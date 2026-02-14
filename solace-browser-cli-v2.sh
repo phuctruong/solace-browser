@@ -46,23 +46,28 @@ log_cdp() { echo -e "${PURPLE}[CDP]${NC} $*" | tee -a "$LOG_DIR/cdp.log"; }
 ################################################################################
 
 # Detect if browser is running and accessible via CDP
+# Pass "quiet" as argument to suppress logging
 detect_browser() {
-    log_info "Detecting Solace Browser..."
+    local quiet="${1:-}"
 
     if curl -s "http://$BROWSER_HOST:$BROWSER_PORT/json" > /dev/null 2>&1; then
-        log_success "Browser detected on CDP port $BROWSER_PORT"
+        [[ -z "$quiet" ]] && log_success "Browser detected on CDP port $BROWSER_PORT"
         CONTROL_MODE="real"
         return 0
     else
-        log_warning "No browser detected on port $BROWSER_PORT"
-        log_warning "Falling back to mock mode (will record JSON, not control real browser)"
+        [[ -z "$quiet" ]] && log_warning "No browser detected on port $BROWSER_PORT"
         CONTROL_MODE="mock"
         return 1
     fi
 }
 
-# Get browser version via CDP
+# Get browser version via CDP (stdout only, no logging)
 get_browser_info() {
+    curl -s "http://$BROWSER_HOST:$BROWSER_PORT/json/version"
+}
+
+# Get browser version via CDP with logging
+get_browser_info_logged() {
     local info=$(curl -s "http://$BROWSER_HOST:$BROWSER_PORT/json/version")
     log_cdp "Browser info: $info"
     echo "$info"
@@ -100,20 +105,75 @@ navigate_to() {
 
     if [[ "$CONTROL_MODE" == "real" ]]; then
         log_cdp "CDP: Navigating to $url"
-        # Real: Send Page.navigate CDP command
-        python3 <<PYEOF
+        # Real: Send Page.navigate CDP command with proper WebSocket handling
+        python3 <<'PYEOF'
 import json
 import subprocess
+import websocket
 import time
+import sys
 
-# Get tab info
-result = subprocess.run(['curl', '-s', 'http://localhost:$BROWSER_PORT/json/list'],
-                       capture_output=True, text=True)
-tabs = json.loads(result.stdout)
-if tabs:
+try:
+    # Get tab info from CDP
+    result = subprocess.run(['curl', '-s', 'http://localhost:9222/json/list'],
+                           capture_output=True, text=True, timeout=5)
+    tabs = json.loads(result.stdout)
+
+    if not tabs:
+        print("ERROR: No tabs found", file=sys.stderr)
+        sys.exit(1)
+
     ws_url = tabs[0]['webSocketDebuggerUrl']
-    # In real implementation, would connect via websocket and send CDP command
-    print(f"Would connect to: {ws_url}")
+    tab_id = tabs[0].get('id', '')
+
+    # Connect to WebSocket with proper timeout
+    ws = websocket.create_connection(ws_url, timeout=10)
+
+    # Send Page.navigate command with message ID
+    msg_id = 1001
+    navigate_cmd = {
+        "id": msg_id,
+        "method": "Page.navigate",
+        "params": {"url": "''' + "$url" + '''"}
+    }
+
+    ws.send(json.dumps(navigate_cmd))
+
+    # Wait for response with timeout
+    response_received = False
+    start_time = time.time()
+    timeout = 10
+
+    while time.time() - start_time < timeout:
+        try:
+            ws.settimeout(0.5)
+            response = ws.recv()
+            if response:
+                result = json.loads(response)
+                if result.get('id') == msg_id:
+                    if 'result' in result:
+                        print(f"SUCCESS: Navigated to ''' + "$url" + '''")
+                        response_received = True
+                        break
+                    elif 'error' in result:
+                        print(f"ERROR: {result['error']['message']}", file=sys.stderr)
+                        sys.exit(1)
+        except websocket.WebSocketTimeoutException:
+            continue
+
+    # Wait for page load event
+    time.sleep(2)
+    ws.close()
+
+    if response_received:
+        sys.exit(0)
+    else:
+        print(f"WARNING: Navigation may not have completed (timeout)", file=sys.stderr)
+        sys.exit(0)
+
+except Exception as e:
+    print(f"ERROR navigating to ''' + "$url" + ''': {e}", file=sys.stderr)
+    sys.exit(1)
 PYEOF
         return 0
     else
@@ -122,14 +182,77 @@ PYEOF
     fi
 }
 
-# Click element via CDP
+# Click element via CDP using Runtime.evaluate
 click_element() {
     local selector="$1"
     log_info "Clicking element: $selector"
 
     if [[ "$CONTROL_MODE" == "real" ]]; then
         log_cdp "CDP: Clicking $selector"
-        # Real: Send Runtime.evaluate to click element
+        # Real: Send Runtime.evaluate CDP command to click element
+        python3 <<'PYEOF'
+import json
+import subprocess
+import websocket
+import time
+import sys
+
+try:
+    # Get tab info from CDP
+    result = subprocess.run(['curl', '-s', 'http://localhost:9222/json/list'],
+                           capture_output=True, text=True, timeout=5)
+    tabs = json.loads(result.stdout)
+
+    if not tabs:
+        print("ERROR: No tabs found", file=sys.stderr)
+        sys.exit(1)
+
+    ws_url = tabs[0]['webSocketDebuggerUrl']
+
+    # Connect to WebSocket
+    ws = websocket.create_connection(ws_url, timeout=10)
+
+    # Send Runtime.evaluate command to click element
+    msg_id = 1002
+    click_cmd = {
+        "id": msg_id,
+        "method": "Runtime.evaluate",
+        "params": {
+            "expression": "(function() { const el = document.querySelector('''' + "$selector" + ''''); if (el) { el.click(); return 'clicked'; } else { return 'not found'; } })()"
+        }
+    }
+
+    ws.send(json.dumps(click_cmd))
+
+    # Wait for response
+    response_received = False
+    start_time = time.time()
+    timeout = 10
+
+    while time.time() - start_time < timeout:
+        try:
+            ws.settimeout(0.5)
+            response = ws.recv()
+            if response:
+                result = json.loads(response)
+                if result.get('id') == msg_id:
+                    if 'result' in result:
+                        print(f"SUCCESS: Clicked element ''' + "$selector" + '''")
+                        response_received = True
+                        break
+                    elif 'error' in result:
+                        print(f"ERROR: {result['error']['message']}", file=sys.stderr)
+        except websocket.WebSocketTimeoutException:
+            continue
+
+    time.sleep(1)
+    ws.close()
+    sys.exit(0)
+
+except Exception as e:
+    print(f"ERROR clicking element ''' + "$selector" + ''': {e}", file=sys.stderr)
+    sys.exit(1)
+PYEOF
         return 0
     else
         log_warning "MOCK MODE: Recording click action"
@@ -137,7 +260,7 @@ click_element() {
     fi
 }
 
-# Type text via CDP
+# Type text via CDP using Input.dispatchKeyEvent
 type_text() {
     local selector="$1"
     local text="$2"
@@ -145,7 +268,88 @@ type_text() {
 
     if [[ "$CONTROL_MODE" == "real" ]]; then
         log_cdp "CDP: Typing in $selector"
-        # Real: Send Input.dispatchKeyEvent commands
+        # Real: Send Input.dispatchKeyEvent CDP commands for each character
+        python3 <<'PYEOF'
+import json
+import subprocess
+import websocket
+import time
+import sys
+
+try:
+    # Get tab info from CDP
+    result = subprocess.run(['curl', '-s', 'http://localhost:9222/json/list'],
+                           capture_output=True, text=True, timeout=5)
+    tabs = json.loads(result.stdout)
+
+    if not tabs:
+        print("ERROR: No tabs found", file=sys.stderr)
+        sys.exit(1)
+
+    ws_url = tabs[0]['webSocketDebuggerUrl']
+
+    # Connect to WebSocket
+    ws = websocket.create_connection(ws_url, timeout=10)
+
+    # First, focus the element
+    msg_id = 1003
+    focus_cmd = {
+        "id": msg_id,
+        "method": "Runtime.evaluate",
+        "params": {
+            "expression": "(function() { const el = document.querySelector('''' + "$selector" + ''''); if (el) { el.focus(); return 'focused'; } })()"
+        }
+    }
+
+    ws.send(json.dumps(focus_cmd))
+    time.sleep(0.2)
+
+    # Clear existing text
+    msg_id = 1004
+    clear_cmd = {
+        "id": msg_id,
+        "method": "Runtime.evaluate",
+        "params": {
+            "expression": "(function() { const el = document.querySelector('''' + "$selector" + ''''); if (el) { el.value = ''; el.innerHTML = ''; return 'cleared'; } })()"
+        }
+    }
+
+    ws.send(json.dumps(clear_cmd))
+    time.sleep(0.2)
+
+    # Type text character by character
+    text_to_type = "''' + "$text" + '''"
+    for char in text_to_type:
+        msg_id = 1005
+        key_cmd = {
+            "id": msg_id,
+            "method": "Input.dispatchKeyEvent",
+            "params": {
+                "type": "char",
+                "text": char
+            }
+        }
+
+        ws.send(json.dumps(key_cmd))
+        time.sleep(0.05)
+
+    # Receive responses
+    start_time = time.time()
+    while time.time() - start_time < 5:
+        try:
+            ws.settimeout(0.2)
+            response = ws.recv()
+        except websocket.WebSocketTimeoutException:
+            break
+
+    print(f"SUCCESS: Typed in ''' + "$selector" + ''': ''' + "$text" + '''")
+    time.sleep(0.5)
+    ws.close()
+
+except Exception as e:
+    print(f"ERROR typing in ''' + "$selector" + ''': {e}", file=sys.stderr)
+    sys.exit(1)
+PYEOF
         return 0
     else
         log_warning "MOCK MODE: Recording type action"
@@ -153,16 +357,97 @@ type_text() {
     fi
 }
 
-# Take screenshot via CDP
+# Take screenshot via CDP using Page.captureScreenshot
 take_screenshot() {
     local filename="${1:-screenshot-$(date +%s).png}"
     log_info "Taking screenshot: $filename"
 
     if [[ "$CONTROL_MODE" == "real" ]]; then
         log_cdp "CDP: Capturing screenshot"
-        local screenshot_path="$ARTIFACTS_DIR/$filename"
         # Real: Send Page.captureScreenshot CDP command
-        echo "Screenshot would be saved to: $screenshot_path"
+        python3 <<'PYEOF'
+import json
+import subprocess
+import websocket
+import base64
+import time
+import sys
+import os
+
+try:
+    # Get tab info from CDP
+    result = subprocess.run(['curl', '-s', 'http://localhost:9222/json/list'],
+                           capture_output=True, text=True, timeout=5)
+    tabs = json.loads(result.stdout)
+
+    if not tabs:
+        print("ERROR: No tabs found", file=sys.stderr)
+        sys.exit(1)
+
+    ws_url = tabs[0]['webSocketDebuggerUrl']
+
+    # Connect to WebSocket
+    ws = websocket.create_connection(ws_url, timeout=10)
+
+    # Send Page.captureScreenshot command
+    msg_id = 1006
+    screenshot_cmd = {
+        "id": msg_id,
+        "method": "Page.captureScreenshot",
+        "params": {
+            "format": "png"
+        }
+    }
+
+    ws.send(json.dumps(screenshot_cmd))
+
+    # Wait for response
+    screenshot_data = None
+    start_time = time.time()
+    timeout = 10
+
+    while time.time() - start_time < timeout:
+        try:
+            ws.settimeout(0.5)
+            response = ws.recv()
+            if response:
+                result = json.loads(response)
+                if result.get('id') == msg_id:
+                    if 'result' in result:
+                        screenshot_data = result['result'].get('data', '')
+                        break
+                    elif 'error' in result:
+                        print(f"ERROR: {result['error']['message']}", file=sys.stderr)
+                        sys.exit(1)
+        except websocket.WebSocketTimeoutException:
+            continue
+
+    ws.close()
+
+    if screenshot_data:
+        # Decode and save screenshot
+        filename = "''' + "$filename" + '''"
+        output_path = os.path.expanduser("~/projects/solace-browser/artifacts/" + filename)
+
+        # Create artifacts directory if needed
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+        # Decode base64 PNG data
+        png_data = base64.b64decode(screenshot_data)
+
+        with open(output_path, 'wb') as f:
+            f.write(png_data)
+
+        print(f"SUCCESS: Screenshot saved to {output_path}")
+        sys.exit(0)
+    else:
+        print("ERROR: No screenshot data received", file=sys.stderr)
+        sys.exit(1)
+
+except Exception as e:
+    print(f"ERROR taking screenshot: {e}", file=sys.stderr)
+    sys.exit(1)
+PYEOF
         return 0
     else
         log_warning "MOCK MODE: Screenshot recording (no real capture)"
@@ -170,13 +455,111 @@ take_screenshot() {
     fi
 }
 
-# Get page snapshot via CDP
+# Get page snapshot via CDP using DOM.getOuterHTML
 get_snapshot() {
     log_info "Getting page snapshot"
 
     if [[ "$CONTROL_MODE" == "real" ]]; then
         log_cdp "CDP: Getting DOM snapshot"
-        # Real: Send DOM.getDocument + DOM.getOuterHTML
+        # Real: Send DOM.getDocument + DOM.getOuterHTML CDP commands
+        python3 <<'PYEOF'
+import json
+import subprocess
+import websocket
+import time
+import sys
+
+try:
+    # Get tab info from CDP
+    result = subprocess.run(['curl', '-s', 'http://localhost:9222/json/list'],
+                           capture_output=True, text=True, timeout=5)
+    tabs = json.loads(result.stdout)
+
+    if not tabs:
+        print("ERROR: No tabs found", file=sys.stderr)
+        sys.exit(1)
+
+    ws_url = tabs[0]['webSocketDebuggerUrl']
+
+    # Connect to WebSocket
+    ws = websocket.create_connection(ws_url, timeout=10)
+
+    # First, get document root node ID
+    msg_id = 1007
+    get_doc_cmd = {
+        "id": msg_id,
+        "method": "DOM.getDocument",
+        "params": {}
+    }
+
+    ws.send(json.dumps(get_doc_cmd))
+
+    # Wait for document response
+    root_node_id = None
+    start_time = time.time()
+
+    while time.time() - start_time < 5:
+        try:
+            ws.settimeout(0.5)
+            response = ws.recv()
+            if response:
+                result = json.loads(response)
+                if result.get('id') == msg_id and 'result' in result:
+                    root_node_id = result['result'].get('root', {}).get('nodeId', None)
+                    break
+        except websocket.WebSocketTimeoutException:
+            continue
+
+    if not root_node_id:
+        print("ERROR: Could not get document root node", file=sys.stderr)
+        sys.exit(1)
+
+    # Now get the outer HTML of the document
+    msg_id = 1008
+    get_html_cmd = {
+        "id": msg_id,
+        "method": "DOM.getOuterHTML",
+        "params": {
+            "nodeId": root_node_id
+        }
+    }
+
+    ws.send(json.dumps(get_html_cmd))
+
+    # Wait for HTML response
+    html_content = None
+    start_time = time.time()
+
+    while time.time() - start_time < 5:
+        try:
+            ws.settimeout(0.5)
+            response = ws.recv()
+            if response:
+                result = json.loads(response)
+                if result.get('id') == msg_id and 'result' in result:
+                    html_content = result['result'].get('outerHTML', '')
+                    break
+        except websocket.WebSocketTimeoutException:
+            continue
+
+    ws.close()
+
+    if html_content:
+        # Print snapshot info
+        print(f"SUCCESS: Page snapshot retrieved ({len(html_content)} bytes)")
+        print(f"HTML length: {len(html_content)}")
+        if len(html_content) < 500:
+            print("HTML Content:")
+            print(html_content)
+        sys.exit(0)
+    else:
+        print("ERROR: Could not retrieve page snapshot", file=sys.stderr)
+        sys.exit(1)
+
+except Exception as e:
+    print(f"ERROR getting snapshot: {e}", file=sys.stderr)
+    sys.exit(1)
+PYEOF
         return 0
     else
         log_warning "MOCK MODE: Snapshot recording"
@@ -198,13 +581,34 @@ start_browser() {
         return 1
     fi
 
-    if ! detect_browser; then
+    if ! detect_browser quiet; then
         log_info "Browser not running. Launching: $BROWSER_PATH"
-        "$BROWSER_PATH" --remote-debugging-port=$BROWSER_PORT \
+        # Clear old profile to avoid restore dialogs
+        rm -rf "$LOG_DIR/browser-profile" 2>/dev/null || true
+        "$BROWSER_PATH" \
+            --remote-debugging-port=$BROWSER_PORT \
+            --remote-allow-origins=* \
             --user-data-dir="$LOG_DIR/browser-profile" \
-            about:blank &
+            --guest \
+            --no-first-run \
+            --no-default-browser-check \
+            --disable-extensions \
+            --disable-plugins \
+            --disable-default-apps \
+            --disable-popup-blocking \
+            --disable-update-menu \
+            --no-service-autorun \
+            --disable-infobars \
+            --disable-background-networking \
+            --disable-sync \
+            --disable-session-crashed-bubble \
+            --disable-crash-session-restore \
+            "about:blank" &
         sleep 3
-        detect_browser
+        detect_browser quiet
+        log_success "Browser started on CDP port $BROWSER_PORT"
+    else
+        log_success "Browser already running on CDP port $BROWSER_PORT"
     fi
 }
 
@@ -213,12 +617,25 @@ record_episode_real() {
     local url="$1"
     local episode_name="${2:-episode-$(date +%s)}"
     local episode_file="$EPISODES_DIR/$episode_name.json"
+    local browser_info
 
     log_info "Recording LIVE episode: $episode_name"
     log_info "URL: $url"
-    log_info "Browser in control - manual interaction detected"
+    log_info "Browser in control - CDP action capture enabled"
 
-    # Start recording - extension captures actions
+    # Get clean browser info (no logging)
+    browser_info=$(get_browser_info || echo '{}')
+
+    # Start recording with initial action (navigate)
+    local initial_action=$(cat <<JSONEOF
+{
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "type": "navigate",
+  "url": "$url"
+}
+JSONEOF
+)
+
     cat > "$episode_file" <<EOF
 {
   "episode_id": "$episode_name",
@@ -226,18 +643,18 @@ record_episode_real() {
   "url": "$url",
   "status": "RECORDING",
   "control_mode": "real_browser",
-  "browser_info": $(get_browser_info || echo '{}'),
-  "actions": [],
+  "browser_info": $browser_info,
+  "actions": [$initial_action],
   "snapshots": []
 }
 EOF
 
     navigate_to "$url"
-    get_browser_info
 
     log_success "Episode recording started in real browser: $episode_file"
     log_info "Navigate the browser manually. All actions are captured via CDP."
-    log_info "When done, run: solace-browser-cli.sh stop-record $episode_name"
+    log_info "Supported actions: navigate, click, fill (type), screenshot"
+    log_info "When done, run: solace-browser-cli.sh compile $episode_name"
 }
 
 ################################################################################
@@ -255,7 +672,7 @@ cmd_browser_info() {
     fi
 
     log_info "Browser Information:"
-    get_browser_info | python3 -m json.tool
+    get_browser_info_logged | python3 -m json.tool
 
     log_info "Open Tabs:"
     list_tabs | python3 -m json.tool
