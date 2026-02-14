@@ -1,0 +1,25 @@
+{
+  "episode_id": "ep-001",
+  "execution_id": "exec-20260214-t2",
+  "timestamp": "2026-02-14T21:13:28.151713Z",
+  "action_traces": [
+    {
+      "action_id": 0,
+      "action_type": "click",
+      "target": "button.submit",
+      "status": "SUCCESS",
+      "pre_state": {
+        "url": "https://example.com",
+        "dom_hash": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+      },
+      "post_state": {
+        "url": "https://example.com",
+        "dom_hash": "46b96647453e217d26ede1d05aa766a3d857fdedf09f83b5ca8a635a09e22beb"
+      },
+      "execution_time_ms": 150
+    }
+  ],
+  "actions_executed": 1,
+  "actions_passed": 1,
+  "actions_failed": 0
+}

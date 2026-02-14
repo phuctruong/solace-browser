@@ -1,0 +1,26 @@
+{
+  "episode_id": "ep-001",
+  "execution_id": "exec-20260214-t4",
+  "timestamp": "2026-02-14T21:13:28.186556Z",
+  "action_traces": [
+    {
+      "action_id": 2,
+      "action_type": "navigate",
+      "target": "page",
+      "value": "https://example.com/search?q=solace",
+      "status": "SUCCESS",
+      "pre_state": {
+        "url": "https://example.com",
+        "dom_hash": "236994dd9789eaaf45eac173f2045742986e6c2e1473ef8c37c441a5bf74d331"
+      },
+      "post_state": {
+        "url": "https://example.com/search?q=solace",
+        "dom_hash": "8c8a044cd630957f542797f371c9ad0401e68965777369d0bcbb8cad3aa5a829"
+      },
+      "execution_time_ms": 500
+    }
+  ],
+  "actions_executed": 1,
+  "actions_passed": 1,
+  "actions_failed": 0
+}
