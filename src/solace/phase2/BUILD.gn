@@ -1,0 +1,74 @@
+# Copyright 2025 Solace Browser Authors. All rights reserved.
+# Phase 2: Episode Recording module build configuration
+
+import("//build/config/chromium_build_config.gni")
+
+# Core recording library (browser process)
+static_library("recording_browser") {
+  sources = [
+    "recording_manager.h",
+    "recording_manager.cc",
+    "episode_schema.h",
+    "episode_schema.cc",
+  ]
+
+  defines = [ "SOLACE_RECORDING_ENABLED" ]
+
+  deps = [
+    "//base",
+    "//base/json",
+    "//net",
+  ]
+
+  public_configs = [ ":recording_config" ]
+}
+
+# Action serializer (renderer process)
+static_library("recording_renderer") {
+  sources = [
+    "action_serializer.h",
+    "action_serializer.cc",
+    "snapshot_capturer.h",
+    "snapshot_capturer.cc",
+    "episode_schema.h",
+  ]
+
+  defines = [ "SOLACE_RECORDING_ENABLED" ]
+
+  deps = [
+    "//base",
+    "//third_party/blink/public:blink",
+    "//third_party/blink/public/common",
+  ]
+
+  public_configs = [ ":recording_config" ]
+}
+
+# Test suite
+test("solace_recording_unittests") {
+  sources = [
+    "recording_manager_unittest.cc",
+    "action_serializer_unittest.cc",
+    "snapshot_capturer_unittest.cc",
+    "episode_schema_unittest.cc",
+  ]
+
+  deps = [
+    ":recording_browser",
+    ":recording_renderer",
+    "//testing/gtest",
+    "//base/test:test_support",
+  ]
+}
+
+config("recording_config") {
+  include_dirs = [ "." ]
+}
+
+# Group for easy integration
+group("solace_recording") {
+  public_deps = [
+    ":recording_browser",
+    ":recording_renderer",
+  ]
+}

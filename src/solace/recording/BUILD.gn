@@ -1,0 +1,27 @@
+# Solace Browser - Episode Recording Module
+# Auth: 65537 | Phase 2: Episode Recording
+
+import("//build/config/features.gni")
+
+source_set("recording") {
+  sources = [
+    "recording_manager.cc",
+    "recording_manager.h",
+    "episode_serializer.cc",
+    "episode_serializer.h",
+    "snapshot_canonicalizer.cc",
+    "snapshot_canonicalizer.h",
+    "action_types.h",
+  ]
+
+  deps = [
+    "//base",
+    "//base:i18n",
+    "//third_party/boringssl",
+    "//url",
+  ]
+
+  public_deps = [
+    "//base",
+  ]
+}
