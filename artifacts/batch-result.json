@@ -1,0 +1,35 @@
+{
+  "batch_id": "batch-20260214-001",
+  "timestamp_started": "2026-02-14T21:23:44.135002Z",
+  "timestamp_completed": "2026-02-14T21:23:44.135022Z",
+  "episode_count": 2,
+  "episodes_executed": 2,
+  "episodes_passed": 2,
+  "episodes_failed": 0,
+  "total_duration_ms": 101,
+  "episode_results": [
+    {
+      "episode_id": "ep-001",
+      "sequence": 1,
+      "status": "SUCCESS",
+      "execution_time_ms": 51
+    },
+    {
+      "episode_id": "ep-rec-20260214-001",
+      "sequence": 2,
+      "status": "SUCCESS",
+      "execution_time_ms": 50
+    }
+  ],
+  "cumulative_state": {
+    "initial_url": "https://example.com",
+    "final_url": "https://example.com",
+    "total_actions": 9
+  },
+  "batch_status": "SUCCESS",
+  "verification": {
+    "all_episodes_passed": true,
+    "cumulative_state_valid": true,
+    "determinism_verified": true
+  }
+}
