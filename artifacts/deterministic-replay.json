@@ -1,0 +1,39 @@
+{
+  "replay_id": "replay-20260214-001",
+  "timestamp": "2026-02-14T17:44:00Z",
+  "replayed_requests": 3,
+  "matched_requests": 3,
+  "mismatched_requests": 0,
+  "replay_matches": [
+    {
+      "request_id": "req-001",
+      "request_hash": "416b853346060a001534689743f2af3f2d20a1ab027a3b3ea1c2ac4cd127a6bb",
+      "original_response": 200,
+      "replayed_response": 200,
+      "match_status": "exact_match",
+      "deterministic": true,
+      "verified": true
+    },
+    {
+      "request_id": "req-002",
+      "request_hash": "f2a0074c2a26219b015dce8fd522b2eaa4b00411d1cce9d6d174c3da47d54860",
+      "original_response": 200,
+      "replayed_response": 200,
+      "match_status": "exact_match",
+      "deterministic": true,
+      "verified": true
+    },
+    {
+      "request_id": "req-003",
+      "request_hash": "de5300ce1ac762d7070f2a4856de1d779bd5d4166760f3604dd300ada5ceef43",
+      "original_response": 200,
+      "replayed_response": 200,
+      "match_status": "exact_match",
+      "deterministic": true,
+      "verified": true
+    }
+  ],
+  "determinism_verified": true,
+  "no_external_calls": true,
+  "replay_successful": true
+}

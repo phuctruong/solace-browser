@@ -1,0 +1,62 @@
+{
+  "history_id": "history-20260214-001",
+  "timestamp": "2026-02-14T17:43:00Z",
+  "requests": [
+    {
+      "request_id": "req-001",
+      "method": "GET",
+      "url": "https://api.example.com/users",
+      "request_headers": {
+        "user-agent": "Mozilla/5.0 (X11; Linux x86_64)",
+        "authorization": "Bearer token123",
+        "accept": "application/json",
+        "host": "api.example.com"
+      },
+      "request_body": null,
+      "intercepted_at_ms": 1771104718400,
+      "response_status": 200,
+      "response_headers": {
+        "content-type": "application/json"
+      },
+      "response_body": "{\"status\": \"ok\"}",
+      "response_time_ms": 45
+    },
+    {
+      "request_id": "req-002",
+      "method": "GET",
+      "url": "https://api.example.com/data",
+      "request_headers": {
+        "user-agent": "Mozilla/5.0 (X11; Linux x86_64)",
+        "accept": "application/json"
+      },
+      "request_body": null,
+      "intercepted_at_ms": 1771104718500,
+      "response_status": 200,
+      "response_headers": {
+        "content-type": "application/json"
+      },
+      "response_body": "{\"status\": \"ok\"}",
+      "response_time_ms": 45
+    },
+    {
+      "request_id": "req-003",
+      "method": "POST",
+      "url": "https://api.example.com/submit",
+      "request_headers": {
+        "content-type": "application/json",
+        "authorization": "Bearer token123"
+      },
+      "request_body": "{\"action\": \"submit\", \"data\": \"value\"}",
+      "intercepted_at_ms": 1771104718600,
+      "response_status": 200,
+      "response_headers": {
+        "content-type": "application/json"
+      },
+      "response_body": "{\"status\": \"ok\"}",
+      "response_time_ms": 45
+    }
+  ],
+  "total_requests": 3,
+  "history_complete": true,
+  "history_valid": true
+}

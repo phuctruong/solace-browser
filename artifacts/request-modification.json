@@ -1,0 +1,48 @@
+{
+  "modification_id": "mod-20260214-001",
+  "timestamp": "2026-02-14T17:41:00Z",
+  "modifications": [
+    {
+      "mod_id": "m-001",
+      "target_request_id": "req-001",
+      "target_url": "https://api.example.com/users",
+      "header_changes": {
+        "authorization": {
+          "before": "Bearer token123",
+          "after": "Bearer new_token456",
+          "applied": true
+        },
+        "x-custom-header": {
+          "added": "custom_value",
+          "applied": true
+        }
+      },
+      "body_changes": null,
+      "applied": true,
+      "success": true
+    },
+    {
+      "mod_id": "m-002",
+      "target_request_id": "req-003",
+      "target_url": "https://api.example.com/submit",
+      "header_changes": {
+        "x-request-id": {
+          "added": "req-12345",
+          "applied": true
+        }
+      },
+      "body_changes": {
+        "before": "{\"action\": \"submit\", \"data\": \"value\"}",
+        "after": "{\"action\": \"submit\", \"data\": \"modified_value\"}",
+        "applied": true
+      },
+      "applied": true,
+      "success": true
+    }
+  ],
+  "total_modifications": 2,
+  "successful_modifications": 2,
+  "failed_modifications": 0,
+  "header_changes_applied": 3,
+  "body_changes_applied": 1
+}
