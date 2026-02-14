@@ -1,0 +1,26 @@
+{
+  "validation_results": [
+    {
+      "field": "name",
+      "valid": true
+    },
+    {
+      "field": "email",
+      "valid": true
+    },
+    {
+      "field": "message",
+      "valid": true
+    },
+    {
+      "field": "subscribe",
+      "valid": true
+    },
+    {
+      "field": "category",
+      "valid": true
+    }
+  ],
+  "errors": 0,
+  "validation_passed": true
+}

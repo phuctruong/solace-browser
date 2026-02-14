@@ -1,0 +1,17 @@
+{
+  "select_operations": [
+    {
+      "selector": "select#category",
+      "option": "support",
+      "selected": true
+    }
+  ],
+  "checkbox_operations": [
+    {
+      "selector": "input#subscribe",
+      "checked": true,
+      "success": true
+    }
+  ],
+  "all_selected": true
+}

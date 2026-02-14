@@ -1,0 +1,21 @@
+{
+  "filled_fields": [
+    {
+      "name": "name",
+      "value": "John Doe",
+      "success": true
+    },
+    {
+      "name": "email",
+      "value": "john@example.com",
+      "success": true
+    },
+    {
+      "name": "message",
+      "value": "Hello world",
+      "success": true
+    }
+  ],
+  "total_filled": 3,
+  "all_filled": true
+}
