@@ -1,0 +1,46 @@
+{
+  "states": [
+    {
+      "id": "INIT",
+      "allowed_transitions": [
+        "IDLE"
+      ]
+    },
+    {
+      "id": "IDLE",
+      "allowed_actions": [
+        "click",
+        "type",
+        "navigate"
+      ],
+      "allowed_transitions": [
+        "LOADING",
+        "NAVIGATING"
+      ]
+    },
+    {
+      "id": "LOADING",
+      "allowed_transitions": [
+        "IDLE"
+      ]
+    },
+    {
+      "id": "NAVIGATING",
+      "allowed_transitions": [
+        "IDLE"
+      ]
+    },
+    {
+      "id": "INTERACTING",
+      "allowed_transitions": [
+        "IDLE"
+      ]
+    },
+    {
+      "id": "ERROR",
+      "allowed_transitions": [
+        "INIT"
+      ]
+    }
+  ]
+}
