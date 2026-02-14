@@ -1,0 +1,7 @@
+{
+  "error_id": "err-20260214-001",
+  "detected_type": "ActionFailed",
+  "classified_type": "ActionFailed",
+  "recovery_strategy": "Retry",
+  "classification_accurate": true
+}
