@@ -1,0 +1,15 @@
+{
+  "spec_id": "wish-2.0-episode-recording",
+  "timestamp": "2026-02-14T21:12:14Z",
+  "authority": "65537",
+  "tests_passed": 5,
+  "tests_failed": 0,
+  "tests_total": 5,
+  "status": "SUCCESS",
+  "schema": {
+    "schema_file": "canon/episode-schema.json",
+    "fields": ["id", "timestamp", "state_snapshot", "actions", "metadata", "checksum"]
+  },
+  "episodes_recorded": 1,
+  "episodes_location": "artifacts/episodes/episode-*.json"
+}

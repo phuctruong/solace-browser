@@ -1,0 +1,42 @@
+{
+  "actions": [
+    {
+      "target": "button.submit",
+      "timestamp": 100,
+      "type": "click"
+    },
+    {
+      "target": "input.search",
+      "timestamp": 200,
+      "type": "type",
+      "value": "solace browser"
+    },
+    {
+      "target": "page",
+      "timestamp": 300,
+      "type": "navigate",
+      "value": "https://example.com/search?q=solace"
+    }
+  ],
+  "checksum": "sha256:ba5b27d12a8e9dd4bf42b4b77d33af00f245482f2da0ddc7ff5e58895a7b9714",
+  "id": "ep-001",
+  "metadata": {
+    "agent": "Haiku-Scout",
+    "framework": "Solace",
+    "phase": "2.0",
+    "tags": [
+      "automation",
+      "testing"
+    ]
+  },
+  "state_snapshot": {
+    "dom_hash": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+    "title": "Example Domain",
+    "url": "https://example.com",
+    "viewport": {
+      "height": 1080,
+      "width": 1920
+    }
+  },
+  "timestamp": "2026-02-14T16:50:00Z"
+}
