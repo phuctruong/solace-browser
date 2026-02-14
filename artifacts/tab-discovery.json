@@ -1,0 +1,1 @@
+{"discovery_id": "disc-20260214-001", "tabs": [{"tab_id": "tab-000", "handle": "CDwindow-A", "title": "Tab 0", "url": "https://example0.com"}, {"tab_id": "tab-001", "handle": "CDwindow-B", "title": "Tab 1", "url": "https://example1.com"}, {"tab_id": "tab-002", "handle": "CDwindow-C", "title": "Tab 2", "url": "https://example2.com"}], "total_tabs": 3, "discovery_complete": true}
