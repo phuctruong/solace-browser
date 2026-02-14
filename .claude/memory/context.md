@@ -8,7 +8,7 @@ oolong_accuracy: 99.3% via Counter() bypass (vs ~40% pure LLM)
 ## GOALS [3]
 project_mission: Solace Browser (Deterministic Browser Automation)
 goal_reliability: 10/10 proof-grade verification
-current_phase: phase7_complete_phase8_planning
+current_phase: phase1_wishes_ripple (wish-1.0✅→wish-1.0b→wish-1.1→Phase2+)
 
 ## DECISIONS [5] LOCKED
 rule_nl_compilation: NL prompts compile to Wish IR targets
@@ -41,8 +41,17 @@ developer_marketing: 7 engines ready (docs-first, wow moment, bottom-up, build-i
 skills_loaded: Prime Skills (12) + Prime Browser (4) + Prime Math (5) + Prime Physics (14, optional)
 canon_locked: Stillwater (theory-first, verified) layer established
 ripple_ready: Implementation layer ready for Phase 8+
-commit_latest: 1b6d050 (gamification setup complete)
-branches_active: master (Phase 7 complete)
+commit_latest: 0345834 (wish-1.0 build infrastructure complete)
+branches_active: master (Phase 7 complete, Phase 1 Wishes started)
+
+## WISHES [7] RIPPLE
+wish_1_0_status: ✅ COMPLETE (5/5 tests pass, proof.json generated)
+wish_1_0b_status: PENDING (Chromium source fetch via gclient)
+wish_1_1_status: PENDING (Browser binary compilation)
+wish_framework: Wishes Method v1.4 (RTC 10/10 locked specs, Haiku ripple execution)
+current_wish: wish-1.0 ✅ → wish-1.0b (next)
+wishes_authority: 65537 (Phuc Forecast)
+wishes_total: 7/7 phases → 20+ wishes planned for full implementation
 
 ## BLOCKERS [11] RIPPLE
 blocker_phase8: ML model training infrastructure (ready to design with Wishes Method)
