@@ -1,0 +1,8 @@
+{
+  "total_duration_seconds": 1.5,
+  "episodes_executed": 2,
+  "actions_executed": 6,
+  "episodes_per_second": 1.3333333333333333,
+  "actions_per_second": 4.0,
+  "episodes_per_minute": 80.0
+}
