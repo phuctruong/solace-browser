@@ -1,0 +1,47 @@
+{
+  "reduction_id": "overhead-20260214-001",
+  "timestamp": "2026-02-14T17:33:00Z",
+  "optimizations": [
+    {
+      "name": "event_listener_cleanup",
+      "before": {
+        "active_listeners": 120,
+        "memory_mb": 45,
+        "gc_pause_ms": 180
+      },
+      "after": {
+        "active_listeners": 45,
+        "memory_mb": 28,
+        "gc_pause_ms": 65
+      },
+      "improvement": {
+        "listeners_reduced_percent": 62,
+        "memory_reduced_percent": 38,
+        "gc_pause_reduced_percent": 64
+      }
+    },
+    {
+      "name": "unnecessary_event_batching",
+      "before": {
+        "event_batches": 500,
+        "processing_time_ms": 250,
+        "memory_mb": 22
+      },
+      "after": {
+        "event_batches": 250,
+        "processing_time_ms": 125,
+        "memory_mb": 15
+      },
+      "improvement": {
+        "batches_reduced_percent": 50,
+        "processing_time_reduced_percent": 50,
+        "memory_reduced_percent": 32
+      }
+    }
+  ],
+  "summary": {
+    "total_memory_reduction_percent": 22,
+    "total_gc_improvement_percent": 50,
+    "event_processing_overhead_reduction_percent": 45
+  }
+}

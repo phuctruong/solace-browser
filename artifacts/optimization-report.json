@@ -1,0 +1,73 @@
+{
+  "report_id": "opt-20260214-001",
+  "timestamp": "2026-02-14T17:35:00Z",
+  "baseline_metrics": {
+    "avg_action_time_ms": 500,
+    "avg_episode_time_ms": 1500,
+    "total_episodes": 3,
+    "total_execution_time_ms": 4500,
+    "peak_memory_mb": 128,
+    "average_cpu_percent": 45
+  },
+  "optimizations_applied": [
+    {
+      "opt_id": "opt-001",
+      "name": "selector_resolution_cache",
+      "target": "slow_selector_resolution",
+      "improvement_percent": 20,
+      "new_action_time_ms": 400
+    },
+    {
+      "opt_id": "opt-002",
+      "name": "dom_traversal_memoization",
+      "target": "redundant_dom_traversal",
+      "improvement_percent": 15,
+      "new_action_time_ms": 425
+    },
+    {
+      "opt_id": "opt-003",
+      "name": "parallel_safe_actions",
+      "target": "sequential_execution_opportunity",
+      "improvement_percent": 28,
+      "new_episode_time_ms": 1080
+    },
+    {
+      "opt_id": "opt-004",
+      "name": "event_listener_cleanup",
+      "target": "memory_overhead",
+      "improvement_percent": 22,
+      "new_peak_memory_mb": 100
+    }
+  ],
+  "optimized_metrics": {
+    "avg_action_time_ms": 350,
+    "avg_episode_time_ms": 900,
+    "total_episodes": 3,
+    "total_execution_time_ms": 2700,
+    "peak_memory_mb": 100,
+    "average_cpu_percent": 35
+  },
+  "improvement": {
+    "action_time_improvement_percent": 30,
+    "episode_time_improvement_percent": 40,
+    "overall_throughput_improvement_percent": 40,
+    "memory_improvement_percent": 22,
+    "cpu_improvement_percent": 22,
+    "combined_improvement_percent": 33
+  },
+  "verification": {
+    "correctness_verified": true,
+    "no_regressions": true,
+    "improvement_target_met": true,
+    "new_baseline_established": true
+  },
+  "new_baseline": {
+    "baseline_id": "baseline-optimized-20260214-001",
+    "avg_action_time_ms": 350,
+    "avg_episode_time_ms": 900,
+    "episodes_per_second": 1.11,
+    "actions_per_second": 8.57,
+    "peak_memory_mb": 100,
+    "average_cpu_percent": 35
+  }
+}
