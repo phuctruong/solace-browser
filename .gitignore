@@ -1,0 +1,46 @@
+# Build artifacts
+build/
+out/
+dist/
+*.o
+*.a
+*.so
+
+# Generated files
+*.pyc
+__pycache__/
+*.egg-info/
+
+# Dependencies
+third_party/
+vendor/
+
+# Binaries
+solace-browser
+solace-browser-bin
+*.exe
+*.dll
+
+# Logs
+*.log
+build.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local config
+.env
+.env.local
+local.conf
+
+# Thorium
+chromium/
+v8/
