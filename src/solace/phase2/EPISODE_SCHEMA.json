@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://solace.dev/schemas/episode/v0.2.0",
+  "title": "Solace Episode Schema v0.2.0",
+  "description": "Phase B compatible episode format for browser interaction recording",
+  "type": "object",
+  "required": ["version", "episode_id", "recording_date", "url_start", "url_end", "actions", "metadata"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "0.2.0",
+      "description": "Schema version"
+    },
+    "episode_id": {
+      "type": "string",
+      "pattern": "^ep_[0-9]{8}_[0-9]{3}$",
+      "description": "Deterministic episode ID: ep_YYYYMMDD_NNN"
+    },
+    "recording_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of recording start"
+    },
+    "url_start": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL when recording began"
+    },
+    "url_end": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL when recording ended"
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Action" },
+      "description": "Ordered list of user actions"
+    },
+    "metadata": { "$ref": "#/$defs/EpisodeMetadata" }
+  },
+
+  "$defs": {
+    "ActionType": {
+      "type": "string",
+      "enum": ["NAVIGATE", "CLICK", "TYPE", "SELECT", "SUBMIT"]
+    },
+
+    "SemanticId": {
+      "type": "object",
+      "description": "Semantic element identifier (human-readable, resilient to DOM changes)",
+      "properties": {
+        "aria_label": { "type": ["string", "null"] },
+        "aria_describedby": { "type": ["string", "null"] },
+        "role": { "type": ["string", "null"] },
+        "placeholder": { "type": ["string", "null"] },
+        "alt": { "type": ["string", "null"] },
+        "title": { "type": ["string", "null"] },
+        "data_testid": { "type": ["string", "null"] },
+        "data_qa": { "type": ["string", "null"] },
+        "text": { "type": ["string", "null"], "maxLength": 100 },
+        "name": { "type": ["string", "null"] },
+        "type": { "type": ["string", "null"] },
+        "for_attr": { "type": ["string", "null"] },
+        "url": { "type": "string", "format": "uri" }
+      },
+      "additionalProperties": false
+    },
+
+    "StructuralId": {
+      "type": "object",
+      "description": "Structural element identifier (precise, fragile)",
+      "properties": {
+        "css_selector": { "type": "string" },
+        "xpath": { "type": "string" },
+        "tag": { "type": "string" },
+        "id": { "type": ["string", "null"] },
+        "nth_child": { "type": "integer", "minimum": 0 },
+        "ref_path": { "type": "string" },
+        "url": { "type": "string", "format": "uri" }
+      },
+      "additionalProperties": false
+    },
+
+    "Target": {
+      "type": "object",
+      "required": ["semantic", "structural"],
+      "properties": {
+        "semantic": { "$ref": "#/$defs/SemanticId" },
+        "structural": { "$ref": "#/$defs/StructuralId" }
+      },
+      "additionalProperties": false
+    },
+
+    "SnapshotDOM": {
+      "type": "object",
+      "required": ["tag", "attrs", "children"],
+      "properties": {
+        "tag": { "type": "string", "description": "Lowercase tag name" },
+        "attrs": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Filtered attributes (ALLOWED_ATTRS only)"
+        },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SnapshotDOM" }
+        },
+        "text": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+
+    "Landmark": {
+      "type": "object",
+      "required": ["role", "label", "ref_path"],
+      "properties": {
+        "role": { "type": "string" },
+        "label": { "type": ["string", "null"] },
+        "ref_path": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+
+    "SnapshotMetadata": {
+      "type": "object",
+      "required": ["node_count", "max_depth", "landmark_count"],
+      "properties": {
+        "node_count": { "type": "integer", "minimum": 0 },
+        "max_depth": { "type": "integer", "minimum": 0 },
+        "landmark_count": { "type": "integer", "minimum": 0 },
+        "step": { "type": "string" },
+        "capture_time_ms": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+
+    "Snapshot": {
+      "type": "object",
+      "required": ["version", "url", "timestamp", "viewport", "dom", "landmarks", "metadata"],
+      "properties": {
+        "version": { "type": "string", "const": "0.2.0" },
+        "url": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "viewport": {
+          "type": "object",
+          "required": ["width", "height"],
+          "properties": {
+            "width": { "type": "integer", "minimum": 1 },
+            "height": { "type": "integer", "minimum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "dom": { "$ref": "#/$defs/SnapshotDOM" },
+        "landmarks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Landmark" }
+        },
+        "metadata": { "$ref": "#/$defs/SnapshotMetadata" }
+      },
+      "additionalProperties": false
+    },
+
+    "SelectValue": {
+      "type": "object",
+      "required": ["selected_text", "selected_value", "previous_value"],
+      "properties": {
+        "selected_text": { "type": "string" },
+        "selected_value": { "type": "string" },
+        "previous_value": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+
+    "SubmitValue": {
+      "type": "object",
+      "required": ["method", "action", "fields"],
+      "properties": {
+        "method": { "type": "string", "enum": ["GET", "POST"] },
+        "action": { "type": "string" },
+        "fields": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "Action": {
+      "type": "object",
+      "required": ["index", "type", "timestamp", "target", "value", "snapshot_before", "snapshot_after"],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "0-based action index, contiguous, no gaps"
+        },
+        "type": { "$ref": "#/$defs/ActionType" },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 with millisecond precision"
+        },
+        "target": { "$ref": "#/$defs/Target" },
+        "value": {
+          "description": "Action-specific value: string for NAVIGATE/TYPE, object for SELECT/SUBMIT, null for CLICK",
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/$defs/SelectValue" },
+            { "$ref": "#/$defs/SubmitValue" },
+            { "type": "null" }
+          ]
+        },
+        "snapshot_before": {
+          "description": "DOM state before action. null for first action in episode.",
+          "oneOf": [
+            { "$ref": "#/$defs/Snapshot" },
+            { "type": "null" }
+          ]
+        },
+        "snapshot_after": { "$ref": "#/$defs/Snapshot" }
+      },
+      "additionalProperties": false
+    },
+
+    "EpisodeMetadata": {
+      "type": "object",
+      "required": ["browser_version", "screen_size", "locale", "action_count", "duration_ms", "recording_mode"],
+      "properties": {
+        "browser_version": { "type": "string" },
+        "screen_size": {
+          "type": "object",
+          "required": ["width", "height"],
+          "properties": {
+            "width": { "type": "integer", "minimum": 1 },
+            "height": { "type": "integer", "minimum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "locale": { "type": "string" },
+        "action_count": { "type": "integer", "minimum": 0 },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "recording_mode": {
+          "type": "string",
+          "enum": ["user_interactive", "cli_driven"]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

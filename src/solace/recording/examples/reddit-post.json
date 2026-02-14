@@ -1,0 +1,100 @@
+{
+  "action_count": 5,
+  "actions": [
+    {
+      "data": {
+        "url": "https://www.reddit.com/r/programming/"
+      },
+      "step": 0,
+      "timestamp": "2026-02-14T14:15:26.242Z",
+      "type": "navigate"
+    },
+    {
+      "data": {
+        "reference": "Create Post",
+        "selector": "button[aria-label='Create Post']"
+      },
+      "step": 1,
+      "timestamp": "2026-02-14T14:15:26.242Z",
+      "type": "click"
+    },
+    {
+      "data": {
+        "reference": "Title",
+        "selector": "textarea[placeholder='Title']",
+        "text": "Show HN: Solace Browser - Chromium fork with native recording"
+      },
+      "step": 2,
+      "timestamp": "2026-02-14T14:15:26.242Z",
+      "type": "type"
+    },
+    {
+      "data": {
+        "reference": "Post Body",
+        "selector": "div[data-testid='post-body']",
+        "text": "We built a custom Chromium fork that records browser interactions natively, without any extension."
+      },
+      "step": 3,
+      "timestamp": "2026-02-14T14:15:26.242Z",
+      "type": "type"
+    },
+    {
+      "data": {
+        "reference": "Post",
+        "selector": "button[type='submit']"
+      },
+      "step": 4,
+      "timestamp": "2026-02-14T14:15:26.242Z",
+      "type": "click"
+    }
+  ],
+  "domain": "www.reddit.com",
+  "end_time": "2026-02-14T14:15:26.242Z",
+  "session_id": "session_1771078526242_2",
+  "snapshots": {
+    "0": {
+      "dom": {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {},
+            "children": [
+              {
+                "attrs": {
+                  "aria-label": "Subreddit navigation",
+                  "role": "navigation"
+                },
+                "children": [],
+                "tag": "nav",
+                "text": ""
+              },
+              {
+                "attrs": {
+                  "aria-label": "Create Post",
+                  "role": "button"
+                },
+                "children": [],
+                "tag": "button",
+                "text": "Create Post"
+              }
+            ],
+            "tag": "body",
+            "text": ""
+          }
+        ],
+        "tag": "html",
+        "text": ""
+      },
+      "meta": {
+        "url": "https://www.reddit.com/r/programming/",
+        "viewport": {
+          "h": 1080,
+          "w": 1920
+        }
+      },
+      "v": 1
+    }
+  },
+  "start_time": "2026-02-14T14:15:26.242Z",
+  "version": "1.0.0"
+}

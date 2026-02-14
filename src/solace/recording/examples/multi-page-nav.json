@@ -1,0 +1,136 @@
+{
+  "action_count": 8,
+  "actions": [
+    {
+      "data": {
+        "url": "https://news.ycombinator.com"
+      },
+      "step": 0,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "navigate"
+    },
+    {
+      "data": {
+        "reference": "new",
+        "selector": "a[href='/newest']"
+      },
+      "step": 1,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "click"
+    },
+    {
+      "data": {
+        "url": "https://news.ycombinator.com/newest"
+      },
+      "step": 2,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "navigate"
+    },
+    {
+      "data": {
+        "reference": "First article link",
+        "selector": "a.titleline"
+      },
+      "step": 3,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "click"
+    },
+    {
+      "data": {
+        "url": "https://example.com/article/1"
+      },
+      "step": 4,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "navigate"
+    },
+    {
+      "data": {
+        "url": "https://news.ycombinator.com"
+      },
+      "step": 5,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "navigate"
+    },
+    {
+      "data": {
+        "reference": "ask",
+        "selector": "a[href='/ask']"
+      },
+      "step": 6,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "click"
+    },
+    {
+      "data": {
+        "url": "https://news.ycombinator.com/ask"
+      },
+      "step": 7,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "navigate"
+    }
+  ],
+  "domain": "news.ycombinator.com",
+  "end_time": "2026-02-14T14:15:26.243Z",
+  "session_id": "session_1771078526243_5",
+  "snapshots": {
+    "0": {
+      "dom": {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {},
+            "children": [
+              {
+                "attrs": {
+                  "role": "navigation"
+                },
+                "children": [
+                  {
+                    "attrs": {
+                      "href": "/newest"
+                    },
+                    "children": [],
+                    "tag": "a",
+                    "text": "new"
+                  },
+                  {
+                    "attrs": {
+                      "href": "/newcomments"
+                    },
+                    "children": [],
+                    "tag": "a",
+                    "text": "comments"
+                  },
+                  {
+                    "attrs": {
+                      "href": "/ask"
+                    },
+                    "children": [],
+                    "tag": "a",
+                    "text": "ask"
+                  }
+                ],
+                "tag": "nav",
+                "text": ""
+              }
+            ],
+            "tag": "body",
+            "text": ""
+          }
+        ],
+        "tag": "html",
+        "text": ""
+      },
+      "meta": {
+        "url": "https://news.ycombinator.com",
+        "viewport": {
+          "h": 1080,
+          "w": 1920
+        }
+      },
+      "v": 1
+    }
+  },
+  "start_time": "2026-02-14T14:15:26.243Z",
+  "version": "1.0.0"
+}

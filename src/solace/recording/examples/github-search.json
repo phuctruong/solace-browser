@@ -1,0 +1,100 @@
+{
+  "action_count": 5,
+  "actions": [
+    {
+      "data": {
+        "url": "https://github.com"
+      },
+      "step": 0,
+      "timestamp": "2026-02-14T14:15:26.242Z",
+      "type": "navigate"
+    },
+    {
+      "data": {
+        "reference": "Search GitHub",
+        "selector": "input[name='q']",
+        "text": "solace browser automation"
+      },
+      "step": 1,
+      "timestamp": "2026-02-14T14:15:26.242Z",
+      "type": "type"
+    },
+    {
+      "data": {
+        "reference": "Search",
+        "selector": "form[aria-label='Search']"
+      },
+      "step": 2,
+      "timestamp": "2026-02-14T14:15:26.242Z",
+      "type": "submit"
+    },
+    {
+      "data": {
+        "url": "https://github.com/search?q=solace+browser+automation"
+      },
+      "step": 3,
+      "timestamp": "2026-02-14T14:15:26.242Z",
+      "type": "navigate"
+    },
+    {
+      "data": {
+        "reference": "solace-browser repository",
+        "selector": "a[href='/example/solace-browser']"
+      },
+      "step": 4,
+      "timestamp": "2026-02-14T14:15:26.242Z",
+      "type": "click"
+    }
+  ],
+  "domain": "github.com",
+  "end_time": "2026-02-14T14:15:26.242Z",
+  "session_id": "session_1771078526242_3",
+  "snapshots": {
+    "0": {
+      "dom": {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {},
+            "children": [
+              {
+                "attrs": {
+                  "aria-label": "Search",
+                  "role": "form"
+                },
+                "children": [
+                  {
+                    "attrs": {
+                      "name": "q",
+                      "placeholder": "Search GitHub",
+                      "type": "text"
+                    },
+                    "children": [],
+                    "tag": "input",
+                    "text": ""
+                  }
+                ],
+                "tag": "form",
+                "text": ""
+              }
+            ],
+            "tag": "body",
+            "text": ""
+          }
+        ],
+        "tag": "html",
+        "text": ""
+      },
+      "meta": {
+        "url": "https://github.com",
+        "viewport": {
+          "h": 1080,
+          "w": 1920
+        }
+      },
+      "v": 1
+    }
+  },
+  "start_time": "2026-02-14T14:15:26.242Z",
+  "version": "1.0.0"
+}

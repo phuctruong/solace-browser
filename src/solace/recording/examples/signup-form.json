@@ -1,0 +1,143 @@
+{
+  "action_count": 7,
+  "actions": [
+    {
+      "data": {
+        "url": "https://example.com/signup"
+      },
+      "step": 0,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "navigate"
+    },
+    {
+      "data": {
+        "reference": "Email",
+        "selector": "input[name='email']",
+        "text": "user@example.com"
+      },
+      "step": 1,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "type"
+    },
+    {
+      "data": {
+        "reference": "Password",
+        "selector": "input[name='password']",
+        "text": "securepassword123"
+      },
+      "step": 2,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "type"
+    },
+    {
+      "data": {
+        "reference": "Full Name",
+        "selector": "input[name='name']",
+        "text": "Jane Doe"
+      },
+      "step": 3,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "type"
+    },
+    {
+      "data": {
+        "reference": "Country",
+        "selector": "select#country",
+        "value": "US"
+      },
+      "step": 4,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "select"
+    },
+    {
+      "data": {
+        "reference": "Timezone",
+        "selector": "select#timezone",
+        "value": "America/Los_Angeles"
+      },
+      "step": 5,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "select"
+    },
+    {
+      "data": {
+        "reference": "Sign Up",
+        "selector": "form[aria-label='Sign Up']"
+      },
+      "step": 6,
+      "timestamp": "2026-02-14T14:15:26.243Z",
+      "type": "submit"
+    }
+  ],
+  "domain": "example.com",
+  "end_time": "2026-02-14T14:15:26.243Z",
+  "session_id": "session_1771078526242_4",
+  "snapshots": {
+    "0": {
+      "dom": {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {},
+            "children": [
+              {
+                "attrs": {
+                  "aria-label": "Sign Up",
+                  "role": "form"
+                },
+                "children": [
+                  {
+                    "attrs": {
+                      "name": "email",
+                      "placeholder": "Email",
+                      "type": "email"
+                    },
+                    "children": [],
+                    "tag": "input",
+                    "text": ""
+                  },
+                  {
+                    "attrs": {
+                      "name": "password",
+                      "placeholder": "Password",
+                      "type": "password"
+                    },
+                    "children": [],
+                    "tag": "input",
+                    "text": ""
+                  },
+                  {
+                    "attrs": {
+                      "name": "name",
+                      "placeholder": "Full Name",
+                      "type": "text"
+                    },
+                    "children": [],
+                    "tag": "input",
+                    "text": ""
+                  }
+                ],
+                "tag": "form",
+                "text": ""
+              }
+            ],
+            "tag": "body",
+            "text": ""
+          }
+        ],
+        "tag": "html",
+        "text": ""
+      },
+      "meta": {
+        "url": "https://example.com/signup",
+        "viewport": {
+          "h": 1080,
+          "w": 1920
+        }
+      },
+      "v": 1
+    }
+  },
+  "start_time": "2026-02-14T14:15:26.243Z",
+  "version": "1.0.0"
+}
