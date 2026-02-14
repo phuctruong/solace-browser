@@ -41,19 +41,20 @@ developer_marketing: 7 engines ready (docs-first, wow moment, bottom-up, build-i
 skills_loaded: Prime Skills (12) + Prime Browser (4) + Prime Math (5) + Prime Physics (14, optional)
 canon_locked: Stillwater (theory-first, verified) layer established
 ripple_ready: Implementation layer ready for Phase 8+
-commit_latest: 16bb099 (wish-3.0 action automation complete)
-branches_active: master (Phase 7 complete, Phase 1-3 Wishes in progress)
+commit_latest: 0978faa (wish-4.0 state machine complete)
+branches_active: master (Phase 7 complete, Phase 1-4 Wishes in progress - 4/20 wishes done)
 
 ## WISHES [7] RIPPLE
 wish_1_0_status: ✅ COMPLETE (5/5 tests, build infrastructure verified)
 wish_1_0b_status: BLOCKED (requires depot_tools - external setup)
 wish_2_0_status: ✅ COMPLETE (5/5 tests, episode recording schema)
 wish_3_0_status: ✅ COMPLETE (5/5 tests, action automation & playback)
-wish_3_1_status: PENDING (State machine & browser bridge)
+wish_4_0_status: ✅ COMPLETE (5/5 tests, browser state machine verified)
+wish_5_0_status: PENDING (Browser bridge & live integration)
 wish_framework: Wishes Method v1.4 (RTC 10/10 locked specs, Haiku ripple execution)
-current_wish: wish-3.0 ✅ → wish-4.0 (State Machine - next)
+current_wish: wish-4.0 ✅ → wish-5.0 (Browser Bridge - next)
 wishes_authority: 65537 (Phuc Forecast)
-wishes_completed: 3/20 (wish-1.0, wish-2.0, wish-3.0) ✅
+wishes_completed: 4/20 (wish-1.0, wish-2.0, wish-3.0, wish-4.0) ✅
 wishes_total: 7/7 phases → 20+ wishes planned for full implementation
 
 ## BLOCKERS [11] RIPPLE
