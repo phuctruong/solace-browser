@@ -1,0 +1,19 @@
+{
+  "spec_id": "wish-1.0-build-infrastructure",
+  "timestamp": "2026-02-14T21:09:30Z",
+  "authority": "65537",
+  "tests_passed": 5,
+  "tests_failed": 0,
+  "tests_total": 5,
+  "status": "SUCCESS",
+  "tools": {
+    "gn": "/usr/bin/gn",
+    "ninja": "/usr/bin/ninja",
+    "gn_version": "1000 (0725d78)",
+    "ninja_version": "1.10.1"
+  },
+  "directories": {
+    "project_root": "/home/phuc/projects/solace-browser",
+    "artifacts": "/home/phuc/projects/solace-browser/artifacts"
+  }
+}
