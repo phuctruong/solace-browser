@@ -1,0 +1,36 @@
+{
+  "id": "ep-rec-20260214-001",
+  "timestamp": "2026-02-14T21:18:03.202935Z",
+  "source": "live_recording",
+  "state_snapshot": {
+    "url": "https://example.com",
+    "title": "Example Domain",
+    "dom_hash": "sha256:ac1b5c0961a7269b6a053ee64276ed0e20a7f48aefb9f67519539d23aaf10149"
+  },
+  "actions": [
+    {
+      "type": "click",
+      "target": "button.submit",
+      "timestamp": 0
+    },
+    {
+      "type": "type",
+      "target": "input.search",
+      "value": "solace",
+      "timestamp": 100
+    },
+    {
+      "type": "navigate",
+      "target": "page",
+      "value": "https://example.com/search",
+      "timestamp": 200
+    }
+  ],
+  "metadata": {
+    "agent": "Episode-Recorder",
+    "framework": "Solace",
+    "phase": "6.0",
+    "recording_duration_seconds": 15
+  },
+  "checksum": "sha256:a422be8d2212a91753ebdb4e120a2ddc17ffd85369353c02d07b76f60d05c63e"
+}
