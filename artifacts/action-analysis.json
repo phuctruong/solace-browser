@@ -1,0 +1,9 @@
+{
+  "total_actions": 6,
+  "action_types": {
+    "click": 2,
+    "type": 2,
+    "navigate": 2
+  },
+  "analysis_complete": true
+}

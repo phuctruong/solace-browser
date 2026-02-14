@@ -1,0 +1,18 @@
+{
+  "unique_urls": [
+    "https://example.com/search",
+    "https://example.com/search?q=solace",
+    "https://example.com"
+  ],
+  "total_transitions": 2,
+  "transitions": [
+    {
+      "from": "https://example.com",
+      "to": "https://example.com/search"
+    },
+    {
+      "from": "https://example.com",
+      "to": "https://example.com/search?q=solace"
+    }
+  ]
+}
