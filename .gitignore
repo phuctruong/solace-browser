@@ -44,3 +44,4 @@ local.conf
 # Thorium
 chromium/
 v8/
+credentials.properties
