@@ -1,0 +1,11 @@
+{
+  "episode_id": "ep-001",
+  "execution_id": "exec-20260214-roundtrip",
+  "actions_executed": 3,
+  "actions_successful": 3,
+  "browser_states_traversed": 4,
+  "final_state": "https://example.com/search?q=solace",
+  "expected_final_state": "https://example.com/search?q=solace",
+  "determinism_verified": true,
+  "round_trip_successful": true
+}

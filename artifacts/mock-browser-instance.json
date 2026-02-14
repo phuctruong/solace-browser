@@ -1,0 +1,27 @@
+{
+  "url": "https://example.com",
+  "title": "Example Domain",
+  "dom_tree": {
+    "root": "html",
+    "children": [
+      {
+        "tag": "head",
+        "children": []
+      },
+      {
+        "tag": "body",
+        "children": [
+          {
+            "tag": "button",
+            "id": "submit",
+            "class": "submit",
+            "text": "Submit"
+          }
+        ]
+      }
+    ]
+  },
+  "state": {
+    "connected": true
+  }
+}
