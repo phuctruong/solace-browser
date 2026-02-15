@@ -1,0 +1,10 @@
+{
+  "recipe_id": "demo-1771110591.recipe",
+  "timestamp": "2026-02-14T23:09:51Z",
+  "source_episode": "demo-1771110591",
+  "source_hash": "0a9088bfd7771759a08ef870300690c9d615dac36d44646e75b641e95cac5994",
+  "control_mode": "mock",
+  "actions": [],
+  "status": "COMPILED",
+  "locked": true
+}

@@ -1,14 +1,45 @@
-# Gmail Automation Skill
+# Gmail Automation Skill (CONSOLIDATED)
 
-**Skill ID**: `gmail-automation`
-**Version**: 1.0
-**Created**: 2026-02-15
-**Authority**: 65537
-**Status**: ✅ Production Ready
+**⚠️ This skill has been consolidated into the canonical location.**
+
+**Canonical Home**: [gmail-automation-protocol.skill.md](../../skills/application/gmail-automation-protocol.skill.md)
+
+All updates and changes should be made to the canonical version. This file is kept only for backward compatibility with existing imports.
 
 ---
 
-## Capabilities
+## Quick Navigation
+
+For complete Gmail automation documentation including:
+- OAuth 2.0 flows
+- Email composition and sending
+- Inbox operations
+- Session persistence
+- Error handling
+
+**See**: [canonical/skills/application/gmail-automation-protocol.skill.md](../../skills/application/gmail-automation-protocol.skill.md)
+
+---
+
+## Why This Consolidation?
+
+Phase 3.5 consolidation merged duplicate knowledge across the system to:
+- Create single source of truth per concept
+- Reduce redundancy
+- Improve cross-referencing
+- Maintain backward compatibility
+
+**Status**: Knowledge unified in canonical location
+**Migration Path**: All links point to canonical
+**Data Preservation**: No content lost, all archived
+
+---
+
+## ORIGINAL CONTENT (ARCHIVED BELOW)
+
+This section contains the original content for reference only.
+
+### Original Capabilities
 
 ### Core Operations
 - ✅ OAuth login with mobile approval (100% success rate)

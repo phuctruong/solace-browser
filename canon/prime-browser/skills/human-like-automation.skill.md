@@ -1,13 +1,44 @@
-# Prime Skill: Human-Like Automation (Unfair Advantage)
+# Prime Skill: Human-Like Automation (CONSOLIDATED)
 
-**Version**: 1.0.0
-**Status**: Production
-**Confidence**: GLOW 95/100
-**XP Value**: 750 (high complexity)
+**⚠️ This skill has been consolidated into the canonical location.**
+
+**Canonical Home**: [human-like-automation.skill.md](../../skills/methodology/human-like-automation.skill.md)
+
+All updates and changes should be made to the canonical version. This file is kept only for backward compatibility with existing imports.
 
 ---
 
-## Overview
+## Quick Navigation
+
+For complete human-like automation documentation including:
+- Mouse movement timing
+- Natural scrolling with easing
+- Network interception
+- Event chain tracking
+- Behavior recording and replay
+- Fingerprint masking
+
+**See**: [canonical/skills/methodology/human-like-automation.skill.md](../../skills/methodology/human-like-automation.skill.md)
+
+---
+
+## Why This Consolidation?
+
+Phase 3.5 consolidation merged duplicate knowledge across the system to:
+- Create single source of truth per concept
+- Reduce redundancy
+- Improve cross-referencing
+- Maintain backward compatibility
+
+**Status**: Knowledge unified in canonical location
+**Migration Path**: All links point to canonical
+**Data Preservation**: No content lost, all archived
+
+---
+
+## ORIGINAL CONTENT (ARCHIVED BELOW)
+
+### Overview
 
 This skill enables **Haiku Swarm** agents to behave indistinguishably from real humans, giving us an unfair advantage over competitors who use standard Playwright/Selenium.
 

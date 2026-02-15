@@ -1,0 +1,10 @@
+{
+  "recipe_id": "test-ep-quick.recipe",
+  "timestamp": "2026-02-14T23:08:59Z",
+  "source_episode": "test-ep-quick",
+  "source_hash": "4dacb52bcfd8b40c90a6f2d3e7281fc72c56cab9fc733be8d2c503f191e78346",
+  "control_mode": "mock",
+  "actions": [],
+  "status": "COMPILED",
+  "locked": true
+}

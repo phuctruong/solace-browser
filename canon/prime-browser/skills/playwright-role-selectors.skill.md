@@ -1,14 +1,43 @@
-# Skill: Playwright Role Selectors (OpenClaw Pattern)
+# Skill: Playwright Role Selectors (CONSOLIDATED)
 
-**Skill ID**: `playwright-role-selectors`
-**Tier**: Core (foundational)
-**Mastery Level**: Expert (proven in production)
-**Source**: Learned from ~/projects/openclaw
-**Validated**: 2026-02-14 (LinkedIn automation)
+**⚠️ This skill has been consolidated into the canonical location.**
+
+**Canonical Home**: [playwright-role-selectors.skill.md](../../skills/framework/playwright-role-selectors.skill.md)
+
+All updates and changes should be made to the canonical version. This file is kept only for backward compatibility with existing imports.
 
 ---
 
-## What This Skill Does
+## Quick Navigation
+
+For complete Playwright role selector documentation including:
+- Syntax and core patterns
+- How to find the right selectors
+- Role selector vs CSS vs XPath comparison
+- Real-world examples (LinkedIn, etc.)
+- Advanced patterns and debugging tips
+
+**See**: [canonical/skills/framework/playwright-role-selectors.skill.md](../../skills/framework/playwright-role-selectors.skill.md)
+
+---
+
+## Why This Consolidation?
+
+Phase 3.5 consolidation merged duplicate knowledge across the system to:
+- Create single source of truth per concept
+- Reduce redundancy
+- Improve cross-referencing
+- Maintain backward compatibility
+
+**Status**: Knowledge unified in canonical location
+**Migration Path**: All links point to canonical
+**Data Preservation**: No content lost, all archived
+
+---
+
+## ORIGINAL CONTENT (ARCHIVED BELOW)
+
+### What This Skill Does
 
 Use Playwright's **role-based selectors** to interact with dynamic web UIs (React, Vue, Angular) where CSS classes and IDs change frequently.
 

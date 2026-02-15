@@ -122,5 +122,26 @@
   },
   "next_ai_instructions": "Load saved session from artifacts/gmail_working_session.json for instant headless access (no re-login). Session valid 14-30 days. If session expired, repeat this recipe. For production: store EMAIL/PASSWORD in env vars, never hardcode.",
   "verified": "2026-02-15",
-  "test_email_sent": "phuc.truong@gmail.com"
+  "test_email_sent": "phuc.truong@gmail.com",
+  "consolidation": {
+    "canonical": true,
+    "consolidation_phase": "3.5",
+    "consolidation_date": "2026-02-15",
+    "variants": [
+      {
+        "variant_id": "oauth2-explicit",
+        "archived_filename": "gmail-oauth2-login.recipe.json",
+        "differences": ["Explicit OAuth 2.0 specific flows"],
+        "archived": true,
+        "archive_location": "artifacts/ARCHIVE_PHASE3/RECIPES/"
+      },
+      {
+        "variant_id": "headed-browser",
+        "archived_filename": "gmail-login-headed.recipe.json",
+        "differences": ["Headed browser variant (vs headless)"],
+        "archived": true,
+        "archive_location": "artifacts/ARCHIVE_PHASE3/RECIPES/"
+      }
+    ]
+  }
 }

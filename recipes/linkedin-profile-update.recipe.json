@@ -48,5 +48,33 @@
     }
   ],
   "status": "COMPILED",
-  "locked": true
+  "locked": true,
+  "consolidation": {
+    "canonical": true,
+    "consolidation_phase": "3.5",
+    "consolidation_date": "2026-02-15",
+    "variants": [
+      {
+        "variant_id": "10-10-optimization",
+        "archived_filename": "linkedin-profile-optimization-10-10.recipe.json",
+        "differences": ["More aggressive headline optimizations", "Improved headline formula"],
+        "archived": true,
+        "archive_location": "artifacts/ARCHIVE_PHASE3/RECIPES/"
+      },
+      {
+        "variant_id": "harsh-qa-fixes",
+        "archived_filename": "linkedin-harsh-qa-fixes.recipe.json",
+        "differences": ["QA-focused refinements", "Additional validation checks"],
+        "archived": true,
+        "archive_location": "artifacts/ARCHIVE_PHASE3/RECIPES/"
+      },
+      {
+        "variant_id": "with-projects",
+        "archived_filename": "linkedin-update-5-projects-hr-approved.recipe.json",
+        "differences": ["Includes project additions", "HR-approved workflow"],
+        "archived": true,
+        "archive_location": "artifacts/ARCHIVE_PHASE3/RECIPES/"
+      }
+    ]
+  }
 }

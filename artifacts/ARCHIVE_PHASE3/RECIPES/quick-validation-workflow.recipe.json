@@ -1,0 +1,10 @@
+{
+  "recipe_id": "quick-validation-workflow.recipe",
+  "timestamp": "2026-02-14T23:09:40Z",
+  "source_episode": "quick-validation-workflow",
+  "source_hash": "606173eae9a723a8cff554ae26ab57ed1eaa3285f88700c2b630c78012bdbab2",
+  "control_mode": "mock",
+  "actions": [],
+  "status": "COMPILED",
+  "locked": true
+}

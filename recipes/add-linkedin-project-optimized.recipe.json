@@ -191,5 +191,28 @@
     "prerequisites": ["logged_in_session"],
     "cloud_run_ready": true,
     "benchmark_verified": true
+  },
+  "consolidation": {
+    "canonical": true,
+    "consolidation_phase": "3.5",
+    "consolidation_date": "2026-02-15",
+    "variants": [
+      {
+        "variant_id": "delete-openclaw",
+        "archived_filename": "delete-linkedin-projects-openclaw.recipe.json",
+        "differences": ["Different workflow: project deletion vs addition", "OpenClaw-based approach"],
+        "note": "Not a variant - different workflow, kept in archive for reference",
+        "archived": true,
+        "archive_location": "artifacts/ARCHIVE_PHASE3/RECIPES/"
+      },
+      {
+        "variant_id": "delete-old",
+        "archived_filename": "delete-old-linkedin-projects.recipe.json",
+        "differences": ["Different workflow: project deletion vs addition", "Older deletion approach"],
+        "note": "Not a variant - superseded by better workflow, kept for historical reference",
+        "archived": true,
+        "archive_location": "artifacts/ARCHIVE_PHASE3/RECIPES/"
+      }
+    ]
   }
 }
