@@ -1,0 +1,8 @@
+{
+  "episode_id": "llm-github-search",
+  "timestamp": "2026-02-14T22:42:00Z",
+  "url": "https://github.com/search",
+  "status": "RECORDING",
+  "control_mode": "mock",
+  "actions": []
+}

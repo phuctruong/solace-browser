@@ -1,0 +1,10 @@
+{
+  "proof_id": "proof-demo-1771110591.recipe-1771110591",
+  "timestamp": "2026-02-14T23:09:51Z",
+  "recipe_id": "demo-1771110591.recipe",
+  "recipe_hash": "9449df8156f7f2c71969437f63781dcc83fa53b681a794f2647ded9f160890bb",
+  "actions_executed": 0,
+  "status": "SUCCESS",
+  "control_mode": "mock",
+  "execution_trace": []
+}

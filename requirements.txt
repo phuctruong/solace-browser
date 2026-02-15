@@ -1,0 +1,8 @@
+httpx==0.25.1
+pydantic==2.0.3
+google-cloud-logging==3.8.0
+google-cloud-monitoring==2.15.1
+google-cloud-storage==2.10.0
+pyyaml==6.0.1
+click==8.1.7
+colorama==0.4.6

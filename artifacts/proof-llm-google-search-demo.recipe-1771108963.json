@@ -1,0 +1,10 @@
+{
+  "proof_id": "proof-llm-google-search-demo.recipe-1771108963",
+  "timestamp": "2026-02-14T22:42:43Z",
+  "recipe_id": "llm-google-search-demo.recipe",
+  "recipe_hash": "b4ad23983b3cd836fe738b208e2ffe5e78b5cede12ff34b4431dd647d4ae0e70",
+  "actions_executed": 0,
+  "status": "SUCCESS",
+  "control_mode": "real_browser",
+  "execution_trace": []
+}

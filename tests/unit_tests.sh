@@ -312,6 +312,9 @@ run_all_tests() {
     fi
 }
 
+# Trap errors to ensure cleanup
+trap 'pkill -f "chrome|chromium" 2>/dev/null || true' EXIT
+
 # Run all tests
 run_all_tests
 exit $?

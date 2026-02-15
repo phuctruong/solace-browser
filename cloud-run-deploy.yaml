@@ -1,0 +1,220 @@
+# Cloud Run Deployment Configuration for Solace Browser
+#
+# This file defines the infrastructure for deploying Solace Browser to
+# Google Cloud Run with auto-scaling, monitoring, and logging.
+#
+# Usage:
+#   gcloud run deploy solace-browser \
+#     --source . \
+#     --region us-central1 \
+#     --allow-unauthenticated
+#
+# Or use Terraform (see below for HCL)
+
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: solace-browser
+  namespace: default
+  labels:
+    app: solace-browser
+    version: "2.0.0"
+spec:
+  template:
+    metadata:
+      annotations:
+        # Auto-scaling configuration
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "10000"
+        autoscaling.knative.dev/targetUtilization: "0.7"
+
+        # Request timeout
+        run.googleapis.com/execution-environment: "gen2"
+    spec:
+      serviceAccountName: solace-browser
+
+      containers:
+      - name: solace-browser
+        image: gcr.io/PROJECT_ID/solace-browser:latest
+
+        ports:
+        - name: http1
+          containerPort: 8080
+
+        env:
+        - name: PORT
+          value: "8080"
+        - name: NODE_ENV
+          value: "production"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: PROJECT_ROOT
+          value: "/app"
+        - name: GCP_PROJECT_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "2"
+          limits:
+            memory: "2Gi"
+            cpu: "2"
+
+        # Startup probe - triggered when container starts
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          failureThreshold: 3
+          periodSeconds: 5
+          timeoutSeconds: 3
+
+        # Liveness probe - check if container is running
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          failureThreshold: 3
+          periodSeconds: 30
+          timeoutSeconds: 5
+
+        # Readiness probe - check if container can accept traffic
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          failureThreshold: 2
+          periodSeconds: 10
+          timeoutSeconds: 3
+          initialDelaySeconds: 5
+
+      # Timeout for request execution
+      timeoutSeconds: 3600
+
+      # Concurrency settings
+      containerConcurrency: 50
+
+  # Traffic configuration
+  traffic:
+  - percent: 100
+    latestRevision: true
+
+---
+# Service Account for Cloud Run
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMServiceAccount
+metadata:
+  name: solace-browser
+spec:
+  displayName: "Solace Browser Cloud Run Service Account"
+
+---
+# IAM Policy: Allow service account to write logs
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMPolicy
+metadata:
+  name: solace-browser-logging
+spec:
+  resourceRef:
+    apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMServiceAccount
+    name: solace-browser
+  bindings:
+  - role: roles/logging.logWriter
+    members:
+    - serviceAccount:solace-browser@PROJECT_ID.iam.gserviceaccount.com
+
+---
+# IAM Policy: Allow service account to write metrics
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMPolicy
+metadata:
+  name: solace-browser-monitoring
+spec:
+  resourceRef:
+    apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMServiceAccount
+    name: solace-browser
+  bindings:
+  - role: roles/monitoring.metricWriter
+    members:
+    - serviceAccount:solace-browser@PROJECT_ID.iam.gserviceaccount.com
+
+---
+# IAM Policy: Allow service account to write to Cloud Storage
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMPolicy
+metadata:
+  name: solace-browser-storage
+spec:
+  resourceRef:
+    apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMServiceAccount
+    name: solace-browser
+  bindings:
+  - role: roles/storage.objectCreator
+    members:
+    - serviceAccount:solace-browser@PROJECT_ID.iam.gserviceaccount.com
+
+---
+# Cloud Run IAM: Allow unauthenticated access (public API)
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMPolicy
+metadata:
+  name: solace-browser-public
+spec:
+  resourceRef:
+    apiVersion: run.cnrm.cloud.google.com/v1beta1
+    kind: CloudRunService
+    name: solace-browser
+  bindings:
+  - role: roles/run.invoker
+    members:
+    - allUsers
+
+---
+# Monitoring Alert Policy: High error rate
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: solace-browser-alerts
+spec:
+  groups:
+  - name: solace-browser
+    interval: 30s
+    rules:
+    - alert: SolaceBrowserHighErrorRate
+      expr: |
+        (
+          sum(rate(solace_browser_errors_total[5m])) by (service)
+          /
+          sum(rate(solace_browser_requests_total[5m])) by (service)
+        ) > 0.05
+      for: 5m
+      annotations:
+        summary: "High error rate on {{ $labels.service }}"
+
+    - alert: SolaceBrowserHighLatency
+      expr: |
+        histogram_quantile(0.95, rate(solace_browser_request_duration_seconds_bucket[5m])) > 30
+      for: 5m
+      annotations:
+        summary: "High request latency on Solace Browser"
+
+---
+# Service Monitor for Prometheus (optional)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: solace-browser-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: solace-browser
+  endpoints:
+  - port: metrics
+    interval: 30s

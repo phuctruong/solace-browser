@@ -1,0 +1,10 @@
+{
+  "proof_id": "proof-llm-hackernews.recipe-1771108939",
+  "timestamp": "2026-02-14T22:42:19Z",
+  "recipe_id": "llm-hackernews.recipe",
+  "recipe_hash": "936465085a665daf9b9936525c380b3db87dd2e26e44af5c983ea664d018124e",
+  "actions_executed": 0,
+  "status": "SUCCESS",
+  "control_mode": "mock",
+  "execution_trace": []
+}

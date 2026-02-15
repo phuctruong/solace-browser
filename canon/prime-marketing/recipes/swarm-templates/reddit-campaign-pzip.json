@@ -1,0 +1,222 @@
+{
+  "name": "PZIP Reddit Campaign",
+  "description": "Launch PZIP to Silicon Valley fanbase via Reddit",
+  "product": "pzip",
+  "strategy": "silicon-valley-fanbase",
+  "channels": ["reddit"],
+  "agents": [
+    {
+      "name": "reddit-scout",
+      "model": "claude-haiku-4-5",
+      "role": "Community intelligence with browser scraping",
+      "tasks": [
+        "Use browser to scrape r/SiliconValleyHBO for Pied Piper references",
+        "Identify top 20 posters with positive sentiment",
+        "Find recent compression discussions (last 30 days)",
+        "Analyze best posting times based on top post timestamps"
+      ],
+      "browser_automation": {
+        "enabled": true,
+        "actions": [
+          {
+            "type": "scrape_subreddit",
+            "subreddit": "SiliconValleyHBO",
+            "sort": "top",
+            "time": "month",
+            "limit": 100
+          },
+          {
+            "type": "scrape_subreddit",
+            "subreddit": "programming",
+            "keywords": ["compression", "pied piper"],
+            "limit": 50
+          }
+        ]
+      },
+      "output_schema": {
+        "top_posters": ["username", "karma", "post_count"],
+        "pied_piper_refs": ["post_url", "upvotes", "comments"],
+        "optimal_times": ["day_of_week", "hour_pt"],
+        "community_sentiment": "positive | neutral | negative"
+      }
+    },
+    {
+      "name": "content-generator",
+      "model": "claude-haiku-4-5",
+      "role": "Generate Reddit post variants",
+      "inputs": ["reddit-scout output"],
+      "tasks": [
+        "Generate 4 post variants (A: nostalgia-heavy, B: technical-heavy, C: climate-heavy, D: founder-story)",
+        "For each variant: title (max 300 chars), body (500-1000 words), tone, target subreddit",
+        "Include viral hooks: 'Real Pied Piper', '93.5% better than LZMA', 'Never-worse guarantee'",
+        "Optimize for r/SiliconValleyHBO first post"
+      ],
+      "output_schema": {
+        "variants": [
+          {
+            "id": "A | B | C | D",
+            "title": "string",
+            "body": "markdown",
+            "target_subreddit": "r/...",
+            "tone": "technical | nostalgic | climate | personal",
+            "hooks": ["hook1", "hook2"],
+            "expected_engagement": "conservative | expected | optimistic"
+          }
+        ],
+        "recommendation": "variant_id with highest forecast"
+      }
+    },
+    {
+      "name": "quality-governor",
+      "model": "claude-sonnet-4-5",
+      "role": "Ethics verification and approval gate",
+      "inputs": ["content-generator output"],
+      "tasks": [
+        "Verify posts comply with Reddit content policy",
+        "Check r/SiliconValleyHBO rules (no spam, on-topic)",
+        "Assess spam score (must be <0.3)",
+        "Verify rate limits respected (1 post per subreddit per week)",
+        "Final approval: APPROVE | ITERATE | REJECT"
+      ],
+      "verification_gates": {
+        "641_edge": [
+          "no_spam_language",
+          "subreddit_rules_ok",
+          "rate_limit_ok",
+          "no_duplicate_content",
+          "spam_score < 0.3"
+        ]
+      },
+      "output_schema": {
+        "decision": "APPROVE | ITERATE | REJECT",
+        "approved_variants": ["variant_id"],
+        "required_changes": ["change_description"],
+        "spam_score": "0.0-1.0",
+        "gate_results": {
+          "641_passed": "boolean",
+          "issues": ["issue_description"]
+        }
+      }
+    },
+    {
+      "name": "browser-poster",
+      "model": "none",
+      "role": "Browser automation for Reddit posting",
+      "tool": "prime-browser",
+      "inputs": ["quality-governor approved variants"],
+      "browser_automation": {
+        "enabled": true,
+        "human_in_loop": true,
+        "actions": [
+          {
+            "type": "reddit_login",
+            "credentials": "ENV:REDDIT_CREDENTIALS"
+          },
+          {
+            "type": "reddit_post",
+            "subreddit": "from_approved_variant",
+            "title": "from_approved_variant",
+            "body": "from_approved_variant",
+            "wait_for_approval": true
+          },
+          {
+            "type": "monitor_post",
+            "duration_hours": 24,
+            "track": ["upvotes", "comments", "awards"]
+          }
+        ]
+      },
+      "output_schema": {
+        "post_url": "https://reddit.com/r/.../...",
+        "posted_at": "ISO_timestamp",
+        "initial_metrics": {
+          "upvotes": "integer",
+          "comments": "integer",
+          "click_through": "integer"
+        }
+      }
+    },
+    {
+      "name": "analytics-tracker",
+      "model": "claude-haiku-4-5",
+      "role": "Track post performance and compute metrics",
+      "inputs": ["browser-poster output"],
+      "tasks": [
+        "Monitor post metrics every 1 hour for 24 hours",
+        "Compute viral coefficient (upvotes / time)",
+        "Track comment sentiment (positive/negative ratio)",
+        "Identify top-performing hooks in comments",
+        "Generate recommendations for next post"
+      ],
+      "browser_automation": {
+        "enabled": true,
+        "actions": [
+          {
+            "type": "scrape_post_metrics",
+            "url": "from_browser_poster",
+            "interval_minutes": 60,
+            "duration_hours": 24
+          }
+        ]
+      },
+      "output_schema": {
+        "final_metrics": {
+          "upvotes": "integer",
+          "comments": "integer",
+          "click_through_rate": "float",
+          "time_to_front_page": "minutes | null",
+          "viral_coefficient": "float"
+        },
+        "sentiment": {
+          "positive_ratio": "0.0-1.0",
+          "top_positive_comments": ["comment_text"],
+          "top_critical_comments": ["comment_text"]
+        },
+        "recommendations": {
+          "best_hooks": ["hook_text"],
+          "adjustments": ["adjustment_description"],
+          "next_post_timing": "ISO_timestamp"
+        }
+      }
+    }
+  ],
+  "verification": {
+    "641_edge": [
+      "rate_limit_respected",
+      "no_duplicate_posts",
+      "guidelines_compliance",
+      "auth_valid",
+      "spam_score_low"
+    ],
+    "274177_stress": [
+      "handle_100_comments",
+      "viral_spike_10x",
+      "negative_sentiment_handling"
+    ],
+    "65537_god": [
+      "front_page_achieved",
+      "100_plus_upvotes",
+      "positive_sentiment_80_percent",
+      "10_plus_downloads_attributed"
+    ]
+  },
+  "max_love": {
+    "rate_limits": {
+      "posts_per_subreddit_per_week": 1,
+      "comments_per_day": 20
+    },
+    "forbidden": [
+      "spam",
+      "purchased_upvotes",
+      "sockpuppets",
+      "astroturfing",
+      "guideline_violations"
+    ],
+    "required": [
+      "authentic_engagement",
+      "human_approval_all_posts",
+      "community_respect",
+      "transparent_affiliation"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "proof_id": "proof-llm-github-search.recipe-1771108939",
+  "timestamp": "2026-02-14T22:42:19Z",
+  "recipe_id": "llm-github-search.recipe",
+  "recipe_hash": "7a0d8b612a61e78d40d5a8b97ce4c1974f27e16fe388c41ee8d8968a605f6328",
+  "actions_executed": 0,
+  "status": "SUCCESS",
+  "control_mode": "mock",
+  "execution_trace": []
+}

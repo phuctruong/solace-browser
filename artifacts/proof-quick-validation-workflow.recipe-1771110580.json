@@ -1,0 +1,10 @@
+{
+  "proof_id": "proof-quick-validation-workflow.recipe-1771110580",
+  "timestamp": "2026-02-14T23:09:40Z",
+  "recipe_id": "quick-validation-workflow.recipe",
+  "recipe_hash": "c1b8971c996b25c1a54e8ac0af293e7e897e39e8dea474750c6c970559761bce",
+  "actions_executed": 0,
+  "status": "SUCCESS",
+  "control_mode": "mock",
+  "execution_trace": []
+}

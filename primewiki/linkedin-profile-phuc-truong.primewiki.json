@@ -3,7 +3,7 @@
   "tier": 79,
   "c_score": 0.95,
   "g_score": 0.9,
-  "crawled_at": "2026-02-14T21:27:33.664089",
+  "crawled_at": "2026-02-14T21:47:24.913986",
   "canonical_claims": [
     {
       "claim": "Profile contains profile_home section",
@@ -12,7 +12,7 @@
         "type": "crawl_snapshot",
         "url": "https://www.linkedin.com/in/me/",
         "screenshot": "artifacts/screenshot.png",
-        "timestamp": "2026-02-14T21:27:20.575314"
+        "timestamp": "2026-02-14T21:47:11.390261"
       }
     },
     {
@@ -22,7 +22,7 @@
         "type": "crawl_snapshot",
         "url": "https://www.linkedin.com/in/me/details/projects/",
         "screenshot": "artifacts/screenshot.png",
-        "timestamp": "2026-02-14T21:27:26.849766"
+        "timestamp": "2026-02-14T21:47:17.993422"
       }
     },
     {
@@ -32,7 +32,7 @@
         "type": "crawl_snapshot",
         "url": "https://www.linkedin.com/in/me/",
         "screenshot": "artifacts/screenshot.png",
-        "timestamp": "2026-02-14T21:27:33.663776"
+        "timestamp": "2026-02-14T21:47:24.913701"
       }
     }
   ],

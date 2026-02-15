@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Solace Browser Bridge - Settings</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 24px;
+      color: #333;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .help-text {
+      display: block;
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    input[type="text"],
+    input[type="url"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    }
+
+    input[type="text"]:focus,
+    input[type="url"]:focus {
+      outline: none;
+      border-color: #00ffff;
+      box-shadow: 0 0 0 3px rgba(0, 255, 255, 0.1);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    #save {
+      background: #00ffff;
+      color: #000;
+      flex: 1;
+    }
+
+    #save:hover {
+      background: #00e6e6;
+    }
+
+    #reset {
+      background: #f0f0f0;
+      color: #333;
+      flex: 1;
+    }
+
+    #reset:hover {
+      background: #e0e0e0;
+    }
+
+    #status {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      display: none;
+    }
+
+    #status.success {
+      display: block;
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    #status.error {
+      display: block;
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .info-box {
+      background: #f9f9f9;
+      border-left: 4px solid #00ffff;
+      padding: 12px;
+      margin-top: 20px;
+      border-radius: 2px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Solace Browser Bridge</h1>
+    <p class="subtitle">Configure connection settings for browser control</p>
+
+    <div class="form-group">
+      <label for="wsUrl">WebSocket Server URL</label>
+      <input
+        type="url"
+        id="wsUrl"
+        placeholder="ws://localhost:9222"
+        required
+      >
+      <span class="help-text">The WebSocket server endpoint (e.g., ws://localhost:9222)</span>
+    </div>
+
+    <div class="button-group">
+      <button id="save">Save Settings</button>
+      <button id="reset">Reset to Default</button>
+    </div>
+
+    <div id="status"></div>
+
+    <div class="info-box">
+      <strong>💡 Tip:</strong> The WebSocket server must be running on your local machine or accessible network.
+      Make sure to start the Solace CLI before connecting the extension.
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

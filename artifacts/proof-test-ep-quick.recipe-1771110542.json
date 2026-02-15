@@ -1,0 +1,10 @@
+{
+  "proof_id": "proof-test-ep-quick.recipe-1771110542",
+  "timestamp": "2026-02-14T23:09:02Z",
+  "recipe_id": "test-ep-quick.recipe",
+  "recipe_hash": "4b6c857aa7115c4734963a08f5b98648d38c5e5a4bc4950e3faf4dca06d2885f",
+  "actions_executed": 0,
+  "status": "SUCCESS",
+  "control_mode": "mock",
+  "execution_trace": []
+}

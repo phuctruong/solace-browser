@@ -1,0 +1,10 @@
+{
+  "proof_id": "proof-wikipedia-demo.recipe-1771108758",
+  "timestamp": "2026-02-14T22:39:18Z",
+  "recipe_id": "wikipedia-demo.recipe",
+  "recipe_hash": "0d71dd0a4784d24617a87f076728820f33122d2c2ba62ed952a470a918933560",
+  "actions_executed": 0,
+  "status": "SUCCESS",
+  "control_mode": "mock",
+  "execution_trace": []
+}

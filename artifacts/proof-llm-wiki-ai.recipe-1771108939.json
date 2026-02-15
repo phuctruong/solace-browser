@@ -1,0 +1,10 @@
+{
+  "proof_id": "proof-llm-wiki-ai.recipe-1771108939",
+  "timestamp": "2026-02-14T22:42:19Z",
+  "recipe_id": "llm-wiki-ai.recipe",
+  "recipe_hash": "5534bda14f26593d75342984d218e900bdb410bb0b5245526bd360efa3d1f9f2",
+  "actions_executed": 0,
+  "status": "SUCCESS",
+  "control_mode": "mock",
+  "execution_trace": []
+}

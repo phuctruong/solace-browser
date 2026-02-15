@@ -1,0 +1,100 @@
+version: '3.9'
+
+services:
+  # ========================================================================
+  # Solace Browser HTTP API Server
+  # ========================================================================
+  solace-browser:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: solace-browser:latest
+    container_name: solace-browser-dev
+    restart: unless-stopped
+
+    # Port mapping
+    ports:
+      - "8080:8080"
+
+    # Environment variables
+    environment:
+      PORT: 8080
+      NODE_ENV: development
+      DEBUG: "true"
+      PROJECT_ROOT: /app
+      PYTHONUNBUFFERED: "1"
+      DISPLAY: ":99"
+
+    # Volume mounts for development
+    volumes:
+      # Application code
+      - ./http_server.js:/app/http_server.js:ro
+      - ./http_bridge.py:/app/http_bridge.py:ro
+      - ./solace-browser-cli-v2.sh:/app/solace-browser-cli-v2.sh:ro
+
+      # Persistent directories
+      - ./logs:/app/logs
+      - ./artifacts:/app/artifacts
+      - ./recipes:/app/recipes
+      - ./episodes:/app/episodes
+
+      # Optional: Mount pre-compiled binary
+      # - ./out/Release/chrome:/usr/local/bin/solace-browser:ro
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8080/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+    # Logging
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=solace-browser"
+
+    # Network
+    networks:
+      - solace-network
+
+  # ========================================================================
+  # Optional: Xvfb for headless display server (if testing GUI)
+  # ========================================================================
+  xvfb:
+    image: debian:bookworm-slim
+    command: >
+      bash -c "
+      apt-get update &&
+      apt-get install -y xvfb &&
+      Xvfb :99 -screen 0 1920x1080x24
+      "
+    environment:
+      DISPLAY: ":99"
+    networks:
+      - solace-network
+    profiles:
+      - gui
+
+networks:
+  solace-network:
+    driver: bridge
+
+volumes:
+  logs:
+  artifacts:
+  recipes:
+  episodes:

@@ -1,0 +1,152 @@
+{
+  "version": "0.1.0",
+  "episode_id": "reddit-post-001",
+  "url_source": "https://www.reddit.com/submit",
+  "refmap": {
+    "ref_54552d9b": {
+      "semantic": {},
+      "structural": {
+        "css_selector": "url:https://www.reddit.com/submit"
+      },
+      "priority": [
+        "css_selector"
+      ],
+      "reliability": {
+        "css_selector": 0.8
+      },
+      "actions": [
+        {
+          "action_index": 0,
+          "action_type": "NAVIGATE",
+          "action_timestamp": "2026-02-14T13:00:00Z"
+        }
+      ],
+      "resolution_strategy": "css_selector (0.80)"
+    },
+    "ref_2a6a89e7": {
+      "semantic": {
+        "data_testid": "post-type-text",
+        "role": "tab",
+        "text": "Text"
+      },
+      "structural": {
+        "css_selector": "[data-testid=\"post-type-text\"]"
+      },
+      "priority": [
+        "data_testid",
+        "css_selector",
+        "role_text",
+        "text"
+      ],
+      "reliability": {
+        "data_testid": 0.98,
+        "role_text": 0.88,
+        "text": 0.65,
+        "css_selector": 0.9
+      },
+      "actions": [
+        {
+          "action_index": 1,
+          "action_type": "CLICK",
+          "action_timestamp": "2026-02-14T13:00:02Z"
+        }
+      ],
+      "resolution_strategy": "data_testid (0.98)"
+    },
+    "ref_fc4a3d7b": {
+      "semantic": {
+        "placeholder": "Title",
+        "name": "title",
+        "text": "My First Post"
+      },
+      "structural": {
+        "css_selector": "[placeholder=\"Title\"]"
+      },
+      "priority": [
+        "name",
+        "placeholder",
+        "css_selector",
+        "text"
+      ],
+      "reliability": {
+        "name": 0.9,
+        "placeholder": 0.85,
+        "text": 0.65,
+        "css_selector": 0.8
+      },
+      "actions": [
+        {
+          "action_index": 2,
+          "action_type": "TYPE",
+          "action_timestamp": "2026-02-14T13:00:05Z"
+        }
+      ],
+      "resolution_strategy": "name (0.90)"
+    },
+    "ref_1e5566e6": {
+      "semantic": {
+        "placeholder": "Text (optional)",
+        "role": "textbox",
+        "text": "Hello Reddit!"
+      },
+      "structural": {
+        "css_selector": "[role=\"textbox\"]"
+      },
+      "priority": [
+        "role_text",
+        "placeholder",
+        "css_selector",
+        "text"
+      ],
+      "reliability": {
+        "placeholder": 0.85,
+        "role_text": 0.88,
+        "text": 0.65,
+        "css_selector": 0.8
+      },
+      "actions": [
+        {
+          "action_index": 3,
+          "action_type": "TYPE",
+          "action_timestamp": "2026-02-14T13:00:08Z"
+        }
+      ],
+      "resolution_strategy": "role_text (0.88)"
+    },
+    "ref_c9e4156c": {
+      "semantic": {
+        "data_testid": "submit-post",
+        "text": "Post"
+      },
+      "structural": {
+        "css_selector": "button[type=\"submit\"]"
+      },
+      "priority": [
+        "data_testid",
+        "css_selector",
+        "text"
+      ],
+      "reliability": {
+        "data_testid": 0.98,
+        "text": 0.65,
+        "css_selector": 0.8
+      },
+      "actions": [
+        {
+          "action_index": 4,
+          "action_type": "CLICK",
+          "action_timestamp": "2026-02-14T13:00:10Z"
+        }
+      ],
+      "resolution_strategy": "data_testid (0.98)"
+    }
+  },
+  "stats": {
+    "total_refs": 5,
+    "action_count": 5,
+    "pages": 1,
+    "semantic_only_count": 0,
+    "structural_only_count": 1,
+    "complete_count": 4
+  }
+}

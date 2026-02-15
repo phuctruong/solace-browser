@@ -1,0 +1,40 @@
+{
+  "name": "Reddit Text Post",
+  "description": "Create a text post on Reddit using Phase 4 AutomationAPI",
+  "refmap_source": "refmap_reddit.json",
+  "steps": [
+    {
+      "action": "clickButton",
+      "ref_id": "ref_2a6a89e7",
+      "description": "Select 'Text' post type tab"
+    },
+    {
+      "action": "typeText",
+      "ref_id": "ref_fc4a3d7b",
+      "text": "My First Post",
+      "description": "Type title into title field"
+    },
+    {
+      "action": "verifyInteraction",
+      "ref_id": "ref_fc4a3d7b",
+      "expected_state": { "value": "My First Post" },
+      "description": "Verify title was set"
+    },
+    {
+      "action": "typeText",
+      "ref_id": "ref_1e5566e6",
+      "text": "Hello Reddit! This is my first post.",
+      "shift_handling": { "autoShift": true },
+      "description": "Type body text with proper capitalization"
+    },
+    {
+      "action": "clickButton",
+      "ref_id": "ref_c9e4156c",
+      "description": "Click Submit/Post button"
+    }
+  ],
+  "value_map": {
+    "ref_fc4a3d7b": "My First Post",
+    "ref_1e5566e6": "Hello Reddit! This is my first post."
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "version": "0.1.0",
+  "episode_id": "github-search-001",
+  "url_source": "https://github.com",
+  "refmap": {
+    "ref_83528f27": {
+      "semantic": {},
+      "structural": {
+        "css_selector": "url:https://github.com"
+      },
+      "priority": [
+        "css_selector"
+      ],
+      "reliability": {
+        "css_selector": 0.8
+      },
+      "actions": [
+        {
+          "action_index": 0,
+          "action_type": "NAVIGATE",
+          "action_timestamp": "2026-02-14T14:00:00Z"
+        }
+      ],
+      "resolution_strategy": "css_selector (0.80)"
+    },
+    "ref_105dd7ff": {
+      "semantic": {
+        "aria_label": "Search or jump to...",
+        "role": "button"
+      },
+      "structural": {
+        "css_selector": "#query-builder-test",
+        "id": "query-builder-test"
+      },
+      "priority": [
+        "aria_label",
+        "id",
+        "css_selector"
+      ],
+      "reliability": {
+        "aria_label": 0.95,
+        "id": 0.92,
+        "css_selector": 0.92
+      },
+      "actions": [
+        {
+          "action_index": 1,
+          "action_type": "CLICK",
+          "action_timestamp": "2026-02-14T14:00:02Z"
+        }
+      ],
+      "resolution_strategy": "aria_label (0.95)"
+    },
+    "ref_6fd736a4": {
+      "semantic": {
+        "aria_label": "Search or jump to...",
+        "name": "query-builder-test",
+        "text": "stillwater os"
+      },
+      "structural": {
+        "css_selector": "#query-builder-test",
+        "id": "query-builder-test"
+      },
+      "priority": [
+        "aria_label",
+        "id",
+        "css_selector",
+        "name",
+        "text"
+      ],
+      "reliability": {
+        "aria_label": 0.95,
+        "name": 0.9,
+        "text": 0.65,
+        "id": 0.92,
+        "css_selector": 0.92
+      },
+      "actions": [
+        {
+          "action_index": 2,
+          "action_type": "TYPE",
+          "action_timestamp": "2026-02-14T14:00:05Z"
+        }
+      ],
+      "resolution_strategy": "aria_label (0.95)"
+    },
+    "ref_86f504a8": {
+      "semantic": {
+        "data_testid": "search-submit",
+        "text": "Search"
+      },
+      "structural": {
+        "css_selector": "button[type=\"submit\"]"
+      },
+      "priority": [
+        "data_testid",
+        "css_selector",
+        "text"
+      ],
+      "reliability": {
+        "data_testid": 0.98,
+        "text": 0.65,
+        "css_selector": 0.8
+      },
+      "actions": [
+        {
+          "action_index": 3,
+          "action_type": "CLICK",
+          "action_timestamp": "2026-02-14T14:00:07Z"
+        }
+      ],
+      "resolution_strategy": "data_testid (0.98)"
+    }
+  },
+  "stats": {
+    "total_refs": 4,
+    "action_count": 4,
+    "pages": 1,
+    "semantic_only_count": 0,
+    "structural_only_count": 1,
+    "complete_count": 3
+  }
+}
