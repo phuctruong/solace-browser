@@ -399,25 +399,92 @@ After completing any web automation task, create a **recipe**:
 
 Save to: `recipes/{task-name}.recipe.json`
 
-### 3. PrimeWiki Builder
+### 3. PrimeWiki Builder with PrimeMermaid Diagrams
 
-Capture knowledge while browsing in **PrimeMermaid format**:
+Capture knowledge while browsing using **PrimeMermaid standard** (from solaceagi/books):
 
 ```markdown
-# PrimeWiki Node: {Topic}
+# PrimeWiki: {website}/{page_name}
 
-**Tier**: 23/47/79/127/241
-**C-Score**: 0.90+ (coherence)
-**G-Score**: 0.85+ (gravity)
+**Tier**: 23 (intermediate)
+**C-Score**: 0.95+ (high coherence)
+**G-Score**: 0.90+ (high gravity)
+**Status**: Phase 1 (live exploration) or Phase 2 (tested)
 
-## Claim Graph (Mermaid)
-## Canon Claims (with evidence)
-## Portals (related nodes)
-## Metadata (YAML)
-## Executable Code (Python)
+## Site Map (PrimeMermaid Diagram)
+Shows complete page structure with all sections:
+
+\`\`\`mermaid
+graph TD
+  Header[Header :: SECTION :: S2 :: P{NAVIGATION} :: V1.0]
+  Nav[Navigation :: SECTION :: S2 :: P{NAVIGATION} :: V1.0]
+  Feed[Post Feed :: LIST :: S2 :: P{CONTENT} :: V1.0]
+  Sidebar[Sidebar :: SECTION :: S2 :: P{INFO} :: V1.0]
+
+  Header --> Nav
+  Header --> Feed
+  Feed --> Sidebar
+\`\`\`
+
+## Components Section (PrimeMermaid Component Diagram)
+Buttons, forms, interactive elements:
+
+\`\`\`mermaid
+graph LR
+  SearchBox[Search Input :: FORM_INPUT :: S2 :: P{FORM} :: V1.0]
+  LoginBtn[Login Button :: BUTTON :: S2 :: P{ACTION} :: V1.0]
+  CreatePost[Create Post :: BUTTON :: S2 :: P{ACTION} :: V1.0]
+
+  SearchBox -.PORTAL.-> LoginBtn
+  CreatePost -.REQUIRES.-> LoginBtn
+\`\`\`
+
+## Landmarks Section
+All interactive elements with selectors:
+
+| Element | Type | Selector | Confidence | Tested |
+|---------|------|----------|------------|--------|
+| Email Input | FORM_INPUT | input[type="email"] | 0.95 | ✅ Phase 2 |
+| Login Button | BUTTON | button[aria-label="Log in"] | 0.98 | ✅ Phase 2 |
+| Create Post | BUTTON | button:has-text("Create post") | 0.85 | 🟡 Phase 1 |
+
+## Portals (State Transitions)
+How to navigate between pages:
+
+| From State | To State | Action | Selector | Strength |
+|-----------|----------|--------|----------|----------|
+| homepage | login-page | click | button:has-text("Log in") | 0.95 |
+| login-page | inbox | submit form | button[type="submit"] | 0.98 |
+| inbox | create-post | click | button:has-text("Create post") | 0.90 |
+
+## Magic Words
+Words that indicate page sections/functionality:
+- "Log in"
+- "Create post"
+- "Trending"
+- "Subscribed"
+- "Communities"
+
+## Security Patterns
+Known challenges and how to overcome:
+- Rate limiting: wait 5s between actions
+- Bot detection: use real event chains
+- OAuth: must wait for user approval
+
+## Quality Metrics
+- **C-Score**: (accuracy_selectors / total_selectors) × (magic_words / expected)
+- **G-Score**: (recipes_created / landmarks) × (phase2_success_rate)
 ```
 
-Save to: `primewiki/{topic}.primemermaid.md`
+Save to: `primewiki/{domain}_{page}.primewiki.md`
+
+**Key Difference from Before:**
+- ✅ PrimeMermaid diagrams for site structure (not just JSON)
+- ✅ Component diagrams showing relationships
+- ✅ Landmarks table with selectors + confidence
+- ✅ Portals table for state transitions
+- ✅ Magic words for semantic understanding
+- ✅ Security/bot evasion patterns documented
 
 ### 4. Skill Updater
 
@@ -516,39 +583,143 @@ LINKEDIN_PORTALS = {
 
 ---
 
-## Example Workflow
+## Live LLM Exploration Workflow (Phase 1 Discovery)
 
-### LinkedIn Profile Optimization
+**Use this when exploring a new website for the first time.**
+
+### Example: Reddit Exploration
 
 ```bash
-# 1. Start server (if not running)
+# STEP 0: Check Registries (30 seconds)
+grep -i "reddit" RECIPE_REGISTRY.md
+grep -i "reddit" PRIMEWIKI_REGISTRY.md
+# Result: Recipes exist (Phase 1 complete), Phase 2 pending
+# Decision: Do Phase 2 testing OR extend Phase 1 if needed
+
+# STEP 1: Start Browser Server
+python persistent_browser_server.py &
+sleep 2
+echo "Browser server started at http://localhost:9222"
+
+# STEP 2: Navigate (Claude directs via HTTP)
+curl -X POST http://localhost:9222/navigate \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://reddit.com"}'
+echo "Navigated to reddit.com"
+
+# STEP 3: Get Page State (Claude analyzes)
+snapshot=$(curl http://localhost:9222/html-clean)
+echo "$snapshot" | jq '.html' | head -100
+# Claude reads: "I see header navigation, post feed, sidebar with communities"
+
+# STEP 4: Claude Reasons (LIVE LLM INTERACTION)
+# Claude (internally):
+# "I see posts, buttons for voting/commenting, subreddit names.
+#  I should identify all clickable elements to document page structure.
+#  I see a 'Create post' button - let me find its exact selector."
+
+# STEP 5: Extract Selectors (Interactive)
+curl http://localhost:9222/snapshot | jq '.aria' | grep -i "create\|post\|button" | head -20
+# Claude: "I found button with text 'Create post', selector analysis..."
+
+# STEP 6: Build PrimeMermaid Diagram (Incrementally)
+# As Claude discovers sections, add to diagrams:
+#   - Header → Navigation → Feed
+#   - Feed → Post Cards → Comments
+#   - Post Cards → Upvote/Downvote buttons
+
+# STEP 7: Document Landmarks with Screenshots
+curl http://localhost:9222/screenshot > artifacts/reddit-homepage-section-1.png
+# Screenshot shows buttons, forms, navigation - Claude analyzes visually
+
+# STEP 8: Test Key Interactions (Without Logging In)
+# Click "Subscribe" button
+curl -X POST http://localhost:9222/click \
+  -H "Content-Type: application/json" \
+  -d '{"selector": "button[aria-label*=\"Subscribe\"]"}'
+
+# STEP 9: Verify Changes & Screenshot
+curl http://localhost:9222/screenshot > artifacts/reddit-after-click.png
+# Claude: "Good, button changed state. Selector confirmed working."
+
+# STEP 10: Save Phase 1 Results
+#   - Created primewiki/reddit-homepage.primewiki.md with PrimeMermaid diagrams
+#   - Identified all selectors (confidence scores based on testing)
+#   - Created recipes/reddit-explore.recipe.json with portal maps
+#   - Documented magic words, security patterns
+#   - Saved ~10 screenshots showing different sections
+
+# STEP 11: Update Registries
+echo "- reddit-homepage.recipe.json :: Phase 1 complete, Phase 2 pending" >> RECIPE_REGISTRY.md
+echo "### reddit-homepage.primewiki.md :: 156+ landmarks, Phase 1 complete" >> PRIMEWIKI_REGISTRY.md
+
+# STEP 12: Commit Everything
+git add -A && git commit -m "feat(reddit): Phase 1 exploration - homepage structure mapped with PrimeMermaid diagrams"
+```
+
+### Key Differences from Pre-Scripted Approach
+
+**❌ OLD (Pre-Written Scripts):**
+```python
+# haiku_swarm_reddit_exploration.py - hardcoded automation
+async def explore_reddit():
+    await page.goto('reddit.com')
+    selectors = ['button.subscribe', 'div.post-feed', ...]  # Hardcoded
+    # No learning, brittle on UI changes
+```
+
+**✅ NEW (Live LLM + Browser API):**
+```bash
+# Interactive CLI workflow
+curl http://localhost:9222/html-clean  # Claude reads page
+# Claude reasons: "I see buttons for voting, subscribing, commenting"
+curl http://localhost:9222/click -d '{"selector": "..."}' # Claude decides action
+curl http://localhost:9222/screenshot  # Claude verifies result
+# At the end: Save recipe + PrimeMermaid + selectors discovered
+```
+
+---
+
+## Example Workflow: LinkedIn Profile Optimization (Phase 2 Replay)
+
+**Use this when you already have recipes from Phase 1.**
+
+```bash
+# STEP 1: Check Registry
+grep "linkedin-profile-optimization" RECIPE_REGISTRY.md
+# Status: Phase 2 READY, cost $0.002
+
+# STEP 2: Start Server
 python persistent_browser_server.py &
 
-# 2. Navigate to profile
-curl -X POST http://localhost:9222/navigate \
-  -d '{"url": "https://linkedin.com/in/me/"}'
+# STEP 3: Load Cookies from Phase 1
+cookies=$(cat artifacts/linkedin_session.json)
+# Already authenticated, skip login
 
-# 3. Get current state
-curl http://localhost:9222/html-clean | jq -r '.html' > current.html
+# STEP 4: Navigate (No LLM needed, just execute recipe)
+curl -X POST http://localhost:9222/navigate -d '{"url": "https://linkedin.com/in/me"}'
 
-# 4. Reason about optimization
-# (You apply expert formulas: mobile hook, headline formula, etc.)
+# STEP 5: Execute Recipe Steps (CPU-only, no LLM cost)
+# Load recipe
+recipe=$(cat recipes/linkedin-profile-optimization-10-10.recipe.json)
 
-# 5. Execute changes
-curl -X POST http://localhost:9222/fill \
-  -d '{"selector": "#headline", "text": "Software 5.0 Architect | 65537 Authority | Building Verified AI OS in Public"}'
+# For each step in recipe:
+#   1. Use selector from recipe (no discovery needed)
+#   2. Execute action (click, fill, submit)
+#   3. Verify with snapshot (no reasoning needed)
 
-# 6. Save recipe
-# (Document reasoning, portals, evidence)
+# Example: Update headline
+curl -X POST http://localhost:9222/click -d '{"selector": "button[aria-label=\"Edit headline\"]"}'
+curl -X POST http://localhost:9222/fill -d '{"selector": "input[aria-label=\"Headline\"]", "text": "Software 5.0 Architect | 65537 Authority"}'
+curl -X POST http://localhost:9222/click -d '{"selector": "button[aria-label=\"Save\"]"}'
 
-# 7. Save PrimeWiki node
-# (Claims + evidence + portals)
+# STEP 6: Verify Success (Screenshot)
+curl http://localhost:9222/screenshot > artifacts/profile-updated.png
 
-# 8. Update skills
-# (Add new patterns learned)
-
-# 9. Commit everything
-git add . && git commit -m "feat: LinkedIn profile optimization to 10/10"
+# STEP 7: Done
+# Cost: $0.002 (just HTTP calls, zero LLM)
+# Time: 3-5 minutes
+# No reasoning needed, 100% deterministic
 ```
 
 ---
