@@ -25,6 +25,7 @@ from enhanced_browser_interactions import (
     get_llm_snapshot
 )
 from rate_limiter import RateLimiter
+from registry_checker import RegistryChecker
 
 logging.basicConfig(
     level=logging.INFO,
@@ -50,6 +51,7 @@ class PersistentBrowserServer:
         self.network = None
         self.session_file = "artifacts/linkedin_session.json"
         self.rate_limiter = RateLimiter()  # Phase 2 Fix #2: Rate limiting
+        self.registry = RegistryChecker()  # Phase 2 Fix #4: Registry enforcement
         self.app = web.Application()
         self.setup_routes()
 
@@ -88,6 +90,9 @@ class PersistentBrowserServer:
 
         # ===== RATE LIMITING (Phase 2 Fix #2) =====
         self.app.router.add_get('/rate-limit-status', self.handle_rate_limit_status)  # Check rate limit status
+
+        # ===== REGISTRY ENFORCEMENT (Phase 2 Fix #4) =====
+        self.app.router.add_get('/check-registry', self.handle_check_registry)  # Check if recipe exists
 
     async def start_browser(self):
         """Start browser (once) with anti-detection for Gmail/Google"""
@@ -1392,6 +1397,39 @@ class PersistentBrowserServer:
         except Exception as e:
             logger.error(f"❌ Rate limit status check failed: {e}")
             return web.json_response({"error": str(e)}, status=500)
+
+    async def handle_check_registry(self, request):
+        """Check if recipe exists for a domain (Phase 2 Fix #4: Registry Enforcement)"""
+        try:
+            url = request.query.get('url', self.page.url if self.page else None)
+
+            if not url:
+                return web.json_response(
+                    {"error": "Missing 'url' parameter", "code": "MISSING_URL"},
+                    status=400
+                )
+
+            # Check if recipe exists
+            result = self.registry.check(url)
+
+            return web.json_response({
+                "success": True,
+                "url": url,
+                "domain": result['domain'],
+                "found": result['found'],
+                "recipe_ids": result['recipe_ids'],
+                "primary_recipe": result['primary_recipe'],
+                "action": result['action'],
+                "cost_savings_usd": result['cost_savings_usd'],
+                "advice": result['advice'],
+                "message": f"{'✅ Recipe found' if result['found'] else '❌ No recipe found'}: {result['advice']}"
+            })
+        except Exception as e:
+            logger.error(f"❌ Registry check failed: {e}")
+            return web.json_response(
+                {"error": f"Registry check failed: {str(e)}", "code": "REGISTRY_ERROR"},
+                status=500
+            )
 
     # ========================================================================
     # Server lifecycle
