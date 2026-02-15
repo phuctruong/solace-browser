@@ -646,8 +646,12 @@ class PersistentBrowserServer:
             logger.info(f"📜 Human scroll: {distance_px}px {direction} in {duration_ms}ms")
 
             # Smooth scroll with easing
+            scroll_distance = distance_px if direction == 'down' else -distance_px
+
             await self.page.evaluate(f"""
-                (distance, duration) => {{
+                () => {{
+                    const distance = {scroll_distance};
+                    const duration = {duration_ms};
                     const start = window.scrollY;
                     const startTime = performance.now();
 
@@ -668,7 +672,7 @@ class PersistentBrowserServer:
                     requestAnimationFrame(scroll);
                     return new Promise(resolve => setTimeout(resolve, duration));
                 }}
-            """, distance_px if direction == 'down' else -distance_px, duration_ms)
+            """)
 
             return web.json_response({"success": True, "scrolled": distance_px})
         except Exception as e:
