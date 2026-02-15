@@ -5,7 +5,62 @@
 
 ---
 
-## The Four-Agent Pipeline
+## The Five-Agent Pipeline
+
+### 0️⃣ Monitor Agent (Page Health Check) ⭐ **GATEKEEPER**
+**Input**: Browser snapshot immediately after navigation
+**Process**: Validate page loaded correctly, check for errors
+**Output**:
+```json
+{
+  "health_check": {
+    "page_loaded": true,
+    "response_code": 200,
+    "title_present": true,
+    "content_visible": true
+  },
+  "error_detection": {
+    "javascript_errors": 0,
+    "timeout_detected": false,
+    "bot_detection": false,
+    "redirect_loops": false,
+    "cloudflare_challenge": false,
+    "rate_limit_hit": false
+  },
+  "page_state": {
+    "expected_state": "homepage",
+    "actual_state": "homepage",
+    "match": true
+  },
+  "readiness": "✅ READY_FOR_SCOUT",
+  "confidence": 0.98,
+  "recommendation": "Proceed to Scout analysis"
+}
+```
+
+**Checks Monitor Performs**:
+- ✅ Page loaded (not hanging, timeout, redirect)
+- ✅ HTTP response code (200, not 403/429/503)
+- ✅ Content visible (not blank, not error page)
+- ✅ JavaScript executed (no console errors)
+- ✅ Expected state (homepage, login page, etc.)
+- ✅ No bot detection triggers (reCAPTCHA, Cloudflare, etc.)
+- ✅ No rate limiting (429 Too Many Requests)
+- ✅ No redirect loops
+- ✅ DOM content loaded (head + body complete)
+
+**If Monitor Fails**:
+```json
+{
+  "readiness": "❌ PAGE_LOAD_FAILED",
+  "error": "rate_limit_hit",
+  "recommendation": "Wait 30 seconds, then retry",
+  "other_agents_status": "DO_NOT_RUN"
+}
+```
+→ Scout, Solver, Skeptic, Keeper all WAIT until Monitor says ✅ READY
+
+---
 
 ### 1️⃣ Scout Agent (Page State Machine)
 **Input**: Browser snapshot (ARIA tree, HTML, screenshots)
@@ -156,7 +211,7 @@
 
 ---
 
-## Complete Information Flow
+## Complete Information Flow (5-Agent Pipeline)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -164,62 +219,61 @@
 │         (navigate, click, fill, screenshot, snapshot)            │
 └──────────────────────────┬──────────────────────────────────────┘
                            │
+                    [1] Navigate URL
+                           │
                            ▼
           ┌────────────────────────────────────┐
           │  Page Snapshot + ARIA Tree          │
           │  (49 KB raw data)                   │
           └────────┬─────────────────────────────┘
                    │
-       ┌───────────┴────────────┬─────────────────────┐
-       │                        │                     │
-       ▼                        ▼                     ▼
-   ┌────────┐          ┌─────────────┐       ┌──────────────┐
-   │ SCOUT  │          │   SOLVER    │       │   SKEPTIC    │
-   ├────────┤          ├─────────────┤       ├──────────────┤
-   │ Detect │          │   Find      │       │   Test &     │
-   │ Page   │          │ Selectors   │       │  Validate    │
-   │ Layout │          │             │       │ Confidence   │
-   │        │          │             │       │              │
-   │Output: │          │Output:      │       │Output:       │
-   │Sections│          │Candidates   │       │Approved      │
-   │Comps   │          │Ranked       │       │Selectors     │
-   │Magic   │          │by          │       │Quality: 0.92 │
-   │Words   │          │Confidence   │       │              │
-   └────┬───┘          └──────┬──────┘       └──────┬───────┘
-        │                     │                     │
-        │ "Here are           │ "Best selectors     │ "✅ All
-        │  the page           │  are these"         │  validated"
-        │  sections"          │                     │
-        │                     │                     │
-        └─────────────────────┴─────────────────────┘
-                              │
-                              ▼
-                   ┌──────────────────────┐
-                   │   KEEPER AGENT       │
-                   ├──────────────────────┤
-                   │ Save Knowledge:      │
-                   │ - Skills             │
-                   │ - Recipes            │
-                   │ - PrimeWiki + Diagrams│
-                   │ - Update Registries  │
-                   │ - Quality Metrics    │
-                   └──────────┬───────────┘
-                              │
-                ┌─────────────┼─────────────┐
-                │             │             │
-                ▼             ▼             ▼
-           ┌────────┐   ┌─────────┐  ┌──────────┐
-           │ Skills │   │Recipes  │  │PrimeWiki │
-           │        │   │         │  │+ Diagrams│
-           │ (canon │   │(.json)  │  │(.md)     │
-           │/skills)   │         │  │          │
-           └────────┘   └─────────┘  └──────────┘
-                │             │             │
-                └─────────────┼─────────────┘
+                   ▼
+          ┌─────────────────────────────────────┐
+          │    MONITOR AGENT (Gatekeeper)       │
+          │    ├─ Page loaded? (200 OK)         │
+          │    ├─ Content visible?              │
+          │    ├─ JS errors? (0)                │
+          │    ├─ Bot detection? (none)         │
+          │    ├─ Rate limited? (no)            │
+          │    ├─ Expected state? (match)       │
+          │    └─ Result: ✅ READY              │
+          └─────────────────────────────────────┘
+                   │
+       ┌───────────┴────────────────────────────────┐
+       │                                            │
+       ▼                                            ▼
+  ┌─────────┐              [If NOT READY]     ┌──────────────┐
+  │  YES ✅ │                                 │   ERROR ❌   │
+  │ Continue │                                 │ (Wait/Retry) │
+  └────┬────┘                                  └──────────────┘
+       │
+   ┌───┴────────────┬─────────────────┬────────────────────┐
+   │                │                 │                    │
+   ▼                ▼                 ▼                    ▼
+┌────────┐   ┌──────────────┐   ┌───────────┐   ┌──────────────┐
+│ SCOUT  │   │   SOLVER     │   │  SKEPTIC  │   │    KEEPER    │
+├────────┤   ├──────────────┤   ├───────────┤   ├──────────────┤
+│Detect  │   │ Find         │   │Test &     │   │Save          │
+│Page    │   │Selectors     │   │Validate   │   │Knowledge     │
+│Layout  │   │              │   │Confidence │   │              │
+│        │   │              │   │           │   │              │
+│Output: │   │Output:       │   │Output:    │   │Output:       │
+│Sections│   │Candidates    │   │Approved   │   │Skills,       │
+│Comps   │   │Ranked        │   │Selectors  │   │Recipes,      │
+│Magic   │   │by Confidence │   │Quality:   │   │PrimeWiki,    │
+│Words   │   │              │   │0.92       │   │Registries    │
+└────┬───┘   └──────┬───────┘   └─────┬─────┘   └──────┬───────┘
+     │              │                 │                │
+     │ "Here are    │ "Best selectors │ "✅ All       │ "📁 Saved
+     │  the page    │  are these"     │  validated"   │  skills,
+     │  sections"   │                 │               │  recipes,
+     │              │                 │               │  primewiki"
+     └──────────────┴─────────────────┴───────────────┴────────────┘
                               │
                               ▼
                     ┌──────────────────────┐
                     │  REGISTRIES UPDATED  │
+                    │  & GIT COMMITTED     │
                     │                      │
                     │ RECIPE_REGISTRY.md   │
                     │ PRIMEWIKI_REGISTRY.md│
@@ -227,6 +281,155 @@
                     │ Future LLMs inherit  │
                     │ 100% of learning     │
                     └──────────────────────┘
+```
+
+---
+
+## Agent Execution Order & Dependencies
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Monitor (Gatekeeper)                  │
+│          Check: Page loaded? Errors? Bot detection?      │
+└────────────────────┬────────────────────────────────────┘
+                     │
+            If ✅ READY, continue
+            If ❌ FAILED, WAIT/RETRY
+                     │
+         ┌───────────┴──────────────┐
+         │                          │
+         ▼                          ▼
+    ┌────────┐              [WAIT 30 SEC]
+    │ SCOUT  │              [THEN RETRY]
+    │(Blocks)│
+    │ Solver │
+    │Skeptic │
+    │ Keeper │
+    └───┬────┘
+        │
+        ├─→ [Optional parallel]
+        │   SCOUT → SOLVER → SKEPTIC
+        │         (Scout feeds Solver)
+        │         (Solver feeds Skeptic)
+        │
+        └─→ KEEPER
+            (Takes all findings and saves)
+```
+
+---
+
+## Monitor Agent: Error Detection Patterns
+
+### Common Errors Monitor Detects
+
+**1. Page Load Failures**
+```json
+{
+  "error_type": "TIMEOUT",
+  "timeout_seconds": 30,
+  "action": "RETRY_AFTER_DELAY",
+  "delay": "30 seconds",
+  "agents_blocked": ["Scout", "Solver", "Skeptic", "Keeper"]
+}
+```
+
+**2. JavaScript Errors**
+```json
+{
+  "error_type": "JS_ERROR",
+  "errors": ["TypeError: Cannot read property 'length' of undefined"],
+  "action": "CONTINUE_WITH_WARNING",
+  "confidence_reduction": 0.85,
+  "agents_blocked": []
+}
+```
+
+**3. Bot Detection Triggers**
+```json
+{
+  "error_type": "BOT_DETECTION",
+  "trigger": "reCAPTCHA v3 dialog",
+  "action": "STOP_AND_WAIT",
+  "wait_time": "60 seconds (human solve time)",
+  "agents_blocked": ["Scout", "Solver", "Skeptic", "Keeper"]
+}
+```
+
+**4. Rate Limiting (429)**
+```json
+{
+  "error_type": "RATE_LIMITED",
+  "status_code": 429,
+  "action": "EXPONENTIAL_BACKOFF",
+  "wait_time": "30s → 60s → 120s",
+  "agents_blocked": ["Scout", "Solver", "Skeptic", "Keeper"]
+}
+```
+
+**5. Redirect Loops**
+```json
+{
+  "error_type": "REDIRECT_LOOP",
+  "redirects": ["/login", "/auth", "/login"],
+  "action": "STOP_AND_ALERT",
+  "agents_blocked": ["Scout", "Solver", "Skeptic", "Keeper"],
+  "human_intervention": "required"
+}
+```
+
+**6. Wrong Expected State**
+```json
+{
+  "error_type": "STATE_MISMATCH",
+  "expected_state": "reddit_homepage",
+  "actual_state": "error_page",
+  "action": "NAVIGATE_AND_RETRY",
+  "retry_count": 3,
+  "agents_blocked": ["Scout", "Solver", "Skeptic", "Keeper"]
+}
+```
+
+---
+
+## Monitor Agent Decision Tree
+
+```
+[Monitor Start]
+    │
+    ├─→ Is page loaded? (not hanging)
+    │   ├─ NO → WAIT/RETRY
+    │   └─ YES ↓
+    │
+    ├─→ HTTP 200 response?
+    │   ├─ NO (429) → RATE_LIMIT_WAIT
+    │   ├─ NO (403) → BLOCKED, STOP
+    │   ├─ NO (5xx) → SERVER_ERROR, RETRY
+    │   └─ YES ↓
+    │
+    ├─→ Content visible?
+    │   ├─ NO (blank page) → JS_NOT_EXECUTED, WAIT
+    │   └─ YES ↓
+    │
+    ├─→ JavaScript errors?
+    │   ├─ YES → Log warnings, reduce confidence
+    │   └─ NO ↓
+    │
+    ├─→ Bot detection trigger?
+    │   ├─ reCAPTCHA → STOP_AND_WAIT (60s)
+    │   ├─ Cloudflare → STOP_AND_WAIT (60s)
+    │   └─ NO ↓
+    │
+    ├─→ Redirect loops?
+    │   ├─ YES → STOP, human intervention needed
+    │   └─ NO ↓
+    │
+    ├─→ Expected state match?
+    │   ├─ NO → Navigate again, retry
+    │   └─ YES ↓
+    │
+    └─→ ✅ READY_FOR_SCOUT
+        │
+        └─→ Scout, Solver, Skeptic, Keeper proceed
 ```
 
 ---
