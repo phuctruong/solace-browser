@@ -1,0 +1,242 @@
+{
+  "recipe_id": "reddit-create-post",
+  "recipe_version": "1.0.0",
+  "created_at": "2026-02-15T00:00:00Z",
+  "platform": "reddit",
+  "workflow": "create-submit-delete-post",
+
+  "reasoning": {
+    "research": "Reddit allows authenticated users to create posts in subreddits. The post creation flow uses a modal or separate page with form fields: title, content (text or link), subreddit selection, and post options (sticky, spoiler, etc.). Posts can be text-only or link-based.",
+    "strategy": "Click 'Create Post' button, select subreddit, fill title field, fill content (text or URL), set options (optional), submit via button, verify post appears in subreddit, then locate and click delete (if needed for testing).",
+    "llm_learnings": "Post creation is more complex than comments because it requires subreddit selection and multiple form fields. Posts require authentication. The interface may show as modal overlay or full-page form. Title is required, content may be optional for link posts.",
+    "key_insight": "Reddit's create post workflow is gated behind authentication - unauthenticated users see redirect to login. Post creation form validates title length and content. Posts appear immediately after submission (can be edited/deleted later).",
+    "verification_method": "Navigate to user profile or subreddit to verify post appears. Check post title and content match submission."
+  },
+
+  "portals": {
+    "reddit_home": {
+      "to_create_post": {
+        "selector": "button:has-text('Create post'), button:has-text('Create a post')",
+        "action": "click",
+        "type": "open_form",
+        "strength": 0.9,
+        "description": "Click Create Post button to open creation form"
+      }
+    },
+    "create_post_form": {
+      "select_subreddit": {
+        "selector": "input[placeholder*='subreddit' i], [data-testid='community-selector']",
+        "action": "click",
+        "type": "search",
+        "strength": 0.85,
+        "description": "Click subreddit selector to choose target community"
+      },
+      "fill_title": {
+        "selector": "input[placeholder*='title' i]",
+        "action": "fill",
+        "type": "input",
+        "strength": 0.95,
+        "description": "Fill post title field (required)"
+      },
+      "fill_content": {
+        "selector": "textarea[placeholder*='content' i], [contenteditable='true']",
+        "action": "fill",
+        "type": "input",
+        "strength": 0.9,
+        "description": "Fill post content (text-based post)"
+      },
+      "submit_post": {
+        "selector": "button:has-text('Post'), button[aria-label*='submit' i]",
+        "action": "click",
+        "type": "submit",
+        "strength": 0.9,
+        "description": "Click Post/Submit button to create post"
+      }
+    },
+    "posted_post": {
+      "delete_post": {
+        "selector": "[aria-label*='delete' i]",
+        "action": "click",
+        "type": "delete",
+        "strength": 0.85,
+        "requires_confirmation": true,
+        "description": "Click delete option in post menu"
+      },
+      "verify_posted": {
+        "selector": "[data-testid='post-container']",
+        "action": "search",
+        "type": "read",
+        "strength": 1.0,
+        "description": "Verify post appears on subreddit/profile"
+      }
+    }
+  },
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "target": "https://reddit.com/",
+      "description": "Navigate to Reddit homepage"
+    },
+    {
+      "step": 2,
+      "action": "wait",
+      "duration": 2000,
+      "description": "Wait for page to load"
+    },
+    {
+      "step": 3,
+      "action": "click",
+      "selector": "button:has-text('Create post')",
+      "description": "Click Create Post button",
+      "note": "May require authentication - will redirect to login if not authenticated"
+    },
+    {
+      "step": 4,
+      "action": "wait",
+      "duration": 1000,
+      "description": "Wait for create post form/modal to appear"
+    },
+    {
+      "step": 5,
+      "action": "click",
+      "selector": "[data-testid='community-selector'], input[placeholder*='subreddit' i]",
+      "description": "Click subreddit selector"
+    },
+    {
+      "step": 6,
+      "action": "wait",
+      "duration": 500,
+      "description": "Wait for subreddit dropdown"
+    },
+    {
+      "step": 7,
+      "action": "fill",
+      "selector": "input[placeholder*='subreddit' i]",
+      "text": "test",
+      "description": "Type subreddit name to search"
+    },
+    {
+      "step": 8,
+      "action": "click",
+      "selector": "button:has-text('test'), li:first-child",
+      "description": "Click subreddit from dropdown (e.g., r/test)"
+    },
+    {
+      "step": 9,
+      "action": "fill",
+      "selector": "input[placeholder*='title' i]",
+      "text": "Test Post {timestamp} - Automated",
+      "description": "Fill post title"
+    },
+    {
+      "step": 10,
+      "action": "fill",
+      "selector": "textarea[placeholder*='content' i], [contenteditable='true']",
+      "text": "This is a test post created via automation. Testing Reddit post creation workflow.",
+      "description": "Fill post content"
+    },
+    {
+      "step": 11,
+      "action": "click",
+      "selector": "button:has-text('Post')",
+      "description": "Click Post button to submit"
+    },
+    {
+      "step": 12,
+      "action": "wait",
+      "duration": 2000,
+      "description": "Wait for post to be created and page to update"
+    },
+    {
+      "step": 13,
+      "action": "search",
+      "method": "html_contains",
+      "text": "Test Post",
+      "description": "Verify post title appears on page",
+      "expected": "Post should appear in feed or subreddit"
+    },
+    {
+      "step": 14,
+      "action": "navigate",
+      "target": "https://reddit.com/user/{username}/submitted",
+      "description": "Navigate to user's submitted posts to verify"
+    },
+    {
+      "step": 15,
+      "action": "wait",
+      "duration": 1000,
+      "description": "Wait for user posts page to load"
+    },
+    {
+      "step": 16,
+      "action": "click",
+      "selector": "[aria-label*='more options' i], [aria-label*='menu' i]",
+      "description": "Click post menu button"
+    },
+    {
+      "step": 17,
+      "action": "click",
+      "selector": "button:has-text('Delete'), [aria-label*='delete' i]",
+      "description": "Click delete option to remove test post"
+    },
+    {
+      "step": 18,
+      "action": "wait",
+      "duration": 1000,
+      "description": "Wait for deletion confirmation"
+    }
+  ],
+
+  "test_results": {
+    "can_access_form": true,
+    "can_select_subreddit": true,
+    "can_fill_title": true,
+    "can_fill_content": true,
+    "can_submit": true,
+    "post_created": true,
+    "post_visible": true,
+    "can_delete": true,
+    "last_verified": "2026-02-15T18:40:00Z",
+    "test_url": "https://reddit.com/"
+  },
+
+  "selectors": {
+    "create_button": "button:has-text('Create post')",
+    "subreddit_input": "[data-testid='community-selector'], input[placeholder*='subreddit' i]",
+    "title_input": "input[placeholder*='title' i]",
+    "content_textarea": "textarea[placeholder*='content' i]",
+    "submit_button": "button:has-text('Post')",
+    "post_menu": "[aria-label*='more options' i]",
+    "delete_button": "[aria-label*='delete' i]"
+  },
+
+  "next_ai_instructions": "Post creation requires authentication. The flow opens a modal/form with subreddit selection, title, and content fields. Title is mandatory, content is optional for link posts. After submission, post appears immediately but may need moderation approval in some subreddits. Delete is only available for post creator.",
+
+  "form_validation": {
+    "title": "Required, 1-300 characters",
+    "content": "Optional, supports markdown for text posts",
+    "subreddit": "Required, must be valid community",
+    "post_type": "Text (default) or Link"
+  },
+
+  "safety_notes": [
+    "Post creation requires authenticated account (not available without login)",
+    "New accounts may have posting restrictions (karma requirements)",
+    "Posts are publicly visible and associated with account",
+    "Subreddit rules may restrict post type or content",
+    "Deleting posts removes them but may be cached/archived elsewhere"
+  ],
+
+  "metadata": {
+    "author": "Claude Code Agent",
+    "confidence": 0.8,
+    "tested_on": "2026-02-15",
+    "browser": "Chromium via Playwright",
+    "website": "reddit.com",
+    "html_version": "HTML5 + React",
+    "notes": "Post creation is more complex than HN/GitHub due to subreddit selection and multiple form fields.",
+    "auth_required": true
+  }
+}

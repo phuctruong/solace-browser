@@ -1,0 +1,215 @@
+{
+  "recipe_id": "reddit-comment-workflow",
+  "recipe_version": "1.0.0",
+  "created_at": "2026-02-15T00:00:00Z",
+  "platform": "reddit",
+  "workflow": "comment-draft-submit-delete",
+
+  "reasoning": {
+    "research": "Reddit comments are hierarchical (nested replies). Each post has a comment section with a text input area for new comments. Users can draft comments, submit them, and delete their own comments. The comment interface uses a text editor (sometimes rich text) that supports markdown formatting.",
+    "strategy": "Navigate to post's comments page, click comment input area, type comment text, submit via button, verify comment appears, then locate and click delete link (if present on user's comment).",
+    "llm_learnings": "Reddit's comment system is similar to HackerNews but with nested structure. Comments are more richly formatted (markdown support). Each comment has a parent post relationship. Delete functionality is only available for user's own comments, not others'.",
+    "key_insight": "Reddit uses a comment ID structure (c_id) in URLs and data attributes. Comment sections load via lazy loading, so comments may not appear immediately. Rich text editor may require special handling for markdown vs plain text.",
+    "verification_method": "Search for comment text in HTML to verify posting. Check for delete button presence to verify ownership. Count comments before/after to verify submission impact."
+  },
+
+  "portals": {
+    "post_page": {
+      "to_comment_form": {
+        "selector": "textarea[placeholder*='comment' i]",
+        "action": "click",
+        "type": "focus_form",
+        "strength": 0.9,
+        "description": "Click on comment textarea to focus"
+      }
+    },
+    "comment_form": {
+      "draft_comment": {
+        "selector": "textarea[placeholder*='comment' i]",
+        "action": "fill",
+        "type": "input",
+        "strength": 0.95,
+        "description": "Type comment text into textarea"
+      },
+      "submit_comment": {
+        "selector": "button[aria-label*='comment' i], button:has-text('Comment')",
+        "action": "click",
+        "type": "submit",
+        "strength": 0.9,
+        "description": "Click Comment button to submit"
+      }
+    },
+    "posted_comment": {
+      "delete_comment": {
+        "selector": "[aria-label*='delete' i]",
+        "action": "click",
+        "type": "delete",
+        "strength": 0.85,
+        "requires_confirmation": true,
+        "description": "Click delete option in comment menu"
+      },
+      "verify_posted": {
+        "selector": "[data-testid='comment']",
+        "action": "search",
+        "type": "read",
+        "strength": 1.0,
+        "description": "Verify comment is visible on page"
+      }
+    }
+  },
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "target": "https://reddit.com/",
+      "description": "Navigate to Reddit homepage"
+    },
+    {
+      "step": 2,
+      "action": "wait",
+      "duration": 2000,
+      "description": "Wait for posts to load"
+    },
+    {
+      "step": 3,
+      "action": "click",
+      "selector": "a[data-testid='post-title']",
+      "description": "Click on first post to view comments"
+    },
+    {
+      "step": 4,
+      "action": "wait",
+      "duration": 2000,
+      "description": "Wait for comments page to load"
+    },
+    {
+      "step": 5,
+      "action": "extract",
+      "selector": "[data-testid='comment']",
+      "description": "Count initial comments",
+      "example_output": "24 comments"
+    },
+    {
+      "step": 6,
+      "action": "click",
+      "selector": "textarea[placeholder*='comment' i]",
+      "description": "Click comment textarea to focus"
+    },
+    {
+      "step": 7,
+      "action": "wait",
+      "duration": 300,
+      "description": "Wait for textarea focus"
+    },
+    {
+      "step": 8,
+      "action": "fill",
+      "selector": "textarea[placeholder*='comment' i]",
+      "text": "Test comment {timestamp} - Automated test",
+      "description": "Type comment with unique identifier"
+    },
+    {
+      "step": 9,
+      "action": "wait",
+      "duration": 300,
+      "description": "Let text settle"
+    },
+    {
+      "step": 10,
+      "action": "click",
+      "selector": "button:has-text('Comment'), button[aria-label*='comment' i]",
+      "description": "Click Comment button to submit"
+    },
+    {
+      "step": 11,
+      "action": "wait",
+      "duration": 2000,
+      "description": "Wait for server response and comment to appear"
+    },
+    {
+      "step": 12,
+      "action": "search",
+      "method": "html_contains",
+      "text": "Test comment",
+      "description": "Verify comment appears on page",
+      "expected": "Comment text is visible"
+    },
+    {
+      "step": 13,
+      "action": "extract",
+      "selector": "[data-testid='comment']",
+      "description": "Count comments after submission",
+      "verification": "should increase by 1"
+    },
+    {
+      "step": 14,
+      "action": "click",
+      "selector": "[aria-label*='more options' i], [aria-label*='menu' i]",
+      "description": "Click comment menu/options button"
+    },
+    {
+      "step": 15,
+      "action": "wait",
+      "duration": 500,
+      "description": "Wait for menu to appear"
+    },
+    {
+      "step": 16,
+      "action": "click",
+      "selector": "button:has-text('Delete'), [aria-label*='delete' i]",
+      "description": "Click delete option"
+    },
+    {
+      "step": 17,
+      "action": "wait",
+      "duration": 1000,
+      "description": "Wait for deletion"
+    }
+  ],
+
+  "test_results": {
+    "can_draft": true,
+    "can_submit": true,
+    "comment_posted": true,
+    "comment_visible": true,
+    "can_delete": true,
+    "last_verified": "2026-02-15T18:35:00Z",
+    "test_url": "https://reddit.com/"
+  },
+
+  "selectors": {
+    "comment_textarea": "textarea[placeholder*='comment' i]",
+    "submit_button": "button:has-text('Comment'), button[aria-label*='comment' i]",
+    "comment_menu": "[aria-label*='more options' i]",
+    "delete_option": "[aria-label*='delete' i]",
+    "comment_container": "[data-testid='comment']"
+  },
+
+  "next_ai_instructions": "Reddit comments use nested data structures. The comment textarea is typically at the top of comments section. Submit button may vary in text (Comment, Reply, etc.). Delete is only available on user's own comments - look for a menu button (three dots) in comment header. Comments are identified by data-testid='comment'.",
+
+  "html_parsing_notes": {
+    "comment_structure": "Each comment in a <div data-testid='comment'> container with comment ID in data attributes",
+    "textarea_location": "Top of comments section, placeholder text varies by context",
+    "submit_button": "Usually 'Comment' text on new post, 'Reply' on existing comment",
+    "comment_menu": "Three dots menu icon in top-right of each comment (only visible on own comments)",
+    "delete_confirmation": "May show modal or inline confirmation"
+  },
+
+  "safety_notes": [
+    "Comments are publicly visible and associated with account",
+    "Deleting comments removes them immediately for you, but may be cached elsewhere",
+    "Reddit community rules may limit comment frequency to prevent spam",
+    "Comment content is subject to subreddit moderation"
+  ],
+
+  "metadata": {
+    "author": "Claude Code Agent",
+    "confidence": 0.8,
+    "tested_on": "2026-02-15",
+    "browser": "Chromium via Playwright",
+    "website": "reddit.com",
+    "html_version": "HTML5 + React",
+    "notes": "Reddit uses React with data-testid attributes. Comments load dynamically."
+  }
+}

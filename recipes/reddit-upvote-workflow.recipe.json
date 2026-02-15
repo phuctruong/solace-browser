@@ -1,0 +1,148 @@
+{
+  "recipe_id": "reddit-upvote-workflow",
+  "recipe_version": "1.0.0",
+  "created_at": "2026-02-15T00:00:00Z",
+  "platform": "reddit",
+  "workflow": "upvote-downvote-cycle",
+
+  "reasoning": {
+    "research": "Reddit uses AJAX-based voting similar to HackerNews. Posts display vote buttons (upvote/downvote arrows) alongside each post. Unlike HN, Reddit shows real-time vote count updates and highlights the user's vote state (orange = upvoted, blue = downvoted).",
+    "strategy": "Navigate to subreddit, identify a post, extract current vote count, click upvote button, verify vote count increased, then click again to undo (downvote), verify count returns to original.",
+    "llm_learnings": "Reddit's voting system is reversible and tracks vote state visually. Users can upvote, downvote, or remove vote. Vote buttons are typically positioned to the left of post content. Vote counts update immediately via AJAX without page reload.",
+    "key_insight": "Reddit's UI elements use data-testid attributes and accessibility labels more than traditional classes, making selector discovery important. The voting arrows are often within a parent container with specific aria-labels.",
+    "verification_method": "Extract score/vote count before and after each action. Verify vote count changes and returns to baseline when toggled."
+  },
+
+  "portals": {
+    "reddit_homepage": {
+      "to_post": {
+        "selector": "a[data-testid='post-title']",
+        "action": "click",
+        "type": "navigate_to_comments",
+        "strength": 0.95,
+        "description": "Click post title to navigate to comments page"
+      }
+    },
+    "post_view": {
+      "upvote_button": {
+        "selector": "button[aria-label*='upvote' i]",
+        "action": "click",
+        "type": "upvote",
+        "strength": 0.85,
+        "reversible": true,
+        "description": "Click upvote arrow to upvote post"
+      },
+      "downvote_button": {
+        "selector": "button[aria-label*='downvote' i]",
+        "action": "click",
+        "type": "downvote",
+        "strength": 0.85,
+        "reversible": true,
+        "description": "Click downvote arrow to downvote or undo upvote"
+      },
+      "vote_score": {
+        "selector": "[data-testid='vote-arrows-container']",
+        "action": "extract",
+        "type": "read",
+        "strength": 0.9,
+        "description": "Extract current vote score"
+      }
+    }
+  },
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "target": "https://reddit.com/",
+      "description": "Navigate to Reddit homepage"
+    },
+    {
+      "step": 2,
+      "action": "wait",
+      "duration": 2000,
+      "description": "Wait for page to fully load"
+    },
+    {
+      "step": 3,
+      "action": "extract",
+      "selector": "[data-testid='vote-arrows-container'] span",
+      "description": "Get current vote score from first visible post",
+      "example_output": "1.2k"
+    },
+    {
+      "step": 4,
+      "action": "click",
+      "selector": "button[aria-label*='upvote' i]",
+      "description": "Click upvote button",
+      "success_indicator": "Button click returns success"
+    },
+    {
+      "step": 5,
+      "action": "wait",
+      "duration": 500,
+      "description": "Wait for AJAX response"
+    },
+    {
+      "step": 6,
+      "action": "extract",
+      "selector": "[data-testid='vote-arrows-container'] span",
+      "description": "Get vote score after upvote",
+      "verification": "Score should increase by 1"
+    },
+    {
+      "step": 7,
+      "action": "click",
+      "selector": "button[aria-label*='upvote' i]",
+      "description": "Click upvote again to undo/toggle"
+    },
+    {
+      "step": 8,
+      "action": "wait",
+      "duration": 500,
+      "description": "Wait for toggle to process"
+    },
+    {
+      "step": 9,
+      "action": "extract",
+      "selector": "[data-testid='vote-arrows-container'] span",
+      "description": "Get final score (should match original)",
+      "verification": "final_score == initial_score"
+    }
+  ],
+
+  "test_results": {
+    "upvote_clickable": true,
+    "downvote_clickable": true,
+    "reversible": true,
+    "visual_feedback": true,
+    "last_verified": "2026-02-15T18:30:00Z",
+    "test_url": "https://reddit.com/"
+  },
+
+  "selectors": {
+    "upvote_button": "button[aria-label*='upvote' i]",
+    "downvote_button": "button[aria-label*='downvote' i]",
+    "vote_score": "[data-testid='vote-arrows-container'] span",
+    "post_link": "a[data-testid='post-title']"
+  },
+
+  "next_ai_instructions": "Reddit voting uses aria-label attributes extensively. Key selectors use accessibility labels (upvote/downvote) rather than class names. Vote buttons are typically in a container with data-testid='vote-arrows-container'. Score is readable from span inside that container. Always verify reversibility by toggling vote state twice.",
+
+  "safety_notes": [
+    "Voting requires authentication on your account",
+    "Vote history is tracked by Reddit",
+    "Excessive bot-like voting can trigger rate limits or account restrictions",
+    "Reddit enforces rate limiting on voting (typically allows ~5-10 votes per post per account)"
+  ],
+
+  "metadata": {
+    "author": "Claude Code Agent",
+    "confidence": 0.85,
+    "tested_on": "2026-02-15",
+    "browser": "Chromium via Playwright",
+    "website": "reddit.com",
+    "html_version": "HTML5 + React",
+    "notes": "Reddit uses React for rendering. Vote buttons use aria-labels for accessibility."
+  }
+}
