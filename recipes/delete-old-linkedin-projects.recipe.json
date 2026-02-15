@@ -1,0 +1,186 @@
+{
+  "recipe_id": "delete-old-linkedin-projects",
+  "version": "1.0",
+  "created": "2026-02-14",
+  "authority": "65537",
+
+  "metadata": {
+    "title": "Delete Old LinkedIn Projects (Technical Jargon Versions)",
+    "category": "linkedin-cleanup",
+    "estimated_time": "2-3 minutes",
+    "difficulty": "easy",
+    "cpu_only": true,
+    "llm_cost": "$0.00 (reasoning externalized)"
+  },
+
+  "reasoning": {
+    "problem": "LinkedIn profile has 10 projects total: 5 old (technical jargon) + 5 new (HR-approved domain names). Recipe replay partially executed before system crash, creating NEW projects instead of updating OLD ones.",
+
+    "why_delete": [
+      "Old projects use technical jargon (STILLWATER OS, SOLACEAGI, PZIP, PHUCNET, IF-THEORY)",
+      "New projects use domain names (Stillwater.com, SolaceAgi.com, PZip.com, IFTheory.com, Phuc.net)",
+      "New projects have HR-approved copy (outcome-focused, who benefits, impact bullets)",
+      "Duplicates confuse profile visitors and dilute messaging",
+      "LinkedIn best practices: 5-7 projects max, all with clear value props"
+    ],
+
+    "strategy": "Navigate to projects page → Find old project by name → Click edit → Click delete → Confirm → Repeat for all 5",
+
+    "success_criteria": [
+      "Only 5 projects remain on profile",
+      "All projects use domain name format (*.com)",
+      "All projects have HR-approved descriptions",
+      "No technical jargon projects remain",
+      "Profile looks clean and professional"
+    ],
+
+    "llm_learnings": "When LinkedIn recipe replay is interrupted, it may create duplicates instead of updating existing entries. Always verify final state and create cleanup recipes. For future: add transaction-like behavior to recipes (check if exists → update vs create).",
+
+    "research_applied": [
+      "LinkedIn Project Section Guide 2026 - Max 5-7 projects, focus on outcomes",
+      "Resume Writing Lab - Use 'who benefits' language, not technical specs",
+      "Teal HQ - Impact bullets with metrics, domain authority signals",
+      "Resume Worded - Professional copy, avoid jargon, clear value props"
+    ]
+  },
+
+  "projects_to_delete": [
+    {
+      "name": "STILLWATER OS",
+      "reason": "Technical jargon, replaced by Stillwater.com with HR copy",
+      "old_description": "Universal compression platform + persistent intelligence OS. 65537D OMEGA architecture. 4.075x compression ratio.",
+      "new_version": "Stillwater.com"
+    },
+    {
+      "name": "SOLACEAGI",
+      "reason": "All caps, technical jargon, replaced by SolaceAgi.com",
+      "old_description": "Verified AI Expert Council (65537 decision-makers, not chatbot). Proof-based reasoning, persistent identity, CPU-native.",
+      "new_version": "SolaceAgi.com"
+    },
+    {
+      "name": "PZIP",
+      "reason": "All caps, replaced by PZip.com with impact bullets",
+      "old_description": "Compression product. Beats LZMA on all file types. 91.4% win rate. Commercial-ready, open source.",
+      "new_version": "PZip.com"
+    },
+    {
+      "name": "PHUCNET",
+      "reason": "All caps, replaced by Phuc.net with clearer positioning",
+      "old_description": "Solo founder brand hub. Ecosystem center for all 5 projects. Support via tips (ko-fi.com/phucnet). Building in public.",
+      "new_version": "Phuc.net"
+    },
+    {
+      "name": "IF-THEORY",
+      "reason": "Hyphenated caps, replaced by IFTheory.com with research focus",
+      "old_description": "Mathematical foundations. 137 prime discoveries. Fermat primes, Mersenne numbers, Sophie Germain primes. Physics + mathematics R&D.",
+      "new_version": "IFTheory.com"
+    }
+  ],
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "type": "navigate",
+      "target": "https://www.linkedin.com/in/me/details/projects/",
+      "reasoning": "Start at projects page to see all current projects",
+      "evidence": ["url_contains:/details/projects/", "projects_visible:10"]
+    },
+    {
+      "step": 2,
+      "type": "comment",
+      "note": "Manual deletion required - LinkedIn uses dynamic IDs that change per session",
+      "reasoning": "Automated clicking would require complex element identification. Manual is faster (2-3 min) and more reliable."
+    },
+    {
+      "step": 3,
+      "type": "comment",
+      "note": "For each old project (STILLWATER OS, SOLACEAGI, PZIP, PHUCNET, IF-THEORY):",
+      "substeps": [
+        "Find project card on page",
+        "Click pencil/edit icon (usually top-right of card)",
+        "Wait for edit modal to open",
+        "Click 'Delete' button (usually bottom of modal)",
+        "Click 'Confirm' or 'Yes' to confirm deletion",
+        "Wait for success message",
+        "Verify project removed from list"
+      ]
+    },
+    {
+      "step": 4,
+      "type": "navigate",
+      "target": "https://www.linkedin.com/in/me/details/projects/",
+      "reasoning": "Refresh page to verify all deletions completed",
+      "evidence": ["projects_count:5", "only_domain_names_visible"]
+    },
+    {
+      "step": 5,
+      "type": "comment",
+      "note": "Verify final state: Only 5 projects with domain names (Stillwater.com, SolaceAgi.com, PZip.com, IFTheory.com, Phuc.net)"
+    }
+  ],
+
+  "evidence_collection": {
+    "before": {
+      "screenshot": "artifacts/screenshot.png",
+      "projects_count": 10,
+      "old_projects": 5,
+      "new_projects": 5
+    },
+    "after": {
+      "screenshot": "artifacts/screenshot-after-cleanup.png",
+      "projects_count": 5,
+      "all_domain_names": true,
+      "all_hr_approved": true
+    }
+  },
+
+  "next_ai_instructions": "This recipe documents WHY we delete (reasoning) but LinkedIn's dynamic UI prevents full automation. For future: (1) Use this recipe as a checklist during manual deletion, (2) Consider LinkedIn API for programmatic deletion if available, (3) Create transaction-like recipe behavior (if exists → update, else → create) to prevent duplicates.",
+
+  "portals": {
+    "linkedin_profile_any": {
+      "to_projects_page": {
+        "url": "https://www.linkedin.com/in/me/details/projects/",
+        "type": "navigate",
+        "strength": 1.0,
+        "evidence": ["url_contains:/details/projects/"]
+      }
+    },
+    "linkedin_projects_page": {
+      "to_edit_project": {
+        "selector": "button[aria-label*='Edit']",
+        "type": "modal_open",
+        "strength": 0.7,
+        "note": "Dynamic - aria-label changes per project"
+      },
+      "to_delete_in_modal": {
+        "selector": "button:has-text('Delete')",
+        "type": "destructive_action",
+        "strength": 0.8,
+        "confirm_required": true
+      }
+    }
+  },
+
+  "cpu_replay_instructions": {
+    "command": "python replay_recipe.py recipes/delete-old-linkedin-projects.recipe.json",
+    "note": "Currently requires manual execution of deletion steps. Recipe provides checklist and reasoning.",
+    "cost": "$0.00 LLM cost (all reasoning externalized)",
+    "time": "2-3 minutes manual work"
+  },
+
+  "self_improvement_notes": {
+    "what_i_learned": [
+      "Recipe replay can create duplicates if interrupted mid-execution",
+      "LinkedIn uses dynamic IDs - full automation is brittle",
+      "Manual deletion (2-3 min) often beats debugging selectors (30+ min)",
+      "Externalized reasoning in recipes = $0 LLM cost for future runs",
+      "Recipes serve as both automation AND documentation"
+    ],
+    "next_time": [
+      "Add pre-flight check: if project exists, update vs create",
+      "Add rollback mechanism for interrupted recipes",
+      "Consider LinkedIn API for reliable project management",
+      "Add evidence snapshots at every step for debugging"
+    ]
+  }
+}
