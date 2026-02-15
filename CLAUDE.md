@@ -76,6 +76,196 @@ solace-browser/
 
 ---
 
+## CRITICAL: OpenClaw vs Solace Browser (Live LLM Paradigm)
+
+### What OpenClaw Does (Browser Extension Pattern)
+OpenClaw uses Chrome DevTools Protocol (CDP) with a browser extension to enable real-time LLM interaction:
+- Extension sends page state to LLM
+- LLM reasons about next action
+- Extension executes action via CDP
+- Cycle repeats in real-time
+
+### What Solace Browser Does (Better - CLI Pattern)
+**DO NOT write pre-written automation scripts.** Instead:
+
+1. **Start the persistent browser server** (stays alive between commands)
+2. **Get page state** via `/snapshot` or `/html-clean` endpoints
+3. **Claude (you) reason** about what to do next in real-time
+4. **Execute via HTTP API** (`/click`, `/fill`, `/navigate`, etc.)
+5. **Verify result** by getting new snapshot
+6. **Save knowledge** as recipes + PrimeWiki + skills
+
+This is **better than OpenClaw** because:
+- ✅ No browser extension needed
+- ✅ Uses CLI (terminal) - more flexible
+- ✅ Phase 1 produces reusable recipes → Phase 2+ cost 100x cheaper
+- ✅ Builds self-improving knowledge base (PrimeWiki + recipes + skills)
+- ✅ Deterministic replay with snapshots and canonicalization
+
+### Correct Workflow (Live LLM, Not Scripts)
+
+```bash
+# 1. Start browser server (terminal 1)
+python persistent_browser_server.py
+# Server ready at http://localhost:9222
+
+# 2. Navigate (CLI, this terminal)
+curl -X POST http://localhost:9222/navigate \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://reddit.com/login"}'
+
+# 3. Get page state (Claude reads this)
+curl http://localhost:9222/html-clean | jq -r '.html'
+
+# 4. Claude reasons: "I see email field, password field, login button"
+
+# 5. Execute (Claude decides this)
+curl -X POST http://localhost:9222/fill \
+  -H "Content-Type: application/json" \
+  -d '{"selector": "input[type=email]", "text": "user@example.com"}'
+
+# 6. Verify (Claude checks result)
+curl http://localhost:9222/html-clean | jq '.html' | grep "user@example.com"
+
+# 7. Repeat steps 3-6 for each action
+
+# 8. Save recipe (after task complete)
+# Document: what I did, why, what I learned, portals discovered
+
+# 9. Save PrimeWiki node (knowledge captured)
+# Document: page structure, landmarks, selectors, magic words
+
+# 10. Git commit
+git add . && git commit -m "Phase 1 discovery: Reddit exploration complete"
+```
+
+### Why Scripts Are Wrong
+
+❌ **Pre-written scripts** (OLD APPROACH):
+- Hardcode every selector and action
+- Brittle - breaks when UI changes
+- No learning - scripts don't improve
+- Can't adapt to unexpected states
+- Can't explain reasoning
+- Can't reuse knowledge
+
+✅ **Live LLM reasoning** (CORRECT APPROACH):
+- Real-time decision making
+- Adapts to UI changes
+- Learns and improves (recipes capture reasoning)
+- Handles unexpected states
+- Explains every decision
+- Produces reusable recipes for Phase 2
+
+### Remember This
+"If you're writing a Python script to automate a website, you're doing it wrong. Use the browser server API and let Claude reason in real-time."
+
+---
+
+## Phase 1 (Discovery) vs Phase 2+ (Replay) Model
+
+### Phase 1: Live LLM Discovery
+- **Cost**: $0.15 per site (30 min LLM reasoning)
+- **What happens**: Claude navigates, observes, reasons, learns
+- **Output**: Recipes + PrimeWiki + Skills + Cookies
+- **Run once** per site type
+- **Time**: 20-30 minutes per site
+
+### Phase 2+: CPU Replay (100x Cheaper)
+- **Cost**: $0.0015 per run (just load recipes, no LLM)
+- **What happens**: Load recipes → load cookies → execute actions → verify
+- **Input**: Use recipes from Phase 1
+- **CPU only** - no LLM calls
+- **Time**: 12 seconds per run
+- **Runs infinitely** - same action repeated
+
+### Example: Gmail Login
+
+**Phase 1 (First Time):**
+```bash
+# Claude navigates, observes, reasons
+curl -X POST http://localhost:9222/navigate -d '{"url": "gmail.com"}'
+curl http://localhost:9222/html-clean  # Claude sees login form
+# Claude: "I see email field, I'll auto-fill with event chain"
+curl -X POST http://localhost:9222/fill -d '{"selector": "email", "text": "user@gmail.com"}'
+# ... more actions ...
+# Claude saves recipe: gmail-login-with-event-chain.recipe.json
+# Claude saves cookies: artifacts/gmail_session.json
+# Cost: $0.15
+```
+
+**Phase 2+ (Subsequent Times):**
+```bash
+# Load recipe + cookies
+recipes = load("gmail-login-with-event-chain.recipe.json")
+cookies = load("artifacts/gmail_session.json")
+
+# Try cookies first (skip login if already authenticated)
+browser.set_cookies(cookies)
+curl -X POST http://localhost:9222/navigate -d '{"url": "gmail.com"}'
+snapshot = curl http://localhost:9222/html-clean
+if "inbox" in snapshot:
+    # Already logged in! Done.
+    # Cost: $0.0015, Time: 2 seconds
+else:
+    # Run recipe steps
+    # Cost: $0.0015, Time: 10 seconds
+```
+
+---
+
+## Session Learning: Security Triggers (Gmail)
+
+### What Happened
+- Attempted Gmail login 5+ times in quick succession
+- Gmail detected suspicious behavior (bot-like pattern)
+- Session terminated, couldn't recover
+
+### Why It Happened
+- ❌ Kept re-logging in without checking for existing cookies
+- ❌ Used same credentials repeatedly (no rate limiting)
+- ❌ Didn't respect OAuth flow (tried to skip 2FA entirely)
+
+### Solution Learned
+- ✅ Check saved cookies FIRST before login attempt
+- ✅ Only login once per session (reuse cookies after that)
+- ✅ Respect authentication flow (email → click Next → password → click Sign in → wait for OAuth if needed)
+- ✅ Use full event chain (focus → input → change → keyup → blur) - Gmail validates via events
+
+### Key Insight
+**Websites have rate limits and bot detection. Respect their security or they'll block you. The smart approach is to login once (Phase 1), save cookies, then reuse (Phase 2+). Never retry authentication.**
+
+---
+
+## Session Learning: Redis Phase 1 Exploration Success
+
+### What We Discovered
+Explored 3 Reddit pages (logged out), captured:
+- **Homepage**: 209 landmarks (buttons, navigation, lists)
+- **Login page**: Email field, password field, SSO buttons, 2FA options
+- **Subreddit page**: Post list, subscribe button, sort options
+
+### What We Saved
+1. **3 PrimeWiki nodes** - semantic structure of each page
+2. **3 Recipe templates** - selectors, portals, magic words
+3. **3 Canonical snapshots** - deterministic SHA-256 hashes
+4. **212 total landmarks** - buttons, forms, navigation elements
+
+### Key Learnings
+- ✅ Exploration works better **logged out first** (no security triggers)
+- ✅ Snapshot canonicalization produces deterministic hashes (useful for verification)
+- ✅ Portal architecture maps state transitions (from homepage → login → subreddit)
+- ✅ Magic words ("Log in", "Sign up", "Subscribe") help future LLMs understand intent
+
+### Phase 2 Application
+Next time we visit Reddit, we can:
+1. Load recipes from Phase 1
+2. Load cookies (after login)
+3. Execute login recipe → navigate to subreddit → create post
+4. Cost: $0.0015 instead of $0.15
+
+---
+
 ## How to Use
 
 ### Start the Browser Server
