@@ -16,9 +16,10 @@ Flow:
 import asyncio
 import os
 import sys
-import configparser
 from datetime import datetime
 from pathlib import Path
+
+from credential_manager import CredentialManager
 
 if not os.environ.get('DISPLAY'):
     os.environ['DISPLAY'] = ':1'
@@ -99,12 +100,14 @@ async def main():
     print("="*80)
     print()
 
-    # Load credentials
-    config = configparser.ConfigParser()
-    config.read('credentials.properties')
-
-    linkedin_email = config.get('linkedin', 'email')
-    linkedin_password = config.get('linkedin', 'password')
+    # Load credentials (secure - from environment variables)
+    try:
+        linkedin_creds = CredentialManager.get_credentials('linkedin')
+        linkedin_email = linkedin_creds['email']
+        linkedin_password = linkedin_creds['password']
+    except EnvironmentError as e:
+        print(f"❌ {e}")
+        sys.exit(1)
 
     print("Configuration:")
     print(f"  LinkedIn Email: {linkedin_email}")

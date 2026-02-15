@@ -11,23 +11,23 @@ Phase 2+ (future): Load recipes + execute with CPU only
 
 import asyncio
 import json
-import configparser
 from datetime import datetime
 from pathlib import Path
 from playwright.async_api import async_playwright
 
+from credential_manager import CredentialManager
+
 # ============================================================================
-# LOAD CREDENTIALS
+# LOAD CREDENTIALS (SECURE)
 # ============================================================================
 
 def load_credentials(section='gmail'):
-    """Load credentials from credentials.properties"""
-    config = configparser.ConfigParser()
-    config.read('credentials.properties')
-
-    if section in config:
-        return config[section]
-    return {}
+    """Load credentials from environment variables (secure)"""
+    try:
+        return CredentialManager.get_credentials(section)
+    except EnvironmentError as e:
+        print(f"❌ Credential Error: {e}")
+        raise
 
 # ============================================================================
 # SCOUT AGENT: Navigate & Detect State

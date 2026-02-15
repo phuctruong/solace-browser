@@ -37,11 +37,16 @@ build.log
 Thumbs.db
 
 # Local config
-.env
-.env.local
+.env           # Actual credentials (should never be committed)
+.env.local     # Local overrides
 local.conf
+credentials.properties  # Plaintext credentials (INSECURE)
+credentials.json        # Credential files
+secrets/       # Secret directories
+private/       # Private files
+
+# NOTE: .env.example IS committed - it's a template with no real credentials
 
 # Thorium
 chromium/
 v8/
-credentials.properties
