@@ -24,6 +24,7 @@ from enhanced_browser_interactions import (
     NetworkMonitor,
     get_llm_snapshot
 )
+from rate_limiter import RateLimiter
 
 logging.basicConfig(
     level=logging.INFO,
@@ -48,6 +49,7 @@ class PersistentBrowserServer:
         self.observer = None
         self.network = None
         self.session_file = "artifacts/linkedin_session.json"
+        self.rate_limiter = RateLimiter()  # Phase 2 Fix #2: Rate limiting
         self.app = web.Application()
         self.setup_routes()
 
@@ -83,6 +85,9 @@ class PersistentBrowserServer:
         self.app.router.add_get('/js-state', self.handle_js_state)  # JavaScript window variables
         self.app.router.add_get('/api-calls', self.handle_api_calls)  # Intercepted network APIs
         self.app.router.add_get('/rate-limits', self.handle_rate_limits)  # Rate limit headers
+
+        # ===== RATE LIMITING (Phase 2 Fix #2) =====
+        self.app.router.add_get('/rate-limit-status', self.handle_rate_limit_status)  # Check rate limit status
 
     async def start_browser(self):
         """Start browser (once) with anti-detection for Gmail/Google"""
@@ -334,6 +339,11 @@ class PersistentBrowserServer:
             return web.json_response({"error": "url required"}, status=400)
 
         logger.info(f"→ Navigating to: {url} (wait_strategy: {wait_strategy})")
+
+        # Phase 2 Fix #2: Check rate limits before navigating
+        rate_limit_info = await self.rate_limiter.wait_if_needed(url, reason="navigate")
+        if rate_limit_info.get('waited'):
+            logger.info(f"⏱️  Rate limited: {rate_limit_info.get('wait_reason', 'rate limit enforced')}")
 
         # Initial navigation - wait for page load
         try:
@@ -1277,6 +1287,30 @@ class PersistentBrowserServer:
         except Exception as e:
             logger.error(f"❌ Rate limit extraction failed: {e}")
             return web.json_response({"error": str(e)}, status=400)
+
+    async def handle_rate_limit_status(self, request):
+        """Check rate limit status for a domain (Phase 2 Fix #2)"""
+        try:
+            url = request.query.get('url', self.page.url if self.page else 'reddit.com')
+
+            if not url:
+                return web.json_response(
+                    {"error": "Missing 'url' parameter"},
+                    status=400
+                )
+
+            stats = self.rate_limiter.get_stats(url)
+            all_stats = self.rate_limiter.get_all_stats()
+
+            return web.json_response({
+                "success": True,
+                "current_domain": stats,
+                "all_tracked_domains": all_stats,
+                "message": f"Rate limit for {stats['domain']}: {stats.get('requests_used', 0)}/{stats.get('requests_limit', '?')} requests"
+            })
+        except Exception as e:
+            logger.error(f"❌ Rate limit status check failed: {e}")
+            return web.json_response({"error": str(e)}, status=500)
 
     # ========================================================================
     # Server lifecycle
