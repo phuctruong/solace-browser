@@ -180,23 +180,25 @@ class PersistentBrowserServer:
         selector = data.get('selector')
         text = data.get('text')
         slowly = data.get('slowly', False)  # OpenClaw pattern for contenteditable
+        delay_ms = data.get('delay', 15)  # Configurable delay (default 15ms, was 50ms)
 
         if not selector or text is None:
             return web.json_response({"error": "selector and text required"}, status=400)
 
         try:
-            logger.info(f"⌨️  Filling: {selector} (slowly={slowly})")
+            logger.info(f"⌨️  Filling: {selector} (slowly={slowly}, delay={delay_ms}ms)")
 
             # OpenClaw pattern: slowly=True for contenteditable divs
             if slowly:
                 # Click to focus first
                 await self.page.click(selector, timeout=8000)
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.1)  # Reduced from 0.2s
                 # Clear existing text
                 await self.page.keyboard.press("Control+A")
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.05)  # Reduced from 0.1s
                 # Type slowly instead of fill (works for contenteditable)
-                await self.page.keyboard.type(text, delay=50)
+                # OPTIMIZED: 15ms default (was 50ms) = 3.3x faster
+                await self.page.keyboard.type(text, delay=delay_ms)
             else:
                 # Standard fill for normal inputs
                 await self.page.fill(selector, text)

@@ -1,0 +1,116 @@
+{
+  "recipe_id": "delete-linkedin-projects-openclaw",
+  "version": "1.0",
+  "created": "2026-02-14T22:00:00Z",
+  "description": "Delete LinkedIn project using OpenClaw role selector pattern",
+
+  "reasoning": {
+    "research": "LinkedIn uses dynamic React UI with CSS classes that change per session. Traditional selectors (aria-label, class names, IDs) all fail because they're not in the HTML or change dynamically.",
+
+    "discovery": "ARIA tree contains computed accessibility labels that are STABLE. Playwright role selectors (role=link[name='...']) use this computed ARIA, not HTML attributes.",
+
+    "strategy": "Use Playwright role-based selectors to find edit links by exact name. Pattern: role=link[name='Edit project {PROJECT_NAME}']. This bypasses all dynamic UI issues.",
+
+    "openclaw_learning": "Found this pattern in ~/projects/openclaw/src/browser/pw-tools-core.interactions.ts - they use getByRole('link', {name: '...'}) as the most stable selector strategy",
+
+    "llm_learnings": "Future LLMs should: (1) Always try role selectors first for dynamic UIs, (2) Check ARIA snapshot to find exact element names, (3) Use text-based selectors as fallback, (4) Never trust CSS classes on React sites"
+  },
+
+  "portals": {
+    "linkedin_projects_page": {
+      "to_edit_modal": {
+        "selector": "role=link[name='Edit project {PROJECT_NAME}']",
+        "type": "click",
+        "strength": 0.98,
+        "why_stable": "Uses computed ARIA labels which don't change"
+      }
+    },
+
+    "edit_modal": {
+      "to_delete_confirm": {
+        "selector": "role=button[name='Delete']",
+        "type": "click",
+        "strength": 0.95,
+        "why_stable": "Button text is stable for accessibility"
+      }
+    },
+
+    "delete_confirm": {
+      "to_complete": {
+        "selector": "role=button[name='Delete']",
+        "type": "click",
+        "strength": 0.90,
+        "note": "Same button name, confirms deletion"
+      }
+    }
+  },
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "url": "https://www.linkedin.com/in/me/details/projects/",
+      "wait": "domcontentloaded",
+      "duration_ms": 2770
+    },
+    {
+      "step": 2,
+      "action": "get_aria_snapshot",
+      "purpose": "Find exact project names and edit link labels",
+      "example_output": "Edit project IF-THEORY",
+      "duration_ms": 320
+    },
+    {
+      "step": 3,
+      "action": "click",
+      "selector": "role=link[name='Edit project IF-THEORY']",
+      "wait_after_ms": 500,
+      "duration_ms": 750
+    },
+    {
+      "step": 4,
+      "action": "click",
+      "selector": "role=button[name='Delete']",
+      "wait_after_ms": 500,
+      "duration_ms": 400
+    },
+    {
+      "step": 5,
+      "action": "click",
+      "selector": "role=button[name='Delete']",
+      "note": "Confirm deletion",
+      "wait_after_ms": 1000,
+      "duration_ms": 400
+    }
+  ],
+
+  "evidence": {
+    "success_rate": "4/5 (80%)",
+    "failures": ["STILLWATER OS timed out"],
+    "method": "Tested in headless mode on 2026-02-14",
+    "screenshot": "artifacts/screenshot.png",
+    "total_time_per_delete": "~5 seconds"
+  },
+
+  "optimizations_applied": {
+    "wait_times": "Reduced from 2s to 0.5s after clicks",
+    "selector_strategy": "Role selectors (most stable)",
+    "headless_compatible": true,
+    "parallelizable": false
+  },
+
+  "next_ai_instructions": "To delete a LinkedIn project: (1) Navigate to /details/projects/, (2) Get ARIA snapshot to find exact project name, (3) Use role=link[name='Edit project {NAME}'] to click edit, (4) Use role=button[name='Delete'] twice (delete + confirm). Run in headless mode for Cloud Run deployment.",
+
+  "cost_savings": {
+    "llm_cost_per_run": "$0 (recipe replay)",
+    "vs_openclaw": "$2.50 per run",
+    "vs_manual": "30 seconds of human time"
+  },
+
+  "metadata": {
+    "tags": ["linkedin", "deletion", "openclaw-pattern", "role-selector", "headless"],
+    "difficulty": "medium",
+    "prerequisites": ["logged_in_session"],
+    "cloud_run_ready": true
+  }
+}
