@@ -41,7 +41,8 @@
 **Checks Monitor Performs**:
 - ✅ Page loaded (not hanging, timeout, redirect)
 - ✅ HTTP response code (200, not 403/429/503)
-- ✅ Content visible (not blank, not error page)
+- ✅ **HTML content present** (not blank, min 100 bytes) ⭐ CRITICAL
+- ✅ **Interactive elements found** (buttons, inputs, 10+) ⭐ CRITICAL
 - ✅ JavaScript executed (no console errors)
 - ✅ Expected state (homepage, login page, etc.)
 - ✅ No bot detection triggers (reCAPTCHA, Cloudflare, etc.)
@@ -55,10 +56,26 @@
   "readiness": "❌ PAGE_LOAD_FAILED",
   "error": "rate_limit_hit",
   "recommendation": "Wait 30 seconds, then retry",
-  "other_agents_status": "DO_NOT_RUN"
+  "agents_blocked": ["Scout", "Solver", "Skeptic", "Keeper"],
+  "action": "Stop browser, restart, retry"
 }
 ```
-→ Scout, Solver, Skeptic, Keeper all WAIT until Monitor says ✅ READY
+→ Scout, Solver, Skeptic, Keeper all BLOCKED until Monitor says ✅ READY
+
+**Monitor's Stop/Restart Strategy**:
+```
+[Check page]
+  ├─ Content blank? → [Kill browser]
+  │                 → [Restart browser]
+  │                 → [Retry navigation]
+  │                 → [Check again]
+  │
+  ├─ Still blank?  → [Report error]
+  │                → [Block all agents]
+  │                → [Await user direction]
+  │
+  └─ Content OK?   → ✅ PROCEED
+```
 
 ---
 
