@@ -583,11 +583,12 @@ LINKEDIN_PORTALS = {
 
 ---
 
-## Live LLM Exploration Workflow (Phase 1 Discovery)
+## Live LLM Exploration Workflow (Phase 1 Discovery) + Haiku Agents
 
 **Use this when exploring a new website for the first time.**
+**IMPORTANT: Use Haiku agents (Scout/Solver/Skeptic) to help analyze pages**
 
-### Example: Reddit Exploration
+### Example: Reddit Exploration with Haiku Agents
 
 ```bash
 # STEP 0: Check Registries (30 seconds)
@@ -599,63 +600,120 @@ grep -i "reddit" PRIMEWIKI_REGISTRY.md
 # STEP 1: Start Browser Server
 python persistent_browser_server.py &
 sleep 2
-echo "Browser server started at http://localhost:9222"
 
-# STEP 2: Navigate (Claude directs via HTTP)
+# STEP 2: Start Haiku Swarm (Scout + Solver + Skeptic)
+# Scout Agent (Page State Machine):
+#   - Role: Detect current page state, identify sections
+#   - Input: snapshot data, ARIA tree
+#   - Output: "I see header (nav), feed (posts), sidebar (communities)"
+#
+# Solver Agent (Selector Resolution):
+#   - Role: Find selectors for interactive elements
+#   - Input: element descriptions, ARIA tree
+#   - Output: "Button 'Create post' = button[data-testid='create-post']"
+#
+# Skeptic Agent (Quality Validation):
+#   - Role: Verify selectors work, check confidence
+#   - Input: selector + page snapshot
+#   - Output: "Selector confidence: 0.95 (tested, stable)"
+
+# STEP 3: Navigate via Browser API
 curl -X POST http://localhost:9222/navigate \
   -H "Content-Type: application/json" \
   -d '{"url": "https://reddit.com"}'
-echo "Navigated to reddit.com"
 
-# STEP 3: Get Page State (Claude analyzes)
-snapshot=$(curl http://localhost:9222/html-clean)
-echo "$snapshot" | jq '.html' | head -100
-# Claude reads: "I see header navigation, post feed, sidebar with communities"
+# STEP 4: Get Page Snapshot
+snapshot=$(curl http://localhost:9222/snapshot)
+echo "$snapshot" > /tmp/page_snapshot.json
 
-# STEP 4: Claude Reasons (LIVE LLM INTERACTION)
-# Claude (internally):
-# "I see posts, buttons for voting/commenting, subreddit names.
-#  I should identify all clickable elements to document page structure.
-#  I see a 'Create post' button - let me find its exact selector."
+# STEP 5: Scout Agent Analyzes (Page Structure Detection)
+# Scout reads snapshot and says:
+# "Structure detected:
+#  - Section: Header (navigation, search, auth buttons)
+#  - Section: Feed (post cards with voting, comments)
+#  - Section: Sidebar (communities list with join buttons)
+#  - Buttons: 18 major interactive elements found
+#  - Forms: 2 forms (search, login modal)"
 
-# STEP 5: Extract Selectors (Interactive)
-curl http://localhost:9222/snapshot | jq '.aria' | grep -i "create\|post\|button" | head -20
-# Claude: "I found button with text 'Create post', selector analysis..."
+# STEP 6: Solver Agent Resolves Selectors (For Each Element Scout Found)
+# Solver says:
+# "For button 'Create post':
+#   - Candidate 1: button:has-text('Create post') → WORKING (high confidence)
+#   - Candidate 2: button[data-testid='create-post'] → WORKING (high confidence)
+#   - Final selector: button[aria-label='Create post'] (0.95 confidence)
+#
+# For link 'Log in':
+#   - Final selector: button:has-text('Log in') (0.98 confidence)"
 
-# STEP 6: Build PrimeMermaid Diagram (Incrementally)
-# As Claude discovers sections, add to diagrams:
-#   - Header → Navigation → Feed
-#   - Feed → Post Cards → Comments
-#   - Post Cards → Upvote/Downvote buttons
+# STEP 7: Skeptic Agent Validates (Verification Pass)
+# Skeptic tests each selector and says:
+# "Validation results:
+#   - ✅ Create post button: FOUND, visible, clickable (confidence 0.95)
+#   - ✅ Log in button: FOUND, visible, clickable (confidence 0.98)
+#   - ✅ Post title link: FOUND, all posts have this selector (confidence 0.90)
+#   - ⚠️  Community join button: Sometimes visible, sometimes not (confidence 0.85)"
 
-# STEP 7: Document Landmarks with Screenshots
-curl http://localhost:9222/screenshot > artifacts/reddit-homepage-section-1.png
-# Screenshot shows buttons, forms, navigation - Claude analyzes visually
+# STEP 8: Incrementally Build PrimeMermaid Diagram
+# As agents find elements, add to diagram:
+# - Scout says: "Found section: Header"
+# - Solver: "Found elements: logo, search, create-post button, login"
+# - Skeptic: "All elements working with 0.95+ confidence"
+# → Add Header section to Site Map diagram
 
-# STEP 8: Test Key Interactions (Without Logging In)
-# Click "Subscribe" button
+# STEP 9: Document Landmarks with Confidence Scores
+# Landmarks Table:
+# | Element | Type | Selector | Confidence | Agent Validation |
+# | Create Post | BUTTON | button[aria-label='Create post'] | 0.95 | ✅ Skeptic verified |
+# | Login | BUTTON | button:has-text('Log in') | 0.98 | ✅ Skeptic verified |
+
+# STEP 10: Test Key Interactions (With Agent Oversight)
 curl -X POST http://localhost:9222/click \
   -H "Content-Type: application/json" \
-  -d '{"selector": "button[aria-label*=\"Subscribe\"]"}'
+  -d '{"selector": "button:has-text(\"Create post\")"}'
 
-# STEP 9: Verify Changes & Screenshot
-curl http://localhost:9222/screenshot > artifacts/reddit-after-click.png
-# Claude: "Good, button changed state. Selector confirmed working."
+# Scout Agent monitors: "Page state changed, create-post modal visible"
+# Skeptic Agent verifies: "Modal appeared as expected, selector working"
 
-# STEP 10: Save Phase 1 Results
-#   - Created primewiki/reddit-homepage.primewiki.md with PrimeMermaid diagrams
-#   - Identified all selectors (confidence scores based on testing)
-#   - Created recipes/reddit-explore.recipe.json with portal maps
-#   - Documented magic words, security patterns
-#   - Saved ~10 screenshots showing different sections
+# STEP 11: Save Phase 1 Results (Agents Help Create Docs)
+# Scout + Solver + Skeptic collectively output:
+# - primewiki/reddit-homepage-phase1.primewiki.md
+#   - Site Map (from Scout's structure detection)
+#   - Landmarks Table (from Solver's selector resolution)
+#   - Confidence Scores (from Skeptic's validation)
+# - recipes/reddit-explore.recipe.json
+#   - Portal maps (Scout identifies transitions)
+#   - Selectors (Solver provides exact paths)
+#   - Success metrics (Skeptic reports success rate)
 
-# STEP 11: Update Registries
-echo "- reddit-homepage.recipe.json :: Phase 1 complete, Phase 2 pending" >> RECIPE_REGISTRY.md
-echo "### reddit-homepage.primewiki.md :: 156+ landmarks, Phase 1 complete" >> PRIMEWIKI_REGISTRY.md
+# STEP 12: Update Registries (With Agent Signatures)
+echo "- reddit-homepage.recipe.json :: Phase 1 complete, Scout+Solver+Skeptic verified" >> RECIPE_REGISTRY.md
 
-# STEP 12: Commit Everything
-git add -A && git commit -m "feat(reddit): Phase 1 exploration - homepage structure mapped with PrimeMermaid diagrams"
+# STEP 13: Commit Everything
+git add -A && git commit -m "feat(reddit): Phase 1 - Haiku agents mapped structure with PrimeMermaid"
 ```
+
+### Key Integration Points
+
+**Scout Agent (Page State Machine)**
+- Detects: sections, content areas, navigation structure
+- Produces: page layout description, component inventory
+- Confidence: 0.90+ (structural elements are stable)
+
+**Solver Agent (Selector Resolution)**
+- Finds: CSS selectors, ARIA labels, data attributes
+- Produces: selector candidates ranked by reliability
+- Confidence: varies by selector type (buttons 0.95+, dynamic content 0.80-0.90)
+
+**Skeptic Agent (Quality Validation)**
+- Tests: each selector actually works, clickability, visibility
+- Produces: validation report with pass/fail, confidence scores
+- Confidence: based on actual testing in browser
+
+**Claude's Role**
+- Orchestrates: calls agents in right order
+- Synthesizes: combines findings into PrimeMermaid diagrams
+- Documents: creates PrimeWiki node with complete information
+- Commits: saves knowledge for future LLMs
 
 ### Key Differences from Pre-Scripted Approach
 
