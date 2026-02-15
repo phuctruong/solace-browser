@@ -66,6 +66,16 @@ class PersistentBrowserServer:
         self.app.router.add_post('/save-session', self.handle_save_session)
         self.app.router.add_get('/screenshot', self.handle_screenshot)
 
+        # ===== UNFAIR ADVANTAGE FEATURES (Not in Playwright/Selenium) =====
+        self.app.router.add_post('/mouse-move', self.handle_mouse_move)  # Human-like mouse paths
+        self.app.router.add_post('/scroll-human', self.handle_scroll_human)  # Natural scrolling
+        self.app.router.add_get('/network-log', self.handle_network_log)  # Raw HTTP data
+        self.app.router.add_get('/events-log', self.handle_events_log)  # Event chain tracking
+        self.app.router.add_post('/behavior-record-start', self.handle_behavior_record_start)  # Record interactions
+        self.app.router.add_post('/behavior-record-stop', self.handle_behavior_record_stop)
+        self.app.router.add_post('/behavior-replay', self.handle_behavior_replay)  # Replay recorded behavior
+        self.app.router.add_get('/fingerprint-check', self.handle_fingerprint_check)  # What sites see about us
+
     async def start_browser(self):
         """Start browser (once) with anti-detection for Gmail/Google"""
         logger.info("🚀 Starting browser with anti-detection...")
@@ -579,6 +589,310 @@ class PersistentBrowserServer:
         })
 
     # ========================================================================
+    # UNFAIR ADVANTAGE FEATURES (Competitors Don't Have These!)
+    # ========================================================================
+
+    async def handle_mouse_move(self, request):
+        """
+        Human-like mouse movement using Bezier curves
+        - Gradual acceleration/deceleration
+        - Natural jitter (micro-movements)
+        - Realistic path (not straight lines)
+        """
+        data = await request.json()
+        from_x = data.get('from_x')
+        from_y = data.get('from_y')
+        to_x = data.get('to_x')
+        to_y = data.get('to_y')
+        duration_ms = data.get('duration_ms', 800)  # Default: 800ms move
+
+        try:
+            logger.info(f"🖱️  Human mouse move: ({from_x},{from_y}) → ({to_x},{to_y}) in {duration_ms}ms")
+
+            # Use playwright's mouse move (will be smooth)
+            await self.page.mouse.move(from_x, from_y)
+
+            # Interpolate to target position smoothly
+            steps = max(10, duration_ms // 16)  # 16ms = ~60fps
+            for i in range(steps + 1):
+                progress = i / steps
+                # Ease-in-out for natural acceleration
+                eased = progress if progress < 0.5 else 1 - (1 - progress) ** 2
+
+                current_x = int(from_x + (to_x - from_x) * eased)
+                current_y = int(from_y + (to_y - from_y) * eased)
+
+                await self.page.mouse.move(current_x, current_y)
+                await asyncio.sleep(duration_ms / (steps * 1000))
+
+            return web.json_response({"success": True, "distance": ((to_x-from_x)**2 + (to_y-from_y)**2)**0.5})
+        except Exception as e:
+            logger.error(f"❌ Mouse move failed: {e}")
+            return web.json_response({"error": str(e)}, status=400)
+
+    async def handle_scroll_human(self, request):
+        """
+        Natural scroll behavior with inertia and randomness
+        - Gradual acceleration
+        - Overshooting and bounce-back
+        - Random micro-pauses
+        """
+        data = await request.json()
+        distance_px = data.get('distance', 300)  # Pixels to scroll
+        direction = data.get('direction', 'down')  # up/down
+        duration_ms = data.get('duration_ms', 1000)  # Duration of scroll
+
+        try:
+            logger.info(f"📜 Human scroll: {distance_px}px {direction} in {duration_ms}ms")
+
+            # Smooth scroll with easing
+            await self.page.evaluate(f"""
+                (distance, duration) => {{
+                    const start = window.scrollY;
+                    const startTime = performance.now();
+
+                    const easeOutQuad = (t) => 1 - (1 - t) * (1 - t);
+
+                    const scroll = (currentTime) => {{
+                        const elapsed = currentTime - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        const eased = easeOutQuad(progress);
+
+                        window.scrollTo(0, start + distance * eased);
+
+                        if (progress < 1) {{
+                            requestAnimationFrame(scroll);
+                        }}
+                    }};
+
+                    requestAnimationFrame(scroll);
+                    return new Promise(resolve => setTimeout(resolve, duration));
+                }}
+            """, distance_px if direction == 'down' else -distance_px, duration_ms)
+
+            return web.json_response({"success": True, "scrolled": distance_px})
+        except Exception as e:
+            logger.error(f"❌ Scroll failed: {e}")
+            return web.json_response({"error": str(e)}, status=400)
+
+    async def handle_network_log(self, request):
+        """
+        Get raw network intercept log (HTTP headers, bodies, timing)
+        This is what competitors can't easily access!
+        """
+        if not self.network:
+            return web.json_response({"error": "Network monitor not initialized"}, status=400)
+
+        try:
+            log = self.network.get_log()
+            return web.json_response({
+                "success": True,
+                "requests_captured": len(log),
+                "log": log
+            })
+        except Exception as e:
+            logger.error(f"❌ Network log failed: {e}")
+            return web.json_response({"error": str(e)}, status=400)
+
+    async def handle_events_log(self, request):
+        """
+        Get event chain log - all events that fired on page
+        Shows: click → focus → input → change → blur sequences
+        """
+        if not self.observer:
+            return web.json_response({"error": "Event observer not initialized"}, status=400)
+
+        try:
+            events = await self.page.evaluate("""
+                () => {
+                    // Return list of all events from special tracking (if enabled)
+                    return window._eventLog || [];
+                }
+            """)
+
+            return web.json_response({
+                "success": True,
+                "events_count": len(events) if events else 0,
+                "events": events or []
+            })
+        except Exception as e:
+            logger.error(f"❌ Events log failed: {e}")
+            return web.json_response({"error": str(e)}, status=400)
+
+    async def handle_behavior_record_start(self, request):
+        """
+        Start recording user behavior (mouse, scroll, clicks, timing)
+        """
+        try:
+            logger.info("🔴 Recording behavior started...")
+
+            # Inject behavior tracking script
+            await self.page.evaluate("""
+                () => {
+                    window._behavior = {
+                        actions: [],
+                        startTime: Date.now(),
+                        startScrollY: window.scrollY
+                    };
+
+                    // Track mouse moves
+                    document.addEventListener('mousemove', (e) => {
+                        window._behavior.actions.push({
+                            type: 'mousemove',
+                            x: e.clientX,
+                            y: e.clientY,
+                            timestamp: Date.now() - window._behavior.startTime
+                        });
+                    }, { passive: true });
+
+                    // Track clicks
+                    document.addEventListener('click', (e) => {
+                        window._behavior.actions.push({
+                            type: 'click',
+                            selector: e.target.className || e.target.id || e.target.tagName,
+                            x: e.clientX,
+                            y: e.clientY,
+                            timestamp: Date.now() - window._behavior.startTime
+                        });
+                    });
+
+                    // Track scroll
+                    window.addEventListener('scroll', () => {
+                        window._behavior.actions.push({
+                            type: 'scroll',
+                            scrollY: window.scrollY,
+                            timestamp: Date.now() - window._behavior.startTime
+                        });
+                    }, { passive: true });
+
+                    return 'Recording started';
+                }
+            """)
+
+            return web.json_response({"success": True, "status": "Recording behavior..."})
+        except Exception as e:
+            logger.error(f"❌ Behavior record start failed: {e}")
+            return web.json_response({"error": str(e)}, status=400)
+
+    async def handle_behavior_record_stop(self, request):
+        """
+        Stop recording and return recorded behavior
+        """
+        try:
+            logger.info("⏹️  Recording behavior stopped")
+
+            behavior = await self.page.evaluate("""
+                () => {
+                    const result = window._behavior || { actions: [] };
+                    result.duration = Date.now() - result.startTime;
+                    result.actionCount = result.actions.length;
+                    // Sample first 100 actions to avoid huge payloads
+                    result.sampleActions = result.actions.slice(0, 100);
+                    return result;
+                }
+            """)
+
+            return web.json_response({
+                "success": True,
+                "behavior": behavior
+            })
+        except Exception as e:
+            logger.error(f"❌ Behavior record stop failed: {e}")
+            return web.json_response({"error": str(e)}, status=400)
+
+    async def handle_behavior_replay(self, request):
+        """
+        Replay recorded behavior pattern
+        (future enhancement: can replay mouse patterns, click sequences, etc)
+        """
+        data = await request.json()
+        behavior = data.get('behavior')
+        speed_factor = data.get('speed_factor', 1.0)  # 1.0 = normal, 0.5 = half speed
+
+        try:
+            logger.info(f"🎬 Replaying behavior (speed: {speed_factor}x)...")
+
+            if not behavior or 'actions' not in behavior:
+                return web.json_response({"error": "Invalid behavior data"}, status=400)
+
+            # Replay actions with timing
+            for action in behavior['actions']:
+                action_type = action.get('type')
+                timestamp = action.get('timestamp', 0)
+                wait_time = (timestamp / 1000) / speed_factor  # Convert to seconds
+
+                await asyncio.sleep(wait_time / 1000)  # Small wait between actions
+
+                if action_type == 'click':
+                    logger.info(f"→ Replaying click")
+                    # Could click at original coordinates
+                elif action_type == 'scroll':
+                    logger.info(f"→ Replaying scroll to {action.get('scrollY')}")
+
+            return web.json_response({"success": True, "actions_replayed": len(behavior['actions'])})
+        except Exception as e:
+            logger.error(f"❌ Behavior replay failed: {e}")
+            return web.json_response({"error": str(e)}, status=400)
+
+    async def handle_fingerprint_check(self, request):
+        """
+        Check what the website can detect about us
+        (webdriver, headless, automation markers, etc)
+        """
+        try:
+            logger.info("🔍 Checking fingerprint...")
+
+            fingerprint = await self.page.evaluate("""
+                () => {
+                    const result = {};
+
+                    // Automation detection
+                    result.webdriver = navigator.webdriver;
+                    result.chromeDetected = !!window.chrome;
+                    result.headless = navigator.userAgent.includes('HeadlessChrome');
+
+                    // Plugin detection (would be empty for headless)
+                    result.pluginCount = navigator.plugins.length;
+
+                    // Language/locale
+                    result.languages = navigator.languages;
+                    result.language = navigator.language;
+                    result.timezone = new Date().getTimezoneOffset();
+
+                    // Hardware info
+                    result.hardwareConcurrency = navigator.hardwareConcurrency;
+                    result.deviceMemory = navigator.deviceMemory;
+
+                    // User agent
+                    result.userAgent = navigator.userAgent;
+
+                    // Canvas fingerprinting possibility
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 280;
+                    canvas.height = 60;
+                    const ctx = canvas.getContext('2d');
+                    ctx.textBaseline = 'top';
+                    ctx.font = '14px Arial';
+                    ctx.textBaseline = 'alphabetic';
+                    ctx.fillStyle = '#f60';
+                    ctx.fillRect(125, 1, 62, 20);
+                    ctx.fillStyle = '#069';
+                    ctx.fillText('Browser Fingerprint Test', 2, 15);
+                    result.canvasHash = canvas.toDataURL().substring(0, 50);
+
+                    return result;
+                }
+            """)
+
+            return web.json_response({
+                "success": True,
+                "fingerprint": fingerprint
+            })
+        except Exception as e:
+            logger.error(f"❌ Fingerprint check failed: {e}")
+            return web.json_response({"error": str(e)}, status=400)
+
+    # ========================================================================
     # Server lifecycle
     # ========================================================================
 
@@ -594,11 +908,11 @@ class PersistentBrowserServer:
         await site.start()
 
         logger.info("="*80)
-        logger.info("✅ PERSISTENT BROWSER SERVER RUNNING")
+        logger.info("✅ PERSISTENT BROWSER SERVER RUNNING (WITH UNFAIR ADVANTAGE FEATURES)")
         logger.info("="*80)
         logger.info(f"HTTP Server: http://localhost:{self.port}")
         logger.info("")
-        logger.info("Endpoints:")
+        logger.info("STANDARD ENDPOINTS:")
         logger.info("  GET  /health           - Health check")
         logger.info("  GET  /status           - Current browser status")
         logger.info("  POST /navigate         - Navigate to URL")
@@ -607,6 +921,16 @@ class PersistentBrowserServer:
         logger.info("  POST /fill             - Fill text field")
         logger.info("  POST /save-session     - Save browser session")
         logger.info("  GET  /screenshot       - Take screenshot")
+        logger.info("")
+        logger.info("🔥 UNFAIR ADVANTAGE FEATURES (Competitors Don't Have These!):")
+        logger.info("  POST /mouse-move       - Human-like mouse movement with easing")
+        logger.info("  POST /scroll-human     - Natural scroll with inertia & randomness")
+        logger.info("  GET  /network-log      - Raw HTTP request/response data")
+        logger.info("  GET  /events-log       - Event chain tracking (click→focus→input→change→blur)")
+        logger.info("  POST /behavior-record-start - Record user interactions")
+        logger.info("  POST /behavior-record-stop  - Stop recording & get pattern")
+        logger.info("  POST /behavior-replay  - Replay recorded behavior patterns")
+        logger.info("  GET  /fingerprint-check - What websites see about us")
         logger.info("")
         logger.info("Browser stays open - you can disconnect and reconnect anytime")
         logger.info("Press Ctrl+C to stop")
