@@ -14,8 +14,9 @@ from datetime import datetime
 from playwright.async_api import async_playwright
 from dataclasses import asdict
 
-from browser_interactions import format_aria_tree, get_dom_snapshot
-from enhanced_browser_interactions import (
+from browser import (
+    format_aria_tree,
+    get_dom_snapshot,
     AriaRefMapper,
     PageObserver,
     NetworkMonitor,

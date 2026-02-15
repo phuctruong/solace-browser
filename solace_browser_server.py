@@ -40,9 +40,9 @@ except ImportError:
     print("Install with: pip install aiohttp")
     sys.exit(1)
 
-# Import enhanced interaction module
+# Import browser module (consolidated from browser_interactions + enhanced_browser_interactions)
 try:
-    from browser_interactions import (
+    from browser import (
         format_aria_tree,
         get_dom_snapshot,
         get_page_state,
@@ -51,7 +51,7 @@ try:
     )
 except ImportError as e:
     logger_temp = logging.getLogger('solace-browser')
-    logger_temp.warning(f"Could not import browser_interactions: {e}")
+    logger_temp.warning(f"Could not import browser module: {e}")
 
 # Setup logging
 logging.basicConfig(
@@ -975,7 +975,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                     "timeout_ms": action.get("timeoutMs")
                 }
                 # Convert to dataclass and execute
-                from browser_interactions import ClickAction
+                from browser.core import ClickAction
                 click_obj = ClickAction(**{k: v for k, v in click_action.items() if k != "kind"})
                 result = await execute_action(self.current_page, click_obj)
                 return result
@@ -991,7 +991,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                     "submit": action.get("submit", False),
                     "timeout_ms": action.get("timeoutMs")
                 }
-                from browser_interactions import TypeAction
+                from browser.core import TypeAction
                 type_obj = TypeAction(**{k: v for k, v in type_action.items() if k != "kind"})
                 result = await execute_action(self.current_page, type_obj)
                 return result
@@ -1004,7 +1004,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                     "delay_ms": action.get("delayMs", 0),
                     "timeout_ms": action.get("timeoutMs")
                 }
-                from browser_interactions import PressAction
+                from browser.core import PressAction
                 press_obj = PressAction(**{k: v for k, v in press_action.items() if k != "kind"})
                 result = await execute_action(self.current_page, press_obj)
                 return result
@@ -1016,7 +1016,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                     "ref": action.get("ref"),
                     "timeout_ms": action.get("timeoutMs")
                 }
-                from browser_interactions import HoverAction
+                from browser.core import HoverAction
                 hover_obj = HoverAction(**{k: v for k, v in hover_action.items() if k != "kind"})
                 result = await execute_action(self.current_page, hover_obj)
                 return result
@@ -1028,7 +1028,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                     "ref": action.get("ref"),
                     "timeout_ms": action.get("timeoutMs")
                 }
-                from browser_interactions import ScrollIntoViewAction
+                from browser.core import ScrollIntoViewAction
                 scroll_obj = ScrollIntoViewAction(**{k: v for k, v in scroll_action.items() if k != "kind"})
                 result = await execute_action(self.current_page, scroll_obj)
                 return result
@@ -1045,7 +1045,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                     "fn": action.get("fn"),
                     "timeout_ms": action.get("timeoutMs", 30000)
                 }
-                from browser_interactions import WaitAction
+                from browser.core import WaitAction
                 wait_obj = WaitAction(**{k: v for k, v in wait_action.items() if k != "kind" and v is not None})
                 result = await execute_action(self.current_page, wait_obj)
                 return result
@@ -1057,7 +1057,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                     "fields": action.get("fields", []),
                     "timeout_ms": action.get("timeoutMs")
                 }
-                from browser_interactions import FillAction
+                from browser.core import FillAction
                 fill_obj = FillAction(**{k: v for k, v in fill_action.items() if k != "kind" and v is not None})
                 result = await execute_action(self.current_page, fill_obj)
                 return result

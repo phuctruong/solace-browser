@@ -7,7 +7,7 @@ Debug LinkedIn ARIA tree - See what elements we're actually getting
 import asyncio
 import json
 from playwright.async_api import async_playwright
-from browser_interactions import format_aria_tree, get_dom_snapshot
+from browser import format_aria_tree, get_dom_snapshot
 from dataclasses import asdict
 
 async def main():
