@@ -172,45 +172,42 @@
 
 ## REDDIT KNOWLEDGE NODES
 
-### 🟡 reddit-homepage-structure.primewiki.json
+### ✅ reddit-homepage-phase1.primewiki.md
 - **Website**: reddit.com (logged out)
-- **Tier**: 23 | **C-Score**: 0.95 | **G-Score**: 0.85
-- **Type**: Homepage layout and navigation
-- **Status**: Phase 1 complete (mapped but not Phase 2 tested)
-- **Landmarks**: 209+ (buttons, navigation, lists)
-  - 209 buttons (navigation, actions, pagination)
-  - 3 navigation sections (main nav, sidebar, footer)
-  - 5 lists (post feed, trending, communities)
-  - 7 headings (sections, categories)
-- **Magic Words**:
-  - "Home"
-  - "Popular"
-  - "Best"
-  - "Trending"
-  - "Explore"
-  - "Subreddits"
-  - "Communities"
-  - "Discover"
-  - "Log in"
-  - "Sign up"
-- **Key Sections**:
-  - Top navigation with logo and search
-  - Sidebar with popular communities
-  - Main feed with post cards
-  - Post cards contain: title, subreddit, upvotes, comments, award buttons
-  - Right sidebar with trending communities
-- **Selectors Identified**:
-  - Post title: `a[data-testid="post-title"]`
-  - Upvote button: `button[aria-label*="upvote"]`
-  - Comment button: `button[aria-label*="comment"]`
-  - Community link: `a[href^="/r/"]`
-  - Search box: `input[placeholder="Search Reddit"]`
+- **Tier**: 23 | **C-Score**: 0.92 | **G-Score**: 0.88
+- **Type**: Homepage layout and navigation (complete site map)
+- **Status**: ✅ Phase 1 COMPLETE with PrimeMermaid diagrams
+- **Exploration Method**: Live CLI + Browser Server API (OpenClaw-style)
+- **Discovered**: 2026-02-15T06:26:00Z
+- **Landmarks**: 24 major interactive elements
+  - Header: 6 elements (logo, search, create, login, signup, menu)
+  - Feed: 8 elements (post cards, voting, comments, share)
+  - Sidebar: 5 elements (communities, join buttons)
+  - Authentication-gated: 5 elements (voting, posting, saving)
+- **PrimeMermaid Diagrams**:
+  - Site Map: Complete page structure with all sections
+  - Component Diagram: Button/form relationships and auth flows
+  - Navigation Flows: How to move between pages
+- **Magic Words**: 25+ (Home, Popular, Trending, Create post, Join, Subscribe, Comments, etc)
+- **Selectors Validated**:
+  - Post title: `a[data-testid="post-title"]` (0.90 confidence)
+  - Upvote: `button[aria-label*="upvote"]` (0.93 confidence)
+  - Community link: `a[href^="/r/"]` (0.95 confidence)
+  - Login: `button:has-text("Log in")` (0.98 confidence)
+  - Create post: `button:has-text("Create post")` (0.92 confidence)
 - **Portal Architecture**:
-  - homepage → trending-community → subreddit-page
   - homepage → login-page → authenticated-view
-  - subreddit-page → post-detail
-- **Phase 2 Pending**: Cookie handling, authenticated feed, personalization
-- **Confidence**: 95% (Phase 1 exploration while logged out)
+  - homepage → subreddit-page (click community)
+  - homepage → post-detail (click post title)
+  - post-card → comments (click comments link)
+  - unauth-action → login-modal (voting, posting, saving gated)
+- **Security Patterns Documented**:
+  - Rate limiting: 5+ sec between actions
+  - Authentication gates: voting, posting, commenting require login
+  - Event chains: focus→input→change→blur for form fields
+  - Session persistence: Save cookies after login for Phase 2
+- **Phase 2 Ready**: ✅ All selectors validated, >85% confidence
+- **Confidence**: 92% (Live exploration + PrimeMermaid validation)
 
 ### 🟡 reddit-authentication-flow.primewiki.json
 - **Website**: reddit.com/login & reddit.com/register
