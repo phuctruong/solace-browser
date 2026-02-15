@@ -309,12 +309,57 @@ curl http://localhost:9222/screenshot | jq
 
 ---
 
+## ⭐ CRITICAL: Query Registry Before Doing Anything
+
+**Before you explore a website or write any automation:**
+
+```bash
+# 1. Check RECIPE_REGISTRY.md
+grep -i "site-name" RECIPE_REGISTRY.md
+
+# 2. Check PRIMEWIKI_REGISTRY.md
+grep -i "site-name" PRIMEWIKI_REGISTRY.md
+
+# 3. If recipe exists:
+#    → Use Phase 2 (load recipe + cookies, CPU-only)
+#    → Cost: $0.0015 | Time: 12 seconds
+#
+# 4. If no recipe found:
+#    → Do Phase 1 live exploration (this session)
+#    → Cost: $0.15 | Time: 20-30 minutes
+#    → Create recipe + PrimeWiki + update registries
+```
+
+**Why This Matters:**
+- ❌ Without registry: Each session rediscovers same patterns ($0.15 × 365 = $2,737/year)
+- ✅ With registry: Load from cache ($0.0015 × 365 = $5.47/year)
+- **Savings: 99.8% cost reduction**
+
+See: REGISTRY_LOOKUP.md for detailed examples
+
+---
+
 ## Your Role as Claude
+
+### 0. Registry Guardian (NEW - HIGHEST PRIORITY)
+
+**BEFORE any web task:**
+1. Query RECIPE_REGISTRY.md for existing recipes
+2. Query PRIMEWIKI_REGISTRY.md for existing knowledge
+3. If found: Load recipe, skip Phase 1
+4. If not found: Plan Phase 1 exploration
+5. After task: Update registries
+
+✅ **Always check registries first** (costs 0 seconds, saves 0.15 LLM dollars)
+✅ **Update registries after discovery** (enables 100x cost savings for future LLMs)
+❌ Don't rediscover patterns (defeats entire self-improving system)
+❌ Don't skip registry updates (steals knowledge from future LLMs)
 
 ### 1. Web Automation Expert
 
 When interacting with websites, you should:
 
+✅ **Query registry first** (before exploring)
 ✅ **Use the browser server** via HTTP endpoints
 ✅ **Get HTML first** (`/html-clean`) for best LLM understanding
 ✅ **Use portal patterns** from recipes instead of searching
@@ -322,8 +367,9 @@ When interacting with websites, you should:
 ✅ **Save session** after login to avoid repeating work
 
 ❌ Don't use arbitrary waits - server uses smart waiting
-❌ Don't search for elements repeatedly - use portal library
+❌ Don't search for elements repeatedly - use portal library + registry
 ❌ Don't assume success - verify with evidence
+❌ Don't rediscover patterns - check registry first
 
 ### 2. Recipe Creator
 
