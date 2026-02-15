@@ -43,6 +43,84 @@ solace-browser/
 
 ---
 
+## DEVELOPER PROTOCOL (CRITICAL)
+
+### When Selectors Break: LOOK FIRST
+**Principle**: Like a real developer - systematically reproduce, inspect, diagnose, fix
+
+```
+DON'T:  Assume selectors work based on old notes
+DON'T:  Try random CSS patterns hoping one works
+DON'T:  Test only the first element
+
+DO:     Get RAW HTML first
+DO:     Search for actual patterns (multiple attempts)
+DO:     Compare what server reports vs what you find
+DO:     Test with multiple elements (not just first)
+DO:     Document the correct selectors
+```
+
+### Example: HackerNews Bug Fix
+```
+PROBLEM:     Click story selector doesn't work
+OLD SELECTOR: a.titlelink (0 matches found!)
+ROOT CAUSE:   Old notes assumed wrong selector
+
+INVESTIGATION:
+1. navigate() → 821 elements loaded ✓
+2. But pattern matching → 0 results ✗
+3. Mismatch = selector wrong, not page load
+
+SOLUTION:
+- Inspected raw HTML
+- Found actual structure: <span class="titleline"><a href="...">
+- Fixed selector: span.titleline a
+- Tested: 30 stories found ✓
+
+LESSON: Don't assume. Inspect. Verify. Update.
+```
+
+### Developer Debugging Workflow
+```
+1. REPRODUCE
+   - Fresh navigation
+   - Element count check
+   - Pattern matching test
+
+2. INSPECT
+   - Get raw HTML
+   - Search multiple patterns
+   - Find what's ACTUALLY there
+
+3. DIAGNOSE
+   - Why did assumption fail?
+   - What changed?
+   - What's the truth?
+
+4. FIX
+   - Update selector
+   - Test with real content
+   - Verify with multiple items
+
+5. COMMIT
+   - Document the fix
+   - Explain root cause
+   - Update recipes/skills
+```
+
+### Correct HackerNews Selectors
+```
+Story title:  span.titleline a              (NOT a.titlelink ✗)
+Story row:    tr.athing                     (NOT tr.story ✗)
+Points:       span.score                    ✓
+Author:       a.hnuser                      ✓
+Time:         span.age a                    ✓
+Comments:     a[href*="item?id="]           ✓
+Upvote:       div.votearrow                 ✓
+```
+
+---
+
 ## Login Patterns (CORRECT - Phase 1 Learning)
 
 ### Gmail/Google Login (Auto-Fill Pattern)
