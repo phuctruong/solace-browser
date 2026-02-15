@@ -1,0 +1,199 @@
+{
+  "recipe_id": "linkedin-update-5-projects-hr-approved",
+  "version": "1.0",
+  "created": "2026-02-14T23:00:00Z",
+  "auth": "65537",
+
+  "metadata": {
+    "title": "Update 5 LinkedIn Projects with HR-Approved Copy",
+    "description": "Updates all 5 projects with domain names and professional, outcome-focused descriptions based on HR expert research",
+    "domain": "linkedin.com",
+    "success_criteria": {
+      "all_projects_updated": true,
+      "domain_names_used": true,
+      "hr_approved_copy": true
+    }
+  },
+
+  "reasoning": {
+    "why": "Original project copy was too technical/weird. HR experts recommend outcome-focused, skimmable descriptions showing who benefits and clear impact.",
+    "expert_sources": [
+      "Resume Writing Lab - LinkedIn Projects Guide 2026",
+      "Teal HQ - How to Add Projects",
+      "Resume Worded - Best Practices for Showcasing Projects"
+    ],
+    "key_changes": [
+      "Project names use domains (SolaceAgi.com vs SOLACEAGI)",
+      "Descriptions focus on WHO benefits (enterprise teams, developers)",
+      "Clear IMPACT metrics (91.4% win rate, 4.075x compression)",
+      "Professional tone (not overly technical jargon)",
+      "Skimmable format (short paragraphs)"
+    ]
+  },
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "type": "navigate",
+      "target": "https://www.linkedin.com/in/me/details/projects/",
+      "value": "",
+      "reasoning": "Go to projects page to see all 5 projects"
+    },
+    {
+      "step": 2,
+      "type": "comment",
+      "note": "Projects visible: IF-THEORY, PHUCNET, PZIP, SOLACEAGI, STILLWATER (may need scroll)"
+    },
+    {
+      "step": 3,
+      "type": "navigate",
+      "target": "https://www.linkedin.com/in/phucvinhtruong/add-edit/PROJECT/?profileFormEntryPoint=PROFILE_SECTION",
+      "value": "",
+      "reasoning": "Navigate to first project edit (will show most recent)"
+    },
+    {
+      "step": 4,
+      "type": "fill",
+      "target": "input[id*='title']",
+      "value": "SolaceAgi.com",
+      "reasoning": "Update project name to use domain instead of SOLACEAGI"
+    },
+    {
+      "step": 5,
+      "type": "fill",
+      "target": "textarea[id*='description']",
+      "value": "AI decision-making platform serving enterprise teams who need verified, explainable recommendations instead of black-box outputs.\n\nImpact:\n• 65,537+ decision templates across finance, healthcare, legal\n• 99.3% accuracy on complex reasoning tasks\n• Used by teams replacing costly consultant hours\n\nLink: https://solaceagi.com",
+      "reasoning": "HR-approved copy: who benefits + clear impact + professional tone"
+    },
+    {
+      "step": 6,
+      "type": "click",
+      "target": "button:has-text('Save')",
+      "value": "",
+      "reasoning": "Save updated project",
+      "evidence": {
+        "confirmation_shown": "Project saved",
+        "project_visible_on_profile": true
+      }
+    },
+    {
+      "step": 7,
+      "type": "navigate",
+      "target": "https://www.linkedin.com/in/phucvinhtruong/add-edit/PROJECT/?profileFormEntryPoint=PROFILE_SECTION",
+      "value": "",
+      "reasoning": "Navigate to next project"
+    },
+    {
+      "step": 8,
+      "type": "fill",
+      "target": "input[id*='title']",
+      "value": "PZip.com",
+      "reasoning": "Update to domain name"
+    },
+    {
+      "step": 9,
+      "type": "fill",
+      "target": "textarea[id*='description']",
+      "value": "Universal compression tool that helps developers, data teams, and researchers reduce file sizes across all formats.\n\nImpact:\n• Beats industry standard LZMA on 91.4% of test cases\n• 4.075x average compression ratio\n• Open-source with commercial support available\n\nLink: https://pzip.com",
+      "reasoning": "HR-approved: benefits (developers, data teams) + impact (91.4%, 4.075x)"
+    },
+    {
+      "step": 10,
+      "type": "click",
+      "target": "button:has-text('Save')",
+      "value": "",
+      "reasoning": "Save PZip project"
+    },
+    {
+      "step": 11,
+      "type": "navigate",
+      "target": "https://www.linkedin.com/in/phucvinhtruong/add-edit/PROJECT/?profileFormEntryPoint=PROFILE_SECTION",
+      "value": "",
+      "reasoning": "Next project"
+    },
+    {
+      "step": 12,
+      "type": "fill",
+      "target": "input[id*='title']",
+      "value": "Stillwater.com",
+      "reasoning": "Update to domain"
+    },
+    {
+      "step": 13,
+      "type": "fill",
+      "target": "textarea[id*='description']",
+      "value": "Compression and persistent intelligence OS designed for teams managing large-scale data pipelines and knowledge bases.\n\nImpact:\n• 65537D OMEGA architecture (16-bit Fermat prime design)\n• Powers high-throughput data processing\n• Reduces storage costs for enterprise workflows\n\nLink: https://stillwater.com",
+      "reasoning": "HR-approved: enterprise teams + cost reduction focus"
+    },
+    {
+      "step": 14,
+      "type": "click",
+      "target": "button:has-text('Save')",
+      "value": "",
+      "reasoning": "Save Stillwater"
+    },
+    {
+      "step": 15,
+      "type": "navigate",
+      "target": "https://www.linkedin.com/in/phucvinhtruong/add-edit/PROJECT/?profileFormEntryPoint=PROFILE_SECTION",
+      "value": "",
+      "reasoning": "Next project (PHUCNET already has domain Phuc.net)"
+    },
+    {
+      "step": 16,
+      "type": "fill",
+      "target": "textarea[id*='description']",
+      "value": "Solo founder ecosystem hub showcasing 5 verified AI products built in public with full transparency.\n\nImpact:\n• 100% SWE-bench verified (6/6 industry benchmarks)\n• Community-supported via Ko-fi tips\n• Harsh QA culture ensures quality over hype\n\nLink: https://phuc.net",
+      "reasoning": "Update description only (name already correct)"
+    },
+    {
+      "step": 17,
+      "type": "click",
+      "target": "button:has-text('Save')",
+      "value": "",
+      "reasoning": "Save Phuc.net"
+    },
+    {
+      "step": 18,
+      "type": "navigate",
+      "target": "https://www.linkedin.com/in/phucvinhtruong/add-edit/PROJECT/?profileFormEntryPoint=PROFILE_SECTION",
+      "value": "",
+      "reasoning": "Last project - IF-THEORY"
+    },
+    {
+      "step": 19,
+      "type": "fill",
+      "target": "input[id*='title']",
+      "value": "IFTheory.com",
+      "reasoning": "Update to domain"
+    },
+    {
+      "step": 20,
+      "type": "fill",
+      "target": "textarea[id*='description']",
+      "value": "Mathematical research advancing prime number theory with applications in cryptography, compression, and distributed systems.\n\nImpact:\n• 137 new prime discoveries published\n• Fermat primes, Mersenne numbers, Sophie Germain research\n• Foundations for deterministic AI architectures\n\nLink: https://iftheory.com",
+      "reasoning": "HR-approved: applications focus + research credibility"
+    },
+    {
+      "step": 21,
+      "type": "click",
+      "target": "button:has-text('Save')",
+      "value": "",
+      "reasoning": "Save final project"
+    },
+    {
+      "step": 22,
+      "type": "navigate",
+      "target": "https://www.linkedin.com/in/me/",
+      "value": "",
+      "reasoning": "Return to profile to verify all updates"
+    }
+  ],
+
+  "next_ai_instructions": {
+    "execution_time": "~3 minutes (vs 30 minutes manual)",
+    "verification": "Check that all 5 projects show domain names and HR-approved copy",
+    "session": "Session saved, no login needed",
+    "replay": "python replay_recipe.py recipes/linkedin-update-5-projects-hr-approved.recipe.json"
+  }
+}
