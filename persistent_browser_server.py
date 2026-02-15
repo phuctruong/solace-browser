@@ -59,6 +59,7 @@ class PersistentBrowserServer:
         self.app.router.add_get('/snapshot', self.handle_snapshot)
         self.app.router.add_get('/html', self.handle_html)
         self.app.router.add_get('/html-clean', self.handle_html_clean)
+        self.app.router.add_get('/detect-modals', self.handle_detect_modals)
         self.app.router.add_post('/click', self.handle_click)
         self.app.router.add_post('/fill', self.handle_fill)
         self.app.router.add_post('/keyboard', self.handle_keyboard)  # OpenClaw pattern
@@ -593,6 +594,160 @@ class PersistentBrowserServer:
             "title": await self.page.title(),
             "html": html,
             "html_length": len(html)
+        })
+
+    async def handle_detect_modals(self, request):
+        """
+        SOLACE SKILL: Detect modals, popups, CAPTCHAs and tell LLM clearly
+        This is what the LLM needs to understand what's blocking it
+        """
+        logger.info("🔍 Detecting modals, CAPTCHAs, popups...")
+
+        # Use JavaScript to detect modals and CAPTCHAs
+        detection = await self.page.evaluate("""
+        () => {
+            const detections = {
+                timestamp: new Date().toISOString(),
+                modals: [],
+                captchas: [],
+                popups: [],
+                interactive_elements: [],
+                title: document.title,
+                url: window.location.href
+            };
+
+            // Detect modal elements
+            const modalSelectors = [
+                '[role="dialog"]',
+                '[role="alertdialog"]',
+                '.modal',
+                '.modal-content',
+                '[class*="modal"]',
+                '[class*="popup"]',
+                '[class*="overlay"]',
+                '[aria-modal="true"]',
+                '.lightbox',
+                '.dialog'
+            ];
+
+            modalSelectors.forEach(selector => {
+                document.querySelectorAll(selector).forEach(el => {
+                    if (el.offsetWidth > 0 && el.offsetHeight > 0) {
+                        const rect = el.getBoundingClientRect();
+                        const isVisible = rect.width > 0 && rect.height > 0;
+                        if (isVisible) {
+                            detections.modals.push({
+                                selector: selector,
+                                text: el.innerText.substring(0, 200),
+                                visible: true
+                            });
+                        }
+                    }
+                });
+            });
+
+            // Detect CAPTCHA specifically
+            // Cloudflare Turnstile
+            if (document.querySelector('iframe[src*="challenges.cloudflare.com"]')) {
+                detections.captchas.push({
+                    type: "cloudflare-turnstile",
+                    detected_by: "iframe src",
+                    action_needed: "Click 'I'm not a robot' checkbox"
+                });
+            }
+
+            // Check for Cloudflare challenge text
+            if (document.body.innerText.includes('Verify you are human')) {
+                detections.captchas.push({
+                    type: "cloudflare-challenge",
+                    detected_by: "text match",
+                    text_found: "Verify you are human",
+                    action_needed: "Locate and click the checkbox"
+                });
+            }
+
+            // Check for "just a moment" (Cloudflare loading)
+            if (document.body.innerText.toLowerCase().includes('just a moment')) {
+                detections.captchas.push({
+                    type: "cloudflare-verifying",
+                    detected_by: "text match",
+                    text_found: "just a moment",
+                    action_needed: "Wait for verification or handle challenge"
+                });
+            }
+
+            // reCAPTCHA detection
+            if (document.querySelector('iframe[src*="recaptcha"]') ||
+                window.grecaptcha) {
+                detections.captchas.push({
+                    type: "recaptcha",
+                    detected_by: "iframe or window.grecaptcha",
+                    action_needed: "reCAPTCHA detected - may require interaction"
+                });
+            }
+
+            // hCaptcha detection
+            if (document.querySelector('iframe[src*="hcaptcha"]') ||
+                window.hcaptcha) {
+                detections.captchas.push({
+                    type: "hcaptcha",
+                    detected_by: "iframe or window.hcaptcha",
+                    action_needed: "hCaptcha detected"
+                });
+            }
+
+            // Look for clickable checkbox-like elements (common CAPTCHA pattern)
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                const rect = cb.getBoundingClientRect();
+                if (rect.width > 0 && rect.height > 0) {
+                    const label = cb.parentElement?.innerText || "unlabeled";
+                    if (label.toLowerCase().includes('not a robot') ||
+                        label.toLowerCase().includes('verify') ||
+                        label.toLowerCase().includes('captcha')) {
+                        detections.interactive_elements.push({
+                            type: "captcha-checkbox",
+                            selector: "input[type='checkbox']",
+                            label: label.substring(0, 100),
+                            action: "click"
+                        });
+                    }
+                }
+            });
+
+            // Generic clickable elements that might be CAPTCHA buttons
+            document.querySelectorAll('button, a, [role="button"]').forEach(el => {
+                const text = el.innerText?.substring(0, 100) || el.getAttribute('aria-label') || '';
+                if (text.toLowerCase().includes('verify') ||
+                    text.toLowerCase().includes('robot') ||
+                    text.toLowerCase().includes('challenge') ||
+                    text.toLowerCase().includes('captcha')) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        detections.interactive_elements.push({
+                            type: "captcha-button",
+                            text: text,
+                            action: "click"
+                        });
+                    }
+                }
+            });
+
+            return detections;
+        }
+        """)
+
+        return web.json_response({
+            "success": True,
+            "detection": detection,
+            "has_modals": len(detection.get("modals", [])) > 0,
+            "has_captchas": len(detection.get("captchas", [])) > 0,
+            "has_interactive_captcha_elements": len(detection.get("interactive_elements", [])) > 0,
+            "clear_signal": {
+                "modal_count": len(detection.get("modals", [])),
+                "captcha_types": [c.get("type") for c in detection.get("captchas", [])],
+                "action_needed": "Handle CAPTCHA" if detection.get("captchas") else "No CAPTCHA"
+            }
         })
 
     # ========================================================================

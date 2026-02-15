@@ -21,7 +21,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["automation_api.js", "content.js"],
+      "js": ["captcha_handler.js", "content_captcha_integration.js", "automation_api.js", "content.js"],
       "run_at": "document_start"
     }
   ],

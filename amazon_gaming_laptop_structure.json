@@ -1,0 +1,406 @@
+{
+  "page_title": "Amazon.com : gaming laptop",
+  "url": "https://www.amazon.com/s?k=gaming+laptop",
+  "page_type": "search_results_page",
+  "timestamp": "2026-02-15",
+
+  "sections": [
+    {
+      "section_id": "search_bar_top",
+      "name": "search_bar",
+      "position": "top_center",
+      "selector": "#twotabsearchtextbox",
+      "type": "input",
+      "purpose": "search for products",
+      "attributes": {
+        "placeholder": "Search Amazon",
+        "aria_label": "Search Amazon"
+      },
+      "interaction": {
+        "type": "text_input",
+        "action": "type and submit",
+        "triggers_navigation": true
+      }
+    },
+    {
+      "section_id": "left_sidebar_filters",
+      "name": "left_filters",
+      "position": "left_side",
+      "selector": "aside",
+      "type": "sidebar",
+      "purpose": "filter search results",
+      "sub_sections": [
+        {
+          "filter_name": "price",
+          "selector": "[aria-label*='Price']",
+          "type": "range_slider",
+          "purpose": "filter by price range"
+        },
+        {
+          "filter_name": "brand",
+          "selector": "[data-a-expander-name='Brand']",
+          "type": "checkbox_list",
+          "purpose": "filter by brand"
+        },
+        {
+          "filter_name": "rating",
+          "selector": "[data-a-expander-name='Avg. Customer Review']",
+          "type": "star_filter",
+          "purpose": "filter by product rating"
+        },
+        {
+          "filter_name": "memory",
+          "selector": "[data-a-expander-name*='RAM']",
+          "type": "checkbox_list",
+          "purpose": "filter by RAM capacity"
+        },
+        {
+          "filter_name": "processor",
+          "selector": "[data-a-expander-name*='Processor']",
+          "type": "checkbox_list",
+          "purpose": "filter by CPU type"
+        },
+        {
+          "filter_name": "graphics",
+          "selector": "[data-a-expander-name*='Graphics']",
+          "type": "checkbox_list",
+          "purpose": "filter by GPU type"
+        }
+      ]
+    },
+    {
+      "section_id": "top_controls",
+      "name": "search_controls",
+      "position": "top",
+      "type": "control_bar",
+      "purpose": "manage result display",
+      "sub_elements": [
+        {
+          "element_name": "sort_dropdown",
+          "selector": "[aria-label*='Sort by']",
+          "type": "dropdown",
+          "purpose": "sort results",
+          "options": [
+            "Featured",
+            "Price: Low to High",
+            "Price: High to Low",
+            "Avg. Customer Review",
+            "Newest Arrivals"
+          ]
+        },
+        {
+          "element_name": "results_per_page",
+          "selector": "[aria-label*='Items per page']",
+          "type": "dropdown",
+          "purpose": "control pagination size"
+        }
+      ]
+    },
+    {
+      "section_id": "product_grid",
+      "name": "product_results",
+      "position": "center_main",
+      "selector": "[data-component-type='s-search-results']",
+      "type": "grid",
+      "purpose": "display product listings",
+      "layout": "multi_column_grid",
+      "sub_elements": [
+        {
+          "element_name": "product_card",
+          "selector": "[data-component-type='s-search-result']",
+          "type": "product_item",
+          "purpose": "individual product listing",
+          "data_attributes": [
+            "data-asin",
+            "data-index",
+            "data-uuid",
+            "data-component-id"
+          ],
+          "child_elements": [
+            {
+              "name": "product_image",
+              "selector": "img.s-image",
+              "type": "image",
+              "purpose": "display product thumbnail"
+            },
+            {
+              "name": "product_title",
+              "selector": "h2 a span",
+              "type": "text_link",
+              "purpose": "product name and link to detail page"
+            },
+            {
+              "name": "rating_stars",
+              "selector": "[aria-label*='stars']",
+              "type": "star_rating",
+              "purpose": "display average rating"
+            },
+            {
+              "name": "review_count",
+              "selector": ".s-size-mini",
+              "type": "text",
+              "purpose": "number of reviews"
+            },
+            {
+              "name": "price",
+              "selector": ".a-price-whole",
+              "type": "text",
+              "purpose": "product price"
+            },
+            {
+              "name": "prime_badge",
+              "selector": ".s-prime",
+              "type": "badge",
+              "purpose": "indicate Prime eligibility"
+            },
+            {
+              "name": "sponsored_badge",
+              "selector": ".s-sponsored-label",
+              "type": "badge",
+              "purpose": "indicate sponsored product"
+            }
+          ]
+        }
+      ],
+      "item_count_observed": 16,
+      "item_count_typical": "35+",
+      "pagination_available": true
+    },
+    {
+      "section_id": "pagination",
+      "name": "pagination_controls",
+      "position": "bottom",
+      "selector": ".s-pagination",
+      "type": "pagination",
+      "purpose": "navigate between result pages",
+      "elements": [
+        {
+          "name": "next_page",
+          "selector": ".s-pagination-next",
+          "type": "button",
+          "purpose": "load next page of results"
+        },
+        {
+          "name": "page_numbers",
+          "selector": ".s-pagination-item",
+          "type": "button_list",
+          "purpose": "jump to specific page"
+        }
+      ]
+    }
+  ],
+
+  "key_portals": [
+    {
+      "portal_id": "search_portal",
+      "from_state": "search_page",
+      "to_state": "filtered_results",
+      "action": "type_search_term",
+      "selector": "#twotabsearchtextbox",
+      "interaction_type": "input_submit",
+      "strength": 0.98,
+      "success_indicators": [
+        "URL changes with search query",
+        "Product grid updates",
+        "Title updates"
+      ]
+    },
+    {
+      "portal_id": "filter_price_portal",
+      "from_state": "search_results",
+      "to_state": "price_filtered_results",
+      "action": "adjust_price_filter",
+      "selector": "[aria-label*='Price']",
+      "interaction_type": "slider_adjust",
+      "strength": 0.95,
+      "success_indicators": [
+        "Product count changes",
+        "Grid updates with new products"
+      ]
+    },
+    {
+      "portal_id": "sort_results_portal",
+      "from_state": "search_results",
+      "to_state": "sorted_results",
+      "action": "change_sort_order",
+      "selector": "[aria-label*='Sort by']",
+      "interaction_type": "dropdown_select",
+      "strength": 0.97,
+      "success_indicators": [
+        "Product order changes",
+        "Grid reorganizes"
+      ]
+    },
+    {
+      "portal_id": "product_detail_portal",
+      "from_state": "search_results",
+      "to_state": "product_detail_page",
+      "action": "click_product_card",
+      "selector": "[data-component-type='s-search-result'] h2 a",
+      "interaction_type": "link_click",
+      "strength": 0.99,
+      "success_indicators": [
+        "URL changes to product ASIN page",
+        "New page loads with product details"
+      ]
+    },
+    {
+      "portal_id": "add_to_cart_portal",
+      "from_state": "product_detail_page",
+      "to_state": "cart_updated",
+      "action": "click_add_to_cart",
+      "selector": "[data-feature-name='dp-atc-button-announcement']",
+      "interaction_type": "button_click",
+      "strength": 0.96,
+      "success_indicators": [
+        "Cart count increases",
+        "Confirmation message appears"
+      ]
+    },
+    {
+      "portal_id": "brand_filter_portal",
+      "from_state": "search_results",
+      "to_state": "brand_filtered_results",
+      "action": "select_brand_checkbox",
+      "selector": "[data-a-expander-name='Brand'] input",
+      "interaction_type": "checkbox_toggle",
+      "strength": 0.94,
+      "success_indicators": [
+        "Products filter by selected brand",
+        "Grid updates"
+      ]
+    },
+    {
+      "portal_id": "next_page_portal",
+      "from_state": "search_results_page_1",
+      "to_state": "search_results_page_2",
+      "action": "click_next_page",
+      "selector": ".s-pagination-next",
+      "interaction_type": "pagination_button",
+      "strength": 0.97,
+      "success_indicators": [
+        "New product batch loads",
+        "URL updates with page parameter"
+      ]
+    }
+  ],
+
+  "user_flows": [
+    {
+      "flow_name": "basic_search_flow",
+      "steps": [
+        "search_term_input",
+        "view_search_results",
+        "browse_product_grid",
+        "click_product_card",
+        "view_product_details",
+        "add_to_cart"
+      ],
+      "success_criteria": "item_added_to_cart"
+    },
+    {
+      "flow_name": "filtered_search_flow",
+      "steps": [
+        "search_term_input",
+        "view_search_results",
+        "apply_price_filter",
+        "apply_brand_filter",
+        "apply_rating_filter",
+        "browse_filtered_grid",
+        "click_product_card",
+        "add_to_cart"
+      ],
+      "success_criteria": "item_added_to_cart_with_filters"
+    },
+    {
+      "flow_name": "price_comparison_flow",
+      "steps": [
+        "search_term_input",
+        "sort_by_price_low_to_high",
+        "browse_budget_options",
+        "sort_by_price_high_to_low",
+        "browse_premium_options",
+        "compare_specifications",
+        "select_best_value"
+      ],
+      "success_criteria": "selected_product_matches_budget"
+    },
+    {
+      "flow_name": "pagination_browse_flow",
+      "steps": [
+        "view_page_1_results",
+        "click_next_page",
+        "view_page_2_results",
+        "adjust_results_per_page",
+        "view_expanded_grid",
+        "find_desired_product"
+      ],
+      "success_criteria": "product_found_and_viewed"
+    },
+    {
+      "flow_name": "rating_based_selection",
+      "steps": [
+        "search_term_input",
+        "apply_high_rating_filter",
+        "sort_by_review_rating",
+        "read_top_reviews",
+        "compare_top_rated_products",
+        "select_highest_rated"
+      ],
+      "success_criteria": "highest_rated_product_selected"
+    }
+  ],
+
+  "semantic_analysis": {
+    "page_regions": {
+      "header": "Search bar, logo, account menu",
+      "sidebar_left": "Categorical filters and refinements",
+      "main_content": "Product grid with sorting/pagination controls",
+      "footer": "Links, policies, additional navigation"
+    },
+    "interaction_density": {
+      "high": ["product_cards", "filter_controls", "sort_dropdown"],
+      "medium": ["pagination_buttons", "price_range_slider"],
+      "low": ["informational_badges", "static_text"]
+    },
+    "information_hierarchy": {
+      "tier_1_critical": ["search_bar", "product_grid", "filters"],
+      "tier_2_important": ["sort_control", "pricing", "rating"],
+      "tier_3_contextual": ["prime_badge", "review_count"]
+    }
+  },
+
+  "responsive_behavior": {
+    "desktop": {
+      "sidebar": "visible_left",
+      "grid_columns": 4,
+      "layout": "sidebar_plus_grid"
+    },
+    "tablet": {
+      "sidebar": "collapsible",
+      "grid_columns": 2,
+      "layout": "responsive_grid"
+    },
+    "mobile": {
+      "sidebar": "modal_or_hidden",
+      "grid_columns": 1,
+      "layout": "full_width_vertical"
+    }
+  },
+
+  "performance_metrics": {
+    "lazy_loading": true,
+    "infinite_scroll": false,
+    "pagination_style": "explicit_next_button",
+    "image_optimization": "responsive_images",
+    "dynamic_content": true
+  },
+
+  "accessibility_features": {
+    "aria_labels": true,
+    "keyboard_navigation": true,
+    "screen_reader_support": true,
+    "semantic_html": true,
+    "focus_management": true
+  }
+}

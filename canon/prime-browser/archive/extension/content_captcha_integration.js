@@ -28,34 +28,60 @@ let captchaHandler = null;
  * Initialize CAPTCHA handling for the page
  */
 function initializeCaptchaHandler() {
-  // Create handler instance
-  captchaHandler = new CaptchaHandler({
-    enabled: true,
-    autoClick: true,
-    timeout: 30000,
-  });
+  try {
+    // Debug: Check if CaptchaHandler class is available
+    if (typeof CaptchaHandler === 'undefined') {
+      console.error('[SOLACE_CAPTCHA] ERROR: CaptchaHandler class not found! Script loading issue?');
+      console.log('[SOLACE_CAPTCHA] Available on window:', Object.keys(window).filter(k => k.includes('Captcha') || k.includes('CAPTCHA')));
+      return;
+    }
 
-  // Start monitoring
-  captchaHandler.startMonitoring();
+    console.log('[SOLACE_CAPTCHA] CaptchaHandler class found, initializing...');
 
-  console.log('[SOLACE_CAPTCHA] CAPTCHA handler initialized and monitoring started');
+    // Create handler instance
+    captchaHandler = new CaptchaHandler({
+      enabled: true,
+      autoClick: true,
+      timeout: 30000,
+    });
 
-  // Expose API to window for Playwright access
-  window.solace_captcha = {
-    handler: captchaHandler,
-    getSummary: () => captchaHandler.getSummary(),
-    getLogs: () => captchaHandler.log,
-    waitForCompletion: (timeout) => captchaHandler.waitForChallengeCompletion(timeout),
-    isMonitoring: () => captchaHandler.monitoring,
-    exportProof: () => captchaHandler.exportLogs(),
-  };
+    // Start monitoring
+    captchaHandler.startMonitoring();
 
-  // Log to extension
-  chrome.runtime.sendMessage({
-    type: 'CAPTCHA_HANDLER_INITIALIZED',
-    url: window.location.href,
-    summary: captchaHandler.getSummary(),
-  });
+    console.log('[SOLACE_CAPTCHA] CAPTCHA handler initialized and monitoring started');
+
+    // Expose API to window for Playwright access
+    window.solace_captcha = {
+      handler: captchaHandler,
+      getSummary: () => captchaHandler.getSummary(),
+      getLogs: () => captchaHandler.log,
+      waitForCompletion: (timeout) => captchaHandler.waitForChallengeCompletion(timeout),
+      isMonitoring: () => captchaHandler.monitoring,
+      exportProof: () => captchaHandler.exportLogs(),
+    };
+
+    console.log('[SOLACE_CAPTCHA] window.solace_captcha API exposed');
+
+    // Log to extension (wrap in try-catch in case extension context isn't ready)
+    try {
+      chrome.runtime.sendMessage({
+        type: 'CAPTCHA_HANDLER_INITIALIZED',
+        url: window.location.href,
+        summary: captchaHandler.getSummary(),
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.log('[SOLACE_CAPTCHA] Note: Extension not responding to init message (may be expected)');
+        } else {
+          console.log('[SOLACE_CAPTCHA] Extension acknowledged initialization');
+        }
+      });
+    } catch (e) {
+      console.log('[SOLACE_CAPTCHA] Could not send message to extension (expected in some contexts):', e.message);
+    }
+  } catch (error) {
+    console.error('[SOLACE_CAPTCHA] FATAL ERROR during initialization:', error);
+    console.error('[SOLACE_CAPTCHA] Stack:', error.stack);
+  }
 }
 
 /**
@@ -98,11 +124,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 // Initialize when DOM is ready
+console.log('[SOLACE_CAPTCHA] Content script loaded for:', window.location.href);
+console.log('[SOLACE_CAPTCHA] Document readyState:', document.readyState);
+console.log('[SOLACE_CAPTCHA] Is CaptchaHandler defined?', typeof CaptchaHandler !== 'undefined');
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeCaptchaHandler);
+  console.log('[SOLACE_CAPTCHA] Document still loading, waiting for DOMContentLoaded...');
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('[SOLACE_CAPTCHA] DOMContentLoaded fired');
+    initializeCaptchaHandler();
+  });
 } else {
+  console.log('[SOLACE_CAPTCHA] Document already loaded, initializing immediately...');
   initializeCaptchaHandler();
 }
-
-// Log initialization
-console.log('[SOLACE_CAPTCHA] Content script loaded for:', window.location.href);
