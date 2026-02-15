@@ -37,8 +37,9 @@ class PersistentBrowserServer:
     LLM can connect/disconnect and continue where it left off
     """
 
-    def __init__(self, port=9223):
+    def __init__(self, port=9223, headless=False):
         self.port = port
+        self.headless = headless  # Cloud Run support
         self.browser = None
         self.context = None
         self.page = None
@@ -69,7 +70,7 @@ class PersistentBrowserServer:
 
         playwright = await async_playwright().start()
         self.browser = await playwright.chromium.launch(
-            headless=False,
+            headless=self.headless,  # Cloud Run: set via --headless flag
             args=['--disable-blink-features=AutomationControlled']
         )
 
@@ -351,8 +352,8 @@ class PersistentBrowserServer:
 # Main entry point
 # ============================================================================
 
-async def main():
-    server = PersistentBrowserServer(port=9222)
+async def main(headless=False):
+    server = PersistentBrowserServer(port=9222, headless=headless)
 
     # Setup signal handlers for graceful shutdown
     loop = asyncio.get_event_loop()
@@ -376,4 +377,11 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    import argparse
+    parser = argparse.ArgumentParser(description='Persistent Browser Server for Cloud Run')
+    parser.add_argument('--headless', action='store_true',
+                       help='Run in headless mode (for Cloud Run deployment)')
+    args = parser.parse_args()
+
+    print(f"🚀 Starting browser server ({'HEADLESS' if args.headless else 'HEADED'} mode)")
+    asyncio.run(main(headless=args.headless))
