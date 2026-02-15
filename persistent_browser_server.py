@@ -59,6 +59,7 @@ class PersistentBrowserServer:
         self.app.router.add_get('/html-clean', self.handle_html_clean)
         self.app.router.add_post('/click', self.handle_click)
         self.app.router.add_post('/fill', self.handle_fill)
+        self.app.router.add_post('/keyboard', self.handle_keyboard)  # OpenClaw pattern
         self.app.router.add_post('/save-session', self.handle_save_session)
         self.app.router.add_get('/screenshot', self.handle_screenshot)
 
@@ -173,22 +174,52 @@ class PersistentBrowserServer:
             return web.json_response({"error": str(e)}, status=400)
 
     async def handle_fill(self, request):
-        """Fill text into field"""
+        """Fill text into field - OpenClaw pattern for complex forms"""
         data = await request.json()
         selector = data.get('selector')
         text = data.get('text')
+        slowly = data.get('slowly', False)  # OpenClaw pattern for contenteditable
 
         if not selector or text is None:
             return web.json_response({"error": "selector and text required"}, status=400)
 
         try:
-            logger.info(f"⌨️  Filling: {selector}")
-            await self.page.fill(selector, text)
-            # No sleep needed - fill completes synchronously
+            logger.info(f"⌨️  Filling: {selector} (slowly={slowly})")
+
+            # OpenClaw pattern: slowly=True for contenteditable divs
+            if slowly:
+                # Click to focus first
+                await self.page.click(selector, timeout=8000)
+                await asyncio.sleep(0.2)
+                # Clear existing text
+                await self.page.keyboard.press("Control+A")
+                await asyncio.sleep(0.1)
+                # Type slowly instead of fill (works for contenteditable)
+                await self.page.keyboard.type(text, delay=50)
+            else:
+                # Standard fill for normal inputs
+                await self.page.fill(selector, text)
 
             return web.json_response({"success": True})
         except Exception as e:
             logger.error(f"❌ Fill failed: {e}")
+            return web.json_response({"error": str(e)}, status=400)
+
+    async def handle_keyboard(self, request):
+        """Handle keyboard press - OpenClaw pattern"""
+        data = await request.json()
+        key = data.get('key')
+        delay_ms = data.get('delay', 0)
+
+        if not key:
+            return web.json_response({"error": "key required"}, status=400)
+
+        try:
+            logger.info(f"⌨️  Keyboard press: {key}")
+            await self.page.keyboard.press(key, delay=max(0, delay_ms))
+            return web.json_response({"success": True})
+        except Exception as e:
+            logger.error(f"❌ Keyboard press failed: {e}")
             return web.json_response({"error": str(e)}, status=400)
 
     async def handle_save_session(self, request):
