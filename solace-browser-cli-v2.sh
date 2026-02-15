@@ -39,7 +39,7 @@ log_info() { echo -e "${BLUE}[INFO]${NC} $(date '+%Y-%m-%d %H:%M:%S') - $*" | te
 log_success() { echo -e "${GREEN}[✓]${NC} $(date '+%Y-%m-%d %H:%M:%S') - $*" | tee -a "$LOG_DIR/solace.log"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $(date '+%Y-%m-%d %H:%M:%S') - $*" | tee -a "$LOG_DIR/solace.log"; }
 log_warning() { echo -e "${YELLOW}[WARN]${NC} $(date '+%Y-%m-%d %H:%M:%S') - $*" | tee -a "$LOG_DIR/solace.log"; }
-log_cdp() { echo -e "${PURPLE}[CDP]${NC} $*" | tee -a "$LOG_DIR/cdp.log"; }
+log_cdp() { echo -e "${PURPLE}[CDP]${NC} $*" | tee -a "$LOG_DIR/cdp.log" >&2; }
 
 ################################################################################
 # CDP (Chrome DevTools Protocol) FUNCTIONS
@@ -106,7 +106,7 @@ navigate_to() {
     if [[ "$CONTROL_MODE" == "real" ]]; then
         log_cdp "CDP: Navigating to $url"
         # Real: Send Page.navigate CDP command with proper WebSocket handling
-        python3 <<'PYEOF'
+        python3 - "$url" <<'PYEOF'
 import json
 import subprocess
 import websocket
@@ -114,6 +114,12 @@ import time
 import sys
 
 try:
+    # Get URL from command line argument
+    url = sys.argv[1] if len(sys.argv) > 1 else None
+    if not url:
+        print("ERROR: No URL provided", file=sys.stderr)
+        sys.exit(1)
+
     # Get tab info from CDP
     result = subprocess.run(['curl', '-s', 'http://localhost:9222/json/list'],
                            capture_output=True, text=True, timeout=5)
@@ -134,7 +140,7 @@ try:
     navigate_cmd = {
         "id": msg_id,
         "method": "Page.navigate",
-        "params": {"url": "''' + "$url" + '''"}
+        "params": {"url": url}
     }
 
     ws.send(json.dumps(navigate_cmd))
@@ -152,7 +158,7 @@ try:
                 result = json.loads(response)
                 if result.get('id') == msg_id:
                     if 'result' in result:
-                        print(f"SUCCESS: Navigated to ''' + "$url" + '''")
+                        print(f"SUCCESS: Navigated to {url}")
                         response_received = True
                         break
                     elif 'error' in result:
@@ -172,7 +178,7 @@ try:
         sys.exit(0)
 
 except Exception as e:
-    print(f"ERROR navigating to ''' + "$url" + ''': {e}", file=sys.stderr)
+    print(f"ERROR navigating to {url}: {e}", file=sys.stderr)
     sys.exit(1)
 PYEOF
         return 0
@@ -190,7 +196,7 @@ click_element() {
     if [[ "$CONTROL_MODE" == "real" ]]; then
         log_cdp "CDP: Clicking $selector"
         # Real: Send Runtime.evaluate CDP command to click element
-        python3 <<'PYEOF'
+        python3 - "$selector" <<'PYEOF'
 import json
 import subprocess
 import websocket
@@ -198,6 +204,12 @@ import time
 import sys
 
 try:
+    # Get selector from command line argument
+    selector = sys.argv[1] if len(sys.argv) > 1 else None
+    if not selector:
+        print("ERROR: No selector provided", file=sys.stderr)
+        sys.exit(1)
+
     # Get tab info from CDP
     result = subprocess.run(['curl', '-s', 'http://localhost:9222/json/list'],
                            capture_output=True, text=True, timeout=5)
@@ -218,7 +230,7 @@ try:
         "id": msg_id,
         "method": "Runtime.evaluate",
         "params": {
-            "expression": "(function() { const el = document.querySelector('''' + "$selector" + ''''); if (el) { el.click(); return 'clicked'; } else { return 'not found'; } })()"
+            "expression": f"(function() {{ const el = document.querySelector('{selector}'); if (el) {{ el.click(); return 'clicked'; }} else {{ return 'not found'; }} }})()"
         }
     }
 
@@ -237,7 +249,7 @@ try:
                 result = json.loads(response)
                 if result.get('id') == msg_id:
                     if 'result' in result:
-                        print(f"SUCCESS: Clicked element ''' + "$selector" + '''")
+                        print(f"SUCCESS: Clicked element {selector}")
                         response_received = True
                         break
                     elif 'error' in result:
@@ -250,7 +262,7 @@ try:
     sys.exit(0)
 
 except Exception as e:
-    print(f"ERROR clicking element ''' + "$selector" + ''': {e}", file=sys.stderr)
+    print(f"ERROR clicking element {selector}: {e}", file=sys.stderr)
     sys.exit(1)
 PYEOF
         return 0
@@ -269,7 +281,7 @@ type_text() {
     if [[ "$CONTROL_MODE" == "real" ]]; then
         log_cdp "CDP: Typing in $selector"
         # Real: Send Input.dispatchKeyEvent CDP commands for each character
-        python3 <<'PYEOF'
+        python3 - "$selector" "$text" <<'PYEOF'
 import json
 import subprocess
 import websocket
@@ -277,6 +289,13 @@ import time
 import sys
 
 try:
+    # Get arguments
+    selector = sys.argv[1] if len(sys.argv) > 1 else None
+    text_to_type = sys.argv[2] if len(sys.argv) > 2 else None
+    if not selector or not text_to_type:
+        print("ERROR: No selector or text provided", file=sys.stderr)
+        sys.exit(1)
+
     # Get tab info from CDP
     result = subprocess.run(['curl', '-s', 'http://localhost:9222/json/list'],
                            capture_output=True, text=True, timeout=5)
@@ -297,7 +316,7 @@ try:
         "id": msg_id,
         "method": "Runtime.evaluate",
         "params": {
-            "expression": "(function() { const el = document.querySelector('''' + "$selector" + ''''); if (el) { el.focus(); return 'focused'; } })()"
+            "expression": f"(function() {{ const el = document.querySelector('{selector}'); if (el) {{ el.focus(); return 'focused'; }} }})()"
         }
     }
 
@@ -310,7 +329,7 @@ try:
         "id": msg_id,
         "method": "Runtime.evaluate",
         "params": {
-            "expression": "(function() { const el = document.querySelector('''' + "$selector" + ''''); if (el) { el.value = ''; el.innerHTML = ''; return 'cleared'; } })()"
+            "expression": f"(function() {{ const el = document.querySelector('{selector}'); if (el) {{ el.value = ''; el.innerHTML = ''; return 'cleared'; }} }})()"
         }
     }
 
@@ -318,7 +337,6 @@ try:
     time.sleep(0.2)
 
     # Type text character by character
-    text_to_type = "''' + "$text" + '''"
     for char in text_to_type:
         msg_id = 1005
         key_cmd = {
@@ -342,12 +360,12 @@ try:
         except websocket.WebSocketTimeoutException:
             break
 
-    print(f"SUCCESS: Typed in ''' + "$selector" + ''': ''' + "$text" + '''")
+    print(f"SUCCESS: Typed in {selector}: {text_to_type}")
     time.sleep(0.5)
     ws.close()
 
 except Exception as e:
-    print(f"ERROR typing in ''' + "$selector" + ''': {e}", file=sys.stderr)
+    print(f"ERROR typing in {selector}: {e}", file=sys.stderr)
     sys.exit(1)
 PYEOF
         return 0
