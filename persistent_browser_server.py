@@ -309,19 +309,75 @@ class PersistentBrowserServer:
         """Navigate to URL"""
         data = await request.json()
         url = data.get('url')
+        wait_strategy = data.get('wait_until', 'networkidle')  # Changed default to networkidle for better SPA support
+        wait_for_content = data.get('wait_for_content', True)  # Wait for main content to render
 
         if not url:
             return web.json_response({"error": "url required"}, status=400)
 
-        logger.info(f"→ Navigating to: {url}")
-        # Use 'domcontentloaded' instead of 'networkidle' for speed (2-3x faster)
-        await self.page.goto(url, wait_until='domcontentloaded')
-        # No sleep - page is ready after goto completes
+        logger.info(f"→ Navigating to: {url} (wait_strategy: {wait_strategy})")
+
+        # Initial navigation - wait for page load
+        try:
+            await self.page.goto(url, wait_until=wait_strategy, timeout=30000)
+        except Exception as e:
+            logger.warning(f"⚠️  Navigation timeout (may still have loaded): {e}")
+
+        # For SPAs (Single Page Apps like Reddit), wait for main content to render
+        # This fixes the "blank page" issue with React/Vue/etc apps
+        if wait_for_content:
+            # Strategy 1: Wait for body to have meaningful content
+            try:
+                logger.info("⏳ Waiting for page content (strategy 1: body.innerHTML > 100)...")
+                await self.page.wait_for_function(
+                    "() => document.body.innerHTML.length > 100",
+                    timeout=8000
+                )
+                logger.info("✅ Page content found (strategy 1 succeeded)")
+            except Exception as e1:
+                logger.warning(f"⚠️  Strategy 1 timeout: {e1}")
+
+                # Strategy 2: Wait for any interactive elements (buttons, inputs, links)
+                try:
+                    logger.info("⏳ Waiting for interactive elements (strategy 2)...")
+                    await self.page.wait_for_function(
+                        "() => document.querySelectorAll('button, input, a, [role=\"button\"]').length > 2",
+                        timeout=5000
+                    )
+                    logger.info("✅ Interactive elements found (strategy 2 succeeded)")
+                except Exception as e2:
+                    logger.warning(f"⚠️  Strategy 2 timeout: {e2}")
+
+                    # Strategy 3: Just wait for basic elements to exist
+                    try:
+                        logger.info("⏳ Waiting for basic DOM elements (strategy 3)...")
+                        await self.page.wait_for_function(
+                            "() => document.querySelectorAll('*').length > 10",
+                            timeout=3000
+                        )
+                        logger.info("✅ DOM elements found (strategy 3 succeeded)")
+                    except Exception as e3:
+                        logger.warning(f"⚠️  Strategy 3 timeout: {e3}")
+
+                        # Last resort: check what we actually got
+                        body_size = await self.page.evaluate("() => document.body.innerHTML.length")
+                        elem_count = await self.page.evaluate("() => document.querySelectorAll('*').length")
+                        logger.error(f"❌ All strategies failed - body size: {body_size}, elements: {elem_count}")
+
+        # Small delay to let any final renders complete
+        await self.page.evaluate("() => new Promise(r => setTimeout(r, 800))")
+
+        # Debug: Log what we actually captured
+        body_size = await self.page.evaluate("() => document.body.innerHTML.length")
+        elem_count = await self.page.evaluate("() => document.querySelectorAll('*').length")
+        logger.info(f"📊 Navigation complete - Body size: {body_size} bytes, Elements: {elem_count}")
 
         return web.json_response({
             "success": True,
             "url": self.page.url,
-            "title": await self.page.title()
+            "title": await self.page.title(),
+            "body_size": body_size,
+            "element_count": elem_count
         })
 
     async def handle_snapshot(self, request):
