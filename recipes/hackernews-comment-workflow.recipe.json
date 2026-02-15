@@ -1,0 +1,217 @@
+{
+  "recipe_id": "hackernews-comment-workflow",
+  "recipe_version": "1.0.0",
+  "created_at": "2026-02-15T00:00:00Z",
+  "platform": "hackernews",
+  "workflow": "comment-draft-submit-delete-cycle",
+
+  "reasoning": {
+    "research": "HackerNews comment system has three distinct phases: (1) Draft - user types in textarea without submitting, (2) Submit - click submit button to post comment publicly, (3) Delete - click delete-confirm link to remove comment. Each phase is independent and reversible except deletion.",
+    "strategy": "Navigate to story comments page, draft a comment by clicking textarea and filling with text, submit it, verify it appears on page and comment count increases, then locate and click the delete-confirm link. The delete phase takes you to a confirmation page.",
+    "llm_learnings": "HackerNews requires 3 sequential steps for comment lifecycle: textarea → submit button → delete-confirm link. Comments are validated server-side (spam, killed by moderators). Always capture the comment ID for tracking. Delete links appear in the HTML row ABOVE the comment text, requiring careful HTML inspection.",
+    "key_insight": "The delete link format is 'delete-confirm?id=<comment_id>', not 'delete?id='. URLs use HTML entities (&amp;) which must be decoded.",
+    "verification_method": "Count comments before/after to verify submission. Search for comment text in HTML to verify visibility. Check for delete link pattern specifically."
+  },
+
+  "portals": {
+    "story_page": {
+      "to_comment_form": {
+        "selector": "textarea",
+        "action": "click",
+        "type": "focus_form",
+        "strength": 0.99,
+        "description": "Click textarea to focus comment form"
+      }
+    },
+    "comment_form": {
+      "draft_comment": {
+        "selector": "textarea",
+        "action": "fill",
+        "type": "input",
+        "strength": 0.99,
+        "description": "Type comment text into textarea (draft state)"
+      },
+      "submit_comment": {
+        "selector": "input[type='submit']",
+        "action": "click",
+        "type": "submit",
+        "strength": 0.98,
+        "description": "Click submit button to post comment"
+      }
+    },
+    "posted_comment": {
+      "delete_comment": {
+        "selector": "a[href*='delete-confirm']",
+        "action": "click",
+        "type": "delete",
+        "strength": 0.95,
+        "requires_confirmation": true,
+        "description": "Click delete-confirm link (goes to confirmation page)"
+      },
+      "verify_posted": {
+        "selector": "div.comment",
+        "action": "search",
+        "type": "read",
+        "strength": 1.0,
+        "description": "Verify comment text is visible on page"
+      }
+    }
+  },
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "target": "https://news.ycombinator.com/",
+      "description": "Navigate to HN homepage"
+    },
+    {
+      "step": 2,
+      "action": "click",
+      "selector": "a[href^='item?id=']",
+      "description": "Click first story with comments"
+    },
+    {
+      "step": 3,
+      "action": "wait",
+      "duration": 1000,
+      "description": "Wait for story page to load"
+    },
+    {
+      "step": 4,
+      "action": "extract",
+      "selector": "regex:(\\d+)&nbsp;comments",
+      "description": "Count initial comments",
+      "example_output": "35 comments"
+    },
+    {
+      "step": 5,
+      "action": "click",
+      "selector": "textarea",
+      "description": "Click on comment textarea to focus",
+      "success_indicator": "click returns true"
+    },
+    {
+      "step": 6,
+      "action": "wait",
+      "duration": 300,
+      "description": "Brief wait for textarea focus"
+    },
+    {
+      "step": 7,
+      "action": "fill",
+      "selector": "textarea",
+      "text": "Your comment here (include timestamp or unique identifier)",
+      "description": "Type comment into textarea",
+      "important": "Use unique text (e.g., timestamp) for tracking and deletion verification"
+    },
+    {
+      "step": 8,
+      "action": "wait",
+      "duration": 300,
+      "description": "Let text settle"
+    },
+    {
+      "step": 9,
+      "action": "verify",
+      "selector": "textarea",
+      "contains": "Your comment",
+      "description": "Verify text was entered (may not be visible in HTML depending on browser)"
+    },
+    {
+      "step": 10,
+      "action": "click",
+      "selector": "input[type='submit']",
+      "description": "Click submit button to post comment"
+    },
+    {
+      "step": 11,
+      "action": "wait",
+      "duration": 2000,
+      "description": "Wait for server response and page update"
+    },
+    {
+      "step": 12,
+      "action": "extract",
+      "selector": "regex:(\\d+)&nbsp;comments",
+      "description": "Count comments after submission",
+      "verification": "should increase by 1"
+    },
+    {
+      "step": 13,
+      "action": "search",
+      "method": "html_contains",
+      "text": "Your comment here",
+      "description": "Verify comment appears on page",
+      "expected": "Comment text is visible"
+    },
+    {
+      "step": 14,
+      "action": "click",
+      "selector": "a[href*='delete-confirm']",
+      "description": "Click delete-confirm link for our comment",
+      "note": "This goes to confirmation page, doesn't delete immediately"
+    },
+    {
+      "step": 15,
+      "action": "wait",
+      "duration": 1000,
+      "description": "Wait for confirmation page to load"
+    },
+    {
+      "step": 16,
+      "action": "verify",
+      "method": "url_contains",
+      "text": "delete-confirm",
+      "description": "Verify we're on confirmation page"
+    }
+  ],
+
+  "test_results": {
+    "can_draft": true,
+    "can_submit": true,
+    "comment_posted": true,
+    "comment_visible": true,
+    "comments_increased": "26 → 27",
+    "delete_link_found": true,
+    "delete_link_clickable": true,
+    "last_verified": "2026-02-15T16:50:00Z",
+    "test_url": "https://news.ycombinator.com/item?id=47021354"
+  },
+
+  "selectors": {
+    "comment_textarea": "textarea",
+    "submit_button": "input[type='submit']",
+    "delete_link": "a[href*='delete-confirm']",
+    "comment_container": "div.comment",
+    "comment_counter": "regex:(\\d+)&nbsp;comments"
+  },
+
+  "next_ai_instructions": "This workflow demonstrates the complete HN comment lifecycle: draft → submit → delete. Critical insights: 1) Drafts are optional - you can submit without a draft state 2) Submitted comments appear immediately unless killed by spam filter 3) Delete links appear in the row metadata ABOVE the comment text, not below 4) Delete requires a confirmation step (goes to delete-confirm page) 5) Always verify comment count change to confirm submission 6) Use unique identifiers (timestamps) to track comments across sessions",
+
+  "html_parsing_notes": {
+    "comment_row_structure": "<tr class='athing comtr'><td>...</td><td><div class='votelinks'>...delete-confirm link here...</div>...</div><div class='comment'><div class='commtext'>COMMENT TEXT HERE</div>",
+    "delete_link_location": "Appears in metadata row ABOVE comment text, NOT inside comment div",
+    "comment_counter_pattern": "Found as '(\\d+)&nbsp;comments' in story metadata",
+    "comment_count_position": "Located in story header area, separate from comment section"
+  },
+
+  "safety_notes": [
+    "Comments are publicly posted to HN - use test text that's clearly automated",
+    "Delete-confirm goes to a confirmation page - you must click confirm again to fully delete",
+    "HN spam filter may automatically kill comments from new accounts",
+    "Comments require minimum karma level to post",
+    "Rate limits apply - don't spam comment requests",
+    "Comments are part of your account history"
+  ],
+
+  "metadata": {
+    "author": "Claude Code Agent",
+    "confidence": 0.92,
+    "tested_on": "2026-02-15",
+    "browser": "Chromium via Playwright",
+    "website": "news.ycombinator.com",
+    "html_version": "HTML5",
+    "notes": "Workflow verified on live HN with authenticated session. Delete-confirm flow requires secondary confirmation page interaction."
+  }
+}

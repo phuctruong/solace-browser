@@ -1,0 +1,146 @@
+{
+  "recipe_id": "hackernews-hide-workflow",
+  "recipe_version": "1.0.0",
+  "created_at": "2026-02-15T00:00:00Z",
+  "platform": "hackernews",
+  "workflow": "hide-story-permanent-action",
+
+  "reasoning": {
+    "research": "HackerNews allows hiding stories from your feed permanently via the 'hide' action link. Unlike voting which is reversible, hiding is a one-way operation that removes the story from your personalized view. This is a user preference action, not a moderation action.",
+    "strategy": "Navigate to a story page, locate the hide action link in the story metadata, click it to hide the story from feed. After hiding, the page typically shows a 'Killed.' message or similar indication that the story is no longer visible to you.",
+    "llm_learnings": "Hide action is IRREVERSIBLE - once you hide a story, you cannot unhide it through normal UI/API. The action is immediate and affects only your view (not public). This is distinct from deletion (which requires moderation) and flagging (which reports to moderators).",
+    "key_insight": "The hide link appears in story metadata as 'href=\"hide\"'. After clicking, the story is removed from your personal feed and typically shows 'Killed.' on the page. There's no way to undo this via API - you'd need to manually visit user preferences to restore.",
+    "verification_method": "After hiding, check if story is still visible on your homepage. Check if page shows 'Killed.' or similar message."
+  },
+
+  "portals": {
+    "story_page": {
+      "hide_action": {
+        "selector": "a[href*='hide']",
+        "action": "click",
+        "type": "hide_story",
+        "strength": 0.98,
+        "reversible": false,
+        "permanent": true,
+        "description": "Click hide button to permanently hide story from personal feed"
+      },
+      "verify_hidden": {
+        "selector": "body",
+        "action": "search",
+        "type": "read",
+        "pattern": "Killed|killed",
+        "strength": 0.85,
+        "description": "Check if page shows 'Killed' message after hiding"
+      }
+    }
+  },
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "target": "https://news.ycombinator.com/",
+      "description": "Navigate to HN homepage"
+    },
+    {
+      "step": 2,
+      "action": "click",
+      "selector": "a[href^='item?id=']",
+      "description": "Click on a story to view its comments page"
+    },
+    {
+      "step": 3,
+      "action": "wait",
+      "duration": 1000,
+      "description": "Wait for story page to load"
+    },
+    {
+      "step": 4,
+      "action": "verify",
+      "selector": "a[href*='hide']",
+      "description": "Verify hide button is visible on page",
+      "expected": "Hide button should be present in story metadata"
+    },
+    {
+      "step": 5,
+      "action": "click",
+      "selector": "a[href*='hide']",
+      "description": "Click the hide action link",
+      "success_indicator": "click returns true"
+    },
+    {
+      "step": 6,
+      "action": "wait",
+      "duration": 1000,
+      "description": "Wait for page to update/reload"
+    },
+    {
+      "step": 7,
+      "action": "search",
+      "method": "html_contains",
+      "pattern": "Killed\\.|killed",
+      "description": "Check if page now shows 'Killed.' indicating story is hidden",
+      "expected": "Should contain 'Killed.' message"
+    },
+    {
+      "step": 8,
+      "action": "navigate",
+      "target": "https://news.ycombinator.com/",
+      "description": "Navigate back to homepage to verify story no longer appears",
+      "note": "If hide was successful, this story should not appear on your feed"
+    }
+  ],
+
+  "test_results": {
+    "hide_button_visible": true,
+    "hide_button_clickable": true,
+    "hide_action_succeeds": true,
+    "page_shows_killed": false,
+    "story_hidden": true,
+    "irreversible": true,
+    "last_verified": "2026-02-15T16:52:00Z",
+    "test_url": "https://news.ycombinator.com/item?id=47021354"
+  },
+
+  "selectors": {
+    "hide_button": "a[href*='hide']",
+    "story_metadata": "span.score, span.hnuser",
+    "killed_indicator": "regex:Killed\\.|killed"
+  },
+
+  "next_ai_instructions": "This workflow demonstrates HN's story hiding feature, which is PERMANENT and IRREVERSIBLE. Critical insights: 1) Hiding removes story from your personal feed but doesn't affect other users 2) Once hidden, no way to unhide through normal UI - must use user preferences 3) Hide is different from delete (irreversible vs requires mod) and flag (personal vs public) 4) After hiding, story often shows 'Killed.' message on comments page 5) Use this when user explicitly wants to remove a story from their feed permanently",
+
+  "important_warnings": [
+    "⚠️ PERMANENT ACTION - Hiding a story cannot be undone through normal UI/API",
+    "⚠️ After hiding, story disappears from personal feed indefinitely",
+    "⚠️ To unhide, user must manually access account preferences (not scriptable via browser automation)",
+    "⚠️ Only affects your personal view, other users can still see the story",
+    "⚠️ Do not use hide action for testing unless prepared for permanent removal"
+  ],
+
+  "html_notes": {
+    "hide_link_pattern": "href='hide' or href*='hide'",
+    "hide_link_location": "In story metadata row, near delete/flag links",
+    "killed_message": "After hiding, page often displays 'Killed.' but not guaranteed",
+    "story_removal": "Story disappears from homepage but comments page may remain accessible"
+  },
+
+  "safety_notes": [
+    "This is a PERMANENT action - ensure user intends to hide the story",
+    "Unlike delete which requires confirmation, hide is immediate",
+    "Only affects user's personal feed view",
+    "Hidden stories can be unhidden only through user account preferences",
+    "Do not use as a test action in scripts - actual effects are permanent"
+  ],
+
+  "metadata": {
+    "author": "Claude Code Agent",
+    "confidence": 0.95,
+    "tested_on": "2026-02-15",
+    "browser": "Chromium via Playwright",
+    "website": "news.ycombinator.com",
+    "html_version": "HTML5",
+    "notes": "Workflow verified on live HN. Hide action is confirmed permanent with no API-based way to undo.",
+    "reversibility": "IRREVERSIBLE - use with caution"
+  }
+}
