@@ -43,6 +43,39 @@ solace-browser/
 
 ---
 
+## Login Patterns (CORRECT - Phase 1 Learning)
+
+### Gmail/Google Login (Auto-Fill Pattern)
+```python
+# CORRECT FLOW:
+# 1. Load credentials from credentials.properties (email + password)
+# 2. Navigate to Gmail
+# 3. Check if already logged in with saved cookies
+# 4. If NOT: Auto-fill email via JavaScript (full event chain)
+#    - input.focus() + input.value = email
+#    - Dispatch: input, change, keyup events
+#    - input.blur() to trigger validation
+# 5. Click Next button (wait for enabled state)
+# 6. Auto-fill password (same pattern as email)
+# 7. Click Sign in button
+# 8. Check for 2FA/OAuth screen
+# 9. WAIT for user OAuth approval (only if needed)
+# 10. Save session cookies for Phase 2+ replay
+
+# DO NOT: Wait for user to type credentials - automate it
+# DO NOT: Use page.fill() without event chain - Gmail validates via events
+# DO NOT: Hammer login endpoint - triggers security locks
+```
+
+### Why This Works
+- ✅ Respects full validation event chain (Gmail's JS expects it)
+- ✅ Uses credentials from secure config (not embedded)
+- ✅ Saves cookies after login (Phase 2+ uses cookies, no re-login)
+- ✅ Only waits for user action when needed (2FA/OAuth approval)
+- ✅ Avoids security triggers (rate limit, suspicious behavior detection)
+
+---
+
 ## How to Use
 
 ### Start the Browser Server
