@@ -60,8 +60,8 @@
     {
       "step": 2,
       "action": "wait",
-      "duration": 2000,
-      "description": "Wait for page to fully load"
+      "duration": 3000,
+      "description": "Wait for page to fully load and React to render vote buttons (increased to 3000ms)"
     },
     {
       "step": 3,
@@ -74,7 +74,7 @@
       "step": 4,
       "action": "click",
       "selector": "button[aria-label*='upvote' i]",
-      "description": "Click upvote button",
+      "description": "Click upvote button (element should be rendered by now after 3000ms React load)",
       "success_indicator": "Button click returns success"
     },
     {

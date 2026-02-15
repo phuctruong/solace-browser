@@ -74,8 +74,8 @@
     {
       "step": 5,
       "action": "wait",
-      "duration": 500,
-      "description": "Wait for AJAX response"
+      "duration": 1000,
+      "description": "Wait for AJAX response (increased to 1000ms for state update)"
     },
     {
       "step": 6,
@@ -86,18 +86,24 @@
     },
     {
       "step": 7,
-      "action": "click",
-      "selector": "div.votearrow",
-      "description": "Click again to toggle/downvote"
+      "action": "wait",
+      "duration": 2000,
+      "description": "Wait longer for vote state to fully update on client before second click (DOM may need to refresh)"
     },
     {
       "step": 8,
-      "action": "wait",
-      "duration": 500,
-      "description": "Wait for toggle AJAX"
+      "action": "click",
+      "selector": "div.votearrow",
+      "description": "Click again to toggle/downvote (element should be fully interactive after extended wait)"
     },
     {
       "step": 9,
+      "action": "wait",
+      "duration": 1000,
+      "description": "Wait for toggle AJAX response"
+    },
+    {
+      "step": 10,
       "action": "extract",
       "selector": "span.score",
       "description": "Get final score (should match initial)",
