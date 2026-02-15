@@ -1,0 +1,1772 @@
+{
+  "type": "reddit_page",
+  "page_name": "subreddit_page",
+  "tier": 23,
+  "c_score": 0.95,
+  "g_score": 0.95,
+  "url": "https://reddit.com/r/programming",
+  "subreddit": "programming",
+  "landmarks": {
+    "navigation": [
+      {
+        "tag": "nav",
+        "text": "Get App\nLog In\nExpand user menu",
+        "ariaLabel": null,
+        "id": "",
+        "class": "h-header-large\n"
+      },
+      {
+        "tag": "nav",
+        "text": "RESOURCES\nAbout Reddit\nAdvertise\nDeveloper Platfor",
+        "ariaLabel": "Primary",
+        "id": "",
+        "class": "z-2"
+      },
+      {
+        "tag": "nav",
+        "text": "RESOURCES\nAbout Reddit\nAdvertise\nDeveloper Platfor",
+        "ariaLabel": "Reddit resources",
+        "id": "",
+        "class": ""
+      }
+    ],
+    "buttons": [
+      {
+        "tag": "a",
+        "text": "Skip to main content",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/#main-content",
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Open menu",
+        "ariaLabel": null,
+        "type": "button",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "Home",
+        "type": "",
+        "href": "https://www.reddit.com/",
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Get App",
+        "ariaLabel": null,
+        "type": "submit",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Log In",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/login/",
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Expand user menu",
+        "ariaLabel": null,
+        "type": "button",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Create Post",
+        "ariaLabel": null,
+        "type": "submit",
+        "href": null,
+        "dataTestid": "create-post"
+      },
+      {
+        "tag": "a",
+        "text": "Feed",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "About",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/about/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Best",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/best/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Hot",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/hot/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "New",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/new/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Top",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/top/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Rising",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/rising/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Card",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/?feedViewType=cardView",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Compact",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/?feedViewType=compactView",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "The Next Two Years of Software Engineering",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r58zqv/the_next_two_years_of_software_engineering/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/fagnerbrack",
+        "ariaLabel": "Author: u/fagnerbrack",
+        "type": "",
+        "href": "https://www.reddit.com/user/fagnerbrack/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "The Next Two Years of Software Engineering",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r58zqv/the_next_two_years_of_software_engineering/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://addyosmani.com/blog/next-two-years/",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://addyosmani.com/blog/next-two-years/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - The Next Two Years of Software Engineering",
+        "type": "",
+        "href": "https://addyosmani.com/blog/next-two-years/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/FigmaOfficial",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/user/FigmaOfficial/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Anthropic: AI assisted coding doesn't show efficiency gains and impairs developers abilities.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1qqxvlw/anthropic_ai_assisted_coding_doesnt_show/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/Gil_berth",
+        "ariaLabel": "Author: u/Gil_berth",
+        "type": "",
+        "href": "https://www.reddit.com/user/Gil_berth/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Anthropic: AI assisted coding doesn't show efficiency gains and impairs developers abilities.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1qqxvlw/anthropic_ai_assisted_coding_doesnt_show/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://arxiv.org/abs/2601.20245",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://arxiv.org/abs/2601.20245",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Evolving Git for the next decade",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r4o4px/evolving_git_for_the_next_decade/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/symbolicard",
+        "ariaLabel": "Author: u/symbolicard",
+        "type": "",
+        "href": "https://www.reddit.com/user/symbolicard/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Evolving Git for the next decade",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r4o4px/evolving_git_for_the_next_decade/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://lwn.net/SubscriberLink/1057561/bddc1e61152fadf6/",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://lwn.net/SubscriberLink/1057561/bddc1e61152fadf6/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/aadiraj48",
+        "ariaLabel": "Author: u/aadiraj48",
+        "type": "",
+        "href": "https://www.reddit.com/user/aadiraj48/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/yojimbo_beta",
+        "ariaLabel": "Author: u/yojimbo_beta",
+        "type": "",
+        "href": "https://www.reddit.com/user/yojimbo_beta/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://github.com/matplotlib/matplotlib/pull/31132",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://github.com/matplotlib/matplotlib/pull/31132",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - Slop pull request is rejected, so slop author instructs slop AI agent to write a slop blog post criticising it as unfair",
+        "type": "",
+        "href": "https://github.com/matplotlib/matplotlib/pull/31132",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Package Management Namespaces",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r59xjq/package_management_namespaces/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/max123246",
+        "ariaLabel": "Author: u/max123246",
+        "type": "",
+        "href": "https://www.reddit.com/user/max123246/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Package Management Namespaces",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r59xjq/package_management_namespaces/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/rust",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/rust/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://nesbitt.io/2026/02/14/package-management-namespaces.html",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://nesbitt.io/2026/02/14/package-management-namespaces.html",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "18 comments",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/rust/comments/1r4t2r0/package_management_namespaces/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - Package Management Namespaces",
+        "type": "",
+        "href": "https://nesbitt.io/2026/02/14/package-management-namespaces.html",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Anthropic built a C compiler using a \"team of parallel agents\", has problems compiling hello world.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1qwzyu4/anthropic_built_a_c_compiler_using_a_team_of/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/Gil_berth",
+        "ariaLabel": "Author: u/Gil_berth",
+        "type": "",
+        "href": "https://www.reddit.com/user/Gil_berth/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Anthropic built a C compiler using a \"team of parallel agents\", has problems compiling hello world.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1qwzyu4/anthropic_built_a_c_compiler_using_a_team_of/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://www.anthropic.com/engineering/building-c-compiler",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.anthropic.com/engineering/building-c-compiler",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - Anthropic built a C compiler using a \"team of parallel agents\", has problems compiling hello world.",
+        "type": "",
+        "href": "https://www.anthropic.com/engineering/building-c-compiler",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "One line of code, 102 blocked threads",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r4m2rs/one_line_of_code_102_blocked_threads/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/nk_25",
+        "ariaLabel": "Author: u/nk_25",
+        "type": "",
+        "href": "https://www.reddit.com/user/nk_25/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "One line of code, 102 blocked threads",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r4m2rs/one_line_of_code_102_blocked_threads/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://medium.com/@nik6/a-deep-dive-into-classloader-contention-in-java-a0415039b0c1",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://medium.com/@nik6/a-deep-dive-into-classloader-contention-in-java-a0415039b0c1",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/Pro-Life-Hacks",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/user/Pro-Life-Hacks/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "96% Engineers Don\u2019t Fully Trust AI Output, Yet Only 48% Verify It",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1qzsxy9/96_engineers_dont_fully_trust_ai_output_yet_only/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/gregorojstersek",
+        "ariaLabel": "Author: u/gregorojstersek",
+        "type": "",
+        "href": "https://www.reddit.com/user/gregorojstersek/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "96% Engineers Don\u2019t Fully Trust AI Output, Yet Only 48% Verify It",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1qzsxy9/96_engineers_dont_fully_trust_ai_output_yet_only/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://newsletter.eng-leadership.com/p/96-engineers-dont-fully-trust-ai",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://newsletter.eng-leadership.com/p/96-engineers-dont-fully-trust-ai",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - 96% Engineers Don\u2019t Fully Trust AI Output, Yet Only 48% Verify It",
+        "type": "",
+        "href": "https://newsletter.eng-leadership.com/p/96-engineers-dont-fully-trust-ai",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Rendering the visible spectrum",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r4c7eb/rendering_the_visible_spectrum/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/thepowderguy",
+        "ariaLabel": "Author: u/thepowderguy",
+        "type": "",
+        "href": "https://www.reddit.com/user/thepowderguy/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Rendering the visible spectrum",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r4c7eb/rendering_the_visible_spectrum/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://brandonli.net/spectra/doc/",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://brandonli.net/spectra/doc/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "New Free AI Resource: How to Get Free API Keys for LLM Projects",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r5aw3k/new_free_ai_resource_how_to_get_free_api_keys_for/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/aadiraj48",
+        "ariaLabel": "Author: u/aadiraj48",
+        "type": "",
+        "href": "https://www.reddit.com/user/aadiraj48/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "New Free AI Resource: How to Get Free API Keys for LLM Projects",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r5aw3k/new_free_ai_resource_how_to_get_free_api_keys_for/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Overrun with AI slop, cURL scraps bug bounties to ensure \"intact mental health\"",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1ql0w5p/overrun_with_ai_slop_curl_scraps_bug_bounties_to/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/Drumedor",
+        "ariaLabel": "Author: u/Drumedor",
+        "type": "",
+        "href": "https://www.reddit.com/user/Drumedor/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Overrun with AI slop, cURL scraps bug bounties to ensure \"intact mental health\"",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1ql0w5p/overrun_with_ai_slop_curl_scraps_bug_bounties_to/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - Overrun with AI slop, cURL scraps bug bounties to ensure \"intact mental health\"",
+        "type": "",
+        "href": "https://arstechnica.com/security/2026/01/overrun-with-ai-slop-curl-scraps-bug-bounties-to-ensure-intact-mental-health/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Micro Frontends: When They Make Sense and When They Don\u2019t",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r4dkgx/micro_frontends_when_they_make_sense_and_when/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/archunit",
+        "ariaLabel": "Author: u/archunit",
+        "type": "",
+        "href": "https://www.reddit.com/user/archunit/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Micro Frontends: When They Make Sense and When They Don\u2019t",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r4dkgx/micro_frontends_when_they_make_sense_and_when/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Spotify says its best developers haven't written a line of code since December, thanks to AI",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r3mznz/spotify_says_its_best_developers_havent_written_a/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/c0re_dump",
+        "ariaLabel": "Author: u/c0re_dump",
+        "type": "",
+        "href": "https://www.reddit.com/user/c0re_dump/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Spotify says its best developers haven't written a line of code since December, thanks to AI",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r3mznz/spotify_says_its_best_developers_havent_written_a/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - Spotify says its best developers haven't written a line of code since December, thanks to AI",
+        "type": "",
+        "href": "https://techcrunch.com/2026/02/12/spotify-says-its-best-developers-havent-written-a-line-of-code-since-december-thanks-to-ai/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Recovered 1973 diving decompression algorithm",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r3msai/recovered_1973_diving_decompression_algorithm/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/thunderbird89",
+        "ariaLabel": "Author: u/thunderbird89",
+        "type": "",
+        "href": "https://www.reddit.com/user/thunderbird89/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Recovered 1973 diving decompression algorithm",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r3msai/recovered_1973_diving_decompression_algorithm/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://github.com/edelprino/DCIEM?tab=readme-ov-file",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://github.com/edelprino/DCIEM?tab=readme-ov-file",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/zAiModel-api",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/user/zAiModel-api/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "AI Makes the Easy Part Easier and the Hard Part Harder",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1qz5g7g/ai_makes_the_easy_part_easier_and_the_hard_part/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/BlunderGOAT",
+        "ariaLabel": "Author: u/BlunderGOAT",
+        "type": "",
+        "href": "https://www.reddit.com/user/BlunderGOAT/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "AI Makes the Easy Part Easier and the Hard Part Harder",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1qz5g7g/ai_makes_the_easy_part_easier_and_the_hard_part/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://www.blundergoat.com/articles/ai-makes-the-easy-part-easier-and-the-hard-part-harder",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.blundergoat.com/articles/ai-makes-the-easy-part-easier-and-the-hard-part-harder",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "New Architecture Could Cut Quantum Hardware Needed to Break RSA-2048 by Tenfold, Study Finds",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r3nxbw/new_architecture_could_cut_quantum_hardware/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/donutloop",
+        "ariaLabel": "Author: u/donutloop",
+        "type": "",
+        "href": "https://www.reddit.com/user/donutloop/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "New Architecture Could Cut Quantum Hardware Needed to Break RSA-2048 by Tenfold, Study Finds",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r3nxbw/new_architecture_could_cut_quantum_hardware/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - New Architecture Could Cut Quantum Hardware Needed to Break RSA-2048 by Tenfold, Study Finds",
+        "type": "",
+        "href": "https://thequantuminsider.com/2026/02/13/new-architecture-could-cut-quantum-hardware-needed-to-break-rsa-2048-by-tenfold-study-finds/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Notepad++ Hijacked by State-Sponsored Hackers",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1qttqik/notepad_hijacked_by_statesponsored_hackers/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/Pensive_Goat",
+        "ariaLabel": "Author: u/Pensive_Goat",
+        "type": "",
+        "href": "https://www.reddit.com/user/Pensive_Goat/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Notepad++ Hijacked by State-Sponsored Hackers",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1qttqik/notepad_hijacked_by_statesponsored_hackers/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://notepad-plus-plus.org/news/hijacked-incident-info-update/",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://notepad-plus-plus.org/news/hijacked-incident-info-update/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Allocators from C to Zig",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r3m0vp/allocators_from_c_to_zig/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/Nuoji",
+        "ariaLabel": "Author: u/Nuoji",
+        "type": "",
+        "href": "https://www.reddit.com/user/Nuoji/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Allocators from C to Zig",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r3m0vp/allocators_from_c_to_zig/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://antonz.org/allocators/",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://antonz.org/allocators/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - Allocators from C to Zig",
+        "type": "",
+        "href": "https://antonz.org/allocators/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/aadiraj48",
+        "ariaLabel": "Author: u/aadiraj48",
+        "type": "",
+        "href": "https://www.reddit.com/user/aadiraj48/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "The 12-Factor App - 15 Years later. Does it Still Hold Up in 2026?",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r2rmmw/the_12factor_app_15_years_later_does_it_still/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/archunit",
+        "ariaLabel": "Author: u/archunit",
+        "type": "",
+        "href": "https://www.reddit.com/user/archunit/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "The 12-Factor App - 15 Years later. Does it Still Hold Up in 2026?",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r2rmmw/the_12factor_app_15_years_later_does_it_still/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "I Tried to Implement a 2024 USENIX Paper on Caching. Here\u2019s What Happened.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r34gxs/i_tried_to_implement_a_2024_usenix_paper_on/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/wineandcode",
+        "ariaLabel": "Author: u/wineandcode",
+        "type": "",
+        "href": "https://www.reddit.com/user/wineandcode/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "I Tried to Implement a 2024 USENIX Paper on Caching. Here\u2019s What Happened.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r34gxs/i_tried_to_implement_a_2024_usenix_paper_on/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/CapitalOne",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/user/CapitalOne/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "What security engineers need to know about quantum cryptography in 2026 (beyond the buzzwords)",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r4r7v4/what_security_engineers_need_to_know_about/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/No_Fisherman1212",
+        "ariaLabel": "Author: u/No_Fisherman1212",
+        "type": "",
+        "href": "https://www.reddit.com/user/No_Fisherman1212/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "What security engineers need to know about quantum cryptography in 2026 (beyond the buzzwords)",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r4r7v4/what_security_engineers_need_to_know_about/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://cybernews-node.blogspot.com/2026/02/quantum-cryptography-in-2026-still-more.html",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://cybernews-node.blogspot.com/2026/02/quantum-cryptography-in-2026-still-more.html",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/halkun",
+        "ariaLabel": "Author: u/halkun",
+        "type": "",
+        "href": "https://www.reddit.com/user/halkun/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://github.com/joshuanwalker/Raiders2600/",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://github.com/joshuanwalker/Raiders2600/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - Atari 2600 Raiders of the Lost Ark source code completely disassembled and reverse engineered. Every line fully commented.",
+        "type": "",
+        "href": "https://github.com/joshuanwalker/Raiders2600/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Integrating a log management platform with Dokploy",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r4qhbr/integrating_a_log_management_platform_with_dokploy/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/tanin47",
+        "ariaLabel": "Author: u/tanin47",
+        "type": "",
+        "href": "https://www.reddit.com/user/tanin47/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Integrating a log management platform with Dokploy",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r4qhbr/integrating_a_log_management_platform_with_dokploy/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://tanin.nanakorn.com/integrating-a-log-management-platform-with-dokploy/",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://tanin.nanakorn.com/integrating-a-log-management-platform-with-dokploy/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - Integrating a log management platform with Dokploy",
+        "type": "",
+        "href": "https://tanin.nanakorn.com/integrating-a-log-management-platform-with-dokploy/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Profiling and Fixing RocksDB Ingestion: 23\u00d7 Faster on 1M Rows",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r2stkm/profiling_and_fixing_rocksdb_ingestion_23_faster/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/grmpf101",
+        "ariaLabel": "Author: u/grmpf101",
+        "type": "",
+        "href": "https://www.reddit.com/user/grmpf101/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Profiling and Fixing RocksDB Ingestion: 23\u00d7 Faster on 1M Rows",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r2stkm/profiling_and_fixing_rocksdb_ingestion_23_faster/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://blog.serenedb.com/building-faster-ingestion",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://blog.serenedb.com/building-faster-ingestion",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - Profiling and Fixing RocksDB Ingestion: 23\u00d7 Faster on 1M Rows",
+        "type": "",
+        "href": "https://blog.serenedb.com/building-faster-ingestion",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Lines of Code Are Back (And It's Worse Than Before)",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r2t1ea/lines_of_code_are_back_and_its_worse_than_before/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/amacgregor",
+        "ariaLabel": "Author: u/amacgregor",
+        "type": "",
+        "href": "https://www.reddit.com/user/amacgregor/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Lines of Code Are Back (And It's Worse Than Before)",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1r2t1ea/lines_of_code_are_back_and_its_worse_than_before/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://www.thepragmaticcto.com/p/lines-of-code-are-back-and-its-worse",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.thepragmaticcto.com/p/lines-of-code-are-back-and-its-worse",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - Lines of Code Are Back (And It's Worse Than Before)",
+        "type": "",
+        "href": "https://www.thepragmaticcto.com/p/lines-of-code-are-back-and-its-worse",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "The dev who asks too many questions is the one you need in your team",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1qq9sth/the_dev_who_asks_too_many_questions_is_the_one/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/dymissy",
+        "ariaLabel": "Author: u/dymissy",
+        "type": "",
+        "href": "https://www.reddit.com/user/dymissy/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "The dev who asks too many questions is the one you need in your team",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/comments/1qq9sth/the_dev_who_asks_too_many_questions_is_the_one/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://leadthroughmistakes.substack.com/p/the-teammate-who-asks-too-many-questions",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://leadthroughmistakes.substack.com/p/the-teammate-who-asks-too-many-questions",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/programming - The dev who asks too many questions is the one you need in your team",
+        "type": "",
+        "href": "https://leadthroughmistakes.substack.com/p/the-teammate-who-asks-too-many-questions",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "FAQ",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/wiki/faq",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/programming",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/learnprogramming",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/learnprogramming/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/cscareerquestions",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/cscareerquestions/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Stack Overflow",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://stackoverflow.com/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/programming",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/samplesize",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/samplesize/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/programming",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/forhire",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/forhire/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/jobbit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/jobbit/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/learnprogramming",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/learnprogramming",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/cscareerquestions",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/cscareerquestions",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Stack Overflow",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://stackoverflow.com/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/ProgrammerHumor/",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/ProgrammerHumor/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/forhire",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/forhire",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/jobbit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/jobbit",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "faq",
+        "ariaLabel": null,
+        "type": "",
+        "href": "http://www.reddit.com/r/programming/wiki/faq",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Read this first",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/wiki/selfpromotion",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/technology",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/technology",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/ProgrammerTIL",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/ProgrammerTIL",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/learnprogramming",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/learnprogramming",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/askprogramming",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/askprogramming",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/coding",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/coding",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/code",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/code",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/compsci",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/compsci",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/dailyprogrammer",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/dailyprogrammer",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/netsec",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/netsec",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/webdev",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/webdev",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/web_design",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/web_design",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/gamedev",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/gamedev",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/cscareerquestions",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/cscareerquestions",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/reverseengineering",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/reverseengineering",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/startups",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/startups",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "/r/techsupport",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/techsupport",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Specific languages",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/programming/wiki/faq#wiki_what_language_reddits_are_there.3F",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Learn More",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://support.reddithelp.com/hc/articles/360049499032",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "View all moderators",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/mod/programming/moderators/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Reddit Rules",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/policies/content-policy",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Privacy Policy",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/policies/privacy-policy",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "User Agreement",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/policies/user-agreement",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Your Privacy Choices",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://support.reddithelp.com/hc/articles/43980704794004",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Accessibility",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://support.reddithelp.com/hc/sections/38303584022676-Accessibility",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Reddit, Inc. \u00a9 2026. All rights reserved.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://redditinc.com/",
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Expand Navigation",
+        "ariaLabel": null,
+        "type": "submit",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Collapse Navigation",
+        "ariaLabel": null,
+        "type": "submit",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "About Reddit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Advertise",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://ads.reddit.com/register?utm_source=web3x_consumer&utm_name=left_nav_cta",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Developer Platform",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://developers.reddit.com/?utm_source=reddit&utm_medium=left_nav_resources",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Reddit Pro\nBETA",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/reddit-pro?utm_source=reddit&utm_medium=left_nav_resources",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Help",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://support.reddithelp.com/hc?utm_source=reddit&utm_medium=footer&utm_campaign=evergreen",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Blog",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://redditblog.com/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Careers",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/careers",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Press",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/press",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Communities",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/best/communities/1/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Best of Reddit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/posts/2026/global/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Reddit Rules",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/policies/content-policy",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Privacy Policy",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/policies/privacy-policy",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "User Agreement",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/policies/user-agreement",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Your Privacy Choices",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://support.reddithelp.com/hc/articles/43980704794004",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Accessibility",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://support.reddithelp.com/hc/sections/38303584022676-Accessibility",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Reddit, Inc. \u00a9 2026. All rights reserved.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://redditinc.com/",
+        "dataTestid": null
+      }
+    ],
+    "forms": [
+      {
+        "tag": "form",
+        "inputs": [
+          {
+            "type": "text",
+            "name": "q",
+            "placeholder": "Search in r/programming",
+            "ariaLabel": null
+          }
+        ],
+        "ariaLabel": null,
+        "action": "https://www.reddit.com/r/programming/search/?q=",
+        "id": ""
+      }
+    ],
+    "lists": [
+      {
+        "tag": "ul",
+        "role": null,
+        "itemCount": 5
+      },
+      {
+        "tag": "ul",
+        "role": null,
+        "itemCount": 15
+      },
+      {
+        "tag": "ul",
+        "role": "presentation",
+        "itemCount": 0
+      }
+    ],
+    "headings": [
+      {
+        "level": "h1",
+        "text": "r/programming",
+        "id": ""
+      },
+      {
+        "level": "h3",
+        "text": "Community highlights",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "State of the Subreddit (January 2027): Mods applications and rules updates",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "COMMUNITY BOOKMARKS",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "R/PROGRAMMING RULES",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "/r/programming is not a support forum",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "\"I made this\", project and product demos",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "Keep submissions on topic and of high quality",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "No surveys",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "No r\u00e9sum\u00e9s/job listings",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "\"Will AI replace programmers?\"",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "INFO",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "MODERATORS",
+        "id": ""
+      }
+    ]
+  },
+  "selectors": {
+    "create post": [
+      {
+        "selector": ".no-underline",
+        "text": "Create Post",
+        "ariaLabel": null,
+        "role": null,
+        "type": "submit",
+        "tag": "button",
+        "confidence": 0.85
+      }
+    ],
+    "subscribe": [
+      {
+        "selector": ".post-link",
+        "text": "https://lwn.net/SubscriberLink/1057561/bddc1e61152",
+        "ariaLabel": null,
+        "role": null,
+        "type": "",
+        "tag": "a",
+        "confidence": 0.85
+      }
+    ],
+    "post": [
+      {
+        "selector": ".no-underline",
+        "text": "Create Post",
+        "ariaLabel": null,
+        "role": null,
+        "type": "submit",
+        "tag": "button",
+        "confidence": 0.85
+      },
+      {
+        "selector": ".absolute",
+        "text": "Slop pull request is rejected, so slop author inst",
+        "ariaLabel": null,
+        "role": null,
+        "type": "",
+        "tag": "a",
+        "confidence": 0.85
+      },
+      {
+        "selector": "#post-title-t3_1r2sa5u",
+        "text": "Slop pull request is rejected, so slop author inst",
+        "ariaLabel": null,
+        "role": null,
+        "type": "",
+        "tag": "a",
+        "confidence": 0.85
+      }
+    ],
+    "comment": [
+      {
+        "selector": ".block",
+        "text": "State of the Subreddit (January 2027): Mods applic",
+        "ariaLabel": null,
+        "role": null,
+        "type": "",
+        "tag": "a",
+        "confidence": 0.85
+      },
+      {
+        "selector": ".text-neutral-content-weak",
+        "text": "18 comments",
+        "ariaLabel": null,
+        "role": null,
+        "type": "",
+        "tag": "a",
+        "confidence": 0.85
+      },
+      {
+        "selector": ".absolute",
+        "text": "Atari 2600 Raiders of the Lost Ark source code com",
+        "ariaLabel": null,
+        "role": null,
+        "type": "",
+        "tag": "a",
+        "confidence": 0.85
+      },
+      {
+        "selector": "#post-title-t3_1r0foef",
+        "text": "Atari 2600 Raiders of the Lost Ark source code com",
+        "ariaLabel": null,
+        "role": null,
+        "type": "",
+        "tag": "a",
+        "confidence": 0.85
+      }
+    ],
+    "upvote": []
+  },
+  "magic_words": [
+    "Create post",
+    "Subscribe",
+    "Trending",
+    "Posts"
+  ],
+  "snapshot_hash": "0c51c775",
+  "timestamp": "2026-02-15T06:11:12.151638"
+}

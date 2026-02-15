@@ -1,0 +1,134 @@
+{
+  "recipe_id": "reddit_login_form",
+  "description": "Reddit login form structure and field selectors",
+  "page_name": "reddit_login",
+  "url": "https://reddit.com/login",
+  "form_fields": {
+    "email": "input[type='email']",
+    "password": "input[type='password']"
+  },
+  "submit_button": ".login",
+  "landmarks": {
+    "navigation": [],
+    "buttons": [
+      {
+        "tag": "a",
+        "text": "Skip to main content",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/login/#main-content",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "User Agreement",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/policies/user-agreement",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Privacy Policy",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/policies/privacy-policy",
+        "dataTestid": null
+      },
+      {
+        "tag": "div",
+        "text": "\uf8ff\u2005Sign in with Apple",
+        "ariaLabel": "Sign in with Apple",
+        "type": null,
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Log In",
+        "ariaLabel": null,
+        "type": "button",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Continue with SSO",
+        "ariaLabel": null,
+        "type": "button",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "back",
+        "ariaLabel": "Back",
+        "type": "button",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Use a backup code",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/login/#",
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Check code",
+        "ariaLabel": null,
+        "type": "button",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "back",
+        "ariaLabel": "Back",
+        "type": "button",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Use a code from an authenticator app",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/login/#",
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Check code",
+        "ariaLabel": null,
+        "type": "button",
+        "href": null,
+        "dataTestid": null
+      }
+    ],
+    "forms": [],
+    "lists": [],
+    "headings": [
+      {
+        "level": "h1",
+        "text": "Log In",
+        "id": ""
+      },
+      {
+        "level": "h1",
+        "text": "\n    Enter the 6-digit code from your authenticator app\n  ",
+        "id": ""
+      },
+      {
+        "level": "h1",
+        "text": "\n    Enter a 6-digit backup code\n  ",
+        "id": ""
+      }
+    ]
+  },
+  "cost_phase1": 0.01,
+  "cost_phase2": 0.0015,
+  "timestamp": "2026-02-15T06:11:07.844497"
+}
