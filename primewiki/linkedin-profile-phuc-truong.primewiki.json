@@ -1,0 +1,46 @@
+{
+  "title": "LinkedIn Profile: Phuc Truong",
+  "tier": 79,
+  "c_score": 0.95,
+  "g_score": 0.9,
+  "crawled_at": "2026-02-14T21:27:33.664089",
+  "canonical_claims": [
+    {
+      "claim": "Profile contains profile_home section",
+      "confidence": 1.0,
+      "evidence": {
+        "type": "crawl_snapshot",
+        "url": "https://www.linkedin.com/in/me/",
+        "screenshot": "artifacts/screenshot.png",
+        "timestamp": "2026-02-14T21:27:20.575314"
+      }
+    },
+    {
+      "claim": "Profile contains projects section",
+      "confidence": 1.0,
+      "evidence": {
+        "type": "crawl_snapshot",
+        "url": "https://www.linkedin.com/in/me/details/projects/",
+        "screenshot": "artifacts/screenshot.png",
+        "timestamp": "2026-02-14T21:27:26.849766"
+      }
+    },
+    {
+      "claim": "Profile contains about section",
+      "confidence": 1.0,
+      "evidence": {
+        "type": "crawl_snapshot",
+        "url": "https://www.linkedin.com/in/me/",
+        "screenshot": "artifacts/screenshot.png",
+        "timestamp": "2026-02-14T21:27:33.663776"
+      }
+    }
+  ],
+  "evidence": [],
+  "portals": {},
+  "metadata": {
+    "source": "https://linkedin.com/in/phucvinhtruong",
+    "method": "browser_crawl",
+    "tool": "solace_browser_crawler"
+  }
+}
