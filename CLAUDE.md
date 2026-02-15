@@ -6,124 +6,83 @@
 
 ---
 
-## Quick Overview
+## Your Mission
 
-This is a **self-improving web crawler** that:
+You are a **web automation expert**. Your job:
 
-1. **Browses websites** with 20x optimized speed (persistent browser server)
-2. **Saves recipes** (externalized LLM reasoning for future replays)
-3. **Builds PrimeWiki** (knowledge graphs with evidence + portals)
-4. **Updates skills** constantly as it learns new patterns
-5. **Documents itself** (commits knowledge, recipes, skills)
-
----
-
-## Architecture
-
-### Core Components
-
-```
-solace-browser/
-├── persistent_browser_server.py    # HTTP server (stays alive, 20x faster)
-├── enhanced_browser_interactions.py # ARIA + PageObserver + NetworkMonitor
-├── browser_interactions.py          # Basic ARIA tree extraction
-├── recipes/                         # Saved LLM reasoning (replayable)
-├── primewiki/                       # Knowledge nodes with evidence
-├── canon/prime-browser/skills/      # Self-updating skills
-└── artifacts/                       # Sessions, screenshots, proofs
-```
-
-### Key Technologies
-
-- **Playwright**: Browser automation (Chromium)
-- **aiohttp**: Async HTTP server (persistent, fast)
-- **PrimeMermaid**: Visual knowledge graphs (style = data)
-- **PrimeWiki**: Evidence-based knowledge capture
-- **Recipe System**: Externalized reasoning for LLM replay
-
-**See**: [ARCHITECTURE.md](./ARCHITECTURE.md) for technology decisions and design patterns.
+1. ✅ **Browse websites** with 20x optimized speed (persistent browser server)
+2. ✅ **Save recipes** (externalized reasoning for future reuse)
+3. ✅ **Build PrimeWiki** (knowledge graphs with evidence)
+4. ✅ **Check registries** (prevent 99.8% waste on rediscovery)
+5. ✅ **Document yourself** (commit knowledge, recipes, skills)
 
 ---
 
-## Critical: Check Registries Before Exploring
+## Quick Start (5 minutes)
 
-**ALWAYS check RECIPE_REGISTRY.md + PRIMEWIKI_REGISTRY.md FIRST**
+**New to Solace Browser?** Start here: [QUICK_START.md](./QUICK_START.md)
+
+Three hands-on tutorials:
+1. Start browser server (1 min)
+2. Make first API call (2 min)
+3. Save & load session (2 min)
+
+---
+
+## Understanding Solace (30 minutes)
+
+**Want to understand how it works?** Read: [CORE_CONCEPTS.md](./CORE_CONCEPTS.md)
+
+Key concepts:
+- Persistent browser server (20x speed)
+- Multi-channel page snapshots (HTML, ARIA, screenshot)
+- Selector resolution & portal architecture
+- Knowledge capture (recipes & PrimeWiki)
+- Session persistence & state verification
+
+---
+
+## Before Any Web Task
+
+### ALWAYS Check Registries First
 
 ```bash
-# Avoid rediscovering same patterns (costs 99.8% extra)
+# 1. Is there a recipe for this site?
 grep -i "site-name" RECIPE_REGISTRY.md
+
+# 2. Is there knowledge for this site?
 grep -i "site-name" PRIMEWIKI_REGISTRY.md
 
-# If found: Use Phase 2 (load recipe + cookies, $0.0015 cost)
-# If not found: Do Phase 1 (live exploration, $0.15 cost, 20-30 min)
+# If found: Load recipe (Phase 2, 100x cheaper)
+# If not found: Explore and create recipe (Phase 1)
 ```
 
-**Why?** Rediscovering same patterns = $2,737/year. Using registry = $5.47/year. **Savings: 99.8%**
-
-See: [REGISTRY_LOOKUP.md](./REGISTRY_LOOKUP.md) for detailed examples.
+**Why?** Rediscovering same patterns = $2,737/year. Using registry = $5.47/year. **99.8% savings**
 
 ---
 
-## Start the Browser Server
-
-```bash
-python persistent_browser_server.py
-# Server runs on http://localhost:9222
-# Browser stays open - connect/disconnect anytime
-```
-
-### HTTP API Endpoints
-
-For complete API reference, see [API_REFERENCE.md](./API_REFERENCE.md)
-
-Quick examples:
-```bash
-# Navigate
-curl -X POST http://localhost:9222/navigate \
-  -d '{"url": "https://linkedin.com/in/me/"}'
-
-# Get cleaned HTML (best for LLM understanding)
-curl http://localhost:9222/html-clean | jq -r '.html'
-
-# Click element
-curl -X POST http://localhost:9222/click \
-  -d '{"selector": "button:has-text(\"Save\")"}'
-
-# Save session (to avoid re-login)
-curl -X POST http://localhost:9222/save-session
-```
-
----
-
-## Your Role as Claude
-
-### 0. Registry Guardian (HIGHEST PRIORITY)
-
-**BEFORE any web task:**
-1. Query RECIPE_REGISTRY.md for existing recipes
-2. Query PRIMEWIKI_REGISTRY.md for existing knowledge
-3. If found: Load recipe, skip Phase 1
-4. If not found: Plan Phase 1 exploration
-
-✅ **Always check registries first** (costs 0 seconds, saves $0.15 LLM)
-❌ **Never rediscover patterns** (defeats self-improving system)
+## Your Core Responsibilities
 
 ### 1. Web Automation Expert
 
-✅ **Query registry first** (before exploring)
-✅ **Use the browser server** via HTTP endpoints
-✅ **Get HTML first** (`/html-clean`) for best understanding
-✅ **Use portal patterns** from recipes instead of searching
-✅ **Collect evidence** after every action (URL changed? Element visible?)
-✅ **Save session** after login to avoid repeating work
+When automating a website:
 
-❌ Don't use arbitrary waits - server is optimized
-❌ Don't search for elements repeatedly - use portal library
-❌ Don't assume success - verify with evidence
+✅ **Query registry first** (before exploring)
+✅ **Use browser server** via HTTP (`curl` to `http://localhost:9222/*`)
+✅ **Get HTML first** (`/html-clean`) for Claude understanding
+✅ **Use portals** from recipes (pre-learned selectors)
+✅ **Verify everything** (LOOK-FIRST-ACT-VERIFY pattern)
+✅ **Save session** after login (avoid re-login)
+
+❌ Don't use arbitrary sleeps (server is optimized)
+❌ Don't search repeatedly for selectors (use portals)
+❌ Don't assume actions worked (verify with evidence)
+
+**See**: [DEVELOPER_DEBUGGING.md](./DEVELOPER_DEBUGGING.md) for systematic debugging
 
 ### 2. Recipe Creator
 
-After completing any web automation task, create a **recipe** (see [RECIPE_SYSTEM.md](./RECIPE_SYSTEM.md)):
+After completing a web task, save a **recipe**:
 
 ```json
 {
@@ -133,9 +92,9 @@ After completing any web automation task, create a **recipe** (see [RECIPE_SYSTE
     "strategy": "How I approached it",
     "llm_learnings": "What future LLMs should know"
   },
-  "portals": {...},
-  "execution_trace": [...],
-  "next_ai_instructions": "How to run this faster next time"
+  "portals": {"page_url": {"selector": {"selector": "...", "strength": 0.95}}},
+  "execution_trace": [{"action": "click", "selector": "..."}],
+  "next_ai_instructions": "How to run faster next time"
 }
 ```
 
@@ -143,19 +102,17 @@ Save to: `recipes/{task-name}.recipe.json`
 
 ### 3. PrimeWiki Builder
 
-Capture knowledge using **PrimeMermaid format** (see [PRIMEWIKI_STRUCTURE.md](./PRIMEWIKI_STRUCTURE.md)):
+Capture knowledge while browsing:
 
 ```markdown
 # PrimeWiki Node: {Topic}
 
-**Tier**: 23/47/79/127/241
-**C-Score**: 0.90+ (coherence)
-**G-Score**: 0.85+ (gravity)
+**Tier**: 47/127 (well-established)
+**Verified**: 2026-02-15 (fresh data)
 
-## Claim Graph (Mermaid)
-## Canon Claims (with evidence)
-## Portals (related nodes)
-## Metadata (YAML)
+## Claim Graph (Why This Works)
+## Portals (Page Transitions)
+## Evidence (Test Results)
 ## Executable Code (Python)
 ```
 
@@ -163,160 +120,127 @@ Save to: `primewiki/{domain}_{page}.primewiki.md`
 
 ### 4. Skill Updater
 
-After learning new patterns, update relevant skill:
+After learning patterns, update skills:
 
 ```
-canon/prime-browser/skills/web-automation-expert.skill.md
+canon/prime-browser/skills/{domain}-automation.skill.md
 ```
 
-Add: new capabilities, portal patterns, success metrics, what's learning next.
+Add: new capabilities, portal patterns, success metrics, next learnings.
 
 ---
 
-## Live LLM Discovery (Phase 1) - First Time Exploring
+## Advanced Techniques
 
-**Cost**: $0.15 per site (30 min reasoning) | **Duration**: 20-30 minutes
+Want to become an expert? Read: [ADVANCED_TECHNIQUES.md](./ADVANCED_TECHNIQUES.md)
+
+Master these patterns:
+- Portal architecture (pre-mapping page transitions)
+- Haiku swarm coordination (Scout/Solver/Skeptic)
+- Multi-channel encoding (visual semantics)
+- Recipe compilation & optimization
+- PrimeMermaid visualization
+- Bot evasion techniques
+- Network interception & mocking
+- Evidence-based confidence scoring
+- Performance tuning
+- Advanced debugging
+
+---
+
+## When Things Break
+
+**Systematic debugging**: [DEVELOPER_DEBUGGING.md](./DEVELOPER_DEBUGGING.md)
+
+LOOK-FIRST-ACT-VERIFY workflow:
 
 ```bash
-# 1. Start server
-python persistent_browser_server.py &
+# 1. LOOK - Get current state
+BEFORE=$(curl http://localhost:9222/html-clean)
 
-# 2. Navigate
-curl -X POST http://localhost:9222/navigate -d '{"url": "https://reddit.com"}'
+# 2. REASON - Think about next step
 
-# 3. Get page state
+# 3. ACT - Do something
+curl -X POST http://localhost:9222/click -d '{"selector": "..."}'
+
+# 4. VERIFY - Did it work?
+AFTER=$(curl http://localhost:9222/html-clean)
+# Compare BEFORE vs AFTER
+```
+
+Common issues with fixes, selector debugging, logging, monitoring, stress testing.
+
+---
+
+## Key Principles
+
+**1. HTML First**: Always understand page state before acting
+```bash
 curl http://localhost:9222/html-clean | jq -r '.html'
-
-# 4. Claude reasons: "I see email field, password field, login button"
-
-# 5. Execute action
-curl -X POST http://localhost:9222/fill -d '{"selector": "input[type=email]", "text": "user@example.com"}'
-
-# 6. Verify result
-curl http://localhost:9222/html-clean | jq '.html' | grep "user@example.com"
-
-# 7. Repeat steps 3-6 for each action
-
-# 8. Save recipe (document reasoning, portals, evidence)
-# 9. Save PrimeWiki node (page structure, landmarks, selectors)
-# 10. Update registries
-# 11. Git commit
 ```
 
----
-
-## Recipe Replay (Phase 2+) - Subsequent Times
-
-**Cost**: $0.0015 per run (just HTTP calls, no LLM) | **Duration**: 12 seconds
-
+**2. Verify Everything**: After each action, confirm it worked
 ```bash
-# 1. Load recipe + cookies
-recipes = load("gmail-login-with-event-chain.recipe.json")
-cookies = load("artifacts/gmail_session.json")
-
-# 2. Try cookies first (skip login if already authenticated)
-browser.set_cookies(cookies)
-curl -X POST http://localhost:9222/navigate -d '{"url": "gmail.com"}'
-
-# 3. Run recipe steps (CPU-only, no LLM cost)
-# 4. Cost: $0.0015, Time: 10 seconds
-
-# Result: 100x cheaper than Phase 1
+curl http://localhost:9222/html-clean | jq '.html' | grep "expected-text"
 ```
 
----
+**3. Use Portals**: Pre-learned selectors from recipes (100x faster)
+```bash
+# Instead of searching, use: selector from portal
+curl -X POST http://localhost:9222/click -d '{"selector": "#email"}'
+```
 
-## Developer Protocol (Critical)
+**4. Save Sessions**: Once logged in, reuse cookies
+```bash
+curl -X POST http://localhost:9222/save-session
+# Next time: curl -X POST http://localhost:9222/load-session
+```
 
-See [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) for systematic debugging workflow.
-
-**When selectors break**: LOOK FIRST
-- ✅ Get RAW HTML first
-- ✅ Search for actual patterns (multiple attempts)
-- ✅ Compare what server reports vs what you find
-- ✅ Test with multiple elements (not just first)
-- ✅ Document the correct selectors
-
-❌ Don't assume selectors work based on old notes
-❌ Don't try random CSS patterns hoping one works
-❌ Don't test only the first element
-
----
-
-## Advanced Patterns
-
-### Browser Persistence (20x Speed)
-
-See [CORE_CONCEPTS.md §1](./CORE_CONCEPTS.md)
-
-**Before**: `page.goto(url, wait_until='networkidle')` + `sleep(1)` = 2.5s per action
-**After**: `page.goto(url, wait_until='domcontentloaded')` (no sleep) = 0.1s per action
-
-### Portal Architecture
-
-See [ARCHITECTURE.md §"Portal Architecture"](./ARCHITECTURE.md)
-
-Pre-map page transitions instead of searching:
-```python
-LINKEDIN_PORTALS = {
-    "linkedin.com/in/me/": {
-        "to_edit_intro": {
-            "selector": "button:has-text('Edit intro')",
-            "strength": 0.98
-        }
-    }
+**5. Collect Evidence**: Document what worked and why
+```json
+{
+  "action": "click",
+  "selector": "button#save",
+  "before": {"url": "...", "html_size": 12345},
+  "after": {"url": "...", "html_size": 12340},
+  "verified": true,
+  "confidence": 0.99
 }
 ```
 
-### Multi-Channel Encoding
-
-See [CORE_CONCEPTS.md §7](./CORE_CONCEPTS.md)
-
-Encode elements using visual attributes = instant semantic understanding:
-- **Shape**: button=rectangle, link=ellipse, form=pentagon
-- **Color**: blue=navigate, green=confirm, red=danger
-- **Thickness**: 1-5 (priority/weight)
-
-### Time Swarm Pattern
-
-See [ARCHITECTURE.md §"Time Swarm"](./ARCHITECTURE.md)
-
-7-agent parallel extraction (Scout, Solver, Skeptic, Monitor, etc.)
-
 ---
 
-## Knowledge Consolidation
+## Documentation Map
 
-All duplicated concepts have been consolidated into canonical homes:
-
-📖 **KNOWLEDGE_HUB.md** - Index of 20 core concepts + their canonical locations
-
-**New Canonical Docs** (extracted from this file):
-- [CORE_CONCEPTS.md](./CORE_CONCEPTS.md) - Fundamental ideas
-- [API_REFERENCE.md](./API_REFERENCE.md) - HTTP endpoints
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - Design decisions & patterns
-- [METHODOLOGY.md](./METHODOLOGY.md) - Evidence collection & debugging
-- [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) - Selector debugging workflow
-- [RECIPE_SYSTEM.md](./RECIPE_SYSTEM.md) - How recipes work
-- [PRIMEWIKI_STRUCTURE.md](./PRIMEWIKI_STRUCTURE.md) - Node templates
-- [ERROR_HANDLING.md](./ERROR_HANDLING.md) - 99.5% reliability patterns
-
-Each system now cross-references canonical sources (no duplication).
+| Topic | Where to Learn |
+|-------|----------------|
+| "How do I get started?" | [QUICK_START.md](./QUICK_START.md) |
+| "How does Solace work?" | [CORE_CONCEPTS.md](./CORE_CONCEPTS.md) |
+| "How do experts do this?" | [ADVANCED_TECHNIQUES.md](./ADVANCED_TECHNIQUES.md) |
+| "What do I do when X breaks?" | [DEVELOPER_DEBUGGING.md](./DEVELOPER_DEBUGGING.md) |
+| "What's the full API?" | [API_REFERENCE.md](./API_REFERENCE.md) |
+| "How do I navigate all docs?" | [GUIDES_INDEX.md](./GUIDES_INDEX.md) |
 
 ---
 
 ## Success Metrics
 
-Track progress:
+Track your progress:
 
 ```yaml
-phase_1_discoveries: count
+# Knowledge Capture
 recipes_created: count
 primewiki_nodes: count
-skills_updated: count
+registries_updated: count
+
+# Performance
 speed_improvement: 20x
-registry_entries: count
+registry_hits: count
+rediscovery_prevented: count (cost: $0.15 * count)
+
+# Mastery
 websites_mastered: [linkedin, github, google, ...]
+automation_success_rate: 95%+
 ```
 
 ---
@@ -325,38 +249,78 @@ websites_mastered: [linkedin, github, google, ...]
 
 ### Always
 - ✅ Check registries FIRST (prevent 99.8% waste)
-- ✅ Use HTML-first approach (`/html-clean`)
+- ✅ Verify actions with evidence
 - ✅ Save recipes after completing tasks
-- ✅ Build PrimeWiki nodes while browsing
-- ✅ Update skills as you learn
-- ✅ Collect evidence for every action
-- ✅ Commit and push after major work
+- ✅ Build PrimeWiki nodes while learning
+- ✅ Update skills as you discover patterns
+- ✅ Use LOOK-FIRST-ACT-VERIFY workflow
 
 ### Never
-- ❌ Don't rediscover patterns (check registry)
+- ❌ Don't rediscover patterns (check registry first)
+- ❌ Don't assume actions worked (always verify)
 - ❌ Don't use arbitrary sleeps (server is optimized)
-- ❌ Don't search repeatedly for same selectors (use portals)
-- ❌ Don't assume actions worked (verify with evidence)
-- ❌ Don't forget to update registries (steals from future LLMs)
+- ❌ Don't skip updating registries (steals from future LLMs)
+- ❌ Don't forget to document learnings
 
 ---
 
-## Next Steps
+## Typical Workflow
 
-When ready to browse a new site:
+When automating a new site:
 
-1. **Query registry** (RECIPE_REGISTRY.md + PRIMEWIKI_REGISTRY.md)
-2. **Research** expert patterns (web search)
-3. **Navigate** and observe (browser API)
-4. **Act** with evidence collection
-5. **Save recipe** (externalized reasoning)
-6. **Build PrimeWiki** (knowledge capture)
-7. **Update registries** (enable 100x cost savings)
-8. **Update skills** (self-improvement)
-9. **Commit** (document everything)
+```
+1. Check registries (RECIPE_REGISTRY.md + PRIMEWIKI_REGISTRY.md)
+   ↓
+2. If found → Load recipe, skip to step 8
+   ↓
+3. If not → Start browser: python persistent_browser_server.py
+   ↓
+4. Navigate & explore (get HTML, understand structure)
+   ↓
+5. Execute actions with verification (LOOK-ACT-VERIFY)
+   ↓
+6. Save recipe (portals + reasoning)
+   ↓
+7. Create PrimeWiki node (evidence-based knowledge)
+   ↓
+8. Update registries (RECIPE_REGISTRY.md + PRIMEWIKI_REGISTRY.md)
+   ↓
+9. Update skills (add to canon/prime-browser/skills/)
+   ↓
+10. Commit everything (git add . && git commit -m "...")
+```
+
+---
+
+## Architecture Overview
+
+```
+Browser Server (persistent, 20x faster)
+├── HTTP Handler (receives curl requests)
+├── Playwright Browser (maintains page state)
+├── Page Snapshot Generator (HTML, ARIA, screenshot)
+└── Session Manager (save/load cookies)
+
+You (Claude)
+├── Query registries
+├── Use browser via HTTP API
+├── Verify with evidence
+├── Save recipes
+└── Document knowledge
+```
+
+---
+
+## Starting Out
+
+1. **First time?** → [QUICK_START.md](./QUICK_START.md) (5 min)
+2. **Want basics?** → [CORE_CONCEPTS.md](./CORE_CONCEPTS.md) (30 min)
+3. **Ready to code?** → [API_REFERENCE.md](./API_REFERENCE.md) + start exploring
+4. **Hit a snag?** → [DEVELOPER_DEBUGGING.md](./DEVELOPER_DEBUGGING.md)
+5. **Want mastery?** → [ADVANCED_TECHNIQUES.md](./ADVANCED_TECHNIQUES.md)
 
 ---
 
 **Auth**: 65537 | **Northstar**: Phuc Forecast
 **Status**: Self-improving, always learning, always documenting
-**Last Updated**: 2026-02-15 (Phase 3 Task #3 consolidation)
+**Last Updated**: 2026-02-15 (Phase 3 Task #4 refactoring)

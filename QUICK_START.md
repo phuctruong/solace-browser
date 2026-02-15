@@ -1,139 +1,184 @@
-# Solace Browser CLI v2.0 - Quick Start Guide
+# Solace Browser Quick Start
 
-## ✅ Implementation Complete
-
-The Solace Browser CLI v2.0 has been refactored with full CDP integration and comprehensive test coverage.
-
-## 🚀 Getting Started
-
-### 1. Verify Installation
-
-```bash
-# Check CLI is executable
-bash solace-browser-cli-v2.sh help
-
-# Check test files exist
-ls -la tests/
-```
-
-### 2. Run Tests (Quick Validation)
-
-**Quick test (2-3 minutes):**
-```bash
-bash tests/unit_tests.sh
-```
-
-**Full test (10-15 minutes):**
-```bash
-bash tests/unit_tests.sh && bash tests/integration_tests.sh && bash tests/harsh_qa.sh
-```
-
-### 3. Test Real Browser (Optional)
-
-If you have Chrome/Chromium installed:
-
-```bash
-# Start browser
-bash solace-browser-cli-v2.sh start
-
-# Navigate
-bash solace-browser-cli-v2.sh navigate test-ep "https://example.com"
-
-# Take screenshot
-bash solace-browser-cli-v2.sh screenshot test.png
-
-# View log
-tail -f logs/solace.log
-```
-
-## 📊 What Was Implemented
-
-### CDP Functions Fixed ✅
-- **navigate_to()** - Navigate to URLs with Page.navigate
-- **click_element()** - Click elements with Runtime.evaluate
-- **type_text()** - Type text with Input.dispatchKeyEvent
-- **take_screenshot()** - Capture PNG screenshots
-- **get_snapshot()** - Retrieve page HTML snapshots
-
-### Test Infrastructure ✅
-- **10 Unit Tests** - Function-level verification
-- **5 Integration Tests** - Full workflow verification
-- **8 Harsh QA Tests** - Edge cases and determinism
-
-### Documentation ✅
-- **tests/README_TESTS.md** - Complete test documentation
-- **IMPLEMENTATION_SUMMARY.md** - Full implementation reference
-- **QUICK_START.md** - This quick start guide
-
-## 📁 Key Files
-
-```
-solace-browser-cli-v2.sh       Main CLI (fixed CDP functions)
-tests/unit_tests.sh            10 unit tests
-tests/integration_tests.sh      5 integration tests
-tests/harsh_qa.sh              8 harsh QA tests
-tests/README_TESTS.md          Test documentation
-IMPLEMENTATION_SUMMARY.md      Full reference
-QUICK_START.md                This file
-```
-
-## 🧪 Test Results Expected
-
-| Suite | Tests | Expected Result |
-|-------|-------|-----------------|
-| Unit | 10 | ✅ All Pass |
-| Integration | 5 | ✅ All Pass |
-| Harsh QA | 8 | ✅ All Pass |
-| **Total** | **23** | **✅ 23/23 Pass** |
-
-## 📖 Full Documentation
-
-For complete details, read:
-- `tests/README_TESTS.md` - Testing guide with examples and troubleshooting
-- `IMPLEMENTATION_SUMMARY.md` - Technical implementation details
-
-## 🐛 Troubleshooting
-
-### Tests fail on CDP functions
-- Install Python websocket library: `pip install websocket-client`
-- Verify Chrome/Chromium installed: `which chromium` or `which google-chrome`
-
-### Browser won't start
-```bash
-# Kill any stuck processes
-pkill -9 chrome chromium
-rm -rf logs/browser-profile
-
-# Try again
-bash solace-browser-cli-v2.sh start
-```
-
-### WebSocket connection fails
-```bash
-# Check CDP endpoint responds
-curl http://localhost:9222/json/list
-
-# Verify port 9222 is free
-lsof -i :9222
-```
-
-## ✨ Next Steps
-
-1. **Run tests to validate:** `bash tests/unit_tests.sh`
-2. **Review implementation:** `cat IMPLEMENTATION_SUMMARY.md`
-3. **Test real browser:** `bash solace-browser-cli-v2.sh start`
-4. **Commit changes:** `git add -A && git commit -m "..."`
-
-## 📞 Support
-
-For issues:
-1. Check logs: `tail -f logs/solace.log`
-2. Run with verbose: `bash -x tests/unit_tests.sh 2>&1 | head -50`
-3. Review: `tests/README_TESTS.md` troubleshooting section
+**Learn Solace Browser in 5 minutes.** Three hands-on tutorials covering the essentials.
 
 ---
 
-**Status:** ✅ Implementation Complete
-**Date:** February 14, 2026
-**Test Coverage:** 23 tests across 3 layers
-**Expected Result:** 23/23 tests PASS
+## Tutorial 1: Start the Browser Server (1 minute)
+
+The browser server stays running so you can connect/disconnect anytime (20x faster than opening a new browser each time).
+
+### Steps
+
+```bash
+# 1. Navigate to project directory
+cd /home/phuc/projects/solace-browser
+
+# 2. Start the persistent browser server
+python persistent_browser_server.py
+```
+
+### What Happens
+
+```
+INFO: Starting Solace Browser Server
+INFO: Chromium browser starting...
+INFO: Server listening on http://localhost:9222
+INFO: Browser ready for commands
+```
+
+### Success Indicator
+
+When you see "Browser ready for commands", the server is running. The browser window stays open until you stop the server (Ctrl+C).
+
+---
+
+## Tutorial 2: Make Your First API Call (2 minutes)
+
+Navigate to a website and capture its state using the HTTP API.
+
+### Step 1: Navigate
+
+```bash
+curl -X POST http://localhost:9222/navigate \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com"}'
+```
+
+### Step 2: Get Clean HTML
+
+```bash
+curl http://localhost:9222/html-clean | jq -r '.html'
+```
+
+You'll see the page's HTML. This is what Claude reads to understand the page.
+
+### Step 3: Take a Screenshot
+
+```bash
+curl http://localhost:9222/screenshot | jq '.image' > page.png
+```
+
+### Step 4: Get ARIA Tree (Accessibility Tree)
+
+```bash
+curl http://localhost:9222/aria | jq '.tree'
+```
+
+This shows the page's semantic structure (buttons, forms, links with labels).
+
+### Common Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/navigate` | POST | Go to URL: `{"url": "..."}` |
+| `/html-clean` | GET | Get cleaned HTML for LLM understanding |
+| `/aria` | GET | Get accessibility tree with labels |
+| `/screenshot` | GET | Get page screenshot |
+| `/click` | POST | Click element: `{"selector": "..."}` |
+| `/fill` | POST | Fill form: `{"selector": "...", "text": "..."}` |
+| `/submit` | POST | Submit form: `{"selector": "..."}` |
+
+---
+
+## Tutorial 3: Save and Load Session (2 minutes)
+
+After logging in, save the session so you don't need to re-login next time.
+
+### Part A: Login and Save
+
+```bash
+# 1. Navigate to login page
+curl -X POST http://localhost:9222/navigate \
+  -d '{"url": "https://linkedin.com/login"}'
+
+# 2. Get page to see what fields exist
+curl http://localhost:9222/html-clean | jq -r '.html'
+
+# 3. Fill email field
+curl -X POST http://localhost:9222/fill \
+  -d '{"selector": "input[type=email]", "text": "your-email@example.com"}'
+
+# 4. Fill password field
+curl -X POST http://localhost:9222/fill \
+  -d '{"selector": "input[type=password]", "text": "your-password"}'
+
+# 5. Click login button
+curl -X POST http://localhost:9222/click \
+  -d '{"selector": "button:has-text(\"Sign in\")"}'
+
+# 6. Wait for redirect (check HTML to see if you're logged in)
+curl http://localhost:9222/html-clean | jq -r '.html'
+
+# 7. Save the session (cookies)
+curl -X POST http://localhost:9222/save-session
+```
+
+This saves cookies to `artifacts/session.json`.
+
+### Part B: Load Session Next Time
+
+```bash
+# 1. Navigate to login page
+curl -X POST http://localhost:9222/navigate \
+  -d '{"url": "https://linkedin.com/login"}'
+
+# 2. Load cookies from saved session
+curl -X POST http://localhost:9222/load-session \
+  -d '{"session_file": "artifacts/session.json"}'
+
+# 3. Navigate to your profile (you're already logged in!)
+curl -X POST http://localhost:9222/navigate \
+  -d '{"url": "https://linkedin.com/in/yourprofile/"}'
+
+# Done! No re-login needed.
+```
+
+---
+
+## Next Steps
+
+- **Understand how it works** → Read [CORE_CONCEPTS.md](./CORE_CONCEPTS.md)
+- **Learn expert patterns** → Read [ADVANCED_TECHNIQUES.md](./ADVANCED_TECHNIQUES.md)
+- **Debug when stuck** → Read [DEVELOPER_DEBUGGING.md](./DEVELOPER_DEBUGGING.md)
+- **Full API reference** → Read [API_REFERENCE.md](./API_REFERENCE.md)
+
+---
+
+## Troubleshooting
+
+### "Connection refused" on localhost:9222
+
+The server isn't running. Start it first:
+```bash
+python persistent_browser_server.py
+```
+
+### "Selector not found"
+
+The HTML changed. Get fresh HTML to find the correct selector:
+```bash
+curl http://localhost:9222/html-clean | jq -r '.html' | grep -i "email"
+```
+
+### "Login failed after fill"
+
+Sometimes websites need a delay. Check the HTML after filling to see what happened:
+```bash
+curl http://localhost:9222/html-clean | jq -r '.html'
+```
+
+Is there an error message? Is the field actually filled?
+
+---
+
+## Key Principles
+
+1. **HTML First**: Always get `/html-clean` to understand page state before acting
+2. **Verify Everything**: After each action (click, fill), check `/html-clean` to confirm it worked
+3. **Use CSS Selectors**: Look for patterns like `button[aria-label="..."]`, `input[type=email]`, `a:has-text("...")`
+4. **Save Sessions**: Once logged in, save with `/save-session` to avoid re-login
+
+---
+
+**Next**: [Go to CORE_CONCEPTS.md](./CORE_CONCEPTS.md) to understand how Solace Browser works
