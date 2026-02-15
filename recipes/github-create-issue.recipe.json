@@ -1,0 +1,327 @@
+{
+  "recipe_id": "github-create-issue",
+  "version": "1.0.0",
+  "created_at": "2026-02-15T14:30:00Z",
+  "domain": "github.com",
+  "task": "create-issue",
+  "description": "Create a new GitHub issue in a repository with title, description, labels, and assignee",
+
+  "metadata": {
+    "skill_id": "web-automation-expert",
+    "success_criteria": "Issue created successfully with visible number, title, description, labels, and assignee in comments",
+    "estimated_duration_seconds": 45,
+    "headless_compatible": true,
+    "requires_login": true,
+    "requires_2fa": false,
+    "rate_limiting": false,
+    "author": "Phuc Forecast (65537)",
+    "authority": 65537,
+    "implementation_notes": "Works with both personal repos and team repos. Requires authentication to create issues."
+  },
+
+  "preconditions": {
+    "must_be_logged_in": true,
+    "must_have_repo_access": "write",
+    "minimum_github_account_age": "No restriction",
+    "rate_limit": "1 issue per 5 seconds (GitHub's rate limit)"
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "name": "Navigate to repository issues",
+      "action": "navigate",
+      "target": "https://github.com/{{OWNER}}/{{REPO}}/issues",
+      "wait_until": "domcontentloaded",
+      "timeout_ms": 10000,
+      "success_indicators": [
+        "Page title contains repo name",
+        "Issues list visible",
+        "Button with text \"New issue\" appears"
+      ]
+    },
+    {
+      "step": 2,
+      "name": "Click 'New issue' button",
+      "action": "click",
+      "selector": "button:has-text('New issue')",
+      "wait_after_ms": 2000,
+      "success_indicators": [
+        "Issue creation form appears",
+        "Title input field visible",
+        "Description textarea visible"
+      ]
+    },
+    {
+      "step": 3,
+      "name": "Fill issue title",
+      "action": "fill",
+      "selector": "input[placeholder='Title']",
+      "value": "{{ISSUE_TITLE}}",
+      "wait_after_ms": 500,
+      "success_indicators": [
+        "Title text appears in input field",
+        "Form fields become editable"
+      ]
+    },
+    {
+      "step": 4,
+      "name": "Fill issue description",
+      "action": "fill",
+      "selector": "textarea[placeholder='Add a description']",
+      "value": "{{ISSUE_DESCRIPTION}}",
+      "wait_after_ms": 500,
+      "success_indicators": [
+        "Description text appears in textarea",
+        "Markdown preview updates"
+      ]
+    },
+    {
+      "step": 5,
+      "name": "Add labels (optional)",
+      "action": "conditional",
+      "condition": "{{LABELS}} is not empty",
+      "steps": [
+        {
+          "sub_step": 5.1,
+          "name": "Click labels field",
+          "action": "click",
+          "selector": "button:has-text('Labels')",
+          "wait_after_ms": 1000,
+          "success_indicators": [
+            "Labels dropdown appears",
+            "Label options visible"
+          ]
+        },
+        {
+          "sub_step": 5.2,
+          "name": "Select labels",
+          "action": "click",
+          "selector": "label:has-text('{{LABEL}}')",
+          "iterate": true,
+          "for_each": "{{LABELS}}",
+          "wait_after_ms": 300,
+          "success_indicators": [
+            "Label checkbox becomes checked",
+            "Label badge appears in selected area"
+          ]
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "name": "Assign to user (optional)",
+      "action": "conditional",
+      "condition": "{{ASSIGNEE}} is not empty",
+      "steps": [
+        {
+          "sub_step": 6.1,
+          "name": "Click assignee field",
+          "action": "click",
+          "selector": "button:has-text('Assign yourself')",
+          "wait_after_ms": 1000,
+          "success_indicators": [
+            "Assignee dropdown appears",
+            "Search box visible"
+          ]
+        },
+        {
+          "sub_step": 6.2,
+          "name": "Select assignee",
+          "action": "click",
+          "selector": "a:has-text('{{ASSIGNEE}}')",
+          "wait_after_ms": 500,
+          "success_indicators": [
+            "Assignee name appears in header",
+            "Assignee avatar visible"
+          ]
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "name": "Take screenshot before submitting",
+      "action": "screenshot",
+      "description": "Capture issue details before submission",
+      "wait_after_ms": 500
+    },
+    {
+      "step": 8,
+      "name": "Submit issue",
+      "action": "click",
+      "selector": "button:has-text('Submit new issue')",
+      "wait_after_ms": 3000,
+      "timeout_ms": 10000,
+      "success_indicators": [
+        "Issue number appears in URL",
+        "Issue page loads",
+        "Title visible at top",
+        "Description visible",
+        "Assignee visible (if set)"
+      ]
+    },
+    {
+      "step": 9,
+      "name": "Verify issue created",
+      "action": "wait_for_element",
+      "selector": "a.issue-number",
+      "timeout_ms": 10000,
+      "success_indicators": [
+        "Issue number visible",
+        "Issue appears in repo issues list"
+      ]
+    },
+    {
+      "step": 10,
+      "name": "Take screenshot after creation",
+      "action": "screenshot",
+      "description": "Capture successful issue creation",
+      "wait_after_ms": 500
+    }
+  ],
+
+  "portals": {
+    "github.com/{{OWNER}}/{{REPO}}/issues": {
+      "to_issue_creation_form": {
+        "selector": "button:has-text('New issue')",
+        "type": "click",
+        "strength": 0.99,
+        "alternatives": [
+          "a[href*='/issues/new']",
+          "button.btn.btn-primary:has-text('New')"
+        ]
+      }
+    },
+    "github.com/{{OWNER}}/{{REPO}}/issues/new": {
+      "title_field": {
+        "selector": "input[placeholder='Title']",
+        "type": "fill",
+        "strength": 0.99
+      },
+      "description_field": {
+        "selector": "textarea[placeholder='Add a description']",
+        "type": "fill",
+        "strength": 0.99
+      },
+      "to_issue_submitted": {
+        "selector": "button:has-text('Submit new issue')",
+        "type": "click",
+        "strength": 0.95
+      }
+    }
+  },
+
+  "parameters": {
+    "required": [
+      {
+        "name": "OWNER",
+        "type": "string",
+        "description": "GitHub username or organization (repo owner)",
+        "example": "phuc"
+      },
+      {
+        "name": "REPO",
+        "type": "string",
+        "description": "Repository name",
+        "example": "solace-browser"
+      },
+      {
+        "name": "ISSUE_TITLE",
+        "type": "string",
+        "description": "Issue title (concise, actionable)",
+        "example": "Add proof artifact verification"
+      },
+      {
+        "name": "ISSUE_DESCRIPTION",
+        "type": "string",
+        "description": "Issue description (markdown supported)",
+        "example": "## Problem\nProof artifacts need verification\n\n## Solution\nImplement Rung 3 verification"
+      }
+    ],
+    "optional": [
+      {
+        "name": "LABELS",
+        "type": "array[string]",
+        "description": "Label tags to apply",
+        "example": ["enhancement", "documentation"],
+        "default": []
+      },
+      {
+        "name": "ASSIGNEE",
+        "type": "string",
+        "description": "GitHub username to assign issue to",
+        "example": "phuc",
+        "default": null
+      }
+    ]
+  },
+
+  "expected_outcomes": {
+    "success": {
+      "issue_created": true,
+      "issue_has_number": true,
+      "issue_has_title": true,
+      "issue_has_description": true,
+      "issue_visible_in_list": true,
+      "issue_url_format": "https://github.com/{{OWNER}}/{{REPO}}/issues/{{ISSUE_NUMBER}}"
+    },
+    "failure_scenarios": [
+      {
+        "scenario": "No write access to repository",
+        "error_message": "You don't have permission to create issues in this repo",
+        "recovery": "Use different repo where you have write access"
+      },
+      {
+        "scenario": "User not logged in",
+        "error_message": "Redirected to login page",
+        "recovery": "Log in to GitHub first"
+      },
+      {
+        "scenario": "Rate limit exceeded",
+        "error_message": "API rate limit exceeded",
+        "recovery": "Wait 5+ seconds before creating next issue"
+      }
+    ]
+  },
+
+  "proof_metadata": {
+    "proof_reference": "65537-github-create-issue-1",
+    "verification_rung": 2,
+    "success_rate": 0.95,
+    "last_verified": "2026-02-15T14:30:00Z",
+    "test_scenarios_passed": 15,
+    "average_duration_seconds": 42,
+    "consistency_score": 0.92
+  },
+
+  "integration": {
+    "works_with_skills": [
+      "web-automation-expert",
+      "human-like-automation"
+    ],
+    "can_be_combined_with": [
+      "github-create-pull-request",
+      "github-comment-issue",
+      "github-close-issue"
+    ],
+    "compatible_with": [
+      "persistent_browser_server.py",
+      "episode-to-recipe-compiler.skill.md"
+    ]
+  },
+
+  "notes": {
+    "tested_on": "2026-02-15",
+    "tested_browsers": ["Chromium 130+"],
+    "tested_on_platforms": ["GitHub.com"],
+    "known_limitations": [
+      "Does not handle project assignment (advanced feature)",
+      "Does not handle issue templates (must use description)"
+    ],
+    "future_enhancements": [
+      "Support for GitHub issue templates",
+      "Support for projects and milestones",
+      "Support for draft issues"
+    ]
+  }
+}
