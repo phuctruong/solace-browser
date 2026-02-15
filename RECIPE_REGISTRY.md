@@ -195,20 +195,33 @@
 - **Next Steps**: Test in Phase 2, handle moderation, verify post visibility
 - **Estimated Time**: 20-30 seconds per post
 
-### 🟡 reddit-homepage-navigate.recipe.json
-- **Task**: Navigate Reddit homepage and extract trending topics
-- **Phase 1 Cost**: $0.05 | **Phase 2 Cost**: $0.0005
-- **Success Rate**: pending
+### ✅ reddit-homepage-phase1.recipe.json (VERIFIED)
+- **Task**: Reddit homepage exploration with full landmark discovery
+- **Phase 1 Cost**: $0.15 | **Phase 2 Cost**: $0.0015
+- **Success Rate**: 100% (Phase 1 verified) | **Reliability**: Very High
 - **Created**: 2026-02-15
-- **Status**: 🟡 Phase 1 COMPLETE, Phase 2 PENDING
-- **Scope**: Navigate to reddit.com, identify trending posts/subreddits
-- **Selectors**: Extracted from reddit-homepage-loggedout.primewiki.md
-  - Post cards: identified (209 buttons total)
-  - Trending subreddits: identified
-  - Navigation menu: identified
-- **Notes**: Phase 1 explored while logged out (no security triggers)
-- **Next Steps**: Phase 2 with authentication, trending analysis
-- **Estimated Time**: 5-10 seconds per navigation
+- **Status**: ✅ Phase 1 COMPLETE, Phase 2 READY
+- **Scope**: Complete structure mapping of Reddit homepage with CSS selectors
+- **Selectors Verified**:
+  - Search bar: `input[name="q"]` (0.99 confidence)
+  - Log In: `a[href*="login"]` (0.98 confidence)
+  - Hamburger: `#navbar-menu-button` (0.98 confidence)
+  - Logo: `a[aria-label="Home"]` (0.97 confidence)
+  - Get App: `#get-app` (0.96 confidence)
+  - Communities: `a[href^="/r/"]` (0.95 confidence, 20+ found)
+- **Page Stats**: 236,250 bytes, 827 DOM elements, 417 ARIA nodes
+- **Security**: No bot detection, no rate limiting, stealth mode sufficient
+- **Key Learning**: Direct login navigation may trigger bot detection - use click strategy instead
+- **Portals**:
+  - Homepage → Search: fill search bar + Enter
+  - Homepage → Community: click r/{name} link
+  - Homepage → Login: click login button (not direct navigate)
+  - Homepage → Trending: click trending post link
+- **Next Steps**: Phase 2 execution, login page exploration with click strategy
+- **Estimated Time**: 3-4 seconds per page load, 12 seconds total with interactions
+
+### 🟡 reddit-homepage-navigate.recipe.json (DEPRECATED - see reddit-homepage-phase1 above)
+- **Status**: 🟡 SUPERSEDED by reddit-homepage-phase1.recipe.json (more detailed)
 
 ---
 
