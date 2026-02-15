@@ -329,84 +329,105 @@ class PersistentBrowserServer:
         })
 
     async def handle_navigate(self, request):
-        """Navigate to URL"""
-        data = await request.json()
-        url = data.get('url')
-        wait_strategy = data.get('wait_until', 'networkidle')  # Changed default to networkidle for better SPA support
-        wait_for_content = data.get('wait_for_content', True)  # Wait for main content to render
-
-        if not url:
-            return web.json_response({"error": "url required"}, status=400)
-
-        logger.info(f"→ Navigating to: {url} (wait_strategy: {wait_strategy})")
-
-        # Phase 2 Fix #2: Check rate limits before navigating
-        rate_limit_info = await self.rate_limiter.wait_if_needed(url, reason="navigate")
-        if rate_limit_info.get('waited'):
-            logger.info(f"⏱️  Rate limited: {rate_limit_info.get('wait_reason', 'rate limit enforced')}")
-
-        # Initial navigation - wait for page load
+        """Navigate to URL (Phase 2 Fix #3: Error Handling)"""
         try:
-            await self.page.goto(url, wait_until=wait_strategy, timeout=30000)
-        except Exception as e:
-            logger.warning(f"⚠️  Navigation timeout (may still have loaded): {e}")
-
-        # For SPAs (Single Page Apps like Reddit), wait for main content to render
-        # This fixes the "blank page" issue with React/Vue/etc apps
-        if wait_for_content:
-            # Strategy 1: Wait for body to have meaningful content
+            # Parse JSON request body
             try:
-                logger.info("⏳ Waiting for page content (strategy 1: body.innerHTML > 100)...")
-                await self.page.wait_for_function(
-                    "() => document.body.innerHTML.length > 100",
-                    timeout=8000
+                data = await request.json()
+            except ValueError as e:
+                logger.error(f"❌ Invalid JSON: {e}")
+                return web.json_response(
+                    {"error": f"Invalid JSON: {str(e)}", "code": "INVALID_JSON"},
+                    status=400
                 )
-                logger.info("✅ Page content found (strategy 1 succeeded)")
-            except Exception as e1:
-                logger.warning(f"⚠️  Strategy 1 timeout: {e1}")
 
-                # Strategy 2: Wait for any interactive elements (buttons, inputs, links)
+            # Extract and validate parameters
+            url = data.get('url')
+            wait_strategy = data.get('wait_until', 'networkidle')
+            wait_for_content = data.get('wait_for_content', True)
+
+            if not url:
+                return web.json_response(
+                    {"error": "Missing required field: 'url'", "code": "MISSING_FIELD"},
+                    status=400
+                )
+
+            logger.info(f"→ Navigating to: {url} (wait_strategy: {wait_strategy})")
+
+            # Phase 2 Fix #2: Check rate limits before navigating
+            rate_limit_info = await self.rate_limiter.wait_if_needed(url, reason="navigate")
+            if rate_limit_info.get('waited'):
+                logger.info(f"⏱️  Rate limited: {rate_limit_info.get('wait_reason', 'rate limit enforced')}")
+
+            # Initial navigation - wait for page load
+            try:
+                await self.page.goto(url, wait_until=wait_strategy, timeout=30000)
+            except Exception as e:
+                logger.warning(f"⚠️  Navigation timeout (may still have loaded): {e}")
+
+            # For SPAs (Single Page Apps like Reddit), wait for main content to render
+            # This fixes the "blank page" issue with React/Vue/etc apps
+            if wait_for_content:
+                # Strategy 1: Wait for body to have meaningful content
                 try:
-                    logger.info("⏳ Waiting for interactive elements (strategy 2)...")
+                    logger.info("⏳ Waiting for page content (strategy 1: body.innerHTML > 100)...")
                     await self.page.wait_for_function(
-                        "() => document.querySelectorAll('button, input, a, [role=\"button\"]').length > 2",
-                        timeout=5000
+                        "() => document.body.innerHTML.length > 100",
+                        timeout=8000
                     )
-                    logger.info("✅ Interactive elements found (strategy 2 succeeded)")
-                except Exception as e2:
-                    logger.warning(f"⚠️  Strategy 2 timeout: {e2}")
+                    logger.info("✅ Page content found (strategy 1 succeeded)")
+                except Exception as e1:
+                    logger.warning(f"⚠️  Strategy 1 timeout: {e1}")
 
-                    # Strategy 3: Just wait for basic elements to exist
+                    # Strategy 2: Wait for any interactive elements (buttons, inputs, links)
                     try:
-                        logger.info("⏳ Waiting for basic DOM elements (strategy 3)...")
+                        logger.info("⏳ Waiting for interactive elements (strategy 2)...")
                         await self.page.wait_for_function(
-                            "() => document.querySelectorAll('*').length > 10",
-                            timeout=3000
+                            "() => document.querySelectorAll('button, input, a, [role=\"button\"]').length > 2",
+                            timeout=5000
                         )
-                        logger.info("✅ DOM elements found (strategy 3 succeeded)")
-                    except Exception as e3:
-                        logger.warning(f"⚠️  Strategy 3 timeout: {e3}")
+                        logger.info("✅ Interactive elements found (strategy 2 succeeded)")
+                    except Exception as e2:
+                        logger.warning(f"⚠️  Strategy 2 timeout: {e2}")
 
-                        # Last resort: check what we actually got
-                        body_size = await self.page.evaluate("() => document.body.innerHTML.length")
-                        elem_count = await self.page.evaluate("() => document.querySelectorAll('*').length")
-                        logger.error(f"❌ All strategies failed - body size: {body_size}, elements: {elem_count}")
+                        # Strategy 3: Just wait for basic elements to exist
+                        try:
+                            logger.info("⏳ Waiting for basic DOM elements (strategy 3)...")
+                            await self.page.wait_for_function(
+                                "() => document.querySelectorAll('*').length > 10",
+                                timeout=3000
+                            )
+                            logger.info("✅ DOM elements found (strategy 3 succeeded)")
+                        except Exception as e3:
+                            logger.warning(f"⚠️  Strategy 3 timeout: {e3}")
 
-        # Small delay to let any final renders complete
-        await self.page.evaluate("() => new Promise(r => setTimeout(r, 800))")
+                            # Last resort: check what we actually got
+                            body_size = await self.page.evaluate("() => document.body.innerHTML.length")
+                            elem_count = await self.page.evaluate("() => document.querySelectorAll('*').length")
+                            logger.error(f"❌ All strategies failed - body size: {body_size}, elements: {elem_count}")
 
-        # Debug: Log what we actually captured
-        body_size = await self.page.evaluate("() => document.body.innerHTML.length")
-        elem_count = await self.page.evaluate("() => document.querySelectorAll('*').length")
-        logger.info(f"📊 Navigation complete - Body size: {body_size} bytes, Elements: {elem_count}")
+            # Small delay to let any final renders complete
+            await self.page.evaluate("() => new Promise(r => setTimeout(r, 800))")
 
-        return web.json_response({
-            "success": True,
-            "url": self.page.url,
-            "title": await self.page.title(),
-            "body_size": body_size,
-            "element_count": elem_count
-        })
+            # Debug: Log what we actually captured
+            body_size = await self.page.evaluate("() => document.body.innerHTML.length")
+            elem_count = await self.page.evaluate("() => document.querySelectorAll('*').length")
+            logger.info(f"📊 Navigation complete - Body size: {body_size} bytes, Elements: {elem_count}")
+
+            return web.json_response({
+                "success": True,
+                "url": self.page.url,
+                "title": await self.page.title(),
+                "body_size": body_size,
+                "element_count": elem_count
+            })
+
+        except Exception as e:
+            logger.error(f"❌ Navigation handler error: {e}")
+            return web.json_response(
+                {"error": f"Navigation failed: {str(e)}", "code": "NAVIGATE_FAILED"},
+                status=500
+            )
 
     async def handle_snapshot(self, request):
         """
@@ -437,36 +458,70 @@ class PersistentBrowserServer:
         return web.json_response(snapshot)
 
     async def handle_click(self, request):
-        """Click element by CSS selector"""
-        data = await request.json()
-        selector = data.get('selector')
-
-        if not selector:
-            return web.json_response({"error": "selector required"}, status=400)
-
+        """Click element by CSS selector (Phase 2 Fix #3: Error Handling)"""
         try:
+            # Parse JSON request body
+            try:
+                data = await request.json()
+            except ValueError as e:
+                logger.error(f"❌ Invalid JSON: {e}")
+                return web.json_response(
+                    {"error": f"Invalid JSON: {str(e)}", "code": "INVALID_JSON"},
+                    status=400
+                )
+
+            selector = data.get('selector')
+
+            if not selector:
+                return web.json_response(
+                    {"error": "Missing required field: 'selector'", "code": "MISSING_FIELD"},
+                    status=400
+                )
+
             logger.info(f"🖱️  Clicking: {selector}")
             await self.page.click(selector, timeout=5000)
             # Wait for DOM to be ready instead of arbitrary sleep
             await self.page.wait_for_load_state('domcontentloaded')
 
             return web.json_response({"success": True})
+
+        except TimeoutError:
+            logger.error(f"❌ Click timeout: {selector}")
+            return web.json_response(
+                {"error": f"Element not found: {selector}", "code": "TIMEOUT"},
+                status=408
+            )
         except Exception as e:
             logger.error(f"❌ Click failed: {e}")
-            return web.json_response({"error": str(e)}, status=400)
+            return web.json_response(
+                {"error": f"Click failed: {str(e)}", "code": "CLICK_FAILED"},
+                status=500
+            )
 
     async def handle_fill(self, request):
-        """Fill text into field - OpenClaw pattern for complex forms"""
-        data = await request.json()
-        selector = data.get('selector')
-        text = data.get('text')
-        slowly = data.get('slowly', False)  # OpenClaw pattern for contenteditable
-        delay_ms = data.get('delay', 15)  # Configurable delay (default 15ms, was 50ms)
-
-        if not selector or text is None:
-            return web.json_response({"error": "selector and text required"}, status=400)
-
+        """Fill text into field - OpenClaw pattern for complex forms (Phase 2 Fix #3: Error Handling)"""
         try:
+            # Parse JSON request body
+            try:
+                data = await request.json()
+            except ValueError as e:
+                logger.error(f"❌ Invalid JSON: {e}")
+                return web.json_response(
+                    {"error": f"Invalid JSON: {str(e)}", "code": "INVALID_JSON"},
+                    status=400
+                )
+
+            selector = data.get('selector')
+            text = data.get('text')
+            slowly = data.get('slowly', False)  # OpenClaw pattern for contenteditable
+            delay_ms = data.get('delay', 15)  # Configurable delay (default 15ms, was 50ms)
+
+            if not selector or text is None:
+                return web.json_response(
+                    {"error": "Missing required fields: 'selector' and 'text'", "code": "MISSING_FIELD"},
+                    status=400
+                )
+
             logger.info(f"⌨️  Filling: {selector} (slowly={slowly}, delay={delay_ms}ms)")
 
             # OpenClaw pattern: slowly=True for contenteditable divs
@@ -485,26 +540,52 @@ class PersistentBrowserServer:
                 await self.page.fill(selector, text)
 
             return web.json_response({"success": True})
+
+        except TimeoutError:
+            logger.error(f"❌ Fill timeout: {selector}")
+            return web.json_response(
+                {"error": f"Element not found: {selector}", "code": "TIMEOUT"},
+                status=408
+            )
         except Exception as e:
             logger.error(f"❌ Fill failed: {e}")
-            return web.json_response({"error": str(e)}, status=400)
+            return web.json_response(
+                {"error": f"Fill failed: {str(e)}", "code": "FILL_FAILED"},
+                status=500
+            )
 
     async def handle_keyboard(self, request):
-        """Handle keyboard press - OpenClaw pattern"""
-        data = await request.json()
-        key = data.get('key')
-        delay_ms = data.get('delay', 0)
-
-        if not key:
-            return web.json_response({"error": "key required"}, status=400)
-
+        """Handle keyboard press - OpenClaw pattern (Phase 2 Fix #3: Error Handling)"""
         try:
+            # Parse JSON request body
+            try:
+                data = await request.json()
+            except ValueError as e:
+                logger.error(f"❌ Invalid JSON: {e}")
+                return web.json_response(
+                    {"error": f"Invalid JSON: {str(e)}", "code": "INVALID_JSON"},
+                    status=400
+                )
+
+            key = data.get('key')
+            delay_ms = data.get('delay', 0)
+
+            if not key:
+                return web.json_response(
+                    {"error": "Missing required field: 'key'", "code": "MISSING_FIELD"},
+                    status=400
+                )
+
             logger.info(f"⌨️  Keyboard press: {key}")
             await self.page.keyboard.press(key, delay=max(0, delay_ms))
             return web.json_response({"success": True})
+
         except Exception as e:
             logger.error(f"❌ Keyboard press failed: {e}")
-            return web.json_response({"error": str(e)}, status=400)
+            return web.json_response(
+                {"error": f"Keyboard press failed: {str(e)}", "code": "KEYBOARD_FAILED"},
+                status=500
+            )
 
     async def handle_evaluate(self, request):
         """Execute JavaScript in page context"""
