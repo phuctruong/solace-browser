@@ -1,0 +1,10 @@
+{
+  "recipe_id": "wikipedia-demo.recipe",
+  "timestamp": "2026-02-14T22:39:18Z",
+  "source_episode": "wikipedia-demo",
+  "source_hash": "ca7ade1fea526318ed4f5d1d95e2967f124d0f2d1764efdc7f40f656891b7f87",
+  "control_mode": "mock",
+  "actions": [],
+  "status": "COMPILED",
+  "locked": true
+}

@@ -1,0 +1,10 @@
+{
+  "recipe_id": "llm-wiki-ai.recipe",
+  "timestamp": "2026-02-14T22:42:00Z",
+  "source_episode": "llm-wiki-ai",
+  "source_hash": "25e59f1e5b7045bd5749a5cf14eb3cb19954c9be629098ae660f07b27730775b",
+  "control_mode": "mock",
+  "actions": [],
+  "status": "COMPILED",
+  "locked": true
+}

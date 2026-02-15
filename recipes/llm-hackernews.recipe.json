@@ -1,0 +1,10 @@
+{
+  "recipe_id": "llm-hackernews.recipe",
+  "timestamp": "2026-02-14T22:42:00Z",
+  "source_episode": "llm-hackernews",
+  "source_hash": "7e989b332f532a0a7971b5b7e1626924ed35c83cbb5aefd3725d4c7f4473861e",
+  "control_mode": "mock",
+  "actions": [],
+  "status": "COMPILED",
+  "locked": true
+}

@@ -1,0 +1,10 @@
+{
+  "recipe_id": "llm-github-search.recipe",
+  "timestamp": "2026-02-14T22:42:00Z",
+  "source_episode": "llm-github-search",
+  "source_hash": "139d6c5be7f0c9dec97afc888307f8d335900bf8315be84f932be5ff68dff1db",
+  "control_mode": "mock",
+  "actions": [],
+  "status": "COMPILED",
+  "locked": true
+}
