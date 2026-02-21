@@ -1,0 +1,236 @@
+{
+  "id": "substack-read-comments",
+  "platform": "substack",
+  "version": "1.0.0",
+  "description": "Read comments on a Substack post. Navigate to the post via the Posts dashboard, open the comments section, and extract commenter names, comment text, timestamps, and like counts. Read-only — no replies or moderation.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["substack.read_comments"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Substack comments can be viewed from the post management page or by navigating to the public post URL and scrolling to the comments section. The management dashboard may have a 'Comments' tab per post. Comment items have the commenter name, body text, timestamp, and like count. Comments may be paginated — first page extracted by default.",
+    "selector_strategy": "Comment items use div[data-testid='comment'] or similar. Commenter name in a span or a element. Comment body in a div or p. Timestamp in a time element. Like count in a span. Use extract_all with limit.",
+    "anti_bot_notes": "Read-only — minimal bot detection. Load saved session and navigate directly. No typing required unless search_query is provided. sort_by may require clicking a sort dropdown.",
+    "performance": "Navigation 3s + post load 4s + comments section load 3s + extraction 2s. Total: ~12s."
+  },
+
+  "input_params": {
+    "post_title": {
+      "type": "string",
+      "description": "Title of the post to read comments for (used for lookup in Posts list)",
+      "required": false,
+      "example": "Why AI Agents Are the New SaaS"
+    },
+    "post_id": {
+      "type": "string",
+      "description": "Post slug or ID for direct URL navigation (preferred over title search)",
+      "required": false,
+      "example": "why-ai-agents-are-the-new-saas"
+    },
+    "sort_by": {
+      "type": "string",
+      "description": "Sort comments by: 'newest' or 'oldest'",
+      "required": false,
+      "default": "newest",
+      "enum": ["newest", "oldest"]
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Maximum number of comments to extract",
+      "required": false,
+      "default": 20,
+      "example": 50
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/substack_working_session.json",
+      "description": "Load saved Substack session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://substack.com/dashboard/posts",
+      "wait_for": "div[data-component='PostsPage'], table.posts-table, div.posts-list",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to Posts management page to locate target post"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "div[data-component='PostsPage'], h1:has-text('Posts'), div.posts-list",
+      "fallback_url_pattern": "substack.com/sign-in",
+      "description": "Verify authenticated — abort with SESSION_EXPIRED if redirected",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "wait_for_selector",
+      "selector": "tr.post-row, div[data-testid='post-card'], div.post-item",
+      "timeout_ms": 10000,
+      "description": "Wait for post list to render"
+    },
+    {
+      "step": 5,
+      "action": "find_and_click",
+      "selector": "tr.post-row, div[data-testid='post-card']",
+      "match_text": "{params.post_title}",
+      "click_child_selector": "a[data-testid='view-comments'], a[href*='/comments'], button:has-text('Comments')",
+      "optional": true,
+      "condition": "{params.post_title}",
+      "description": "Find post row by title and click its Comments link",
+      "wait_after_ms": 3000,
+      "timeout_ms": 8000,
+      "screenshot": true
+    },
+    {
+      "step": 6,
+      "action": "navigate",
+      "target": "https://substack.com/p/{params.post_id}/comments",
+      "wait_for": "div.comments-section, div[data-testid='comments-container'], section[aria-label='Comments']",
+      "optional": true,
+      "condition": "{params.post_id}",
+      "timeout_ms": 12000,
+      "description": "Navigate directly to post comments by post ID if provided",
+      "screenshot": true
+    },
+    {
+      "step": 7,
+      "action": "wait_for_selector",
+      "selector": "div[data-testid='comment'], div.comment-item, article.comment",
+      "timeout_ms": 10000,
+      "description": "Wait for comment items to load"
+    },
+    {
+      "step": 8,
+      "action": "click",
+      "selector": "button[data-sort='newest'], button:has-text('Newest'), select option[value='newest']",
+      "optional": true,
+      "condition": "{params.sort_by} == 'newest'",
+      "description": "Click sort by Newest if specified",
+      "wait_after_ms": 1500
+    },
+    {
+      "step": 9,
+      "action": "click",
+      "selector": "button[data-sort='oldest'], button:has-text('Oldest'), select option[value='oldest']",
+      "optional": true,
+      "condition": "{params.sort_by} == 'oldest'",
+      "description": "Click sort by Oldest if specified",
+      "wait_after_ms": 1500
+    },
+    {
+      "step": 10,
+      "action": "screenshot",
+      "description": "Capture comments section before extraction",
+      "screenshot": true
+    },
+    {
+      "step": 11,
+      "action": "extract_all",
+      "selector": "div[data-testid='comment'], div.comment-item, article.comment",
+      "limit": "{params.limit}",
+      "fields": {
+        "commenter_name": {
+          "selector": "a.commenter-name, span.author-name, div[data-field='commenter']",
+          "type": "textContent"
+        },
+        "comment_body": {
+          "selector": "div.comment-body, p.comment-text, div[data-field='body']",
+          "type": "textContent"
+        },
+        "timestamp": {
+          "selector": "time, span.comment-time, div[data-field='timestamp']",
+          "type": "textContent"
+        },
+        "likes": {
+          "selector": "span.like-count, button[aria-label*='like'] span, div[data-field='likes']",
+          "type": "textContent",
+          "optional": true
+        },
+        "is_reply": {
+          "check": "has_class",
+          "class": "is-reply",
+          "optional": true
+        }
+      },
+      "description": "Extract comment data from all visible comment items",
+      "screenshot": true
+    },
+    {
+      "step": 12,
+      "action": "extract",
+      "selector": "span.total-comments, div[data-testid='comment-count'], p:has-text('comment')",
+      "field": "total_comments",
+      "type": "textContent",
+      "optional": true,
+      "description": "Extract total comment count if available"
+    },
+    {
+      "step": 13,
+      "action": "return_result",
+      "description": "Return extracted comments list and metadata"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "comments": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "commenter_name": {"type": "string", "example": "Jane Smith"},
+            "comment_body": {"type": "string", "example": "Great article! This changed how I think about AI agents."},
+            "timestamp": {"type": "string", "example": "Feb 21, 2026"},
+            "likes": {"type": "string", "example": "12"},
+            "is_reply": {"type": "boolean", "example": false}
+          },
+          "required": ["commenter_name", "comment_body"]
+        }
+      },
+      "total_comments": {"type": "string", "example": "47 comments"},
+      "post_title": {"type": "string", "example": "Why AI Agents Are the New SaaS"},
+      "sort_by": {"type": "string", "example": "newest"},
+      "extracted_count": {"type": "integer", "example": 20},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["comments", "extracted_count", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect substack.com/sign-in redirect — abort with SESSION_EXPIRED, run session login recipe first",
+    "post_not_found": "If post not found in Posts list, return POST_NOT_FOUND error with the searched post_title",
+    "no_comments": "Return empty comments array — not an error; post may have zero comments",
+    "element_not_found": "Log missing selector, return partial results for fields that were found",
+    "rate_limited": "If rate limit detected, wait 30s then retry once"
+  },
+
+  "metadata": {
+    "tags": ["substack", "comments", "read", "read-only", "community"],
+    "difficulty": "easy",
+    "prerequisites": ["substack_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 15,
+    "idempotent": true,
+    "destructive": false
+  }
+}

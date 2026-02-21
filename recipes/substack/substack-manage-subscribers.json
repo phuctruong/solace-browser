@@ -1,0 +1,231 @@
+{
+  "id": "substack-manage-subscribers",
+  "platform": "substack",
+  "version": "1.0.0",
+  "description": "View and search the Substack subscriber list. Supports filtering by subscription type (free/paid/all) and searching by name or email. Read-only — no modifications to subscriber records.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["substack.read_subscribers"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "The subscribers list is at /dashboard/subscribers or /subscribers. It shows a table of subscribers with columns: name, email, subscription type (free/paid), join date. Filtering by type is done via tab or dropdown. Search is an input field at the top. Data is paginated — first page returned by default.",
+    "selector_strategy": "Table rows are tr or div[role='row'] elements. Filter tabs are button or a elements. Search input is identifiable by placeholder 'Search subscribers' or aria-label. Extract all visible subscriber rows up to the limit.",
+    "anti_bot_notes": "Read-only — minimal bot detection risk. If search query provided, use human_type (80-150ms) for the search input. Page load is sufficient for extraction.",
+    "performance": "Navigation 3s + page load 4s + optional search 3s + extraction 2s. Total: ~9-12s."
+  },
+
+  "input_params": {
+    "filter": {
+      "type": "string",
+      "description": "Subscription type filter: 'all', 'free', 'paid'",
+      "required": false,
+      "default": "all",
+      "enum": ["all", "free", "paid"]
+    },
+    "search_query": {
+      "type": "string",
+      "description": "Optional: search for a specific subscriber by name or email",
+      "required": false,
+      "example": "jane@example.com"
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Maximum number of subscribers to return (first page)",
+      "required": false,
+      "default": 25,
+      "example": 50
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/substack_working_session.json",
+      "description": "Load saved Substack session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://substack.com/dashboard/subscribers",
+      "wait_for": "div[data-component='SubscribersPage'], table.subscribers-table, div.subscriber-list",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to Subscribers dashboard page"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "div[data-component='SubscribersPage'], h1:has-text('Subscribers'), table.subscribers-table",
+      "fallback_url_pattern": "substack.com/sign-in",
+      "description": "Verify authenticated — abort with SESSION_EXPIRED if redirected",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "wait_for_selector",
+      "selector": "tr.subscriber-row, div[data-testid='subscriber-row'], tbody tr",
+      "timeout_ms": 10000,
+      "description": "Wait for subscriber rows to render in the table"
+    },
+    {
+      "step": 5,
+      "action": "click",
+      "selector": "button[data-filter='paid'], a[data-tab='paid'], button:has-text('Paid')",
+      "optional": true,
+      "condition": "{params.filter} == 'paid'",
+      "description": "Click 'Paid' filter tab if filter=paid",
+      "wait_after_ms": 1500,
+      "screenshot": false
+    },
+    {
+      "step": 6,
+      "action": "click",
+      "selector": "button[data-filter='free'], a[data-tab='free'], button:has-text('Free')",
+      "optional": true,
+      "condition": "{params.filter} == 'free'",
+      "description": "Click 'Free' filter tab if filter=free",
+      "wait_after_ms": 1500,
+      "screenshot": false
+    },
+    {
+      "step": 7,
+      "action": "wait_for_selector",
+      "selector": "tr.subscriber-row, div[data-testid='subscriber-row'], tbody tr",
+      "optional": true,
+      "timeout_ms": 8000,
+      "description": "Wait for filtered subscriber list to update"
+    },
+    {
+      "step": 8,
+      "action": "click",
+      "selector": "input[placeholder*='Search'], input[aria-label*='Search subscriber'], input[data-testid='subscriber-search']",
+      "optional": true,
+      "condition": "{params.search_query}",
+      "description": "Click search input if search query provided",
+      "wait_after_ms": 300,
+      "screenshot": false
+    },
+    {
+      "step": 9,
+      "action": "human_type",
+      "selector": "input[placeholder*='Search'], input[aria-label*='Search subscriber'], input[data-testid='subscriber-search']",
+      "text": "{params.search_query}",
+      "delay_ms": "80-150",
+      "click_first": false,
+      "optional": true,
+      "condition": "{params.search_query}",
+      "description": "Type search query with human-like delays",
+      "screenshot": false
+    },
+    {
+      "step": 10,
+      "action": "wait_for_selector",
+      "selector": "tr.subscriber-row, div[data-testid='subscriber-row'], tbody tr",
+      "optional": true,
+      "timeout_ms": 5000,
+      "description": "Wait for search results to filter"
+    },
+    {
+      "step": 11,
+      "action": "screenshot",
+      "description": "Capture subscriber list before extraction",
+      "screenshot": true
+    },
+    {
+      "step": 12,
+      "action": "extract_all",
+      "selector": "tr.subscriber-row, div[data-testid='subscriber-row'], tbody tr",
+      "limit": "{params.limit}",
+      "fields": {
+        "name": {
+          "selector": "td.subscriber-name, div[data-field='name'], span.subscriber-name",
+          "type": "textContent"
+        },
+        "email": {
+          "selector": "td.subscriber-email, div[data-field='email'], span.subscriber-email",
+          "type": "textContent"
+        },
+        "subscription_type": {
+          "selector": "td.subscription-type, span.tier-badge, div[data-field='tier']",
+          "type": "textContent"
+        },
+        "joined_date": {
+          "selector": "td.join-date, time, div[data-field='joined']",
+          "type": "textContent"
+        }
+      },
+      "description": "Extract subscriber records from visible rows",
+      "screenshot": true
+    },
+    {
+      "step": 13,
+      "action": "extract",
+      "selector": "div[data-testid='subscriber-total'], span.total-count, p:has-text('subscribers')",
+      "field": "total_count",
+      "type": "textContent",
+      "optional": true,
+      "description": "Extract total subscriber count label"
+    },
+    {
+      "step": 14,
+      "action": "return_result",
+      "description": "Return extracted subscriber list and metadata"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "subscribers": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {"type": "string", "example": "Jane Smith"},
+            "email": {"type": "string", "example": "jane@example.com"},
+            "subscription_type": {"type": "string", "example": "paid"},
+            "joined_date": {"type": "string", "example": "Jan 15, 2026"}
+          },
+          "required": ["email"]
+        }
+      },
+      "total_count": {"type": "string", "example": "1,247 subscribers"},
+      "filter_applied": {"type": "string", "example": "paid"},
+      "search_query": {"type": "string", "example": "jane@example.com"},
+      "extracted_count": {"type": "integer", "example": 25},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["subscribers", "extracted_count", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect substack.com/sign-in redirect — abort with SESSION_EXPIRED, run session login recipe first",
+    "empty_subscriber_list": "Return empty subscribers array — not an error condition",
+    "element_not_found": "Log missing selector, return partial results; check if filter tab changed page layout",
+    "rate_limited": "If rate limit detected, wait 30s then retry once"
+  },
+
+  "metadata": {
+    "tags": ["substack", "subscribers", "manage", "read-only", "list"],
+    "difficulty": "easy",
+    "prerequisites": ["substack_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 12,
+    "idempotent": true,
+    "destructive": false
+  }
+}

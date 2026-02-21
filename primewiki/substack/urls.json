@@ -1,0 +1,123 @@
+{
+  "node_id": "substack-urls",
+  "version": "1.0.0",
+  "platform": "substack",
+  "domain": "substack.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+
+  "base_urls": {
+    "dashboard": "https://substack.com/dashboard",
+    "new_post": "https://substack.com/publish/post",
+    "posts": "https://substack.com/dashboard/posts",
+    "stats": "https://substack.com/dashboard/stats",
+    "subscribers": "https://substack.com/dashboard/subscribers",
+    "settings": "https://substack.com/dashboard/settings",
+    "email_settings": "https://substack.com/dashboard/settings/email",
+    "monetization": "https://substack.com/dashboard/settings/monetization"
+  },
+
+  "dynamic_patterns": {
+    "post_editor": "https://substack.com/p/{post_slug}/edit",
+    "post_comments": "https://substack.com/p/{post_slug}/comments",
+    "post_public": "https://{publication}.substack.com/p/{post_slug}",
+    "publication_home": "https://{publication}.substack.com",
+    "post_stats": "https://substack.com/dashboard/stats?post={post_slug}"
+  },
+
+  "navigation_paths": {
+    "dashboard_to_new_post": {
+      "from": "dashboard",
+      "to": "post_editor",
+      "method": "click_new_post_button",
+      "selector": "a[href*='/publish/post'], button[data-testid='new-post-button']",
+      "wait_ms": 3000
+    },
+    "dashboard_to_posts": {
+      "from": "dashboard",
+      "to": "posts_list",
+      "method": "navigate_direct",
+      "url": "https://substack.com/dashboard/posts",
+      "wait_ms": 2000
+    },
+    "dashboard_to_stats": {
+      "from": "dashboard",
+      "to": "stats_page",
+      "method": "navigate_direct",
+      "url": "https://substack.com/dashboard/stats",
+      "wait_ms": 2000
+    },
+    "dashboard_to_subscribers": {
+      "from": "dashboard",
+      "to": "subscribers_page",
+      "method": "navigate_direct",
+      "url": "https://substack.com/dashboard/subscribers",
+      "wait_ms": 2000
+    },
+    "posts_to_editor": {
+      "from": "posts_list",
+      "to": "post_editor",
+      "method": "click_edit_link_in_row",
+      "selector": "a[data-testid='edit-post']",
+      "wait_ms": 3000
+    },
+    "posts_to_comments": {
+      "from": "posts_list",
+      "to": "post_comments",
+      "method": "click_comments_link_in_row",
+      "selector": "a[data-testid='view-comments'], a[href*='/comments']",
+      "wait_ms": 3000
+    },
+    "editor_to_publish": {
+      "from": "post_editor",
+      "to": "publish_dialog",
+      "method": "click_publish_button",
+      "selector": "button[data-testid='publish-button'], button:has-text('Publish')",
+      "wait_ms": 2000
+    },
+    "editor_to_schedule": {
+      "from": "publish_dialog",
+      "to": "schedule_dialog",
+      "method": "click_schedule_option",
+      "selector": "button:has-text('Schedule for later'), a:has-text('Schedule')",
+      "wait_ms": 1500
+    }
+  },
+
+  "auth_urls": {
+    "sign_in": "https://substack.com/sign-in",
+    "sign_up": "https://substack.com/sign-up",
+    "oauth_callback": "https://substack.com/auth/callback"
+  },
+
+  "url_detection": {
+    "authenticated": {
+      "pattern": "substack.com/dashboard",
+      "indicates": "User is logged in and on dashboard"
+    },
+    "login_redirect": {
+      "pattern": "substack.com/sign-in",
+      "indicates": "Session expired — re-authentication required"
+    },
+    "editor_active": {
+      "pattern": "substack.com/publish",
+      "indicates": "Post editor is open (new post)"
+    },
+    "editor_edit_active": {
+      "pattern": "/edit",
+      "indicates": "Editing an existing post"
+    },
+    "posts_active": {
+      "pattern": "dashboard/posts",
+      "indicates": "Posts management list is active"
+    },
+    "stats_active": {
+      "pattern": "dashboard/stats",
+      "indicates": "Stats dashboard is active"
+    },
+    "subscribers_active": {
+      "pattern": "dashboard/subscribers",
+      "indicates": "Subscribers list is active"
+    }
+  }
+}

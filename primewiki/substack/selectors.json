@@ -1,0 +1,323 @@
+{
+  "node_id": "substack-selectors",
+  "version": "1.0.0",
+  "platform": "substack",
+  "domain": "substack.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+  "source": "substack-automation-recipes.primewiki.md",
+
+  "dashboard": {
+    "main_container": {
+      "selector": "div[data-component='DashboardPage']",
+      "confidence": 0.92,
+      "type": "wait_for",
+      "note": "Primary dashboard wrapper — confirms authenticated state"
+    },
+    "new_post_button": {
+      "selector": "a[href*='/publish/post'], button[data-testid='new-post-button'], a[data-testid='new-post-button']",
+      "confidence": 0.90,
+      "action": "click",
+      "wait_after_ms": 3000,
+      "note": "Opens the post editor — most stable via data-testid"
+    },
+    "navigation_links": {
+      "selector": "nav[aria-label='Dashboard navigation'] a",
+      "confidence": 0.88,
+      "type": "selector_list"
+    }
+  },
+
+  "editor": {
+    "title_field": {
+      "selector": "div[data-testid='post-title'], input[placeholder*='Title'], h1[data-placeholder*='Title']",
+      "confidence": 0.90,
+      "action": "click_then_human_type",
+      "typing_delay_ms": "80-150",
+      "note": "ProseMirror title block or dedicated input — check which variant is rendered"
+    },
+    "subtitle_field": {
+      "selector": "div[data-testid='post-subtitle'], input[placeholder*='Subtitle'], h2[data-placeholder*='Subtitle'], p[data-placeholder*='Add a subtitle']",
+      "confidence": 0.88,
+      "action": "click_then_human_type",
+      "typing_delay_ms": "50-120",
+      "note": "Optional subtitle / deck field below title"
+    },
+    "body_field": {
+      "selector": "div.ProseMirror[contenteditable='true']",
+      "confidence": 0.95,
+      "action": "click_then_type",
+      "typing_delay_ms": 50,
+      "note": "Main ProseMirror editor body — same selector across Substack versions"
+    },
+    "publish_button": {
+      "selector": "button[data-testid='publish-button'], button:has-text('Publish'), button[aria-label*='Publish']",
+      "confidence": 0.88,
+      "action": "click",
+      "wait_after_ms": 2000,
+      "note": "Opens publish options dialog"
+    },
+    "confirm_publish_button": {
+      "selector": "button[data-testid='confirm-publish'], button:has-text('Publish now'), button[aria-label='Publish now']",
+      "fallback_selector": "button:has-text('Publish post')",
+      "confidence": 0.85,
+      "action": "click",
+      "wait_after_ms": 4000,
+      "note": "Final confirmation button inside publish dialog"
+    },
+    "schedule_later_option": {
+      "selector": "button:has-text('Schedule for later'), a:has-text('Schedule'), button[data-testid='schedule-option']",
+      "fallback_selector": "li:has-text('Schedule'), div[role='menuitem']:has-text('Schedule')",
+      "confidence": 0.85,
+      "action": "click",
+      "wait_after_ms": 1500,
+      "note": "Schedule option inside publish dropdown/dialog"
+    },
+    "schedule_datetime_input": {
+      "selector": "input[type='datetime-local']",
+      "fallback_selector": "input[data-testid='schedule-date-input'], input[type='date']",
+      "confidence": 0.88,
+      "action": "fill",
+      "note": "Datetime picker — direct value fill acceptable (no bot detection on datetime inputs)"
+    },
+    "confirm_schedule_button": {
+      "selector": "button[data-testid='confirm-schedule'], button:has-text('Schedule post'), button:has-text('Schedule')",
+      "fallback_selector": "button.schedule-confirm, button[aria-label*='Schedule']",
+      "confidence": 0.85,
+      "action": "click",
+      "wait_after_ms": 3000
+    },
+    "update_button": {
+      "selector": "button[data-testid='update-button'], button:has-text('Update'), button:has-text('Save')",
+      "fallback_selector": "button.update-btn, button[data-component='UpdateButton']",
+      "confidence": 0.84,
+      "action": "click",
+      "wait_after_ms": 3000,
+      "note": "Save/Update button for editing published posts"
+    },
+    "audience_everyone": {
+      "selector": "input[value='everyone'], label:has-text('Everyone'), button[data-audience='everyone']",
+      "confidence": 0.85,
+      "action": "click",
+      "note": "Select free/everyone audience in publish dialog"
+    },
+    "audience_paid": {
+      "selector": "input[value='paid'], label:has-text('Paid'), button[data-audience='paid']",
+      "confidence": 0.85,
+      "action": "click",
+      "note": "Select paid-only audience in publish dialog"
+    }
+  },
+
+  "posts_list": {
+    "page_container": {
+      "selector": "div[data-component='PostsPage']",
+      "confidence": 0.90,
+      "type": "wait_for"
+    },
+    "post_rows": {
+      "selector": "tr.post-row, div[data-testid='post-card'], div.post-item",
+      "confidence": 0.87,
+      "type": "selector_list",
+      "note": "Each row/card represents one post"
+    },
+    "post_edit_link": {
+      "selector": "a[data-testid='edit-post'], a[aria-label*='Edit'], button:has-text('Edit')",
+      "confidence": 0.86,
+      "action": "click",
+      "note": "Edit link per post row — click within the matching row context"
+    },
+    "post_comments_link": {
+      "selector": "a[data-testid='view-comments'], a[href*='/comments'], button:has-text('Comments')",
+      "confidence": 0.84,
+      "action": "click",
+      "note": "Link to view comments for a specific post"
+    },
+    "post_title_text": {
+      "selector": "a.post-title, td.post-name, h3.post-title",
+      "confidence": 0.88,
+      "type": "text_extraction",
+      "note": "Post title text inside a row/card for matching"
+    }
+  },
+
+  "stats": {
+    "page_container": {
+      "selector": "div[data-component='StatsPage'], main[aria-label*='stats']",
+      "confidence": 0.88,
+      "type": "wait_for"
+    },
+    "subscriber_count": {
+      "selector": "div[data-testid='subscriber-count'], div.stats-count, h1.stat-number, span[data-stat='subscribers']",
+      "confidence": 0.85,
+      "type": "text_extraction",
+      "note": "Total subscriber count — main headline stat"
+    },
+    "paid_subscriber_count": {
+      "selector": "div[data-testid='paid-subscriber-count'], span[data-stat='paid-subscribers'], div.paid-count",
+      "confidence": 0.83,
+      "type": "text_extraction",
+      "optional": true
+    },
+    "open_rate": {
+      "selector": "div[data-testid='open-rate'], span[data-stat='open-rate'], div.open-rate-value",
+      "confidence": 0.83,
+      "type": "text_extraction",
+      "optional": true
+    },
+    "click_rate": {
+      "selector": "div[data-testid='click-rate'], span[data-stat='click-rate'], div.click-rate-value",
+      "confidence": 0.82,
+      "type": "text_extraction",
+      "optional": true
+    },
+    "recent_post_rows": {
+      "selector": "div[data-testid='recent-post-stat'], tr.post-stat-row, div.post-performance-row",
+      "confidence": 0.80,
+      "type": "selector_list",
+      "note": "Per-post stat rows in the recent posts table"
+    }
+  },
+
+  "subscribers": {
+    "page_container": {
+      "selector": "div[data-component='SubscribersPage']",
+      "confidence": 0.88,
+      "type": "wait_for"
+    },
+    "subscriber_rows": {
+      "selector": "tr.subscriber-row, div[data-testid='subscriber-row'], tbody tr",
+      "confidence": 0.86,
+      "type": "selector_list",
+      "note": "Individual subscriber records in the table"
+    },
+    "subscriber_name": {
+      "selector": "td.subscriber-name, div[data-field='name'], span.subscriber-name",
+      "confidence": 0.85,
+      "type": "text_extraction"
+    },
+    "subscriber_email": {
+      "selector": "td.subscriber-email, div[data-field='email'], span.subscriber-email",
+      "confidence": 0.85,
+      "type": "text_extraction"
+    },
+    "subscription_type": {
+      "selector": "td.subscription-type, span.tier-badge, div[data-field='tier']",
+      "confidence": 0.83,
+      "type": "text_extraction",
+      "note": "Free or Paid tier badge"
+    },
+    "join_date": {
+      "selector": "td.join-date, time, div[data-field='joined']",
+      "confidence": 0.82,
+      "type": "text_extraction"
+    },
+    "search_input": {
+      "selector": "input[placeholder*='Search'], input[aria-label*='Search subscriber'], input[data-testid='subscriber-search']",
+      "confidence": 0.85,
+      "action": "human_type",
+      "typing_delay_ms": "80-150",
+      "note": "Search input at top of subscribers table"
+    },
+    "filter_all_tab": {
+      "selector": "button[data-filter='all'], a[data-tab='all'], button:has-text('All')",
+      "confidence": 0.83,
+      "action": "click"
+    },
+    "filter_paid_tab": {
+      "selector": "button[data-filter='paid'], a[data-tab='paid'], button:has-text('Paid')",
+      "confidence": 0.83,
+      "action": "click"
+    },
+    "filter_free_tab": {
+      "selector": "button[data-filter='free'], a[data-tab='free'], button:has-text('Free')",
+      "confidence": 0.83,
+      "action": "click"
+    },
+    "total_count_label": {
+      "selector": "div[data-testid='subscriber-total'], span.total-count, p:has-text('subscribers')",
+      "confidence": 0.80,
+      "type": "text_extraction",
+      "optional": true
+    }
+  },
+
+  "comments": {
+    "comments_section": {
+      "selector": "div.comments-section, div[data-testid='comments-container'], section[aria-label='Comments']",
+      "confidence": 0.86,
+      "type": "wait_for"
+    },
+    "comment_items": {
+      "selector": "div[data-testid='comment'], div.comment-item, article.comment",
+      "confidence": 0.85,
+      "type": "selector_list",
+      "note": "Individual comment elements"
+    },
+    "commenter_name": {
+      "selector": "a.commenter-name, span.author-name, div[data-field='commenter']",
+      "confidence": 0.86,
+      "type": "text_extraction"
+    },
+    "comment_body": {
+      "selector": "div.comment-body, p.comment-text, div[data-field='body']",
+      "confidence": 0.85,
+      "type": "text_extraction"
+    },
+    "comment_timestamp": {
+      "selector": "time, span.comment-time, div[data-field='timestamp']",
+      "confidence": 0.84,
+      "type": "text_extraction"
+    },
+    "like_count": {
+      "selector": "span.like-count, button[aria-label*='like'] span, div[data-field='likes']",
+      "confidence": 0.80,
+      "type": "text_extraction",
+      "optional": true
+    },
+    "sort_newest": {
+      "selector": "button[data-sort='newest'], button:has-text('Newest')",
+      "confidence": 0.82,
+      "action": "click"
+    },
+    "sort_oldest": {
+      "selector": "button[data-sort='oldest'], button:has-text('Oldest')",
+      "confidence": 0.82,
+      "action": "click"
+    },
+    "total_comment_count": {
+      "selector": "span.total-comments, div[data-testid='comment-count']",
+      "confidence": 0.80,
+      "type": "text_extraction",
+      "optional": true
+    }
+  },
+
+  "navigation": {
+    "dashboard_link": {
+      "selector": "a[href='/dashboard'], a[href*='/dashboard']",
+      "confidence": 0.88,
+      "action": "click"
+    },
+    "posts_link": {
+      "selector": "a[href*='/dashboard/posts']",
+      "confidence": 0.88,
+      "action": "click"
+    },
+    "stats_link": {
+      "selector": "a[href*='/dashboard/stats']",
+      "confidence": 0.88,
+      "action": "click"
+    },
+    "subscribers_link": {
+      "selector": "a[href*='/dashboard/subscribers']",
+      "confidence": 0.88,
+      "action": "click"
+    },
+    "settings_link": {
+      "selector": "a[href*='/dashboard/settings'], a[href*='/settings']",
+      "confidence": 0.86,
+      "action": "click"
+    }
+  }
+}

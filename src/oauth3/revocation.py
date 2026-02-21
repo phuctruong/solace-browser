@@ -1,61 +1,339 @@
 """
-OAuth3 Token Revocation
+OAuth3 Token Revocation + Session Management
 
-Immediate revocation: mark token as revoked in persistent store.
-Revocation must propagate within the current request — no async delay.
+Revocation must be synchronous and immediate per spec §4.1:
+  "Revocation MUST take effect immediately and synchronously."
 
-Per OAUTH3-WHITEPAPER.md §5.2:
-  "Immediate revocation must:
-   - Kill cloud sessions
-   - Burn active agency tokens
-   - Wipe vault credentials
-   - Disable future execution"
+Two storage backends:
+  TokenStore  — in-memory store (for testing + ephemeral sessions)
 
-Phase 1 implements: burn active agency tokens.
-Cloud session kill and vault wipe are Phase 3 (solaceagi.com).
+Per spec §4.4 the revocation registry must support O(1) lookups.
+TokenStore uses dict keyed by token_id for O(1) lookup.
 
+Reference: oauth3-spec-v0.1.md §4
 Rung: 641
 """
 
-import json
+from __future__ import annotations
+
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional
 
-from .token import AgencyToken, DEFAULT_TOKEN_DIR
+from .token import AgencyToken, parse_iso8601
 
 
-# -------------------------------------------------------------------------
-# Single token revocation
-# -------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# TokenStore — in-memory token store with CRUD + revocation
+# ---------------------------------------------------------------------------
 
-def revoke_token(token_id: str, token_dir: Optional[Path] = None) -> bool:
+class TokenStore:
     """
-    Revoke a single token by marking it as revoked in its JSON file.
+    In-memory token store.
+
+    Provides O(1) lookup, insert, revocation, and cleanup.
+    Thread-safety: not guaranteed (single-threaded use only in Phase 1).
+
+    Usage:
+        store = TokenStore()
+        store.add(token)
+        store.revoke(token.token_id)
+        active = store.get_active_tokens(subject="user:alice@example.com")
+    """
+
+    def __init__(self) -> None:
+        # _tokens: {token_id: AgencyToken}
+        self._tokens: Dict[str, AgencyToken] = {}
+
+    # -------------------------------------------------------------------------
+    # CRUD
+    # -------------------------------------------------------------------------
+
+    def add(self, token: AgencyToken) -> None:
+        """
+        Add a token to the store. Overwrites any existing token with the same id.
+
+        Args:
+            token: AgencyToken to store.
+        """
+        self._tokens[token.token_id] = token
+
+    def get(self, token_id: str) -> Optional[AgencyToken]:
+        """
+        Retrieve a token by id.
+
+        Args:
+            token_id: UUID of the token.
+
+        Returns:
+            AgencyToken if found, None otherwise.
+        """
+        return self._tokens.get(token_id)
+
+    def remove(self, token_id: str) -> bool:
+        """
+        Remove a token from the store entirely.
+
+        Args:
+            token_id: UUID of the token.
+
+        Returns:
+            True if token existed and was removed, False otherwise.
+        """
+        if token_id in self._tokens:
+            del self._tokens[token_id]
+            return True
+        return False
+
+    def all_tokens(self) -> List[AgencyToken]:
+        """Return all tokens in the store (including revoked and expired)."""
+        return list(self._tokens.values())
+
+    # -------------------------------------------------------------------------
+    # Revocation
+    # -------------------------------------------------------------------------
+
+    def revoke(self, token_id: str) -> bool:
+        """
+        Revoke a single token by id.
+
+        Revocation is immediate and synchronous (spec §4.1).
+        Revocation is permanent: a revoked token cannot be re-activated.
+
+        Args:
+            token_id: UUID of the token to revoke.
+
+        Returns:
+            True if revocation succeeded or token was already revoked.
+            False if token not found.
+        """
+        token = self._tokens.get(token_id)
+        if token is None:
+            return False
+
+        if token.revoked:
+            # Idempotent: already revoked → True (revocation is complete)
+            return True
+
+        # Frozen dataclass: create a new instance with revoked=True
+        import dataclasses
+        revoked_at = datetime.now(timezone.utc).isoformat()
+        revoked_token = dataclasses.replace(
+            token,
+            revoked=True,
+            revoked_at=revoked_at,
+        )
+        self._tokens[token_id] = revoked_token
+        return True
+
+    def revoke_all_for_subject(self, subject: str) -> int:
+        """
+        Revoke ALL active tokens for a given subject.
+
+        Used when an account is compromised or a session is terminated (spec §4.3).
+
+        Args:
+            subject: Principal identifier whose tokens should be revoked.
+
+        Returns:
+            Count of tokens revoked (excludes already-revoked tokens).
+        """
+        import dataclasses
+        revoked_count = 0
+        revoked_at = datetime.now(timezone.utc).isoformat()
+
+        for token_id, token in list(self._tokens.items()):
+            if token.subject == subject and not token.revoked:
+                revoked_token = dataclasses.replace(
+                    token,
+                    revoked=True,
+                    revoked_at=revoked_at,
+                )
+                self._tokens[token_id] = revoked_token
+                revoked_count += 1
+
+        return revoked_count
+
+    # -------------------------------------------------------------------------
+    # Queries
+    # -------------------------------------------------------------------------
+
+    def get_active_tokens(self, subject: str) -> List[AgencyToken]:
+        """
+        Return all active (non-revoked, non-expired) tokens for a subject.
+
+        Args:
+            subject: Principal identifier.
+
+        Returns:
+            List of active AgencyToken instances.
+        """
+        now = datetime.now(timezone.utc)
+        result = []
+        for token in self._tokens.values():
+            if token.subject != subject:
+                continue
+            if token.revoked:
+                continue
+            try:
+                expires_at = parse_iso8601(token.expires_at)
+                if now > expires_at:
+                    continue
+            except (ValueError, AttributeError):
+                continue
+            result.append(token)
+        return result
+
+    def is_revoked(self, token_id: str) -> bool:
+        """
+        Quickly check if a token is revoked.
+
+        Fail-closed: returns True for unknown/missing tokens.
+
+        Args:
+            token_id: UUID to check.
+
+        Returns:
+            True if revoked or not found.
+            False if found and NOT revoked.
+        """
+        token = self._tokens.get(token_id)
+        if token is None:
+            return True  # fail-closed: unknown → treat as revoked
+        return token.revoked
+
+    # -------------------------------------------------------------------------
+    # Cleanup
+    # -------------------------------------------------------------------------
+
+    def cleanup_expired(self) -> int:
+        """
+        Remove tokens that have been expired for > 0 seconds.
+
+        Per spec §4.4: expired tokens MAY be pruned from the registry.
+        They are implicitly invalid via G2 (TTL gate) regardless.
+
+        Returns:
+            Count of tokens removed.
+        """
+        now = datetime.now(timezone.utc)
+        to_remove = []
+
+        for token_id, token in self._tokens.items():
+            try:
+                expires_at = parse_iso8601(token.expires_at)
+                if now > expires_at:
+                    to_remove.append(token_id)
+            except (ValueError, AttributeError):
+                to_remove.append(token_id)  # malformed → remove
+
+        for token_id in to_remove:
+            del self._tokens[token_id]
+
+        return len(to_remove)
+
+    def __len__(self) -> int:
+        return len(self._tokens)
+
+    def __repr__(self) -> str:
+        return f"TokenStore(count={len(self._tokens)})"
+
+
+# ---------------------------------------------------------------------------
+# Standalone revocation functions (legacy API + convenience wrappers)
+# ---------------------------------------------------------------------------
+
+def revoke_token(token_id: str, store: Optional[TokenStore] = None) -> bool:
+    """
+    Revoke a single token by id in the given store.
 
     Args:
         token_id: UUID of the token to revoke.
+        store:    TokenStore to revoke from (required for in-memory store).
+
+    Returns:
+        True if revocation succeeded or token was already revoked.
+        False if token not found.
+    """
+    if store is None:
+        return False
+    return store.revoke(token_id)
+
+
+def revoke_all_for_subject(subject: str, store: TokenStore) -> int:
+    """
+    Revoke all active tokens for a subject.
+
+    Args:
+        subject: Principal identifier.
+        store:   TokenStore to revoke from.
+
+    Returns:
+        Count of tokens revoked.
+    """
+    return store.revoke_all_for_subject(subject)
+
+
+def get_active_tokens(subject: str, store: TokenStore) -> List[AgencyToken]:
+    """
+    Return all active tokens for a subject from the given store.
+
+    Args:
+        subject: Principal identifier.
+        store:   TokenStore to query.
+
+    Returns:
+        List of active AgencyToken instances.
+    """
+    return store.get_active_tokens(subject)
+
+
+def cleanup_expired(store: TokenStore) -> int:
+    """
+    Remove expired tokens from the store.
+
+    Args:
+        store: TokenStore to clean.
+
+    Returns:
+        Count of tokens removed.
+    """
+    return store.cleanup_expired()
+
+
+# ---------------------------------------------------------------------------
+# File-based revocation (backward compat with file-based storage)
+# ---------------------------------------------------------------------------
+
+def revoke_token_file(token_id: str, token_dir=None) -> bool:
+    """
+    Revoke a single token by marking it in its JSON file.
+
+    Legacy function for file-based storage. New code should use TokenStore.
+
+    Args:
+        token_id:  UUID of the token to revoke.
         token_dir: Directory containing token files.
 
     Returns:
-        True if revocation succeeded, False if token was not found or already revoked.
+        True if revocation succeeded, False if not found or already revoked.
     """
-    token_dir = token_dir or DEFAULT_TOKEN_DIR
-    token_path = token_dir / f"{token_id}.json"
+    import json
+    from pathlib import Path
 
+    if token_dir is None:
+        return False
+
+    token_path = Path(token_dir) / f"{token_id}.json"
     if not token_path.exists():
         return False
 
     try:
         data = json.loads(token_path.read_text(encoding="utf-8"))
-
-        # Idempotent: if already revoked, return True (revocation is complete)
         if data.get("revoked", False):
-            return True
+            return True  # idempotent
 
         data["revoked"] = True
         data["revoked_at"] = datetime.now(timezone.utc).isoformat()
-
         token_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
         return True
 
@@ -63,119 +341,31 @@ def revoke_token(token_id: str, token_dir: Optional[Path] = None) -> bool:
         return False
 
 
-# -------------------------------------------------------------------------
-# Bulk revocation by scope
-# -------------------------------------------------------------------------
-
-def revoke_all_tokens_for_scope(
-    scope: str,
-    token_dir: Optional[Path] = None,
-) -> int:
+def is_revoked_file(token_id: str, token_dir=None) -> bool:
     """
-    Find all tokens that include a specific scope and revoke them.
+    Quick revocation check for file-based storage.
 
-    Useful for emergency revocation when a scope is compromised or abused.
+    Fail-closed: returns True for missing/malformed tokens.
 
     Args:
-        scope: The scope string to search for (e.g. "linkedin.create_post").
-        token_dir: Directory containing token files.
-
-    Returns:
-        Count of tokens successfully revoked.
-    """
-    token_dir = token_dir or DEFAULT_TOKEN_DIR
-
-    if not token_dir.exists():
-        return 0
-
-    revoked_count = 0
-
-    for token_file in token_dir.glob("*.json"):
-        try:
-            data = json.loads(token_file.read_text(encoding="utf-8"))
-
-            # Skip already-revoked tokens
-            if data.get("revoked", False):
-                continue
-
-            # Check if this token has the target scope
-            if scope in data.get("scopes", []):
-                data["revoked"] = True
-                data["revoked_at"] = datetime.now(timezone.utc).isoformat()
-                token_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
-                revoked_count += 1
-
-        except (json.JSONDecodeError, OSError):
-            # Skip malformed or inaccessible token files
-            continue
-
-    return revoked_count
-
-
-# -------------------------------------------------------------------------
-# Revocation status check
-# -------------------------------------------------------------------------
-
-def is_revoked(token_id: str, token_dir: Optional[Path] = None) -> bool:
-    """
-    Quick check if a specific token is revoked.
-
-    Does not load the full AgencyToken — reads only the "revoked" field.
-    Suitable for fast pre-flight checks without full token loading overhead.
-
-    Args:
-        token_id: UUID of the token to check.
+        token_id:  UUID to check.
         token_dir: Directory containing token files.
 
     Returns:
         True if token is revoked or not found.
-        False if token exists and is NOT revoked.
-
-    Note: Returns True (fail-closed) for missing or malformed tokens.
     """
-    token_dir = token_dir or DEFAULT_TOKEN_DIR
-    token_path = token_dir / f"{token_id}.json"
+    import json
+    from pathlib import Path
 
-    if not token_path.exists():
-        # Fail-closed: treat missing tokens as revoked
+    if token_dir is None:
         return True
+
+    token_path = Path(token_dir) / f"{token_id}.json"
+    if not token_path.exists():
+        return True  # fail-closed
 
     try:
         data = json.loads(token_path.read_text(encoding="utf-8"))
         return data.get("revoked", False)
     except (json.JSONDecodeError, OSError):
-        # Fail-closed: treat malformed tokens as revoked
-        return True
-
-
-# -------------------------------------------------------------------------
-# List all tokens (for management UI)
-# -------------------------------------------------------------------------
-
-def list_all_tokens(token_dir: Optional[Path] = None) -> list:
-    """
-    Load all tokens from the token directory.
-
-    Args:
-        token_dir: Directory containing token files.
-
-    Returns:
-        List of AgencyToken instances (all tokens, including revoked).
-    """
-    token_dir = token_dir or DEFAULT_TOKEN_DIR
-
-    if not token_dir.exists():
-        return []
-
-    tokens = []
-    for token_file in sorted(token_dir.glob("*.json")):
-        try:
-            token = AgencyToken.load_from_file(
-                token_file.stem,
-                token_dir=token_dir,
-            )
-            tokens.append(token)
-        except Exception:
-            continue
-
-    return tokens
+        return True  # fail-closed

@@ -1,0 +1,265 @@
+{
+  "id": "substack-publish-post",
+  "platform": "substack",
+  "version": "1.0.0",
+  "description": "Publish a new post on Substack with human-like typing. Supports free and paid-only audience targeting. Uses keyboard navigation and deliberate delays to bypass bot detection on the editor.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["substack.write_post"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Substack's editor (Substack Writer) is a ProseMirror-based rich text editor. The 'New post' button lives at the top of the dashboard. Title is input[data-testid='post-title'] or div[data-testid='post-title']. Subtitle is a contenteditable or input below the title. The body is a ProseMirror contenteditable div. Audience toggle (Everyone vs Paid) is a radio-style selector. The Publish button opens a confirmation dialog before final publish.",
+    "selector_strategy": "Use data-testid attributes where available — most stable. Fall back to aria-label and role selectors. ProseMirror body uses div.ProseMirror as the main editor container.",
+    "anti_bot_notes": "Title field requires char-by-char typing at 80-150ms. Body can use 50ms delay. Must click each field explicitly — do not Tab. Audience selection requires clicking the toggle, then confirming. Publish confirmation dialog must be explicitly clicked.",
+    "llm_learnings": "Substack may show a 'drafts saved' toast — not an error. After clicking Publish, wait for the confirmation modal before clicking final publish button. The modal has a 'Publish now' button distinct from the draft publish button.",
+    "performance": "Navigation 3s + editor load 3s + typing variable + publish 5s. Short post (~200 chars): ~25-35s total."
+  },
+
+  "input_params": {
+    "title": {
+      "type": "string",
+      "description": "Post title",
+      "required": true,
+      "example": "Why AI Agents Are the New SaaS"
+    },
+    "subtitle": {
+      "type": "string",
+      "description": "Post subtitle / deck text",
+      "required": false,
+      "example": "The shift from software to agent delegation is already happening"
+    },
+    "body": {
+      "type": "string",
+      "description": "Post body in plain text or markdown",
+      "required": true,
+      "example": "Today I want to talk about how AI agents are replacing traditional SaaS..."
+    },
+    "audience": {
+      "type": "string",
+      "description": "Audience: 'everyone' (free) or 'paid' (paid subscribers only)",
+      "required": false,
+      "default": "everyone",
+      "enum": ["everyone", "paid"]
+    },
+    "section": {
+      "type": "string",
+      "description": "Optional newsletter section to publish under",
+      "required": false,
+      "example": "Weekly Dispatch"
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/substack_working_session.json",
+      "description": "Load saved Substack session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://substack.com/dashboard",
+      "wait_for": "div[data-component='DashboardPage'], nav[aria-label='Dashboard navigation']",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to Substack dashboard and wait for main content"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "div[data-component='DashboardPage'], a[href*='/publish']",
+      "fallback_url_pattern": "substack.com/sign-in",
+      "description": "Verify authenticated — if redirected to sign-in, abort with SESSION_EXPIRED",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "click",
+      "selector": "a[href*='/publish/post'], button[data-testid='new-post-button'], a[data-testid='new-post-button']",
+      "fallback_selector": "a[href*='/new-post'], button:has-text('New post'), a:has-text('New post')",
+      "description": "Click 'New post' button to open editor",
+      "wait_after_ms": 3000,
+      "timeout_ms": 8000,
+      "screenshot": true
+    },
+    {
+      "step": 5,
+      "action": "wait_for_selector",
+      "selector": "div.ProseMirror, div[data-testid='post-title'], input[placeholder*='Title']",
+      "timeout_ms": 10000,
+      "description": "Wait for post editor to fully load"
+    },
+    {
+      "step": 6,
+      "action": "click",
+      "selector": "div[data-testid='post-title'], input[placeholder*='Title'], h1[data-placeholder*='Title']",
+      "description": "Click title field to focus it",
+      "wait_after_ms": 500,
+      "screenshot": false
+    },
+    {
+      "step": 7,
+      "action": "human_type",
+      "selector": "div[data-testid='post-title'], input[placeholder*='Title'], h1[data-placeholder*='Title']",
+      "text": "{params.title}",
+      "delay_ms": "80-150",
+      "click_first": false,
+      "description": "Type post title with human-like delays",
+      "screenshot": false
+    },
+    {
+      "step": 8,
+      "action": "click",
+      "selector": "div[data-testid='post-subtitle'], input[placeholder*='Subtitle'], h2[data-placeholder*='Subtitle'], p[data-placeholder*='Add a subtitle']",
+      "description": "Click subtitle field (skip if not present — optional field)",
+      "optional": true,
+      "condition": "{params.subtitle}",
+      "wait_after_ms": 300,
+      "screenshot": false
+    },
+    {
+      "step": 9,
+      "action": "human_type",
+      "selector": "div[data-testid='post-subtitle'], input[placeholder*='Subtitle'], h2[data-placeholder*='Subtitle']",
+      "text": "{params.subtitle}",
+      "delay_ms": "50-120",
+      "click_first": false,
+      "optional": true,
+      "condition": "{params.subtitle}",
+      "description": "Type subtitle if provided",
+      "screenshot": false
+    },
+    {
+      "step": 10,
+      "action": "click",
+      "selector": "div.ProseMirror[contenteditable='true']",
+      "description": "Click the ProseMirror body editor to focus it",
+      "wait_after_ms": 400,
+      "screenshot": false
+    },
+    {
+      "step": 11,
+      "action": "type",
+      "selector": "div.ProseMirror[contenteditable='true']",
+      "text": "{params.body}",
+      "delay_ms": 50,
+      "description": "Type post body (50ms per char — bot detection minimal in body)",
+      "screenshot": false
+    },
+    {
+      "step": 12,
+      "action": "screenshot",
+      "description": "Capture composed post before publishing",
+      "screenshot": true
+    },
+    {
+      "step": 13,
+      "action": "click",
+      "selector": "button[data-testid='publish-button'], button:has-text('Publish'), button[aria-label*='Publish']",
+      "fallback_selector": "button.pub-button, button[data-component='PublishButton']",
+      "description": "Click publish button to open publish settings dialog",
+      "wait_after_ms": 2000,
+      "timeout_ms": 8000,
+      "screenshot": true
+    },
+    {
+      "step": 14,
+      "action": "click",
+      "selector": "input[value='everyone'], label:has-text('Everyone'), button[data-audience='everyone']",
+      "optional": true,
+      "condition": "{params.audience} == 'everyone'",
+      "description": "Select 'Everyone' audience if specified (default)",
+      "wait_after_ms": 500
+    },
+    {
+      "step": 15,
+      "action": "click",
+      "selector": "input[value='paid'], label:has-text('Paid'), button[data-audience='paid']",
+      "optional": true,
+      "condition": "{params.audience} == 'paid'",
+      "description": "Select 'Paid only' audience if specified",
+      "wait_after_ms": 500
+    },
+    {
+      "step": 16,
+      "action": "click",
+      "selector": "button[data-testid='confirm-publish'], button:has-text('Publish now'), button[aria-label='Publish now']",
+      "fallback_selector": "button.confirm-publish, button:has-text('Publish post')",
+      "description": "Click final 'Publish now' in confirmation dialog",
+      "wait_after_ms": 4000,
+      "timeout_ms": 10000,
+      "screenshot": true
+    },
+    {
+      "step": 17,
+      "action": "verify",
+      "checks": [
+        {"type": "no_element", "selector": "div[role='alertdialog'][data-error='true']", "description": "No error dialog"},
+        {"type": "url_contains", "pattern": "substack.com", "description": "Still on Substack domain"}
+      ],
+      "description": "Verify post was published without errors"
+    },
+    {
+      "step": 18,
+      "action": "return_result",
+      "description": "Return publish confirmation with post URL if available"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "published": {"type": "boolean", "example": true},
+      "title": {"type": "string", "example": "Why AI Agents Are the New SaaS"},
+      "audience": {"type": "string", "example": "everyone"},
+      "post_url": {"type": "string", "example": "https://yourpub.substack.com/p/why-ai-agents"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["published", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect substack.com/sign-in redirect — abort with SESSION_EXPIRED, re-run session login recipe first",
+    "editor_not_loaded": "Retry wait_for_selector with 15s timeout; if still fails, reload page and retry once",
+    "publish_dialog_not_found": "Check if already in publish flow; try scrolling up and finding publish button",
+    "element_not_found": "Log selector tried, capture screenshot, try fallback_selector if defined",
+    "rate_limited": "If 429 or rate limit banner detected, wait 60s then retry once"
+  },
+
+  "anti_detection": {
+    "human_typing": true,
+    "explicit_field_clicks": true,
+    "keyboard_shortcuts_preferred": false,
+    "avoid_tab_navigation": true,
+    "avoid_instant_fill": true,
+    "typing_delays": {
+      "title": "80-150ms",
+      "subtitle": "50-120ms",
+      "body": "50ms"
+    }
+  },
+
+  "metadata": {
+    "tags": ["substack", "publish", "write", "post", "newsletter"],
+    "difficulty": "medium",
+    "prerequisites": ["substack_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 35,
+    "idempotent": false,
+    "destructive": false
+  }
+}

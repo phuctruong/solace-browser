@@ -1,0 +1,166 @@
+{
+  "node_id": "substack-actions",
+  "version": "1.0.0",
+  "platform": "substack",
+  "domain": "substack.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+  "source": "substack-automation-recipes.primewiki.md",
+
+  "actions": {
+    "new_post": {
+      "id": "new_post",
+      "description": "Open the Substack post editor to create a new post",
+      "oauth3_scope": "substack.write_post",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://substack.com/dashboard", "wait_for": "div[data-component='DashboardPage']", "timeout_ms": 12000},
+        {"action": "click", "selector": "a[href*='/publish/post'], button[data-testid='new-post-button']", "wait_ms": 3000, "note": "Opens post editor"},
+        {"action": "wait_for_selector", "selector": "div.ProseMirror, div[data-testid='post-title']", "timeout_ms": 10000, "note": "Editor fully loaded"}
+      ],
+      "anti_detection": {
+        "human_typing": true,
+        "explicit_field_clicks": true
+      },
+      "success_criteria": {
+        "editor_visible": true,
+        "title_field_focusable": true
+      }
+    },
+
+    "publish": {
+      "id": "publish",
+      "description": "Publish a post immediately after filling editor fields",
+      "oauth3_scope": "substack.write_post",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "click", "selector": "button[data-testid='publish-button'], button:has-text('Publish')", "wait_ms": 2000, "note": "Open publish dialog"},
+        {"action": "click", "selector": "button[data-testid='confirm-publish'], button:has-text('Publish now')", "wait_ms": 4000, "note": "Confirm publish"}
+      ],
+      "anti_detection": {
+        "wait_for_dialog": true
+      },
+      "success_criteria": {
+        "no_error_dialog": true,
+        "post_published": true
+      }
+    },
+
+    "schedule": {
+      "id": "schedule",
+      "description": "Schedule a post for future publication using the datetime picker",
+      "oauth3_scope": "substack.schedule",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "click", "selector": "button[data-testid='publish-button'], button:has-text('Publish')", "wait_ms": 2000, "note": "Open publish options"},
+        {"action": "click", "selector": "button:has-text('Schedule for later'), a:has-text('Schedule')", "wait_ms": 1500, "note": "Select schedule option"},
+        {"action": "fill", "selector": "input[type='datetime-local']", "note": "Set scheduled datetime (ISO 8601 value)"},
+        {"action": "click", "selector": "button[data-testid='confirm-schedule'], button:has-text('Schedule post')", "wait_ms": 3000, "note": "Confirm schedule"}
+      ],
+      "success_criteria": {
+        "post_in_scheduled_queue": true,
+        "no_error_dialog": true
+      }
+    },
+
+    "edit": {
+      "id": "edit",
+      "description": "Open an existing post for editing from the Posts dashboard",
+      "oauth3_scope": "substack.write_post",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://substack.com/dashboard/posts", "wait_for": "div[data-component='PostsPage']", "timeout_ms": 12000},
+        {"action": "find_and_click", "match_text": "{post_title}", "click_child": "a[data-testid='edit-post']", "wait_ms": 3000, "note": "Find post by title, click Edit"},
+        {"action": "wait_for_selector", "selector": "div.ProseMirror[contenteditable='true']", "timeout_ms": 10000, "note": "Editor loaded with existing content"}
+      ],
+      "success_criteria": {
+        "editor_loaded": true,
+        "existing_content_visible": true
+      }
+    },
+
+    "view_stats": {
+      "id": "view_stats",
+      "description": "Navigate to the Substack Stats dashboard and read metrics",
+      "oauth3_scope": "substack.read_stats",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://substack.com/dashboard/stats", "wait_for": "div[data-component='StatsPage']", "timeout_ms": 12000},
+        {"action": "wait_for_selector", "selector": "div[data-testid='subscriber-count'], div.stats-count", "timeout_ms": 10000},
+        {"action": "extract", "fields": ["subscriber_count", "open_rate", "click_rate"]}
+      ],
+      "success_criteria": {
+        "stats_loaded": true,
+        "subscriber_count_extracted": true
+      }
+    },
+
+    "manage_subscribers": {
+      "id": "manage_subscribers",
+      "description": "Navigate to subscriber list and extract subscriber data with optional filter and search",
+      "oauth3_scope": "substack.read_subscribers",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://substack.com/dashboard/subscribers", "wait_for": "div[data-component='SubscribersPage']", "timeout_ms": 12000},
+        {"action": "wait_for_selector", "selector": "tr.subscriber-row, tbody tr", "timeout_ms": 10000},
+        {"action": "optional_click", "selector": "button[data-filter='paid']", "condition": "filter==paid"},
+        {"action": "optional_human_type", "selector": "input[placeholder*='Search']", "delay_ms": "80-150", "condition": "search_query"},
+        {"action": "extract_all", "selector": "tr.subscriber-row, tbody tr", "fields": ["name", "email", "subscription_type", "joined_date"]}
+      ],
+      "success_criteria": {
+        "rows_extracted": ">= 0"
+      }
+    },
+
+    "read_comments": {
+      "id": "read_comments",
+      "description": "Navigate to post comments and extract commenter data",
+      "oauth3_scope": "substack.read_comments",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://substack.com/p/{post_id}/comments", "wait_for": "div.comments-section", "timeout_ms": 12000},
+        {"action": "wait_for_selector", "selector": "div[data-testid='comment'], div.comment-item", "timeout_ms": 10000},
+        {"action": "extract_all", "selector": "div[data-testid='comment']", "fields": ["commenter_name", "comment_body", "timestamp", "likes"]}
+      ],
+      "success_criteria": {
+        "comments_visible": true
+      }
+    }
+  },
+
+  "anti_detection_rules": {
+    "typing": {
+      "title_field": {"min_delay_ms": 80, "max_delay_ms": 150, "method": "human_type"},
+      "subtitle_field": {"min_delay_ms": 50, "max_delay_ms": 120, "method": "human_type"},
+      "body_field": {"delay_ms": 50, "method": "type"},
+      "search_fields": {"min_delay_ms": 80, "max_delay_ms": 150, "method": "human_type"}
+    },
+    "navigation": {
+      "between_actions_ms": "300-800",
+      "after_editor_open_ms": 3000,
+      "after_publish_ms": 4000,
+      "after_schedule_ms": 3000
+    },
+    "critical_patterns": [
+      "Never use .fill() on title or body fields — use human_type or type",
+      "Always click field explicitly before typing — do not Tab navigate",
+      "Use Ctrl+A to select all before replacing body content",
+      "Wait for ProseMirror to be fully loaded before typing",
+      "datetime-local inputs can use direct value fill — no bot detection"
+    ]
+  }
+}

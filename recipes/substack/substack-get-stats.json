@@ -1,0 +1,188 @@
+{
+  "id": "substack-get-stats",
+  "platform": "substack",
+  "version": "1.0.0",
+  "description": "Read subscriber count, open rates, click rates, and post performance statistics from the Substack dashboard. Read-only — no writes or side effects.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["substack.read_stats"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Substack's Stats page is at /dashboard/stats or /stats. It shows total subscribers, subscriber growth chart, recent post open rates, click rates. Each stat is in a labelled div or span. The stats page does not have complex SPAs — values are rendered in the DOM. Post-level stats may require clicking into individual posts from the Posts list.",
+    "selector_strategy": "Extract by data-testid where available, fallback to aria-label and heading text matching. Subscriber count is often in a prominent h1 or div.stats-count class. Avoid XPath — stick to CSS selectors.",
+    "anti_bot_notes": "Read-only operation — minimal bot detection risk. Saved session navigation only. No typing required. Wait for stats container before extracting numbers.",
+    "performance": "Navigation 3s + stats page load 4s + extraction 2s. Total: ~9s."
+  },
+
+  "input_params": {
+    "date_range": {
+      "type": "string",
+      "description": "Date range filter: 'last_7_days', 'last_30_days', 'last_90_days', 'all_time'",
+      "required": false,
+      "default": "last_30_days",
+      "enum": ["last_7_days", "last_30_days", "last_90_days", "all_time"]
+    },
+    "post_id": {
+      "type": "string",
+      "description": "Optional: specific post slug or ID to get individual post stats",
+      "required": false,
+      "example": "why-ai-agents-are-the-new-saas"
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/substack_working_session.json",
+      "description": "Load saved Substack session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://substack.com/dashboard/stats",
+      "wait_for": "div[data-component='StatsPage'], main[aria-label*='stats'], div.stats-dashboard",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to Stats dashboard"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "div[data-component='StatsPage'], h1:has-text('Stats'), div.subscriber-count",
+      "fallback_url_pattern": "substack.com/sign-in",
+      "description": "Verify authenticated — abort with SESSION_EXPIRED if redirected to login",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "wait_for_selector",
+      "selector": "div[data-testid='subscriber-count'], div.stats-count, h1.stat-number, span[data-stat='subscribers']",
+      "timeout_ms": 10000,
+      "description": "Wait for subscriber statistics to render"
+    },
+    {
+      "step": 5,
+      "action": "extract",
+      "selector": "div[data-testid='subscriber-count'], div.stats-count, h1.stat-number, span[data-stat='subscribers']",
+      "field": "subscriber_count",
+      "type": "textContent",
+      "description": "Extract total subscriber count",
+      "screenshot": true
+    },
+    {
+      "step": 6,
+      "action": "extract",
+      "selector": "div[data-testid='paid-subscriber-count'], span[data-stat='paid-subscribers'], div.paid-count",
+      "field": "paid_subscriber_count",
+      "type": "textContent",
+      "optional": true,
+      "description": "Extract paid subscriber count if available"
+    },
+    {
+      "step": 7,
+      "action": "extract",
+      "selector": "div[data-testid='open-rate'], span[data-stat='open-rate'], div.open-rate-value",
+      "field": "open_rate",
+      "type": "textContent",
+      "optional": true,
+      "description": "Extract average open rate percentage"
+    },
+    {
+      "step": 8,
+      "action": "extract",
+      "selector": "div[data-testid='click-rate'], span[data-stat='click-rate'], div.click-rate-value",
+      "field": "click_rate",
+      "type": "textContent",
+      "optional": true,
+      "description": "Extract average click rate percentage"
+    },
+    {
+      "step": 9,
+      "action": "extract_all",
+      "selector": "div[data-testid='recent-post-stat'], tr.post-stat-row, div.post-performance-row",
+      "limit": 10,
+      "fields": {
+        "post_title": {
+          "selector": "a.post-title, td.post-name, span[data-field='title']",
+          "type": "textContent"
+        },
+        "opens": {
+          "selector": "span.opens-count, td.opens, span[data-field='opens']",
+          "type": "textContent"
+        },
+        "clicks": {
+          "selector": "span.clicks-count, td.clicks, span[data-field='clicks']",
+          "type": "textContent"
+        },
+        "published_at": {
+          "selector": "span.publish-date, td.date, time",
+          "type": "textContent"
+        }
+      },
+      "optional": true,
+      "description": "Extract recent post performance data",
+      "screenshot": true
+    },
+    {
+      "step": 10,
+      "action": "return_result",
+      "description": "Return extracted stats as structured data"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "subscriber_count": {"type": "string", "example": "1,247"},
+      "paid_subscriber_count": {"type": "string", "example": "89"},
+      "open_rate": {"type": "string", "example": "42%"},
+      "click_rate": {"type": "string", "example": "8%"},
+      "recent_posts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "post_title": {"type": "string"},
+            "opens": {"type": "string"},
+            "clicks": {"type": "string"},
+            "published_at": {"type": "string"}
+          }
+        }
+      },
+      "date_range": {"type": "string", "example": "last_30_days"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["subscriber_count", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect substack.com/sign-in redirect — abort with SESSION_EXPIRED, run session login recipe first",
+    "stats_not_loaded": "Retry with 15s timeout; if still fails, try navigating to /stats directly",
+    "element_not_found": "Log which stat element was not found, return partial results with null for missing fields",
+    "rate_limited": "If rate limit detected, wait 30s then retry once"
+  },
+
+  "metadata": {
+    "tags": ["substack", "stats", "analytics", "subscribers", "read-only"],
+    "difficulty": "easy",
+    "prerequisites": ["substack_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 12,
+    "idempotent": true,
+    "destructive": false
+  }
+}

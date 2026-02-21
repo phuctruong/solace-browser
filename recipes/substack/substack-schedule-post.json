@@ -1,0 +1,268 @@
+{
+  "id": "substack-schedule-post",
+  "platform": "substack",
+  "version": "1.0.0",
+  "description": "Write a Substack post and schedule it for future publication at a specified date and time. Fills title, subtitle, body, then opens the schedule dialog to set the ISO 8601 publish datetime.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["substack.write_post", "substack.schedule"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Substack's scheduling is accessed via the Publish dropdown — there is a 'Schedule for later' option that opens a date/time picker. The picker has separate date and time inputs or a combined datetime input. After setting the time, a 'Schedule' button confirms it. The post then appears in the scheduled posts queue on the dashboard.",
+    "selector_strategy": "Publish button opens a dropdown/dialog. 'Schedule for later' is a link or button inside that dialog. Date/time inputs are standard HTML inputs of type date/time or datetime-local. Fallback: type directly into visible date/time input fields.",
+    "anti_bot_notes": "Title and body require human-like typing. Date/time fields can be filled via direct value setting — these are not observed for bot patterns. After clicking 'Schedule', confirm the post appears in scheduled queue.",
+    "llm_learnings": "schedule_datetime must be in ISO 8601 format (e.g. 2026-03-01T14:00:00). Convert to local time if timezone detected on page. The schedule confirmation shows the scheduled time — verify it matches expected.",
+    "performance": "Navigation 3s + editor load 3s + typing variable + schedule dialog 5s. Short post: ~30-40s total."
+  },
+
+  "input_params": {
+    "title": {
+      "type": "string",
+      "description": "Post title",
+      "required": true,
+      "example": "The Future of AI Delegation"
+    },
+    "subtitle": {
+      "type": "string",
+      "description": "Post subtitle / deck text",
+      "required": false,
+      "example": "How OAuth3 changes everything"
+    },
+    "body": {
+      "type": "string",
+      "description": "Post body in plain text",
+      "required": true,
+      "example": "We are entering an era where tasks are delegated to AI agents..."
+    },
+    "schedule_datetime": {
+      "type": "string",
+      "description": "ISO 8601 datetime for scheduled publication (e.g. 2026-03-01T09:00:00)",
+      "required": true,
+      "format": "date-time",
+      "example": "2026-03-01T09:00:00"
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/substack_working_session.json",
+      "description": "Load saved Substack session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://substack.com/dashboard",
+      "wait_for": "div[data-component='DashboardPage'], nav[aria-label='Dashboard navigation']",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to Substack dashboard"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "div[data-component='DashboardPage'], a[href*='/publish']",
+      "fallback_url_pattern": "substack.com/sign-in",
+      "description": "Verify authenticated — abort with SESSION_EXPIRED if redirected",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "click",
+      "selector": "a[href*='/publish/post'], button[data-testid='new-post-button'], a[data-testid='new-post-button']",
+      "fallback_selector": "a[href*='/new-post'], button:has-text('New post'), a:has-text('New post')",
+      "description": "Click 'New post' to open post editor",
+      "wait_after_ms": 3000,
+      "timeout_ms": 8000,
+      "screenshot": true
+    },
+    {
+      "step": 5,
+      "action": "wait_for_selector",
+      "selector": "div.ProseMirror, div[data-testid='post-title'], input[placeholder*='Title']",
+      "timeout_ms": 10000,
+      "description": "Wait for post editor to fully load"
+    },
+    {
+      "step": 6,
+      "action": "click",
+      "selector": "div[data-testid='post-title'], input[placeholder*='Title'], h1[data-placeholder*='Title']",
+      "description": "Click title field to focus",
+      "wait_after_ms": 500,
+      "screenshot": false
+    },
+    {
+      "step": 7,
+      "action": "human_type",
+      "selector": "div[data-testid='post-title'], input[placeholder*='Title'], h1[data-placeholder*='Title']",
+      "text": "{params.title}",
+      "delay_ms": "80-150",
+      "click_first": false,
+      "description": "Type post title with human-like delays",
+      "screenshot": false
+    },
+    {
+      "step": 8,
+      "action": "click",
+      "selector": "div[data-testid='post-subtitle'], input[placeholder*='Subtitle'], h2[data-placeholder*='Subtitle']",
+      "optional": true,
+      "condition": "{params.subtitle}",
+      "description": "Click subtitle field if subtitle provided",
+      "wait_after_ms": 300,
+      "screenshot": false
+    },
+    {
+      "step": 9,
+      "action": "human_type",
+      "selector": "div[data-testid='post-subtitle'], input[placeholder*='Subtitle'], h2[data-placeholder*='Subtitle']",
+      "text": "{params.subtitle}",
+      "delay_ms": "50-120",
+      "click_first": false,
+      "optional": true,
+      "condition": "{params.subtitle}",
+      "description": "Type subtitle if provided",
+      "screenshot": false
+    },
+    {
+      "step": 10,
+      "action": "click",
+      "selector": "div.ProseMirror[contenteditable='true']",
+      "description": "Click body editor",
+      "wait_after_ms": 400,
+      "screenshot": false
+    },
+    {
+      "step": 11,
+      "action": "type",
+      "selector": "div.ProseMirror[contenteditable='true']",
+      "text": "{params.body}",
+      "delay_ms": 50,
+      "description": "Type post body",
+      "screenshot": false
+    },
+    {
+      "step": 12,
+      "action": "screenshot",
+      "description": "Capture completed post before scheduling",
+      "screenshot": true
+    },
+    {
+      "step": 13,
+      "action": "click",
+      "selector": "button[data-testid='publish-button'], button:has-text('Publish'), button[aria-label*='Publish']",
+      "fallback_selector": "button.pub-button, button[data-component='PublishButton']",
+      "description": "Click Publish button to open publish options dialog",
+      "wait_after_ms": 2000,
+      "timeout_ms": 8000,
+      "screenshot": true
+    },
+    {
+      "step": 14,
+      "action": "click",
+      "selector": "button:has-text('Schedule for later'), a:has-text('Schedule'), button[data-testid='schedule-option']",
+      "fallback_selector": "li:has-text('Schedule'), div[role='menuitem']:has-text('Schedule')",
+      "description": "Click 'Schedule for later' option in publish dropdown",
+      "wait_after_ms": 1500,
+      "timeout_ms": 8000,
+      "screenshot": true
+    },
+    {
+      "step": 15,
+      "action": "wait_for_selector",
+      "selector": "input[type='datetime-local'], input[type='date'], div[data-testid='schedule-picker']",
+      "timeout_ms": 8000,
+      "description": "Wait for date/time picker to appear"
+    },
+    {
+      "step": 16,
+      "action": "fill",
+      "selector": "input[type='datetime-local']",
+      "value": "{params.schedule_datetime}",
+      "fallback_selector": "input[data-testid='schedule-date-input']",
+      "description": "Set scheduled datetime (ISO 8601 value — direct fill acceptable for datetime inputs)",
+      "wait_after_ms": 500,
+      "screenshot": false
+    },
+    {
+      "step": 17,
+      "action": "click",
+      "selector": "button[data-testid='confirm-schedule'], button:has-text('Schedule post'), button:has-text('Schedule')",
+      "fallback_selector": "button.schedule-confirm, button[aria-label*='Schedule']",
+      "description": "Confirm the scheduled time and submit",
+      "wait_after_ms": 3000,
+      "timeout_ms": 8000,
+      "screenshot": true
+    },
+    {
+      "step": 18,
+      "action": "verify",
+      "checks": [
+        {"type": "no_element", "selector": "div[role='alertdialog'][data-error='true']", "description": "No error dialog"},
+        {"type": "url_contains", "pattern": "substack.com", "description": "Still on Substack domain"}
+      ],
+      "description": "Verify post was scheduled without errors"
+    },
+    {
+      "step": 19,
+      "action": "return_result",
+      "description": "Return schedule confirmation with post details"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "scheduled": {"type": "boolean", "example": true},
+      "title": {"type": "string", "example": "The Future of AI Delegation"},
+      "schedule_datetime": {"type": "string", "example": "2026-03-01T09:00:00"},
+      "post_url": {"type": "string", "example": "https://yourpub.substack.com/p/the-future-of-ai"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["scheduled", "schedule_datetime", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect substack.com/sign-in redirect — abort with SESSION_EXPIRED, run session login recipe first",
+    "schedule_dialog_not_found": "Check if publish dialog is open; look for 'Schedule for later' link inside dialog",
+    "datetime_input_not_found": "Try alternative selector input[type='date'] + input[type='time'] for split fields",
+    "element_not_found": "Log selector, capture screenshot, try fallback_selector",
+    "rate_limited": "If rate limit detected, wait 60s then retry once"
+  },
+
+  "anti_detection": {
+    "human_typing": true,
+    "explicit_field_clicks": true,
+    "keyboard_shortcuts_preferred": false,
+    "avoid_tab_navigation": true,
+    "avoid_instant_fill": true,
+    "typing_delays": {
+      "title": "80-150ms",
+      "subtitle": "50-120ms",
+      "body": "50ms"
+    }
+  },
+
+  "metadata": {
+    "tags": ["substack", "schedule", "publish", "post", "newsletter"],
+    "difficulty": "medium",
+    "prerequisites": ["substack_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 40,
+    "idempotent": false,
+    "destructive": false
+  }
+}
