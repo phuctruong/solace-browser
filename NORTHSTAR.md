@@ -2,6 +2,31 @@
 
 > *"Be water, my friend."* — Bruce Lee
 
+## The Reframe: From Tool to Protocol
+
+**Before OAuth3**: SolaceBrowser = browser automation tool (competing on features)
+**After OAuth3**: SolaceBrowser = reference implementation of AI delegation standard
+
+```
+OAuth3 Spec (OPEN STANDARD)
+    │
+    ├── solace-browser = reference implementation (OSS) ← THIS PROJECT
+    ├── stillwater = verification + governance layer (OSS)
+    ├── solace-cli = terminal-native surface (OSS)
+    └── solaceagi.com = hosted compliance-grade execution (PAID)
+
+Standard → Ecosystem → Revenue
+```
+
+**Why this wins**: Token-revenue vendors (OpenAI, Anthropic, Google) are structurally
+incentivized to keep token usage HIGH. OAuth3 reduces token usage to near-zero via
+recipe reuse. They CANNOT implement it without cannibalizing their revenue. We can.
+
+**The moat**: First open standard for AI agency delegation. Anyone who implements it
+validates our position. Anyone who doesn't is non-compliant.
+
+---
+
 ## Software 5.0 Context
 
 SolaceBrowser is **Software 5.0 for personal web automation**:
@@ -30,12 +55,24 @@ CLOUD  → Same persistent_browser_server.py running headless on solaceagi.com
          Recipe system: 70% cache hit → $0.01/task vs $0.20 for competitors
 ```
 
-**Five moats no competitor has simultaneously:**
-1. Deep anti-detection (canvas/WebGL/JA3/Bezier mouse/inertia scroll)
-2. Recipe system (externalized reasoning → 70% cache hit → 3x cheaper COGS)
-3. Twin architecture (local browsing + cloud AGI delegation)
-4. Fingerprint sync (cloud browser identical to user's real browser)
-5. Stillwater verification (evidence-based execution, not just screenshots)
+**Six moats (all competitors have 0–2):**
+1. **Recipe system** → 70% cache hit → 3x cheaper COGS
+2. **PrimeWiki** → domain-aware navigation (not generic DOM scraping)
+3. **Twin architecture** → local browsing + cloud delegation
+4. **Anti-detection** → Bezier mouse, fingerprint sync, char-by-char typing
+5. **Stillwater verification** → evidence bundle per task (not just screenshots)
+6. **OAuth3 protocol** → scoped consent, revocation, audit trail, step-up auth ← UNCOPYABLE
+
+**Why moat #6 is uncopyable**: OpenAI building OAuth3 = OpenAI cannibalizing its token revenue.
+We have structural freedom to do what they can't.
+
+**Competitive gaps (Feb 2026)**:
+| Competitor | Missing |
+|-----------|---------|
+| OpenClaw | No evidence trail; no consent model; no revocation |
+| Browser-Use | No session persistence; no recipe system; no OAuth3 |
+| Bardeen | Chrome extension only; no cloud twin; no step-up auth |
+| Vercel agent-browser | Cloud-only; no local twin; no recipe library; no OAuth3 |
 
 ## North Star Metric
 
