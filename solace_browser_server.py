@@ -47,6 +47,7 @@ try:
     from oauth3.revocation import list_all_tokens
     from oauth3.token import DEFAULT_TOKEN_DIR
     from oauth3.consent_ui import register_consent_routes
+    from oauth3.step_up import validate_and_consume_nonce
     OAUTH3_AVAILABLE = True
 except ImportError as _oauth3_import_error:
     logger_temp = logging.getLogger("solace-browser")
@@ -1552,6 +1553,9 @@ class SolaceBrowserServer:
             or request.headers.get("X-Agency-Token")
         )
 
+        # Extract optional step-up nonce
+        step_up_nonce = data.get("step_up_nonce") or None
+
         if not token_id:
             # No token provided → direct to consent
             required_scope = recipe.get("required_scope", f"{recipe_id.split('-')[0]}.action")
@@ -1574,8 +1578,51 @@ class SolaceBrowserServer:
             action_class = "action"
             required_scope = f"{platform}.{action_class}"
 
-        # Enforce OAuth3
-        passes, details = enforce_oauth3(token_id, required_scope)
+        # Validate step-up nonce if provided, before calling enforce_oauth3
+        step_up_performed = False
+        step_up_performed_at = None
+        if step_up_nonce:
+            nonce_valid, nonce_action = validate_and_consume_nonce(step_up_nonce)
+            if not nonce_valid:
+                # Invalid or expired nonce — reject with 402 so client re-prompts
+                return web.json_response(
+                    {
+                        "error": "step_up_nonce_invalid",
+                        "detail": "Step-up nonce is expired, invalid, or already used.",
+                        "token_id": token_id,
+                        "required_scope": required_scope,
+                        "confirm_url": (
+                            f"/step-up?token_id={token_id}"
+                            f"&action={required_scope}"
+                            f"&recipe_id={recipe_id}"
+                            f"&error=Nonce+expired+or+already+used"
+                        ),
+                    },
+                    status=402,
+                )
+            # Nonce valid — check it authorises the right action
+            if nonce_action != required_scope:
+                return web.json_response(
+                    {
+                        "error": "step_up_nonce_scope_mismatch",
+                        "detail": (
+                            f"Nonce was issued for '{nonce_action}' "
+                            f"but recipe requires '{required_scope}'."
+                        ),
+                        "token_id": token_id,
+                        "required_scope": required_scope,
+                    },
+                    status=403,
+                )
+            step_up_performed = True
+            step_up_performed_at = datetime.now(timezone.utc).isoformat()
+
+        # Enforce OAuth3 (step_up_confirmed=True when nonce was valid)
+        passes, details = enforce_oauth3(
+            token_id,
+            required_scope,
+            step_up_confirmed=step_up_performed,
+        )
 
         if not passes:
             error_code = details.get("error", "enforcement_failed")
@@ -1616,11 +1663,19 @@ class SolaceBrowserServer:
         agency_token_evidence = build_evidence_token_entry(
             token_id=enforcement_details["token_id"],
             scope_used=enforcement_details["scope"],
-            step_up_performed=False,
+            step_up_performed=step_up_performed,
             token_expires_at=enforcement_details.get("expires_at"),
         )
 
         started_at = datetime.now(timezone.utc).isoformat()
+
+        # Build step-up evidence entry (only when step-up was performed)
+        step_up_evidence = {
+            "required": True if step_up_performed else False,
+            "performed": step_up_performed,
+            "performed_at": step_up_performed_at,
+            "action": required_scope if step_up_performed else None,
+        }
 
         # Recipe execution stub:
         # Phase 1.5 implements OAuth3 enforcement infrastructure.
@@ -1640,9 +1695,14 @@ class SolaceBrowserServer:
             "rung": 641,
         }
 
+        # Attach step_up evidence only when relevant
+        if step_up_performed:
+            evidence["step_up"] = step_up_evidence
+
         logger.info(
             f"OAuth3 enforced for recipe '{recipe_id}': "
-            f"token={token_id[:8]}... scope={required_scope}"
+            f"token={token_id[:8]}... scope={required_scope} "
+            f"step_up={step_up_performed}"
         )
 
         return web.json_response(

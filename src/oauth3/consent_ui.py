@@ -45,6 +45,7 @@ from oauth3.scopes import (
     get_scope_risk_level,
 )
 from oauth3.revocation import revoke_token, list_all_tokens
+from oauth3.step_up import create_step_up_nonce
 
 # ---------------------------------------------------------------------------
 # Platform → default scopes mapping (for home page tile badges)
@@ -881,6 +882,287 @@ async def handle_tokens_page(request) -> object:
 
 
 # ---------------------------------------------------------------------------
+# Page builder: GET /step-up
+# ---------------------------------------------------------------------------
+
+
+def build_step_up_page(
+    token_id: str,
+    action: str,
+    recipe_id: str = "",
+    error: Optional[str] = None,
+) -> tuple:
+    """
+    Build the step-up confirmation page HTML.
+
+    Shown when a recipe requires a destructive scope (STEP_UP_REQUIRED_SCOPES).
+    Forces the user to explicitly confirm the permanent, irreversible action.
+
+    Args:
+        token_id:  The agency token_id requesting the action.
+        action:    The high-risk scope (e.g. "linkedin.delete_post").
+        recipe_id: The recipe that triggered step-up (optional, for display).
+        error:     Flash error message (e.g. "nonce expired").
+
+    Returns:
+        (html_str, http_status_code)
+        Returns 400 if action is not a recognised step-up scope.
+    """
+    from oauth3.scopes import STEP_UP_REQUIRED_SCOPES, get_scope_description
+
+    # Validate action is a real step-up scope
+    if action not in STEP_UP_REQUIRED_SCOPES:
+        body = (
+            '<div class="container">'
+            f'<div class="flash-error">Unknown or non-destructive action: {_h(action)}</div>'
+            '</div>'
+        )
+        return _html_shell("Step-Up Confirmation", body), 400
+
+    scope_desc = get_scope_description(action) or action
+
+    error_html = ""
+    if error:
+        error_html = f'<div class="flash-error">{_h(error)}</div>'
+
+    recipe_html = ""
+    if recipe_id:
+        recipe_html = f"""
+      <div style="background:#111827;border:1px solid #374151;border-radius:8px;
+                  padding:12px 16px;margin-bottom:20px;font-size:0.8rem;color:#9ca3af;">
+        <strong style="color:#d1d5db;">Recipe:</strong>
+        <code style="color:#93c5fd;margin-left:6px;">{_h(recipe_id)}</code>
+      </div>"""
+
+    # JSON payload for the POST request
+    post_payload = json.dumps({"token_id": token_id, "action": action})
+
+    body = f"""
+  <div class="container">
+    {error_html}
+    <div class="card">
+      <div class="card-header">
+        <h1 style="color:#ef4444;">Permanent Action Confirmation</h1>
+        <p style="color:#9ca3af;">Review carefully — this action cannot be undone.</p>
+      </div>
+
+      <!-- Red warning banner -->
+      <div style="background:#450a0a;border:2px solid #dc2626;border-radius:10px;
+                  padding:16px 20px;margin-bottom:24px;display:flex;
+                  align-items:flex-start;gap:14px;">
+        <span style="font-size:1.5rem;line-height:1;">&#9888;</span>
+        <div>
+          <div style="font-weight:700;color:#f87171;font-size:1rem;margin-bottom:4px;">
+            Permanent Action &mdash; This cannot be undone
+          </div>
+          <div style="color:#fca5a5;font-size:0.875rem;">
+            You are about to perform a destructive, irreversible action.
+            Once confirmed, there is no undo.
+          </div>
+        </div>
+      </div>
+
+      <!-- Action details -->
+      <div style="margin-bottom:20px;">
+        <p style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;
+                  letter-spacing:0.05em;margin-bottom:10px;">Action Being Authorised</p>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:14px;
+                    background:#1a1a2e;border:1px solid #4b5563;border-radius:8px;">
+          <span style="font-size:1.2rem;">&#x1F5D1;</span>
+          <div>
+            <div style="font-family:'Courier New',monospace;color:#fca5a5;
+                        font-size:0.85rem;margin-bottom:4px;">{_h(action)}</div>
+            <div style="color:#e5e7eb;font-size:0.875rem;">{_h(scope_desc)}</div>
+          </div>
+          <span class="risk-badge risk-high" style="margin-left:auto;margin-top:2px;">
+            HIGH RISK
+          </span>
+        </div>
+      </div>
+
+      {recipe_html}
+
+      <!-- Confirm / Cancel -->
+      <div class="btn-row">
+        <button class="btn" id="confirm-btn"
+                style="background:#dc2626;color:white;font-weight:700;"
+                onclick="confirmStepUp()">
+          &#x26A0; Confirm Delete
+        </button>
+        <a class="btn btn-deny" href="/">
+          Cancel &mdash; Go Back
+        </a>
+      </div>
+
+      <p style="margin-top:16px;font-size:0.75rem;color:#6b7280;text-align:center;">
+        This confirmation expires in 5 minutes.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const _PAYLOAD = {post_payload};
+
+    async function confirmStepUp() {{
+      const btn = document.getElementById('confirm-btn');
+      btn.disabled = true;
+      btn.textContent = 'Confirming...';
+      try {{
+        const resp = await fetch('/oauth3/step-up', {{
+          method: 'POST',
+          headers: {{'Content-Type': 'application/json'}},
+          body: JSON.stringify(_PAYLOAD)
+        }});
+        const data = await resp.json();
+        if (data.nonce) {{
+          // Store nonce in sessionStorage and signal the originating tab / caller
+          sessionStorage.setItem('solace_step_up_nonce', data.nonce);
+          sessionStorage.setItem('solace_step_up_action', _PAYLOAD.action);
+          // Redirect to a success notice page (caller should poll or use postMessage)
+          window.location.href = '/?step_up=confirmed&action=' + encodeURIComponent(_PAYLOAD.action);
+        }} else {{
+          alert('Step-up failed: ' + (data.error || 'unknown error'));
+          btn.disabled = false;
+          btn.textContent = '\\u26A0 Confirm Delete';
+        }}
+      }} catch (e) {{
+        alert('Network error: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = '\\u26A0 Confirm Delete';
+      }}
+    }}
+  </script>"""
+
+    return _html_shell("Step-Up Confirmation", body), 200
+
+
+# ---------------------------------------------------------------------------
+# Route handlers: GET /step-up, POST /oauth3/step-up
+# ---------------------------------------------------------------------------
+
+
+async def handle_step_up_get(request) -> object:
+    """
+    GET /step-up?token_id=...&action=linkedin.delete_post&recipe_id=...
+
+    Query params:
+      token_id  — agency token that holds the destructive scope (required)
+      action    — the step-up scope being confirmed (required)
+      recipe_id — the recipe that triggered step-up (optional, display only)
+      error     — error flash message (optional)
+    """
+    from aiohttp import web
+
+    token_id = request.rel_url.query.get("token_id", "")
+    action = request.rel_url.query.get("action", "")
+    recipe_id = request.rel_url.query.get("recipe_id", "")
+    error = request.rel_url.query.get("error")
+
+    if not token_id or not action:
+        html, status = _html_shell(
+            "Step-Up Confirmation",
+            '<div class="container"><div class="flash-error">'
+            'Missing token_id or action parameter.</div></div>',
+        ), 400
+        return web.Response(text=html, content_type="text/html", status=status)
+
+    html, status = build_step_up_page(
+        token_id=token_id,
+        action=action,
+        recipe_id=recipe_id,
+        error=error,
+    )
+    return web.Response(text=html, content_type="text/html", status=status)
+
+
+async def handle_step_up_post(request) -> object:
+    """
+    POST /oauth3/step-up
+    Body: {"token_id": "...", "action": "linkedin.delete_post"}
+
+    Validates the token is active and has the destructive scope,
+    then issues a one-time nonce (TTL 300s).
+
+    Response 200: {"nonce": "uuid4", "expires_in": 300, "action": "..."}
+    Response 400: invalid JSON or missing fields
+    Response 401: token invalid / expired / revoked
+    Response 403: token does not have the requested scope
+    Response 422: action is not a step-up required scope
+    """
+    from aiohttp import web
+    from oauth3.token import AgencyToken, DEFAULT_TOKEN_DIR
+    from oauth3.scopes import STEP_UP_REQUIRED_SCOPES
+
+    try:
+        data = await request.json()
+    except Exception:
+        return web.json_response({"error": "invalid_json"}, status=400)
+
+    token_id = data.get("token_id", "")
+    action = data.get("action", "")
+
+    if not token_id or not action:
+        return web.json_response(
+            {"error": "missing_fields", "detail": "token_id and action are required"},
+            status=400,
+        )
+
+    # Validate action is actually a step-up scope
+    if action not in STEP_UP_REQUIRED_SCOPES:
+        return web.json_response(
+            {
+                "error": "not_step_up_scope",
+                "detail": f"'{action}' is not a step-up required scope",
+                "step_up_scopes": STEP_UP_REQUIRED_SCOPES,
+            },
+            status=422,
+        )
+
+    # Load and validate token
+    try:
+        token = AgencyToken.load_from_file(token_id)
+    except FileNotFoundError:
+        return web.json_response(
+            {"error": "token_not_found", "token_id": token_id},
+            status=401,
+        )
+    except Exception as e:
+        return web.json_response({"error": "token_load_error", "detail": str(e)}, status=401)
+
+    is_valid, validity_error = token.validate()
+    if not is_valid:
+        error_code = "token_revoked" if token.revoked else "token_expired"
+        return web.json_response(
+            {"error": error_code, "detail": validity_error, "token_id": token_id},
+            status=401,
+        )
+
+    # Token must have the requested scope
+    if not token.has_scope(action):
+        return web.json_response(
+            {
+                "error": "insufficient_scope",
+                "detail": f"Token does not have scope '{action}'",
+                "token_scopes": token.scopes,
+            },
+            status=403,
+        )
+
+    # All checks passed — issue nonce
+    nonce = create_step_up_nonce(token_id=token_id, action=action)
+
+    return web.json_response(
+        {
+            "nonce": nonce,
+            "expires_in": 300,
+            "action": action,
+            "token_id": token_id,
+        },
+        status=200,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Route registration helper
 # ---------------------------------------------------------------------------
 
@@ -896,3 +1178,5 @@ def register_consent_routes(app) -> None:
     app.router.add_get("/consent", handle_consent_get)
     app.router.add_post("/oauth3/consent", handle_consent_post)
     app.router.add_get("/settings/tokens", handle_tokens_page)
+    app.router.add_get("/step-up", handle_step_up_get)
+    app.router.add_post("/oauth3/step-up", handle_step_up_post)
