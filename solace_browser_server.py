@@ -33,6 +33,21 @@ if str(_SRC_PATH) not in sys.path:
     sys.path.insert(0, str(_SRC_PATH))
 
 try:
+    from history import (
+        BrowsingSession,
+        list_sessions,
+        load_session,
+        get_snapshot as get_session_snapshot,
+        list_session_snapshots,
+        save_session as save_browsing_session,
+    )
+    HISTORY_AVAILABLE = True
+except ImportError as _history_import_error:
+    logger_temp = logging.getLogger("solace-browser")
+    logger_temp.warning(f"History module not available: {_history_import_error}")
+    HISTORY_AVAILABLE = False
+
+try:
     from oauth3 import (
         AgencyToken,
         SCOPES,
@@ -1152,6 +1167,12 @@ class SolaceBrowserServer:
         # Recipe execution (OAuth3-enforced)
         self.app.router.add_post('/run-recipe', self._handle_run_recipe)
 
+        # History API (Phase 2, BUILD 5)
+        self.app.router.add_get('/history', self._handle_history_list)
+        self.app.router.add_get('/history/{session_id}', self._handle_history_session)
+        self.app.router.add_get('/history/{session_id}/{snapshot_id}', self._handle_history_snapshot)
+        self.app.router.add_get('/history/{session_id}/{snapshot_id}/render', self._handle_history_render)
+
         # Debug UI routes
         if self.browser.debug_ui:
             self.app.router.add_get('/', self._handle_ui)
@@ -1718,6 +1739,131 @@ class SolaceBrowserServer:
             },
             status=200,
         )
+
+    # =========================================================================
+    # History API handlers (Phase 2, BUILD 5)
+    # =========================================================================
+
+    async def _handle_history_list(self, request):
+        """
+        GET /history
+        List all browsing sessions.
+
+        Response 200: [{session_id, task_id, recipe_id, started_at, snapshot_count}]
+        Response 503: history module not loaded
+        """
+        if not HISTORY_AVAILABLE:
+            return web.json_response(
+                {"error": "history_unavailable", "detail": "History module not loaded"},
+                status=503,
+            )
+        try:
+            sessions = list_sessions()
+            return web.json_response({"sessions": sessions}, status=200)
+        except Exception as e:
+            logger.error(f"History list error: {e}")
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def _handle_history_session(self, request):
+        """
+        GET /history/{session_id}
+        List snapshot metadata for a session (no decompression).
+
+        Response 200: {session_id, snapshots: [{snapshot_id, url, title, timestamp, compressed_size_bytes}]}
+        Response 404: session not found
+        Response 503: history module not loaded
+        """
+        if not HISTORY_AVAILABLE:
+            return web.json_response(
+                {"error": "history_unavailable"},
+                status=503,
+            )
+        session_id = request.match_info["session_id"]
+        try:
+            snapshots_meta = list_session_snapshots(session_id)
+            return web.json_response(
+                {"session_id": session_id, "snapshots": snapshots_meta},
+                status=200,
+            )
+        except FileNotFoundError:
+            return web.json_response(
+                {"error": "session_not_found", "session_id": session_id},
+                status=404,
+            )
+        except Exception as e:
+            logger.error(f"History session detail error: {e}")
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def _handle_history_snapshot(self, request):
+        """
+        GET /history/{session_id}/{snapshot_id}
+        Return full decompressed snapshot JSON.
+
+        Response 200: full snapshot dict (includes html field)
+        Response 404: session or snapshot not found
+        Response 503: history module not loaded
+        """
+        if not HISTORY_AVAILABLE:
+            return web.json_response(
+                {"error": "history_unavailable"},
+                status=503,
+            )
+        session_id = request.match_info["session_id"]
+        snapshot_id = request.match_info["snapshot_id"]
+        try:
+            snapshot = get_session_snapshot(session_id, snapshot_id)
+            return web.json_response(snapshot.to_dict(), status=200)
+        except FileNotFoundError:
+            return web.json_response(
+                {
+                    "error": "snapshot_not_found",
+                    "session_id": session_id,
+                    "snapshot_id": snapshot_id,
+                },
+                status=404,
+            )
+        except Exception as e:
+            logger.error(f"History snapshot detail error: {e}")
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def _handle_history_render(self, request):
+        """
+        GET /history/{session_id}/{snapshot_id}/render
+        Return raw HTML only (sandboxed; suitable for iframe embedding).
+
+        Response 200: Content-Type text/html with sandbox CSP
+        Response 404: session or snapshot not found
+        Response 503: history module not loaded
+        """
+        if not HISTORY_AVAILABLE:
+            return web.json_response(
+                {"error": "history_unavailable"},
+                status=503,
+            )
+        session_id = request.match_info["session_id"]
+        snapshot_id = request.match_info["snapshot_id"]
+        try:
+            snapshot = get_session_snapshot(session_id, snapshot_id)
+            headers = {
+                "Content-Security-Policy": "sandbox allow-same-origin",
+            }
+            return web.Response(
+                text=snapshot.html,
+                content_type="text/html",
+                headers=headers,
+            )
+        except FileNotFoundError:
+            return web.json_response(
+                {
+                    "error": "snapshot_not_found",
+                    "session_id": session_id,
+                    "snapshot_id": snapshot_id,
+                },
+                status=404,
+            )
+        except Exception as e:
+            logger.error(f"History render error: {e}")
+            return web.json_response({"error": str(e)}, status=500)
 
     async def _handle_ui(self, request):
         """Serve debugging UI"""
