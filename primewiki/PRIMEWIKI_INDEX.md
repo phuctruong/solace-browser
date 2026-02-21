@@ -1,273 +1,189 @@
-# PrimeWiki Index - Knowledge Graph Navigation
+# PrimeWiki Index — SolaceBrowser
 
-**Version**: 1.0
-**Last Updated**: 2026-02-15
-**Authority**: 65537 (Phuc Forecast)
-**Status**: Active
+**Version**: 2.0.0 (Prime Mermaid enforcement)
+**Authority**: 65537
+**Last Updated**: 2026-02-21
+**Format**: Prime Mermaid triplets (`.mmd` + `.sha256` + `.prime-mermaid.md`)
 
----
-
-## Overview
-
-The PrimeWiki is a knowledge graph containing discovered information about web platforms, authentication flows, UI patterns, and automation strategies. This index provides navigation and cross-referencing across all nodes.
-
-**Total Nodes**: 5
-**Domains Covered**: LinkedIn, Gmail, Reddit
-**Coherence Score**: 0.93 average
-**Gravity Score**: 0.88 average
+> *"I fear not the man who has studied 10,000 selectors once,*
+> *but the man who has captured one PM triplet and verified it 10,000 times."*
 
 ---
 
-## By Domain
+## Quick Status
 
-### LinkedIn (1 node)
-
-| Node | Tier | Focus | Skills | Recipes |
-|------|------|-------|--------|---------|
-| **linkedin-profile-phuc-truong** | 79 | Profile structure, sections, optimization | linkedin-automation-protocol, web-automation-expert | linkedin-profile-update, add-linkedin-project-optimized |
-
-**Key Insights**:
-- Profile contains: profile_home, projects, about sections
-- Optimization techniques documented
-- Full automation workflow available
+| Platform | PM Triplets | Recipes | Status |
+|----------|-------------|---------|--------|
+| LinkedIn | ✅ 1 triplet | 6 recipes | ACTIVE |
+| Gmail | ✅ 2 triplets | 0 recipes | ACTIVE |
+| HackerNews | ✅ 1 triplet + 4 legacy | 0 recipes | ACTIVE |
+| Reddit | ✅ 1 triplet + 1 legacy | 0 recipes | ACTIVE |
+| Notion | ✅ 1 triplet | 0 recipes | ACTIVE |
+| Amazon | 🟡 1 legacy .md | 0 recipes | LEGACY |
 
 ---
 
-### Gmail (1 node)
+## LinkedIn
 
-| Node | Tier | Focus | Skills | Recipes |
-|------|------|-------|--------|---------|
-| **gmail-oauth2-authentication** | 47 | OAuth2 flow, 2FA handling, email operations | gmail-automation-protocol, human-like-automation | gmail-oauth-login, gmail-send-email |
+**Dir**: `primewiki/linkedin/`
 
-**Key Insights**:
-- Multi-step OAuth2 with 2FA required
-- Headed mode necessary (app notification 2FA)
-- 99% selector discovery confidence
-- Session persistence up to 30 days
+| File | Type | SHA256 | Purpose |
+|------|------|--------|---------|
+| `linkedin-page-flow.mmd` | Canonical Mermaid | `406d4fca...` | State machine: auth → feed → all page states |
+| `linkedin-page-flow.sha256` | Drift detector | — | Verify .mmd integrity |
+| `linkedin-page-flow.prime-mermaid.md` | Human spec | — | Selectors, edge cases, recipe refs |
 
----
-
-### Reddit (3 nodes)
-
-| Node | Tier | Focus | Skills | Recipes |
-|------|------|-------|--------|---------|
-| **reddit_homepage_loggedout** | 47 | Homepage structure, navigation | web-automation-expert, browser-state-machine | reddit_homepage_navigate, reddit-homepage-phase1 |
-| **reddit_login_page** | 42 | Login form, credentials entry | human-like-automation | reddit_login_form |
-| **reddit_subreddit_page** | 45 | Subreddit navigation, interactions | web-automation-expert, browser-state-machine | reddit_subreddit_navigate, reddit-comment-workflow, reddit-create-post |
-
-**Key Insights**:
-- Comprehensive Reddit automation coverage
-- Multiple interaction workflows available
-- State transitions well-documented
+**Key Facts**:
+- Auth cookie: `li_at` (session-bound, ~30 day lifetime)
+- POST_COMPOSER uses `artdeco-modal` overlay
+- CHECKPOINT_PAGE appears after >30 days or new IP
+- 6 MVP recipes operational: discover-posts, create-post, edit-post, delete-post, react, comment
 
 ---
 
-## By Tier (Confidence Level)
+## Gmail
 
-### Tier 79 (Expert - Highest Confidence)
-- **linkedin-profile-phuc-truong** (C: 0.95, G: 0.90)
-  - Production-ready LinkedIn automation
-  - Multiple optimization patterns documented
+**Dir**: `primewiki/gmail/`
 
-### Tier 47 (Advanced)
-- **gmail-oauth2-authentication** (C: 0.95, G: 0.90)
-  - Complete OAuth2 flow mapped
-  - Selectors and success indicators documented
-- **reddit_homepage_loggedout** (C: ~0.85, G: ~0.80)
-  - Navigation patterns documented
+| File | Type | SHA256 | Purpose |
+|------|------|--------|---------|
+| `gmail-page-flow.mmd` | Canonical Mermaid | `bdf04329...` | State machine: auth → inbox → all email states |
+| `gmail-page-flow.sha256` | Drift detector | — | Verify .mmd integrity |
+| `gmail-page-flow.prime-mermaid.md` | Human spec | — | Selector map, cookie list |
+| `gmail-oauth2.mmd` | Canonical Mermaid | `17448ddd...` | OAuth2 decision flow with 2FA gate |
+| `gmail-oauth2.sha256` | Drift detector | — | Verify .mmd integrity |
+| `gmail-oauth2.prime-mermaid.md` | Human spec | — | Step-by-step auth selectors |
+| `gmail-bot-detection-bypass.primemermaid.md` | Legacy PM | — | Bot bypass patterns (high value, keep) |
+| `gmail-automation-100.primewiki.md` | Legacy PM | — | Full automation guide |
 
-### Tier 42-45 (Intermediate)
-- **reddit_login_page** (C: ~0.80, G: ~0.75)
-- **reddit_subreddit_page** (C: ~0.80, G: ~0.75)
-
----
-
-## By Maturity
-
-### Production-Ready (2)
-- linkedin-profile-phuc-truong
-- gmail-oauth2-authentication
-
-### Active Research (3)
-- reddit_homepage_loggedout
-- reddit_login_page
-- reddit_subreddit_page
+**Key Facts**:
+- CRITICAL: Use char-by-char typing (80-200ms/char) — instant `.fill()` → bot detection
+- Auth requires 5 cookies: SID, HSID, SSID, APISID, `__Secure-3PAPISID`
+- 2FA = Google Prompt (mobile app) — headed mode required
+- Session lifetime: 14-30 days
 
 ---
 
-## Cross-References Map
+## HackerNews
 
-### Skills to PrimeWiki
+**Dir**: `primewiki/hackernews/`
 
-**Framework Skills**:
-- `browser-state-machine.skill.md` → reddit_homepage_loggedout, reddit_subreddit_page
+| File | Type | SHA256 | Purpose |
+|------|------|--------|---------|
+| `hackernews-page-flow.mmd` | Canonical Mermaid | `c8842aa4...` | State machine: homepage → stories → comments |
+| `hackernews-page-flow.sha256` | Drift detector | — | Verify .mmd integrity |
+| `hackernews-page-flow.prime-mermaid.md` | Human spec | — | Selectors, stability notes |
+| `hackernews-homepage-phase1.primewiki.md` | Legacy PM | — | Detailed portal analysis |
+| `hackernews-architecture-vision.primewiki.md` | Legacy PM | — | Automation architecture |
+| `hackernews-semantic-layer.primewiki.md` | Legacy PM | — | Semantic knowledge |
+| `hackernews-ux-design-layer.primewiki.md` | Legacy PM | — | UX patterns |
 
-**Methodology Skills**:
-- `web-automation-expert.skill.md` → linkedin-profile-phuc-truong, reddit_homepage_loggedout, reddit_subreddit_page
-- `human-like-automation.skill.md` → gmail-oauth2-authentication, reddit_login_page
-
-**Application Skills**:
-- `linkedin-automation-protocol.skill.md` → linkedin-profile-phuc-truong
-- `gmail-automation-protocol.skill.md` → gmail-oauth2-authentication
-
----
-
-### Recipes to PrimeWiki
-
-**LinkedIn Recipes**:
-- `linkedin-profile-update.recipe.json` → linkedin-profile-phuc-truong
-- `add-linkedin-project-optimized.recipe.json` → linkedin-profile-phuc-truong
-
-**Gmail Recipes**:
-- `gmail-oauth-login.recipe.json` → gmail-oauth2-authentication
-- `gmail-send-email.recipe.json` → gmail-oauth2-authentication
-
-**Reddit Recipes**:
-- `reddit_homepage_navigate.recipe.json` → reddit_homepage_loggedout
-- `reddit-homepage-phase1.recipe.json` → reddit_homepage_loggedout
-- `reddit_login_form.recipe.json` → reddit_login_page
-- `reddit_subreddit_navigate.recipe.json` → reddit_subreddit_page
-- `reddit-comment-workflow.recipe.json` → reddit_subreddit_page
-- `reddit-create-post.recipe.json` → reddit_subreddit_page
+**Key Facts**:
+- Extremely stable selectors (server-rendered HTML, ~10+ years unchanged)
+- `div.votearrow` for upvote (authenticated only)
+- `table.itemlist` for homepage
+- 1-year expiry on PM triplets (vs 6 months for other platforms)
 
 ---
 
-## Search Keywords
+## Reddit
 
-### Platform Keywords
-- **linkedin**: linkedin-profile-phuc-truong
-- **gmail**: gmail-oauth2-authentication
-- **reddit**: reddit_homepage_loggedout, reddit_login_page, reddit_subreddit_page
-- **google**: gmail-oauth2-authentication (OAuth provider)
+**Dir**: `primewiki/reddit/`
 
-### Topic Keywords
-- **authentication**: gmail-oauth2-authentication, reddit_login_page
-- **oauth2**: gmail-oauth2-authentication
-- **2fa**: gmail-oauth2-authentication
-- **profile**: linkedin-profile-phuc-truong
-- **navigation**: reddit_homepage_loggedout, reddit_subreddit_page
-- **homepage**: reddit_homepage_loggedout
-- **login**: reddit_login_page
+| File | Type | SHA256 | Purpose |
+|------|------|--------|---------|
+| `reddit-login.mmd` | Canonical Mermaid | `47b3319f...` | Auth + navigation flow with CAPTCHA gate |
+| `reddit-login.sha256` | Drift detector | — | Verify .mmd integrity |
+| `reddit-login.prime-mermaid.md` | Human spec | — | Selectors, CAPTCHA handling |
+| `reddit-homepage-phase1.primewiki.md` | Legacy PM | — | Homepage portal analysis |
 
-### Technique Keywords
-- **selectors**: all nodes (selector discovery documented)
-- **portals**: linkedin-profile-phuc-truong
-- **state-machine**: reddit_homepage_loggedout, reddit_subreddit_page
+**Key Facts**:
+- Auth cookie: `reddit_session`
+- CAPTCHA (reCAPTCHA v2) can appear after failed logins or suspicious IP
+- New Reddit (SPA) vs Old Reddit (server-rendered) — different selectors
+- Rate limit: 60 req/min
 
 ---
 
-## Usage Guide
+## Notion
 
-### Finding Information About a Platform
+**Dir**: `primewiki/notion/`
 
-**I want to automate LinkedIn:**
-1. Find: linkedin-profile-phuc-truong
-2. Check: Implementing skills (linkedin-automation-protocol, web-automation-expert)
-3. Load: Related recipes (linkedin-profile-update, add-linkedin-project-optimized)
-4. Reference: KNOWLEDGE_HUB.md#linkedin-automation
+| File | Type | SHA256 | Purpose |
+|------|------|--------|---------|
+| `notion-page-flow.mmd` | Canonical Mermaid | `2dd5124a...` | Workspace → page → database states |
+| `notion-page-flow.sha256` | Drift detector | — | Verify .mmd integrity |
+| `notion-page-flow.prime-mermaid.md` | Human spec | — | Login methods, selectors |
 
-**I want to automate Gmail:**
-1. Find: gmail-oauth2-authentication
-2. Check: OAuth2 flow details and 2FA requirements
-3. Load: Related recipes (gmail-oauth-login, gmail-send-email)
-4. Reference: KNOWLEDGE_HUB.md#gmail-authentication
-
-**I want to automate Reddit:**
-1. Start: reddit_homepage_loggedout for structure
-2. Add: reddit_login_page for authentication
-3. Add: reddit_subreddit_page for interactions
-4. Load: Related recipes for each workflow
+**Key Facts**:
+- Auth cookie: `token_v2`
+- Login via magic link (requires email access) or password
+- Auto-save on every keystroke (no explicit save)
+- `[data-block-id]` for all content blocks
 
 ---
 
-## Node Relationships
+## Amazon
 
-```
-linkedin-profile-phuc-truong
-├─ Implements: linkedin-automation-protocol.skill.md
-├─ Implements: web-automation-expert.skill.md
-├─ Enabled by: linkedin-profile-update.recipe.json
-└─ Enabled by: add-linkedin-project-optimized.recipe.json
+**Dir**: `primewiki/amazon/`
 
-gmail-oauth2-authentication
-├─ Implements: gmail-automation-protocol.skill.md
-├─ Implements: human-like-automation.skill.md
-├─ Enabled by: gmail-oauth-login.recipe.json
-└─ Enabled by: gmail-send-email.recipe.json
+| File | Type | Purpose |
+|------|------|---------|
+| `amazon-gaming-laptop-search.primemermaid.md` | Legacy PM | Portal map for gaming laptop search (full validation data) |
 
-reddit_homepage_loggedout
-├─ Linked to: reddit_login_page (login flow)
-├─ Linked to: reddit_subreddit_page (navigation)
-├─ Implements: web-automation-expert.skill.md
-├─ Implements: browser-state-machine.skill.md
-├─ Enabled by: reddit_homepage_navigate.recipe.json
-└─ Enabled by: reddit-homepage-phase1.recipe.json
+**Status**: Legacy single-file format. Not yet converted to triplet.
+**Action**: Convert to PM triplet when Amazon recipe needed.
 
-reddit_login_page
-├─ Linked from: reddit_homepage_loggedout
-├─ Linked to: reddit_subreddit_page
-├─ Implements: human-like-automation.skill.md
-└─ Enabled by: reddit_login_form.recipe.json
+---
 
-reddit_subreddit_page
-├─ Linked from: reddit_homepage_loggedout
-├─ Linked from: reddit_login_page
-├─ Implements: web-automation-expert.skill.md
-├─ Implements: browser-state-machine.skill.md
-├─ Enabled by: reddit_subreddit_navigate.recipe.json
-├─ Enabled by: reddit-comment-workflow.recipe.json
-└─ Enabled by: reddit-create-post.recipe.json
+## Archive
+
+**Dir**: `primewiki/archive/`
+
+Deprecated files. Do NOT read or use as source of truth.
+
+| Archived File | Superseded By |
+|--------------|--------------|
+| `gmail-oauth2-authentication.primewiki.json` | `gmail/gmail-oauth2.prime-mermaid.md` |
+| `reddit_login_page.primewiki.json` | `reddit/reddit-login.prime-mermaid.md` |
+| `reddit_homepage_loggedout.primewiki.json` | `reddit/reddit-login.prime-mermaid.md` |
+| `reddit_subreddit_page.primewiki.json` | `reddit/reddit-login.prime-mermaid.md` |
+| `github-*.md` | Not migrated (low priority) |
+| `reddit-*-summary.md` | Not migrated (low priority) |
+| `silicon-valley-marketing-discovery-2026.primemermaid.md` | `solace-marketing/primewiki/` |
+
+---
+
+## Roadmap (Platforms to Add)
+
+Priority order based on user demand and COGS impact:
+
+| Priority | Platform | Category | Recipes Needed |
+|----------|----------|----------|----------------|
+| 1 | Twitter/X | Social | post, DM, follow |
+| 2 | Substack | Publishing | publish, manage subscribers |
+| 3 | GitHub | Dev | PR, issues, reviews |
+| 4 | Medium | Publishing | publish, stats |
+| 5 | Instagram | Social | post, story, DM |
+| 6 | YouTube | Video | upload, comments |
+| 7 | Slack | Productivity | message, channel |
+| 8 | Product Hunt | Community | launch, vote |
+| 9 | AngelList | Jobs | apply, profile |
+| 10 | Airtable | Database | CRUD |
+
+See `ROADMAP.md` in project root for full vendor roadmap with prompts.
+
+---
+
+## Verification
+
+```bash
+# Verify all PM triplets are intact
+cd /home/phuc/projects/solace-browser/primewiki
+for sha in **/*.sha256; do
+  dir=$(dirname $sha)
+  (cd $dir && sha256sum -c $(basename $sha)) && echo "OK: $sha" || echo "DRIFT: $sha"
+done
 ```
 
----
-
-## Quick Stats
-
-| Metric | Value |
-|--------|-------|
-| Total Nodes | 5 |
-| Average Tier | 52 |
-| Average Coherence Score | 0.93 |
-| Average Gravity Score | 0.88 |
-| Production-Ready Nodes | 2 (40%) |
-| Active Research Nodes | 3 (60%) |
-| Total Implementing Skills | 8 |
-| Total Related Recipes | 13 |
-| Platforms Covered | 3 (LinkedIn, Gmail, Reddit) |
-| Most Documented Node | gmail-oauth2-authentication (52KB) |
-
----
-
-## Future Expansion Opportunities
-
-### High Priority (Based on Recipes)
-1. **GitHub** - 4 recipes waiting for node documentation
-   - Suggested nodes: github-authentication, github-issue-workflow, github-pr-workflow
-   - Related skills: web-automation-expert, git-protocol.skill.md (new)
-
-2. **HackerNews** - 4 recipes without dedicated nodes
-   - Suggested nodes: hackernews-homepage, hackernews-submission, hackernews-comments
-   - Related skills: hackernews-signup-protocol, web-automation-expert
-
-3. **Wikipedia** - 2 recipes without dedicated nodes
-   - Suggested nodes: wikipedia-article-structure, wikipedia-search
-   - Related skills: web-automation-expert
-
-### Medium Priority
-1. **Search/Discovery** - 5 recipes needing knowledge nodes
-2. **Advanced Workflows** - Multi-site orchestration nodes
-
----
-
-## Related Documents
-
-- **SKILLS_REGISTRY.md** - Skill implementations and dependencies
-- **KNOWLEDGE_HUB.md** - High-level concept mapping
-- **RECIPE_REGISTRY.md** - Recipe catalog and usage
-- **REDIRECT_CLEANUP_SUMMARY.md** - System consolidation status
-
----
-
-**Authority**: 65537 (Phuc Forecast)
-**Last Verified**: 2026-02-15
-**Next Review**: 2026-03-01
+**Auth**: 65537 | **Standard**: prime-mermaid v1.1.0 | **Northstar**: recipe hit rate → 70%+

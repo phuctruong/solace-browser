@@ -44,6 +44,45 @@ No task completes without a Stillwater evidence bundle. No evidence bundle → n
 
 ---
 
+## PrimeWiki Enforcement (HARD RULES)
+
+```
+FORBIDDEN: JSON_AS_SOURCE_OF_TRUTH
+FORBIDDEN: YAML_AS_SOURCE_OF_TRUTH
+FORBIDDEN: ORPHANED_MMD (no .sha256 + .prime-mermaid.md)
+FORBIDDEN: SHA256_MISMATCH (drift without explanation)
+FORBIDDEN: STALE_JSON_IN_PRIMEWIKI (*.json outside archive/)
+```
+
+**PrimeWiki must use Prime Mermaid triplet format:**
+- `primewiki/{platform}/{name}.mmd` — canonical Mermaid body (SHA256 source)
+- `primewiki/{platform}/{name}.sha256` — drift detector
+- `primewiki/{platform}/{name}.prime-mermaid.md` — human spec + selector map
+
+**JSON is derived transport ONLY** — generate from .mmd, never author directly.
+See `primewiki/PRIMEWIKI_STANDARDS.md` for full rules.
+
+**When adding a new platform**:
+1. Create `primewiki/{platform}/` directory
+2. Write `{platform}-page-flow.mmd` (state machine)
+3. `sha256sum {name}.mmd > {name}.sha256`
+4. Write `{name}.prime-mermaid.md` (selector map + embedded diagram)
+5. Add to `primewiki/PRIMEWIKI_INDEX.md`
+6. Reference in recipe JSON: `"primewiki_ref": "primewiki/{platform}/{name}.prime-mermaid.md"`
+
+**Platform PM status** (as of 2026-02-21):
+
+| Platform | PM Triplet | Recipes |
+|----------|-----------|---------|
+| LinkedIn | ✅ ACTIVE | 6 operational |
+| Gmail | ✅ ACTIVE | 0 (next sprint) |
+| HackerNews | ✅ ACTIVE | 0 (next sprint) |
+| Reddit | ✅ ACTIVE | 0 (next sprint) |
+| Notion | ✅ ACTIVE | 0 (next sprint) |
+| Amazon | 🟡 LEGACY | 0 |
+
+---
+
 ## Project Ripple
 # See ripples/project.md for project-specific constraints and rung target.
 # Edit ripples/project.md — do NOT put project architecture here.

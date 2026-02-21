@@ -1,0 +1,32 @@
+stateDiagram-v2
+    [*] --> UNAUTHENTICATED
+    UNAUTHENTICATED --> AUTH_GATE : navigate notion.so
+    AUTH_GATE --> WORKSPACE : token_v2 cookie valid
+    AUTH_GATE --> LOGIN_PAGE : no valid session
+    LOGIN_PAGE --> EMAIL_GATE : enter email
+    EMAIL_GATE --> MAGIC_LINK_SENT : continue with email (magic link)
+    EMAIL_GATE --> PASSWORD_GATE : password login selected
+    MAGIC_LINK_SENT --> WORKSPACE : magic link clicked from inbox
+    PASSWORD_GATE --> WORKSPACE : password accepted
+    PASSWORD_GATE --> FORBIDDEN_WRONG_PASSWORD : wrong password
+    WORKSPACE --> PAGE_VIEW : page opened from sidebar
+    WORKSPACE --> DATABASE_VIEW : database opened
+    WORKSPACE --> SEARCH_RESULTS : search Cmd+K
+    WORKSPACE --> NEW_PAGE : new page created
+    PAGE_VIEW --> PAGE_EDIT : click anywhere to edit
+    PAGE_EDIT --> PAGE_VIEW : changes auto-saved
+    DATABASE_VIEW --> BOARD_VIEW : board layout selected
+    DATABASE_VIEW --> CALENDAR_VIEW : calendar layout selected
+    DATABASE_VIEW --> GALLERY_VIEW : gallery layout selected
+    DATABASE_VIEW --> PAGE_VIEW : row clicked (opens as page)
+    DATABASE_VIEW --> TABLE_VIEW : table layout selected
+    TABLE_VIEW --> PAGE_VIEW : row clicked
+    SEARCH_RESULTS --> PAGE_VIEW : result clicked
+    NEW_PAGE --> PAGE_EDIT : blank page opened
+
+    note right of WORKSPACE
+        Auth cookie: token_v2 (httpOnly)
+        Sidebar: .notion-sidebar
+        Page content: .notion-page-content
+        Blocks: [data-block-id]
+    end note

@@ -1,0 +1,30 @@
+flowchart TD
+    START([User navigates mail.google.com]) --> AUTH_CHECK{Session cookies valid?}
+    AUTH_CHECK -->|SID + HSID + SSID valid| INBOX[INBOX: authenticated]
+    AUTH_CHECK -->|no valid session| SIGNIN[accounts.google.com/signin/v2/identifier]
+    SIGNIN --> EMAIL_FIELD[Email input field: input[type=email]]
+    EMAIL_FIELD --> TYPING_CHECK{Input method?}
+    TYPING_CHECK -->|instant .fill()| FORBIDDEN_BOT_DETECT[FORBIDDEN: bot detection triggered]
+    TYPING_CHECK -->|char-by-char 80-200ms| NEXT_BTN[Click Next button: div[id=identifierNext]]
+    NEXT_BTN --> EMAIL_GATE{Email recognized?}
+    EMAIL_GATE -->|unknown email| FORBIDDEN_NO_ACCOUNT[FORBIDDEN: no account found]
+    EMAIL_GATE -->|recognized| PASSWORD_FIELD[Password input: input[type=password] char-by-char]
+    PASSWORD_FIELD --> SIGNIN_BTN[Click Sign In: div[id=passwordNext]]
+    SIGNIN_BTN --> AUTH_GATE{Credentials valid?}
+    AUTH_GATE -->|wrong password| FORBIDDEN_WRONG_CREDS[FORBIDDEN: wrong credentials]
+    AUTH_GATE -->|valid| TWO_FA_CHECK{2FA configured?}
+    TWO_FA_CHECK -->|no| SESSION_CREATE[Session cookies created: 14-30 day lifetime]
+    TWO_FA_CHECK -->|yes - Google Prompt| MOBILE_APPROVAL[Wait for mobile app approval: max 60s]
+    MOBILE_APPROVAL --> APPROVAL_GATE{Approved?}
+    APPROVAL_GATE -->|timeout| FORBIDDEN_TIMEOUT[FORBIDDEN: approval timeout]
+    APPROVAL_GATE -->|denied| FORBIDDEN_DENIED[FORBIDDEN: user denied on device]
+    APPROVAL_GATE -->|approved| SESSION_CREATE
+    SESSION_CREATE --> INBOX
+
+    style FORBIDDEN_BOT_DETECT fill:#DC2626,color:#fff
+    style FORBIDDEN_NO_ACCOUNT fill:#DC2626,color:#fff
+    style FORBIDDEN_WRONG_CREDS fill:#DC2626,color:#fff
+    style FORBIDDEN_TIMEOUT fill:#DC2626,color:#fff
+    style FORBIDDEN_DENIED fill:#DC2626,color:#fff
+    style INBOX fill:#10B981,color:#fff
+    style SESSION_CREATE fill:#10B981,color:#fff

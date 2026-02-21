@@ -1,0 +1,27 @@
+stateDiagram-v2
+    [*] --> HOMEPAGE
+    HOMEPAGE --> COMMENT_PAGE : click N comments link
+    HOMEPAGE --> LOGIN_PAGE : click login (unauthenticated)
+    HOMEPAGE --> NEXT_PAGE : click More link
+    HOMEPAGE --> STORY_PAGE : click story title
+    HOMEPAGE --> SUBMIT_PAGE : click submit (authenticated only)
+    LOGIN_PAGE --> FORBIDDEN_BAD_CREDS : wrong credentials
+    LOGIN_PAGE --> HOMEPAGE : login successful (user cookie set)
+    NEXT_PAGE --> HOMEPAGE : navigate back (page 2, 3...)
+    STORY_PAGE --> COMMENT_PAGE : view comments
+    STORY_PAGE --> HOMEPAGE : navigate back
+    COMMENT_PAGE --> REPLY_COMPOSE : click reply (authenticated)
+    COMMENT_PAGE --> STORY_PAGE : navigate back
+    COMMENT_PAGE --> UPVOTE_GATE : click div.votearrow (authenticated)
+    REPLY_COMPOSE --> COMMENT_PAGE : reply submitted (textarea submit)
+    SUBMIT_PAGE --> HOMEPAGE : post submitted
+    SUBMIT_PAGE --> FORBIDDEN_UNAUTH : accessed unauthenticated
+    UPVOTE_GATE --> COMMENT_PAGE : upvote registered
+
+    note right of HOMEPAGE
+        Stories: tr.athing
+        Score: span.score
+        Upvote: div.votearrow
+        Auth: user cookie (session-based)
+        Domain: news.ycombinator.com
+    end note

@@ -1,0 +1,29 @@
+stateDiagram-v2
+    [*] --> UNAUTHENTICATED
+    UNAUTHENTICATED --> AUTH_GATE : navigate linkedin.com
+    AUTH_GATE --> FEED : li_at cookie valid
+    AUTH_GATE --> LOGIN_PAGE : no valid session
+    LOGIN_PAGE --> CREDENTIAL_GATE : submit email + password
+    CREDENTIAL_GATE --> CHECKPOINT_PAGE : 2FA triggered
+    CREDENTIAL_GATE --> FEED : credentials accepted
+    CREDENTIAL_GATE --> FORBIDDEN_BAD_CREDS : wrong credentials
+    CHECKPOINT_PAGE --> FEED : 2FA verified
+    CHECKPOINT_PAGE --> FORBIDDEN_TIMEOUT : verification timeout
+    FEED --> JOB_LISTINGS : navigate /jobs
+    FEED --> MESSAGING : navigate /messaging
+    FEED --> NOTIFICATIONS : bell icon clicked
+    FEED --> POST_COMPOSER : start a post clicked
+    FEED --> PROFILE_VIEW : navigate /in/username
+    FEED --> SEARCH_RESULTS : search submitted
+    POST_COMPOSER --> FEED : post discarded
+    POST_COMPOSER --> FEED : post published
+    PROFILE_VIEW --> FEED : navigate back
+    PROFILE_VIEW --> POST_COMPOSER : edit post clicked
+    SEARCH_RESULTS --> PROFILE_VIEW : click person result
+    SEARCH_RESULTS --> FEED : navigate back
+
+    note right of FEED
+        Selector: .scaffold-layout__main
+        Auth cookie: li_at (secure, httpOnly)
+        artdeco-modal for POST_COMPOSER
+    end note

@@ -1,0 +1,26 @@
+flowchart TD
+    START([Navigate reddit.com]) --> AUTH_CHECK{reddit_session cookie?}
+    AUTH_CHECK -->|valid cookie| FEED[HOMEPAGE: authenticated feed]
+    AUTH_CHECK -->|no session| LOGIN_PAGE[reddit.com/login]
+    LOGIN_PAGE --> USERNAME_INPUT[input[name=username] - enter username]
+    USERNAME_INPUT --> PASSWORD_INPUT[input[name=password] - enter password]
+    PASSWORD_INPUT --> SUBMIT_BTN[button[type=submit] - click login]
+    SUBMIT_BTN --> CAPTCHA_CHECK{CAPTCHA triggered?}
+    CAPTCHA_CHECK -->|yes| CAPTCHA_GATE[CAPTCHA challenge - iframe.g-recaptcha]
+    CAPTCHA_GATE -->|solved| CREDENTIAL_CHECK
+    CAPTCHA_GATE -->|failed 3x| FORBIDDEN_LOCKED[FORBIDDEN: account temporarily locked]
+    CAPTCHA_CHECK -->|no| CREDENTIAL_CHECK{Credentials valid?}
+    CREDENTIAL_CHECK -->|invalid| FORBIDDEN_BAD_CREDS[FORBIDDEN: invalid credentials]
+    CREDENTIAL_CHECK -->|valid| SESSION_CREATE[reddit_session cookie created]
+    SESSION_CREATE --> FEED
+    FEED --> SUBREDDIT[r/subreddit page: div[data-testid=subredditTitle]]
+    FEED --> PROFILE[u/username: a[href^=/user/]]
+    FEED --> SUBMIT_POST[Submit form: form[action=/api/submit]]
+    SUBREDDIT --> POST_PAGE[Individual post + comments]
+    POST_PAGE --> COMMENT_AREA[textarea[name=text] for reply]
+    COMMENT_AREA --> FEED
+
+    style FORBIDDEN_LOCKED fill:#DC2626,color:#fff
+    style FORBIDDEN_BAD_CREDS fill:#DC2626,color:#fff
+    style FEED fill:#10B981,color:#fff
+    style SESSION_CREATE fill:#10B981,color:#fff
