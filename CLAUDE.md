@@ -12,10 +12,15 @@ NORTHSTAR: Phuc_Forecast
 PROJECT: SolaceBrowser
 DOMAIN: web automation / recipe capture / self-improving browser agent
 
-## Stillwater Core Skills
+## Dispatch Protocol (Mandatory)
+# MAIN SESSION: prime-safety + prime-coder + phuc-forecast (read skills/phuc-forecast.md for planning)
+# PLANNING: DREAM→FORECAST→DECIDE→ACT→VERIFY for any non-trivial decision (phuc-forecast FSM)
+# DISPATCH (>50 lines): read swarms/<role>.md → Task tool with full skills/ files pasted inline
+# SUB-AGENTS: prime-safety ALWAYS first; CNF capsule = full task + context, never "as before"
+# SWARMS: scout=KenT, forecaster=Grace, coder, skeptic, mathematician — see swarms/ dir
+# ANTI-ROT: phuc-swarms handles full skill injection + context isolation for sub-agents
+# RUNG: declare rung_target before dispatch; integration rung = MIN(all sub-agent rungs)
 # Loaded: prime-safety, prime-wishes, phuc-cleanup
-# Read: skills/prime-safety.md (always) + domain skills as needed; paste inline for sub-agents
-# Swarms: swarms/ has agent types with personas (scout=KenT, forecaster=Grace, etc.)
 
 <!-- QUICK LOAD (10-15 lines): Use this block for fast context; load full file for production.
 SKILL: prime-safety (god-skill) v2.1.0
