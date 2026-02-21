@@ -69,10 +69,30 @@ We have structural freedom to do what they can't.
 **Competitive gaps (Feb 2026)**:
 | Competitor | Missing |
 |-----------|---------|
-| OpenClaw | No evidence trail; no consent model; no revocation |
+| OpenClaw | No evidence trail; no consent model; no revocation; 512 security vulnerabilities |
 | Browser-Use | No session persistence; no recipe system; no OAuth3 |
 | Bardeen | Chrome extension only; no cloud twin; no step-up auth |
 | Vercel agent-browser | Cloud-only; no local twin; no recipe library; no OAuth3 |
+
+### FDA 21 CFR Part 11 — ALCOA+ Mapping
+
+SolaceBrowser is the first browser automation platform where every agent action maps to ALCOA+ data integrity:
+
+| ALCOA+ Principle | SolaceBrowser Implementation |
+|-----------------|-------------------------------|
+| **A**ttributable | OAuth3 token identifies which agent took which action, on whose behalf |
+| **L**egible | PZip HTML snapshots — actual pages rendered, not lossy screenshots |
+| **C**ontemporaneous | Timestamps captured at execution, not reconstructed later |
+| **O**riginal | Full HTML snapshot (what the agent actually saw) — not a summary |
+| **A**ccurate | Stillwater rung-gated evidence bundles — not prose claims |
+| +**Complete** | Full session captured: every page, every form fill, every action |
+| +**Consistent** | Deterministic recipe replay — same seed → same audit trail |
+| +**Enduring** | PZip compression enables forever retention at near-zero cost |
+| +**Available** | Kanban history UI — browse, search, replay any agent session |
+
+"In clinical trials, 'trust me' is not evidence. Only the original, timestamped, attributable record is evidence." — Phuc Truong (CRIO founder, Harvard '98)
+
+No competitor stores original records this way. OpenClaw uses screenshots (lossy, not original). Browser-Use has no history at all.
 
 ## North Star Metric
 
