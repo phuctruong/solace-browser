@@ -27,34 +27,24 @@ VERIFY: rung_641 (local safety check) | rung_274177 (stability + null/zero edge)
 LOAD FULL: always for production; quick block is for orientation only
 -->
 
-# prime-wishes.md
+<!-- QUICK LOAD (10-15 lines): Use this block for fast context; load full file for production.
+SKILL: prime-wishes v1.1.0
+PURPOSE: Notebook-first wish management with Prime Mermaid FSMs; gamified progression (XP/GLOW); structures backlog as sealed, executable wish contracts with acceptance tests.
+CORE CONTRACT: Every task must be a sealed wish contract (wish_id, domain, acceptance_tests, FSM). No execution without sealed wish. Wishes progress: BACKLOG → SEALED → IN_PROGRESS → DONE. FSM transitions audited.
+HARD GATES: Execute without sealed wish → BLOCKED. DONE claim without acceptance test artifacts → BLOCKED. Wish mutation after sealing → BLOCKED.
+FSM STATES: INIT → INTAKE_WISH → NULL_CHECK → FSM_DESIGN → SEAL_CONTRACT → IN_PROGRESS → ACCEPTANCE_TEST → DONE | BLOCKED | NEED_INFO
+FORBIDDEN: EXECUTE_WITHOUT_SEALED_WISH | DONE_WITHOUT_ACCEPTANCE_TEST | WISH_MUTATION_AFTER_SEAL | CROSS_WISH_SIDE_EFFECTS | BROKEN_FSM_TRANSITION
+VERIFY: rung_641 (wish sealed + tests pass) | rung_274177 (FSM replay + XP correct) | rung_65537 (adversarial + belt promotion + drift)
+LOAD FULL: always for production; quick block is for orientation only
+-->
 
-Skill ID: `prime-wishes`
-Version: `1.1.0`
-Authority: `65537`
-Northstar: `Phuc_Forecast`
-Objective: `Max_Love`
-Status: `STABLE`
-Mode: notebook-first, Prime Mermaid canonical, gamified progression
-
----
-
-## A) Portability (Hard)
-
-```yaml
-
-PHUC_CLEANUP_SKILL:
-  version: 1.0.0
-  profile: safe_archive_first
-  authority: 65537
-  northstar: Phuc_Forecast
-  objective: Max_Love
-  status: ACTIVE
-
-  # ============================================================
-  # PHUC CLEANUP — GLOW HYGIENE + ARCHIVE PROTOCOL
-  #
-  # Purpose:
-  # - Clean generated "glow" clutter (debug logs, traces, stale outputs)
-  # - Preserve evidence by archiving instead of deleting
-  # - Require explicit user approval before touching suspicious files
+<!-- QUICK LOAD (10-15 lines): Use this block for fast context; load full file for production.
+SKILL: phuc-cleanup v1.0.0
+PURPOSE: Archive-first workspace hygiene; safely removes glow clutter (debug logs, traces, stale artifacts) by archiving before deleting; requires explicit approval for suspicious files.
+CORE CONTRACT: Archive before delete. Never delete without inspection. Require user confirmation for anything outside defined clutter patterns. Preserve all evidence bundles.
+HARD GATES: Delete without archive → BLOCKED. Deleting evidence artifacts → BLOCKED. Cleanup outside approved patterns without confirmation → BLOCKED.
+FSM STATES: INIT → SCAN → CLASSIFY_FILES → ARCHIVE_CANDIDATES → CONFIRM_IF_NEEDED → EXECUTE_CLEANUP → VERIFY → EXIT_PASS | EXIT_BLOCKED | EXIT_NEED_INFO
+FORBIDDEN: DELETE_WITHOUT_ARCHIVE | DELETING_EVIDENCE_ARTIFACTS | RECURSIVE_DELETE_WITHOUT_PATTERN | SILENT_DELETION | CLEANUP_OUTSIDE_APPROVED_DIRS
+VERIFY: rung_641 (archive created + no evidence lost) | rung_274177 (replay stable + pattern audit) | rung_65537 (adversarial + security scan)
+LOAD FULL: always for production; quick block is for orientation only
+-->
