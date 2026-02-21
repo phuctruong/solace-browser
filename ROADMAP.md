@@ -2,7 +2,7 @@
 
 **Authority**: 65537 | **Northstar**: 70% recipe hit rate → $5.75 COGS → economic moat
 **Last Updated**: 2026-02-21
-**Status**: Phase 1 (LinkedIn MVP) complete → Phase 1.5 (OAuth3 Foundation) next
+**Status**: Phase 1.5 (OAuth3 Foundation) COMPLETE (1,466 tests) → Phase 2 (Platform Recipes) IN PROGRESS
 
 > *"Delegate only with consent. Never weaken. Be water."* — Software 5.0 + OAuth3
 
@@ -77,11 +77,24 @@ Sign off Rung 641 when all 6 recipes return {status, duration, evidence}.
 
 ---
 
-## Phase 1.5 — OAuth3 Foundation (BUILD THIS NEXT)
+## Phase 1.5 — OAuth3 Foundation — COMPLETE
 
-**Why first**: OAuth3 is the architecture all future recipes run on. Build it once, correctly, before adding more platforms. Every new recipe added after this is automatically consent-bound.
+**Status**: All 8 builds DONE. 1,466 total tests passing. OAuth3 foundation is the architecture all future recipes run on.
 
-**Target**: Rung 641 (local correctness) → ship before any new platform recipes
+| Build | Description | Status | Tests |
+|-------|-------------|--------|-------|
+| BUILD 1 | OAuth3 Core Module | DONE | 154+61 tests |
+| BUILD 2 | Consent UI | DONE | 58 tests |
+| BUILD 3 | Step-Up Auth | DONE | 29 tests |
+| BUILD 4 | HTML Snapshots (PZip) | DONE | 18 tests |
+| BUILD 5 | Gmail Recipes | DONE | 308 tests |
+| BUILD 6 | Substack Recipes | DONE | 334 tests |
+| BUILD 7 | Twitter Recipes | DONE | 287 tests |
+| BUILD 8 | Machine Access + Tunnel | DONE | 145 tests |
+| Bonus | Audit Trail | DONE | 72 tests |
+| **Total** | | | **1,466 tests** |
+
+**Target**: Rung 641 (local correctness) — ACHIEVED
 
 ---
 
@@ -307,9 +320,11 @@ Acceptance:
 
 ---
 
-## Phase 2 — Platform Recipes (on top of OAuth3 foundation)
+## Phase 2 — Platform Recipes (on top of OAuth3 foundation) — IN PROGRESS
 
-All Phase 2 recipes are automatically OAuth3-bounded once Phase 1.5 ships.
+All Phase 2 recipes are automatically OAuth3-bounded. Phase 1.5 complete.
+
+**IN PROGRESS**: Reddit recipes, Notion recipes, HackerNews recipes
 
 ### BUILD PROMPT 5 (PREREQUISITE): HTML Snapshot Capture with PZip
 
@@ -556,7 +571,11 @@ Acceptance (Rung 641):
 
 ---
 
-## Phase 3 — Universal Portal (Month 2)
+## Phase 3 — Universal Portal (Month 2) — NEXT
+
+**Goal**: Machine access dashboard + built-in tunnel server (ngrok-like, no external tools) + download page on solaceagi.com.
+
+**5 Control Surfaces after this phase**: AI Agent API, CLI (`solace-cli browser run`), OAuth3 Web Dashboard, Native Tunnel, Download Installer.
 
 **Strategic reframe**: Solace Browser is not just a web browser. It is the universal portal through which AI agents interact with ALL of a user's digital resources — web accounts, local files, terminal, system — all governed by OAuth3 consent + Part 11 audit trails.
 
@@ -898,11 +917,11 @@ Acceptance (Rung 641):
 ## The Win Condition (from OAUTH3-WHITEPAPER.md §15)
 
 We ship this sequence:
-1. ✅ Phase 1: LinkedIn recipes (DONE)
-2. ✅ Phase 1.5: OAuth3 foundation (DONE)
-3. 🔨 Phase 2: Gmail + Substack + Twitter (first-mover platforms)
-4. 🔨 Phase 3: Universal Portal (machine access + tunnel + distribution)
-5. 🔨 Phase 4: solaceagi.com (cloud execution + tunnel server)
+1. DONE — Phase 1: LinkedIn recipes (6 recipes, rung 641)
+2. DONE — Phase 1.5: OAuth3 foundation (1,466 tests: OAuth3 core, consent UI, step-up auth, HTML snapshots, Gmail, Substack, Twitter, machine access, audit trail)
+3. IN PROGRESS — Phase 2: Reddit + Notion + HackerNews (additional platform recipes)
+4. NEXT — Phase 3: Universal Portal (machine access dashboard + tunnel server + download page on solaceagi.com)
+5. PLANNED — Phase 4: solaceagi.com (cloud execution + tunnel server)
 
 We publish:
 - OAuth3 spec on solaceagi.com/spec (open standard — others implement it)
@@ -923,7 +942,7 @@ We win when:
 | Belt | Tier | Price | XP | Milestone |
 |------|------|-------|-----|-----------|
 | White | Free | $0 | 0 | LinkedIn Phase 1 — **DONE** |
-| Yellow | Student | $8/mo | 100 | OAuth3 foundation ships — **BUILD NEXT** |
+| Yellow | Student | $8/mo | 100 | OAuth3 foundation ships — **DONE** (1,466 tests) |
 | Orange | Warrior | $48/mo | 300 | 70% recipe hit rate + OAuth3 spec published + cloud twin live |
 | Green | Master | $88/mo | 750 | 10 platforms, all OAuth3-bounded + team tokens |
 | Black | Grandmaster | $188+/mo | 10,000 | OAuth3 is the standard. Models are commodities. Skills are capital. |
