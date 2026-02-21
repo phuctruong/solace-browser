@@ -1,0 +1,183 @@
+{
+  "node_id": "gmail-actions",
+  "version": "1.0.0",
+  "platform": "gmail",
+  "domain": "mail.google.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+  "source": "gmail-automation-100.primewiki.md + gmail-bot-detection-bypass.primemermaid.md",
+
+  "actions": {
+    "compose": {
+      "id": "compose",
+      "description": "Open compose modal and send a new email",
+      "oauth3_scope": "gmail.compose.send",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "click", "selector": "[gh='cm']", "wait_ms": 3000, "note": "Open compose modal"},
+        {"action": "human_type", "selector": "input[aria-autocomplete='list']", "delay_ms": "80-200", "note": "Type recipient email"},
+        {"action": "keyboard_press", "key": "Enter", "wait_ms": 1000, "note": "Accept autocomplete"},
+        {"action": "click_then_type", "selector": "input[name='subjectbox']", "delay_ms": 80, "note": "Fill subject"},
+        {"action": "click_then_type", "selector": "div[aria-label='Message Body']", "delay_ms": 40, "note": "Fill body"},
+        {"action": "keyboard_shortcut", "key": "Control+Enter", "wait_ms": 3000, "note": "Send email"}
+      ],
+      "anti_detection": {
+        "human_typing": true,
+        "autocomplete_enter": true,
+        "keyboard_send": true
+      },
+      "success_criteria": {
+        "no_error_dialog": true,
+        "returns_to_inbox": true
+      }
+    },
+
+    "read_inbox": {
+      "id": "read_inbox",
+      "description": "Read latest emails from inbox with metadata extraction",
+      "oauth3_scope": "gmail.read.inbox",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://mail.google.com/mail/u/0/#inbox", "wait_for": "div[role='main']", "timeout_ms": 10000},
+        {"action": "extract_all", "selector": "[role='row']", "fields": ["subject", "sender", "date", "is_read", "is_starred"]}
+      ],
+      "success_criteria": {
+        "rows_extracted": ">= 1"
+      }
+    },
+
+    "search": {
+      "id": "search",
+      "description": "Search emails by query and extract results",
+      "oauth3_scope": "gmail.read.search",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://mail.google.com/mail/u/0/#inbox", "wait_for": "div[role='main']", "timeout_ms": 10000},
+        {"action": "click", "selector": "input[aria-label='Search mail']", "wait_ms": 500},
+        {"action": "human_type", "selector": "input[aria-label='Search mail']", "delay_ms": "80-150", "note": "Type search query"},
+        {"action": "keyboard_press", "key": "Enter", "wait_ms": 3000, "note": "Execute search"},
+        {"action": "extract_all", "selector": "[role='row']", "fields": ["subject", "sender", "date", "snippet"]}
+      ],
+      "success_criteria": {
+        "search_executed": true
+      }
+    },
+
+    "reply": {
+      "id": "reply",
+      "description": "Reply to a specific email in a thread",
+      "oauth3_scope": "gmail.compose.reply",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://mail.google.com/mail/u/0/#inbox", "wait_for": "div[role='main']", "timeout_ms": 10000},
+        {"action": "click", "selector": "[role='row']:first-child", "wait_ms": 2000, "note": "Open target email"},
+        {"action": "click", "selector": "div[aria-label='Reply']", "wait_ms": 1500, "note": "Open reply compose"},
+        {"action": "click_then_type", "selector": "div[aria-label='Message Body']", "delay_ms": 40, "note": "Type reply body"},
+        {"action": "keyboard_shortcut", "key": "Control+Enter", "wait_ms": 3000, "note": "Send reply"}
+      ],
+      "success_criteria": {
+        "no_error_dialog": true,
+        "reply_sent": true
+      }
+    },
+
+    "label": {
+      "id": "label",
+      "description": "Apply a label to selected emails",
+      "oauth3_scope": "gmail.organize.label",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "click", "selector": "div[aria-label='Labels']", "wait_ms": 1000, "note": "Open label dropdown"},
+        {"action": "type", "selector": "input[aria-label='Label as']", "note": "Search for label name"},
+        {"action": "click", "selector": "div[role='menuitemcheckbox']", "note": "Select label"},
+        {"action": "click", "selector": "div[aria-label='Apply']", "wait_ms": 1000, "note": "Apply label"}
+      ],
+      "success_criteria": {
+        "label_applied": true
+      }
+    },
+
+    "archive": {
+      "id": "archive",
+      "description": "Archive selected emails (removes from inbox, keeps in All Mail)",
+      "oauth3_scope": "gmail.organize.archive",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "click", "selector": "div[role='checkbox']", "note": "Select email(s)"},
+        {"action": "click", "selector": "div[aria-label='Archive']", "wait_ms": 2000, "note": "Archive selected"}
+      ],
+      "success_criteria": {
+        "email_removed_from_inbox": true,
+        "undo_available": true
+      }
+    },
+
+    "delete": {
+      "id": "delete",
+      "description": "Permanently delete selected emails",
+      "oauth3_scope": "gmail.organize.delete",
+      "risk_level": "high",
+      "destructive": true,
+      "requires_step_up": true,
+      "sequence": [
+        {"action": "click", "selector": "div[role='checkbox']", "note": "Select email(s)"},
+        {"action": "click", "selector": "div[aria-label='Delete']", "wait_ms": 2000, "note": "Move to trash"}
+      ],
+      "success_criteria": {
+        "email_moved_to_trash": true
+      }
+    },
+
+    "forward": {
+      "id": "forward",
+      "description": "Forward an email to another recipient",
+      "oauth3_scope": "gmail.compose.forward",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "click", "selector": "div[aria-label='Forward']", "wait_ms": 1500, "note": "Open forward compose"},
+        {"action": "human_type", "selector": "input[aria-autocomplete='list']", "delay_ms": "80-200", "note": "Type forward recipient"},
+        {"action": "keyboard_press", "key": "Enter", "wait_ms": 1000, "note": "Accept autocomplete"},
+        {"action": "keyboard_shortcut", "key": "Control+Enter", "wait_ms": 3000, "note": "Send forward"}
+      ],
+      "success_criteria": {
+        "no_error_dialog": true
+      }
+    }
+  },
+
+  "anti_detection_rules": {
+    "typing": {
+      "login_fields": {"min_delay_ms": 80, "max_delay_ms": 200, "method": "char_by_char"},
+      "compose_to": {"min_delay_ms": 80, "max_delay_ms": 200, "method": "char_by_char"},
+      "compose_subject": {"delay_ms": 80, "method": "type"},
+      "compose_body": {"delay_ms": 40, "method": "type"},
+      "search_query": {"min_delay_ms": 80, "max_delay_ms": 150, "method": "char_by_char"}
+    },
+    "navigation": {
+      "between_actions_ms": "300-1000",
+      "after_compose_open_ms": 3000,
+      "after_send_ms": 3000,
+      "after_search_ms": 2000
+    },
+    "critical_patterns": [
+      "Never use .fill() on Google login fields",
+      "Always press Enter after To field to accept autocomplete",
+      "Prefer Ctrl+Enter over Send button click",
+      "Explicit field clicks instead of Tab navigation"
+    ]
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "id": "gmail-archive-emails",
+  "platform": "gmail",
+  "version": "1.0.0",
+  "description": "Archive one or more emails in Gmail. Archiving removes emails from inbox but keeps them in All Mail. This is a non-destructive operation with undo support.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["gmail.organize.archive"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Gmail archive is triggered by div[aria-label='Archive'] button. Can be used from thread view (archives current thread) or from inbox with selected emails (checkbox selection). Archive is non-destructive — emails move to All Mail and can be found via search or All Mail view. An undo notification appears briefly after archiving.",
+    "selector_strategy": "Use aria-label for Archive button. Use role='checkbox' for email selection. Both are stable ARIA selectors.",
+    "anti_bot_notes": "Low bot detection risk — archive is a single click action. No text input required.",
+    "performance": "Navigation 3s + select/open 1s + archive click 1s + verify 1s. Typical: 6-8s."
+  },
+
+  "input_params": {
+    "email_index": {
+      "type": "integer",
+      "description": "Index of email to archive (0 = latest). Default 0.",
+      "required": false,
+      "default": 0,
+      "example": 0
+    },
+    "archive_from": {
+      "type": "string",
+      "description": "Where to archive from: 'thread' (open email first) or 'inbox' (select checkbox). Default 'thread'.",
+      "required": false,
+      "default": "thread",
+      "enum": ["thread", "inbox"],
+      "example": "thread"
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/gmail_working_session.json",
+      "description": "Load saved Gmail session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://mail.google.com/mail/u/0/#inbox",
+      "wait_for": "div[role='main']",
+      "timeout_ms": 10000,
+      "screenshot": true,
+      "description": "Navigate to Gmail inbox"
+    },
+    {
+      "step": 3,
+      "action": "conditional",
+      "description": "Either open email thread or select checkbox depending on archive_from parameter",
+      "condition": "{params.archive_from} == 'thread'",
+      "if_true": {
+        "action": "click",
+        "selector": "[role='row']:nth-child({params.email_index + 1})",
+        "selector_default": "[role='row']:first-child",
+        "description": "Open email thread for archiving",
+        "wait_after_ms": 2000
+      },
+      "if_false": {
+        "action": "click",
+        "selector": "[role='row']:nth-child({params.email_index + 1}) div[role='checkbox']",
+        "selector_default": "[role='row']:first-child div[role='checkbox']",
+        "description": "Select email checkbox in inbox for archiving",
+        "wait_after_ms": 500
+      },
+      "timeout_ms": 5000,
+      "screenshot": true
+    },
+    {
+      "step": 4,
+      "action": "extract",
+      "fields": {
+        "email_subject": {
+          "selector_thread": "h2.hP",
+          "selector_inbox": "[role='row']:first-child [role='heading']",
+          "type": "textContent"
+        }
+      },
+      "description": "Extract email subject for evidence before archiving"
+    },
+    {
+      "step": 5,
+      "action": "click",
+      "selector": "div[aria-label='Archive']",
+      "description": "Click Archive button",
+      "wait_after_ms": 2000,
+      "timeout_ms": 5000,
+      "screenshot": true
+    },
+    {
+      "step": 6,
+      "action": "verify",
+      "checks": [
+        {"type": "url_contains", "pattern": "#inbox", "description": "Returned to inbox after archiving"},
+        {"type": "no_element", "selector": "div[role='alertdialog']", "description": "No error dialog"}
+      ],
+      "description": "Verify archive succeeded — should return to inbox view"
+    },
+    {
+      "step": 7,
+      "action": "return_result",
+      "description": "Return archive confirmation"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "archived": {"type": "boolean", "example": true},
+      "email_subject": {"type": "string", "example": "Meeting tomorrow at 3pm"},
+      "archive_from": {"type": "string", "example": "thread"},
+      "timestamp": {"type": "string", "format": "date-time"},
+      "undo_available": {"type": "boolean", "example": true}
+    },
+    "required": ["archived", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "archive_button_not_found": "Archive button may not be visible — ensure email is selected or thread is open",
+    "empty_inbox": "Abort with NO_EMAILS error if inbox is empty",
+    "session_expired": "Detect accounts.google.com redirect — abort with SESSION_EXPIRED"
+  },
+
+  "metadata": {
+    "tags": ["gmail", "archive", "organize", "cleanup", "non-destructive"],
+    "difficulty": "easy",
+    "prerequisites": ["gmail_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 8,
+    "idempotent": false,
+    "destructive": false
+  }
+}

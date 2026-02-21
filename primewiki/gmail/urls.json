@@ -1,0 +1,95 @@
+{
+  "node_id": "gmail-urls",
+  "version": "1.0.0",
+  "platform": "gmail",
+  "domain": "mail.google.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+
+  "base_urls": {
+    "inbox": "https://mail.google.com/mail/u/0/#inbox",
+    "compose": "https://mail.google.com/mail/u/0/#inbox?compose=new",
+    "sent": "https://mail.google.com/mail/u/0/#sent",
+    "drafts": "https://mail.google.com/mail/u/0/#drafts",
+    "starred": "https://mail.google.com/mail/u/0/#starred",
+    "spam": "https://mail.google.com/mail/u/0/#spam",
+    "trash": "https://mail.google.com/mail/u/0/#trash",
+    "all_mail": "https://mail.google.com/mail/u/0/#all",
+    "settings": "https://mail.google.com/mail/u/0/#settings/general",
+    "contacts": "https://contacts.google.com/"
+  },
+
+  "search_urls": {
+    "search_pattern": "https://mail.google.com/mail/u/0/#search/{query}",
+    "advanced_search": "https://mail.google.com/mail/u/0/#advanced-search",
+    "label_pattern": "https://mail.google.com/mail/u/0/#label/{label_name}",
+    "thread_pattern": "https://mail.google.com/mail/u/0/#inbox/{thread_id}"
+  },
+
+  "auth_urls": {
+    "google_login": "https://accounts.google.com/",
+    "google_signin": "https://accounts.google.com/signin/v2/identifier",
+    "oauth_consent": "https://accounts.google.com/o/oauth2/auth"
+  },
+
+  "navigation_paths": {
+    "inbox_to_compose": {
+      "from": "inbox",
+      "to": "compose_modal",
+      "method": "click_compose_button",
+      "selector": "[gh='cm']",
+      "wait_ms": 3000
+    },
+    "inbox_to_thread": {
+      "from": "inbox",
+      "to": "email_thread",
+      "method": "click_email_row",
+      "selector": "[role='row']",
+      "wait_ms": 2000
+    },
+    "inbox_to_search": {
+      "from": "inbox",
+      "to": "search_results",
+      "method": "click_search_and_type",
+      "selector": "input[aria-label='Search mail']",
+      "wait_ms": 2000
+    },
+    "thread_to_reply": {
+      "from": "email_thread",
+      "to": "reply_compose",
+      "method": "click_reply",
+      "selector": "div[aria-label='Reply']",
+      "wait_ms": 1500
+    },
+    "thread_to_inbox": {
+      "from": "email_thread",
+      "to": "inbox",
+      "method": "click_back",
+      "selector": "div[aria-label='Back to Inbox']",
+      "wait_ms": 1500
+    }
+  },
+
+  "url_detection": {
+    "authenticated": {
+      "pattern": "mail.google.com",
+      "indicates": "User is logged in"
+    },
+    "login_redirect": {
+      "pattern": "accounts.google.com",
+      "indicates": "Session expired, re-authentication needed"
+    },
+    "inbox_active": {
+      "pattern": "#inbox",
+      "indicates": "Inbox view active"
+    },
+    "thread_active": {
+      "pattern": "#inbox/",
+      "indicates": "Email thread open"
+    },
+    "search_active": {
+      "pattern": "#search/",
+      "indicates": "Search results active"
+    }
+  }
+}

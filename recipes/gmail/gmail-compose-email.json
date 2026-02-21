@@ -1,0 +1,199 @@
+{
+  "id": "gmail-compose-email",
+  "platform": "gmail",
+  "version": "1.0.0",
+  "description": "Compose and send an email via Gmail with human-like typing to bypass bot detection. Uses Ctrl+Enter keyboard shortcut for 100% send reliability.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["gmail.compose.send"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Gmail compose window uses a modal triggered by [gh='cm'] button. The To field uses autocomplete that must be accepted with Enter key. Subject field is input[name='subjectbox']. Body is a contenteditable div with aria-label 'Message Body'. Ctrl+Enter shortcut sends with 100% reliability vs 85% for button click.",
+    "selector_strategy": "Attribute-based selectors for compose fields — these are stable across Gmail UI updates. [gh='cm'] for compose button is Gmail-specific internal attribute, highly stable.",
+    "anti_bot_notes": "CRITICAL: Must use char-by-char typing (80-200ms) for To field — instant fill triggers 'browser may not be secure' warning. Subject can use 80ms delay. Body can use 40ms (no bot detection on body text).",
+    "llm_learnings": "Autocomplete dropdown from To field intercepts clicks on Subject field. Must press Enter after To field to accept suggestion and close dropdown. Then click Subject explicitly. Tab navigation unreliable due to autocomplete.",
+    "performance": "Navigation 3s + compose open 3s + typing variable + send 3s. For short email: ~15-20s total."
+  },
+
+  "input_params": {
+    "to": {
+      "type": "string",
+      "description": "Recipient email address",
+      "required": true,
+      "example": "recipient@example.com",
+      "format": "email"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Email subject line",
+      "required": true,
+      "example": "Meeting Follow-up"
+    },
+    "body": {
+      "type": "string",
+      "description": "Email body text",
+      "required": true,
+      "example": "Hi, thanks for the meeting today. Here are the action items we discussed..."
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/gmail_working_session.json",
+      "description": "Load saved Gmail session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://mail.google.com/mail/u/0/#inbox",
+      "wait_for": "div[role='main']",
+      "timeout_ms": 10000,
+      "screenshot": true,
+      "description": "Navigate to Gmail inbox"
+    },
+    {
+      "step": 3,
+      "action": "click",
+      "selector": "[gh='cm']",
+      "description": "Click compose button to open compose modal",
+      "wait_after_ms": 3000,
+      "timeout_ms": 5000,
+      "screenshot": true
+    },
+    {
+      "step": 4,
+      "action": "wait_for_selector",
+      "selector": "input[aria-autocomplete='list']",
+      "timeout_ms": 5000,
+      "description": "Wait for To field to appear in compose modal"
+    },
+    {
+      "step": 5,
+      "action": "human_type",
+      "selector": "input[aria-autocomplete='list']",
+      "text": "{params.to}",
+      "delay_ms": "80-200",
+      "click_first": true,
+      "description": "Type recipient email with human-like delays to bypass bot detection",
+      "screenshot": false
+    },
+    {
+      "step": 6,
+      "action": "keyboard_press",
+      "key": "Enter",
+      "description": "Accept autocomplete suggestion and close dropdown",
+      "wait_after_ms": 1000
+    },
+    {
+      "step": 7,
+      "action": "click",
+      "selector": "input[name='subjectbox']",
+      "description": "Click subject field explicitly (Tab unreliable due to autocomplete)",
+      "wait_after_ms": 300,
+      "screenshot": false
+    },
+    {
+      "step": 8,
+      "action": "type",
+      "selector": "input[name='subjectbox']",
+      "text": "{params.subject}",
+      "delay_ms": 80,
+      "description": "Type subject with moderate delay"
+    },
+    {
+      "step": 9,
+      "action": "click",
+      "selector": "div[aria-label='Message Body']",
+      "description": "Click body field explicitly",
+      "wait_after_ms": 300,
+      "screenshot": false
+    },
+    {
+      "step": 10,
+      "action": "type",
+      "selector": "div[aria-label='Message Body']",
+      "text": "{params.body}",
+      "delay_ms": 40,
+      "description": "Type body text with faster delay (no bot detection on body)"
+    },
+    {
+      "step": 11,
+      "action": "screenshot",
+      "description": "Capture composed email before sending",
+      "screenshot": true
+    },
+    {
+      "step": 12,
+      "action": "keyboard_press",
+      "key": "Control+Enter",
+      "description": "Send email via keyboard shortcut (100% reliability)",
+      "wait_after_ms": 3000,
+      "screenshot": true
+    },
+    {
+      "step": 13,
+      "action": "verify",
+      "checks": [
+        {"type": "no_element", "selector": "div[role='alertdialog']", "description": "No error dialog present"},
+        {"type": "url_contains", "pattern": "mail.google.com", "description": "Still on Gmail domain"}
+      ],
+      "description": "Verify email was sent successfully"
+    },
+    {
+      "step": 14,
+      "action": "return_result",
+      "description": "Return send confirmation"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "sent": {"type": "boolean", "example": true},
+      "to": {"type": "string", "example": "recipient@example.com"},
+      "subject": {"type": "string", "example": "Meeting Follow-up"},
+      "timestamp": {"type": "string", "format": "date-time"},
+      "char_count": {"type": "integer", "example": 142}
+    },
+    "required": ["sent", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "autocomplete_blocks_click": "Press Enter to accept and close dropdown before clicking Subject",
+    "to_field_error": "Ensure Enter pressed after typing email to form recipient chip",
+    "send_button_not_found": "Use Ctrl+Enter keyboard shortcut instead of clicking Send button",
+    "session_expired": "Detect accounts.google.com redirect — run gmail-oauth-login recipe first"
+  },
+
+  "anti_detection": {
+    "human_typing": true,
+    "explicit_field_clicks": true,
+    "keyboard_shortcuts_preferred": true,
+    "avoid_tab_navigation": true,
+    "avoid_instant_fill": true
+  },
+
+  "metadata": {
+    "tags": ["gmail", "compose", "send", "write", "email"],
+    "difficulty": "medium",
+    "prerequisites": ["gmail_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 20,
+    "idempotent": false,
+    "destructive": false
+  }
+}

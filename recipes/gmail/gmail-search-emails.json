@@ -1,0 +1,177 @@
+{
+  "id": "gmail-search-emails",
+  "platform": "gmail",
+  "version": "1.0.0",
+  "description": "Search Gmail emails by query string and extract matching results. Supports Gmail search operators (from:, to:, subject:, has:, is:, etc.)",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["gmail.read.search"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Gmail search bar is input[aria-label='Search mail'] at the top of the page. After typing and pressing Enter, results render in the same row format as inbox. Gmail supports advanced search operators like from:, to:, subject:, has:attachment, is:unread, before:, after:, in:, label:, etc.",
+    "selector_strategy": "Search bar uses aria-label which is stable. Results use same [role='row'] structure as inbox — same extraction logic applies.",
+    "anti_bot_notes": "Use char-by-char typing (80-150ms) for search query to avoid triggering bot detection. Wait 2-3 seconds after Enter for search results to render.",
+    "performance": "Navigation 3s + type query variable + search execute 3s + extraction 1s. Typical: 8-12s."
+  },
+
+  "input_params": {
+    "query": {
+      "type": "string",
+      "description": "Gmail search query. Supports operators: from:, to:, subject:, has:attachment, is:unread, before:, after:, in:, label:",
+      "required": true,
+      "example": "from:someone@example.com subject:meeting"
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Maximum number of results to extract. Default 10.",
+      "required": false,
+      "default": 10,
+      "example": 20
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/gmail_working_session.json",
+      "description": "Load saved Gmail session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://mail.google.com/mail/u/0/#inbox",
+      "wait_for": "div[role='main']",
+      "timeout_ms": 10000,
+      "screenshot": false,
+      "description": "Navigate to Gmail inbox"
+    },
+    {
+      "step": 3,
+      "action": "click",
+      "selector": "input[aria-label='Search mail']",
+      "description": "Click search bar to focus it",
+      "wait_after_ms": 500,
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "human_type",
+      "selector": "input[aria-label='Search mail']",
+      "text": "{params.query}",
+      "delay_ms": "80-150",
+      "description": "Type search query with human-like delays",
+      "screenshot": false
+    },
+    {
+      "step": 5,
+      "action": "keyboard_press",
+      "key": "Enter",
+      "description": "Execute search",
+      "wait_after_ms": 3000,
+      "screenshot": true
+    },
+    {
+      "step": 6,
+      "action": "wait_for_selector",
+      "selector": "[role='row']",
+      "timeout_ms": 8000,
+      "optional": true,
+      "description": "Wait for search results to render (may be zero results)"
+    },
+    {
+      "step": 7,
+      "action": "extract_all",
+      "selector": "[role='row']",
+      "limit": "{params.limit}",
+      "fields": {
+        "subject": {
+          "selector": "[role='heading']",
+          "type": "textContent"
+        },
+        "sender": {
+          "selector": "[email]",
+          "type": "attribute",
+          "attribute": "email"
+        },
+        "sender_name": {
+          "selector": "[email]",
+          "type": "textContent"
+        },
+        "date": {
+          "selector": "td.xW.xY span",
+          "type": "textContent"
+        },
+        "snippet": {
+          "selector": ".y2",
+          "type": "textContent"
+        },
+        "is_read": {
+          "check": "not_has_class",
+          "class": "zE"
+        }
+      },
+      "description": "Extract search results metadata",
+      "screenshot": true
+    },
+    {
+      "step": 8,
+      "action": "return_result",
+      "description": "Return search results"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "query": {"type": "string", "example": "from:someone@example.com"},
+      "results": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "subject": {"type": "string"},
+            "sender": {"type": "string"},
+            "sender_name": {"type": "string"},
+            "date": {"type": "string"},
+            "snippet": {"type": "string"},
+            "is_read": {"type": "boolean"}
+          },
+          "required": ["subject", "sender"]
+        }
+      },
+      "total_found": {"type": "integer", "example": 5},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["query", "results", "total_found", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "no_results": "Return empty results array with total_found=0 — not an error",
+    "search_timeout": "Retry search once with 15s timeout, then return empty",
+    "session_expired": "Detect accounts.google.com redirect — abort with SESSION_EXPIRED"
+  },
+
+  "metadata": {
+    "tags": ["gmail", "search", "read-only", "query", "extraction"],
+    "difficulty": "easy",
+    "prerequisites": ["gmail_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 12,
+    "idempotent": true,
+    "destructive": false
+  }
+}

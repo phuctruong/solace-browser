@@ -1,0 +1,167 @@
+{
+  "id": "gmail-label-emails",
+  "platform": "gmail",
+  "version": "1.0.0",
+  "description": "Apply a label to one or more emails in Gmail. Opens the email or selects emails in inbox, then applies the specified label via the label dropdown.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["gmail.organize.label"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Gmail labels are applied via the Labels button in the toolbar (div[aria-label='Labels']). Clicking it opens a dropdown with div[role='menuitemcheckbox'] items. Labels can be searched/filtered with input[aria-label='Label as']. The Apply button confirms the selection. Labels can be applied from inbox (select emails first) or from within a thread view.",
+    "selector_strategy": "Use aria-label selectors for label button and search input. Use role='menuitemcheckbox' for label options in dropdown.",
+    "anti_bot_notes": "Low bot detection risk — label operations are UI click actions with no sensitive text input.",
+    "performance": "Navigation 3s + open email or select 1s + label dropdown 1s + apply 1s. Typical: 8-12s."
+  },
+
+  "input_params": {
+    "label": {
+      "type": "string",
+      "description": "Label name to apply (e.g., 'Work', 'Important', 'Follow-up')",
+      "required": true,
+      "example": "Work"
+    },
+    "email_index": {
+      "type": "integer",
+      "description": "Index of email to label (0 = latest). Default 0.",
+      "required": false,
+      "default": 0,
+      "example": 0
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/gmail_working_session.json",
+      "description": "Load saved Gmail session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://mail.google.com/mail/u/0/#inbox",
+      "wait_for": "div[role='main']",
+      "timeout_ms": 10000,
+      "screenshot": false,
+      "description": "Navigate to Gmail inbox"
+    },
+    {
+      "step": 3,
+      "action": "click",
+      "selector": "[role='row']:nth-child({params.email_index + 1})",
+      "selector_default": "[role='row']:first-child",
+      "description": "Click target email to open thread view",
+      "wait_after_ms": 2000,
+      "timeout_ms": 5000,
+      "screenshot": true
+    },
+    {
+      "step": 4,
+      "action": "wait_for_selector",
+      "selector": "h2.hP",
+      "timeout_ms": 5000,
+      "description": "Wait for thread view to load"
+    },
+    {
+      "step": 5,
+      "action": "click",
+      "selector": "div[aria-label='Labels']",
+      "description": "Click Labels button in toolbar to open label dropdown",
+      "wait_after_ms": 1000,
+      "timeout_ms": 5000,
+      "screenshot": true
+    },
+    {
+      "step": 6,
+      "action": "wait_for_selector",
+      "selector": "input[aria-label='Label as']",
+      "timeout_ms": 3000,
+      "description": "Wait for label search input in dropdown"
+    },
+    {
+      "step": 7,
+      "action": "type",
+      "selector": "input[aria-label='Label as']",
+      "text": "{params.label}",
+      "delay_ms": 60,
+      "description": "Type label name to filter dropdown options"
+    },
+    {
+      "step": 8,
+      "action": "wait",
+      "duration_ms": 500,
+      "description": "Wait for dropdown filter to update"
+    },
+    {
+      "step": 9,
+      "action": "click",
+      "selector": "div[role='menuitemcheckbox']:first-child",
+      "description": "Select the matching label from dropdown",
+      "wait_after_ms": 300,
+      "timeout_ms": 3000,
+      "screenshot": true
+    },
+    {
+      "step": 10,
+      "action": "click",
+      "selector": "div[aria-label='Apply']",
+      "description": "Click Apply to confirm label assignment",
+      "wait_after_ms": 1000,
+      "timeout_ms": 3000,
+      "screenshot": true
+    },
+    {
+      "step": 11,
+      "action": "verify",
+      "checks": [
+        {"type": "no_element", "selector": "div[role='alertdialog']", "description": "No error dialog"}
+      ],
+      "description": "Verify label was applied successfully"
+    },
+    {
+      "step": 12,
+      "action": "return_result",
+      "description": "Return label application confirmation"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "labeled": {"type": "boolean", "example": true},
+      "label": {"type": "string", "example": "Work"},
+      "email_subject": {"type": "string", "example": "Meeting tomorrow at 3pm"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["labeled", "label", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "label_not_found": "If label does not exist in dropdown, create new label via 'Create new' option",
+    "label_dropdown_timeout": "Retry click on Labels button once, then abort",
+    "session_expired": "Detect accounts.google.com redirect — abort with SESSION_EXPIRED"
+  },
+
+  "metadata": {
+    "tags": ["gmail", "label", "organize", "categorize"],
+    "difficulty": "medium",
+    "prerequisites": ["gmail_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 12,
+    "idempotent": true,
+    "destructive": false
+  }
+}

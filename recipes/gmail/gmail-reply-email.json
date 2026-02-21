@@ -1,0 +1,175 @@
+{
+  "id": "gmail-reply-email",
+  "platform": "gmail",
+  "version": "1.0.0",
+  "description": "Reply to a specific email in Gmail. Opens the latest email (or specified thread), clicks Reply, types response body, and sends via Ctrl+Enter.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["gmail.read.inbox", "gmail.compose.reply"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Gmail reply button is div[aria-label='Reply'] inside an email thread view. Clicking it opens an inline compose box at the bottom of the thread. The reply body field shares the same selector as compose: div[aria-label='Message Body']. Reply sends with Ctrl+Enter.",
+    "selector_strategy": "Navigate to thread first, then use aria-label selectors for reply actions. Reply body field uses same contenteditable div as compose.",
+    "anti_bot_notes": "Reply body typing can use 40ms delay (no bot detection on reply body text). Navigation to thread is click-based with normal wait times.",
+    "llm_learnings": "Reply compose box appears inline at the bottom of the thread. If multiple messages in thread, the Reply button for the latest message is the one to click. After reply send, page stays in thread view.",
+    "performance": "Navigation 3s + thread open 2s + reply open 1.5s + typing variable + send 3s. Typical: 12-18s."
+  },
+
+  "input_params": {
+    "body": {
+      "type": "string",
+      "description": "Reply message body text",
+      "required": true,
+      "example": "Thanks for your email. I will review the documents and get back to you by end of day."
+    },
+    "email_index": {
+      "type": "integer",
+      "description": "Index of email to reply to (0 = latest). Default 0.",
+      "required": false,
+      "default": 0,
+      "example": 0
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/gmail_working_session.json",
+      "description": "Load saved Gmail session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://mail.google.com/mail/u/0/#inbox",
+      "wait_for": "div[role='main']",
+      "timeout_ms": 10000,
+      "screenshot": false,
+      "description": "Navigate to Gmail inbox"
+    },
+    {
+      "step": 3,
+      "action": "click",
+      "selector": "[role='row']:nth-child({params.email_index + 1})",
+      "selector_default": "[role='row']:first-child",
+      "description": "Click target email to open thread view",
+      "wait_after_ms": 2000,
+      "timeout_ms": 5000,
+      "screenshot": true
+    },
+    {
+      "step": 4,
+      "action": "wait_for_selector",
+      "selector": "h2.hP",
+      "timeout_ms": 5000,
+      "description": "Wait for thread header to confirm thread view loaded"
+    },
+    {
+      "step": 5,
+      "action": "extract",
+      "fields": {
+        "original_subject": {"selector": "h2.hP", "type": "textContent"},
+        "original_sender": {"selector": "span.gD", "type": "textContent"}
+      },
+      "description": "Extract original email metadata for evidence"
+    },
+    {
+      "step": 6,
+      "action": "click",
+      "selector": "div[aria-label='Reply']",
+      "description": "Click Reply button to open inline reply compose",
+      "wait_after_ms": 1500,
+      "timeout_ms": 5000,
+      "screenshot": true
+    },
+    {
+      "step": 7,
+      "action": "wait_for_selector",
+      "selector": "div[aria-label='Message Body']",
+      "timeout_ms": 5000,
+      "description": "Wait for reply body field to appear"
+    },
+    {
+      "step": 8,
+      "action": "click",
+      "selector": "div[aria-label='Message Body']",
+      "description": "Click reply body field to focus it",
+      "wait_after_ms": 300,
+      "screenshot": false
+    },
+    {
+      "step": 9,
+      "action": "type",
+      "selector": "div[aria-label='Message Body']",
+      "text": "{params.body}",
+      "delay_ms": 40,
+      "description": "Type reply body with fast delay (no bot detection on body text)"
+    },
+    {
+      "step": 10,
+      "action": "screenshot",
+      "description": "Capture composed reply before sending",
+      "screenshot": true
+    },
+    {
+      "step": 11,
+      "action": "keyboard_press",
+      "key": "Control+Enter",
+      "description": "Send reply via keyboard shortcut",
+      "wait_after_ms": 3000,
+      "screenshot": true
+    },
+    {
+      "step": 12,
+      "action": "verify",
+      "checks": [
+        {"type": "no_element", "selector": "div[role='alertdialog']", "description": "No error dialog present"}
+      ],
+      "description": "Verify reply was sent successfully"
+    },
+    {
+      "step": 13,
+      "action": "return_result",
+      "description": "Return reply confirmation with original email context"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "replied": {"type": "boolean", "example": true},
+      "original_subject": {"type": "string", "example": "Meeting tomorrow at 3pm"},
+      "original_sender": {"type": "string", "example": "Jane Smith"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["replied", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "empty_inbox": "Abort with NO_EMAILS error if inbox has zero rows",
+    "reply_button_not_found": "Check if email is in thread view — may need to scroll down to find Reply button",
+    "session_expired": "Detect accounts.google.com redirect — abort with SESSION_EXPIRED"
+  },
+
+  "metadata": {
+    "tags": ["gmail", "reply", "compose", "email", "thread"],
+    "difficulty": "medium",
+    "prerequisites": ["gmail_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 18,
+    "idempotent": false,
+    "destructive": false
+  }
+}

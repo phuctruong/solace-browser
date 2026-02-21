@@ -1,0 +1,157 @@
+{
+  "id": "gmail-read-inbox",
+  "platform": "gmail",
+  "version": "1.0.0",
+  "description": "Read latest emails from Gmail inbox with metadata extraction (subject, sender, date, read status, starred status)",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["gmail.read.inbox"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Gmail inbox renders email rows using role='row' ARIA elements. Each row contains subject (role='heading'), sender ([email] attribute), date, and read/starred indicators. Unread emails have class .zE (bold styling). Extraction is read-only and does not trigger bot detection.",
+    "selector_strategy": "Use ARIA role selectors for stability. Role='row' for email list, role='heading' for subject. Fallback to class-based selectors for date and snippet.",
+    "anti_bot_notes": "Read-only operation — minimal bot detection risk. Navigate with saved session to avoid login. Wait for div[role='main'] to confirm page loaded.",
+    "performance": "Expected run time: 5-8 seconds (navigation 3s + wait 2s + extraction 1s). No typing needed."
+  },
+
+  "input_params": {
+    "limit": {
+      "type": "integer",
+      "description": "Maximum number of emails to read. Default 10.",
+      "required": false,
+      "default": 10,
+      "example": 20
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/gmail_working_session.json",
+      "description": "Load saved Gmail session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://mail.google.com/mail/u/0/#inbox",
+      "wait_for": "div[role='main']",
+      "timeout_ms": 10000,
+      "screenshot": true,
+      "description": "Navigate to Gmail inbox and wait for main container"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "div[role='main']",
+      "fallback_url_pattern": "accounts.google.com",
+      "description": "Verify we are authenticated — if redirected to login, abort with SESSION_EXPIRED",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "wait_for_selector",
+      "selector": "[role='row']",
+      "timeout_ms": 8000,
+      "description": "Wait for email rows to render in inbox"
+    },
+    {
+      "step": 5,
+      "action": "extract_all",
+      "selector": "[role='row']",
+      "limit": "{params.limit}",
+      "fields": {
+        "subject": {
+          "selector": "[role='heading']",
+          "type": "textContent"
+        },
+        "sender": {
+          "selector": "[email]",
+          "type": "attribute",
+          "attribute": "email"
+        },
+        "sender_name": {
+          "selector": "[email]",
+          "type": "textContent"
+        },
+        "date": {
+          "selector": "td.xW.xY span",
+          "type": "textContent"
+        },
+        "snippet": {
+          "selector": ".y2",
+          "type": "textContent"
+        },
+        "is_read": {
+          "check": "not_has_class",
+          "class": "zE"
+        },
+        "is_starred": {
+          "selector": "span[aria-label*='Starred']",
+          "type": "exists"
+        }
+      },
+      "description": "Extract email metadata from visible inbox rows",
+      "screenshot": true
+    },
+    {
+      "step": 6,
+      "action": "return_result",
+      "description": "Return extracted emails as structured data"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "emails": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "subject": {"type": "string", "example": "Meeting tomorrow at 3pm"},
+            "sender": {"type": "string", "example": "jane@example.com"},
+            "sender_name": {"type": "string", "example": "Jane Smith"},
+            "date": {"type": "string", "example": "Feb 21"},
+            "snippet": {"type": "string", "example": "Just wanted to confirm our meeting..."},
+            "is_read": {"type": "boolean", "example": true},
+            "is_starred": {"type": "boolean", "example": false}
+          },
+          "required": ["subject", "sender", "is_read"]
+        }
+      },
+      "total_extracted": {"type": "integer", "example": 10},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["emails", "total_extracted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect accounts.google.com redirect — abort with SESSION_EXPIRED error",
+    "empty_inbox": "Return empty emails array — not an error",
+    "selector_timeout": "Retry once with 15s timeout, then abort"
+  },
+
+  "metadata": {
+    "tags": ["gmail", "read", "inbox", "read-only", "extraction"],
+    "difficulty": "easy",
+    "prerequisites": ["gmail_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 8,
+    "idempotent": true,
+    "destructive": false
+  }
+}

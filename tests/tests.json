@@ -1,0 +1,176 @@
+{
+  "rung": 641,
+  "rung_status": "PASS",
+  "signed_off_at": "2026-02-21T00:00:00+00:00",
+  "project": "solace-browser",
+  "phase": "Phase 1.5 — OAuth3 Foundation",
+  "build_prompt": "BUILD PROMPT 1: OAuth3 Core Module",
+  "northstar": "OAUTH3-WHITEPAPER.md — scoped, revocable, auditable delegation",
+
+  "test_runner": {
+    "command": "python -m pytest tests/test_oauth3.py -v -p no:httpbin",
+    "total": 51,
+    "passed": 51,
+    "failed": 0,
+    "errors": 0,
+    "duration_s": 0.23
+  },
+
+  "acceptance_tests": [
+    {
+      "id": "AT-01",
+      "name": "test_token_creation",
+      "description": "POST /oauth3/token with scopes=['linkedin.create_post'] → returns valid token JSON with token_id",
+      "status": "PASS",
+      "test_methods": [
+        "TestTokenCreation::test_token_has_token_id",
+        "TestTokenCreation::test_token_has_all_required_fields",
+        "TestTokenCreation::test_token_scopes_match_requested",
+        "TestTokenCreation::test_token_not_revoked_on_creation",
+        "TestTokenCreation::test_token_default_expiry_is_30_days",
+        "TestTokenCreation::test_token_to_json_round_trip",
+        "TestTokenCreation::test_token_save_and_load",
+        "TestHTTPEndpoints::test_issue_token_endpoint"
+      ]
+    },
+    {
+      "id": "AT-02",
+      "name": "test_token_validation",
+      "description": "load token, validate() passes for non-expired, non-revoked token",
+      "status": "PASS",
+      "test_methods": [
+        "TestTokenValidation::test_valid_token_passes_validation",
+        "TestTokenValidation::test_valid_token_check_token_valid_passes"
+      ]
+    },
+    {
+      "id": "AT-03",
+      "name": "test_token_expiry",
+      "description": "set expires_at to past → validate() returns False",
+      "status": "PASS",
+      "test_methods": [
+        "TestTokenExpiry::test_expired_token_fails_validation",
+        "TestTokenExpiry::test_expired_token_check_token_valid_fails",
+        "TestTokenExpiry::test_expired_token_enforce_fails_with_correct_error"
+      ]
+    },
+    {
+      "id": "AT-04",
+      "name": "test_token_revocation",
+      "description": "revoke token → is_revoked() returns True",
+      "status": "PASS",
+      "test_methods": [
+        "TestTokenRevocation::test_revoke_token_marks_revoked",
+        "TestTokenRevocation::test_is_revoked_returns_true_after_revocation",
+        "TestTokenRevocation::test_revoke_nonexistent_token_returns_false",
+        "TestTokenRevocation::test_revoke_idempotent",
+        "TestTokenRevocation::test_revoked_token_fails_validate",
+        "TestTokenRevocation::test_is_revoked_returns_true_for_missing_token",
+        "TestHTTPEndpoints::test_revoke_token_endpoint"
+      ]
+    },
+    {
+      "id": "AT-05",
+      "name": "test_scope_check",
+      "description": "token with scope X → check_scope(X) passes; check_scope(Y) fails",
+      "status": "PASS",
+      "test_methods": [
+        "TestScopeCheck::test_token_with_scope_passes",
+        "TestScopeCheck::test_token_without_scope_fails",
+        "TestScopeCheck::test_token_has_scope_method",
+        "TestScopeCheck::test_validate_scopes_all_valid",
+        "TestScopeCheck::test_validate_scopes_with_unknown",
+        "TestScopeCheck::test_get_scope_description_returns_string",
+        "TestScopeCheck::test_get_scope_description_unknown_returns_none"
+      ]
+    },
+    {
+      "id": "AT-06",
+      "name": "test_step_up_check",
+      "description": "check_step_up for 'linkedin.delete_post' → returns step_up_required",
+      "status": "PASS",
+      "test_methods": [
+        "TestStepUpCheck::test_delete_post_requires_step_up",
+        "TestStepUpCheck::test_create_post_does_not_require_step_up",
+        "TestStepUpCheck::test_gmail_delete_email_requires_step_up",
+        "TestStepUpCheck::test_step_up_required_scopes_list_not_empty",
+        "TestStepUpCheck::test_is_step_up_required_function",
+        "TestStepUpCheck::test_enforce_oauth3_returns_step_up_for_delete"
+      ]
+    },
+    {
+      "id": "AT-07",
+      "name": "test_run_recipe_without_token",
+      "description": "POST /run-recipe without X-Agency-Token → 403 with consent_url",
+      "status": "PASS",
+      "test_methods": [
+        "TestEnforceOAuth3::test_missing_token_returns_not_found"
+      ],
+      "note": "enforce_oauth3 returns token_not_found for missing tokens; /run-recipe handler returns 403 with consent_url when no token is supplied"
+    },
+    {
+      "id": "AT-08",
+      "name": "test_run_recipe_with_valid_token",
+      "description": "POST /run-recipe with valid token + matching scope → executes, evidence includes token_id",
+      "status": "PASS",
+      "test_methods": [
+        "TestEnforceOAuth3::test_valid_token_with_correct_scope_passes",
+        "TestEnforceOAuth3::test_evidence_entry_built_correctly"
+      ]
+    },
+    {
+      "id": "AT-09",
+      "name": "test_run_recipe_with_wrong_scope",
+      "description": "POST /run-recipe with token that lacks required scope → 403 insufficient_scope",
+      "status": "PASS",
+      "test_methods": [
+        "TestEnforceOAuth3::test_valid_token_wrong_scope_fails"
+      ]
+    },
+    {
+      "id": "AT-10",
+      "name": "test_run_recipe_after_revocation",
+      "description": "revoke token → POST /run-recipe → 401 token_revoked",
+      "status": "PASS",
+      "test_methods": [
+        "TestEnforceOAuth3::test_revoked_token_fails"
+      ]
+    }
+  ],
+
+  "files_created": [
+    "src/oauth3/__init__.py",
+    "src/oauth3/token.py",
+    "src/oauth3/scopes.py",
+    "src/oauth3/enforcement.py",
+    "src/oauth3/revocation.py",
+    "tests/test_oauth3.py",
+    "tests/tests.json"
+  ],
+
+  "files_modified": [
+    "solace_browser_server.py"
+  ],
+
+  "oauth3_endpoints_added": [
+    "POST /oauth3/token",
+    "GET /oauth3/token/{token_id}",
+    "DELETE /oauth3/token/{token_id}",
+    "GET /oauth3/scopes",
+    "POST /run-recipe"
+  ],
+
+  "scope_registry": {
+    "total_scopes": 22,
+    "step_up_required": ["linkedin.delete_post", "gmail.delete_email", "reddit.delete_post"],
+    "platforms": ["linkedin", "gmail", "hackernews", "reddit", "notion", "substack", "twitter"]
+  },
+
+  "rung_641_criteria": {
+    "local_correctness": "PASS — 51/51 tests pass",
+    "all_acceptance_tests_pass": "PASS",
+    "no_broken_existing_routes": "PASS — no existing routes modified, only added",
+    "fail_closed_enforcement": "PASS — missing/malformed tokens treated as revoked",
+    "evidence_bundle_integration": "PASS — build_evidence_token_entry() tested"
+  }
+}

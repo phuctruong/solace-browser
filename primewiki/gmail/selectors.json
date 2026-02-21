@@ -1,0 +1,330 @@
+{
+  "node_id": "gmail-selectors",
+  "version": "1.0.0",
+  "platform": "gmail",
+  "domain": "mail.google.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+  "source": "gmail-automation-100.primewiki.md + gmail-page-flow.prime-mermaid.md",
+
+  "login": {
+    "email_field": {
+      "selector": "input[type='email']",
+      "confidence": 0.98,
+      "action": "human_type",
+      "typing_delay_ms": "80-200",
+      "note": "Char-by-char typing required — instant .fill() triggers bot detection"
+    },
+    "password_field": {
+      "selector": "input[type='password']",
+      "confidence": 0.98,
+      "action": "human_type",
+      "typing_delay_ms": "80-200"
+    },
+    "next_button_email": {
+      "selector": "div#identifierNext",
+      "confidence": 0.95,
+      "action": "click",
+      "wait_after_ms": 2000
+    },
+    "next_button_password": {
+      "selector": "div#passwordNext",
+      "confidence": 0.95,
+      "action": "click",
+      "wait_after_ms": 2000
+    }
+  },
+
+  "inbox": {
+    "main_container": {
+      "selector": "div[role='main']",
+      "confidence": 0.97,
+      "type": "wait_for",
+      "note": "Primary inbox container — indicates authenticated state"
+    },
+    "email_rows": {
+      "selector": "[role='row']",
+      "confidence": 0.97,
+      "type": "selector_list",
+      "note": "Returns all visible email rows in inbox"
+    },
+    "email_subject": {
+      "selector": "[role='row'] [role='heading']",
+      "confidence": 0.96,
+      "type": "text_extraction"
+    },
+    "email_sender": {
+      "selector": "[role='row'] [email]",
+      "confidence": 0.95,
+      "type": "text_extraction"
+    },
+    "email_snippet": {
+      "selector": "[role='row'] .y2",
+      "confidence": 0.90,
+      "type": "text_extraction",
+      "note": "Email preview snippet text"
+    },
+    "email_date": {
+      "selector": "[role='row'] td.xW.xY span",
+      "confidence": 0.88,
+      "type": "text_extraction",
+      "note": "Date/time column in inbox row"
+    },
+    "unread_indicator": {
+      "selector": "[role='row'].zE",
+      "confidence": 0.94,
+      "type": "class_check",
+      "note": "Unread rows have class .zE (bold)"
+    },
+    "starred_indicator": {
+      "selector": "[role='row'] span[aria-label*='Starred']",
+      "confidence": 0.93,
+      "type": "attribute_check"
+    },
+    "checkbox": {
+      "selector": "[role='row'] div[role='checkbox']",
+      "confidence": 0.92,
+      "type": "click",
+      "note": "Select individual email rows for bulk actions"
+    },
+    "select_all_checkbox": {
+      "selector": "div[aria-label='Select'][role='checkbox']",
+      "confidence": 0.91,
+      "type": "click",
+      "note": "Master select-all checkbox above inbox"
+    }
+  },
+
+  "compose": {
+    "compose_button": {
+      "selector": "[gh='cm']",
+      "confidence": 0.98,
+      "action": "click",
+      "wait_after_ms": 3000,
+      "note": "Opens compose modal"
+    },
+    "to_field": {
+      "selector": "input[aria-autocomplete='list']",
+      "confidence": 1.0,
+      "action": "human_type",
+      "typing_delay_ms": "80-200",
+      "critical_pattern": "MUST press Enter after typing to accept autocomplete"
+    },
+    "subject_field": {
+      "selector": "input[name='subjectbox']",
+      "confidence": 0.98,
+      "action": "click_then_type",
+      "typing_delay_ms": 80
+    },
+    "body_field": {
+      "selector": "div[aria-label='Message Body']",
+      "confidence": 0.98,
+      "action": "click_then_type",
+      "typing_delay_ms": 40,
+      "note": "Faster typing acceptable — no bot detection on body"
+    },
+    "send_keyboard": {
+      "method": "Control+Enter",
+      "confidence": 1.0,
+      "action": "keyboard_shortcut",
+      "note": "100% reliable — preferred over button click"
+    },
+    "send_button_fallback": {
+      "selector": "div[aria-label^='Send']",
+      "confidence": 0.85,
+      "action": "click",
+      "note": "Fallback only — keyboard shortcut preferred"
+    },
+    "discard_button": {
+      "selector": "div[aria-label='Discard draft']",
+      "confidence": 0.90,
+      "action": "click"
+    },
+    "cc_toggle": {
+      "selector": "span[aria-label='Add Cc recipients']",
+      "confidence": 0.88,
+      "action": "click"
+    },
+    "bcc_toggle": {
+      "selector": "span[aria-label='Add Bcc recipients']",
+      "confidence": 0.88,
+      "action": "click"
+    }
+  },
+
+  "email_thread": {
+    "thread_header": {
+      "selector": "h2.hP",
+      "confidence": 0.96,
+      "type": "text_extraction",
+      "note": "Subject line in thread view"
+    },
+    "reply_button": {
+      "selector": "div[aria-label='Reply']",
+      "confidence": 0.94,
+      "action": "click",
+      "note": "Opens inline reply compose"
+    },
+    "reply_all_button": {
+      "selector": "div[aria-label='Reply all']",
+      "confidence": 0.93,
+      "action": "click"
+    },
+    "forward_button": {
+      "selector": "div[aria-label='Forward']",
+      "confidence": 0.93,
+      "action": "click"
+    },
+    "reply_body_field": {
+      "selector": "div[aria-label='Message Body']",
+      "confidence": 0.95,
+      "action": "click_then_type",
+      "typing_delay_ms": 40,
+      "note": "Same field as compose — appears in reply inline"
+    },
+    "message_body": {
+      "selector": "div.a3s.aiL",
+      "confidence": 0.92,
+      "type": "text_extraction",
+      "note": "Email message body content"
+    },
+    "sender_info": {
+      "selector": "span.gD",
+      "confidence": 0.91,
+      "type": "text_extraction",
+      "note": "Sender name and email in thread"
+    },
+    "back_to_inbox": {
+      "selector": "div[aria-label='Back to Inbox']",
+      "confidence": 0.94,
+      "action": "click"
+    }
+  },
+
+  "search": {
+    "search_bar": {
+      "selector": "input[aria-label='Search mail']",
+      "confidence": 0.96,
+      "action": "type_and_enter",
+      "wait_for_results_ms": 2000
+    },
+    "search_results_container": {
+      "selector": ".Tm.aeJ",
+      "confidence": 0.90,
+      "type": "wait_for",
+      "note": "Search results wrapper"
+    },
+    "search_result_rows": {
+      "selector": "[role='row']",
+      "confidence": 0.95,
+      "type": "selector_list",
+      "note": "Same row format as inbox after search"
+    },
+    "clear_search": {
+      "selector": "div[aria-label='Clear search']",
+      "confidence": 0.88,
+      "action": "click"
+    }
+  },
+
+  "actions": {
+    "archive_button": {
+      "selector": "div[aria-label='Archive']",
+      "confidence": 0.95,
+      "action": "click",
+      "note": "Available in thread view and toolbar when emails selected"
+    },
+    "delete_button": {
+      "selector": "div[aria-label='Delete']",
+      "confidence": 0.95,
+      "action": "click"
+    },
+    "mark_read_button": {
+      "selector": "div[aria-label='Mark as read']",
+      "confidence": 0.94,
+      "action": "click"
+    },
+    "mark_unread_button": {
+      "selector": "div[aria-label='Mark as unread']",
+      "confidence": 0.94,
+      "action": "click"
+    },
+    "star_toggle": {
+      "selector": "span[aria-label*='Star']",
+      "confidence": 0.92,
+      "action": "click"
+    },
+    "label_button": {
+      "selector": "div[aria-label='Labels']",
+      "confidence": 0.93,
+      "action": "click",
+      "note": "Opens label dropdown — available in thread view and toolbar"
+    },
+    "label_dropdown_item": {
+      "selector": "div[role='menuitemcheckbox']",
+      "confidence": 0.90,
+      "type": "selector_list",
+      "note": "Label options in the dropdown"
+    },
+    "label_search_input": {
+      "selector": "input[aria-label='Label as']",
+      "confidence": 0.88,
+      "action": "type",
+      "note": "Search/filter within label dropdown"
+    },
+    "label_apply_button": {
+      "selector": "div[aria-label='Apply']",
+      "confidence": 0.89,
+      "action": "click",
+      "note": "Confirm label application"
+    },
+    "move_to_button": {
+      "selector": "div[aria-label='Move to']",
+      "confidence": 0.91,
+      "action": "click"
+    },
+    "snooze_button": {
+      "selector": "div[aria-label='Snooze']",
+      "confidence": 0.88,
+      "action": "click"
+    }
+  },
+
+  "navigation": {
+    "inbox_link": {
+      "selector": "a[href*='#inbox']",
+      "confidence": 0.97,
+      "action": "click"
+    },
+    "sent_link": {
+      "selector": "a[href*='#sent']",
+      "confidence": 0.97,
+      "action": "click"
+    },
+    "drafts_link": {
+      "selector": "a[href*='#drafts']",
+      "confidence": 0.97,
+      "action": "click"
+    },
+    "starred_link": {
+      "selector": "a[href*='#starred']",
+      "confidence": 0.96,
+      "action": "click"
+    },
+    "spam_link": {
+      "selector": "a[href*='#spam']",
+      "confidence": 0.96,
+      "action": "click"
+    },
+    "trash_link": {
+      "selector": "a[href*='#trash']",
+      "confidence": 0.96,
+      "action": "click"
+    },
+    "all_mail_link": {
+      "selector": "a[href*='#all']",
+      "confidence": 0.94,
+      "action": "click"
+    }
+  }
+}
