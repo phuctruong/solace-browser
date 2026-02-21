@@ -390,9 +390,10 @@ class TestScopeValidation:
         assert invalid == []
 
     def test_validate_unknown_scope_fails(self):
-        is_valid, invalid = validate_scopes(["linkedin.create_post"])
+        """Truly unknown scopes (not in registry or legacy aliases) are rejected."""
+        is_valid, invalid = validate_scopes(["totally.fake.scope"])
         assert is_valid is False
-        assert "linkedin.create_post" in invalid
+        assert "totally.fake.scope" in invalid
 
     def test_validate_fake_scope_fails(self):
         is_valid, invalid = validate_scopes(["fake.scope.xyz"])
@@ -449,8 +450,9 @@ class TestScopeValidation:
             )
 
     def test_scopes_compat_alias_populated(self):
-        """SCOPES dict (backward compat alias) maps scope → description."""
-        assert len(SCOPES) == len(SCOPE_REGISTRY)
+        """SCOPES dict (backward compat alias) includes all registry scopes."""
+        # SCOPES includes both triple-segment and legacy two-segment scopes
+        assert len(SCOPES) >= len(SCOPE_REGISTRY)
         for scope in SCOPE_REGISTRY:
             assert scope in SCOPES
 

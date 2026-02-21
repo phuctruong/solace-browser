@@ -21,7 +21,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple
+from pathlib import Path
+from typing import List, Optional, Tuple, Union
 
 from .token import AgencyToken, parse_iso8601
 from .scopes import HIGH_RISK_SCOPES, get_scope_risk_level
@@ -389,3 +390,106 @@ def build_evidence_token_entry(
         "step_up_performed": step_up_performed,
         "token_expires_at": token_expires_at,
     }
+
+
+def enforce_oauth3(
+    token_or_id: Union[AgencyToken, str],
+    required_scope: Union[str, List[str]],
+    step_up_confirmed: bool = False,
+    token_dir=None,
+) -> Tuple[bool, dict]:
+    """
+    Full enforcement pipeline — backward-compatible.
+
+    Accepts either an AgencyToken object OR a token_id string.
+    When a string is passed, loads the token from file (requires token_dir).
+
+    Runs: token load → validation → scope check → step-up check.
+
+    Args:
+        token_or_id:       AgencyToken or token_id string.
+        required_scope:    Scope string or list of scope strings required.
+        step_up_confirmed: If True, step-up scopes are allowed to proceed.
+        token_dir:         Directory for file-based token loading.
+
+    Returns:
+        (passes: bool, details: dict)
+        details contains 'error', 'token_id', 'scope', 'consent_url', etc.
+    """
+    details: dict = {}
+
+    # Normalize required_scope to a single scope string (first if list)
+    if isinstance(required_scope, list):
+        scope = required_scope[0] if required_scope else ""
+    else:
+        scope = required_scope
+
+    # Load token if a token_id string was provided
+    if isinstance(token_or_id, str):
+        token_id = token_or_id
+        if token_dir is None:
+            details["error"] = "token_not_found"
+            details["detail"] = "token_dir required when passing token_id string"
+            return False, details
+        try:
+            from .token import AgencyToken as _AgencyToken
+            token = _AgencyToken.load_from_file(token_id, token_dir=token_dir)
+        except FileNotFoundError:
+            details["error"] = "token_not_found"
+            details["token_id"] = token_id
+            details["required_scope"] = scope
+            details["consent_url"] = f"/consent?scopes={scope}"
+            return False, details
+        except Exception as exc:
+            details["error"] = "token_load_error"
+            details["token_id"] = token_id
+            details["detail"] = str(exc)
+            return False, details
+    else:
+        token = token_or_id
+        token_id = token.token_id
+
+    # Gate 1: Token validity (expiry + revocation)
+    is_valid, error_msg = check_token_valid(token)
+    if not is_valid:
+        # Map error message to canonical error codes
+        if "revoked" in error_msg:
+            details["error"] = "token_revoked"
+        elif "expired" in error_msg:
+            details["error"] = "token_expired"
+        else:
+            details["error"] = error_msg
+        details["token_id"] = token_id
+        details["error_detail"] = error_msg
+        return False, details
+
+    # Gate 2: Scope check
+    if scope:
+        has_scope, scope_error = check_scope(token, scope)
+        if not has_scope:
+            details["error"] = "insufficient_scope"
+            details["token_id"] = token_id
+            details["scope"] = scope
+            details["consent_url"] = f"/consent?scopes={scope}"
+            details["error_detail"] = scope_error
+            return False, details
+
+    # Gate 3: Step-up check for high-risk scopes
+    if scope and scope in HIGH_RISK_SCOPES:
+        if not step_up_confirmed:
+            details["error"] = "step_up_required"
+            details["token_id"] = token_id
+            details["scope"] = scope
+            details["action"] = scope
+            details["step_up_required"] = True
+            details["confirm_url"] = f"/step-up?token_id={token_id}&action={scope}"
+            return False, details
+        else:
+            details["step_up_performed"] = True
+
+    # All gates passed
+    details["token_id"] = token_id
+    details["scope"] = scope
+    details["expires_at"] = token.expires_at
+    details["passed"] = True
+    return True, details

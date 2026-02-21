@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Solace Browser — Your AI Agent Portal</title>
+  <meta name="description" content="Solace Browser: Web + Machine + Cloud, governed by OAuth3. Browse the web, access your local machine, and connect to the cloud.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    /* ============================================================
+       CSS VARIABLES — Solace Browser dark theme (orange accent)
+       ============================================================ */
+    :root {
+      --bg-primary:       #0a0a0a;
+      --bg-secondary:     #0f0f0f;
+      --bg-card:          #141414;
+      --bg-card-hover:    #1a1a1a;
+      --white:            #ffffff;
+      --cornflower-blue:  #81afdd;
+      --accent:           #FF6B35;
+      --accent-dim:       rgba(255, 107, 53, 0.12);
+      --accent-border:    rgba(255, 107, 53, 0.3);
+      --accent-hover:     #ff8c5a;
+      --salmon:           #ff8a71;
+      --medium-purple:    #ae67fa;
+      --royal-blue:       #3d6184;
+      --turquoise:        #13ded2;
+      --green:            #4ade80;
+      --green-dim:        rgba(74, 222, 128, 0.1);
+      --green-border:     rgba(74, 222, 128, 0.25);
+      --border-subtle:    rgba(255, 255, 255, 0.08);
+      --border-mid:       rgba(255, 255, 255, 0.15);
+      --text-muted:       #666;
+      --text-secondary:   #999;
+    }
+
+    /* ============================================================
+       RESET + BASE
+       ============================================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--white);
+      font-family: Manrope, 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: var(--cornflower-blue);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    a:hover {
+      color: var(--white);
+    }
+
+    h1, h2, h3, h4 {
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--white);
+    }
+
+    p {
+      color: var(--text-secondary);
+      letter-spacing: -0.01em;
+    }
+
+    /* ============================================================
+       LAYOUT
+       ============================================================ */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* ============================================================
+       PARTICLE CANVAS
+       ============================================================ */
+    #particles-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+    }
+
+    .page-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ============================================================
+       HEADER / NAV
+       ============================================================ */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 10, 10, 0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      padding: 0.9rem 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--white);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent), #ff9a5c);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .logo-tagline {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-left: 0.25rem;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 100px;
+      padding: 0.25rem 0.75rem;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .status-dot.disconnected {
+      background: var(--text-muted);
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-btn {
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      padding: 0.35rem 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .nav-btn:hover {
+      background: var(--bg-card);
+      border-color: var(--border-subtle);
+      color: var(--white);
+    }
+
+    .nav-btn.accent {
+      background: var(--accent-dim);
+      border-color: var(--accent-border);
+      color: var(--accent);
+    }
+
+    .nav-btn.accent:hover {
+      background: var(--accent);
+      color: var(--white);
+    }
+
+    /* ============================================================
+       HERO
+       ============================================================ */
+    .hero {
+      padding: 3rem 0 2rem;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 100px;
+      padding: 0.25rem 0.85rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, var(--white) 0%, var(--accent) 60%, #ff9a5c 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    /* ============================================================
+       SECTION SPACING
+       ============================================================ */
+    .section {
+      padding: 2.5rem 0;
+    }
+
+    .section + .section {
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .section-link {
+      font-size: 0.8rem;
+      color: var(--cornflower-blue);
+    }
+
+    /* ============================================================
+       QUICK ACTION CARDS
+       ============================================================ */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .quick-actions { grid-template-columns: 1fr; }
+    }
+
+    .action-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1.5rem;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      cursor: pointer;
+    }
+
+    .action-card:hover {
+      border-color: var(--accent-border);
+      background: var(--bg-card-hover);
+      transform: translateY(-2px);
+      color: var(--white);
+    }
+
+    .action-card-icon {
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .action-card-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.02em;
+    }
+
+    .action-card-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .action-card-arrow {
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-weight: 700;
+      margin-top: auto;
+    }
+
+    .action-card.primary {
+      border-color: var(--accent-border);
+      background: linear-gradient(135deg, var(--accent-dim) 0%, var(--bg-card) 80%);
+    }
+
+    /* ============================================================
+       CONNECTIONS TABLE
+       ============================================================ */
+    .connections-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .connections-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+      gap: 1rem;
+    }
+
+    .connections-stats {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .conn-stat {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .conn-stat-val {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.02em;
+    }
+
+    .conn-stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .tunnel-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.3rem 0.8rem;
+      border-radius: 100px;
+      border: 1px solid;
+    }
+
+    .tunnel-badge.connected {
+      color: var(--green);
+      background: var(--green-dim);
+      border-color: var(--green-border);
+    }
+
+    .tunnel-badge.disconnected {
+      color: var(--text-muted);
+      background: var(--bg-secondary);
+      border-color: var(--border-subtle);
+    }
+
+    .tokens-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .tokens-table th {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0.65rem 1.25rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .tokens-table td {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .tokens-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .tokens-table tr:hover td {
+      background: rgba(255,255,255,0.02);
+      color: var(--white);
+    }
+
+    .token-scope {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      font-family: 'Courier New', monospace;
+      background: rgba(129, 175, 221, 0.1);
+      color: var(--cornflower-blue);
+      border: 1px solid rgba(129, 175, 221, 0.2);
+      border-radius: 4px;
+      padding: 0.1rem 0.45rem;
+      margin-right: 0.25rem;
+    }
+
+    .token-active {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--green);
+    }
+
+    .token-active::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state a {
+      color: var(--accent);
+    }
+
+    /* ============================================================
+       RECIPE LIBRARY
+       ============================================================ */
+    .recipe-search {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .search-input {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--white);
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.55rem 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-border);
+    }
+
+    .recipe-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.85rem;
+    }
+
+    .recipe-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.6rem;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      cursor: pointer;
+    }
+
+    .recipe-card:hover {
+      border-color: var(--accent-border);
+      background: var(--bg-card-hover);
+      transform: translateY(-1px);
+    }
+
+    .recipe-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    .recipe-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .recipe-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .recipe-run-btn {
+      font-family: inherit;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 6px;
+      padding: 0.2rem 0.6rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      width: 100%;
+      text-align: center;
+    }
+
+    .recipe-run-btn:hover {
+      background: var(--accent);
+      color: var(--white);
+    }
+
+    /* ============================================================
+       5 WAYS TO CONTROL
+       ============================================================ */
+    .ways-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .way-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .way-card:hover {
+      border-color: var(--border-mid);
+      background: var(--bg-card-hover);
+    }
+
+    .way-num {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .way-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .way-desc {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* ============================================================
+       FOOTER
+       ============================================================ */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 1.5rem 0;
+      margin-top: 2rem;
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-brand {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .footer-links a {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--cornflower-blue);
+    }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @media (max-width: 640px) {
+      .header-status { display: none; }
+      .connections-stats { gap: 0.75rem; }
+      .recipe-grid { grid-template-columns: repeat(2, 1fr); }
+      .ways-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 400px) {
+      .ways-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ============================================================
+       ANIMATIONS
+       ============================================================ */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      animation: fadeInUp 0.4s ease forwards;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<div class="page-content">
+
+  <!-- ================================================================
+       HEADER
+       ================================================================ -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="/web/home.html" class="logo">
+        <span class="logo-icon">&#x1F525;</span>
+        Solace Browser
+        <span class="logo-tagline">v1.0.0-beta</span>
+      </a>
+
+      <div class="header-status">
+        <div class="status-pill" id="tunnel-status-pill">
+          <span class="status-dot disconnected" id="tunnel-dot"></span>
+          <span id="tunnel-label">Tunnel: Off</span>
+        </div>
+        <div class="status-pill">
+          <span class="status-dot" id="agent-dot"></span>
+          <span id="agent-label">Agent: Ready</span>
+        </div>
+      </div>
+
+      <nav class="header-nav">
+        <a href="/machine/dashboard" class="nav-btn">&#x1F4BB; Machine</a>
+        <a href="/tunnel/connect" class="nav-btn">&#x2601;&#xFE0F; Tunnel</a>
+        <a href="/settings/tokens" class="nav-btn">&#x1F511; Tokens</a>
+        <a href="https://solaceagi.com/browser" target="_blank" class="nav-btn accent">Get Full Version</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ================================================================
+       HERO
+       ================================================================ -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-eyebrow">AI Agent Portal</div>
+      <h1>Your AI Agent Portal</h1>
+      <p class="hero-sub">Web + Machine + Cloud — governed by OAuth3</p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       SECTION 1: QUICK ACTIONS
+       ================================================================ -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-title">Quick Actions</span>
+      </div>
+
+      <div class="quick-actions">
+
+        <a href="/recipes/dashboard" class="action-card primary fade-in" style="animation-delay:0.05s">
+          <div class="action-card-icon">&#x1F310;</div>
+          <div>
+            <div class="action-card-title">Browse Web</div>
+            <div class="action-card-desc">Access the web with OAuth3-protected AI agent automation. Gmail, LinkedIn, Substack, Twitter, and more.</div>
+          </div>
+          <div class="action-card-arrow">Open Recipe Dashboard &rsaquo;</div>
+        </a>
+
+        <a href="/machine/dashboard" class="action-card fade-in" style="animation-delay:0.10s">
+          <div class="action-card-icon">&#x1F4BB;</div>
+          <div>
+            <div class="action-card-title">My Machine</div>
+            <div class="action-card-desc">File browser, terminal, and system info — all OAuth3-gated. Full local machine access from one panel.</div>
+          </div>
+          <div class="action-card-arrow">Open Machine Dashboard &rsaquo;</div>
+        </a>
+
+        <a href="/tunnel/connect" class="action-card fade-in" style="animation-delay:0.15s">
+          <div class="action-card-icon">&#x2601;</div>
+          <div>
+            <div class="action-card-title">Cloud Connect</div>
+            <div class="action-card-desc">Connect to solaceagi.com for remote agent access via built-in tunnel. Control from anywhere.</div>
+          </div>
+          <div class="action-card-arrow">Connect to Cloud &rsaquo;</div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       SECTION 2: ACTIVE CONNECTIONS
+       ================================================================ -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-title">Active Connections</span>
+        <a href="/settings/tokens" class="section-link">Manage tokens &rsaquo;</a>
+      </div>
+
+      <div class="connections-card">
+
+        <div class="connections-bar">
+          <div class="connections-stats">
+            <div class="conn-stat">
+              <div class="conn-stat-val" id="token-count">0</div>
+              <div class="conn-stat-label">Active Tokens</div>
+            </div>
+            <div class="conn-stat">
+              <div class="conn-stat-val" id="scope-count">0</div>
+              <div class="conn-stat-label">Scopes Granted</div>
+            </div>
+          </div>
+          <div class="tunnel-badge disconnected" id="tunnel-badge">
+            <span>&#x25CF;</span>
+            <span id="tunnel-text">Tunnel Disconnected</span>
+          </div>
+        </div>
+
+        <div id="tokens-table-wrapper">
+          <table class="tokens-table">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Scopes</th>
+                <th>Expires</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tokens-tbody">
+              <tr>
+                <td colspan="4">
+                  <div class="empty-state">
+                    <p>No active tokens. <a href="https://solaceagi.com/settings/oauth3">Grant OAuth3 scopes</a> to get started.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       SECTION 3: RECIPE LIBRARY
+       ================================================================ -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-title">Recipe Library</span>
+        <a href="/recipes/dashboard" class="section-link">View all &rsaquo;</a>
+      </div>
+
+      <div class="recipe-search">
+        <input
+          type="text"
+          class="search-input"
+          id="recipe-search"
+          placeholder="Search recipes... (Gmail, LinkedIn, Substack...)"
+          oninput="filterRecipes(this.value)"
+        >
+      </div>
+
+      <div class="recipe-grid" id="recipe-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       SECTION 4: 5 WAYS TO CONTROL
+       ================================================================ -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-title">5 Ways to Control Solace Browser</span>
+      </div>
+
+      <div class="ways-grid">
+
+        <div class="way-card">
+          <div class="way-num">01</div>
+          <div class="way-title">AI Agent</div>
+          <div class="way-desc">Use with Claude Code, Cursor, or any AI coding agent loaded with Stillwater skills. The agent dispatches tasks directly via MCP or HTTP.</div>
+        </div>
+
+        <div class="way-card">
+          <div class="way-num">02</div>
+          <div class="way-title">Command Line</div>
+          <div class="way-desc"><code style="font-family:monospace;font-size:0.8em;color:var(--accent)">solace-browser run 'task'</code> — direct CLI execution. Fully scriptable, cron-compatible, pipe-friendly.</div>
+        </div>
+
+        <div class="way-card">
+          <div class="way-num">03</div>
+          <div class="way-title">OAuth3 Web</div>
+          <div class="way-desc">Grant scopes from solaceagi.com dashboard for remote control. Each scope is explicit, revocable, and audit-logged.</div>
+        </div>
+
+        <div class="way-card">
+          <div class="way-num">04</div>
+          <div class="way-title">Tunnel</div>
+          <div class="way-desc">Built-in ngrok-like tunnel — expose your local browser to your cloud twin. Connect from anywhere, no port forwarding needed.</div>
+        </div>
+
+        <div class="way-card">
+          <div class="way-num">05</div>
+          <div class="way-title">Download</div>
+          <div class="way-desc">Get Solace Browser at <a href="https://solaceagi.com/browser" target="_blank">solaceagi.com/browser</a>. Free and open source. Cloud features require a solaceagi.com account.</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       FOOTER
+       ================================================================ -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <span class="footer-brand">Solace Browser v1.0.0-beta</span>
+        <div class="footer-links">
+          <a href="https://solaceagi.com/trust" target="_blank">Trust Center</a>
+          <a href="https://solaceagi.com/legal/privacy-policy" target="_blank">Privacy</a>
+          <a href="https://solaceagi.com/legal/terms-of-service" target="_blank">Terms</a>
+          <a href="https://github.com/phuctruong/solace-browser" target="_blank">GitHub</a>
+          <a href="https://solaceagi.com/browser" target="_blank">Get Full Version</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- end .page-content -->
+
+<!-- ================================================================
+     JAVASCRIPT
+     ================================================================ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ------------------------------------------------------------------
+     PARTICLE CANVAS
+  ------------------------------------------------------------------ */
+  (function initParticles() {
+    var canvas = document.getElementById('particles-canvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var W, H, particles;
+    var COLORS = ['#FF6B35', '#ff9a5c', '#81afdd', '#ae67fa'];
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+
+    function rand(a, b) { return Math.random() * (b - a) + a; }
+
+    function makeParticle() {
+      return {
+        x: rand(0, W), y: rand(0, H),
+        vx: rand(-0.2, 0.2), vy: rand(-0.2, 0.2),
+        r: rand(0.8, 2.2),
+        alpha: rand(0.1, 0.35),
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      };
+    }
+
+    function init() {
+      resize();
+      particles = Array.from({ length: 50 }, makeParticle);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      for (var i = 0; i < particles.length; i++) {
+        var p = particles[i];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < -5) p.x = W + 5;
+        if (p.x > W + 5) p.x = -5;
+        if (p.y < -5) p.y = H + 5;
+        if (p.y > H + 5) p.y = -5;
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', function () { resize(); });
+    init();
+    draw();
+  })();
+
+  /* ------------------------------------------------------------------
+     RECIPE DATA (static — will be replaced by API call in production)
+  ------------------------------------------------------------------ */
+  var RECIPES = [
+    { id: 'gmail',     icon: '&#x2709;&#xFE0F;',  name: 'Gmail',     count: 8,  platform: 'gmail' },
+    { id: 'linkedin',  icon: '&#x1F4BC;',          name: 'LinkedIn',  count: 6,  platform: 'linkedin' },
+    { id: 'substack',  icon: '&#x270D;&#xFE0F;',   name: 'Substack',  count: 4,  platform: 'substack' },
+    { id: 'twitter',   icon: '&#x1F426;',          name: 'Twitter/X', count: 5,  platform: 'twitter' },
+    { id: 'reddit',    icon: '&#x1F47E;',          name: 'Reddit',    count: 3,  platform: 'reddit' },
+    { id: 'github',    icon: '&#x1F40D;',          name: 'GitHub',    count: 7,  platform: 'github' },
+  ];
+
+  var allRecipes = RECIPES.slice();
+
+  function renderRecipes(list) {
+    var grid = document.getElementById('recipe-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    if (list.length === 0) {
+      grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:1rem 0">No recipes found.</p>';
+      return;
+    }
+
+    list.forEach(function (r) {
+      var card = document.createElement('div');
+      card.className = 'recipe-card';
+      card.innerHTML =
+        '<div class="recipe-icon">' + r.icon + '</div>' +
+        '<div class="recipe-name">' + r.name + '</div>' +
+        '<div class="recipe-meta">' + r.count + ' recipes</div>' +
+        '<button class="recipe-run-btn" onclick="runRecipe(\'' + r.id + '\')">Run &rsaquo;</button>';
+      grid.appendChild(card);
+    });
+  }
+
+  window.filterRecipes = function (q) {
+    q = q.toLowerCase().trim();
+    var filtered = !q ? allRecipes : allRecipes.filter(function (r) {
+      return r.name.toLowerCase().includes(q) || r.platform.includes(q);
+    });
+    renderRecipes(filtered);
+  };
+
+  window.runRecipe = function (id) {
+    // Will dispatch to /recipes/{id}/run via API in production
+    var url = '/recipes/' + id + '/run';
+    window.location.href = url;
+  };
+
+  renderRecipes(allRecipes);
+
+  /* ------------------------------------------------------------------
+     LOAD ACTIVE CONNECTIONS
+     Fetches /api/tokens/active — static placeholder shown if unavailable
+  ------------------------------------------------------------------ */
+  function loadConnections() {
+    fetch('/api/tokens/active', { method: 'GET', headers: { 'Accept': 'application/json' } })
+      .then(function (res) {
+        if (!res.ok) throw new Error('unavailable');
+        return res.json();
+      })
+      .then(function (data) {
+        renderTokens(data.tokens || []);
+        updateTunnelStatus(data.tunnel || null);
+      })
+      .catch(function () {
+        // API not available yet — show placeholder state
+        renderTokens([]);
+        updateTunnelStatus(null);
+      });
+  }
+
+  function renderTokens(tokens) {
+    var tbody = document.getElementById('tokens-tbody');
+    var tokenCount = document.getElementById('token-count');
+    var scopeCount = document.getElementById('scope-count');
+    if (!tbody) return;
+
+    var totalScopes = 0;
+    tokens.forEach(function (t) {
+      totalScopes += (t.scopes || []).length;
+    });
+
+    if (tokenCount) tokenCount.textContent = tokens.length;
+    if (scopeCount) scopeCount.textContent = totalScopes;
+
+    if (tokens.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><p>No active tokens. <a href="https://solaceagi.com/settings/oauth3">Grant OAuth3 scopes</a> to get started.</p></div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = '';
+    tokens.forEach(function (t) {
+      var scopes = (t.scopes || []).map(function (s) {
+        return '<span class="token-scope">' + s + '</span>';
+      }).join('');
+
+      var exp = t.expires_at ? new Date(t.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : 'Never';
+
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + (t.service || '—') + '</td>' +
+        '<td>' + (scopes || '<span style="color:var(--text-muted)">none</span>') + '</td>' +
+        '<td>' + exp + '</td>' +
+        '<td><span class="token-active">Active</span></td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  function updateTunnelStatus(tunnel) {
+    var badge  = document.getElementById('tunnel-badge');
+    var text   = document.getElementById('tunnel-text');
+    var dot    = document.getElementById('tunnel-dot');
+    var label  = document.getElementById('tunnel-label');
+
+    if (tunnel && tunnel.connected) {
+      if (badge)  { badge.className = 'tunnel-badge connected'; }
+      if (text)   { text.textContent = 'Tunnel: ' + (tunnel.public_url || 'Connected'); }
+      if (dot)    { dot.className = 'status-dot'; }
+      if (label)  { label.textContent = 'Tunnel: On'; }
+    } else {
+      if (badge)  { badge.className = 'tunnel-badge disconnected'; }
+      if (text)   { text.textContent = 'Tunnel Disconnected'; }
+      if (dot)    { dot.className = 'status-dot disconnected'; }
+      if (label)  { label.textContent = 'Tunnel: Off'; }
+    }
+  }
+
+  /* ------------------------------------------------------------------
+     INIT
+  ------------------------------------------------------------------ */
+  loadConnections();
+
+  // Refresh connections every 30s
+  setInterval(loadConnections, 30000);
+
+})();
+</script>
+
+</body>
+</html>

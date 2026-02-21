@@ -2,6 +2,43 @@
 
 > *"Be water, my friend."* — Bruce Lee
 
+## The Universal Portal Vision
+
+**Solace Browser is not just a web browser.**
+
+It is the universal portal through which AI agents interact with ALL of a user's digital resources — web accounts, local files, terminal, system state — all governed by OAuth3 consent and Part 11 audit trails.
+
+```
+solaceagi.com (cloud)
+    ↕ tunnel (built-in reverse proxy, like ngrok)
+Solace Browser (local portal)
+    ├── Web Layer (OAuth3 browser, recipes, 10+ platforms)
+    ├── Machine Layer (files, terminal, system — OAuth3-gated)
+    ├── Tunnel Layer (reverse proxy to cloud — step-up required)
+    └── OAuth3 Enforcement (ALL actions scope-gated, evidenced)
+```
+
+**5 Control Surfaces:**
+1. **AI Agent** — Claude Code + stillwater skills call the local API directly
+2. **CLI** — `solace-cli browser run "task"` from any terminal
+3. **OAuth3 Web** — solaceagi.com dashboard → remote control via tunnel
+4. **Native Tunnel** — built-in reverse proxy, connect from anywhere, no external tools
+5. **Download** — solaceagi.com/browser, cross-platform (DMG / DEB / MSI)
+
+**The competitive moat deepens with every layer:**
+
+| Competitor | Web | Machine | Tunnel | OAuth3 |
+|-----------|-----|---------|--------|--------|
+| Browser-Use | Chrome only | No | No | No |
+| Bardeen | Extension only | No | No | No |
+| OpenClaw | Yes | No | No | No |
+| Vercel agent-browser | Cloud only | No | No | No |
+| **Solace Browser** | **Yes** | **Yes** | **Yes** | **Yes** |
+
+No competitor has OAuth3-gated machine access. We ship it first.
+
+---
+
 ## The Reframe: From Tool to Protocol
 
 **Before OAuth3**: SolaceBrowser = browser automation tool (competing on features)
@@ -55,13 +92,14 @@ CLOUD  → Same persistent_browser_server.py running headless on solaceagi.com
          Recipe system: 70% cache hit → $0.01/task vs $0.20 for competitors
 ```
 
-**Six moats (all competitors have 0–2):**
+**Seven moats (all competitors have 0–2):**
 1. **Recipe system** → 70% cache hit → 3x cheaper COGS
 2. **PrimeWiki** → domain-aware navigation (not generic DOM scraping)
 3. **Twin architecture** → local browsing + cloud delegation
 4. **Anti-detection** → Bezier mouse, fingerprint sync, char-by-char typing
 5. **Stillwater verification** → evidence bundle per task (not just screenshots)
 6. **OAuth3 protocol** → scoped consent, revocation, audit trail, step-up auth ← UNCOPYABLE
+7. **Machine layer** → OAuth3-gated file + terminal + system access ← FIRST MOVER
 
 **Why moat #6 is uncopyable**: OpenAI building OAuth3 = OpenAI cannibalizing its token revenue.
 We have structural freedom to do what they can't.
@@ -236,16 +274,24 @@ What this enables (no competitor offers this):
 - Zero-knowledge sync: user's master password never touches server
 - Phuc swarms for all implementation (coder/planner/skeptic typed agents)
 - **PZip HTML snapshots**: full page capture + form fill recording + cross-file compression
+- **Machine layer**: OAuth3-gated file/terminal/system access (13 scopes, path traversal prevention)
+- **Tunnel engine**: built-in reverse proxy at rung 65537 (TLS-only, token-pinned, bandwidth-tracked)
+- **Cross-platform distribution**: Tauri wrapper + platform installers + auto-update
+- **Universal portal home page**: 5 control surfaces in one dashboard
 
 ## What Does NOT Align
 
-- Building Chromium fork (use Electron)
+- Building Chromium fork (use Tauri/Electron)
 - Mobile-first (desktop first)
 - Scraping/aggregating data (personal task delegation only)
 - Running browser automation without sealed wish contract (EXECUTE_WITHOUT_SEALED_WISH)
 - Claiming task success without Stillwater evidence bundle
 - Storing screenshots instead of HTML snapshots (lossy → can't inspect → can't replay)
 - Storing uncompressed HTML (always PZip before storage)
+- Machine access without OAuth3 token (MACHINE_ACCESS_WITHOUT_TOKEN — forbidden state)
+- Tunnel without step-up confirmation (TUNNEL_WITHOUT_STEP_UP — forbidden state)
+- Path traversal allowed (any "../" or absolute path outside allowed_roots → 403, no exceptions)
+- Blocklisted commands executed (BLOCKED_COMMAND_EXECUTED — forbidden state, highest severity)
 
 ## Key Risks to Monitor
 

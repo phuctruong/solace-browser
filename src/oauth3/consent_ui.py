@@ -41,6 +41,7 @@ from oauth3.scopes import (
     SCOPES,
     STEP_UP_REQUIRED_SCOPES,
     validate_scopes,
+    validate_scopes_lenient,
     get_scope_description,
     get_scope_risk_level,
 )
@@ -458,7 +459,7 @@ def build_consent_page(
             '<div class="container"><div class="flash-error">No scopes requested.</div></div>',
         ), 400
 
-    is_valid, unknown = validate_scopes(requested_scopes)
+    is_valid, unknown = validate_scopes_lenient(requested_scopes)
     if not is_valid:
         unknown_list = ", ".join(_h(u) for u in unknown)
         body = (
@@ -838,7 +839,7 @@ async def handle_consent_post(request) -> object:
     if not isinstance(requested_scopes, list):
         return web.json_response({"error": "scopes_must_be_list"}, status=400)
 
-    is_valid, unknown = validate_scopes(requested_scopes)
+    is_valid, unknown = validate_scopes_lenient(requested_scopes)
     if not is_valid:
         return web.json_response(
             {"error": "unknown_scopes", "unknown": unknown},
@@ -850,7 +851,7 @@ async def handle_consent_post(request) -> object:
         user_id="local",
         scopes=requested_scopes,
     )
-    token.save_to_file()
+    token.save_to_file(DEFAULT_TOKEN_DIR)
 
     response = web.json_response(
         {

@@ -65,6 +65,7 @@ from .enforcement import (
     check_scope,
     check_step_up,
     build_evidence_token_entry,
+    enforce_oauth3,
 )
 
 # ---------------------------------------------------------------------------
@@ -80,6 +81,9 @@ from .revocation import (
     # file-based backward compat
     revoke_token_file,
     is_revoked_file,
+    is_revoked,
+    list_all_tokens,
+    revoke_all_tokens_for_scope,
 )
 
 # ---------------------------------------------------------------------------
@@ -119,6 +123,7 @@ __all__ = [
     "check_scope",
     "check_step_up",
     "build_evidence_token_entry",
+    "enforce_oauth3",
     # Revocation
     "TokenStore",
     "revoke_token",
@@ -127,6 +132,9 @@ __all__ = [
     "cleanup_expired",
     "revoke_token_file",
     "is_revoked_file",
+    "is_revoked",
+    "list_all_tokens",
+    "revoke_all_tokens_for_scope",
 ]
 
 __version__ = "0.1.0"

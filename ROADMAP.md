@@ -556,13 +556,298 @@ Acceptance (Rung 641):
 
 ---
 
-## Phase 3 — solaceagi.com (Cloud Layer)
+## Phase 3 — Universal Portal (Month 2)
 
-**When**: After Phase 2 (Gmail + Substack + Twitter validated)
+**Strategic reframe**: Solace Browser is not just a web browser. It is the universal portal through which AI agents interact with ALL of a user's digital resources — web accounts, local files, terminal, system — all governed by OAuth3 consent + Part 11 audit trails.
+
+**Why this deepens the moat**: No competitor has OAuth3-gated machine access. Browser-Use is Chrome only. Bardeen is extension only. OpenClaw has no machine layer. Solace Browser is the first AI agent portal with web + machine + cloud in a single, consent-governed application.
+
+**5 Control Surfaces (after this phase):**
+1. AI Agent (Claude Code + stillwater skills → local API)
+2. CLI (`solace-cli browser run "task"`)
+3. OAuth3 Web (solaceagi.com dashboard → remote control)
+4. Native Tunnel (built-in reverse proxy, connect from anywhere)
+5. Download (solaceagi.com/browser, cross-platform installers)
+
+---
+
+### BUILD PROMPT 11: Machine Access Layer
+
+```
+TASK: Build OAuth3-gated machine access layer for solace-browser
+
+Context: Solace Browser transforms from web-only browser to universal AI agent portal.
+The machine layer gives AI agents access to local files, terminal, and system — all gated
+by the same OAuth3 consent + Part 11 evidence system as the web layer.
+
+RISK LEVEL: HIGH — machine access is irreversible (files can be deleted, commands executed)
+Rung target: 274177 (irreversible — not just local correctness)
+
+Files to create:
+  src/machine/scopes.py — 13 machine-specific OAuth3 scopes:
+    MACHINE_SCOPES = {
+      "machine.file.read":        "Read files and directories on your machine",
+      "machine.file.write":       "Write and create files on your machine",
+      "machine.file.delete":      "Delete files from your machine (STEP-UP REQUIRED)",
+      "machine.file.list":        "List directory contents on your machine",
+      "machine.terminal.read":    "View terminal output and command history",
+      "machine.terminal.execute": "Execute terminal commands on your machine (STEP-UP REQUIRED)",
+      "machine.terminal.allowlist": "Execute commands matching the configured allowlist",
+      "machine.system.info":      "Read system information (CPU, memory, disk, OS)",
+      "machine.system.env":       "Read environment variables (non-secret)",
+      "machine.process.list":     "List running processes",
+      "machine.process.kill":     "Kill processes by PID (STEP-UP REQUIRED)",
+      "machine.tunnel":           "Open reverse tunnel to solaceagi.com (STEP-UP REQUIRED)",
+      "machine.clipboard":        "Read and write clipboard contents",
+    }
+    MACHINE_STEP_UP_REQUIRED = [
+      "machine.file.delete", "machine.terminal.execute",
+      "machine.process.kill", "machine.tunnel"
+    ]
+
+  src/machine/file_browser.py — OAuth3-gated file system access:
+    - list_directory(path, token): requires machine.file.list scope
+    - read_file(path, token): requires machine.file.read scope
+    - write_file(path, content, token): requires machine.file.write scope
+    - delete_file(path, token): requires machine.file.delete + step-up confirmation
+    - Security: path traversal prevention (deny paths outside allowed_roots)
+    - allowed_roots configurable in ~/.solace/machine-config.json
+    - Default allowed_roots: ["~/Documents", "~/Desktop", "~/Downloads", "~/.solace"]
+
+  src/machine/terminal.py — OAuth3-gated command execution:
+    - execute_command(cmd, token): requires machine.terminal.execute + step-up
+    - execute_allowlisted(cmd, token): requires machine.terminal.allowlist
+    - Allowlist stored in ~/.solace/terminal-allowlist.json (user-managed)
+    - Blocklist (hard-coded, never overridable):
+        BLOCKED_COMMANDS = ["rm -rf /", "mkfs", "dd if=", "fork bomb", "> /dev/"]
+    - Output capture: stdout + stderr + exit_code + duration_ms
+    - Timeout: 30 seconds max per command
+    - Evidence: every execution emits OAuth3-bound evidence bundle
+
+  src/machine/api.py — FastAPI router for machine endpoints:
+    POST /machine/file/list    — list directory (machine.file.list scope)
+    POST /machine/file/read    — read file contents (machine.file.read scope)
+    POST /machine/file/write   — write file (machine.file.write scope)
+    DELETE /machine/file       — delete file (machine.file.delete + step-up)
+    GET  /machine/system/info  — system info (machine.system.info scope)
+    POST /machine/terminal/run — execute command (machine.terminal.execute + step-up)
+    GET  /machine/scopes       — list all machine scopes
+
+Security requirements (non-negotiable):
+  - ALL machine operations require valid OAuth3 agency token
+  - Path traversal: ANY request containing ".." or absolute path → 403 immediately
+  - Step-up for destructive: file.delete + terminal.execute → require confirmed step-up nonce
+  - Blocklist: checked BEFORE any token validation (fail-closed)
+  - Evidence bundle: every machine operation logs to ~/.solace/evidence/{task_id}/
+
+Acceptance tests (Rung 274177):
+  - 100+ tests covering scope enforcement, path traversal attack vectors, command blocklist
+  - Path traversal: ../../../etc/passwd → 403 for all read/write/delete endpoints
+  - Blocklist: "rm -rf /" blocked with no token check
+  - Valid token + correct scope → operation succeeds, evidence bundle emitted
+  - Step-up required for delete + execute (without nonce → 402)
+  - Step-up confirmed + nonce → operation executes, evidence shows step_up_performed=true
+  - Null/missing scope → 403 with scope name in error body
+  - allowed_roots enforced: path outside roots → 403 even with valid token
+
+Rung: 274177
+```
+
+---
+
+### BUILD PROMPT 12: Tunnel Engine
+
+```
+TASK: Build reverse tunnel engine for solace-browser → tunnel.solaceagi.com
+
+Context: The tunnel enables remote control of the local Solace Browser from anywhere.
+This is the "built-in ngrok" — no external tools, no configuration, one click to connect.
+
+RISK LEVEL: CRITICAL — tunnel opens local machine to internet
+Rung target: 65537 (security-critical — this is the highest risk surface in the system)
+
+Files to create:
+  src/machine/tunnel.py — Reverse tunnel implementation:
+    - WebSocket-based persistent connection to tunnel.solaceagi.com
+    - OAuth3 scope: machine.tunnel (step-up required before tunnel opens)
+    - Tunnel lifecycle:
+        INIT → STEP_UP_CHECK → OAUTH3_GATE → CONNECT → ACTIVE → HEARTBEAT_LOOP → DISCONNECT
+    - TunnelSession dataclass:
+        {tunnel_id, user_id, token_id, started_at, bytes_in, bytes_out,
+         connected: bool, last_heartbeat: ISO8601}
+    - Auto-reconnect: exponential backoff (1s, 2s, 4s, 8s, max 60s)
+    - Heartbeat: ping every 30s, disconnect if no pong within 10s
+    - Bandwidth tracking: bytes_in + bytes_out per session, logged to evidence bundle
+    - Hard limits: max 100MB/session (free tier), configurable per belt tier
+    - Graceful shutdown: close WebSocket cleanly, emit disconnect evidence bundle
+
+  Tunnel endpoint mapping:
+    - tunnel.solaceagi.com assigns unique subdomain: {user_id}.tunnel.solaceagi.com
+    - All HTTP requests to subdomain → WebSocket relay → local Solace Browser API
+    - OAuth3 token required on every proxied request (server-side validation)
+
+  Evidence per tunnel session:
+    {
+      "tunnel_id": "uuid4",
+      "user_id": "...",
+      "token_id": "...",
+      "scope": "machine.tunnel",
+      "step_up_performed": true,
+      "started_at": "ISO8601",
+      "ended_at": "ISO8601",
+      "bytes_in": 1234,
+      "bytes_out": 5678,
+      "requests_proxied": 42,
+      "disconnect_reason": "user_initiated | timeout | server_closed | error"
+    }
+
+Security requirements (non-negotiable):
+  - ZERO tunnel traffic without valid OAuth3 token on every proxied request
+  - TLS required on WebSocket connection (wss:// only, reject ws://)
+  - Tunnel token pinned to user_id — cross-user relay impossible
+  - Bandwidth limits enforced in real-time (not post-hoc)
+  - Tunnel closes immediately on token revocation (revocation propagation < 5s)
+  - Security scan required before merge: semgrep + bandit on tunnel.py
+
+Acceptance tests (Rung 65537):
+  - WebSocket handshake with valid OAuth3 machine.tunnel token → connected
+  - WebSocket handshake without token → connection refused
+  - Token revoked mid-session → tunnel closes within 5s
+  - Bandwidth limit exceeded → graceful disconnect, no further relay
+  - Auto-reconnect after simulated disconnect → reconnects within 2s
+  - Heartbeat timeout simulation → disconnect after 10s no-pong
+  - Evidence bundle emitted on clean disconnect AND on error disconnect
+
+Rung: 65537
+```
+
+---
+
+### BUILD PROMPT 13: Browser Home Page + Machine Dashboard
+
+```
+TASK: Build browser home page and machine control dashboard for solace-browser
+
+Context: The home page becomes a command center for the universal portal.
+Users see: web automation status + machine access + tunnel connection + quick actions.
+
+Files to create:
+  web/home.html — Universal portal start page (replaces current home page):
+    Sections:
+      1. Quick Actions panel: [Run Recipe] [Browse Files] [Open Terminal] [Connect Tunnel]
+         Each action checks OAuth3 token before proceeding (redirect to /consent if missing)
+      2. Recipe Library grid: most-used recipes with last-run status + hit rate badge
+      3. Machine Status panel: disk usage, running processes count, tunnel status
+      4. Activity Feed: last 10 recipe runs + machine access logs (real-time, SSE)
+    Tech: vanilla HTML/CSS/JS, no build step, served by existing ui_server.py
+
+  web/machine-dashboard.html — Machine control center:
+    Three panels:
+      File Browser panel:
+        - Left: directory tree (allowed_roots from machine-config.json)
+        - Right: file listing with actions (read, write, download, delete with step-up confirm)
+        - Breadcrumb navigation
+        - File content viewer (code highlighting for .py, .json, .md, .yaml)
+        - Upload: drag-and-drop to write files (requires machine.file.write token)
+        - All operations call /machine/file/* endpoints with OAuth3 token in header
+
+      Terminal panel:
+        - Command input with allowlist indicator (shows if command matches allowlist)
+        - Output display: stdout (white) + stderr (red) + exit code badge
+        - Step-up confirmation modal for execute (non-allowlisted) commands
+        - Command history (last 50 commands, sessionStorage)
+        - System info sidebar: CPU %, memory %, disk %, uptime
+
+      Active Sessions panel:
+        - List of current OAuth3 machine tokens (scope, issued_at, expires_at)
+        - Revoke button per token
+        - Tunnel status: connected/disconnected, bytes_in/out, [Disconnect] button
+
+  web/tunnel-connect.html — Tunnel connection management:
+    - Current status: DISCONNECTED / CONNECTING / ACTIVE + tunnel URL
+    - [Connect Tunnel] button → requests machine.tunnel step-up → opens WebSocket
+    - Connected state shows: tunnel URL, bytes transferred, duration, request count
+    - [Copy Tunnel URL] button (copies {user_id}.tunnel.solaceagi.com to clipboard)
+    - [Disconnect] button → graceful tunnel shutdown
+    - Connection log: last 10 tunnel events (ISO8601 + event type)
+
+Acceptance tests (Rung 641):
+  - web/home.html renders all 4 sections without JS errors
+  - Quick Actions: each button triggers OAuth3 token check before action
+  - Machine dashboard: File Browser lists allowed_roots directories
+  - Terminal panel: allowlisted command executes without step-up; other commands show modal
+  - Tunnel connect: [Connect Tunnel] triggers step-up flow, then WebSocket connection
+  - All endpoints called with OAuth3 token in Authorization header
+
+Rung: 641
+```
+
+---
+
+### BUILD PROMPT 14: Cross-Platform Distribution
+
+```
+TASK: Package Solace Browser as cross-platform desktop application
+
+Context: Solace Browser must ship as a native desktop app — not a Python script users must
+configure themselves. One download, one install, runs everywhere. This is the distribution
+layer that puts the universal portal in users' hands.
+
+Architecture:
+  Option A (Tauri): Rust shell + webview, smaller binary, better perf
+  Option B (Electron): Node + Chromium, larger but more battle-tested
+  Decision: Tauri (smaller install footprint, no bundled Chromium overhead)
+
+  Bundled components:
+    - Tauri shell (Rust) wraps existing web UI (web/home.html + machine-dashboard.html)
+    - Embedded Python runtime (pyinstaller bundled) for solace_browser_server.py + machine API
+    - Playwright browsers installed to ~/Library/Application Support/SolaceBrowser/
+    - Configuration wizard on first launch (allowed_roots, allowlist setup)
+
+Files to create:
+  src-tauri/
+  ├── tauri.conf.json      — Tauri app configuration (name, version, icons, bundle ids)
+  ├── src/main.rs          — Rust entry point + Python subprocess manager
+  └── icons/               — App icons (DMG, DEB, MSI)
+
+  scripts/
+  ├── build-mac.sh         — Build DMG for macOS (arm64 + x86_64 universal)
+  ├── build-linux.sh       — Build .deb + .rpm for Debian/Ubuntu + RHEL/Fedora
+  └── build-windows.sh     — Build .msi installer for Windows 10/11
+
+  installer/
+  └── welcome.html         — First-launch wizard: allowed_roots + allowlist config
+
+Download page (solaceagi.com/browser):
+  - Platform auto-detection (macOS/Linux/Windows)
+  - Primary download button + secondary platform links
+  - Changelog, SHA256 checksums
+  - Installation instructions per platform
+
+Auto-update mechanism:
+  - Check https://solaceagi.com/api/browser/latest on startup
+  - Compare version strings, show banner if update available
+  - [Update Now] → download + verify SHA256 → replace binary → restart
+
+Acceptance tests (Rung 641):
+  - macOS: app launches, all API servers start, home.html renders
+  - Linux: .deb installs, app runs headless on Ubuntu 22.04
+  - Windows: .msi installs, app runs on Windows 11
+  - Auto-update: version check returns new version → banner shown
+  - SHA256 of distributed binary matches solaceagi.com/api/browser/latest checksum
+
+Rung: 641
+```
+
+---
+
+## Phase 4 — solaceagi.com (Cloud Layer)
+
+**When**: After Phase 3 (Universal Portal validated, machine layer stable)
 **What**: Hosted Stillwater + cloud browser execution, OAuth3-governed
 
 ```
-BUILD PROMPT 10: solaceagi.com MVP API
+BUILD PROMPT 10: solaceagi.com MVP API (renumbered from original Phase 3)
 
 TASK: Build FastAPI service for solaceagi.com — cloud recipe execution
 
@@ -614,9 +899,10 @@ Acceptance (Rung 641):
 
 We ship this sequence:
 1. ✅ Phase 1: LinkedIn recipes (DONE)
-2. 🔨 Phase 1.5: OAuth3 foundation (BUILD NEXT)
+2. ✅ Phase 1.5: OAuth3 foundation (DONE)
 3. 🔨 Phase 2: Gmail + Substack + Twitter (first-mover platforms)
-4. 🔨 Phase 3: solaceagi.com (cloud execution)
+4. 🔨 Phase 3: Universal Portal (machine access + tunnel + distribution)
+5. 🔨 Phase 4: solaceagi.com (cloud execution + tunnel server)
 
 We publish:
 - OAuth3 spec on solaceagi.com/spec (open standard — others implement it)

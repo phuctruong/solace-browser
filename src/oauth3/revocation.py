@@ -242,21 +242,32 @@ class TokenStore:
 # Standalone revocation functions (legacy API + convenience wrappers)
 # ---------------------------------------------------------------------------
 
-def revoke_token(token_id: str, store: Optional[TokenStore] = None) -> bool:
+def revoke_token(
+    token_id: str,
+    store: Optional[TokenStore] = None,
+    *,
+    token_dir=None,
+) -> bool:
     """
-    Revoke a single token by id in the given store.
+    Revoke a single token by id.
+
+    Supports both in-memory (store=) and file-based (token_dir=) backends.
 
     Args:
-        token_id: UUID of the token to revoke.
-        store:    TokenStore to revoke from (required for in-memory store).
+        token_id:  UUID of the token to revoke.
+        store:     TokenStore to revoke from (for in-memory backend).
+        token_dir: Directory containing token files (for file-based backend).
 
     Returns:
         True if revocation succeeded or token was already revoked.
         False if token not found.
     """
-    if store is None:
-        return False
-    return store.revoke(token_id)
+    # File-based backend takes priority if token_dir is provided
+    if token_dir is not None:
+        return revoke_token_file(token_id, token_dir=token_dir)
+    if store is not None:
+        return store.revoke(token_id)
+    return False
 
 
 def revoke_all_for_subject(subject: str, store: TokenStore) -> int:
@@ -369,3 +380,88 @@ def is_revoked_file(token_id: str, token_dir=None) -> bool:
         return data.get("revoked", False)
     except (json.JSONDecodeError, OSError):
         return True  # fail-closed
+
+
+def list_all_tokens(token_dir=None) -> List[AgencyToken]:
+    """
+    List all tokens from file-based storage as AgencyToken objects.
+
+    Args:
+        token_dir: Directory containing token JSON files.
+
+    Returns:
+        List of AgencyToken instances loaded from files.
+    """
+    import json
+    from pathlib import Path
+
+    if token_dir is None:
+        return []
+
+    token_path = Path(token_dir)
+    if not token_path.exists():
+        return []
+
+    tokens = []
+    for f in sorted(token_path.glob("*.json")):
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+            # Handle files saved before step_up_required_for field existed
+            if "step_up_required_for" not in data:
+                from .scopes import HIGH_RISK_SCOPES
+                scopes = data.get("scopes", [])
+                data["step_up_required_for"] = [s for s in scopes if s in HIGH_RISK_SCOPES]
+            # Handle files saved before issuer field existed (legacy)
+            if "issuer" not in data:
+                data["issuer"] = "https://solaceagi.com"
+            token = AgencyToken.from_dict(data)
+            tokens.append(token)
+        except (json.JSONDecodeError, OSError, ValueError, KeyError):
+            continue
+    return tokens
+
+
+def is_revoked(token_id: str, token_dir=None) -> bool:
+    """
+    Backward-compat alias for is_revoked_file.
+
+    Fail-closed: missing/malformed → True.
+    """
+    return is_revoked_file(token_id, token_dir=token_dir)
+
+
+def revoke_all_tokens_for_scope(scope: str, token_dir=None) -> int:
+    """
+    Revoke all tokens that contain a given scope (file-based).
+
+    Backward-compatibility function for old tests.
+
+    Args:
+        scope:     Scope string to match.
+        token_dir: Directory containing token JSON files.
+
+    Returns:
+        Number of tokens revoked.
+    """
+    import json
+    from pathlib import Path
+
+    if token_dir is None:
+        return 0
+
+    token_path = Path(token_dir)
+    if not token_path.exists():
+        return 0
+
+    count = 0
+    for f in sorted(token_path.glob("*.json")):
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+            scopes = data.get("scopes", [])
+            if scope in scopes and not data.get("revoked", False):
+                data["revoked"] = True
+                f.write_text(json.dumps(data), encoding="utf-8")
+                count += 1
+        except (json.JSONDecodeError, OSError):
+            continue
+    return count
