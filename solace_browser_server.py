@@ -25,7 +25,33 @@ import os
 from pathlib import Path
 from typing import Dict, Optional, Any
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+# OAuth3 module — add src/ to path for local import
+_SRC_PATH = Path(__file__).parent / "src"
+if str(_SRC_PATH) not in sys.path:
+    sys.path.insert(0, str(_SRC_PATH))
+
+try:
+    from oauth3 import (
+        AgencyToken,
+        SCOPES,
+        validate_scopes,
+        get_scope_description,
+        enforce_oauth3,
+        revoke_token,
+        revoke_all_tokens_for_scope,
+        is_revoked,
+    )
+    from oauth3.enforcement import build_evidence_token_entry
+    from oauth3.revocation import list_all_tokens
+    from oauth3.token import DEFAULT_TOKEN_DIR
+    from oauth3.consent_ui import register_consent_routes
+    OAUTH3_AVAILABLE = True
+except ImportError as _oauth3_import_error:
+    logger_temp = logging.getLogger("solace-browser")
+    logger_temp.warning(f"OAuth3 module not available: {_oauth3_import_error}")
+    OAUTH3_AVAILABLE = False
 
 try:
     from playwright.async_api import async_playwright, Browser, Page
@@ -1105,6 +1131,26 @@ class SolaceBrowserServer:
         self.app.router.add_get('/api/status', self._handle_status)
         self.app.router.add_get('/api/events', self._handle_events)
 
+        # OAuth3 routes (Phase 1.5)
+        self.app.router.add_post('/oauth3/token', self._handle_oauth3_issue_token)
+        self.app.router.add_get('/oauth3/token/{token_id}', self._handle_oauth3_get_token)
+        self.app.router.add_delete('/oauth3/token/{token_id}', self._handle_oauth3_revoke_token)
+        self.app.router.add_get('/oauth3/scopes', self._handle_oauth3_scopes)
+
+        # OAuth3 Consent UI (Phase 1.5 BUILD 2)
+        # Routes: GET /consent, POST /oauth3/consent, GET /settings/tokens
+        if OAUTH3_AVAILABLE:
+            try:
+                register_consent_routes(self.app)
+            except Exception as _consent_ui_error:
+                import logging as _logging
+                _logging.getLogger("solace-browser").warning(
+                    f"Consent UI routes could not be registered: {_consent_ui_error}"
+                )
+
+        # Recipe execution (OAuth3-enforced)
+        self.app.router.add_post('/run-recipe', self._handle_run_recipe)
+
         # Debug UI routes
         if self.browser.debug_ui:
             self.app.router.add_get('/', self._handle_ui)
@@ -1282,6 +1328,336 @@ class SolaceBrowserServer:
         """Get event history"""
         limit = int(request.query.get('limit', 100))
         return web.json_response(self.browser.event_history[-limit:])
+
+    # =========================================================================
+    # OAuth3 handlers (Phase 1.5)
+    # =========================================================================
+
+    async def _handle_oauth3_issue_token(self, request):
+        """
+        POST /oauth3/token
+        Issue an agency token with the requested scopes.
+
+        Request body:
+          {
+            "scopes": ["linkedin.create_post"],
+            "user_id": "string (optional, defaults to 'local')",
+            "expires_hours": 720  (optional, default 720 = 30 days)
+          }
+
+        Response 200:
+          {token_id, user_id, issued_at, expires_at, scopes, step_up_required_for}
+
+        Response 400: unknown scopes
+        Response 503: OAuth3 module not loaded
+        """
+        if not OAUTH3_AVAILABLE:
+            return web.json_response(
+                {"error": "oauth3_unavailable", "detail": "OAuth3 module not loaded"},
+                status=503,
+            )
+
+        try:
+            data = await request.json()
+        except Exception:
+            return web.json_response({"error": "invalid_json"}, status=400)
+
+        requested_scopes = data.get("scopes", [])
+        if not requested_scopes:
+            return web.json_response(
+                {"error": "missing_scopes", "detail": "At least one scope is required"},
+                status=400,
+            )
+
+        # Validate all requested scopes exist
+        is_valid, unknown = validate_scopes(requested_scopes)
+        if not is_valid:
+            return web.json_response(
+                {
+                    "error": "unknown_scopes",
+                    "unknown": unknown,
+                    "known_scopes": list(SCOPES.keys()),
+                },
+                status=400,
+            )
+
+        user_id = data.get("user_id", "local")
+        expires_hours = int(data.get("expires_hours", 720))
+
+        token = AgencyToken.create(
+            user_id=user_id,
+            scopes=requested_scopes,
+            expires_hours=expires_hours,
+        )
+        token.save_to_file()
+
+        logger.info(
+            f"OAuth3 token issued: {token.token_id[:8]}... "
+            f"scopes={requested_scopes} user={user_id}"
+        )
+
+        return web.json_response(token.to_dict(), status=200)
+
+    async def _handle_oauth3_get_token(self, request):
+        """
+        GET /oauth3/token/{token_id}
+        Return token status (expiry, revocation, scopes).
+
+        Response 200: {token_id, issued_at, expires_at, scopes, revoked, revoked_at}
+        Response 404: token not found
+        Response 503: OAuth3 module not loaded
+        """
+        if not OAUTH3_AVAILABLE:
+            return web.json_response(
+                {"error": "oauth3_unavailable"},
+                status=503,
+            )
+
+        token_id = request.match_info["token_id"]
+
+        try:
+            token = AgencyToken.load_from_file(token_id)
+        except FileNotFoundError:
+            return web.json_response(
+                {"error": "token_not_found", "token_id": token_id},
+                status=404,
+            )
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+        return web.json_response(token.to_dict(), status=200)
+
+    async def _handle_oauth3_revoke_token(self, request):
+        """
+        DELETE /oauth3/token/{token_id}
+        Revoke an agency token immediately.
+
+        Response 200: {"revoked": true, "token_id": "..."}
+        Response 404: token not found
+        Response 503: OAuth3 module not loaded
+        """
+        if not OAUTH3_AVAILABLE:
+            return web.json_response(
+                {"error": "oauth3_unavailable"},
+                status=503,
+            )
+
+        token_id = request.match_info["token_id"]
+        success = revoke_token(token_id)
+
+        if not success:
+            return web.json_response(
+                {"error": "token_not_found", "token_id": token_id},
+                status=404,
+            )
+
+        logger.info(f"OAuth3 token revoked: {token_id[:8]}...")
+        return web.json_response({"revoked": True, "token_id": token_id}, status=200)
+
+    async def _handle_oauth3_scopes(self, request):
+        """
+        GET /oauth3/scopes
+        Return all registered scopes with descriptions and risk levels.
+
+        Response 200: {"scopes": {"scope_name": "description", ...}}
+        """
+        if not OAUTH3_AVAILABLE:
+            return web.json_response(
+                {"error": "oauth3_unavailable"},
+                status=503,
+            )
+
+        from oauth3.scopes import STEP_UP_REQUIRED_SCOPES, get_scope_risk_level
+
+        scope_details = {
+            scope: {
+                "description": description,
+                "risk_level": get_scope_risk_level(scope),
+                "step_up_required": scope in STEP_UP_REQUIRED_SCOPES,
+            }
+            for scope, description in SCOPES.items()
+        }
+
+        return web.json_response({"scopes": scope_details}, status=200)
+
+    # =========================================================================
+    # Recipe execution (OAuth3-enforced)
+    # =========================================================================
+
+    async def _handle_run_recipe(self, request):
+        """
+        POST /run-recipe
+        Execute a recipe with OAuth3 enforcement.
+
+        Request body:
+          {
+            "recipe_id": "linkedin-discover-posts",
+            "agency_token": "<token_id>",  (or use X-Agency-Token header)
+            "input_params": {}
+          }
+
+        OAuth3 enforcement:
+          1. Extract agency_token from body or X-Agency-Token header
+          2. Load token; validate (expiry + revocation)
+          3. Check scope matches recipe's required_scope
+          4. Check step-up for high-risk scopes
+          5. On pass: execute recipe stub, return evidence bundle with token_id
+
+        Error responses:
+          401 — token invalid (expired or revoked)
+          402 — step_up_required
+          403 — insufficient_scope OR missing token
+          404 — recipe not found
+          503 — OAuth3 module not loaded
+        """
+        if not OAUTH3_AVAILABLE:
+            return web.json_response(
+                {"error": "oauth3_unavailable", "detail": "OAuth3 module not loaded"},
+                status=503,
+            )
+
+        try:
+            data = await request.json()
+        except Exception:
+            return web.json_response({"error": "invalid_json"}, status=400)
+
+        recipe_id = data.get("recipe_id")
+        if not recipe_id:
+            return web.json_response(
+                {"error": "missing_recipe_id", "detail": "recipe_id is required"},
+                status=400,
+            )
+
+        # Load recipe from recipes/ directory
+        recipes_dir = Path(__file__).parent / "recipes"
+        recipe_path = recipes_dir / f"{recipe_id}.recipe.json"
+
+        if not recipe_path.exists():
+            return web.json_response(
+                {"error": "recipe_not_found", "recipe_id": recipe_id},
+                status=404,
+            )
+
+        try:
+            recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            return web.json_response(
+                {"error": "recipe_load_error", "detail": str(e)},
+                status=500,
+            )
+
+        # Extract agency token — body first, then header
+        token_id = (
+            data.get("agency_token")
+            or request.headers.get("X-Agency-Token")
+        )
+
+        if not token_id:
+            # No token provided → direct to consent
+            required_scope = recipe.get("required_scope", f"{recipe_id.split('-')[0]}.action")
+            return web.json_response(
+                {
+                    "error": "missing_agency_token",
+                    "detail": "Provide agency_token in body or X-Agency-Token header",
+                    "required_scope": required_scope,
+                    "consent_url": f"/consent?scopes={required_scope}",
+                },
+                status=403,
+            )
+
+        # Determine required scope for this recipe
+        required_scope = recipe.get("required_scope")
+        if not required_scope:
+            # Infer scope from recipe metadata
+            metadata_tags = recipe.get("metadata", {}).get("tags", [])
+            platform = metadata_tags[0] if metadata_tags else recipe_id.split("-")[0]
+            action_class = "action"
+            required_scope = f"{platform}.{action_class}"
+
+        # Enforce OAuth3
+        passes, details = enforce_oauth3(token_id, required_scope)
+
+        if not passes:
+            error_code = details.get("error", "enforcement_failed")
+
+            # Map error codes to HTTP status
+            if error_code in ("token_expired", "token_revoked", "token_not_found", "token_load_error"):
+                status_code = 401
+            elif error_code == "step_up_required":
+                status_code = 402
+            else:
+                # insufficient_scope or unknown
+                status_code = 403
+
+            response_body = {
+                "error": error_code,
+                "detail": details.get("error_detail", ""),
+                "token_id": token_id,
+                "required_scope": required_scope,
+            }
+
+            # Add consent_url for scope errors
+            if "consent_url" in details:
+                response_body["consent_url"] = details["consent_url"]
+
+            # Add step-up details
+            if error_code == "step_up_required":
+                response_body["action"] = details.get("action", required_scope)
+                response_body["confirm_url"] = (
+                    f"/step-up?token_id={token_id}"
+                    f"&action={required_scope}"
+                    f"&recipe_id={recipe_id}"
+                )
+
+            return web.json_response(response_body, status=status_code)
+
+        # OAuth3 passed — build evidence bundle
+        enforcement_details = details
+        agency_token_evidence = build_evidence_token_entry(
+            token_id=enforcement_details["token_id"],
+            scope_used=enforcement_details["scope"],
+            step_up_performed=False,
+            token_expires_at=enforcement_details.get("expires_at"),
+        )
+
+        started_at = datetime.now(timezone.utc).isoformat()
+
+        # Recipe execution stub:
+        # Phase 1.5 implements OAuth3 enforcement infrastructure.
+        # Full recipe replay engine integration is Phase 2.
+        # The stub confirms OAuth3 passed and returns the evidence bundle.
+        evidence = {
+            "recipe_id": recipe_id,
+            "status": "oauth3_verified",
+            "started_at": started_at,
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+            "agency_token": agency_token_evidence,
+            "recipe_metadata": {
+                "description": recipe.get("description", ""),
+                "version": recipe.get("version", "1.0"),
+                "required_scope": required_scope,
+            },
+            "rung": 641,
+        }
+
+        logger.info(
+            f"OAuth3 enforced for recipe '{recipe_id}': "
+            f"token={token_id[:8]}... scope={required_scope}"
+        )
+
+        return web.json_response(
+            {
+                "success": True,
+                "recipe_id": recipe_id,
+                "status": "oauth3_verified",
+                "message": (
+                    "OAuth3 enforcement passed. Recipe execution stub returned. "
+                    "Full execution engine integrates in Phase 2."
+                ),
+                "evidence": evidence,
+            },
+            status=200,
+        )
 
     async def _handle_ui(self, request):
         """Serve debugging UI"""
