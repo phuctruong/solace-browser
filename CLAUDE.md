@@ -16,7 +16,8 @@ DOMAIN: web automation / recipe capture / self-improving browser agent
 # MAIN SESSION MODEL: haiku (coordination only — sub-agents handle all heavy work via swarms/)
 # INLINE_DEEP_WORK IS FORBIDDEN — phuc-orchestration governs ALL tasks without exception
 # MAIN SESSION: 3 skills max → prime-safety + prime-coder + phuc-forecast (DREAM→FORECAST→DECIDE→ACT→VERIFY)
-# DISPATCH: task >50 lines OR domain-specialized → read swarms/<role>.md → Task tool
+# DISPATCH: task >50 lines OR domain-specialized → Task tool (subagent_type=general-purpose, model=sonnet|opus) + paste skills/ inline
+# EXPLICIT SWARM: /phuc-swarm [role] "task" guarantees correct model+skills; use this when in doubt
 # ROLE→TASK: coder=bugfix/feat, planner=arch/design, skeptic=verify, scout=research, mathematician=proofs
 # MODEL: haiku=scout/janitor/graph-designer, sonnet=coder/planner/skeptic, opus=math/security/audit
 # SUB-AGENT PACK: paste full skills/ inline (prime-safety first) + CNF capsule (full task/context, no "as before")
