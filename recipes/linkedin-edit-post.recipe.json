@@ -1,0 +1,168 @@
+{
+  "recipe_id": "linkedin-edit-post",
+  "version": "2.0",
+  "created": "2026-02-21T00:00:00Z",
+  "description": "Edit an existing LinkedIn post by URL. Navigates to the post, opens the edit modal via the '...' more options menu, clears existing text, and types new content using fill_slowly at 15ms/char to satisfy LinkedIn's React form validation.",
+
+  "reasoning": {
+    "research": "LinkedIn posts can be edited from the post's own URL or from the feed. The edit flow is: click '...' overflow menu on the post → click 'Edit post' → modal opens with existing text in a Quill editor → clear + retype.",
+    "selector_strategy": "Use aria-label selectors for the more-options button since it lacks a visible text name. The menu item 'Edit post' is a list item with role=menuitem. The Quill editor is the same as in create-post: role=textbox or .ql-editor. Ctrl+A clears the entire editor reliably.",
+    "anti_bot_notes": "Wait 400ms after clicking '...' for the dropdown to animate. Wait 500ms after clicking 'Edit post' for the edit modal to fully load and Quill to initialize. Type at 15ms/char.",
+    "llm_learnings": "The more-options ('...') button on LinkedIn posts uses aria-label='Open control menu' or similar. The exact name varies by post type (own post vs. shared). For own posts, the menu contains 'Edit post', 'Delete post'. For others' posts it shows different options. Always navigate to the post URL directly to guarantee the post is in DOM.",
+    "performance": "Navigation 3s + dropdown open 0.4s + modal open 0.5s + clear 0.1s + typing variable (15ms/char) + save 1s. For 200-char edit: ~3s typing. Total: ~8-10s typical."
+  },
+
+  "input_params": {
+    "post_url": {
+      "type": "string",
+      "description": "Full URL of the LinkedIn post to edit. Format: https://www.linkedin.com/feed/update/urn:li:activity:NNNNN/",
+      "required": true,
+      "example": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000003/"
+    },
+    "new_text": {
+      "type": "string",
+      "description": "Replacement post content. Max 3000 characters. Replaces the entire post text.",
+      "required": true,
+      "example": "Updated: Excited to share our latest AI automation research. The future is now. #AI #Automation"
+    }
+  },
+
+  "portals": {
+    "post_page": {
+      "url": "{params.post_url}",
+      "wait": "networkidle",
+      "note": "Navigate directly to the post URL to guarantee the post is visible and editable."
+    },
+    "more_options_button": {
+      "selector": "role=button[name='Open control menu']",
+      "type": "click",
+      "strength": 0.85,
+      "wait_after_ms": 400,
+      "note": "The '...' overflow menu button. aria-label may vary — try 'More actions' as fallback."
+    },
+    "more_options_button_fallback": {
+      "selector": "[data-control-name='post_options'] button, .feed-shared-social-actions__overflow-menu button",
+      "type": "click",
+      "strength": 0.70,
+      "wait_after_ms": 400,
+      "note": "Class-based fallback for overflow menu button."
+    },
+    "edit_post_menu_item": {
+      "selector": "role=menuitem[name='Edit post']",
+      "type": "click",
+      "strength": 0.90,
+      "wait_after_ms": 500,
+      "note": "Menu item to open the edit modal. Opens Quill editor with current post content."
+    },
+    "edit_textbox": {
+      "selector": "role=textbox[name='Text editor for creating content']",
+      "type": "fill_slowly",
+      "method": "click_select_all_type",
+      "delay_ms": 15,
+      "strength": 0.93,
+      "note": "Same Quill editor as create-post modal. Ctrl+A clears existing text."
+    },
+    "edit_textbox_fallback": {
+      "selector": ".ql-editor",
+      "type": "fill_slowly",
+      "method": "click_select_all_type",
+      "delay_ms": 15,
+      "strength": 0.85,
+      "note": "Direct Quill class fallback."
+    },
+    "save_button": {
+      "selector": "role=button[name='Save']",
+      "type": "click",
+      "strength": 0.95,
+      "wait_after_ms": 1500,
+      "note": "Submits the edit. Wait 1.5s for LinkedIn API to persist changes."
+    }
+  },
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "url": "{params.post_url}",
+      "wait": "networkidle",
+      "duration_ms": 3000,
+      "note": "Navigate to post. Must be logged in and post must belong to this account."
+    },
+    {
+      "step": 2,
+      "action": "click",
+      "selector": "role=button[name='Open control menu']",
+      "wait_after_ms": 400,
+      "duration_ms": 500,
+      "note": "Opens the '...' more-options dropdown."
+    },
+    {
+      "step": 3,
+      "action": "click",
+      "selector": "role=menuitem[name='Edit post']",
+      "wait_after_ms": 500,
+      "duration_ms": 600,
+      "note": "Opens edit modal. Quill editor loads with current post content."
+    },
+    {
+      "step": 4,
+      "action": "click",
+      "selector": "role=textbox[name='Text editor for creating content']",
+      "duration_ms": 100,
+      "note": "Focus the editor."
+    },
+    {
+      "step": 5,
+      "action": "keyboard",
+      "keys": "Control+A",
+      "duration_ms": 50,
+      "note": "Select all existing text to clear it before typing new content."
+    },
+    {
+      "step": 6,
+      "action": "fill_slowly",
+      "selector": "role=textbox[name='Text editor for creating content']",
+      "text": "{params.new_text}",
+      "delay_ms": 15,
+      "duration_ms_formula": "len(new_text) * 15",
+      "note": "Type replacement text at 15ms/char."
+    },
+    {
+      "step": 7,
+      "action": "click",
+      "selector": "role=button[name='Save']",
+      "wait_after_ms": 1500,
+      "duration_ms": 400,
+      "note": "Save the edit. Wait for API confirmation."
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "edited":    { "type": "boolean", "example": true },
+      "post_url":  { "type": "string", "example": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000003/" },
+      "timestamp": { "type": "string", "format": "date-time", "example": "2026-02-21T10:10:00Z" },
+      "char_count": { "type": "integer", "example": 93 }
+    },
+    "required": ["edited", "timestamp"]
+  },
+
+  "output_example": {
+    "edited": true,
+    "post_url": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000003/",
+    "timestamp": "2026-02-21T10:10:00Z",
+    "char_count": 93
+  },
+
+  "metadata": {
+    "tags": ["linkedin", "post", "edit", "write", "fill_slowly", "quill"],
+    "difficulty": "medium",
+    "prerequisites": ["logged_in_session", "post_owned_by_account"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 12,
+    "idempotent": false,
+    "destructive": false,
+    "safety_note": "Only edits posts owned by the authenticated account. LinkedIn will reject edits on others' posts."
+  }
+}

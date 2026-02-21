@@ -1,0 +1,67 @@
+{
+  "recipe_id": "google-search-proof-of-concept",
+  "version": "1.0",
+  "created": "2026-02-15T19:20:57.278970",
+  "domain": "google.com",
+  "task": "Search Google with site: filter",
+  "control_mode": "headless_browser",
+  "headless_optimized": true,
+  "reasoning": {
+    "research": "Google search works well with headless mode. Simple navigation and form fill. No JavaScript execution required for basic search results.",
+    "strategy": "Navigate to Google.com, wait for page, fill search field, press Enter, wait for results, extract HTML",
+    "llm_learnings": "Headless mode is efficient for search. Consider JavaScript wait patterns for dynamic content. ARIA tree provides structured result data."
+  },
+  "portals": {
+    "google_homepage": {
+      "to_search_field": {
+        "selector": "textarea[name='q'], input[name='q']",
+        "action": "click_and_type",
+        "type": "form_fill",
+        "strength": 0.95
+      }
+    },
+    "search_field_filled": {
+      "to_results": {
+        "method": "keyboard_enter",
+        "action": "press_enter",
+        "type": "submit",
+        "strength": 1.0
+      }
+    }
+  },
+  "execution_trace": [],
+  "results_sample": [],
+  "metrics": {},
+  "success_criteria": {
+    "navigation_success": true,
+    "search_field_filled": true,
+    "results_extracted": true,
+    "results_count_min": 5
+  },
+  "selectors": {
+    "search_field": "textarea[name='q'], input[name='q']",
+    "result_title": "h3.DKV0Md",
+    "result_link": "a[href*='/url']",
+    "result_snippet": "span.VwiC3b"
+  },
+  "timing": {
+    "navigation_load": 5000,
+    "results_load": 5000,
+    "field_fill": 1000
+  },
+  "anti_detection": {
+    "headless_mode": true,
+    "stealth_enabled": true,
+    "user_agent": "real_chrome_linux",
+    "viewport": "1920x1080"
+  },
+  "performance": {
+    "total_execution_sec": 0,
+    "headless_efficient": true,
+    "resource_usage": "LOW",
+    "detection_risk": "LOW"
+  },
+  "next_ai_instructions": "Use headless mode for all Google searches - minimal resource usage. Extract results from clean HTML or ARIA tree. Implement rate limiting for batch searches (1-2 searches/sec max). Can parallelize 100+ searches.",
+  "production_ready": false,
+  "notes": "Proof of concept - single query test. Ready for scaling to batch searches."
+}

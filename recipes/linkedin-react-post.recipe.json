@@ -1,0 +1,137 @@
+{
+  "recipe_id": "linkedin-react-post",
+  "version": "2.0",
+  "created": "2026-02-21T00:00:00Z",
+  "description": "React (Like or other reaction) to a LinkedIn post by URL. Navigates to the post, checks if already reacted (idempotent guard), and clicks the Like/React button if not already active. Verifies the reaction was registered.",
+
+  "reasoning": {
+    "research": "LinkedIn's Like button is a toggle. If already liked, clicking it un-likes. Idempotency is critical: check the button's aria-pressed state or active CSS class before clicking. The reaction button has role=button with name containing 'Like' and aria-pressed='true' when active.",
+    "selector_strategy": "Use role=button[name='Like'] as primary selector. The button's aria-pressed attribute indicates current state ('true' = already liked). For other reactions (Celebrate, Support, Love, etc.), the reaction picker appears on hover/long-press. MVP only implements 'like' reaction.",
+    "anti_bot_notes": "No fill_slowly needed — just a click. Wait 1s after click for LinkedIn API to register and update the UI count. Check aria-pressed before and after to verify state change.",
+    "llm_learnings": "LinkedIn reaction button states: aria-pressed='false' (not reacted) → click → aria-pressed='true' (reacted). The count updates asynchronously. For idempotency: if aria-pressed is already 'true', skip the click and return reacted=true. Button is inside .reactions-react-button container.",
+    "performance": "Navigation 3s + state check 0.2s + optional click 0.5s + verify 0.3s. Total: ~4-5s."
+  },
+
+  "input_params": {
+    "post_url": {
+      "type": "string",
+      "description": "Full URL of the LinkedIn post to react to.",
+      "required": true,
+      "example": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000001/"
+    },
+    "reaction": {
+      "type": "string",
+      "description": "Reaction type. Currently only 'like' is supported in MVP.",
+      "required": false,
+      "default": "like",
+      "enum": ["like"],
+      "example": "like"
+    }
+  },
+
+  "portals": {
+    "post_page": {
+      "url": "{params.post_url}",
+      "wait": "networkidle",
+      "note": "Navigate to the post to see the Like button."
+    },
+    "like_button": {
+      "selector": "role=button[name='Like']",
+      "type": "state_check_then_click",
+      "check_attr": "aria-pressed",
+      "skip_if": "true",
+      "strength": 0.90,
+      "wait_after_ms": 1000,
+      "note": "Like button. aria-pressed=true means already liked — skip click (idempotent)."
+    },
+    "like_button_fallback": {
+      "selector": ".reactions-react-button button",
+      "type": "state_check_then_click",
+      "check_attr": "aria-pressed",
+      "skip_if": "true",
+      "strength": 0.78,
+      "wait_after_ms": 1000,
+      "note": "Class-based fallback for the reaction container."
+    },
+    "reaction_count": {
+      "selector": ".social-details-social-counts__reactions-count",
+      "type": "textContent",
+      "strength": 0.80,
+      "note": "Post-click verification: read the updated reaction count."
+    }
+  },
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "url": "{params.post_url}",
+      "wait": "networkidle",
+      "duration_ms": 3000,
+      "note": "Navigate to post. Must be logged in."
+    },
+    {
+      "step": 2,
+      "action": "read_attribute",
+      "selector": "role=button[name='Like']",
+      "attribute": "aria-pressed",
+      "store_as": "already_liked",
+      "duration_ms": 200,
+      "note": "Check if already liked. If 'true', skip steps 3-4 (idempotent guard)."
+    },
+    {
+      "step": 3,
+      "action": "conditional_click",
+      "selector": "role=button[name='Like']",
+      "condition": "already_liked != 'true'",
+      "wait_after_ms": 1000,
+      "duration_ms": 500,
+      "note": "Click Like only if not already reacted."
+    },
+    {
+      "step": 4,
+      "action": "read_attribute",
+      "selector": "role=button[name='Like']",
+      "attribute": "aria-pressed",
+      "store_as": "final_state",
+      "duration_ms": 200,
+      "note": "Verify aria-pressed is now 'true'."
+    },
+    {
+      "step": 5,
+      "action": "return_result",
+      "duration_ms": 50
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "reacted":      { "type": "boolean", "example": true },
+      "reaction":     { "type": "string", "example": "like" },
+      "was_already_reacted": { "type": "boolean", "example": false, "description": "True if the post was already liked before this run (idempotent case)." },
+      "post_url":     { "type": "string", "example": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000001/" },
+      "timestamp":    { "type": "string", "format": "date-time", "example": "2026-02-21T10:20:00Z" }
+    },
+    "required": ["reacted", "reaction", "timestamp"]
+  },
+
+  "output_example": {
+    "reacted": true,
+    "reaction": "like",
+    "was_already_reacted": false,
+    "post_url": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000001/",
+    "timestamp": "2026-02-21T10:20:00Z"
+  },
+
+  "metadata": {
+    "tags": ["linkedin", "post", "react", "like", "engagement", "idempotent"],
+    "difficulty": "easy",
+    "prerequisites": ["logged_in_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 5,
+    "idempotent": true,
+    "destructive": false,
+    "safety_note": "Idempotent: if post is already liked, returns reacted=true without clicking. Does not un-like."
+  }
+}

@@ -1,6 +1,0 @@
-{
-  "strategy": "Retry",
-  "retry_attempt": 1,
-  "status": "SUCCESS",
-  "execution_successful": true
-}

@@ -1,7 +1,48 @@
 # CLAUDE.md — SolaceBrowser
-# Stillwater v1.5.0 | Generated: 2026-02-21
-# Project context, architecture, and phases: see README.md
-# Skills: read skills/<name>.md before production work — QUICK LOAD blocks below = orientation only
+# Software 5.0 | Bruce Lee + Gamification | Auth: 65537
+# "Be like water making its way through cracks." — Bruce Lee
+
+## Software 5.0 Identity
+
+> *"Empty your mind. Be formless, shapeless — like water."* — Bruce Lee
+
+SolaceBrowser **IS Software 5.0 in action**:
+
+| Layer | SolaceBrowser |
+|-------|--------------|
+| **Source code** | Natural language task intent ("check my LinkedIn messages") |
+| **Runtime** | Browser agent + Playwright + recipe engine |
+| **Compiled output** | Recipes + Stillwater evidence bundles |
+| **CI/CD** | Recipe hit rate + task success rate (North Star metrics) |
+
+Every task → DREAM → FORECAST → DECIDE → ACT → VERIFY → Recipe artifact.
+No task completes without a Stillwater evidence bundle. No evidence bundle → not DONE.
+
+## Bruce Lee Framework (The Browser Agent Way)
+
+- **ABSORB**: Study what automation patterns work — capture every successful task as a recipe
+- **DISCARD**: Stop re-running recipes that break — cache miss = investigate the site change
+- **ADD**: Your anti-detection fingerprint, your session, your authenticated context
+- **BE WATER**: Adapt to each site's DOM changes without rewriting — recipe versioning + fallback
+
+> "I fear not the man who has practiced 10,000 browser automations once,
+> but I fear the man who has captured one recipe and perfected it 10,000 times."
+
+## Belt System (Recipe Mastery)
+
+| Belt | XP | Achievement |
+|------|----|-------------|
+| ⬜ White | 0 | First recipe captured |
+| 🟡 Yellow | 100 | First task completed without manual intervention |
+| 🟠 Orange | 300 | 70% recipe cache hit rate |
+| 🟢 Green | 750 | 10 sites automated end-to-end |
+| 🔵 Blue | 1,500 | Cloud execution running 24/7 while you sleep |
+| 🟤 Brown | 3,000 | 80% recipe hit rate — recipes are the economic moat |
+| ⬛ Black | 10,000 | 90% hit rate + twin architecture live — you are the browser |
+
+*Current belt: ⬜ White — beginning the recipe journey.*
+
+---
 
 ## Project Ripple
 # See ripples/project.md for project-specific constraints and rung target.

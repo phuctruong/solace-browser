@@ -1,0 +1,162 @@
+{
+  "recipe_id": "linkedin-comment-post",
+  "version": "2.0",
+  "created": "2026-02-21T00:00:00Z",
+  "description": "Leave a comment on a LinkedIn post. Navigates to the post, clicks the Comment button to expand the comment area, types the comment text using fill_slowly at 15ms/char, and submits via keyboard (Ctrl+Enter) or the Post comment button.",
+
+  "reasoning": {
+    "research": "LinkedIn comment flow: navigate to post → click 'Comment' button (social actions bar) → comment text input expands (a Quill editor) → type comment → submit with Ctrl+Enter or click 'Post comment' button. The comment box is a separate Quill instance from the post composer.",
+    "selector_strategy": "Use role=button[name='Comment'] for the social actions Comment button. The comment textbox uses role=textbox[name='Add a comment...'] or a similar ARIA label. Ctrl+Enter submits without needing to locate the submit button. fill_slowly at 15ms/char for anti-bot compliance.",
+    "anti_bot_notes": "Wait 400ms after clicking Comment for the text area to expand and Quill to initialize. Type at 15ms/char. Ctrl+Enter is the most reliable submit method — avoids locating a dynamically-labeled submit button.",
+    "llm_learnings": "LinkedIn comment box: (1) Click role=button[name='Comment'] in the social actions bar to expand it. (2) Comment input has ARIA label 'Add a comment...' or similar. (3) Quill is used — must use fill_slowly. (4) Ctrl+Enter submits the comment. (5) After submission, the comment appears below the post and the text area clears.",
+    "performance": "Navigation 3s + comment expand 0.4s + focus 0.1s + typing variable (15ms/char) + submit 0.5s. For 100-char comment: ~1.5s typing. Total: ~6-7s typical."
+  },
+
+  "input_params": {
+    "post_url": {
+      "type": "string",
+      "description": "Full URL of the LinkedIn post to comment on.",
+      "required": true,
+      "example": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000001/"
+    },
+    "comment_text": {
+      "type": "string",
+      "description": "Text of the comment. Plain text. Max ~1250 characters.",
+      "required": true,
+      "example": "Great insights! The point about human-AI collaboration resonates deeply with what we're seeing in practice."
+    }
+  },
+
+  "portals": {
+    "post_page": {
+      "url": "{params.post_url}",
+      "wait": "networkidle",
+      "note": "Navigate to the post URL."
+    },
+    "comment_button": {
+      "selector": "role=button[name='Comment']",
+      "type": "click",
+      "strength": 0.90,
+      "wait_after_ms": 400,
+      "note": "Social actions bar Comment button. Expands the comment input area below the post."
+    },
+    "comment_button_fallback": {
+      "selector": ".comment-button, [data-control-name='comment']",
+      "type": "click",
+      "strength": 0.72,
+      "wait_after_ms": 400,
+      "note": "Attribute-based fallback for the Comment button."
+    },
+    "comment_textbox": {
+      "selector": "role=textbox[name='Add a comment…']",
+      "type": "fill_slowly",
+      "method": "click_then_type",
+      "delay_ms": 15,
+      "strength": 0.88,
+      "note": "Comment Quill editor. Note Unicode ellipsis in 'Add a comment…' — may vary."
+    },
+    "comment_textbox_fallback": {
+      "selector": ".comments-comment-box__text-editor .ql-editor",
+      "type": "fill_slowly",
+      "method": "click_then_type",
+      "delay_ms": 15,
+      "strength": 0.80,
+      "note": "Class-based fallback targeting comment box Quill editor specifically."
+    },
+    "submit_keyboard": {
+      "keys": "Control+Enter",
+      "type": "keyboard",
+      "strength": 0.95,
+      "wait_after_ms": 1000,
+      "note": "Most reliable submit method. Ctrl+Enter posts the comment."
+    },
+    "submit_button_fallback": {
+      "selector": "role=button[name='Post comment']",
+      "type": "click",
+      "strength": 0.85,
+      "wait_after_ms": 1000,
+      "note": "Click-based fallback if Ctrl+Enter fails."
+    }
+  },
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "url": "{params.post_url}",
+      "wait": "networkidle",
+      "duration_ms": 3000,
+      "note": "Navigate to post. Must be logged in."
+    },
+    {
+      "step": 2,
+      "action": "click",
+      "selector": "role=button[name='Comment']",
+      "wait_after_ms": 400,
+      "duration_ms": 500,
+      "note": "Expand the comment text area."
+    },
+    {
+      "step": 3,
+      "action": "click",
+      "selector": "role=textbox[name='Add a comment…']",
+      "duration_ms": 150,
+      "note": "Focus the comment editor."
+    },
+    {
+      "step": 4,
+      "action": "fill_slowly",
+      "selector": "role=textbox[name='Add a comment…']",
+      "text": "{params.comment_text}",
+      "delay_ms": 15,
+      "duration_ms_formula": "len(comment_text) * 15",
+      "note": "Type comment at 15ms/char to satisfy LinkedIn's anti-bot detection."
+    },
+    {
+      "step": 5,
+      "action": "keyboard",
+      "keys": "Control+Enter",
+      "wait_after_ms": 1000,
+      "duration_ms": 200,
+      "note": "Submit the comment. Wait 1s for LinkedIn API to post and UI to update."
+    },
+    {
+      "step": 6,
+      "action": "verify_comment",
+      "check": "comment_text_appears_below_post",
+      "duration_ms": 500,
+      "note": "Confirm comment appears in the comment thread."
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "commented":     { "type": "boolean", "example": true },
+      "comment_text":  { "type": "string", "example": "Great insights! The point about human-AI collaboration resonates deeply." },
+      "post_url":      { "type": "string", "example": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000001/" },
+      "timestamp":     { "type": "string", "format": "date-time", "example": "2026-02-21T10:25:00Z" },
+      "char_count":    { "type": "integer", "example": 68 }
+    },
+    "required": ["commented", "comment_text", "post_url", "timestamp"]
+  },
+
+  "output_example": {
+    "commented": true,
+    "comment_text": "Great insights! The point about human-AI collaboration resonates deeply with what we're seeing in practice.",
+    "post_url": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000001/",
+    "timestamp": "2026-02-21T10:25:00Z",
+    "char_count": 105
+  },
+
+  "metadata": {
+    "tags": ["linkedin", "post", "comment", "write", "fill_slowly", "engagement"],
+    "difficulty": "medium",
+    "prerequisites": ["logged_in_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 10,
+    "idempotent": false,
+    "destructive": false,
+    "safety_note": "Not idempotent — running twice will post duplicate comments. Verify intent before running."
+  }
+}

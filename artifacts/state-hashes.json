@@ -1,9 +1,0 @@
-{
-  "state_hashes": [
-    {
-      "state": "IDLE",
-      "hash": "sha256:04b99dd0b895b65536190b2c7261ba58cf4885b01d306c0ec0a93988bb1e4b0b"
-    }
-  ],
-  "determinism_verified": true
-}

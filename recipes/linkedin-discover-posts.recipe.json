@@ -1,0 +1,177 @@
+{
+  "recipe_id": "linkedin-discover-posts",
+  "version": "2.0",
+  "created": "2026-02-21T00:00:00Z",
+  "description": "Scroll the LinkedIn feed, collect top posts by engagement (likes + comments + shares), return structured list sorted by total engagement descending.",
+
+  "reasoning": {
+    "research": "LinkedIn feed renders as a dynamic list of article elements. Each post (feed item) is wrapped in a container with class .feed-shared-update-v2 or exposed as role=article. Engagement counts are in .social-details-social-counts__reactions-count for likes and .social-details-social-counts__comments for comments. Author info lives in .update-components-actor__title.",
+    "selector_strategy": "Prefer role-based selectors for stability. Fall back to class selectors for engagement counts since LinkedIn does not expose those as ARIA roles. Use document.querySelectorAll for bulk extraction rather than individual waits.",
+    "anti_bot_notes": "Scroll with random human-like delays (800-1500ms between scrolls). Extract in a single pass after scrolling completes to minimize DOM queries. Do not click any engagement buttons during discovery.",
+    "llm_learnings": "LinkedIn paginates feed lazily. 3-5 scrolls yield ~15-25 posts. Filter threshold of 50 total engagement removes low-signal noise. Posts older than 7 days rarely appear in default feed sort.",
+    "performance": "Expected run time: 8-15 seconds (navigation 3s + 4 scrolls x 1.2s + extraction 1s). No fill_slowly needed for read-only recipe."
+  },
+
+  "input_params": {},
+
+  "portals": {
+    "feed_page": {
+      "url": "https://www.linkedin.com/feed/",
+      "wait": "networkidle"
+    },
+    "feed_posts": {
+      "selector": ".feed-shared-update-v2",
+      "type": "querySelectorAll",
+      "strength": 0.90,
+      "note": "Primary feed post container. Falls back to role=article if class changes."
+    },
+    "feed_posts_fallback": {
+      "selector": "role=article",
+      "type": "querySelectorAll",
+      "strength": 0.75,
+      "note": "ARIA fallback — broader but stable across redesigns."
+    },
+    "author_name": {
+      "selector": ".update-components-actor__title",
+      "type": "textContent",
+      "strength": 0.85,
+      "note": "Author display name within each post container."
+    },
+    "author_link": {
+      "selector": ".update-components-actor__meta-link",
+      "type": "href",
+      "strength": 0.80,
+      "note": "Author profile URL."
+    },
+    "post_text": {
+      "selector": ".feed-shared-update-v2__description",
+      "type": "textContent",
+      "strength": 0.85,
+      "note": "Post body text. Truncate to 200 chars for snippet."
+    },
+    "likes_count": {
+      "selector": ".social-details-social-counts__reactions-count",
+      "type": "textContent",
+      "strength": 0.80,
+      "note": "Reaction/like count. Parse integer from text (may contain 'K')."
+    },
+    "comments_count": {
+      "selector": ".social-details-social-counts__comments",
+      "type": "textContent",
+      "strength": 0.78,
+      "note": "Comment count. Parse integer."
+    },
+    "post_url": {
+      "selector": ".feed-shared-update-v2__content-container a[data-tracking-control-name]",
+      "type": "href",
+      "strength": 0.75,
+      "note": "Canonical post URL. Alternative: look for urn:li: in page links."
+    }
+  },
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "url": "https://www.linkedin.com/feed/",
+      "wait": "networkidle",
+      "duration_ms": 3000,
+      "note": "Must be logged in. Uses persistent session."
+    },
+    {
+      "step": 2,
+      "action": "scroll",
+      "direction": "down",
+      "distance_px": 800,
+      "repeat": 4,
+      "delay_between_ms": 1200,
+      "duration_ms": 4800,
+      "note": "Human-like scroll to trigger lazy loading of feed posts."
+    },
+    {
+      "step": 3,
+      "action": "extract_all",
+      "target": ".feed-shared-update-v2",
+      "fields": ["author", "author_url", "text_snippet", "likes", "comments", "shares", "post_url"],
+      "duration_ms": 800,
+      "note": "Bulk extraction via page.evaluate(). Parse engagement counts as integers."
+    },
+    {
+      "step": 4,
+      "action": "filter",
+      "condition": "total_engagement > 50",
+      "sort": "total_engagement DESC",
+      "limit": 20,
+      "duration_ms": 10,
+      "note": "total_engagement = likes + comments + shares."
+    },
+    {
+      "step": 5,
+      "action": "return_result",
+      "duration_ms": 5
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "posts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "author":       { "type": "string", "example": "Jane Smith" },
+            "author_url":   { "type": "string", "example": "https://www.linkedin.com/in/janesmith/" },
+            "text_snippet": { "type": "string", "example": "AI is transforming how we think about..." },
+            "likes":        { "type": "integer", "example": 142 },
+            "comments":     { "type": "integer", "example": 38 },
+            "shares":       { "type": "integer", "example": 12 },
+            "post_url":     { "type": "string", "example": "https://www.linkedin.com/feed/update/urn:li:activity:7123456789/" },
+            "discovered_at": { "type": "string", "format": "date-time", "example": "2026-02-21T10:00:00Z" }
+          },
+          "required": ["author", "text_snippet", "likes", "comments", "post_url", "discovered_at"]
+        }
+      },
+      "total_found":  { "type": "integer", "example": 12 },
+      "page_scrolls": { "type": "integer", "example": 4 }
+    },
+    "required": ["posts", "total_found", "page_scrolls"]
+  },
+
+  "output_example": {
+    "posts": [
+      {
+        "author": "Satya Nadella",
+        "author_url": "https://www.linkedin.com/in/satyanadella/",
+        "text_snippet": "AI is the defining technology of our era. The investments we make today will shape...",
+        "likes": 4821,
+        "comments": 312,
+        "shares": 187,
+        "post_url": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000001/",
+        "discovered_at": "2026-02-21T10:00:00Z"
+      },
+      {
+        "author": "Reid Hoffman",
+        "author_url": "https://www.linkedin.com/in/reidhoffman/",
+        "text_snippet": "The future of work is not about replacing humans but about augmenting what we can do together...",
+        "likes": 2103,
+        "comments": 98,
+        "shares": 54,
+        "post_url": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000002/",
+        "discovered_at": "2026-02-21T10:00:01Z"
+      }
+    ],
+    "total_found": 12,
+    "page_scrolls": 4
+  },
+
+  "metadata": {
+    "tags": ["linkedin", "discovery", "read-only", "feed", "engagement"],
+    "difficulty": "easy",
+    "prerequisites": ["logged_in_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 12,
+    "idempotent": true,
+    "destructive": false
+  }
+}

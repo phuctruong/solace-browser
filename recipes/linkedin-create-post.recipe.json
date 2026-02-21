@@ -1,0 +1,143 @@
+{
+  "recipe_id": "linkedin-create-post",
+  "version": "2.0",
+  "created": "2026-02-21T00:00:00Z",
+  "description": "Create a new LinkedIn text post with provided content. Uses fill_slowly at 15ms/char delay to satisfy LinkedIn's React form validation without triggering anti-bot measures.",
+
+  "reasoning": {
+    "research": "LinkedIn's post composer is a modal triggered by the 'Start a post' button on the feed. The text area is a Quill editor (.ql-editor, role=textbox) which is a contenteditable div. Standard .fill() does not fire React synthetic events correctly on contenteditable elements.",
+    "selector_strategy": "Use role=button[name='Start a post'] for the trigger — this is stable across LinkedIn redesigns. Use role=textbox for the Quill editor. Use role=button[name='Post'] to submit. All role selectors are verified in LinkedIn's ARIA tree.",
+    "anti_bot_notes": "Type at 15ms/char (not faster — tested, 10ms sometimes fails on Linux headless). Wait 500ms after modal opens for Quill to fully initialize. Wait 1000ms after clicking Post for the network request to resolve before checking for success.",
+    "llm_learnings": "Quill editor: (1) click to focus, (2) Ctrl+A to select all (clear any placeholder), (3) use slowly typing with delay=15. Do NOT use standard .fill() — it bypasses React event system. The Post button is only enabled when text content is non-empty.",
+    "performance": "Navigation 3s + modal open 0.5s + typing variable (15ms/char) + Post click 1s. For 500-char post: ~3s typing. Total: ~8-10s typical."
+  },
+
+  "input_params": {
+    "text": {
+      "type": "string",
+      "description": "Post content. Max 3000 characters. Plain text only.",
+      "required": true,
+      "example": "Excited to share our latest AI automation research. The future of work is human-AI collaboration, not replacement. #AI #Future #Innovation"
+    }
+  },
+
+  "portals": {
+    "feed_page": {
+      "url": "https://www.linkedin.com/feed/",
+      "wait": "networkidle"
+    },
+    "start_post_button": {
+      "selector": "role=button[name='Start a post']",
+      "type": "click",
+      "strength": 0.92,
+      "wait_after_ms": 500,
+      "note": "Opens the post composer modal. Wait for Quill to initialize."
+    },
+    "start_post_button_fallback": {
+      "selector": ".share-box-feed-entry__trigger",
+      "type": "click",
+      "strength": 0.80,
+      "note": "Class-based fallback if ARIA name changes."
+    },
+    "composer_textbox": {
+      "selector": "role=textbox[name='Text editor for creating content']",
+      "type": "fill_slowly",
+      "method": "click_then_type",
+      "delay_ms": 15,
+      "strength": 0.95,
+      "note": "Quill contenteditable. Must click first to focus, then type."
+    },
+    "composer_textbox_fallback": {
+      "selector": ".ql-editor",
+      "type": "fill_slowly",
+      "method": "click_then_type",
+      "delay_ms": 15,
+      "strength": 0.88,
+      "note": "Direct Quill class selector fallback."
+    },
+    "post_button": {
+      "selector": "role=button[name='Post']",
+      "type": "click",
+      "strength": 0.95,
+      "wait_after_ms": 1500,
+      "note": "Submit the post. Button disabled until text is typed. Wait for API response."
+    }
+  },
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "url": "https://www.linkedin.com/feed/",
+      "wait": "networkidle",
+      "duration_ms": 3000
+    },
+    {
+      "step": 2,
+      "action": "click",
+      "selector": "role=button[name='Start a post']",
+      "wait_after_ms": 500,
+      "duration_ms": 600,
+      "note": "Opens composer modal. Quill editor initializes in ~200ms."
+    },
+    {
+      "step": 3,
+      "action": "click",
+      "selector": "role=textbox[name='Text editor for creating content']",
+      "duration_ms": 100,
+      "note": "Focus the editor before typing."
+    },
+    {
+      "step": 4,
+      "action": "fill_slowly",
+      "selector": "role=textbox[name='Text editor for creating content']",
+      "text": "{params.text}",
+      "delay_ms": 15,
+      "duration_ms_formula": "len(text) * 15",
+      "note": "Type at 15ms/char. For 500 chars: ~7.5s."
+    },
+    {
+      "step": 5,
+      "action": "click",
+      "selector": "role=button[name='Post']",
+      "wait_after_ms": 1500,
+      "duration_ms": 400,
+      "note": "Submit. Wait 1.5s for LinkedIn API to process."
+    },
+    {
+      "step": 6,
+      "action": "capture_result",
+      "look_for": "post_url",
+      "method": "check_feed_for_new_post",
+      "duration_ms": 500
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "posted":    { "type": "boolean", "example": true },
+      "post_url":  { "type": "string", "example": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000003/" },
+      "timestamp": { "type": "string", "format": "date-time", "example": "2026-02-21T10:05:00Z" },
+      "char_count": { "type": "integer", "example": 138 }
+    },
+    "required": ["posted", "timestamp"]
+  },
+
+  "output_example": {
+    "posted": true,
+    "post_url": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000003/",
+    "timestamp": "2026-02-21T10:05:00Z",
+    "char_count": 138
+  },
+
+  "metadata": {
+    "tags": ["linkedin", "post", "write", "create", "fill_slowly"],
+    "difficulty": "medium",
+    "prerequisites": ["logged_in_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 15,
+    "idempotent": false,
+    "destructive": false
+  }
+}

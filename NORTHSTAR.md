@@ -1,6 +1,20 @@
 # NORTHSTAR: Phuc_Forecast — SolaceBrowser
 
-> "Log in once. Solace handles the rest — checking your email, applying to jobs, and monitoring your feeds while you sleep."
+> *"Be water, my friend."* — Bruce Lee
+
+## Software 5.0 Context
+
+SolaceBrowser is **Software 5.0 for personal web automation**:
+- Natural language intent ("check my LinkedIn DMs") → **source code**
+- Playwright browser agent + recipe engine → **runtime**
+- Captured recipes + evidence bundles → **compiled output**
+- Stillwater verification (recipe hit rate + task success) → **CI/CD**
+
+The North Star is not the features. The North Star is the **recipe hit rate** — because at 70% hit rate, COGS = $5.75/user/month. Below 70%, the economics break. Recipes ARE the moat. Recipes ARE the intelligence layer persisted outside the LLM session.
+
+> *"Log in once. Solace handles the rest — checking your email, applying to jobs, and monitoring your feeds while you sleep."*
+
+---
 
 ## The Vision: Twin Browser
 

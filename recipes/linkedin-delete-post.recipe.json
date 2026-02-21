@@ -1,0 +1,145 @@
+{
+  "recipe_id": "linkedin-delete-post",
+  "version": "2.0",
+  "created": "2026-02-21T00:00:00Z",
+  "description": "Delete a LinkedIn post by URL. Navigates to the post, opens the '...' more options menu, clicks 'Delete post', confirms the deletion dialog, and verifies the post is removed. IRREVERSIBLE — logs the post text before deleting.",
+
+  "reasoning": {
+    "research": "LinkedIn post deletion flow: navigate to post URL → click '...' menu → click 'Delete post' → confirmation dialog appears ('Are you sure you want to delete?') → click 'Delete' button to confirm. The confirmation dialog is a modal with role=dialog.",
+    "selector_strategy": "Use role=button[name='Open control menu'] for the '...' button. The 'Delete post' menu item uses role=menuitem. The confirmation dialog's Delete button uses role=button[name='Delete']. All role-based for maximum stability.",
+    "anti_bot_notes": "Wait 400ms after '...' click for dropdown. Wait 500ms after 'Delete post' click for confirmation dialog. No typing needed. Total interaction is faster than create/edit.",
+    "llm_learnings": "CRITICAL: This action is IRREVERSIBLE. Always capture the post text content BEFORE clicking delete (step 2 in execution_trace). LinkedIn shows a confirmation dialog — must click 'Delete' (not the close X). After deletion, LinkedIn redirects to feed or shows empty state. Check for redirect to confirm success.",
+    "performance": "Navigation 3s + extract text 0.5s + dropdown 0.4s + confirm dialog 0.5s + confirmation 0.3s. Total: ~5-6s.",
+    "safety": "Pre-deletion: capture full post text and store in artifact. If artifact write fails, abort deletion."
+  },
+
+  "input_params": {
+    "post_url": {
+      "type": "string",
+      "description": "Full URL of the LinkedIn post to delete. Format: https://www.linkedin.com/feed/update/urn:li:activity:NNNNN/",
+      "required": true,
+      "example": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000003/"
+    }
+  },
+
+  "portals": {
+    "post_page": {
+      "url": "{params.post_url}",
+      "wait": "networkidle",
+      "note": "Navigate to post. Verify the post is visible before attempting deletion."
+    },
+    "post_content_capture": {
+      "selector": ".feed-shared-update-v2__description, .update-components-text",
+      "type": "textContent",
+      "strength": 0.85,
+      "note": "Capture post text BEFORE deletion for audit trail. Non-blocking — proceed even if not found."
+    },
+    "more_options_button": {
+      "selector": "role=button[name='Open control menu']",
+      "type": "click",
+      "strength": 0.85,
+      "wait_after_ms": 400,
+      "note": "The '...' overflow menu button."
+    },
+    "more_options_button_fallback": {
+      "selector": "button[aria-label='More actions']",
+      "type": "click",
+      "strength": 0.75,
+      "wait_after_ms": 400,
+      "note": "Alternate aria-label fallback."
+    },
+    "delete_post_menu_item": {
+      "selector": "role=menuitem[name='Delete post']",
+      "type": "click",
+      "strength": 0.90,
+      "wait_after_ms": 500,
+      "note": "Opens the deletion confirmation dialog."
+    },
+    "confirm_delete_button": {
+      "selector": "role=button[name='Delete']",
+      "type": "click",
+      "strength": 0.92,
+      "wait_after_ms": 1500,
+      "note": "Confirms deletion in the dialog. Wait for redirect or feed to reload."
+    }
+  },
+
+  "execution_trace": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "url": "{params.post_url}",
+      "wait": "networkidle",
+      "duration_ms": 3000,
+      "note": "Navigate to post. Must be logged in and post must belong to this account."
+    },
+    {
+      "step": 2,
+      "action": "extract_text",
+      "selector": ".feed-shared-update-v2__description",
+      "store_as": "pre_delete_text",
+      "duration_ms": 300,
+      "note": "SAFETY: Capture post content for audit trail before deletion. Store in artifact."
+    },
+    {
+      "step": 3,
+      "action": "click",
+      "selector": "role=button[name='Open control menu']",
+      "wait_after_ms": 400,
+      "duration_ms": 500,
+      "note": "Opens the '...' dropdown menu."
+    },
+    {
+      "step": 4,
+      "action": "click",
+      "selector": "role=menuitem[name='Delete post']",
+      "wait_after_ms": 500,
+      "duration_ms": 600,
+      "note": "Shows the deletion confirmation dialog."
+    },
+    {
+      "step": 5,
+      "action": "click",
+      "selector": "role=button[name='Delete']",
+      "wait_after_ms": 1500,
+      "duration_ms": 400,
+      "note": "Confirm deletion. IRREVERSIBLE. LinkedIn redirects to feed after success."
+    },
+    {
+      "step": 6,
+      "action": "verify_deletion",
+      "check": "current_url_is_feed_or_post_returns_404",
+      "duration_ms": 500,
+      "note": "Confirm deletion succeeded by checking URL changed or post is gone."
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "deleted":         { "type": "boolean", "example": true },
+      "post_url":        { "type": "string", "example": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000003/" },
+      "pre_delete_text": { "type": "string", "example": "The original post content captured before deletion for audit..." },
+      "timestamp":       { "type": "string", "format": "date-time", "example": "2026-02-21T10:15:00Z" }
+    },
+    "required": ["deleted", "timestamp", "pre_delete_text"]
+  },
+
+  "output_example": {
+    "deleted": true,
+    "post_url": "https://www.linkedin.com/feed/update/urn:li:activity:7195000000000000003/",
+    "pre_delete_text": "Updated: Excited to share our latest AI automation research. The future is now. #AI #Automation",
+    "timestamp": "2026-02-21T10:15:00Z"
+  },
+
+  "metadata": {
+    "tags": ["linkedin", "post", "delete", "write", "destructive", "irreversible"],
+    "difficulty": "medium",
+    "prerequisites": ["logged_in_session", "post_owned_by_account"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 8,
+    "idempotent": false,
+    "destructive": true,
+    "safety_note": "IRREVERSIBLE. Pre-deletion text is captured and stored in artifact for audit. Abort if capture fails. Only works on posts owned by the authenticated account."
+  }
+}
