@@ -1,0 +1,284 @@
+{
+  "node_id": "reddit-selectors",
+  "version": "1.0.0",
+  "platform": "reddit",
+  "domain": "old.reddit.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+  "note": "All selectors target old.reddit.com — new.reddit.com SPA selectors are intentionally excluded due to instability",
+
+  "listing": {
+    "main_container": {
+      "selector": ".content[role='main']",
+      "confidence": 0.98,
+      "type": "wait_for",
+      "note": "Primary content container on all old.reddit.com pages"
+    },
+    "post_container": {
+      "selector": ".thing[data-type='link']",
+      "confidence": 0.97,
+      "type": "selector_list",
+      "note": "All post items in a subreddit listing or search results"
+    },
+    "post_title": {
+      "selector": "a.title.may-blank",
+      "confidence": 0.97,
+      "type": "text_extraction",
+      "note": "Post title text and href for URL"
+    },
+    "post_author": {
+      "selector": ".thing .author",
+      "confidence": 0.96,
+      "type": "text_extraction"
+    },
+    "post_score": {
+      "selector": ".thing .score.unvoted",
+      "confidence": 0.95,
+      "type": "attribute",
+      "attribute": "title",
+      "note": "title attribute has numeric score; textContent has formatted string"
+    },
+    "post_id": {
+      "selector": ".thing",
+      "confidence": 0.99,
+      "type": "attribute",
+      "attribute": "data-fullname",
+      "note": "t3_XXXX format full name"
+    },
+    "comment_count": {
+      "selector": ".thing a.comments",
+      "confidence": 0.94,
+      "type": "text_extraction",
+      "note": "Text includes 'N comments' or 'N comment'"
+    },
+    "post_flair": {
+      "selector": ".linkflairlabel",
+      "confidence": 0.90,
+      "type": "text_extraction"
+    },
+    "post_domain": {
+      "selector": ".domain a",
+      "confidence": 0.95,
+      "type": "text_extraction"
+    },
+    "stickied_post": {
+      "selector": ".thing.stickied",
+      "confidence": 0.97,
+      "type": "class_check"
+    },
+    "nsfw_tag": {
+      "selector": ".thing .nsfw-stamp",
+      "confidence": 0.93,
+      "type": "exists"
+    }
+  },
+
+  "voting": {
+    "upvote_button": {
+      "selector": ".thing .arrow.up",
+      "confidence": 0.97,
+      "action": "click",
+      "wait_before_ms": 1200,
+      "note": "Random human-like delay before clicking"
+    },
+    "downvote_button": {
+      "selector": ".thing .arrow.down",
+      "confidence": 0.97,
+      "action": "click",
+      "wait_before_ms": 1200
+    },
+    "upvote_active": {
+      "selector": ".thing .arrow.up.upmod",
+      "confidence": 0.97,
+      "type": "class_check",
+      "note": "Present when current user has upvoted this post"
+    },
+    "downvote_active": {
+      "selector": ".thing .arrow.down.downmod",
+      "confidence": 0.97,
+      "type": "class_check",
+      "note": "Present when current user has downvoted this post"
+    },
+    "score_liked": {
+      "selector": ".thing .score.likes",
+      "confidence": 0.95,
+      "type": "attribute",
+      "attribute": "title",
+      "note": "Score element after upvoting (class changes from .unvoted to .likes)"
+    }
+  },
+
+  "comments": {
+    "comment_area": {
+      "selector": ".commentarea",
+      "confidence": 0.98,
+      "type": "wait_for"
+    },
+    "nested_listing": {
+      "selector": ".nestedlisting",
+      "confidence": 0.97,
+      "type": "container"
+    },
+    "comment_container": {
+      "selector": ".thing.comment",
+      "confidence": 0.97,
+      "type": "selector_list"
+    },
+    "top_level_comments": {
+      "selector": ".nestedlisting > .comment",
+      "confidence": 0.96,
+      "type": "selector_list",
+      "note": "Only direct children — excludes nested replies"
+    },
+    "comment_author": {
+      "selector": ".comment .author",
+      "confidence": 0.97,
+      "type": "text_extraction"
+    },
+    "comment_score": {
+      "selector": ".comment .score.unvoted",
+      "confidence": 0.94,
+      "type": "attribute",
+      "attribute": "title"
+    },
+    "comment_body": {
+      "selector": ".comment .usertext-body .md",
+      "confidence": 0.96,
+      "type": "text_extraction"
+    },
+    "comment_depth": {
+      "selector": ".comment",
+      "confidence": 0.99,
+      "type": "attribute",
+      "attribute": "data-depth"
+    },
+    "comment_id": {
+      "selector": ".comment",
+      "confidence": 0.99,
+      "type": "attribute",
+      "attribute": "data-fullname",
+      "note": "t1_XXXX format"
+    },
+    "comment_timestamp": {
+      "selector": ".comment time",
+      "confidence": 0.93,
+      "type": "attribute",
+      "attribute": "datetime"
+    },
+    "op_indicator": {
+      "selector": ".comment .author.submitter",
+      "confidence": 0.96,
+      "type": "class_check",
+      "note": ".submitter class on author link indicates OP"
+    },
+    "more_comments": {
+      "selector": ".morecomments a",
+      "confidence": 0.92,
+      "action": "click",
+      "note": "Load more comments link"
+    }
+  },
+
+  "submit": {
+    "submit_form": {
+      "selector": "form#postsubmit",
+      "confidence": 0.98,
+      "type": "wait_for"
+    },
+    "link_radio": {
+      "selector": "input[value='link']",
+      "confidence": 0.99,
+      "action": "click"
+    },
+    "self_radio": {
+      "selector": "input[value='self']",
+      "confidence": 0.99,
+      "action": "click"
+    },
+    "title_field": {
+      "selector": "#title",
+      "confidence": 0.99,
+      "action": "human_type",
+      "typing_delay_ms": "60-120"
+    },
+    "url_field": {
+      "selector": "#url",
+      "confidence": 0.99,
+      "action": "type",
+      "typing_delay_ms": 50,
+      "note": "Link posts only"
+    },
+    "text_field": {
+      "selector": "#text",
+      "confidence": 0.99,
+      "action": "type",
+      "typing_delay_ms": 40,
+      "note": "Self/text posts only"
+    },
+    "submit_button": {
+      "selector": "button.save",
+      "confidence": 0.96,
+      "action": "click",
+      "wait_after_ms": 4000
+    },
+    "flair_button": {
+      "selector": ".flair-button",
+      "confidence": 0.87,
+      "action": "click",
+      "note": "Only present if subreddit has flairs"
+    }
+  },
+
+  "search": {
+    "search_form": {
+      "selector": "#search",
+      "confidence": 0.97,
+      "type": "container"
+    },
+    "search_input": {
+      "selector": "input[name='q']",
+      "confidence": 0.99,
+      "action": "type"
+    },
+    "results_container": {
+      "selector": ".search-result-listing",
+      "confidence": 0.95,
+      "type": "wait_for"
+    },
+    "result_subreddit": {
+      "selector": ".thing .tagline .subreddit",
+      "confidence": 0.93,
+      "type": "text_extraction",
+      "note": "Shows subreddit attribution in cross-subreddit search results"
+    }
+  },
+
+  "navigation": {
+    "user_menu": {
+      "selector": ".user a",
+      "confidence": 0.97,
+      "type": "text_extraction",
+      "note": "Shows username if logged in; login/register if not"
+    },
+    "login_link": {
+      "selector": "a[href*='login']",
+      "confidence": 0.98,
+      "action": "click"
+    },
+    "subreddit_link": {
+      "selector": "a[href^='/r/']",
+      "confidence": 0.95,
+      "action": "click"
+    },
+    "next_page": {
+      "selector": "a[rel='next']",
+      "confidence": 0.94,
+      "action": "click"
+    },
+    "prev_page": {
+      "selector": "a[rel='prev']",
+      "confidence": 0.94,
+      "action": "click"
+    }
+  }
+}

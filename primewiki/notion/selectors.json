@@ -1,0 +1,197 @@
+{
+  "node_id": "notion-selectors",
+  "version": "1.0.0",
+  "platform": "notion",
+  "domain": "www.notion.so",
+  "authority": 65537,
+  "created": "2026-02-21",
+  "note": "Notion SPA selectors — prefer data-block-id and ARIA attrs over hashed class names",
+
+  "navigation": {
+    "sidebar": {
+      "selector": ".notion-sidebar",
+      "confidence": 0.95,
+      "type": "wait_for"
+    },
+    "workspace_name": {
+      "selector": ".notion-workspace-name",
+      "confidence": 0.88,
+      "type": "text_extraction"
+    },
+    "new_page_button": {
+      "selector": "[aria-label*='New page'], [class*='addPage']",
+      "confidence": 0.85,
+      "action": "click"
+    },
+    "search_trigger_button": {
+      "selector": "[aria-label*='Search'], [class*='search']",
+      "confidence": 0.87,
+      "action": "click",
+      "note": "Fallback to clicking search button if Ctrl+K fails"
+    }
+  },
+
+  "page": {
+    "page_content": {
+      "selector": ".notion-page-content",
+      "confidence": 0.97,
+      "type": "wait_for",
+      "note": "Primary content container — confirms page has rendered"
+    },
+    "page_block": {
+      "selector": ".notion-page-block",
+      "confidence": 0.95,
+      "type": "container"
+    },
+    "title_block": {
+      "selector": ".notion-title-block",
+      "confidence": 0.95,
+      "type": "container"
+    },
+    "title_contenteditable": {
+      "selector": ".notion-title-block [contenteditable]",
+      "confidence": 0.94,
+      "action": "click_then_type",
+      "note": "Page title input"
+    },
+    "title_placeholder": {
+      "selector": ".notion-page-block [contenteditable][placeholder]",
+      "confidence": 0.90,
+      "action": "click_then_type",
+      "note": "Title field with placeholder — present on new/empty pages"
+    },
+    "content_blocks": {
+      "selector": ".notion-page-content > [data-block-id]",
+      "confidence": 0.97,
+      "type": "selector_list",
+      "note": "All top-level content blocks"
+    },
+    "any_block": {
+      "selector": "[data-block-id]",
+      "confidence": 0.99,
+      "type": "selector_list"
+    },
+    "block_contenteditable": {
+      "selector": "[data-block-id] [contenteditable]",
+      "confidence": 0.93,
+      "type": "text_extraction"
+    },
+    "last_block_contenteditable": {
+      "selector": ".notion-page-content > [data-block-id]:last-child [contenteditable]",
+      "confidence": 0.91,
+      "action": "click",
+      "note": "Target for appending new content"
+    }
+  },
+
+  "blocks": {
+    "text_block": {
+      "selector": ".notion-text-block",
+      "confidence": 0.96,
+      "type": "selector_list"
+    },
+    "h1_block": {
+      "selector": ".notion-header-block",
+      "confidence": 0.95,
+      "type": "selector_list"
+    },
+    "h2_block": {
+      "selector": ".notion-sub_header-block",
+      "confidence": 0.95,
+      "type": "selector_list"
+    },
+    "h3_block": {
+      "selector": ".notion-sub_sub_header-block",
+      "confidence": 0.95,
+      "type": "selector_list"
+    },
+    "bullet_block": {
+      "selector": ".notion-bulleted_list-block",
+      "confidence": 0.94,
+      "type": "selector_list"
+    },
+    "numbered_block": {
+      "selector": ".notion-numbered_list-block",
+      "confidence": 0.94,
+      "type": "selector_list"
+    },
+    "toggle_block": {
+      "selector": ".notion-toggle-block",
+      "confidence": 0.93,
+      "type": "selector_list"
+    },
+    "todo_block": {
+      "selector": ".notion-to_do-block",
+      "confidence": 0.93,
+      "type": "selector_list"
+    },
+    "callout_block": {
+      "selector": ".notion-callout-block",
+      "confidence": 0.91,
+      "type": "selector_list"
+    }
+  },
+
+  "database": {
+    "collection_view": {
+      "selector": ".notion-collection-view",
+      "confidence": 0.93,
+      "type": "wait_for"
+    },
+    "table_header": {
+      "selector": ".notion-collection-view-header",
+      "confidence": 0.91,
+      "type": "container"
+    },
+    "database_row": {
+      "selector": ".notion-collection-item",
+      "confidence": 0.92,
+      "type": "selector_list"
+    },
+    "row_title": {
+      "selector": ".notion-collection-item .notion-collection-item-title",
+      "confidence": 0.91,
+      "type": "text_extraction"
+    },
+    "property_cell": {
+      "selector": ".notion-collection-property",
+      "confidence": 0.89,
+      "type": "selector_list"
+    },
+    "select_value": {
+      "selector": ".notion-select-value",
+      "confidence": 0.90,
+      "type": "text_extraction"
+    },
+    "new_row_button": {
+      "selector": "[aria-label*='New'], .notion-collection-view-body-footer",
+      "confidence": 0.85,
+      "action": "click"
+    }
+  },
+
+  "search": {
+    "search_input": {
+      "selector": "input[placeholder*='Search']",
+      "confidence": 0.90,
+      "action": "human_type",
+      "typing_delay_ms": "60-100",
+      "note": "Appears after Ctrl+K. Debounce 1500ms for results."
+    },
+    "search_results": {
+      "selector": "[aria-label*='Search result'], .notion-search-result-item",
+      "confidence": 0.85,
+      "type": "selector_list"
+    },
+    "result_title": {
+      "selector": "[class*='title'], .notion-search-result-title",
+      "confidence": 0.84,
+      "type": "text_extraction"
+    },
+    "result_breadcrumb": {
+      "selector": "[class*='breadcrumb'], .notion-search-result-breadcrumb",
+      "confidence": 0.82,
+      "type": "text_extraction"
+    }
+  }
+}

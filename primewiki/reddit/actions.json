@@ -1,0 +1,144 @@
+{
+  "node_id": "reddit-actions",
+  "version": "1.0.0",
+  "platform": "reddit",
+  "domain": "old.reddit.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+
+  "actions": {
+    "browse_subreddit": {
+      "id": "browse_subreddit",
+      "description": "Navigate to subreddit and extract top posts with metadata",
+      "oauth3_scope": "reddit.read.subreddit",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "load_session", "path": "artifacts/reddit_working_session.json"},
+        {"action": "navigate", "url": "https://old.reddit.com/r/{subreddit}/{sort}/", "wait_for": ".content[role='main']"},
+        {"action": "extract_all", "selector": ".thing[data-type='link']", "fields": ["title", "url", "author", "score", "comment_count", "flair", "post_id"]}
+      ],
+      "success_criteria": {
+        "posts_extracted": ">= 1",
+        "no_redirect_to_login": true
+      }
+    },
+
+    "read_comments": {
+      "id": "read_comments",
+      "description": "Navigate to post thread and extract comments with metadata",
+      "oauth3_scope": "reddit.read.comments",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "load_session", "path": "artifacts/reddit_working_session.json"},
+        {"action": "navigate", "url": "https://old.reddit.com{post_url}?sort={sort}", "wait_for": ".commentarea"},
+        {"action": "extract_all", "selector": ".nestedlisting > .comment", "fields": ["author", "score", "body", "depth", "comment_id", "timestamp"]}
+      ],
+      "success_criteria": {
+        "commentarea_visible": true
+      }
+    },
+
+    "search": {
+      "id": "search",
+      "description": "Search Reddit and extract matching posts",
+      "oauth3_scope": "reddit.read.search",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "load_session", "path": "artifacts/reddit_working_session.json"},
+        {"action": "navigate", "url": "https://old.reddit.com/search?q={query}&sort={sort}&t={time}", "wait_for": ".search-result-listing"},
+        {"action": "extract_all", "selector": ".thing[data-type='link']", "fields": ["title", "url", "subreddit", "author", "score", "comment_count"]}
+      ],
+      "success_criteria": {
+        "results_container_visible": true
+      }
+    },
+
+    "submit_post": {
+      "id": "submit_post",
+      "description": "Submit a new text or link post to a subreddit",
+      "oauth3_scope": "reddit.write.submit",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "rate_limit": "1 per 600s per account",
+      "sequence": [
+        {"action": "load_session", "path": "artifacts/reddit_working_session.json"},
+        {"action": "navigate", "url": "https://old.reddit.com/r/{subreddit}/submit", "wait_for": "form#postsubmit"},
+        {"action": "click", "selector": "input[value='{post_type}']", "wait_ms": 800, "note": "Select link or self radio"},
+        {"action": "human_type", "selector": "#title", "delay_ms": "60-120", "note": "Post title"},
+        {"action": "type", "selector": "#url OR #text", "delay_ms": "40-50", "note": "URL or body depending on type"},
+        {"action": "screenshot", "description": "Capture form before submit"},
+        {"action": "click", "selector": "button.save", "wait_ms": 4000, "note": "Submit post"}
+      ],
+      "success_criteria": {
+        "redirected_to_comments_url": true,
+        "no_error_status": true
+      }
+    },
+
+    "upvote": {
+      "id": "upvote",
+      "description": "Upvote a post by clicking the upvote arrow",
+      "oauth3_scope": "reddit.write.vote",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "rate_limit": "50 per minute (after which votes may be fuzzy)",
+      "sequence": [
+        {"action": "load_session", "path": "artifacts/reddit_working_session.json"},
+        {"action": "navigate", "url": "https://old.reddit.com{post_url}", "wait_for": ".thing.link"},
+        {"action": "wait", "duration_ms": 1200, "note": "Human-like delay before voting"},
+        {"action": "click", "selector": ".thing.link .arrow.up", "wait_ms": 2000, "note": "Upvote arrow"},
+        {"action": "verify", "check": "has_class", "selector": ".thing.link .arrow.up", "class": "upmod"}
+      ],
+      "success_criteria": {
+        "upmod_class_present": true
+      }
+    },
+
+    "downvote": {
+      "id": "downvote",
+      "description": "Downvote a post",
+      "oauth3_scope": "reddit.write.vote",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "load_session", "path": "artifacts/reddit_working_session.json"},
+        {"action": "navigate", "url": "https://old.reddit.com{post_url}", "wait_for": ".thing.link"},
+        {"action": "wait", "duration_ms": 1200},
+        {"action": "click", "selector": ".thing.link .arrow.down", "wait_ms": 2000}
+      ],
+      "success_criteria": {
+        "downmod_class_present": true
+      }
+    }
+  },
+
+  "anti_detection_rules": {
+    "typing": {
+      "title_field": {"min_delay_ms": 60, "max_delay_ms": 120, "method": "human_type"},
+      "url_field": {"delay_ms": 50, "method": "type"},
+      "text_field": {"delay_ms": 40, "method": "type"}
+    },
+    "navigation": {
+      "between_actions_ms": "500-1500",
+      "after_navigate_ms": 2000,
+      "before_vote_ms": 1200,
+      "after_submit_ms": 4000
+    },
+    "critical_patterns": [
+      "Always use old.reddit.com, never www.reddit.com",
+      "Load session first — never attempt writes without authentication",
+      "Minimum 1200ms delay before voting actions",
+      "Never submit more than 1 post per 10 minutes on the same account",
+      "Scroll the page before clicking (humans scroll first)"
+    ]
+  }
+}

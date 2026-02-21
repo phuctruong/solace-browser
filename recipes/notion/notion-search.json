@@ -1,0 +1,187 @@
+{
+  "id": "notion-search",
+  "platform": "notion",
+  "version": "1.0.0",
+  "description": "Search across a Notion workspace using the Cmd+K quick search. Returns matching pages, databases, and blocks.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["notion.read.search"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Notion's workspace search is triggered by Ctrl+K (or Cmd+K on Mac) which opens a search modal. The modal has an input field with placeholder 'Search or jump to...' (selector: input[placeholder*='Search']). Results render as .notion-search-result items in a dropdown list. Each result has the page title, breadcrumb path, and icon. Clicking a result navigates to that page.",
+    "selector_strategy": "Trigger search modal via Ctrl+K keyboard shortcut (most reliable). Wait for search input: input[placeholder*='Search']. Type query with 80ms delay. Wait 2s for results to load. Extract results via .notion-search-result-item or similar container. Each result has title and path.",
+    "anti_bot_notes": "Notion search is client-side with debounce — wait 1500ms after typing for full results. No bot detection on search. Valid session required to access workspace content.",
+    "performance": "Navigate 4s + shortcut 1s + type query 2s + wait results 2s + extract 1s = ~10s total."
+  },
+
+  "input_params": {
+    "query": {
+      "type": "string",
+      "description": "Search query to find pages, databases, or blocks",
+      "required": true,
+      "example": "meeting notes"
+    },
+    "workspace_url": {
+      "type": "string",
+      "description": "Any Notion workspace URL to trigger search from",
+      "required": true,
+      "example": "https://www.notion.so"
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Maximum results to extract",
+      "required": false,
+      "default": 10,
+      "example": 5
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/notion_working_session.json",
+      "description": "Load saved Notion session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "{params.workspace_url}",
+      "wait_for": ".notion-sidebar",
+      "timeout_ms": 15000,
+      "screenshot": true,
+      "description": "Navigate to Notion workspace"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": ".notion-sidebar",
+      "fallback_url_pattern": "notion.so/login",
+      "description": "Verify authenticated — abort with SESSION_EXPIRED if login page",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "keyboard_press",
+      "key": "Control+k",
+      "description": "Open Notion search modal via keyboard shortcut",
+      "wait_after_ms": 1000
+    },
+    {
+      "step": 5,
+      "action": "wait_for_selector",
+      "selector": "input[placeholder*='Search']",
+      "timeout_ms": 5000,
+      "description": "Wait for search modal input to appear"
+    },
+    {
+      "step": 6,
+      "action": "human_type",
+      "selector": "input[placeholder*='Search']",
+      "text": "{params.query}",
+      "delay_ms": "60-100",
+      "click_first": true,
+      "description": "Type search query",
+      "screenshot": false
+    },
+    {
+      "step": 7,
+      "action": "wait",
+      "duration_ms": 1500,
+      "description": "Wait for search debounce and result rendering"
+    },
+    {
+      "step": 8,
+      "action": "screenshot",
+      "description": "Capture search results dropdown",
+      "screenshot": true
+    },
+    {
+      "step": 9,
+      "action": "extract_all",
+      "selector": "[aria-label*='Search result'], .notion-search-result-item",
+      "limit": "{params.limit}",
+      "fields": {
+        "title": {
+          "selector": ".notion-search-result-title, [class*='title']",
+          "type": "textContent"
+        },
+        "breadcrumb": {
+          "selector": ".notion-search-result-breadcrumb, [class*='breadcrumb']",
+          "type": "textContent"
+        },
+        "result_url": {
+          "selector": "a",
+          "type": "attribute",
+          "attribute": "href"
+        }
+      },
+      "description": "Extract search results with titles and breadcrumb paths",
+      "screenshot": false
+    },
+    {
+      "step": 10,
+      "action": "keyboard_press",
+      "key": "Escape",
+      "description": "Close search modal",
+      "wait_after_ms": 500
+    },
+    {
+      "step": 11,
+      "action": "return_result",
+      "description": "Return search results as structured data"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "query": {"type": "string", "example": "meeting notes"},
+      "results": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "title": {"type": "string", "example": "Q1 Meeting Notes"},
+            "breadcrumb": {"type": "string", "example": "Engineering / Planning"},
+            "result_url": {"type": "string", "example": "https://notion.so/Q1-Meeting-Notes-abc123"}
+          },
+          "required": ["title"]
+        }
+      },
+      "total_extracted": {"type": "integer", "example": 5},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["query", "results", "total_extracted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect notion.so/login redirect — run notion-oauth-login recipe first",
+    "search_modal_not_open": "Fallback: click search icon in sidebar if Ctrl+K fails",
+    "no_results": "Return empty results array — not an error, query just has no matches",
+    "render_timeout": "Retry navigate with 20s timeout, then abort"
+  },
+
+  "metadata": {
+    "tags": ["notion", "search", "read-only", "workspace", "discovery"],
+    "difficulty": "medium",
+    "prerequisites": ["notion_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 12,
+    "idempotent": true,
+    "destructive": false
+  }
+}

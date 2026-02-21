@@ -1,0 +1,157 @@
+{
+  "id": "reddit-upvote-post",
+  "platform": "reddit",
+  "version": "1.0.0",
+  "description": "Upvote a specific Reddit post by post ID or URL. Requires authenticated session with voting rights (account age and karma requirements).",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["reddit.write.vote"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "On old.reddit.com, the upvote arrow is a div.arrow.up inside .midcol next to each .thing post. Its class changes from 'arrow up' to 'arrow up upmod' when upvoted. Clicking .arrow.up on a post that is already upvoted removes the vote. The thing container has data-fullname matching the post ID (t3_XXXXX format).",
+    "selector_strategy": "Navigate to the post URL directly on old.reddit.com. Find .thing[data-fullname='{post_id}'] .arrow.up for the upvote button. Check current state via .upmod class. Use data-fullname to precisely target the correct post even in a listing.",
+    "anti_bot_notes": "Reddit rate-limits voting actions. Add 1-2s random delay before clicking. Do not vote on more than 50 posts per hour. New accounts (<7 days old) may have vote-fuzzing applied. Voting requires valid modhash cookie.",
+    "performance": "Navigation 3s + find element 1s + click 1s + verify 2s = ~8s total."
+  },
+
+  "input_params": {
+    "post_url": {
+      "type": "string",
+      "description": "Full Reddit post URL to navigate to before upvoting",
+      "required": true,
+      "example": "https://reddit.com/r/programming/comments/abc123/my_post/"
+    },
+    "post_id": {
+      "type": "string",
+      "description": "Reddit post fullname ID (t3_XXXXX format) for precise targeting",
+      "required": false,
+      "example": "t3_abc123"
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/reddit_working_session.json",
+      "description": "Load saved Reddit session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://old.reddit.com{params.post_url}",
+      "wait_for": ".thing.link",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to the post on old.reddit.com"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": ".thing.link",
+      "fallback_url_pattern": "reddit.com/login",
+      "description": "Verify authenticated — upvoting requires login",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "check_element",
+      "selector": ".thing.link .arrow.up",
+      "description": "Verify upvote arrow is present (not already upvoted will have no .upmod class)",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 5,
+      "action": "extract",
+      "selector": ".thing.link .score.unvoted, .thing.link .score.likes",
+      "field": "score_before",
+      "type": "attribute",
+      "attribute": "title",
+      "description": "Record score before upvoting",
+      "screenshot": false
+    },
+    {
+      "step": 6,
+      "action": "wait",
+      "duration_ms": 1200,
+      "description": "Human-like delay before voting"
+    },
+    {
+      "step": 7,
+      "action": "click",
+      "selector": ".thing.link .arrow.up",
+      "description": "Click upvote arrow on the post",
+      "wait_after_ms": 2000,
+      "timeout_ms": 5000,
+      "screenshot": true
+    },
+    {
+      "step": 8,
+      "action": "verify",
+      "checks": [
+        {"type": "has_element", "selector": ".thing.link .arrow.up.upmod", "description": "Upvote arrow now has .upmod class (vote registered)"}
+      ],
+      "description": "Verify vote was registered — .upmod class should be present"
+    },
+    {
+      "step": 9,
+      "action": "extract",
+      "selector": ".thing.link .score.likes",
+      "field": "score_after",
+      "type": "attribute",
+      "attribute": "title",
+      "description": "Record score after upvoting",
+      "screenshot": false
+    },
+    {
+      "step": 10,
+      "action": "return_result",
+      "description": "Return vote confirmation with before/after scores"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "upvoted": {"type": "boolean", "example": true},
+      "post_url": {"type": "string", "example": "https://reddit.com/r/programming/comments/abc123/my_post/"},
+      "score_before": {"type": "string", "example": "142"},
+      "score_after": {"type": "string", "example": "143"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["upvoted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect reddit.com/login redirect — run reddit-oauth-login recipe first",
+    "already_upvoted": "Detect .upmod class already present — return already_voted: true without clicking",
+    "rate_limited": "Reddit rate-limits voting at ~50/min — slow down if vote appears not to register",
+    "vote_blocked": "New accounts may have votes fuzzy or blocked — return VOTE_BLOCKED with reason",
+    "post_deleted": "Detect [deleted] or [removed] — return POST_DELETED",
+    "selector_timeout": "Retry once with 15s timeout on navigate, then abort"
+  },
+
+  "metadata": {
+    "tags": ["reddit", "upvote", "vote", "write", "interaction"],
+    "difficulty": "easy",
+    "prerequisites": ["reddit_session", "reddit_account_age_7d"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 8,
+    "idempotent": false,
+    "destructive": false
+  }
+}

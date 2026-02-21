@@ -1,0 +1,180 @@
+{
+  "id": "hn-submit-story",
+  "platform": "hackernews",
+  "version": "1.0.0",
+  "description": "Submit a new story to Hacker News with title and URL. Requires authenticated session. Respects HN submission rules (no duplicate URLs, appropriate titles).",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["hackernews.write.submit"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "HN submit page (/submit) has a simple form: input[name='title'] for title, input[name='url'] for URL, and textarea[name='text'] for text submissions (Ask HN, Show HN). Submit button is input[type='submit']. On successful submission, redirected to /item?id={story_id}. On duplicate URL, HN shows 'That link was already submitted' with a link to the existing submission.",
+    "selector_strategy": "Navigate to hn.algolia.com/submit after loading session. Form fields: input[name='title'], input[name='url']. Submit: input[type='submit']. Verify success by checking URL redirect to /item?id=. HN's form is pure HTML — no JavaScript tricks needed.",
+    "anti_bot_notes": "HN rate limits submissions: 1 story per 4 hours for new accounts. Requires karma >= 1 to submit. Story titles must not contain all-caps words or exclamation marks. Human-like typing speeds recommended. Login via session cookie required.",
+    "performance": "Navigation 2s + form fill ~10s + submit 2s + verify 2s = ~16s total."
+  },
+
+  "input_params": {
+    "title": {
+      "type": "string",
+      "description": "Story title. Should not be in ALL CAPS. No excessive punctuation.",
+      "required": true,
+      "example": "Show HN: My open source browser automation tool"
+    },
+    "url": {
+      "type": "string",
+      "description": "URL to submit. Must be unique (HN rejects duplicate URLs within 1 year).",
+      "required": false,
+      "example": "https://github.com/example/solace-browser"
+    },
+    "text": {
+      "type": "string",
+      "description": "Text for Ask HN or Show HN (used when no URL provided)",
+      "required": false,
+      "example": "I've been building this for 6 months and wanted to share it with the community..."
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/hackernews_working_session.json",
+      "description": "Load saved HN session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://news.ycombinator.com/submit",
+      "wait_for": "form",
+      "timeout_ms": 8000,
+      "screenshot": true,
+      "description": "Navigate to HN submit form"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "form input[name='title']",
+      "fallback_url_pattern": "ycombinator.com/login",
+      "description": "Verify authenticated — form must show title field. If login page, abort.",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "human_type",
+      "selector": "input[name='title']",
+      "text": "{params.title}",
+      "delay_ms": "70-130",
+      "click_first": true,
+      "description": "Type story title",
+      "screenshot": false
+    },
+    {
+      "step": 5,
+      "action": "type",
+      "selector": "input[name='url']",
+      "text": "{params.url}",
+      "delay_ms": 50,
+      "click_first": true,
+      "description": "Type story URL (if link submission)",
+      "condition": "{params.url} is not empty",
+      "screenshot": false
+    },
+    {
+      "step": 6,
+      "action": "type",
+      "selector": "textarea[name='text']",
+      "text": "{params.text}",
+      "delay_ms": 40,
+      "click_first": true,
+      "description": "Type story text (if text submission)",
+      "condition": "{params.text} is not empty",
+      "screenshot": false
+    },
+    {
+      "step": 7,
+      "action": "screenshot",
+      "description": "Capture completed form before submission",
+      "screenshot": true
+    },
+    {
+      "step": 8,
+      "action": "click",
+      "selector": "input[type='submit']",
+      "description": "Submit the form",
+      "wait_after_ms": 3000,
+      "timeout_ms": 10000,
+      "screenshot": true
+    },
+    {
+      "step": 9,
+      "action": "verify",
+      "checks": [
+        {"type": "url_contains", "pattern": "ycombinator.com/item?id=", "description": "Redirected to new story page"},
+        {"type": "no_element", "selector": ".error", "description": "No error message shown"}
+      ],
+      "description": "Verify story was submitted successfully"
+    },
+    {
+      "step": 10,
+      "action": "extract",
+      "field": "story_url",
+      "type": "current_url",
+      "description": "Capture URL of newly submitted story",
+      "screenshot": false
+    },
+    {
+      "step": 11,
+      "action": "return_result",
+      "description": "Return submission result"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "submitted": {"type": "boolean", "example": true},
+      "story_url": {"type": "string", "example": "https://news.ycombinator.com/item?id=12345678"},
+      "story_id": {"type": "string", "example": "12345678"},
+      "title": {"type": "string", "example": "Show HN: My open source browser automation tool"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["submitted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect ycombinator.com/login redirect — run hn-login recipe first",
+    "duplicate_url": "Detect 'already submitted' message — return DUPLICATE_URL with existing story link",
+    "rate_limited": "HN enforces 4h between submissions — detect 'too many submissions' error",
+    "karma_too_low": "Detect karma requirement message — need karma >= 1 to submit",
+    "invalid_title": "Detect title error — title must not be all-caps or contain special chars"
+  },
+
+  "anti_detection": {
+    "human_typing": true,
+    "screenshot_before_submit": true
+  },
+
+  "metadata": {
+    "tags": ["hackernews", "submit", "post", "write"],
+    "difficulty": "easy",
+    "prerequisites": ["hackernews_session", "hn_karma_1"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 16,
+    "idempotent": false,
+    "destructive": false
+  }
+}

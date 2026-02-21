@@ -1,0 +1,236 @@
+{
+  "node_id": "hackernews-selectors",
+  "version": "1.0.0",
+  "platform": "hackernews",
+  "domain": "news.ycombinator.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+  "note": "HN selectors are pure HTML — extremely stable since 2012. Confidence values are very high.",
+
+  "listing": {
+    "story_row": {
+      "selector": "tr.athing",
+      "confidence": 0.99,
+      "type": "selector_list",
+      "note": "Each story is two rows: .athing (title) and next sibling (metadata)"
+    },
+    "story_id": {
+      "selector": "tr.athing",
+      "confidence": 0.99,
+      "type": "attribute",
+      "attribute": "id",
+      "note": "Integer ID as string"
+    },
+    "story_rank": {
+      "selector": ".rank",
+      "confidence": 0.99,
+      "type": "text_extraction"
+    },
+    "story_title": {
+      "selector": ".titleline > a:first-child",
+      "confidence": 0.99,
+      "type": "text_extraction"
+    },
+    "story_url": {
+      "selector": ".titleline > a:first-child",
+      "confidence": 0.99,
+      "type": "attribute",
+      "attribute": "href"
+    },
+    "story_domain": {
+      "selector": ".sitestr",
+      "confidence": 0.97,
+      "type": "text_extraction",
+      "note": "Domain without protocol. May not exist for self-posts."
+    },
+    "story_score": {
+      "selector": ".score",
+      "confidence": 0.98,
+      "type": "text_extraction",
+      "note": "Text is 'N points'. Hidden for very new stories."
+    },
+    "story_author": {
+      "selector": ".hnuser",
+      "confidence": 0.98,
+      "type": "text_extraction"
+    },
+    "story_age": {
+      "selector": ".age a",
+      "confidence": 0.97,
+      "type": "text_extraction",
+      "note": "Relative time: '3 hours ago', '2 days ago'"
+    },
+    "story_comment_link": {
+      "selector": "a[href*='item?id=']:last-child",
+      "confidence": 0.95,
+      "type": "text_extraction",
+      "note": "Text: 'N comments' or 'discuss' (0 comments)"
+    },
+    "next_page": {
+      "selector": "a.morelink",
+      "confidence": 0.98,
+      "action": "click"
+    }
+  },
+
+  "story_page": {
+    "fatitem": {
+      "selector": "table.fatitem",
+      "confidence": 0.98,
+      "type": "wait_for"
+    },
+    "story_title_link": {
+      "selector": ".fatitem .titleline > a",
+      "confidence": 0.99,
+      "type": "text_extraction"
+    },
+    "story_score": {
+      "selector": ".fatitem .score",
+      "confidence": 0.98,
+      "type": "text_extraction"
+    },
+    "story_author": {
+      "selector": ".fatitem .hnuser",
+      "confidence": 0.98,
+      "type": "text_extraction"
+    },
+    "op_text": {
+      "selector": ".fatitem .toptext",
+      "confidence": 0.90,
+      "type": "text_extraction",
+      "note": "Present on Ask HN / Show HN text submissions"
+    }
+  },
+
+  "comments": {
+    "comment_tree": {
+      "selector": "table.comment-tree",
+      "confidence": 0.98,
+      "type": "wait_for"
+    },
+    "comment_row": {
+      "selector": "tr.athing.comtr",
+      "confidence": 0.98,
+      "type": "selector_list"
+    },
+    "comment_id": {
+      "selector": "tr.athing.comtr",
+      "confidence": 0.99,
+      "type": "attribute",
+      "attribute": "id"
+    },
+    "comment_depth_image": {
+      "selector": ".ind img",
+      "confidence": 0.99,
+      "type": "attribute",
+      "attribute": "width",
+      "note": "width / 40 = nesting depth"
+    },
+    "comment_author": {
+      "selector": ".comhead .hnuser",
+      "confidence": 0.98,
+      "type": "text_extraction"
+    },
+    "comment_text": {
+      "selector": ".commtext",
+      "confidence": 0.98,
+      "type": "text_extraction"
+    },
+    "comment_age": {
+      "selector": ".comhead .age a",
+      "confidence": 0.97,
+      "type": "text_extraction"
+    },
+    "comment_score": {
+      "selector": ".comhead .score",
+      "confidence": 0.90,
+      "type": "text_extraction",
+      "note": "Only visible for users with karma >= 500"
+    },
+    "reply_link": {
+      "selector": ".reply a[href*='reply']",
+      "confidence": 0.94,
+      "action": "click",
+      "note": "Opens reply form inline"
+    }
+  },
+
+  "submit": {
+    "title_input": {
+      "selector": "input[name='title']",
+      "confidence": 0.99,
+      "action": "human_type",
+      "typing_delay_ms": "70-130"
+    },
+    "url_input": {
+      "selector": "input[name='url']",
+      "confidence": 0.99,
+      "action": "type",
+      "typing_delay_ms": 50
+    },
+    "text_area": {
+      "selector": "textarea[name='text']",
+      "confidence": 0.99,
+      "action": "type",
+      "typing_delay_ms": 40
+    },
+    "submit_button": {
+      "selector": "input[type='submit']",
+      "confidence": 0.99,
+      "action": "click",
+      "wait_after_ms": 3000
+    }
+  },
+
+  "navigation": {
+    "nav_links": {
+      "home": {"selector": "a[href='/']", "confidence": 0.99},
+      "new": {"selector": "a[href='/newest']", "confidence": 0.99},
+      "ask": {"selector": "a[href='/ask']", "confidence": 0.99},
+      "show": {"selector": "a[href='/show']", "confidence": 0.99},
+      "jobs": {"selector": "a[href='/jobs']", "confidence": 0.99},
+      "submit": {"selector": "a[href='/submit']", "confidence": 0.99},
+      "login": {"selector": "a[href*='/login']", "confidence": 0.99}
+    },
+    "user_link": {
+      "selector": "#me",
+      "confidence": 0.98,
+      "type": "text_extraction",
+      "note": "Shows username if logged in"
+    }
+  },
+
+  "algolia_search": {
+    "story_article": {
+      "selector": "article.Story",
+      "confidence": 0.92,
+      "type": "selector_list"
+    },
+    "story_title_link": {
+      "selector": ".Story--title a:first-child",
+      "confidence": 0.92,
+      "type": "text_extraction"
+    },
+    "story_hn_link": {
+      "selector": ".Story--title .Story--hn-link",
+      "confidence": 0.90,
+      "type": "attribute",
+      "attribute": "href"
+    },
+    "story_score": {
+      "selector": ".Story--score",
+      "confidence": 0.91,
+      "type": "text_extraction"
+    },
+    "story_author": {
+      "selector": ".Story--author",
+      "confidence": 0.91,
+      "type": "text_extraction"
+    },
+    "story_age": {
+      "selector": ".Story--age",
+      "confidence": 0.91,
+      "type": "text_extraction"
+    }
+  }
+}

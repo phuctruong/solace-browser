@@ -1,0 +1,165 @@
+{
+  "id": "hn-search",
+  "platform": "hackernews",
+  "version": "1.0.0",
+  "description": "Search Hacker News via the Algolia HN Search API (hn.algolia.com). Returns matching stories with title, author, score, and URL. No login required.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["hackernews.read.search"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "HN has an official Algolia-powered search at hn.algolia.com. The search page renders results as article.Story elements. Alternatively, navigate to news.ycombinator.com/search and the form submits to hn.algolia.com. hn.algolia.com/api/v1/search returns JSON directly. The search page itself has: .Story--title a (title+URL), .Story--meta .Story--score (points), .Story--meta .Story--author (username), .Story--meta a.Story--age (time), .Story--meta a:last-of-type (comments link).",
+    "selector_strategy": "Navigate directly to hn.algolia.com/search?q={query}&dateRange={range}&type=story. Wait for article.Story. Extract .Story--title a for title/URL, .Story--author for username, .Story--score for points. This is more reliable than navigating HN's own search.",
+    "anti_bot_notes": "hn.algolia.com is a public search endpoint — no bot detection, no rate limiting for normal use. JSON API also available at hn.algolia.com/api/v1/search — navigation preferred for screenshot evidence.",
+    "performance": "Navigation 2s + wait 1s + extraction 1s = ~4s total."
+  },
+
+  "input_params": {
+    "query": {
+      "type": "string",
+      "description": "Search query string",
+      "required": true,
+      "example": "browser automation"
+    },
+    "date_range": {
+      "type": "string",
+      "description": "Time filter: all, past24h, pastWeek, pastMonth, pastYear",
+      "required": false,
+      "default": "all",
+      "enum": ["all", "past24h", "pastWeek", "pastMonth", "pastYear"]
+    },
+    "type": {
+      "type": "string",
+      "description": "Content type: story, comment, ask_hn, show_hn, job",
+      "required": false,
+      "default": "story",
+      "enum": ["story", "comment", "ask_hn", "show_hn", "job"]
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Maximum number of results to extract",
+      "required": false,
+      "default": 20,
+      "example": 10
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "target": "https://hn.algolia.com/search?q={params.query}&dateRange={params.date_range}&type={params.type}",
+      "wait_for": "article.Story",
+      "timeout_ms": 10000,
+      "screenshot": true,
+      "description": "Navigate to Algolia HN search results (no login required)"
+    },
+    {
+      "step": 2,
+      "action": "check_element",
+      "selector": "article.Story",
+      "description": "Verify search results loaded",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 3,
+      "action": "extract_all",
+      "selector": "article.Story",
+      "limit": "{params.limit}",
+      "fields": {
+        "title": {
+          "selector": ".Story--title a:first-child",
+          "type": "textContent"
+        },
+        "url": {
+          "selector": ".Story--title a:first-child",
+          "type": "attribute",
+          "attribute": "href"
+        },
+        "hn_link": {
+          "selector": ".Story--title .Story--hn-link",
+          "type": "attribute",
+          "attribute": "href"
+        },
+        "score": {
+          "selector": ".Story--score",
+          "type": "textContent"
+        },
+        "author": {
+          "selector": ".Story--author",
+          "type": "textContent"
+        },
+        "age": {
+          "selector": ".Story--age",
+          "type": "textContent"
+        },
+        "comment_count": {
+          "selector": "a[href*='ycombinator.com/item']",
+          "type": "textContent"
+        }
+      },
+      "description": "Extract search results with metadata",
+      "screenshot": true
+    },
+    {
+      "step": 4,
+      "action": "return_result",
+      "description": "Return search results as structured data"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "query": {"type": "string", "example": "browser automation"},
+      "results": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "title": {"type": "string", "example": "Playwright vs Puppeteer in 2026"},
+            "url": {"type": "string", "example": "https://example.com/playwright-vs-puppeteer"},
+            "hn_link": {"type": "string", "example": "https://news.ycombinator.com/item?id=12345678"},
+            "score": {"type": "string", "example": "342 points"},
+            "author": {"type": "string", "example": "jsmith"},
+            "age": {"type": "string", "example": "3 days ago"},
+            "comment_count": {"type": "string", "example": "87 comments"}
+          },
+          "required": ["title"]
+        }
+      },
+      "date_range": {"type": "string", "example": "all"},
+      "total_extracted": {"type": "integer", "example": 20},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["query", "results", "total_extracted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "HN search is public — no session required. This error should not occur.",
+    "no_results": "Return empty results array — not an error, query just has no matches",
+    "algolia_down": "Fallback: navigate to news.ycombinator.com/search?q={query} if hn.algolia.com fails",
+    "selector_timeout": "Retry once with 15s timeout, then abort"
+  },
+
+  "metadata": {
+    "tags": ["hackernews", "search", "algolia", "read-only", "discovery"],
+    "difficulty": "easy",
+    "prerequisites": [],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 5,
+    "idempotent": true,
+    "destructive": false
+  }
+}

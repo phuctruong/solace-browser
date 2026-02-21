@@ -1,0 +1,190 @@
+{
+  "id": "reddit-search",
+  "platform": "reddit",
+  "version": "1.0.0",
+  "description": "Search across Reddit or within a specific subreddit. Returns matching posts with metadata.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["reddit.read.search"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "old.reddit.com/search renders results as .thing[data-type='link'] elements with the same structure as subreddit listings. Search URL pattern: old.reddit.com/search?q={query}&sort={sort}&t={time_range}. For subreddit-scoped search: old.reddit.com/r/{subreddit}/search?q={query}&restrict_sr=on. Results include title, subreddit, author, score, comment count.",
+    "selector_strategy": "Use old.reddit.com/search for site-wide and old.reddit.com/r/{sub}/search?restrict_sr=on for subreddit-scoped. Same .thing selectors as browse-subreddit recipe. Check .search-result-footer .tagline for subreddit attribution in cross-subreddit results.",
+    "anti_bot_notes": "Search is read-only — no bot detection risk. No login required for public content search. Rate limiting applies to very frequent searches (>60/min). Use 1s delay between search requests.",
+    "performance": "Navigation 3s + wait 2s + extraction 2s = ~7s total."
+  },
+
+  "input_params": {
+    "query": {
+      "type": "string",
+      "description": "Search query string",
+      "required": true,
+      "example": "open source CLI tools"
+    },
+    "subreddit": {
+      "type": "string",
+      "description": "Restrict search to specific subreddit (optional)",
+      "required": false,
+      "example": "programming"
+    },
+    "sort": {
+      "type": "string",
+      "description": "Sort results by: relevance, hot, new, top",
+      "required": false,
+      "default": "relevance",
+      "enum": ["relevance", "hot", "new", "top"]
+    },
+    "time_range": {
+      "type": "string",
+      "description": "Time range filter: all, year, month, week, day, hour",
+      "required": false,
+      "default": "all",
+      "enum": ["all", "year", "month", "week", "day", "hour"]
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Maximum number of results to return",
+      "required": false,
+      "default": 25,
+      "example": 10
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/reddit_working_session.json",
+      "description": "Load saved Reddit session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://old.reddit.com/search?q={params.query}&sort={params.sort}&t={params.time_range}",
+      "wait_for": ".search-result-listing",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to Reddit search results page"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": ".search-result-listing",
+      "fallback_url_pattern": "reddit.com/login",
+      "description": "Verify page loaded — if redirected to login, abort with SESSION_EXPIRED",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "extract",
+      "selector": ".search-result-count",
+      "field": "result_count",
+      "type": "textContent",
+      "description": "Extract total result count if shown",
+      "screenshot": false
+    },
+    {
+      "step": 5,
+      "action": "extract_all",
+      "selector": ".thing[data-type='link']",
+      "limit": "{params.limit}",
+      "fields": {
+        "title": {
+          "selector": "a.title",
+          "type": "textContent"
+        },
+        "url": {
+          "selector": "a.title",
+          "type": "attribute",
+          "attribute": "href"
+        },
+        "subreddit": {
+          "selector": ".tagline .subreddit",
+          "type": "textContent"
+        },
+        "author": {
+          "selector": ".author",
+          "type": "textContent"
+        },
+        "score": {
+          "selector": ".score.unvoted",
+          "type": "attribute",
+          "attribute": "title"
+        },
+        "comment_count": {
+          "selector": ".comments",
+          "type": "textContent"
+        },
+        "post_id": {
+          "type": "attribute",
+          "attribute": "data-fullname"
+        }
+      },
+      "description": "Extract search result posts with metadata",
+      "screenshot": true
+    },
+    {
+      "step": 6,
+      "action": "return_result",
+      "description": "Return search results as structured data"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "query": {"type": "string", "example": "open source CLI tools"},
+      "posts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "title": {"type": "string", "example": "I built an open source CLI tool"},
+            "url": {"type": "string", "example": "https://reddit.com/r/programming/comments/abc123/..."},
+            "subreddit": {"type": "string", "example": "r/programming"},
+            "author": {"type": "string", "example": "jane_dev"},
+            "score": {"type": "string", "example": "847"},
+            "comment_count": {"type": "string", "example": "156 comments"},
+            "post_id": {"type": "string", "example": "t3_abc123"}
+          },
+          "required": ["title", "url"]
+        }
+      },
+      "sort": {"type": "string", "example": "relevance"},
+      "time_range": {"type": "string", "example": "all"},
+      "total_extracted": {"type": "integer", "example": 25},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["query", "posts", "total_extracted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect reddit.com/login redirect — abort with SESSION_EXPIRED error",
+    "no_results": "Return empty posts array with no_results=true — not an error",
+    "search_unavailable": "Detect search temporarily unavailable message — retry once after 5s",
+    "selector_timeout": "Retry once with 20s timeout, then abort"
+  },
+
+  "metadata": {
+    "tags": ["reddit", "search", "read-only", "extraction", "discovery"],
+    "difficulty": "easy",
+    "prerequisites": ["reddit_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 7,
+    "idempotent": true,
+    "destructive": false
+  }
+}

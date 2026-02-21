@@ -1,0 +1,112 @@
+{
+  "node_id": "reddit-urls",
+  "version": "1.0.0",
+  "platform": "reddit",
+  "domain": "old.reddit.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+
+  "base_urls": {
+    "homepage": "https://old.reddit.com/",
+    "popular": "https://old.reddit.com/r/popular/",
+    "all": "https://old.reddit.com/r/all/",
+    "search": "https://old.reddit.com/search",
+    "submit": "https://old.reddit.com/submit",
+    "login": "https://old.reddit.com/login"
+  },
+
+  "subreddit_urls": {
+    "listing": "https://old.reddit.com/r/{subreddit}/",
+    "hot": "https://old.reddit.com/r/{subreddit}/hot/",
+    "new": "https://old.reddit.com/r/{subreddit}/new/",
+    "top": "https://old.reddit.com/r/{subreddit}/top/?t=all",
+    "rising": "https://old.reddit.com/r/{subreddit}/rising/",
+    "submit": "https://old.reddit.com/r/{subreddit}/submit",
+    "wiki": "https://old.reddit.com/r/{subreddit}/wiki/index",
+    "rules": "https://old.reddit.com/r/{subreddit}/about/rules"
+  },
+
+  "post_urls": {
+    "thread": "https://old.reddit.com/r/{subreddit}/comments/{post_id}/{slug}/",
+    "comments_sorted": "https://old.reddit.com/r/{subreddit}/comments/{post_id}/{slug}/?sort={sort}",
+    "comment_permalink": "https://old.reddit.com/r/{subreddit}/comments/{post_id}/{slug}/{comment_id}/"
+  },
+
+  "search_urls": {
+    "site_wide": "https://old.reddit.com/search?q={query}&sort={sort}&t={time}",
+    "subreddit_scoped": "https://old.reddit.com/r/{subreddit}/search?q={query}&restrict_sr=on&sort={sort}&t={time}"
+  },
+
+  "user_urls": {
+    "profile": "https://old.reddit.com/u/{username}/",
+    "posts": "https://old.reddit.com/u/{username}/submitted/",
+    "comments": "https://old.reddit.com/u/{username}/comments/",
+    "about": "https://old.reddit.com/user/{username}/about.json"
+  },
+
+  "navigation_paths": {
+    "homepage_to_subreddit": {
+      "from": "homepage",
+      "to": "subreddit_listing",
+      "method": "navigate_direct",
+      "url_template": "https://old.reddit.com/r/{subreddit}/",
+      "wait_for": ".content[role='main']"
+    },
+    "listing_to_thread": {
+      "from": "subreddit_listing",
+      "to": "post_thread",
+      "method": "click",
+      "selector": "a.title.may-blank",
+      "wait_for": ".commentarea",
+      "wait_ms": 2000
+    },
+    "listing_to_submit": {
+      "from": "subreddit_listing",
+      "to": "submit_form",
+      "method": "navigate_direct",
+      "url_template": "https://old.reddit.com/r/{subreddit}/submit",
+      "wait_for": "form#postsubmit"
+    },
+    "homepage_to_search": {
+      "from": "homepage",
+      "to": "search_results",
+      "method": "navigate_direct",
+      "url_template": "https://old.reddit.com/search?q={query}",
+      "wait_for": ".search-result-listing"
+    },
+    "thread_to_listing": {
+      "from": "post_thread",
+      "to": "subreddit_listing",
+      "method": "navigate_direct",
+      "url_template": "https://old.reddit.com/r/{subreddit}/",
+      "wait_for": ".content[role='main']"
+    }
+  },
+
+  "url_detection": {
+    "authenticated": {
+      "pattern": "old.reddit.com",
+      "check": "element_exists",
+      "selector": ".user a",
+      "indicates": "User is logged in (username shown in nav)"
+    },
+    "login_redirect": {
+      "pattern": "reddit.com/login",
+      "indicates": "Session expired — re-authentication needed"
+    },
+    "post_created": {
+      "pattern": "/r/{subreddit}/comments/",
+      "indicates": "Post was submitted successfully"
+    },
+    "subreddit_private": {
+      "check": "text_contains",
+      "text": "This community is private",
+      "indicates": "Cannot access restricted/private subreddit"
+    },
+    "quarantined": {
+      "check": "text_contains",
+      "text": "Are you sure you want to continue",
+      "indicates": "Subreddit is quarantined — requires opt-in"
+    }
+  }
+}

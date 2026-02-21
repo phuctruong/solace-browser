@@ -1,0 +1,103 @@
+{
+  "node_id": "hackernews-actions",
+  "version": "1.0.0",
+  "platform": "hackernews",
+  "domain": "news.ycombinator.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+
+  "actions": {
+    "read_frontpage": {
+      "id": "read_frontpage",
+      "description": "Read top 30 stories from HN front page — no login required",
+      "oauth3_scope": "hackernews.read.frontpage",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://news.ycombinator.com/news?p={page}", "wait_for": ".athing"},
+        {"action": "extract_all", "selector": "tr.athing", "fields": ["story_id", "rank", "title", "url", "domain", "score", "author", "age", "comment_count"]}
+      ],
+      "success_criteria": {
+        "stories_extracted": ">= 25"
+      }
+    },
+
+    "read_comments": {
+      "id": "read_comments",
+      "description": "Read comment thread for a story — no login required",
+      "oauth3_scope": "hackernews.read.comments",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://news.ycombinator.com/item?id={story_id}", "wait_for": ".fatitem"},
+        {"action": "extract", "selector": ".fatitem .titleline > a", "field": "story_title"},
+        {"action": "extract", "selector": ".fatitem .score", "field": "story_score"},
+        {"action": "wait_for_selector", "selector": ".comment-tree", "timeout_ms": 5000},
+        {"action": "extract_all", "selector": "tr.athing.comtr", "fields": ["comment_id", "author", "text", "depth_pixels", "timestamp"]}
+      ],
+      "success_criteria": {
+        "fatitem_visible": true
+      }
+    },
+
+    "search": {
+      "id": "search",
+      "description": "Search HN via Algolia — no login required",
+      "oauth3_scope": "hackernews.read.search",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://hn.algolia.com/search?q={query}&dateRange={date_range}&type={type}", "wait_for": "article.Story"},
+        {"action": "extract_all", "selector": "article.Story", "fields": ["title", "url", "hn_link", "score", "author", "age", "comment_count"]}
+      ],
+      "success_criteria": {
+        "story_articles_found": ">= 0"
+      }
+    },
+
+    "submit_story": {
+      "id": "submit_story",
+      "description": "Submit a new story to HN — requires authenticated session",
+      "oauth3_scope": "hackernews.write.submit",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "rate_limit": "~2 per day for normal accounts",
+      "sequence": [
+        {"action": "load_session", "path": "artifacts/hackernews_working_session.json"},
+        {"action": "navigate", "url": "https://news.ycombinator.com/submit", "wait_for": "form", "timeout_ms": 8000},
+        {"action": "human_type", "selector": "input[name='title']", "delay_ms": "70-130", "note": "Title"},
+        {"action": "type", "selector": "input[name='url']", "delay_ms": 50, "note": "URL (if link post)"},
+        {"action": "type", "selector": "textarea[name='text']", "delay_ms": 40, "note": "Text (if text post)"},
+        {"action": "screenshot", "description": "Capture form before submit"},
+        {"action": "click", "selector": "input[type='submit']", "wait_ms": 3000},
+        {"action": "verify", "check": "url_contains", "pattern": "/item?id="}
+      ],
+      "success_criteria": {
+        "redirected_to_item_page": true,
+        "no_duplicate_error": true
+      }
+    }
+  },
+
+  "anti_detection_rules": {
+    "typing": {
+      "title_field": {"min_delay_ms": 70, "max_delay_ms": 130, "method": "human_type"},
+      "url_field": {"delay_ms": 50, "method": "type"},
+      "text_area": {"delay_ms": 40, "method": "type"}
+    },
+    "navigation": {
+      "between_page_reads_ms": 500,
+      "after_submit_ms": 3000
+    },
+    "critical_patterns": [
+      "HN reads require no authentication — skip load_session for read-only recipes",
+      "Title must not have ALL CAPS words or exclamation marks",
+      "Check for duplicate URL error before declaring submission successful",
+      "Minimum 1s between page loads as courtesy (not enforced, but good practice)"
+    ]
+  }
+}

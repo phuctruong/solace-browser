@@ -1,0 +1,192 @@
+{
+  "id": "notion-update-page",
+  "platform": "notion",
+  "version": "1.0.0",
+  "description": "Update an existing Notion page — append text to body, update title, or modify database properties. Uses in-place editing on existing content.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["notion.write.update"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Notion pages are edited in-place — click anywhere on the page to enter edit mode. No explicit edit button exists. To append content: click at the end of the last block, press Enter to create new block, then type. To update title: click on title (contenteditable with data in .notion-title-block), select all, type new title. Database property updates: click on property value cell in table view.",
+    "selector_strategy": "Navigate to page URL. Click at end of .notion-page-content to enter edit mode. Append via End key + Enter + type. Title update: click .notion-title-block span, Ctrl+A, type new title. Autosave triggers every 2s after changes.",
+    "anti_bot_notes": "Notion tracks editing sessions and may flag accounts that make very rapid edits. Use 60ms+ typing delay. Wait 2s after each editing action for autosave. Do not reload page immediately after edit — wait 3s for save confirmation.",
+    "performance": "Navigate 4s + enter edit 1s + typing variable + autosave wait 2s = ~10-15s base."
+  },
+
+  "input_params": {
+    "page_url": {
+      "type": "string",
+      "description": "URL of the Notion page to update",
+      "required": true,
+      "example": "https://www.notion.so/My-Page-abc123"
+    },
+    "append_text": {
+      "type": "string",
+      "description": "Text to append to the page body as a new block",
+      "required": false,
+      "example": "Updated 2026-02-21: Added Q2 roadmap section."
+    },
+    "new_title": {
+      "type": "string",
+      "description": "New title to replace existing page title (optional)",
+      "required": false,
+      "example": "Project Planning Q1-Q2 2026"
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/notion_working_session.json",
+      "description": "Load saved Notion session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "{params.page_url}",
+      "wait_for": ".notion-page-content",
+      "timeout_ms": 15000,
+      "screenshot": true,
+      "description": "Navigate to the target Notion page"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": ".notion-page-content",
+      "fallback_url_pattern": "notion.so/login",
+      "description": "Verify authenticated — abort with SESSION_EXPIRED if login page",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "click",
+      "selector": ".notion-title-block [contenteditable]",
+      "description": "Click title to enter edit mode on title",
+      "wait_after_ms": 500,
+      "condition": "{params.new_title} is not empty",
+      "screenshot": false
+    },
+    {
+      "step": 5,
+      "action": "keyboard_press",
+      "key": "Control+a",
+      "description": "Select all title text",
+      "wait_after_ms": 200,
+      "condition": "{params.new_title} is not empty"
+    },
+    {
+      "step": 6,
+      "action": "human_type",
+      "selector": ".notion-title-block [contenteditable]",
+      "text": "{params.new_title}",
+      "delay_ms": "60-100",
+      "description": "Type new title (replaces selected text)",
+      "condition": "{params.new_title} is not empty",
+      "screenshot": false
+    },
+    {
+      "step": 7,
+      "action": "click",
+      "selector": ".notion-page-content > [data-block-id]:last-child [contenteditable]",
+      "description": "Click at the last block to position cursor for append",
+      "wait_after_ms": 500,
+      "condition": "{params.append_text} is not empty",
+      "screenshot": false
+    },
+    {
+      "step": 8,
+      "action": "keyboard_press",
+      "key": "End",
+      "description": "Move cursor to end of last block",
+      "wait_after_ms": 200,
+      "condition": "{params.append_text} is not empty"
+    },
+    {
+      "step": 9,
+      "action": "keyboard_press",
+      "key": "Enter",
+      "description": "Create new block for appended content",
+      "wait_after_ms": 500,
+      "condition": "{params.append_text} is not empty"
+    },
+    {
+      "step": 10,
+      "action": "type",
+      "selector": ".notion-page-content > [data-block-id]:last-child [contenteditable]",
+      "text": "{params.append_text}",
+      "delay_ms": 40,
+      "description": "Type appended text in new block",
+      "condition": "{params.append_text} is not empty",
+      "screenshot": false
+    },
+    {
+      "step": 11,
+      "action": "wait",
+      "duration_ms": 2500,
+      "description": "Wait for Notion autosave to persist all changes"
+    },
+    {
+      "step": 12,
+      "action": "screenshot",
+      "description": "Capture updated page state as evidence",
+      "screenshot": true
+    },
+    {
+      "step": 13,
+      "action": "return_result",
+      "description": "Return update confirmation"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "updated": {"type": "boolean", "example": true},
+      "page_url": {"type": "string", "example": "https://www.notion.so/My-Page-abc123"},
+      "title_updated": {"type": "boolean", "example": false},
+      "text_appended": {"type": "boolean", "example": true},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["updated", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect notion.so/login redirect — run notion-oauth-login recipe first",
+    "page_not_found": "Detect 'Page not found' message — page may have been deleted or URL is wrong",
+    "page_private": "Detect 'you need access' — page is private and session user was not invited",
+    "page_not_editable": "Detect editor toolbar absence — page may be in view-only mode, check permissions",
+    "autosave_failed": "Detect offline/saving indicator stalled — wait 5s and retry, then abort with SAVE_FAILED",
+    "title_field_not_found": "Retry with 12s timeout, then abort"
+  },
+
+  "anti_detection": {
+    "human_typing": true,
+    "wait_for_autosave": true,
+    "explicit_field_clicks": true
+  },
+
+  "metadata": {
+    "tags": ["notion", "update", "edit", "page", "write"],
+    "difficulty": "medium",
+    "prerequisites": ["notion_session", "page_write_access"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 18,
+    "idempotent": false,
+    "destructive": false
+  }
+}

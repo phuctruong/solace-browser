@@ -1,0 +1,215 @@
+{
+  "id": "reddit-create-post",
+  "platform": "reddit",
+  "version": "1.0.0",
+  "description": "Submit a new text or link post to a subreddit. Uses old.reddit.com submit form for selector stability. Requires authenticated session.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["reddit.write.submit"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "old.reddit.com/r/{subreddit}/submit renders a straightforward HTML form with id='title' for post title, id='url' for link posts, id='text' for self-posts, and #kind-link / #kind-self radio buttons for post type. The submit button has class='save' inside form#postsubmit. No React, no SPA complexity — 95%+ selector confidence.",
+    "selector_strategy": "Use old.reddit.com/r/{subreddit}/submit for the form. Form field IDs are extremely stable: #title, #url, #text. Use radio input[value='link'] for link posts and input[value='self'] for text posts. Submit via button.save click.",
+    "anti_bot_notes": "Type title with 80ms char-by-char delay. Must click radio to switch post type before filling type-specific fields. Reddit checks user agent and session validity — use real saved session. Post too frequently triggers rate limiting (wait at least 600s between posts on same account).",
+    "performance": "Navigation 3s + form fill ~15-20s + submit 3s = ~25s total. Link post slightly faster than self post."
+  },
+
+  "input_params": {
+    "subreddit": {
+      "type": "string",
+      "description": "Target subreddit name without r/ prefix",
+      "required": true,
+      "example": "test"
+    },
+    "title": {
+      "type": "string",
+      "description": "Post title (max 300 chars)",
+      "required": true,
+      "example": "Check out this open source project"
+    },
+    "post_type": {
+      "type": "string",
+      "description": "Type of post: 'link' for URL submission, 'self' for text post",
+      "required": true,
+      "enum": ["link", "self"],
+      "example": "link"
+    },
+    "url": {
+      "type": "string",
+      "description": "URL to submit (required if post_type=link)",
+      "required": false,
+      "example": "https://github.com/example/repo"
+    },
+    "text": {
+      "type": "string",
+      "description": "Post body text (used if post_type=self)",
+      "required": false,
+      "example": "I built this tool over the weekend..."
+    },
+    "flair": {
+      "type": "string",
+      "description": "Post flair label (optional, subreddit must allow it)",
+      "required": false,
+      "example": "Discussion"
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/reddit_working_session.json",
+      "description": "Load saved Reddit session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://old.reddit.com/r/{params.subreddit}/submit",
+      "wait_for": "form#postsubmit",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to submit form on old.reddit.com"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "form#postsubmit",
+      "fallback_url_pattern": "reddit.com/login",
+      "description": "Verify authenticated — form must be visible. If login page, abort with SESSION_EXPIRED.",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "click",
+      "selector": "input[value='{params.post_type}']",
+      "description": "Select post type (link or self) via radio button",
+      "wait_after_ms": 800,
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 5,
+      "action": "human_type",
+      "selector": "#title",
+      "text": "{params.title}",
+      "delay_ms": "60-120",
+      "click_first": true,
+      "description": "Type post title with human-like delays",
+      "screenshot": false
+    },
+    {
+      "step": 6,
+      "action": "type",
+      "selector": "#url",
+      "text": "{params.url}",
+      "delay_ms": 50,
+      "click_first": true,
+      "description": "Type URL (only executed if post_type=link)",
+      "condition": "{params.post_type} == 'link'",
+      "screenshot": false
+    },
+    {
+      "step": 7,
+      "action": "type",
+      "selector": "#text",
+      "text": "{params.text}",
+      "delay_ms": 40,
+      "click_first": true,
+      "description": "Type body text (only executed if post_type=self)",
+      "condition": "{params.post_type} == 'self'",
+      "screenshot": false
+    },
+    {
+      "step": 8,
+      "action": "screenshot",
+      "description": "Capture completed form before submission",
+      "screenshot": true
+    },
+    {
+      "step": 9,
+      "action": "click",
+      "selector": "button.save",
+      "description": "Submit the post",
+      "wait_after_ms": 4000,
+      "timeout_ms": 10000,
+      "screenshot": true
+    },
+    {
+      "step": 10,
+      "action": "verify",
+      "checks": [
+        {"type": "url_contains", "pattern": "/r/{params.subreddit}/comments/", "description": "Redirected to new post URL"},
+        {"type": "no_element", "selector": ".status.error", "description": "No error status message"}
+      ],
+      "description": "Verify post was submitted successfully"
+    },
+    {
+      "step": 11,
+      "action": "extract",
+      "selector": "a.title",
+      "field": "href",
+      "type": "attribute",
+      "attribute": "href",
+      "description": "Extract the URL of the newly created post",
+      "screenshot": false
+    },
+    {
+      "step": 12,
+      "action": "return_result",
+      "description": "Return submission result with post URL"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "submitted": {"type": "boolean", "example": true},
+      "post_url": {"type": "string", "example": "https://reddit.com/r/test/comments/abc123/my_post_title/"},
+      "post_id": {"type": "string", "example": "abc123"},
+      "subreddit": {"type": "string", "example": "test"},
+      "title": {"type": "string", "example": "Check out this open source project"},
+      "post_type": {"type": "string", "example": "link"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["submitted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect reddit.com/login redirect — run reddit-oauth-login recipe first",
+    "rate_limited": "Reddit enforces 600s between posts — detect 'you are doing that too much' message",
+    "subreddit_banned": "Detect 'community not available' — return SUBREDDIT_UNAVAILABLE error",
+    "subreddit_restricted": "Detect 'you must be approved' — return SUBMISSION_BLOCKED",
+    "title_too_long": "Detect character count warning — truncate title to 300 chars",
+    "spam_filter": "Post may be caught by AutoModerator — check post URL for [removed] tag after 60s"
+  },
+
+  "anti_detection": {
+    "human_typing": true,
+    "radio_click_before_fill": true,
+    "screenshot_before_submit": true,
+    "avoid_rapid_resubmission": true
+  },
+
+  "metadata": {
+    "tags": ["reddit", "submit", "create", "post", "write"],
+    "difficulty": "medium",
+    "prerequisites": ["reddit_session", "reddit_karma_5"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 25,
+    "idempotent": false,
+    "destructive": false
+  }
+}

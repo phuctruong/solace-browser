@@ -1,0 +1,152 @@
+{
+  "id": "hn-read-frontpage",
+  "platform": "hackernews",
+  "version": "1.0.0",
+  "description": "Read top 30 stories from Hacker News front page. Extracts title, URL, domain, author, score, and comment count. No login required.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["hackernews.read.frontpage"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "news.ycombinator.com renders stories as pure HTML table rows — no React, no SPA. Each story consists of two <tr> rows: one with the titleline (.titleline > a for title+URL, .sitebit .sitestr for domain) and one with the subtext (.score for points, .hnuser for author, .age a for time, a:contains('comments') for comment count). Story rank is .rank. This is the simplest and most stable structure in SolaceBrowser.",
+    "selector_strategy": "Use .athing for the title row container. Then .subtext (next sibling) for metadata. .titleline > a gives href (URL) and text (title). .sitestr gives domain. .score span has points. .hnuser has username. Comments link has text pattern 'N comments'. HN ID: .athing[id] attribute.",
+    "anti_bot_notes": "HN has NO bot detection for reads — explicitly crawler-friendly. No login needed. No rate limiting for normal page loads. 34KB page loads in <1s. Do not scrape more than 60 pages/minute as courtesy.",
+    "performance": "Navigation 2s + wait 1s + extraction 1s = ~4s total. Extremely fast."
+  },
+
+  "input_params": {
+    "page": {
+      "type": "integer",
+      "description": "Page number (each page has 30 stories). Default 1.",
+      "required": false,
+      "default": 1,
+      "example": 2
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "target": "https://news.ycombinator.com/news?p={params.page}",
+      "wait_for": ".athing",
+      "timeout_ms": 8000,
+      "screenshot": true,
+      "description": "Navigate to HN front page (no login required)"
+    },
+    {
+      "step": 2,
+      "action": "check_element",
+      "selector": ".athing",
+      "description": "Verify stories loaded",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 3,
+      "action": "extract_all",
+      "selector": ".athing",
+      "fields": {
+        "story_id": {
+          "type": "attribute",
+          "attribute": "id"
+        },
+        "rank": {
+          "selector": ".rank",
+          "type": "textContent"
+        },
+        "title": {
+          "selector": ".titleline > a",
+          "type": "textContent"
+        },
+        "url": {
+          "selector": ".titleline > a",
+          "type": "attribute",
+          "attribute": "href"
+        },
+        "domain": {
+          "selector": ".sitestr",
+          "type": "textContent"
+        },
+        "score": {
+          "selector": "+ tr .score",
+          "type": "textContent",
+          "note": "Next sibling tr .score"
+        },
+        "author": {
+          "selector": "+ tr .hnuser",
+          "type": "textContent"
+        },
+        "age": {
+          "selector": "+ tr .age a",
+          "type": "textContent"
+        },
+        "comment_count": {
+          "selector": "+ tr a:last-child",
+          "type": "textContent"
+        }
+      },
+      "description": "Extract all 30 stories with metadata",
+      "screenshot": true
+    },
+    {
+      "step": 4,
+      "action": "return_result",
+      "description": "Return extracted stories as structured data"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "stories": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "story_id": {"type": "string", "example": "12345678"},
+            "rank": {"type": "string", "example": "1."},
+            "title": {"type": "string", "example": "Show HN: I built a new programming language"},
+            "url": {"type": "string", "example": "https://example.com/my-lang"},
+            "domain": {"type": "string", "example": "example.com"},
+            "score": {"type": "string", "example": "342 points"},
+            "author": {"type": "string", "example": "pg"},
+            "age": {"type": "string", "example": "3 hours ago"},
+            "comment_count": {"type": "string", "example": "87 comments"}
+          },
+          "required": ["story_id", "title", "url"]
+        }
+      },
+      "page": {"type": "integer", "example": 1},
+      "total_extracted": {"type": "integer", "example": 30},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["stories", "page", "total_extracted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "HN does not require login for reads — this error should not occur",
+    "empty_page": "Return empty stories array — page number may be out of range",
+    "selector_timeout": "Retry once with 15s timeout, then abort"
+  },
+
+  "metadata": {
+    "tags": ["hackernews", "frontpage", "read-only", "extraction", "news"],
+    "difficulty": "easy",
+    "prerequisites": [],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 4,
+    "idempotent": true,
+    "destructive": false
+  }
+}

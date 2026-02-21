@@ -1,0 +1,148 @@
+{
+  "id": "notion-read-page",
+  "platform": "notion",
+  "version": "1.0.0",
+  "description": "Read a Notion page's content including title, blocks, text, and properties. Works for both regular pages and database entries.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["notion.read.page"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Notion renders pages as a tree of block elements in .notion-page-content. The page title is in .notion-page-block .notion-record-icon + .notion-title-block span[placeholder='Untitled']. Individual blocks have data-block-id attributes and specific class names per type: .notion-text-block (paragraph), .notion-header-block (H1), .notion-sub_header-block (H2), .notion-bulleted_list-block (bullet). Database page properties appear in .notion-peek-renderer .notion-collection-property.",
+    "selector_strategy": "Load session via token_v2 cookie. Navigate directly to page URL (notion.so/{page_id}). Wait for .notion-page-content to confirm full render. Extract title via .notion-page-block, then all content blocks recursively. Properties via .notion-collection-item cells.",
+    "anti_bot_notes": "Notion uses React SPA with Cloudflare protection. Session cookie token_v2 is httpOnly and long-lived. Page rendering takes 3-5s on first load. Wait for .notion-page-content with 15s timeout. Notion does not block automated reading with valid session.",
+    "performance": "Session load 1s + navigation 4s + render wait 3s + extraction 2s = ~10s total."
+  },
+
+  "input_params": {
+    "page_url": {
+      "type": "string",
+      "description": "Notion page URL (notion.so/... or custom domain)",
+      "required": true,
+      "example": "https://www.notion.so/My-Page-Title-abc123def456"
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/notion_working_session.json",
+      "description": "Load saved Notion session cookies (token_v2)",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "{params.page_url}",
+      "wait_for": ".notion-page-content",
+      "timeout_ms": 15000,
+      "screenshot": true,
+      "description": "Navigate to Notion page and wait for content to render"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": ".notion-page-content",
+      "fallback_url_pattern": "notion.so/login",
+      "description": "Verify authenticated — if login page shown, abort with SESSION_EXPIRED",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "wait_for_selector",
+      "selector": ".notion-page-block",
+      "timeout_ms": 10000,
+      "description": "Wait for page block structure to load fully"
+    },
+    {
+      "step": 5,
+      "action": "extract",
+      "selector": ".notion-page-block [contenteditable] span, .notion-title-block span",
+      "field": "page_title",
+      "type": "textContent",
+      "description": "Extract page title",
+      "screenshot": false
+    },
+    {
+      "step": 6,
+      "action": "extract_all",
+      "selector": ".notion-page-content > [data-block-id]",
+      "fields": {
+        "block_id": {
+          "type": "attribute",
+          "attribute": "data-block-id"
+        },
+        "block_type": {
+          "type": "attribute",
+          "attribute": "class",
+          "transform": "extract_block_type"
+        },
+        "text_content": {
+          "selector": "[contenteditable]",
+          "type": "textContent"
+        }
+      },
+      "description": "Extract all top-level content blocks with their IDs and text",
+      "screenshot": true
+    },
+    {
+      "step": 7,
+      "action": "return_result",
+      "description": "Return page content as structured data"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "page_title": {"type": "string", "example": "Project Planning Q1 2026"},
+      "page_url": {"type": "string", "example": "https://www.notion.so/My-Page-Title-abc123"},
+      "blocks": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "block_id": {"type": "string", "example": "abc123-def456-..."},
+            "block_type": {"type": "string", "example": "notion-text-block"},
+            "text_content": {"type": "string", "example": "This is a paragraph of text."}
+          },
+          "required": ["block_id", "text_content"]
+        }
+      },
+      "total_blocks": {"type": "integer", "example": 12},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["page_title", "blocks", "total_blocks", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect notion.so/login redirect — abort with SESSION_EXPIRED error",
+    "page_not_found": "Detect 404 or 'page not found' — return PAGE_NOT_FOUND error",
+    "page_private": "Detect 'you need access' — return ACCESS_DENIED",
+    "empty_page": "Return empty blocks array — not an error",
+    "render_timeout": "Retry once with 25s timeout on .notion-page-content, then abort"
+  },
+
+  "metadata": {
+    "tags": ["notion", "read", "page", "blocks", "extraction"],
+    "difficulty": "medium",
+    "prerequisites": ["notion_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 12,
+    "idempotent": true,
+    "destructive": false
+  }
+}

@@ -1,0 +1,171 @@
+{
+  "id": "hn-read-comments",
+  "platform": "hackernews",
+  "version": "1.0.0",
+  "description": "Read comment thread for a Hacker News story. Extracts comments with author, text, score, and nesting depth. No login required for public threads.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["hackernews.read.comments"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "HN comment threads at /item?id={story_id} render as pure HTML. Story details are in .fatitem .athing. Comments are in .comment-tree. Each comment is a tr.athing[id] containing .ind (indentation pixel width for depth), .hnuser (author), .commtext (text content), .age a (timestamp), .score (points, only for users with karma >= 500). Depth is calculable from .ind img[width] attribute (each 40px = 1 depth level).",
+    "selector_strategy": "Navigate to news.ycombinator.com/item?id={story_id}. Wait for .comment-tree. Extract .athing.comtr for all comments. .commtext .c00 for text (or .commtext directly). .hnuser for author. Depth from .ind img width / 40. No login needed.",
+    "anti_bot_notes": "HN comment pages are pure public HTML. Zero bot detection. Fast to load (< 50KB for typical thread). Very high selector confidence due to 15-year stable HTML structure.",
+    "performance": "Navigation 2s + extraction 2s = ~4s total. One of the fastest recipes in the collection."
+  },
+
+  "input_params": {
+    "story_id": {
+      "type": "string",
+      "description": "HN story ID (integer as string)",
+      "required": true,
+      "example": "12345678"
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Maximum number of comments to extract",
+      "required": false,
+      "default": 50,
+      "example": 25
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "target": "https://news.ycombinator.com/item?id={params.story_id}",
+      "wait_for": ".fatitem",
+      "timeout_ms": 8000,
+      "screenshot": true,
+      "description": "Navigate to HN story/comment page (no login required)"
+    },
+    {
+      "step": 2,
+      "action": "check_element",
+      "selector": ".fatitem",
+      "description": "Verify story page loaded",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 3,
+      "action": "extract",
+      "selector": ".fatitem .titleline > a",
+      "field": "story_title",
+      "type": "textContent",
+      "description": "Extract story title for context",
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "extract",
+      "selector": ".fatitem .score",
+      "field": "story_score",
+      "type": "textContent",
+      "description": "Extract story score",
+      "screenshot": false
+    },
+    {
+      "step": 5,
+      "action": "wait_for_selector",
+      "selector": ".comment-tree",
+      "timeout_ms": 5000,
+      "description": "Wait for comment tree to load"
+    },
+    {
+      "step": 6,
+      "action": "extract_all",
+      "selector": "tr.athing.comtr",
+      "limit": "{params.limit}",
+      "fields": {
+        "comment_id": {
+          "type": "attribute",
+          "attribute": "id"
+        },
+        "author": {
+          "selector": ".hnuser",
+          "type": "textContent"
+        },
+        "text": {
+          "selector": ".commtext",
+          "type": "textContent"
+        },
+        "depth_pixels": {
+          "selector": ".ind img",
+          "type": "attribute",
+          "attribute": "width"
+        },
+        "timestamp": {
+          "selector": ".age a",
+          "type": "textContent"
+        },
+        "score": {
+          "selector": ".score",
+          "type": "textContent"
+        }
+      },
+      "description": "Extract all comments with metadata",
+      "screenshot": true
+    },
+    {
+      "step": 7,
+      "action": "return_result",
+      "description": "Return extracted comments as structured data"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "story_id": {"type": "string", "example": "12345678"},
+      "story_title": {"type": "string", "example": "Show HN: My open source browser automation tool"},
+      "story_score": {"type": "string", "example": "342 points"},
+      "comments": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "comment_id": {"type": "string", "example": "87654321"},
+            "author": {"type": "string", "example": "pg"},
+            "text": {"type": "string", "example": "Great project! Have you considered..."},
+            "depth_pixels": {"type": "string", "example": "0"},
+            "timestamp": {"type": "string", "example": "3 hours ago"},
+            "score": {"type": "string", "example": ""}
+          },
+          "required": ["comment_id", "author", "text"]
+        }
+      },
+      "total_extracted": {"type": "integer", "example": 50},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["story_id", "comments", "total_extracted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "HN comments are public — session not required. This error should not occur.",
+    "story_not_found": "Detect 'No such item' — story may have been killed or ID is wrong",
+    "comments_disabled": "Return empty comments array — story may be new or have 0 comments",
+    "selector_timeout": "Retry once with 12s timeout on .fatitem, then abort"
+  },
+
+  "metadata": {
+    "tags": ["hackernews", "comments", "read-only", "thread", "extraction"],
+    "difficulty": "easy",
+    "prerequisites": [],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 5,
+    "idempotent": true,
+    "destructive": false
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "node_id": "notion-urls",
+  "version": "1.0.0",
+  "platform": "notion",
+  "domain": "www.notion.so",
+  "authority": 65537,
+  "created": "2026-02-21",
+
+  "base_urls": {
+    "workspace": "https://www.notion.so",
+    "login": "https://www.notion.so/login",
+    "signup": "https://www.notion.so/signup",
+    "settings": "https://www.notion.so/settings"
+  },
+
+  "page_urls": {
+    "page_pattern": "https://www.notion.so/{page-title-slug}-{page_id_hex}",
+    "page_direct": "https://www.notion.so/{page_id_hex}",
+    "database_page": "https://www.notion.so/{workspace_slug}/{page-title}-{page_id}",
+    "public_page": "https://www.notion.so/{username}/{page-title}-{page_id}"
+  },
+
+  "navigation_paths": {
+    "workspace_to_page": {
+      "from": "workspace",
+      "to": "page_view",
+      "method": "navigate_direct",
+      "url_template": "{page_url}",
+      "wait_for": ".notion-page-content",
+      "timeout_ms": 15000
+    },
+    "workspace_to_new_page": {
+      "from": "workspace",
+      "to": "new_page_edit",
+      "method": "keyboard_shortcut",
+      "key": "Control+n",
+      "wait_for": ".notion-title-block [contenteditable][placeholder]",
+      "timeout_ms": 8000
+    },
+    "any_to_search": {
+      "from": "any",
+      "to": "search_modal",
+      "method": "keyboard_shortcut",
+      "key": "Control+k",
+      "wait_for": "input[placeholder*='Search']",
+      "timeout_ms": 5000
+    }
+  },
+
+  "url_detection": {
+    "authenticated": {
+      "pattern": "notion.so",
+      "check": "element_exists",
+      "selector": ".notion-sidebar",
+      "indicates": "User authenticated and workspace loaded"
+    },
+    "login_redirect": {
+      "pattern": "notion.so/login",
+      "indicates": "Session expired"
+    },
+    "page_not_found": {
+      "check": "text_contains",
+      "text": "Page not found",
+      "indicates": "Page has been deleted or URL is wrong"
+    },
+    "access_denied": {
+      "check": "text_contains",
+      "text": "you need access",
+      "indicates": "Page is private or shared without user being invited"
+    }
+  }
+}

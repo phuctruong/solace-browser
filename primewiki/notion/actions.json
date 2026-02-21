@@ -1,0 +1,117 @@
+{
+  "node_id": "notion-actions",
+  "version": "1.0.0",
+  "platform": "notion",
+  "domain": "www.notion.so",
+  "authority": 65537,
+  "created": "2026-02-21",
+
+  "actions": {
+    "read_page": {
+      "id": "read_page",
+      "description": "Navigate to a Notion page and extract title + content blocks",
+      "oauth3_scope": "notion.read.page",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "load_session", "path": "artifacts/notion_working_session.json"},
+        {"action": "navigate", "url": "{page_url}", "wait_for": ".notion-page-content", "timeout_ms": 15000},
+        {"action": "wait_for_selector", "selector": ".notion-page-block", "timeout_ms": 10000},
+        {"action": "extract", "selector": ".notion-title-block [contenteditable]", "field": "page_title"},
+        {"action": "extract_all", "selector": ".notion-page-content > [data-block-id]", "fields": ["block_id", "block_type", "text_content"]}
+      ],
+      "success_criteria": {
+        "page_content_visible": true,
+        "at_least_one_block_extracted": true
+      }
+    },
+
+    "search": {
+      "id": "search",
+      "description": "Open search modal and extract matching pages/blocks",
+      "oauth3_scope": "notion.read.search",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "load_session", "path": "artifacts/notion_working_session.json"},
+        {"action": "navigate", "url": "https://www.notion.so", "wait_for": ".notion-sidebar", "timeout_ms": 15000},
+        {"action": "keyboard_press", "key": "Control+k", "wait_ms": 1000},
+        {"action": "wait_for_selector", "selector": "input[placeholder*='Search']", "timeout_ms": 5000},
+        {"action": "human_type", "selector": "input[placeholder*='Search']", "delay_ms": "60-100"},
+        {"action": "wait", "duration_ms": 1500, "note": "Debounce wait for results"},
+        {"action": "extract_all", "selector": "[aria-label*='Search result']", "fields": ["title", "breadcrumb", "result_url"]},
+        {"action": "keyboard_press", "key": "Escape", "note": "Close modal"}
+      ],
+      "success_criteria": {
+        "search_modal_opened": true
+      }
+    },
+
+    "create_page": {
+      "id": "create_page",
+      "description": "Create a new page in workspace with title and optional body",
+      "oauth3_scope": "notion.write.create",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "load_session", "path": "artifacts/notion_working_session.json"},
+        {"action": "navigate", "url": "{parent_url}", "wait_for": ".notion-page-content", "timeout_ms": 15000},
+        {"action": "keyboard_press", "key": "Control+n", "wait_ms": 2500, "note": "Create new page"},
+        {"action": "wait_for_selector", "selector": ".notion-page-block [contenteditable][placeholder]", "timeout_ms": 8000},
+        {"action": "human_type", "selector": ".notion-page-block [contenteditable][placeholder]", "delay_ms": "60-100", "note": "Type title"},
+        {"action": "keyboard_press", "key": "Enter", "wait_ms": 800},
+        {"action": "type", "selector": ".notion-text-block [contenteditable]", "delay_ms": 40, "note": "Type body"},
+        {"action": "wait", "duration_ms": 2500, "note": "Autosave wait"}
+      ],
+      "success_criteria": {
+        "page_url_has_uuid": true,
+        "title_visible": true
+      }
+    },
+
+    "update_page": {
+      "id": "update_page",
+      "description": "Append text to existing page or update title",
+      "oauth3_scope": "notion.write.update",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "load_session", "path": "artifacts/notion_working_session.json"},
+        {"action": "navigate", "url": "{page_url}", "wait_for": ".notion-page-content", "timeout_ms": 15000},
+        {"action": "click", "selector": ".notion-page-content > [data-block-id]:last-child [contenteditable]", "wait_ms": 500},
+        {"action": "keyboard_press", "key": "End"},
+        {"action": "keyboard_press", "key": "Enter", "wait_ms": 500},
+        {"action": "type", "selector": "[data-block-id]:last-child [contenteditable]", "delay_ms": 40, "note": "Append text"},
+        {"action": "wait", "duration_ms": 2500, "note": "Autosave wait"}
+      ],
+      "success_criteria": {
+        "content_appended": true,
+        "autosave_complete": true
+      }
+    }
+  },
+
+  "anti_detection_rules": {
+    "typing": {
+      "title_field": {"min_delay_ms": 60, "max_delay_ms": 100, "method": "human_type"},
+      "body_field": {"delay_ms": 40, "method": "type"},
+      "search_field": {"min_delay_ms": 60, "max_delay_ms": 100, "method": "human_type"}
+    },
+    "navigation": {
+      "page_render_wait_ms": 15000,
+      "after_keyboard_shortcut_ms": 1000,
+      "autosave_wait_ms": 2500,
+      "after_search_type_ms": 1500
+    },
+    "critical_patterns": [
+      "Always wait >= 2500ms after write actions for autosave",
+      "Prefer keyboard shortcuts (Ctrl+K, Ctrl+N) over clicking UI buttons",
+      "Wait for .notion-page-content before any extraction",
+      "Use data-block-id for precise block targeting"
+    ]
+  }
+}

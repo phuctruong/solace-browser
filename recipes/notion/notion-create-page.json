@@ -1,0 +1,179 @@
+{
+  "id": "notion-create-page",
+  "platform": "notion",
+  "version": "1.0.0",
+  "description": "Create a new page in a Notion workspace or database. Supports title, body text, and optional properties for database entries.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["notion.write.create"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Notion new page creation: click '+ New page' in sidebar or use keyboard shortcut. The new page opens with a title field (contenteditable with placeholder 'Untitled'). After typing title and pressing Enter, cursor moves to body. For database entries, navigate to the database view and click '+ New' button. The row opens as a full page with property fields.",
+    "selector_strategy": "Navigate to parent page or database URL. Use keyboard shortcut Ctrl+N (or click '+' in sidebar) to create new page. Title field: .notion-page-block [contenteditable][placeholder='Untitled']. Body: first .notion-text-block [contenteditable] after title. After typing title + Enter, body is auto-focused.",
+    "anti_bot_notes": "Notion auto-saves content in real-time — no explicit save button needed. Type title with 60-100ms delays. Wait 2s after each block of text for autosave to persist. Notion does not have aggressive bot detection for write operations with valid session.",
+    "performance": "Navigation 4s + new page creation 2s + title typing ~5s + body typing variable + autosave 2s = ~15-20s."
+  },
+
+  "input_params": {
+    "parent_url": {
+      "type": "string",
+      "description": "URL of parent page or workspace where new page will be created",
+      "required": true,
+      "example": "https://www.notion.so/My-Workspace-abc123"
+    },
+    "title": {
+      "type": "string",
+      "description": "Page title",
+      "required": true,
+      "example": "Meeting Notes 2026-02-21"
+    },
+    "body": {
+      "type": "string",
+      "description": "Page body content (plain text, first paragraph)",
+      "required": false,
+      "example": "Attendees: Alice, Bob, Charlie\n\nAgenda:\n1. Q1 planning\n2. Roadmap review"
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/notion_working_session.json",
+      "description": "Load saved Notion session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "{params.parent_url}",
+      "wait_for": ".notion-page-content",
+      "timeout_ms": 15000,
+      "screenshot": true,
+      "description": "Navigate to parent page or workspace"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": ".notion-page-content",
+      "fallback_url_pattern": "notion.so/login",
+      "description": "Verify authenticated — abort with SESSION_EXPIRED if login page",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "keyboard_press",
+      "key": "Control+N",
+      "description": "Create new page via keyboard shortcut",
+      "wait_after_ms": 2500,
+      "screenshot": true
+    },
+    {
+      "step": 5,
+      "action": "wait_for_selector",
+      "selector": ".notion-page-block [contenteditable][placeholder]",
+      "timeout_ms": 8000,
+      "description": "Wait for new page title field to appear"
+    },
+    {
+      "step": 6,
+      "action": "human_type",
+      "selector": ".notion-page-block [contenteditable][placeholder]",
+      "text": "{params.title}",
+      "delay_ms": "60-100",
+      "click_first": true,
+      "description": "Type the page title with human-like delays",
+      "screenshot": false
+    },
+    {
+      "step": 7,
+      "action": "keyboard_press",
+      "key": "Enter",
+      "description": "Press Enter to move to page body",
+      "wait_after_ms": 800
+    },
+    {
+      "step": 8,
+      "action": "type",
+      "selector": ".notion-text-block [contenteditable]",
+      "text": "{params.body}",
+      "delay_ms": 40,
+      "click_first": true,
+      "description": "Type page body content",
+      "condition": "{params.body} is not empty",
+      "screenshot": false
+    },
+    {
+      "step": 9,
+      "action": "wait",
+      "duration_ms": 2000,
+      "description": "Wait for Notion autosave to persist content"
+    },
+    {
+      "step": 10,
+      "action": "screenshot",
+      "description": "Capture created page with content",
+      "screenshot": true
+    },
+    {
+      "step": 11,
+      "action": "extract",
+      "selector": ".notion-page-content",
+      "field": "page_url",
+      "type": "current_url",
+      "description": "Capture URL of newly created page"
+    },
+    {
+      "step": 12,
+      "action": "return_result",
+      "description": "Return creation result with page URL"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "created": {"type": "boolean", "example": true},
+      "page_url": {"type": "string", "example": "https://www.notion.so/Meeting-Notes-2026-02-21-abc123"},
+      "page_id": {"type": "string", "example": "abc123-def456-..."},
+      "title": {"type": "string", "example": "Meeting Notes 2026-02-21"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["created", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect notion.so/login redirect — run notion-oauth-login recipe first",
+    "keyboard_shortcut_failed": "Fallback: look for '+' button in sidebar and click it to create page",
+    "title_field_not_found": "Retry waiting for .notion-page-block with 15s timeout",
+    "autosave_failed": "Detect offline indicator — wait 5s and retry, then abort"
+  },
+
+  "anti_detection": {
+    "human_typing": true,
+    "keyboard_shortcuts_preferred": true,
+    "wait_for_autosave": true
+  },
+
+  "metadata": {
+    "tags": ["notion", "create", "page", "write"],
+    "difficulty": "medium",
+    "prerequisites": ["notion_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 20,
+    "idempotent": false,
+    "destructive": false
+  }
+}

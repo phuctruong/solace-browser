@@ -1,0 +1,87 @@
+{
+  "node_id": "hackernews-urls",
+  "version": "1.0.0",
+  "platform": "hackernews",
+  "domain": "news.ycombinator.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+
+  "base_urls": {
+    "homepage": "https://news.ycombinator.com/",
+    "frontpage": "https://news.ycombinator.com/news",
+    "newest": "https://news.ycombinator.com/newest",
+    "ask": "https://news.ycombinator.com/ask",
+    "show": "https://news.ycombinator.com/show",
+    "jobs": "https://news.ycombinator.com/jobs",
+    "submit": "https://news.ycombinator.com/submit",
+    "login": "https://news.ycombinator.com/login"
+  },
+
+  "paged_urls": {
+    "frontpage_paged": "https://news.ycombinator.com/news?p={page}",
+    "newest_paged": "https://news.ycombinator.com/newest?next={story_id}"
+  },
+
+  "story_urls": {
+    "story_page": "https://news.ycombinator.com/item?id={story_id}",
+    "comment_permalink": "https://news.ycombinator.com/item?id={comment_id}"
+  },
+
+  "user_urls": {
+    "user_profile": "https://news.ycombinator.com/user?id={username}",
+    "user_submissions": "https://news.ycombinator.com/submitted?id={username}",
+    "user_comments": "https://news.ycombinator.com/threads?id={username}",
+    "user_favorites": "https://news.ycombinator.com/favorites?id={username}"
+  },
+
+  "search_urls": {
+    "algolia_search": "https://hn.algolia.com/search?q={query}&dateRange={date_range}&type={type}",
+    "algolia_api": "https://hn.algolia.com/api/v1/search?query={query}&tags={tags}&dateRange={date_range}&page={page}&hitsPerPage={limit}",
+    "hn_native_search": "https://news.ycombinator.com/search?q={query}"
+  },
+
+  "navigation_paths": {
+    "home_to_story": {
+      "from": "frontpage",
+      "to": "story_page",
+      "method": "navigate_direct",
+      "url_template": "https://news.ycombinator.com/item?id={story_id}",
+      "wait_for": ".fatitem"
+    },
+    "any_to_submit": {
+      "from": "any",
+      "to": "submit_form",
+      "method": "navigate_direct",
+      "url_template": "https://news.ycombinator.com/submit",
+      "wait_for": "form",
+      "requires_auth": true
+    },
+    "submit_to_story": {
+      "from": "submit_form",
+      "to": "new_story_page",
+      "method": "form_submit",
+      "success_pattern": "/item?id="
+    }
+  },
+
+  "url_detection": {
+    "authenticated": {
+      "check": "element_exists",
+      "selector": "#me",
+      "indicates": "Logged in — username shown in nav"
+    },
+    "login_redirect": {
+      "pattern": "ycombinator.com/login",
+      "indicates": "Not authenticated — login required for this action"
+    },
+    "story_created": {
+      "pattern": "ycombinator.com/item?id=",
+      "indicates": "Story submitted successfully, now on story page"
+    },
+    "duplicate_error": {
+      "check": "text_contains",
+      "text": "That link has already been submitted",
+      "indicates": "Duplicate URL — existing submission found"
+    }
+  }
+}

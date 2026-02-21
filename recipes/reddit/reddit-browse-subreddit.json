@@ -1,0 +1,186 @@
+{
+  "id": "reddit-browse-subreddit",
+  "platform": "reddit",
+  "version": "1.0.0",
+  "description": "Navigate to a subreddit and extract the top posts with metadata (title, author, score, comment count, flair, URL)",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["reddit.read.subreddit"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Reddit's new SPA (2023+) renders posts as shreddit-post custom web components. Each post element has data attributes: post-title, author, score, comment-count, subreddit-prefixed-name. The feed container is shreddit-feed. Old.reddit.com uses classic HTML with .thing elements and .title .a anchors — 10x simpler and more stable for automation.",
+    "selector_strategy": "Target old.reddit.com for maximum selector stability. Use .thing as post container, .title .may-blank for post title+URL, .score.unvoted for points, .author for username, .comments for comment count. These selectors have been stable since 2012.",
+    "anti_bot_notes": "Reddit does not aggressively detect read-only scraping on old.reddit.com. No login required for public subreddits. Navigation with saved session preferred to access personalized sorting. Add 1-2s delay between pages.",
+    "performance": "Expected run time: 5-10 seconds (navigation 3s + wait 2s + extraction 2s). Old Reddit loads in ~200KB vs 2MB for new Reddit."
+  },
+
+  "input_params": {
+    "subreddit": {
+      "type": "string",
+      "description": "Subreddit name without r/ prefix",
+      "required": true,
+      "example": "programming"
+    },
+    "sort": {
+      "type": "string",
+      "description": "Sort order: hot, new, top, rising",
+      "required": false,
+      "default": "hot",
+      "enum": ["hot", "new", "top", "rising"]
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Number of posts to extract. Default 25.",
+      "required": false,
+      "default": 25,
+      "example": 10
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/reddit_working_session.json",
+      "description": "Load saved Reddit session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://old.reddit.com/r/{params.subreddit}/{params.sort}/",
+      "wait_for": ".content[role='main']",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to subreddit on old.reddit.com and wait for content to load"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": ".content[role='main']",
+      "fallback_url_pattern": "reddit.com/login",
+      "description": "Verify page loaded — if redirected to login, abort with SESSION_EXPIRED",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "check_element",
+      "selector": ".thing",
+      "description": "Verify subreddit has posts (if no .thing elements, subreddit may be private or banned)",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 5,
+      "action": "extract_all",
+      "selector": ".thing[data-type='link']",
+      "limit": "{params.limit}",
+      "fields": {
+        "title": {
+          "selector": "a.title",
+          "type": "textContent"
+        },
+        "url": {
+          "selector": "a.title",
+          "type": "attribute",
+          "attribute": "href"
+        },
+        "author": {
+          "selector": ".author",
+          "type": "textContent"
+        },
+        "score": {
+          "selector": ".score.unvoted",
+          "type": "attribute",
+          "attribute": "title"
+        },
+        "comment_count": {
+          "selector": ".comments",
+          "type": "textContent"
+        },
+        "flair": {
+          "selector": ".linkflairlabel",
+          "type": "textContent"
+        },
+        "post_id": {
+          "type": "attribute",
+          "attribute": "data-fullname"
+        },
+        "domain": {
+          "selector": ".domain a",
+          "type": "textContent"
+        },
+        "is_stickied": {
+          "check": "has_class",
+          "class": "stickied"
+        }
+      },
+      "description": "Extract post metadata from subreddit listing",
+      "screenshot": true
+    },
+    {
+      "step": 6,
+      "action": "return_result",
+      "description": "Return extracted posts as structured data"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "posts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "title": {"type": "string", "example": "I built a CLI tool that does X"},
+            "url": {"type": "string", "example": "https://example.com/article"},
+            "author": {"type": "string", "example": "john_doe"},
+            "score": {"type": "string", "example": "1247"},
+            "comment_count": {"type": "string", "example": "234 comments"},
+            "flair": {"type": "string", "example": "Discussion"},
+            "post_id": {"type": "string", "example": "t3_abc123"},
+            "domain": {"type": "string", "example": "github.com"},
+            "is_stickied": {"type": "boolean", "example": false}
+          },
+          "required": ["title", "url", "author"]
+        }
+      },
+      "subreddit": {"type": "string", "example": "programming"},
+      "sort": {"type": "string", "example": "hot"},
+      "total_extracted": {"type": "integer", "example": 25},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["posts", "subreddit", "total_extracted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect reddit.com/login redirect — abort with SESSION_EXPIRED error",
+    "subreddit_private": "No .thing elements found — subreddit may be private, banned, or quarantined",
+    "subreddit_not_found": "404 page detected — check subreddit name spelling",
+    "empty_subreddit": "Return empty posts array — not an error",
+    "selector_timeout": "Retry once with 20s timeout, then abort"
+  },
+
+  "metadata": {
+    "tags": ["reddit", "subreddit", "browse", "read-only", "extraction"],
+    "difficulty": "easy",
+    "prerequisites": ["reddit_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 10,
+    "idempotent": true,
+    "destructive": false
+  }
+}

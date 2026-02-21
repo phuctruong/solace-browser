@@ -1,0 +1,188 @@
+{
+  "id": "reddit-read-comments",
+  "platform": "reddit",
+  "version": "1.0.0",
+  "description": "Read and extract comments from a Reddit post thread including nested replies, comment scores, and author info",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["reddit.read.comments"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "old.reddit.com comment threads use .comment elements as containers. Each .comment has .author for username, .score.unvoted (with title attribute for score), .usertext-body .md for comment text, and .child for nested replies. The .thing element wrapping the OP post is at the top with class .link. Comment depth is indicated by data-depth attribute.",
+    "selector_strategy": "Use old.reddit.com for stable selectors. Top-level comments: .nestedlisting > .comment. All comments: .comment. Comment text: .usertext-body .md. Depth: data-depth attribute. Score: .score.unvoted[title]. Author: .author link. This avoids React SPA complexity entirely.",
+    "anti_bot_notes": "Read-only comment scraping is low risk on old.reddit.com. No rate limiting for normal browsing speeds. Page may have 'load more comments' links — follow one level deep for top threads.",
+    "performance": "Navigation 3s + wait 2s + extraction 2-5s depending on comment count. Expected 5-10s total for typical 100-comment thread."
+  },
+
+  "input_params": {
+    "post_url": {
+      "type": "string",
+      "description": "Full Reddit post URL (reddit.com or old.reddit.com)",
+      "required": true,
+      "example": "https://reddit.com/r/programming/comments/abc123/my_post/"
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Maximum number of top-level comments to extract",
+      "required": false,
+      "default": 50,
+      "example": 25
+    },
+    "sort": {
+      "type": "string",
+      "description": "Comment sort: best, top, new, controversial, old",
+      "required": false,
+      "default": "best",
+      "enum": ["best", "top", "new", "controversial", "old"]
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/reddit_working_session.json",
+      "description": "Load saved Reddit session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://old.reddit.com{params.post_url}?sort={params.sort}",
+      "wait_for": ".commentarea",
+      "timeout_ms": 15000,
+      "screenshot": true,
+      "description": "Navigate to post thread on old.reddit.com with specified sort"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": ".commentarea",
+      "fallback_url_pattern": "reddit.com/login",
+      "description": "Verify page loaded — if redirected to login, abort with SESSION_EXPIRED",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "extract",
+      "selector": ".thing.link .title a.title",
+      "field": "text",
+      "type": "textContent",
+      "description": "Extract post title for context",
+      "screenshot": false
+    },
+    {
+      "step": 5,
+      "action": "extract",
+      "selector": ".thing.link .score.unvoted",
+      "field": "score",
+      "type": "attribute",
+      "attribute": "title",
+      "description": "Extract post score",
+      "screenshot": false
+    },
+    {
+      "step": 6,
+      "action": "extract_all",
+      "selector": ".nestedlisting > .comment",
+      "limit": "{params.limit}",
+      "fields": {
+        "author": {
+          "selector": ".author",
+          "type": "textContent"
+        },
+        "score": {
+          "selector": ".score.unvoted",
+          "type": "attribute",
+          "attribute": "title"
+        },
+        "body": {
+          "selector": ".usertext-body .md",
+          "type": "textContent"
+        },
+        "depth": {
+          "type": "attribute",
+          "attribute": "data-depth"
+        },
+        "comment_id": {
+          "type": "attribute",
+          "attribute": "data-fullname"
+        },
+        "timestamp": {
+          "selector": "time",
+          "type": "attribute",
+          "attribute": "datetime"
+        },
+        "is_op": {
+          "check": "has_class",
+          "class": "submitter"
+        }
+      },
+      "description": "Extract top-level comments with metadata",
+      "screenshot": true
+    },
+    {
+      "step": 7,
+      "action": "return_result",
+      "description": "Return extracted comments as structured data"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "post_title": {"type": "string", "example": "I built a tool that does X"},
+      "post_score": {"type": "string", "example": "1247"},
+      "comments": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "author": {"type": "string", "example": "jane_doe"},
+            "score": {"type": "string", "example": "342"},
+            "body": {"type": "string", "example": "Great project! I've been looking for this."},
+            "depth": {"type": "string", "example": "0"},
+            "comment_id": {"type": "string", "example": "t1_xyz789"},
+            "timestamp": {"type": "string", "example": "2026-02-21T10:30:00+00:00"},
+            "is_op": {"type": "boolean", "example": false}
+          },
+          "required": ["author", "body"]
+        }
+      },
+      "total_extracted": {"type": "integer", "example": 50},
+      "sort": {"type": "string", "example": "best"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["comments", "total_extracted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect reddit.com/login redirect — abort with SESSION_EXPIRED error",
+    "comments_disabled": "Detect 'comments have been locked' message — return empty array with locked=true",
+    "post_deleted": "Detect '[deleted]' or '[removed]' on post title — return POST_DELETED",
+    "empty_thread": "Return empty comments array — not an error",
+    "selector_timeout": "Retry once with 20s timeout, then abort"
+  },
+
+  "metadata": {
+    "tags": ["reddit", "comments", "read", "thread", "extraction"],
+    "difficulty": "easy",
+    "prerequisites": ["reddit_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 10,
+    "idempotent": true,
+    "destructive": false
+  }
+}
