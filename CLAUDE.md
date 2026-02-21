@@ -1,7 +1,7 @@
 # CLAUDE.md — SolaceBrowser
 # Stillwater v1.5.0 | Generated: 2026-02-21
 # Project context, architecture, and phases: see README.md
-# Skill directory (full files for sub-agent dispatch): skills/
+# Skills: read skills/<name>.md before production work — QUICK LOAD blocks below = orientation only
 
 ## Project Ripple
 # See ripples/project.md for project-specific constraints and rung target.
@@ -14,7 +14,7 @@ DOMAIN: web automation / recipe capture / self-improving browser agent
 
 ## Stillwater Core Skills
 # Loaded: prime-safety, prime-wishes, phuc-cleanup
-# Full files in: skills/  (for sub-agent dispatch via phuc-orchestration)
+# Read: skills/prime-safety.md (always) + domain skills as needed; paste inline for sub-agents
 
 <!-- QUICK LOAD (10-15 lines): Use this block for fast context; load full file for production.
 SKILL: prime-safety (god-skill) v2.1.0
