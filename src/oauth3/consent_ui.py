@@ -868,6 +868,7 @@ async def handle_consent_post(request) -> object:
         token.token_id,
         httponly=True,
         samesite="Strict",
+        secure=True,
         max_age=token.expires_at and 60 * 60 * 24 * 30,  # 30 days
     )
 
