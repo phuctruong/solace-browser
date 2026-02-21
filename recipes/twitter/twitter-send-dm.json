@@ -1,0 +1,230 @@
+{
+  "id": "twitter-send-dm",
+  "platform": "twitter",
+  "version": "1.0.0",
+  "description": "Send a direct message (DM) to a Twitter/X user by handle. Navigates to the Messages section, searches for the recipient, and types the message with human-like delays. Only sends to existing DM conversations or users who allow DMs.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["twitter.write_dm"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Twitter/X DMs are at x.com/messages. A new DM conversation is started via the compose DM button (a[data-testid='NewDM_Button'] or similar). The recipient search input is within the modal. The message input is div[data-testid='dmComposerTextInput'] — a contenteditable div. Sending is done via button[data-testid='dmComposerSendButton'] or Enter key. Users who have DMs restricted may not be searchable.",
+    "selector_strategy": "Use data-testid for compose button, recipient search, message input, and send button — all stable across redesigns. Fall back to aria-label selectors. The DM compose modal has distinct selectors from the main messages thread view.",
+    "anti_bot_notes": "Message input requires char-by-char human typing at 60-120ms. Must click compose DM button explicitly. Recipient search requires human-like typing with 80-150ms delays. Wait for search results to appear before clicking recipient.",
+    "llm_learnings": "Twitter may show 'This person limits who can message them' if DMs are restricted. Send button may be disabled until a recipient is selected. After sending, verify message appears in conversation thread.",
+    "performance": "Navigation 3s + modal open 2s + recipient search 5s + typing variable + send 3s. Short message (~100 chars): ~20-30s total."
+  },
+
+  "input_params": {
+    "recipient_handle": {
+      "type": "string",
+      "description": "Twitter/X handle of the recipient (with or without @)",
+      "required": true,
+      "example": "solaceagi"
+    },
+    "message_text": {
+      "type": "string",
+      "description": "Text of the direct message to send",
+      "required": true,
+      "example": "Hey! I wanted to follow up on the OAuth3 discussion."
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/twitter_working_session.json",
+      "description": "Load saved Twitter/X session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://x.com/messages",
+      "wait_for": "div[data-testid='DMDrawer'], div[aria-label='Direct Messages']",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to Twitter/X Messages inbox"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "div[data-testid='DMDrawer'], div[aria-label='Direct Messages']",
+      "fallback_url_pattern": "x.com/i/flow/login",
+      "description": "Verify authenticated — if redirected to login flow, abort with SESSION_EXPIRED",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "click",
+      "selector": "a[data-testid='NewDM_Button'], button[aria-label='New message'], button[data-testid='NewDM_Button']",
+      "fallback_selector": "a[href='/messages/compose'], button[aria-label*='compose'], button[aria-label*='New DM']",
+      "description": "Click the New Message / Compose DM button to open recipient search modal",
+      "wait_after_ms": 1500,
+      "timeout_ms": 8000,
+      "screenshot": false
+    },
+    {
+      "step": 5,
+      "action": "wait_for_selector",
+      "selector": "input[data-testid='searchPeople'], input[placeholder*='Search people'], input[aria-label*='Search people']",
+      "timeout_ms": 8000,
+      "description": "Wait for recipient search input to appear in compose modal"
+    },
+    {
+      "step": 6,
+      "action": "click",
+      "selector": "input[data-testid='searchPeople'], input[placeholder*='Search people'], input[aria-label*='Search people']",
+      "description": "Click recipient search input to focus it",
+      "wait_after_ms": 400,
+      "screenshot": false
+    },
+    {
+      "step": 7,
+      "action": "human_type",
+      "selector": "input[data-testid='searchPeople'], input[placeholder*='Search people'], input[aria-label*='Search people']",
+      "text": "{params.recipient_handle}",
+      "delay_ms": "80-150",
+      "click_first": false,
+      "description": "Type recipient handle in search field with human-like delays",
+      "screenshot": false
+    },
+    {
+      "step": 8,
+      "action": "wait_for_selector",
+      "selector": "div[data-testid='TypeaheadUser'], div[role='option'][data-testid*='User']",
+      "timeout_ms": 8000,
+      "description": "Wait for user search results to appear in dropdown"
+    },
+    {
+      "step": 9,
+      "action": "click",
+      "selector": "div[data-testid='TypeaheadUser']:first-child, div[role='option'][data-testid*='User']:first-child",
+      "fallback_selector": "li[data-testid='UserCell']:first-child",
+      "description": "Click the first matching user result to select recipient",
+      "wait_after_ms": 1000,
+      "screenshot": true
+    },
+    {
+      "step": 10,
+      "action": "click",
+      "selector": "button[data-testid='nextButton'], button:has-text('Next'), button[aria-label='Next']",
+      "fallback_selector": "button[type='submit']:has-text('Next')",
+      "description": "Click Next to open the DM compose view with selected recipient",
+      "wait_after_ms": 1500,
+      "timeout_ms": 8000,
+      "screenshot": false
+    },
+    {
+      "step": 11,
+      "action": "wait_for_selector",
+      "selector": "div[data-testid='dmComposerTextInput'][contenteditable='true']",
+      "timeout_ms": 10000,
+      "description": "Wait for DM message compose input to be ready"
+    },
+    {
+      "step": 12,
+      "action": "click",
+      "selector": "div[data-testid='dmComposerTextInput'][contenteditable='true']",
+      "description": "Click message compose input to focus it",
+      "wait_after_ms": 400,
+      "screenshot": false
+    },
+    {
+      "step": 13,
+      "action": "human_type",
+      "selector": "div[data-testid='dmComposerTextInput'][contenteditable='true']",
+      "text": "{params.message_text}",
+      "delay_ms": "60-120",
+      "click_first": false,
+      "description": "Type DM message text with human-like delays",
+      "screenshot": false
+    },
+    {
+      "step": 14,
+      "action": "screenshot",
+      "description": "Capture composed DM before sending",
+      "screenshot": true
+    },
+    {
+      "step": 15,
+      "action": "click",
+      "selector": "button[data-testid='dmComposerSendButton']",
+      "fallback_selector": "button[aria-label='Send'], button[type='submit'][aria-label*='Send']",
+      "description": "Click Send button to deliver the DM",
+      "wait_after_ms": 3000,
+      "timeout_ms": 8000,
+      "screenshot": true
+    },
+    {
+      "step": 16,
+      "action": "verify",
+      "checks": [
+        {"type": "no_element", "selector": "div[role='alert'][data-type='error']", "description": "No error alert"},
+        {"type": "url_contains", "pattern": "x.com/messages", "description": "Still in messages section"}
+      ],
+      "description": "Verify DM was sent without errors"
+    },
+    {
+      "step": 17,
+      "action": "return_result",
+      "description": "Return DM send confirmation"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "sent": {"type": "boolean", "example": true},
+      "recipient_handle": {"type": "string", "example": "@solaceagi"},
+      "message_text": {"type": "string", "example": "Hey! I wanted to follow up..."},
+      "conversation_url": {"type": "string", "example": "https://x.com/messages/conversation_id"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["sent", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect x.com/i/flow/login redirect — abort with SESSION_EXPIRED, re-run session login recipe first",
+    "recipient_not_found": "If TypeaheadUser results are empty after typing handle, abort with RECIPIENT_NOT_FOUND",
+    "dm_restricted": "If 'limits who can message them' banner appears, abort with DM_RESTRICTED",
+    "compose_not_loaded": "Retry wait_for_selector with 15s timeout; if still fails, navigate to x.com/messages/compose directly",
+    "element_not_found": "Log selector tried, capture screenshot, try fallback_selector if defined",
+    "rate_limited": "If DM rate limit detected, wait 60s then retry once"
+  },
+
+  "anti_detection": {
+    "human_typing": true,
+    "explicit_field_clicks": true,
+    "keyboard_shortcuts_preferred": false,
+    "avoid_tab_navigation": true,
+    "avoid_instant_fill": true,
+    "typing_delays": {
+      "recipient_search": "80-150ms",
+      "message_text": "60-120ms"
+    }
+  },
+
+  "metadata": {
+    "tags": ["twitter", "x", "dm", "direct-message", "write", "messages"],
+    "difficulty": "medium",
+    "prerequisites": ["twitter_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 30,
+    "idempotent": false,
+    "destructive": false
+  }
+}

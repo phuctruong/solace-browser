@@ -1,0 +1,332 @@
+{
+  "node_id": "twitter-selectors",
+  "version": "1.0.0",
+  "platform": "twitter",
+  "domain": "x.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+  "source": "twitter-automation-recipes.primewiki.md",
+
+  "home": {
+    "primary_column": {
+      "selector": "div[data-testid='primaryColumn']",
+      "confidence": 0.96,
+      "type": "wait_for",
+      "note": "Main content column — confirms authenticated state on any X page"
+    },
+    "sidebar_right": {
+      "selector": "div[data-testid='sidebarColumn']",
+      "confidence": 0.90,
+      "type": "wait_for"
+    },
+    "for_you_tab": {
+      "selector": "a[href='/home'][role='tab'], span:has-text('For you')",
+      "confidence": 0.87,
+      "action": "click",
+      "note": "Default 'For You' timeline tab"
+    },
+    "following_tab": {
+      "selector": "a[href='/home/following'][role='tab'], span:has-text('Following')",
+      "confidence": 0.87,
+      "action": "click",
+      "note": "Following-only timeline tab"
+    }
+  },
+
+  "compose": {
+    "tweet_textarea": {
+      "selector": "div[data-testid='tweetTextarea_0'][contenteditable='true']",
+      "confidence": 0.96,
+      "action": "click_then_human_type",
+      "typing_delay_ms": "60-120",
+      "note": "Primary tweet compose contenteditable — most stable selector across X redesigns"
+    },
+    "tweet_textarea_fallback": {
+      "selector": "div[data-testid='tweetTextarea_0_label'] div[contenteditable='true']",
+      "confidence": 0.88,
+      "action": "click_then_human_type",
+      "note": "Fallback compose box if primary testid changes"
+    },
+    "post_button_inline": {
+      "selector": "button[data-testid='tweetButtonInline']",
+      "confidence": 0.94,
+      "action": "click",
+      "wait_after_ms": 3000,
+      "note": "Post button within the tweet compose bar (inline variant)"
+    },
+    "post_button_modal": {
+      "selector": "button[data-testid='tweetButton']",
+      "confidence": 0.92,
+      "action": "click",
+      "wait_after_ms": 3000,
+      "note": "Post button in the tweet compose modal"
+    },
+    "char_counter": {
+      "selector": "span[data-testid='charCounter']",
+      "confidence": 0.88,
+      "type": "text_extraction",
+      "note": "Character counter — negative value means over limit"
+    },
+    "media_upload_button": {
+      "selector": "button[data-testid='fileInput'], input[data-testid='fileInput']",
+      "fallback_selector": "button[aria-label='Add photos or video']",
+      "confidence": 0.85,
+      "action": "click",
+      "note": "Media attachment button in compose toolbar"
+    },
+    "reply_indicator": {
+      "selector": "div[data-testid='inlineReplyTweet'], div[aria-label*='Reply to']",
+      "confidence": 0.84,
+      "type": "wait_for",
+      "note": "Confirms reply compose mode is active with target tweet shown"
+    }
+  },
+
+  "tweet_card": {
+    "tweet_article": {
+      "selector": "article[data-testid='tweet']",
+      "confidence": 0.97,
+      "type": "selector_list",
+      "note": "Individual tweet container — top-level selector for all tweet extraction"
+    },
+    "tweet_text": {
+      "selector": "div[data-testid='tweetText']",
+      "confidence": 0.95,
+      "type": "text_extraction",
+      "note": "Full tweet text content including hashtags and mentions"
+    },
+    "author_name_container": {
+      "selector": "div[data-testid='User-Name']",
+      "confidence": 0.94,
+      "type": "selector_list",
+      "note": "Container with display name + handle"
+    },
+    "author_display_name": {
+      "selector": "div[data-testid='User-Name'] span:first-child",
+      "confidence": 0.90,
+      "type": "text_extraction"
+    },
+    "author_handle_link": {
+      "selector": "div[data-testid='User-Name'] a[href*='/']",
+      "confidence": 0.92,
+      "type": "attribute",
+      "attribute": "href",
+      "note": "href value is /{handle} — extract substring after last /"
+    },
+    "tweet_timestamp": {
+      "selector": "time",
+      "confidence": 0.95,
+      "type": "attribute",
+      "attribute": "datetime",
+      "note": "ISO 8601 datetime — most reliable machine-readable timestamp"
+    },
+    "like_button": {
+      "selector": "button[data-testid='like']",
+      "confidence": 0.94,
+      "action": "click",
+      "note": "Like/unlike toggle — aria-pressed=true when liked"
+    },
+    "like_count": {
+      "selector": "button[data-testid='like'] span[data-testid='app-text-transition-container']",
+      "confidence": 0.88,
+      "type": "text_extraction",
+      "optional": true
+    },
+    "retweet_button": {
+      "selector": "button[data-testid='retweet']",
+      "confidence": 0.93,
+      "action": "click",
+      "note": "Retweet/repost toggle — opens menu with Repost and Quote options"
+    },
+    "retweet_count": {
+      "selector": "button[data-testid='retweet'] span[data-testid='app-text-transition-container']",
+      "confidence": 0.87,
+      "type": "text_extraction",
+      "optional": true
+    },
+    "reply_button": {
+      "selector": "button[data-testid='reply']",
+      "confidence": 0.93,
+      "action": "click",
+      "note": "Opens reply compose inline or navigates to tweet for reply"
+    },
+    "reply_count": {
+      "selector": "button[data-testid='reply'] span[data-testid='app-text-transition-container']",
+      "confidence": 0.87,
+      "type": "text_extraction",
+      "optional": true
+    },
+    "tweet_photo": {
+      "selector": "div[data-testid='tweetPhoto']",
+      "confidence": 0.90,
+      "type": "exists",
+      "optional": true,
+      "note": "Present when tweet contains image media"
+    },
+    "tweet_video": {
+      "selector": "div[data-testid='videoComponent'], video",
+      "confidence": 0.88,
+      "type": "exists",
+      "optional": true
+    },
+    "retweet_confirm": {
+      "selector": "div[data-testid='retweetConfirm'], span:has-text('Repost')",
+      "confidence": 0.88,
+      "action": "click",
+      "wait_after_ms": 1500
+    }
+  },
+
+  "notifications": {
+    "notifications_tab_all": {
+      "selector": "a[href='/notifications'][role='tab'], span:has-text('All')",
+      "confidence": 0.88,
+      "action": "click",
+      "note": "All notifications tab"
+    },
+    "notifications_tab_mentions": {
+      "selector": "a[href='/notifications/mentions'][role='tab'], span:has-text('Mentions')",
+      "confidence": 0.87,
+      "action": "click",
+      "note": "Mentions-only tab"
+    },
+    "notification_cell": {
+      "selector": "div[data-testid='cellInnerDiv']",
+      "confidence": 0.88,
+      "type": "selector_list",
+      "note": "Individual notification container within the timeline list"
+    },
+    "notification_context": {
+      "selector": "span[data-testid='socialContext'], span[data-testid='notificationContextItem']",
+      "confidence": 0.85,
+      "type": "text_extraction",
+      "optional": true,
+      "note": "Notification type text: 'liked your Tweet', 'retweeted', 'followed you', etc."
+    }
+  },
+
+  "messages": {
+    "dm_drawer": {
+      "selector": "div[data-testid='DMDrawer'], div[aria-label='Direct Messages']",
+      "confidence": 0.90,
+      "type": "wait_for",
+      "note": "Messages panel — confirms messages section loaded"
+    },
+    "new_dm_button": {
+      "selector": "a[data-testid='NewDM_Button'], button[aria-label='New message'], button[data-testid='NewDM_Button']",
+      "fallback_selector": "a[href='/messages/compose']",
+      "confidence": 0.88,
+      "action": "click",
+      "wait_after_ms": 1500,
+      "note": "Compose new DM — opens recipient search modal"
+    },
+    "recipient_search_input": {
+      "selector": "input[data-testid='searchPeople'], input[placeholder*='Search people'], input[aria-label*='Search people']",
+      "confidence": 0.88,
+      "action": "click_then_human_type",
+      "typing_delay_ms": "80-150",
+      "note": "Recipient search field in DM compose modal"
+    },
+    "typeahead_user_result": {
+      "selector": "div[data-testid='TypeaheadUser']:first-child, li[data-testid='UserCell']:first-child",
+      "fallback_selector": "div[role='option'][data-testid*='User']:first-child",
+      "confidence": 0.87,
+      "action": "click",
+      "wait_after_ms": 1000,
+      "note": "First search result in recipient typeahead dropdown"
+    },
+    "next_button": {
+      "selector": "button[data-testid='nextButton'], button:has-text('Next'), button[aria-label='Next']",
+      "confidence": 0.88,
+      "action": "click",
+      "wait_after_ms": 1500
+    },
+    "dm_composer_input": {
+      "selector": "div[data-testid='dmComposerTextInput'][contenteditable='true']",
+      "confidence": 0.92,
+      "action": "click_then_human_type",
+      "typing_delay_ms": "60-120",
+      "note": "DM message compose contenteditable div"
+    },
+    "dm_send_button": {
+      "selector": "button[data-testid='dmComposerSendButton']",
+      "fallback_selector": "button[aria-label='Send'], button[type='submit'][aria-label*='Send']",
+      "confidence": 0.92,
+      "action": "click",
+      "wait_after_ms": 3000,
+      "note": "Send button in DM composer"
+    },
+    "dm_restricted_notice": {
+      "selector": "span:has-text('limits who can message'), div[data-testid='dm-restricted']",
+      "confidence": 0.82,
+      "type": "exists",
+      "optional": true,
+      "note": "Indicates target user has DMs restricted — abort with DM_RESTRICTED"
+    }
+  },
+
+  "search": {
+    "search_input": {
+      "selector": "input[data-testid='SearchBox_Search_Input'], input[aria-label='Search query']",
+      "confidence": 0.90,
+      "action": "click_then_human_type",
+      "typing_delay_ms": "60-100",
+      "note": "Main search input in the header bar"
+    },
+    "search_results_top_tab": {
+      "selector": "a[href*='f=top'], span:has-text('Top')",
+      "confidence": 0.87,
+      "action": "click",
+      "note": "Top/Relevance results tab"
+    },
+    "search_results_latest_tab": {
+      "selector": "a[href*='f=live'], span:has-text('Latest')",
+      "confidence": 0.87,
+      "action": "click",
+      "note": "Latest/Chronological results tab"
+    },
+    "search_results_people_tab": {
+      "selector": "a[href*='f=user'], span:has-text('People')",
+      "confidence": 0.86,
+      "action": "click",
+      "optional": true
+    },
+    "empty_state": {
+      "selector": "div[data-testid='emptyState']",
+      "confidence": 0.88,
+      "type": "exists",
+      "optional": true,
+      "note": "Shown when search returns no results"
+    }
+  },
+
+  "navigation": {
+    "home_link": {
+      "selector": "a[data-testid='AppTabBar_Home_Link'], a[aria-label='Home'][href='/home']",
+      "confidence": 0.92,
+      "action": "click"
+    },
+    "notifications_link": {
+      "selector": "a[data-testid='AppTabBar_Notifications_Link'], a[aria-label='Notifications']",
+      "confidence": 0.92,
+      "action": "click"
+    },
+    "messages_link": {
+      "selector": "a[data-testid='AppTabBar_DirectMessage_Link'], a[aria-label='Messages']",
+      "confidence": 0.91,
+      "action": "click"
+    },
+    "profile_link": {
+      "selector": "a[data-testid='AppTabBar_Profile_Link'], a[aria-label='Profile']",
+      "confidence": 0.90,
+      "action": "click"
+    },
+    "post_tweet_button": {
+      "selector": "a[data-testid='SideNav_NewTweet_Button'], button[aria-label='Post'], a[aria-label='Tweet']",
+      "confidence": 0.90,
+      "action": "click",
+      "wait_after_ms": 1500,
+      "note": "Global 'Post' button in left sidebar — opens compose modal"
+    }
+  }
+}

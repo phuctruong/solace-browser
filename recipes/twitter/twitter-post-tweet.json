@@ -1,0 +1,210 @@
+{
+  "id": "twitter-post-tweet",
+  "platform": "twitter",
+  "version": "1.0.0",
+  "description": "Post a new tweet on Twitter/X with optional media and reply context. Supports plain text tweets, quote tweets, and replies. Uses human-like typing to avoid bot detection on the compose input.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["twitter.write_tweet"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Twitter/X (x.com) compose box is a contenteditable div with data-testid='tweetTextarea_0'. The 'Post' button is button[data-testid='tweetButtonInline'] in the primary compose bar or the tweet modal. Media upload uses input[data-testid='fileInput']. Reply target is set via navigating to the tweet URL before composing. Character limit enforced client-side at 280 chars.",
+    "selector_strategy": "Use data-testid attributes — Twitter uses these consistently across redesigns. The compose area and post button both have stable data-testid values. Fall back to aria-label selectors for accessibility-rich elements.",
+    "anti_bot_notes": "Compose box requires char-by-char typing at 60-120ms. Must click the compose area explicitly before typing — do not auto-focus. If media_urls provided, must click the media upload button and provide file paths. Reply requires navigating to target tweet URL first.",
+    "llm_learnings": "Twitter may show a 'character limit exceeded' indicator — check char count before posting. The compose box toolbar (media, GIF, emoji) must not be accidentally clicked. After posting, the tweet appears in the timeline — wait for success indicator or URL change.",
+    "performance": "Navigation 3s + compose load 2s + typing variable + post 3s. Short tweet (~100 chars): ~15-20s total."
+  },
+
+  "input_params": {
+    "text": {
+      "type": "string",
+      "description": "Tweet text. Maximum 280 characters.",
+      "required": true,
+      "example": "AI agents are replacing SaaS. The shift is already happening. #AI #AgentDelegation"
+    },
+    "media_urls": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Optional list of local file paths or URLs for media attachments (images/video). Max 4 images or 1 video.",
+      "required": false,
+      "example": ["/tmp/screenshot.png"]
+    },
+    "reply_to_id": {
+      "type": "string",
+      "description": "Tweet ID to reply to. If provided, the tweet is posted as a reply.",
+      "required": false,
+      "example": "1234567890123456789"
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/twitter_working_session.json",
+      "description": "Load saved Twitter/X session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://x.com/home",
+      "wait_for": "div[data-testid='primaryColumn']",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to Twitter/X home feed and wait for primary column to confirm auth"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "div[data-testid='primaryColumn']",
+      "fallback_url_pattern": "x.com/i/flow/login",
+      "description": "Verify authenticated — if redirected to login flow, abort with SESSION_EXPIRED",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "navigate",
+      "target": "https://x.com/compose/tweet",
+      "wait_for": "div[data-testid='tweetTextarea_0']",
+      "optional": true,
+      "condition": "NOT {params.reply_to_id}",
+      "timeout_ms": 10000,
+      "screenshot": false,
+      "description": "Navigate to compose tweet page if not a reply"
+    },
+    {
+      "step": 5,
+      "action": "navigate",
+      "target": "https://x.com/i/web/status/{params.reply_to_id}",
+      "wait_for": "div[data-testid='reply']",
+      "optional": true,
+      "condition": "{params.reply_to_id}",
+      "timeout_ms": 10000,
+      "screenshot": false,
+      "description": "Navigate to target tweet if posting a reply"
+    },
+    {
+      "step": 6,
+      "action": "click",
+      "selector": "div[data-testid='reply'], div[aria-label='Reply'], button[data-testid='reply']",
+      "optional": true,
+      "condition": "{params.reply_to_id}",
+      "description": "Click Reply button on target tweet to open reply compose box",
+      "wait_after_ms": 1500,
+      "timeout_ms": 8000,
+      "screenshot": false
+    },
+    {
+      "step": 7,
+      "action": "wait_for_selector",
+      "selector": "div[data-testid='tweetTextarea_0'][contenteditable='true']",
+      "timeout_ms": 10000,
+      "description": "Wait for tweet compose textarea to be interactive"
+    },
+    {
+      "step": 8,
+      "action": "click",
+      "selector": "div[data-testid='tweetTextarea_0'][contenteditable='true']",
+      "description": "Click compose area to focus it before typing",
+      "wait_after_ms": 500,
+      "screenshot": false
+    },
+    {
+      "step": 9,
+      "action": "human_type",
+      "selector": "div[data-testid='tweetTextarea_0'][contenteditable='true']",
+      "text": "{params.text}",
+      "delay_ms": "60-120",
+      "click_first": false,
+      "description": "Type tweet text with human-like delays to bypass bot detection",
+      "screenshot": false
+    },
+    {
+      "step": 10,
+      "action": "screenshot",
+      "description": "Capture composed tweet before posting",
+      "screenshot": true
+    },
+    {
+      "step": 11,
+      "action": "click",
+      "selector": "button[data-testid='tweetButtonInline'], button[data-testid='tweetButton']",
+      "fallback_selector": "button[aria-label='Post'], button:has-text('Post')",
+      "description": "Click Post button to submit the tweet",
+      "wait_after_ms": 3000,
+      "timeout_ms": 8000,
+      "screenshot": true
+    },
+    {
+      "step": 12,
+      "action": "verify",
+      "checks": [
+        {"type": "no_element", "selector": "div[role='alert'][data-type='error']", "description": "No error alert"},
+        {"type": "no_element", "selector": "span[data-testid='charCounter']:has-text('-')", "description": "Character count not over limit"},
+        {"type": "url_contains", "pattern": "x.com", "description": "Still on X domain"}
+      ],
+      "description": "Verify tweet was posted without errors"
+    },
+    {
+      "step": 13,
+      "action": "return_result",
+      "description": "Return post confirmation with tweet ID if extractable from URL or DOM"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "posted": {"type": "boolean", "example": true},
+      "text": {"type": "string", "example": "AI agents are replacing SaaS..."},
+      "tweet_id": {"type": "string", "example": "1234567890123456789"},
+      "tweet_url": {"type": "string", "example": "https://x.com/username/status/1234567890123456789"},
+      "reply_to_id": {"type": "string", "example": null},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["posted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect x.com/i/flow/login redirect — abort with SESSION_EXPIRED, re-run session login recipe first",
+    "compose_not_loaded": "Retry wait_for_selector with 15s timeout; if still fails, navigate directly to x.com/compose/tweet",
+    "character_limit_exceeded": "Check text length before posting — if > 280 chars, truncate or abort with PARAM_INVALID",
+    "element_not_found": "Log selector tried, capture screenshot, try fallback_selector if defined",
+    "rate_limited": "If 429 or 'Something went wrong' banner detected, wait 60s then retry once",
+    "duplicate_tweet": "Twitter may reject identical tweets — vary text slightly or abort with DUPLICATE_CONTENT"
+  },
+
+  "anti_detection": {
+    "human_typing": true,
+    "explicit_field_clicks": true,
+    "keyboard_shortcuts_preferred": false,
+    "avoid_tab_navigation": true,
+    "avoid_instant_fill": true,
+    "typing_delays": {
+      "tweet_text": "60-120ms"
+    }
+  },
+
+  "metadata": {
+    "tags": ["twitter", "x", "tweet", "post", "write", "social"],
+    "difficulty": "easy",
+    "prerequisites": ["twitter_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 20,
+    "idempotent": false,
+    "destructive": false
+  }
+}

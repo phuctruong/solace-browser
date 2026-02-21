@@ -1,0 +1,177 @@
+{
+  "id": "twitter-read-notifications",
+  "platform": "twitter",
+  "version": "1.0.0",
+  "description": "Read Twitter/X notifications with type filtering. Extracts notification type (mention, like, retweet, follow), actor handle, associated tweet text, and timestamp. Supports all/mentions/likes/retweets filter modes.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["twitter.read_notifications"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Twitter/X notifications page at x.com/notifications renders notification items as div[data-testid='notification'] or within a timeline list. The 'All' tab shows all notification types; the 'Mentions' tab shows only @mentions. Each notification has an actor (user who performed action), an action type indicator, and optionally a linked tweet. The notification bell icon in sidebar links to /notifications.",
+    "selector_strategy": "Navigate directly to x.com/notifications for the All tab. Use x.com/notifications/mentions for the Mentions tab. Notification items use data-testid='notification' where available; fall back to article[data-testid='tweet'] since mention notifications embed tweet previews.",
+    "anti_bot_notes": "Read-only operation — minimal bot detection risk. Page may require scroll to load older notifications. Avoid rapid extraction; add 500ms pause between scroll steps.",
+    "performance": "Expected run time: 8-12 seconds (navigation 3s + load 2s + extraction 3-7s). No typing needed."
+  },
+
+  "input_params": {
+    "filter": {
+      "type": "string",
+      "description": "Notification filter: 'all' (all notifications), 'mentions' (@ mentions only), 'likes' (likes only), 'retweets' (retweets/reposts only)",
+      "required": false,
+      "default": "all",
+      "enum": ["all", "mentions", "likes", "retweets"]
+    },
+    "count": {
+      "type": "integer",
+      "description": "Maximum number of notifications to read. Default 20.",
+      "required": false,
+      "default": 20,
+      "example": 20
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/twitter_working_session.json",
+      "description": "Load saved Twitter/X session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://x.com/notifications",
+      "wait_for": "div[data-testid='primaryColumn']",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to Twitter/X notifications page and wait for primary column"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "div[data-testid='primaryColumn']",
+      "fallback_url_pattern": "x.com/i/flow/login",
+      "description": "Verify authenticated — if redirected to login flow, abort with SESSION_EXPIRED",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "navigate",
+      "target": "https://x.com/notifications/mentions",
+      "wait_for": "div[data-testid='primaryColumn']",
+      "optional": true,
+      "condition": "{params.filter} == 'mentions'",
+      "timeout_ms": 10000,
+      "screenshot": false,
+      "description": "Navigate to Mentions-only notifications if filter is 'mentions'"
+    },
+    {
+      "step": 5,
+      "action": "wait_for_selector",
+      "selector": "section[aria-labelledby], div[aria-label='Timeline: Notifications'] div[data-testid='cellInnerDiv']",
+      "fallback_selector": "article[data-testid='tweet'], div[data-testid='notification']",
+      "timeout_ms": 10000,
+      "description": "Wait for notification items to render in the timeline"
+    },
+    {
+      "step": 6,
+      "action": "extract_all",
+      "selector": "div[data-testid='cellInnerDiv']",
+      "limit": "{params.count}",
+      "fields": {
+        "notification_type": {
+          "selector": "span[data-testid='socialContext'], span[data-testid='notificationContextItem']",
+          "type": "textContent",
+          "optional": true
+        },
+        "actor_handle": {
+          "selector": "a[role='link'][href*='/'][data-testid='User-Name'], div[data-testid='User-Name'] a",
+          "type": "attribute",
+          "attribute": "href",
+          "transform": "extract_handle",
+          "optional": true
+        },
+        "actor_name": {
+          "selector": "div[data-testid='User-Name'] span",
+          "type": "textContent",
+          "index": 0,
+          "optional": true
+        },
+        "tweet_text": {
+          "selector": "div[data-testid='tweetText']",
+          "type": "textContent",
+          "optional": true
+        },
+        "timestamp": {
+          "selector": "time",
+          "type": "attribute",
+          "attribute": "datetime",
+          "optional": true
+        }
+      },
+      "description": "Extract notification entries from the notifications timeline",
+      "screenshot": true
+    },
+    {
+      "step": 7,
+      "action": "return_result",
+      "description": "Return extracted notifications as structured data"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "notifications": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "notification_type": {"type": "string", "example": "liked your Tweet"},
+            "actor_handle": {"type": "string", "example": "@jane_doe"},
+            "actor_name": {"type": "string", "example": "Jane Doe"},
+            "tweet_text": {"type": "string", "example": "AI agents are replacing SaaS..."},
+            "timestamp": {"type": "string", "example": "2026-02-21T08:00:00.000Z"}
+          },
+          "required": ["timestamp"]
+        }
+      },
+      "total_extracted": {"type": "integer", "example": 20},
+      "filter_applied": {"type": "string", "example": "all"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["notifications", "total_extracted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect x.com/i/flow/login redirect — abort with SESSION_EXPIRED, re-run session login recipe first",
+    "empty_notifications": "Return empty notifications array — not an error, just no new activity",
+    "element_not_found": "Log selector tried, capture screenshot, try fallback_selector if defined",
+    "rate_limited": "If rate limit indicator detected, wait 60s then retry once",
+    "mentions_tab_not_found": "Fall back to all-notifications page and filter client-side by notification_type"
+  },
+
+  "metadata": {
+    "tags": ["twitter", "x", "notifications", "mentions", "read", "read-only"],
+    "difficulty": "easy",
+    "prerequisites": ["twitter_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 12,
+    "idempotent": true,
+    "destructive": false
+  }
+}

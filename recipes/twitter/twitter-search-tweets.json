@@ -1,0 +1,199 @@
+{
+  "id": "twitter-search-tweets",
+  "platform": "twitter",
+  "version": "1.0.0",
+  "description": "Search for tweets on Twitter/X using a text query. Extracts matching tweets with author, text, engagement counts, and timestamps. Supports sorting by relevance or latest. Navigates to x.com/search with the encoded query.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["twitter.read_search"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Twitter/X search is accessible at x.com/search?q={query}&src=typed_query. The 'Top' tab shows relevance-ranked results; the 'Latest' tab shows chronological results. Results render as article[data-testid='tweet'] elements — same structure as the timeline. Search bar is input[data-testid='SearchBox_Search_Input']. Results tab switching: 'a[href*=\"f=live\"]' for Latest, default tab for Top.",
+    "selector_strategy": "Encode query in URL for navigation — avoids typing into search bar for reliability. Switch tabs via href patterns. Tweet extraction identical to timeline recipe using article[data-testid='tweet'] containers.",
+    "anti_bot_notes": "Read-only search — minimal bot detection risk. URL-based navigation is preferred over typing in search box. Add 1s wait after navigation to allow search results to hydrate fully.",
+    "performance": "Expected run time: 10-15 seconds (navigation 3s + results load 3s + extraction 3-8s). No typing needed."
+  },
+
+  "input_params": {
+    "query": {
+      "type": "string",
+      "description": "Search query. Supports Twitter search operators (from:, #hashtag, -word, etc.)",
+      "required": true,
+      "example": "#AI agent delegation"
+    },
+    "count": {
+      "type": "integer",
+      "description": "Maximum number of tweets to return. Default 20.",
+      "required": false,
+      "default": 20,
+      "example": 20
+    },
+    "sort": {
+      "type": "string",
+      "description": "Sort order: 'relevance' (Top results) or 'latest' (chronological)",
+      "required": false,
+      "default": "relevance",
+      "enum": ["relevance", "latest"]
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/twitter_working_session.json",
+      "description": "Load saved Twitter/X session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://x.com/search?q={params.query}&src=typed_query&f=top",
+      "wait_for": "div[data-testid='primaryColumn']",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to search results with encoded query (Top/Relevance tab)"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "div[data-testid='primaryColumn']",
+      "fallback_url_pattern": "x.com/i/flow/login",
+      "description": "Verify authenticated — if redirected to login flow, abort with SESSION_EXPIRED",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "navigate",
+      "target": "https://x.com/search?q={params.query}&src=typed_query&f=live",
+      "wait_for": "div[data-testid='primaryColumn']",
+      "optional": true,
+      "condition": "{params.sort} == 'latest'",
+      "timeout_ms": 10000,
+      "screenshot": false,
+      "description": "Navigate to Latest tab if sort is 'latest'"
+    },
+    {
+      "step": 5,
+      "action": "wait_for_selector",
+      "selector": "article[data-testid='tweet']",
+      "fallback_selector": "div[data-testid='emptyState']",
+      "timeout_ms": 10000,
+      "description": "Wait for tweet results or empty state to render"
+    },
+    {
+      "step": 6,
+      "action": "scroll_and_extract",
+      "selector": "article[data-testid='tweet']",
+      "limit": "{params.count}",
+      "scroll_step_px": 400,
+      "scroll_delay_ms": 800,
+      "fields": {
+        "author_name": {
+          "selector": "div[data-testid='User-Name'] span",
+          "type": "textContent",
+          "index": 0
+        },
+        "author_handle": {
+          "selector": "div[data-testid='User-Name'] a[href*='/']",
+          "type": "attribute",
+          "attribute": "href",
+          "transform": "extract_handle"
+        },
+        "tweet_text": {
+          "selector": "div[data-testid='tweetText']",
+          "type": "textContent"
+        },
+        "timestamp": {
+          "selector": "time",
+          "type": "attribute",
+          "attribute": "datetime"
+        },
+        "like_count": {
+          "selector": "button[data-testid='like'] span[data-testid='app-text-transition-container']",
+          "type": "textContent",
+          "optional": true
+        },
+        "retweet_count": {
+          "selector": "button[data-testid='retweet'] span[data-testid='app-text-transition-container']",
+          "type": "textContent",
+          "optional": true
+        },
+        "reply_count": {
+          "selector": "button[data-testid='reply'] span[data-testid='app-text-transition-container']",
+          "type": "textContent",
+          "optional": true
+        },
+        "has_media": {
+          "selector": "div[data-testid='tweetPhoto'], video",
+          "type": "exists"
+        }
+      },
+      "description": "Extract search result tweets with engagement data",
+      "screenshot": true
+    },
+    {
+      "step": 7,
+      "action": "return_result",
+      "description": "Return extracted search result tweets as structured data"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "tweets": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "author_name": {"type": "string", "example": "AI Researcher"},
+            "author_handle": {"type": "string", "example": "@airesearcher"},
+            "tweet_text": {"type": "string", "example": "Agent delegation is the new paradigm..."},
+            "timestamp": {"type": "string", "example": "2026-02-21T09:00:00.000Z"},
+            "like_count": {"type": "string", "example": "89"},
+            "retweet_count": {"type": "string", "example": "24"},
+            "reply_count": {"type": "string", "example": "7"},
+            "has_media": {"type": "boolean", "example": false}
+          },
+          "required": ["author_handle", "tweet_text", "timestamp"]
+        }
+      },
+      "query": {"type": "string", "example": "#AI agent delegation"},
+      "sort_applied": {"type": "string", "example": "relevance"},
+      "total_extracted": {"type": "integer", "example": 20},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["tweets", "query", "total_extracted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect x.com/i/flow/login redirect — abort with SESSION_EXPIRED, re-run session login recipe first",
+    "no_results": "Return empty tweets array with total_extracted: 0 — not an error; query may just have no matches",
+    "element_not_found": "Log selector tried, capture screenshot, try fallback_selector if defined",
+    "rate_limited": "If search rate limit detected, wait 60s then retry once",
+    "latest_tab_not_found": "Fall back to Top results if Latest tab href selector not found"
+  },
+
+  "metadata": {
+    "tags": ["twitter", "x", "search", "query", "read", "read-only"],
+    "difficulty": "easy",
+    "prerequisites": ["twitter_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 15,
+    "idempotent": true,
+    "destructive": false
+  }
+}

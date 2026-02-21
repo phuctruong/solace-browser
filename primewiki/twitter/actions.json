@@ -1,0 +1,159 @@
+{
+  "node_id": "twitter-actions",
+  "version": "1.0.0",
+  "platform": "twitter",
+  "domain": "x.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+  "source": "twitter-automation-recipes.primewiki.md",
+
+  "actions": {
+    "compose_tweet": {
+      "id": "compose_tweet",
+      "description": "Open the tweet compose box on the home page or via direct URL",
+      "oauth3_scope": "twitter.write_tweet",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://x.com/compose/tweet", "wait_for": "div[data-testid='tweetTextarea_0']", "timeout_ms": 10000},
+        {"action": "click", "selector": "div[data-testid='tweetTextarea_0'][contenteditable='true']", "wait_ms": 500, "note": "Focus compose area"},
+        {"action": "wait_for_selector", "selector": "div[data-testid='tweetTextarea_0'][contenteditable='true']", "timeout_ms": 8000, "note": "Compose box fully interactive"}
+      ],
+      "anti_detection": {
+        "human_typing": true,
+        "explicit_field_clicks": true
+      },
+      "success_criteria": {
+        "compose_box_visible": true,
+        "compose_box_focusable": true
+      }
+    },
+
+    "send_tweet": {
+      "id": "send_tweet",
+      "description": "Post the composed tweet by clicking the Post button",
+      "oauth3_scope": "twitter.write_tweet",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "click", "selector": "button[data-testid='tweetButtonInline'], button[data-testid='tweetButton']", "wait_ms": 3000, "note": "Submit tweet"},
+        {"action": "verify", "check": "no_error_alert", "selector": "div[role='alert'][data-type='error']"}
+      ],
+      "success_criteria": {
+        "no_error_alert": true,
+        "tweet_posted": true
+      }
+    },
+
+    "like_tweet": {
+      "id": "like_tweet",
+      "description": "Like a specific tweet by clicking its like button",
+      "oauth3_scope": "twitter.write_tweet",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://x.com/i/web/status/{tweet_id}", "wait_for": "article[data-testid='tweet']", "timeout_ms": 10000},
+        {"action": "click", "selector": "button[data-testid='like']", "wait_ms": 1000, "note": "Toggle like on the tweet"},
+        {"action": "verify", "check": "aria_pressed", "selector": "button[data-testid='like']", "value": "true"}
+      ],
+      "success_criteria": {
+        "like_button_toggled": true
+      }
+    },
+
+    "retweet": {
+      "id": "retweet",
+      "description": "Repost (retweet) a tweet by clicking its Retweet button and confirming",
+      "oauth3_scope": "twitter.write_tweet",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://x.com/i/web/status/{tweet_id}", "wait_for": "article[data-testid='tweet']", "timeout_ms": 10000},
+        {"action": "click", "selector": "button[data-testid='retweet']", "wait_ms": 1000, "note": "Open retweet menu"},
+        {"action": "click", "selector": "div[data-testid='retweetConfirm'], span:has-text('Repost')", "wait_ms": 1500, "note": "Confirm repost"}
+      ],
+      "success_criteria": {
+        "retweet_menu_opened": true,
+        "repost_confirmed": true
+      }
+    },
+
+    "reply_to_tweet": {
+      "id": "reply_to_tweet",
+      "description": "Reply to a specific tweet by navigating to it and composing a reply",
+      "oauth3_scope": "twitter.write_tweet",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://x.com/i/web/status/{tweet_id}", "wait_for": "article[data-testid='tweet']", "timeout_ms": 10000},
+        {"action": "click", "selector": "div[data-testid='reply'], button[data-testid='reply']", "wait_ms": 1500, "note": "Open reply compose"},
+        {"action": "wait_for_selector", "selector": "div[data-testid='tweetTextarea_0'][contenteditable='true']", "timeout_ms": 8000},
+        {"action": "click", "selector": "div[data-testid='tweetTextarea_0'][contenteditable='true']", "wait_ms": 400, "note": "Focus reply box"},
+        {"action": "human_type", "selector": "div[data-testid='tweetTextarea_0']", "delay_ms": "60-120"},
+        {"action": "click", "selector": "button[data-testid='tweetButtonInline']", "wait_ms": 3000, "note": "Post reply"}
+      ],
+      "anti_detection": {
+        "human_typing": true,
+        "explicit_field_clicks": true
+      },
+      "success_criteria": {
+        "reply_posted": true,
+        "no_error_alert": true
+      }
+    },
+
+    "send_dm": {
+      "id": "send_dm",
+      "description": "Send a direct message to a user via the Messages compose flow",
+      "oauth3_scope": "twitter.write_dm",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {"action": "navigate", "url": "https://x.com/messages", "wait_for": "div[data-testid='DMDrawer']", "timeout_ms": 12000},
+        {"action": "click", "selector": "a[data-testid='NewDM_Button'], button[aria-label='New message']", "wait_ms": 1500, "note": "Open new DM modal"},
+        {"action": "human_type", "selector": "input[data-testid='searchPeople']", "delay_ms": "80-150", "note": "Search for recipient"},
+        {"action": "click", "selector": "div[data-testid='TypeaheadUser']:first-child", "wait_ms": 1000, "note": "Select recipient"},
+        {"action": "click", "selector": "button[data-testid='nextButton']", "wait_ms": 1500, "note": "Proceed to compose"},
+        {"action": "click", "selector": "div[data-testid='dmComposerTextInput']", "wait_ms": 400},
+        {"action": "human_type", "selector": "div[data-testid='dmComposerTextInput']", "delay_ms": "60-120"},
+        {"action": "click", "selector": "button[data-testid='dmComposerSendButton']", "wait_ms": 3000, "note": "Send DM"}
+      ],
+      "anti_detection": {
+        "human_typing": true,
+        "explicit_field_clicks": true
+      },
+      "success_criteria": {
+        "dm_sent": true,
+        "message_visible_in_thread": true
+      }
+    }
+  },
+
+  "anti_detection_rules": {
+    "typing": {
+      "tweet_compose": {"min_delay_ms": 60, "max_delay_ms": 120, "method": "human_type"},
+      "dm_message": {"min_delay_ms": 60, "max_delay_ms": 120, "method": "human_type"},
+      "recipient_search": {"min_delay_ms": 80, "max_delay_ms": 150, "method": "human_type"}
+    },
+    "navigation": {
+      "between_actions_ms": "300-800",
+      "after_compose_open_ms": 1500,
+      "after_post_ms": 3000,
+      "after_dm_sent_ms": 2000
+    },
+    "critical_patterns": [
+      "Never use .fill() on tweet compose area or DM input — always use human_type",
+      "Always click field explicitly before typing — do not auto-focus or Tab navigate",
+      "Wait for contenteditable='true' before typing — not just element existence",
+      "DM recipient search requires human_type to trigger typeahead results",
+      "Like and retweet actions require page navigation first — do not click from timeline directly",
+      "Verify compose box data-testid='tweetTextarea_0' is not disabled before typing"
+    ]
+  }
+}

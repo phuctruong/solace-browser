@@ -1,0 +1,144 @@
+{
+  "node_id": "twitter-urls",
+  "version": "1.0.0",
+  "platform": "twitter",
+  "domain": "x.com",
+  "authority": 65537,
+  "created": "2026-02-21",
+
+  "base_urls": {
+    "home": "https://x.com/home",
+    "compose": "https://x.com/compose/tweet",
+    "notifications": "https://x.com/notifications",
+    "notifications_mentions": "https://x.com/notifications/mentions",
+    "messages": "https://x.com/messages",
+    "messages_compose": "https://x.com/messages/compose",
+    "search": "https://x.com/search",
+    "explore": "https://x.com/explore",
+    "settings": "https://x.com/settings",
+    "bookmarks": "https://x.com/i/bookmarks"
+  },
+
+  "dynamic_patterns": {
+    "user_profile": "https://x.com/{handle}",
+    "tweet_permalink": "https://x.com/{handle}/status/{tweet_id}",
+    "tweet_permalink_web": "https://x.com/i/web/status/{tweet_id}",
+    "user_tweets": "https://x.com/{handle}/with_replies",
+    "user_media": "https://x.com/{handle}/media",
+    "user_likes": "https://x.com/{handle}/likes",
+    "dm_conversation": "https://x.com/messages/{conversation_id}",
+    "search_top": "https://x.com/search?q={query}&src=typed_query&f=top",
+    "search_latest": "https://x.com/search?q={query}&src=typed_query&f=live",
+    "search_people": "https://x.com/search?q={query}&src=typed_query&f=user",
+    "hashtag": "https://x.com/hashtag/{tag}",
+    "list": "https://x.com/i/lists/{list_id}"
+  },
+
+  "legacy_redirects": {
+    "twitter_home": "https://twitter.com/home",
+    "twitter_tweet": "https://twitter.com/{handle}/status/{tweet_id}",
+    "note": "twitter.com URLs redirect to x.com — use x.com in all recipes for consistency"
+  },
+
+  "navigation_paths": {
+    "home_to_compose": {
+      "from": "home",
+      "to": "compose",
+      "method": "navigate_direct",
+      "url": "https://x.com/compose/tweet",
+      "wait_ms": 2000
+    },
+    "home_to_reply": {
+      "from": "home",
+      "to": "tweet_permalink",
+      "method": "navigate_to_tweet_then_click_reply",
+      "url": "https://x.com/i/web/status/{tweet_id}",
+      "wait_ms": 2000
+    },
+    "home_to_messages": {
+      "from": "home",
+      "to": "messages",
+      "method": "click_messages_nav",
+      "selector": "a[data-testid='AppTabBar_DirectMessage_Link']",
+      "wait_ms": 2000
+    },
+    "messages_to_compose_dm": {
+      "from": "messages",
+      "to": "new_dm_modal",
+      "method": "click_new_dm_button",
+      "selector": "a[data-testid='NewDM_Button'], button[aria-label='New message']",
+      "wait_ms": 1500
+    },
+    "home_to_notifications": {
+      "from": "home",
+      "to": "notifications",
+      "method": "click_notifications_nav",
+      "selector": "a[data-testid='AppTabBar_Notifications_Link']",
+      "wait_ms": 1500
+    },
+    "home_to_search": {
+      "from": "home",
+      "to": "search_results",
+      "method": "navigate_direct_with_query",
+      "url": "https://x.com/search?q={query}&src=typed_query&f=top",
+      "wait_ms": 2000
+    }
+  },
+
+  "auth_urls": {
+    "login": "https://x.com/i/flow/login",
+    "login_legacy": "https://twitter.com/login",
+    "logout": "https://x.com/logout",
+    "signup": "https://x.com/i/flow/signup",
+    "oauth_authorize": "https://api.twitter.com/oauth/authorize",
+    "oauth2_authorize": "https://twitter.com/i/oauth2/authorize"
+  },
+
+  "url_detection": {
+    "authenticated": {
+      "pattern": "x.com/home",
+      "indicates": "User is logged in and on home feed"
+    },
+    "login_redirect": {
+      "pattern": "x.com/i/flow/login",
+      "indicates": "Session expired — re-authentication required"
+    },
+    "login_redirect_legacy": {
+      "pattern": "twitter.com/login",
+      "indicates": "Legacy login redirect — session expired"
+    },
+    "compose_active": {
+      "pattern": "x.com/compose/tweet",
+      "indicates": "Tweet compose modal is active"
+    },
+    "tweet_permalink_active": {
+      "pattern": "x.com/i/web/status/",
+      "indicates": "Viewing a specific tweet permalink"
+    },
+    "messages_active": {
+      "pattern": "x.com/messages",
+      "indicates": "Messages inbox is active"
+    },
+    "notifications_active": {
+      "pattern": "x.com/notifications",
+      "indicates": "Notifications page is active"
+    },
+    "search_active": {
+      "pattern": "x.com/search",
+      "indicates": "Search results page is active"
+    },
+    "profile_active": {
+      "pattern_regex": "x\\.com/[^/]+$",
+      "indicates": "User profile page is active"
+    }
+  },
+
+  "api_endpoints": {
+    "note": "These are Twitter/X internal API endpoints observed in network traffic. Use browser session — do not call directly without proper auth headers.",
+    "timeline_home": "https://twitter.com/i/api/graphql/*/HomeTimeline",
+    "search_timeline": "https://twitter.com/i/api/graphql/*/SearchTimeline",
+    "notifications_all": "https://twitter.com/i/api/2/notifications/all.json",
+    "create_tweet": "https://twitter.com/i/api/graphql/*/CreateTweet",
+    "dm_new": "https://twitter.com/i/api/1.1/dm/new2.json"
+  }
+}

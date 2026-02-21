@@ -1,0 +1,198 @@
+{
+  "id": "twitter-read-timeline",
+  "platform": "twitter",
+  "version": "1.0.0",
+  "description": "Read tweets from the home timeline on Twitter/X. Extracts tweet text, author handle, timestamp, engagement counts (likes, retweets, replies), and media presence. Supports filtering by content type.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["twitter.read_timeline"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Twitter/X home timeline renders tweets as article[data-testid='tweet'] elements. Each tweet article contains: author name (div[data-testid='User-Name']), tweet text (div[data-testid='tweetText']), timestamp (time element), and metric spans. The timeline has three tabs — For You, Following — accessible via nav links. Scroll is required to load more tweets beyond the initial viewport.",
+    "selector_strategy": "Use data-testid='tweet' for tweet article containers — extremely stable across redesigns. Extract sub-fields using relative selectors within each tweet article. Timestamp uses the time element's datetime attribute for machine-readable format.",
+    "anti_bot_notes": "Read-only operation — minimal bot detection risk. Navigate with saved session. Scroll slowly if count > 20 to trigger lazy loading. Do not rapid-fire scroll or extract.",
+    "performance": "Expected run time: 8-15 seconds (navigation 3s + load 2s + extraction 2-8s depending on count). No typing needed."
+  },
+
+  "input_params": {
+    "count": {
+      "type": "integer",
+      "description": "Number of tweets to read. Default 20.",
+      "required": false,
+      "default": 20,
+      "example": 20
+    },
+    "filter": {
+      "type": "string",
+      "description": "Timeline filter: 'all' (For You tab), 'following' (Following tab only), 'replies' (include replies in results)",
+      "required": false,
+      "default": "all",
+      "enum": ["all", "following", "replies"]
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/twitter_working_session.json",
+      "description": "Load saved Twitter/X session cookies",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://x.com/home",
+      "wait_for": "div[data-testid='primaryColumn']",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to Twitter/X home timeline and wait for primary column"
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "div[data-testid='primaryColumn']",
+      "fallback_url_pattern": "x.com/i/flow/login",
+      "description": "Verify authenticated — if redirected to login flow, abort with SESSION_EXPIRED",
+      "timeout_ms": 5000,
+      "screenshot": false
+    },
+    {
+      "step": 4,
+      "action": "click",
+      "selector": "nav[aria-label='Home timeline'] a[href='/home'][aria-label='Following'], a[href='/home'][data-tab='following']",
+      "fallback_selector": "span:has-text('Following')",
+      "optional": true,
+      "condition": "{params.filter} == 'following'",
+      "description": "Switch to Following tab if filter is 'following'",
+      "wait_after_ms": 1500,
+      "screenshot": false
+    },
+    {
+      "step": 5,
+      "action": "wait_for_selector",
+      "selector": "article[data-testid='tweet']",
+      "timeout_ms": 10000,
+      "description": "Wait for tweet articles to render in timeline"
+    },
+    {
+      "step": 6,
+      "action": "scroll_and_extract",
+      "selector": "article[data-testid='tweet']",
+      "limit": "{params.count}",
+      "scroll_step_px": 400,
+      "scroll_delay_ms": 800,
+      "fields": {
+        "author_name": {
+          "selector": "div[data-testid='User-Name'] span",
+          "type": "textContent",
+          "index": 0
+        },
+        "author_handle": {
+          "selector": "div[data-testid='User-Name'] a[href*='/']",
+          "type": "attribute",
+          "attribute": "href",
+          "transform": "extract_handle"
+        },
+        "tweet_text": {
+          "selector": "div[data-testid='tweetText']",
+          "type": "textContent"
+        },
+        "timestamp": {
+          "selector": "time",
+          "type": "attribute",
+          "attribute": "datetime"
+        },
+        "like_count": {
+          "selector": "button[data-testid='like'] span[data-testid='app-text-transition-container']",
+          "type": "textContent",
+          "optional": true
+        },
+        "retweet_count": {
+          "selector": "button[data-testid='retweet'] span[data-testid='app-text-transition-container']",
+          "type": "textContent",
+          "optional": true
+        },
+        "reply_count": {
+          "selector": "button[data-testid='reply'] span[data-testid='app-text-transition-container']",
+          "type": "textContent",
+          "optional": true
+        },
+        "has_media": {
+          "selector": "div[data-testid='tweetPhoto'], video",
+          "type": "exists"
+        },
+        "is_reply": {
+          "selector": "div[data-testid='reply']",
+          "check": "has_ancestor_attr",
+          "attribute": "data-testid",
+          "value": "tweet",
+          "optional": true
+        }
+      },
+      "description": "Extract tweet data from timeline articles with scroll-to-load",
+      "screenshot": true
+    },
+    {
+      "step": 7,
+      "action": "return_result",
+      "description": "Return extracted timeline tweets as structured data"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "tweets": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "author_name": {"type": "string", "example": "Phuc Nguyen"},
+            "author_handle": {"type": "string", "example": "@phuc"},
+            "tweet_text": {"type": "string", "example": "AI agents are replacing SaaS..."},
+            "timestamp": {"type": "string", "example": "2026-02-21T10:00:00.000Z"},
+            "like_count": {"type": "string", "example": "142"},
+            "retweet_count": {"type": "string", "example": "37"},
+            "reply_count": {"type": "string", "example": "12"},
+            "has_media": {"type": "boolean", "example": false}
+          },
+          "required": ["author_handle", "tweet_text", "timestamp"]
+        }
+      },
+      "total_extracted": {"type": "integer", "example": 20},
+      "filter_applied": {"type": "string", "example": "all"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["tweets", "total_extracted", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect x.com/i/flow/login redirect — abort with SESSION_EXPIRED error",
+    "empty_timeline": "Return empty tweets array with total_extracted: 0 — not an error",
+    "element_not_found": "Log selector tried, capture screenshot, retry once with 15s timeout",
+    "rate_limited": "If rate limit banner detected, wait 60s then retry once",
+    "following_tab_not_found": "Fall back to 'all' filter if Following tab selector not found"
+  },
+
+  "metadata": {
+    "tags": ["twitter", "x", "timeline", "read", "feed", "read-only"],
+    "difficulty": "easy",
+    "prerequisites": ["twitter_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 15,
+    "idempotent": true,
+    "destructive": false
+  }
+}
