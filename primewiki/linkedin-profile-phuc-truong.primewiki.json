@@ -42,5 +42,20 @@
     "source": "https://linkedin.com/in/phucvinhtruong",
     "method": "browser_crawl",
     "tool": "solace_browser_crawler"
+  },
+  "cross_references": {
+    "implementing_skills": [
+      "canon/skills/application/linkedin-automation-protocol.skill.md",
+      "canon/skills/methodology/web-automation-expert.skill.md"
+    ],
+    "related_recipes": [
+      "recipes/linkedin-profile-update.recipe.json",
+      "recipes/add-linkedin-project-optimized.recipe.json"
+    ],
+    "canonical_references": [
+      "KNOWLEDGE_HUB.md#linkedin-automation",
+      "SKILLS_REGISTRY.md#linkedin-automation-protocol"
+    ],
+    "see_also": []
   }
 }

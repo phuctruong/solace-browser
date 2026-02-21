@@ -123,6 +123,25 @@ Browser: ✓ Action taken
 ```
 **Use Case:** Quick check - where are we?
 
+### POST /save-session
+```json
+{
+  "success": true,
+  "path": "artifacts/solace_session.json"
+}
+```
+**Use Case:** Export cookies/localStorage (`storage_state`) for portable/headless reuse.
+
+## Session Persistence (Login Survival)
+
+Two layers (use both):
+
+1. **Shared Chrome profile dir** (`SOLACE_USER_DATA_DIR`, default `artifacts/solace_user_data`)
+This preserves logins across restarts even if the server is killed uncleanly.
+
+2. **storage_state export** (`SOLACE_SESSION_FILE`, default `artifacts/solace_session.json`)
+This is useful for proof artifacts and for runs where you want a portable session snapshot.
+
 ### GET /html-clean
 ```json
 {
@@ -518,4 +537,3 @@ discovery.loop(
 **Use in:** Solace Browser + any HTTP-based browser automation
 **Cost:** 10x intelligence improvement for 2x token cost
 **ROI:** Unmeasurable (makes previously impossible tasks possible)
-

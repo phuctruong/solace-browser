@@ -162,5 +162,20 @@
     "Forgot password"
   ],
   "snapshot_hash": "0c51c775",
-  "timestamp": "2026-02-15T06:11:07.844296"
+  "timestamp": "2026-02-15T06:11:07.844296",
+  "cross_references": {
+    "implementing_skills": [
+      "canon/skills/methodology/human-like-automation.skill.md",
+      "canon/skills/application/gitlab-automation-protocol.skill.md"
+    ],
+    "related_recipes": [
+      "recipes/reddit_login_form.recipe.json"
+    ],
+    "canonical_references": [
+      "KNOWLEDGE_HUB.md#reddit-authentication"
+    ],
+    "see_also": [
+      "primewiki/reddit_homepage_loggedout.primewiki.json"
+    ]
+  }
 }

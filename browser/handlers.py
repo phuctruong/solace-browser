@@ -22,35 +22,45 @@ logger = logging.getLogger('browser-server')
 
 def setup_handlers(app, server):
     """Setup all HTTP routes on the aiohttp app"""
-    app.router.add_get('/health', lambda r: handle_health(r, server))
-    app.router.add_get('/status', lambda r: handle_status(r, server))
-    app.router.add_post('/navigate', lambda r: handle_navigate(r, server))
-    app.router.add_get('/snapshot', lambda r: handle_snapshot(r, server))
-    app.router.add_get('/html', lambda r: handle_html(r, server))
-    app.router.add_get('/html-clean', lambda r: handle_html_clean(r, server))
-    app.router.add_get('/detect-modals', lambda r: handle_detect_modals(r, server))
-    app.router.add_post('/click', lambda r: handle_click(r, server))
-    app.router.add_post('/fill', lambda r: handle_fill(r, server))
-    app.router.add_post('/keyboard', lambda r: handle_keyboard(r, server))
-    app.router.add_post('/evaluate', lambda r: handle_evaluate(r, server))
-    app.router.add_post('/save-session', lambda r: handle_save_session(r, server))
-    app.router.add_get('/screenshot', lambda r: handle_screenshot(r, server))
+    # Support both legacy endpoints (e.g. /status) and CLI-style endpoints (e.g. /api/status).
+    # This keeps existing curl-based docs working while enabling solace-browser-cli-v3.sh.
+    for prefix in ("", "/api"):
+        app.router.add_get(f'{prefix}/health', lambda r: handle_health(r, server))
+        app.router.add_get(f'{prefix}/status', lambda r: handle_status(r, server))
+        app.router.add_post(f'{prefix}/navigate', lambda r: handle_navigate(r, server))
 
-    # Unfair advantage features
-    app.router.add_post('/mouse-move', lambda r: handle_mouse_move(r, server))
-    app.router.add_post('/scroll-human', lambda r: handle_scroll_human(r, server))
-    app.router.add_get('/network-log', lambda r: handle_network_log(r, server))
-    app.router.add_get('/fingerprint-check', lambda r: handle_fingerprint_check(r, server))
+        # Snapshot is GET in the current server, but some clients POST /snapshot.
+        app.router.add_get(f'{prefix}/snapshot', lambda r: handle_snapshot(r, server))
+        app.router.add_post(f'{prefix}/snapshot', lambda r: handle_snapshot(r, server))
 
-    # Semantic layer
-    app.router.add_get('/semantic-analysis', lambda r: handle_semantic_analysis(r, server))
-    app.router.add_get('/meta-tags', lambda r: handle_meta_tags(r, server))
-    app.router.add_get('/js-state', lambda r: handle_js_state(r, server))
-    app.router.add_get('/api-calls', lambda r: handle_api_calls(r, server))
+        app.router.add_get(f'{prefix}/html', lambda r: handle_html(r, server))
+        app.router.add_get(f'{prefix}/html-clean', lambda r: handle_html_clean(r, server))
+        app.router.add_get(f'{prefix}/detect-modals', lambda r: handle_detect_modals(r, server))
+        app.router.add_post(f'{prefix}/click', lambda r: handle_click(r, server))
+        app.router.add_post(f'{prefix}/fill', lambda r: handle_fill(r, server))
+        app.router.add_post(f'{prefix}/keyboard', lambda r: handle_keyboard(r, server))
+        app.router.add_post(f'{prefix}/evaluate', lambda r: handle_evaluate(r, server))
+        app.router.add_post(f'{prefix}/save-session', lambda r: handle_save_session(r, server))
 
-    # Rate limiting & registry
-    app.router.add_get('/rate-limit-status', lambda r: handle_rate_limit_status(r, server))
-    app.router.add_get('/check-registry', lambda r: handle_check_registry(r, server))
+        # Screenshot is GET in the current server, but some clients POST /screenshot.
+        app.router.add_get(f'{prefix}/screenshot', lambda r: handle_screenshot(r, server))
+        app.router.add_post(f'{prefix}/screenshot', lambda r: handle_screenshot(r, server))
+
+        # Unfair advantage features
+        app.router.add_post(f'{prefix}/mouse-move', lambda r: handle_mouse_move(r, server))
+        app.router.add_post(f'{prefix}/scroll-human', lambda r: handle_scroll_human(r, server))
+        app.router.add_get(f'{prefix}/network-log', lambda r: handle_network_log(r, server))
+        app.router.add_get(f'{prefix}/fingerprint-check', lambda r: handle_fingerprint_check(r, server))
+
+        # Semantic layer
+        app.router.add_get(f'{prefix}/semantic-analysis', lambda r: handle_semantic_analysis(r, server))
+        app.router.add_get(f'{prefix}/meta-tags', lambda r: handle_meta_tags(r, server))
+        app.router.add_get(f'{prefix}/js-state', lambda r: handle_js_state(r, server))
+        app.router.add_get(f'{prefix}/api-calls', lambda r: handle_api_calls(r, server))
+
+        # Rate limiting & registry
+        app.router.add_get(f'{prefix}/rate-limit-status', lambda r: handle_rate_limit_status(r, server))
+        app.router.add_get(f'{prefix}/check-registry', lambda r: handle_check_registry(r, server))
 
 
 # ============================================================================
@@ -67,10 +77,15 @@ async def handle_status(request, server):
     if not server.page:
         return web.json_response({"error": "No page"}, status=400)
 
+    session_path = Path(server.session_file) if getattr(server, "session_file", None) else None
     return web.json_response({
+        "success": True,
         "url": server.page.url,
         "title": await server.page.title(),
-        "has_session": Path(server.session_file).exists()
+        "has_session": session_path.exists() if session_path else False,
+        "session_file": str(session_path) if session_path else None,
+        "session_file_bytes": session_path.stat().st_size if session_path and session_path.exists() else 0,
+        "autosave_seconds": getattr(server, "autosave_seconds", None),
     })
 
 
@@ -146,7 +161,8 @@ async def handle_snapshot(request, server):
 
     logger.info(f"Snapshot ready: {len(aria_tree)} ARIA nodes")
 
-    return web.json_response(snapshot)
+    ok = "error" not in snapshot
+    return web.json_response({"success": ok, **snapshot})
 
 
 async def handle_click(request, server):
@@ -292,13 +308,42 @@ async def handle_save_session(request, server):
 
 async def handle_screenshot(request, server):
     """Take screenshot"""
+    data = {}
+    if request.method == "POST":
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+
+    requested = (
+        data.get("path")
+        or request.query.get("path")
+        or data.get("filename")
+        or request.query.get("filename")
+    )
+
+    # Backward-compatible default used by many existing scripts and PrimeWiki nodes.
     path = "artifacts/screenshot.png"
+    if requested:
+        p = Path(str(requested))
+
+        # If user passed a bare filename, keep it under artifacts/ for convenience.
+        if len(p.parts) == 1:
+            p = Path("artifacts") / p
+
+        if p.is_absolute() or ".." in p.parts:
+            return web.json_response({"error": "Invalid screenshot path"}, status=400)
+
+        path = str(p)
+
     Path(path).parent.mkdir(parents=True, exist_ok=True)
 
-    await server.page.screenshot(path=path)
+    full_page = bool(data.get("full_page", False)) if isinstance(data, dict) else False
+    await server.page.screenshot(path=path, full_page=full_page)
     logger.info(f"Screenshot: {path}")
 
-    return web.json_response({"success": True, "path": path})
+    # Return both keys for compatibility with different clients.
+    return web.json_response({"success": True, "path": path, "filepath": path})
 
 
 async def handle_html(request, server):
@@ -466,7 +511,7 @@ async def handle_scroll_human(request, server):
     """Natural scroll behavior with inertia"""
     try:
         data = await request.json()
-        distance_px = data.get('distance', 300)
+        distance_px = data.get('distance_px', data.get('distance', 300))
         direction = data.get('direction', 'down')
         duration_ms = data.get('duration_ms', 1000)
 
@@ -514,10 +559,12 @@ async def handle_network_log(request, server):
     try:
         requests = server.network.get_recent_requests(20)
         responses = server.network.get_recent_responses(20)
+        failures = server.network.get_recent_failures(20) if hasattr(server.network, "get_recent_failures") else []
         return web.json_response({
             "success": True,
             "requests": requests,
-            "responses": responses
+            "responses": responses,
+            "failures": failures,
         })
     except Exception as e:
         logger.error(f"Network log failed: {e}")

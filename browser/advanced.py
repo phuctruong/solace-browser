@@ -13,11 +13,26 @@ This layer adds critical missing pieces for LLM-driven automation:
 import asyncio
 import json
 import logging
+import time
 from typing import Dict, List, Optional, Any, Literal
 from dataclasses import dataclass, asdict
 from datetime import datetime
 
 logger = logging.getLogger('solace-browser')
+
+_NOISY_CONSOLE_SUBSTRINGS = (
+    "Cross-Origin-Opener-Policy policy would block the window.postMessage call.",
+)
+
+_NOISY_HTTP_400_URL_SUBSTRINGS = (
+    "rest/trackObserveApi/trackObserve",
+    "/svc/shreddit/account/identity_provider_signin",
+)
+
+_NOISY_REQUEST_FAILED_RULES = (
+    ("w3-reporting.reddit.com/reports", "ERR_ABORTED"),
+    ("/recaptcha/enterprise/clr", "ERR_ABORTED"),
+)
 
 
 # ============================================================================
@@ -115,10 +130,20 @@ class PageObserver:
         self.console_messages = []
         self.page_errors = []
         self.max_messages = 100  # Keep last 100 messages
+        self.max_errors = 50  # Keep last 50 page errors to avoid unbounded growth
+        # De-dupe noisy repeating errors: message -> unix timestamp (seconds)
+        self._last_error_log: Dict[str, float] = {}
+        self._error_log_suppress_seconds = 30
 
         # Setup listeners
         page.on("console", self._on_console)
         page.on("pageerror", self._on_page_error)
+
+    @staticmethod
+    def _is_ignorable_console_message(text: str) -> bool:
+        if not isinstance(text, str):
+            return False
+        return any(p in text for p in _NOISY_CONSOLE_SUBSTRINGS)
 
     def _on_console(self, msg):
         """Capture console messages"""
@@ -139,16 +164,42 @@ class PageObserver:
 
         # Log errors prominently
         if msg.type in ["error", "warning"]:
-            logger.warning(f"Console {msg.type}: {msg.text}")
+            text = msg.text or ""
+            noisy = (
+                "net::ERR_BLOCKED_BY_CLIENT" in text
+                or text.startswith("Failed to load resource: the server responded with a status of 400")
+                or text.startswith("BooleanExpression with operator ")
+                or text.startswith("VIDEOJS: WARN")
+                or self._is_ignorable_console_message(text)
+            )
+            if noisy:
+                logger.debug(f"Console {msg.type}: {text}")
+            else:
+                logger.warning(f"Console {msg.type}: {text}")
 
     def _on_page_error(self, error):
         """Capture page errors (JavaScript exceptions)"""
-        entry = {
-            "message": str(error),
-            "timestamp": datetime.now().isoformat()
-        }
+        message = str(error)
+        entry = {"message": message, "timestamp": datetime.now().isoformat()}
         self.page_errors.append(entry)
-        logger.error(f"Page error: {error}")
+
+        # Keep only last N entries.
+        if len(self.page_errors) > self.max_errors:
+            self.page_errors.pop(0)
+
+        # Avoid log spam: only log repeats every N seconds per unique message.
+        now = time.time()
+        last = self._last_error_log.get(message, 0.0)
+        if now - last < self._error_log_suppress_seconds:
+            return
+        self._last_error_log[message] = now
+
+        lower = message.lower()
+        if "server responded with an invalid payload for voyager" in lower:
+            # This is often LinkedIn internal churn or a transient edge in page boot.
+            logger.warning(f"Page error: {message}")
+        else:
+            logger.error(f"Page error: {message}")
 
     def get_recent_console(self, count: int = 10):
         """Get recent console messages"""
@@ -161,7 +212,8 @@ class PageObserver:
     def has_errors(self):
         """Check if any errors occurred"""
         return len(self.page_errors) > 0 or any(
-            msg["type"] == "error" for msg in self.console_messages
+            msg["type"] == "error" and not self._is_ignorable_console_message(msg.get("text", ""))
+            for msg in self.console_messages
         )
 
     def clear(self):
@@ -184,11 +236,30 @@ class NetworkMonitor:
         self.page = page
         self.requests = []
         self.responses = []
+        self.failures = []
         self.max_entries = 100  # Keep last 100 requests
 
         # Setup listeners
         page.on("request", self._on_request)
         page.on("response", self._on_response)
+        page.on("requestfailed", self._on_request_failed)
+
+    @staticmethod
+    def _is_ignorable_http_response(status: int, url: str) -> bool:
+        if status != 400 or not isinstance(url, str):
+            return False
+        return any(p in url for p in _NOISY_HTTP_400_URL_SUBSTRINGS)
+
+    @staticmethod
+    def _is_ignorable_request_failure(url: str, err_text: str) -> bool:
+        if not isinstance(url, str):
+            return False
+        if url.startswith("chrome-extension://invalid/"):
+            return True
+        for url_part, err_part in _NOISY_REQUEST_FAILED_RULES:
+            if url_part in url and (not err_part or err_part in err_text):
+                return True
+        return False
 
     def _on_request(self, request):
         """Capture HTTP requests"""
@@ -221,9 +292,41 @@ class NetworkMonitor:
         if len(self.responses) > self.max_entries:
             self.responses.pop(0)
 
-        # Log failed requests
-        if not response.ok:
-            logger.warning(f"HTTP {response.status}: {response.url}")
+        # Log failed requests (ignore redirects and known noisy telemetry endpoints).
+        if response.status >= 400:
+            if self._is_ignorable_http_response(response.status, response.url):
+                logger.debug(f"HTTP {response.status}: {response.url}")
+            else:
+                logger.warning(f"HTTP {response.status}: {response.url}")
+
+    def _on_request_failed(self, request):
+        """Capture network failures (DNS errors, blocked by client, etc)."""
+        entry = {
+            "type": "requestfailed",
+            "url": request.url,
+            "method": request.method,
+            "resourceType": request.resource_type,
+            "failure": request.failure,
+            "timestamp": datetime.now().isoformat(),
+        }
+        self.failures.append(entry)
+
+        if len(self.failures) > self.max_entries:
+            self.failures.pop(0)
+
+        try:
+            err = ""
+            if request.failure:
+                if isinstance(request.failure, dict):
+                    err = request.failure.get("errorText", "") or ""
+                else:
+                    err = str(request.failure)
+            if self._is_ignorable_request_failure(request.url, err):
+                logger.debug(f"Request failed: {request.url} {err}".rstrip())
+            else:
+                logger.warning(f"Request failed: {request.url} {err}".rstrip())
+        except Exception:
+            logger.warning(f"Request failed: {request.url}")
 
     def get_recent_requests(self, count: int = 10):
         """Get recent requests"""
@@ -235,12 +338,26 @@ class NetworkMonitor:
 
     def get_failed_requests(self):
         """Get all failed requests (status >= 400)"""
-        return [r for r in self.responses if not r.get("ok", True)]
+        failed = []
+        for r in self.responses:
+            try:
+                status = int(r.get("status", 0))
+            except Exception:
+                status = 0
+            url = r.get("url", "")
+            if status >= 400 and not self._is_ignorable_http_response(status, url):
+                failed.append(r)
+        return failed
+
+    def get_recent_failures(self, count: int = 10):
+        """Get recent requestfailed events."""
+        return self.failures[-count:]
 
     def clear(self):
         """Clear all captured network activity"""
         self.requests.clear()
         self.responses.clear()
+        self.failures.clear()
 
 
 # ============================================================================
@@ -293,7 +410,8 @@ async def get_llm_snapshot(
             "network": {
                 "requests": network_monitor.get_recent_requests(10) if network_monitor else [],
                 "responses": network_monitor.get_recent_responses(10) if network_monitor else [],
-                "failures": network_monitor.get_failed_requests() if network_monitor else []
+                "failures": network_monitor.get_failed_requests() if network_monitor else [],
+                "requestFailed": network_monitor.get_recent_failures(10) if network_monitor and hasattr(network_monitor, "get_recent_failures") else [],
             },
 
             # State

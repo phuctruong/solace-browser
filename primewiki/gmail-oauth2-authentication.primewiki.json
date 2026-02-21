@@ -5,8 +5,7 @@
   "created_at": "2026-02-15T08:26:36.173959",
   "discovery_method": "headed_mode_with_2fa_confirmation",
   "coherence_score": 0.95,
-  "gravity_score": 0.90,
-
+  "gravity_score": 0.9,
   "platform_info": {
     "provider": "Google",
     "platform": "gmail.com",
@@ -15,7 +14,6 @@
     "headless_compatible": false,
     "reason_not_headless": "2FA requires app notification which cannot be sent to headless browser"
   },
-
   "oauth2_flow": {
     "description": "Multi-step OAuth2 authentication with Gmail app 2FA confirmation",
     "steps": [
@@ -60,17 +58,23 @@
         "name": "Login Verification",
         "url": "https://myaccount.google.com/",
         "action": "Verify successful login",
-        "success_indicators": ["inbox", "Gmail", "account"],
+        "success_indicators": [
+          "inbox",
+          "Gmail",
+          "account"
+        ],
         "screenshot": "gmail_oauth2_step05_verify_login.png"
       }
     ]
   },
-
   "selectors_discovered": {
     "email_input": {
       "selector": "input[type='email']",
       "confidence": 0.99,
-      "alternatives": ["input[aria-label*='email' i]", "input[name*='email' i]"],
+      "alternatives": [
+        "input[aria-label*='email' i]",
+        "input[name*='email' i]"
+      ],
       "notes": "Standard HTML5 email input"
     },
     "password_input": {
@@ -82,15 +86,16 @@
     "next_button": {
       "selector": "button:has-text('Next')",
       "confidence": 0.98,
-      "alternatives": ["button[type='button']:has-text('Next')"],
+      "alternatives": [
+        "button[type='button']:has-text('Next')"
+      ],
       "notes": "Appears on both email and password pages"
     }
   },
-
   "learnings": {
     "google_oauth2_characteristics": [
       "Form-based authentication (email + password)",
-      "Multi-step flow (email → password → 2FA)",
+      "Multi-step flow (email \u2192 password \u2192 2FA)",
       "Uses standard HTML5 input elements",
       "Predictable selector patterns",
       "Consistent across sessions"
@@ -117,21 +122,25 @@
       "Device fingerprinting"
     ]
   },
-
   "recipes": [
     {
       "recipe_id": "gmail-oauth2-login",
       "recipe_version": "1.0.0",
       "workflow": "oauth2-authentication",
-      "suitable_for": ["headed_mode", "manual_2fa_approval"],
-      "not_suitable_for": ["headless_mode", "fully_automated"],
+      "suitable_for": [
+        "headed_mode",
+        "manual_2fa_approval"
+      ],
+      "not_suitable_for": [
+        "headless_mode",
+        "fully_automated"
+      ],
       "execution_trace_steps": 9,
       "success_rate_headed": 100,
       "success_rate_headless": 0,
       "file": "recipes/gmail-oauth2-login.recipe.json"
     }
   ],
-
   "execution_insights": {
     "headed_mode": {
       "success": true,
@@ -158,7 +167,6 @@
       ]
     }
   },
-
   "security_notes": {
     "password_handling": "Credentials loaded from credentials.properties file - never hardcoded",
     "2fa_approval": "User must approve manually - no way to automate this",
@@ -172,7 +180,6 @@
       "Do not automate 2FA - it defeats security purpose"
     ]
   },
-
   "next_steps": {
     "headless_automation": [
       "Extract OAuth2 access token after successful login",
@@ -193,7 +200,6 @@
       "Cache OAuth2 tokens to avoid repeated login"
     ]
   },
-
   "discovery_session": {
     "date": "2026-02-15",
     "duration_seconds": 35,
@@ -203,21 +209,18 @@
     "success": true,
     "notes": "Successful full-cycle discovery with real user 2FA confirmation via Gmail app"
   },
-
   "metrics": {
     "discovery_efficiency": "100% - All steps successfully mapped",
     "selector_accuracy": "99% - Selectors match current Google OAuth2 form",
     "documentation_completeness": "95% - Full flow documented with screenshots",
     "production_readiness": "80% - Headed mode ready, headless requires OAuth2 token approach"
   },
-
   "related_nodes": [
     "linkedin-authentication-oauth",
     "hackernews-authentication-basic",
     "github-authentication-oauth",
     "reddit-authentication-oauth"
   ],
-
   "tags": [
     "oauth2",
     "authentication",
@@ -228,5 +231,20 @@
     "headed-only",
     "manual-approval",
     "security"
-  ]
+  ],
+  "cross_references": {
+    "implementing_skills": [
+      "canon/skills/application/gmail-automation-protocol.skill.md",
+      "canon/skills/methodology/human-like-automation.skill.md"
+    ],
+    "related_recipes": [
+      "recipes/gmail-oauth-login.recipe.json",
+      "recipes/gmail-send-email.recipe.json"
+    ],
+    "canonical_references": [
+      "KNOWLEDGE_HUB.md#gmail-authentication",
+      "SKILLS_REGISTRY.md#gmail-automation-protocol"
+    ],
+    "see_also": []
+  }
 }

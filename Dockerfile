@@ -44,8 +44,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnss3 \
     libxss1 \
     libappindicator3-1 \
-    libindicator7 \
-    libgconf-2-4 \
     libx11-6 \
     libxcb1 \
     libxcomposite1 \
@@ -73,7 +71,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxshmfence1 \
     python3-minimal \
     python3-pip \
-    node-typescript \
     nodejs \
     npm \
     && rm -rf /var/lib/apt/lists/*

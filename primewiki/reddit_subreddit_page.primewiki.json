@@ -1768,5 +1768,22 @@
     "Posts"
   ],
   "snapshot_hash": "0c51c775",
-  "timestamp": "2026-02-15T06:11:12.151638"
+  "timestamp": "2026-02-15T06:11:12.151638",
+  "cross_references": {
+    "implementing_skills": [
+      "canon/skills/methodology/web-automation-expert.skill.md",
+      "canon/skills/framework/browser-state-machine.skill.md"
+    ],
+    "related_recipes": [
+      "recipes/reddit_subreddit_navigate.recipe.json",
+      "recipes/reddit-comment-workflow.recipe.json",
+      "recipes/reddit-create-post.recipe.json"
+    ],
+    "canonical_references": [
+      "KNOWLEDGE_HUB.md#reddit-navigation"
+    ],
+    "see_also": [
+      "primewiki/reddit_homepage_loggedout.primewiki.json"
+    ]
+  }
 }

@@ -50,3 +50,23 @@ private/       # Private files
 # Thorium
 chromium/
 v8/
+
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Scratch directory (local experiments, not for commit)
+scratch/
+
+# Runtime artifacts
+artifacts/
+logs/
+checkpoints/
+episodes/
+reports/
+verification-reports/
+
+# Source code (too large for git)
+source/
+source_full/

@@ -10,7 +10,7 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLI_VERSION="3.0.0"
-BROWSER_SERVER_SCRIPT="$PROJECT_ROOT/solace_browser_server.py"
+BROWSER_SERVER_SCRIPT="$PROJECT_ROOT/persistent_browser_server.py"
 LOG_DIR="${PROJECT_ROOT}/logs"
 RECIPES_DIR="${PROJECT_ROOT}/recipes"
 EPISODES_DIR="${PROJECT_ROOT}/episodes"
@@ -21,6 +21,18 @@ BROWSER_PID_FILE="${LOG_DIR}/browser.pid"
 BROWSER_PORT="${BROWSER_PORT:-9222}"
 BROWSER_HOST="localhost"
 API_BASE="http://${BROWSER_HOST}:${BROWSER_PORT}/api"
+
+# Shared session file so a manual login in a headed server can be reused by CLI runs.
+SESSION_FILE="${SESSION_FILE:-${ARTIFACTS_DIR}/solace_session.json}"
+# Shared Chrome profile dir so logins persist across restarts.
+# WARNING: do not run two browser servers concurrently pointing at the same user data dir.
+USER_DATA_DIR="${USER_DATA_DIR:-${ARTIFACTS_DIR}/solace_user_data}"
+# Default disabled to avoid disruptive background activity (e.g. while typing).
+# Enable if you want periodic persistence: AUTOSAVE_SECONDS=15 bash solace-browser-cli-v3.sh start
+AUTOSAVE_SECONDS="${AUTOSAVE_SECONDS:-0}"
+export SOLACE_SESSION_FILE="${SESSION_FILE}"
+export SOLACE_AUTOSAVE_SECONDS="${AUTOSAVE_SECONDS}"
+export SOLACE_USER_DATA_DIR="${USER_DATA_DIR}"
 
 # Colors
 GREEN='\033[0;32m'
@@ -57,13 +69,22 @@ start_browser_server() {
         return 0
     fi
 
-    # Start server in background
-    python3 "$BROWSER_SERVER_SCRIPT" \
+    # Clear stale pid file from previous crashed runs.
+    if [[ -f "$BROWSER_PID_FILE" ]]; then
+        rm -f "$BROWSER_PID_FILE"
+    fi
+
+    # Start server detached so it survives CLI process exit.
+    nohup python3 "$BROWSER_SERVER_SCRIPT" \
         --headless \
         --port "$BROWSER_PORT" \
+        --session-file "$SESSION_FILE" \
+        --user-data-dir "$USER_DATA_DIR" \
+        --autosave-seconds "$AUTOSAVE_SECONDS" \
         > "$LOG_DIR/browser.log" 2>&1 &
 
     local pid=$!
+    disown "$pid" 2>/dev/null || true
     echo $pid > "$BROWSER_PID_FILE"
 
     # Wait for server to be ready
@@ -73,8 +94,11 @@ start_browser_server() {
             log_success "Browser server started (PID: $pid)"
             return 0
         fi
+        if ! kill -0 "$pid" 2>/dev/null; then
+            break
+        fi
         sleep 0.5
-        ((attempts++))
+        attempts=$((attempts + 1))
     done
 
     log_error "Failed to start browser server"
@@ -85,7 +109,26 @@ start_browser_server() {
 stop_browser_server() {
     if [[ -f "$BROWSER_PID_FILE" ]]; then
         local pid=$(cat "$BROWSER_PID_FILE")
-        kill $pid 2>/dev/null || true
+        # Best-effort save before shutdown.
+        curl -s -X POST "$API_BASE/save-session" >/dev/null 2>&1 || true
+
+        # Graceful stop (lets the server persist storage_state on shutdown).
+        kill -TERM "$pid" 2>/dev/null || true
+
+        local attempts=0
+        while [[ $attempts -lt 20 ]]; do
+            if ! kill -0 "$pid" 2>/dev/null; then
+                break
+            fi
+            sleep 0.5
+            attempts=$((attempts + 1))
+        done
+
+        # Last resort.
+        if kill -0 "$pid" 2>/dev/null; then
+            kill -KILL "$pid" 2>/dev/null || true
+        fi
+
         rm -f "$BROWSER_PID_FILE"
         log_success "Browser server stopped"
     fi
@@ -247,7 +290,7 @@ EOF
 # RECIPE COMPILATION & EXECUTION
 ################################################################################
 
-cmd_compile() {
+compile_recipe_internal() {
     local episode_name="$1"
     local episode_file="$EPISODES_DIR/$episode_name.json"
 
@@ -284,7 +327,7 @@ PYEOF
     log_success "Recipe compiled and LOCKED: $RECIPES_DIR/$episode_name.recipe.json"
 }
 
-cmd_play() {
+play_recipe_internal() {
     local recipe_name="$1"
     local recipe_file="$RECIPES_DIR/$recipe_name.recipe.json"
 
@@ -433,11 +476,11 @@ cmd_snapshot() {
 }
 
 cmd_compile() {
-    cmd_compile "$@"
+    compile_recipe_internal "$@"
 }
 
 cmd_play() {
-    cmd_play "$@"
+    play_recipe_internal "$@"
 }
 
 cmd_ui() {

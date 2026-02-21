@@ -21,6 +21,7 @@ import json
 import logging
 import sys
 import argparse
+import os
 from pathlib import Path
 from typing import Dict, Optional, Any
 import uuid
@@ -68,7 +69,7 @@ class SolaceBrowser:
     def __init__(self, headless: bool = True, debug_ui: bool = False, session_file: Optional[str] = None):
         self.headless = headless
         self.debug_ui = debug_ui
-        self.session_file = session_file or "artifacts/linkedin_session.json"
+        self.session_file = session_file or os.getenv("SOLACE_SESSION_FILE") or "artifacts/solace_session.json"
         self.browser: Optional[Browser] = None
         self.context = None
         self.pages: Dict[str, Page] = {}

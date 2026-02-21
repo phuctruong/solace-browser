@@ -29,26 +29,43 @@ logger = logging.getLogger('browser-server')
 # ============================================================================
 
 async def main(headless=False):
-    server = PersistentBrowserServer(port=9222, headless=headless)
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('--port', type=int, default=9222)
+    parser.add_argument('--session-file', default=None)
+    parser.add_argument('--user-data-dir', default=None)
+    # Default autosave disabled: background storage_state calls can disrupt interactive typing.
+    parser.add_argument('--autosave-seconds', type=int, default=0)
+    args, _unknown = parser.parse_known_args()
 
-    # Setup signal handlers for graceful shutdown
-    loop = asyncio.get_event_loop()
+    server = PersistentBrowserServer(
+        port=args.port,
+        headless=headless,
+        session_file=args.session_file,
+        autosave_seconds=args.autosave_seconds,
+        user_data_dir=args.user_data_dir,
+    )
 
-    def signal_handler():
+    shutdown = asyncio.Event()
+    loop = asyncio.get_running_loop()
+
+    def _request_shutdown():
         logger.info("\nShutting down...")
-        asyncio.create_task(server.stop())
-        loop.stop()
+        shutdown.set()
 
-    loop.add_signal_handler(signal.SIGINT, signal_handler)
-    loop.add_signal_handler(signal.SIGTERM, signal_handler)
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        try:
+            loop.add_signal_handler(sig, _request_shutdown)
+        except NotImplementedError:
+            # Fallback for platforms without add_signal_handler support.
+            signal.signal(sig, lambda *_: _request_shutdown())
 
-    # Start server
     await server.start()
 
-    # Keep running
     try:
-        await asyncio.Event().wait()
+        await shutdown.wait()
     except KeyboardInterrupt:
+        pass
+    finally:
         await server.stop()
 
 
@@ -56,6 +73,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Persistent Browser Server for Cloud Run')
     parser.add_argument('--headless', action='store_true',
                        help='Run in headless mode (for Cloud Run deployment)')
+    parser.add_argument('--port', type=int, default=9222,
+                       help='HTTP port (default: 9222)')
+    parser.add_argument('--session-file', default=None,
+                       help='Playwright storage_state JSON file to load/save (default: $SOLACE_SESSION_FILE or artifacts/solace_session.json)')
+    parser.add_argument('--user-data-dir', default=None,
+                       help='Chrome user data dir for a persistent profile (default: $SOLACE_USER_DATA_DIR). If set, login sessions persist automatically across restarts.')
+    parser.add_argument('--autosave-seconds', type=int, default=0,
+                       help='Autosave storage_state every N seconds (default: 0 disables; can be disruptive while typing)')
     args = parser.parse_args()
 
     print(f"Starting browser server ({'HEADLESS' if args.headless else 'HEADED'} mode)")
