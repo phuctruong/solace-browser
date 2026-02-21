@@ -70,3 +70,6 @@ verification-reports/
 # Source code (too large for git)
 source/
 source_full/
+
+# Claude Code commands and config (local only)
+.claude/
