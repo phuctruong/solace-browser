@@ -83,10 +83,14 @@ We have structural freedom to do what they can't.
 | Recipe hit rate | 50% | 70% | 80% | 90% |
 | Cloud task success rate | 70% | 80% | 90% | 95% |
 | Paying users | 100 | 1,000 | 5,000 | 25,000 |
-| MRR | $1.9K | $19K | $95K | $475K |
+| MRR (blended belt mix) | ~$5K | ~$18.3K | ~$91K | ~$457K |
 
-**Why recipe hit rate?** At 70% hit, COGS = $5.75/user/month (70% gross margin).
-Without recipes: $12.75 COGS (33% margin). Recipes ARE the economic moat.
+**Belt-blended MRR at 1,000 users** (example mix):
+$8×300 + $48×200 + $88×50 + $188×10 = $2,400 + $9,600 + $4,400 + $1,880 = **$18,280/mo**
+
+**Why recipe hit rate?** At 70% hit, COGS = $5.75/user/month (70%+ gross margin).
+Without recipes: $12.75 COGS (33% margin — not fundable). Recipes ARE the economic moat.
+"I fear not the man who has practiced 10,000 kicks once, but I fear the man who has practiced one kick 10,000 times." — Bruce Lee. This is recipe replay.
 
 ## Current Phase: Phase 0 — Validate Core Premise
 
@@ -112,14 +116,22 @@ Build spec: `specs/BUILD-SPEC.md` | QA checklist: `specs/QA-CHECKLIST.md`
 **UI server:** port 9223 (separate from API server at 9222)
 **Tech:** Vanilla HTML/CSS/JS, no build step, served by Python stdlib HTTP server
 
-### Differentiation (Free vs solaceagi.com)
+### Differentiation (Belt Tiers via solaceagi.com)
 
-| Tier | What you get |
-|------|-------------|
-| **Free (OSS client)** | All UI, all 6 LinkedIn recipes, local execution |
-| **solaceagi.com** | AI-enhanced recipe quality, cloud execution (24/7), scheduled tasks, session vault, 90-day history |
+| Belt | Price | What you get | Browsing History |
+|------|-------|-------------|-----------------|
+| White (Free) | $0 | All UI, all 6 LinkedIn recipes, local execution, BYOK | 100 snapshots, 7-day retention |
+| Yellow (Student) | $8/mo | Managed LLM (no API key), 30-day evidence, 20 tokens, replay priority | 1,000 snapshots, 30-day retention |
+| Orange (Warrior) | $48/mo | Cloud twin (24/7), OAuth3 vault, 90-day evidence, production skills (rung 65537) | 10,000 snapshots, 90-day retention |
+| Green (Master) | $88/user/mo | Team tokens, SOC2 audit, private Stillwater Store, SAML SSO | Unlimited snapshots, 1-year retention |
+| Black (Grandmaster) | $188+/mo | Dedicated nodes, on-prem, custom governance | Unlimited snapshots, forever retention |
 
-Recipe FORMAT is open. Recipe LIBRARY quality + cloud execution = the paid moat.
+**Near-unlimited browsing history**: Full HTML snapshots, not screenshots. See exactly what your AI did.
+PZip compression makes this affordable: 100 LinkedIn pages stored as ~5 pages worth of data.
+"See exactly what your AI did — actual pages, not screenshots."
+
+Recipe FORMAT is open. Recipe LIBRARY quality + cloud execution + belt progression + browsing history = the paid moat.
+"This isn't SaaS — it's a dojo."
 
 ## Phase 2: Electron Shell (After Phase 1 validated)
 
@@ -146,6 +158,55 @@ Cloud intelligence layer uses Claude API:
 - Sonnet for planning new tasks
 - Haiku for executing cached recipes (100x cheaper)
 
+## PZip-Powered Browsing History (Secret Sauce Moat #7)
+
+PZip (`/home/phuc/projects/pzip/`) enables a browsing history feature no competitor can match economically.
+
+```
+PZip + Global Asset Registry (GAR) — 3 layers of dedup:
+  Layer 1: Global assets — React, jQuery, Bootstrap, fonts = stored ONCE for ALL users
+  Layer 2: Domain assets — site CSS, site JS, logos = stored ONCE per domain
+  Layer 3: User deltas — only unique text/form data = ~11KB per page (vs ~730KB raw)
+
+Why this achieves 45:1 to 80:1 effective compression:
+  - Typical page = 80% shared assets + 15% template + 5% unique content
+  - With GAR: ~11KB stored per page (asset refs + delta + unique)
+  - Static HTML (no JS): even smaller (~3-5KB delta)
+  - Same JS/CSS libraries cached GLOBALLY (React 150KB = stored once, period)
+  - Same images/logos/fonts cached per DOMAIN
+  - Form fills captured with before/after state (highlighted yellow)
+  - Kanban-style UI → users see agent actions as visual card timeline
+
+At scale (the math that wins):
+  10K users × 1000 pages = 7.3TB raw → 160GB with GAR = $3.20/mo
+  That's $0.00032/user/month for full browsing history
+  Competitors: $146/mo for same data without PZip (if they store it at all)
+
+What this enables (no competitor offers this):
+  - "See exactly what your AI did — actual pages, not screenshots"
+  - Replay exactly what the agent did step-by-step
+  - Inspect form fills: see what the agent typed before/after
+  - Full-text search across your entire browsing history
+  - Kanban view: session → page cards → click → full HTML render (iframe)
+```
+
+**Snapshot schema** (every page visit captures):
+```json
+{
+  "snapshot_id": "sha256(url + timestamp + html_hash)",
+  "url": "https://linkedin.com/feed",
+  "title": "LinkedIn Feed",
+  "timestamp": "ISO8601",
+  "html": "<!DOCTYPE html>...",
+  "form_state": {"input#search": "software engineer"},
+  "form_changes": [{"selector": "input#search", "before": "", "after": "software engineer"}],
+  "viewport": {"width": 1920, "height": 1080},
+  "scroll_position": {"x": 0, "y": 450}
+}
+```
+
+**Build prompt**: See `ROADMAP.md` — HTML Snapshot Capture build prompt (Phase 2 / PZip integration)
+
 ## What Aligns with This Northstar
 
 - Phase 0 validation tests (run before any Electron code)
@@ -154,6 +215,7 @@ Cloud intelligence layer uses Claude API:
 - Evidence-based execution: Stillwater verification bundles per task
 - Zero-knowledge sync: user's master password never touches server
 - Phuc swarms for all implementation (coder/planner/skeptic typed agents)
+- **PZip HTML snapshots**: full page capture + form fill recording + cross-file compression
 
 ## What Does NOT Align
 
@@ -162,6 +224,8 @@ Cloud intelligence layer uses Claude API:
 - Scraping/aggregating data (personal task delegation only)
 - Running browser automation without sealed wish contract (EXECUTE_WITHOUT_SEALED_WISH)
 - Claiming task success without Stillwater evidence bundle
+- Storing screenshots instead of HTML snapshots (lossy → can't inspect → can't replay)
+- Storing uncompressed HTML (always PZip before storage)
 
 ## Key Risks to Monitor
 

@@ -311,7 +311,100 @@ Acceptance:
 
 All Phase 2 recipes are automatically OAuth3-bounded once Phase 1.5 ships.
 
-### BUILD PROMPT 5: Gmail Recipes (first platform after LinkedIn)
+### BUILD PROMPT 5 (PREREQUISITE): HTML Snapshot Capture with PZip
+
+```
+TASK: Add HTML snapshot capture to solace-browser recipe execution
+
+Context:
+- After each recipe step that navigates or modifies a page, capture a full page snapshot.
+- PZip compression makes this economically viable: HTML pages from same domain share
+  80%+ content (CSS, JS, layout). Cross-file compression: 100 LinkedIn pages → ~5 pages worth.
+- This is the secret sauce no competitor offers: full pages, not screenshots. Actual HTML,
+  not a raster image. Inspectable, searchable, replayable.
+- PZip Python API at /home/phuc/projects/pzip/pzip/:
+    pzip.pzip_compress(data: bytes) -> bytes
+    pzip.pzip_decompress(data: bytes) -> bytes
+    pzip.compress_collection(dir: str) -> bytes  ← cross-file magic
+
+Files to create:
+  src/snapshot.py — HTML snapshot capture module
+  src/history.py  — Browsing session history (list of snapshots, in-order)
+
+After each recipe step that calls navigate() or any action that modifies the page:
+1. Capture full page HTML: document.documentElement.outerHTML (via Playwright page.content())
+2. Capture computed CSS for visible elements (page.evaluate() → getComputedStyle on visible elements)
+3. Capture form state: all input values, selected options, checked states
+   (page.evaluate() → query all inputs/selects/checkboxes → {selector: value} dict)
+4. Capture form changes: compare form_state before and after each recipe step
+   (diff: before_state vs after_state → emit form_changes list)
+5. Capture network requests: browser network log (XHR/fetch URLs + response sizes)
+   (via page.on("response") listener registered before step execution)
+6. Generate snapshot_id = sha256(url + timestamp + html_hash) — content-addressed
+7. Package as snapshot JSON:
+   {
+     "snapshot_id": "sha256hex",
+     "url": "https://...",
+     "title": "Page Title",
+     "timestamp": "ISO8601",
+     "html": "<!DOCTYPE html>...",
+     "form_state": {"input#email": "user@example.com"},
+     "form_changes": [{"selector": "input#email", "before": "", "after": "user@example.com"}],
+     "network_requests": [{"url": "...", "method": "GET", "response_size_bytes": 1234}],
+     "viewport": {"width": 1920, "height": 1080},
+     "scroll_position": {"x": 0, "y": 450},
+     "recipe_step": {"step_index": 2, "action": "fill", "selector": "input#email"}
+   }
+8. Compress with PZip: compressed_blob = pzip.pzip_compress(json.dumps(snapshot).encode())
+9. Store compressed blob: ~/.solace/history/{session_id}/{snapshot_id}.pzip
+10. Add entry to session index: ~/.solace/history/{session_id}/index.jsonl
+    (one JSON line per snapshot: {snapshot_id, url, title, timestamp, compressed_size_bytes})
+
+Integration point in solace_browser_server.py:
+- After each call to executor.execute_step() → call snapshot.capture(page, step_info) → append to session history
+- POST /run-recipe response: include {session_id, snapshots_captured: N} in evidence bundle
+
+History API endpoints (add to solace_browser_server.py):
+  GET /history — list all sessions (from ~/.solace/history/ dirs)
+    Response: [{session_id, task_id, recipe_id, started_at, snapshot_count}]
+  GET /history/{session_id} — list snapshots in session
+    Response: {session_id, snapshots: [{snapshot_id, url, title, timestamp, compressed_size_bytes}]}
+  GET /history/{session_id}/{snapshot_id} — get full snapshot (decompress → return JSON)
+    Response: full snapshot JSON with html field
+  GET /history/{session_id}/{snapshot_id}/render — return raw HTML only (for iframe)
+    Content-Type: text/html
+    Content-Security-Policy: sandbox allow-same-origin (no script execution)
+
+History UI (add to ui_server.py):
+  GET /activity-history — browsing history Kanban view
+    Columns: one per session (date + task name header)
+    Cards: one per page visit (favicon, title, URL truncated, timestamp)
+    Yellow badge: if form_changes is non-empty for this snapshot
+    Click card → modal: sandboxed iframe showing rendered page + form diff panel
+    Filter bar: by date / by site domain / by recipe / by action type
+    Search: POST /history/search?q=... → full-text search in snapshot HTML + form values
+
+Acceptance tests (Rung 641):
+- Capture snapshot for a test page: HTML is non-empty, form_state captured correctly
+- Form fill: before_state and after_state differ correctly → form_changes correct
+- PZip compression ratio > 2:1 on captured HTML (use LinkedIn page or equivalent HTML file)
+- PZip decompress → original HTML recovered byte-for-byte (round-trip test)
+- snapshot_id is deterministic: same inputs → same sha256 (byte-identical test)
+- GET /history/{session_id} returns correct snapshot list after 3 captures
+- GET /history/{session_id}/{snapshot_id}/render returns valid HTML in < 200ms
+
+Files to read first:
+  - solace_browser_server.py (understand existing run-recipe + evidence bundle structure)
+  - /home/phuc/projects/pzip/pzip/__init__.py or pzip.py (understand Python API)
+  - recipes/linkedin-discover-posts.recipe.json (reference recipe format)
+
+Rung: 641
+Evidence: compression ratio measurement in evidence/tests.json
+```
+
+---
+
+### BUILD PROMPT 7: Gmail Recipes (first platform after LinkedIn)
 
 ```
 TASK: Build 4 Gmail recipes for solace-browser
@@ -368,7 +461,7 @@ Acceptance (Rung 641):
 
 ---
 
-### BUILD PROMPT 6: Substack Recipes (first-mover opportunity)
+### BUILD PROMPT 8: Substack Recipes (first-mover opportunity)
 
 ```
 TASK: Build Substack PM triplet + 3 recipes — FIRST MOVER IN THIS SPACE
@@ -418,7 +511,7 @@ Acceptance (Rung 641):
 
 ---
 
-### BUILD PROMPT 7: Twitter/X Recipes
+### BUILD PROMPT 9: Twitter/X Recipes
 
 ```
 TASK: Build Twitter/X PM triplet + 3 recipes
@@ -469,13 +562,16 @@ Acceptance (Rung 641):
 **What**: Hosted Stillwater + cloud browser execution, OAuth3-governed
 
 ```
-BUILD PROMPT 8: solaceagi.com MVP API
+BUILD PROMPT 10: solaceagi.com MVP API
 
 TASK: Build FastAPI service for solaceagi.com — cloud recipe execution
 
 Architecture:
-  User enters Anthropic API key + grants OAuth3 agency tokens (cloud scope)
-  Cloud executes recipes using user's own API key (zero LLM costs to us)
+  Belt-gated access:
+    White Belt ($0): BYOK — user provides own API key, zero LLM cost to us
+    Yellow Belt ($8/mo): Managed LLM (Together.ai/OpenRouter, 20% margin, ~8K tasks/mo)
+    Orange Belt ($48/mo): Cloud twin (24/7) + managed LLM included + OAuth3 vault
+  Cloud executes recipes using user's own API key or managed LLM (by tier)
   Stillwater evidence bundle returned per task
 
 Endpoints:
@@ -536,14 +632,24 @@ We win when:
 
 ## Belt System
 
-| Belt | XP | Milestone |
-|------|----|-----------|
-| ⬜ White | 0 | LinkedIn Phase 1 — **DONE** |
-| 🟡 Yellow | 100 | OAuth3 foundation ships — **BUILD NEXT** |
-| 🟠 Orange | 300 | 70% recipe hit rate + OAuth3 spec published |
-| 🟢 Green | 750 | 10 platforms, all OAuth3-bounded |
-| 🔵 Blue | 1,500 | solaceagi.com live — cloud execution under OAuth3 |
-| 🟤 Brown | 3,000 | 80% hit rate + "rung-gated" entering industry lexicon |
-| ⬛ Black | 10,000 | OAuth3 is the standard. Models are commodities. Skills are capital. |
+> "Don't get set into one form, adapt it and build your own." — Bruce Lee
+
+| Belt | Tier | Price | XP | Milestone |
+|------|------|-------|-----|-----------|
+| White | Free | $0 | 0 | LinkedIn Phase 1 — **DONE** |
+| Yellow | Student | $8/mo | 100 | OAuth3 foundation ships — **BUILD NEXT** |
+| Orange | Warrior | $48/mo | 300 | 70% recipe hit rate + OAuth3 spec published + cloud twin live |
+| Green | Master | $88/mo | 750 | 10 platforms, all OAuth3-bounded + team tokens |
+| Black | Grandmaster | $188+/mo | 10,000 | OAuth3 is the standard. Models are commodities. Skills are capital. |
+
+**XP sources (community flywheel):**
+- Recipe submitted to Stillwater Store: +50 XP
+- Recipe accepted at rung 641: +100 XP
+- Recipe accepted at rung 65537: +300 XP
+- PrimeWiki PM triplet submitted: +75 XP
+- Swarm agent definition contributed: +100 XP
+- Security audit contribution: +200 XP
+
+"This isn't SaaS — it's a dojo. Every skill you contribute makes the platform better for everyone."
 
 **Auth**: 65537 | **OAUTH3-WHITEPAPER.md is the constitution**
