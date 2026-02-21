@@ -12,14 +12,17 @@ NORTHSTAR: Phuc_Forecast
 PROJECT: SolaceBrowser
 DOMAIN: web automation / recipe capture / self-improving browser agent
 
-## Dispatch Protocol (Mandatory)
-# MAIN SESSION: prime-safety + prime-coder + phuc-forecast (read skills/phuc-forecast.md for planning)
-# PLANNING: DREAM→FORECAST→DECIDE→ACT→VERIFY for any non-trivial decision (phuc-forecast FSM)
-# DISPATCH (>50 lines): read swarms/<role>.md → Task tool with full skills/ files pasted inline
-# SUB-AGENTS: prime-safety ALWAYS first; CNF capsule = full task + context, never "as before"
-# SWARMS: scout=KenT, forecaster=Grace, coder, skeptic, mathematician — see swarms/ dir
-# ANTI-ROT: phuc-swarms handles full skill injection + context isolation for sub-agents
+## Phuc-Orchestration: MANDATORY (no inline deep work — ever)
+# MAIN SESSION MODEL: haiku (coordination only — sub-agents handle all heavy work via swarms/)
+# INLINE_DEEP_WORK IS FORBIDDEN — phuc-orchestration governs ALL tasks without exception
+# MAIN SESSION: 3 skills max → prime-safety + prime-coder + phuc-forecast (DREAM→FORECAST→DECIDE→ACT→VERIFY)
+# DISPATCH: task >50 lines OR domain-specialized → read swarms/<role>.md → Task tool
+# ROLE→TASK: coder=bugfix/feat, planner=arch/design, skeptic=verify, scout=research, mathematician=proofs
+# MODEL: haiku=scout/janitor/graph-designer, sonnet=coder/planner/skeptic, opus=math/security/audit
+# SUB-AGENT PACK: paste full skills/ inline (prime-safety first) + CNF capsule (full task/context, no "as before")
 # RUNG: declare rung_target before dispatch; integration rung = MIN(all sub-agent rungs)
+# FORBIDDEN: INLINE_DEEP_WORK | SKILL_LESS_DISPATCH | FORGOTTEN_CAPSULE | SUMMARY_AS_EVIDENCE
+# COMBOS: canon/combos/ has WISH+RECIPE pairs (plan, bugfix, run-test, ci-triage, security, deps)
 # Loaded: prime-safety, prime-wishes, phuc-cleanup
 
 <!-- QUICK LOAD (10-15 lines): Use this block for fast context; load full file for production.
