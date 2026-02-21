@@ -47,16 +47,39 @@ Before writing any Electron code, validate:
 
 **Stop if:** session transfer fails for 5+ sites (fundamental premise broken).
 
-## Phase 1: Electron MVP (Weeks 2-4, ~3K lines new code)
+## Phase 1: MVP UI + LinkedIn Recipes (Current Sprint)
+
+Build spec: `specs/BUILD-SPEC.md` | QA checklist: `specs/QA-CHECKLIST.md`
+
+| Feature | What | Rung |
+|---------|------|------|
+| Home Page | Custom start page — 6 supported sites with session status + quick actions | 641 |
+| Activity View | Post-login view — twin orchestrator logs, PrimeWiki, Mermaid state diagram, HTML viewer | 641 |
+| Kanban UI | Recipe task queue (Queue → Running → Done → Failed) | 641 |
+| LinkedIn Recipes | 6 MVP recipes: discover-posts, create-post, edit-post, delete-post, react, comment | 641 |
+
+**UI server:** port 9223 (separate from API server at 9222)
+**Tech:** Vanilla HTML/CSS/JS, no build step, served by Python stdlib HTTP server
+
+### Differentiation (Free vs solaceagi.com)
+
+| Tier | What you get |
+|------|-------------|
+| **Free (OSS client)** | All UI, all 6 LinkedIn recipes, local execution |
+| **solaceagi.com** | AI-enhanced recipe quality, cloud execution (24/7), scheduled tasks, session vault, 90-day history |
+
+Recipe FORMAT is open. Recipe LIBRARY quality + cloud execution = the paid moat.
+
+## Phase 2: Electron Shell (After Phase 1 validated)
 
 | Layer | Build | Reuse |
 |-------|-------|-------|
-| Electron shell + home screen | BUILD (~1K lines) | — |
+| Electron shell wrapping Phase 1 UI | BUILD (~1K lines) | Phase 1 HTML/JS |
 | Session encrypt/upload | BUILD (~200 lines) | `/save-session` output |
 | Cloud task queue | BUILD (thin) | solaceagi FastAPI |
 | Everything else | — | REUSE (40+ API endpoints) |
 
-**MVP demo:** Login to LinkedIn in browser → cloud reads your messages → results appear.
+**MVP demo:** Login to LinkedIn in browser → cloud reads your messages → results appear in Activity View.
 
 ## Model Strategy (Intelligence Layer)
 
@@ -99,8 +122,10 @@ Cloud intelligence layer uses Claude API:
 ## See Also
 
 - `IDEAS.md` — full 65537-expert analysis (DREAM→FORECAST→DECIDE→ACT→VERIFY)
+- `specs/BUILD-SPEC.md` — Phase 1 build spec (4 features + 6 LinkedIn recipes)
+- `specs/QA-CHECKLIST.md` — QA verification checklist (used by auditor session)
 - `CLAUDE.md` — prime-wishes + phuc-cleanup loaded
 - `ripples/project.md` — project constraints
-- `skills/prime-browser.md` — browser agent skill (703 lines)
+- `skills/prime-browser.md` — browser agent skill
 - `recipes/*.recipe.json` — cached automation recipes
 - `primewiki/*.primewiki.json` — site knowledge graphs
