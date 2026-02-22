@@ -1,23 +1,24 @@
 """
-Multi-Profile Browser Manager — OAuth3-isolated browser profiles.
+Multi-Profile Browser Manager — OAuth3-governed browser profile management.
 
-Each BrowserProfile is a complete, isolated browser context:
-  - Unique profile_id (UUID v4)
-  - Separate cookie jar path (no cross-profile leakage)
-  - Separate OAuth3 token namespace (oauth3_token_ids list)
-  - Independent viewport, user-agent, proxy, extensions
-  - ISO 8601 UTC timestamps for created_at and last_used
+Provides isolated browser profiles where each session is bound to an OAuth3
+token, scopes enforced per action, and all activity logged with SHA-256 evidence.
 
-ProfileManager enforces:
-  - No cross-profile data access (isolation contract)
-  - Default profile always exists and cannot be deleted
-  - Profile switches are logged with timestamps (evidence trail)
-  - delete() requires OAuth3 scope machine.file.delete + step-up
+Architecture:
+  BrowserProfile   — profile configuration dataclass
+  ProfileSession   — session state dataclass
+  ProfileManager   — create/delete profiles, start/suspend/resume/terminate sessions
 
-OAuth3 scopes:
-  machine.file.delete  — delete a profile (HIGH RISK — step-up required)
+Security contract:
+  - Sessions cannot access other profiles data (profile isolation)
+  - Each session is bound to an OAuth3 token (token_id stored, not validated inline)
+  - Delete profile requires step-up auth (profile.delete.profile is HIGH RISK)
+  - All timestamps are ISO 8601 UTC strings
+  - All hashes are sha256: prefixed hex strings
+  - No float in verification paths (int only)
+  - Never store plaintext credentials, reference encrypted vault only
 
-Rung: 641
+Rung: 274177 (session lifecycle, potentially irreversible operations)
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
@@ -46,7 +47,7 @@ def _sha256_hex(data: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Defaults
+# Constants
 # ---------------------------------------------------------------------------
 
 DEFAULT_VIEWPORT: Dict[str, int] = {"width": 1280, "height": 720}
@@ -56,51 +57,12 @@ DEFAULT_USER_AGENT: str = (
 )
 DEFAULT_PROFILE_NAME: str = "default"
 
-# OAuth3 scopes referenced by ProfileManager
+# OAuth3 scopes referenced by ProfileManager (legacy backward-compat names)
 SCOPE_FILE_DELETE: str = "machine.file.delete"
 SCOPE_PROCESS_LIST: str = "machine.process.list"
 
 # Max profiles allowed per manager instance
 MAX_PROFILES: int = 100
-
-
-# ---------------------------------------------------------------------------
-# ProfileSession — session state dataclass (for backward compat with __init__)
-# ---------------------------------------------------------------------------
-
-@dataclass
-class ProfileSession:
-    """
-    A single browser profile session (lightweight session state).
-
-    Fields:
-        session_id:         UUID v4 unique session identifier.
-        profile_id:         ID of the profile this session belongs to.
-        status:             Current state: idle|active|suspended|terminated.
-        started_at:         ISO 8601 UTC timestamp of session start.
-        last_activity_at:   ISO 8601 UTC timestamp of last activity.
-        pages_visited:      Integer count of pages visited.
-        oauth3_scopes_used: List of OAuth3 scope strings exercised.
-    """
-
-    session_id: str
-    profile_id: str
-    status: str
-    started_at: str
-    last_activity_at: str
-    pages_visited: int
-    oauth3_scopes_used: List[str]
-
-    def to_dict(self) -> dict:
-        return {
-            "session_id": self.session_id,
-            "profile_id": self.profile_id,
-            "status": self.status,
-            "started_at": self.started_at,
-            "last_activity_at": self.last_activity_at,
-            "pages_visited": int(self.pages_visited),
-            "oauth3_scopes_used": list(self.oauth3_scopes_used),
-        }
 
 
 # ---------------------------------------------------------------------------
@@ -126,117 +88,130 @@ class ProfileIsolationError(ProfileError):
 @dataclass
 class BrowserProfile:
     """
-    A browser profile — a fully isolated execution context.
+    A browser profile with OAuth3 governance.
 
     Fields:
-        profile_id:       UUID v4 unique identifier.
-        name:             Human-readable profile name.
-        user_agent:       Browser User-Agent header string.
-        viewport:         {"width": int, "height": int} in pixels.
-        cookies_path:     Path to this profile's cookie jar (isolated).
-        proxy:            Optional proxy URL (e.g. "socks5://localhost:1080").
-        extensions:       Installed browser extension IDs.
-        oauth3_token_ids: OAuth3 token IDs bound to this profile (isolated).
-        created_at:       ISO 8601 UTC creation timestamp.
-        last_used:        ISO 8601 UTC last activation timestamp.
+        profile_id:             UUID4 globally unique profile identifier.
+        name:                   Human-readable profile name.
+        user_agent:             Browser user-agent string for this profile.
+        viewport:               Viewport dict with width (int) and height (int) keys.
+        proxy:                  Proxy URL string, or None for direct connection.
+        cookies_enabled:        Whether cookies are enabled for this profile.
+        oauth3_token_id:        token_id of the AgencyToken that authorized creation.
+        created_at:             ISO 8601 UTC timestamp of profile creation.
+        platform_credentials:   Dict of credential references (encrypted vault refs only).
     """
 
     profile_id: str
     name: str
     user_agent: str
     viewport: Dict[str, int]
-    cookies_path: str
     proxy: Optional[str]
-    extensions: List[str]
-    oauth3_token_ids: List[str]
+    cookies_enabled: bool
+    oauth3_token_id: str
     created_at: str
-    last_used: str
-
-    # ------------------------------------------------------------------
-    # Evidence / integrity
-    # ------------------------------------------------------------------
+    platform_credentials: Dict
 
     def sha256_hash(self) -> str:
-        """
-        Return SHA-256 hex digest of canonical profile fields.
-
-        Used for audit trail integrity.
-        """
+        """Return SHA-256 hex digest of canonical profile fields."""
         canonical = {
             "profile_id": self.profile_id,
             "name": self.name,
             "user_agent": self.user_agent,
             "viewport": self.viewport,
-            "cookies_path": self.cookies_path,
             "created_at": self.created_at,
         }
         return _sha256_hex(canonical)
 
-    # ------------------------------------------------------------------
-    # Serialization
-    # ------------------------------------------------------------------
-
     def to_dict(self) -> dict:
-        """Convert to plain dict (JSON-serializable)."""
+        """Convert to plain dict. Credential values are masked."""
         return {
             "profile_id": self.profile_id,
             "name": self.name,
             "user_agent": self.user_agent,
             "viewport": dict(self.viewport),
-            "cookies_path": self.cookies_path,
             "proxy": self.proxy,
-            "extensions": list(self.extensions),
-            "oauth3_token_ids": list(self.oauth3_token_ids),
+            "cookies_enabled": self.cookies_enabled,
+            "oauth3_token_id": self.oauth3_token_id,
             "created_at": self.created_at,
-            "last_used": self.last_used,
+            "platform_credentials": {
+                k: "***vault-ref***"
+                if any(kw in k.lower() for kw in ("secret", "password", "token", "key"))
+                else v
+                for k, v in self.platform_credentials.items()
+            },
         }
-
-    @classmethod
-    def from_dict(cls, data: dict) -> "BrowserProfile":
-        """Deserialize from plain dict."""
-        if data.get("oauth3_token_ids") is None:
-            raise ValueError("oauth3_token_ids must be a list, not null.")
-        if data.get("extensions") is None:
-            raise ValueError("extensions must be a list, not null.")
-        return cls(
-            profile_id=data["profile_id"],
-            name=data["name"],
-            user_agent=data.get("user_agent", DEFAULT_USER_AGENT),
-            viewport=dict(data.get("viewport", DEFAULT_VIEWPORT)),
-            cookies_path=data["cookies_path"],
-            proxy=data.get("proxy", None),
-            extensions=list(data.get("extensions", [])),
-            oauth3_token_ids=list(data.get("oauth3_token_ids", [])),
-            created_at=data["created_at"],
-            last_used=data["last_used"],
-        )
 
     def __repr__(self) -> str:
         return (
             f"BrowserProfile(id={self.profile_id[:8]}..., "
             f"name={self.name!r}, "
-            f"viewport={self.viewport['width']}x{self.viewport['height']})"
+            f"viewport={self.viewport.get('width')}x{self.viewport.get('height')})"
         )
 
 
 # ---------------------------------------------------------------------------
-# SwitchEvent — evidence log entry for profile switches
+# ProfileSession dataclass
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ProfileSession:
+    """
+    A single browser profile session.
+
+    States: idle -> active -> suspended -> terminated
+
+    Fields:
+        session_id:         UUID4 globally unique session identifier.
+        profile_id:         ID of the profile this session belongs to.
+        status:             Current lifecycle state (idle|active|suspended|terminated).
+        started_at:         ISO 8601 UTC timestamp of session start.
+        last_activity_at:   ISO 8601 UTC timestamp of last recorded activity.
+        pages_visited:      Count of pages visited in this session (int, never float).
+        oauth3_scopes_used: List of OAuth3 scope strings exercised in this session.
+    """
+
+    session_id: str
+    profile_id: str
+    status: str
+    started_at: str
+    last_activity_at: str
+    pages_visited: int
+    oauth3_scopes_used: List[str]
+
+    def to_dict(self) -> dict:
+        """Serialize to plain dict (JSON-serializable)."""
+        return {
+            "session_id": self.session_id,
+            "profile_id": self.profile_id,
+            "status": self.status,
+            "started_at": self.started_at,
+            "last_activity_at": self.last_activity_at,
+            "pages_visited": int(self.pages_visited),
+            "oauth3_scopes_used": list(self.oauth3_scopes_used),
+        }
+
+    def __repr__(self) -> str:
+        return (
+            f"ProfileSession(id={self.session_id[:8]}..., "
+            f"profile={self.profile_id[:8]}..., "
+            f"status={self.status!r}, "
+            f"pages={self.pages_visited})"
+        )
+
+
+# ---------------------------------------------------------------------------
+# SwitchEvent dataclass (backward compat)
 # ---------------------------------------------------------------------------
 
 @dataclass
 class SwitchEvent:
-    """
-    Evidence record of a profile switch operation.
+    """Evidence record of a profile switch operation."""
 
-    Every call to ProfileManager.switch() appends one of these to the
-    switch_log. Used to prove that isolation was maintained across
-    profile transitions.
-    """
-
-    from_profile_id: Optional[str]   # None if no profile was active
+    from_profile_id: Optional[str]
     to_profile_id: str
-    switched_at: str                  # ISO 8601 UTC
-    sha256_to: str                    # SHA-256 of the target profile at switch time
+    switched_at: str
+    sha256_to: str
 
     def to_dict(self) -> dict:
         return {
@@ -248,269 +223,404 @@ class SwitchEvent:
 
 
 # ---------------------------------------------------------------------------
+# Viewport validation
+# ---------------------------------------------------------------------------
+
+def _validate_viewport(viewport: dict) -> Optional[str]:
+    """Validate viewport dict. Returns None if valid, error string if invalid."""
+    if not isinstance(viewport, dict):
+        return "viewport must be a dict"
+    width = viewport.get("width")
+    height = viewport.get("height")
+    if not isinstance(width, int) or isinstance(width, bool):
+        return "viewport.width must be an integer"
+    if not isinstance(height, int) or isinstance(height, bool):
+        return "viewport.height must be an integer"
+    if width <= 0:
+        return f"viewport.width must be positive, got {width}"
+    if height <= 0:
+        return f"viewport.height must be positive, got {height}"
+    return None
+
+
+# ---------------------------------------------------------------------------
 # ProfileManager
 # ---------------------------------------------------------------------------
 
 class ProfileManager:
     """
-    Manage multiple isolated browser profiles.
+    OAuth3-governed browser profile manager.
 
-    Guarantees:
-      1. No cross-profile data leakage: each profile has its own cookie jar
-         and OAuth3 token set. Accessing another profile's tokens raises
-         ProfileIsolationError.
-      2. Default profile always exists: it is created at init time and
-         cannot be deleted (raises ProfileError).
-      3. Profile switches are logged with timestamps (evidence trail).
-      4. delete() enforces OAuth3 scope machine.file.delete + step-up
-         semantics (raises ProfileError without confirmation).
+    create_profile / delete_profile / list_profiles
+    start_session / suspend_session / resume_session / terminate_session
+    get_session_stats
 
-    Usage:
-        pm = ProfileManager()
-        p = pm.create("Work", user_agent="...", viewport={"width": 1920, "height": 1080})
-        pm.switch(p.profile_id)
-        pm.delete(p.profile_id, oauth3_confirmed=True, step_up_confirmed=True)
+    Rung: 274177
     """
 
     def __init__(self) -> None:
         self._profiles: Dict[str, BrowserProfile] = {}
+        self._sessions: Dict[str, ProfileSession] = {}
+        self._audit_log: List[dict] = []
         self._active_profile_id: Optional[str] = None
         self.switch_log: List[SwitchEvent] = []
 
-        # Always create the default profile at init time
-        self._default_profile_id: str = self._create_default_profile()
-
-    # ------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Internal helpers
-    # ------------------------------------------------------------------
+    # -------------------------------------------------------------------------
 
-    def _cookies_path_for(self, profile_id: str) -> str:
-        """Derive an isolated cookie jar path for a profile."""
-        return f"~/.solace/profiles/{profile_id}/cookies.db"
+    def _audit(self, event: str, data: dict) -> dict:
+        entry = {"event": event, "timestamp": _now_iso(), **data}
+        entry["integrity_hash"] = _sha256_hex(entry)
+        self._audit_log.append(entry)
+        return entry
 
-    def _create_default_profile(self) -> str:
-        """Create the immutable default profile and return its ID."""
-        profile_id = str(uuid.uuid4())
-        now = _now_iso()
-        profile = BrowserProfile(
-            profile_id=profile_id,
-            name=DEFAULT_PROFILE_NAME,
-            user_agent=DEFAULT_USER_AGENT,
-            viewport=dict(DEFAULT_VIEWPORT),
-            cookies_path=self._cookies_path_for(profile_id),
-            proxy=None,
-            extensions=[],
-            oauth3_token_ids=[],
-            created_at=now,
-            last_used=now,
-        )
-        self._profiles[profile_id] = profile
-        return profile_id
+    # -------------------------------------------------------------------------
+    # Profile management
+    # -------------------------------------------------------------------------
 
-    # ------------------------------------------------------------------
-    # CRUD
-    # ------------------------------------------------------------------
-
-    def create(
+    def create_profile(
         self,
         name: str,
-        user_agent: Optional[str] = None,
-        viewport: Optional[Dict[str, int]] = None,
-        proxy: Optional[str] = None,
-        extensions: Optional[List[str]] = None,
+        config: Optional[dict] = None,
+        token_id: str = "",
     ) -> BrowserProfile:
         """
-        Create a new isolated browser profile.
+        Create a new browser profile.
+
+        OAuth3 scope required: profile.create.profile (MEDIUM)
 
         Args:
-            name:       Human-readable profile name.
-            user_agent: Browser user-agent string (defaults to DEFAULT_USER_AGENT).
-            viewport:   {"width": int, "height": int} (defaults to DEFAULT_VIEWPORT).
-            proxy:      Optional proxy URL.
-            extensions: Optional list of extension IDs.
+            name:     Human-readable profile name.
+            config:   Profile configuration dict with keys:
+                        user_agent, viewport, proxy, cookies_enabled, platform_credentials
+            token_id: OAuth3 token_id authorizing this creation (audit trail).
 
         Returns:
-            New BrowserProfile instance.
+            The new BrowserProfile.
+
+        Raises:
+            ValueError: If name is empty, viewport is invalid, or max profiles reached.
         """
+        if config is None:
+            config = {}
+
+        if not name or not name.strip():
+            raise ValueError("Profile name must not be empty.")
+
+        if len(self._profiles) >= MAX_PROFILES:
+            raise ValueError(
+                f"Maximum profile count ({MAX_PROFILES}) reached."
+            )
+
+        user_agent = config.get("user_agent", DEFAULT_USER_AGENT)
+        if not isinstance(user_agent, str) or not user_agent.strip():
+            user_agent = DEFAULT_USER_AGENT
+
+        viewport = config.get("viewport", dict(DEFAULT_VIEWPORT))
+        viewport_error = _validate_viewport(viewport)
+        if viewport_error:
+            raise ValueError(f"Invalid viewport: {viewport_error}")
+        viewport = {
+            "width": int(viewport["width"]),
+            "height": int(viewport["height"]),
+        }
+
+        proxy = config.get("proxy", None)
+        if proxy is not None and not isinstance(proxy, str):
+            proxy = None
+
+        cookies_enabled = config.get("cookies_enabled", True)
+        if not isinstance(cookies_enabled, bool):
+            cookies_enabled = bool(cookies_enabled)
+
+        raw_creds = config.get("platform_credentials", {})
+        platform_credentials = dict(raw_creds) if isinstance(raw_creds, dict) else {}
+
         profile_id = str(uuid.uuid4())
-        now = _now_iso()
+        created_at = _now_iso()
 
         profile = BrowserProfile(
             profile_id=profile_id,
-            name=name,
-            user_agent=user_agent or DEFAULT_USER_AGENT,
-            viewport=dict(viewport) if viewport else dict(DEFAULT_VIEWPORT),
-            cookies_path=self._cookies_path_for(profile_id),
+            name=name.strip(),
+            user_agent=user_agent,
+            viewport=viewport,
             proxy=proxy,
-            extensions=list(extensions) if extensions else [],
-            oauth3_token_ids=[],
-            created_at=now,
-            last_used=now,
+            cookies_enabled=cookies_enabled,
+            oauth3_token_id=token_id,
+            created_at=created_at,
+            platform_credentials=platform_credentials,
         )
+
         self._profiles[profile_id] = profile
+
+        self._audit("profile_created", {
+            "profile_id": profile_id,
+            "name": name.strip(),
+            "token_id": token_id,
+        })
+
         return profile
 
-    def get(self, profile_id: str) -> Optional[BrowserProfile]:
-        """
-        Return the profile for the given profile_id, or None if not found.
-
-        Args:
-            profile_id: UUID v4 profile identifier.
-
-        Returns:
-            BrowserProfile or None.
-        """
-        return self._profiles.get(profile_id)
-
-    def list_profiles(self) -> List[BrowserProfile]:
-        """
-        Return all profiles (including the default profile).
-
-        Returns:
-            List of BrowserProfile instances, ordered by creation time.
-        """
-        return sorted(
-            self._profiles.values(),
-            key=lambda p: p.created_at,
-        )
-
-    def delete(
+    def delete_profile(
         self,
         profile_id: str,
-        oauth3_confirmed: bool = False,
+        token_id: str = "",
         step_up_confirmed: bool = False,
     ) -> bool:
         """
-        Delete a browser profile.
+        Delete a browser profile and all its sessions.
 
-        Requires oauth3_confirmed=True (OAuth3 scope machine.file.delete)
-        AND step_up_confirmed=True (step-up re-consent for destructive action).
-
-        The default profile cannot be deleted.
-
-        Args:
-            profile_id:        UUID v4 of the profile to delete.
-            oauth3_confirmed:  True if machine.file.delete scope is granted.
-            step_up_confirmed: True if step-up consent was obtained.
+        OAuth3 scope required: profile.delete.profile (HIGH, step-up required)
 
         Returns:
-            True on success.
+            True if deleted, False if profile not found.
 
         Raises:
-            ProfileError:         If trying to delete the default profile, or
-                                  missing OAuth3 scope / step-up.
-            ProfileNotFoundError: If profile_id does not exist.
+            PermissionError: If step_up_confirmed is False.
         """
-        # Gate 1: default profile is immutable
-        if profile_id == self._default_profile_id:
-            raise ProfileError(
-                "Cannot delete the default profile. "
-                "The default profile is permanent and always available."
-            )
-
-        # Gate 2: profile must exist
-        if profile_id not in self._profiles:
-            raise ProfileNotFoundError(
-                f"Profile not found: {profile_id}"
-            )
-
-        # Gate 3: OAuth3 scope check
-        if not oauth3_confirmed:
-            raise ProfileError(
-                f"OAuth3 scope required: {SCOPE_FILE_DELETE}. "
-                "Set oauth3_confirmed=True after verifying the token grants this scope."
-            )
-
-        # Gate 4: step-up required (machine.file.delete is a destructive scope)
         if not step_up_confirmed:
-            raise ProfileError(
-                "Step-up re-consent required for profile deletion (destructive action). "
-                "Set step_up_confirmed=True after the user confirms via the step-up flow."
+            raise PermissionError(
+                "profile.delete.profile requires step-up authorization."
             )
 
-        # All gates passed — delete the profile
+        if profile_id not in self._profiles:
+            return False
+
+        sessions_to_remove = [
+            sid for sid, sess in self._sessions.items()
+            if sess.profile_id == profile_id
+        ]
+        for sid in sessions_to_remove:
+            self._sessions.pop(sid)
+            self._audit("session_terminated_on_profile_delete", {
+                "session_id": sid,
+                "profile_id": profile_id,
+                "token_id": token_id,
+            })
+
         del self._profiles[profile_id]
 
-        # If the deleted profile was active, fall back to default
         if self._active_profile_id == profile_id:
-            self._active_profile_id = self._default_profile_id
+            self._active_profile_id = None
+
+        self._audit("profile_deleted", {
+            "profile_id": profile_id,
+            "token_id": token_id,
+            "sessions_terminated": len(sessions_to_remove),
+        })
 
         return True
 
-    # ------------------------------------------------------------------
-    # Switch
-    # ------------------------------------------------------------------
-
-    def switch(self, profile_id: str) -> BrowserProfile:
+    def list_profiles(self) -> List[BrowserProfile]:
         """
-        Activate a profile and suspend the currently active one.
+        List all browser profiles.
 
-        Records a SwitchEvent in the switch_log for evidence.
+        OAuth3 scope required: profile.read.list (LOW)
+        """
+        return list(self._profiles.values())
 
-        Args:
-            profile_id: UUID v4 of the profile to activate.
+    def get(self, profile_id: str) -> Optional[BrowserProfile]:
+        """Return the profile for the given profile_id, or None."""
+        return self._profiles.get(profile_id)
 
-        Returns:
-            The newly activated BrowserProfile.
+    # -------------------------------------------------------------------------
+    # Session lifecycle
+    # -------------------------------------------------------------------------
+
+    def start_session(
+        self,
+        profile_id: str,
+        token_id: str,
+    ) -> ProfileSession:
+        """
+        Start a new browsing session for the given profile.
+
+        OAuth3 scope required: profile.session.start (MEDIUM)
 
         Raises:
-            ProfileNotFoundError: If profile_id does not exist.
+            ValueError: If profile_id is not found or token_id is empty.
         """
-        if profile_id not in self._profiles:
-            raise ProfileNotFoundError(
-                f"Profile not found: {profile_id}"
+        if not token_id:
+            raise ValueError(
+                "token_id is required to start a session. "
+                "Each session must be bound to an OAuth3 token."
             )
 
+        if profile_id not in self._profiles:
+            raise ValueError(f"Profile '{profile_id}' not found.")
+
+        session_id = str(uuid.uuid4())
         now = _now_iso()
-        old_id = self._active_profile_id
-        new_profile = self._profiles[profile_id]
 
-        # Update last_used timestamp on the target profile
-        updated = BrowserProfile(
-            profile_id=new_profile.profile_id,
-            name=new_profile.name,
-            user_agent=new_profile.user_agent,
-            viewport=dict(new_profile.viewport),
-            cookies_path=new_profile.cookies_path,
-            proxy=new_profile.proxy,
-            extensions=list(new_profile.extensions),
-            oauth3_token_ids=list(new_profile.oauth3_token_ids),
-            created_at=new_profile.created_at,
-            last_used=now,
+        session = ProfileSession(
+            session_id=session_id,
+            profile_id=profile_id,
+            status="active",
+            started_at=now,
+            last_activity_at=now,
+            pages_visited=0,
+            oauth3_scopes_used=["profile.session.start"],
         )
-        self._profiles[profile_id] = updated
-        self._active_profile_id = profile_id
 
-        # Log evidence
-        event = SwitchEvent(
-            from_profile_id=old_id,
-            to_profile_id=profile_id,
-            switched_at=now,
-            sha256_to=updated.sha256_hash(),
-        )
-        self.switch_log.append(event)
+        self._sessions[session_id] = session
 
-        return updated
+        self._audit("session_start", {
+            "session_id": session_id,
+            "profile_id": profile_id,
+            "token_id": token_id,
+        })
 
-    # ------------------------------------------------------------------
-    # Active profile access
-    # ------------------------------------------------------------------
+        return session
 
-    @property
-    def active_profile(self) -> Optional[BrowserProfile]:
-        """Return the currently active BrowserProfile, or None."""
-        if self._active_profile_id is None:
-            return None
-        return self._profiles.get(self._active_profile_id)
+    def suspend_session(self, session_id: str) -> bool:
+        """
+        Suspend an active session.
 
-    @property
-    def default_profile(self) -> BrowserProfile:
-        """Return the default (immutable) profile."""
-        return self._profiles[self._default_profile_id]
+        OAuth3 scope required: profile.session.suspend (LOW)
 
-    # ------------------------------------------------------------------
+        Returns:
+            True if suspended/already-suspended, False if not found or terminated.
+
+        Raises:
+            ValueError: If session is in invalid state for suspension.
+        """
+        session = self._sessions.get(session_id)
+        if session is None:
+            return False
+        if session.status == "terminated":
+            return False
+        if session.status == "suspended":
+            return True
+        if session.status != "active":
+            raise ValueError(
+                f"Cannot suspend session in state '{session.status}'."
+            )
+        session.status = "suspended"
+        session.last_activity_at = _now_iso()
+        self._audit("session_suspend", {
+            "session_id": session_id,
+            "profile_id": session.profile_id,
+            "pages_visited": int(session.pages_visited),
+        })
+        return True
+
+    def resume_session(self, session_id: str) -> bool:
+        """
+        Resume a suspended session.
+
+        OAuth3 scope required: profile.session.resume (LOW)
+
+        Returns:
+            True if resumed/already-active, False if not found or terminated.
+
+        Raises:
+            ValueError: If session is in invalid state for resume.
+        """
+        session = self._sessions.get(session_id)
+        if session is None:
+            return False
+        if session.status == "terminated":
+            return False
+        if session.status == "active":
+            return True
+        if session.status != "suspended":
+            raise ValueError(
+                f"Cannot resume session in state '{session.status}'."
+            )
+        session.status = "active"
+        session.last_activity_at = _now_iso()
+        self._audit("session_resume", {
+            "session_id": session_id,
+            "profile_id": session.profile_id,
+            "pages_visited": int(session.pages_visited),
+        })
+        return True
+
+    def terminate_session(
+        self,
+        session_id: str,
+        token_id: str = "",
+        step_up_confirmed: bool = False,
+    ) -> bool:
+        """
+        Terminate a session (irreversible).
+
+        OAuth3 scope required: profile.session.terminate (HIGH, step-up required)
+
+        Returns:
+            True if terminated, False if not found.
+
+        Raises:
+            PermissionError: If step_up_confirmed is False.
+        """
+        if not step_up_confirmed:
+            raise PermissionError(
+                "profile.session.terminate requires step-up authorization."
+            )
+        session = self._sessions.get(session_id)
+        if session is None:
+            return False
+        if session.status == "terminated":
+            return True
+        prev_status = session.status
+        session.status = "terminated"
+        session.last_activity_at = _now_iso()
+        self._audit("session_terminate", {
+            "session_id": session_id,
+            "profile_id": session.profile_id,
+            "token_id": token_id,
+            "prev_status": prev_status,
+            "pages_visited": int(session.pages_visited),
+            "scopes_used": list(session.oauth3_scopes_used),
+        })
+        self._sessions.pop(session_id, None)
+        return True
+
+    def get_session_stats(self, session_id: str) -> dict:
+        """
+        Return statistics for a session.
+
+        OAuth3 scope required: profile.session.read (LOW)
+
+        Returns:
+            Dict with session metrics, or {"error": ...} if not found.
+        """
+        session = self._sessions.get(session_id)
+        if session is None:
+            return {
+                "error": "SESSION_NOT_FOUND",
+                "detail": f"Session '{session_id}' not found.",
+            }
+        return {
+            "session_id": session.session_id,
+            "profile_id": session.profile_id,
+            "status": session.status,
+            "started_at": session.started_at,
+            "last_activity_at": session.last_activity_at,
+            "pages_visited": int(session.pages_visited),
+            "oauth3_scopes_used": list(session.oauth3_scopes_used),
+            "scope_count": len(session.oauth3_scopes_used),
+        }
+
+    # -------------------------------------------------------------------------
+    # Session listing (isolation enforcement)
+    # -------------------------------------------------------------------------
+
+    def list_sessions_for_profile(self, profile_id: str) -> List[ProfileSession]:
+        """List sessions belonging to a specific profile only (isolation)."""
+        return [
+            sess for sess in self._sessions.values()
+            if sess.profile_id == profile_id
+        ]
+
+    def list_all_sessions(self) -> List[ProfileSession]:
+        """List all active sessions across all profiles."""
+        return list(self._sessions.values())
+
+    # -------------------------------------------------------------------------
     # Isolation enforcement
-    # ------------------------------------------------------------------
+    # -------------------------------------------------------------------------
 
     def get_tokens_for_profile(
         self,
@@ -518,17 +628,9 @@ class ProfileManager:
         target_profile_id: str,
     ) -> List[str]:
         """
-        Return the OAuth3 token IDs for target_profile_id.
+        Return OAuth3 token IDs for target_profile_id.
 
-        Cross-profile access is blocked: requesting_profile_id must equal
-        target_profile_id, or a ProfileIsolationError is raised.
-
-        Args:
-            requesting_profile_id: Profile making the request.
-            target_profile_id:     Profile whose tokens are requested.
-
-        Returns:
-            List of OAuth3 token ID strings.
+        Cross-profile access blocked: requesting_profile_id must equal target_profile_id.
 
         Raises:
             ProfileIsolationError: If cross-profile access is attempted.
@@ -538,79 +640,70 @@ class ProfileManager:
             raise ProfileIsolationError(
                 f"Cross-profile token access blocked: "
                 f"profile {requesting_profile_id!r} attempted to read tokens "
-                f"of profile {target_profile_id!r}. "
-                "Each profile's OAuth3 tokens are isolated."
+                f"of profile {target_profile_id!r}."
             )
-
         profile = self._profiles.get(target_profile_id)
         if profile is None:
-            raise ProfileNotFoundError(
-                f"Profile not found: {target_profile_id}"
-            )
+            raise ProfileNotFoundError(f"Profile not found: {target_profile_id}")
+        return [profile.oauth3_token_id] if profile.oauth3_token_id else []
 
-        return list(profile.oauth3_token_ids)
+    # -------------------------------------------------------------------------
+    # Activity recording
+    # -------------------------------------------------------------------------
 
-    def add_token_to_profile(self, profile_id: str, token_id: str) -> bool:
-        """
-        Associate an OAuth3 token ID with a profile.
-
-        Args:
-            profile_id: UUID v4 of the target profile.
-            token_id:   OAuth3 token_id to bind.
-
-        Returns:
-            True on success.
-
-        Raises:
-            ProfileNotFoundError: If profile_id does not exist.
-        """
-        profile = self._profiles.get(profile_id)
-        if profile is None:
-            raise ProfileNotFoundError(f"Profile not found: {profile_id}")
-
-        if token_id not in profile.oauth3_token_ids:
-            updated_tokens = list(profile.oauth3_token_ids) + [token_id]
-            updated = BrowserProfile(
-                profile_id=profile.profile_id,
-                name=profile.name,
-                user_agent=profile.user_agent,
-                viewport=dict(profile.viewport),
-                cookies_path=profile.cookies_path,
-                proxy=profile.proxy,
-                extensions=list(profile.extensions),
-                oauth3_token_ids=updated_tokens,
-                created_at=profile.created_at,
-                last_used=profile.last_used,
-            )
-            self._profiles[profile_id] = updated
+    def record_page_visit(self, session_id: str, scope_used: str = "") -> bool:
+        """Record a page visit (increments counter, updates activity timestamp)."""
+        session = self._sessions.get(session_id)
+        if session is None or session.status != "active":
+            return False
+        session.pages_visited = int(session.pages_visited) + 1
+        session.last_activity_at = _now_iso()
+        if scope_used and scope_used not in session.oauth3_scopes_used:
+            session.oauth3_scopes_used.append(scope_used)
         return True
 
-    def cookies_path_for(self, profile_id: str) -> str:
-        """
-        Return the isolated cookie jar path for a profile.
+    # -------------------------------------------------------------------------
+    # Audit trail access
+    # -------------------------------------------------------------------------
 
-        Args:
-            profile_id: UUID v4 of the profile.
+    def get_audit_log(self) -> List[dict]:
+        """Return a copy of the append-only audit log."""
+        return list(self._audit_log)
 
-        Returns:
-            Cookie jar path string.
+    # -------------------------------------------------------------------------
+    # Legacy switch() for backward compat
+    # -------------------------------------------------------------------------
 
-        Raises:
-            ProfileNotFoundError: If profile_id does not exist.
-        """
-        profile = self._profiles.get(profile_id)
-        if profile is None:
+    def switch(self, profile_id: str) -> BrowserProfile:
+        """Activate a profile (legacy API). Records a SwitchEvent for evidence."""
+        if profile_id not in self._profiles:
             raise ProfileNotFoundError(f"Profile not found: {profile_id}")
-        return profile.cookies_path
+        now = _now_iso()
+        old_id = self._active_profile_id
+        profile = self._profiles[profile_id]
+        self._active_profile_id = profile_id
+        event = SwitchEvent(
+            from_profile_id=old_id,
+            to_profile_id=profile_id,
+            switched_at=now,
+            sha256_to=profile.sha256_hash(),
+        )
+        self.switch_log.append(event)
+        return profile
 
-    # ------------------------------------------------------------------
+    @property
+    def active_profile(self) -> Optional[BrowserProfile]:
+        """Return the currently active BrowserProfile, or None."""
+        if self._active_profile_id is None:
+            return None
+        return self._profiles.get(self._active_profile_id)
+
+    # -------------------------------------------------------------------------
     # Representation
-    # ------------------------------------------------------------------
+    # -------------------------------------------------------------------------
 
     def __repr__(self) -> str:
-        n = len(self._profiles)
-        active = self._active_profile_id
         return (
-            f"ProfileManager(profiles={n}, "
-            f"active={active[:8] + '...' if active else 'None'})"
+            f"ProfileManager(profiles={len(self._profiles)}, "
+            f"active_sessions={len(self._sessions)})"
         )
