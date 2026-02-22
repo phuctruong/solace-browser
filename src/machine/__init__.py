@@ -53,6 +53,7 @@ from src.machine.scopes import (
     SCOPE_GIT_READ,
     SCOPE_GIT_WRITE,
     SCOPE_TUNNEL_MANAGE,
+    SCOPE_TUNNEL_OPEN,
 )
 
 from src.machine import file_browser
@@ -84,6 +85,7 @@ __all__ = [
     "SCOPE_GIT_READ",
     "SCOPE_GIT_WRITE",
     "SCOPE_TUNNEL_MANAGE",
+    "SCOPE_TUNNEL_OPEN",
     # Sub-modules
     "file_browser",
     "terminal",

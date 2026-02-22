@@ -144,6 +144,13 @@ MACHINE_SCOPES: Dict[str, Dict] = {
         "risk_level": "high",
         "destructive": True,
     },
+
+    "machine.tunnel.open": {
+        "platform": "machine",
+        "description": "Open a WebSocket reverse tunnel session to solaceagi.com (persistent connection)",
+        "risk_level": "high",
+        "destructive": True,
+    },
 }
 
 
@@ -220,3 +227,4 @@ SCOPE_INSTALL_PACKAGE = "machine.install.package"
 SCOPE_GIT_READ = "machine.git.read"
 SCOPE_GIT_WRITE = "machine.git.write"
 SCOPE_TUNNEL_MANAGE = "machine.tunnel.manage"
+SCOPE_TUNNEL_OPEN = "machine.tunnel.open"
