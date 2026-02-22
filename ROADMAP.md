@@ -433,7 +433,7 @@ Acceptance tests (Rung 641):
 
 Files to read first:
   - solace_browser_server.py (understand existing run-recipe + evidence bundle structure)
-  - /home/phuc/projects/pzip/pzip/__init__.py or pzip.py (understand Python API)
+  - the PZip module Python API (understand Python integration)
   - recipes/linkedin-discover-posts.recipe.json (reference recipe format)
 
 Rung: 641

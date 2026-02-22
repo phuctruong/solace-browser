@@ -57,7 +57,7 @@ MAGIC_WORD_MAP:
   leaf_words:
     SESSION_ID:   "UUID identifying a browser session — groups all evidence bundles from one user session (→ section 5.1)"
     ACTION_ID:    "Monotonic integer + UUID — uniquely identifies one browser action within a session (→ section 5.1)"
-    PZIP_RATIO:   "Expected compression ratio ~66:1 for DOM snapshots + screenshots — enables infinite evidence retention (→ section 7.1)"
+    PZIP_RATIO:   "Industry-leading compression ratio for DOM snapshots + screenshots — enables infinite evidence retention (→ section 7.1)"
     REPLAY_FIDELITY: "Guarantee that decompressing an evidence bundle reproduces the exact original artifacts (→ section 7.4)"
 
   # PRIME FACTORIZATIONS
@@ -256,10 +256,10 @@ pzip_integration:
   purpose: "Deterministic compression for infinite evidence retention at negligible storage cost"
 
   compression_targets:
-    dom_snapshots: "~66:1 ratio (structured JSON → highly repetitive)"
-    screenshots:   "~8:1 ratio (PNG already compressed; pzip adds structural analysis)"
-    diff_files:    "~20:1 ratio (JSON diff with repeated field names)"
-    bundle_total:  "~30:1 ratio across mixed content"
+    dom_snapshots: "industry-leading compression ratio (structured JSON content)"
+    screenshots:   "additional compression applied to PNG content"
+    diff_files:    "high compression on diff files with repeated field names"
+    bundle_total:  "overall industry-leading compression across mixed content"
 
   economics:
     uncompressed_per_action: "~2 MB (before+after snapshots + screenshots)"

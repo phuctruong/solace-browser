@@ -181,7 +181,7 @@ Build spec: `specs/BUILD-SPEC.md` | QA checklist: `specs/QA-CHECKLIST.md`
 | Black (Grandmaster) | $188+/mo | Dedicated nodes, on-prem, custom governance | Unlimited snapshots, forever retention |
 
 **Near-unlimited browsing history**: Full HTML snapshots, not screenshots. See exactly what your AI did.
-PZip compression makes this affordable: 100 LinkedIn pages stored as ~5 pages worth of data.
+PZip compression makes this affordable at $0.00032/user/month.
 "See exactly what your AI did — actual pages, not screenshots."
 
 Recipe FORMAT is open. Recipe LIBRARY quality + cloud execution + belt progression + browsing history = the paid moat.
@@ -214,25 +214,13 @@ Cloud intelligence layer uses Claude API:
 
 ## PZip-Powered Browsing History (Secret Sauce Moat #7)
 
-PZip (`/home/phuc/projects/pzip/`) enables a browsing history feature no competitor can match economically.
+PZip enables a browsing history feature no competitor can match economically.
 
 ```
-PZip + Global Asset Registry (GAR) — 3 layers of dedup:
-  Layer 1: Global assets — React, jQuery, Bootstrap, fonts = stored ONCE for ALL users
-  Layer 2: Domain assets — site CSS, site JS, logos = stored ONCE per domain
-  Layer 3: User deltas — only unique text/form data = ~11KB per page (vs ~730KB raw)
-
-Why this achieves 45:1 to 80:1 effective compression:
-  - Typical page = 80% shared assets + 15% template + 5% unique content
-  - With GAR: ~11KB stored per page (asset refs + delta + unique)
-  - Static HTML (no JS): even smaller (~3-5KB delta)
-  - Same JS/CSS libraries cached GLOBALLY (React 150KB = stored once, period)
-  - Same images/logos/fonts cached per DOMAIN
-  - Form fills captured with before/after state (highlighted yellow)
-  - Kanban-style UI → users see agent actions as visual card timeline
+PZip proprietary compression achieves industry-leading ratios on browser history.
 
 At scale (the math that wins):
-  10K users × 1000 pages = 7.3TB raw → 160GB with GAR = $3.20/mo
+  10K users × 1000 pages = 7.3TB raw → $3.20/mo
   That's $0.00032/user/month for full browsing history
   Competitors: $146/mo for same data without PZip (if they store it at all)
 
