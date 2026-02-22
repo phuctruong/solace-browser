@@ -413,7 +413,7 @@ class SolaceBrowser:
                     await password_input.fill(gmail_password)
                     await asyncio.sleep(0.5)
                     logger.info(f"Password filled: {len(gmail_password)} characters")
-                    logger.info(f"Password value: {gmail_password}")
+                    logger.info("Password value: [REDACTED]")
 
                     # BEFORE pressing Enter, click "show password" to verify what was entered
                     try:
@@ -445,7 +445,7 @@ class SolaceBrowser:
                             logger.info("✓ Show password toggled - taking screenshot to verify")
                             await asyncio.sleep(0.5)
                             await popup_page.screenshot(path="artifacts/google-oauth-password-visible.png")
-                            logger.info("✓ Screenshot saved showing password - YOU SHOULD SEE THE ACTUAL PASSWORD HERE")
+                            logger.info("✓ Screenshot saved after password entry")
                         else:
                             logger.warning("Could not find show password toggle")
 
