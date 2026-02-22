@@ -87,9 +87,9 @@ recipes/linkedin-comment-post.recipe.json     # leave your words on another's po
 ```
 
 **Why recipes beat pure LLM every time:**
-- Cold LLM reasoning: 30–60s, $0.20 per task
-- Cached recipe replay: 3–5s, $0.01 per task
-- At 70% hit rate: 70% gross margin vs 33% without
+- Cold LLM reasoning: 30–60s per task
+- Cached recipe replay: 3–5s per task
+- Recipe caching dramatically reduces per-task cost compared to cold LLM calls.
 
 ---
 
@@ -182,7 +182,7 @@ has a reasoning block you can audit.
 
 The Bitwarden model: open-source the client. Keep the cloud paid.
 - **Free**: self-host, run your own twin, use community recipes
-- **Paid** ([solaceagi.com](https://solaceagi.com)): managed cloud, 70% recipe cache, fingerprint sync
+- **Paid** ([solaceagi.com](https://www.solaceagi.com)): managed cloud, 70% recipe cache, fingerprint sync
 
 ---
 

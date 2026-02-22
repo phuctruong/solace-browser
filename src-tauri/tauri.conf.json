@@ -130,7 +130,7 @@
     "updater": {
       "active": false,
       "dialog": true,
-      "endpoints": ["https://solaceagi.com/api/releases/latest"],
+      "endpoints": ["https://www.solaceagi.com/api/releases/latest"],
       "pubkey": ""
     },
     "windows": [

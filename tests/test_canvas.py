@@ -78,7 +78,7 @@ from canvas.a2ui import (
 def _make_render_token():
     """Token with canvas.overlay.render scope."""
     return AgencyToken.create(
-        issuer="https://solaceagi.com",
+        issuer="https://www.solaceagi.com",
         subject="test-user",
         scopes=[SCOPE_CANVAS_RENDER],
         intent="canvas overlay test",
@@ -88,7 +88,7 @@ def _make_render_token():
 def _make_interact_token():
     """Token with canvas.overlay.render + canvas.overlay.interact scopes."""
     return AgencyToken.create(
-        issuer="https://solaceagi.com",
+        issuer="https://www.solaceagi.com",
         subject="test-user",
         scopes=[SCOPE_CANVAS_RENDER, SCOPE_CANVAS_INTERACT],
         intent="canvas interact test",
@@ -98,7 +98,7 @@ def _make_interact_token():
 def _make_a2ui_token():
     """Token with canvas.a2ui.communicate scope."""
     return AgencyToken.create(
-        issuer="https://solaceagi.com",
+        issuer="https://www.solaceagi.com",
         subject="test-user",
         scopes=[SCOPE_A2UI_COMMUNICATE],
         intent="a2ui communicate test",
@@ -108,7 +108,7 @@ def _make_a2ui_token():
 def _make_a2ui_input_token():
     """Token with canvas.a2ui.communicate + canvas.a2ui.input scopes."""
     return AgencyToken.create(
-        issuer="https://solaceagi.com",
+        issuer="https://www.solaceagi.com",
         subject="test-user",
         scopes=[SCOPE_A2UI_COMMUNICATE, SCOPE_A2UI_INPUT],
         intent="a2ui input test",
@@ -118,7 +118,7 @@ def _make_a2ui_input_token():
 def _make_full_token():
     """Token with all canvas scopes."""
     return AgencyToken.create(
-        issuer="https://solaceagi.com",
+        issuer="https://www.solaceagi.com",
         subject="test-user",
         scopes=list(ALL_CANVAS_SCOPES),
         intent="full canvas test",
@@ -745,7 +745,7 @@ class TestLiveCanvasOAuth3:
     def test_attach_requires_render_scope(self):
         """Attaching without canvas.overlay.render must raise PermissionError."""
         token = AgencyToken.create(
-            issuer="https://solaceagi.com",
+            issuer="https://www.solaceagi.com",
             subject="test",
             scopes=[SCOPE_A2UI_COMMUNICATE],  # wrong scope
             intent="test",
@@ -756,7 +756,7 @@ class TestLiveCanvasOAuth3:
 
     def test_highlight_without_render_scope_raises(self):
         token = AgencyToken.create(
-            issuer="https://solaceagi.com",
+            issuer="https://www.solaceagi.com",
             subject="test",
             scopes=[SCOPE_A2UI_COMMUNICATE],
             intent="test",
@@ -1132,7 +1132,7 @@ class TestA2UIBridgeOAuth3:
 
     def test_send_status_without_communicate_scope_raises(self):
         token = AgencyToken.create(
-            issuer="https://solaceagi.com",
+            issuer="https://www.solaceagi.com",
             subject="test",
             scopes=[SCOPE_CANVAS_RENDER],  # wrong scope
             intent="test",

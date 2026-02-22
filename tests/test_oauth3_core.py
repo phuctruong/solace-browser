@@ -89,7 +89,7 @@ from oauth3.revocation import (
 # Constants for test data
 # ---------------------------------------------------------------------------
 
-ISSUER = "https://solaceagi.com"
+ISSUER = "https://www.solaceagi.com"
 SUBJECT = "user:phuc@example.com"
 LOW_SCOPE = "linkedin.read.feed"
 HIGH_SCOPE = "linkedin.post.text"

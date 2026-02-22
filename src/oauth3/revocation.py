@@ -413,7 +413,7 @@ def list_all_tokens(token_dir=None) -> List[AgencyToken]:
                 data["step_up_required_for"] = [s for s in scopes if s in HIGH_RISK_SCOPES]
             # Handle files saved before issuer field existed (legacy)
             if "issuer" not in data:
-                data["issuer"] = "https://solaceagi.com"
+                data["issuer"] = "https://www.solaceagi.com"
             token = AgencyToken.from_dict(data)
             tokens.append(token)
         except (json.JSONDecodeError, OSError, ValueError, KeyError):

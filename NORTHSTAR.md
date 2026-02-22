@@ -55,9 +55,7 @@ OAuth3 Spec (OPEN STANDARD)
 Standard → Ecosystem → Revenue
 ```
 
-**Why this wins**: Token-revenue vendors (OpenAI, Anthropic, Google) are structurally
-incentivized to keep token usage HIGH. OAuth3 reduces token usage to near-zero via
-recipe reuse. They CANNOT implement it without cannibalizing their revenue. We can.
+**Why this wins**: Model-neutral architecture provides a structural advantage over model-specific platforms. OAuth3 reduces token usage to near-zero via recipe reuse, creating durable economic efficiency that complements open standards adoption.
 
 **The moat**: First open standard for AI agency delegation. Anyone who implements it
 validates our position. Anyone who doesn't is non-compliant.
@@ -72,7 +70,7 @@ SolaceBrowser is **Software 5.0 for personal web automation**:
 - Captured recipes + evidence bundles → **compiled output**
 - Stillwater verification (recipe hit rate + task success) → **CI/CD**
 
-The North Star is not the features. The North Star is the **recipe hit rate** — because at 70% hit rate, COGS = $5.75/user/month. Below 70%, the economics break. Recipes ARE the moat. Recipes ARE the intelligence layer persisted outside the LLM session.
+The North Star is not the features. The North Star is the **recipe hit rate** — because recipe caching is the key to economic viability. Below a critical hit rate, the economics break. Recipes ARE the moat. Recipes ARE the intelligence layer persisted outside the LLM session.
 
 > *"Log in once. Solace handles the rest — checking your email, applying to jobs, and monitoring your feeds while you sleep."*
 
@@ -89,7 +87,7 @@ LOCAL  → Electron browser wrapping persistent_browser_server.py
 
 CLOUD  → Same persistent_browser_server.py running headless on solaceagi.com
          Your sessions + fingerprint, running tasks 24/7 while you sleep
-         Recipe system: 70% cache hit → $0.01/task vs $0.20 for competitors
+         Recipe caching dramatically reduces per-task cost compared to cold LLM calls.
 ```
 
 **Seven moats (all competitors have 0–2):**
@@ -101,16 +99,16 @@ CLOUD  → Same persistent_browser_server.py running headless on solaceagi.com
 6. **OAuth3 protocol** → scoped consent, revocation, audit trail, step-up auth ← UNCOPYABLE
 7. **Machine layer** → OAuth3-gated file + terminal + system access ← FIRST MOVER
 
-**Why moat #6 is uncopyable**: OpenAI building OAuth3 = OpenAI cannibalizing its token revenue.
-We have structural freedom to do what they can't.
+**Why moat #6 is uncopyable**: OAuth3 provides a structural moat through architecture, not vendor lock-in.
+We have structural freedom to do what model-centric platforms cannot.
 
 **Competitive gaps (Feb 2026)**:
 | Competitor | Missing |
 |-----------|---------|
-| OpenClaw | No evidence trail; no consent model; no revocation; 512 security vulnerabilities |
-| Browser-Use | No session persistence; no recipe system; no OAuth3 |
-| Bardeen | Chrome extension only; no cloud twin; no step-up auth |
-| Vercel agent-browser | Cloud-only; no local twin; no recipe library; no OAuth3 |
+| Extension-based tools | No evidence trail; no consent model; no revocation |
+| Script-replay tools | No session persistence; no recipe system; no OAuth3 |
+| Browser extensions | Local execution only; no cloud twin; no step-up auth |
+| Cloud-only tools | No local twin; no recipe library; no OAuth3 |
 
 ### FDA 21 CFR Part 11 — ALCOA+ Mapping
 
@@ -143,11 +141,9 @@ No competitor stores original records this way. OpenClaw uses screenshots (lossy
 | Paying users | 100 | 1,000 | 5,000 | 25,000 |
 | MRR (blended belt mix) | ~$5K | ~$18.3K | ~$91K | ~$457K |
 
-**Belt-blended MRR at 1,000 users** (example mix):
-$8×300 + $48×200 + $88×50 + $188×10 = $2,400 + $9,600 + $4,400 + $1,880 = **$18,280/mo**
+**Belt-blended MRR at 1,000 users**: MRR projections are maintained in internal strategy documents.
 
-**Why recipe hit rate?** At 70% hit, COGS = $5.75/user/month (70%+ gross margin).
-Without recipes: $12.75 COGS (33% margin — not fundable). Recipes ARE the economic moat.
+**Why recipe hit rate?** Recipe caching significantly reduces per-task cost. Recipes ARE the economic moat.
 "I fear not the man who has practiced 10,000 kicks once, but I fear the man who has practiced one kick 10,000 times." — Bruce Lee. This is recipe replay.
 
 ## Current Phase: Phase 0 — Validate Core Premise

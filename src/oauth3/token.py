@@ -4,7 +4,7 @@ OAuth3 Agency Token — AgencyToken dataclass + validation
 Schema (spec-aligned v0.1 — triple-segment scopes: platform.action.resource):
 {
   "token_id": "uuid4",
-  "issuer":   "string (URI of issuing platform, e.g. 'https://solaceagi.com')",
+  "issuer":   "string (URI of issuing platform, e.g. 'https://www.solaceagi.com')",
   "subject":  "string (consenting principal identifier)",
   "scopes":   ["linkedin.post.text", "gmail.read.inbox"],
   "intent":   "string (natural-language description of the delegation purpose)",
@@ -103,7 +103,7 @@ class AgencyToken:
 
     Fields:
         token_id:             UUID4 globally unique token identifier (revocation key).
-        issuer:               URI of the issuing platform (e.g. 'https://solaceagi.com')
+        issuer:               URI of the issuing platform (e.g. 'https://www.solaceagi.com')
                               or 'urn:stillwater:self-issued'.
         subject:              Identifier of the consenting principal (user email or ID).
         scopes:               Granted scopes in platform.action.resource format.
@@ -136,7 +136,7 @@ class AgencyToken:
     @classmethod
     def create(
         cls,
-        issuer: str = "https://solaceagi.com",
+        issuer: str = "https://www.solaceagi.com",
         subject: str = "",
         scopes: Optional[List[str]] = None,
         intent: str = "agent delegation",
@@ -352,7 +352,7 @@ class AgencyToken:
 
         return cls(
             token_id=data["token_id"],
-            issuer=data.get("issuer", "https://solaceagi.com"),
+            issuer=data.get("issuer", "https://www.solaceagi.com"),
             subject=subject,
             scopes=ScopeTuple(scopes),
             intent=data.get("intent", ""),
@@ -418,7 +418,7 @@ class AgencyToken:
             data["step_up_required_for"] = [s for s in scopes if s in HIGH_RISK_SCOPES]
         # Handle files saved before issuer field existed
         if "issuer" not in data:
-            data["issuer"] = "https://solaceagi.com"
+            data["issuer"] = "https://www.solaceagi.com"
         return cls.from_dict(data)
 
     def revoke(self) -> "AgencyToken":

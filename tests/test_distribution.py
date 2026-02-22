@@ -419,10 +419,10 @@ class TestAutoUpdate:
         """Mock HTTP response returning a newer version."""
         release_data = {
             "version": "2.0.0",
-            "url": "https://solaceagi.com/releases/SolaceBrowser-2.0.0-linux-amd64.deb",
+            "url": "https://www.solaceagi.com/releases/SolaceBrowser-2.0.0-linux-amd64.deb",
             "sha256": "a" * 64,
             "size_bytes": 80_000_000,
-            "changelog_url": "https://solaceagi.com/changelog",
+            "changelog_url": "https://www.solaceagi.com/changelog",
             "release_date": "2026-03-01",
         }
 
@@ -439,7 +439,7 @@ class TestAutoUpdate:
         """Mock HTTP response returning the same version."""
         release_data = {
             "version": "1.0.0",
-            "url": "https://solaceagi.com/releases/SolaceBrowser-1.0.0-linux-amd64.deb",
+            "url": "https://www.solaceagi.com/releases/SolaceBrowser-1.0.0-linux-amd64.deb",
             "sha256": "b" * 64,
         }
 
@@ -455,7 +455,7 @@ class TestAutoUpdate:
         """A version older than current must NOT be flagged as an update."""
         release_data = {
             "version": "0.9.0",
-            "url": "https://solaceagi.com/releases/SolaceBrowser-0.9.0-linux-amd64.deb",
+            "url": "https://www.solaceagi.com/releases/SolaceBrowser-0.9.0-linux-amd64.deb",
             "sha256": "c" * 64,
         }
 
@@ -505,7 +505,7 @@ class TestAutoUpdate:
     def test_banner_calls_on_update_available(self):
         release_data = {
             "version": "1.1.0",
-            "url": "https://solaceagi.com/releases/SolaceBrowser-1.1.0-linux-amd64.deb",
+            "url": "https://www.solaceagi.com/releases/SolaceBrowser-1.1.0-linux-amd64.deb",
             "sha256": "d" * 64,
         }
 
@@ -524,7 +524,7 @@ class TestAutoUpdate:
     def test_banner_calls_on_no_update(self):
         release_data = {
             "version": "1.0.0",
-            "url": "https://solaceagi.com/releases/SolaceBrowser-1.0.0-linux-amd64.deb",
+            "url": "https://www.solaceagi.com/releases/SolaceBrowser-1.0.0-linux-amd64.deb",
             "sha256": "e" * 64,
         }
 
@@ -542,7 +542,7 @@ class TestAutoUpdate:
     def test_banner_last_result_set(self):
         release_data = {
             "version": "1.0.0",
-            "url": "https://solaceagi.com/releases/test.deb",
+            "url": "https://www.solaceagi.com/releases/test.deb",
             "sha256": "f" * 64,
         }
 

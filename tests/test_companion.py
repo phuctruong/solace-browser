@@ -137,7 +137,7 @@ def make_minimal_app() -> _MinimalApp:
 def make_token(scopes: List[str]) -> AgencyToken:
     """Create a valid AgencyToken with the given companion scopes."""
     return AgencyToken.create(
-        issuer="https://solaceagi.com",
+        issuer="https://www.solaceagi.com",
         subject="test-user",
         scopes=scopes,
         intent="companion test",
@@ -974,7 +974,7 @@ class TestClipboardMonitor:
         event = AppEvent(
             event_type="clipboard_change",
             source="system",
-            data={"content": "Visit https://solaceagi.com"},
+            data={"content": "Visit https://www.solaceagi.com"},
         )
         resp = app.handle_event(event)
         assert any("open_url:" in a for a in resp.actions)

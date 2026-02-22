@@ -741,7 +741,7 @@ class TestOAuth3Integration:
         """Create an AgencyToken for testing."""
         ttl = -1 if expired else 3600
         token = AgencyToken.create(
-            issuer="https://solaceagi.com",
+            issuer="https://www.solaceagi.com",
             subject="user:test@example.com",
             scopes=scopes,
             intent="plugin integration test",

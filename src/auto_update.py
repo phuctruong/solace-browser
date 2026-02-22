@@ -34,7 +34,7 @@ logger = logging.getLogger("solace.auto_update")
 # ---------------------------------------------------------------------------
 
 # Default update endpoint — override via SOLACE_UPDATE_URL env var
-DEFAULT_UPDATE_URL = "https://solaceagi.com/api/releases/latest"
+DEFAULT_UPDATE_URL = "https://www.solaceagi.com/api/releases/latest"
 
 # Timeout for HTTP requests (seconds)
 REQUEST_TIMEOUT = 10

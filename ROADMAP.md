@@ -1,6 +1,6 @@
 # SolaceBrowser — Platform Roadmap
 
-**Authority**: 65537 | **Northstar**: 70% recipe hit rate → $5.75 COGS → economic moat
+**Authority**: 65537 | **Northstar**: 70% recipe hit rate → economic moat
 **Last Updated**: 2026-02-21
 **Status**: Phase 1 DONE → Phase 1.5 DONE (1,466 tests) → Phase 2 DONE (805 tests) → Phase 3 DONE (344 tests) → Phase 4 DONE (10 OpenClaw competitive features, 3,542 total tests)
 
@@ -59,8 +59,8 @@ This distinction is enormous:
 **Recipe moat + OAuth3 governance = structurally uncopyable position.**
 
 At 70% recipe hit rate:
-- COGS: $5.75/user/month (70% gross margin)
-- Without recipes: $12.75 COGS (33% margin — not fundable)
+- Recipe caching significantly reduces per-task cost
+- Without recipes: substantially higher COGS reduces viability
 
 OAuth3 makes the recipe system **legally and architecturally defensible**:
 - Every recipe execution is bounded by a scoped, revocable agency token
@@ -360,7 +360,7 @@ Context:
   80%+ content (CSS, JS, layout). Cross-file compression: 100 LinkedIn pages → ~5 pages worth.
 - This is the secret sauce no competitor offers: full pages, not screenshots. Actual HTML,
   not a raster image. Inspectable, searchable, replayable.
-- PZip Python API at /home/phuc/projects/pzip/pzip/:
+- PZip Python API (install pzip package):
     pzip.pzip_compress(data: bytes) -> bytes
     pzip.pzip_decompress(data: bytes) -> bytes
     pzip.compress_collection(dir: str) -> bytes  ← cross-file magic
@@ -596,7 +596,7 @@ Acceptance (Rung 641):
 
 ## Phase 3 — Universal Portal (Month 2) — DONE
 
-**Goal**: Machine access dashboard + built-in tunnel server (ngrok-like, no external tools) + download page on solaceagi.com.
+**Goal**: Machine access dashboard + built-in tunnel server (ngrok-like, no external tools) + download page on www.solaceagi.com.
 
 **Machine Access Layer**: 100 security tests delivered (path traversal, command blocklist, scope enforcement, step-up auth, timeout). Rung 274177 achieved.
 **Dashboard UI**: 70 tests delivered (machine-dashboard.html + portal home page).
@@ -612,9 +612,9 @@ Acceptance (Rung 641):
 **5 Control Surfaces (after this phase):**
 1. AI Agent (Claude Code + stillwater skills → local API)
 2. CLI (`solace-cli browser run "task"`)
-3. OAuth3 Web (solaceagi.com dashboard → remote control)
+3. OAuth3 Web (www.solaceagi.com dashboard → remote control)
 4. Native Tunnel (built-in reverse proxy, connect from anywhere)
-5. Download (solaceagi.com/browser, cross-platform installers)
+5. Download (www.solaceagi.com/browser, cross-platform installers)
 
 ---
 
@@ -729,7 +729,7 @@ Files to create:
     - Graceful shutdown: close WebSocket cleanly, emit disconnect evidence bundle
 
   Tunnel endpoint mapping:
-    - tunnel.solaceagi.com assigns unique subdomain: {user_id}.tunnel.solaceagi.com
+    - Tunnel server assigns a user-specific subdomain for each connected session
     - All HTTP requests to subdomain → WebSocket relay → local Solace Browser API
     - OAuth3 token required on every proxied request (server-side validation)
 
@@ -814,7 +814,7 @@ Files to create:
     - Current status: DISCONNECTED / CONNECTING / ACTIVE + tunnel URL
     - [Connect Tunnel] button → requests machine.tunnel step-up → opens WebSocket
     - Connected state shows: tunnel URL, bytes transferred, duration, request count
-    - [Copy Tunnel URL] button (copies {user_id}.tunnel.solaceagi.com to clipboard)
+    - [Copy Tunnel URL] button (copies user-specific subdomain URL to clipboard)
     - [Disconnect] button → graceful tunnel shutdown
     - Connection log: last 10 tunnel events (ISO8601 + event type)
 
@@ -865,14 +865,14 @@ Files to create:
   installer/
   └── welcome.html         — First-launch wizard: allowed_roots + allowlist config
 
-Download page (solaceagi.com/browser):
+Download page (www.solaceagi.com/browser):
   - Platform auto-detection (macOS/Linux/Windows)
   - Primary download button + secondary platform links
   - Changelog, SHA256 checksums
   - Installation instructions per platform
 
 Auto-update mechanism:
-  - Check https://solaceagi.com/api/browser/latest on startup
+  - Check https://www.solaceagi.com/api/browser/latest on startup
   - Compare version strings, show banner if update available
   - [Update Now] → download + verify SHA256 → replace binary → restart
 
@@ -908,8 +908,8 @@ TASK: Build FastAPI service for solaceagi.com — cloud recipe execution
 Architecture:
   Belt-gated access:
     White Belt ($0): BYOK — user provides own API key, zero LLM cost to us
-    Yellow Belt ($8/mo): Managed LLM (Together.ai/OpenRouter, 20% margin, ~8K tasks/mo)
-    Orange Belt ($48/mo): Cloud twin (24/7) + managed LLM included + OAuth3 vault
+    Yellow Belt: Managed LLM hosting with upstream provider routing.
+    Orange Belt: Cloud twin (24/7) + managed LLM included + OAuth3 vault
   Cloud executes recipes using user's own API key or managed LLM (by tier)
   Stillwater evidence bundle returned per task
 
@@ -940,6 +940,9 @@ Session vault (AES-256-GCM, zero-knowledge):
 
 Infrastructure: FastAPI + Playwright in Docker + Redis task queue + Postgres (task log)
 
+**When**: After Phase 4 (all competitive features validated)
+**What**: Hosted Stillwater + cloud browser execution, OAuth3-governed
+
 Acceptance (Rung 641):
   - POST /tasks → task queued → GET /tasks/{id} shows running → done
   - GET /tasks/{id}/evidence returns valid Stillwater bundle
@@ -960,9 +963,9 @@ We ship this sequence:
 6. PLANNED — Phase 5: solaceagi.com (cloud execution + tunnel relay)
 
 We publish:
-- OAuth3 spec on solaceagi.com/spec (open standard — others implement it)
+- OAuth3 spec on www.solaceagi.com/spec (open standard — others implement it)
 - Cost model paper (tokens saved = capital accumulated)
-- One-command demo: `curl -X POST solaceagi.com/demo/linkedin-read-messages`
+- One-command demo: `curl -X POST www.solaceagi.com/demo/linkedin-read-messages`
 
 We win when:
 - OpenClaw, Browser-Use are forced to implement OAuth3 (we set the standard)
@@ -977,11 +980,11 @@ We win when:
 
 | Belt | Tier | Price | XP | Milestone |
 |------|------|-------|-----|-----------|
-| White | Free | $0 | 0 | LinkedIn Phase 1 — **DONE** |
-| Yellow | Student | $8/mo | 100 | OAuth3 foundation ships — **DONE** (1,466 tests); Phase 2 Platform Recipes — **DONE** (805 tests) |
-| Orange | Warrior | $48/mo | 300 | 70% recipe hit rate + OAuth3 spec published + cloud twin live |
-| Green | Master | $88/mo | 750 | 10 platforms, all OAuth3-bounded + team tokens |
-| Black | Grandmaster | $188+/mo | 10,000 | OAuth3 is the standard. Models are commodities. Skills are capital. |
+| White | Free | — | 0 | LinkedIn Phase 1 — **DONE** |
+| Yellow | Student | — | 100 | OAuth3 foundation ships — **DONE** (1,466 tests); Phase 2 Platform Recipes — **DONE** (805 tests) |
+| Orange | Warrior | — | 300 | 70% recipe hit rate + OAuth3 spec published + cloud twin live |
+| Green | Master | — | 750 | 10 platforms, all OAuth3-bounded + team tokens |
+| Black | Grandmaster | — | 10,000 | OAuth3 is the standard. Models are commodities. Skills are capital. |
 
 **XP sources (community flywheel):**
 - Recipe submitted to Stillwater Store: +50 XP
