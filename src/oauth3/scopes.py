@@ -276,6 +276,64 @@ SCOPE_REGISTRY: Dict[str, Dict] = {
         "risk_level": "high",
         "destructive": True,
     },
+
+    # -------------------------------------------------------------------------
+    # Agent routing (OAuth3-governed multi-agent dispatch)
+    # -------------------------------------------------------------------------
+
+    "agent.dispatch.task": {
+        "platform": "agent",
+        "description": "Dispatch a task to a registered agent via the router",
+        "risk_level": "medium",
+        "destructive": False,
+    },
+    "agent.admin.register": {
+        "platform": "agent",
+        "description": "Register or unregister agents in the router",
+        "risk_level": "high",
+        "destructive": True,
+    },
+    "agent.monitor.stats": {
+        "platform": "agent",
+        "description": "Read per-agent metrics and task status",
+        "risk_level": "low",
+        "destructive": False,
+    },
+    "agent.cancel.task": {
+        "platform": "agent",
+        "description": "Cancel a running or pending task",
+        "risk_level": "medium",
+        "destructive": True,
+    },
+
+    # -------------------------------------------------------------------------
+    # Plugin management (OAuth3-governed plugin registry)
+    # -------------------------------------------------------------------------
+
+    "plugin.install.any": {
+        "platform": "plugin",
+        "description": "Install and uninstall plugins from the registry",
+        "risk_level": "high",
+        "destructive": True,
+    },
+    "plugin.execute.any": {
+        "platform": "plugin",
+        "description": "Execute installed plugins within their declared scopes",
+        "risk_level": "medium",
+        "destructive": False,
+    },
+    "plugin.admin.any": {
+        "platform": "plugin",
+        "description": "Administer the plugin registry (register, suspend, uninstall)",
+        "risk_level": "high",
+        "destructive": True,
+    },
+    "plugin.read.registry": {
+        "platform": "plugin",
+        "description": "Read plugin registry listings and manifests (read-only)",
+        "risk_level": "low",
+        "destructive": False,
+    },
 }
 
 
