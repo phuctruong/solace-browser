@@ -2,7 +2,7 @@
 
 **Authority**: 65537 | **Northstar**: 70% recipe hit rate → $5.75 COGS → economic moat
 **Last Updated**: 2026-02-21
-**Status**: Phase 1 DONE → Phase 1.5 DONE (1,466 tests) → Phase 2 DONE (805 tests) → Phase 3 IN PROGRESS (Machine Access: 100 tests, Dashboard: 70 tests)
+**Status**: Phase 1 DONE → Phase 1.5 DONE (1,466 tests) → Phase 2 DONE (805 tests) → Phase 3 DONE (Machine Access: 100, Dashboard: 70, Distribution: 94 tests)
 
 ## Status Summary (2026-02-21)
 
@@ -11,9 +11,10 @@
 | Phase 1: LinkedIn MVP | DONE | — |
 | Phase 1.5: OAuth3 Foundation | DONE | 1,466 |
 | Phase 2: Platform Recipes (Reddit/Notion/HN) | DONE | 805 |
-| Phase 3: Machine Access Layer | IN PROGRESS | 100 |
-| Phase 3: Dashboard UI | IN PROGRESS | 70 |
-| **Total** | | **2,441** |
+| Phase 3: Machine Access Layer | DONE | 100 |
+| Phase 3: Dashboard UI | DONE | 70 |
+| Phase 3: Cross-Platform Distribution | DONE | 94 |
+| **Total** | | **2,535** |
 
 > *"Delegate only with consent. Never weaken. Be water."* — Software 5.0 + OAuth3
 
@@ -582,13 +583,14 @@ Acceptance (Rung 641):
 
 ---
 
-## Phase 3 — Universal Portal (Month 2) — IN PROGRESS
+## Phase 3 — Universal Portal (Month 2) — DONE
 
 **Goal**: Machine access dashboard + built-in tunnel server (ngrok-like, no external tools) + download page on solaceagi.com.
 
 **Machine Access Layer**: 100 security tests delivered (path traversal, command blocklist, scope enforcement, step-up auth, timeout). Rung 274177 achieved.
 **Dashboard UI**: 70 tests delivered (machine-dashboard.html + portal home page).
-**Test count**: 1,466 (Phase 1.5) + 805 (Phase 2) + 100 (Machine Access) + 70 (Dashboard) = 2,441 total.
+**Cross-Platform Distribution**: 94 tests delivered (Tauri + PyInstaller, DMG/DEB/MSI build scripts, auto-update, installer wizard, download page).
+**Test count**: 1,466 (Phase 1.5) + 805 (Phase 2) + 100 (Machine Access) + 70 (Dashboard) + 94 (Distribution) = 2,535 total.
 
 **5 Control Surfaces after this phase**: AI Agent API, CLI (`solace-cli browser run`), OAuth3 Web Dashboard, Native Tunnel, Download Installer.
 
@@ -935,8 +937,8 @@ We ship this sequence:
 1. DONE — Phase 1: LinkedIn recipes (6 recipes, rung 641)
 2. DONE — Phase 1.5: OAuth3 foundation (1,466 tests: OAuth3 core, consent UI, step-up auth, HTML snapshots, Gmail, Substack, Twitter, machine access, audit trail)
 3. DONE — Phase 2: Reddit + Notion + HackerNews (805 tests across 3 platforms)
-4. IN PROGRESS — Phase 3: Universal Portal (Machine Access Layer: 100 security tests done; Dashboard: 70 tests done; tunnel server + distribution next)
-5. PLANNED — Phase 4: solaceagi.com (cloud execution + tunnel server)
+4. DONE — Phase 3: Universal Portal (Machine Access: 100 tests, Dashboard: 70 tests, Distribution: 94 tests)
+5. PLANNED — Phase 4: solaceagi.com (cloud execution + tunnel relay)
 
 We publish:
 - OAuth3 spec on solaceagi.com/spec (open standard — others implement it)
