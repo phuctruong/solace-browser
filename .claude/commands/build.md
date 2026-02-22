@@ -34,12 +34,14 @@ ARGUMENTS: $ARGUMENTS
 
 ## Swarm Team for Every Build
 
-| Agent | Model | Skill Pack | When |
-|-------|-------|-----------|------|
-| Scout | haiku | prime-safety | Always first — map codebase, identify gaps |
-| Forecaster | sonnet | prime-safety + phuc-forecast | Always — failure modes, stop rules |
-| Coder | sonnet | prime-safety + prime-coder | Implementation |
-| Skeptic | sonnet | prime-safety + prime-coder + phuc-forecast | Verification (rung 274177+) |
+| Agent | Model | Skill Pack | Swarm File (persona) | When |
+|-------|-------|-----------|----------------------|------|
+| Scout | haiku | prime-safety | `swarms/scout.md` (Ken Thompson) | Always first — map codebase, identify gaps |
+| Forecaster | sonnet | prime-safety + phuc-forecast | `swarms/forecaster.md` (Grace Hopper) | Always — failure modes, stop rules |
+| Coder | sonnet | prime-safety + prime-coder | `swarms/coder.md` (Donald Knuth) | Implementation |
+| Skeptic | sonnet | prime-safety + prime-coder + phuc-forecast | `swarms/skeptic.md` (Alan Turing) | Verification (rung 274177+) |
+
+**MANDATORY**: Every agent dispatch MUST load the corresponding `swarms/*.md` file from `/home/phuc/projects/stillwater/swarms/` and inject the full persona guidance + agent type definition + anti-patterns into the CNF capsule.
 
 ## Instructions for Claude
 
@@ -76,6 +78,11 @@ Role:        scout
 Model:       haiku
 Skill pack:  prime-safety (full content from /home/phuc/projects/stillwater/skills/prime-safety.md)
 Rung target: 641
+
+## Agent Type Definition (persona + FSM + anti-patterns)
+<BEGIN_SWARM_TYPE name="scout">
+[FULL CONTENT of /home/phuc/projects/stillwater/swarms/scout.md]
+</BEGIN_SWARM_TYPE>
 
 NORTHSTAR (load first — MANDATORY):
 [paste full NORTHSTAR.md content]
@@ -122,6 +129,11 @@ Role:        forecaster
 Model:       sonnet
 Skill pack:  prime-safety + phuc-forecast (full content from skills/)
 Rung target: [from ROADMAP phase]
+
+## Agent Type Definition (persona + FSM + anti-patterns)
+<BEGIN_SWARM_TYPE name="forecaster">
+[FULL CONTENT of /home/phuc/projects/stillwater/swarms/forecaster.md]
+</BEGIN_SWARM_TYPE>
 
 NORTHSTAR (load first — MANDATORY):
 [paste full NORTHSTAR.md content]
@@ -228,6 +240,11 @@ Model:       sonnet
 Skill pack:  prime-safety + prime-coder (full content from skills/)
 Rung target: [from ROADMAP]
 
+## Agent Type Definition (persona + FSM + anti-patterns)
+<BEGIN_SWARM_TYPE name="coder">
+[FULL CONTENT of /home/phuc/projects/stillwater/swarms/coder.md]
+</BEGIN_SWARM_TYPE>
+
 NORTHSTAR (load first — MANDATORY):
 [paste full NORTHSTAR.md content]
 
@@ -303,6 +320,7 @@ Run: /build oauth3-core to start (this is the highest-leverage next step)
 ## Forbidden States
 
 - `SKILL_LESS_DISPATCH` — never dispatch without full skill content pasted inline
+- `PERSONA_LESS_DISPATCH` — never dispatch without loading the corresponding `swarms/*.md` file and injecting `<BEGIN_SWARM_TYPE>` block into the CNF capsule
 - `FORGOTTEN_CAPSULE` — never say "as discussed" or "as before" in any sub-agent prompt
 - `NORTHSTAR_DRIFT_UNCHECKED` — never start without NORTHSTAR alignment check
 - `RUNG_UNDECLARED` — always declare rung_target before any dispatch
