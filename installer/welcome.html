@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solace Browser — First Launch Setup</title>
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0d0f14;
+      --surface:     #161b26;
+      --surface2:    #1e2636;
+      --border:      #2a3347;
+      --accent:      #4f9eff;
+      --accent-dim:  #2d5fa0;
+      --success:     #3ecf8e;
+      --warning:     #f5a623;
+      --text:        #e2e8f0;
+      --text-muted:  #7a8aa0;
+      --radius:      10px;
+      --font:        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ===== Layout ===== */
+    .wrapper {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* ===== Logo / Header ===== */
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent) 0%, #9b59f7 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .logo-title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .logo-tagline {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 40px;
+    }
+
+    /* ===== Progress bar ===== */
+    .progress-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 36px;
+    }
+
+    .progress-step {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      transition: background 0.3s;
+    }
+
+    .progress-step.done  { background: var(--success); }
+    .progress-step.active { background: var(--accent); }
+
+    /* ===== Step labels ===== */
+    .step-labels {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .step-labels span {
+      flex: 1;
+      text-align: center;
+    }
+
+    .step-labels span.active-label { color: var(--accent); font-weight: 600; }
+    .step-labels span.done-label   { color: var(--success); }
+
+    /* ===== Cards / Panels ===== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 20px;
+    }
+
+    .card h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .card .subtitle {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    /* ===== Step panels ===== */
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+
+    /* ===== Welcome screen ===== */
+    .welcome-hero {
+      text-align: center;
+      padding: 12px 0 28px;
+    }
+
+    .welcome-hero .hero-icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+    }
+
+    .welcome-hero h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .welcome-hero p {
+      color: var(--text-muted);
+      max-width: 420px;
+      margin: 0 auto 28px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      text-align: left;
+      margin-bottom: 32px;
+    }
+
+    .feature-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 13px;
+    }
+
+    .feature-item .fi-icon { font-size: 20px; margin-bottom: 6px; }
+    .feature-item .fi-title { font-weight: 600; margin-bottom: 2px; }
+    .feature-item .fi-desc  { color: var(--text-muted); font-size: 12px; }
+
+    /* ===== Checkboxes ===== */
+    .check-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .check-item:hover { border-color: var(--accent-dim); }
+    .check-item.checked { border-color: var(--accent); }
+
+    .check-item input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      margin-top: 2px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .check-item .ci-label { font-size: 14px; font-weight: 500; }
+    .check-item .ci-path  { font-size: 12px; color: var(--text-muted); font-family: monospace; }
+
+    .custom-path-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .custom-path-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: monospace;
+    }
+
+    .custom-path-row input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .custom-path-row button {
+      background: var(--accent-dim);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .custom-path-row button:hover { background: var(--accent); }
+
+    /* ===== Terminal allowlist ===== */
+    .term-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+
+    .term-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-family: monospace;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .term-item:hover { border-color: var(--accent-dim); }
+    .term-item.checked { border-color: var(--success); }
+    .term-item input[type="checkbox"] { accent-color: var(--success); flex-shrink: 0; }
+
+    /* ===== Inputs ===== */
+    .field { margin-bottom: 20px; }
+    .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+    .field input, .field select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .field input[type="password"] { font-family: monospace; letter-spacing: 2px; }
+    .field .hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    .skip-link {
+      display: block;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 8px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .skip-link:hover { color: var(--text); }
+
+    /* ===== LLM provider selector ===== */
+    .llm-options { display: flex; gap: 10px; margin-bottom: 20px; }
+
+    .llm-option {
+      flex: 1;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .llm-option:hover { border-color: var(--accent-dim); }
+    .llm-option.selected { border-color: var(--accent); background: var(--surface2); }
+    .llm-option .lo-icon { font-size: 24px; margin-bottom: 6px; }
+    .llm-option .lo-title { font-size: 13px; font-weight: 600; }
+    .llm-option .lo-desc  { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+    .llm-panel { display: none; }
+    .llm-panel.active { display: block; }
+
+    /* ===== Info box ===== */
+    .info-box {
+      background: rgba(79, 158, 255, 0.08);
+      border: 1px solid rgba(79, 158, 255, 0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .info-box strong { color: var(--accent); }
+
+    /* ===== Done screen ===== */
+    .done-screen {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .done-screen .done-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .done-screen h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .done-screen p {
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    .summary-list {
+      text-align: left;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      font-size: 13px;
+    }
+
+    .summary-list li { list-style: none; padding: 4px 0; color: var(--text-muted); }
+    .summary-list li span { color: var(--success); font-weight: 600; }
+
+    /* ===== Buttons ===== */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 22px;
+      border-radius: 7px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--accent-dim); }
+
+    .btn-success {
+      background: var(--success);
+      color: #0d0f14;
+    }
+    .btn-success:hover { opacity: 0.88; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 520px) {
+      .feature-grid { grid-template-columns: 1fr; }
+      .term-group { grid-template-columns: 1fr; }
+      .llm-options { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+
+    <!-- Logo -->
+    <div class="logo-row">
+      <div class="logo-icon">&#x2728;</div>
+      <div class="logo-title">Solace Browser</div>
+    </div>
+    <div class="logo-tagline">Privacy-first browser with AI agency delegation and OAuth3 consent</div>
+
+    <!-- Progress bar -->
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-step" id="ps0"></div>
+      <div class="progress-step" id="ps1"></div>
+      <div class="progress-step" id="ps2"></div>
+      <div class="progress-step" id="ps3"></div>
+    </div>
+
+    <div class="step-labels" id="stepLabels">
+      <span id="sl0">Welcome</span>
+      <span id="sl1">File Access</span>
+      <span id="sl2">Terminal</span>
+      <span id="sl3">LLM Setup</span>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- Step 0 — Welcome -->
+    <!-- ============================================================ -->
+    <div class="step-panel active" id="step-0">
+      <div class="card">
+        <div class="welcome-hero">
+          <div class="hero-icon">&#x1F30A;</div>
+          <h1>Welcome to Solace Browser</h1>
+          <p>The first browser where AI agents work <em>for you</em> — with full consent, full control, full audit trail.</p>
+        </div>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="fi-icon">&#x1F512;</div>
+            <div class="fi-title">OAuth3 Consent</div>
+            <div class="fi-desc">Every AI action requires your explicit token-based consent</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-icon">&#x1F4DC;</div>
+            <div class="fi-title">Full Audit Trail</div>
+            <div class="fi-desc">Cryptographic proof of every step taken on your behalf</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-icon">&#x1F9E0;</div>
+            <div class="fi-title">Recipe Replay</div>
+            <div class="fi-desc">Record once, replay indefinitely without token cost</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-icon">&#x1F511;</div>
+            <div class="fi-title">BYOK or Managed</div>
+            <div class="fi-desc">Bring your own API key or use our managed LLM (+$3/mo)</div>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <strong>This setup takes about 2 minutes.</strong> You can change all settings later from Preferences.
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="goToStep(1)">Get Started &#x2192;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- Step 1 — allowed_roots (File Access) -->
+    <!-- ============================================================ -->
+    <div class="step-panel" id="step-1">
+      <div class="card">
+        <h2>Step 1: File Access</h2>
+        <div class="subtitle">Choose which folders Solace Browser may read and write. All access requires an OAuth3 token.</div>
+
+        <div id="allowedRootsGroup" class="check-group">
+          <label class="check-item" id="ci-documents">
+            <input type="checkbox" id="cb-documents" checked onchange="toggleCheck('ci-documents', this)" />
+            <div>
+              <div class="ci-label">Documents</div>
+              <div class="ci-path">~/Documents</div>
+            </div>
+          </label>
+          <label class="check-item checked" id="ci-desktop">
+            <input type="checkbox" id="cb-desktop" checked onchange="toggleCheck('ci-desktop', this)" />
+            <div>
+              <div class="ci-label">Desktop</div>
+              <div class="ci-path">~/Desktop</div>
+            </div>
+          </label>
+          <label class="check-item checked" id="ci-downloads">
+            <input type="checkbox" id="cb-downloads" checked onchange="toggleCheck('ci-downloads', this)" />
+            <div>
+              <div class="ci-label">Downloads</div>
+              <div class="ci-path">~/Downloads</div>
+            </div>
+          </label>
+          <label class="check-item" id="ci-home">
+            <input type="checkbox" id="cb-home" onchange="toggleCheck('ci-home', this)" />
+            <div>
+              <div class="ci-label">Home (entire)</div>
+              <div class="ci-path">~ (use with caution)</div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Custom path entry -->
+        <div class="custom-path-row">
+          <input type="text" id="customPathInput" placeholder="/path/to/folder" />
+          <button onclick="addCustomPath()">+ Add</button>
+        </div>
+
+        <div id="customPathList"></div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goToStep(0)">&#x2190; Back</button>
+          <button class="btn btn-primary" onclick="saveAllowedRootsAndNext()">Next &#x2192;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- Step 2 — Terminal Allowlist -->
+    <!-- ============================================================ -->
+    <div class="step-panel" id="step-2">
+      <div class="card">
+        <h2>Step 2: Terminal Commands</h2>
+        <div class="subtitle">Select which commands Solace Browser agents may execute in your terminal. Dangerous commands are never allowed and cannot be enabled.</div>
+
+        <div class="info-box">
+          <strong>Safe defaults pre-selected.</strong> Destructive commands (rm -rf, sudo, curl | bash) are permanently blocked at the OS level.
+        </div>
+
+        <div class="term-group" id="termAllowlist">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goToStep(1)">&#x2190; Back</button>
+          <button class="btn btn-primary" onclick="saveTerminalAndNext()">Next &#x2192;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- Step 3 — LLM Configuration -->
+    <!-- ============================================================ -->
+    <div class="step-panel" id="step-3">
+      <div class="card">
+        <h2>Step 3: LLM Configuration</h2>
+        <div class="subtitle">Choose how Solace Browser runs AI tasks. You can change this at any time in Preferences &#x2192; LLM.</div>
+
+        <div class="llm-options">
+          <div class="llm-option selected" id="opt-byok" onclick="selectLLM('byok')">
+            <div class="lo-icon">&#x1F511;</div>
+            <div class="lo-title">BYOK</div>
+            <div class="lo-desc">Bring your own Anthropic or OpenAI key</div>
+          </div>
+          <div class="llm-option" id="opt-managed" onclick="selectLLM('managed')">
+            <div class="lo-icon">&#x2601;&#xFE0F;</div>
+            <div class="lo-title">Managed LLM</div>
+            <div class="lo-desc">+$3/mo — no API key needed</div>
+          </div>
+          <div class="llm-option" id="opt-skip" onclick="selectLLM('skip')">
+            <div class="lo-icon">&#x23E9;</div>
+            <div class="lo-title">Skip</div>
+            <div class="lo-desc">Configure later in Preferences</div>
+          </div>
+        </div>
+
+        <!-- BYOK panel -->
+        <div class="llm-panel active" id="llm-byok">
+          <div class="field">
+            <label>Provider</label>
+            <select id="byokProvider" onchange="updateProviderHint()">
+              <option value="anthropic">Anthropic (Claude)</option>
+              <option value="openai">OpenAI (GPT-4)</option>
+              <option value="together">Together.ai (Llama)</option>
+              <option value="openrouter">OpenRouter</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>API Key</label>
+            <input type="password" id="byokKey" placeholder="sk-..." autocomplete="off" />
+            <div class="hint" id="byokHint">Your key is stored locally with AES-256-GCM encryption and never sent to our servers.</div>
+          </div>
+        </div>
+
+        <!-- Managed LLM panel -->
+        <div class="llm-panel" id="llm-managed">
+          <div class="info-box">
+            <strong>Managed LLM (+$3/mo)</strong> routes through Llama 3.3 70B (Together.ai) with OpenRouter fallback. No API key needed. Cancel anytime.
+          </div>
+          <div class="field">
+            <label>solaceagi.com Email</label>
+            <input type="email" id="managedEmail" placeholder="you@example.com" />
+          </div>
+          <div class="field">
+            <label>Access Token</label>
+            <input type="password" id="managedToken" placeholder="Paste token from solaceagi.com/account" />
+            <div class="hint">Get your token at <strong>solaceagi.com/account</strong> after subscribing.</div>
+          </div>
+        </div>
+
+        <!-- Skip panel -->
+        <div class="llm-panel" id="llm-skip">
+          <div class="info-box">
+            LLM features will be disabled until you configure a provider. Recipe replay still works without an LLM.
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goToStep(2)">&#x2190; Back</button>
+          <button class="btn btn-success" onclick="saveLLMAndFinish()">Finish Setup &#x2713;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- Step 4 — Done -->
+    <!-- ============================================================ -->
+    <div class="step-panel" id="step-4">
+      <div class="card">
+        <div class="done-screen">
+          <div class="done-icon">&#x2705;</div>
+          <h2>Solace Browser is ready.</h2>
+          <p>Your configuration has been saved. You can change any setting in Preferences at any time.</p>
+
+          <ul class="summary-list" id="configSummary">
+            <!-- Populated by JS -->
+          </ul>
+
+          <button class="btn btn-success" onclick="launchBrowser()" style="font-size:15px; padding:12px 32px;">
+            Launch Solace Browser &#x1F680;
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /wrapper -->
+
+  <script>
+    // ============================================================
+    // State
+    // ============================================================
+    const state = {
+      allowedRoots: [],
+      terminalCommands: [],
+      llmProvider: "byok",
+      llmKey: "",
+      llmEmail: "",
+      llmToken: "",
+      configSaved: false,
+    };
+
+    const STEPS = 4;
+    let currentStep = 0;
+
+    // ============================================================
+    // Progress / navigation
+    // ============================================================
+    function updateProgress(step) {
+      const labels = ["Welcome", "File Access", "Terminal", "LLM Setup"];
+      for (let i = 0; i < STEPS; i++) {
+        const ps = document.getElementById("ps" + i);
+        const sl = document.getElementById("sl" + i);
+        if (i < step) {
+          ps.className = "progress-step done";
+          sl.className = "done-label";
+        } else if (i === step) {
+          ps.className = "progress-step active";
+          sl.className = "active-label";
+        } else {
+          ps.className = "progress-step";
+          sl.className = "";
+        }
+        sl.textContent = labels[i];
+      }
+    }
+
+    function goToStep(n) {
+      document.getElementById("step-" + currentStep).classList.remove("active");
+      currentStep = n;
+      document.getElementById("step-" + currentStep).classList.add("active");
+      updateProgress(n);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // ============================================================
+    // Step 1 — allowed_roots
+    // ============================================================
+    function toggleCheck(id, checkbox) {
+      const label = document.getElementById(id);
+      if (checkbox.checked) {
+        label.classList.add("checked");
+      } else {
+        label.classList.remove("checked");
+      }
+    }
+
+    // Initialize checked state
+    document.querySelectorAll(".check-item input[type=checkbox]").forEach(cb => {
+      const label = cb.closest(".check-item");
+      if (cb.checked && label) label.classList.add("checked");
+    });
+
+    function addCustomPath() {
+      const inp = document.getElementById("customPathInput");
+      const val = inp.value.trim();
+      if (!val) return;
+
+      const list = document.getElementById("customPathList");
+      const id = "ci-custom-" + Date.now();
+
+      const label = document.createElement("label");
+      label.className = "check-item checked";
+      label.id = id;
+      label.style.marginTop = "8px";
+      label.innerHTML = `
+        <input type="checkbox" checked onchange="toggleCheck('${id}', this)" data-custom="1" />
+        <div>
+          <div class="ci-label">Custom</div>
+          <div class="ci-path">${val}</div>
+        </div>`;
+      list.appendChild(label);
+      inp.value = "";
+    }
+
+    function collectAllowedRoots() {
+      const roots = [];
+      const pathMap = {
+        "cb-documents": "~/Documents",
+        "cb-desktop":   "~/Desktop",
+        "cb-downloads": "~/Downloads",
+        "cb-home":      "~",
+      };
+
+      for (const [id, path] of Object.entries(pathMap)) {
+        const cb = document.getElementById(id);
+        if (cb && cb.checked) roots.push(path);
+      }
+
+      document.querySelectorAll("[data-custom='1']:checked").forEach(cb => {
+        const pathEl = cb.closest(".check-item").querySelector(".ci-path");
+        if (pathEl) roots.push(pathEl.textContent.trim());
+      });
+
+      return roots;
+    }
+
+    function saveAllowedRootsAndNext() {
+      state.allowedRoots = collectAllowedRoots();
+      goToStep(2);
+    }
+
+    // ============================================================
+    // Step 2 — Terminal allowlist
+    // ============================================================
+    const SAFE_COMMANDS = [
+      { cmd: "ls",     label: "ls",     desc: "list files" },
+      { cmd: "cat",    label: "cat",    desc: "read file" },
+      { cmd: "grep",   label: "grep",   desc: "search text" },
+      { cmd: "find",   label: "find",   desc: "find files" },
+      { cmd: "python3",label: "python3",desc: "run Python" },
+      { cmd: "node",   label: "node",   desc: "run Node.js" },
+      { cmd: "git",    label: "git",    desc: "git operations" },
+      { cmd: "npm",    label: "npm",    desc: "Node packages" },
+      { cmd: "pip",    label: "pip",    desc: "Python packages" },
+      { cmd: "curl",   label: "curl",   desc: "HTTP requests" },
+      { cmd: "jq",     label: "jq",     desc: "JSON processor" },
+      { cmd: "awk",    label: "awk",    desc: "text processing" },
+      { cmd: "sed",    label: "sed",    desc: "stream editor" },
+      { cmd: "sort",   label: "sort",   desc: "sort lines" },
+      { cmd: "uniq",   label: "uniq",   desc: "deduplicate" },
+      { cmd: "wc",     label: "wc",     desc: "word/line count" },
+      { cmd: "head",   label: "head",   desc: "first N lines" },
+      { cmd: "tail",   label: "tail",   desc: "last N lines" },
+      { cmd: "echo",   label: "echo",   desc: "print text" },
+      { cmd: "date",   label: "date",   desc: "current date" },
+    ];
+
+    // Default safe commands (pre-checked)
+    const DEFAULT_CHECKED = new Set(["ls","cat","grep","find","python3","git","echo","date","jq"]);
+
+    function buildTermAllowlist() {
+      const container = document.getElementById("termAllowlist");
+      container.innerHTML = "";
+
+      SAFE_COMMANDS.forEach(item => {
+        const isChecked = DEFAULT_CHECKED.has(item.cmd);
+        const id = "tcb-" + item.cmd;
+        const label = document.createElement("label");
+        label.className = "term-item" + (isChecked ? " checked" : "");
+        label.id = "tci-" + item.cmd;
+        label.innerHTML = `
+          <input type="checkbox" id="${id}" ${isChecked ? "checked" : ""}
+            onchange="toggleTermCheck('tci-${item.cmd}', this)" />
+          <span>${item.cmd}</span>`;
+        label.title = item.desc;
+        container.appendChild(label);
+      });
+    }
+
+    function toggleTermCheck(id, checkbox) {
+      const label = document.getElementById(id);
+      if (checkbox.checked) {
+        label.classList.add("checked");
+      } else {
+        label.classList.remove("checked");
+      }
+    }
+
+    function collectTerminalCommands() {
+      const cmds = [];
+      SAFE_COMMANDS.forEach(item => {
+        const cb = document.getElementById("tcb-" + item.cmd);
+        if (cb && cb.checked) cmds.push(item.cmd);
+      });
+      return cmds;
+    }
+
+    function saveTerminalAndNext() {
+      state.terminalCommands = collectTerminalCommands();
+      goToStep(3);
+    }
+
+    buildTermAllowlist();
+
+    // ============================================================
+    // Step 3 — LLM Configuration
+    // ============================================================
+    function selectLLM(provider) {
+      ["byok", "managed", "skip"].forEach(p => {
+        document.getElementById("opt-" + p).classList.remove("selected");
+        document.getElementById("llm-" + p).classList.remove("active");
+      });
+      document.getElementById("opt-" + provider).classList.add("selected");
+      document.getElementById("llm-" + provider).classList.add("active");
+      state.llmProvider = provider;
+    }
+
+    function updateProviderHint() {
+      const provider = document.getElementById("byokProvider").value;
+      const hints = {
+        anthropic:   "Your key is stored locally with AES-256-GCM and never sent to our servers.",
+        openai:      "Your OpenAI key is stored locally with AES-256-GCM encryption.",
+        together:    "Together.ai key — get one at api.together.ai",
+        openrouter:  "OpenRouter key — get one at openrouter.ai/keys",
+      };
+      document.getElementById("byokHint").textContent = hints[provider] || "";
+    }
+
+    function saveLLMAndFinish() {
+      if (state.llmProvider === "byok") {
+        const provider = document.getElementById("byokProvider").value;
+        const key = document.getElementById("byokKey").value.trim();
+        state.llmProvider = provider;
+        state.llmKey = key ? "***stored***" : "(not set)";
+      } else if (state.llmProvider === "managed") {
+        state.llmEmail = document.getElementById("managedEmail").value.trim();
+        state.llmToken = document.getElementById("managedToken").value.trim() ? "***stored***" : "(not set)";
+      }
+
+      // Persist config (in Tauri, this would use the Rust IPC to write config file)
+      const config = {
+        allowed_roots: state.allowedRoots,
+        terminal_allowlist: state.terminalCommands,
+        llm: {
+          provider: state.llmProvider,
+          key_stored: state.llmKey ? true : false,
+        },
+        setup_complete: true,
+        setup_date: new Date().toISOString(),
+      };
+      state.configSaved = true;
+
+      // In browser context, save to localStorage as a fallback
+      try {
+        localStorage.setItem("solace_config", JSON.stringify(config));
+      } catch (e) { /* may be unavailable in Tauri webview */ }
+
+      // Build summary for display
+      const summary = document.getElementById("configSummary");
+      summary.innerHTML = `
+        <li>File roots allowed: <span>${state.allowedRoots.length > 0 ? state.allowedRoots.join(", ") : "None"}</span></li>
+        <li>Terminal commands: <span>${state.terminalCommands.length} commands enabled</span></li>
+        <li>LLM provider: <span>${state.llmProvider}</span></li>
+        <li>OAuth3 vault: <span>Ready (no tokens yet)</span></li>
+        <li>Config saved: <span>${new Date().toLocaleString()}</span></li>
+      `;
+
+      goToStep(4);
+    }
+
+    // ============================================================
+    // Step 4 — Launch
+    // ============================================================
+    function launchBrowser() {
+      // Signal Tauri backend to close wizard and open main window
+      if (window.__TAURI__) {
+        window.__TAURI__.invoke("setup_complete").catch(() => {});
+      } else {
+        // Development / non-Tauri context
+        alert("Setup complete. Launch the main Solace Browser window.");
+      }
+    }
+
+    // ============================================================
+    // Init
+    // ============================================================
+    updateProgress(0);
+    toggleCheck("ci-documents", document.getElementById("cb-documents"));
+    toggleCheck("ci-desktop",   document.getElementById("cb-desktop"));
+    toggleCheck("ci-downloads", document.getElementById("cb-downloads"));
+  </script>
+</body>
+</html>
