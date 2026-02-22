@@ -48,7 +48,7 @@ Platform-specific adapters, timing Jitter, and engagement tracking metrics.
 ### [EXPERT_MOE_ORCHESTRATION.md](./EXPERT_MOE_ORCHESTRATION.md)
 Advanced scaling using the 65537 Expert Council for automation decision-making.
 
-### [OPENCLAW_LEARNINGS.md](./OPENCLAW_LEARNINGS.md)
+### [BROWSER_ARCHITECTURE_LEARNINGS.md](./BROWSER_ARCHITECTURE_LEARNINGS.md)
 Core wisdom on selector stability and state drift avoidance.
 
 ---

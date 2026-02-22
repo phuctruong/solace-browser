@@ -112,7 +112,7 @@ BrowserAction = (
 async def format_aria_tree(page, limit: int = 500) -> List[AriaNode]:
     """
     Extract accessibility tree from page using CDP
-    Similar to OpenClaw's snapshotAria()
+    Returns ARIA nodes with ref IDs for structured AI interaction.
     """
     try:
         # Try Playwright accessibility API first
@@ -221,7 +221,7 @@ async def format_aria_tree(page, limit: int = 500) -> List[AriaNode]:
 async def get_dom_snapshot(page, limit: int = 800) -> List[Dict[str, Any]]:
     """
     Extract DOM tree from page
-    Similar to OpenClaw's snapshotDom()
+    Returns DOM nodes with ref IDs for structured AI interaction.
     """
     try:
         # Get DOM structure via JavaScript

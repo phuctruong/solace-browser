@@ -143,7 +143,7 @@ A **Haiku swarm** is a coordinated team of Haiku 4.5 agents operating under Prim
 
 ```
 SCOUT (Browser Architecture):
-  ├─ Analyzes OpenClaw LEARNINGS.md
+  ├─ Analyzes BROWSER_ARCHITECTURE_LEARNINGS.md
   ├─ Identifies per-tab tracking patterns
   ├─ Maps badge state machine
   └─ Proposes connection deduplication approach
@@ -270,7 +270,7 @@ TASK: Phase A1 — Per-tab session tracking
 ```bash
 /prime-swarm-orchestration \
   --task-type "browser-automation" \
-  --task-description "Phase A: Parity with OpenClaw" \
+  --task-description "Phase A: Browser Control Foundation" \
   --swarm-size 3 \
   --model "haiku" \
   --verification-level "full"
@@ -296,7 +296,7 @@ AGENTS: 3 × Haiku 4.5 specialists
 
 SCOUT (Sarah):
   Task: Phase A architecture analysis
-  Inputs: OPENCLAW_LEARNINGS.md, existing code
+  Inputs: BROWSER_ARCHITECTURE_LEARNINGS.md, existing code
   Outputs: Per-tab tracking proposal, badge state machine, connection dedup strategy
   Duration: 30 min
   Skills: shannon-compaction, socratic-debugging

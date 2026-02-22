@@ -10,7 +10,7 @@
 
 ## Overview
 
-Chrome extension for real-time browser automation with **per-tab state tracking**, **request deduplication**, and **badge visual feedback**. Part of Prime Browser Phase A (parity with OpenClaw).
+Chrome extension for real-time browser automation with **per-tab state tracking**, **request deduplication**, and **badge visual feedback**. Part of Prime Browser Phase A (core browser control foundation).
 
 ---
 
@@ -196,10 +196,10 @@ Every 35 ticks = checkpoint
 
 All patterns derived from **RESEARCH_SYNTHESIS.md**:
 
-- ✅ OpenClaw badge system (identical)
-- ✅ OpenClaw per-tab state (exact pattern)
-- ✅ OpenClaw deduplication (proven)
-- ✅ OpenClaw pooling (verified)
+- ✅ Badge configuration system (centralized, per-tab)
+- ✅ Per-tab state machine (exact Map-based pattern)
+- ✅ Request deduplication (promise-based, proven)
+- ✅ Connection pooling (verified)
 - ✅ Accessibility tree foundation (ready for Phase B/C)
 
 ---

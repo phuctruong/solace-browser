@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# SOLACE BROWSER CLI v2.0.0 - Real Browser Control (Like OpenClaw)
+# SOLACE BROWSER CLI v2.0.0 - AI-Native Browser Control
 # Uses Chrome DevTools Protocol (CDP) for real browser automation
 # Auth: 65537 | Northstar: Phuc Forecast
 ################################################################################
@@ -586,7 +586,7 @@ PYEOF
 }
 
 ################################################################################
-# EPISODE RECORDING (Like OpenClaw workflow)
+# EPISODE RECORDING (AI-Native workflow)
 ################################################################################
 
 # Start browser if not running
@@ -843,7 +843,7 @@ PYEOF
 cmd_help() {
     cat <<EOF
 ${GREEN}SOLACE BROWSER CLI v$CLI_VERSION${NC}
-Real Browser Control via Chrome DevTools Protocol (Like OpenClaw)
+AI-Native Browser Control via Chrome DevTools Protocol
 Auth: 65537 | Northstar: Phuc Forecast
 
 ${BLUE}ARCHITECTURE:${NC}
@@ -859,7 +859,7 @@ ${BLUE}BROWSER COMMANDS:${NC}
   start                            Start Solace Browser
   browser-info                     Show browser info via CDP
 
-${BLUE}EPISODE RECORDING (Like OpenClaw):${NC}
+${BLUE}EPISODE RECORDING:${NC}
   record <url> [name]              Start episode recording (real browser)
   navigate <episode> <url>         Navigate (real browser)
   click <episode> <selector>       Click element (real browser)

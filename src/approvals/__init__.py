@@ -3,7 +3,7 @@ approvals — OAuth3-Governed Execution Approval System
 SolaceBrowser Phase 2 (Security Feature #9)
 
 Provides exec approval gating and time-bounded elevated privilege sessions
-that out-compete OpenClaw's approval mechanism.
+with stronger guarantees than any generic approval mechanism.
 
 Architecture:
   gate.py     — ApprovalRequest + ApprovalDecision + ApprovalGate

@@ -922,7 +922,7 @@ Support the journey: https://ko-fi.com/phucnet"""
     async def get_aria_snapshot(self, limit: int = 500) -> Dict[str, Any]:
         """
         Get accessibility tree (ARIA) snapshot with element references
-        Similar to OpenClaw's snapshotAria()
+        Returns ARIA nodes with ref IDs for structured AI interaction.
         """
         if not self.current_page:
             return {"error": "No active page"}
@@ -947,7 +947,7 @@ Support the journey: https://ko-fi.com/phucnet"""
     async def get_dom_snapshot(self, limit: int = 800) -> Dict[str, Any]:
         """
         Get DOM tree snapshot with element references
-        Similar to OpenClaw's snapshotDom()
+        Returns DOM nodes with ref IDs for structured AI interaction.
         """
         if not self.current_page:
             return {"error": "No active page"}
@@ -997,7 +997,7 @@ Support the journey: https://ko-fi.com/phucnet"""
         """
         Execute a structured action with human-like behaviors
         Supports: click, type, press, hover, scroll, wait, fill
-        Similar to OpenClaw's unified action model
+        Unified action model for AI-driven browser control.
         """
         if not self.current_page:
             return {"error": "No active page"}
@@ -1139,7 +1139,7 @@ class SolaceBrowserServer:
         self.app.router.add_post('/api/update-linkedin-profile', self._handle_update_linkedin_profile)
         self.app.router.add_post('/api/save-session', self._handle_save_session)
         self.app.router.add_get('/api/session-status', self._handle_session_status)
-        # New OpenClaw-like routes for better AI interaction
+        # AI-native routes for structured browser interaction
         self.app.router.add_get('/api/aria-snapshot', self._handle_aria_snapshot)
         self.app.router.add_get('/api/dom-snapshot', self._handle_dom_snapshot)
         self.app.router.add_get('/api/page-snapshot', self._handle_page_snapshot)

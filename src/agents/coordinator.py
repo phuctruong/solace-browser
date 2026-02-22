@@ -15,7 +15,7 @@ All hashes:     "sha256:" prefixed hex strings.
 No floats in verification paths (int only).
 OAuth3 enforcement is delegated to CapabilityAgentRouter.submit_task.
 
-Reference: solace-browser multi-agent routing spec (OpenClaw Feature #7)
+Reference: solace-browser multi-agent routing spec (Feature #7)
 Rung: 641 (local correctness)
 """
 

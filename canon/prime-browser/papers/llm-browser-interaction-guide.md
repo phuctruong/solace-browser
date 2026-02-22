@@ -9,13 +9,13 @@
 
 ## THE CORE INSIGHT
 
-**OpenClaw's Secret:** LLMs don't see screenshots and HTML. They see **structured element references**.
+**The Core Insight:** LLMs don't see screenshots and HTML. They see **structured element references**.
 
 ```
 ❌ Old Way (Solace v1):
 Browser → Screenshot + HTML string → LLM → "Click button.submit-btn"
 
-✅ New Way (Solace v2 + OpenClaw patterns):
+✅ New Way (Solace v2 — AI-native approach):
 Browser → ARIA tree with refs (n1, n2, n3...) → LLM → "Click n42"
 ```
 
@@ -23,7 +23,7 @@ Browser → ARIA tree with refs (n1, n2, n3...) → LLM → "Click n42"
 
 ## CRITICAL DIFFERENCES
 
-### What OpenClaw Provides
+### What AI-Native Browser Interaction Provides
 
 1. **Accessibility Tree (ARIA) Snapshots**
    - Every interactive element gets a reference: `n1`, `n2`, `n3`...
@@ -391,28 +391,28 @@ assert any("saved" in msg['text'].lower() for msg in snapshot['console'])
 
 ---
 
-## OPENCLAW FILE REFERENCES
+## IMPLEMENTATION REFERENCE
 
-**Study These Files:**
+**Key Patterns (Playwright API):**
 
-1. **`~/projects/openclaw/src/browser/cdp.ts`**
-   - `snapshotAria()` → How to get accessibility tree
-   - `snapshotDom()` → How to get DOM structure
+1. **Accessibility Tree Snapshot**
+   - `page.accessibility.snapshot()` → How to get ARIA tree
+   - `page.evaluate()` → How to get DOM structure
 
-2. **`~/projects/openclaw/src/browser/routes/agent.snapshot.ts`**
+2. **Snapshot Serving**
    - How snapshots are served to agents (LLMs)
    - Combined screenshot + ARIA + DOM response format
 
-3. **`~/projects/openclaw/src/browser/routes/agent.act.ts`**
+3. **Unified Action Execution**
    - Unified action execution
    - Modifiers, delays, human-like behaviors
 
-4. **`~/projects/openclaw/src/browser/pw-tools-core.interactions.ts`**
-   - Click/type/hover/scroll implementation
+4. **Click/Type/Scroll Implementation**
+   - Click/type/hover/scroll via Playwright locators
    - `slowly` typing character-by-character
    - Timeout and retry logic
 
-5. **`~/projects/openclaw/src/browser/client-actions-core.ts`**
+5. **Action Type Definitions**
    - Action type definitions
    - BrowserActRequest interface
 
@@ -486,7 +486,7 @@ async def get_page_snapshot(self):
 - ❌ No network visibility
 - ❌ Fragile (breaks on DOM changes)
 
-**After (Solace v2 + OpenClaw patterns):**
+**After (Solace v2 — AI-native approach):**
 - ✅ LLM sees structured ARIA tree with refs
 - ✅ LLM uses stable element references (n1, n2...)
 - ✅ Human-like typing with delays

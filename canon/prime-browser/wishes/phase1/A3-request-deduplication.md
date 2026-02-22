@@ -1,7 +1,7 @@
 # Wish A3: Request Deduplication + Connection Pooling
 
 **Task ID:** A3
-**Phase:** Phase A (Parity with OpenClaw)
+**Phase:** Phase A (Browser Control Foundation)
 **Owner:** Solver (via Haiku swarm)
 **Timeline:** 2 days
 **Depends On:** A1 (per-tab state machine)
@@ -14,7 +14,7 @@
 
 Implement efficient request deduplication and connection pooling for WebSocket relay. Prevents duplicate CDP commands and ensures single WebSocket connection per relay server.
 
-**Reference Pattern:** OpenClaw deduplication (RESEARCH_SYNTHESIS.md, line 37–41)
+**Reference Pattern:** Industry-standard WebSocket request deduplication (promise fan-out pattern)
 
 ---
 
@@ -149,7 +149,7 @@ async def get_relay_connection(relay_url: str) -> WebSocket:
 ✅ Thread-safe concurrent deduplication
 ✅ 641-edge tests pass (all 5 dedup/pool cases)
 ✅ 274177-stress tests pass (100+ concurrent commands)
-✅ OpenClaw pattern matched exactly
+✅ Industry-standard pattern matched exactly
 
 ---
 

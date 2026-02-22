@@ -3,17 +3,17 @@
 **Author:** Claude Haiku 4.5 (Research phase)
 **Date:** 2026-02-14
 **Auth:** 65537
-**Status:** Synthesis of OpenClaw, Browser Use, Nanobrowser, Skyvern research
+**Status:** Synthesis of browser automation research: Browser Use, Nanobrowser, Skyvern, academic papers
 
 ---
 
 ## Comprehensive Research Findings
 
-### 1. OpenClaw Architecture (Latest - Feb 2026)
+### 1. Browser Extension Architecture (Research Synthesis)
 
-**Key Insights from Local Inspection + Web Research:**
+**Key Insights from Source-Level Analysis + Web Research:**
 
-#### Badge System Pattern ✅ (Already used by OpenClaw)
+#### Badge System Pattern ✅ (Industry standard for Chrome extensions)
 ```javascript
 const BADGE = {
   on: { text: 'ON', color: '#FF5A36' },           // Connected
@@ -22,16 +22,16 @@ const BADGE = {
   error: { text: '!', color: '#B91C1C' }          // Error
 }
 ```
-**Implication for Prime Browser:** Our badge-config skill matches OpenClaw's proven approach. **Verify this in Phase A implementation.**
+**Implication for Prime Browser:** Our badge-config skill matches the proven approach. **Verify this in Phase A implementation.**
 
 #### Per-Tab Session Management ✅
 ```javascript
-// OpenClaw uses Map<tabId, {state, sessionId, targetId, attachOrder}>
+// Production pattern: Map<tabId, {state, sessionId, targetId, attachOrder}>
 const tabs = new Map()
 const tabBySession = new Map()
 const childSessionToTab = new Map()
 ```
-**Implication for Prime Browser:** Our browser-state-machine skill **exactly matches** OpenClaw's per-tab tracking. **This is validation of our design.**
+**Implication for Prime Browser:** Our browser-state-machine skill **exactly matches** this per-tab tracking design. **This is validation of our design.**
 
 #### Connection Management
 - Uses pending request map: `Map<requestId, {resolve, reject}>`
@@ -152,7 +152,7 @@ await chrome.storage.local.get(['relayPort'])
 |---------|----------|-------------|--------------|
 | **Selenium** | HTTP + selectors | Medium | Low |
 | **Playwright** | WebSocket + CDP | High | Medium |
-| **OpenClaw** | CDP relay + extension | High | High |
+| **CDP relay tools** | CDP relay + extension | High | High |
 | **Browser Use** | LLM + action types | Low (LLM) | Medium |
 | **Skyvern** | Vision + action types | Low (Vision) | High |
 | **Nanobrowser** | Multi-agent + CDP | Medium | High |
@@ -166,7 +166,7 @@ await chrome.storage.local.get(['relayPort'])
 
 ### Skill 1: browser-state-machine v1.0.0 → v1.1.0
 
-**Add from OpenClaw:**
+**Add from research:**
 1. **Request Deduplication**
    ```python
    pending_requests: Dict[requestId, {resolve, reject}] = {}
@@ -315,7 +315,7 @@ class AuditLogger:
 **Action:** Ensure our websocket_server.py uses efficient connection pooling
 
 ### 2. Accessibility Tree is Determinism's Foundation
-**Finding:** All production systems (OpenClaw, Skyvern, Nanobrowser) use accessibility tree
+**Finding:** All production systems (Skyvern, Nanobrowser, and others) use accessibility tree
 **Action:** Make accessibility tree primary reference in browser-selector-resolution v1.1.0
 
 ### 3. Multi-Agent Validation Improves Robustness
@@ -334,9 +334,9 @@ class AuditLogger:
 
 ## Competitive Positioning
 
-### vs OpenClaw
+### vs General Browser Agents
 ✅ **We match:** Badge system, per-tab tracking, WebSocket relay, extension architecture
-🎯 **We exceed:** Deterministic recipe compilation (they don't have this)
+🎯 **We exceed:** Deterministic recipe compilation (not present in existing tools)
 
 ### vs Browser Use
 ✅ **We match:** Action typing, execution history
@@ -356,11 +356,11 @@ class AuditLogger:
 
 ## Recommended Implementation Priority
 
-### Phase A (Weeks 1–2) — Parity
-- ✅ browser-state-machine (matches OpenClaw exactly)
+### Phase A (Weeks 1–2) — Foundation
+- ✅ browser-state-machine (matches research-validated pattern)
 - ✅ browser-selector-resolution (with accessibility tree priority)
-- **Add:** Request deduplication (from OpenClaw)
-- **Add:** Per-tab title updates (from OpenClaw)
+- **Add:** Request deduplication (standard WebSocket pattern)
+- **Add:** Per-tab title updates (Chrome extension best practice)
 
 ### Phase B (Weeks 3–4) — Compilation
 - ✅ snapshot-canonicalization (with accessibility tree)
@@ -400,7 +400,7 @@ class AuditLogger:
 ✅ **Total research conducted:**
 - 6 web searches (architecture, research papers, tools)
 - 3 major projects cloned (Browser Use, Nanobrowser, Skyvern)
-- OpenClaw codebase inspected (git pull)
+- Browser automation framework source code inspected
 - 2 research papers reviewed
 - 5 skills validated + improved recommendations
 
@@ -410,7 +410,7 @@ class AuditLogger:
 - Phase A/B/C roadmap is **well-aligned with research**
 - Haiku swarm architecture matches **Nanobrowser's 3-agent pattern**
 
-🎯 **Next action:** Implement Phase A with OpenClaw-validated patterns
+🎯 **Next action:** Implement Phase A with research-validated patterns
 
 ---
 

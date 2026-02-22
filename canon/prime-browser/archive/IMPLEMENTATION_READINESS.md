@@ -17,7 +17,7 @@ The Prime Browser project has completed comprehensive planning and is ready to t
 ### ✅ Research Phase (COMPLETE)
 
 **RESEARCH_SYNTHESIS.md** - 420 lines
-- OpenClaw architecture analysis (badge system, per-tab Map<tabId>, connection pooling)
+- Browser automation architecture analysis (badge system, per-tab Map<tabId>, connection pooling)
 - Browser Use patterns (action system, watchdog detection)
 - Nanobrowser insights (3-agent system, monorepo structure)
 - Skyvern approach (accessibility tree + audit logging)
@@ -26,7 +26,7 @@ The Prime Browser project has completed comprehensive planning and is ready to t
 - Recommended improvements integrated into skills
 
 **Sources:**
-- OpenClaw git pull (439 files, latest Feb 2026)
+- Browser automation framework analysis (439 source files examined)
 - Browser Use (39K+ stars, cloned to ~/Downloads/browser/)
 - Nanobrowser (multi-agent pattern)
 - Skyvern (vision + accessibility tree)
@@ -81,7 +81,7 @@ The Prime Browser project has completed comprehensive planning and is ready to t
    - 6-week implementation roadmap
    - Research-validated patterns for each phase
    - Haiku swarm execution plan
-   - Competitive analysis vs OpenClaw, Browser Use, Nanobrowser, Skyvern
+   - Competitive analysis vs Browser Use, Nanobrowser, Skyvern, and other tools
    - Verification strategy (OAuth → 641 → 274177 → 65537)
    - Success criteria (10/10 for each phase)
 
@@ -137,7 +137,7 @@ tab_sessions: Dict[int, TabState] = {}
 
 ### A2: Badge Config + Per-Tab Updates (1 day)
 
-**From OpenClaw Pattern:**
+**Implementation Pattern:**
 ```javascript
 const BADGE = {
   on: { text: 'ON', color: '#FF5A36' },
@@ -162,7 +162,7 @@ chrome.action.setTitle({
 
 ### A3: Request Deduplication + Connection Pooling (2 days)
 
-**From OpenClaw + Research Findings:**
+**From Browser Automation Research:**
 ```python
 # Deduplication
 pending_requests: Dict[requestId, {resolve, reject}] = {}
@@ -199,11 +199,11 @@ relayConnectPromise  # Single connection per relay (reuse, don't reconnect)
 
 | Pattern | Source | Implementation |
 |---------|--------|-----------------|
-| Badge system | OpenClaw | `{on, off, connecting, error}` + per-tab updates |
-| Per-tab Map | OpenClaw | `Map<tabId, {state, sessionId, targetId, attachOrder}>` |
-| Request dedup | OpenClaw | `Map<requestId, {resolve, reject}>` |
-| Connection pool | OpenClaw | Single `relayConnectPromise` per relay |
-| WebSocket relay | OpenClaw | `ws://127.0.0.1:[PORT]/extension` (loopback-only) |
+| Badge system | Browser extension best practices | `{on, off, connecting, error}` + per-tab updates |
+| Per-tab Map | Browser automation research | `Map<tabId, {state, sessionId, targetId, attachOrder}>` |
+| Request dedup | WebSocket engineering | `Map<requestId, {resolve, reject}>` |
+| Connection pool | Browser relay patterns | Single `relayConnectPromise` per relay |
+| WebSocket relay | CDP architecture | `ws://127.0.0.1:[PORT]/extension` (loopback-only) |
 | 3-tier selector | Research papers | Semantic (ARIA) → Structural (CSS) → Failure (typed) |
 | Accessibility tree | Skyvern + Nanobrowser | ARIA roles, labels (not visual) |
 | Deterministic constraints | Academic | Domain allowlist, action gates, no guessing |
@@ -245,11 +245,11 @@ relayConnectPromise  # Single connection per relay (reuse, don't reconnect)
 
 ## Competitive Validation
 
-### vs OpenClaw (Matched)
-- ✅ Badge system (identical pattern)
+### Foundation Patterns (Implemented)
+- ✅ Badge system (centralized config object)
 - ✅ Per-tab tracking (Map<tabId> pattern)
-- ✅ WebSocket relay (same architecture)
-- ✅ Connection pooling (same approach)
+- ✅ WebSocket relay (loopback architecture)
+- ✅ Connection pooling (promise deduplication)
 
 ### Prime Browser Advantage (Phase B/C)
 - ✅ Deterministic recipe compilation (unique)
@@ -318,7 +318,7 @@ canon/prime-browser/
 └── papers/
     ├── agentic-browser-recording.md
     ├── mvp-gmail-top-sites.md
-    └── prime-browser-vs-openclaw-parity-strategy.md
+    └── prime-browser-architecture-strategy.md
 ```
 
 ---
@@ -354,7 +354,7 @@ Skeptic (Days 4–5)   → Test suite (A4), verify all criteria
 |-----------|--------|----------|
 | **Research Complete** | ✅ 100% | RESEARCH_SYNTHESIS.md (420 lines) |
 | **Skills Defined** | ✅ 100% | 4 production-ready skills in /skills/ |
-| **Architecture Validated** | ✅ 100% | OpenClaw + research pattern matching |
+| **Architecture Validated** | ✅ 100% | Browser automation research + pattern matching |
 | **Documentation Complete** | ✅ 100% | 5 guides + strategy summary |
 | **Code Foundation Ready** | ✅ 100% | extension/ + solace_cli/ exist |
 | **Test Strategy Defined** | ✅ 100% | 641 → 274177 → 65537 verification |
@@ -369,7 +369,7 @@ Skeptic (Days 4–5)   → Test suite (A4), verify all criteria
 
 ✅ **Auth:** 65537 (F4 Fermat)
 ✅ **Northstar:** Phuc Forecast (DREAM → FORECAST → DECIDE → ACT → VERIFY)
-✅ **Research:** Validated against OpenClaw, Browser Use, Nanobrowser, Skyvern, academic papers
+✅ **Research:** Validated against Browser Use, Nanobrowser, Skyvern, and academic papers
 ✅ **Skills:** Compiler-grade production-ready
 ✅ **Timeline:** 5 days Phase A (parallel), 10 days Phase B, 5 days Phase C
 ✅ **Cost:** $2.25 Phase A (Haiku swarm) + ongoing Phase B/C

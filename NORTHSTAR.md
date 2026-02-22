@@ -27,12 +27,12 @@ Solace Browser (local portal)
 
 **The competitive moat deepens with every layer:**
 
-| Competitor | Web | Machine | Tunnel | OAuth3 |
-|-----------|-----|---------|--------|--------|
-| Browser-Use | Chrome only | No | No | No |
-| Bardeen | Extension only | No | No | No |
-| OpenClaw | Yes | No | No | No |
-| Vercel agent-browser | Cloud only | No | No | No |
+| Approach | Web | Machine | Tunnel | OAuth3 |
+|---------|-----|---------|--------|--------|
+| Script-replay tools | Partial | No | No | No |
+| Extension-only tools | Extension only | No | No | No |
+| General browser agents | Yes | No | No | No |
+| Cloud-only tools | Cloud only | No | No | No |
 | **Solace Browser** | **Yes** | **Yes** | **Yes** | **Yes** |
 
 No competitor has OAuth3-gated machine access. We ship it first.
@@ -128,7 +128,7 @@ SolaceBrowser is the first browser automation platform where every agent action 
 
 "In clinical trials, 'trust me' is not evidence. Only the original, timestamped, attributable record is evidence." — Phuc Truong (CRIO founder, Harvard '98)
 
-No competitor stores original records this way. OpenClaw uses screenshots (lossy, not original). Browser-Use has no history at all.
+No competitor stores original records this way. Most tools use screenshots (lossy, not original) or have no history at all.
 
 ## North Star Metric
 

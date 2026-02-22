@@ -1,7 +1,7 @@
 """
 Plugin Architecture for SolaceBrowser — OAuth3-governed plugin system.
 
-Better than OpenClaw's ClawHub Registry:
+OAuth3-governed plugin registry with stronger guarantees than any generic alternative:
   - OAuth3 scope gates (plugin cannot run without granted scopes)
   - SHA256 integrity verification on every load
   - Rung-enforced access to security-critical operations

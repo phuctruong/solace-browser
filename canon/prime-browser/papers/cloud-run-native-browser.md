@@ -276,7 +276,7 @@ Time: 5 minutes
 | Solution | Cost | Time | Setup |
 |----------|------|------|-------|
 | **Cloud Run** | $12 | 10 min | 2 min |
-| OpenClaw (LLM-based) | $250,000 | 40 hrs | 1 hr |
+| Per-action LLM tools | $250,000 | 40 hrs | 1 hr |
 | EC2 Auto-scaling | $2,000 | 20 min | 1 hr |
 | Kubernetes (GKE) | $500 | 15 min | 2 hrs |
 | Heroku Dynos | $1,000 | 25 min | 30 min |
@@ -397,13 +397,13 @@ Cloud Run pricing (us-central1):
   Daily cost: $240 + $300 + $0.40 = ~$540
   Monthly: $540 × 30 = $16,200
 
-vs OpenClaw:
+vs per-action LLM tools:
   1M × $2.50 = $2,500,000/month
 
 vs Heroku Dynos (performance-l, $500/month):
   For 10,000 concurrent instances: $5,000,000/month
 
-Cloud Run wins: 146x cheaper than OpenClaw
+Cloud Run wins: 146x cheaper than per-action LLM tools
 ```
 
 ---

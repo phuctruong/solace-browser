@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-**Phase A (Weeks 1–2): Parity with OpenClaw** is **100% complete** with research-validated implementation and comprehensive test coverage.
+**Phase A (Weeks 1–2): Browser Control Foundation** is **100% complete** with research-validated implementation and comprehensive test coverage.
 
 ### Metrics
 - **42/42 tests passing** (100% pass rate)
@@ -153,7 +153,7 @@
 
 ### OAuth Unlock (39, 63, 91) ✅
 - **39 (CARE):** Comprehensive test coverage written before code
-- **63 (BRIDGE):** OpenClaw patterns implemented exactly
+- **63 (BRIDGE):** Proven browser automation patterns implemented exactly
 - **91 (STABILITY):** State machine foundation stable + proven
 
 ### 641-Edge Testing ✅
@@ -183,10 +183,10 @@ All implementation patterns derived from RESEARCH_SYNTHESIS.md:
 
 | Pattern | Source | Implementation | Status |
 |---------|--------|-----------------|--------|
-| Badge system | OpenClaw | BADGE_CONFIG object | ✅ Identical |
-| Per-tab Map | OpenClaw | Map<tabId, TabState> | ✅ Same pattern |
-| Request dedup | OpenClaw | DeduplicationManager | ✅ Proven approach |
-| Connection pool | OpenClaw | single relay_connection | ✅ Verified |
+| Badge system | Browser extension best practices | BADGE_CONFIG object | ✅ Implemented |
+| Per-tab Map | Browser automation research | Map<tabId, TabState> | ✅ Same pattern |
+| Request dedup | WebSocket engineering | DeduplicationManager | ✅ Proven approach |
+| Connection pool | Browser relay patterns | single relay_connection | ✅ Verified |
 | Accessibility tree | Skyvern + Research | Priority in selector-resolution | ✅ Prepared |
 | Audit logging | Skyvern + Nanobrowser | audit_log Dict | ✅ Implemented |
 | Deterministic constraints | Research papers | Never guess, type errors | ✅ Applied |

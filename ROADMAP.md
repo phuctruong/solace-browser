@@ -2,7 +2,7 @@
 
 **Authority**: 65537 | **Northstar**: 70% recipe hit rate → economic moat
 **Last Updated**: 2026-02-21
-**Status**: Phase 1 DONE → Phase 1.5 DONE (1,466 tests) → Phase 2 DONE (805 tests) → Phase 3 DONE (344 tests) → Phase 4 DONE (10 OpenClaw competitive features, 3,542 total tests)
+**Status**: Phase 1 DONE → Phase 1.5 DONE (1,466 tests) → Phase 2 DONE (805 tests) → Phase 3 DONE (344 tests) → Phase 4 DONE (10 advanced features, 3,542 total tests)
 
 ## Status Summary (2026-02-22)
 
@@ -76,13 +76,13 @@ OAuth3 makes the recipe system **legally and architecturally defensible**:
 6. **OAuth3 protocol** (scoped consent, revocation, audit trail — unique to us)
 
 **Competitive landscape**:
-| Competitor | Approach | OAuth3 gap |
-|-----------|---------|-----------|
-| OpenClaw | General browser agent | No consent model, no revocation, black box |
-| Browser-Use | Playwright + LLM | No scoped delegation, no evidence |
-| Bardeen | Chrome extension | No cloud, no agency tokens |
-| Vercel agent-browser | DOM reduction | No consent, no revocation, no recipe reuse |
-| **All of them** | — | None implement OAuth3 — we publish the spec |
+| Approach | Gap |
+|---------|-----|
+| General browser agents | No consent model, no revocation, black box |
+| Playwright + LLM tools | No scoped delegation, no evidence |
+| Chrome extensions | No cloud, no agency tokens |
+| DOM reduction tools | No consent, no revocation, no recipe reuse |
+| **All existing tools** | None implement OAuth3 — we publish the spec |
 
 ---
 
@@ -607,7 +607,7 @@ Acceptance (Rung 641):
 
 **Strategic reframe**: Solace Browser is not just a web browser. It is the universal portal through which AI agents interact with ALL of a user's digital resources — web accounts, local files, terminal, system — all governed by OAuth3 consent + Part 11 audit trails.
 
-**Why this deepens the moat**: No competitor has OAuth3-gated machine access. Browser-Use is Chrome only. Bardeen is extension only. OpenClaw has no machine layer. Solace Browser is the first AI agent portal with web + machine + cloud in a single, consent-governed application.
+**Why this deepens the moat**: No competitor has OAuth3-gated machine access. Solace Browser is the first AI agent portal with web + machine + cloud in a single, consent-governed application.
 
 **5 Control Surfaces (after this phase):**
 1. AI Agent (Claude Code + stillwater skills → local API)
@@ -888,9 +888,9 @@ Rung: 641
 
 ---
 
-## Phase 4 — OpenClaw Competitive Features — DONE
+## Phase 4 — Advanced Features — DONE
 
-**Status**: All 10 OpenClaw competitive features delivered. 3,542 total tests passing.
+**Status**: All 10 advanced features delivered. 3,542 total tests passing.
 **Completed**: Dynamic DOM Snapshots, Workflow State Machine, Multi-Channel Gateway, Plugin Architecture, Multi-Agent Routing, Exec Approvals + Elevated Mode, Multi-Profile Browser + Process Mgr, Voice Wake (141 tests), Live Canvas (132 tests), Companion Apps (165 tests).
 
 ---
@@ -959,7 +959,7 @@ We ship this sequence:
 2. DONE — Phase 1.5: OAuth3 foundation (1,466 tests: OAuth3 core, consent UI, step-up auth, HTML snapshots, Gmail, Substack, Twitter, machine access, audit trail)
 3. DONE — Phase 2: Reddit + Notion + HackerNews (805 tests across 3 platforms)
 4. DONE — Phase 3: Universal Portal (Machine Access: 100 tests, Dashboard: 70 tests, Distribution: 94 tests)
-5. DONE — Phase 4: OpenClaw competitive features (Voice Wake: 141 tests, Live Canvas: 132 tests, Companion Apps: 165 tests — 10 features total, 3,542 total tests)
+5. DONE — Phase 4: Advanced platform features (Voice Wake: 141 tests, Live Canvas: 132 tests, Companion Apps: 165 tests — 10 features total, 3,542 total tests)
 6. PLANNED — Phase 5: solaceagi.com (cloud execution + tunnel relay)
 
 We publish:
@@ -968,7 +968,7 @@ We publish:
 - One-command demo: `curl -X POST www.solaceagi.com/demo/linkedin-read-messages`
 
 We win when:
-- OpenClaw, Browser-Use are forced to implement OAuth3 (we set the standard)
+- Other browser automation tools are forced to implement OAuth3 (we set the standard)
 - Enterprises adopt rung-gated execution as compliance requirement
 - Skill libraries are treated as capital assets (not just code)
 

@@ -95,7 +95,7 @@ canon/
 
 ### Phase A (Complete) ✅
 
-**Foundation: Parity with OpenClaw**
+**Foundation: Core Browser Control Layer**
 
 ```
 BROWSER_STATE_MACHINE

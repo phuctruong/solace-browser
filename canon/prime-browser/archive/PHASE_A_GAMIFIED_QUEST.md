@@ -11,7 +11,7 @@
 
 ## Quest Overview
 
-Transform Prime Browser to achieve **parity with OpenClaw** while adding **unique recipe-based replay capability**. This is a 5-day parallel swarm quest using Prime Channel routing and gamified agent coordination.
+Transform Prime Browser to achieve **feature-complete browser control** while adding **unique recipe-based replay capability**. This is a 5-day parallel swarm quest using Prime Channel routing and gamified agent coordination.
 
 **Quest Goal:** Per-tab state machine + badge config + request deduplication + comprehensive testing
 
@@ -84,7 +84,7 @@ Skeptic (Level 5):
 ## Quest Contract
 
 ### Primary Goal
-Implement per-tab state machine, badge visual feedback, request deduplication, and comprehensive test suite to achieve parity with OpenClaw browser automation framework.
+Implement per-tab state machine, badge visual feedback, request deduplication, and comprehensive test suite to achieve production-grade browser automation capability.
 
 ### Quest Steps
 
@@ -239,10 +239,10 @@ OAuth(39,63,91)    ✅ All three unlock conditions met
 
 All implementation validated against **RESEARCH_SYNTHESIS.md**:
 
-- ✅ OpenClaw badge system (identical pattern)
-- ✅ OpenClaw per-tab Map<tabId> (exact architecture)
-- ✅ OpenClaw request deduplication (proven approach)
-- ✅ OpenClaw connection pooling (proven pattern)
+- ✅ Badge configuration system (centralized, identical pattern)
+- ✅ Per-tab Map<tabId> (exact architecture)
+- ✅ Request deduplication (proven approach)
+- ✅ Connection pooling (proven pattern)
 - ✅ Accessibility tree foundation (for Phase B/C)
 - ✅ Deterministic constraints (never guess)
 - ✅ Audit logging (all transitions recorded)

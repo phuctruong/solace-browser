@@ -54,7 +54,7 @@ Output:
 ```
 
 The server:
-- Listens on `ws://localhost:9222` (OpenClaw-inspired port 18792 → we use 9222)
+- Listens on `ws://localhost:9222` (standard CDP relay port — we use 9222)
 - Bridges the Chrome extension to CLI commands
 - Records episodes for later Playwright recipe compilation
 - Tracks active sessions and snapshots

@@ -14,12 +14,12 @@ updated: 2026-02-15
 authority: 65537
 ---
 
-# Skill: Playwright Role Selectors (OpenClaw Pattern)
+# Skill: Playwright Role Selectors (Accessibility Tree Pattern)
 
 **Skill ID**: `playwright-role-selectors`
 **Tier**: Core (foundational)
 **Mastery Level**: Expert (proven in production)
-**Source**: Learned from ~/projects/openclaw
+**Source**: Playwright accessibility API + production validation
 **Validated**: 2026-02-14 (LinkedIn automation)
 
 ---
@@ -300,13 +300,13 @@ curl http://localhost:9222/screenshot  # See what's visible
 
 ## Next-Level Usage
 
-### Combine with OpenClaw Slowly Pattern
+### Combine with Slow-Type Pattern
 ```python
 # For contenteditable fields (React forms)
 requests.post(f"{API}/fill", json={
     "selector": 'role=textbox[name="Description"]',  # Role selector
     "text": "Long description...",
-    "slowly": True,  # OpenClaw pattern
+    "slowly": True,  # character-by-character for React controlled inputs
     "delay": 15  # Optimized delay
 })
 ```
@@ -343,10 +343,10 @@ python3 persistent_browser_server.py --headless
 1. Apply to other dynamic sites (GitHub, Google, etc.)
 2. Build portal library (pre-mapped selectors)
 3. Create recipes using role selectors
-4. Contribute patterns back to OpenClaw
+4. Expand the portal library with pre-mapped selectors for each site
 
 ### Related Skills:
-- `openclaw-slowly-typing.skill.md` (for React forms)
+- `slow-typing.skill.md` (for React forms)
 - `aria-snapshot-analysis.skill.md` (finding selectors)
 - `headless-browser-automation.skill.md` (Cloud Run)
 

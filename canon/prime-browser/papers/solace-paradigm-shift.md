@@ -34,7 +34,7 @@ on the same dataset (100 execution samples minimum).
 This is NOT a narrative claim. This is a testable conjecture.
 ```
 
-**Why This Matters:** Old paradigm (OpenClaw) cannot achieve all three:
+**Why This Matters:** The old agent-based paradigm cannot achieve all three:
 - Old achieves cost-per-action but FAILS determinism (probabilistic per run)
 - Old achieves determinism within run but FAILS scale (1-10 instances max)
 - Old cannot achieve parallelism AND determinism AND cost simultaneously
@@ -69,7 +69,7 @@ Cost Incurred: [ANALYZING_PAGE] + [UPDATING_CONTEXT] × N_ACTIONS
 
 Determinism: [ANALYZING_PAGE] output varies 40-70% even with:
   - Same page content
-  - Same LLM (OpenClaw uses Haiku)
+  - Same LLM (Haiku or similar small model)
   - Same temperature
   Reason: LLM sampling introduces variance (softmax over logits)
 
@@ -117,7 +117,7 @@ State Set (RECIPE_NEW):
 Cost Incurred: [RECORDING_EPISODE] = human time only (not billable)
   All other states = 0 LLM cost
   [REPLAYING] × 100,000 = 100,000 × $0.0001 = $10 total
-  (100 million times cheaper than OpenClaw)
+  (100 million times cheaper than per-action LLM approaches)
 
 Determinism: [REPLAYING] output is IDENTICAL across all N executions
   Same recipe + same page = byte-for-byte identical proof.json
@@ -150,7 +150,7 @@ Guarantee: If [LOCKED] achieved, then ALL executions deterministic
 
 ### State Machine Comparison
 
-| Dimension | Old (OpenClaw) | New (Solace) |
+| Dimension | Old (Agent-Based) | New (Solace) |
 |-----------|---|---|
 | **Per-action cost** | $0.01 (LLM) | $0.000001 (Cloud Run CPU) |
 | **Scale** | 1-10 parallel | 10,000 parallel |
@@ -459,13 +459,13 @@ TEST T9: Idempotence (Determinism Guarantee)
 
 TEST T10: End-to-End Paradigm Shift Proof
   Setup:
-    - Compare OpenClaw vs Solace execution on 100 recipes
+    - Compare agent-based vs Solace execution on 100 recipes
     - Metrics: Cost, Determinism, Parallelism, Time-to-Result
   Input:
-    - OpenClaw: Execute 100 recipes sequentially ($2.50 each)
+    - Agent-based tools: Execute 100 recipes sequentially ($2.50 each)
     - Solace: Execute same 100 recipes in parallel on Cloud Run
   Expect:
-    - OpenClaw: $250, 40 hours, determinism 40-70%, 1-10 parallel
+    - Agent-based tools: $250, 40 hours, determinism 40-70%, 1-10 parallel
     - Solace: $10, 5 minutes, determinism 100%, 100+ parallel
     - All THREE properties from PRIME_TRUTH_THESIS simultaneously true
   Verify:
@@ -579,7 +579,7 @@ PARADIGM CONSTRAINT:
 
 ### 1. Cost Efficiency (250x Cheaper)
 ```
-OpenClaw:     $250,000 (100K runs)
+Agent-based:  $250,000 (100K runs)
 Solace:       $10 (100K runs)
 Savings:      $249,990 (99.996% cheaper)
 ```
@@ -684,8 +684,8 @@ Verification: RTC (Round-Trip Canonicalization) passed
 
 ## Comparison Matrix
 
-| Dimension | OpenClaw | Playwright | Selenium | Solace |
-|-----------|----------|-----------|----------|--------|
+| Dimension | Agent-Based Tools | Playwright | Selenium | Solace |
+|-----------|-------------------|-----------|----------|--------|
 | **Cost per 1K runs** | $2,500 | Dev infra | Dev infra | $0.10 |
 | **Determinism** | 40-70% | N/A | N/A | 100% |
 | **Proof artifacts** | Narrative | None | None | Cryptographic |
@@ -704,7 +704,7 @@ Verification: RTC (Round-Trip Canonicalization) passed
 
 **Goal:** Post to 100,000 social media accounts across Reddit, HackerNews, Twitter, LinkedIn
 
-**OpenClaw Approach:**
+**Per-Action LLM Approach:**
 ```
 Cost:     100,000 × $2.50 = $250,000
 Time:     ~40 hours (rate-limited by LLM)
@@ -804,7 +804,7 @@ The modern web is 90% JavaScript-rendered SPAs (Single Page Applications):
 - ❌ APIs are blocked/rate-limited/changing
 - ❌ Static scrapers fail (empty HTML)
 - ❌ Selenium/Playwright are slow and expensive
-- ❌ OpenClaw costs $2.50 per execution
+- ❌ Per-action LLM tools cost $2.50 per execution
 - ❌ **Result: Billions of data points locked**
 
 **Solace unlocks:**
@@ -848,8 +848,8 @@ Solace Browser leverages the entire Stillwater OS platform:
 
 ## 9. COMPARISON_MATRIX: Full Feature Table
 
-| Feature | OpenClaw | Playwright | Selenium | Solace |
-|---------|----------|-----------|----------|--------|
+| Feature | Agent-Based Tools | Playwright | Selenium | Solace |
+|---------|------------------|-----------|----------|--------|
 | **Cost per execution** | $2.50 | Dev infra | Dev infra | $0.0001 |
 | **Determinism** | 40-70% | N/A | N/A | 100% ✓ |
 | **Proof artifacts** | Narrative | None | None | Cryptographic ✓ |
@@ -904,7 +904,7 @@ The paradigm shift is VERIFIED by satisfying all three properties simultaneously
 **✅ PROPERTY B (Cost Efficiency):**
 - Measured: $0.000095 per execution (target: $0.0001)
 - Evidence: Cloud Run invoice × instance count × runtime
-- Comparison: 250x cheaper than OpenClaw ($250,000 → $10 for 100K runs)
+- Comparison: 250x cheaper than per-action LLM tools ($250,000 → $10 for 100K runs)
 - Status: CONFIRMED
 
 **✅ PROPERTY C (Parallelism):**

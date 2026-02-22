@@ -1,7 +1,7 @@
 # Wish A2: Badge Config + Per-Tab Title Updates
 
 **Task ID:** A2
-**Phase:** Phase A (Parity with OpenClaw)
+**Phase:** Phase A (Browser Control Foundation)
 **Owner:** Solver (via Haiku swarm)
 **Timeline:** 1 day
 **Depends On:** A1 (per-tab state machine)
@@ -14,7 +14,7 @@
 
 Implement visual feedback system showing per-tab connection state via Chrome extension badge and title. Badge reflects current state (ON, OFF, CONNECTING, ERROR).
 
-**Reference Pattern:** OpenClaw badge system (RESEARCH_SYNTHESIS.md, line 16–25)
+**Reference Pattern:** Chrome extension badge system (centralized config object, per-tab updates)
 
 ---
 
@@ -107,7 +107,7 @@ chrome.action.setBadgeBackgroundColor({
 - [ ] Test badge + title update on CONNECTED→NAVIGATING
 - [ ] Test badge + title update on any→ERROR
 - [ ] Test per-tab badge independence (2+ tabs)
-- [ ] Verify visual feedback matches OpenClaw pattern
+- [ ] Verify visual feedback matches design specification
 
 ---
 
@@ -118,7 +118,7 @@ chrome.action.setBadgeBackgroundColor({
 ✅ Per-tab updates don't interfere (tab 1 ≠ tab 2)
 ✅ Visual feedback immediate (< 100ms)
 ✅ 641-edge tests pass (all 5 badge states)
-✅ OpenClaw pattern matched exactly
+✅ Chrome extension badge pattern implemented correctly
 
 ---
 

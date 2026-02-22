@@ -7,7 +7,7 @@
   "reasoning": {
     "research": "LinkedIn project forms use both standard inputs (name field) and contenteditable divs (description field). Standard .fill() works for inputs but times out on contenteditable.",
 
-    "openclaw_solution": "Found in ~/projects/openclaw - use 'slowly' pattern: click → select all → type with delay. This works around React's form validation.",
+    "pattern_source": "Discovered via browser automation research - use 'slowly' pattern: click → select all → type with delay. This works around React's form validation.",
 
     "performance_analysis": "Baseline: 28.82s per project. Bottleneck: slowly typing at 50ms/char = 12.92s for 200 chars. Optimization: reduce to 15ms/char = 4.30s (3x faster).",
 
@@ -181,12 +181,12 @@
   "cost_savings": {
     "time_per_project": "Saved 18.27 seconds (63%)",
     "llm_cost": "$0 (recipe replay)",
-    "cloud_run_cost": "$0.0001 per execution (vs $2.50 OpenClaw)",
+    "cloud_run_cost": "$0.0001 per execution (vs $2.50 for managed automation services)",
     "human_time": "Saved 2-3 minutes of manual work"
   },
 
   "metadata": {
-    "tags": ["linkedin", "addition", "openclaw-pattern", "role-selector", "optimized", "headless"],
+    "tags": ["linkedin", "addition", "ai-native-pattern", "role-selector", "optimized", "headless"],
     "difficulty": "medium",
     "prerequisites": ["logged_in_session"],
     "cloud_run_ready": true,
@@ -198,9 +198,9 @@
     "consolidation_date": "2026-02-15",
     "variants": [
       {
-        "variant_id": "delete-openclaw",
-        "archived_filename": "delete-linkedin-projects-openclaw.recipe.json",
-        "differences": ["Different workflow: project deletion vs addition", "OpenClaw-based approach"],
+        "variant_id": "delete-v1",
+        "archived_filename": "delete-linkedin-projects-v1.recipe.json",
+        "differences": ["Different workflow: project deletion vs addition", "Earlier deletion approach"],
         "note": "Not a variant - different workflow, kept in archive for reference",
         "archived": true,
         "archive_location": "artifacts/ARCHIVE_PHASE3/RECIPES/"

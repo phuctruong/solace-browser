@@ -1,14 +1,13 @@
-# OpenClaw Browser Extension Learnings
+# Browser Extension Architecture Learnings
 
 **Date:** 2026-02-14
-**Source:** /home/phuc/projects/openclaw/assets/chrome-extension/
-**Goal:** Steal the best patterns from OpenClaw and upgrade our Solace extension
+**Goal:** Document proven patterns for robust Chrome extension development in AI browser agents
 
-## Key Patterns to Steal
+## Key Patterns
 
 ### 1. Badge Configuration Object (HIGH PRIORITY)
 
-**Current (Solace):**
+**Before (scattered calls):**
 ```javascript
 // Individual calls scattered throughout
 setBadge("ON", "#00FF00");
@@ -16,7 +15,7 @@ setBadge("REC", "#FF0000");
 setBadge("ERR", "#FF0000");
 ```
 
-**Upgrade (from OpenClaw):**
+**After (centralized config):**
 ```javascript
 const BADGE = {
   on: { text: 'ON', color: '#FF5A36' },
@@ -44,14 +43,14 @@ function setBadge(tabId, kind) {
 
 ### 2. Per-Tab Session Tracking (HIGH PRIORITY)
 
-**Current (Solace):**
+**Before (global state):**
 ```javascript
 let recordingEnabled = false;
 let currentSession = null;
 // Single global session - doesn't support multiple tabs
 ```
 
-**Upgrade (from OpenClaw):**
+**After (per-tab Map):**
 ```javascript
 /** @type {Map<number, {state:'connecting'|'connected', sessionId?:string}>} */
 const tabs = new Map()
@@ -65,7 +64,7 @@ void chrome.debugger.detach({ tabId }).catch(() => {})
 setBadge(tabId, 'connecting')
 void chrome.action.setTitle({
   tabId,
-  title: 'OpenClaw Browser Relay: disconnected',
+  title: 'Solace Browser Relay: disconnected',
 })
 ```
 
@@ -79,7 +78,7 @@ void chrome.action.setTitle({
 
 ### 3. Connection Promise Deduplication (MEDIUM PRIORITY)
 
-**Current (Solace):**
+**Before:**
 ```javascript
 async function connect() {
   if (isConnected) return;
@@ -87,7 +86,7 @@ async function connect() {
 }
 ```
 
-**Upgrade (from OpenClaw):**
+**After (promise-deduplicated):**
 ```javascript
 let relayConnectPromise = null
 
@@ -117,7 +116,7 @@ async function ensureRelayConnection() {
 
 ### 4. Preflight Health Check (HIGH PRIORITY)
 
-**Current (Solace):**
+**Before:**
 ```javascript
 ws = new WebSocket(wsUrl);
 ws.onopen = () => {
@@ -125,7 +124,7 @@ ws.onopen = () => {
 };
 ```
 
-**Upgrade (from OpenClaw):**
+**After (fail-fast preflight):**
 ```javascript
 // Fast preflight: is the relay server up?
 try {
@@ -150,7 +149,7 @@ const ws = new WebSocket(wsUrl)
 
 ### 5. Request/Response Pattern with Pending Map (MEDIUM PRIORITY)
 
-**Current (Solace):**
+**Before:**
 ```javascript
 async for (msg in this.ws) {
   response = json.loads(msg)
@@ -159,7 +158,7 @@ async for (msg in this.ws) {
 }
 ```
 
-**Upgrade (from OpenClaw):**
+**After (pending map pattern):**
 ```javascript
 /** @type {Map<number, {resolve, reject}>} */
 const pending = new Map()
@@ -200,13 +199,7 @@ async function onRelayMessage(text) {
 
 ### 6. Options Page Best Practices (MEDIUM PRIORITY)
 
-**Current (Solace):**
-```javascript
-// Simple form with save button
-document.getElementById('save').addEventListener('click', saveOptions)
-```
-
-**Upgrade (from OpenClaw):**
+**Modern approach:**
 ```html
 <!-- Manifest v3 uses options_ui not options_page -->
 "options_ui": { "page": "options.html", "open_in_tab": true }
@@ -241,14 +234,7 @@ document.getElementById('save').addEventListener('click', saveOptions)
 
 ### 7. Relay Port Configuration (MEDIUM PRIORITY)
 
-**Current (Solace):**
-```javascript
-const DEFAULT_WS_URL = "ws://localhost:9222";
-const config = await getServerConfig();
-const wsUrl = config.wsUrl;
-```
-
-**Upgrade (from OpenClaw):**
+**Robust port handling:**
 ```javascript
 const DEFAULT_PORT = 18792
 
@@ -283,17 +269,7 @@ async function checkRelayReachable(port) {
 
 ### 8. Manifest v3 Best Practices (LOW PRIORITY)
 
-**Current (Solace):**
-```json
-{
-  "manifest_version": 3,
-  "permissions": ["scripting", "webRequest", "tabs", "storage"],
-  "host_permissions": ["<all_urls>"],
-  "options_page": "options.html"
-}
-```
-
-**Upgrade (from OpenClaw):**
+**Modern manifest.json:**
 ```json
 {
   "manifest_version": 3,
@@ -321,20 +297,7 @@ async function checkRelayReachable(port) {
 
 ### 9. Error Recovery Pattern (MEDIUM PRIORITY)
 
-**Current (Solace):**
-```javascript
-ws.onerror = (error) => {
-  console.error("[Solace] WebSocket error:", error);
-  isConnected = false;
-};
-
-ws.onclose = () => {
-  isConnected = false;
-  setTimeout(connect, 5000); // Retry
-};
-```
-
-**Upgrade (from OpenClaw):**
+**Per-tab error recovery:**
 ```javascript
 function onRelayClosed(reason) {
   relayWs = null
@@ -348,7 +311,7 @@ function onRelayClosed(reason) {
     setBadge(tabId, 'connecting')
     void chrome.action.setTitle({
       tabId,
-      title: 'OpenClaw Browser Relay: disconnected'
+      title: 'Solace Browser Relay: disconnected'
     })
   }
   tabs.clear()
@@ -365,13 +328,7 @@ function onRelayClosed(reason) {
 
 ### 10. Listener Installation Guard (LOW PRIORITY)
 
-**Current (Solace):**
-```javascript
-// Listeners installed multiple times
-chrome.tabs.onUpdated.addListener(handler);
-```
-
-**Upgrade (from OpenClaw):**
+**Prevent duplicate listener registration:**
 ```javascript
 let debuggerListenersInstalled = false
 
@@ -410,7 +367,7 @@ if (!debuggerListenersInstalled) {
 
 ## Twin AI + Playwright Specific Notes
 
-OpenClaw's architecture is CDP-focused (Chrome DevTools Protocol) which is different from our Twin AI + Playwright focus. However, many patterns are directly applicable:
+Our architecture is CDP-focused (Chrome DevTools Protocol) which complements Twin AI + Playwright focus. Many patterns are directly applicable:
 
 - **Badge system:** Perfect for showing recording state
 - **Per-tab tracking:** Essential when recording from multiple tabs
@@ -442,7 +399,7 @@ canon/prime-browser/extension/
 │   - Add port validation
 │   - Add AbortController timeout
 └── images/ (LOW IMPACT)
-    - Add icon32.png (from openclaw)
+    - Add icon32.png
 ```
 
 ## Measurements
@@ -494,4 +451,4 @@ After implementing these upgrades:
 **Northstar:** Phuc Forecast (DREAM → FORECAST → DECIDE → ACT → VERIFY)
 **Verification:** 641 → 274177 → 65537
 
-*"Every pattern in OpenClaw teaches us how to build deterministic, fail-safe, user-friendly automation."*
+*"Every proven pattern teaches us how to build deterministic, fail-safe, user-friendly automation."*

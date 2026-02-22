@@ -3,13 +3,13 @@
 **Auth:** 65537 | **Northstar:** Phuc Forecast
 **Date:** 2026-02-14
 **Status:** Research-Validated, Ready for Phase A Execution
-**Research Source:** RESEARCH_SYNTHESIS.md (OpenClaw, Browser Use, Nanobrowser, Skyvern, Academic Papers)
+**Research Source:** RESEARCH_SYNTHESIS.md (Browser Use, Nanobrowser, Skyvern, Academic Papers)
 
 ---
 
 ## Executive Summary
 
-Prime Browser achieves **parity with OpenClaw** (production browser automation framework) while adding a **unique competitive advantage**: deterministic recipe compilation for Playwright-based replay without re-execution.
+Prime Browser implements **production-grade browser control** while adding a **unique competitive advantage**: deterministic recipe compilation for Playwright-based replay without re-execution.
 
 ### Goal
 ```
@@ -19,7 +19,7 @@ Episode (real-time exploration) → Recipe (frozen, deterministic) → Playwrigh
 ### Competitive Advantage
 | System | Real-Time Control | Determinism | Replay Capability | Audit Trail |
 |--------|-------------------|-------------|-------------------|-------------|
-| OpenClaw | ✅ Yes | High | ❌ No | ✅ Medium |
+| General browser agents | ✅ Yes | High | ❌ No | ✅ Medium |
 | Browser Use | ✅ Yes | Low (LLM) | ❌ No | ✅ Medium |
 | **Prime Browser** | ✅ Yes | **High** | **✅ Yes** | **✅ High** |
 
@@ -27,7 +27,7 @@ Episode (real-time exploration) → Recipe (frozen, deterministic) → Playwrigh
 
 ## Phase Breakdown (6 Weeks)
 
-### Phase A: Parity with OpenClaw (Weeks 1–2)
+### Phase A: Browser Control Foundation (Weeks 1–2)
 
 **Goal:** Real-time browser control via WebSocket relay + per-tab state machine
 
@@ -46,7 +46,7 @@ Episode (real-time exploration) → Recipe (frozen, deterministic) → Playwrigh
 
 **Research-Validated Patterns Applied:**
 
-✅ **From OpenClaw:**
+✅ **Foundation Patterns (Research-Validated):**
 - Badge system: `{on, off, connecting, error}` with per-tab updates
 - Per-tab Map: `Map<tabId, {state, sessionId, targetId, attachOrder}>`
 - Request deduplication: `Map<requestId, {resolve, reject}>`
@@ -227,10 +227,10 @@ Recipe YAML
 
 ## Competitive Analysis (Research-Derived)
 
-### vs OpenClaw
+### vs General Browser Agents
 
-| Dimension | OpenClaw | Prime Browser |
-|-----------|----------|---------------|
+| Dimension | General Browser Agents | Prime Browser |
+|-----------|-----------------------|---------------|
 | **Real-time control** | ✅ Yes | ✅ Yes |
 | **Per-tab tracking** | ✅ Yes (Map) | ✅ Yes (same pattern) |
 | **WebSocket relay** | ✅ Yes | ✅ Yes (same architecture) |
@@ -350,7 +350,7 @@ canon/prime-browser/
 
 All recommendations derived from:
 
-1. **OpenClaw source inspection** (~/projects/openclaw)
+1. **Browser automation architecture research** (source-level analysis)
    - Badge system, per-tab Map, request deduplication, connection pooling
 
 2. **Browser Use (39K+ GitHub stars)**

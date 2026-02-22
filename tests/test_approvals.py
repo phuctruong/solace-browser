@@ -1,6 +1,6 @@
 """
 tests/test_approvals.py — Exec Approvals + Elevated Mode Test Suite
-SolaceBrowser Phase 2 (OpenClaw Feature #9)
+SolaceBrowser Phase 2 (Feature #9)
 
 Tests (60+ required):
   TestApprovalRequest   (8 tests)  — dataclass creation, fields, expiry, risk levels

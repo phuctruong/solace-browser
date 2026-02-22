@@ -28,7 +28,7 @@
 Traditional Scrapers:
   ❌ Selenium/Puppeteer: Expensive LLM thinking per page
   ❌ Static (BeautifulSoup): Can't render JavaScript
-  ❌ OpenClaw: $0.05 per page × 1M pages = $50,000
+  ❌ Per-action LLM tools: $0.05 per page × 1M pages = $50,000
 
 Solace Browser Crawler:
   ✅ Real browser (full JavaScript execution)

@@ -1,7 +1,7 @@
 # Wish A4: Integration Tests (Phase A Completion)
 
 **Task ID:** A4
-**Phase:** Phase A (Parity with OpenClaw)
+**Phase:** Phase A (Browser Control Foundation)
 **Owner:** Skeptic (via Haiku swarm)
 **Timeline:** 2 days
 **Depends On:** A1, A2, A3 (all implementation)

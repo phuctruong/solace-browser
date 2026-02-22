@@ -1,7 +1,7 @@
 # Wish A1: Per-Tab State Machine Implementation
 
 **Task ID:** A1
-**Phase:** Phase A (Parity with OpenClaw)
+**Phase:** Phase A (Browser Control Foundation)
 **Owner:** Solver (via Haiku swarm)
 **Timeline:** 2 days
 **Status:** READY FOR EXECUTION

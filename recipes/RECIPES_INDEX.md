@@ -43,7 +43,7 @@
 **Description**: Add optimized project to LinkedIn profile
 
 **Variants** (archived):
-- `delete-linkedin-projects-openclaw` - Delete workflow (different, kept separate)
+- `delete-linkedin-projects` - Delete workflow (different, kept separate)
 - `delete-old-linkedin-projects` - Older delete workflow
 
 **Execution Time**: ~3 minutes

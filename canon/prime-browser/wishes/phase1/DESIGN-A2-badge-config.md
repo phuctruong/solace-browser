@@ -19,7 +19,7 @@ Badge and title updates are a visual feedback layer driven by state transitions 
 ```javascript
 const BADGE_CONFIG = {
     IDLE:       { text: '',   color: '#000000' },  // No badge (off)
-    CONNECTED:  { text: 'ON', color: '#FF5A36' },  // Red-orange (OpenClaw pattern)
+    CONNECTED:  { text: 'ON', color: '#FF5A36' },  // Red-orange (connected state)
     NAVIGATING: { text: '..', color: '#F59E0B' },  // Amber (in-progress)
     CLICKING:   { text: '..', color: '#F59E0B' },  // Amber (in-progress)
     TYPING:     { text: '..', color: '#F59E0B' },  // Amber (in-progress)
@@ -129,6 +129,6 @@ Modify existing code:
 ## Complexity Assessment
 
 - **Difficulty:** Low
-- **Risk:** Low (Chrome API is well-documented, pattern validated by OpenClaw)
+- **Risk:** Low (Chrome API is well-documented, pattern validated in production)
 - **Day estimate:** 0.5 days
 - **Dependencies:** A1 must provide `transitionTabState()` hook

@@ -1,5 +1,5 @@
 """
-Multi-Agent Routing — Test Suite (OpenClaw Feature #7)
+Multi-Agent Routing — Test Suite (Feature #7)
 
 ~60 tests across 7 test classes:
   TestAgentProfile     (8)  — creation, capabilities, validation

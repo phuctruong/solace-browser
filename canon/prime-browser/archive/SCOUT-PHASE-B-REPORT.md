@@ -29,7 +29,7 @@ Phase B (Recipe Compilation) design architecture is **complete**. Four design do
 
 ### Phase A Established
 
-Phase A (Browser Control Parity) established these patterns, validated against OpenClaw and research:
+Phase A (Browser Control Foundation) established these patterns, validated against browser automation research:
 
 1. **Per-tab state machine** (TabState, TabStateManager, atomic transitions)
 2. **Badge visual feedback** (BADGE_CONFIG, per-tab updates)

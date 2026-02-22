@@ -19,7 +19,7 @@ authority: 65537
 > **Channel:** 5 (Logic & Implementation)
 > **GLOW:** 80 (High Impact — Core State Machine)
 > **Status:** 🎮 ACTIVE (Phase A Complete)
-> **Phase:** A (Parity with OpenClaw)
+> **Phase:** A (Foundation — Core Browser Control)
 > **XP:** 600 (Implementation specialization)
 > **Solver Focus:** Implementation + Efficiency + Logic
 

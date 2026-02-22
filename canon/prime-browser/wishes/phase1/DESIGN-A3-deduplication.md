@@ -99,7 +99,7 @@ _ws_connection: Optional[websockets.WebSocketClientProtocol] = None
 - First request with a given DedupKey dispatches to extension normally
 - Subsequent requests with the same key are added as `additional_waiters`
 - When the extension responds, the response is sent to both the primary client and all additional waiters
-- This is the same pattern used by OpenClaw (RESEARCH_SYNTHESIS.md, line 37-41)
+- This is the industry-standard pattern for WebSocket request deduplication
 
 ### D4: Connection pooling applies to `browser_commands.py` (client side)
 

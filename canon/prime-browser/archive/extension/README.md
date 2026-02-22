@@ -10,7 +10,7 @@
 
 ## Overview
 
-Chrome extension implementing **real-time browser control** with per-tab session tracking, visual badge feedback, and WebSocket relay coordination. Phase A implementation of Prime Browser (parity with OpenClaw).
+Chrome extension implementing **real-time browser control** with per-tab session tracking, visual badge feedback, and WebSocket relay coordination. Phase A implementation of Prime Browser (core browser control foundation).
 
 ---
 

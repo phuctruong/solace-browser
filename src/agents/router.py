@@ -9,7 +9,7 @@ Every task dispatch is gated by OAuth3 scope enforcement:
 Scoring algorithm:
   final_score = scope_overlap_score * specialization_bonus * availability_weight
 
-New capability-based routing (OpenClaw Feature #7 extension):
+Capability-based routing extension (Feature #7):
   AgentProfile   — agent descriptor (capabilities + oauth3_scopes + concurrency)
   AgentTask      — task payload (required_capabilities + oauth3_token_id)
   AgentResult    — task outcome (status + evidence_hash + timing)
@@ -681,7 +681,7 @@ def _build_evidence(
 
 
 # ===========================================================================
-# OpenClaw Feature #7 — Capability-Based Routing Extension
+# Capability-Based Routing Extension (Feature #7)
 # ===========================================================================
 #
 # The classes below extend the router with a capability-matching, OAuth3-gated
@@ -851,8 +851,8 @@ class CapabilityAgentRouter:
     """
     OAuth3-governed capability-based multi-agent task router.
 
-    This is the new routing engine for Feature #7. It is distinct from the
-    existing AgentRouter (scope-based) above and provides:
+    This is the capability-based routing engine for Feature #7. It is distinct
+    from the existing AgentRouter (scope-based) above and provides:
       - register_agent(profile) / unregister_agent(agent_id)
       - submit_task(task) → routes using RoutingStrategy
       - get_task_status(task_id) → AgentResult
