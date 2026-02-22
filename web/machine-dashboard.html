@@ -635,6 +635,83 @@
     }
 
     /* ============================================================
+       SESSIONS PANEL
+       ============================================================ */
+    .session-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .session-info { flex: 1; min-width: 0; }
+
+    .session-token-id {
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--cornflower-blue);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .session-scopes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.3rem;
+    }
+
+    .session-scope-tag {
+      font-family: 'Courier New', monospace;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 3px;
+      padding: 0.05rem 0.4rem;
+    }
+
+    .session-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .session-revoke-btn {
+      font-family: inherit;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--salmon);
+      background: transparent;
+      border: 1px solid rgba(255,138,113,0.3);
+      border-radius: 5px;
+      padding: 0.25rem 0.65rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .session-revoke-btn:hover {
+      background: rgba(255,138,113,0.1);
+    }
+
+    .sessions-empty {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* ============================================================
        RESPONSIVE
        ============================================================ */
     @media (max-width: 768px) {
@@ -672,6 +749,7 @@
       <button class="view-btn active" id="btn-files" onclick="switchView('files')">&#x1F4C1; Files</button>
       <button class="view-btn" id="btn-terminal" onclick="switchView('terminal')">&#x1F4BB; Terminal</button>
       <button class="view-btn" id="btn-system" onclick="switchView('system')">&#x1F4CA; System</button>
+      <button class="view-btn" id="btn-sessions" onclick="switchView('sessions')">&#x1F511; Sessions</button>
     </div>
 
     <div class="scope-badge" id="scope-badge">machine.read_files</div>
@@ -783,6 +861,19 @@
         </div>
       </div>
 
+      <!-- SESSIONS VIEW -->
+      <div class="view-panel" id="view-sessions">
+        <div class="system-panel" id="sessions-panel">
+
+          <div class="section-sub-title">Active OAuth3 Sessions</div>
+
+          <div id="sessions-list">
+            <!-- Populated by JS -->
+          </div>
+
+        </div>
+      </div>
+
     </main>
   </div>
 
@@ -888,8 +979,9 @@
     }
 
     // Fetch via API; fall back to placeholder
-    fetch('/machine/files/content?path=/' + encodeURIComponent(item.id), {
-      headers: { 'Accept': 'application/json' }
+    var _token1 = localStorage.getItem('solace_token') || sessionStorage.getItem('solace_token') || '';
+    fetch('/machine/files/read?path=/' + encodeURIComponent(item.id), {
+      headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + _token1 }
     })
       .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
       .then(function (data) {
@@ -918,7 +1010,8 @@
   }
 
   window.loadFileTree = function () {
-    fetch('/machine/files?path=/', { headers: { 'Accept': 'application/json' } })
+    var _token2 = localStorage.getItem('solace_token') || sessionStorage.getItem('solace_token') || '';
+    fetch('/machine/files?path=/', { headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + _token2 } })
       .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
       .then(function (data) {
         renderFileTree(data.tree || FILE_TREE);
@@ -969,7 +1062,7 @@
      VIEW SWITCHER
   ------------------------------------------------------------------ */
   window.switchView = function (view) {
-    ['files', 'terminal', 'system'].forEach(function (v) {
+    ['files', 'terminal', 'system', 'sessions'].forEach(function (v) {
       var panel = document.getElementById('view-' + v);
       var btn   = document.getElementById('btn-' + v);
       if (panel) panel.classList.toggle('active', v === view);
@@ -978,8 +1071,15 @@
 
     // Update scope badge
     var badge = document.getElementById('scope-badge');
-    var scopes = { files: 'machine.read_files', terminal: 'machine.execute_safe', system: 'machine.read_system' };
-    if (badge) badge.textContent = scopes[view] || 'machine.read_files';
+    var scopes = {
+      files: 'machine.read.files',
+      terminal: 'machine.execute.safe',
+      system: 'machine.read.sysinfo',
+      sessions: 'oauth3.manage.tokens',
+    };
+    if (badge) badge.textContent = scopes[view] || 'machine.read.files';
+
+    if (view === 'sessions') loadSessions();
   };
 
   /* ------------------------------------------------------------------
@@ -1024,10 +1124,15 @@
     // Append command line
     appendTermLine('<span class="term-prompt">solace@machine</span><span class="term-out">:</span><span class="term-cmd">~</span><span class="term-out"> $ </span><span class="term-cmd">' + escHtml(cmd) + '</span>');
 
-    // POST to API
+    // POST to API (OAuth3 token required)
+    var _tokenTerm = localStorage.getItem('solace_token') || sessionStorage.getItem('solace_token') || '';
     fetch('/machine/terminal/execute', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ' + _tokenTerm,
+      },
       body: JSON.stringify({ command: cmd }),
     })
       .then(function (res) {
@@ -1184,7 +1289,8 @@
   }
 
   function loadSystemInfo() {
-    fetch('/machine/system', { headers: { 'Accept': 'application/json' } })
+    var _tokenSys = localStorage.getItem('solace_token') || sessionStorage.getItem('solace_token') || '';
+    fetch('/machine/system', { headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + _tokenSys } })
       .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
       .then(function (data) {
         renderSystemInfo(data.system || PLACEHOLDER_SYSTEM);
@@ -1197,6 +1303,85 @@
         renderNetwork(PLACEHOLDER_NETWORK);
       });
   }
+
+  /* ------------------------------------------------------------------
+     ACTIVE SESSIONS (OAuth3 token list with revoke)
+  ------------------------------------------------------------------ */
+  function loadSessions() {
+    var token = localStorage.getItem('solace_token') || sessionStorage.getItem('solace_token') || '';
+    var headers = { 'Accept': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+    fetch('/api/tokens/active', { headers: headers })
+      .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
+      .then(function (data) { renderSessions(data.tokens || []); })
+      .catch(function () {
+        // Show placeholder when API not connected
+        renderSessions([
+          {
+            token_id: 'demo_' + Math.random().toString(36).slice(2, 10),
+            scopes: ['machine.read.files', 'machine.execute.safe'],
+            expires_at: new Date(Date.now() + 86400000).toISOString(),
+            created_at: new Date().toISOString(),
+          }
+        ]);
+      });
+  }
+
+  function renderSessions(tokens) {
+    var list = document.getElementById('sessions-list');
+    if (!list) return;
+
+    if (!tokens || tokens.length === 0) {
+      list.innerHTML = '<div class="sessions-empty">No active sessions. Grant OAuth3 scopes to create a session.</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    tokens.forEach(function (t) {
+      var scopeTags = (t.scopes || []).map(function (s) {
+        return '<span class="session-scope-tag">' + escHtml(s) + '</span>';
+      }).join('');
+
+      var exp = t.expires_at
+        ? new Date(t.expires_at).toLocaleString()
+        : 'Never';
+
+      var card = document.createElement('div');
+      card.className = 'session-card';
+      card.setAttribute('data-token-id', t.token_id || '');
+      card.innerHTML =
+        '<div class="session-info">' +
+          '<div class="session-token-id">' + escHtml(t.token_id || '—') + '</div>' +
+          '<div class="session-scopes">' + (scopeTags || '<span style="color:var(--text-muted);font-size:0.7rem">no scopes</span>') + '</div>' +
+          '<div class="session-meta">Expires: ' + exp + '</div>' +
+        '</div>' +
+        '<button class="session-revoke-btn" onclick="revokeToken(\'' + escHtml(t.token_id || '') + '\')">Revoke</button>';
+      list.appendChild(card);
+    });
+  }
+
+  window.revokeToken = function (tokenId) {
+    if (!tokenId) return;
+    if (!confirm('Revoke token ' + tokenId + '? This cannot be undone.')) return;
+
+    var token = localStorage.getItem('solace_token') || sessionStorage.getItem('solace_token') || '';
+    fetch('/api/tokens/revoke', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify({ token_id: tokenId }),
+    })
+      .then(function () { loadSessions(); })
+      .catch(function () {
+        // Remove card from DOM optimistically
+        var card = document.querySelector('[data-token-id="' + tokenId + '"]');
+        if (card) card.remove();
+      });
+  };
 
   /* ------------------------------------------------------------------
      INIT

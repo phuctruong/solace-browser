@@ -564,10 +564,14 @@
         </div>
       </div>
 
-      <div style="margin-top:0.5rem">
+      <div style="margin-top:0.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
         <button class="btn-connect connect" id="connect-btn" onclick="handleConnectClick()">
           <span id="connect-btn-icon">&#x26A1;</span>
           <span id="connect-btn-label">Connect to Cloud</span>
+        </button>
+        <button class="btn-connect disconnect" id="disconnect-btn" onclick="disconnectTunnel()" style="display:none">
+          <span>&#x25FC;</span>
+          <span>Disconnect</span>
         </button>
       </div>
     </div>
@@ -727,14 +731,18 @@
     ring.className  = 'status-ring-fill ' + state;
     label.className = 'status-label ' + state;
 
+    var disconnectBtnEl = el('disconnect-btn');
+
     if (state === STATE.DISCONNECTED) {
       icon.textContent  = '☁';
       label.textContent = 'Disconnected';
       if (descEl) descEl.textContent = desc || 'Click the button below to expose your local Solace Browser to the cloud.';
       btn.className = 'btn-connect connect';
       btn.disabled = false;
+      btn.style.display = '';
       btnIcon.textContent = '⚡';
       btnLabel.textContent = 'Connect to Cloud';
+      if (disconnectBtnEl) disconnectBtnEl.style.display = 'none';
       if (details) details.style.display = 'none';
       if (urlCard) urlCard.classList.remove('visible');
 
@@ -742,20 +750,22 @@
       icon.textContent  = '⟳';
       label.textContent = 'Connecting...';
       if (descEl) descEl.textContent = desc || 'Opening secure tunnel to solaceagi.com...';
-      btn.className = 'btn-connect disconnect';
-      btn.disabled = false;
+      btn.className = 'btn-connect connect';
+      btn.disabled = true;
+      btn.style.display = '';
       btnIcon.textContent = '◼';
-      btnLabel.textContent = 'Cancel';
+      btnLabel.textContent = 'Connecting...';
+      if (disconnectBtnEl) disconnectBtnEl.style.display = '';
       if (details) details.style.display = 'block';
 
     } else if (state === STATE.CONNECTED) {
       icon.textContent  = '✓';
       label.textContent = 'Connected';
       if (descEl) descEl.textContent = desc || 'Tunnel is live. Share the public URL with your cloud twin.';
-      btn.className = 'btn-connect disconnect';
-      btn.disabled = false;
-      btnIcon.textContent = '✕';
-      btnLabel.textContent = 'Disconnect';
+      btn.className = 'btn-connect connect';
+      btn.disabled = true;
+      btn.style.display = 'none';
+      if (disconnectBtnEl) { disconnectBtnEl.style.display = ''; }
       if (details) details.style.display = 'block';
       if (urlCard) urlCard.classList.add('visible');
 
@@ -765,8 +775,10 @@
       if (descEl) descEl.textContent = desc || 'Tunnel connection failed. Check your settings.';
       btn.className = 'btn-connect connect';
       btn.disabled = false;
+      btn.style.display = '';
       btnIcon.textContent = '⟳';
       btnLabel.textContent = 'Retry';
+      if (disconnectBtnEl) disconnectBtnEl.style.display = 'none';
       if (details) details.style.display = 'block';
     }
   }
@@ -817,11 +829,10 @@
      CONNECT / DISCONNECT
   ------------------------------------------------------------------ */
   window.handleConnectClick = function () {
-    if (currentState === STATE.CONNECTED || currentState === STATE.CONNECTING) {
-      disconnectTunnel();
-    } else {
+    if (currentState === STATE.DISCONNECTED || currentState === STATE.ERROR) {
       checkScopeAndConnect();
     }
+    // Disconnect is handled by the separate #disconnect-btn
   };
 
   function checkScopeAndConnect() {
@@ -917,7 +928,7 @@
     startUptimeTimer();
   }
 
-  function disconnectTunnel() {
+  window.disconnectTunnel = function disconnectTunnel() {
     addLog('Disconnecting tunnel...', 'warn');
 
     fetch('/tunnel/stop', {
@@ -934,12 +945,17 @@
     setStatus(STATE.DISCONNECTED);
     addLog('Tunnel disconnected.', 'ok');
 
-    el('detail-tunnel-id').textContent = '—';
-    el('detail-status').textContent    = 'Disconnected';
-    el('detail-uptime').textContent    = '—';
-    el('detail-bytes').textContent     = '—';
-    el('detail-since').textContent     = '—';
-  }
+    var tid = el('detail-tunnel-id');
+    var dsts = el('detail-status');
+    var dut = el('detail-uptime');
+    var dby = el('detail-bytes');
+    var dsi = el('detail-since');
+    if (tid)  tid.textContent  = '—';
+    if (dsts) dsts.textContent = 'Disconnected';
+    if (dut)  dut.textContent  = '—';
+    if (dby)  dby.textContent  = '—';
+    if (dsi)  dsi.textContent  = '—';
+  };
 
   function startUptimeTimer() {
     clearInterval(uptimeTimer);

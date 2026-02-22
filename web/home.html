@@ -315,11 +315,15 @@
        ============================================================ */
     .quick-actions {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 1rem;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 960px) {
+      .quick-actions { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 540px) {
       .quick-actions { grid-template-columns: 1fr; }
     }
 
@@ -609,6 +613,141 @@
     }
 
     /* ============================================================
+       PLATFORM CARDS
+       ============================================================ */
+    .platform-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.85rem;
+    }
+
+    .platform-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .platform-card:hover {
+      border-color: var(--border-mid);
+      background: var(--bg-card-hover);
+    }
+
+    .platform-card-icon { font-size: 1.4rem; line-height: 1; }
+
+    .platform-card-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .platform-scope-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.68rem;
+      font-weight: 600;
+      font-family: 'Courier New', monospace;
+      border-radius: 4px;
+      padding: 0.1rem 0.4rem;
+    }
+
+    .platform-scope-badge.granted {
+      color: var(--green);
+      background: var(--green-dim);
+      border: 1px solid var(--green-border);
+    }
+
+    .platform-scope-badge.missing {
+      color: var(--text-muted);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .platform-card-link {
+      font-size: 0.72rem;
+      color: var(--accent);
+      font-weight: 600;
+      margin-top: auto;
+    }
+
+    /* ============================================================
+       ACTIVITY FEED
+       ============================================================ */
+    .activity-feed {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .activity-empty {
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      color: var(--text-muted);
+    }
+
+    .activity-empty p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background 0.1s;
+    }
+
+    .activity-item:last-child { border-bottom: none; }
+    .activity-item:hover { background: rgba(255,255,255,0.02); }
+
+    .activity-icon {
+      font-size: 1rem;
+      line-height: 1.4;
+      flex-shrink: 0;
+    }
+
+    .activity-body { flex: 1; min-width: 0; }
+
+    .activity-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .activity-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    .activity-status {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      flex-shrink: 0;
+      align-self: center;
+    }
+
+    .activity-status.ok {
+      color: var(--green);
+      background: var(--green-dim);
+    }
+
+    .activity-status.warn {
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    /* ============================================================
        5 WAYS TO CONTROL
        ============================================================ */
     .ways-grid {
@@ -778,29 +917,38 @@
 
       <div class="quick-actions">
 
-        <a href="/recipes/dashboard" class="action-card primary fade-in" style="animation-delay:0.05s">
+        <a href="/recipes/dashboard" id="btn-run-recipe" class="action-card primary fade-in" style="animation-delay:0.05s">
           <div class="action-card-icon">&#x1F310;</div>
           <div>
-            <div class="action-card-title">Browse Web</div>
-            <div class="action-card-desc">Access the web with OAuth3-protected AI agent automation. Gmail, LinkedIn, Substack, Twitter, and more.</div>
+            <div class="action-card-title">Run Recipe</div>
+            <div class="action-card-desc">Execute OAuth3-protected automation recipes. Gmail, LinkedIn, Substack, Twitter, and more.</div>
           </div>
           <div class="action-card-arrow">Open Recipe Dashboard &rsaquo;</div>
         </a>
 
-        <a href="/machine/dashboard" class="action-card fade-in" style="animation-delay:0.10s">
-          <div class="action-card-icon">&#x1F4BB;</div>
+        <a href="/web/machine-dashboard.html" id="btn-browse-files" class="action-card fade-in" style="animation-delay:0.10s">
+          <div class="action-card-icon">&#x1F4C1;</div>
           <div>
-            <div class="action-card-title">My Machine</div>
-            <div class="action-card-desc">File browser, terminal, and system info — all OAuth3-gated. Full local machine access from one panel.</div>
+            <div class="action-card-title">Browse Files</div>
+            <div class="action-card-desc">OAuth3-gated file browser — read, download, and navigate your local filesystem from the dashboard.</div>
           </div>
-          <div class="action-card-arrow">Open Machine Dashboard &rsaquo;</div>
+          <div class="action-card-arrow">Open File Browser &rsaquo;</div>
         </a>
 
-        <a href="/tunnel/connect" class="action-card fade-in" style="animation-delay:0.15s">
+        <a href="/web/machine-dashboard.html#terminal" id="btn-open-terminal" class="action-card fade-in" style="animation-delay:0.15s">
+          <div class="action-card-icon">&#x1F4BB;</div>
+          <div>
+            <div class="action-card-title">Open Terminal</div>
+            <div class="action-card-desc">Run safe read-only commands or request step-up auth for full shell access — all OAuth3-scoped.</div>
+          </div>
+          <div class="action-card-arrow">Open Terminal &rsaquo;</div>
+        </a>
+
+        <a href="/web/tunnel-connect.html" id="btn-connect-tunnel" class="action-card fade-in" style="animation-delay:0.20s">
           <div class="action-card-icon">&#x2601;</div>
           <div>
-            <div class="action-card-title">Cloud Connect</div>
-            <div class="action-card-desc">Connect to solaceagi.com for remote agent access via built-in tunnel. Control from anywhere.</div>
+            <div class="action-card-title">Connect Tunnel</div>
+            <div class="action-card-desc">Expose your local Solace Browser to solaceagi.com via a secure tunnel. Control from anywhere.</div>
           </div>
           <div class="action-card-arrow">Connect to Cloud &rsaquo;</div>
         </a>
@@ -891,7 +1039,42 @@
   </section>
 
   <!-- ================================================================
-       SECTION 4: 5 WAYS TO CONTROL
+       SECTION 4: PLATFORM SCOPE STATUS
+       ================================================================ -->
+  <section class="section" id="platform-cards-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-title">Platform Connections</span>
+        <a href="/settings/tokens" class="section-link">Manage scopes &rsaquo;</a>
+      </div>
+
+      <div class="platform-cards" id="platform-cards">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       SECTION 5: ACTIVITY FEED
+       ================================================================ -->
+  <section class="section" id="activity-feed-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-title">Recent Activity</span>
+        <a href="/settings/audit" class="section-link">Full audit log &rsaquo;</a>
+      </div>
+
+      <div class="activity-feed" id="activity-feed">
+        <div class="activity-empty">
+          <span style="font-size:1.5rem;display:block;margin-bottom:0.5rem">&#x1F4CB;</span>
+          <p>No recent activity. Run a recipe or access your machine to see events here.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       SECTION 6: 5 WAYS TO CONTROL
        ================================================================ -->
   <section class="section">
     <div class="container">
@@ -1148,9 +1331,104 @@
   }
 
   /* ------------------------------------------------------------------
+     PLATFORM CARDS
+     Shows scope status per platform — loaded from /api/tokens/scopes
+  ------------------------------------------------------------------ */
+  var PLATFORMS = [
+    { id: 'gmail',    icon: '&#x2709;&#xFE0F;', name: 'Gmail',    scope: 'gmail.read',    href: '/consent/gmail' },
+    { id: 'linkedin', icon: '&#x1F4BC;',         name: 'LinkedIn', scope: 'linkedin.read', href: '/consent/linkedin' },
+    { id: 'substack', icon: '&#x270D;&#xFE0F;',  name: 'Substack', scope: 'substack.read', href: '/consent/substack' },
+    { id: 'twitter',  icon: '&#x1F426;',         name: 'Twitter',  scope: 'twitter.read',  href: '/consent/twitter' },
+    { id: 'reddit',   icon: '&#x1F47E;',         name: 'Reddit',   scope: 'reddit.read',   href: '/consent/reddit' },
+    { id: 'github',   icon: '&#x1F40D;',         name: 'GitHub',   scope: 'github.read',   href: '/consent/github' },
+    { id: 'machine',  icon: '&#x1F4BB;',         name: 'Machine',  scope: 'machine.read.files', href: '/web/machine-dashboard.html' },
+  ];
+
+  function renderPlatformCards(grantedScopes) {
+    var container = document.getElementById('platform-cards');
+    if (!container) return;
+    container.innerHTML = '';
+
+    PLATFORMS.forEach(function (p) {
+      var granted = (grantedScopes || []).indexOf(p.scope) >= 0;
+      var card = document.createElement('div');
+      card.className = 'platform-card';
+      card.setAttribute('data-platform', p.id);
+      card.innerHTML =
+        '<div class="platform-card-icon">' + p.icon + '</div>' +
+        '<div class="platform-card-name">' + p.name + '</div>' +
+        '<span class="platform-scope-badge ' + (granted ? 'granted' : 'missing') + '">' +
+          (granted ? '&#x2713; Granted' : '&#x25CB; Not granted') +
+        '</span>' +
+        '<a href="' + p.href + '" class="platform-card-link">' +
+          (granted ? 'View &rsaquo;' : 'Grant scope &rsaquo;') +
+        '</a>';
+      container.appendChild(card);
+    });
+  }
+
+  function loadPlatformScopes() {
+    var token = localStorage.getItem('solace_token') || '';
+    var headers = { 'Accept': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+    fetch('/api/tokens/scopes', { headers: headers })
+      .then(function (res) { return res.json(); })
+      .then(function (data) { renderPlatformCards(data.scopes || []); })
+      .catch(function () { renderPlatformCards([]); });
+  }
+
+  /* ------------------------------------------------------------------
+     ACTIVITY FEED
+     Loads from /api/activity/recent — shows placeholder if unavailable
+  ------------------------------------------------------------------ */
+  function loadActivityFeed() {
+    var token = localStorage.getItem('solace_token') || '';
+    var headers = { 'Accept': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+    fetch('/api/activity/recent', { headers: headers })
+      .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
+      .then(function (data) { renderActivityFeed(data.events || []); })
+      .catch(function () { renderActivityFeed([]); });
+  }
+
+  function renderActivityFeed(events) {
+    var feed = document.getElementById('activity-feed');
+    if (!feed) return;
+
+    if (!events || events.length === 0) {
+      feed.innerHTML =
+        '<div class="activity-empty">' +
+          '<span style="font-size:1.5rem;display:block;margin-bottom:0.5rem">&#x1F4CB;</span>' +
+          '<p>No recent activity. Run a recipe or access your machine to see events here.</p>' +
+        '</div>';
+      return;
+    }
+
+    feed.innerHTML = '';
+    events.forEach(function (ev) {
+      var item = document.createElement('div');
+      item.className = 'activity-item';
+      item.innerHTML =
+        '<span class="activity-icon">' + (ev.icon || '&#x25CF;') + '</span>' +
+        '<div class="activity-body">' +
+          '<div class="activity-title">' + (ev.title || 'Activity') + '</div>' +
+          '<div class="activity-meta">' + (ev.meta || '') + '</div>' +
+        '</div>' +
+        '<span class="activity-status ' + (ev.status === 'ok' ? 'ok' : 'warn') + '">' +
+          (ev.status || 'info') +
+        '</span>';
+      feed.appendChild(item);
+    });
+  }
+
+  /* ------------------------------------------------------------------
      INIT
   ------------------------------------------------------------------ */
   loadConnections();
+  loadPlatformScopes();
+  loadActivityFeed();
 
   // Refresh connections every 30s
   setInterval(loadConnections, 30000);

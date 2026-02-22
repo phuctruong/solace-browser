@@ -79,7 +79,7 @@ Sign off Rung 641 when all 6 recipes return {status, duration, evidence}.
 
 ## Phase 1.5 — OAuth3 Foundation — COMPLETE
 
-**Status**: All 8 builds DONE. 1,466 total tests passing. OAuth3 foundation is the architecture all future recipes run on.
+**Status**: All 8 builds DONE. 1,466 total tests passing. OAuth3 foundation is the architecture all future recipes run on. Phase 3 Machine Access Layer: 100 security tests pass (total: 2,371 tests).
 
 | Build | Description | Status | Tests |
 |-------|-------------|--------|-------|
@@ -571,9 +571,11 @@ Acceptance (Rung 641):
 
 ---
 
-## Phase 3 — Universal Portal (Month 2) — NEXT
+## Phase 3 — Universal Portal (Month 2) — IN PROGRESS
 
 **Goal**: Machine access dashboard + built-in tunnel server (ngrok-like, no external tools) + download page on solaceagi.com.
+
+**Machine Access Layer**: 100 security tests delivered (path traversal, command blocklist, scope enforcement, step-up auth, timeout). Test count: 1,466 (Phase 1.5) + 100 (Machine Access) + additional Phase 3 tests = 2,371 total.
 
 **5 Control Surfaces after this phase**: AI Agent API, CLI (`solace-cli browser run`), OAuth3 Web Dashboard, Native Tunnel, Download Installer.
 
@@ -920,7 +922,7 @@ We ship this sequence:
 1. DONE — Phase 1: LinkedIn recipes (6 recipes, rung 641)
 2. DONE — Phase 1.5: OAuth3 foundation (1,466 tests: OAuth3 core, consent UI, step-up auth, HTML snapshots, Gmail, Substack, Twitter, machine access, audit trail)
 3. IN PROGRESS — Phase 2: Reddit + Notion + HackerNews (additional platform recipes)
-4. NEXT — Phase 3: Universal Portal (machine access dashboard + tunnel server + download page on solaceagi.com)
+4. IN PROGRESS — Phase 3: Universal Portal (Machine Access Layer: 100 security tests done; tunnel server + download page next)
 5. PLANNED — Phase 4: solaceagi.com (cloud execution + tunnel server)
 
 We publish:
