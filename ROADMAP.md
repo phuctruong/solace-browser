@@ -2,7 +2,7 @@
 
 **Authority**: 65537 | **Northstar**: 70% recipe hit rate → $5.75 COGS → economic moat
 **Last Updated**: 2026-02-21
-**Status**: Phase 1 DONE → Phase 1.5 DONE (1,466 tests) → Phase 2 DONE (805 tests) → Phase 3 DONE (344 tests) → Phase 4 DONE (7 OpenClaw competitive features, 478 tests)
+**Status**: Phase 1 DONE → Phase 1.5 DONE (1,466 tests) → Phase 2 DONE (805 tests) → Phase 3 DONE (344 tests) → Phase 4 DONE (10 OpenClaw competitive features, 3,542 total tests)
 
 ## Status Summary (2026-02-22)
 
@@ -22,7 +22,10 @@
 | Phase 4: Multi-Agent Routing | DONE | 75 |
 | Phase 4: Exec Approvals + Elevated Mode | DONE | 70 |
 | Phase 4: Multi-Profile Browser + Process Mgr | DONE | 60 |
-| **Total** | | **3,078** |
+| Phase 4: Voice Wake | DONE | 141 |
+| Phase 4: Live Canvas | DONE | 132 |
+| Phase 4: Companion Apps | DONE | 165 |
+| **Total** | | **3,542** |
 
 > *"Delegate only with consent. Never weaken. Be water."* — Software 5.0 + OAuth3
 
@@ -885,9 +888,16 @@ Rung: 641
 
 ---
 
-## Phase 4 — solaceagi.com (Cloud Layer)
+## Phase 4 — OpenClaw Competitive Features — DONE
 
-**When**: After Phase 3 (Universal Portal validated, machine layer stable)
+**Status**: All 10 OpenClaw competitive features delivered. 3,542 total tests passing.
+**Completed**: Dynamic DOM Snapshots, Workflow State Machine, Multi-Channel Gateway, Plugin Architecture, Multi-Agent Routing, Exec Approvals + Elevated Mode, Multi-Profile Browser + Process Mgr, Voice Wake (141 tests), Live Canvas (132 tests), Companion Apps (165 tests).
+
+---
+
+## Phase 5 — solaceagi.com (Cloud Layer)
+
+**When**: After Phase 4 (all competitive features validated)
 **What**: Hosted Stillwater + cloud browser execution, OAuth3-governed
 
 ```
@@ -946,7 +956,8 @@ We ship this sequence:
 2. DONE — Phase 1.5: OAuth3 foundation (1,466 tests: OAuth3 core, consent UI, step-up auth, HTML snapshots, Gmail, Substack, Twitter, machine access, audit trail)
 3. DONE — Phase 2: Reddit + Notion + HackerNews (805 tests across 3 platforms)
 4. DONE — Phase 3: Universal Portal (Machine Access: 100 tests, Dashboard: 70 tests, Distribution: 94 tests)
-5. PLANNED — Phase 4: solaceagi.com (cloud execution + tunnel relay)
+5. DONE — Phase 4: OpenClaw competitive features (Voice Wake: 141 tests, Live Canvas: 132 tests, Companion Apps: 165 tests — 10 features total, 3,542 total tests)
+6. PLANNED — Phase 5: solaceagi.com (cloud execution + tunnel relay)
 
 We publish:
 - OAuth3 spec on solaceagi.com/spec (open standard — others implement it)
