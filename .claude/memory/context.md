@@ -77,3 +77,10 @@ blocker_phase8: ML model training infrastructure (ready to design with Wishes Me
 blocker_phase9: campaign analytics pipeline (pending Phase 8 completion)
 blocker_phase10: cross-browser porting (Firefox/Safari/Edge compatibility layer)
 known_issue_none: all Phase 1-7 blockers resolved
+
+## SESSION_UPDATE_2026_02_25 [REMEMBER]
+phase1_reference_impl: oauth3_evidence_chain + oauth3_vault + browser_layers + browser_gate
+phase1_artifacts: artifacts/phase1_session_2026-02-25/{tests.json,repro_red.log,repro_green.log,phase1_reference_screenshot.png}
+phase1_tests_targeted: 185 passed, 0 failed, 18 xfailed, 1 xpassed
+phase1_blocker_phase5: waiting_for_solaceagi_dragon_evolution_marker="Phase 3 COMPLETE"
+phase1_todo_updated: scratch/todo/PHASE_1_OAuth3_Core.md

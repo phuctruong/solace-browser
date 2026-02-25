@@ -87,6 +87,21 @@ from .revocation import (
 )
 
 # ---------------------------------------------------------------------------
+# Vault + Evidence (Phase 1 reference implementation)
+# ---------------------------------------------------------------------------
+
+from .evidence import (
+    EvidenceChain,
+)
+from .vault import (
+    OAuth3Vault,
+    OAuth3VaultError,
+    TokenNotFoundError,
+    TokenValidationError,
+    ScopeViolationError,
+)
+
+# ---------------------------------------------------------------------------
 # Public API surface
 # ---------------------------------------------------------------------------
 
@@ -135,6 +150,13 @@ __all__ = [
     "is_revoked",
     "list_all_tokens",
     "revoke_all_tokens_for_scope",
+    # Vault + Evidence
+    "EvidenceChain",
+    "OAuth3Vault",
+    "OAuth3VaultError",
+    "TokenNotFoundError",
+    "TokenValidationError",
+    "ScopeViolationError",
 ]
 
 __version__ = "0.1.0"
