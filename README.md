@@ -1,217 +1,304 @@
-# Solace Browser — The Twin Browser Dojo
+# Solace Browser
 
-> "Be water, my friend. Flow through walls. Work while you sleep." — Bruce Lee (adapted)
+**OAuth3 Reference Implementation + Browser Automation + Recipe Engine**
 
-[![Status](https://img.shields.io/badge/Phase-1%20MVP%20Build-blue)](specs/BUILD-SPEC.md)
-[![Rung](https://img.shields.io/badge/Rung%20Target-641-green)](specs/QA-CHECKLIST.md)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Stillwater](https://img.shields.io/badge/Stillwater-v1.5.0-purple)](https://github.com/phuctruong/stillwater)
+> "The best way to prove OAuth3 is possible is to build it." — Phuc Truong
 
----
+Solace Browser is an open-source browser automation framework that proves **OAuth3 (scoped, revocable, auditable tokens) is the right way to delegate AI agency**.
 
-## The Twin
+## Quick Start
 
-You browse. Your twin works.
-
-```
-LOCAL  → You: normal browser, logged in, living your life
-CLOUD  → Twin: headless clone, identical fingerprint, running tasks 24/7
-
-One click to sync. AES-256-GCM zero-knowledge encryption.
-Your sessions stay yours. The cloud can't read them. Only your twin can use them.
-```
-
-This is not an extension. This is not a chatbot sidebar.
-
-This is a **second you** — an AI rider on your digital shadow — delegating work
-while you sleep, armed with recipes that execute 70x faster than pure LLM reasoning.
-
----
-
-## The Five Moats
-
-| Moat | What it means |
-|------|---------------|
-| **Anti-Detection** | Canvas/WebGL/JA3/Bezier mouse/inertia scroll — your twin IS you to every bot detector |
-| **Recipe System** | Externalized reasoning → 70% cache hit → $0.01/task vs $0.20 competitors |
-| **Twin Architecture** | Local browsing + cloud AGI delegation — work while you sleep |
-| **Fingerprint Sync** | Cloud browser has your exact fingerprint, timezone, plugins, fonts |
-| **Stillwater Verification** | Evidence bundles, not just screenshots — you can audit every action |
-
----
-
-## The Dojo Belt System
-
-You don't install Solace Browser. You **earn** it, layer by layer.
-
-| Belt | Rung | What You Can Do |
-|------|------|-----------------|
-| 🤍 White | Setup | Run the browser server, navigate, take screenshots |
-| 🟡 Yellow | 641 | Execute basic recipes (discover, post, comment) |
-| 🟠 Orange | 641+ | Session sync across machines, headless execution |
-| 🟢 Green | 274177 | Cloud delegation, recipe hit rate > 50% |
-| 🔵 Blue | 274177+ | PrimeWiki maps, PrimeMermaid page geometry |
-| 🟤 Brown | 65537 | Anti-detection passing BotD/CreepJS, fingerprint sync |
-| ⚫ Black | 65537 | Twin architecture, cloud farm, zero-knowledge vault |
-
----
-
-## The Scrolls (Skills)
-
-Skills are loaded into sub-agents. Read the full scroll before production work.
-
-| Scroll | What it teaches |
-|--------|----------------|
-| [`skills/prime-safety.md`](skills/prime-safety.md) | Fail-closed safety layer — always loaded first |
-| [`skills/prime-wishes.md`](skills/prime-wishes.md) | Wish contract system — seal before you execute |
-| [`skills/phuc-swarms.md`](skills/phuc-swarms.md) | Multi-agent orchestration — Scout→Forecast→Solve→Verify |
-| [`skills/phuc-cleanup.md`](skills/phuc-cleanup.md) | Repo janitor — keep the dojo clean |
-
----
-
-## The Spellbook (Recipes)
-
-Recipes are externalized reasoning. Cast once, replay instantly.
-
+### Installation
 ```bash
-# See all recipes
-ls recipes/*.recipe.json
-
-# The LinkedIn Dojo (6 spells):
-recipes/linkedin-discover-posts.recipe.json   # scan the feed for worthy posts
-recipes/linkedin-create-post.recipe.json      # conjure a post into existence
-recipes/linkedin-edit-post.recipe.json        # revise what you've written
-recipes/linkedin-delete-post.recipe.json      # banish a post (irreversible)
-recipes/linkedin-react-post.recipe.json       # mark a post with your presence
-recipes/linkedin-comment-post.recipe.json     # leave your words on another's post
+git clone https://github.com/phuc-labs/solace-browser.git
+cd solace-browser
+pip install -r requirements.txt
+playwright install  # Install browser binaries
 ```
 
-**Why recipes beat pure LLM every time:**
-- Cold LLM reasoning: 30–60s per task
-- Cached recipe replay: 3–5s per task
-- Recipe caching dramatically reduces per-task cost compared to cold LLM calls.
+### First Recipe (3 Minutes)
+```python
+from solace_browser import BrowserContext
+from oauth3 import OAuth3Vault
 
----
+# Create OAuth3 vault
+vault = OAuth3Vault()
+token = vault.issue_token("user@example.com", ["browser.read", "browser.click"])
 
-## The Arena (Supported Sites)
+# Create browser with OAuth3 gates
+async with BrowserContext(token=token) as browser:
+    page = await browser.new_page()
 
-| Site | Status | Recipes |
-|------|--------|---------|
-| 🔵 LinkedIn | ✅ Active | 6 (discover, post, edit, delete, react, comment) |
-| 📧 Gmail | ✅ Active | 2 (oauth-login, send-email) |
-| 🔴 Reddit | ✅ Active | 5 (login, navigate, upvote, comment, create-post) |
-| 🟠 Hacker News | ✅ Active | 4 (navigate, upvote, comment, hide) |
-| ⚫ GitHub | ✅ Active | 1 (create-issue) |
-| 🔵 Google | ✅ Active | 1 (search) |
+    # Every action is scoped + audited
+    await page.goto("https://gmail.com")           # requires browser.read
+    await page.click("button#compose")             # requires browser.click
 
----
+    # Evidence automatically captured
+    # Check: evidence/oauth3_audit.jsonl
+```
 
-## The Kata (Quick Start)
-
+### Run a Recipe
 ```bash
-# 1. Start the browser server (port 9222)
-python persistent_browser_server.py
-
-# 2. Start the UI (port 9223)
-python ui_server.py
-
-# 3. Open http://localhost:9223 — your dojo dashboard
-
-# 4. Navigate in a headed session first (to capture your session)
-# 5. Click "Sync Session" on the site card
-# 6. Run a recipe from the Kanban board
+solace-browser run recipes/gmail/triage-inbox.mmd \
+  --user user@example.com \
+  --input email_address=user@gmail.com
 ```
 
-**API Endpoints (40+ available at port 9222):**
-
+### Try OAuth3 Revocation
 ```bash
-POST /navigate          # go to URL
-POST /click             # click element by selector
-POST /fill              # type text into field
-GET  /snapshot          # ARIA tree of current page
-GET  /html-clean        # cleaned HTML for LLM consumption
-GET  /screenshot        # PNG screenshot
-POST /save-session      # export session state
-POST /fingerprint-check # verify anti-detection status
-POST /scroll-human      # human-like scroll
+# Issue token
+token=$(solace-browser auth grant --scopes browser.read browser.click)
+
+# Start a task using that token
+solace-browser run recipes/gmail/fetch-emails.mmd --token $token &
+
+# Revoke the token (mid-task)
+solace-browser auth revoke $token
+
+# Task halts immediately ✓
+# Evidence: revocation logged + timestamp captured
 ```
 
 ---
 
-## The Map (PrimeWiki)
+## What's Unique
 
-PrimeWiki is the living knowledge graph of each site. Built from real sessions.
-Stored in `primewiki/`. Submitted to the Stillwater Store for community benefit.
+### 1. OAuth3 by Default
+Every action is **scoped, revocable, auditable**:
+```bash
+# Issue a token with limited scope
+solace-browser auth grant --scopes browser.read browser.click
 
+# User can revoke anytime
+solace-browser auth revoke <token>
+
+# Every action is logged (hash-chained, tamper-evident)
+solace-browser evidence export <run_id>
+```
+
+### 2. Deterministic Recipes
+Recipes are Prime Mermaid DAGs — same seed = same output (forever):
+```mermaid
+graph LR
+    A["Fetch Gmail Inbox"] --> B["Extract Emails"]
+    B --> C["Classify Importance"]
+    C --> D["Generate Summary"]
+    D --> E["Save to Outbox"]
+```
+
+Cost: **$0.001 per task** (cached, no LLM call)
+vs. **$0.01 per task** (cold call to Sonnet)
+
+At 70% recipe hit rate: **70% cost reduction**
+
+### 3. PM Triplets (Context Model)
+Recipes understand user + task + context:
+```python
+user = User(id="phuc", language="en", tone="professional")
+task = Task(goal="triage inbox", inputs={"email": ...}, success="summary created")
+context = Context(current_step=2, decisions_made=[...], remaining=[...])
+
+# Composable: email summarizer → LinkedIn poster → human approval
+output = recipe.execute(user, task, context)
+```
+
+### 4. Part 11 Audit Trail
+Browser execution is auditable:
+```bash
+# Audit export includes:
+# - OAuth3 events (token issued, revoked, scope checked)
+# - Action events (click, fill, navigate, screenshot)
+# - Visual evidence (screenshot at each step)
+# - DOM snapshots (exact HTML before/after)
+# - Manifest (metadata, hashes, timestamps)
+
+solace-browser evidence export run_123456
+# Outputs: audit_bundle.zip
+#   ├── oauth3_audit.jsonl
+#   ├── action_audit.jsonl
+#   ├── visual/
+#   ├── dom/
+#   └── manifest.json
+```
+
+---
+
+## Architecture
+
+### 4 Layers
+
+**Layer 1: Browser Automation** (Playwright)
+- Navigate, click, fill, screenshot, DOM capture
+
+**Layer 2: OAuth3 Scope Gates**
+- Every action wrapped in scope check
+- Revocation halts execution immediately
+
+**Layer 3: Recipe Engine** (Prime Mermaid Parser)
+- Parse DAG, execute deterministically, cache results
+- Hit rate = recipe submissions / total tasks
+
+**Layer 4: PM Triplets** (Context Models)
+- User model (identity, preferences)
+- Task model (goal, inputs, success criteria)
+- Context model (state, decisions, remaining steps)
+- Enables composition (A's output = B's input)
+
+---
+
+## Phases (7 Phases, 14 Sessions)
+
+| Phase | Goal | Recipes Shipped |
+|-------|------|-----------------|
+| **0** | Foundation (directory structure, docs, skeleton) | 0 |
+| **1** | OAuth3 Core (token management, scope gates) | 0 |
+| **2** | Browser Automation (Playwright integration) | 2 (Gmail: fetch, compose) |
+| **3** | Recipe Engine (Prime Mermaid parser) | 2 (executable) |
+| **4** | PM Triplets (User/Task/Context models) | 2 (composable) |
+| **5** | Store Integration (Stillwater Store) | 10+ (community) |
+| **6** | Multi-Platform (Gmail, LinkedIn, Slack, GitHub, Notion) | 50+ (recipes) |
+
+**Status:** Phase 0 ready to start
+**Target Rung:** 65537 (production-ready)
+**Total Sessions:** 14
+
+**See:** `ROADMAP.md` for detailed workstreams
+
+---
+
+## Project Structure
+
+```
+solace-browser/
+├── src/
+│   ├── oauth3/              OAuth3 implementation
+│   ├── browser/             Playwright wrapper + OAuth3 gates
+│   ├── recipes/             Recipe engine (parser + executor)
+│   ├── triplets/            PM Triplet models
+│   └── util/                Crypto + evidence helpers
+├── recipes/                 Canonical recipes (Gmail, LinkedIn, etc.)
+├── tests/                   Unit + integration tests
+├── docs/                    API docs, spec, examples
+├── NORTHSTAR.md             Vision + metrics
+├── ROADMAP.md               Build plan (7 phases, 14 sessions)
+├── CLAUDE.md                Project constraints + skills
+└── scratch/                 Working files (gitignored)
+```
+
+---
+
+## Key Concepts
+
+### OAuth3 Scopes
+```
+browser.read        → Read-only (navigate, read DOM)
+browser.click       → Click elements
+browser.fill        → Fill forms + type text
+browser.send        → Send emails/messages (requires step-up consent)
+browser.screenshot  → Take screenshots
+browser.dom         → Capture DOM snapshots
+```
+
+### Recipe Format (Prime Mermaid)
+```mermaid
+graph LR
+    A["Fetch Gmail"] --> B["Extract Emails"]
+    B --> C["Classify"]
+    C --> D["Summarize"]
+    D --> E["Save Result"]
+
+    style A fill:#e1f5ff
+    style E fill:#c8e6c9
+```
+
+### Evidence Bundle
 ```json
 {
-  "site": "linkedin.com",
-  "pages": {
-    "feed": {
-      "post_card": { "selector": "role=article", "strength": 0.95 },
-      "like_button": { "selector": ".reactions-react-button", "strength": 0.90 }
-    }
+  "run_id": "run_123456",
+  "timestamp": "2026-02-25T14:12:00Z",
+  "oauth3_events": [
+    {"timestamp": "...", "event": "TOKEN_ISSUED", "scopes": ["browser.read", "browser.click"]}
+  ],
+  "action_events": [
+    {"timestamp": "...", "action": "click", "selector": "button#compose", "scope_check": "✓"}
+  ],
+  "artifacts": {
+    "screenshots": ["step_1.png", "step_2.png"],
+    "dom_snapshots": ["step_1.html", "step_2.html"]
+  },
+  "manifest": {
+    "version": "0.1.0",
+    "recipe": "gmail/triage-inbox.mmd",
+    "hash_chain": "sha256:abc..."
   }
 }
 ```
 
 ---
 
-## The Blueprint (PrimeMermaid)
+## Contributing
 
-PrimeMermaid is page geometry: what interactive elements exist, where they are,
-what state machines govern them. Cast once, navigate forever.
+### Add a New Recipe
+1. Create `recipes/[platform]/[task].mmd` (Prime Mermaid format)
+2. Test locally: `solace-browser run recipes/[platform]/[task].mmd`
+3. Submit to Stillwater Store: `solace-browser store submit`
+4. Community votes + refinement
 
-```
-stateDiagram-v2
-  [*] --> Feed
-  Feed --> PostModal : click Start a post
-  PostModal --> Posted : click Post button
-  Posted --> [*]
-```
+### Improve OAuth3 Implementation
+1. Run tests: `pytest tests/ -v`
+2. Check: `bandit -r src/oauth3/` (security)
+3. Verify: `semgrep -c p/security-audit src/oauth3/`
+4. Submit PR
 
-Stored in `primewiki/` as `.mmd` files. Rendered live in the Activity View.
-
----
-
-## The Mission
-
-This is the first open-source AI twin browser built on verifiable evidence,
-not vibes. Every action is logged. Every task has an artifact. Every recipe
-has a reasoning block you can audit.
-
-The Bitwarden model: open-source the client. Keep the cloud paid.
-- **Free**: self-host, run your own twin, use community recipes
-- **Paid** ([solaceagi.com](https://www.solaceagi.com)): managed cloud, 70% recipe cache, fingerprint sync
+### Report Issues
+- OAuth3 scope bypass → **P0** (security)
+- Recipe non-determinism → **P1** (core)
+- Audit trail gap → **P2** (compliance)
+- UI/docs → **P3** (polish)
 
 ---
 
-## The Code of the Dojo
+## Roadmap
 
-Built with Stillwater OS. Governed by the verification ladder.
+**Phase 0 (1 week):** Foundation + docs + skeleton ✓
+**Phase 1 (2 weeks):** OAuth3 core (vault + scopes)
+**Phase 2 (2 weeks):** Playwright integration + screenshot capture
+**Phase 3 (2 weeks):** Recipe parser + deterministic execution
+**Phase 4 (2 weeks):** PM Triplet models (composition)
+**Phase 5 (2 weeks):** Store integration (read + submit recipes)
+**Phase 6 (3 weeks):** Multi-platform recipes (Gmail, LinkedIn, Slack, GitHub, Notion)
 
-| Principle | Application |
-|-----------|-------------|
-| No claim without evidence | Every recipe has a `reasoning` block |
-| Fail-closed | Sessions fail safe; never destructive without sealed wish |
-| Externalized reasoning | LLM thinking → recipes → instant replay |
-| Open core, paid cloud | Client = MIT. Recipe library + farm = solaceagi.com |
-
----
-
-## See Also
-
-- [`NORTHSTAR.md`](NORTHSTAR.md) — mission, metrics, model strategy
-- [`IDEAS.md`](IDEAS.md) — 65537-expert analysis of the opportunity
-- [`specs/BUILD-SPEC.md`](specs/BUILD-SPEC.md) — MVP build spec (Phase 1)
-- [`specs/QA-CHECKLIST.md`](specs/QA-CHECKLIST.md) — verification checklist
-- [`primewiki/`](primewiki/) — site knowledge graphs
-- [`recipes/`](recipes/) — automation recipe library
-- [Stillwater OS](https://github.com/phuctruong/stillwater) — the AI verification framework powering this
+**Target:** Production-ready (rung 65537) by Q3 2026
 
 ---
 
-> Born from a boat. Forged at Harvard. Battle-tested in startups.
-> Now open-sourced for the world.
->
-> Absorb what is useful. Discard what is useless. Add what is essentially your own. — Bruce Lee
+## Related Projects
+
+- **stillwater** — Core OS + skills + Stillwater Store
+- **solaceagi.com** — Hosted platform (uses solace-browser as cloud twin)
+- **solace-cli** — Terminal-native CLI (extends stillwater)
+- **paudio** — Voice synthesis (for avatar system)
+- **pvideo** — Video/avatar rendering (if theory)
+- **pzip** — Compression engine (for storage)
+
+---
+
+## Questions?
+
+- **GitHub Issues:** Bug reports + feature requests
+- **Discussions:** Ideas + design feedback
+- **CLAUDE.md:** Project constraints + dispatch rules
+- **NORTHSTAR.md:** Vision + metrics
+
+---
+
+## License
+
+MIT (open source, any use)
+
+---
+
+**Built by:** Phuc Truong + Community
+**Updated:** 2026-02-25
+**Rung Target:** 65537
+**Status:** 🎯 Phase 0 ready

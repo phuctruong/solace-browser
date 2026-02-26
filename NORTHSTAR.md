@@ -1,296 +1,380 @@
-# NORTHSTAR: Phuc_Forecast — SolaceBrowser
+# NORTHSTAR: Phuc_Forecast — Solace Browser v1.0
+# OAuth3 Reference Implementation + PM Triplets + Recipe Engine
+# Software 5.0 Edition | Updated: 2026-02-25
 
-> *"Be water, my friend."* — Bruce Lee
-
-## The Universal Portal Vision
-
-**Solace Browser is not just a web browser.**
-
-It is the universal portal through which AI agents interact with ALL of a user's digital resources — web accounts, local files, terminal, system state — all governed by OAuth3 consent and Part 11 audit trails.
-
-```
-solaceagi.com (cloud)
-    ↕ tunnel (built-in reverse proxy, like ngrok)
-Solace Browser (local portal)
-    ├── Web Layer (OAuth3 browser, recipes, 10+ platforms)
-    ├── Machine Layer (files, terminal, system — OAuth3-gated)
-    ├── Tunnel Layer (reverse proxy to cloud — step-up required)
-    └── OAuth3 Enforcement (ALL actions scope-gated, evidenced)
-```
-
-**5 Control Surfaces:**
-1. **AI Agent** — Claude Code + stillwater skills call the local API directly
-2. **CLI** — `solace-cli browser run "task"` from any terminal
-3. **OAuth3 Web** — solaceagi.com dashboard → remote control via tunnel
-4. **Native Tunnel** — built-in reverse proxy, connect from anywhere, no external tools
-5. **Download** — solaceagi.com/browser, cross-platform (DMG / DEB / MSI)
-
-**The competitive moat deepens with every layer:**
-
-| Approach | Web | Machine | Tunnel | OAuth3 |
-|---------|-----|---------|--------|--------|
-| Script-replay tools | Partial | No | No | No |
-| Extension-only tools | Extension only | No | No | No |
-| General browser agents | Yes | No | No | No |
-| Cloud-only tools | Cloud only | No | No | No |
-| **Solace Browser** | **Yes** | **Yes** | **Yes** | **Yes** |
-
-No competitor has OAuth3-gated machine access. We ship it first.
+> "The best way to understand something is to build it." — Richard Feynman
+> "OAuth3 is not a feature—it's the law of the dojo." — Phuc Truong
 
 ---
 
-## The Reframe: From Tool to Protocol
+## THE VISION
 
-**Before OAuth3**: SolaceBrowser = browser automation tool (competing on features)
-**After OAuth3**: SolaceBrowser = reference implementation of AI delegation standard
+**Solace Browser = The Open Standard for Delegated AI Agency**
 
 ```
-OAuth3 Spec (OPEN STANDARD)
-    │
-    ├── solace-browser = reference implementation (OSS) ← THIS PROJECT
-    ├── stillwater = verification + governance layer (OSS)
-    ├── solace-cli = terminal-native surface (OSS)
-    └── solaceagi.com = hosted compliance-grade execution (PAID)
+Layer 1: Playwright/Selenium (browser automation)
+         ↓ (execution surface)
 
-Standard → Ecosystem → Revenue
+Layer 2: OAuth3 Scope Gates (authorization)
+         Every click requires explicit scope
+         Every action is revocable
+         ↓
+
+Layer 3: Recipe Engine (deterministic execution)
+         Prime Mermaid recipes
+         Reproducible, auditable, cached
+         ↓
+
+Layer 4: PM Triplets (context model)
+         User model + Task model + Context model
+         Enables composition (output of A = input to B)
+         ↓
+
+solace-browser = Proving ground for OAuth3 + browser automation
+                 = Reference implementation for solaceagi.com
+                 = Community-driven recipe library
 ```
 
-**Why this wins**: Model-neutral architecture provides a structural advantage over model-specific platforms. OAuth3 reduces token usage to near-zero via recipe reuse, creating durable economic efficiency that complements open standards adoption.
-
-**The moat**: First open standard for AI agency delegation. Anyone who implements it
-validates our position. Anyone who doesn't is non-compliant.
+**Why This Matters:**
+- **OAuth3 is uncopyable:** Token vendors (OpenAI, Anthropic) cannot implement it—cannibalizes revenue
+- **Browser automation is commoditized:** Selenium/Playwright exist, but none have OAuth3 + auditing
+- **Recipes compound:** Each recipe submission makes hit rate higher → margins better → attracts more users
+- **Open source builds trust:** No black box. Users see exactly what the agent does.
 
 ---
 
-## Software 5.0 Context
+## NORTH STAR METRIC: Recipe Hit Rate
 
-SolaceBrowser is **Software 5.0 for personal web automation**:
-- Natural language intent ("check my LinkedIn DMs") → **source code**
-- Playwright browser agent + recipe engine → **runtime**
-- Captured recipes + evidence bundles → **compiled output**
-- Stillwater verification (recipe hit rate + task success) → **CI/CD**
+### The Question
+**"How do we build a browser automation platform where the majority of tasks complete without calling an LLM?"**
 
-The North Star is not the features. The North Star is the **recipe hit rate** — because recipe caching is the key to economic viability. Below a critical hit rate, the economics break. Recipes ARE the moat. Recipes ARE the intelligence layer persisted outside the LLM session.
+### The Answer: Recipe Flywheel
+```
+Phase 1: Build recipe engine (Prime Mermaid parser)
+         Hit rate: 0% (no recipes)
 
-> *"Log in once. Solace handles the rest — checking your email, applying to jobs, and monitoring your feeds while you sleep."*
+Phase 2: Ship 10 hand-written recipes (email, LinkedIn, etc.)
+         Hit rate: 5% (rare perfect match)
+
+Phase 3: Community submission opens (Stillwater Store integration)
+         + Recipe caching + hit rate tracking
+         Hit rate: 20% (some tasks match exactly)
+
+Phase 4: Recipe refinement (ML feedback loop)
+         + Reward high-hit recipes
+         + Prune low-hit recipes
+         Hit rate: 50%
+
+Phase 5: Specialization (per-domain recipe training)
+         + Gmail recipe ≠ LinkedIn recipe
+         + Fine-tuned for specific workflows
+         Hit rate: 70%+
+
+Economics at 70% hit rate:
+  Recipe task cost: $0.001 (Haiku at scale)
+  LLM task cost:    $0.01 (Sonnet, medium)
+  If 70% recipes:   $0.007/task avg → 30% of cold-call cost
+```
 
 ---
 
-## The Vision: Twin Browser
+## STRATEGIC METRICS
 
-SolaceBrowser is **not just another AI browser sidebar**. It is a twin architecture:
+| Metric | Phase 1 | Phase 4 | Phase 6 |
+|--------|---------|---------|---------|
+| **Browser recipes shipped** | 0 | 10 | 50+ |
+| **Recipe hit rate** | 0% | 30% | 70%+ |
+| **GitHub stars** | 0 | 500 | 5,000 |
+| **Community recipe submissions** | 0 | 5/mo | 50/mo |
+| **Platforms supported** | 0 | 1-2 | 10+ |
+| **Rung 65537 recipes** | 0% | 20% | 80% |
 
+---
+
+## CORE FEATURES
+
+### 1. OAuth3 Reference Implementation
 ```
-LOCAL  → Electron browser wrapping persistent_browser_server.py
-         User browses normally + AI sidebar for current page
-         One-click session sync (AES-256-GCM zero-knowledge encryption)
+What it proves:
+  ✓ OAuth3 spec is implementable (not vaporware)
+  ✓ Token vendors CAN'T do it (breaks their model)
+  ✓ Users WANT it (scoped, revocable, auditable)
 
-CLOUD  → Same persistent_browser_server.py running headless on solaceagi.com
-         Your sessions + fingerprint, running tasks 24/7 while you sleep
-         Recipe caching dramatically reduces per-task cost compared to cold LLM calls.
-```
+Scope gates:
+  browser.read  → inspect + read pages only
+  browser.click → click elements
+  browser.fill  → fill forms + type text
+  browser.send  → send emails/messages (requires step-up)
 
-**Seven moats (all competitors have 0–2):**
-1. **Recipe system** → 70% cache hit → 3x cheaper COGS
-2. **PrimeWiki** → domain-aware navigation (not generic DOM scraping)
-3. **Twin architecture** → local browsing + cloud delegation
-4. **Anti-detection** → Bezier mouse, fingerprint sync, char-by-char typing
-5. **Stillwater verification** → evidence bundle per task (not just screenshots)
-6. **OAuth3 protocol** → scoped consent, revocation, audit trail, step-up auth ← UNCOPYABLE
-7. **Machine layer** → OAuth3-gated file + terminal + system access ← FIRST MOVER
-
-**Why moat #6 is uncopyable**: OAuth3 provides a structural moat through architecture, not vendor lock-in.
-We have structural freedom to do what model-centric platforms cannot.
-
-**Competitive gaps (Feb 2026)**:
-| Competitor | Missing |
-|-----------|---------|
-| Extension-based tools | No evidence trail; no consent model; no revocation |
-| Script-replay tools | No session persistence; no recipe system; no OAuth3 |
-| Browser extensions | Local execution only; no cloud twin; no step-up auth |
-| Cloud-only tools | No local twin; no recipe library; no OAuth3 |
-
-### FDA 21 CFR Part 11 — ALCOA+ Mapping
-
-SolaceBrowser is the first browser automation platform where every agent action maps to ALCOA+ data integrity:
-
-| ALCOA+ Principle | SolaceBrowser Implementation |
-|-----------------|-------------------------------|
-| **A**ttributable | OAuth3 token identifies which agent took which action, on whose behalf |
-| **L**egible | PZip HTML snapshots — actual pages rendered, not lossy screenshots |
-| **C**ontemporaneous | Timestamps captured at execution, not reconstructed later |
-| **O**riginal | Full HTML snapshot (what the agent actually saw) — not a summary |
-| **A**ccurate | Stillwater rung-gated evidence bundles — not prose claims |
-| +**Complete** | Full session captured: every page, every form fill, every action |
-| +**Consistent** | Deterministic recipe replay — same seed → same audit trail |
-| +**Enduring** | PZip compression enables forever retention at near-zero cost |
-| +**Available** | Kanban history UI — browse, search, replay any agent session |
-
-"In clinical trials, 'trust me' is not evidence. Only the original, timestamped, attributable record is evidence." — Phuc Truong (CRIO founder, Harvard '98)
-
-No competitor stores original records this way. Most tools use screenshots (lossy, not original) or have no history at all.
-
-## North Star Metric
-
-**Recipe Hit Rate + Task Success Rate**
-
-| Metric | 3mo | 6mo | 12mo | 24mo |
-|--------|-----|-----|------|------|
-| Recipe hit rate | 50% | 70% | 80% | 90% |
-| Cloud task success rate | 70% | 80% | 90% | 95% |
-| Paying users | 100 | 1,000 | 5,000 | 25,000 |
-| MRR (blended belt mix) | ~$5K | ~$18.3K | ~$91K | ~$457K |
-
-**Belt-blended MRR at 1,000 users**: MRR projections are maintained in internal strategy documents.
-
-**Why recipe hit rate?** Recipe caching significantly reduces per-task cost. Recipes ARE the economic moat.
-"I fear not the man who has practiced 10,000 kicks once, but I fear the man who has practiced one kick 10,000 times." — Bruce Lee. This is recipe replay.
-
-## Current Phase: Phase 0 — Validate Core Premise
-
-Before writing any Electron code, validate:
-- [ ] `storage_state` transfers between machines for 8+ of top 10 sites
-- [ ] Sessions survive 7+ days headless for 5+ sites
-- [ ] Fingerprint sync passes BotD/CreepJS (cloud looks like local)
-- [ ] Headless Docker execution works end-to-end for "check LinkedIn messages"
-
-**Stop if:** session transfer fails for 5+ sites (fundamental premise broken).
-
-## Phase 1: MVP UI + LinkedIn Recipes (Current Sprint)
-
-Build spec: `specs/BUILD-SPEC.md` | QA checklist: `specs/QA-CHECKLIST.md`
-
-| Feature | What | Rung |
-|---------|------|------|
-| Home Page | Custom start page — 6 supported sites with session status + quick actions | 641 |
-| Activity View | Post-login view — twin orchestrator logs, PrimeWiki, Mermaid state diagram, HTML viewer | 641 |
-| Kanban UI | Recipe task queue (Queue → Running → Done → Failed) | 641 |
-| LinkedIn Recipes | 6 MVP recipes: discover-posts, create-post, edit-post, delete-post, react, comment | 641 |
-
-**UI server:** port 9223 (separate from API server at 9222)
-**Tech:** Vanilla HTML/CSS/JS, no build step, served by Python stdlib HTTP server
-
-### Differentiation (Belt Tiers via solaceagi.com)
-
-| Belt | Price | What you get | Browsing History |
-|------|-------|-------------|-----------------|
-| White (Free) | $0 | All UI, all 6 LinkedIn recipes, local execution, BYOK | 100 snapshots, 7-day retention |
-| Yellow (Student) | $8/mo | Managed LLM (no API key), 30-day evidence, 20 tokens, replay priority | 1,000 snapshots, 30-day retention |
-| Orange (Warrior) | $48/mo | Cloud twin (24/7), OAuth3 vault, 90-day evidence, production skills (rung 65537) | 10,000 snapshots, 90-day retention |
-| Green (Master) | $88/user/mo | Team tokens, SOC2 audit, private Stillwater Store, SAML SSO | Unlimited snapshots, 1-year retention |
-| Black (Grandmaster) | $188+/mo | Dedicated nodes, on-prem, custom governance | Unlimited snapshots, forever retention |
-
-**Near-unlimited browsing history**: Full HTML snapshots, not screenshots. See exactly what your AI did.
-PZip compression makes this affordable at $0.00032/user/month.
-"See exactly what your AI did — actual pages, not screenshots."
-
-Recipe FORMAT is open. Recipe LIBRARY quality + cloud execution + belt progression + browsing history = the paid moat.
-"This isn't SaaS — it's a dojo."
-
-## Phase 2: Electron Shell (After Phase 1 validated)
-
-| Layer | Build | Reuse |
-|-------|-------|-------|
-| Electron shell wrapping Phase 1 UI | BUILD (~1K lines) | Phase 1 HTML/JS |
-| Session encrypt/upload | BUILD (~200 lines) | `/save-session` output |
-| Cloud task queue | BUILD (thin) | solaceagi FastAPI |
-| Everything else | — | REUSE (40+ API endpoints) |
-
-**MVP demo:** Login to LinkedIn in browser → cloud reads your messages → results appear in Activity View.
-
-## Model Strategy (Intelligence Layer)
-
-Per IDEAS.md architecture:
-
-| Model | Role |
-|-------|------|
-| **haiku** | Main session coordinator; task execution in cloud (recipe replays) |
-| **sonnet** | Task planning; new recipe creation; coder swarm |
-| **opus** | Security audit; zero-knowledge encryption review |
-
-Cloud intelligence layer uses Claude API:
-- Sonnet for planning new tasks
-- Haiku for executing cached recipes (100x cheaper)
-
-## PZip-Powered Browsing History (Secret Sauce Moat #7)
-
-PZip enables a browsing history feature no competitor can match economically.
-
-```
-PZip proprietary compression achieves industry-leading ratios on browser history.
-
-At scale (the math that wins):
-  10K users × 1000 pages = 7.3TB raw → $3.20/mo
-  That's $0.00032/user/month for full browsing history
-  Competitors: $146/mo for same data without PZip (if they store it at all)
-
-What this enables (no competitor offers this):
-  - "See exactly what your AI did — actual pages, not screenshots"
-  - Replay exactly what the agent did step-by-step
-  - Inspect form fills: see what the agent typed before/after
-  - Full-text search across your entire browsing history
-  - Kanban view: session → page cards → click → full HTML render (iframe)
+Evidence:
+  Every action logged (JSONL)
+  Hash-chained (tamper-evident)
+  Exportable for audit
 ```
 
-**Snapshot schema** (every page visit captures):
-```json
-{
-  "snapshot_id": "sha256(url + timestamp + html_hash)",
-  "url": "https://linkedin.com/feed",
-  "title": "LinkedIn Feed",
-  "timestamp": "ISO8601",
-  "html": "<!DOCTYPE html>...",
-  "form_state": {"input#search": "software engineer"},
-  "form_changes": [{"selector": "input#search", "before": "", "after": "software engineer"}],
-  "viewport": {"width": 1920, "height": 1080},
-  "scroll_position": {"x": 0, "y": 450}
-}
+### 2. Recipe Engine (Prime Mermaid Parser)
+```
+Recipe = Deterministic task definition:
+
+Input:
+  ```mermaid
+  graph LR
+    A["Fetch Gmail Inbox"] --> B["Extract Emails"]
+    B --> C["Classify Importance"]
+    C --> D["Generate Summary"]
+    D --> E["Save to Outbox"]
+  ```
+
+Output:
+  Summary JSON + evidence bundle
+
+Execution:
+  Same seed → same output (forever)
+  Cached → $0.001/task (vs $0.01 with LLM)
 ```
 
-**Build prompt**: See `ROADMAP.md` — HTML Snapshot Capture build prompt (Phase 2 / PZip integration)
+### 3. PM Triplets (Context Model)
+```
+User Model:
+  - Identity (who is using the agent)
+  - Preferences (tone, language, style)
+  - Constraints (budget, time, scope)
 
-## What Aligns with This Northstar
+Task Model:
+  - Goal (what does the agent need to do)
+  - Inputs (what data does it start with)
+  - Success criteria (when is the task done)
 
-- Phase 0 validation tests (run before any Electron code)
-- Recipe system: every successful task creates/improves a recipe
-- Anti-detection: weekly fingerprint-check against BotD/CreepJS
-- Evidence-based execution: Stillwater verification bundles per task
-- Zero-knowledge sync: user's master password never touches server
-- Phuc swarms for all implementation (coder/planner/skeptic typed agents)
-- **PZip HTML snapshots**: full page capture + form fill recording + cross-file compression
-- **Machine layer**: OAuth3-gated file/terminal/system access (13 scopes, path traversal prevention)
-- **Tunnel engine**: built-in reverse proxy at rung 65537 (TLS-only, token-pinned, bandwidth-tracked)
-- **Cross-platform distribution**: Tauri wrapper + platform installers + auto-update
-- **Universal portal home page**: 5 control surfaces in one dashboard
+Context Model:
+  - Current state (where are we in the task)
+  - Decisions made (what has the agent done so far)
+  - Remaining steps (what's left)
 
-## What Does NOT Align
+Enables composition:
+  Email summarizer (output = summary)
+    → LinkedIn poster (input = summary, output = draft)
+    → Human approval (input = draft, output = approved/rejected)
+```
 
-- Building Chromium fork (use Tauri/Electron)
-- Mobile-first (desktop first)
-- Scraping/aggregating data (personal task delegation only)
-- Running browser automation without sealed wish contract (EXECUTE_WITHOUT_SEALED_WISH)
-- Claiming task success without Stillwater evidence bundle
-- Storing screenshots instead of HTML snapshots (lossy → can't inspect → can't replay)
-- Storing uncompressed HTML (always PZip before storage)
-- Machine access without OAuth3 token (MACHINE_ACCESS_WITHOUT_TOKEN — forbidden state)
-- Tunnel without step-up confirmation (TUNNEL_WITHOUT_STEP_UP — forbidden state)
-- Path traversal allowed (any "../" or absolute path outside allowed_roots → 403, no exceptions)
-- Blocklisted commands executed (BLOCKED_COMMAND_EXECUTED — forbidden state, highest severity)
+### 4. Multi-Platform Recipes
+```
+Phase 1: Gmail (email triage, draft reply, send)
+Phase 2: LinkedIn (post, comment, message)
+Phase 3: Slack (channel summary, thread reply)
+Phase 4: GitHub (issue triage, PR comment)
+Phase 5: Notion (create page, sync data)
+Phase 6+: Twitter, Stripe, Shopify, HubSpot, Calendly, etc.
 
-## Key Risks to Monitor
+Each platform:
+  - Canonical task recipes
+  - OAuth2/OAuth3 scopes mapped
+  - Evidence capture (screenshots, DOM diffs)
+  - Community refinement
+```
 
-1. Session expiry: Google/LinkedIn expire sessions — monitor weekly
-2. Anti-detection degradation: sites update detection — weekly BotD check
-3. Chrome Auto Browse: can't do cloud delegation, can't work while sleeping
-4. Legal: act as user's authorized agent; never aggregate data
+### 5. Part 11 Audit Trail (Browser Edition)
+```
+Browser execution is especially auditable:
+  - Visual evidence (screenshots at each step)
+  - DOM snapshots (exact HTML before/after click)
+  - Network log (what was requested)
+  - Timing (how long each step took)
 
-## See Also
+Audit bundle includes:
+  ✓ oauth3_audit.jsonl (authorization events)
+  ✓ action_audit.jsonl (every click, fill, submit)
+  ✓ visual/ (screenshot at each step)
+  ✓ dom/ (DOM snapshots)
+  ✓ manifest.json (metadata, hashes)
+  ✓ bundle.sha256 (tamper detection)
 
-- `IDEAS.md` — full 65537-expert analysis (DREAM→FORECAST→DECIDE→ACT→VERIFY)
-- `specs/BUILD-SPEC.md` — Phase 1 build spec (4 features + 6 LinkedIn recipes)
-- `specs/QA-CHECKLIST.md` — QA verification checklist (used by auditor session)
-- `CLAUDE.md` — prime-wishes + phuc-cleanup loaded
-- `ripples/project.md` — project constraints
-- `skills/prime-browser.md` — browser agent skill
-- `recipes/*.recipe.json` — cached automation recipes
-- `primewiki/*.primewiki.json` — site knowledge graphs
+Auditor sees:
+  "Agent clicked button #submit at 2:34:12"
+  "Scopes: browser.send (✓ in scope)"
+  "Screenshot before: [image]"
+  "Screenshot after: [image]"
+```
+
+---
+
+## ARCHITECTURE: 4 Layers
+
+### Layer 1: Browser Automation
+```
+Playwright (preferred) or Selenium
+  ├── Page navigation
+  ├── Element selection + interaction
+  ├── Screenshot + DOM capture
+  └── Network interception
+```
+
+### Layer 2: OAuth3 Scope Gates
+```
+Every action wrapped in:
+  ├── Check user token
+  ├── Verify scope (browser.click required for click())
+  ├── Record action (evidence chain)
+  └── Execute or reject
+```
+
+### Layer 3: Recipe Execution Engine
+```
+Prime Mermaid parser:
+  ├── Parse recipe DAG
+  ├── Execute each node (deterministic)
+  ├── Cache result (if recipe = known good)
+  └── Return output + evidence
+```
+
+### Layer 4: PM Triplet Context
+```
+User + Task + Context models:
+  ├── User preferences (tone, budget, constraints)
+  ├── Task definition (goal, inputs, success criteria)
+  └── Context state (what's been done, what's left)
+```
+
+---
+
+## PROJECT PHASES (7 Phases, 14 Sessions)
+
+| Phase | Name | Goal | Rung | Sessions | Dependencies |
+|-------|------|------|------|----------|--------------|
+| **0** | Foundation | Directory structure, docs, skeleton | 641 | 1 | None |
+| **1** | OAuth3 Core | Token management, scope gates | 274177 | 2 | Phase 0 |
+| **2** | Browser Automation | Playwright + recipe runner | 641 | 2 | Phase 1 |
+| **3** | Recipe Engine | Prime Mermaid parser | 641 | 2 | Phase 2 |
+| **4** | PM Triplets | User/Task/Context models | 641 | 2 | Phase 3 |
+| **5** | Store Integration | Stillwater Store (read + submit) | 641 | 2 | Phase 4 + solaceagi Phase 3 |
+| **6** | Multi-Platform | Gmail, LinkedIn, Slack, GitHub, Notion | 641 | 3 | Phase 5 |
+
+**Total:** 14 sessions to rung 65537 (production ready)
+
+**See:** `ROADMAP.md` (full specification)
+
+---
+
+## COMPETITIVE POSITION
+
+| Competitor | Gap | Solace Browser Advantage |
+|-----------|-----|------------------------|
+| Selenium | No scope gates, no revocation, no evidence | OAuth3 + audit trail + recipe caching |
+| Playwright | Same as Selenium | OAuth3 + audit trail + recipe caching |
+| Browser-Use | No OAuth3, no recipe caching, vague evidence | Scoped, revocable, evidence-first |
+| OpenClaw | No evidence, thousands of vulns | Part 11 architected, rung-gated |
+| Bardeen | Chrome extension only, centralized control | Open source, local+cloud, federated |
+
+### Why Uncopyable
+```
+1. OAuth3 is the dojo law
+   No competitor can implement it without breaking their token model
+
+2. Recipe library compounds
+   Each community submission raises hit rate
+   → lower COGS → better margins → attracts more users
+
+3. Evidence by default
+   Browser automation + audit trail = compliance ready
+   Other platforms are opaque (screenshots or nothing)
+
+4. Open source + community
+   GitHub stars + community recipes = defensible moat
+   Proprietary alternatives can't match pace of improvement
+```
+
+---
+
+## ECOSYSTEM ROLE
+
+Solace Browser fits into 9-project ecosystem:
+
+```
+stillwater/cli (OSS)
+  ↓ (base CLI, anyone uses)
+
+solace-browser (OSS)  ← YOU ARE HERE
+  ├── OAuth3 reference impl
+  ├── Recipe engine + caching
+  ├── PM triplets
+  └── Multi-platform recipes
+
+  ↓ (feeds into)
+
+solaceagi.com (PAID, hosted platform)
+  ├── solace-browser + cloud twin
+  ├── LLM router (L1–L5)
+  ├── Memory Vault (search + diffs)
+  └── Belt progression system
+```
+
+---
+
+## RUNG LADDER
+
+| Phase | Target Rung | Quality Gate | Example Test |
+|-------|-------------|--------------|--------------|
+| **0-4** | 641 | Unit tests pass locally | OAuth3 token issue/revoke works |
+| **1, 5** | 274177 | Same recipe → same output (replay) | Issue + revoke token → actions blocked |
+| **6** | 65537 | Survives adversarial | Revocation mid-action → immediate halt |
+
+---
+
+## BELT PROGRESSION
+
+| Belt | Milestone | Achievement |
+|------|-----------|-------------|
+| White | First recipe runs | GitHub fork + modify recipe |
+| Yellow | 5 recipes submitted | Stillwater Store submissions accepted |
+| Orange | Recipe hit rate > 30% | Real user adoption, cache hits tracked |
+| Green | Rung 65537 achieved | Full test suite + adversarial tests pass |
+| Blue | 1,000+ GitHub stars | Community momentum |
+| Black | OAuth3 external adopters | Other platforms adopt spec |
+
+---
+
+## QUICK START
+
+### Run Phase 0
+```bash
+/build Phase_0_Foundation
+```
+
+### Then Phase 1 (OAuth3 Core)
+```bash
+/build Phase_1_OAuth3_Core
+```
+
+### See Progress
+```bash
+/status
+cat scratch/todo/Phase_*.md
+```
+
+---
+
+## KEY FILES
+
+| File | Purpose |
+|------|---------|
+| NORTHSTAR.md | This file (vision + metrics) |
+| CLAUDE.md | Directives (phases, skills, dispatch rules) |
+| ROADMAP.md | Full build plan (workstreams, acceptance criteria) |
+| README.md | Getting started for developers |
+| scratch/todo/ | Phase checklists (Codex builds these) |
+
+---
+
+## SEE ALSO
+
+- `ROADMAP.md` — Full build plan (7 phases, 14 sessions)
+- `CLAUDE.md` — Project constraints + skills
+- `README.md` — Developer quick start
+- `/home/phuc/projects/solaceagi/NORTHSTAR.md` — Hosted platform (integrates this)
+- `/home/phuc/projects/stillwater/` — Core OS + skills
+
+---
+
+**Signature:** Software 5.0 Edition
+**Rung Target:** 65537 (production-ready, community-driven)
+**Vision:** Open standard for OAuth3 + browser automation + recipes
+**Status:** 🎯 Ready for Phase 0
