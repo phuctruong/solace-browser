@@ -1,7 +1,7 @@
 """
 test_oauth3_enforcement.py
 ===========================
-Derived from: diagrams/oauth3-enforcement-flow.md
+Derived from: data/default/diagrams/oauth3-enforcement-flow.md
 
 Tests the 4-gate cascade:
   G1: Token exists in vault
@@ -17,7 +17,7 @@ Rules from diagram:
   - Revocation real-time: revoked token → G1 FAIL
 
 Run:
-    python -m pytest tests/test_diagrams/test_oauth3_enforcement.py -v
+    python -m pytest tests/test_data/default/diagrams/test_oauth3_enforcement.py -v
 """
 
 from __future__ import annotations

@@ -38,8 +38,8 @@ import pytest
 # ---------------------------------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).parent.parent
-RECIPES_DIR = PROJECT_ROOT / "recipes" / "substack"
-PRIMEWIKI_DIR = PROJECT_ROOT / "primewiki" / "substack"
+RECIPES_DIR = PROJECT_ROOT / "data" / "default" / "recipes" / "substack"
+PRIMEWIKI_DIR = PROJECT_ROOT / "data" / "default" / "primewiki" / "substack"
 
 SRC_PATH = PROJECT_ROOT / "src"
 if str(SRC_PATH) not in sys.path:
@@ -182,7 +182,7 @@ class TestRecipeFileExistence:
     """Verify all 6 Substack recipe files exist and are valid JSON."""
 
     def test_recipes_directory_exists(self):
-        assert RECIPES_DIR.exists(), f"recipes/substack/ directory missing at {RECIPES_DIR}"
+        assert RECIPES_DIR.exists(), f"data/default/recipes/substack/ directory missing at {RECIPES_DIR}"
 
     def test_all_six_recipes_exist(self):
         for filename in RECIPE_FILES:
@@ -548,19 +548,19 @@ class TestPMTriplet:
 
     def test_pm_directory_exists(self):
         assert PRIMEWIKI_DIR.exists(), \
-            f"primewiki/substack/ directory missing at {PRIMEWIKI_DIR}"
+            f"data/default/primewiki/substack/ directory missing at {PRIMEWIKI_DIR}"
 
     def test_selectors_json_exists(self):
         filepath = PRIMEWIKI_DIR / "selectors.json"
-        assert filepath.exists(), "primewiki/substack/selectors.json missing"
+        assert filepath.exists(), "data/default/primewiki/substack/selectors.json missing"
 
     def test_urls_json_exists(self):
         filepath = PRIMEWIKI_DIR / "urls.json"
-        assert filepath.exists(), "primewiki/substack/urls.json missing"
+        assert filepath.exists(), "data/default/primewiki/substack/urls.json missing"
 
     def test_actions_json_exists(self):
         filepath = PRIMEWIKI_DIR / "actions.json"
-        assert filepath.exists(), "primewiki/substack/actions.json missing"
+        assert filepath.exists(), "data/default/primewiki/substack/actions.json missing"
 
     def test_selectors_json_valid(self, all_pm_files):
         data = all_pm_files["selectors.json"]

@@ -216,7 +216,7 @@ test_recipe_compilation() {
     test_start "Verify compile creates locked recipe from episode"
 
     local episode_file="$PROJECT_ROOT/episodes/unit-test-episode.json"
-    local recipe_file="$PROJECT_ROOT/recipes/unit-test-episode.recipe.json"
+    local recipe_file="$PROJECT_ROOT/data/default/recipes/unit-test-episode.recipe.json"
 
     # Ensure episode exists
     if [[ ! -f "$episode_file" ]]; then
@@ -240,7 +240,7 @@ test_proof_generation() {
     log_test_header "Proof Generation (Recipe → Execution Proof)"
     test_start "Verify play generates valid proof artifact"
 
-    local recipe_file="$PROJECT_ROOT/recipes/unit-test-episode.recipe.json"
+    local recipe_file="$PROJECT_ROOT/data/default/recipes/unit-test-episode.recipe.json"
 
     # Ensure recipe exists
     if [[ ! -f "$recipe_file" ]]; then

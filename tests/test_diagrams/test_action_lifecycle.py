@@ -1,7 +1,7 @@
 """
 test_action_lifecycle.py
 =========================
-Derived from: diagrams/browser-action-lifecycle.md
+Derived from: data/default/diagrams/browser-action-lifecycle.md
 
 Tests the complete browser action lifecycle FSM:
   Phase 1: INTENT — normalize → compute cache key
@@ -22,7 +22,7 @@ Required artifacts per lifecycle run (from diagram manifest):
   evidence_bundle.json      — Phase 5
 
 Run:
-    python -m pytest tests/test_diagrams/test_action_lifecycle.py -v
+    python -m pytest tests/test_data/default/diagrams/test_action_lifecycle.py -v
 """
 
 from __future__ import annotations

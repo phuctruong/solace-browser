@@ -182,7 +182,7 @@ tail -f logs/cdp.log
 cat episodes/*.json | jq '.'
 
 # Check recipe structure
-cat recipes/*.recipe.json | jq '.'
+cat data/default/recipes/*.recipe.json | jq '.'
 
 # Check proof structure
 cat artifacts/proof-*.json | jq '.'
@@ -268,7 +268,7 @@ tests/
 Related Files:
 ├── solace-browser-cli-v2.sh # Main CLI (modified with CDP fixes)
 ├── episodes/               # Episode JSON files
-├── recipes/                # Locked recipe JSON files
+├── data/default/recipes/                # Locked recipe JSON files
 ├── artifacts/              # Proof and screenshot files
 └── logs/                   # Test logs (solace.log, cdp.log)
 ```

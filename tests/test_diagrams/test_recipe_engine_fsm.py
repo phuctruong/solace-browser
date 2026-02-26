@@ -1,7 +1,7 @@
 """
 test_recipe_engine_fsm.py
 ==========================
-Derived from: diagrams/recipe-engine-fsm.md
+Derived from: data/default/diagrams/recipe-engine-fsm.md
 
 Tests the Recipe Engine FSM state transitions:
   INTAKE → INTENT_CLASSIFY → CACHE_LOOKUP → HIT_VERIFY | CACHE_MISS
@@ -17,7 +17,7 @@ Additional contracts:
   - BLOCKED state on safety violation
 
 Run:
-    python -m pytest tests/test_diagrams/test_recipe_engine_fsm.py -v
+    python -m pytest tests/test_data/default/diagrams/test_recipe_engine_fsm.py -v
 """
 
 from __future__ import annotations

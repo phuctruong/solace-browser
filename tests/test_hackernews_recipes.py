@@ -38,8 +38,8 @@ import pytest
 # ---------------------------------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).parent.parent
-RECIPES_DIR = PROJECT_ROOT / "recipes" / "hackernews"
-PRIMEWIKI_DIR = PROJECT_ROOT / "primewiki" / "hackernews"
+RECIPES_DIR = PROJECT_ROOT / "data" / "default" / "recipes" / "hackernews"
+PRIMEWIKI_DIR = PROJECT_ROOT / "data" / "default" / "primewiki" / "hackernews"
 
 SRC_PATH = PROJECT_ROOT / "src"
 if str(SRC_PATH) not in sys.path:
@@ -145,10 +145,10 @@ def recipe(request, all_recipes):
 class TestFileExistence:
 
     def test_recipes_directory_exists(self):
-        assert RECIPES_DIR.exists(), f"recipes/hackernews/ missing at {RECIPES_DIR}"
+        assert RECIPES_DIR.exists(), f"data/default/recipes/hackernews/ missing at {RECIPES_DIR}"
 
     def test_primewiki_directory_exists(self):
-        assert PRIMEWIKI_DIR.exists(), f"primewiki/hackernews/ missing at {PRIMEWIKI_DIR}"
+        assert PRIMEWIKI_DIR.exists(), f"data/default/primewiki/hackernews/ missing at {PRIMEWIKI_DIR}"
 
     def test_all_recipe_files_exist(self):
         for filename in RECIPE_FILES:

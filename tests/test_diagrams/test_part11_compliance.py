@@ -1,7 +1,7 @@
 """
 test_part11_compliance.py
 ==========================
-Derived from: diagrams/part11-alcoa-mapping.md
+Derived from: data/default/diagrams/part11-alcoa-mapping.md
 
 Tests 21 CFR Part 11 / ALCOA+ compliance:
   Each ALCOA+ dimension has at least one assertion
@@ -28,7 +28,7 @@ ALCOA+ Dimensions (9):
   §11.50   — Electronic signatures: AES-256-GCM per bundle, chain-linked
 
 Run:
-    python -m pytest tests/test_diagrams/test_part11_compliance.py -v
+    python -m pytest tests/test_data/default/diagrams/test_part11_compliance.py -v
 """
 
 from __future__ import annotations

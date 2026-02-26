@@ -1,0 +1,6 @@
+{
+  "version": "1.0",
+  "description": "OAuth3 token smoke test",
+  "required_scope": "gmail.read.inbox",
+  "metadata": {"tags": ["gmail", "smoke"]}
+}

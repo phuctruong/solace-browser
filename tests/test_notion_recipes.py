@@ -37,8 +37,8 @@ import pytest
 # ---------------------------------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).parent.parent
-RECIPES_DIR = PROJECT_ROOT / "recipes" / "notion"
-PRIMEWIKI_DIR = PROJECT_ROOT / "primewiki" / "notion"
+RECIPES_DIR = PROJECT_ROOT / "data" / "default" / "recipes" / "notion"
+PRIMEWIKI_DIR = PROJECT_ROOT / "data" / "default" / "primewiki" / "notion"
 
 SRC_PATH = PROJECT_ROOT / "src"
 if str(SRC_PATH) not in sys.path:
@@ -145,10 +145,10 @@ def recipe(request, all_recipes):
 class TestFileExistence:
 
     def test_recipes_directory_exists(self):
-        assert RECIPES_DIR.exists(), f"recipes/notion/ missing at {RECIPES_DIR}"
+        assert RECIPES_DIR.exists(), f"data/default/recipes/notion/ missing at {RECIPES_DIR}"
 
     def test_primewiki_directory_exists(self):
-        assert PRIMEWIKI_DIR.exists(), f"primewiki/notion/ missing at {PRIMEWIKI_DIR}"
+        assert PRIMEWIKI_DIR.exists(), f"data/default/primewiki/notion/ missing at {PRIMEWIKI_DIR}"
 
     def test_all_recipe_files_exist(self):
         for filename in RECIPE_FILES:

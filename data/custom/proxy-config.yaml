@@ -1,0 +1,2 @@
+country=us,url=http://us-proxy.local:8080
+country=ca,url=http://ca-proxy.local:8080

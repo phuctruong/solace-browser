@@ -199,7 +199,7 @@ if __name__ == "__main__":
         print("Usage: python replay_recipe.py <recipe.json>")
         print()
         print("Available recipes:")
-        recipes_dir = Path("recipes")
+        recipes_dir = Path("data/default/recipes")
         if recipes_dir.exists():
             for recipe_file in sorted(recipes_dir.glob("*.json")):
                 print(f"  - {recipe_file.name}")

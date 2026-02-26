@@ -1,4 +1,4 @@
-# tests/test_diagrams/__init__.py
+# tests/test_data/default/diagrams/__init__.py
 # Diagram-to-test suite for SolaceBrowser
 # Each test file corresponds to one diagram in /diagrams/
 # Tests define interface contracts derived from FSM/flowchart definitions.

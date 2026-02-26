@@ -348,12 +348,14 @@ _LEGACY_SCOPE_ALIASES: Dict[str, Dict] = {
     "fs.list": {"platform": "fs", "description": "List directory entries inside the local Solace workspace", "risk_level": "low", "destructive": False},
     "fs.hash": {"platform": "fs", "description": "Hash files for deterministic audit checks", "risk_level": "low", "destructive": False},
     # Browser legacy two-segment scopes (Phase 1 browser wrapper)
+    "browser.navigate": {"platform": "browser", "description": "Navigate browser pages", "risk_level": "low", "destructive": False},
     "browser.read": {"platform": "browser", "description": "Read and navigate browser pages", "risk_level": "low", "destructive": False},
     "browser.click": {"platform": "browser", "description": "Click page elements", "risk_level": "medium", "destructive": False},
     "browser.fill": {"platform": "browser", "description": "Fill form fields", "risk_level": "medium", "destructive": False},
     "browser.send": {"platform": "browser", "description": "Send irreversible actions (submit/send)", "risk_level": "high", "destructive": True},
     "browser.screenshot": {"platform": "browser", "description": "Capture browser screenshots", "risk_level": "low", "destructive": False},
     "browser.dom": {"platform": "browser", "description": "Read DOM content / execute safe inspection scripts", "risk_level": "low", "destructive": False},
+    "browser.verify": {"platform": "browser", "description": "Verify page state via DOM checks", "risk_level": "low", "destructive": False},
     # LinkedIn legacy two-segment scopes (used by old tests and consent UI)
     "linkedin.create_post": {"platform": "linkedin", "description": "Create posts on your behalf", "risk_level": "medium", "destructive": False},
     "linkedin.edit_post": {"platform": "linkedin", "description": "Edit posts on your behalf", "risk_level": "medium", "destructive": False},

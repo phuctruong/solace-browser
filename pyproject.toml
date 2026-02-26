@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "solace-browser"
+version = "0.1.0"
+description = "Twin browser webservice with OAuth3 and Part 11 evidence capture"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [{name = "Phuc Vinh Truong", email = "phuc@phuc.net"}]
+dependencies = [
+    "aiohttp>=3.9",
+    "playwright>=1.40",
+    "playwright-stealth>=1.0",
+    "httpx>=0.25.1",
+    "pydantic>=2.0.3",
+    "pyyaml>=6.0.1",
+    "click>=8.1.7",
+    "colorama>=0.4.6",
+    "google-cloud-logging>=3.8.0",
+    "google-cloud-monitoring>=2.15.1",
+    "google-cloud-storage>=2.10.0",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[project.urls]
+Homepage = "https://github.com/phuctruong/solace-browser"
+Repository = "https://github.com/phuctruong/solace-browser"
+
+[project.scripts]
+solace-browser = "solace_browser_server:cli_main"
+
+[tool.setuptools]
+py-modules = ["solace_browser_server", "rate_limiter", "registry_checker"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["browser*", "src*"]
+exclude = ["tests*", "artifacts*", "episodes*"]
+namespaces = true

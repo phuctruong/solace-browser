@@ -1,0 +1,1852 @@
+{
+  "type": "reddit_page",
+  "page_name": "homepage_loggedout",
+  "tier": 23,
+  "c_score": 0.95,
+  "g_score": 0.95,
+  "url": "https://reddit.com",
+  "title": "Reddit - The Front Page of the Internet",
+  "landmarks": {
+    "navigation": [
+      {
+        "tag": "nav",
+        "text": "Get App\nLog In\nExpand user menu",
+        "ariaLabel": null,
+        "id": "",
+        "class": "h-header-large\n"
+      },
+      {
+        "tag": "nav",
+        "text": "RESOURCES\nAbout Reddit\nAdvertise\nDeveloper Platfor",
+        "ariaLabel": "Primary",
+        "id": "",
+        "class": "z-2"
+      },
+      {
+        "tag": "nav",
+        "text": "RESOURCES\nAbout Reddit\nAdvertise\nDeveloper Platfor",
+        "ariaLabel": "Reddit resources",
+        "id": "",
+        "class": ""
+      }
+    ],
+    "buttons": [
+      {
+        "tag": "a",
+        "text": "Skip to main content",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/#main-content",
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Open menu",
+        "ariaLabel": null,
+        "type": "button",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "Home",
+        "type": "",
+        "href": "https://www.reddit.com/",
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Get App",
+        "ariaLabel": null,
+        "type": "submit",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Log In",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/login/",
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Expand user menu",
+        "ariaLabel": null,
+        "type": "button",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Best",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Hot",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/hot/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "New",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/new/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Top",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/top/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Rising",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/rising/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Everywhere",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=global",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "United States",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=us",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Argentina",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=ar",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Australia",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=au",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Bulgaria",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=bg",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Canada",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=ca",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Chile",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=cl",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Colombia",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=co",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Croatia",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=hr",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Czech Republic",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=cz",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Finland",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=fi",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "France",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=fr",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Germany",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=de",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Greece",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=gr",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Hungary",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=hu",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Iceland",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=is",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "India",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=in",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Ireland",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=ie",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Italy",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=it",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Japan",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=jp",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Malaysia",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=my",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Mexico",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=mx",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "New Zealand",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=nz",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Philippines",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=ph",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Poland",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=pl",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Portugal",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=pt",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Puerto Rico",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=pr",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Romania",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=ro",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Serbia",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=rs",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Singapore",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=sg",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Spain",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=es",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Sweden",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=se",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Taiwan",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=tw",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Thailand",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=th",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Turkey",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=tr",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "United Kingdom",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/popular/best/?geo_filter=gb",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Card",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/?feedViewType=cardView",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Compact",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/?feedViewType=compactView",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Found after washing my son\u2019s clothes",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/whatisit/comments/1r4tzv0/found_after_washing_my_sons_clothes/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/whatisit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/whatisit/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/whatisit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/whatisit/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://www.youtube.com/watch?v=k-V-IDychWI",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.youtube.com/watch?v=k-V-IDychWI",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://www.youtube.com/watch?v=k-V-IDychWI",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.youtube.com/watch?v=k-V-IDychWI",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Found after washing my son\u2019s clothes",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/whatisit/comments/1r4tzv0/found_after_washing_my_sons_clothes/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/GuardianBike",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/user/GuardianBike/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "For those who have had an affair, why did you decide to cheat instead of leave your partner?",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskReddit/comments/1r4yt4a/for_those_who_have_had_an_affair_why_did_you/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/AskReddit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskReddit/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/AskReddit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskReddit/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "For those who have had an affair, why did you decide to cheat instead of leave your partner?",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskReddit/comments/1r4yt4a/for_those_who_have_had_an_affair_why_did_you/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Obama Just Decided to tell us Aliens Exist.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/videos/comments/1r55kqc/obama_just_decided_to_tell_us_aliens_exist/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/videos",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/videos/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/videos",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/videos/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Obama Just Decided to tell us Aliens Exist.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/videos/comments/1r55kqc/obama_just_decided_to_tell_us_aliens_exist/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/mildlyinfuriating",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/mildlyinfuriating/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/mildlyinfuriating",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/mildlyinfuriating/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/mildlyinfuriating - Colorectal cancer is rising in younger adults. One of the most preventable cancers is also the cancer with the 2nd most deaths.",
+        "type": "",
+        "href": "https://apnews.com/article/colon-cancer-young-adults-boseman-van-der-beek-7200285f2060145b8369de9ed8db9c17",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Guy parks in my driveway, gives me attitude when I ask who he is",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/EntitledPeople/comments/1r4znol/guy_parks_in_my_driveway_gives_me_attitude_when_i/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/EntitledPeople",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/EntitledPeople/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/EntitledPeople",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/EntitledPeople/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Guy parks in my driveway, gives me attitude when I ask who he is",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/EntitledPeople/comments/1r4znol/guy_parks_in_my_driveway_gives_me_attitude_when_i/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Angeline Jolie and her brother, James Haven had a running gag.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/Weird/comments/1r54smt/angeline_jolie_and_her_brother_james_haven_had_a/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/Weird",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/Weird/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/Weird",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/Weird/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Angeline Jolie and her brother, James Haven had a running gag.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/Weird/comments/1r54smt/angeline_jolie_and_her_brother_james_haven_had_a/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "What law in your country would surprise foreigners because it\u2019s legal almost everywhere else?",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskTheWorld/comments/1r4nw6v/what_law_in_your_country_would_surprise/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/AskTheWorld",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskTheWorld/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/AskTheWorld",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskTheWorld/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "What law in your country would surprise foreigners because it\u2019s legal almost everywhere else?",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskTheWorld/comments/1r4nw6v/what_law_in_your_country_would_surprise/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Western Digital runs out of HDD capacity: CEO says massive AI deals secured, price surges ahead",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/pcmasterrace/comments/1r557x7/western_digital_runs_out_of_hdd_capacity_ceo_says/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/pcmasterrace",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/pcmasterrace/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/pcmasterrace",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/pcmasterrace/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Western Digital runs out of HDD capacity: CEO says massive AI deals secured, price surges ahead",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/pcmasterrace/comments/1r557x7/western_digital_runs_out_of_hdd_capacity_ceo_says/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/pcmasterrace - Western Digital runs out of HDD capacity: CEO says massive AI deals secured, price surges ahead",
+        "type": "",
+        "href": "https://www.tweaktown.com/news/110168/western-digital-runs-out-of-hdd-capacity-ceo-says-massive-ai-deals-secured-price-surges-ahead/index.html",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/doordash",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/user/doordash/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "The hill that my mother died on",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/TwoXChromosomes/comments/1r4zs71/the_hill_that_my_mother_died_on/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/TwoXChromosomes",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/TwoXChromosomes/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/TwoXChromosomes",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/TwoXChromosomes/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "The hill that my mother died on",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/TwoXChromosomes/comments/1r4zs71/the_hill_that_my_mother_died_on/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "This simple test exposes the connection between vision and motor control.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/interesting/comments/1r56068/this_simple_test_exposes_the_connection_between/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/interesting",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/interesting/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/interesting",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/interesting/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "This simple test exposes the connection between vision and motor control.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/interesting/comments/1r56068/this_simple_test_exposes_the_connection_between/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "What did the vet do to my cat?",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/CATHELP/comments/1r50nnf/what_did_the_vet_do_to_my_cat/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/CATHELP",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/CATHELP/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/CATHELP",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/CATHELP/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "What did the vet do to my cat?",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/CATHELP/comments/1r50nnf/what_did_the_vet_do_to_my_cat/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Asking someone what alternating traffic means trying to prove a point.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/confidentlyincorrect/comments/1r57epo/asking_someone_what_alternating_traffic_means/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/confidentlyincorrect",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/confidentlyincorrect/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/confidentlyincorrect",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/confidentlyincorrect/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Asking someone what alternating traffic means trying to prove a point.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/confidentlyincorrect/comments/1r57epo/asking_someone_what_alternating_traffic_means/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Found this cleaner out a renters trashed apartment any idea what it is for",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/whatisit/comments/1r4vqb1/found_this_cleaner_out_a_renters_trashed/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/whatisit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/whatisit/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/whatisit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/whatisit/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://www.youtube.com/watch?v=k-V-IDychWI",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.youtube.com/watch?v=k-V-IDychWI",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://www.youtube.com/watch?v=k-V-IDychWI",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.youtube.com/watch?v=k-V-IDychWI",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Found this cleaner out a renters trashed apartment any idea what it is for",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/whatisit/comments/1r4vqb1/found_this_cleaner_out_a_renters_trashed/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "President Obama about aliens in a new interview: \"They're real\"",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/Fauxmoi/comments/1r55r0e/president_obama_about_aliens_in_a_new_interview/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/Fauxmoi",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/Fauxmoi/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/Fauxmoi",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/Fauxmoi/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "President Obama about aliens in a new interview: \"They're real\"",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/Fauxmoi/comments/1r55r0e/president_obama_about_aliens_in_a_new_interview/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Comparison of fixing nuts",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/EngineeringPorn/comments/1r57xp4/comparison_of_fixing_nuts/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/EngineeringPorn",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/EngineeringPorn/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/EngineeringPorn",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/EngineeringPorn/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Comparison of fixing nuts",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/EngineeringPorn/comments/1r57xp4/comparison_of_fixing_nuts/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/disneyplus",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/user/disneyplus/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/mildlyinfuriating",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/mildlyinfuriating/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/mildlyinfuriating",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/mildlyinfuriating/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Favorite biopic about some guy literally no one gives a shit about anymore",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/okbuddycinephile/comments/1r50zya/favorite_biopic_about_some_guy_literally_no_one/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/okbuddycinephile",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/okbuddycinephile/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/okbuddycinephile",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/okbuddycinephile/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Favorite biopic about some guy literally no one gives a shit about anymore",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/okbuddycinephile/comments/1r50zya/favorite_biopic_about_some_guy_literally_no_one/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "completely lost here",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/ExplainTheJoke/comments/1r4jrwx/completely_lost_here/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/ExplainTheJoke",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/ExplainTheJoke/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/ExplainTheJoke",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/ExplainTheJoke/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "completely lost here",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/ExplainTheJoke/comments/1r4jrwx/completely_lost_here/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "The broadcast did not do justice to exactly HOW empty that arena was.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/nba/comments/1r56qe1/the_broadcast_did_not_do_justice_to_exactly_how/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/nba",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/nba/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/nba",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/nba/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "The broadcast did not do justice to exactly HOW empty that arena was.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/nba/comments/1r56qe1/the_broadcast_did_not_do_justice_to_exactly_how/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "What\u2019s something people romanticize that is actually miserable?",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskReddit/comments/1r4srbl/whats_something_people_romanticize_that_is/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/AskReddit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskReddit/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/AskReddit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskReddit/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "What\u2019s something people romanticize that is actually miserable?",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskReddit/comments/1r4srbl/whats_something_people_romanticize_that_is/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Told neighbour that if my kid can\u2019t play at hers, her kid can\u2019t play at ours. AITAH?",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AITAH/comments/1r4y69b/told_neighbour_that_if_my_kid_cant_play_at_hers/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/AITAH",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AITAH/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/AITAH",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AITAH/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Told neighbour that if my kid can\u2019t play at hers, her kid can\u2019t play at ours. AITAH?",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AITAH/comments/1r4y69b/told_neighbour_that_if_my_kid_cant_play_at_hers/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/todayilearned",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/todayilearned/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/todayilearned",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/todayilearned/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "https://en.wikipedia.org/wiki/42nd_Golden_Raspberry_Awards",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://en.wikipedia.org/wiki/42nd_Golden_Raspberry_Awards",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "u/hims",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/user/hims/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/AskTheWorld",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskTheWorld/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/AskTheWorld",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskTheWorld/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/WorkReform",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/WorkReform/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/WorkReform",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/WorkReform/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "The sound of every punch",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/nextfuckinglevel/comments/1r5385o/the_sound_of_every_punch/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/nextfuckinglevel",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/nextfuckinglevel/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/nextfuckinglevel",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/nextfuckinglevel/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "The sound of every punch",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/nextfuckinglevel/comments/1r5385o/the_sound_of_every_punch/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "TIFU going to my ex's wedding",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/tifu/comments/1r4pcx2/tifu_going_to_my_exs_wedding/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/tifu",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/tifu/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/tifu",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/tifu/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "TIFU going to my ex's wedding",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/tifu/comments/1r4pcx2/tifu_going_to_my_exs_wedding/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Team Canada caught cheating at the olympics by Team Sweden. Canadian throws a fit on live TV.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/SipsTea/comments/1r56i6q/team_canada_caught_cheating_at_the_olympics_by/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/SipsTea",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/SipsTea/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/SipsTea",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/SipsTea/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Team Canada caught cheating at the olympics by Team Sweden. Canadian throws a fit on live TV.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/SipsTea/comments/1r56i6q/team_canada_caught_cheating_at_the_olympics_by/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "George R. R. Martin Is 'Not in the Mood' to Finish 'The Winds of Winter'",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/books/comments/1r4v8g3/george_r_r_martin_is_not_in_the_mood_to_finish/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/books",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/books/",
+        "dataTestid": "subreddit-name"
+      },
+      {
+        "tag": "a",
+        "text": "r/books",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/books/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "George R. R. Martin Is 'Not in the Mood' to Finish 'The Winds of Winter'",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/books/comments/1r4v8g3/george_r_r_martin_is_not_in_the_mood_to_finish/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "ariaLabel": "r/books - George R. R. Martin Is 'Not in the Mood' to Finish 'The Winds of Winter'",
+        "type": "",
+        "href": "https://www.esquire.com/entertainment/books/a64917333/george-rr-martin-the-winds-of-winter-update-controversy/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/AskMen\n7,157,247 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskMen",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/AskWomen\n5,620,127 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/AskWomen",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/PS4\n5,516,065 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/PS4",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/apple\n6,319,552 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/apple",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/NBA2k\n751,661 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/NBA2k",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/sysadmin\n        \n        1,228,462 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/sysadmin",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/nba\n        \n        16,970,001 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/nba",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/askscience\n        \n        26,208,725 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/askscience",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/cars\n        \n        7,391,055 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/cars",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/pcmasterrace\n        \n        15,967,278 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/pcmasterrace",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/pokemon\n        \n        4,768,923 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/pokemon",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/netflix\n        \n        1,859,423 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/netflix",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/nvidia\n        \n        2,321,066 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/nvidia",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/headphones\n        \n        1,524,168 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/headphones",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/hearthstone\n        \n        1,933,230 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/hearthstone",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/fantasyfootball\n        \n        3,399,404 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/fantasyfootball",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/pathofexile\n        \n        1,053,393 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/pathofexile",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/canada\n        \n        4,297,262 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/canada",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "r/nosleep\n        \n        18,124,722 members",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/r/nosleep",
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "See more",
+        "ariaLabel": null,
+        "type": "submit",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Reddit Rules",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/policies/content-policy",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Privacy Policy",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/policies/privacy-policy",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "User Agreement",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/policies/user-agreement",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Your Privacy Choices",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://support.reddithelp.com/hc/articles/43980704794004",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Accessibility",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://support.reddithelp.com/hc/sections/38303584022676-Accessibility",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Reddit, Inc. \u00a9 2026. All rights reserved.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://redditinc.com/",
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Expand Navigation",
+        "ariaLabel": null,
+        "type": "submit",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "button",
+        "text": "Collapse Navigation",
+        "ariaLabel": null,
+        "type": "submit",
+        "href": null,
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "About Reddit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Advertise",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://ads.reddit.com/register?utm_source=web3x_consumer&utm_name=left_nav_cta",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Developer Platform",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://developers.reddit.com/?utm_source=reddit&utm_medium=left_nav_resources",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Reddit Pro\nBETA",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/reddit-pro?utm_source=reddit&utm_medium=left_nav_resources",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Help",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://support.reddithelp.com/hc?utm_source=reddit&utm_medium=footer&utm_campaign=evergreen",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Blog",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://redditblog.com/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Careers",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/careers",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Press",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/press",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Communities",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/best/communities/1/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Best of Reddit",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/posts/2026/global/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Best of Reddit in Portuguese",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/posts/2026/tl-pt-BR/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Best of Reddit in German",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/posts/2026/tl-de/",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Reddit Rules",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/policies/content-policy",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Privacy Policy",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.reddit.com/policies/privacy-policy",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "User Agreement",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://www.redditinc.com/policies/user-agreement",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Your Privacy Choices",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://support.reddithelp.com/hc/articles/43980704794004",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Accessibility",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://support.reddithelp.com/hc/sections/38303584022676-Accessibility",
+        "dataTestid": null
+      },
+      {
+        "tag": "a",
+        "text": "Reddit, Inc. \u00a9 2026. All rights reserved.",
+        "ariaLabel": null,
+        "type": "",
+        "href": "https://redditinc.com/",
+        "dataTestid": null
+      }
+    ],
+    "forms": [
+      {
+        "tag": "form",
+        "inputs": [
+          {
+            "type": "text",
+            "name": "q",
+            "placeholder": "Find anything",
+            "ariaLabel": null
+          }
+        ],
+        "ariaLabel": null,
+        "action": "https://www.reddit.com/search/?q=",
+        "id": ""
+      }
+    ],
+    "lists": [
+      {
+        "tag": "ul",
+        "role": null,
+        "itemCount": 4
+      },
+      {
+        "tag": "ul",
+        "role": null,
+        "itemCount": 3
+      },
+      {
+        "tag": "ul",
+        "role": null,
+        "itemCount": 2
+      },
+      {
+        "tag": "ul",
+        "role": null,
+        "itemCount": 2
+      },
+      {
+        "tag": "ul",
+        "role": null,
+        "itemCount": 19
+      }
+    ],
+    "headings": [
+      {
+        "level": "h2",
+        "text": "Rubio on EU relations",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "Winter Olympics Day 8",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "Wasserman selling agency",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "Alexei Navalny death",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "Stolz wins 2nd gold",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "Discord age verification latest",
+        "id": ""
+      },
+      {
+        "level": "h2",
+        "text": "POPULAR COMMUNITIES",
+        "id": ""
+      }
+    ]
+  },
+  "selectors": {
+    "log in": [
+      {
+        "selector": "#login-button",
+        "text": "Log In",
+        "ariaLabel": null,
+        "role": null,
+        "type": "",
+        "tag": "a",
+        "confidence": 0.85
+      }
+    ],
+    "sign up": [],
+    "search": [],
+    "home": [
+      {
+        "selector": ".hover:no-underline",
+        "text": "I was just sitting on my front patio minding my ow",
+        "ariaLabel": null,
+        "role": null,
+        "type": "",
+        "tag": "a",
+        "confidence": 0.85
+      },
+      {
+        "selector": ".hover:no-underline",
+        "text": "Some context: \n\nOur girls are 4, born 5 days apart",
+        "ariaLabel": null,
+        "role": null,
+        "type": "",
+        "tag": "a",
+        "confidence": 0.85
+      }
+    ],
+    "trending": [],
+    "post": []
+  },
+  "magic_words": [
+    "Log in",
+    "Sign up",
+    "Search",
+    "Trending",
+    "Hot",
+    "New"
+  ],
+  "snapshot_hash": "0c51c775",
+  "timestamp": "2026-02-15T06:11:04.256275",
+  "cross_references": {
+    "implementing_skills": [
+      "canon/skills/methodology/web-automation-expert.skill.md",
+      "canon/skills/framework/browser-state-machine.skill.md"
+    ],
+    "related_recipes": [
+      "data/default/recipes/reddit_homepage_navigate.recipe.json",
+      "data/default/recipes/reddit-homepage-phase1.recipe.json"
+    ],
+    "canonical_references": [
+      "KNOWLEDGE_HUB.md#reddit-navigation"
+    ],
+    "see_also": [
+      "data/default/primewiki/reddit_login_page.primewiki.json",
+      "data/default/primewiki/reddit_subreddit_page.primewiki.json"
+    ]
+  }
+}

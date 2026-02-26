@@ -39,8 +39,8 @@ import pytest
 # ---------------------------------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).parent.parent
-RECIPES_DIR = PROJECT_ROOT / "recipes" / "reddit"
-PRIMEWIKI_DIR = PROJECT_ROOT / "primewiki" / "reddit"
+RECIPES_DIR = PROJECT_ROOT / "data" / "default" / "recipes" / "reddit"
+PRIMEWIKI_DIR = PROJECT_ROOT / "data" / "default" / "primewiki" / "reddit"
 
 SRC_PATH = PROJECT_ROOT / "src"
 if str(SRC_PATH) not in sys.path:
@@ -164,10 +164,10 @@ class TestFileExistence:
     """Verify all recipe and PM triplet files exist."""
 
     def test_recipes_directory_exists(self):
-        assert RECIPES_DIR.exists(), f"recipes/reddit/ missing at {RECIPES_DIR}"
+        assert RECIPES_DIR.exists(), f"data/default/recipes/reddit/ missing at {RECIPES_DIR}"
 
     def test_primewiki_directory_exists(self):
-        assert PRIMEWIKI_DIR.exists(), f"primewiki/reddit/ missing at {PRIMEWIKI_DIR}"
+        assert PRIMEWIKI_DIR.exists(), f"data/default/primewiki/reddit/ missing at {PRIMEWIKI_DIR}"
 
     def test_all_five_recipe_files_exist(self):
         for filename in RECIPE_FILES:

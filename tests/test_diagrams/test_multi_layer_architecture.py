@@ -1,7 +1,7 @@
 """
 test_multi_layer_architecture.py
 =================================
-Derived from: diagrams/browser-multi-layer-architecture.md
+Derived from: data/default/diagrams/browser-multi-layer-architecture.md
 
 Tests the 5-layer architecture contracts:
   Layer 1: Heartbeat — CPU, < 100ms budget
@@ -15,7 +15,7 @@ Tests are SKELETAL: they assert interface contracts, not implementation details.
 First run MUST be RED (fail) — implementation not yet wired to this interface.
 
 Run:
-    python -m pytest tests/test_diagrams/test_multi_layer_architecture.py -v
+    python -m pytest tests/test_data/default/diagrams/test_multi_layer_architecture.py -v
 """
 
 from __future__ import annotations

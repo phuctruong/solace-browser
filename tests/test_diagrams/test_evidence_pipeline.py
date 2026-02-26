@@ -1,7 +1,7 @@
 """
 test_evidence_pipeline.py
 ==========================
-Derived from: diagrams/evidence-pipeline.md
+Derived from: data/default/diagrams/evidence-pipeline.md
 
 Tests the evidence pipeline:
   Before capture: DOM snapshot → PZip compress → SHA256 hash
@@ -21,7 +21,7 @@ Pipeline invariants from diagram:
   - Contemporaneous timestamps (within 30 seconds of action)
 
 Run:
-    python -m pytest tests/test_diagrams/test_evidence_pipeline.py -v
+    python -m pytest tests/test_data/default/diagrams/test_evidence_pipeline.py -v
 """
 
 from __future__ import annotations

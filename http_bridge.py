@@ -44,7 +44,7 @@ except ImportError:
 PROJECT_ROOT = os.getenv('PROJECT_ROOT', '/app')
 LOG_DIR = os.path.join(PROJECT_ROOT, 'logs')
 ARTIFACTS_DIR = os.path.join(PROJECT_ROOT, 'artifacts')
-RECIPES_DIR = os.path.join(PROJECT_ROOT, 'recipes')
+RECIPES_DIR = os.path.join(PROJECT_ROOT, 'data', 'default', 'recipes')
 EPISODES_DIR = os.path.join(PROJECT_ROOT, 'episodes')
 CLI_SCRIPT = os.path.join(PROJECT_ROOT, 'solace-browser-cli-v2.sh')
 BROWSER_PATH = os.getenv('BROWSER_PATH', '/usr/local/bin/solace-browser')

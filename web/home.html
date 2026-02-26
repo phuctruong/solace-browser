@@ -890,7 +890,8 @@
         <a href="/machine/dashboard" class="nav-btn">&#x1F4BB; Machine</a>
         <a href="/tunnel/connect" class="nav-btn">&#x2601;&#xFE0F; Tunnel</a>
         <a href="/settings/tokens" class="nav-btn">&#x1F511; Tokens</a>
-        <a href="https://www.solaceagi.com/browser" target="_blank" class="nav-btn accent">Get Full Version</a>
+        <button id="btn-add-site" class="nav-btn accent" onclick="addSite()">+ Add Site</button>
+        <a href="https://www.solaceagi.com/browser" target="_blank" class="nav-btn">Get Full Version</a>
       </nav>
     </div>
   </header>
@@ -1332,51 +1333,67 @@
 
   /* ------------------------------------------------------------------
      PLATFORM CARDS
-     Shows scope status per platform — loaded from /api/tokens/scopes
+     Shows PrimeWiki/snapshot/recipe/session status from UI server.
   ------------------------------------------------------------------ */
-  var PLATFORMS = [
-    { id: 'gmail',    icon: '&#x2709;&#xFE0F;', name: 'Gmail',    scope: 'gmail.read',    href: '/consent/gmail' },
-    { id: 'linkedin', icon: '&#x1F4BC;',         name: 'LinkedIn', scope: 'linkedin.read', href: '/consent/linkedin' },
-    { id: 'substack', icon: '&#x270D;&#xFE0F;',  name: 'Substack', scope: 'substack.read', href: '/consent/substack' },
-    { id: 'twitter',  icon: '&#x1F426;',         name: 'Twitter',  scope: 'twitter.read',  href: '/consent/twitter' },
-    { id: 'reddit',   icon: '&#x1F47E;',         name: 'Reddit',   scope: 'reddit.read',   href: '/consent/reddit' },
-    { id: 'github',   icon: '&#x1F40D;',         name: 'GitHub',   scope: 'github.read',   href: '/consent/github' },
-    { id: 'machine',  icon: '&#x1F4BB;',         name: 'Machine',  scope: 'machine.read.files', href: '/web/machine-dashboard.html' },
-  ];
-
-  function renderPlatformCards(grantedScopes) {
+  function renderPlatformCards(vendors) {
     var container = document.getElementById('platform-cards');
     if (!container) return;
     container.innerHTML = '';
 
-    PLATFORMS.forEach(function (p) {
-      var granted = (grantedScopes || []).indexOf(p.scope) >= 0;
+    (vendors || []).forEach(function (v) {
+      var site = (v.site || '').toLowerCase();
+      var title = site ? site.charAt(0).toUpperCase() + site.slice(1) : 'Unknown';
+      var mapped = !!v.primewiki_mapped;
       var card = document.createElement('div');
       card.className = 'platform-card';
-      card.setAttribute('data-platform', p.id);
+      card.setAttribute('data-platform', site);
       card.innerHTML =
-        '<div class="platform-card-icon">' + p.icon + '</div>' +
-        '<div class="platform-card-name">' + p.name + '</div>' +
-        '<span class="platform-scope-badge ' + (granted ? 'granted' : 'missing') + '">' +
-          (granted ? '&#x2713; Granted' : '&#x25CB; Not granted') +
-        '</span>' +
-        '<a href="' + p.href + '" class="platform-card-link">' +
-          (granted ? 'View &rsaquo;' : 'Grant scope &rsaquo;') +
-        '</a>';
+        '<div class="platform-card-name">' + title + '</div>' +
+        '<div style=\"font-size:0.78rem;color:var(--text-secondary);margin:0.25rem 0\">PrimeWiki: ' +
+          (mapped ? '&#x2713;' : '&#x25CB;') + ' &nbsp; Snapshots: ' +
+          (v.snapshot_pages_mapped || 0) + '/' + (v.snapshot_pages_total || 0) +
+        '</div>' +
+        '<div style=\"font-size:0.78rem;color:var(--text-secondary);margin:0.25rem 0\">Recipes: ' +
+          (v.recipe_count || 0) + ' &nbsp; Session: ' + (v.session_status || 'none') +
+        '</div>' +
+        '<div style=\"display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.45rem\">' +
+          '<a href=\"/recipes/dashboard\" class=\"platform-card-link\">Run Recipe</a>' +
+          '<a href=\"/web/home.html\" class=\"platform-card-link\" onclick=\"mapSite(\\'' + site + '\\');return false;\">Map Site</a>' +
+          '<a href=\"/primewiki/' + site + '\" class=\"platform-card-link\">View Wiki</a>' +
+        '</div>';
       container.appendChild(card);
     });
   }
 
-  function loadPlatformScopes() {
-    var token = localStorage.getItem('solace_token') || '';
-    var headers = { 'Accept': 'application/json' };
-    if (token) headers['Authorization'] = 'Bearer ' + token;
-
-    fetch('/api/tokens/scopes', { headers: headers })
+  function loadPlatformCards() {
+    fetch('/api/ui/vendors', { headers: { 'Accept': 'application/json' } })
       .then(function (res) { return res.json(); })
-      .then(function (data) { renderPlatformCards(data.scopes || []); })
+      .then(function (data) { renderPlatformCards(data.vendors || []); })
       .catch(function () { renderPlatformCards([]); });
   }
+
+  window.mapSite = function (site) {
+    if (!site) return;
+    var normalized = site.indexOf('http') === 0 ? site : ('https://' + site);
+    return fetch('/api/ui/add-site', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: normalized })
+    }).then(function (res) { return res.json(); });
+  };
+
+  window.addSite = function () {
+    var url = window.prompt('Enter site URL to map (e.g. https://example.com):');
+    if (!url) return;
+    mapSite(url)
+      .then(function () {
+        loadPlatformCards();
+        alert('Site mapping started. PrimeWiki + snapshots + recipe seed created.');
+      })
+      .catch(function () {
+        alert('Failed to map site.');
+      });
+  };
 
   /* ------------------------------------------------------------------
      ACTIVITY FEED
@@ -1427,7 +1444,7 @@
      INIT
   ------------------------------------------------------------------ */
   loadConnections();
-  loadPlatformScopes();
+  loadPlatformCards();
   loadActivityFeed();
 
   // Refresh connections every 30s

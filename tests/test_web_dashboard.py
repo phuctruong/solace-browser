@@ -560,14 +560,14 @@ class TestNoCdnDependencies:
     def test_machine_no_cdn(self, machine_html):
         """machine-dashboard.html must not depend on external CDNs."""
         assert not self._has_external_cdn(machine_html), \
-            "machine-dashboard.html must not load external CDN scripts/styles"
+            "machine-dashboard.html must not load external CDN src/scripts/styles"
 
     def test_home_no_cdn(self, home_html):
         """home.html must not depend on external CDNs."""
         assert not self._has_external_cdn(home_html), \
-            "home.html must not load external CDN scripts/styles"
+            "home.html must not load external CDN src/scripts/styles"
 
     def test_tunnel_no_cdn(self, tunnel_html):
         """tunnel-connect.html must not depend on external CDNs."""
         assert not self._has_external_cdn(tunnel_html), \
-            "tunnel-connect.html must not load external CDN scripts/styles"
+            "tunnel-connect.html must not load external CDN src/scripts/styles"

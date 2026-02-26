@@ -1,7 +1,7 @@
 """
 test_full_stack_integration.py
 ================================
-Derived from: diagrams/solace-browser-full-stack.md
+Derived from: data/default/diagrams/solace-browser-full-stack.md
 
 Integration tests for the complete SolaceBrowser stack:
   - 5 control surfaces (agent, CLI, web, tunnel, download)
@@ -17,7 +17,7 @@ These tests are INTEGRATION-level: they verify component wiring,
 not individual component correctness (covered in unit tests).
 
 Run:
-    python -m pytest tests/test_diagrams/test_full_stack_integration.py -v
+    python -m pytest tests/test_data/default/diagrams/test_full_stack_integration.py -v
 """
 
 from __future__ import annotations

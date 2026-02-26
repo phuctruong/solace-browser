@@ -1,0 +1,21 @@
+{
+  "id": "mail-google-com-discover-home",
+  "oauth3_scopes": [
+    "mail.google.com.read"
+  ],
+  "primewiki_ref": "data/default/primewiki/mail.google.com/mail-google-com-page-flow.prime-mermaid.md",
+  "site": "mail.google.com",
+  "steps": [
+    {
+      "action": "navigate",
+      "step": 1,
+      "url": "https://mail.google.com"
+    },
+    {
+      "action": "snapshot",
+      "step": 2,
+      "target": "home"
+    }
+  ],
+  "title": "Discover mail.google.com homepage"
+}

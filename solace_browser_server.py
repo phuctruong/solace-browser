@@ -17,6 +17,7 @@ Features:
 """
 
 import asyncio
+import hashlib
 import json
 import logging
 import sys
@@ -26,6 +27,7 @@ from pathlib import Path
 from typing import Dict, Optional, Any
 import uuid
 from datetime import datetime, timezone, timedelta
+from urllib.parse import urlparse
 
 # OAuth3 module — add src/ to path for local import
 _SRC_PATH = Path(__file__).parent / "src"
@@ -70,6 +72,15 @@ except ImportError as _oauth3_import_error:
     OAUTH3_AVAILABLE = False
 
 try:
+    from audit.chain import AuditChain
+    AUDIT_AVAILABLE = True
+except ImportError as _audit_import_error:
+    logger_temp = logging.getLogger("solace-browser")
+    logger_temp.warning(f"Audit module not available: {_audit_import_error}")
+    AuditChain = Any  # type: ignore
+    AUDIT_AVAILABLE = False
+
+try:
     from playwright.async_api import async_playwright, Browser, Page
 except ImportError:
     print("ERROR: Playwright not installed")
@@ -96,6 +107,13 @@ except ImportError as e:
     logger_temp = logging.getLogger('solace-browser')
     logger_temp.warning(f"Could not import browser module: {e}")
 
+from competitive_features import (
+    load_proxy_config,
+    select_proxy,
+    solve_captcha,
+    webvoyager_score,
+)
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -108,7 +126,15 @@ class SolaceBrowser:
     Custom Solace Browser - Headless Chromium with CDP Protocol
     """
 
-    def __init__(self, headless: bool = True, debug_ui: bool = False, session_file: Optional[str] = None):
+    def __init__(
+        self,
+        headless: bool = True,
+        debug_ui: bool = False,
+        session_file: Optional[str] = None,
+        part11_enabled: bool = False,
+        part11_mode: str = "screenshot",
+        part11_audit_dir: Optional[str] = None,
+    ):
         self.headless = headless
         self.debug_ui = debug_ui
         self.session_file = session_file or os.getenv("SOLACE_SESSION_FILE") or "artifacts/solace_session.json"
@@ -118,6 +144,230 @@ class SolaceBrowser:
         self.current_page: Optional[Page] = None
         self.message_id_counter = 0
         self.event_history = []
+        self._audit_chain: Optional[AuditChain] = None
+        self.part11: Dict[str, Any] = {
+            "enabled": False,
+            "mode": "screenshot",
+            "audit_dir": "",
+            "artifacts_dir": os.getenv("SOLACE_PART11_ARTIFACT_DIR", "artifacts/part11"),
+            "session_id": "",
+            "events": 0,
+            "bytes_written": 0,
+            "last_error": None,
+        }
+        self.configure_part11(
+            enabled=part11_enabled,
+            mode=part11_mode,
+            audit_dir=part11_audit_dir,
+            reset_session=True,
+        )
+
+    @staticmethod
+    def _part11_mode_or_raise(mode: str) -> str:
+        if mode not in {"screenshot", "archive"}:
+            raise ValueError(f"Unsupported part11 mode: '{mode}'. Allowed: screenshot, archive")
+        return mode
+
+    @staticmethod
+    def _new_part11_session_id() -> str:
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        return f"part11-{stamp}-{uuid.uuid4().hex[:8]}"
+
+    def get_part11_status(self) -> Dict[str, Any]:
+        status = dict(self.part11)
+        return status
+
+    def configure_part11(
+        self,
+        *,
+        enabled: Optional[bool] = None,
+        mode: Optional[str] = None,
+        audit_dir: Optional[str] = None,
+        reset_session: bool = False,
+    ) -> Dict[str, Any]:
+        cur_enabled = bool(self.part11.get("enabled", False))
+        cur_mode = str(self.part11.get("mode", "screenshot"))
+        cur_audit_dir = str(self.part11.get("audit_dir", ""))
+
+        next_enabled = cur_enabled if enabled is None else bool(enabled)
+        next_mode = cur_mode if mode is None else self._part11_mode_or_raise(str(mode))
+        raw_audit_dir = (
+            cur_audit_dir
+            if audit_dir is None
+            else str(audit_dir)
+        )
+        if not raw_audit_dir:
+            raw_audit_dir = os.getenv("SOLACE_PART11_AUDIT_DIR", "~/.solace/audit")
+        next_audit_dir = str(Path(raw_audit_dir).expanduser())
+
+        if next_enabled and not AUDIT_AVAILABLE:
+            raise RuntimeError("Part 11 is enabled but audit module is unavailable.")
+
+        changed = (
+            reset_session
+            or next_enabled != cur_enabled
+            or next_mode != cur_mode
+            or next_audit_dir != cur_audit_dir
+        )
+
+        self.part11["enabled"] = next_enabled
+        self.part11["mode"] = next_mode
+        self.part11["audit_dir"] = next_audit_dir
+
+        if next_enabled:
+            Path(self.part11["artifacts_dir"]).mkdir(parents=True, exist_ok=True)
+            Path(next_audit_dir).mkdir(parents=True, exist_ok=True)
+            if changed or not self.part11.get("session_id"):
+                self.part11["session_id"] = self._new_part11_session_id()
+                self.part11["events"] = 0
+                self.part11["bytes_written"] = 0
+                self.part11["last_error"] = None
+                self._audit_chain = AuditChain(
+                    session_id=self.part11["session_id"],
+                    base_dir=next_audit_dir,
+                )
+        else:
+            self._audit_chain = None
+
+        return self.get_part11_status()
+
+    async def _capture_part11_evidence(
+        self,
+        action: str,
+        target: str,
+        success: bool,
+        error_detail: str = "",
+    ) -> Dict[str, Any]:
+        if not self.current_page:
+            raise RuntimeError("No active page for Part 11 evidence capture.")
+        if not self.part11.get("enabled", False):
+            raise RuntimeError("Part 11 capture requested while Part 11 is disabled.")
+
+        mode = self.part11["mode"]
+        event_idx = int(self.part11.get("events", 0)) + 1
+        event_id = f"e{event_idx:06d}"
+        event_dir = Path(self.part11["artifacts_dir"]) / self.part11["session_id"] / event_id
+        event_dir.mkdir(parents=True, exist_ok=True)
+
+        ts = datetime.now(timezone.utc).isoformat()
+        url = self.current_page.url
+        title = await self.current_page.title()
+        artifact_paths: Dict[str, str] = {}
+        artifact_sizes: Dict[str, int] = {}
+
+        if mode == "screenshot":
+            screenshot_path = event_dir / "evidence.png"
+            await self.current_page.screenshot(path=str(screenshot_path), full_page=True)
+            artifact_paths["screenshot"] = str(screenshot_path)
+            artifact_sizes["screenshot"] = screenshot_path.stat().st_size
+            snapshot_bytes = screenshot_path.read_bytes()
+            snapshot_id = hashlib.sha256(snapshot_bytes).hexdigest()
+        else:
+            html = await self.current_page.content()
+            html_path = event_dir / "page.html"
+            html_path.write_text(html, encoding="utf-8")
+            artifact_paths["html"] = str(html_path)
+            artifact_sizes["html"] = html_path.stat().st_size
+
+            if not self.context:
+                raise RuntimeError("Browser context unavailable for archive capture.")
+
+            cdp_session = await self.context.new_cdp_session(self.current_page)
+            try:
+                archive_resp = await cdp_session.send("Page.captureSnapshot", {"format": "mhtml"})
+            except Exception as exc:
+                raise RuntimeError(f"Page.captureSnapshot failed: {exc}") from exc
+            mhtml = archive_resp.get("data", "")
+            if not mhtml:
+                raise RuntimeError("Page.captureSnapshot returned empty archive.")
+            mhtml_path = event_dir / "page.mhtml"
+            mhtml_path.write_text(mhtml, encoding="utf-8")
+            artifact_paths["mhtml"] = str(mhtml_path)
+            artifact_sizes["mhtml"] = mhtml_path.stat().st_size
+            snapshot_id = hashlib.sha256((html + "\n---MHTML---\n" + mhtml).encode("utf-8")).hexdigest()
+
+        metadata = {
+            "event_id": event_id,
+            "timestamp": ts,
+            "mode": mode,
+            "action": action,
+            "target": target,
+            "success": success,
+            "error_detail": error_detail,
+            "url": url,
+            "title": title,
+            "snapshot_id": snapshot_id,
+            "artifacts": artifact_paths,
+            "artifact_sizes": artifact_sizes,
+        }
+        metadata_path = event_dir / "metadata.json"
+        metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+        artifact_paths["metadata"] = str(metadata_path)
+        artifact_sizes["metadata"] = metadata_path.stat().st_size
+
+        total_bytes = sum(artifact_sizes.values())
+        self.part11["events"] = event_idx
+        self.part11["bytes_written"] = int(self.part11.get("bytes_written", 0)) + total_bytes
+        self.part11["last_error"] = None
+
+        if self._audit_chain is not None:
+            self._audit_chain.append(
+                user_id="local-user",
+                token_id=self.part11["session_id"],
+                action=action,
+                target=target,
+                before_value="",
+                after_value="success" if success else "error",
+                reason=f"part11_capture mode={mode}",
+                meaning="authorized" if success else "attempted",
+                human_description=f"{action} target='{target}' url='{url}' mode='{mode}' success={success}",
+                snapshot_id=snapshot_id,
+                scope_used=f"part11.{mode}",
+                step_up_performed=False,
+            )
+
+        return {
+            "event_id": event_id,
+            "session_id": self.part11["session_id"],
+            "mode": mode,
+            "snapshot_id": snapshot_id,
+            "bytes_written": total_bytes,
+            "artifacts": artifact_paths,
+            "audit_dir": self.part11["audit_dir"],
+        }
+
+    async def _finalize_part11_result(
+        self,
+        action: str,
+        target: str,
+        payload: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        if not self.part11.get("enabled", False):
+            return payload
+
+        success = payload.get("error") is None
+        error_detail = payload.get("error", "")
+        try:
+            evidence = await self._capture_part11_evidence(
+                action=action,
+                target=target,
+                success=success,
+                error_detail=str(error_detail) if error_detail else "",
+            )
+            payload["part11"] = evidence
+            return payload
+        except Exception as exc:
+            self.part11["last_error"] = str(exc)
+            if payload.get("error"):
+                payload["part11_error"] = str(exc)
+                return payload
+            return {
+                "error": "part11_evidence_failed",
+                "detail": str(exc),
+                "action": action,
+                "target": target,
+                "action_result": payload,
+            }
 
     async def start(self):
         """Start the Solace Browser"""
@@ -195,15 +445,16 @@ class SolaceBrowser:
             logger.info(f"Navigating to: {url}")
             response = await self.current_page.goto(url, wait_until='domcontentloaded')
 
-            return {
+            result = {
                 "success": True,
                 "url": url,
                 "status": response.status if response else None,
                 "timestamp": datetime.now().isoformat()
             }
+            return await self._finalize_part11_result("navigate", url, result)
         except Exception as e:
             logger.error(f"Navigation failed: {e}")
-            return {"error": str(e)}
+            return await self._finalize_part11_result("navigate", url, {"error": str(e)})
 
     async def click(self, selector: str) -> Dict[str, Any]:
         """Click an element"""
@@ -215,14 +466,15 @@ class SolaceBrowser:
             await self.current_page.click(selector)
             await asyncio.sleep(0.5)  # Wait for action to complete
 
-            return {
+            result = {
                 "success": True,
                 "selector": selector,
                 "timestamp": datetime.now().isoformat()
             }
+            return await self._finalize_part11_result("click", selector, result)
         except Exception as e:
             logger.error(f"Click failed: {e}")
-            return {"error": str(e)}
+            return await self._finalize_part11_result("click", selector, {"error": str(e)})
 
     async def fill(self, selector: str, text: str) -> Dict[str, Any]:
         """Fill a form field with text"""
@@ -234,15 +486,16 @@ class SolaceBrowser:
             await self.current_page.fill(selector, text)
             await asyncio.sleep(0.3)
 
-            return {
+            result = {
                 "success": True,
                 "selector": selector,
                 "text": text,
                 "timestamp": datetime.now().isoformat()
             }
+            return await self._finalize_part11_result("fill", selector, result)
         except Exception as e:
             logger.error(f"Fill failed: {e}")
-            return {"error": str(e)}
+            return await self._finalize_part11_result("fill", selector, {"error": str(e)})
 
     async def take_screenshot(self, filename: Optional[str] = None) -> Dict[str, Any]:
         """Take a screenshot"""
@@ -260,16 +513,18 @@ class SolaceBrowser:
             logger.info(f"Taking screenshot: {filepath}")
             await self.current_page.screenshot(path=str(filepath))
 
-            return {
+            result = {
                 "success": True,
                 "filename": filename,
                 "filepath": str(filepath),
                 "size": filepath.stat().st_size if filepath.exists() else 0,
                 "timestamp": datetime.now().isoformat()
             }
+            return await self._finalize_part11_result("take_screenshot", str(filepath), result)
         except Exception as e:
             logger.error(f"Screenshot failed: {e}")
-            return {"error": str(e)}
+            target = filename or "screenshot"
+            return await self._finalize_part11_result("take_screenshot", target, {"error": str(e)})
 
     async def get_snapshot(self) -> Dict[str, Any]:
         """Get page HTML snapshot"""
@@ -280,7 +535,7 @@ class SolaceBrowser:
             logger.info("Getting page snapshot")
             html = await self.current_page.content()
 
-            return {
+            result = {
                 "success": True,
                 "html_length": len(html),
                 "url": self.current_page.url,
@@ -288,9 +543,10 @@ class SolaceBrowser:
                 "html": html[:1000] + "..." if len(html) > 1000 else html,
                 "timestamp": datetime.now().isoformat()
             }
+            return await self._finalize_part11_result("get_snapshot", self.current_page.url, result)
         except Exception as e:
             logger.error(f"Snapshot failed: {e}")
-            return {"error": str(e)}
+            return await self._finalize_part11_result("get_snapshot", "current_page", {"error": str(e)})
 
     async def evaluate(self, expression: str) -> Dict[str, Any]:
         """Execute JavaScript in the page"""
@@ -301,14 +557,17 @@ class SolaceBrowser:
             logger.info(f"Evaluating: {expression[:50]}...")
             result = await self.current_page.evaluate(expression)
 
-            return {
+            payload = {
                 "success": True,
                 "result": result,
                 "timestamp": datetime.now().isoformat()
             }
+            target = expression[:80]
+            return await self._finalize_part11_result("evaluate", target, payload)
         except Exception as e:
             logger.error(f"Evaluate failed: {e}")
-            return {"error": str(e)}
+            target = expression[:80]
+            return await self._finalize_part11_result("evaluate", target, {"error": str(e)})
 
     async def login_linkedin_google_auto(self, gmail_email: str, gmail_password: str) -> Dict[str, Any]:
         """Auto-login to LinkedIn via Google OAuth with Gmail credentials
@@ -815,6 +1074,12 @@ class SolaceBrowser:
             "url": self.current_page.url if self.current_page else None,
             "timestamp": datetime.now().isoformat()
         })
+        # Best-effort autosave so auth state survives restarts even if the
+        # process is stopped without calling /api/save-session explicitly.
+        try:
+            asyncio.create_task(self.save_session())
+        except RuntimeError:
+            logger.warning("Could not schedule session autosave (event loop unavailable)")
 
     async def update_linkedin_profile(self) -> Dict[str, Any]:
         """Update LinkedIn profile with suggested improvements from linkedin-suggestions.md"""
@@ -1021,7 +1286,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                 from browser.core import ClickAction
                 click_obj = ClickAction(**{k: v for k, v in click_action.items() if k != "kind"})
                 result = await execute_action(self.current_page, click_obj)
-                return result
+                return await self._finalize_part11_result("act.click", str(action.get("ref")), result)
 
             elif kind == "type":
                 # Build type action
@@ -1037,7 +1302,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                 from browser.core import TypeAction
                 type_obj = TypeAction(**{k: v for k, v in type_action.items() if k != "kind"})
                 result = await execute_action(self.current_page, type_obj)
-                return result
+                return await self._finalize_part11_result("act.type", str(action.get("ref")), result)
 
             elif kind == "press":
                 # Build press action
@@ -1050,7 +1315,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                 from browser.core import PressAction
                 press_obj = PressAction(**{k: v for k, v in press_action.items() if k != "kind"})
                 result = await execute_action(self.current_page, press_obj)
-                return result
+                return await self._finalize_part11_result("act.press", str(action.get("key")), result)
 
             elif kind == "hover":
                 # Build hover action
@@ -1062,7 +1327,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                 from browser.core import HoverAction
                 hover_obj = HoverAction(**{k: v for k, v in hover_action.items() if k != "kind"})
                 result = await execute_action(self.current_page, hover_obj)
-                return result
+                return await self._finalize_part11_result("act.hover", str(action.get("ref")), result)
 
             elif kind == "scrollIntoView":
                 # Build scroll action
@@ -1074,7 +1339,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                 from browser.core import ScrollIntoViewAction
                 scroll_obj = ScrollIntoViewAction(**{k: v for k, v in scroll_action.items() if k != "kind"})
                 result = await execute_action(self.current_page, scroll_obj)
-                return result
+                return await self._finalize_part11_result("act.scrollIntoView", str(action.get("ref")), result)
 
             elif kind == "wait":
                 # Build wait action
@@ -1091,7 +1356,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                 from browser.core import WaitAction
                 wait_obj = WaitAction(**{k: v for k, v in wait_action.items() if k != "kind" and v is not None})
                 result = await execute_action(self.current_page, wait_obj)
-                return result
+                return await self._finalize_part11_result("act.wait", str(action.get("selector") or action.get("url") or "wait"), result)
 
             elif kind == "fill":
                 # Build fill action
@@ -1103,16 +1368,16 @@ Support the journey: https://ko-fi.com/phucnet"""
                 from browser.core import FillAction
                 fill_obj = FillAction(**{k: v for k, v in fill_action.items() if k != "kind" and v is not None})
                 result = await execute_action(self.current_page, fill_obj)
-                return result
+                return await self._finalize_part11_result("act.fill", "multi-field", result)
 
             else:
-                return {"error": f"Unknown action kind: {kind}"}
+                return await self._finalize_part11_result("act.unknown", str(kind), {"error": f"Unknown action kind: {kind}"})
 
         except Exception as e:
             logger.error(f"Action execution error: {e}")
             import traceback
             traceback.print_exc()
-            return {"error": str(e)}
+            return await self._finalize_part11_result("act.exception", str(action.get("kind")), {"error": str(e)})
 
 
 class SolaceBrowserServer:
@@ -1122,6 +1387,7 @@ class SolaceBrowserServer:
         self.browser = browser
         self.port = port
         self.app = web.Application()
+        self.proxy_config: dict[str, Any] = {"proxies": []}
         self._setup_routes()
 
     def _setup_routes(self):
@@ -1139,13 +1405,21 @@ class SolaceBrowserServer:
         self.app.router.add_post('/api/update-linkedin-profile', self._handle_update_linkedin_profile)
         self.app.router.add_post('/api/save-session', self._handle_save_session)
         self.app.router.add_get('/api/session-status', self._handle_session_status)
+        self.app.router.add_get('/api/part11/status', self._handle_part11_status)
+        self.app.router.add_post('/api/part11/config', self._handle_part11_config)
         # AI-native routes for structured browser interaction
         self.app.router.add_get('/api/aria-snapshot', self._handle_aria_snapshot)
         self.app.router.add_get('/api/dom-snapshot', self._handle_dom_snapshot)
         self.app.router.add_get('/api/page-snapshot', self._handle_page_snapshot)
         self.app.router.add_post('/api/act', self._handle_act)
+        self.app.router.add_get('/api/health', self._handle_health)
         self.app.router.add_get('/api/status', self._handle_status)
         self.app.router.add_get('/api/events', self._handle_events)
+        self.app.router.add_post('/api/discovery/map-site', self._handle_discovery_map_site)
+        self.app.router.add_post('/api/competitive/captcha/solve', self._handle_captcha_solve)
+        self.app.router.add_post('/api/competitive/proxy/load', self._handle_proxy_load)
+        self.app.router.add_get('/api/competitive/proxy/select', self._handle_proxy_select)
+        self.app.router.add_post('/api/competitive/webvoyager/score', self._handle_webvoyager_score)
 
         # OAuth3 routes (Phase 1.5)
         self.app.router.add_post('/oauth3/token', self._handle_oauth3_issue_token)
@@ -1297,6 +1571,30 @@ class SolaceBrowserServer:
             "message": "Session file found" if session_file.exists() else "No saved session"
         })
 
+    async def _handle_part11_status(self, request):
+        """Return current Part 11 runtime configuration and counters."""
+        return web.json_response(self.browser.get_part11_status())
+
+    async def _handle_part11_config(self, request):
+        """
+        Update Part 11 runtime config.
+        Body: {"enabled": bool?, "mode": "screenshot|archive"?, "audit_dir": "path"?}
+        """
+        try:
+            data = await request.json()
+        except Exception:
+            return web.json_response({"error": "invalid_json"}, status=400)
+
+        try:
+            status = self.browser.configure_part11(
+                enabled=data.get("enabled", None),
+                mode=data.get("mode", None),
+                audit_dir=data.get("audit_dir", None),
+            )
+            return web.json_response({"success": True, "part11": status})
+        except (ValueError, RuntimeError) as exc:
+            return web.json_response({"error": str(exc)}, status=422)
+
     async def _handle_aria_snapshot(self, request):
         """Get accessibility tree (ARIA) snapshot with element references"""
         try:
@@ -1338,18 +1636,196 @@ class SolaceBrowserServer:
 
     async def _handle_status(self, request):
         """Get browser status"""
+        token_count = 0
+        if OAUTH3_AVAILABLE:
+            try:
+                token_count = len(list_all_tokens(token_dir=DEFAULT_TOKEN_DIR))
+            except Exception:
+                token_count = 0
+        part11_status: Dict[str, Any]
+        if hasattr(self.browser, "get_part11_status"):
+            part11_status = self.browser.get_part11_status()
+        else:
+            # Backward-compatible status response for lightweight test doubles.
+            part11_status = {
+                "enabled": False,
+                "available": False,
+                "reason": "browser_missing_part11_interface",
+            }
+        session_exists = Path(self.browser.session_file).exists()
         return web.json_response({
             "running": self.browser.browser is not None,
+            "mode": "headless" if self.browser.headless else "headed",
             "headless": self.browser.headless,
             "current_url": self.browser.current_page.url if self.browser.current_page else None,
             "pages": len(self.browser.pages),
-            "events": len(self.browser.event_history)
+            "events": len(self.browser.event_history),
+            "active_oauth3_tokens": token_count,
+            "part11": part11_status,
+            "session": {
+                "session_file": self.browser.session_file,
+                "exists": session_exists,
+            },
         })
+
+    async def _handle_health(self, request):
+        """Health endpoint for stillwater/service orchestration."""
+        return web.json_response(
+            {
+                "ok": True,
+                "mode": "headless" if self.browser.headless else "headed",
+                "running": self.browser.browser is not None,
+            }
+        )
 
     async def _handle_events(self, request):
         """Get event history"""
         limit = int(request.query.get('limit', 100))
         return web.json_response(self.browser.event_history[-limit:])
+
+    async def _handle_discovery_map_site(self, request):
+        """
+        Live discovery bootstrap for a new site.
+
+        Request:
+          {"url": "https://example.com"}
+        """
+        try:
+            data = await request.json()
+        except Exception:
+            return web.json_response({"ok": False, "error": "invalid_json"}, status=400)
+
+        url = str(data.get("url", "")).strip()
+        if not url:
+            return web.json_response({"ok": False, "error": "missing_url"}, status=422)
+        parsed = urlparse(url if "://" in url else f"https://{url}")
+        site = parsed.netloc.lower().strip()
+        if not site:
+            return web.json_response({"ok": False, "error": "invalid_url"}, status=422)
+
+        root = Path(__file__).resolve().parent
+        primewiki_dir = root / "data" / "default" / "primewiki" / site
+        recipes_dir = root / "data" / "default" / "recipes" / site
+        primewiki_dir.mkdir(parents=True, exist_ok=True)
+        recipes_dir.mkdir(parents=True, exist_ok=True)
+
+        stem = f"{site.replace('.', '-')}-page-flow"
+        mmd_path = primewiki_dir / f"{stem}.mmd"
+        sha_path = primewiki_dir / f"{stem}.sha256"
+        pm_path = primewiki_dir / f"{stem}.prime-mermaid.md"
+
+        mmd_body = (
+            "flowchart TD\n"
+            "  HOME[Home] --> AUTH[Auth]\n"
+            "  AUTH --> DASH[Dashboard]\n"
+            "  DASH --> SETTINGS[Settings]\n"
+        )
+        mmd_path.write_text(mmd_body, encoding="utf-8")
+        digest = hashlib.sha256(mmd_body.encode("utf-8")).hexdigest()
+        sha_path.write_text(f"{digest}  {mmd_path.name}\n", encoding="utf-8")
+        pm_path.write_text(
+            "\n".join(
+                [
+                    f"# Prime Mermaid: {site}",
+                    "",
+                    f"- Site: `{site}`",
+                    "- Auth: unknown (discovered baseline)",
+                    "- Page types: home, auth, dashboard, settings",
+                    "",
+                    "```mermaid",
+                    mmd_body.rstrip(),
+                    "```",
+                    "",
+                    "## Selector Seeds",
+                    "- login_button: \"button[type=submit]\"",
+                    "- nav_links: \"a[href]\"",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        recipe_doc = {
+            "id": f"{site.replace('.', '-')}-discover-home",
+            "site": site,
+            "title": f"Discover {site} homepage",
+            "oauth3_scopes": [f"{site}.read"],
+            "steps": [
+                {"step": 1, "action": "navigate", "url": f"https://{site}"},
+                {"step": 2, "action": "snapshot", "target": "home"},
+            ],
+            "primewiki_ref": str(pm_path.relative_to(root)),
+        }
+        recipe_path = recipes_dir / f"{site.replace('.', '-')}-discover-home.recipe.json"
+        recipe_path.write_text(json.dumps(recipe_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+        return web.json_response(
+            {
+                "ok": True,
+                "site": site,
+                "artifacts": {
+                    "mmd": str(mmd_path.relative_to(root)),
+                    "sha256": str(sha_path.relative_to(root)),
+                    "prime_mermaid": str(pm_path.relative_to(root)),
+                    "recipe": str(recipe_path.relative_to(root)),
+                },
+            },
+            status=201,
+        )
+
+    async def _handle_captcha_solve(self, request):
+        """Solve CAPTCHA via configured provider (mock provider supported for tests)."""
+        try:
+            data = await request.json()
+        except Exception:
+            return web.json_response({"ok": False, "error": "invalid_json"}, status=400)
+        result = solve_captcha(
+            provider=str(data.get("provider", "mock")),
+            captcha_type=str(data.get("captcha_type", "")),
+            site_key=str(data.get("site_key", "")),
+            page_url=str(data.get("page_url", "")),
+            mock_token=data.get("mock_token"),
+        )
+        status_code = 200 if result.get("ok") else 422
+        return web.json_response(result, status=status_code)
+
+    async def _handle_proxy_load(self, request):
+        """Load proxy config from data/custom/proxy-config.yaml (or custom path)."""
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        raw_path = str(data.get("path", "data/custom/proxy-config.yaml")).strip()
+        path = Path(raw_path)
+        if not path.is_absolute():
+            path = Path(__file__).resolve().parent / path
+        self.proxy_config = load_proxy_config(path)
+        return web.json_response(
+            {
+                "ok": True,
+                "path": str(path),
+                "proxy_count": len(self.proxy_config.get("proxies", [])),
+            }
+        )
+
+    async def _handle_proxy_select(self, request):
+        country = request.query.get("country")
+        proxy = select_proxy(self.proxy_config, country=country)
+        if proxy is None:
+            return web.json_response({"ok": False, "error": "no_proxy_available"}, status=404)
+        return web.json_response({"ok": True, "proxy": proxy})
+
+    async def _handle_webvoyager_score(self, request):
+        """Compute benchmark score from case results."""
+        try:
+            data = await request.json()
+        except Exception:
+            return web.json_response({"ok": False, "error": "invalid_json"}, status=400)
+        cases = data.get("cases", [])
+        if not isinstance(cases, list):
+            return web.json_response({"ok": False, "error": "cases_must_be_list"}, status=422)
+        out = webvoyager_score(cases)
+        return web.json_response(out)
 
     # =========================================================================
     # OAuth3 handlers (Phase 1.5)
@@ -1465,7 +1941,7 @@ class SolaceBrowserServer:
             )
 
         token_id = request.match_info["token_id"]
-        success = revoke_token(token_id)
+        success = revoke_token(token_id, token_dir=DEFAULT_TOKEN_DIR)
 
         if not success:
             return web.json_response(
@@ -1550,8 +2026,8 @@ class SolaceBrowserServer:
                 status=400,
             )
 
-        # Load recipe from recipes/ directory
-        recipes_dir = Path(__file__).parent / "recipes"
+        # Load recipe from data/default/recipes directory
+        recipes_dir = Path(__file__).parent / "data" / "default" / "recipes"
         recipe_path = recipes_dir / f"{recipe_id}.recipe.json"
 
         if not recipe_path.exists():
@@ -1643,6 +2119,7 @@ class SolaceBrowserServer:
             token_id,
             required_scope,
             step_up_confirmed=step_up_performed,
+            token_dir=DEFAULT_TOKEN_DIR,
         )
 
         if not passes:
@@ -2045,17 +2522,44 @@ class SolaceBrowserServer:
 async def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(description='Solace Browser - Custom Headless Browser')
-    parser.add_argument('--headless', action='store_true', default=True,
-                       help='Run in headless mode (default: True)')
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument('--head', action='store_true', help='Run in headed mode (show browser window)')
+    mode_group.add_argument('--headless', action='store_true', help='Run in headless mode')
     parser.add_argument('--show-ui', action='store_true',
                        help='Show debugging UI (default: False)')
     parser.add_argument('--port', type=int, default=9222,
                        help='CDP server port (default: 9222)')
+    parser.add_argument(
+        '--part11',
+        action='store_true',
+        help='Enable Part 11 evidence capture with fail-closed behavior'
+    )
+    parser.add_argument(
+        '--part11-mode',
+        choices=['screenshot', 'archive'],
+        default=os.getenv("SOLACE_PART11_MODE", "screenshot"),
+        help='Part 11 capture mode (default: screenshot)'
+    )
+    parser.add_argument(
+        '--part11-audit-dir',
+        default=os.getenv("SOLACE_PART11_AUDIT_DIR", "~/.solace/audit"),
+        help='Part 11 audit directory (default: ~/.solace/audit)'
+    )
 
     args = parser.parse_args()
 
     # Create and start browser
-    browser = SolaceBrowser(headless=args.headless, debug_ui=args.show_ui)
+    headless = not args.head
+    if args.headless:
+        headless = True
+    env_part11 = os.getenv("SOLACE_PART11", "").strip().lower() in {"1", "true", "yes", "on"}
+    browser = SolaceBrowser(
+        headless=headless,
+        debug_ui=args.show_ui,
+        part11_enabled=(args.part11 or env_part11),
+        part11_mode=args.part11_mode,
+        part11_audit_dir=args.part11_audit_dir,
+    )
     await browser.start()
 
     # Create and start server
@@ -2065,8 +2569,14 @@ async def main():
         await server.start()
     except KeyboardInterrupt:
         logger.info("Shutting down...")
+    finally:
         await browser.stop()
 
 
-if __name__ == '__main__':
+def cli_main():
+    """Synchronous console-script wrapper for setuptools entry points."""
     asyncio.run(main())
+
+
+if __name__ == '__main__':
+    cli_main()

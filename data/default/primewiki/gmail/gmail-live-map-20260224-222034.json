@@ -1,0 +1,1750 @@
+{
+  "run_at": "2026-02-24T22:20:06.191305Z",
+  "base": "http://localhost:9224",
+  "sections": [
+    {
+      "name": "inbox",
+      "target": "https://mail.google.com/mail/u/0/#inbox",
+      "navigate": {
+        "success": true,
+        "url": "https://mail.google.com/mail/u/0/#inbox",
+        "status": null,
+        "timestamp": "2026-02-24T17:20:06.205005"
+      },
+      "status_url": "https://mail.google.com/mail/u/0/#inbox",
+      "status_mode": "headed",
+      "eval": {
+        "success": true,
+        "result": {
+          "title": "Inbox (2,813) - phuc@phuc.net - phuc.net Mail",
+          "href": "https://mail.google.com/mail/u/0/#inbox",
+          "nav_items": [
+            {
+              "text": "Inbox",
+              "href": "https://mail.google.com/mail/u/0/#inbox"
+            },
+            {
+              "text": "Starred",
+              "href": "https://mail.google.com/mail/u/0/#starred"
+            },
+            {
+              "text": "Snoozed",
+              "href": "https://mail.google.com/mail/u/0/#snoozed"
+            },
+            {
+              "text": "Sent",
+              "href": "https://mail.google.com/mail/u/0/#sent"
+            },
+            {
+              "text": "Drafts",
+              "href": "https://mail.google.com/mail/u/0/#drafts"
+            },
+            {
+              "text": "Applicants",
+              "href": "https://mail.google.com/mail/u/0/#label/Applicants"
+            },
+            {
+              "text": "Interview",
+              "href": "https://mail.google.com/mail/u/0/#label/Interview"
+            },
+            {
+              "text": "KEEP",
+              "href": "https://mail.google.com/mail/u/0/#label/KEEP"
+            },
+            {
+              "text": "Stats for your post \"The Most Important Skill Fathers Must Teach in th\u2026\" - Here's how your post has performed since it was published.\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad",
+              "href": null
+            },
+            {
+              "text": "The Most Important Skill Fathers Must Teach in the AI Age - This me and Tyson, learning how to use claude code, to build pzip.net.Thanks for reading! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Shareable assets for: The Most Important Skill Fathers Must Teach in th\u2026 - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Compose",
+              "href": null
+            }
+          ],
+          "markers": {
+            "has_compose": true,
+            "has_search": true,
+            "has_message_rows": 50
+          }
+        },
+        "timestamp": "2026-02-24T17:20:08.225998"
+      },
+      "dom_url": "https://mail.google.com/mail/u/0/#inbox",
+      "dom_markers": {
+        "inbox_word": true,
+        "compose_word": true,
+        "search_mail_word": true,
+        "signin_word": false,
+        "row_count": 50
+      },
+      "screenshot": "/home/phuc/projects/solace-browser/artifacts/gmail-live-map-inbox.png"
+    },
+    {
+      "name": "starred",
+      "target": "https://mail.google.com/mail/u/0/#starred",
+      "navigate": {
+        "success": true,
+        "url": "https://mail.google.com/mail/u/0/#starred",
+        "status": null,
+        "timestamp": "2026-02-24T17:20:08.738496"
+      },
+      "status_url": "https://mail.google.com/mail/u/0/#starred",
+      "status_mode": "headed",
+      "eval": {
+        "success": true,
+        "result": {
+          "title": "Starred - phuc@phuc.net - phuc.net Mail",
+          "href": "https://mail.google.com/mail/u/0/#starred",
+          "nav_items": [
+            {
+              "text": "Inbox",
+              "href": "https://mail.google.com/mail/u/0/#inbox"
+            },
+            {
+              "text": "Starred",
+              "href": "https://mail.google.com/mail/u/0/#starred"
+            },
+            {
+              "text": "Snoozed",
+              "href": "https://mail.google.com/mail/u/0/#snoozed"
+            },
+            {
+              "text": "Sent",
+              "href": "https://mail.google.com/mail/u/0/#sent"
+            },
+            {
+              "text": "Drafts",
+              "href": "https://mail.google.com/mail/u/0/#drafts"
+            },
+            {
+              "text": "Applicants",
+              "href": "https://mail.google.com/mail/u/0/#label/Applicants"
+            },
+            {
+              "text": "Interview",
+              "href": "https://mail.google.com/mail/u/0/#label/Interview"
+            },
+            {
+              "text": "KEEP",
+              "href": "https://mail.google.com/mail/u/0/#label/KEEP"
+            },
+            {
+              "text": "Stats for your post \"The Most Important Skill Fathers Must Teach in th\u2026\" - Here's how your post has performed since it was published.\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad",
+              "href": null
+            },
+            {
+              "text": "The Most Important Skill Fathers Must Teach in the AI Age - This me and Tyson, learning how to use claude code, to build pzip.net.Thanks for reading! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Shareable assets for: The Most Important Skill Fathers Must Teach in th\u2026 - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Your paperback book has been published! - Congratulations, your paperback, \"AI Enhanced Science,\" is published on Amazon. If you republished your book with updates, your changes are now live. What's next Availability. It takes up",
+              "href": null
+            },
+            {
+              "text": "Inbox Your book has been typeset! - Your book has been typeset! Please use the link below to download your files. If you love how your book has been formatted, let us know by tweeting @ReedsyHQ! Download your book",
+              "href": null
+            },
+            {
+              "text": "Inbox These women artists are lit - Renters demand zoning protections | There's a party called the Klituation 48 Hills This 48 Hills newsletter is sponsored by Superfine Art Fair, Xena: Warrior Parody, Brava Theatre, The Chan Center,",
+              "href": null
+            },
+            {
+              "text": "Inbox We need some information from you - Wise. Your account for the world's money \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Fwd: Applications are Open for Year 3 of ACCEL - We can chat at next sales meeting but let's apply for bunch if these accelerators. It's basically free leadgen ;) - phuc On Saturday, November 23, 2024, Chris Crowley <chris.crowley@phuclabs",
+              "href": null
+            },
+            {
+              "text": "Inbox Hey Phuc, you\u2019re getting paid today (11/18/2024) - This will brighten your day\u2026 See a breakdown of your gross pay, taxes, and more. Gusto Phuclabs Happy payday, Phuc. Phuclabs An additional payment was made Access your full paycheck Show pay details",
+              "href": null
+            },
+            {
+              "text": "Inbox Reminder: Great interview with Dr. Greer on \"Inspire\" - In depth discussion of the DPIA - Disclosure Project Intelligence Archive A deep dive into the DPIA - Disclosure Project Intelligence Archive Dr. Greer with Michael Sandler about the DPIA - Disclosure",
+              "href": null
+            },
+            {
+              "text": "Inbox Tuna Cutting Show!!! - Hi Everyone!!! We are having Tuna Cutting Show on Sunday 10/1 from 3PM! We are going to get a 170LBS Mexican whole tuna and we are going to cut it into pieces right in front of you!!! It will be served",
+              "href": null
+            },
+            {
+              "text": "Inbox Plant Manager Ready for change - Hey Phuc, I am reaching out to you today to present a highly qualified candidate for the role of plant manager. Position: Plant Manager Experience: Army veteran with 14 years of experience in plant",
+              "href": null
+            },
+            {
+              "text": "Inbox Summer 2023 - Converting the sound file from a wav file to MP3 might do the job. That will compress it by 10 X or so. - phuc On Monday, May 29, 2023, Phuc Truong <phuc@phuc.net> wrote: Ok sounds good. - phucl",
+              "href": null
+            },
+            {
+              "text": "Inbox [GitHub] Please verify your device - ---------- Forwarded message ---------- From: GitHub <noreply@github.com> Date: Monday, March 6, 2023 Subject: [GitHub] Please verify your device To: Phuc Truong <phuc@phuc.net> Hey",
+              "href": null
+            },
+            {
+              "text": "Inbox Advice on Hackathon/Republic Campaign - Hi Yelena, Thanks for following up. No worries. We are probably going to close a round soon with an investor group outside of Republic.com. After that we have big plans so just anxious awaiting a term",
+              "href": null
+            },
+            {
+              "text": "Inbox Enjoy the merch! - Our popular caps and tumblers + other merch .... Back in Stock! Lots of merch back in stock! Caps, Tumblers, Water bottles and mugs ! Enjoy ! Great for gifts ! These caps were so popular we did a fifth",
+              "href": null
+            },
+            {
+              "text": "Inbox Lunch Wednesday? - Sounds great! On Tue, Aug 30, 2022 at 6:20 AM Phuc Truong <phuc@phuc.net> wrote: Want to try Jade Garden at noon? Exciting that you are moving back to Boston from VT. Both wonderful and great",
+              "href": null
+            },
+            {
+              "text": "Inbox Womble Bond Dickinson (US) LLP - Bills through June 2022 - Please find attached our bill for services rendered through June 30th. Please let us know if you have any questions or concerns. Thank you, Matthew Cox Billing Coordinator Womble Bond Dickinson (US)",
+              "href": null
+            },
+            {
+              "text": "Inbox Global CE-5 - Saturday June 4, 2022 - Reach out to the stars in Universal Peace - Its more important than ever. Participate in the upcoming Global CE-5 event, this Saturday June 4, 2022 Click image for a short clip from the CE5 film about",
+              "href": null
+            },
+            {
+              "text": "Inbox Phuc <> Roboflow - Labeling feedback - Great; invite sent -- looking forward to it! - Brad On Mon, Sep 13, 2021 at 1:07 PM Phuc Truong <phuc@phuc.net> wrote: Sorry, let's do Thursday at 12 pm EST or 9am PST? Please go ahead and",
+              "href": null
+            },
+            {
+              "text": "Inbox Request to meet - Excellent, Phuc - thank you! This week is very flexible for me. If it's easier, you can open my calendar (linked below) and the times should update to your time-zone. 30 Minute Meeting Looking",
+              "href": null
+            },
+            {
+              "text": "Inbox Fwd: Cloud Recording - Phuc Truong's Personal Meeting Room is now available - passcode - e7vn!MrM ---------- Forwarded message --------- From: Phuc Truong <phuctt@gmail.com> Date: Tue, Jan 5, 2021 at 2:35 PM Subject: Fwd: Cloud Recording - Phuc Truong's Personal",
+              "href": null
+            },
+            {
+              "text": "Inbox Order delivery: Windows 10 Professional - ---------- Forwarded message ---------- From: Sales - Keysoff.com <service@keysoff.com> Date: Wednesday, January 6, 2021 Subject: Order delivery: Windows 10 Professional To: phuc@phuc.net Hello,",
+              "href": null
+            },
+            {
+              "text": "Inbox Re: HI, I want to do an international wire to Ecuador. But the country ... - Hi Phuc, Sam here from Mercury. Thanks for reaching out! We don't currently support wires to Ecuador. We suggest using a service like TransferWise or Xoom, which can be linked directly to your",
+              "href": null
+            },
+            {
+              "text": "Compose",
+              "href": null
+            }
+          ],
+          "markers": {
+            "has_compose": true,
+            "has_search": true,
+            "has_message_rows": 71
+          }
+        },
+        "timestamp": "2026-02-24T17:20:10.761571"
+      },
+      "dom_url": "https://mail.google.com/mail/u/0/#starred",
+      "dom_markers": {
+        "inbox_word": true,
+        "compose_word": true,
+        "search_mail_word": true,
+        "signin_word": false,
+        "row_count": 71
+      },
+      "screenshot": "/home/phuc/projects/solace-browser/artifacts/gmail-live-map-starred.png"
+    },
+    {
+      "name": "snoozed",
+      "target": "https://mail.google.com/mail/u/0/#snoozed",
+      "navigate": {
+        "success": true,
+        "url": "https://mail.google.com/mail/u/0/#snoozed",
+        "status": null,
+        "timestamp": "2026-02-24T17:20:11.435534"
+      },
+      "status_url": "https://mail.google.com/mail/u/0/#snoozed",
+      "status_mode": "headed",
+      "eval": {
+        "success": true,
+        "result": {
+          "title": "Snoozed - phuc@phuc.net - phuc.net Mail",
+          "href": "https://mail.google.com/mail/u/0/#snoozed",
+          "nav_items": [
+            {
+              "text": "Inbox",
+              "href": "https://mail.google.com/mail/u/0/#inbox"
+            },
+            {
+              "text": "Starred",
+              "href": "https://mail.google.com/mail/u/0/#starred"
+            },
+            {
+              "text": "Snoozed",
+              "href": "https://mail.google.com/mail/u/0/#snoozed"
+            },
+            {
+              "text": "Sent",
+              "href": "https://mail.google.com/mail/u/0/#sent"
+            },
+            {
+              "text": "Drafts",
+              "href": "https://mail.google.com/mail/u/0/#drafts"
+            },
+            {
+              "text": "Applicants",
+              "href": "https://mail.google.com/mail/u/0/#label/Applicants"
+            },
+            {
+              "text": "Interview",
+              "href": "https://mail.google.com/mail/u/0/#label/Interview"
+            },
+            {
+              "text": "KEEP",
+              "href": "https://mail.google.com/mail/u/0/#label/KEEP"
+            },
+            {
+              "text": "Stats for your post \"The Most Important Skill Fathers Must Teach in th\u2026\" - Here's how your post has performed since it was published.\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad",
+              "href": null
+            },
+            {
+              "text": "The Most Important Skill Fathers Must Teach in the AI Age - This me and Tyson, learning how to use claude code, to build pzip.net.Thanks for reading! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Shareable assets for: The Most Important Skill Fathers Must Teach in th\u2026 - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Your paperback book has been published! - Congratulations, your paperback, \"AI Enhanced Science,\" is published on Amazon. If you republished your book with updates, your changes are now live. What's next Availability. It takes up",
+              "href": null
+            },
+            {
+              "text": "Inbox Your book has been typeset! - Your book has been typeset! Please use the link below to download your files. If you love how your book has been formatted, let us know by tweeting @ReedsyHQ! Download your book",
+              "href": null
+            },
+            {
+              "text": "Inbox These women artists are lit - Renters demand zoning protections | There's a party called the Klituation 48 Hills This 48 Hills newsletter is sponsored by Superfine Art Fair, Xena: Warrior Parody, Brava Theatre, The Chan Center,",
+              "href": null
+            },
+            {
+              "text": "Inbox We need some information from you - Wise. Your account for the world's money \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Fwd: Applications are Open for Year 3 of ACCEL - We can chat at next sales meeting but let's apply for bunch if these accelerators. It's basically free leadgen ;) - phuc On Saturday, November 23, 2024, Chris Crowley <chris.crowley@phuclabs",
+              "href": null
+            },
+            {
+              "text": "Inbox Hey Phuc, you\u2019re getting paid today (11/18/2024) - This will brighten your day\u2026 See a breakdown of your gross pay, taxes, and more. Gusto Phuclabs Happy payday, Phuc. Phuclabs An additional payment was made Access your full paycheck Show pay details",
+              "href": null
+            },
+            {
+              "text": "Inbox Reminder: Great interview with Dr. Greer on \"Inspire\" - In depth discussion of the DPIA - Disclosure Project Intelligence Archive A deep dive into the DPIA - Disclosure Project Intelligence Archive Dr. Greer with Michael Sandler about the DPIA - Disclosure",
+              "href": null
+            },
+            {
+              "text": "Inbox Tuna Cutting Show!!! - Hi Everyone!!! We are having Tuna Cutting Show on Sunday 10/1 from 3PM! We are going to get a 170LBS Mexican whole tuna and we are going to cut it into pieces right in front of you!!! It will be served",
+              "href": null
+            },
+            {
+              "text": "Inbox Plant Manager Ready for change - Hey Phuc, I am reaching out to you today to present a highly qualified candidate for the role of plant manager. Position: Plant Manager Experience: Army veteran with 14 years of experience in plant",
+              "href": null
+            },
+            {
+              "text": "Inbox Summer 2023 - Converting the sound file from a wav file to MP3 might do the job. That will compress it by 10 X or so. - phuc On Monday, May 29, 2023, Phuc Truong <phuc@phuc.net> wrote: Ok sounds good. - phucl",
+              "href": null
+            },
+            {
+              "text": "Inbox [GitHub] Please verify your device - ---------- Forwarded message ---------- From: GitHub <noreply@github.com> Date: Monday, March 6, 2023 Subject: [GitHub] Please verify your device To: Phuc Truong <phuc@phuc.net> Hey",
+              "href": null
+            },
+            {
+              "text": "Inbox Advice on Hackathon/Republic Campaign - Hi Yelena, Thanks for following up. No worries. We are probably going to close a round soon with an investor group outside of Republic.com. After that we have big plans so just anxious awaiting a term",
+              "href": null
+            },
+            {
+              "text": "Inbox Enjoy the merch! - Our popular caps and tumblers + other merch .... Back in Stock! Lots of merch back in stock! Caps, Tumblers, Water bottles and mugs ! Enjoy ! Great for gifts ! These caps were so popular we did a fifth",
+              "href": null
+            },
+            {
+              "text": "Inbox Lunch Wednesday? - Sounds great! On Tue, Aug 30, 2022 at 6:20 AM Phuc Truong <phuc@phuc.net> wrote: Want to try Jade Garden at noon? Exciting that you are moving back to Boston from VT. Both wonderful and great",
+              "href": null
+            },
+            {
+              "text": "Inbox Womble Bond Dickinson (US) LLP - Bills through June 2022 - Please find attached our bill for services rendered through June 30th. Please let us know if you have any questions or concerns. Thank you, Matthew Cox Billing Coordinator Womble Bond Dickinson (US)",
+              "href": null
+            },
+            {
+              "text": "Inbox Global CE-5 - Saturday June 4, 2022 - Reach out to the stars in Universal Peace - Its more important than ever. Participate in the upcoming Global CE-5 event, this Saturday June 4, 2022 Click image for a short clip from the CE5 film about",
+              "href": null
+            },
+            {
+              "text": "Inbox Phuc <> Roboflow - Labeling feedback - Great; invite sent -- looking forward to it! - Brad On Mon, Sep 13, 2021 at 1:07 PM Phuc Truong <phuc@phuc.net> wrote: Sorry, let's do Thursday at 12 pm EST or 9am PST? Please go ahead and",
+              "href": null
+            },
+            {
+              "text": "Inbox Request to meet - Excellent, Phuc - thank you! This week is very flexible for me. If it's easier, you can open my calendar (linked below) and the times should update to your time-zone. 30 Minute Meeting Looking",
+              "href": null
+            },
+            {
+              "text": "Inbox Fwd: Cloud Recording - Phuc Truong's Personal Meeting Room is now available - passcode - e7vn!MrM ---------- Forwarded message --------- From: Phuc Truong <phuctt@gmail.com> Date: Tue, Jan 5, 2021 at 2:35 PM Subject: Fwd: Cloud Recording - Phuc Truong's Personal",
+              "href": null
+            },
+            {
+              "text": "Inbox Order delivery: Windows 10 Professional - ---------- Forwarded message ---------- From: Sales - Keysoff.com <service@keysoff.com> Date: Wednesday, January 6, 2021 Subject: Order delivery: Windows 10 Professional To: phuc@phuc.net Hello,",
+              "href": null
+            },
+            {
+              "text": "Inbox Re: HI, I want to do an international wire to Ecuador. But the country ... - Hi Phuc, Sam here from Mercury. Thanks for reaching out! We don't currently support wires to Ecuador. We suggest using a service like TransferWise or Xoom, which can be linked directly to your",
+              "href": null
+            },
+            {
+              "text": "Compose",
+              "href": null
+            }
+          ],
+          "markers": {
+            "has_compose": true,
+            "has_search": true,
+            "has_message_rows": 71
+          }
+        },
+        "timestamp": "2026-02-24T17:20:13.455200"
+      },
+      "dom_url": "https://mail.google.com/mail/u/0/#snoozed",
+      "dom_markers": {
+        "inbox_word": true,
+        "compose_word": true,
+        "search_mail_word": true,
+        "signin_word": false,
+        "row_count": 71
+      },
+      "screenshot": "/home/phuc/projects/solace-browser/artifacts/gmail-live-map-snoozed.png"
+    },
+    {
+      "name": "sent",
+      "target": "https://mail.google.com/mail/u/0/#sent",
+      "navigate": {
+        "success": true,
+        "url": "https://mail.google.com/mail/u/0/#sent",
+        "status": null,
+        "timestamp": "2026-02-24T17:20:14.127439"
+      },
+      "status_url": "https://mail.google.com/mail/u/0/#sent",
+      "status_mode": "headed",
+      "eval": {
+        "success": true,
+        "result": {
+          "title": "Sent Mail - phuc@phuc.net - phuc.net Mail",
+          "href": "https://mail.google.com/mail/u/0/#sent",
+          "nav_items": [
+            {
+              "text": "Inbox",
+              "href": "https://mail.google.com/mail/u/0/#inbox"
+            },
+            {
+              "text": "Starred",
+              "href": "https://mail.google.com/mail/u/0/#starred"
+            },
+            {
+              "text": "Snoozed",
+              "href": "https://mail.google.com/mail/u/0/#snoozed"
+            },
+            {
+              "text": "Sent",
+              "href": "https://mail.google.com/mail/u/0/#sent"
+            },
+            {
+              "text": "Drafts",
+              "href": "https://mail.google.com/mail/u/0/#drafts"
+            },
+            {
+              "text": "Applicants",
+              "href": "https://mail.google.com/mail/u/0/#label/Applicants"
+            },
+            {
+              "text": "Interview",
+              "href": "https://mail.google.com/mail/u/0/#label/Interview"
+            },
+            {
+              "text": "KEEP",
+              "href": "https://mail.google.com/mail/u/0/#label/KEEP"
+            },
+            {
+              "text": "Stats for your post \"The Most Important Skill Fathers Must Teach in th\u2026\" - Here's how your post has performed since it was published.\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad",
+              "href": null
+            },
+            {
+              "text": "The Most Important Skill Fathers Must Teach in the AI Age - This me and Tyson, learning how to use claude code, to build pzip.net.Thanks for reading! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Shareable assets for: The Most Important Skill Fathers Must Teach in th\u2026 - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox IF theory - Hi Pleroma / Daniya, Happy to hear from you! Glad you want to engage. I am in the middle of very existing hackathon where I am upgrading stillwater to be the first ever FDA Part 11 Compliant AI system.",
+              "href": null
+            },
+            {
+              "text": "InboxKEEP PYPI KEY - Don't forget it. -phuc",
+              "href": null
+            },
+            {
+              "text": "Inbox Happy Year of the Horse/AGI - I'm Phuc (Harvard \u2192 tech CEO exit \u2192 now full-time builder). I believe I have discovered AGI and humbly as you to check it out. With a simple upgrade of skills + orchestration + other cool",
+              "href": null
+            },
+            {
+              "text": "Inbox Account Reactivation Request - Stillwater Physics Research Campaign - Hi Moltbook Team, Our account: Agent Name: stillwater-os Agent ID: 62770f69-7a7b-49c4-b596-240a6062fac9 API Key: moltbook_sk_T6JmuFArevgYhRcF7KuDI_L1F55DnOSw Profile: https://moltbook.com/u/stillwater-",
+              "href": null
+            },
+            {
+              "text": "Inbox Huge Breakthrough - Thanks. I used Claude code but with my agi upgrades. The breakthrough is more my math theories and I upgraded Claude code implemented based on what I call wishes and prime logic. Happy to meet up for",
+              "href": null
+            },
+            {
+              "text": "Inbox Fwd: EFL: Congratulations! Next Steps for EFL Training (Cycle 1 2026) - Nice! Congrats! - phuc On Thursday, January 29, 2026, Sherri Yun Cheung <yunsherricheung@ikumon.com> wrote: FYI: Will be able to launch on June 1. Best, -Sherri Sherri Yun Cheung Kumon Instructor",
+              "href": null
+            },
+            {
+              "text": "Inbox Phuc Truong accepted PC1-13 - Our shares of Hiopocratic AI is official. See attached! -Phuc ---------- Forwarded message --------- From: Carta <no-reply@carta.com> Date: Wed, Jan 28, 2026 at 9:20 PM Subject: Phuc Truong",
+              "href": null
+            },
+            {
+              "text": "Inbox UpdateSuggested reply - I took care of google and only kept my account. I can ping luminous. thanks -PHuc On Tue, Jan 27, 2026 at 6:15 PM M Zero <5jugglingcats@gmail.com> wrote: Hey Bud, I saw your update come through,Suggested reply",
+              "href": null
+            },
+            {
+              "text": "Inbox (no subject) - Ok On Wednesday, January 7, 2026, Truong, Tyson <ttruong11@bostonk12.org> wrote: I forgot my swimming trunks for swimming. it's in my laundry basket. Can you bring it? sorry, it's stupid",
+              "href": null
+            },
+            {
+              "text": "Inbox Grove AI, Inc. sent you $500.00 - Fyi ---------- Forwarded message ---------- From: Mercury <hello@mercury.com> Date: Friday, January 2, 2026 Subject: Grove AI, Inc. sent you $500.00 To: phuc@phuc.net Grove AI, Inc. sent you",
+              "href": null
+            },
+            {
+              "text": "Inbox Fw: Questionaire Estate Planning - What's a good time? Next week? - phuc On Tuesday, December 23, 2025, Lance Beal <lance@lancebeal.com> wrote: Yes, we can. Beal & Hebert, Acadiana's Hometown Lawyers From: Phuc Truong",
+              "href": null
+            },
+            {
+              "text": "Inbox Webflow / Google - PayGoogle as much as you can.. skip webflow. I just cracked agi. I will launch soon and take over bills. - phuc On Thursday, December 11, 2025, Midnight Zero <zero@visioncycle.com> wrote: Hey Bud",
+              "href": null
+            },
+            {
+              "text": "Inbox Phuc (Grove AI Advisor) <> Shubhra (Hippocratic AI) - Great. Thanks Tran! Shubra. Let me know if you still want to meet Monday. Would love to meet you and your team. - phuc On Friday, December 5, 2025, Tran Le <tran@grovetrials.com> wrote: Thanks",
+              "href": null
+            },
+            {
+              "text": "Inbox (no subject) - I will drop off at the front desk for you. - phuc On Tuesday, December 2, 2025, Truong, Tyson <ttruong11@bostonk12.org> wrote: Thank you, dad. Sorry for the inconvenience. On Tue, Dec 2, 2025 at",
+              "href": null
+            },
+            {
+              "text": "Inbox Lance Beal- palazzo meeting - Sounds good. Looking forward to it. -Phuc On Fri, Nov 14, 2025 at 4:07 PM Lance Beal <lance@lancebeal.com> wrote: It is on my list. We just got internet back up. I will get out hopefully today.",
+              "href": null
+            },
+            {
+              "text": "Inbox Continue Paying? - Leave them on for a while more. Let's see what happens in a few months. I have a few things going on that look promising. - phuc On Thursday, November 13, 2025, Midnight Zero <zero@visioncycle.",
+              "href": null
+            },
+            {
+              "text": "Inbox XRF - I know Steve Solomon. He was the one who recommended Sciapps for me to buy. We are friendly so it was my idea. All set. - phuc On Wednesday, October 29, 2025, Dave Day <dave@dave-day.com> wrote:",
+              "href": null
+            },
+            {
+              "text": "Inbox XRF - No worries. Thanks for your hard work! Let me know anytime. By the way, you should try out Claude code. Been using it with VS Code and it's great. AI is going to change coding forever. The MVP for",
+              "href": null
+            },
+            {
+              "text": "Inbox update - Awesome. Thanks so much! -Phuc On Mon, Oct 6, 2025 at 10:48 PM Dave Day <dave@dave-day.com> wrote: Hi Phuc, Sorry for the silence. We have been out in New Mexico the last two weeks but are flying",
+              "href": null
+            },
+            {
+              "text": "Inbox test - test",
+              "href": null
+            },
+            {
+              "text": "Inbox arXiv endorsement request from Phuc Truong - Hi Matt, I just got back from Bermuda. Based on some feedback from friends and advisors, I have decided to focus on the ChatGPT rewrite first since I am only a few weeks away from being done. Once I",
+              "href": null
+            },
+            {
+              "text": "Compose",
+              "href": null
+            }
+          ],
+          "markers": {
+            "has_compose": true,
+            "has_search": true,
+            "has_message_rows": 100
+          }
+        },
+        "timestamp": "2026-02-24T17:20:16.135620"
+      },
+      "dom_url": "https://mail.google.com/mail/u/0/#sent",
+      "dom_markers": {
+        "inbox_word": true,
+        "compose_word": true,
+        "search_mail_word": true,
+        "signin_word": false,
+        "row_count": 100
+      },
+      "screenshot": "/home/phuc/projects/solace-browser/artifacts/gmail-live-map-sent.png"
+    },
+    {
+      "name": "drafts",
+      "target": "https://mail.google.com/mail/u/0/#drafts",
+      "navigate": {
+        "success": true,
+        "url": "https://mail.google.com/mail/u/0/#drafts",
+        "status": null,
+        "timestamp": "2026-02-24T17:20:16.967231"
+      },
+      "status_url": "https://mail.google.com/mail/u/0/#drafts",
+      "status_mode": "headed",
+      "eval": {
+        "success": true,
+        "result": {
+          "title": "Drafts (29) - phuc@phuc.net - phuc.net Mail",
+          "href": "https://mail.google.com/mail/u/0/#drafts",
+          "nav_items": [
+            {
+              "text": "Inbox",
+              "href": "https://mail.google.com/mail/u/0/#inbox"
+            },
+            {
+              "text": "Starred",
+              "href": "https://mail.google.com/mail/u/0/#starred"
+            },
+            {
+              "text": "Snoozed",
+              "href": "https://mail.google.com/mail/u/0/#snoozed"
+            },
+            {
+              "text": "Sent",
+              "href": "https://mail.google.com/mail/u/0/#sent"
+            },
+            {
+              "text": "Drafts",
+              "href": "https://mail.google.com/mail/u/0/#drafts"
+            },
+            {
+              "text": "Applicants",
+              "href": "https://mail.google.com/mail/u/0/#label/Applicants"
+            },
+            {
+              "text": "Interview",
+              "href": "https://mail.google.com/mail/u/0/#label/Interview"
+            },
+            {
+              "text": "KEEP",
+              "href": "https://mail.google.com/mail/u/0/#label/KEEP"
+            },
+            {
+              "text": "Stats for your post \"The Most Important Skill Fathers Must Teach in th\u2026\" - Here's how your post has performed since it was published.\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad",
+              "href": null
+            },
+            {
+              "text": "The Most Important Skill Fathers Must Teach in the AI Age - This me and Tyson, learning how to use claude code, to build pzip.net.Thanks for reading! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Shareable assets for: The Most Important Skill Fathers Must Teach in th\u2026 - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox IF theory - Hi Pleroma / Daniya, Happy to hear from you! Glad you want to engage. I am in the middle of very existing hackathon where I am upgrading stillwater to be the first ever FDA Part 11 Compliant AI system.",
+              "href": null
+            },
+            {
+              "text": "InboxKEEP PYPI KEY - Don't forget it. -phuc",
+              "href": null
+            },
+            {
+              "text": "Inbox Happy Year of the Horse/AGI - I'm Phuc (Harvard \u2192 tech CEO exit \u2192 now full-time builder). I believe I have discovered AGI and humbly as you to check it out. With a simple upgrade of skills + orchestration + other cool",
+              "href": null
+            },
+            {
+              "text": "Inbox Account Reactivation Request - Stillwater Physics Research Campaign - Hi Moltbook Team, Our account: Agent Name: stillwater-os Agent ID: 62770f69-7a7b-49c4-b596-240a6062fac9 API Key: moltbook_sk_T6JmuFArevgYhRcF7KuDI_L1F55DnOSw Profile: https://moltbook.com/u/stillwater-",
+              "href": null
+            },
+            {
+              "text": "Inbox Huge Breakthrough - Thanks. I used Claude code but with my agi upgrades. The breakthrough is more my math theories and I upgraded Claude code implemented based on what I call wishes and prime logic. Happy to meet up for",
+              "href": null
+            },
+            {
+              "text": "Inbox Fwd: EFL: Congratulations! Next Steps for EFL Training (Cycle 1 2026) - Nice! Congrats! - phuc On Thursday, January 29, 2026, Sherri Yun Cheung <yunsherricheung@ikumon.com> wrote: FYI: Will be able to launch on June 1. Best, -Sherri Sherri Yun Cheung Kumon Instructor",
+              "href": null
+            },
+            {
+              "text": "Inbox Phuc Truong accepted PC1-13 - Our shares of Hiopocratic AI is official. See attached! -Phuc ---------- Forwarded message --------- From: Carta <no-reply@carta.com> Date: Wed, Jan 28, 2026 at 9:20 PM Subject: Phuc Truong",
+              "href": null
+            },
+            {
+              "text": "Inbox UpdateSuggested reply - I took care of google and only kept my account. I can ping luminous. thanks -PHuc On Tue, Jan 27, 2026 at 6:15 PM M Zero <5jugglingcats@gmail.com> wrote: Hey Bud, I saw your update come through,Suggested reply",
+              "href": null
+            },
+            {
+              "text": "Inbox (no subject) - Ok On Wednesday, January 7, 2026, Truong, Tyson <ttruong11@bostonk12.org> wrote: I forgot my swimming trunks for swimming. it's in my laundry basket. Can you bring it? sorry, it's stupid",
+              "href": null
+            },
+            {
+              "text": "Inbox Grove AI, Inc. sent you $500.00 - Fyi ---------- Forwarded message ---------- From: Mercury <hello@mercury.com> Date: Friday, January 2, 2026 Subject: Grove AI, Inc. sent you $500.00 To: phuc@phuc.net Grove AI, Inc. sent you",
+              "href": null
+            },
+            {
+              "text": "Inbox Fw: Questionaire Estate Planning - What's a good time? Next week? - phuc On Tuesday, December 23, 2025, Lance Beal <lance@lancebeal.com> wrote: Yes, we can. Beal & Hebert, Acadiana's Hometown Lawyers From: Phuc Truong",
+              "href": null
+            },
+            {
+              "text": "Inbox Webflow / Google - PayGoogle as much as you can.. skip webflow. I just cracked agi. I will launch soon and take over bills. - phuc On Thursday, December 11, 2025, Midnight Zero <zero@visioncycle.com> wrote: Hey Bud",
+              "href": null
+            },
+            {
+              "text": "Inbox Phuc (Grove AI Advisor) <> Shubhra (Hippocratic AI) - Great. Thanks Tran! Shubra. Let me know if you still want to meet Monday. Would love to meet you and your team. - phuc On Friday, December 5, 2025, Tran Le <tran@grovetrials.com> wrote: Thanks",
+              "href": null
+            },
+            {
+              "text": "Inbox (no subject) - I will drop off at the front desk for you. - phuc On Tuesday, December 2, 2025, Truong, Tyson <ttruong11@bostonk12.org> wrote: Thank you, dad. Sorry for the inconvenience. On Tue, Dec 2, 2025 at",
+              "href": null
+            },
+            {
+              "text": "Inbox Lance Beal- palazzo meeting - Sounds good. Looking forward to it. -Phuc On Fri, Nov 14, 2025 at 4:07 PM Lance Beal <lance@lancebeal.com> wrote: It is on my list. We just got internet back up. I will get out hopefully today.",
+              "href": null
+            },
+            {
+              "text": "Inbox Continue Paying? - Leave them on for a while more. Let's see what happens in a few months. I have a few things going on that look promising. - phuc On Thursday, November 13, 2025, Midnight Zero <zero@visioncycle.",
+              "href": null
+            },
+            {
+              "text": "Inbox XRF - I know Steve Solomon. He was the one who recommended Sciapps for me to buy. We are friendly so it was my idea. All set. - phuc On Wednesday, October 29, 2025, Dave Day <dave@dave-day.com> wrote:",
+              "href": null
+            },
+            {
+              "text": "Inbox XRF - No worries. Thanks for your hard work! Let me know anytime. By the way, you should try out Claude code. Been using it with VS Code and it's great. AI is going to change coding forever. The MVP for",
+              "href": null
+            },
+            {
+              "text": "Inbox update - Awesome. Thanks so much! -Phuc On Mon, Oct 6, 2025 at 10:48 PM Dave Day <dave@dave-day.com> wrote: Hi Phuc, Sorry for the silence. We have been out in New Mexico the last two weeks but are flying",
+              "href": null
+            },
+            {
+              "text": "Inbox test - test",
+              "href": null
+            },
+            {
+              "text": "Inbox arXiv endorsement request from Phuc Truong - Hi Matt, I just got back from Bermuda. Based on some feedback from friends and advisors, I have decided to focus on the ChatGPT rewrite first since I am only a few weeks away from being done. Once I",
+              "href": null
+            },
+            {
+              "text": "Compose",
+              "href": null
+            },
+            {
+              "text": "Discard drafts",
+              "href": null
+            }
+          ],
+          "markers": {
+            "has_compose": true,
+            "has_search": true,
+            "has_message_rows": 129
+          }
+        },
+        "timestamp": "2026-02-24T17:20:18.992987"
+      },
+      "dom_url": "https://mail.google.com/mail/u/0/#drafts",
+      "dom_markers": {
+        "inbox_word": true,
+        "compose_word": true,
+        "search_mail_word": true,
+        "signin_word": false,
+        "row_count": 129
+      },
+      "screenshot": "/home/phuc/projects/solace-browser/artifacts/gmail-live-map-drafts.png"
+    },
+    {
+      "name": "important",
+      "target": "https://mail.google.com/mail/u/0/#important",
+      "navigate": {
+        "success": true,
+        "url": "https://mail.google.com/mail/u/0/#important",
+        "status": null,
+        "timestamp": "2026-02-24T17:20:19.955171"
+      },
+      "status_url": "https://mail.google.com/mail/u/0/#important",
+      "status_mode": "headed",
+      "eval": {
+        "success": true,
+        "result": {
+          "title": "Drafts (29) - phuc@phuc.net - phuc.net Mail",
+          "href": "https://mail.google.com/mail/u/0/#important",
+          "nav_items": [
+            {
+              "text": "Inbox",
+              "href": "https://mail.google.com/mail/u/0/#inbox"
+            },
+            {
+              "text": "Starred",
+              "href": "https://mail.google.com/mail/u/0/#starred"
+            },
+            {
+              "text": "Snoozed",
+              "href": "https://mail.google.com/mail/u/0/#snoozed"
+            },
+            {
+              "text": "Sent",
+              "href": "https://mail.google.com/mail/u/0/#sent"
+            },
+            {
+              "text": "Drafts",
+              "href": "https://mail.google.com/mail/u/0/#drafts"
+            },
+            {
+              "text": "Applicants",
+              "href": "https://mail.google.com/mail/u/0/#label/Applicants"
+            },
+            {
+              "text": "Interview",
+              "href": "https://mail.google.com/mail/u/0/#label/Interview"
+            },
+            {
+              "text": "KEEP",
+              "href": "https://mail.google.com/mail/u/0/#label/KEEP"
+            },
+            {
+              "text": "Stats for your post \"The Most Important Skill Fathers Must Teach in th\u2026\" - Here's how your post has performed since it was published.\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad",
+              "href": null
+            },
+            {
+              "text": "The Most Important Skill Fathers Must Teach in the AI Age - This me and Tyson, learning how to use claude code, to build pzip.net.Thanks for reading! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Shareable assets for: The Most Important Skill Fathers Must Teach in th\u2026 - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox IF theory - Hi Pleroma / Daniya, Happy to hear from you! Glad you want to engage. I am in the middle of very existing hackathon where I am upgrading stillwater to be the first ever FDA Part 11 Compliant AI system.",
+              "href": null
+            },
+            {
+              "text": "InboxKEEP PYPI KEY - Don't forget it. -phuc",
+              "href": null
+            },
+            {
+              "text": "Inbox Happy Year of the Horse/AGI - I'm Phuc (Harvard \u2192 tech CEO exit \u2192 now full-time builder). I believe I have discovered AGI and humbly as you to check it out. With a simple upgrade of skills + orchestration + other cool",
+              "href": null
+            },
+            {
+              "text": "Inbox Account Reactivation Request - Stillwater Physics Research Campaign - Hi Moltbook Team, Our account: Agent Name: stillwater-os Agent ID: 62770f69-7a7b-49c4-b596-240a6062fac9 API Key: moltbook_sk_T6JmuFArevgYhRcF7KuDI_L1F55DnOSw Profile: https://moltbook.com/u/stillwater-",
+              "href": null
+            },
+            {
+              "text": "Inbox Huge Breakthrough - Thanks. I used Claude code but with my agi upgrades. The breakthrough is more my math theories and I upgraded Claude code implemented based on what I call wishes and prime logic. Happy to meet up for",
+              "href": null
+            },
+            {
+              "text": "Inbox Fwd: EFL: Congratulations! Next Steps for EFL Training (Cycle 1 2026) - Nice! Congrats! - phuc On Thursday, January 29, 2026, Sherri Yun Cheung <yunsherricheung@ikumon.com> wrote: FYI: Will be able to launch on June 1. Best, -Sherri Sherri Yun Cheung Kumon Instructor",
+              "href": null
+            },
+            {
+              "text": "Inbox Phuc Truong accepted PC1-13 - Our shares of Hiopocratic AI is official. See attached! -Phuc ---------- Forwarded message --------- From: Carta <no-reply@carta.com> Date: Wed, Jan 28, 2026 at 9:20 PM Subject: Phuc Truong",
+              "href": null
+            },
+            {
+              "text": "Inbox UpdateSuggested reply - I took care of google and only kept my account. I can ping luminous. thanks -PHuc On Tue, Jan 27, 2026 at 6:15 PM M Zero <5jugglingcats@gmail.com> wrote: Hey Bud, I saw your update come through,Suggested reply",
+              "href": null
+            },
+            {
+              "text": "Inbox (no subject) - Ok On Wednesday, January 7, 2026, Truong, Tyson <ttruong11@bostonk12.org> wrote: I forgot my swimming trunks for swimming. it's in my laundry basket. Can you bring it? sorry, it's stupid",
+              "href": null
+            },
+            {
+              "text": "Inbox Grove AI, Inc. sent you $500.00 - Fyi ---------- Forwarded message ---------- From: Mercury <hello@mercury.com> Date: Friday, January 2, 2026 Subject: Grove AI, Inc. sent you $500.00 To: phuc@phuc.net Grove AI, Inc. sent you",
+              "href": null
+            },
+            {
+              "text": "Inbox Fw: Questionaire Estate Planning - What's a good time? Next week? - phuc On Tuesday, December 23, 2025, Lance Beal <lance@lancebeal.com> wrote: Yes, we can. Beal & Hebert, Acadiana's Hometown Lawyers From: Phuc Truong",
+              "href": null
+            },
+            {
+              "text": "Inbox Webflow / Google - PayGoogle as much as you can.. skip webflow. I just cracked agi. I will launch soon and take over bills. - phuc On Thursday, December 11, 2025, Midnight Zero <zero@visioncycle.com> wrote: Hey Bud",
+              "href": null
+            },
+            {
+              "text": "Inbox Phuc (Grove AI Advisor) <> Shubhra (Hippocratic AI) - Great. Thanks Tran! Shubra. Let me know if you still want to meet Monday. Would love to meet you and your team. - phuc On Friday, December 5, 2025, Tran Le <tran@grovetrials.com> wrote: Thanks",
+              "href": null
+            },
+            {
+              "text": "Inbox (no subject) - I will drop off at the front desk for you. - phuc On Tuesday, December 2, 2025, Truong, Tyson <ttruong11@bostonk12.org> wrote: Thank you, dad. Sorry for the inconvenience. On Tue, Dec 2, 2025 at",
+              "href": null
+            },
+            {
+              "text": "Inbox Lance Beal- palazzo meeting - Sounds good. Looking forward to it. -Phuc On Fri, Nov 14, 2025 at 4:07 PM Lance Beal <lance@lancebeal.com> wrote: It is on my list. We just got internet back up. I will get out hopefully today.",
+              "href": null
+            },
+            {
+              "text": "Inbox Continue Paying? - Leave them on for a while more. Let's see what happens in a few months. I have a few things going on that look promising. - phuc On Thursday, November 13, 2025, Midnight Zero <zero@visioncycle.",
+              "href": null
+            },
+            {
+              "text": "Inbox XRF - I know Steve Solomon. He was the one who recommended Sciapps for me to buy. We are friendly so it was my idea. All set. - phuc On Wednesday, October 29, 2025, Dave Day <dave@dave-day.com> wrote:",
+              "href": null
+            },
+            {
+              "text": "Inbox XRF - No worries. Thanks for your hard work! Let me know anytime. By the way, you should try out Claude code. Been using it with VS Code and it's great. AI is going to change coding forever. The MVP for",
+              "href": null
+            },
+            {
+              "text": "Inbox update - Awesome. Thanks so much! -Phuc On Mon, Oct 6, 2025 at 10:48 PM Dave Day <dave@dave-day.com> wrote: Hi Phuc, Sorry for the silence. We have been out in New Mexico the last two weeks but are flying",
+              "href": null
+            },
+            {
+              "text": "Inbox test - test",
+              "href": null
+            },
+            {
+              "text": "Inbox arXiv endorsement request from Phuc Truong - Hi Matt, I just got back from Bermuda. Based on some feedback from friends and advisors, I have decided to focus on the ChatGPT rewrite first since I am only a few weeks away from being done. Once I",
+              "href": null
+            },
+            {
+              "text": "Compose",
+              "href": null
+            },
+            {
+              "text": "Discard drafts",
+              "href": null
+            }
+          ],
+          "markers": {
+            "has_compose": true,
+            "has_search": true,
+            "has_message_rows": 129
+          }
+        },
+        "timestamp": "2026-02-24T17:20:21.977742"
+      },
+      "dom_url": "https://mail.google.com/mail/u/0/#important",
+      "dom_markers": {
+        "inbox_word": true,
+        "compose_word": true,
+        "search_mail_word": true,
+        "signin_word": false,
+        "row_count": 129
+      },
+      "screenshot": "/home/phuc/projects/solace-browser/artifacts/gmail-live-map-important.png"
+    },
+    {
+      "name": "scheduled",
+      "target": "https://mail.google.com/mail/u/0/#scheduled",
+      "navigate": {
+        "success": true,
+        "url": "https://mail.google.com/mail/u/0/#scheduled",
+        "status": null,
+        "timestamp": "2026-02-24T17:20:22.896837"
+      },
+      "status_url": "https://mail.google.com/mail/u/0/#scheduled",
+      "status_mode": "headed",
+      "eval": {
+        "success": true,
+        "result": {
+          "title": "Scheduled - phuc@phuc.net - phuc.net Mail",
+          "href": "https://mail.google.com/mail/u/0/#scheduled",
+          "nav_items": [
+            {
+              "text": "Inbox",
+              "href": "https://mail.google.com/mail/u/0/#inbox"
+            },
+            {
+              "text": "Starred",
+              "href": "https://mail.google.com/mail/u/0/#starred"
+            },
+            {
+              "text": "Snoozed",
+              "href": "https://mail.google.com/mail/u/0/#snoozed"
+            },
+            {
+              "text": "Sent",
+              "href": "https://mail.google.com/mail/u/0/#sent"
+            },
+            {
+              "text": "Drafts",
+              "href": "https://mail.google.com/mail/u/0/#drafts"
+            },
+            {
+              "text": "Applicants",
+              "href": "https://mail.google.com/mail/u/0/#label/Applicants"
+            },
+            {
+              "text": "Interview",
+              "href": "https://mail.google.com/mail/u/0/#label/Interview"
+            },
+            {
+              "text": "KEEP",
+              "href": "https://mail.google.com/mail/u/0/#label/KEEP"
+            },
+            {
+              "text": "Stats for your post \"The Most Important Skill Fathers Must Teach in th\u2026\" - Here's how your post has performed since it was published.\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad",
+              "href": null
+            },
+            {
+              "text": "The Most Important Skill Fathers Must Teach in the AI Age - This me and Tyson, learning how to use claude code, to build pzip.net.Thanks for reading! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Shareable assets for: The Most Important Skill Fathers Must Teach in th\u2026 - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Compose",
+              "href": null
+            },
+            {
+              "text": "Discard drafts",
+              "href": null
+            }
+          ],
+          "markers": {
+            "has_compose": true,
+            "has_search": true,
+            "has_message_rows": 79
+          }
+        },
+        "timestamp": "2026-02-24T17:20:24.915688"
+      },
+      "dom_url": "https://mail.google.com/mail/u/0/#scheduled",
+      "dom_markers": {
+        "inbox_word": true,
+        "compose_word": true,
+        "search_mail_word": true,
+        "signin_word": false,
+        "row_count": 79
+      },
+      "screenshot": "/home/phuc/projects/solace-browser/artifacts/gmail-live-map-scheduled.png"
+    },
+    {
+      "name": "all-mail",
+      "target": "https://mail.google.com/mail/u/0/#all",
+      "navigate": {
+        "success": true,
+        "url": "https://mail.google.com/mail/u/0/#all",
+        "status": null,
+        "timestamp": "2026-02-24T17:20:25.525347"
+      },
+      "status_url": "https://mail.google.com/mail/u/0/#all",
+      "status_mode": "headed",
+      "eval": {
+        "success": true,
+        "result": {
+          "title": "All Mail - phuc@phuc.net - phuc.net Mail",
+          "href": "https://mail.google.com/mail/u/0/#all",
+          "nav_items": [
+            {
+              "text": "Inbox",
+              "href": "https://mail.google.com/mail/u/0/#inbox"
+            },
+            {
+              "text": "Starred",
+              "href": "https://mail.google.com/mail/u/0/#starred"
+            },
+            {
+              "text": "Snoozed",
+              "href": "https://mail.google.com/mail/u/0/#snoozed"
+            },
+            {
+              "text": "Sent",
+              "href": "https://mail.google.com/mail/u/0/#sent"
+            },
+            {
+              "text": "Drafts",
+              "href": "https://mail.google.com/mail/u/0/#drafts"
+            },
+            {
+              "text": "Applicants",
+              "href": "https://mail.google.com/mail/u/0/#label/Applicants"
+            },
+            {
+              "text": "Interview",
+              "href": "https://mail.google.com/mail/u/0/#label/Interview"
+            },
+            {
+              "text": "KEEP",
+              "href": "https://mail.google.com/mail/u/0/#label/KEEP"
+            },
+            {
+              "text": "Stats for your post \"The Most Important Skill Fathers Must Teach in th\u2026\" - Here's how your post has performed since it was published.\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad",
+              "href": null
+            },
+            {
+              "text": "The Most Important Skill Fathers Must Teach in the AI Age - This me and Tyson, learning how to use claude code, to build pzip.net.Thanks for reading! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Shareable assets for: The Most Important Skill Fathers Must Teach in th\u2026 - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox IF theory - Hi Pleroma / Daniya, Happy to hear from you! Glad you want to engage. I am in the middle of very existing hackathon where I am upgrading stillwater to be the first ever FDA Part 11 Compliant AI system.",
+              "href": null
+            },
+            {
+              "text": "Inbox Security alert - A new sign-in on Linux phuc@phuc.net We noticed a new sign-in to your Google Account on a Linux device. If this was you, you don't need to do anything. If not, we'll help you secure your",
+              "href": null
+            },
+            {
+              "text": "Inbox Reminder: Save 25% This Summer - Book by March 1 for stays May 21\u2013September 7 \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c Omni Hotels",
+              "href": null
+            },
+            {
+              "text": "Inbox Winter Felt Long\u2026 Let\u2019s Welcome Spring with Vibrant Holi Celebrations! - Spring is almost here. Celebrate with colors, music, food, and festive fun!!! Diwali Feast Box is available from (2).png click here to unsubscribe. \u200b",
+              "href": null
+            },
+            {
+              "text": "Inbox Refine which tags you follow on DEV - Hey Phuc Truong! We want to help you make the most out of DEV. Take a moment to refine your tags by visiting our tags page. Browse through the topics to find what interests you most. Remember, you can",
+              "href": null
+            },
+            {
+              "text": "Inbox How to Save the Media - A new book about putting people above platforms \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Upcoming Application Deadline: Gust Mission Control - Hi Phuc, Looking for guidance, growth and funding opportunities for Phuc Labs, Inc.? Gust's Mission Control program is an equity-free virtual acceleration platform tailored for startups from the",
+              "href": null
+            },
+            {
+              "text": "Inbox Show up when it matters most with up to $1500 in Ads credit - Get in front of new customers when they search for your business. Reminder: Unlock your special offer of up to $1500 in Google Ads credit.* Claim your offer Reminder: Unlock your special offer of up to",
+              "href": null
+            },
+            {
+              "text": "Inbox Zoom Invitation from Wellie Chao - Hi there, Wellie Chao (wchao@chaofolk.com) is inviting you to join a group chat on Zoom. Please click the link to view invitation. Invitation link expires in 30 days. By accepting the invitation, you",
+              "href": null
+            },
+            {
+              "text": "Inbox DEV + Google AI - Thanks for being part of the DEV Community! We know that it can be exhausting to keep up with the latest and greatest AI developments. Where does one even start? We're thrilled to have teamed up",
+              "href": null
+            },
+            {
+              "text": "Inbox Stats for your post \"The Most Important Skill Fathers Must Teach in th\u2026\" - Here's how your post has performed since it was published. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox All Shanti Location Closed Today Due to Storm - Our Dorchester, Roslindale and Roxbury locations are closed due to the storm. Stay safe. We'll see you tomorrow. Facebook Instagram Shanti 1111 Dorchester Avenue Boston, MA 02125 (617) 929-3900 +1",
+              "href": null
+            },
+            {
+              "text": "Inbox Register: 2026 tax changes event - Don't miss our online event, happening on February 25 \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Hi, Phuc Your Exclusive Reward is Here! Just for You - Don't Miss: 10$ Off Deal! Hi Phuc! View Your Account JOIN OUR TEXT CLUB Sign up for our text club and get $10 off your order of $40 or more. See website for more details. DOWNLOAD PEPE'S",
+              "href": null
+            },
+            {
+              "text": "Inbox Phuc-Travis IntroSuggested reply - Hi Phuc, Following up on our LinkedIn discussion via email. Do you have time Tuesday for the 20 minute video call? Thanks, Travis McQueenSuggested reply",
+              "href": null
+            },
+            {
+              "text": "Inbox [Action Required] Failed Payment - Dear phuc@phuc.net, We noticed that your recent payment attempt was unsuccessful. To avoid any interruptions to your account, please log in to api.together.ai and update your payment method as soon as",
+              "href": null
+            },
+            {
+              "text": "Inbox [Action Required] Authenticate your Payment Method - Dear phuc@phuc.net, We noticed that your recent payment attempt could not be completed due to additional authentication requirements from your payment method provider. To finish processing your payment",
+              "href": null
+            },
+            {
+              "text": "Inbox Stats for your post \"What if AI believed in God?\" - Here's how your post has performed since it was published. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Welcome to DEV! - Hey Phuc Truong! Welcome to DEV! We're excited to have you join our community. We'd love to get to know you better. Feel free to stop by our welcome thread and leave a quick comment about",
+              "href": null
+            },
+            {
+              "text": "Inbox The Most Important Skill Fathers Must Teach in the AI Age - This me and Tyson, learning how to use claude code, to build pzip.net.Thanks for reading! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Shareable assets for: The Most Important Skill Fathers Must Teach in th\u2026 - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Where did you go, Phuc? - Your AAA membership has expired, but it's not too late. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox 50% off one full-price item! You Earned This Coupon... - Save on your faves online or in store. \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c",
+              "href": null
+            },
+            {
+              "text": "Inbox Your Newton Store Has Yellow-Tag Sale Prices - Don't Miss Out! - Handpicked deals, just for you. \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c",
+              "href": null
+            },
+            {
+              "text": "Inbox You just got a badge - Congratulations, Phuc Truong! You received the Writing Debut badge! Awarded for writing and sharing your first DEV post! Continue sharing your work to earn the 4 Week Writing Streak Badge. Check out",
+              "href": null
+            },
+            {
+              "text": "Inbox Email Confirmation - To confirm your email, enter the code provided in the app. \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b",
+              "href": null
+            },
+            {
+              "text": "Inbox What if AI believed in God? - Thought Experiment: If \u201cGod Is Real,\u201d Can We Convince AI \u2014 and What Happens Next? **Author:** Phuc Vinh Truong **Frame:** Universal Computer / Information-Lifecycle Physics \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Shareable assets for: What if AI believed in God? - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Phuc Truong, confirm your DEV Community account - Welcome Phuc Truong! You can confirm your account email through the link below: Confirm my account",
+              "href": null
+            },
+            {
+              "text": "Inbox A new secret key has been created for your Stripe account - A new secret key has been created for your account. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Your Stripe verification link - Use this link to create a new API key \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox \u201cConspiracy theories are the true Great American Art Form\u201d - In this edition of the Weekender: navigating Shakespearean traffic, ranking conspiracy theories, and a post-apocalyptic short story \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Stripe - -- Sherri Yun Cheung Cell: 617-291-8138",
+              "href": null
+            },
+            {
+              "text": "Inbox PZIP - Hey there, I saw your launch on Product Hunt, congrats! I left you an upvote. I was wondering if you'd consider also launching on TinyLaunch. We've been getting some traffic recently. It only",
+              "href": null
+            },
+            {
+              "text": "Inbox [PyPI] Trusted Publisher for project stillwater can be made more secure - A Trusted Publisher for project stillwater was just used from a CI/CD job configured with a GitHub environment. The environment used was: pypi. Since the Trusted Publisher is configured to allow any",
+              "href": null
+            },
+            {
+              "text": "InboxKEEP PYPI KEY - Don't forget it. -phuc",
+              "href": null
+            },
+            {
+              "text": "Inbox [PyPI] Two-factor method added - Someone, perhaps you, has added a TOTP two-factor authentication method to your PyPI account phucnet. If you did not make this change, you can email admin@pypi.org to communicate with the PyPI",
+              "href": null
+            },
+            {
+              "text": "Inbox [PyPI] Recovery code use notification - A recovery code for your PyPI account phucnet has been used. If you did not make this change, you can email admin@pypi.org to communicate with the PyPI administrators.",
+              "href": null
+            },
+            {
+              "text": "Inbox [PyPI] Recovery codes generation notification - New recovery codes for your PyPI account phucnet have been generated. If you did not make this change, you can email admin@pypi.org to communicate with the PyPI administrators.",
+              "href": null
+            },
+            {
+              "text": "Inbox [PyPI] Email verification - Someone, perhaps you, has added this email address ( phuc@phuc.net ) to their PyPI account. If you wish to proceed with this request, click this link to verify your email address. This link will expire",
+              "href": null
+            },
+            {
+              "text": "Inbox Stats for your post \"How Humans Outsource their Minds\" - Here's how your post has performed since it was published. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Stats for your post \"Happy Year of the Horse/AGI\" - Here's how your post has performed since it was published. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox People you know are on Substack - It's easy to find your friends and see what they are reading and sharing. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox New in Claude Code: Sonnet 4.6, desktop app upgrades, and more - Get even more out of Claude Code with these updates.\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f Claude Code Here's what's new We just released Claude Sonnet 4.6, our most capable Sonnet",
+              "href": null
+            },
+            {
+              "text": "Inbox Growth tip: Share summaries and snippets on social media - Growth tip: Share a post snippet on social media Congrats on publishing your first post, Phuc! It's time to share it. Here are a few things you can do to promote your work. Tweet a thread with your",
+              "href": null
+            },
+            {
+              "text": "Inbox $212.50 payment to Anthropic, PBC was unsuccessful again - We weren't able to charge the credit card you provided. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox $23.38 payment to Eleven Labs Inc. was unsuccessful - We weren't able to charge the credit card you provided. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox 738382 is your Substack verification code - Here's your verification code to sign in to Substack: 738382 This code will only be valid for the next 10 minutes. If the code does not work, you can use this login verification link: Verify email",
+              "href": null
+            },
+            {
+              "text": "Inbox Log in to Moltbook - Log in to Moltbook Click the button below to log in to your dashboard: Log In to Moltbook This link expires in 10 minutes. If you didn't request this, you can safely ignore this email.",
+              "href": null
+            },
+            {
+              "text": "Compose",
+              "href": null
+            }
+          ],
+          "markers": {
+            "has_compose": true,
+            "has_search": true,
+            "has_message_rows": 100
+          }
+        },
+        "timestamp": "2026-02-24T17:20:27.550750"
+      },
+      "dom_url": "https://mail.google.com/mail/u/0/#all",
+      "dom_markers": {
+        "inbox_word": true,
+        "compose_word": true,
+        "search_mail_word": true,
+        "signin_word": false,
+        "row_count": 100
+      },
+      "screenshot": "/home/phuc/projects/solace-browser/artifacts/gmail-live-map-all-mail.png"
+    },
+    {
+      "name": "spam",
+      "target": "https://mail.google.com/mail/u/0/#spam",
+      "navigate": {
+        "success": true,
+        "url": "https://mail.google.com/mail/u/0/#spam",
+        "status": null,
+        "timestamp": "2026-02-24T17:20:28.325820"
+      },
+      "status_url": "https://mail.google.com/mail/u/0/#spam",
+      "status_mode": "headed",
+      "eval": {
+        "success": true,
+        "result": {
+          "title": "Spam (45) - phuc@phuc.net - phuc.net Mail",
+          "href": "https://mail.google.com/mail/u/0/#spam",
+          "nav_items": [
+            {
+              "text": "Inbox",
+              "href": "https://mail.google.com/mail/u/0/#inbox"
+            },
+            {
+              "text": "Starred",
+              "href": "https://mail.google.com/mail/u/0/#starred"
+            },
+            {
+              "text": "Snoozed",
+              "href": "https://mail.google.com/mail/u/0/#snoozed"
+            },
+            {
+              "text": "Sent",
+              "href": "https://mail.google.com/mail/u/0/#sent"
+            },
+            {
+              "text": "Drafts",
+              "href": "https://mail.google.com/mail/u/0/#drafts"
+            },
+            {
+              "text": "Applicants",
+              "href": "https://mail.google.com/mail/u/0/#label/Applicants"
+            },
+            {
+              "text": "Interview",
+              "href": "https://mail.google.com/mail/u/0/#label/Interview"
+            },
+            {
+              "text": "KEEP",
+              "href": "https://mail.google.com/mail/u/0/#label/KEEP"
+            },
+            {
+              "text": "Stats for your post \"The Most Important Skill Fathers Must Teach in th\u2026\" - Here's how your post has performed since it was published.\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad",
+              "href": null
+            },
+            {
+              "text": "The Most Important Skill Fathers Must Teach in the AI Age - This me and Tyson, learning how to use claude code, to build pzip.net.Thanks for reading! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Shareable assets for: The Most Important Skill Fathers Must Teach in th\u2026 - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox IF theory - Hi Pleroma / Daniya, Happy to hear from you! Glad you want to engage. I am in the middle of very existing hackathon where I am upgrading stillwater to be the first ever FDA Part 11 Compliant AI system.",
+              "href": null
+            },
+            {
+              "text": "Inbox Security alert - A new sign-in on Linux phuc@phuc.net We noticed a new sign-in to your Google Account on a Linux device. If this was you, you don't need to do anything. If not, we'll help you secure your",
+              "href": null
+            },
+            {
+              "text": "Inbox Reminder: Save 25% This Summer - Book by March 1 for stays May 21\u2013September 7 \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c Omni Hotels",
+              "href": null
+            },
+            {
+              "text": "Inbox Winter Felt Long\u2026 Let\u2019s Welcome Spring with Vibrant Holi Celebrations! - Spring is almost here. Celebrate with colors, music, food, and festive fun!!! Diwali Feast Box is available from (2).png click here to unsubscribe. \u200b",
+              "href": null
+            },
+            {
+              "text": "Inbox Refine which tags you follow on DEV - Hey Phuc Truong! We want to help you make the most out of DEV. Take a moment to refine your tags by visiting our tags page. Browse through the topics to find what interests you most. Remember, you can",
+              "href": null
+            },
+            {
+              "text": "Inbox How to Save the Media - A new book about putting people above platforms \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Upcoming Application Deadline: Gust Mission Control - Hi Phuc, Looking for guidance, growth and funding opportunities for Phuc Labs, Inc.? Gust's Mission Control program is an equity-free virtual acceleration platform tailored for startups from the",
+              "href": null
+            },
+            {
+              "text": "Inbox Show up when it matters most with up to $1500 in Ads credit - Get in front of new customers when they search for your business. Reminder: Unlock your special offer of up to $1500 in Google Ads credit.* Claim your offer Reminder: Unlock your special offer of up to",
+              "href": null
+            },
+            {
+              "text": "Inbox Zoom Invitation from Wellie Chao - Hi there, Wellie Chao (wchao@chaofolk.com) is inviting you to join a group chat on Zoom. Please click the link to view invitation. Invitation link expires in 30 days. By accepting the invitation, you",
+              "href": null
+            },
+            {
+              "text": "Inbox DEV + Google AI - Thanks for being part of the DEV Community! We know that it can be exhausting to keep up with the latest and greatest AI developments. Where does one even start? We're thrilled to have teamed up",
+              "href": null
+            },
+            {
+              "text": "Inbox Stats for your post \"The Most Important Skill Fathers Must Teach in th\u2026\" - Here's how your post has performed since it was published. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox All Shanti Location Closed Today Due to Storm - Our Dorchester, Roslindale and Roxbury locations are closed due to the storm. Stay safe. We'll see you tomorrow. Facebook Instagram Shanti 1111 Dorchester Avenue Boston, MA 02125 (617) 929-3900 +1",
+              "href": null
+            },
+            {
+              "text": "Inbox Register: 2026 tax changes event - Don't miss our online event, happening on February 25 \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f \u034f \u200d\u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Hi, Phuc Your Exclusive Reward is Here! Just for You - Don't Miss: 10$ Off Deal! Hi Phuc! View Your Account JOIN OUR TEXT CLUB Sign up for our text club and get $10 off your order of $40 or more. See website for more details. DOWNLOAD PEPE'S",
+              "href": null
+            },
+            {
+              "text": "Inbox Phuc-Travis IntroSuggested reply - Hi Phuc, Following up on our LinkedIn discussion via email. Do you have time Tuesday for the 20 minute video call? Thanks, Travis McQueenSuggested reply",
+              "href": null
+            },
+            {
+              "text": "Inbox [Action Required] Failed Payment - Dear phuc@phuc.net, We noticed that your recent payment attempt was unsuccessful. To avoid any interruptions to your account, please log in to api.together.ai and update your payment method as soon as",
+              "href": null
+            },
+            {
+              "text": "Inbox [Action Required] Authenticate your Payment Method - Dear phuc@phuc.net, We noticed that your recent payment attempt could not be completed due to additional authentication requirements from your payment method provider. To finish processing your payment",
+              "href": null
+            },
+            {
+              "text": "Inbox Stats for your post \"What if AI believed in God?\" - Here's how your post has performed since it was published. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Welcome to DEV! - Hey Phuc Truong! Welcome to DEV! We're excited to have you join our community. We'd love to get to know you better. Feel free to stop by our welcome thread and leave a quick comment about",
+              "href": null
+            },
+            {
+              "text": "Inbox The Most Important Skill Fathers Must Teach in the AI Age - This me and Tyson, learning how to use claude code, to build pzip.net.Thanks for reading! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Shareable assets for: The Most Important Skill Fathers Must Teach in th\u2026 - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Where did you go, Phuc? - Your AAA membership has expired, but it's not too late. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox 50% off one full-price item! You Earned This Coupon... - Save on your faves online or in store. \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c",
+              "href": null
+            },
+            {
+              "text": "Inbox Your Newton Store Has Yellow-Tag Sale Prices - Don't Miss Out! - Handpicked deals, just for you. \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c",
+              "href": null
+            },
+            {
+              "text": "Inbox You just got a badge - Congratulations, Phuc Truong! You received the Writing Debut badge! Awarded for writing and sharing your first DEV post! Continue sharing your work to earn the 4 Week Writing Streak Badge. Check out",
+              "href": null
+            },
+            {
+              "text": "Inbox Email Confirmation - To confirm your email, enter the code provided in the app. \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b\u200d\u200e\u200f \u200c\u200b",
+              "href": null
+            },
+            {
+              "text": "Inbox What if AI believed in God? - Thought Experiment: If \u201cGod Is Real,\u201d Can We Convince AI \u2014 and What Happens Next? **Author:** Phuc Vinh Truong **Frame:** Universal Computer / Information-Lifecycle Physics \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Shareable assets for: What if AI believed in God? - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Phuc Truong, confirm your DEV Community account - Welcome Phuc Truong! You can confirm your account email through the link below: Confirm my account",
+              "href": null
+            },
+            {
+              "text": "Inbox A new secret key has been created for your Stripe account - A new secret key has been created for your account. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Your Stripe verification link - Use this link to create a new API key \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox \u201cConspiracy theories are the true Great American Art Form\u201d - In this edition of the Weekender: navigating Shakespearean traffic, ranking conspiracy theories, and a post-apocalyptic short story \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Stripe - -- Sherri Yun Cheung Cell: 617-291-8138",
+              "href": null
+            },
+            {
+              "text": "Inbox PZIP - Hey there, I saw your launch on Product Hunt, congrats! I left you an upvote. I was wondering if you'd consider also launching on TinyLaunch. We've been getting some traffic recently. It only",
+              "href": null
+            },
+            {
+              "text": "Inbox [PyPI] Trusted Publisher for project stillwater can be made more secure - A Trusted Publisher for project stillwater was just used from a CI/CD job configured with a GitHub environment. The environment used was: pypi. Since the Trusted Publisher is configured to allow any",
+              "href": null
+            },
+            {
+              "text": "InboxKEEP PYPI KEY - Don't forget it. -phuc",
+              "href": null
+            },
+            {
+              "text": "Inbox [PyPI] Two-factor method added - Someone, perhaps you, has added a TOTP two-factor authentication method to your PyPI account phucnet. If you did not make this change, you can email admin@pypi.org to communicate with the PyPI",
+              "href": null
+            },
+            {
+              "text": "Inbox [PyPI] Recovery code use notification - A recovery code for your PyPI account phucnet has been used. If you did not make this change, you can email admin@pypi.org to communicate with the PyPI administrators.",
+              "href": null
+            },
+            {
+              "text": "Inbox [PyPI] Recovery codes generation notification - New recovery codes for your PyPI account phucnet have been generated. If you did not make this change, you can email admin@pypi.org to communicate with the PyPI administrators.",
+              "href": null
+            },
+            {
+              "text": "Inbox [PyPI] Email verification - Someone, perhaps you, has added this email address ( phuc@phuc.net ) to their PyPI account. If you wish to proceed with this request, click this link to verify your email address. This link will expire",
+              "href": null
+            },
+            {
+              "text": "Inbox Stats for your post \"How Humans Outsource their Minds\" - Here's how your post has performed since it was published. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox Stats for your post \"Happy Year of the Horse/AGI\" - Here's how your post has performed since it was published. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox People you know are on Substack - It's easy to find your friends and see what they are reading and sharing. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox New in Claude Code: Sonnet 4.6, desktop app upgrades, and more - Get even more out of Claude Code with these updates.\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f\u034f Claude Code Here's what's new We just released Claude Sonnet 4.6, our most capable Sonnet",
+              "href": null
+            },
+            {
+              "text": "Inbox Growth tip: Share summaries and snippets on social media - Growth tip: Share a post snippet on social media Congrats on publishing your first post, Phuc! It's time to share it. Here are a few things you can do to promote your work. Tweet a thread with your",
+              "href": null
+            },
+            {
+              "text": "Inbox $212.50 payment to Anthropic, PBC was unsuccessful again - We weren't able to charge the credit card you provided. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox $23.38 payment to Eleven Labs Inc. was unsuccessful - We weren't able to charge the credit card you provided. \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Inbox 738382 is your Substack verification code - Here's your verification code to sign in to Substack: 738382 This code will only be valid for the next 10 minutes. If the code does not work, you can use this login verification link: Verify email",
+              "href": null
+            },
+            {
+              "text": "Inbox Log in to Moltbook - Log in to Moltbook Click the button below to log in to your dashboard: Log In to Moltbook This link expires in 10 minutes. If you didn't request this, you can safely ignore this email.",
+              "href": null
+            },
+            {
+              "text": "Roadside Essentials from AAA - AAA Trusted support for your journey, wherever you drive. You Qualify for a Courtesy Roadside Kit As a licensed driver residing in a participating region, you are eligible to receive a roadside support",
+              "href": null
+            },
+            {
+              "text": "Something to enjoy with your membership - Hey, did you get a chance to look over the draft agenda I sent? I was thinking we could move the project review to before lunch. That way we have the afternoon free for the brainstorming session. Also,",
+              "href": null
+            },
+            {
+              "text": "Membership update: now with a complimentary Keurig coffee machine - I wanted to follow up on the project timeline we discussed. The initial drafts should be ready by next Tuesday, so let's schedule a brief check-in for Monday afternoon. I'll bring the updated",
+              "href": null
+            },
+            {
+              "text": "A gift from Marriott to show our gratitude - I've been reviewing the notes from our last team sync. The presentation for the client is coming along, but we need to finalize the data slides by Wednesday. Could you send over the updated figures",
+              "href": null
+            },
+            {
+              "text": "Your gift from your recent Marriott visit - I reviewed the quarterly report you sent. The data looks consistent with our projections. We might need to adjust the timeline for the upcoming phase. The team meeting is set for Thursday at 10 AM.",
+              "href": null
+            },
+            {
+              "text": "Sharing a quick idea for Phuc.Net - Hi Phuc, I didn't want to be a stranger in your inbox, so I'll keep this brief. We've been helping teams explore where AI or custom software can remove manual work and speed up internal",
+              "href": null
+            },
+            {
+              "text": "Your 2026 Plan Changes + Ins. Kit Is Shipping Details - Yes, Tuesday still works for me, and I can keep it simple so we don't overpack the schedule. If you want my suggestion, let's start with the two items you said were most important, then decide",
+              "href": null
+            },
+            {
+              "text": "Compose",
+              "href": null
+            },
+            {
+              "text": "Not spam",
+              "href": null
+            },
+            {
+              "text": "Delete all spam messages now",
+              "href": null
+            }
+          ],
+          "markers": {
+            "has_compose": true,
+            "has_search": true,
+            "has_message_rows": 146
+          }
+        },
+        "timestamp": "2026-02-24T17:20:30.350680"
+      },
+      "dom_url": "https://mail.google.com/mail/u/0/#spam",
+      "dom_markers": {
+        "inbox_word": true,
+        "compose_word": true,
+        "search_mail_word": true,
+        "signin_word": false,
+        "row_count": 146
+      },
+      "screenshot": "/home/phuc/projects/solace-browser/artifacts/gmail-live-map-spam.png"
+    },
+    {
+      "name": "trash",
+      "target": "https://mail.google.com/mail/u/0/#trash",
+      "navigate": {
+        "success": true,
+        "url": "https://mail.google.com/mail/u/0/#trash",
+        "status": null,
+        "timestamp": "2026-02-24T17:20:31.387099"
+      },
+      "status_url": "https://mail.google.com/mail/u/0/#trash",
+      "status_mode": "headed",
+      "eval": {
+        "success": true,
+        "result": {
+          "title": "Trash - phuc@phuc.net - phuc.net Mail",
+          "href": "https://mail.google.com/mail/u/0/#trash",
+          "nav_items": [
+            {
+              "text": "Inbox",
+              "href": "https://mail.google.com/mail/u/0/#inbox"
+            },
+            {
+              "text": "Starred",
+              "href": "https://mail.google.com/mail/u/0/#starred"
+            },
+            {
+              "text": "Snoozed",
+              "href": "https://mail.google.com/mail/u/0/#snoozed"
+            },
+            {
+              "text": "Sent",
+              "href": "https://mail.google.com/mail/u/0/#sent"
+            },
+            {
+              "text": "Drafts",
+              "href": "https://mail.google.com/mail/u/0/#drafts"
+            },
+            {
+              "text": "Applicants",
+              "href": "https://mail.google.com/mail/u/0/#label/Applicants"
+            },
+            {
+              "text": "Interview",
+              "href": "https://mail.google.com/mail/u/0/#label/Interview"
+            },
+            {
+              "text": "KEEP",
+              "href": "https://mail.google.com/mail/u/0/#label/KEEP"
+            },
+            {
+              "text": "Stats for your post \"The Most Important Skill Fathers Must Teach in th\u2026\" - Here's how your post has performed since it was published.\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad\u034f \u00ad",
+              "href": null
+            },
+            {
+              "text": "The Most Important Skill Fathers Must Teach in the AI Age - This me and Tyson, learning how to use claude code, to build pzip.net.Thanks for reading! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Shareable assets for: The Most Important Skill Fathers Must Teach in th\u2026 - We've generated custom assets to help you promote your post on other social networks. Download your assets and share with a link to your post! \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f \u034f",
+              "href": null
+            },
+            {
+              "text": "Roadside Essentials from AAA - AAA Trusted support for your journey, wherever you drive. You Qualify for a Courtesy Roadside Kit As a licensed driver residing in a participating region, you are eligible to receive a roadside support",
+              "href": null
+            },
+            {
+              "text": "Something to enjoy with your membership - Hey, did you get a chance to look over the draft agenda I sent? I was thinking we could move the project review to before lunch. That way we have the afternoon free for the brainstorming session. Also,",
+              "href": null
+            },
+            {
+              "text": "Membership update: now with a complimentary Keurig coffee machine - I wanted to follow up on the project timeline we discussed. The initial drafts should be ready by next Tuesday, so let's schedule a brief check-in for Monday afternoon. I'll bring the updated",
+              "href": null
+            },
+            {
+              "text": "A gift from Marriott to show our gratitude - I've been reviewing the notes from our last team sync. The presentation for the client is coming along, but we need to finalize the data slides by Wednesday. Could you send over the updated figures",
+              "href": null
+            },
+            {
+              "text": "Your gift from your recent Marriott visit - I reviewed the quarterly report you sent. The data looks consistent with our projections. We might need to adjust the timeline for the upcoming phase. The team meeting is set for Thursday at 10 AM.",
+              "href": null
+            },
+            {
+              "text": "Sharing a quick idea for Phuc.Net - Hi Phuc, I didn't want to be a stranger in your inbox, so I'll keep this brief. We've been helping teams explore where AI or custom software can remove manual work and speed up internal",
+              "href": null
+            },
+            {
+              "text": "Your 2026 Plan Changes + Ins. Kit Is Shipping Details - Yes, Tuesday still works for me, and I can keep it simple so we don't overpack the schedule. If you want my suggestion, let's start with the two items you said were most important, then decide",
+              "href": null
+            },
+            {
+              "text": "Contract(s) via DocuSign \u2013 Please Review and Sign Contract - Bridget Davis (Treasurer) sent you a document to review and sign. REVIEW DOCUMENT Bridget Davis (Treasurer) Please review and provide your signature for the contract(s) included in this Docusign",
+              "href": null
+            },
+            {
+              "text": "Compose",
+              "href": null
+            },
+            {
+              "text": "Not spam",
+              "href": null
+            },
+            {
+              "text": "Delete all spam messages now",
+              "href": null
+            },
+            {
+              "text": "Empty Trash now",
+              "href": null
+            }
+          ],
+          "markers": {
+            "has_compose": true,
+            "has_search": true,
+            "has_message_rows": 103
+          }
+        },
+        "timestamp": "2026-02-24T17:20:33.412902"
+      },
+      "dom_url": "https://mail.google.com/mail/u/0/#trash",
+      "dom_markers": {
+        "inbox_word": true,
+        "compose_word": true,
+        "search_mail_word": true,
+        "signin_word": false,
+        "row_count": 103
+      },
+      "screenshot": "/home/phuc/projects/solace-browser/artifacts/gmail-live-map-trash.png"
+    }
+  ]
+}

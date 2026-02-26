@@ -1,0 +1,21 @@
+{
+  "id": "wave6-live-example-com-discover-home",
+  "oauth3_scopes": [
+    "wave6-live.example.com.read"
+  ],
+  "primewiki_ref": "data/default/primewiki/wave6-live.example.com/wave6-live-example-com-page-flow.prime-mermaid.md",
+  "site": "wave6-live.example.com",
+  "steps": [
+    {
+      "action": "navigate",
+      "step": 1,
+      "url": "https://wave6-live.example.com"
+    },
+    {
+      "action": "snapshot",
+      "step": 2,
+      "target": "home"
+    }
+  ],
+  "title": "Discover wave6-live.example.com homepage"
+}

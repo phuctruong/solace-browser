@@ -90,7 +90,7 @@ fi
 # Test 7: Recipe compilation
 echo -e "\nTest 7: Recipe Compilation..."
 if bash "$CLI_SCRIPT" compile "quick-test" > /dev/null 2>&1; then
-    if [[ -f "$PROJECT_ROOT/recipes/quick-test.recipe.json" ]]; then
+    if [[ -f "$PROJECT_ROOT/data/default/recipes/quick-test.recipe.json" ]]; then
         pass "Recipe file created"
     else
         fail "Recipe file not created"

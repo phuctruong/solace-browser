@@ -13,7 +13,7 @@ CLI_SCRIPT="$PROJECT_ROOT/solace-browser-cli-v2.sh"
 TEST_DIR="$PROJECT_ROOT/tests"
 ARTIFACTS_DIR="$PROJECT_ROOT/artifacts"
 EPISODES_DIR="$PROJECT_ROOT/episodes"
-RECIPES_DIR="$PROJECT_ROOT/recipes"
+RECIPES_DIR="$PROJECT_ROOT/data/default/recipes"
 LOGS_DIR="$PROJECT_ROOT/logs"
 
 # Colors

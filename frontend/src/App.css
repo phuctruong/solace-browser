@@ -1,0 +1,114 @@
+:root {
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  color: #0f172a;
+  background: radial-gradient(circle at 20% 10%, #fce7bf, #f8fafc 42%);
+}
+
+body {
+  margin: 0;
+}
+
+.layout {
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid #dbe4ef;
+  background: #ffffffc0;
+  backdrop-filter: blur(6px);
+}
+
+.brand {
+  font-weight: 700;
+  text-decoration: none;
+  color: #111827;
+}
+
+main {
+  padding: 20px;
+}
+
+.app-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.app-tile {
+  border: 1px solid #d5dbe3;
+  border-radius: 10px;
+  padding: 12px;
+  background: white;
+}
+
+.app-tile.locked {
+  opacity: 0.5;
+}
+
+.app-name {
+  border: none;
+  background: transparent;
+  display: flex;
+  gap: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.badge {
+  display: inline-block;
+  margin: 8px 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ecfeff;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  padding: 8px;
+}
+
+.modal {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  width: min(460px, 92vw);
+  background: #fff;
+  border: 1px solid #d5dbe3;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 10px 25px #00000022;
+}
+
+.modal textarea {
+  width: 100%;
+  min-height: 80px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.gallery img {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #d5dbe3;
+}

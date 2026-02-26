@@ -1,0 +1,21 @@
+{
+  "id": "mixedcase-example-com-discover-home",
+  "oauth3_scopes": [
+    "mixedcase.example.com.read"
+  ],
+  "primewiki_ref": "data/default/primewiki/mixedcase.example.com/mixedcase-example-com-page-flow.prime-mermaid.md",
+  "site": "mixedcase.example.com",
+  "steps": [
+    {
+      "action": "navigate",
+      "step": 1,
+      "url": "https://mixedcase.example.com"
+    },
+    {
+      "action": "snapshot",
+      "step": 2,
+      "target": "home"
+    }
+  ],
+  "title": "Discover mixedcase.example.com homepage"
+}

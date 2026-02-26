@@ -1,7 +1,7 @@
 """
 test_twin_sync.py
 ==================
-Derived from: diagrams/twin-sync-flow.md
+Derived from: data/default/diagrams/twin-sync-flow.md
 
 Tests the twin sync protocol:
   - Session state serialization (StateBundleLocal schema)
@@ -16,7 +16,7 @@ FSM states from LOCAL_WINS diagram:
   CONFLICT_DETECTED → COMPARE_VERSIONS → LOCAL_WINS_APPLY | MANUAL_MERGE_REQUIRED
 
 Run:
-    python -m pytest tests/test_diagrams/test_twin_sync.py -v
+    python -m pytest tests/test_data/default/diagrams/test_twin_sync.py -v
 """
 
 from __future__ import annotations

@@ -1,0 +1,21 @@
+{
+  "id": "ui-addsite-example-com-discover-home",
+  "oauth3_scopes": [
+    "ui-addsite.example.com.read"
+  ],
+  "primewiki_ref": "data/default/primewiki/ui-addsite.example.com/ui-addsite-example-com-page-flow.prime-mermaid.md",
+  "site": "ui-addsite.example.com",
+  "steps": [
+    {
+      "action": "navigate",
+      "step": 1,
+      "url": "https://ui-addsite.example.com"
+    },
+    {
+      "action": "snapshot",
+      "step": 2,
+      "target": "home"
+    }
+  ],
+  "title": "Discover ui-addsite.example.com homepage"
+}
