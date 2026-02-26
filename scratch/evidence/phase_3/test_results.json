@@ -1,0 +1,10 @@
+{
+  "phase": "3",
+  "suite": "store_integration",
+  "total": 10,
+  "passed": 10,
+  "failed": 0,
+  "errors": 0,
+  "pass_rate": 1.0,
+  "result": "pass"
+}

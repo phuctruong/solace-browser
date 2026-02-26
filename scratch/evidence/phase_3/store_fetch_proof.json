@@ -1,0 +1,12 @@
+{
+  "cache_hit": true,
+  "cache_path": "/home/phuc/projects/solace-browser/scratch/evidence/phase_3/store_cache/compose-email/1.2.0.json",
+  "cache_stats": {
+    "hit_rate": 1.0,
+    "hits": 1,
+    "misses": 0
+  },
+  "fetched_recipe_id": "compose-email",
+  "fetched_version": "1.2.0",
+  "listed_count": 1
+}
