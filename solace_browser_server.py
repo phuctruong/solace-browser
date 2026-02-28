@@ -107,12 +107,20 @@ except ImportError as e:
     logger_temp = logging.getLogger('solace-browser')
     logger_temp.warning(f"Could not import browser module: {e}")
 
-from competitive_features import (
-    load_proxy_config,
-    select_proxy,
-    solve_captcha,
-    webvoyager_score,
-)
+try:
+    from competitive_features import (
+        load_proxy_config,
+        select_proxy,
+        solve_captcha,
+        webvoyager_score,
+    )
+except ImportError as _cf_import_error:
+    logger_temp = logging.getLogger('solace-browser')
+    logger_temp.warning(f"competitive_features not available: {_cf_import_error}")
+    load_proxy_config = None
+    select_proxy = None
+    solve_captcha = None
+    webvoyager_score = None
 
 # Setup logging
 logging.basicConfig(
