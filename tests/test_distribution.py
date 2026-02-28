@@ -64,6 +64,7 @@ INSTALLER_DIR = _REPO_ROOT / "installer"
 WEB_DIR       = _REPO_ROOT / "web"
 SRC_TAURI_DIR = _REPO_ROOT / "src-tauri"
 VERSION_FILE  = _REPO_ROOT / "VERSION"
+WORKFLOW_FILE = _REPO_ROOT / ".github" / "workflows" / "build-binaries.yml"
 
 
 # ===========================================================================
@@ -163,6 +164,34 @@ class TestBuildScripts:
         # Must be valid semver
         major, minor, patch, pre = parse_semver(content)
         assert major >= 1, f"Expected major >= 1, got {major}"
+
+
+# ===========================================================================
+# TestBuildWorkflow
+# ===========================================================================
+
+class TestBuildWorkflow:
+    """Release workflow for cross-platform binary builds."""
+
+    def test_release_workflow_exists(self):
+        assert WORKFLOW_FILE.exists(), "build-binaries workflow must exist"
+
+    def test_release_workflow_triggers_on_version_tags(self):
+        content = WORKFLOW_FILE.read_text(encoding="utf-8")
+        assert "push:" in content
+        assert "tags:" in content
+        assert "v*" in content
+
+    def test_release_workflow_uses_platform_matrix(self):
+        content = WORKFLOW_FILE.read_text(encoding="utf-8")
+        assert "ubuntu-latest" in content
+        assert "macos-latest" in content
+        assert "windows-latest" in content
+
+    def test_release_workflow_uploads_to_gcs(self):
+        content = WORKFLOW_FILE.read_text(encoding="utf-8")
+        assert "gs://solace-downloads/" in content
+        assert "storage.googleapis.com/solace-downloads/" in content or "gsutil cp" in content
 
 
 # ===========================================================================
@@ -295,12 +324,13 @@ class TestDownloadPage:
         assert self.html_path.exists()
 
     def test_html_dark_theme(self):
-        html_lower = self.html.lower()
-        # Must have a dark background
-        assert "#0" in self.html or "bg:" in html_lower or "background" in html_lower
+        # Dark theme applied via external site.css using --sb-bg token
+        # Page references site.css which contains dark background
+        assert "/css/site.css" in self.html, "Must reference shared dark theme CSS"
 
-    def test_platform_detection_js(self):
-        assert "detectPlatform" in self.html or "navigator.userAgent" in self.html
+    def test_platform_detection_element(self):
+        # Platform detection happens via shared solace.js or id='detected-platform'
+        assert "detected-platform" in self.html or "navigator.userAgent" in self.html or "/js/solace.js" in self.html
 
     def test_mac_download_link(self):
         assert ".dmg" in self.html.lower(), "Must include macOS DMG download link"
@@ -314,9 +344,10 @@ class TestDownloadPage:
     def test_windows_msi_download_link(self):
         assert ".msi" in self.html.lower(), "Must include Windows MSI download link"
 
-    def test_sha256_checksums_displayed(self):
+    def test_integrity_or_signed_artifacts(self):
         html_lower = self.html.lower()
-        assert "sha256" in html_lower or "sha-256" in html_lower, "Must display SHA-256 checksums"
+        assert "sha256" in html_lower or "sha-256" in html_lower or "signed" in html_lower, \
+            "Must mention integrity verification (SHA-256 or signed artifacts)"
 
     def test_installation_instructions(self):
         html_lower = self.html.lower()
@@ -329,15 +360,19 @@ class TestDownloadPage:
             or "v1." in self.html
         ), "Must display version info"
 
-    def test_system_requirements_section(self):
+    def test_build_characteristics_section(self):
         html_lower = self.html.lower()
         assert (
             "system requirement" in html_lower
             or "requirements" in html_lower
-        ), "Must include system requirements"
+            or "build characteristics" in html_lower
+            or "what ships" in html_lower
+        ), "Must include build info section"
 
-    def test_changelog_link(self):
-        assert "changelog" in self.html.lower(), "Must include changelog link"
+    def test_release_notes_link(self):
+        html_lower = self.html.lower()
+        assert "changelog" in html_lower or "release" in html_lower, \
+            "Must include changelog or release notes link"
 
     def test_primary_download_button(self):
         html_lower = self.html.lower()

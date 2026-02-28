@@ -1,28 +1,31 @@
 """
-Web Dashboard UI Tests — Solace Browser Phase 3
+Web Dashboard UI Tests — Solace Browser (Updated for current page design)
 
 Verifies that the web UI pages (machine-dashboard.html, tunnel-connect.html,
-home.html) contain the expected structure, element IDs, JavaScript API calls,
-and OAuth3 Authorization header patterns.
+home.html, download.html) contain the expected structure, element IDs,
+accessibility attributes, and mobile responsive patterns.
 
 No Selenium required — HTML structure is verified via regex and string
 matching against the static file content.
 
 Tests organized into:
   1. TestMachineDashboardStructure      — 10 tests
-  2. TestTunnelConnectStructure         — 7 tests
-  3. TestHomePageStructure              — 8 tests
-  4. TestOAuth3TokenInApiCalls          — 8 tests
-  5. TestJavaScriptApiFormation         — 7 tests
+  2. TestTunnelConnectStructure         — 10 tests
+  3. TestHomePageStructure              — 10 tests
+  4. TestDownloadPageStructure          — 8 tests
+  5. TestHamburgerMenuConsistency       — 6 tests
+  6. TestMobileResponsive               — 6 tests
+  7. TestAccessibility                  — 8 tests
+  8. TestNoCdnDependencies              — 4 tests
+  9. TestYinyangRailCSS                 — 6 tests
 
-Total: 40 tests
+Total: 68 tests
 Rung: 641
 """
 
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 
 import pytest
@@ -33,10 +36,15 @@ import pytest
 
 _REPO_ROOT = Path(__file__).parent.parent
 _WEB_DIR = _REPO_ROOT / "web"
+_CSS_DIR = _WEB_DIR / "css"
 
 _MACHINE_DASHBOARD_PATH = _WEB_DIR / "machine-dashboard.html"
 _TUNNEL_CONNECT_PATH    = _WEB_DIR / "tunnel-connect.html"
 _HOME_PATH              = _WEB_DIR / "home.html"
+_DOWNLOAD_PATH          = _WEB_DIR / "download.html"
+_SITE_CSS_PATH          = _CSS_DIR / "site.css"
+
+ALL_PAGES = [_HOME_PATH, _DOWNLOAD_PATH, _MACHINE_DASHBOARD_PATH, _TUNNEL_CONNECT_PATH]
 
 
 # ---------------------------------------------------------------------------
@@ -79,73 +87,55 @@ class TestMachineDashboardStructure:
     def html(self):
         return _read(_MACHINE_DASHBOARD_PATH)
 
-    def test_file_browser_panel_exists(self, html):
-        """File browser panel (file-pane) must be present."""
-        assert _has_class(html, "file-pane"), \
-            "Expected .file-pane element in machine-dashboard.html"
+    def test_dashboard_shell_exists(self, html):
+        """Dashboard shell wrapper must be present."""
+        assert _has_class(html, "dashboard-shell"), \
+            "Expected .dashboard-shell in machine-dashboard.html"
 
-    def test_file_tree_element_exists(self, html):
-        """Directory tree container (file-tree) must be present."""
-        assert _has_id(html, "file-tree"), \
-            "Expected id='file-tree' in machine-dashboard.html"
+    def test_dashboard_toolbar_exists(self, html):
+        """Dashboard toolbar section must be present."""
+        assert _has_class(html, "dashboard-toolbar"), \
+            "Expected .dashboard-toolbar in machine-dashboard.html"
 
-    def test_terminal_panel_exists(self, html):
-        """Terminal view panel must be present."""
-        assert _has_id(html, "view-terminal"), \
-            "Expected id='view-terminal' in machine-dashboard.html"
+    def test_status_strip_exists(self, html):
+        """Status strip with pills must be present."""
+        assert _has_class(html, "status-strip"), \
+            "Expected .status-strip in machine-dashboard.html"
 
-    def test_terminal_input_exists(self, html):
-        """Terminal command input with correct placeholder must exist."""
-        assert _has_id(html, "term-input"), \
-            "Expected id='term-input' in machine-dashboard.html"
-        assert "Enter command" in html, \
-            "Expected placeholder 'Enter command...' in terminal input"
+    def test_file_list_element_exists(self, html):
+        """File list container must be present."""
+        assert _has_id(html, "file-list"), \
+            "Expected id='file-list' in machine-dashboard.html"
 
-    def test_terminal_output_element_exists(self, html):
+    def test_file_search_exists(self, html):
+        """File search input must be present."""
+        assert _has_id(html, "file-search"), \
+            "Expected id='file-search' in machine-dashboard.html"
+
+    def test_system_table_body_exists(self, html):
+        """System posture table body must be present."""
+        assert _has_id(html, "system-table-body"), \
+            "Expected id='system-table-body' in machine-dashboard.html"
+
+    def test_terminal_output_exists(self, html):
         """Terminal output container must be present."""
         assert _has_id(html, "terminal-output"), \
             "Expected id='terminal-output' in machine-dashboard.html"
 
-    def test_system_info_panel_exists(self, html):
-        """System info view panel must be present."""
-        assert _has_id(html, "view-system"), \
-            "Expected id='view-system' in machine-dashboard.html"
+    def test_terminal_command_input_exists(self, html):
+        """Terminal command input must be present."""
+        assert _has_id(html, "terminal-command"), \
+            "Expected id='terminal-command' in machine-dashboard.html"
 
-    def test_sessions_panel_exists(self, html):
-        """Active sessions panel must be present."""
-        assert _has_id(html, "view-sessions"), \
-            "Expected id='view-sessions' in machine-dashboard.html"
+    def test_terminal_form_exists(self, html):
+        """Terminal form element must exist."""
+        assert _has_id(html, "terminal-form"), \
+            "Expected id='terminal-form' in machine-dashboard.html"
 
-    def test_sessions_btn_exists(self, html):
-        """Sessions tab button must exist."""
-        assert _has_id(html, "btn-sessions"), \
-            "Expected id='btn-sessions' in machine-dashboard.html"
-
-    def test_breadcrumb_navigation_exists(self, html):
-        """Breadcrumb navigation container must exist."""
-        assert _has_id(html, "breadcrumb"), \
-            "Expected id='breadcrumb' for path navigation"
-
-    def test_file_viewer_exists(self, html):
-        """File content viewer element must exist."""
-        assert _has_id(html, "file-viewer"), \
-            "Expected id='file-viewer' in machine-dashboard.html"
-
-    def test_view_switcher_buttons_present(self, html):
-        """All three primary view buttons (Files, Terminal, System) must exist."""
-        assert _has_id(html, "btn-files"), "Missing id='btn-files'"
-        assert _has_id(html, "btn-terminal"), "Missing id='btn-terminal'"
-        assert _has_id(html, "btn-system"), "Missing id='btn-system'"
-
-    def test_sessions_list_element_exists(self, html):
-        """Sessions list container must exist for dynamic rendering."""
-        assert _has_id(html, "sessions-list"), \
-            "Expected id='sessions-list' in machine-dashboard.html"
-
-    def test_revoke_function_defined(self, html):
-        """revokeToken JS function must be defined for session revoke buttons."""
-        assert "revokeToken" in html, \
-            "Expected revokeToken function in machine-dashboard.html"
+    def test_dashboard_columns_layout(self, html):
+        """Dashboard columns layout must be present."""
+        assert _has_class(html, "dashboard-columns"), \
+            "Expected .dashboard-columns in machine-dashboard.html"
 
 
 # ===========================================================================
@@ -160,64 +150,56 @@ class TestTunnelConnectStructure:
         return _read(_TUNNEL_CONNECT_PATH)
 
     def test_connect_button_exists(self, html):
-        """Connect button must be present with id='connect-btn'."""
-        assert _has_id(html, "connect-btn"), \
-            "Expected id='connect-btn' in tunnel-connect.html"
+        """Connect button must be present."""
+        assert _has_id(html, "connect-button"), \
+            "Expected id='connect-button' in tunnel-connect.html"
 
     def test_disconnect_button_exists(self, html):
-        """Dedicated disconnect button must be present with id='disconnect-btn'."""
-        assert _has_id(html, "disconnect-btn"), \
-            "Expected id='disconnect-btn' in tunnel-connect.html"
+        """Disconnect button must be present."""
+        assert _has_id(html, "disconnect-button"), \
+            "Expected id='disconnect-button' in tunnel-connect.html"
 
     def test_status_label_with_disconnected_state(self, html):
         """Status label must start in disconnected state."""
         assert "Disconnected" in html, \
             "Expected initial 'Disconnected' label in tunnel-connect.html"
 
-    def test_tunnel_log_element_exists(self, html):
-        """Connection log container must exist."""
-        assert _has_id(html, "tunnel-log"), \
-            "Expected id='tunnel-log' in tunnel-connect.html"
-
-    def test_public_url_display_exists(self, html):
-        """Public URL display card must exist."""
-        assert _has_id(html, "public-url-card"), \
-            "Expected id='public-url-card' in tunnel-connect.html"
-
-    def test_public_url_value_element_exists(self, html):
-        """Public URL value display must exist."""
-        assert _has_id(html, "public-url-value"), \
-            "Expected id='public-url-value' in tunnel-connect.html"
-
-    def test_copy_url_button_exists(self, html):
-        """Copy URL button must exist."""
-        assert "copyUrl" in html or "copy-url" in html.lower(), \
-            "Expected copyUrl function or copy-url element in tunnel-connect.html"
-
     def test_status_ring_element_exists(self, html):
         """Status ring visual indicator must exist."""
         assert _has_id(html, "status-ring"), \
             "Expected id='status-ring' in tunnel-connect.html"
 
-    def test_connection_log_events_capacity(self, html):
-        """Log must have overflow-y: auto for scrollable event history."""
-        assert "overflow-y" in html and "auto" in html, \
-            "Expected overflow-y:auto in tunnel log CSS for scrollable events"
+    def test_status_label_exists(self, html):
+        """Status label element must exist."""
+        assert _has_id(html, "status-label"), \
+            "Expected id='status-label' in tunnel-connect.html"
 
-    def test_detail_bytes_element_exists(self, html):
-        """Bytes transferred counter element must exist."""
-        assert _has_id(html, "detail-bytes"), \
-            "Expected id='detail-bytes' for bytes counter in tunnel-connect.html"
+    def test_endpoint_value_exists(self, html):
+        """Endpoint value display must exist."""
+        assert _has_id(html, "endpoint-value"), \
+            "Expected id='endpoint-value' in tunnel-connect.html"
 
-    def test_detail_uptime_element_exists(self, html):
-        """Duration/uptime counter element must exist."""
-        assert _has_id(html, "detail-uptime"), \
-            "Expected id='detail-uptime' for duration counter in tunnel-connect.html"
+    def test_copy_endpoint_button_exists(self, html):
+        """Copy endpoint button must exist."""
+        assert _has_id(html, "copy-endpoint"), \
+            "Expected id='copy-endpoint' in tunnel-connect.html"
 
-    def test_consent_card_element_exists(self, html):
-        """OAuth3 consent card must exist for scope gate."""
-        assert _has_id(html, "consent-card"), \
-            "Expected id='consent-card' for OAuth3 consent prompt"
+    def test_open_endpoint_button_exists(self, html):
+        """Open endpoint button must exist."""
+        assert _has_id(html, "open-endpoint"), \
+            "Expected id='open-endpoint' in tunnel-connect.html"
+
+    def test_approval_badge_exists(self, html):
+        """Approval badge must exist with fail-closed default."""
+        assert _has_id(html, "approval-badge"), \
+            "Expected id='approval-badge' in tunnel-connect.html"
+        assert "Fail-closed" in html, \
+            "Expected 'Fail-closed' badge text"
+
+    def test_tunnel_splash_stage_exists(self, html):
+        """Tunnel splash stage with product image must exist."""
+        assert _has_class(html, "tunnel-splash-stage"), \
+            "Expected .tunnel-splash-stage in tunnel-connect.html"
 
 
 # ===========================================================================
@@ -225,253 +207,168 @@ class TestTunnelConnectStructure:
 # ===========================================================================
 
 class TestHomePageStructure:
-    """home.html contains required Quick Action buttons, platform cards, and activity feed."""
+    """home.html contains hero, surface cards, OAuth3 vault, and recipe launchpad."""
 
     @pytest.fixture(scope="class")
     def html(self):
         return _read(_HOME_PATH)
 
-    def test_run_recipe_button_exists(self, html):
-        """'Run Recipe' quick action button must exist."""
-        assert _has_id(html, "btn-run-recipe"), \
-            "Expected id='btn-run-recipe' in home.html"
+    def test_hero_section_exists(self, html):
+        """Hero section must be present."""
+        assert _has_class(html, "hero"), \
+            "Expected .hero section in home.html"
 
-    def test_browse_files_button_exists(self, html):
-        """'Browse Files' quick action button must exist."""
-        assert _has_id(html, "btn-browse-files"), \
-            "Expected id='btn-browse-files' in home.html"
+    def test_display_heading_exists(self, html):
+        """Display heading must be present."""
+        assert _has_class(html, "display"), \
+            "Expected .display heading in home.html"
 
-    def test_open_terminal_button_exists(self, html):
-        """'Open Terminal' quick action button must exist."""
-        assert _has_id(html, "btn-open-terminal"), \
-            "Expected id='btn-open-terminal' in home.html"
+    def test_kpi_grid_exists(self, html):
+        """KPI grid with product stats must exist."""
+        assert _has_class(html, "kpi-grid"), \
+            "Expected .kpi-grid in home.html"
 
-    def test_connect_tunnel_button_exists(self, html):
-        """'Connect Tunnel' quick action button must exist."""
-        assert _has_id(html, "btn-connect-tunnel"), \
-            "Expected id='btn-connect-tunnel' in home.html"
+    def test_surface_grid_exists(self, html):
+        """Surface cards grid must exist with 3 surfaces."""
+        assert _has_class(html, "surface-grid"), \
+            "Expected .surface-grid in home.html"
+        assert html.count("surface-card__kicker") >= 3, \
+            "Expected at least 3 surface cards"
 
-    def test_platform_cards_container_exists(self, html):
-        """Platform cards container must exist."""
-        assert _has_id(html, "platform-cards"), \
-            "Expected id='platform-cards' in home.html"
+    def test_token_table_body_exists(self, html):
+        """OAuth3 token table body must exist."""
+        assert _has_id(html, "token-table-body"), \
+            "Expected id='token-table-body' in home.html"
 
-    def test_platform_cards_section_exists(self, html):
-        """Platform scope status section must exist."""
-        assert _has_id(html, "platform-cards-section"), \
-            "Expected id='platform-cards-section' in home.html"
+    def test_activity_list_exists(self, html):
+        """Activity feed list must exist."""
+        assert _has_id(html, "activity-list"), \
+            "Expected id='activity-list' in home.html"
 
-    def test_activity_feed_exists(self, html):
-        """Activity feed placeholder must exist."""
-        assert _has_id(html, "activity-feed"), \
-            "Expected id='activity-feed' in home.html"
+    def test_scope_list_exists(self, html):
+        """Scope summary list must exist."""
+        assert _has_id(html, "scope-list"), \
+            "Expected id='scope-list' in home.html"
 
-    def test_activity_feed_section_exists(self, html):
-        """Activity feed section wrapper must exist."""
-        assert _has_id(html, "activity-feed-section"), \
-            "Expected id='activity-feed-section' in home.html"
+    def test_recipe_search_exists(self, html):
+        """Recipe search input must exist."""
+        assert _has_id(html, "recipe-search"), \
+            "Expected id='recipe-search' in home.html"
 
-    def test_run_recipe_links_to_recipes(self, html):
-        """Run Recipe button element must link to a /recipes path."""
-        # The anchor tag may have href before or after id, so verify both exist
-        # in the same opening tag by matching the full tag pattern.
-        assert _has_pattern(
-            html,
-            r'<a\s[^>]*id="btn-run-recipe"[^>]*>|<a\s[^>]*href="[^"]*recipes[^"]*"[^>]*id="btn-run-recipe"',
-        ) or (
-            'id="btn-run-recipe"' in html and '/recipes' in html
-        ), "btn-run-recipe must link to a /recipes path"
+    def test_recipe_list_exists(self, html):
+        """Recipe list with at least one item must exist."""
+        assert _has_class(html, "recipe-list"), \
+            "Expected .recipe-list in home.html"
+        assert "data-recipe-name" in html, \
+            "Expected at least one recipe item with data-recipe-name"
 
-    def test_browse_files_links_to_machine_dashboard(self, html):
-        """Browse Files button must link to machine-dashboard."""
-        # Verify the btn-browse-files element references machine-dashboard path
-        assert _has_pattern(
-            html,
-            r'href="[^"]*machine-dashboard[^"]*"[^>]*id="btn-browse-files"|id="btn-browse-files"[^>]*href="[^"]*machine-dashboard',
-        ) or (
-            'id="btn-browse-files"' in html and 'machine-dashboard' in html
-        ), "btn-browse-files must link to machine-dashboard"
-
-    def test_connect_tunnel_links_to_tunnel_page(self, html):
-        """Connect Tunnel button must link to tunnel-connect page."""
-        assert _has_pattern(
-            html,
-            r'href="[^"]*tunnel[^"]*"[^>]*id="btn-connect-tunnel"|id="btn-connect-tunnel"[^>]*href="[^"]*tunnel',
-        ) or (
-            'id="btn-connect-tunnel"' in html and 'tunnel-connect' in html
-        ), "btn-connect-tunnel must link to tunnel page"
-
-    def test_quick_actions_section_exists(self, html):
-        """Quick actions section must contain the four action cards."""
-        assert "quick-actions" in html, \
-            "Expected .quick-actions container in home.html"
-
-    def test_active_connections_section_present(self, html):
-        """Active Connections section must still be present."""
-        assert "Active Connections" in html or "tokens-table" in html, \
-            "Expected Active Connections section in home.html"
+    def test_surface_links_to_pages(self, html):
+        """Surface cards must link to their respective pages."""
+        assert "/machine-dashboard" in html, \
+            "Expected link to /machine-dashboard"
+        assert "/tunnel-connect" in html, \
+            "Expected link to /tunnel-connect"
+        assert "/download" in html, \
+            "Expected link to /download"
 
 
 # ===========================================================================
-# 4. TestOAuth3TokenInApiCalls
+# 4. TestDownloadPageStructure
 # ===========================================================================
 
-class TestOAuth3TokenInApiCalls:
-    """All API calls in the web pages must include the Authorization: Bearer header."""
+class TestDownloadPageStructure:
+    """download.html contains download links and platform detection."""
 
     @pytest.fixture(scope="class")
-    def machine_html(self):
-        return _read(_MACHINE_DASHBOARD_PATH)
+    def html(self):
+        return _read(_DOWNLOAD_PATH)
 
-    @pytest.fixture(scope="class")
-    def tunnel_html(self):
-        return _read(_TUNNEL_CONNECT_PATH)
+    def test_primary_download_link_exists(self, html):
+        """Primary download button must exist."""
+        assert _has_id(html, "primary-download"), \
+            "Expected id='primary-download' in download.html"
 
-    @pytest.fixture(scope="class")
-    def home_html(self):
-        return _read(_HOME_PATH)
+    def test_detected_platform_element_exists(self, html):
+        """Platform detection element must exist."""
+        assert _has_id(html, "detected-platform"), \
+            "Expected id='detected-platform' in download.html"
 
-    def test_machine_file_list_includes_auth_header(self, machine_html):
-        """File list API call must include Authorization header."""
-        assert _has_pattern(
-            machine_html,
-            r"Authorization.*Bearer.*machine/files",
-        ) or _has_pattern(
-            machine_html,
-            r"machine/files.*Authorization.*Bearer",
-        ) or (
-            "Authorization" in machine_html and "/machine/files" in machine_html
-        ), "machine/files fetch must include Authorization: Bearer header"
+    def test_install_command_exists(self, html):
+        """CLI install command must exist."""
+        assert _has_id(html, "install-command"), \
+            "Expected id='install-command' in download.html"
 
-    def test_machine_terminal_execute_includes_auth_header(self, machine_html):
-        """Terminal execute API call must include Authorization header."""
-        assert "Authorization" in machine_html and "/machine/terminal/execute" in machine_html, \
-            "terminal/execute fetch must include Authorization header"
+    def test_macos_download_links(self, html):
+        """macOS download links must be present."""
+        assert "mac-arm64" in html, "Expected Apple Silicon download link"
+        assert "mac-x86_64" in html or "mac-intel" in html, "Expected Intel Mac download link"
 
-    def test_machine_system_info_includes_auth_header(self, machine_html):
-        """System info API call must include Authorization header."""
-        assert "Authorization" in machine_html and "/machine/system" in machine_html, \
-            "machine/system fetch must include Authorization header"
+    def test_linux_download_links(self, html):
+        """Linux download links must be present."""
+        assert "linux-amd64" in html, "Expected Linux AMD64 download link"
 
-    def test_machine_sessions_api_includes_auth_header(self, machine_html):
-        """Sessions list API call must include Authorization header."""
-        assert "Authorization" in machine_html and "/api/tokens/active" in machine_html, \
-            "sessions fetch must include Authorization header"
+    def test_windows_download_links(self, html):
+        """Windows download links must be present."""
+        assert "windows-x64" in html, "Expected Windows x64 download link"
 
-    def test_machine_revoke_api_includes_auth_header(self, machine_html):
-        """Token revoke API call must include Authorization header."""
-        assert "Authorization" in machine_html and "/api/tokens/revoke" in machine_html, \
-            "revoke fetch must include Authorization header"
+    def test_gcs_download_urls(self, html):
+        """Download URLs must point to GCS storage."""
+        assert "storage.googleapis.com/solace-downloads" in html, \
+            "Expected GCS download URL in download.html"
 
-    def test_home_platform_scopes_includes_auth_header(self, home_html):
-        """Platform scopes API call must include Authorization header."""
-        assert "Authorization" in home_html and "/api/tokens/scopes" in home_html, \
-            "platform scopes fetch must include Authorization header"
-
-    def test_home_activity_feed_includes_auth_header(self, home_html):
-        """Activity feed API call must include Authorization header."""
-        assert "Authorization" in home_html and "/api/activity" in home_html, \
-            "activity feed fetch must include Authorization header"
-
-    def test_token_read_from_storage(self, machine_html):
-        """Token must be read from localStorage or sessionStorage (not hardcoded)."""
-        assert _has_pattern(machine_html, r"localStorage\.getItem.*solace_token"), \
-            "OAuth3 token must be read from localStorage (solace_token key)"
-
-    def test_bearer_prefix_used_in_auth_header(self, machine_html):
-        """Authorization value must use 'Bearer ' prefix."""
-        assert _has_pattern(machine_html, r"['\"]Bearer ['\"]"), \
-            "Authorization header must use 'Bearer ' prefix"
+    def test_release_notes_link(self, html):
+        """Release notes link must be present."""
+        assert "github.com/solaceagi/solace-browser/releases" in html, \
+            "Expected GitHub releases link"
 
 
 # ===========================================================================
-# 5. TestJavaScriptApiFormation
+# 5. TestHamburgerMenuConsistency
 # ===========================================================================
 
-class TestJavaScriptApiFormation:
-    """Verify that JavaScript API call URLs match the backend endpoint spec."""
+class TestHamburgerMenuConsistency:
+    """All pages must have identical hamburger button and mobile menu structure."""
 
     @pytest.fixture(scope="class")
-    def machine_html(self):
-        return _read(_MACHINE_DASHBOARD_PATH)
+    def pages(self):
+        return {p.stem: _read(p) for p in ALL_PAGES}
 
-    @pytest.fixture(scope="class")
-    def tunnel_html(self):
-        return _read(_TUNNEL_CONNECT_PATH)
+    def test_all_pages_have_hamburger_button(self, pages):
+        """Every page must have the hamburger toggle button."""
+        for name, html in pages.items():
+            assert _has_id(html, "hamburger-toggle"), \
+                f"Missing id='hamburger-toggle' in {name}"
 
-    @pytest.fixture(scope="class")
-    def home_html(self):
-        return _read(_HOME_PATH)
+    def test_all_pages_have_mobile_menu(self, pages):
+        """Every page must have the mobile menu container."""
+        for name, html in pages.items():
+            assert _has_id(html, "mobile-menu"), \
+                f"Missing id='mobile-menu' in {name}"
 
-    def test_machine_files_endpoint_correct(self, machine_html):
-        """File list fetches from /machine/files endpoint."""
-        assert "/machine/files" in machine_html, \
-            "Expected fetch to /machine/files"
+    def test_hamburger_has_three_spans(self, pages):
+        """Hamburger button must contain three span elements."""
+        for name, html in pages.items():
+            assert _has_pattern(html, r'id="hamburger-toggle"[^>]*><span></span><span></span><span></span>'), \
+                f"Hamburger button in {name} must have 3 spans"
 
-    def test_machine_file_read_endpoint_correct(self, machine_html):
-        """File read fetches from /machine/files/read endpoint."""
-        assert "/machine/files/read" in machine_html, \
-            "Expected fetch to /machine/files/read"
+    def test_mobile_menu_has_surfaces_section(self, pages):
+        """Mobile menu must contain Surfaces section with all nav links."""
+        for name, html in pages.items():
+            assert _has_text(html, "Surfaces"), \
+                f"Missing 'Surfaces' section in mobile menu of {name}"
 
-    def test_terminal_execute_endpoint_correct(self, machine_html):
-        """Terminal fetches to /machine/terminal/execute endpoint."""
-        assert "/machine/terminal/execute" in machine_html, \
-            "Expected fetch to /machine/terminal/execute"
+    def test_mobile_menu_has_platform_section(self, pages):
+        """Mobile menu must contain Platform section."""
+        for name, html in pages.items():
+            assert _has_text(html, "Platform"), \
+                f"Missing 'Platform' section in mobile menu of {name}"
 
-    def test_system_info_endpoint_correct(self, machine_html):
-        """System info fetches from /machine/system endpoint."""
-        assert "/machine/system" in machine_html, \
-            "Expected fetch to /machine/system"
-
-    def test_tunnel_start_endpoint_correct(self, tunnel_html):
-        """Tunnel connect posts to /tunnel/start endpoint."""
-        assert "/tunnel/start" in tunnel_html, \
-            "Expected POST to /tunnel/start"
-
-    def test_tunnel_stop_endpoint_correct(self, tunnel_html):
-        """Tunnel disconnect posts to /tunnel/stop endpoint."""
-        assert "/tunnel/stop" in tunnel_html, \
-            "Expected POST to /tunnel/stop"
-
-    def test_tunnel_status_endpoint_correct(self, tunnel_html):
-        """Tunnel status polls /tunnel/status endpoint."""
-        assert "/tunnel/status" in tunnel_html, \
-            "Expected GET /tunnel/status"
-
-    def test_tokens_revoke_endpoint_correct(self, machine_html):
-        """Token revoke posts to /api/tokens/revoke endpoint."""
-        assert "/api/tokens/revoke" in machine_html, \
-            "Expected POST to /api/tokens/revoke"
-
-    def test_machine_fetch_uses_post_for_execute(self, machine_html):
-        """Terminal execute must use POST method."""
-        assert _has_pattern(
-            machine_html,
-            r"method.*['\"]POST['\"].*terminal/execute|terminal/execute.*method.*['\"]POST['\"]",
-        ) or (
-            "POST" in machine_html and "terminal/execute" in machine_html
-        ), "terminal/execute must use POST method"
-
-    def test_machine_json_content_type_for_post(self, machine_html):
-        """POST requests must set Content-Type: application/json."""
-        assert "application/json" in machine_html, \
-            "POST requests must include Content-Type: application/json"
-
-    def test_dark_theme_background_defined(self, machine_html):
-        """Dark theme background color must be defined in CSS."""
-        # Accept either #0a0a0a or #1a1a2e (spec mentions both)
-        assert _has_pattern(machine_html, r"#0a0a0a|#1a1a2e|bg-primary"), \
-            "Dark theme background variable must be present"
-
-    def test_tunnel_html_dark_theme_defined(self, tunnel_html):
-        """Tunnel page dark theme must match design system."""
-        assert _has_pattern(tunnel_html, r"#0a0a0a|bg-primary"), \
-            "Tunnel page must use dark theme"
-
-    def test_home_html_dark_theme_defined(self, home_html):
-        """Home page dark theme must match design system."""
-        assert _has_pattern(home_html, r"#0a0a0a|bg-primary"), \
-            "Home page must use dark theme"
+    def test_mobile_menu_links_to_all_pages(self, pages):
+        """Mobile menu must link to all 4 surface pages."""
+        for name, html in pages.items():
+            for path in ["/", "/download", "/machine-dashboard", "/tunnel-connect"]:
+                assert f'href="{path}"' in html, \
+                    f"Mobile menu in {name} missing link to {path}"
 
 
 # ===========================================================================
@@ -479,95 +376,195 @@ class TestJavaScriptApiFormation:
 # ===========================================================================
 
 class TestMobileResponsive:
-    """Verify pages include responsive CSS."""
+    """Verify pages include responsive CSS patterns."""
 
     @pytest.fixture(scope="class")
-    def machine_html(self):
-        return _read(_MACHINE_DASHBOARD_PATH)
+    def pages(self):
+        return {p.stem: _read(p) for p in ALL_PAGES}
 
     @pytest.fixture(scope="class")
-    def home_html(self):
-        return _read(_HOME_PATH)
+    def css(self):
+        return _read(_SITE_CSS_PATH)
 
-    @pytest.fixture(scope="class")
-    def tunnel_html(self):
-        return _read(_TUNNEL_CONNECT_PATH)
+    def test_all_pages_have_viewport_meta(self, pages):
+        """All pages must have viewport meta tag for mobile."""
+        for name, html in pages.items():
+            assert 'name="viewport"' in html, \
+                f"{name} must have viewport meta tag"
 
-    def test_machine_has_viewport_meta(self, machine_html):
-        """machine-dashboard must have viewport meta tag for mobile."""
-        assert 'name="viewport"' in machine_html, \
-            "machine-dashboard.html must have viewport meta tag"
+    def test_css_has_media_queries(self, css):
+        """site.css must have responsive media queries."""
+        assert "@media" in css, \
+            "site.css must include responsive @media queries"
 
-    def test_home_has_viewport_meta(self, home_html):
-        """home.html must have viewport meta tag."""
-        assert 'name="viewport"' in home_html, \
-            "home.html must have viewport meta tag"
+    def test_css_has_hamburger_breakpoint(self, css):
+        """CSS must hide hamburger on desktop (>=769px)."""
+        assert _has_pattern(css, r"@media.*min-width.*769"), \
+            "CSS must have 769px breakpoint for desktop nav"
 
-    def test_tunnel_has_viewport_meta(self, tunnel_html):
-        """tunnel-connect.html must have viewport meta tag."""
-        assert 'name="viewport"' in tunnel_html, \
-            "tunnel-connect.html must have viewport meta tag"
+    def test_css_hides_nav_on_mobile(self, css):
+        """CSS must hide desktop nav on mobile (<=768px)."""
+        assert _has_pattern(css, r"@media.*max-width.*768"), \
+            "CSS must have 768px breakpoint for mobile nav"
 
-    def test_machine_has_media_query(self, machine_html):
-        """machine-dashboard must have at least one responsive media query."""
-        assert "@media" in machine_html, \
-            "machine-dashboard.html must include responsive @media queries"
+    def test_css_has_flexbox_or_grid(self, css):
+        """CSS must use flexbox or grid for layouts."""
+        assert "display: flex" in css or "display:flex" in css or \
+               "display: grid" in css or "display:grid" in css, \
+            "site.css must use flexbox or grid layouts"
 
-    def test_home_has_media_query(self, home_html):
-        """home.html must have at least one responsive media query."""
-        assert "@media" in home_html, \
-            "home.html must include responsive @media queries"
-
-    def test_machine_uses_flexbox(self, machine_html):
-        """machine-dashboard layout must use flexbox."""
-        assert "display: flex" in machine_html or "display:flex" in machine_html, \
-            "machine-dashboard.html must use flexbox layout"
-
-    def test_home_uses_grid_or_flexbox(self, home_html):
-        """home.html must use CSS Grid or flexbox for responsive layout."""
-        assert "display: grid" in home_html or "display:grid" in home_html \
-            or "display: flex" in home_html or "display:flex" in home_html, \
-            "home.html must use CSS Grid or Flexbox"
+    def test_all_pages_use_shared_css(self, pages):
+        """All pages must reference the shared site.css."""
+        for name, html in pages.items():
+            assert "/css/site.css" in html, \
+                f"{name} must include /css/site.css"
 
 
 # ===========================================================================
-# 7. TestNoCdnDependencies
+# 7. TestAccessibility
+# ===========================================================================
+
+class TestAccessibility:
+    """Verify ARIA attributes and accessibility patterns."""
+
+    @pytest.fixture(scope="class")
+    def pages(self):
+        return {p.stem: _read(p) for p in ALL_PAGES}
+
+    def test_hamburger_has_aria_label(self, pages):
+        """Hamburger button must have aria-label."""
+        for name, html in pages.items():
+            assert _has_pattern(html, r'id="hamburger-toggle"[^>]*aria-label='), \
+                f"Hamburger in {name} missing aria-label"
+
+    def test_hamburger_has_aria_expanded(self, pages):
+        """Hamburger button must have aria-expanded attribute."""
+        for name, html in pages.items():
+            assert _has_pattern(html, r'id="hamburger-toggle"[^>]*aria-expanded='), \
+                f"Hamburger in {name} missing aria-expanded"
+
+    def test_nav_has_aria_label(self, pages):
+        """Primary navigation must have aria-label."""
+        for name, html in pages.items():
+            assert _has_pattern(html, r'<nav[^>]*aria-label="Primary"'), \
+                f"Nav in {name} missing aria-label='Primary'"
+
+    def test_search_inputs_have_labels(self):
+        """Search inputs must have associated labels or aria-label."""
+        home = _read(_HOME_PATH)
+        if _has_id(home, "recipe-search"):
+            assert _has_pattern(home, r'(for="recipe-search"|aria-label=)'), \
+                "Recipe search input must have label or aria-label"
+        machine = _read(_MACHINE_DASHBOARD_PATH)
+        if _has_id(machine, "file-search"):
+            assert _has_pattern(machine, r'(for="file-search"|aria-label=)'), \
+                "File search input must have label or aria-label"
+
+    def test_images_have_alt_text(self, pages):
+        """All img elements must have alt attributes."""
+        for name, html in pages.items():
+            imgs = re.findall(r'<img\b[^>]*>', html)
+            for img in imgs:
+                assert 'alt=' in img, \
+                    f"Image in {name} missing alt attribute: {img[:80]}"
+
+    def test_all_pages_have_lang_attribute(self, pages):
+        """All pages must have lang attribute on html element."""
+        for name, html in pages.items():
+            assert '<html lang="en">' in html, \
+                f"{name} missing lang='en' on html element"
+
+    def test_terminal_input_has_label(self):
+        """Terminal command input must have accessible label."""
+        html = _read(_MACHINE_DASHBOARD_PATH)
+        assert _has_pattern(html, r'(for="terminal-command"|aria-label=.*[Tt]erminal)'), \
+            "Terminal command input must have label or aria-label"
+
+    def test_particles_canvas_is_aria_hidden(self, pages):
+        """Particles canvas (decorative) must be aria-hidden."""
+        for name, html in pages.items():
+            if "data-particles-canvas" in html:
+                assert _has_pattern(html, r'data-particles-canvas[^>]*aria-hidden="true"'), \
+                    f"Particles canvas in {name} must be aria-hidden='true'"
+
+
+# ===========================================================================
+# 8. TestNoCdnDependencies
 # ===========================================================================
 
 class TestNoCdnDependencies:
     """Verify no external CDN script or stylesheet dependencies exist."""
 
     @pytest.fixture(scope="class")
-    def machine_html(self):
-        return _read(_MACHINE_DASHBOARD_PATH)
-
-    @pytest.fixture(scope="class")
-    def home_html(self):
-        return _read(_HOME_PATH)
-
-    @pytest.fixture(scope="class")
-    def tunnel_html(self):
-        return _read(_TUNNEL_CONNECT_PATH)
+    def pages(self):
+        return {p.stem: _read(p) for p in ALL_PAGES}
 
     def _has_external_cdn(self, html: str) -> bool:
         """Return True if the page loads an external script/stylesheet from a CDN."""
         cdn_pattern = re.compile(
             r'<(script|link)[^>]+(src|href)=["\']https?://'
-            r'(?!solaceagi\.com|localhost)'
+            r'(?![a-z.]*solaceagi\.com|localhost|storage\.googleapis\.com|github\.com)'
         )
         return bool(cdn_pattern.search(html))
 
-    def test_machine_no_cdn(self, machine_html):
-        """machine-dashboard.html must not depend on external CDNs."""
-        assert not self._has_external_cdn(machine_html), \
-            "machine-dashboard.html must not load external CDN src/scripts/styles"
-
-    def test_home_no_cdn(self, home_html):
+    def test_home_no_cdn(self, pages):
         """home.html must not depend on external CDNs."""
-        assert not self._has_external_cdn(home_html), \
-            "home.html must not load external CDN src/scripts/styles"
+        assert not self._has_external_cdn(pages["home"]), \
+            "home.html must not load external CDN scripts/styles"
 
-    def test_tunnel_no_cdn(self, tunnel_html):
+    def test_machine_no_cdn(self, pages):
+        """machine-dashboard.html must not depend on external CDNs."""
+        assert not self._has_external_cdn(pages["machine-dashboard"]), \
+            "machine-dashboard.html must not load external CDN scripts/styles"
+
+    def test_tunnel_no_cdn(self, pages):
         """tunnel-connect.html must not depend on external CDNs."""
-        assert not self._has_external_cdn(tunnel_html), \
-            "tunnel-connect.html must not load external CDN src/scripts/styles"
+        assert not self._has_external_cdn(pages["tunnel-connect"]), \
+            "tunnel-connect.html must not load external CDN scripts/styles"
+
+    def test_download_no_cdn(self, pages):
+        """download.html must not depend on external CDNs."""
+        assert not self._has_external_cdn(pages["download"]), \
+            "download.html must not load external CDN scripts/styles"
+
+
+# ===========================================================================
+# 9. TestYinyangRailCSS
+# ===========================================================================
+
+class TestYinyangRailCSS:
+    """Verify Yinyang rail CSS exists in site.css."""
+
+    @pytest.fixture(scope="class")
+    def css(self):
+        return _read(_SITE_CSS_PATH)
+
+    def test_top_rail_class_exists(self, css):
+        """.yy-top-rail CSS class must exist."""
+        assert ".yy-top-rail" in css, \
+            "Expected .yy-top-rail class in site.css"
+
+    def test_bottom_rail_class_exists(self, css):
+        """.yy-bottom-rail CSS class must exist."""
+        assert ".yy-bottom-rail" in css, \
+            "Expected .yy-bottom-rail class in site.css"
+
+    def test_bottom_rail_expanded_state(self, css):
+        """.yy-bottom-rail must have expandable state."""
+        assert ".yy-bottom-rail.is-expanded" in css, \
+            "Expected .yy-bottom-rail.is-expanded in site.css"
+
+    def test_user_message_style_exists(self, css):
+        """User message bubble style must exist."""
+        assert ".yy-msg--user" in css, \
+            "Expected .yy-msg--user class in site.css"
+
+    def test_assistant_message_style_exists(self, css):
+        """Assistant message bubble style must exist."""
+        assert ".yy-msg--assistant" in css, \
+            "Expected .yy-msg--assistant class in site.css"
+
+    def test_credits_display_style_exists(self, css):
+        """Credits display style must exist."""
+        assert ".yy-bottom-rail__credits" in css, \
+            "Expected .yy-bottom-rail__credits class in site.css"

@@ -18,7 +18,7 @@ def test_home_page_served() -> None:
     client = TestClient(ui_server.app)
     resp = client.get("/")
     assert resp.status_code == 200
-    assert "Your AI Agent Portal" in resp.text
+    assert "Solace Browser" in resp.text
 
 
 def test_vendors_endpoint_returns_rows() -> None:

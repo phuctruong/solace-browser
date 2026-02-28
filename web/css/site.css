@@ -22,6 +22,9 @@
   --sb-font-display: "Manrope", "Segoe UI", sans-serif;
   --sb-font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
   --sb-font-mono: "IBM Plex Mono", "SFMono-Regular", monospace;
+  --sb-on-accent: #081019;
+  --sb-accent-warm: #ffbf69;
+  --sb-terminal-text: #95ffcf;
 }
 
 * { box-sizing: border-box; }
@@ -32,7 +35,7 @@ body {
   background:
     radial-gradient(circle at top right, rgba(255, 107, 53, 0.16), transparent 28%),
     radial-gradient(circle at top left, rgba(100, 196, 255, 0.12), transparent 24%),
-    linear-gradient(180deg, #081019 0%, #070d16 100%);
+    linear-gradient(180deg, var(--sb-bg) 0%, #070d16 100%);
   color: var(--sb-text);
   font: 400 16px/1.6 var(--sb-font-body);
 }
@@ -118,8 +121,8 @@ main { display: block; }
   display: grid;
   place-items: center;
   border-radius: 14px;
-  color: #081019;
-  background: linear-gradient(135deg, var(--sb-accent), #ffbf69);
+  color: var(--sb-on-accent);
+  background: linear-gradient(135deg, var(--sb-accent), var(--sb-accent-warm));
   box-shadow: 0 8px 24px rgba(255, 107, 53, 0.28);
 }
 .site-brand__icon--image {
@@ -158,7 +161,7 @@ main { display: block; }
 }
 .nav-link--accent:hover,
 .nav-link--accent:focus-visible {
-  color: #081019;
+  color: var(--sb-on-accent);
   background: var(--sb-accent);
 }
 
@@ -204,8 +207,8 @@ main { display: block; }
 .btn:hover,
 .btn:focus-visible { transform: translateY(-1px); outline: none; }
 .btn-primary {
-  background: linear-gradient(135deg, var(--sb-accent), #ffbf69);
-  color: #081019;
+  background: linear-gradient(135deg, var(--sb-accent), var(--sb-accent-warm));
+  color: var(--sb-on-accent);
   border-color: transparent;
   box-shadow: 0 12px 30px rgba(255, 107, 53, 0.28);
 }
@@ -416,7 +419,7 @@ main { display: block; }
   border-radius: var(--sb-radius-md);
   border: 1px solid rgba(70, 217, 167, 0.18);
   background: rgba(3, 8, 14, 0.82);
-  color: #95ffcf;
+  color: var(--sb-terminal-text);
   font: 500 0.92rem/1.5 var(--sb-font-mono);
   overflow: auto;
 }
@@ -788,7 +791,7 @@ main { display: block; }
   border-radius: 999px;
   border: none;
   background: var(--sb-accent);
-  color: #081019;
+  color: var(--sb-on-accent);
   font-weight: 700;
   font-size: 0.82rem;
 }
