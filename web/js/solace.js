@@ -11,6 +11,7 @@
 
   function init() {
     markActiveNav();
+    initHamburger();
     initFooterYear();
     initRevealObserver();
     initParticles();
@@ -32,6 +33,42 @@
     document.querySelectorAll("[data-nav-path]").forEach((link) => {
       if (link.getAttribute("data-nav-path") === current) {
         link.classList.add("is-active");
+      }
+    });
+  }
+
+  function initHamburger() {
+    const toggle = document.querySelector("#hamburger-toggle");
+    const menu = document.querySelector("#mobile-menu");
+    if (!toggle || !menu) {
+      return;
+    }
+
+    function closeMenu() {
+      menu.classList.remove("is-active");
+      toggle.classList.remove("is-active");
+      toggle.setAttribute("aria-expanded", "false");
+    }
+
+    toggle.addEventListener("click", function () {
+      const willOpen = !menu.classList.contains("is-active");
+      menu.classList.toggle("is-active", willOpen);
+      toggle.classList.toggle("is-active", willOpen);
+      toggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!(event.target instanceof Node)) {
+        return;
+      }
+      if (!toggle.contains(event.target) && !menu.contains(event.target)) {
+        closeMenu();
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closeMenu();
       }
     });
   }
