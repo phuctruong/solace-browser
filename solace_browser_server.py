@@ -134,6 +134,24 @@ except ImportError as _cf_import_error:
     solve_captcha = None
     webvoyager_score = None
 
+try:
+    from llm import get_llm_client
+    LLM_AVAILABLE = True
+except ImportError as _llm_import_error:
+    logger_temp = logging.getLogger("solace-browser")
+    logger_temp.warning(f"LLM module not available: {_llm_import_error}")
+    LLM_AVAILABLE = False
+
+try:
+    from yinyang.top_rail import inject_top_rail
+    from yinyang.bottom_rail import inject_bottom_rail
+    from yinyang.ws_bridge import YinyangWSBridge
+    YINYANG_AVAILABLE = True
+except ImportError as _yy_import_error:
+    logger_temp = logging.getLogger("solace-browser")
+    logger_temp.warning(f"Yinyang module not available: {_yy_import_error}")
+    YINYANG_AVAILABLE = False
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -200,6 +218,28 @@ def build_arg_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help='Heartbeat interval in seconds (default: env / disabled)',
+    )
+    parser.add_argument(
+        '--llm-backend',
+        choices=['claude_code', 'together', 'none'],
+        default=os.getenv('SOLACE_LLM_BACKEND', 'none'),
+        help='LLM backend for recipe generation (default: none)',
+    )
+    parser.add_argument(
+        '--yinyang',
+        action='store_true',
+        default=True,
+        help='Enable Yinyang chat rails (default: True)',
+    )
+    parser.add_argument(
+        '--no-yinyang',
+        action='store_true',
+        help='Disable Yinyang chat rails',
+    )
+    parser.add_argument(
+        '--yinyang-cloud-url',
+        default=os.getenv('SOLACEAGI_URL', 'https://www.solaceagi.com'),
+        help='Solace AGI cloud URL for Yinyang relay',
     )
     parser.add_argument(
         '--version',
@@ -489,16 +529,27 @@ class SolaceBrowser:
         logger.info(f"Starting Solace Browser (headless={self.headless})")
 
         playwright = await async_playwright().start()
+        launch_args = [
+            '--disable-blink-features=AutomationControlled',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--use-gl=swiftshader',
+        ]
+        if not self.headless:
+            launch_args.extend([
+                '--start-maximized',
+                '--disable-features=UseSkiaRenderer',
+            ])
+
         self.browser = await playwright.chromium.launch(
             headless=self.headless,
-            args=[
-                '--disable-blink-features=AutomationControlled',
-                '--disable-dev-shm-usage',
-            ]
+            args=launch_args,
         )
 
         # Create initial page with optional session state
         context_options = {}
+        if not self.headless:
+            context_options['no_viewport'] = True
 
         # Load saved session if it exists
         if Path(self.session_file).exists():
@@ -1503,11 +1554,13 @@ class SolaceBrowserServer:
         browser: SolaceBrowser,
         port: int = 9222,
         sync_config: Optional[Any] = None,
+        yinyang_bridge: Optional[Any] = None,
     ):
         self.browser = browser
         self.port = port
         self.app = web.Application()
         self.proxy_config: dict[str, Any] = {"proxies": []}
+        self._yinyang_bridge = yinyang_bridge
 
         # Sync client (browser <-> cloud)
         self._sync_config: Optional[Any] = None
@@ -1706,6 +1759,11 @@ class SolaceBrowserServer:
             self.app.router.add_post('/api/sync/push', self._handle_sync_push)
             self.app.router.add_get('/api/sync/status', self._handle_sync_status)
             self.app.router.add_post('/api/sync/pull', self._handle_sync_pull)
+
+        # Yinyang WebSocket bridge
+        if YINYANG_AVAILABLE and self._yinyang_bridge is not None:
+            self.app.router.add_get('/ws/yinyang', self._yinyang_bridge.handle_ws)
+            logger.info("[Yinyang] WebSocket bridge registered at /ws/yinyang")
 
         # Debug UI routes
         if self.browser.debug_ui:
@@ -2903,11 +2961,28 @@ async def main():
     )
     await browser.start()
 
+    # Initialize LLM client
+    llm_client = None
+    if LLM_AVAILABLE:
+        llm_client = get_llm_client(args.llm_backend)
+        logger.info(f"[LLM] Backend: {args.llm_backend}")
+    else:
+        logger.warning("[LLM] No LLM module available")
+
+    # Initialize Yinyang bridge
+    yy_bridge = None
+    if YINYANG_AVAILABLE and not getattr(args, 'no_yinyang', False):
+        yy_bridge = YinyangWSBridge(
+            cloud_url=getattr(args, 'yinyang_cloud_url', 'https://www.solaceagi.com'),
+            llm_client=llm_client,
+        )
+
     # Create and start server
     server = SolaceBrowserServer(
         browser,
         port=args.port,
         sync_config=build_sync_config(args),
+        yinyang_bridge=yy_bridge,
     )
 
     try:
