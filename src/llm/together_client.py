@@ -38,6 +38,7 @@ class TogetherClient:
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {self.api_key}",
+                    "User-Agent": "solace-browser/1.0",
                 },
                 method="POST",
             )
