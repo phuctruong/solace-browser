@@ -1,3 +1,7 @@
+# Historical Architecture Notes
+
+This file contains historical design material. The active browser runtime and API are defined by `solace_browser_server.py`, `README.md`, and `docs/BROWSER_API.md`.
+
 # Solace Browser: OAuth3 Multi-Site Homepage + Webservice Architecture
 **Version:** 1.0.0
 **Rung Target:** 641 (deterministic, testable, well-scoped design)
@@ -1801,14 +1805,14 @@ class DiscordOAuthHandler:
 **Risk Level:** HIGH
 
 **Mitigation:**
-1. **Persistent context enabled**: PersistentBrowserServer uses `context=await browser.new_context(storage_state=session_file)`
+1. **Persistent context enabled**: `solace_browser_server.py` restores the Playwright context from `artifacts/solace_session.json` when present
 2. **Autosave every 30s**: Background task saves session state to disk
 3. **Encrypt sensitive data**: OAuth tokens stored separately in encrypted `artifacts/oauth3_tokens.json`
 4. **Checksum validation**: `artifacts/oauth3_tokens.json` includes SHA256 checksum; corruption detected on load
 5. **Manual save endpoint**: POST /api/save-session forces immediate save
 6. **Recovery procedure**: If corruption detected, prompt user to re-login
 
-**Implementation detail:** PersistentBrowserServer.__init__ has `autosave_seconds` parameter; defaults to 30
+**Implementation detail:** `solace_browser_server.py` owns session restore/save behavior and `POST /api/save-session` forces an immediate checkpoint
 
 ---
 

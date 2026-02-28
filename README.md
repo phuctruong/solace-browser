@@ -1,334 +1,142 @@
 # Solace Browser
 
-**Deterministic web automation. Recipe flywheel economics. Cloud twin at [solaceagi.com](https://solaceagi.com).**
+Solace Browser is a local-first browser automation runtime with a single supported HTTP control API, OAuth3-aware execution surfaces, and a static site for product/distribution pages.
 
-> "The best way to prove OAuth3 is possible is to build it." — Phuc Truong
+## Runtime Surfaces
+- Browser control server: `solace_browser_server.py`
+- Static site: `web/` served by `src/scripts/start-local-webserver.sh`
+- Browser-site shared assets:
+  - `web/css/site.css`
+  - `web/js/solace.js`
 
-Solace Browser is an open-source browser automation framework that proves **OAuth3 (scoped, revocable, auditable tokens) is the right way to delegate AI agency**.
+## One Supported Browser API
+The only supported browser-control webservice is `solace_browser_server.py`.
 
-## Quick Start
+Start it:
+```bash
+python3 solace_browser_server.py --port 9222 --head
+```
 
-### Installation
+Base URL:
+```text
+http://127.0.0.1:9222
+```
+
+Core endpoints:
+- `GET /api/health`
+- `GET /api/status`
+- `POST /api/navigate`
+- `POST /api/click`
+- `POST /api/fill`
+- `POST /api/evaluate`
+- `POST /api/screenshot`
+- `POST /api/snapshot`
+- `GET /api/aria-snapshot`
+- `GET /api/dom-snapshot`
+- `GET /api/page-snapshot`
+
+Important:
+- `POST /api/evaluate` expects the JSON key `expression`
+- `browser/http_server.py` and `browser/handlers.py` are not part of the supported runtime anymore
+
+Full contract:
+- [docs/BROWSER_API.md](/home/phuc/projects/solace-browser/docs/BROWSER_API.md)
+
+## Local Web Site
+Start the browser-site local server:
+```bash
+./src/scripts/start-local-webserver.sh 8791
+```
+
+Routes:
+- `/`
+- `/download`
+- `/machine-dashboard`
+- `/tunnel-connect`
+
+Legacy `.html` URLs redirect to slug URLs.
+
+## Install
 ```bash
 git clone https://github.com/phuc-labs/solace-browser.git
 cd solace-browser
-pip install -r requirements.txt
-playwright install  # Install browser binaries
+python3 -m pip install -e .[dev]
+playwright install
 ```
 
-### First Recipe (3 Minutes)
-```python
-from solace_browser import BrowserContext
-from oauth3 import OAuth3Vault
-
-# Create OAuth3 vault
-vault = OAuth3Vault()
-token = vault.issue_token("user@example.com", ["browser.read", "browser.click"])
-
-# Create browser with OAuth3 gates
-async with BrowserContext(token=token) as browser:
-    page = await browser.new_page()
-
-    # Every action is scoped + audited
-    await page.goto("https://gmail.com")           # requires browser.read
-    await page.click("button#compose")             # requires browser.click
-
-    # Evidence automatically captured
-    # Check: evidence/oauth3_audit.jsonl
-```
-
-### Run a Recipe
+## Quick Use
+Health check:
 ```bash
-solace-browser run recipes/gmail/triage-inbox.mmd \
-  --user user@example.com \
-  --input email_address=user@gmail.com
+curl -fsS http://127.0.0.1:9222/api/health
 ```
 
-### Try OAuth3 Revocation
+Navigate:
 ```bash
-# Issue token
-token=$(solace-browser auth grant --scopes browser.read browser.click)
-
-# Start a task using that token
-solace-browser run recipes/gmail/fetch-emails.mmd --token $token &
-
-# Revoke the token (mid-task)
-solace-browser auth revoke $token
-
-# Task halts immediately ✓
-# Evidence: revocation logged + timestamp captured
+curl -fsS -X POST http://127.0.0.1:9222/api/navigate \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://example.com"}'
 ```
 
----
-
-## Recipe Flywheel
-
-**First run expensive, subsequent runs cheap:**
-
-```
-LLM discovers solution (tokens spent)
-            ↓
-        Recipe extracted
-            ↓
-        Recipes replayed (Haiku, $0.001)
-            ↓
-        All users benefit + costs fall
-```
-
-As a community, costs fall as usage grows (opposite of token vendors). This is the competitive moat.
-
----
-
-## What's Unique
-
-### 1. OAuth3 by Default
-Every action is **scoped, revocable, auditable**:
+Get structured snapshot:
 ```bash
-# Issue a token with limited scope
-solace-browser auth grant --scopes browser.read browser.click
-
-# User can revoke anytime
-solace-browser auth revoke <token>
-
-# Every action is logged (hash-chained, tamper-evident)
-solace-browser evidence export <run_id>
+curl -fsS http://127.0.0.1:9222/api/page-snapshot
 ```
 
-### 2. Deterministic Recipes
-Recipes are Prime Mermaid DAGs — same seed = same output (forever):
-```mermaid
-graph LR
-    A["Fetch Gmail Inbox"] --> B["Extract Emails"]
-    B --> C["Classify Importance"]
-    C --> D["Generate Summary"]
-    D --> E["Save to Outbox"]
-```
-
-Cost: **$0.001 per task** (cached, no LLM call)
-vs. **$0.01 per task** (cold call to Sonnet)
-
-At 70% recipe hit rate: **70% cost reduction**
-
-### 3. PM Triplets (Context Model)
-Recipes understand user + task + context:
-```python
-user = User(id="phuc", language="en", tone="professional")
-task = Task(goal="triage inbox", inputs={"email": ...}, success="summary created")
-context = Context(current_step=2, decisions_made=[...], remaining=[...])
-
-# Composable: email summarizer → LinkedIn poster → human approval
-output = recipe.execute(user, task, context)
-```
-
-### 4. Part 11 Audit Trail
-Browser execution is auditable:
+Evaluate page state:
 ```bash
-# Audit export includes:
-# - OAuth3 events (token issued, revoked, scope checked)
-# - Action events (click, fill, navigate, screenshot)
-# - Visual evidence (screenshot at each step)
-# - DOM snapshots (exact HTML before/after)
-# - Manifest (metadata, hashes, timestamps)
-
-solace-browser evidence export run_123456
-# Outputs: audit_bundle.zip
-#   ├── oauth3_audit.jsonl
-#   ├── action_audit.jsonl
-#   ├── visual/
-#   ├── dom/
-#   └── manifest.json
+curl -fsS -X POST http://127.0.0.1:9222/api/evaluate \
+  -H 'Content-Type: application/json' \
+  -d '{"expression":"() => document.title"}'
 ```
 
----
+Take screenshot:
+```bash
+curl -fsS -X POST http://127.0.0.1:9222/api/screenshot \
+  -H 'Content-Type: application/json' \
+  -d '{"filename":"page.png"}'
+```
 
-## Architecture
+## Static Site Architecture
+The browser site follows the PHUC web architecture rules:
+- one shared stylesheet
+- one shared runtime JS file
+- slug-first URLs
+- no inline CSS
+- no inline JS
+- local-safe mock API responses for demo pages
 
-### 4 Layers
-
-**Layer 1: Browser Automation** (Playwright)
-- Navigate, click, fill, screenshot, DOM capture
-
-**Layer 2: OAuth3 Scope Gates**
-- Every action wrapped in scope check
-- Revocation halts execution immediately
-
-**Layer 3: Recipe Engine** (Prime Mermaid Parser)
-- Parse DAG, execute deterministically, cache results
-- Hit rate = recipe submissions / total tasks
-
-**Layer 4: PM Triplets** (Context Models)
-- User model (identity, preferences)
-- Task model (goal, inputs, success criteria)
-- Context model (state, decisions, remaining steps)
-- Enables composition (A's output = B's input)
-
----
-
-## Phases (7 Phases, 14 Sessions)
-
-| Phase | Goal | Recipes Shipped |
-|-------|------|-----------------|
-| **0** | Foundation (directory structure, docs, skeleton) | 0 |
-| **1** | OAuth3 Core (token management, scope gates) | 0 |
-| **2** | Browser Automation (Playwright integration) | 2 (Gmail: fetch, compose) |
-| **3** | Recipe Engine (Prime Mermaid parser) | 2 (executable) |
-| **4** | PM Triplets (User/Task/Context models) | 2 (composable) |
-| **5** | Store Integration (Stillwater Store) | 10+ (community) |
-| **6** | Multi-Platform (Gmail, LinkedIn, Slack, GitHub, Notion) | 50+ (recipes) |
-
-**Status:** Phase 0 ready to start
-**Target Rung:** 65537 (production-ready)
-**Total Sessions:** 14
-
-**See:** `ROADMAP.md` for detailed workstreams
-
----
+Verification:
+```bash
+./scripts/check_web_architecture.sh
+pytest -q tests/test_web_architecture.py
+```
 
 ## Project Structure
-
-```
+```text
 solace-browser/
-├── src/
-│   ├── oauth3/              OAuth3 implementation
-│   ├── browser/             Playwright wrapper + OAuth3 gates
-│   ├── recipes/             Recipe engine (parser + executor)
-│   ├── triplets/            PM Triplet models
-│   └── util/                Crypto + evidence helpers
-├── recipes/                 Canonical recipes (Gmail, LinkedIn, etc.)
-├── tests/                   Unit + integration tests
-├── docs/                    API docs, spec, examples
-├── NORTHSTAR.md             Vision + metrics
-├── ROADMAP.md               Build plan (7 phases, 14 sessions)
-├── CLAUDE.md                Project constraints + skills
-└── scratch/                 Working files (gitignored)
+├── solace_browser_server.py
+├── browser/
+│   ├── __init__.py
+│   ├── core.py
+│   ├── advanced.py
+│   └── semantic.py
+├── web/
+│   ├── server.py
+│   ├── home.html
+│   ├── download.html
+│   ├── machine-dashboard.html
+│   ├── tunnel-connect.html
+│   ├── css/site.css
+│   ├── js/solace.js
+│   └── images/splash/
+├── src/scripts/start-local-webserver.sh
+├── docs/BROWSER_API.md
+├── scripts/check_web_architecture.sh
+└── tests/test_web_architecture.py
 ```
 
----
-
-## Key Concepts
-
-### OAuth3 Scopes
-```
-browser.read        → Read-only (navigate, read DOM)
-browser.click       → Click elements
-browser.fill        → Fill forms + type text
-browser.send        → Send emails/messages (requires step-up consent)
-browser.screenshot  → Take screenshots
-browser.dom         → Capture DOM snapshots
-```
-
-### Recipe Format (Prime Mermaid)
-```mermaid
-graph LR
-    A["Fetch Gmail"] --> B["Extract Emails"]
-    B --> C["Classify"]
-    C --> D["Summarize"]
-    D --> E["Save Result"]
-
-    style A fill:#e1f5ff
-    style E fill:#c8e6c9
-```
-
-### Evidence Bundle
-```json
-{
-  "run_id": "run_123456",
-  "timestamp": "2026-02-25T14:12:00Z",
-  "oauth3_events": [
-    {"timestamp": "...", "event": "TOKEN_ISSUED", "scopes": ["browser.read", "browser.click"]}
-  ],
-  "action_events": [
-    {"timestamp": "...", "action": "click", "selector": "button#compose", "scope_check": "✓"}
-  ],
-  "artifacts": {
-    "screenshots": ["step_1.png", "step_2.png"],
-    "dom_snapshots": ["step_1.html", "step_2.html"]
-  },
-  "manifest": {
-    "version": "0.1.0",
-    "recipe": "gmail/triage-inbox.mmd",
-    "hash_chain": "sha256:abc..."
-  }
-}
-```
-
----
-
-## Contributing
-
-### Add a New Recipe
-1. Create `recipes/[platform]/[task].mmd` (Prime Mermaid format)
-2. Test locally: `solace-browser run recipes/[platform]/[task].mmd`
-3. Submit to Stillwater Store: `solace-browser store submit`
-4. Community votes + refinement
-
-### Improve OAuth3 Implementation
-1. Run tests: `pytest tests/ -v`
-2. Check: `bandit -r src/oauth3/` (security)
-3. Verify: `semgrep -c p/security-audit src/oauth3/`
-4. Submit PR
-
-### Report Issues
-- OAuth3 scope bypass → **P0** (security)
-- Recipe non-determinism → **P1** (core)
-- Audit trail gap → **P2** (compliance)
-- UI/docs → **P3** (polish)
-
----
-
-## Roadmap
-
-**Phase 0 (1 week):** Foundation + docs + skeleton ✓
-**Phase 1 (2 weeks):** OAuth3 core (vault + scopes)
-**Phase 2 (2 weeks):** Playwright integration + screenshot capture
-**Phase 3 (2 weeks):** Recipe parser + deterministic execution
-**Phase 4 (2 weeks):** PM Triplet models (composition)
-**Phase 5 (2 weeks):** Store integration (read + submit recipes)
-**Phase 6 (3 weeks):** Multi-platform recipes (Gmail, LinkedIn, Slack, GitHub, Notion)
-
-**Target:** Production-ready (rung 65537) by Q3 2026
-
----
-
-## Cloud Twin
-
-Run Solace Browser locally with `solace-cli`, or use the always-on cloud twin:
-
-**[solaceagi.com](https://solaceagi.com)** — Cloud vertex with:
-- 24/7 scheduling
-- Evidence Vault (search, export, audit)
-- Team sharing (private recipes)
-- Managed LLM routing (20% markup on tokens)
-
-See live app catalog: **[App Store](https://solaceagi.com/app-store.html)**
-
-## Related Projects
-
-- **[Stillwater OS](https://github.com/phuctruong/stillwater)** — Core OS + skills + Stillwater Store
-- **[Solace AGI](https://solaceagi.com)** — Hosted platform (uses solace-browser as cloud twin)
-- **[Solace CLI](https://github.com/phuctruong/solace-cli)** — Terminal-native CLI (extends stillwater)
-- **[Paudio](https://github.com/phuctruong/paudio)** — Voice synthesis (for avatar system)
-- **[PVideo](https://github.com/phuctruong/pvideo)** — Video/avatar rendering (IF Theory engine)
-- **[PZip](https://github.com/phuctruong/pzip)** — Compression engine (for storage)
-
----
-
-## Questions?
-
-- **GitHub Issues:** Bug reports + feature requests
-- **Discussions:** Ideas + design feedback
-- **CLAUDE.md:** Project constraints + dispatch rules
-- **NORTHSTAR.md:** Vision + metrics
-
----
-
-## License
-
-MIT (open source, any use)
-
----
-
-**Built by:** Phuc Truong + Community
-**Updated:** 2026-02-25
-**Rung Target:** 65537
-**Status:** 🎯 Phase 0 ready
+## Current Status
+- single supported browser API surface is active
+- structured snapshot endpoints are working
+- browser site uses shared CSS/JS and slug routes
+- browser-driven QA artifacts can be generated through the live control API

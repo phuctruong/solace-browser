@@ -29,10 +29,13 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
 
-# OAuth3 module — add src/ to path for local import
+__version__ = "1.0.0"
+
+# OAuth3/local source modules live under src/, but keep the repo root ahead of it
+# so imports like `browser` resolve to the top-level browser package, not src/browser.
 _SRC_PATH = Path(__file__).parent / "src"
 if str(_SRC_PATH) not in sys.path:
-    sys.path.insert(0, str(_SRC_PATH))
+    sys.path.append(str(_SRC_PATH))
 
 try:
     from history import (
@@ -138,6 +141,88 @@ logging.basicConfig(
 )
 logger = logging.getLogger('solace-browser')
 
+
+def build_arg_parser() -> argparse.ArgumentParser:
+    """Create the CLI argument parser."""
+    parser = argparse.ArgumentParser(
+        description='Solace Browser - Custom Headless Browser'
+    )
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument(
+        '--head',
+        action='store_true',
+        help='Run in headed mode (show browser window)',
+    )
+    mode_group.add_argument(
+        '--headless',
+        action='store_true',
+        help='Run in headless mode',
+    )
+    parser.add_argument(
+        '--show-ui',
+        action='store_true',
+        help='Show debugging UI (default: False)',
+    )
+    parser.add_argument(
+        '--port',
+        type=int,
+        default=9222,
+        help='CDP server port (default: 9222)',
+    )
+    parser.add_argument(
+        '--part11',
+        action='store_true',
+        help='Enable Part 11 evidence capture with fail-closed behavior',
+    )
+    parser.add_argument(
+        '--part11-mode',
+        choices=['screenshot', 'archive'],
+        default=os.getenv("SOLACE_PART11_MODE", "screenshot"),
+        help='Part 11 capture mode (default: screenshot)',
+    )
+    parser.add_argument(
+        '--part11-audit-dir',
+        default=os.getenv("SOLACE_PART11_AUDIT_DIR", "~/.solace/audit"),
+        help='Part 11 audit directory (default: ~/.solace/audit)',
+    )
+    parser.add_argument(
+        '--sync-api-url',
+        default=None,
+        help='Override sync API URL for browser-to-cloud heartbeat/upload',
+    )
+    parser.add_argument(
+        '--sync-api-key',
+        default=None,
+        help='Override sync API key for browser-to-cloud heartbeat/upload',
+    )
+    parser.add_argument(
+        '--sync-interval',
+        type=int,
+        default=None,
+        help='Heartbeat interval in seconds (default: env / disabled)',
+    )
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=f'solace-browser {__version__}',
+    )
+    return parser
+
+
+def build_sync_config(args: argparse.Namespace) -> Optional[Any]:
+    """Build sync config from env, then apply CLI overrides."""
+    if not SYNC_AVAILABLE:
+        return None
+
+    config = SyncConfig.from_env()
+    if args.sync_api_url:
+        config.api_url = str(args.sync_api_url)
+    if args.sync_api_key is not None:
+        config.api_key = str(args.sync_api_key)
+    if args.sync_interval is not None:
+        config.auto_sync_interval_seconds = int(args.sync_interval)
+    return config
+
 class SolaceBrowser:
     """
     Custom Solace Browser - Headless Chromium with CDP Protocol
@@ -162,6 +247,7 @@ class SolaceBrowser:
         self.message_id_counter = 0
         self.event_history = []
         self._audit_chain: Optional[AuditChain] = None
+        self._part11_upload_hook: Optional[Any] = None
         self.part11: Dict[str, Any] = {
             "enabled": False,
             "mode": "screenshot",
@@ -178,6 +264,10 @@ class SolaceBrowser:
             audit_dir=part11_audit_dir,
             reset_session=True,
         )
+
+    def set_part11_upload_hook(self, hook: Optional[Any]) -> None:
+        """Register an async callback for post-seal Part 11 uploads."""
+        self._part11_upload_hook = hook
 
     @staticmethod
     def _part11_mode_or_raise(mode: str) -> str:
@@ -372,6 +462,14 @@ class SolaceBrowser:
                 error_detail=str(error_detail) if error_detail else "",
             )
             payload["part11"] = evidence
+            if self._part11_upload_hook is not None:
+                try:
+                    upload_result = await self._part11_upload_hook(evidence)
+                    if upload_result is not None:
+                        payload["part11_upload"] = upload_result
+                except Exception as exc:
+                    self.part11["last_error"] = str(exc)
+                    payload["part11_upload_error"] = str(exc)
             return payload
         except Exception as exc:
             self.part11["last_error"] = str(exc)
@@ -1400,24 +1498,151 @@ Support the journey: https://ko-fi.com/phucnet"""
 class SolaceBrowserServer:
     """HTTP/WebSocket server for CDP protocol"""
 
-    def __init__(self, browser: SolaceBrowser, port: int = 9222):
+    def __init__(
+        self,
+        browser: SolaceBrowser,
+        port: int = 9222,
+        sync_config: Optional[Any] = None,
+    ):
         self.browser = browser
         self.port = port
         self.app = web.Application()
         self.proxy_config: dict[str, Any] = {"proxies": []}
 
         # Sync client (browser <-> cloud)
+        self._sync_config: Optional[Any] = None
         self._sync_client: Optional[Any] = None
         self._evidence_collector: Optional[Any] = None
+        self._sync_heartbeat_task: Optional[asyncio.Task[Any]] = None
+        self._last_evidence_upload: Optional[Dict[str, Any]] = None
         if SYNC_AVAILABLE:
-            sync_config = SyncConfig.from_env()
-            self._sync_client = SyncClient(sync_config)
-            audit_dir_str = os.getenv("SOLACE_PART11_AUDIT_DIR", "~/.solace/audit")
+            self._sync_config = sync_config or SyncConfig.from_env()
+            self._sync_client = SyncClient(self._sync_config)
+            audit_dir_str = self._resolve_sync_audit_dir()
             self._evidence_collector = EvidenceCollector(
                 audit_dir=Path(audit_dir_str).expanduser(),
             )
+            if hasattr(self.browser, "set_part11_upload_hook"):
+                self.browser.set_part11_upload_hook(self._auto_upload_pending_evidence)
 
         self._setup_routes()
+
+    def _resolve_sync_audit_dir(self) -> str:
+        """Use the active browser Part 11 audit dir when available."""
+        browser_part11 = getattr(self.browser, "part11", None)
+        if isinstance(browser_part11, dict):
+            audit_dir = str(browser_part11.get("audit_dir", "")).strip()
+            if audit_dir:
+                return audit_dir
+        return os.getenv("SOLACE_PART11_AUDIT_DIR", "~/.solace/audit")
+
+    async def _send_sync_heartbeat(self) -> bool:
+        """Send one heartbeat when sync is configured."""
+        if self._sync_client is None or self._sync_config is None:
+            return False
+        if not getattr(self._sync_config, "api_key", "").strip():
+            return False
+
+        await self._sync_client.heartbeat(f"solace-browser {__version__}")
+        return True
+
+    async def _sync_heartbeat_loop(self) -> None:
+        """Run periodic sync heartbeats until shutdown."""
+        interval = 0
+        if self._sync_config is not None:
+            interval = int(getattr(self._sync_config, "auto_sync_interval_seconds", 0))
+        if interval <= 0:
+            return
+
+        try:
+            while True:
+                await asyncio.sleep(interval)
+                await self._send_sync_heartbeat()
+        except asyncio.CancelledError:
+            logger.debug("Sync heartbeat loop cancelled")
+            raise
+
+    async def _start_sync_services(self) -> None:
+        """Send startup heartbeat and optionally launch the heartbeat loop."""
+        if self._sync_client is None or self._sync_config is None:
+            return
+        if not getattr(self._sync_config, "api_key", "").strip():
+            logger.info("Sync heartbeat disabled: no API key configured")
+            return
+
+        await self._send_sync_heartbeat()
+
+        interval = int(getattr(self._sync_config, "auto_sync_interval_seconds", 0))
+        if interval > 0:
+            self._sync_heartbeat_task = asyncio.create_task(
+                self._sync_heartbeat_loop()
+            )
+            logger.info("Sync heartbeat loop started (%ss)", interval)
+
+    async def _stop_sync_services(self) -> None:
+        """Cancel background sync work and close the sync client."""
+        if self._sync_heartbeat_task is not None:
+            self._sync_heartbeat_task.cancel()
+            try:
+                await self._sync_heartbeat_task
+            except asyncio.CancelledError:
+                logger.debug("Sync heartbeat task cancelled during shutdown")
+            self._sync_heartbeat_task = None
+
+        if self._sync_client is not None:
+            await self._sync_client.close()
+
+    def _ensure_evidence_collector(self) -> Optional[Any]:
+        """Keep the evidence collector aligned with the active Part 11 audit dir."""
+        if not SYNC_AVAILABLE:
+            return None
+
+        audit_dir = Path(self._resolve_sync_audit_dir()).expanduser()
+        if (
+            self._evidence_collector is None
+            or getattr(self._evidence_collector, "audit_dir", None) != audit_dir
+        ):
+            self._evidence_collector = EvidenceCollector(audit_dir=audit_dir)
+        return self._evidence_collector
+
+    async def _auto_upload_pending_evidence(
+        self,
+        evidence: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Upload freshly sealed Part 11 evidence when auto-upload is enabled."""
+        if self._sync_client is None or self._sync_config is None:
+            result = {"status": "skipped", "reason": "sync_unavailable"}
+            self._last_evidence_upload = result
+            return result
+        if not getattr(self._sync_config, "evidence_auto_upload", False):
+            result = {"status": "skipped", "reason": "evidence_auto_upload_disabled"}
+            self._last_evidence_upload = result
+            return result
+        if not getattr(self._sync_config, "api_key", "").strip():
+            result = {"status": "skipped", "reason": "missing_api_key"}
+            self._last_evidence_upload = result
+            return result
+
+        collector = self._ensure_evidence_collector()
+        if collector is None:
+            result = {"status": "skipped", "reason": "collector_unavailable"}
+            self._last_evidence_upload = result
+            return result
+
+        try:
+            result = await upload_pending_evidence(self._sync_client, collector)
+            result["trigger_event_id"] = evidence.get("event_id")
+            self._last_evidence_upload = result
+            return result
+        except Exception as exc:
+            result = {
+                "status": "error",
+                "error": str(exc),
+                "trigger_event_id": evidence.get("event_id"),
+            }
+            self._last_evidence_upload = result
+            logger.error("Part 11 evidence auto-upload failed: %s", exc)
+            return result
 
     def _setup_routes(self):
         """Setup HTTP routes"""
@@ -1490,9 +1715,9 @@ class SolaceBrowserServer:
     async def _handle_version(self, request):
         """Return browser version (CDP compatible)"""
         return web.json_response({
-            "Browser": "Solace Browser/1.0.0",
+            "Browser": f"Solace Browser/{__version__}",
             "Protocol-Version": "1.3",
-            "User-Agent": "Solace/1.0.0",
+            "User-Agent": f"Solace/{__version__}",
             "V8-Version": "12.0.0"
         })
 
@@ -1814,6 +2039,11 @@ class SolaceBrowserServer:
             data = await request.json()
         except Exception:
             return web.json_response({"ok": False, "error": "invalid_json"}, status=400)
+        if solve_captcha is None:
+            return web.json_response(
+                {"ok": False, "error": "competitive_features_unavailable"},
+                status=503,
+            )
         result = solve_captcha(
             provider=str(data.get("provider", "mock")),
             captcha_type=str(data.get("captcha_type", "")),
@@ -1830,6 +2060,11 @@ class SolaceBrowserServer:
             data = await request.json()
         except Exception:
             data = {}
+        if load_proxy_config is None:
+            return web.json_response(
+                {"ok": False, "error": "competitive_features_unavailable"},
+                status=503,
+            )
         raw_path = str(data.get("path", "data/custom/proxy-config.yaml")).strip()
         path = Path(raw_path)
         if not path.is_absolute():
@@ -1844,6 +2079,11 @@ class SolaceBrowserServer:
         )
 
     async def _handle_proxy_select(self, request):
+        if select_proxy is None:
+            return web.json_response(
+                {"ok": False, "error": "competitive_features_unavailable"},
+                status=503,
+            )
         country = request.query.get("country")
         proxy = select_proxy(self.proxy_config, country=country)
         if proxy is None:
@@ -1859,6 +2099,11 @@ class SolaceBrowserServer:
         cases = data.get("cases", [])
         if not isinstance(cases, list):
             return web.json_response({"ok": False, "error": "cases_must_be_list"}, status=422)
+        if webvoyager_score is None:
+            return web.json_response(
+                {"ok": False, "error": "competitive_features_unavailable"},
+                status=503,
+            )
         out = webvoyager_score(cases)
         return web.json_response(out)
 
@@ -2593,6 +2838,7 @@ class SolaceBrowserServer:
             "api_url": status.api_url,
             "auto_sync_enabled": status.auto_sync_enabled,
             "evidence_auto_upload": status.evidence_auto_upload,
+            "last_evidence_upload": self._last_evidence_upload,
         })
 
     async def _handle_sync_pull(self, request):
@@ -2625,6 +2871,7 @@ class SolaceBrowserServer:
         await runner.setup()
         site = web.TCPSite(runner, 'localhost', self.port)
         await site.start()
+        await self._start_sync_services()
         logger.info(f"✓ CDP Server started on http://localhost:{self.port}")
 
         # Keep running
@@ -2633,36 +2880,13 @@ class SolaceBrowserServer:
         except KeyboardInterrupt:
             pass
         finally:
+            await self._stop_sync_services()
             await runner.cleanup()
 
 
 async def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(description='Solace Browser - Custom Headless Browser')
-    mode_group = parser.add_mutually_exclusive_group()
-    mode_group.add_argument('--head', action='store_true', help='Run in headed mode (show browser window)')
-    mode_group.add_argument('--headless', action='store_true', help='Run in headless mode')
-    parser.add_argument('--show-ui', action='store_true',
-                       help='Show debugging UI (default: False)')
-    parser.add_argument('--port', type=int, default=9222,
-                       help='CDP server port (default: 9222)')
-    parser.add_argument(
-        '--part11',
-        action='store_true',
-        help='Enable Part 11 evidence capture with fail-closed behavior'
-    )
-    parser.add_argument(
-        '--part11-mode',
-        choices=['screenshot', 'archive'],
-        default=os.getenv("SOLACE_PART11_MODE", "screenshot"),
-        help='Part 11 capture mode (default: screenshot)'
-    )
-    parser.add_argument(
-        '--part11-audit-dir',
-        default=os.getenv("SOLACE_PART11_AUDIT_DIR", "~/.solace/audit"),
-        help='Part 11 audit directory (default: ~/.solace/audit)'
-    )
-
+    parser = build_arg_parser()
     args = parser.parse_args()
 
     # Create and start browser
@@ -2680,7 +2904,11 @@ async def main():
     await browser.start()
 
     # Create and start server
-    server = SolaceBrowserServer(browser, port=args.port)
+    server = SolaceBrowserServer(
+        browser,
+        port=args.port,
+        sync_config=build_sync_config(args),
+    )
 
     try:
         await server.start()

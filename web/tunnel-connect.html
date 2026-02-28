@@ -2,1028 +2,118 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Tunnel Connect — Solace Browser</title>
-  <meta name="description" content="Connect Solace Browser to the cloud via built-in tunnel. OAuth3-gated remote access.">
+  <title>Tunnel Connect | Solace Browser</title>
+  <meta name="description" content="Control the Solace Browser cloud relay and keep endpoint exposure visible.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <style>
-    /* ============================================================
-       CSS VARIABLES
-       ============================================================ */
-    :root {
-      --bg-primary:       #0a0a0a;
-      --bg-secondary:     #0d0d0d;
-      --bg-card:          #141414;
-      --bg-card-hover:    #1a1a1a;
-      --white:            #ffffff;
-      --cornflower-blue:  #81afdd;
-      --accent:           #FF6B35;
-      --accent-dim:       rgba(255, 107, 53, 0.12);
-      --accent-border:    rgba(255, 107, 53, 0.3);
-      --salmon:           #ff8a71;
-      --medium-purple:    #ae67fa;
-      --turquoise:        #13ded2;
-      --green:            #4ade80;
-      --green-dim:        rgba(74, 222, 128, 0.1);
-      --green-border:     rgba(74, 222, 128, 0.25);
-      --border-subtle:    rgba(255, 255, 255, 0.08);
-      --border-mid:       rgba(255, 255, 255, 0.15);
-      --text-muted:       #555;
-      --text-secondary:   #888;
-    }
-
-    /* ============================================================
-       RESET + BASE
-       ============================================================ */
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html { font-size: 16px; scroll-behavior: smooth; }
-
-    body {
-      background-color: var(--bg-primary);
-      color: var(--white);
-      font-family: Manrope, 'Segoe UI', system-ui, -apple-system, sans-serif;
-      font-size: 1rem;
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-      min-height: 100vh;
-    }
-
-    a { color: var(--cornflower-blue); text-decoration: none; transition: color 0.2s; }
-    a:hover { color: var(--white); }
-    h1, h2, h3 { font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; }
-
-    /* ============================================================
-       PARTICLE CANVAS
-       ============================================================ */
-    #particles-canvas {
-      position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none; z-index: 0; opacity: 0.3;
-    }
-
-    .page-content { position: relative; z-index: 1; }
-
-    /* ============================================================
-       HEADER
-       ============================================================ */
-    .header {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(10, 10, 10, 0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .header-inner {
-      display: flex; align-items: center;
-      justify-content: space-between;
-      gap: 1rem; padding: 0.9rem 1.5rem;
-      max-width: 900px; margin: 0 auto;
-    }
-
-    .logo {
-      display: flex; align-items: center; gap: 0.5rem;
-      font-size: 1rem; font-weight: 800; color: var(--white);
-      letter-spacing: -0.02em; text-decoration: none;
-    }
-
-    .logo-icon {
-      width: 26px; height: 26px;
-      background: linear-gradient(135deg, var(--accent), #ff9a5c);
-      border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.8rem;
-    }
-
-    .header-back {
-      font-size: 0.8rem; font-weight: 600;
-      color: var(--text-secondary);
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 7px;
-      padding: 0.3rem 0.7rem;
-      text-decoration: none;
-      transition: all 0.15s;
-    }
-
-    .header-back:hover { color: var(--white); border-color: var(--border-mid); }
-
-    /* ============================================================
-       PAGE LAYOUT
-       ============================================================ */
-    .page-wrap {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 3rem 1.5rem 4rem;
-    }
-
-    /* ============================================================
-       STATUS INDICATOR (big central)
-       ============================================================ */
-    .status-hub {
-      text-align: center;
-      padding: 3rem 1.5rem 2rem;
-    }
-
-    .status-ring {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 120px;
-      height: 120px;
-      margin-bottom: 1.5rem;
-    }
-
-    .status-ring-bg {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 3px solid var(--border-subtle);
-    }
-
-    .status-ring-fill {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 3px solid transparent;
-      border-top-color: var(--accent);
-      animation: none;
-      transition: border-top-color 0.3s;
-    }
-
-    .status-ring-fill.connecting {
-      animation: spin-ring 1s linear infinite;
-    }
-
-    .status-ring-fill.connected {
-      border-color: var(--green);
-      animation: none;
-    }
-
-    @keyframes spin-ring {
-      to { transform: rotate(360deg); }
-    }
-
-    .status-icon {
-      font-size: 2.5rem;
-      line-height: 1;
-      position: relative;
-      z-index: 1;
-    }
-
-    .status-label {
-      font-size: 1.5rem;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      margin-bottom: 0.4rem;
-    }
-
-    .status-label.disconnected { color: var(--text-secondary); }
-    .status-label.connecting   { color: var(--accent); }
-    .status-label.connected    { color: var(--green); }
-    .status-label.error        { color: var(--salmon); }
-
-    .status-desc {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      margin-bottom: 2rem;
-    }
-
-    /* ============================================================
-       BUTTONS
-       ============================================================ */
-    .btn-connect {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      font-family: inherit;
-      font-size: 1.05rem;
-      font-weight: 800;
-      border-radius: 10px;
-      padding: 0.85rem 2.5rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: none;
-      letter-spacing: -0.01em;
-    }
-
-    .btn-connect.connect {
-      background: linear-gradient(135deg, var(--accent), #ff9a5c);
-      color: var(--white);
-      box-shadow: 0 4px 24px rgba(255,107,53,0.3);
-    }
-
-    .btn-connect.connect:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 32px rgba(255,107,53,0.4);
-    }
-
-    .btn-connect.disconnect {
-      background: var(--bg-card);
-      color: var(--salmon);
-      border: 1px solid rgba(255,138,113,0.3);
-    }
-
-    .btn-connect.disconnect:hover {
-      background: rgba(255,138,113,0.08);
-    }
-
-    .btn-connect:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    /* ============================================================
-       PUBLIC URL DISPLAY
-       ============================================================ */
-    .public-url-card {
-      display: none;
-      background: var(--green-dim);
-      border: 1px solid var(--green-border);
-      border-radius: 12px;
-      padding: 1.25rem 1.5rem;
-      margin: 1.5rem 0;
-    }
-
-    .public-url-card.visible { display: block; }
-
-    .public-url-label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--green);
-      margin-bottom: 0.5rem;
-    }
-
-    .public-url-value {
-      font-family: 'Courier New', monospace;
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--white);
-      word-break: break-all;
-      margin-bottom: 0.75rem;
-    }
-
-    .url-actions {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .url-btn {
-      font-family: inherit;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--green);
-      background: transparent;
-      border: 1px solid var(--green-border);
-      border-radius: 6px;
-      padding: 0.3rem 0.75rem;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .url-btn:hover { background: var(--green-dim); }
-
-    /* ============================================================
-       CONSENT PROMPT
-       ============================================================ */
-    .consent-card {
-      display: none;
-      background: var(--bg-card);
-      border: 1px solid var(--accent-border);
-      border-radius: 14px;
-      padding: 1.75rem;
-      margin: 1.5rem 0;
-    }
-
-    .consent-card.visible { display: block; }
-
-    .consent-icon { font-size: 1.5rem; margin-bottom: 0.75rem; display: block; }
-
-    .consent-card h3 {
-      font-size: 1rem;
-      font-weight: 800;
-      margin-bottom: 0.5rem;
-      color: var(--white);
-    }
-
-    .consent-card p {
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-      margin-bottom: 1.25rem;
-      line-height: 1.6;
-    }
-
-    .scope-display {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      font-family: 'Courier New', monospace;
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: var(--accent);
-      background: var(--accent-dim);
-      border: 1px solid var(--accent-border);
-      border-radius: 6px;
-      padding: 0.25rem 0.7rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .consent-btns {
-      display: flex;
-      gap: 0.75rem;
-    }
-
-    .btn-grant {
-      font-family: inherit;
-      font-size: 0.875rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--accent), #ff9a5c);
-      color: var(--white);
-      border: none;
-      border-radius: 8px;
-      padding: 0.6rem 1.25rem;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-
-    .btn-grant:hover { opacity: 0.9; }
-
-    .btn-deny {
-      font-family: inherit;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-      background: transparent;
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 0.6rem 1.25rem;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .btn-deny:hover { border-color: var(--border-mid); color: var(--white); }
-
-    /* ============================================================
-       DETAILS PANEL
-       ============================================================ */
-    .details-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-top: 2rem;
-    }
-
-    @media (max-width: 540px) { .details-grid { grid-template-columns: 1fr; } }
-
-    .detail-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 10px;
-      padding: 1.1rem;
-    }
-
-    .detail-label {
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 0.4rem;
-    }
-
-    .detail-value {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--white);
-      font-family: 'Courier New', monospace;
-      word-break: break-all;
-    }
-
-    .detail-value.dim { color: var(--text-secondary); font-weight: 500; }
-
-    /* ============================================================
-       LOG
-       ============================================================ */
-    .tunnel-log {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 10px;
-      padding: 1rem;
-      margin-top: 1.5rem;
-      font-family: 'Courier New', monospace;
-      font-size: 0.78rem;
-      max-height: 180px;
-      overflow-y: auto;
-      color: var(--text-secondary);
-    }
-
-    .tunnel-log::-webkit-scrollbar { width: 4px; }
-    .tunnel-log::-webkit-scrollbar-thumb { background: var(--border-subtle); }
-
-    .log-line { margin-bottom: 0.1rem; }
-    .log-line.info  { color: var(--turquoise); }
-    .log-line.ok    { color: var(--green); }
-    .log-line.warn  { color: var(--accent); }
-    .log-line.error { color: var(--salmon); }
-
-    /* ============================================================
-       HOW IT WORKS
-       ============================================================ */
-    .how-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 0.85rem;
-      margin-top: 1.5rem;
-    }
-
-    .how-step {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 10px;
-      padding: 1.1rem;
-    }
-
-    .how-num {
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 0.4rem;
-    }
-
-    .how-title {
-      font-size: 0.88rem;
-      font-weight: 700;
-      color: var(--white);
-      margin-bottom: 0.35rem;
-    }
-
-    .how-desc {
-      font-size: 0.78rem;
-      color: var(--text-secondary);
-      line-height: 1.5;
-    }
-
-    .section-label-head {
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 0.75rem;
-      margin-top: 2.5rem;
-    }
-
-    /* ============================================================
-       FOOTER
-       ============================================================ */
-    footer {
-      border-top: 1px solid var(--border-subtle);
-      padding: 1.25rem 1.5rem;
-      text-align: center;
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
-
-    footer a { color: var(--text-muted); transition: color 0.2s; }
-    footer a:hover { color: var(--cornflower-blue); }
-    footer .sep { margin: 0 0.4rem; opacity: 0.5; }
-  </style>
+  <link rel="canonical" href="https://browser.solaceagi.com/tunnel-connect">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/solace.js" defer></script>
 </head>
-<body>
+<body data-page="tunnel-connect">
+  <div class="site-shell">
+    <canvas data-particles-canvas aria-hidden="true"></canvas>
+    <div class="page-frame">
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a class="site-brand" href="/">
+            <span class="site-brand__icon">SB</span>
+            <span class="site-brand__text">
+              <span class="site-brand__name">Tunnel Connect</span>
+              <span class="site-brand__tag">Cloud exposure with explicit approval</span>
+            </span>
+          </a>
+          <nav class="site-nav" aria-label="Primary">
+            <a class="nav-link" data-nav-path="/" href="/">Home</a>
+            <a class="nav-link" data-nav-path="/download" href="/download">Download</a>
+            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
+            <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect">Tunnel</a>
+          </nav>
+        </div>
+      </header>
 
-<canvas id="particles-canvas"></canvas>
+      <main class="tunnel-shell">
+        <section class="status-card reveal">
+          <div class="status-ring" id="status-ring" data-state="connecting">
+            <span class="status-ring__icon">◎</span>
+          </div>
+          <div>
+            <p class="eyebrow">Tunnel surface</p>
+            <h1 class="dashboard-title" id="status-label">Disconnected</h1>
+            <p class="lead" id="status-description">Grant tunnel.connect before the browser exposes a public URL.</p>
+            <div class="button-row">
+              <button class="btn btn-primary" id="connect-button" type="button">Request tunnel</button>
+              <button class="btn btn-secondary" id="disconnect-button" type="button">Close tunnel</button>
+            </div>
+          </div>
+        </section>
 
-<div class="page-content">
+        <section class="tunnel-splash-stage reveal" aria-labelledby="tunnel-splash-title">
+          <div class="tunnel-splash-orbit" aria-hidden="true"></div>
+          <div class="tunnel-splash-frame">
+            <img
+              class="tunnel-splash-image"
+              src="/images/splash/solace-browser-loading-splash-image.png"
+              alt="Solace Browser loading splash artwork"
+            >
+          </div>
+          <div class="tunnel-splash-copy">
+            <p class="panel-kicker">Visible relay posture</p>
+            <h2 class="tunnel-splash-title" id="tunnel-splash-title">Solace Browser</h2>
+            <p class="tunnel-splash-subtitle">A tunnel should feel deliberate: bright enough to notice, quiet enough to trust, and easy to close the second the job is done.</p>
+          </div>
+        </section>
 
-  <!-- ================================================================
-       HEADER
-       ================================================================ -->
-  <header class="header">
-    <div class="header-inner">
-      <a href="/web/home.html" class="logo">
-        <span class="logo-icon">&#x1F525;</span>
-        Solace Browser
-      </a>
-      <a href="/web/home.html" class="header-back">&larr; Home</a>
+        <section class="tunnel-grid reveal">
+          <article class="endpoint-card">
+            <div class="panel-kicker">Public relay</div>
+            <h3>Endpoint status</h3>
+            <p class="endpoint-value" id="endpoint-value">Not connected</p>
+            <div class="button-row">
+              <button class="btn btn-secondary" id="copy-endpoint" type="button">Copy URL</button>
+              <button class="btn btn-secondary" id="open-endpoint" type="button">Open URL</button>
+            </div>
+          </article>
+          <article class="consent-card">
+            <div class="panel-kicker">Approval posture</div>
+            <h3>Why the tunnel stays explicit</h3>
+            <p>Remote access is powerful enough that the browser should never imply it is live unless the approval, URL, and rollback control are all visible at once.</p>
+            <p><span class="status-tag" id="approval-badge">Fail-closed</span></p>
+          </article>
+        </section>
+
+        <section class="page-section reveal">
+          <div class="surface-grid">
+            <article class="timeline-card">
+              <div class="panel-kicker">Step 1</div>
+              <h3>Grant the narrow scope</h3>
+              <p>Authorize only `tunnel.connect` for the specific runtime that needs a cloud relay.</p>
+            </article>
+            <article class="timeline-card">
+              <div class="panel-kicker">Step 2</div>
+              <h3>Expose one endpoint</h3>
+              <p>The browser surfaces the exact public URL instead of burying it in logs or agent text.</p>
+            </article>
+            <article class="timeline-card">
+              <div class="panel-kicker">Step 3</div>
+              <h3>Close it when the job is done</h3>
+              <p>The same page provides the stop control and a visible disconnected state for verification.</p>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="site-footer__inner">
+          <div>© <span data-current-year></span> Solace Browser. Public URLs should be obvious, narrow, and temporary.</div>
+          <div class="site-footer__links">
+            <a href="/">Home</a>
+            <a href="/download">Download</a>
+            <a href="/machine-dashboard">Machine</a>
+            <a href="https://github.com/solaceagi/solace-browser" target="_blank" rel="noopener">GitHub</a>
+          </div>
+        </div>
+      </footer>
     </div>
-  </header>
-
-  <!-- ================================================================
-       MAIN
-       ================================================================ -->
-  <div class="page-wrap">
-
-    <!-- CONSENT PROMPT (shown if scope not granted) -->
-    <div class="consent-card" id="consent-card">
-      <span class="consent-icon">&#x1F512;</span>
-      <h3>OAuth3 Scope Required</h3>
-      <p>
-        Connecting the tunnel requires the <code style="font-family:monospace;color:var(--accent)">machine.tunnel</code> scope.
-        This grants Solace Browser permission to expose your local browser via a secure tunnel to www.solaceagi.com.
-      </p>
-      <div class="scope-display">&#x1F511; machine.tunnel</div>
-      <div class="consent-btns">
-        <button class="btn-grant" onclick="grantTunnelScope()">Grant Scope &amp; Connect</button>
-        <button class="btn-deny" onclick="dismissConsent()">Cancel</button>
-      </div>
-    </div>
-
-    <!-- STATUS HUB -->
-    <div class="status-hub">
-      <div class="status-ring">
-        <div class="status-ring-bg"></div>
-        <div class="status-ring-fill" id="status-ring"></div>
-        <span class="status-icon" id="status-icon">&#x2601;</span>
-      </div>
-
-      <div class="status-label disconnected" id="status-label">Disconnected</div>
-      <div class="status-desc" id="status-desc">Click the button below to expose your local Solace Browser to the cloud.</div>
-
-      <!-- PUBLIC URL (shown when connected) -->
-      <div class="public-url-card" id="public-url-card">
-        <div class="public-url-label">Public Tunnel URL</div>
-        <div class="public-url-value" id="public-url-value">—</div>
-        <div class="url-actions">
-          <button class="url-btn" onclick="copyUrl()">&#x1F4CB; Copy URL</button>
-          <button class="url-btn" onclick="openUrl()">&#x2197; Open in Tab</button>
-          <button class="url-btn" onclick="shareUrl()">&#x1F517; Share</button>
-        </div>
-      </div>
-
-      <div style="margin-top:0.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
-        <button class="btn-connect connect" id="connect-btn" onclick="handleConnectClick()">
-          <span id="connect-btn-icon">&#x26A1;</span>
-          <span id="connect-btn-label">Connect to Cloud</span>
-        </button>
-        <button class="btn-connect disconnect" id="disconnect-btn" onclick="disconnectTunnel()" style="display:none">
-          <span>&#x25FC;</span>
-          <span>Disconnect</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- CONNECTION DETAILS (shown when connected or connecting) -->
-    <div id="details-section" style="display:none">
-      <div class="details-grid">
-        <div class="detail-card">
-          <div class="detail-label">Tunnel ID</div>
-          <div class="detail-value" id="detail-tunnel-id">—</div>
-        </div>
-        <div class="detail-card">
-          <div class="detail-label">Status</div>
-          <div class="detail-value" id="detail-status">Disconnected</div>
-        </div>
-        <div class="detail-card">
-          <div class="detail-label">Uptime</div>
-          <div class="detail-value" id="detail-uptime">—</div>
-        </div>
-        <div class="detail-card">
-          <div class="detail-label">Bytes Transferred</div>
-          <div class="detail-value" id="detail-bytes">—</div>
-        </div>
-        <div class="detail-card">
-          <div class="detail-label">Connected Since</div>
-          <div class="detail-value dim" id="detail-since">—</div>
-        </div>
-        <div class="detail-card">
-          <div class="detail-label">Region</div>
-          <div class="detail-value dim" id="detail-region">—</div>
-        </div>
-      </div>
-
-      <!-- Tunnel Log -->
-      <div class="tunnel-log" id="tunnel-log">
-        <div class="log-line info">Tunnel log initialized.</div>
-      </div>
-    </div>
-
-    <!-- HOW IT WORKS -->
-    <div class="section-label-head">How the Tunnel Works</div>
-    <div class="how-grid">
-      <div class="how-step">
-        <div class="how-num">Step 1</div>
-        <div class="how-title">Grant Scope</div>
-        <div class="how-desc">OAuth3 <code style="font-family:monospace;font-size:0.75em;color:var(--accent)">machine.tunnel</code> scope is required. Grant once from your token settings.</div>
-      </div>
-      <div class="how-step">
-        <div class="how-num">Step 2</div>
-        <div class="how-title">Open Tunnel</div>
-        <div class="how-desc">Solace Browser opens a secure WebSocket tunnel to www.solaceagi.com. No port forwarding needed.</div>
-      </div>
-      <div class="how-step">
-        <div class="how-num">Step 3</div>
-        <div class="how-title">Get Public URL</div>
-        <div class="how-desc">You receive a unique public URL (e.g. <code style="font-family:monospace;font-size:0.75em">tunnel.solaceagi.com/abc123</code>). Share it with your cloud twin or team.</div>
-      </div>
-      <div class="how-step">
-        <div class="how-num">Step 4</div>
-        <div class="how-title">Disconnect Anytime</div>
-        <div class="how-desc">Click Disconnect or revoke the scope. The tunnel closes instantly. No residual access.</div>
-      </div>
-    </div>
-
-  </div><!-- end .page-wrap -->
-
-  <!-- FOOTER -->
-  <footer>
-    <a href="/web/home.html">Home</a>
-    <span class="sep">&middot;</span>
-    <a href="/machine/dashboard">Machine</a>
-    <span class="sep">&middot;</span>
-    <a href="/settings/tokens">Token Settings</a>
-    <span class="sep">&middot;</span>
-    <a href="https://www.solaceagi.com/trust" target="_blank">Trust Center</a>
-    <span class="sep">&middot;</span>
-    <a href="https://github.com/phuctruong/solace-browser" target="_blank">GitHub</a>
-  </footer>
-
-</div><!-- end .page-content -->
-
-<!-- ================================================================
-     JAVASCRIPT
-     ================================================================ -->
-<script>
-(function () {
-  'use strict';
-
-  /* ------------------------------------------------------------------
-     PARTICLE CANVAS
-  ------------------------------------------------------------------ */
-  (function initParticles() {
-    var canvas = document.getElementById('particles-canvas');
-    if (!canvas) return;
-    var ctx = canvas.getContext('2d');
-    var W, H, particles;
-    var COLORS = ['#FF6B35', '#ff9a5c', '#81afdd', '#ae67fa'];
-
-    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-    function rand(a, b) { return Math.random() * (b - a) + a; }
-    function makeP() {
-      return { x: rand(0, W), y: rand(0, H), vx: rand(-0.2, 0.2), vy: rand(-0.2, 0.2),
-               r: rand(0.8, 2), alpha: rand(0.08, 0.3), color: COLORS[Math.floor(Math.random() * COLORS.length)] };
-    }
-    function init() { resize(); particles = Array.from({ length: 45 }, makeP); }
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
-      for (var i = 0; i < particles.length; i++) {
-        var p = particles[i];
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color; ctx.fill();
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < -5) p.x = W + 5; if (p.x > W + 5) p.x = -5;
-        if (p.y < -5) p.y = H + 5; if (p.y > H + 5) p.y = -5;
-      }
-      ctx.globalAlpha = 1;
-      requestAnimationFrame(draw);
-    }
-    window.addEventListener('resize', function () { resize(); });
-    init(); draw();
-  })();
-
-  /* ------------------------------------------------------------------
-     STATE
-  ------------------------------------------------------------------ */
-  var STATE = {
-    DISCONNECTED: 'disconnected',
-    CONNECTING:   'connecting',
-    CONNECTED:    'connected',
-    ERROR:        'error',
-  };
-
-  var currentState = STATE.DISCONNECTED;
-  var tunnelData   = null;
-  var uptimeTimer  = null;
-  var connectedAt  = null;
-  var hasTunnelScope = false;  // Will be checked via API
-
-  /* ------------------------------------------------------------------
-     UI HELPERS
-  ------------------------------------------------------------------ */
-  function el(id) { return document.getElementById(id); }
-
-  function setStatus(state, desc) {
-    currentState = state;
-
-    var ring  = el('status-ring');
-    var icon  = el('status-icon');
-    var label = el('status-label');
-    var descEl = el('status-desc');
-    var btn   = el('connect-btn');
-    var btnIcon = el('connect-btn-icon');
-    var btnLabel = el('connect-btn-label');
-    var details = el('details-section');
-    var urlCard = el('public-url-card');
-
-    ring.className  = 'status-ring-fill ' + state;
-    label.className = 'status-label ' + state;
-
-    var disconnectBtnEl = el('disconnect-btn');
-
-    if (state === STATE.DISCONNECTED) {
-      icon.textContent  = '☁';
-      label.textContent = 'Disconnected';
-      if (descEl) descEl.textContent = desc || 'Click the button below to expose your local Solace Browser to the cloud.';
-      btn.className = 'btn-connect connect';
-      btn.disabled = false;
-      btn.style.display = '';
-      btnIcon.textContent = '⚡';
-      btnLabel.textContent = 'Connect to Cloud';
-      if (disconnectBtnEl) disconnectBtnEl.style.display = 'none';
-      if (details) details.style.display = 'none';
-      if (urlCard) urlCard.classList.remove('visible');
-
-    } else if (state === STATE.CONNECTING) {
-      icon.textContent  = '⟳';
-      label.textContent = 'Connecting...';
-      if (descEl) descEl.textContent = desc || 'Opening secure tunnel to solaceagi.com...';
-      btn.className = 'btn-connect connect';
-      btn.disabled = true;
-      btn.style.display = '';
-      btnIcon.textContent = '◼';
-      btnLabel.textContent = 'Connecting...';
-      if (disconnectBtnEl) disconnectBtnEl.style.display = '';
-      if (details) details.style.display = 'block';
-
-    } else if (state === STATE.CONNECTED) {
-      icon.textContent  = '✓';
-      label.textContent = 'Connected';
-      if (descEl) descEl.textContent = desc || 'Tunnel is live. Share the public URL with your cloud twin.';
-      btn.className = 'btn-connect connect';
-      btn.disabled = true;
-      btn.style.display = 'none';
-      if (disconnectBtnEl) { disconnectBtnEl.style.display = ''; }
-      if (details) details.style.display = 'block';
-      if (urlCard) urlCard.classList.add('visible');
-
-    } else if (state === STATE.ERROR) {
-      icon.textContent  = '✕';
-      label.textContent = 'Error';
-      if (descEl) descEl.textContent = desc || 'Tunnel connection failed. Check your settings.';
-      btn.className = 'btn-connect connect';
-      btn.disabled = false;
-      btn.style.display = '';
-      btnIcon.textContent = '⟳';
-      btnLabel.textContent = 'Retry';
-      if (disconnectBtnEl) disconnectBtnEl.style.display = 'none';
-      if (details) details.style.display = 'block';
-    }
-  }
-
-  function addLog(msg, type) {
-    var log = el('tunnel-log');
-    if (!log) return;
-    var div = document.createElement('div');
-    div.className = 'log-line ' + (type || '');
-    div.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
-    log.appendChild(div);
-    log.scrollTop = log.scrollHeight;
-  }
-
-  function formatBytes(bytes) {
-    if (!bytes) return '0 B';
-    var k = 1024;
-    var sizes = ['B', 'KB', 'MB', 'GB'];
-    var i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  }
-
-  function formatUptime(seconds) {
-    var h = Math.floor(seconds / 3600);
-    var m = Math.floor((seconds % 3600) / 60);
-    var s = seconds % 60;
-    return (h > 0 ? h + 'h ' : '') + (m > 0 ? m + 'm ' : '') + s + 's';
-  }
-
-  function updateDetails(data) {
-    if (!data) return;
-    var tunnelId = el('detail-tunnel-id');
-    var statusEl = el('detail-status');
-    var bytesEl  = el('detail-bytes');
-    var sinceEl  = el('detail-since');
-    var regionEl = el('detail-region');
-    var urlEl    = el('public-url-value');
-
-    if (tunnelId) tunnelId.textContent = data.tunnel_id || '—';
-    if (statusEl) statusEl.textContent = data.status || '—';
-    if (bytesEl)  bytesEl.textContent  = formatBytes(data.bytes_transferred || 0);
-    if (sinceEl)  sinceEl.textContent  = data.connected_at ? new Date(data.connected_at).toLocaleString() : '—';
-    if (regionEl) regionEl.textContent = data.region || 'us-west-1';
-    if (urlEl && data.public_url) urlEl.textContent = data.public_url;
-  }
-
-  /* ------------------------------------------------------------------
-     CONNECT / DISCONNECT
-  ------------------------------------------------------------------ */
-  window.handleConnectClick = function () {
-    if (currentState === STATE.DISCONNECTED || currentState === STATE.ERROR) {
-      checkScopeAndConnect();
-    }
-    // Disconnect is handled by the separate #disconnect-btn
-  };
-
-  function checkScopeAndConnect() {
-    // Check if machine.tunnel scope is granted
-    fetch('/api/tokens/scopes', { headers: { 'Accept': 'application/json' } })
-      .then(function (res) { return res.json(); })
-      .then(function (data) {
-        var scopes = data.scopes || [];
-        if (scopes.indexOf('machine.tunnel') >= 0) {
-          hasTunnelScope = true;
-          connectTunnel();
-        } else {
-          // Show consent prompt
-          var consent = el('consent-card');
-          if (consent) consent.classList.add('visible');
-        }
-      })
-      .catch(function () {
-        // API unavailable — show consent prompt as safe default
-        var consent = el('consent-card');
-        if (consent) consent.classList.add('visible');
-      });
-  }
-
-  window.grantTunnelScope = function () {
-    var consent = el('consent-card');
-    if (consent) consent.classList.remove('visible');
-
-    // In production: POST /api/oauth3/grant { scope: 'machine.tunnel' }
-    addLog('Granting machine.tunnel scope...', 'info');
-    hasTunnelScope = true;
-
-    // Simulate grant success then connect
-    setTimeout(connectTunnel, 300);
-  };
-
-  window.dismissConsent = function () {
-    var consent = el('consent-card');
-    if (consent) consent.classList.remove('visible');
-  };
-
-  function connectTunnel() {
-    setStatus(STATE.CONNECTING);
-    addLog('Initiating tunnel connection...', 'info');
-    addLog('Requesting tunnel_id from solaceagi.com...', 'info');
-
-    fetch('/tunnel/start', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ scope: 'machine.tunnel' }),
-    })
-      .then(function (res) {
-        if (res.status === 403) throw new Error('scope_denied');
-        if (!res.ok) throw new Error('server_error');
-        return res.json();
-      })
-      .then(function (data) {
-        tunnelData = data;
-        connectedAt = Date.now();
-        setStatus(STATE.CONNECTED);
-        updateDetails(data);
-        addLog('Tunnel established: ' + (data.public_url || '—'), 'ok');
-        addLog('Tunnel ID: ' + (data.tunnel_id || '—'), 'ok');
-        startUptimeTimer();
-      })
-      .catch(function (err) {
-        if (err.message === 'scope_denied') {
-          setStatus(STATE.ERROR, 'machine.tunnel scope was denied or expired.');
-          addLog('Error: machine.tunnel scope denied.', 'error');
-        } else {
-          // API not ready — simulate connected state for demo
-          simulateConnected();
-        }
-      });
-  }
-
-  function simulateConnected() {
-    // Demo mode when /tunnel/start API is not available
-    var demoData = {
-      tunnel_id:     'sol_' + Math.random().toString(36).slice(2, 10),
-      public_url:    'https://tunnel.solaceagi.com/demo-' + Math.random().toString(36).slice(2, 8),
-      status:        'connected',
-      bytes_transferred: 0,
-      connected_at:  new Date().toISOString(),
-      region:        'us-west-1',
-    };
-    tunnelData = demoData;
-    connectedAt = Date.now();
-    setStatus(STATE.CONNECTED, 'Tunnel is live (demo mode — API not connected).');
-    updateDetails(demoData);
-    addLog('DEMO MODE: /tunnel/start API not connected.', 'warn');
-    addLog('Tunnel simulated: ' + demoData.public_url, 'ok');
-    startUptimeTimer();
-  }
-
-  window.disconnectTunnel = function disconnectTunnel() {
-    addLog('Disconnecting tunnel...', 'warn');
-
-    fetch('/tunnel/stop', {
-      method: 'POST',
-      headers: { 'Accept': 'application/json' },
-    })
-      .then(function () {})
-      .catch(function () {});
-
-    clearInterval(uptimeTimer);
-    tunnelData  = null;
-    connectedAt = null;
-
-    setStatus(STATE.DISCONNECTED);
-    addLog('Tunnel disconnected.', 'ok');
-
-    var tid = el('detail-tunnel-id');
-    var dsts = el('detail-status');
-    var dut = el('detail-uptime');
-    var dby = el('detail-bytes');
-    var dsi = el('detail-since');
-    if (tid)  tid.textContent  = '—';
-    if (dsts) dsts.textContent = 'Disconnected';
-    if (dut)  dut.textContent  = '—';
-    if (dby)  dby.textContent  = '—';
-    if (dsi)  dsi.textContent  = '—';
-  };
-
-  function startUptimeTimer() {
-    clearInterval(uptimeTimer);
-    uptimeTimer = setInterval(function () {
-      var uptimeEl = el('detail-uptime');
-      if (!uptimeEl || !connectedAt) return;
-      var seconds = Math.floor((Date.now() - connectedAt) / 1000);
-      uptimeEl.textContent = formatUptime(seconds);
-
-      // Simulate bytes transferred climbing
-      if (tunnelData) {
-        tunnelData.bytes_transferred = (tunnelData.bytes_transferred || 0) + Math.floor(Math.random() * 200);
-        var bytesEl = el('detail-bytes');
-        if (bytesEl) bytesEl.textContent = formatBytes(tunnelData.bytes_transferred);
-      }
-    }, 1000);
-  }
-
-  /* ------------------------------------------------------------------
-     URL ACTIONS
-  ------------------------------------------------------------------ */
-  window.copyUrl = function () {
-    var urlEl = el('public-url-value');
-    if (urlEl && urlEl.textContent !== '—') {
-      navigator.clipboard.writeText(urlEl.textContent).then(function () {
-        addLog('URL copied to clipboard.', 'info');
-      });
-    }
-  };
-
-  window.openUrl = function () {
-    var urlEl = el('public-url-value');
-    if (urlEl && urlEl.textContent !== '—') {
-      window.open(urlEl.textContent, '_blank');
-    }
-  };
-
-  window.shareUrl = function () {
-    var urlEl = el('public-url-value');
-    if (!urlEl || urlEl.textContent === '—') return;
-    if (navigator.share) {
-      navigator.share({ title: 'Solace Browser Tunnel', url: urlEl.textContent });
-    } else {
-      copyUrl();
-    }
-  };
-
-  /* ------------------------------------------------------------------
-     INIT: check current tunnel status
-  ------------------------------------------------------------------ */
-  fetch('/tunnel/status', { headers: { 'Accept': 'application/json' } })
-    .then(function (res) { return res.json(); })
-    .then(function (data) {
-      if (data.connected) {
-        tunnelData  = data;
-        connectedAt = data.connected_at ? new Date(data.connected_at).getTime() : Date.now();
-        setStatus(STATE.CONNECTED);
-        updateDetails(data);
-        startUptimeTimer();
-        addLog('Restored existing tunnel connection.', 'ok');
-      }
-    })
-    .catch(function () {
-      setStatus(STATE.DISCONNECTED);
-    });
-
-})();
-</script>
-
+  </div>
 </body>
 </html>

@@ -1,109 +1,88 @@
 #!/usr/bin/env python3
 
 """
-Solace Browser - Consolidated Web Automation Module
+Solace Browser automation package.
 
-Architecture:
-├── core.py          - ARIA tree, DOM extraction, basic page operations
-├── advanced.py      - Page observer, network monitor, ref mapper
-├── semantic.py      - 5-layer semantic analysis (visual/data/api/metadata/network)
-├── http_server.py   - Persistent HTTP server wrapper
-└── handlers.py      - HTTP endpoint handlers
+This package exposes the reusable browser primitives used by the active
+`solace_browser_server.py` webservice:
+- `core.py`: ARIA tree, DOM extraction, page state, and basic actions
+- `advanced.py`: observers, network monitoring, reference mapping
+- `semantic.py`: metadata, API/network, and semantic analysis helpers
 
-This module consolidates:
-- browser_interactions.py (basic ARIA + DOM extraction)
-- enhanced_browser_interactions.py (page observation + network monitoring)
-- persistent_browser_server.py (HTTP server + endpoint handlers)
+The only supported browser HTTP API lives in `solace_browser_server.py`.
+There is no second supported server surface inside `browser/`.
 """
 
-# Core layer
 from browser.core import (
     AriaNode,
-    ClickAction,
-    TypeAction,
-    PressAction,
-    HoverAction,
-    ScrollIntoViewAction,
-    WaitAction,
-    FillAction,
     BrowserAction,
+    ClickAction,
+    FillAction,
+    HoverAction,
+    PressAction,
+    ScrollIntoViewAction,
+    TypeAction,
+    WaitAction,
+    execute_action,
+    execute_click,
+    execute_fill,
+    execute_hover,
+    execute_press,
+    execute_scroll_into_view,
+    execute_type,
+    execute_wait,
     format_aria_tree,
     get_dom_snapshot,
     get_page_state,
-    execute_action,
-    execute_click,
-    execute_type,
-    execute_press,
-    execute_hover,
-    execute_scroll_into_view,
-    execute_wait,
-    execute_fill,
 )
-
-# Advanced layer
 from browser.advanced import (
     AriaRefMapper,
-    PageObserver,
     NetworkMonitor,
-    get_llm_snapshot,
+    PageObserver,
     execute_click_via_ref,
     execute_type_via_ref,
+    get_llm_snapshot,
 )
-
-# Semantic layer
 from browser.semantic import (
     SemanticAnalyzer,
-    get_semantic_analysis,
-    get_meta_tags,
-    get_js_state,
     get_api_calls,
+    get_js_state,
+    get_meta_tags,
     get_rate_limit_info,
+    get_semantic_analysis,
 )
 
-# Server layer
-from browser.http_server import PersistentBrowserServer
-
 __all__ = [
-    # Core data structures
-    "AriaNode",
-    "ClickAction",
-    "TypeAction",
-    "PressAction",
-    "HoverAction",
-    "ScrollIntoViewAction",
-    "WaitAction",
-    "FillAction",
-    "BrowserAction",
-
-    # Core functions
-    "format_aria_tree",
-    "get_dom_snapshot",
-    "get_page_state",
-    "execute_action",
-    "execute_click",
-    "execute_type",
-    "execute_press",
-    "execute_hover",
-    "execute_scroll_into_view",
-    "execute_wait",
-    "execute_fill",
-
-    # Advanced functions
-    "AriaRefMapper",
-    "PageObserver",
-    "NetworkMonitor",
-    "get_llm_snapshot",
-    "execute_click_via_ref",
-    "execute_type_via_ref",
-
-    # Semantic functions
-    "SemanticAnalyzer",
-    "get_semantic_analysis",
-    "get_meta_tags",
-    "get_js_state",
-    "get_api_calls",
-    "get_rate_limit_info",
-
-    # Server
-    "PersistentBrowserServer",
+    'AriaNode',
+    'BrowserAction',
+    'ClickAction',
+    'FillAction',
+    'HoverAction',
+    'PressAction',
+    'ScrollIntoViewAction',
+    'TypeAction',
+    'WaitAction',
+    'execute_action',
+    'execute_click',
+    'execute_fill',
+    'execute_hover',
+    'execute_press',
+    'execute_scroll_into_view',
+    'execute_type',
+    'execute_wait',
+    'format_aria_tree',
+    'get_dom_snapshot',
+    'get_page_state',
+    'AriaRefMapper',
+    'NetworkMonitor',
+    'PageObserver',
+    'execute_click_via_ref',
+    'execute_type_via_ref',
+    'get_llm_snapshot',
+    'SemanticAnalyzer',
+    'get_api_calls',
+    'get_js_state',
+    'get_meta_tags',
+    'get_rate_limit_info',
+    'get_semantic_analysis',
 ]
