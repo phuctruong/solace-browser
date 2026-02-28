@@ -81,6 +81,15 @@ except ImportError as _audit_import_error:
     AUDIT_AVAILABLE = False
 
 try:
+    from sync_client import SyncClient, SyncConfig, SyncError
+    from evidence_upload import EvidenceCollector, upload_pending_evidence
+    SYNC_AVAILABLE = True
+except ImportError as _sync_import_error:
+    logger_temp = logging.getLogger("solace-browser")
+    logger_temp.warning(f"Sync module not available: {_sync_import_error}")
+    SYNC_AVAILABLE = False
+
+try:
     from playwright.async_api import async_playwright, Browser, Page
 except ImportError:
     print("ERROR: Playwright not installed")
@@ -1396,6 +1405,18 @@ class SolaceBrowserServer:
         self.port = port
         self.app = web.Application()
         self.proxy_config: dict[str, Any] = {"proxies": []}
+
+        # Sync client (browser <-> cloud)
+        self._sync_client: Optional[Any] = None
+        self._evidence_collector: Optional[Any] = None
+        if SYNC_AVAILABLE:
+            sync_config = SyncConfig.from_env()
+            self._sync_client = SyncClient(sync_config)
+            audit_dir_str = os.getenv("SOLACE_PART11_AUDIT_DIR", "~/.solace/audit")
+            self._evidence_collector = EvidenceCollector(
+                audit_dir=Path(audit_dir_str).expanduser(),
+            )
+
         self._setup_routes()
 
     def _setup_routes(self):
@@ -1454,6 +1475,12 @@ class SolaceBrowserServer:
         self.app.router.add_get('/history/{session_id}', self._handle_history_session)
         self.app.router.add_get('/history/{session_id}/{snapshot_id}', self._handle_history_snapshot)
         self.app.router.add_get('/history/{session_id}/{snapshot_id}/render', self._handle_history_render)
+
+        # Sync routes (browser <-> cloud evidence + config bridge)
+        if SYNC_AVAILABLE:
+            self.app.router.add_post('/api/sync/push', self._handle_sync_push)
+            self.app.router.add_get('/api/sync/status', self._handle_sync_status)
+            self.app.router.add_post('/api/sync/pull', self._handle_sync_pull)
 
         # Debug UI routes
         if self.browser.debug_ui:
@@ -2509,6 +2536,88 @@ class SolaceBrowserServer:
 </body>
 </html>
         """
+
+    # ------------------------------------------------------------------
+    # Sync handlers (browser <-> cloud evidence + config bridge)
+    # ------------------------------------------------------------------
+
+    async def _handle_sync_push(self, request):
+        """Trigger a push of current evidence to cloud.
+
+        POST /api/sync/push
+
+        Collects all pending evidence bundles from the Part 11 audit
+        directory and uploads them to solaceagi.com via the sync client.
+        """
+        if self._sync_client is None or self._evidence_collector is None:
+            return web.json_response(
+                {"error": "sync module not available"}, status=503
+            )
+
+        try:
+            result = await upload_pending_evidence(
+                self._sync_client, self._evidence_collector
+            )
+            return web.json_response({"success": True, "sync": result})
+        except SyncError as exc:
+            logger.error("Sync push failed: %s", exc)
+            return web.json_response(
+                {"error": f"sync push failed: {exc}"}, status=502
+            )
+        except Exception as exc:
+            logger.error("Sync push unexpected error: %s", exc)
+            return web.json_response(
+                {"error": f"sync push error: {exc}"}, status=500
+            )
+
+    async def _handle_sync_status(self, request):
+        """Show sync status (last push time, pending items).
+
+        GET /api/sync/status
+        """
+        if self._sync_client is None or self._evidence_collector is None:
+            return web.json_response(
+                {"error": "sync module not available"}, status=503
+            )
+
+        pending_evidence = self._evidence_collector.pending_count
+        status = self._sync_client.get_status(
+            pending_evidence=pending_evidence,
+        )
+        return web.json_response({
+            "connected": status.connected,
+            "last_push_iso": status.last_push_iso,
+            "last_pull_iso": status.last_pull_iso,
+            "pending_evidence_count": status.pending_evidence_count,
+            "pending_runs_count": status.pending_runs_count,
+            "api_url": status.api_url,
+            "auto_sync_enabled": status.auto_sync_enabled,
+            "evidence_auto_upload": status.evidence_auto_upload,
+        })
+
+    async def _handle_sync_pull(self, request):
+        """Trigger a pull of config from cloud.
+
+        POST /api/sync/pull
+        """
+        if self._sync_client is None:
+            return web.json_response(
+                {"error": "sync module not available"}, status=503
+            )
+
+        try:
+            config = await self._sync_client.pull_config()
+            return web.json_response({"success": True, "config": config})
+        except SyncError as exc:
+            logger.error("Sync pull failed: %s", exc)
+            return web.json_response(
+                {"error": f"sync pull failed: {exc}"}, status=502
+            )
+        except Exception as exc:
+            logger.error("Sync pull unexpected error: %s", exc)
+            return web.json_response(
+                {"error": f"sync pull error: {exc}"}, status=500
+            )
 
     async def start(self):
         """Start the server"""
