@@ -1,11 +1,22 @@
 :root {
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
   color: #0f172a;
-  background: radial-gradient(circle at 20% 10%, #fce7bf, #f8fafc 42%);
+  background:
+    radial-gradient(circle at top left, #ffe7a8 0, transparent 32%),
+    radial-gradient(circle at 80% 20%, #cde7ff 0, transparent 28%),
+    linear-gradient(180deg, #fffdf7 0%, #f5f8fc 100%);
+  --panel: rgba(255, 255, 255, 0.86);
+  --panel-border: #d4dde8;
+  --ink: #0f172a;
+  --muted: #526174;
+  --accent: #134e4a;
+  --warn: #92400e;
+  --danger: #9f1239;
 }
 
 body {
   margin: 0;
+  color: var(--ink);
 }
 
 .layout {
@@ -16,10 +27,11 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
+  gap: 16px;
+  padding: 16px 24px;
   border-bottom: 1px solid #dbe4ef;
-  background: #ffffffc0;
-  backdrop-filter: blur(6px);
+  background: #ffffffc8;
+  backdrop-filter: blur(10px);
 }
 
 .brand {
@@ -29,20 +41,21 @@ body {
 }
 
 main {
-  padding: 20px;
+  padding: 24px;
 }
 
 .app-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  gap: 16px;
 }
 
 .app-tile {
-  border: 1px solid #d5dbe3;
-  border-radius: 10px;
-  padding: 12px;
-  background: white;
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  padding: 16px;
+  background: var(--panel);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
 }
 
 .app-tile.locked {
@@ -56,59 +69,286 @@ main {
   gap: 8px;
   font-weight: 600;
   cursor: pointer;
+  color: var(--ink);
+  padding: 0;
 }
 
 .badge {
   display: inline-block;
   margin: 8px 0;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
-  background: #ecfeff;
+  background: #e0f2fe;
+  color: #0c4a6e;
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
 }
 
 th,
 td {
   border-bottom: 1px solid #e5e7eb;
   text-align: left;
-  padding: 8px;
+  padding: 12px;
+}
+
+.modal-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
 }
 
 .modal {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  width: min(460px, 92vw);
+  position: relative;
+  width: min(720px, calc(100vw - 24px));
   background: #fff;
-  border: 1px solid #d5dbe3;
-  border-radius: 12px;
-  padding: 14px;
-  box-shadow: 0 10px 25px #00000022;
-}
-
-.modal textarea {
-  width: 100%;
-  min-height: 80px;
+  border: 1px solid var(--panel-border);
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.2);
 }
 
 .actions {
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
 }
 
 .gallery {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
 .gallery img {
   width: 100%;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid #d5dbe3;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #0f766e;
+  color: white;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+input,
+textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  padding: 10px 12px;
+  background: white;
+  box-sizing: border-box;
+}
+
+.hero-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.credits-card,
+.risk-card,
+.detail-card,
+.empty-card,
+.auth-card {
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  padding: 20px;
+  background: var(--panel);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hero-panel h2,
+.detail-card h3,
+.auth-card h3,
+.empty-card h3,
+.plan-header h3 {
+  margin-top: 0;
+}
+
+.risk-low {
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.risk-medium {
+  background: #fef3c7;
+  color: var(--warn);
+}
+
+.risk-high {
+  background: #ffe4e6;
+  color: var(--danger);
+}
+
+.dashboard-page,
+.detail-page,
+.setup-page,
+.auth-page {
+  display: grid;
+  gap: 20px;
+}
+
+.app-copy,
+.app-meta,
+.modal-copy {
+  color: var(--muted);
+}
+
+.runs-section,
+.detail-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.detail-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.section-header,
+.plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.timeline {
+  display: grid;
+  gap: 10px;
+  padding-left: 18px;
+}
+
+.timeline-step {
+  display: grid;
+  gap: 4px;
+}
+
+.approval-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 18px 0;
+}
+
+.approval-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.approval-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.approval-toggle input {
+  width: auto;
+}
+
+.selectable-card {
+  cursor: pointer;
+}
+
+.selected-card {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.14);
+}
+
+.auth-grid,
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.auth-card form {
+  display: grid;
+  gap: 10px;
+}
+
+.scope-required {
+  background: #f0fdf4;
+}
+
+.scope-optional {
+  background: #fffbeb;
+}
+
+.scope-step-up {
+  background: #fff1f2;
+}
+
+nav {
+  display: flex;
+  gap: 14px;
+}
+
+nav a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+@media (max-width: 760px) {
+  .header,
+  .hero-panel,
+  .section-header {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  main {
+    padding: 16px;
+  }
+
+  .modal {
+    padding: 18px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
 }

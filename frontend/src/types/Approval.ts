@@ -3,12 +3,14 @@ export interface ApprovalPreview {
   scopes: string[];
   estimatedCostUsd: number;
   estimatedDurationSec: number;
+  stepLabels?: string[];
+  taskId?: string;
 }
 
 export interface ApprovalRecord {
   id: string;
   approvedAt: string;
-  decision: "approve" | "override" | "cancel";
+  decision: "approve" | "modify" | "abort" | "override" | "cancel";
   reason?: string;
   approver: string;
   preview: ApprovalPreview;

@@ -520,7 +520,7 @@ class AppRegistry:
         try:
             self._apps[app_id].start()
             self._lifecycle.transition(app_id, AppState.RUNNING)
-        except Exception as exc:
+        except (OSError, RuntimeError, TypeError, ValueError) as exc:
             self._lifecycle.transition(app_id, AppState.ERROR)
             raise CompanionAppError(
                 f"App '{app_id}' failed to start: {exc}"
@@ -542,7 +542,7 @@ class AppRegistry:
         try:
             self._apps[app_id].stop()
             self._lifecycle.transition(app_id, AppState.STOPPED)
-        except Exception as exc:
+        except (OSError, RuntimeError, TypeError, ValueError) as exc:
             self._lifecycle.transition(app_id, AppState.ERROR)
             raise CompanionAppError(
                 f"App '{app_id}' failed to stop cleanly: {exc}"

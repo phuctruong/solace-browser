@@ -42,6 +42,19 @@ from src.machine.scopes import SCOPE_TUNNEL_MANAGE, SCOPE_TUNNEL_OPEN
 
 logger = logging.getLogger(__name__)
 
+try:
+    from websockets.exceptions import WebSocketException  # type: ignore
+except ImportError:  # pragma: no cover - optional dependency
+    class WebSocketException(Exception):
+        """Fallback when websockets is unavailable."""
+
+
+try:
+    from httpx import HTTPError  # type: ignore
+except ImportError:  # pragma: no cover - optional dependency
+    class HTTPError(Exception):
+        """Fallback when httpx is unavailable."""
+
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -127,8 +140,8 @@ class TunnelServer:
             }
             with open(AUDIT_LOG_PATH, "a", encoding="utf-8") as fh:
                 fh.write(json.dumps(record) + "\n")
-        except Exception:
-            pass
+        except (OSError, TypeError, ValueError) as exc:
+            logger.warning("tunnel audit write failed: %s", exc)
 
     def _gate_check(self, token: AgencyToken) -> Optional[dict]:
         """Run full four-gate scope check. Returns None if allowed."""
@@ -543,7 +556,7 @@ class TunnelClient:
             )
             return True
 
-        except Exception as exc:
+        except (OSError, WebSocketException) as exc:
             logger.warning("TunnelClient.connect failed: %s", exc)
             self._state = "INIT"
             self._session.connected = False
@@ -571,14 +584,14 @@ class TunnelClient:
             try:
                 await self._heartbeat_task
             except asyncio.CancelledError:
-                pass
+                logger.debug("TunnelClient heartbeat task cancelled during disconnect")
         self._heartbeat_task = None
 
         # Close WebSocket gracefully
         if self._ws is not None:
             try:
                 await self._ws.close()
-            except Exception as exc:
+            except (OSError, RuntimeError, WebSocketException) as exc:
                 logger.debug("TunnelClient.disconnect ws.close() error: %s", exc)
             self._ws = None
 
@@ -630,13 +643,13 @@ class TunnelClient:
                     )
                     await self.disconnect(reason=REASON_TIMEOUT)
                     return
-                except Exception as exc:
+                except (OSError, RuntimeError, WebSocketException) as exc:
                     logger.warning("TunnelClient heartbeat error: %s", exc)
                     await self.disconnect(reason=REASON_ERROR)
                     return
 
         except asyncio.CancelledError:
-            pass  # Normal cancellation during disconnect()
+            logger.debug("TunnelClient heartbeat loop cancelled")
 
     async def _handle_relay(self, ws_message: Any) -> None:
         """
@@ -701,7 +714,7 @@ class TunnelClient:
                     "headers": dict(resp.headers),
                     "body": resp.text,
                 }
-        except Exception as exc:
+        except (HTTPError, OSError, RuntimeError, ValueError) as exc:
             logger.warning("TunnelClient._handle_relay: local HTTP error: %s", exc)
             response_payload = {
                 "request_id": request_id,
@@ -717,7 +730,7 @@ class TunnelClient:
                 self._track_bandwidth("out", len(response_bytes))
                 await self._ws.send(response_bytes)
                 self._session.requests_proxied += 1
-            except Exception as exc:
+            except (OSError, RuntimeError, ValueError, WebSocketException) as exc:
                 logger.warning("TunnelClient._handle_relay: send error: %s", exc)
 
     async def _auto_reconnect(self) -> bool:

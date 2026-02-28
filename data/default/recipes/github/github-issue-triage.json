@@ -1,0 +1,257 @@
+{
+  "id": "github-issue-triage",
+  "platform": "github",
+  "version": "1.0.0",
+  "description": "Read open GitHub issues, classify by priority and type, suggest assignees from label history, and produce a triage report.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["github.read.issues"],
+  "evidence_type": "lane_a",
+  "primewiki_reference": "data/default/primewiki/github/actions.json",
+
+  "reasoning": {
+    "research": "GitHub issues page lists issues in a table. Each issue row contains title, labels, assignee avatars, comment count, and age. Issue rows use [data-testid='issue-row'] or .js-issue-row selectors. Filters are applied via URL query params (?q=is:open+is:issue+no:assignee). Individual issue pages contain body markdown, comments, and label sidebar. Pagination uses .pagination a[rel='next'].",
+    "selector_strategy": "Navigate to /issues?q=is:open+is:issue+no:assignee. Issue rows: [data-testid='issue-row']. Title: [data-testid='issue-row'] a[id^='issue_']. Labels: [data-testid='issue-row'] .IssueLabel. Assignee: [data-testid='issue-row'] .AvatarStack. Age: [data-testid='issue-row'] relative-time. Individual issue body: .js-comment-body or [data-testid='issue-body']. Comments: .timeline-comment.",
+    "anti_bot_notes": "GitHub rate-limits unauthenticated requests. With valid session cookies, read operations are not aggressively blocked. Add 500-800ms delays between issue detail page navigations. Do not open more than 25 issues in rapid succession.",
+    "performance": "Navigation 3s + filter apply 2s + list extraction 3s + per-issue detail (25 issues x 3s) = 75s + LLM classification 10s + report generation 5s + save 2s = ~100s."
+  },
+
+  "input_params": {
+    "owner": {
+      "type": "string",
+      "description": "GitHub repository owner (user or organization)",
+      "required": true,
+      "example": "stillwater-sc"
+    },
+    "repo": {
+      "type": "string",
+      "description": "GitHub repository name",
+      "required": true,
+      "example": "stillwater"
+    },
+    "max_issues": {
+      "type": "number",
+      "description": "Maximum number of issues to triage in a single run",
+      "required": false,
+      "example": 25
+    },
+    "label_filter": {
+      "type": "string",
+      "description": "Optional label to filter issues by (e.g., 'needs-triage')",
+      "required": false,
+      "example": "needs-triage"
+    }
+  },
+
+  "budgets": {
+    "max_reads": 100,
+    "max_sends": 0,
+    "max_deletes": 0,
+    "max_llm_calls": 3,
+    "max_duration_seconds": 300
+  },
+
+  "mermaid_fsm": "stateDiagram-v2\n  [*] --> NavigateIssues\n  NavigateIssues --> Authenticate: page_loaded\n  Authenticate --> ApplyFilters: auth_confirmed\n  ApplyFilters --> ExtractIssueList: filters_applied\n  ExtractIssueList --> ExtractIssueDetails: list_extracted\n  ExtractIssueDetails --> ClassifyPriority: details_extracted\n  ClassifyPriority --> ClassifyType: priority_assigned\n  ClassifyType --> SuggestAssignees: type_assigned\n  SuggestAssignees --> DraftReport: assignees_suggested\n  DraftReport --> SaveToOutbox: report_ready\n  SaveToOutbox --> CaptureEvidence: saved\n  CaptureEvidence --> [*]",
+
+  "steps": [
+    {
+      "step_id": "step_01_navigate_issues",
+      "action": "navigate",
+      "description": "Navigate to the GitHub repository issues page. Construct the URL from owner and repo params and wait for the issues list container to render.",
+      "selector": "[data-testid='issue-row']",
+      "scope_required": "github.read.issues",
+      "evidence_capture": true,
+      "timeout_ms": 15000,
+      "on_error": "fail_with_screenshot",
+      "target": "https://github.com/{params.owner}/{params.repo}/issues"
+    },
+    {
+      "step_id": "step_02_authenticate",
+      "action": "check_auth",
+      "description": "Verify the GitHub session is authenticated by checking for the user avatar in the top navigation bar. If redirected to login, abort with SESSION_EXPIRED.",
+      "selector": "[data-testid='user-avatar']",
+      "scope_required": "github.read.issues",
+      "evidence_capture": false,
+      "timeout_ms": 8000,
+      "on_error": "fail_with_screenshot",
+      "fallback_url_pattern": "github.com/login"
+    },
+    {
+      "step_id": "step_03_apply_filters",
+      "action": "navigate",
+      "description": "Apply issue filters to show only open, unassigned issues. Navigate to the filtered URL with query parameters: is:open is:issue no:assignee. If a label_filter param is provided, add label:{label_filter} to the query.",
+      "selector": "[data-testid='issue-row']",
+      "scope_required": "github.read.issues",
+      "evidence_capture": true,
+      "timeout_ms": 12000,
+      "on_error": "retry_once",
+      "target": "https://github.com/{params.owner}/{params.repo}/issues?q=is%3Aopen+is%3Aissue+no%3Aassignee"
+    },
+    {
+      "step_id": "step_04_extract_issue_list",
+      "action": "extract",
+      "description": "Extract the list of issues from the filtered view. For each issue row, capture: title, issue number, labels (name and color), comment count, and age (relative-time element). Limit extraction to max_issues param (default 25).",
+      "selector": "[data-testid='issue-row']",
+      "scope_required": "github.read.issues",
+      "evidence_capture": true,
+      "timeout_ms": 10000,
+      "on_error": "fail_with_screenshot",
+      "extract_fields": {
+        "title": "a[id^='issue_']",
+        "issue_number": "a[id^='issue_']::attr(href)",
+        "labels": ".IssueLabel",
+        "comment_count": ".Link--muted",
+        "age": "relative-time"
+      }
+    },
+    {
+      "step_id": "step_05_extract_issue_details",
+      "action": "extract",
+      "description": "For each issue in the extracted list, navigate to the individual issue page and extract the full body text and all comments. Capture comment authors and timestamps. Add 600ms delay between issue page navigations to avoid rate limiting. Return enriched issue objects.",
+      "selector": ".js-comment-body",
+      "scope_required": "github.read.issues",
+      "evidence_capture": false,
+      "timeout_ms": 90000,
+      "on_error": "skip_with_warning",
+      "per_item_delay_ms": 600,
+      "extract_fields": {
+        "body": ".js-comment-body:first-of-type",
+        "comments": ".timeline-comment .js-comment-body",
+        "comment_authors": ".timeline-comment .author",
+        "comment_timestamps": ".timeline-comment relative-time"
+      }
+    },
+    {
+      "step_id": "step_06_classify_priority",
+      "action": "classify",
+      "description": "Classify each issue by priority using LLM analysis. Priority levels: critical (security vulnerabilities, data loss, production outages), high (broken features, significant regressions), medium (non-critical bugs, UX issues), low (cosmetic issues, minor improvements). Classification considers: issue body severity keywords, label signals, comment urgency, and age (older unresolved issues escalate).",
+      "selector": null,
+      "scope_required": "llm.generate.text",
+      "evidence_capture": true,
+      "timeout_ms": 20000,
+      "on_error": "fail_with_screenshot",
+      "categories": ["critical", "high", "medium", "low"],
+      "llm_prompt_template": "Classify the following GitHub issue by priority. Consider severity, impact, and urgency. Return one of: critical, high, medium, low. Provide a one-sentence justification."
+    },
+    {
+      "step_id": "step_07_classify_type",
+      "action": "classify",
+      "description": "Classify each issue by type using LLM analysis. Type categories: bug (unexpected behavior, errors, crashes), feature (new functionality requests, enhancements), question (usage questions, documentation queries), docs (documentation improvements, typo fixes). Uses issue title, body, and labels as classification signals.",
+      "selector": null,
+      "scope_required": "llm.generate.text",
+      "evidence_capture": true,
+      "timeout_ms": 20000,
+      "on_error": "fail_with_screenshot",
+      "categories": ["bug", "feature", "question", "docs"],
+      "llm_prompt_template": "Classify the following GitHub issue by type. Return one of: bug, feature, question, docs. Provide a one-sentence justification."
+    },
+    {
+      "step_id": "step_08_suggest_assignees",
+      "action": "summarize",
+      "description": "For each issue, suggest a potential assignee based on label history and past issue activity. Analyze which contributors have historically worked on issues with similar labels. If no clear match, suggest 'unassigned' with reasoning. Output a mapping of issue number to suggested assignee.",
+      "selector": null,
+      "scope_required": "llm.generate.text",
+      "evidence_capture": false,
+      "timeout_ms": 15000,
+      "on_error": "skip_with_warning",
+      "llm_prompt_template": "Given the following issues with their labels and the repository's contributor history, suggest the most appropriate assignee for each issue. If uncertain, say 'unassigned'."
+    },
+    {
+      "step_id": "step_09_draft_triage_report",
+      "action": "transform",
+      "description": "Draft a comprehensive triage report as a markdown document. Include: summary statistics (total issues, breakdown by priority and type), a markdown table with columns (Issue #, Title, Priority, Type, Suggested Assignee, Age, Labels), and a recommended action section highlighting critical/high priority items that need immediate attention.",
+      "selector": null,
+      "scope_required": "github.read.issues",
+      "evidence_capture": true,
+      "timeout_ms": 10000,
+      "on_error": "fail_with_screenshot",
+      "output_format": "markdown",
+      "template": "# Issue Triage Report: {owner}/{repo}\n**Generated:** {timestamp}\n**Issues Analyzed:** {issue_count}\n\n## Summary\n- Critical: {critical_count}\n- High: {high_count}\n- Medium: {medium_count}\n- Low: {low_count}\n\n## Triage Table\n| # | Title | Priority | Type | Suggested Assignee | Age | Labels |\n|---|-------|----------|------|--------------------|-----|--------|\n{issue_rows}\n\n## Recommended Actions\n{recommendations}"
+    },
+    {
+      "step_id": "step_10_save_to_outbox",
+      "action": "save",
+      "description": "Save the triage report to the local outbox directory. File is named with repository and date for easy retrieval and historical comparison.",
+      "selector": null,
+      "scope_required": "outbox.write",
+      "evidence_capture": true,
+      "timeout_ms": 5000,
+      "on_error": "fail_with_screenshot",
+      "output_path": "outbox/github-triage-{owner}-{repo}-{date}.md"
+    },
+    {
+      "step_id": "step_11_capture_evidence",
+      "action": "capture",
+      "description": "Take a final evidence screenshot of the GitHub issues page showing the filtered issue list that was triaged. Include the filter bar and visible issue rows for audit trail verification.",
+      "selector": null,
+      "scope_required": "github.read.issues",
+      "evidence_capture": true,
+      "timeout_ms": 8000,
+      "on_error": "skip_with_warning"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "repository": {"type": "string", "example": "stillwater-sc/stillwater"},
+      "issues_analyzed": {"type": "number", "example": 18},
+      "priority_breakdown": {
+        "type": "object",
+        "properties": {
+          "critical": {"type": "number", "example": 2},
+          "high": {"type": "number", "example": 5},
+          "medium": {"type": "number", "example": 7},
+          "low": {"type": "number", "example": 4}
+        }
+      },
+      "type_breakdown": {
+        "type": "object",
+        "properties": {
+          "bug": {"type": "number", "example": 8},
+          "feature": {"type": "number", "example": 6},
+          "question": {"type": "number", "example": 3},
+          "docs": {"type": "number", "example": 1}
+        }
+      },
+      "triage_report_markdown": {"type": "string", "example": "# Issue Triage Report: stillwater-sc/stillwater\n..."},
+      "outbox_path": {"type": "string", "example": "outbox/github-triage-stillwater-sc-stillwater-2026-02-21.md"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["repository", "issues_analyzed", "triage_report_markdown", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect github.com/login redirect — run github-oauth-login recipe first",
+    "repo_not_found": "Verify owner/repo combination. Abort with REPO_NOT_FOUND if 404.",
+    "no_issues_matching_filter": "Return empty triage report with zero counts rather than failing",
+    "rate_limited": "Detect 429 response or abuse detection page. Wait 60s and retry once. If still blocked, proceed with already-extracted issues.",
+    "issue_page_load_failed": "Skip individual issue detail extraction, classify based on title and labels only"
+  },
+
+  "anti_detection": {
+    "human_typing": false,
+    "natural_navigation_delays": true,
+    "wait_for_dom_settle": true,
+    "per_page_delay_ms": 600
+  },
+
+  "metadata": {
+    "tags": ["github", "issues", "triage", "classify", "read", "llm"],
+    "difficulty": "hard",
+    "prerequisites": ["github_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 100,
+    "idempotent": true,
+    "destructive": false
+  }
+}

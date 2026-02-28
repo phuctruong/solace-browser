@@ -206,7 +206,7 @@ class AutoUpdateChecker:
                 latest_version=release.version,
                 release=release if update_available else None,
             )
-        except Exception as exc:
+        except (ConnectionError, KeyError, OSError, TypeError, ValueError) as exc:
             logger.warning("Auto-update check failed: %s", exc)
             return UpdateResult(
                 update_available=False,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 import hashlib
 import json
@@ -9,6 +10,20 @@ from pathlib import Path
 from typing import Any, Dict
 
 from cli.init_workspace import resolve_solace_home
+
+
+@dataclass(frozen=True)
+class CacheStats:
+    hit_count: int
+    miss_count: int
+    hit_rate: float
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "hits": self.hit_count,
+            "misses": self.miss_count,
+            "hit_rate": self.hit_rate,
+        }
 
 
 class RecipeCache:
@@ -71,12 +86,15 @@ class RecipeCache:
             return 0.0
         return self.hits / total
 
+    def cache_stats(self) -> CacheStats:
+        return CacheStats(
+            hit_count=self.hits,
+            miss_count=self.misses,
+            hit_rate=self.hit_rate(),
+        )
+
     def stats(self) -> Dict[str, Any]:
-        return {
-            "hits": self.hits,
-            "misses": self.misses,
-            "hit_rate": self.hit_rate(),
-        }
+        return self.cache_stats().to_dict()
 
     def _path_for_key(self, key: str) -> Path:
         return self.cache_dir / f"{key}.json"

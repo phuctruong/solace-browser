@@ -30,6 +30,7 @@ class EvidenceChain:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "event_type": event_type,
             "prev_hash": self.prev_hash,
+            "previous_hash": self.prev_hash,
             "data": data,
         }
         event_hash = self._event_hash(event)
@@ -61,13 +62,15 @@ class EvidenceChain:
         expected_prev = GENESIS_HASH
 
         for idx, event in enumerate(events):
-            if event.get("prev_hash") != expected_prev:
+            previous_hash = event.get("previous_hash", event.get("prev_hash"))
+            if previous_hash != expected_prev:
                 return False, f"broken_prev_hash_at_index_{idx}"
 
             payload = {
                 "timestamp": event.get("timestamp"),
                 "event_type": event.get("event_type"),
-                "prev_hash": event.get("prev_hash"),
+                "prev_hash": previous_hash,
+                "previous_hash": previous_hash,
                 "data": event.get("data"),
             }
             expected_hash = self._event_hash(payload)

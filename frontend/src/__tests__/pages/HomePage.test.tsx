@@ -22,10 +22,14 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-vi.mock("../../services/solaceagiClient", () => ({
-  createApprovalRecord: (...args: unknown[]) => createApprovalRecordMock(...args),
-  syncEvidence: (...args: unknown[]) => syncEvidenceMock(...args),
-}));
+vi.mock("../../services/solaceagiClient", async () => {
+  const actual = await vi.importActual<typeof import("../../services/solaceagiClient")>("../../services/solaceagiClient");
+  return {
+    ...actual,
+    createApprovalRecord: (...args: unknown[]) => createApprovalRecordMock(...args),
+    syncEvidence: (...args: unknown[]) => syncEvidenceMock(...args),
+  };
+});
 
 vi.mock("../../services/playwrightClient", () => ({
   executeHeadless: (...args: unknown[]) => executeHeadlessMock(...args),
@@ -163,7 +167,7 @@ describe("<HomePage>", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getAllByRole("button", { name: "Run Now" })[1]);
-    fireEvent.click(screen.getByRole("button", { name: "CANCEL" }));
+    fireEvent.click(screen.getByRole("button", { name: "Abort" }));
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "Approval Required" })).toBeNull();
     });
@@ -188,7 +192,7 @@ describe("<HomePage>", () => {
     );
 
     fireEvent.click(screen.getAllByRole("button", { name: "Run Now" })[1]);
-    fireEvent.click(screen.getByRole("button", { name: "APPROVE & RUN" }));
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
 
     await waitFor(() => {
       expect(createApprovalRecordMock).toHaveBeenCalled();

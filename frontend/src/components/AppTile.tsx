@@ -1,4 +1,5 @@
 import type { AppModel } from "../types/App";
+import { formatTimestamp } from "../utils/formatting";
 
 interface AppTileProps {
   app: AppModel;
@@ -16,6 +17,12 @@ export function AppTile({ app, locked, onOpen, onRun }: AppTileProps): JSX.Eleme
         <span>{app.name}</span>
       </button>
       <div className="badge">{status}</div>
+      {app.description ? <p className="app-copy">{app.description}</p> : null}
+      {app.lastRunTime || app.lastRunAt ? (
+        <p className="app-meta">Last run {formatTimestamp(app.lastRunTime ?? app.lastRunAt ?? "")}</p>
+      ) : (
+        <p className="app-meta">No recent runs</p>
+      )}
       <div>{app.budgetRemaining !== undefined ? `Budget ${app.budgetRemaining}` : "No budget"}</div>
       <button type="button" onClick={() => onRun(app)} disabled={locked || app.status !== "connected"}>
         Run Now

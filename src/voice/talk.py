@@ -25,6 +25,7 @@ Rung: 641
 
 from __future__ import annotations
 
+import logging
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -70,6 +71,8 @@ _FINANCIAL_INTENTS = frozenset({
 })
 
 _ALL_CONFIRM_REQUIRED = _DESTRUCTIVE_INTENTS | _FINANCIAL_INTENTS
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -716,7 +719,8 @@ class TalkMode:
             return False
         try:
             return bool(self._confirmation_callback(action))
-        except Exception:  # noqa: BLE001
+        except (RuntimeError, TypeError, ValueError) as exc:
+            logger.warning("Voice confirmation callback failed for %s: %s", action.intent, exc)
             return False
 
     def _log_audit(

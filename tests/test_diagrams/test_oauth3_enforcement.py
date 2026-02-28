@@ -99,9 +99,9 @@ SUBJECT = "user:testuser@example.com"
 
 def _token(scopes, ttl_seconds=3600):
     if _OAUTH3_BASE_AVAILABLE:
-        return create_token(
+        return AgencyToken.create(
             issuer=ISSUER,
-            subject=SUBJECT,
+            user_id=SUBJECT,
             scopes=scopes,
             intent="test intent",
             ttl_seconds=ttl_seconds,

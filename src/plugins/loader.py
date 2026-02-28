@@ -651,7 +651,7 @@ def _run_oauth3_gates(token: object, required_scopes: List[str]) -> dict:
     # G2 + G4: Use token.validate() — checks expiry and revocation
     try:
         is_valid, error_msg = token.validate()
-    except Exception as exc:
+    except (AttributeError, TypeError, ValueError) as exc:
         return {
             "allowed": False,
             "error_code": "OAUTH3_MALFORMED_TOKEN",

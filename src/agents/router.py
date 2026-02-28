@@ -597,7 +597,7 @@ class AgentRouter:
                 dispatched_at=dispatched_at,
             )
 
-        except Exception as exc:  # noqa: BLE001
+        except (KeyError, RuntimeError, TypeError, ValueError) as exc:
             elapsed_ms = int((_time.monotonic() - t_start) * 1000)
             evidence = _build_evidence(
                 envelope=envelope,

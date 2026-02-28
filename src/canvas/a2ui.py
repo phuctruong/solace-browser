@@ -22,6 +22,7 @@ Rung: 641
 
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 from collections import deque
@@ -43,6 +44,8 @@ from canvas.scopes import (
 MAX_QUEUE_DEPTH: int = 100
 MESSAGE_AUTO_EXPIRE_SECONDS: int = 300       # 5 minutes
 INPUT_REQUEST_TIMEOUT_SECONDS: int = 30      # 30-second auto-deny (fail-closed)
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -680,8 +683,8 @@ class A2UIBridge:
                     "requires_response": msg.requires_response,
                     "payload_keys": list(msg.payload.keys()),
                 })
-            except Exception:
-                pass  # Audit log failure must never block the operation
+            except (RuntimeError, TypeError, ValueError) as exc:
+                logger.warning("A2UI audit logger failed for %s: %s", msg.message_id, exc)
 
     def _wait_for_response(
         self,
@@ -714,7 +717,7 @@ class A2UIBridge:
                 try:
                     self._response_channel._queue.remove(resp_msg)
                 except ValueError:
-                    pass
+                    logger.debug("A2UI response %s was already consumed", resp_msg.message_id)
                 return resp_msg.payload.get("response")
         # No matching response found → fail-closed (None = deny)
         return None

@@ -12,12 +12,14 @@ Phase 1 reference implementation:
 from __future__ import annotations
 
 import base64
+import binascii
 import json
 import secrets
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from .evidence import EvidenceChain
@@ -287,7 +289,16 @@ class OAuth3Vault:
             ciphertext = base64.b64decode(payload["ciphertext_b64"])
             plaintext = AESGCM(self.encryption_key).decrypt(nonce, ciphertext, None)
             decoded = json.loads(plaintext.decode("utf-8"))
-        except Exception as exc:  # noqa: BLE001
+        except (
+            InvalidTag,
+            OSError,
+            KeyError,
+            TypeError,
+            ValueError,
+            UnicodeDecodeError,
+            binascii.Error,
+            json.JSONDecodeError,
+        ) as exc:
             raise OAuth3VaultError(f"Failed to load persisted tokens: {exc}") from exc
 
         for row in decoded.get("tokens", []):

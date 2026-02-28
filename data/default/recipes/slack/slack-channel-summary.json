@@ -1,0 +1,245 @@
+{
+  "id": "slack-channel-summary",
+  "platform": "slack",
+  "version": "1.0.0",
+  "description": "Read latest Slack channel messages and generate a concise summary categorized by questions, decisions, action items, and FYI.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["channel.slack.read"],
+  "evidence_type": "lane_a",
+  "primewiki_reference": "data/default/primewiki/slack/actions.json",
+
+  "reasoning": {
+    "research": "Slack channels load messages in a virtualized list. The container uses [data-qa='virtual-list-item'] for each message. Scrolling up triggers infinite scroll to load older messages. Each message contains author name, timestamp, and body text. Thread replies are collapsed by default. Date dividers separate message groups.",
+    "selector_strategy": "Navigate directly to channel URL. Messages are in [data-qa='virtual-list-item']. Author in [data-qa='message_sender_name']. Timestamp in [data-qa='message_timestamp'] or time[datetime]. Body text in .p-rich_text_section. Date dividers in .c-message_list__day_divider__label__pill.",
+    "anti_bot_notes": "Slack does not aggressively block read-only scraping of authenticated sessions. Use natural scroll intervals (800-1200ms between scrolls). Avoid rapid repeated scrolls. Wait for DOM settle after each scroll event.",
+    "performance": "Navigation 4-6s + auth check 2s + scroll pagination ~15s (5 scrolls x 3s) + extraction 3s + LLM summary 5-8s + save 2s = ~35-45s."
+  },
+
+  "input_params": {
+    "channel_url": {
+      "type": "string",
+      "description": "Full Slack channel URL to summarize",
+      "required": true,
+      "example": "https://app.slack.com/client/T01234567/C01234567"
+    },
+    "date_range_start": {
+      "type": "string",
+      "description": "ISO date string for the start of the summary window",
+      "required": false,
+      "example": "2026-02-20T00:00:00Z"
+    },
+    "date_range_end": {
+      "type": "string",
+      "description": "ISO date string for the end of the summary window",
+      "required": false,
+      "example": "2026-02-21T23:59:59Z"
+    },
+    "max_messages": {
+      "type": "number",
+      "description": "Maximum number of messages to extract before summarizing",
+      "required": false,
+      "example": 200
+    }
+  },
+
+  "budgets": {
+    "max_reads": 100,
+    "max_sends": 0,
+    "max_deletes": 0,
+    "max_llm_calls": 3,
+    "max_duration_seconds": 300
+  },
+
+  "mermaid_fsm": "stateDiagram-v2\n  [*] --> NavigateWorkspace\n  NavigateWorkspace --> Authenticate: page_loaded\n  Authenticate --> NavigateChannel: auth_confirmed\n  NavigateChannel --> ScrollPaginate: channel_loaded\n  ScrollPaginate --> ExtractMessages: scroll_complete\n  ExtractMessages --> FilterByDate: extracted\n  FilterByDate --> CategorizeMessages: filtered\n  CategorizeMessages --> GenerateSummary: categorized\n  GenerateSummary --> FormatMarkdown: summary_ready\n  FormatMarkdown --> SaveToOutbox: formatted\n  SaveToOutbox --> CaptureEvidence: saved\n  CaptureEvidence --> [*]",
+
+  "steps": [
+    {
+      "step_id": "step_01_navigate_workspace",
+      "action": "navigate",
+      "description": "Navigate to the Slack workspace by loading the channel URL. Wait for the primary view container to confirm the app has loaded.",
+      "selector": ".p-client_container",
+      "scope_required": "channel.slack.read",
+      "evidence_capture": true,
+      "timeout_ms": 15000,
+      "on_error": "fail_with_screenshot"
+    },
+    {
+      "step_id": "step_02_authenticate",
+      "action": "check_auth",
+      "description": "Verify the session is authenticated by checking for the presence of the workspace sidebar. If redirected to login page, abort with SESSION_EXPIRED.",
+      "selector": ".p-channel_sidebar",
+      "scope_required": "channel.slack.read",
+      "evidence_capture": false,
+      "timeout_ms": 8000,
+      "on_error": "fail_with_screenshot",
+      "fallback_url_pattern": "slack.com/signin"
+    },
+    {
+      "step_id": "step_03_navigate_channel",
+      "action": "navigate",
+      "description": "Navigate to the specific channel URL and wait for the message list to render. Confirm channel name in the header matches expectations.",
+      "selector": "[data-qa='channel_header_title']",
+      "scope_required": "channel.slack.read",
+      "evidence_capture": true,
+      "timeout_ms": 12000,
+      "on_error": "retry_once"
+    },
+    {
+      "step_id": "step_04_scroll_load_messages",
+      "action": "scroll",
+      "description": "Scroll up in the message list to trigger infinite scroll pagination. Perform up to 5 scroll-up actions with 1200ms pauses between each to allow DOM rendering. Stop early if a date divider older than date_range_start is encountered.",
+      "selector": ".c-virtual_list__scroll_container",
+      "scope_required": "channel.slack.read",
+      "evidence_capture": false,
+      "timeout_ms": 20000,
+      "on_error": "skip_with_warning",
+      "scroll_direction": "up",
+      "max_scroll_iterations": 5,
+      "pause_between_ms": 1200
+    },
+    {
+      "step_id": "step_05_extract_messages",
+      "action": "extract",
+      "description": "Extract all visible messages from the virtualized list. For each message, capture: author name (from [data-qa='message_sender_name']), timestamp (from time[datetime]), and body text (from .p-rich_text_section). Return as a structured array.",
+      "selector": "[data-qa='virtual-list-item']",
+      "scope_required": "channel.slack.read",
+      "evidence_capture": true,
+      "timeout_ms": 10000,
+      "on_error": "fail_with_screenshot",
+      "extract_fields": {
+        "author": "[data-qa='message_sender_name']",
+        "timestamp": "time[datetime]",
+        "body": ".p-rich_text_section"
+      }
+    },
+    {
+      "step_id": "step_06_filter_by_date",
+      "action": "extract",
+      "description": "Filter extracted messages to only include those within the specified date range (date_range_start to date_range_end). If no date range is provided, include all messages from the last 24 hours. Discard bot messages and join/leave notifications.",
+      "selector": null,
+      "scope_required": "channel.slack.read",
+      "evidence_capture": false,
+      "timeout_ms": 5000,
+      "on_error": "skip_with_warning",
+      "filter_criteria": {
+        "date_start": "{params.date_range_start}",
+        "date_end": "{params.date_range_end}",
+        "exclude_bots": true,
+        "exclude_system_messages": true
+      }
+    },
+    {
+      "step_id": "step_07_categorize_messages",
+      "action": "classify",
+      "description": "Categorize each filtered message into one of four buckets: questions (messages ending with '?' or requesting info), decisions (messages stating conclusions or agreements), action_items (messages assigning tasks or containing deadlines), and fyi (general information sharing). Use LLM classification for ambiguous messages.",
+      "selector": null,
+      "scope_required": "llm.generate.text",
+      "evidence_capture": true,
+      "timeout_ms": 15000,
+      "on_error": "fail_with_screenshot",
+      "categories": ["questions", "decisions", "action_items", "fyi"]
+    },
+    {
+      "step_id": "step_08_generate_summary",
+      "action": "summarize",
+      "description": "Generate a concise channel summary using the LLM. The summary includes: channel name, date range covered, message count, and a section for each category (questions, decisions, action items, FYI) with the most important items listed. Limit to 500 words.",
+      "selector": null,
+      "scope_required": "llm.generate.text",
+      "evidence_capture": true,
+      "timeout_ms": 20000,
+      "on_error": "fail_with_screenshot",
+      "llm_prompt_template": "Summarize the following Slack channel messages. Group by: Questions, Decisions, Action Items, FYI. Be concise. Include author attribution for key items.",
+      "max_output_tokens": 1500
+    },
+    {
+      "step_id": "step_09_format_markdown",
+      "action": "transform",
+      "description": "Format the generated summary as a clean markdown document with headers for each category, bullet points for individual items, and a metadata header containing channel name, date range, and message count.",
+      "selector": null,
+      "scope_required": "channel.slack.read",
+      "evidence_capture": false,
+      "timeout_ms": 5000,
+      "on_error": "fail_with_screenshot",
+      "output_format": "markdown",
+      "template": "# Channel Summary: {channel_name}\n**Date Range:** {date_start} - {date_end}\n**Messages Analyzed:** {message_count}\n\n## Questions\n{questions}\n\n## Decisions\n{decisions}\n\n## Action Items\n{action_items}\n\n## FYI\n{fyi}"
+    },
+    {
+      "step_id": "step_10_save_to_outbox",
+      "action": "save",
+      "description": "Save the formatted markdown summary to the local outbox directory. File is named with channel name and date range for easy retrieval.",
+      "selector": null,
+      "scope_required": "outbox.write",
+      "evidence_capture": true,
+      "timeout_ms": 5000,
+      "on_error": "fail_with_screenshot",
+      "output_path": "outbox/slack-summary-{channel_name}-{date}.md"
+    },
+    {
+      "step_id": "step_11_capture_evidence",
+      "action": "capture",
+      "description": "Take a final evidence screenshot of the Slack channel showing the messages that were summarized. Include the channel header and visible message list for audit trail verification.",
+      "selector": null,
+      "scope_required": "channel.slack.read",
+      "evidence_capture": true,
+      "timeout_ms": 8000,
+      "on_error": "skip_with_warning"
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "channel_name": {"type": "string", "example": "#engineering"},
+      "date_range": {"type": "string", "example": "2026-02-20 to 2026-02-21"},
+      "messages_analyzed": {"type": "number", "example": 47},
+      "summary_markdown": {"type": "string", "example": "# Channel Summary: #engineering\n..."},
+      "categories": {
+        "type": "object",
+        "properties": {
+          "questions": {"type": "number", "example": 5},
+          "decisions": {"type": "number", "example": 3},
+          "action_items": {"type": "number", "example": 8},
+          "fyi": {"type": "number", "example": 31}
+        }
+      },
+      "outbox_path": {"type": "string", "example": "outbox/slack-summary-engineering-2026-02-21.md"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["channel_name", "messages_analyzed", "summary_markdown", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect slack.com/signin redirect — run slack-oauth-login recipe first",
+    "channel_not_found": "Verify channel URL format and workspace membership. Abort with CHANNEL_NOT_FOUND.",
+    "no_messages_in_range": "Return empty summary with zero counts rather than failing",
+    "llm_timeout": "Retry LLM call once with reduced message count (halve input). If still fails, return raw extracted messages without summary.",
+    "scroll_stuck": "If message list does not grow after 3 scroll attempts, proceed with currently loaded messages"
+  },
+
+  "anti_detection": {
+    "human_typing": false,
+    "natural_scroll_intervals": true,
+    "wait_for_dom_settle": true,
+    "randomize_scroll_pause": true
+  },
+
+  "metadata": {
+    "tags": ["slack", "summary", "channel", "read", "llm"],
+    "difficulty": "medium",
+    "prerequisites": ["slack_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 45,
+    "idempotent": true,
+    "destructive": false
+  }
+}

@@ -169,7 +169,7 @@ def execute_layer(
                         "status": "ok",
                     }
                 )
-            except Exception as exc:  # noqa: BLE001
+            except (AttributeError, RuntimeError, TypeError, ValueError) as exc:
                 status = "EXIT_BLOCKED"
                 error = str(exc)
                 trace.append(

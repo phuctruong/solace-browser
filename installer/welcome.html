@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solace Browser Setup Wizard</title>
+  <style>
+    :root {
+      --bg: #08101d;
+      --surface: #122033;
+      --surface-alt: #1a2b43;
+      --border: #27405f;
+      --text: #eef5ff;
+      --muted: #9cb4d1;
+      --accent: #6ec1ff;
+      --accent-strong: #3e9cf3;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #10223a 0%, var(--bg) 55%);
+      color: var(--text);
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+    }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 24px 72px;
+    }
+
+    .frame {
+      background: rgba(18, 32, 51, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .hero {
+      padding: 32px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(62, 156, 243, 0.18), transparent);
+    }
+
+    .hero p { color: var(--muted); max-width: 720px; }
+    .layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: 560px;
+    }
+
+    .steps {
+      padding: 24px;
+      border-right: 1px solid var(--border);
+      background: rgba(8, 16, 29, 0.45);
+    }
+
+    .steps button {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .steps button.active {
+      background: var(--surface-alt);
+      border-color: var(--accent);
+    }
+
+    .panel {
+      padding: 28px 32px;
+      display: none;
+    }
+
+    .panel.active { display: block; }
+    .panel h2 { margin-top: 0; }
+    .panel p, .panel li, .panel label { color: var(--muted); }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .card {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(26, 43, 67, 0.55);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #0d1827;
+      color: var(--text);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 24px 32px 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #03111f;
+    }
+
+    .inline-note {
+      display: inline-block;
+      margin-top: 12px;
+      color: var(--accent);
+    }
+
+    code {
+      color: var(--accent);
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="frame">
+      <section class="hero">
+        <h1>Solace Browser installer</h1>
+        <p>Configure allowed_roots, terminal allowlist, OAuth3 access, and your LLM provider before the first run. Every step can be reviewed later, and optional managed or BYOK settings can be skipped for now.</p>
+      </section>
+      <div class="layout">
+        <nav class="steps" aria-label="Setup steps">
+          <button class="active" data-step-nav="0" onclick="goToStep(0)">1. File access</button>
+          <button data-step-nav="1" onclick="goToStep(1)">2. Terminal allowlist</button>
+          <button data-step-nav="2" onclick="goToStep(2)">3. OAuth3 and API key</button>
+          <button data-step-nav="3" onclick="goToStep(3)">4. LLM provider</button>
+        </nav>
+        <section>
+          <article class="panel active" data-step="0">
+            <h2>Choose allowed roots</h2>
+            <p>Grant file access only where Solace Browser needs it. Recommended defaults include Documents, Desktop, and Downloads.</p>
+            <div class="card-grid">
+              <label class="card"><input type="checkbox" checked> Documents</label>
+              <label class="card"><input type="checkbox" checked> Desktop</label>
+              <label class="card"><input type="checkbox" checked> Downloads</label>
+            </div>
+            <label for="customRoot">Add custom path</label>
+            <input id="customRoot" type="text" placeholder="/workspace/custom">
+          </article>
+
+          <article class="panel" data-step="1">
+            <h2>Terminal allowlist</h2>
+            <p>Keep the terminal contract explicit. Suggested commands:</p>
+            <ul>
+              <li><code>git status</code></li>
+              <li><code>pytest</code></li>
+              <li><code>npm test</code></li>
+            </ul>
+            <span class="inline-note">Prime-safety: fail closed when a command is not on the allowlist.</span>
+          </article>
+
+          <article class="panel" data-step="2">
+            <h2>OAuth3 and API key</h2>
+            <p>Choose whether to use OAuth3 consent flows, an API key, or both. This step can be completed later if you only want local workflows right now.</p>
+            <div class="card-grid">
+              <div class="card">OAuth3 scopes and consent review</div>
+              <div class="card">Managed key storage</div>
+              <div class="card">BYOK provider token</div>
+            </div>
+            <button class="btn btn-secondary" type="button">Skip for later</button>
+          </article>
+
+          <article class="panel" data-step="3">
+            <h2>LLM configuration</h2>
+            <p>Select a provider, keep managed defaults, or bring your own key. The config is persisted locally so the setup wizard can resume.</p>
+            <div class="card-grid">
+              <div class="card">Managed provider</div>
+              <div class="card">BYOK OpenAI-compatible endpoint</div>
+              <div class="card">Offline local LLM</div>
+            </div>
+          </article>
+        </section>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" type="button" onclick="previousStep()">Back</button>
+        <button class="btn btn-primary" type="button" onclick="nextStep()">Next</button>
+      </div>
+    </div>
+  </main>
+  <script>
+    const panels = Array.from(document.querySelectorAll("[data-step]"));
+    const navButtons = Array.from(document.querySelectorAll("[data-step-nav]"));
+    let currentStep = 0;
+
+    function persistConfig() {
+      const config = {
+        currentStep,
+        customRoot: document.getElementById("customRoot").value,
+      };
+      localStorage.setItem("solace-installer-config", JSON.stringify(config));
+    }
+
+    function goToStep(stepIndex) {
+      currentStep = Math.max(0, Math.min(stepIndex, panels.length - 1));
+      panels.forEach((panel, index) => panel.classList.toggle("active", index === currentStep));
+      navButtons.forEach((button, index) => button.classList.toggle("active", index === currentStep));
+      persistConfig();
+    }
+
+    function nextStep() {
+      goToStep(currentStep + 1);
+    }
+
+    function previousStep() {
+      goToStep(currentStep - 1);
+    }
+
+    const savedConfig = localStorage.getItem("solace-installer-config");
+    if (savedConfig) {
+      try {
+        const parsed = JSON.parse(savedConfig);
+        if (typeof parsed.currentStep === "number") {
+          goToStep(parsed.currentStep);
+        }
+        if (typeof parsed.customRoot === "string") {
+          document.getElementById("customRoot").value = parsed.customRoot;
+        }
+      } catch (error) {
+        localStorage.removeItem("solace-installer-config");
+      }
+    }
+  </script>
+</body>
+</html>

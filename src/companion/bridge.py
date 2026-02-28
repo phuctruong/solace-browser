@@ -28,6 +28,7 @@ Rung: 641 (local correctness)
 
 from __future__ import annotations
 
+import logging
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
@@ -49,6 +50,7 @@ from companion.apps import (
 EVENT_BUS_MAX_EVENTS_PER_MINUTE: int = 1000   # per-app rate cap
 EVENT_BUS_MAX_SUBSCRIPTIONS_PER_APP: int = 20  # subscription cap per app
 RATE_LIMIT_WINDOW_SECONDS: int = 60            # rolling window size
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -248,7 +250,7 @@ class EventBus:
             for cb in callbacks:
                 try:
                     cb(event)
-                except Exception as exc:  # noqa: BLE001
+                except (RuntimeError, TypeError, ValueError) as exc:
                     self.error_log.append({
                         "app_id": app_id,
                         "event_type": event_type,
@@ -433,8 +435,8 @@ class AppBridge:
         if app_id in self._apps:
             try:
                 self._apps[app_id].handle_event(event)
-            except Exception:  # noqa: BLE001
-                pass  # fire-and-forget; error already captured by EventBus
+            except (RuntimeError, TypeError, ValueError) as exc:
+                logger.debug("Companion app %s event handling failed: %s", app_id, exc)
 
     # ------------------------------------------------------------------
     # EventBus exposure

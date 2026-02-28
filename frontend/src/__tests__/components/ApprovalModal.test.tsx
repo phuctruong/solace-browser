@@ -20,22 +20,24 @@ describe("<ApprovalModal>", () => {
 
   it("renders steps", () => {
     render(<ApprovalModal open preview={mockPreview} onDecision={vi.fn()} />);
-    expect(screen.getByText("Steps: 5")).toBeInTheDocument();
+    expect(screen.getByText("Steps")).toBeInTheDocument();
+    expect(screen.getByText("5")).toBeInTheDocument();
   });
 
   it("renders scopes list", () => {
     render(<ApprovalModal open preview={mockPreview} onDecision={vi.fn()} />);
-    expect(screen.getByText("Scopes: gmail.read.inbox, gmail.draft.create")).toBeInTheDocument();
+    expect(screen.getByText("gmail.read.inbox")).toBeInTheDocument();
+    expect(screen.getByText("gmail.draft.create")).toBeInTheDocument();
   });
 
   it("renders estimated cost", () => {
     render(<ApprovalModal open preview={mockPreview} onDecision={vi.fn()} />);
-    expect(screen.getByText("Est. Cost: $0.12")).toBeInTheDocument();
+    expect(screen.getByText("$0.12")).toBeInTheDocument();
   });
 
   it("renders estimated duration", () => {
     render(<ApprovalModal open preview={mockPreview} onDecision={vi.fn()} />);
-    expect(screen.getByText("Est. Duration: 18s")).toBeInTheDocument();
+    expect(screen.getByText("18s")).toBeInTheDocument();
   });
 
   it("has override reason textbox", () => {
@@ -43,51 +45,61 @@ describe("<ApprovalModal>", () => {
     expect(screen.getByLabelText("Override reason")).toBeInTheDocument();
   });
 
-  it("keeps override disabled for short reason", () => {
+  it("keeps override reason disabled until enabled", () => {
     render(<ApprovalModal open preview={mockPreview} onDecision={vi.fn()} />);
-    fireEvent.change(screen.getByLabelText("Override reason"), { target: { value: "no" } });
-    expect(screen.getByRole("button", { name: "OVERRIDE & EXPLAIN" })).toBeDisabled();
+    expect(screen.getByLabelText("Override reason")).toBeDisabled();
   });
 
-  it("enables override when reason length > 3", () => {
+  it("enables override reason when safety check is enabled", () => {
     render(<ApprovalModal open preview={mockPreview} onDecision={vi.fn()} />);
-    fireEvent.change(screen.getByLabelText("Override reason"), { target: { value: "valid reason" } });
-    expect(screen.getByRole("button", { name: "OVERRIDE & EXPLAIN" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Override safety check" }));
+    expect(screen.getByLabelText("Override reason")).toBeEnabled();
   });
 
-  it("approve triggers decision", () => {
+  it("approve triggers decision", async () => {
     const onDecision = vi.fn();
     render(<ApprovalModal open preview={mockPreview} onDecision={onDecision} />);
-    fireEvent.click(screen.getByRole("button", { name: "APPROVE & RUN" }));
-    expect(onDecision).toHaveBeenCalledWith("approve");
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    await waitFor(() => {
+      expect(onDecision).toHaveBeenCalledWith("approve", undefined);
+    });
   });
 
-  it("override triggers decision with reason", () => {
+  it("modify triggers decision with reason", async () => {
     const onDecision = vi.fn();
     render(<ApprovalModal open preview={mockPreview} onDecision={onDecision} />);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Override safety check" }));
     fireEvent.change(screen.getByLabelText("Override reason"), { target: { value: "security exception" } });
-    fireEvent.click(screen.getByRole("button", { name: "OVERRIDE & EXPLAIN" }));
-    expect(onDecision).toHaveBeenCalledWith("override", "security exception");
+    fireEvent.click(screen.getByRole("button", { name: "Modify" }));
+    await waitFor(() => {
+      expect(onDecision).toHaveBeenCalledWith("modify", "security exception");
+    });
   });
 
-  it("cancel triggers decision", () => {
+  it("abort triggers decision", async () => {
     const onDecision = vi.fn();
     render(<ApprovalModal open preview={mockPreview} onDecision={onDecision} />);
-    fireEvent.click(screen.getByRole("button", { name: "CANCEL" }));
-    expect(onDecision).toHaveBeenCalledWith("cancel");
+    fireEvent.click(screen.getByRole("button", { name: "Abort" }));
+    await waitFor(() => {
+      expect(onDecision).toHaveBeenCalledWith("abort", undefined);
+    });
   });
 
   it("shows all action buttons", () => {
     render(<ApprovalModal open preview={mockPreview} onDecision={vi.fn()} />);
-    expect(screen.getByRole("button", { name: "APPROVE & RUN" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "OVERRIDE & EXPLAIN" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "CANCEL" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Approve" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Modify" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Abort" })).toBeInTheDocument();
   });
 
-  it("trims whitespace for override enablement", () => {
+  it("trims whitespace for override validation", async () => {
     render(<ApprovalModal open preview={mockPreview} onDecision={vi.fn()} />);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Override safety check" }));
     fireEvent.change(screen.getByLabelText("Override reason"), { target: { value: "    " } });
-    expect(screen.getByRole("button", { name: "OVERRIDE & EXPLAIN" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Modify" }));
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("Override reason must be at least 4 characters.");
+    });
   });
 
   it("shows 30 second auto deny timer by default", () => {
@@ -99,7 +111,7 @@ describe("<ApprovalModal>", () => {
     const onDecision = vi.fn();
     render(<ApprovalModal open preview={mockPreview} onDecision={onDecision} autoDenySeconds={0} />);
     await waitFor(() => {
-      expect(onDecision).toHaveBeenCalledWith("cancel");
+      expect(onDecision).toHaveBeenCalledWith("abort", undefined);
     });
   });
 });

@@ -26,6 +26,7 @@ from typing import List, Optional, Tuple, Union
 
 from .token import AgencyToken, parse_iso8601
 from .scopes import HIGH_RISK_SCOPES, get_scope_risk_level
+from .revocation import TokenStore
 
 
 # ---------------------------------------------------------------------------
@@ -77,8 +78,10 @@ class ScopeGate:
 
     def __init__(
         self,
-        token: AgencyToken,
-        required_scopes: List[str],
+        token: Optional[AgencyToken] = None,
+        required_scopes: Optional[List[str]] = None,
+        *,
+        store: Optional[TokenStore] = None,
     ) -> None:
         """
         Initialize the gate with a token and the scopes needed for the action.
@@ -88,7 +91,8 @@ class ScopeGate:
             required_scopes: Scopes the recipe needs to execute.
         """
         self.token = token
-        self.required_scopes = required_scopes
+        self.required_scopes = list(required_scopes or [])
+        self.store = store
 
     # -------------------------------------------------------------------------
     # Individual gate checks
@@ -219,59 +223,118 @@ class ScopeGate:
         # G1: Schema
         g1 = self.g1_schema()
         if not g1.passed:
-            return ScopeGateResult(
-                allowed=False,
-                blocking_gate="G1",
+            return _build_scope_gate_result(
+                token_id=getattr(self.token, "token_id", None),
                 gate_results=[g1],
                 missing_scopes=[],
                 error_code=g1.error_code,
                 error_detail=g1.error_detail,
+                blocking_gate="G1",
             )
 
         # G2: Expiry
         g2 = self.g2_expiry()
         if not g2.passed:
-            return ScopeGateResult(
-                allowed=False,
-                blocking_gate="G2",
+            return _build_scope_gate_result(
+                token_id=getattr(self.token, "token_id", None),
                 gate_results=[g1, g2],
                 missing_scopes=[],
                 error_code=g2.error_code,
                 error_detail=g2.error_detail,
+                blocking_gate="G2",
             )
 
         # G3: Scope
         g3, missing = self.g3_scope()
         if not g3.passed:
-            return ScopeGateResult(
-                allowed=False,
-                blocking_gate="G3",
+            return _build_scope_gate_result(
+                token_id=getattr(self.token, "token_id", None),
                 gate_results=[g1, g2, g3],
                 missing_scopes=missing,
                 error_code=g3.error_code,
                 error_detail=g3.error_detail,
+                blocking_gate="G3",
             )
 
         # G4: Revocation
         g4 = self.g4_revocation()
         if not g4.passed:
-            return ScopeGateResult(
-                allowed=False,
-                blocking_gate="G4",
+            return _build_scope_gate_result(
+                token_id=getattr(self.token, "token_id", None),
                 gate_results=[g1, g2, g3, g4],
                 missing_scopes=[],
                 error_code=g4.error_code,
                 error_detail=g4.error_detail,
+                blocking_gate="G4",
             )
 
-        return ScopeGateResult(
-            allowed=True,
-            blocking_gate=None,
+        high_risk_required = [scope for scope in self.required_scopes if scope in HIGH_RISK_SCOPES]
+        if high_risk_required and not step_up_nonce:
+            step_up_gate = GateResult(
+                gate="G4",
+                status=GATE_BLOCKED,
+                error_code="OAUTH3_STEP_UP_REQUIRED",
+                error_detail=f"step_up_required for scopes {high_risk_required}",
+            )
+            return _build_scope_gate_result(
+                token_id=getattr(self.token, "token_id", None),
+                gate_results=[g1, g2, g3, step_up_gate],
+                missing_scopes=[],
+                error_code=step_up_gate.error_code,
+                error_detail=step_up_gate.error_detail,
+                blocking_gate="G4",
+            )
+
+        return _build_scope_gate_result(
+            token_id=getattr(self.token, "token_id", None),
             gate_results=[g1, g2, g3, g4],
             missing_scopes=[],
             error_code=None,
             error_detail=None,
+            blocking_gate=None,
         )
+
+    def check(
+        self,
+        *,
+        token_id: str,
+        required_scope: str,
+        is_destructive: bool,
+        step_up_confirmed: bool = False,
+    ) -> "ScopeGateResult":
+        """
+        Diagram-facing API: evaluate the 4-gate cascade from token_id + store.
+
+        This keeps the existing token-based API (`check_all`) intact while
+        enabling the newer diagram tests that construct `ScopeGate(store=...)`.
+        """
+        if self.store is None:
+            raise ValueError("ScopeGate(store=...) is required for check(token_id=...).")
+
+        token = self.store.get(token_id)
+        if token is None or token.revoked:
+            reason = "token_not_found" if token is None else "token_revoked"
+            gate = GateResult(
+                gate="G1",
+                status=GATE_BLOCKED,
+                error_code="OAUTH3_TOKEN_NOT_FOUND" if token is None else "OAUTH3_TOKEN_REVOKED",
+                error_detail=reason,
+            )
+            return _build_scope_gate_result(
+                token_id=token_id,
+                gate_results=[gate],
+                missing_scopes=[],
+                error_code=gate.error_code,
+                error_detail=gate.error_detail,
+                blocking_gate="G1",
+            )
+
+        self.token = token
+        self.required_scopes = [required_scope]
+
+        step_up_needed = is_destructive or required_scope in HIGH_RISK_SCOPES
+        nonce = "step-up-confirmed" if (step_up_confirmed or not step_up_needed) else None
+        return self.check_all(step_up_nonce=nonce)
 
 
 @dataclass
@@ -284,6 +347,57 @@ class ScopeGateResult:
     missing_scopes: List[str]        # Scopes not in token (G3 failure only)
     error_code: Optional[str]        # OAUTH3_* code if blocked
     error_detail: Optional[str]      # Human-readable explanation
+    token_id: Optional[str] = None
+    g1_token_exists: bool = False
+    g2_not_expired: Optional[bool] = None
+    g3_scope_present: Optional[bool] = None
+    g4_step_up_satisfied: Optional[bool] = None
+    overall_result: str = GATE_BLOCKED
+    failure_gate: Optional[str] = None
+    failure_reason: Optional[str] = None
+
+
+def _build_scope_gate_result(
+    *,
+    token_id: Optional[str],
+    gate_results: List[GateResult],
+    missing_scopes: List[str],
+    error_code: Optional[str],
+    error_detail: Optional[str],
+    blocking_gate: Optional[str],
+) -> ScopeGateResult:
+    g1_exists = False
+    g2_not_expired: Optional[bool] = None
+    g3_scope_present: Optional[bool] = None
+    g4_step_up_satisfied: Optional[bool] = None
+
+    for gate in gate_results:
+        if gate.gate == "G1":
+            g1_exists = gate.passed
+        elif gate.gate == "G2":
+            g2_not_expired = gate.passed
+        elif gate.gate == "G3":
+            g3_scope_present = gate.passed
+        elif gate.gate == "G4":
+            g4_step_up_satisfied = gate.passed
+
+    allowed = blocking_gate is None
+    return ScopeGateResult(
+        allowed=allowed,
+        blocking_gate=blocking_gate,
+        gate_results=gate_results,
+        missing_scopes=missing_scopes,
+        error_code=error_code,
+        error_detail=error_detail,
+        token_id=token_id,
+        g1_token_exists=g1_exists,
+        g2_not_expired=g2_not_expired,
+        g3_scope_present=g3_scope_present,
+        g4_step_up_satisfied=g4_step_up_satisfied,
+        overall_result=GATE_PASS if allowed else GATE_BLOCKED,
+        failure_gate=blocking_gate,
+        failure_reason=error_detail,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -291,9 +405,15 @@ class ScopeGateResult:
 # ---------------------------------------------------------------------------
 
 def enforce_scopes(
-    token: AgencyToken,
-    required_scopes: List[str],
-) -> Tuple[bool, List[str]]:
+    token: Optional[AgencyToken] = None,
+    required_scopes: Optional[List[str]] = None,
+    *,
+    token_id: Optional[str] = None,
+    required_scope: Optional[str] = None,
+    is_destructive: bool = False,
+    step_up_confirmed: bool = False,
+    store: Optional[TokenStore] = None,
+) -> Union[Tuple[bool, List[str]], str]:
     """
     Check that a token grants all required scopes.
 
@@ -308,8 +428,29 @@ def enforce_scopes(
         (allowed: bool, missing: List[str])
         allowed is True if all required_scopes are in token.scopes.
     """
-    missing = [s for s in required_scopes if s not in token.scopes]
-    return len(missing) == 0, missing
+    # Backward-compatible API:
+    #   enforce_scopes(token, [scope_a, scope_b]) -> (allowed, missing)
+    if token is not None and required_scopes is not None:
+        missing = [s for s in required_scopes if s not in token.scopes]
+        return len(missing) == 0, missing
+
+    # Diagram-facing API:
+    #   enforce_scopes(token_id=..., required_scope=..., is_destructive=..., store=...)
+    if not token_id:
+        raise ValueError("token_id is required when calling enforce_scopes() in gate mode.")
+    if not required_scope:
+        raise ValueError("required_scope is required when calling enforce_scopes() in gate mode.")
+    if store is None:
+        raise ValueError("store is required when calling enforce_scopes() in gate mode.")
+
+    gate = ScopeGate(store=store)
+    result = gate.check(
+        token_id=token_id,
+        required_scope=required_scope,
+        is_destructive=is_destructive,
+        step_up_confirmed=step_up_confirmed,
+    )
+    return result.overall_result
 
 
 def require_step_up(token: AgencyToken, scope: str) -> bool:
@@ -440,7 +581,7 @@ def enforce_oauth3(
             details["required_scope"] = scope
             details["consent_url"] = f"/consent?scopes={scope}"
             return False, details
-        except Exception as exc:
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
             details["error"] = "token_load_error"
             details["token_id"] = token_id
             details["detail"] = str(exc)

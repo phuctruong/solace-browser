@@ -7,10 +7,13 @@ interface TimelineProps {
 
 export function Timeline({ steps }: TimelineProps): JSX.Element {
   return (
-    <ol>
+    <ol className="timeline" aria-label="Run timeline">
       {steps.map((step) => (
-        <li key={step.id}>
-          <strong>{step.name}</strong> · {step.action} · {step.status} · {formatMs(step.durationMs)} · {step.scope}
+        <li key={step.id} className={`timeline-step timeline-step-${step.status}`}>
+          <strong>{step.name}</strong>
+          <span>{step.status}</span>
+          <span>{formatMs(step.durationMs)}</span>
+          <span>{step.scope}</span>
         </li>
       ))}
     </ol>

@@ -1,0 +1,53 @@
+{
+  "node_id": "github-actions",
+  "version": "1.0.0",
+  "platform": "github",
+  "domain": "github.com",
+  "authority": 65537,
+  "created": "2026-02-27",
+  "actions": {
+    "read_issues": {
+      "id": "read_issues",
+      "description": "Read open issues from a repository issues page.",
+      "oauth3_scope": "github.read.issues",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {
+          "action": "navigate",
+          "url": "https://github.com/{owner}/{repo}/issues",
+          "wait_for": "[data-testid='issue-row']"
+        },
+        {
+          "action": "extract_all",
+          "selector": "[data-testid='issue-row']",
+          "fields": ["title", "labels", "assignee", "state"]
+        }
+      ]
+    },
+    "comment_issue": {
+      "id": "comment_issue",
+      "description": "Draft and publish an issue comment.",
+      "oauth3_scope": "github.comment.issue",
+      "risk_level": "medium",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {
+          "action": "navigate",
+          "url": "https://github.com/{owner}/{repo}/issues/{issue_number}",
+          "wait_for": "textarea#new_comment_field"
+        },
+        {
+          "action": "type",
+          "selector": "textarea#new_comment_field"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit'][data-testid='comment-button']"
+        }
+      ]
+    }
+  }
+}

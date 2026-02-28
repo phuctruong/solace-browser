@@ -24,9 +24,11 @@ import pytest
 import pytest_asyncio
 import os
 import json
+import socket
 from pathlib import Path
 from datetime import datetime
 import asyncio
+from urllib.parse import urlparse
 
 # Playwright for browser automation
 from playwright.async_api import async_playwright, Browser, Page, BrowserContext
@@ -47,6 +49,23 @@ GMAIL_PASSWORD = os.getenv("GMAIL_TEST_PASSWORD", "")
 
 # For local testing without auth
 SKIP_AUTH = os.getenv("SKIP_AUTH", "false").lower() == "true"
+
+
+def _stillwater_server_available() -> bool:
+    try:
+        import urllib.request
+        req = urllib.request.Request(f"{STILLWATER_URL}/health", method="GET")
+        with urllib.request.urlopen(req, timeout=0.5) as resp:
+            return resp.status == 200
+    except Exception:
+        return False
+
+
+SERVER_REQUIRED_REASON = f"Stillwater server not available at {STILLWATER_URL}"
+SERVER_AVAILABLE = pytest.mark.skipif(
+    not _stillwater_server_available(),
+    reason=SERVER_REQUIRED_REASON,
+)
 
 
 # ============================================================================
@@ -140,6 +159,8 @@ async def login_with_gmail(page: Page, email: str, password: str) -> dict:
 # Test Suite
 # ============================================================================
 
+@pytest.mark.server_required
+@SERVER_AVAILABLE
 class TestStillwaterAdminUI:
     """Test Stillwater admin UI and functionality."""
 
@@ -239,6 +260,8 @@ class TestStillwaterAdminUI:
         print("✅ Operations log visible")
 
 
+@pytest.mark.server_required
+@SERVER_AVAILABLE
 class TestStillwaterAPI:
     """Test Stillwater REST API endpoints."""
 

@@ -1,0 +1,18 @@
+{
+  "node_id": "github-urls",
+  "version": "1.0.0",
+  "platform": "github",
+  "domain": "github.com",
+  "authority": 65537,
+  "created": "2026-02-27",
+  "base_urls": {
+    "home": "https://github.com",
+    "issues": "https://github.com/{owner}/{repo}/issues",
+    "issue": "https://github.com/{owner}/{repo}/issues/{issue_number}",
+    "pulls": "https://github.com/{owner}/{repo}/pulls"
+  },
+  "dynamic_patterns": {
+    "repo": "https://github.com/{owner}/{repo}",
+    "issues_filtered": "https://github.com/{owner}/{repo}/issues?q={query}"
+  }
+}

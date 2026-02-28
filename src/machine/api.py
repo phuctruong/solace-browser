@@ -137,7 +137,7 @@ def _extract_token(authorization: Optional[str]) -> AgencyToken:
         data = json.loads(raw)
         token = AgencyToken.from_dict(data)
         return token
-    except Exception as exc:
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         raise HTTPException(
             status_code=401,
             detail={

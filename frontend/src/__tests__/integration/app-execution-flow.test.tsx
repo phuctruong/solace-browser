@@ -67,14 +67,14 @@ describe("integration: app execution flow", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getAllByRole("button", { name: "Run Now" })[1]);
-    fireEvent.click(screen.getByRole("button", { name: "CANCEL" }));
+    fireEvent.click(screen.getByRole("button", { name: "Abort" }));
 
     await waitFor(() => {
       expect(executeSpy).not.toHaveBeenCalled();
     });
   });
 
-  it("override decision executes run when reason provided", async () => {
+  it("override-enabled approve executes run when reason provided", async () => {
     vi.spyOn(Date, "now").mockReturnValue(321);
     const executeSpy = vi.spyOn(await import("../../services/playwrightClient"), "executeHeadless");
     render(
@@ -86,11 +86,12 @@ describe("integration: app execution flow", () => {
     );
 
     fireEvent.click(screen.getAllByRole("button", { name: "Run Now" })[1]);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Override safety check" }));
     fireEvent.change(screen.getByLabelText("Override reason"), { target: { value: "critical incident" } });
-    fireEvent.click(screen.getByRole("button", { name: "OVERRIDE & EXPLAIN" }));
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
 
     await waitFor(() => {
-      expect(createApprovalRecordMock).toHaveBeenCalledWith(expect.any(Object), "override", "critical incident");
+      expect(createApprovalRecordMock).toHaveBeenCalledWith(expect.any(Object), "approve", "critical incident");
       expect(executeSpy).toHaveBeenCalled();
       expect(screen.getByText("run_321")).toBeInTheDocument();
     });
@@ -105,7 +106,7 @@ describe("integration: app execution flow", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getAllByRole("button", { name: "Run Now" })[1]);
-    fireEvent.click(screen.getByRole("button", { name: "APPROVE & RUN" }));
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
     await waitFor(() => {
       expect(syncEvidenceMock).toHaveBeenCalled();
     });

@@ -365,10 +365,13 @@ _LEGACY_SCOPE_ALIASES: Dict[str, Dict] = {
     "linkedin.react": {"platform": "linkedin", "description": "React to LinkedIn posts", "risk_level": "low", "destructive": False},
     # Gmail legacy two-segment scopes
     "gmail.read_inbox": {"platform": "gmail", "description": "Read Gmail inbox messages", "risk_level": "low", "destructive": False},
+    "gmail.compose.send": {"platform": "gmail", "description": "Compose and send Gmail message", "risk_level": "high", "destructive": True},
     "gmail.send_email": {"platform": "gmail", "description": "Send emails on your behalf", "risk_level": "medium", "destructive": False},
     "gmail.delete_email": {"platform": "gmail", "description": "Delete Gmail emails (irreversible)", "risk_level": "high", "destructive": True},
     "gmail.label": {"platform": "gmail", "description": "Apply labels to Gmail messages", "risk_level": "low", "destructive": False},
     "gmail.search": {"platform": "gmail", "description": "Search Gmail messages", "risk_level": "low", "destructive": False},
+    # Machine legacy two-segment scopes
+    "machine.execute_command": {"platform": "machine", "description": "Execute machine command", "risk_level": "high", "destructive": True},
     # Reddit legacy two-segment scopes
     "reddit.delete_post": {"platform": "reddit", "description": "Delete a Reddit post (irreversible)", "risk_level": "high", "destructive": True},
 }

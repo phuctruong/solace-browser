@@ -563,7 +563,7 @@ class ProcessManager:
                 if self.kill_process(pid_str, step_up_confirmed=step_up_confirmed):
                     count += 1
             except PermissionError:
-                pass  # Should not happen with step_up_confirmed=True
+                continue
         return count
 
     # ------------------------------------------------------------------

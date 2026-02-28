@@ -1,45 +1,109 @@
-import { useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppGrid } from "../components/AppGrid";
 import { ApprovalModal } from "../components/ApprovalModal";
+import { LoadingSpinner } from "../components/LoadingSpinner";
 import { RunsTable } from "../components/RunsTable";
 import { EvidenceManager } from "../services/evidenceManager";
 import { executeHeadless } from "../services/playwrightClient";
-import { createApprovalRecord, syncEvidence } from "../services/solaceagiClient";
+import {
+  createApprovalRecord,
+  getCreditsSummary,
+  getRecentRuns,
+  listInstalledApps,
+  syncEvidence,
+} from "../services/solaceagiClient";
 import { useSessionStore } from "../state/useSessionStore";
 import type { AppModel } from "../types/App";
 import type { ApprovalPreview } from "../types/Approval";
 import type { RunModel } from "../types/Run";
 import { APPS, SAMPLE_RUNS, STORAGE_KEYS } from "../utils/constants";
+import { formatUsd } from "../utils/formatting";
 import { loadJson, saveJson } from "../utils/storage";
+
+type PageState = "loading" | "loaded" | "error";
 
 export function HomePage(): JSX.Element {
   const navigate = useNavigate();
-  const session = useSessionStore((s) => s.session);
-  const connectApp = useSessionStore((s) => s.connectApp);
-  const [runs, setRuns] = useState<RunModel[]>(loadJson<RunModel[]>(STORAGE_KEYS.RUNS, SAMPLE_RUNS));
+  const session = useSessionStore((state) => state.session);
+  const connectApp = useSessionStore((state) => state.connectApp);
+  const [pageState, setPageState] = useState<PageState>("loading");
+  const [error, setError] = useState<string | null>(null);
+  const [apps, setApps] = useState<AppModel[]>(APPS);
+  const [creditsRemaining, setCreditsRemaining] = useState<number>(session?.creditsUsd ?? 0);
+  const [runs, setRuns] = useState<RunModel[]>(() => {
+    const storedRuns = loadJson<RunModel[]>(STORAGE_KEYS.RUNS, []);
+    return storedRuns.length > 0 ? storedRuns : SAMPLE_RUNS;
+  });
   const [pendingApp, setPendingApp] = useState<AppModel | null>(null);
   const [approvalOpen, setApprovalOpen] = useState(false);
 
-  const locked = !session || !session.membershipTier;
+  const locked = !session?.membershipTier;
   const connectedApps = session?.connectedApps ?? [];
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadDashboard(): Promise<void> {
+      setPageState("loading");
+      setError(null);
+      try {
+        const [installedApps, credits, recentRuns] = await Promise.all([
+          listInstalledApps(),
+          getCreditsSummary(),
+          getRecentRuns(),
+        ]);
+        if (!active) {
+          return;
+        }
+        startTransition(() => {
+          setApps(installedApps);
+          setCreditsRemaining(credits.remaining);
+          setRuns(recentRuns);
+          setPageState("loaded");
+        });
+      } catch (err) {
+        if (!active) {
+          return;
+        }
+        setError(err instanceof Error ? err.message : "Failed to load dashboard");
+        setPageState("error");
+      }
+    }
+
+    void loadDashboard();
+    return () => {
+      active = false;
+    };
+  }, [session?.uid]);
 
   const preview: ApprovalPreview = useMemo(
     () => ({
-      steps: 5,
+      steps: pendingApp?.scopeDetails
+        ? pendingApp.scopeDetails.required.length + pendingApp.scopeDetails.optional.length + 2
+        : 4,
       scopes: pendingApp?.scopes ?? [],
-      estimatedCostUsd: 0.12,
-      estimatedDurationSec: 18,
+      estimatedCostUsd: pendingApp?.riskTier === "high" ? 0.28 : 0.12,
+      estimatedDurationSec: pendingApp?.riskTier === "high" ? 22 : 16,
+      taskId: pendingApp?.approvalTaskId,
+      stepLabels: pendingApp
+        ? [
+            `Open ${pendingApp.name}`,
+            "Capture page state",
+            "Apply OAuth3 scopes",
+            "Return evidence bundle",
+          ]
+        : [],
     }),
     [pendingApp],
   );
 
   function openApp(app: AppModel): void {
-    if (locked && app.id === "solace") {
+    if (!session && app.id === "solace") {
       navigate("/login");
       return;
     }
-    if (locked) {
+    if (locked && app.id !== "solace") {
       return;
     }
 
@@ -65,20 +129,24 @@ export function HomePage(): JSX.Element {
     setApprovalOpen(true);
   }
 
-  async function onDecision(decision: "approve" | "override" | "cancel", reason?: string): Promise<void> {
+  async function handleDecision(decision: "approve" | "modify" | "abort", reason?: string): Promise<void> {
     if (!pendingApp) {
       return;
     }
+
     await createApprovalRecord(preview, decision, reason);
-    setApprovalOpen(false);
-    if (decision === "cancel") {
+    if (decision !== "approve") {
+      setApprovalOpen(false);
+      if (decision === "abort") {
+        setPendingApp(null);
+      }
       return;
     }
 
     const execution = await executeHeadless({
       appId: pendingApp.id,
       recipeId: `${pendingApp.id}.default`,
-      seed: "phase-4.1",
+      seed: "task-002",
       scopes: pendingApp.scopes,
     });
 
@@ -95,14 +163,14 @@ export function HomePage(): JSX.Element {
       status: execution.status,
       startedAt: new Date().toISOString(),
       durationMs: execution.durationMs,
-      tokenCostUsd: 0.12,
+      tokenCostUsd: preview.estimatedCostUsd,
       model: "L2/Sonnet",
       estimatedOpusUsd: 0.45,
       screenshots: execution.screenshots,
       steps: [
         {
-          id: "1",
-          name: "Execute recipe",
+          id: "step_1",
+          name: `Run ${pendingApp.name}`,
           action: "run",
           status: "success",
           durationMs: execution.durationMs,
@@ -112,21 +180,78 @@ export function HomePage(): JSX.Element {
       firstHash: bundle.events[0]?.eventHash.slice(0, 6) ?? "",
       lastHash: bundle.events[bundle.events.length - 1]?.eventHash.slice(0, 6) ?? "",
       hashVerified: await evidence.verify(),
+      tokensConsumed: 912,
+      modelLevel: "L2/Sonnet",
+      savingsVsFullLlm: 0.33,
+      evidence: execution.screenshots.map((shot) => ({
+        src: `/evidence/${shot}`,
+        label: shot,
+      })),
     };
 
     const nextRuns = [run, ...runs].slice(0, 20);
     setRuns(nextRuns);
     saveJson(STORAGE_KEYS.RUNS, nextRuns);
+    setApprovalOpen(false);
+    setPendingApp(null);
   }
 
   return (
-    <section>
-      <h2>Home</h2>
-      {locked ? <p>Sign in to Solace to unlock apps</p> : <p>Apps unlocked and ready.</p>}
-      <AppGrid apps={APPS} locked={locked} connectedAppIds={connectedApps} onOpen={openApp} onRun={requestRun} />
-      <h3>Runs</h3>
-      <RunsTable runs={runs} />
-      <ApprovalModal open={approvalOpen} preview={preview} onDecision={onDecision} />
+    <section className="dashboard-page">
+      <div className="hero-panel">
+        <div>
+          <p className="eyebrow">Installed Apps</p>
+          <h2>Home</h2>
+          <p>{locked ? "Sign in to Solace to unlock apps" : "Apps unlocked and ready."}</p>
+        </div>
+        <div className="credits-card">
+          <p className="eyebrow">Credits remaining</p>
+          <strong>{formatUsd(creditsRemaining)}</strong>
+          <p>{creditsRemaining.toFixed(2)}</p>
+          <p>{session ? `${session.email}` : "Guest mode"}</p>
+        </div>
+      </div>
+
+      {pageState === "loading" ? <LoadingSpinner /> : null}
+      {pageState === "error" ? <p role="alert">Dashboard error: {error}</p> : null}
+
+      {pageState !== "error" ? (
+        <>
+          {apps.length === 0 ? (
+            <article className="empty-card">
+              <h3>Install your first app</h3>
+              <p>Connect a workspace, mailbox, or browser recipe to start creating replay-safe runs.</p>
+              <button type="button" onClick={() => navigate("/store")}>
+                Browse store
+              </button>
+            </article>
+          ) : (
+            <AppGrid apps={apps} locked={locked} connectedAppIds={connectedApps} onOpen={openApp} onRun={requestRun} />
+          )}
+
+          <section className="runs-section">
+            <div className="section-header">
+              <div>
+                <p className="eyebrow">Recent runs</p>
+                <h3>Runs</h3>
+              </div>
+              <p>{runs.length} stored execution records</p>
+            </div>
+            <RunsTable runs={runs} />
+          </section>
+        </>
+      ) : null}
+
+      <ApprovalModal
+        open={approvalOpen}
+        preview={preview}
+        taskId={pendingApp?.approvalTaskId}
+        onDecision={handleDecision}
+        onClose={() => {
+          setApprovalOpen(false);
+          setPendingApp(null);
+        }}
+      />
     </section>
   );
 }

@@ -32,3 +32,5 @@ def test_recipe_cache_miss_for_new_inputs_and_stale(tmp_path: Path) -> None:
     stale = cache.get_result(key_a, max_age_hours=24)
     assert stale is None
     assert cache.stats()["misses"] >= 2
+    stats = cache.cache_stats()
+    assert stats.miss_count >= 2

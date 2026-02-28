@@ -1,0 +1,128 @@
+openapi: 3.1.0
+info:
+  title: Solace Browser Frontend Mock Contract
+  version: 0.1.0
+paths:
+  /api/v1/store/apps:
+    get:
+      summary: List installed apps
+      parameters:
+        - in: query
+          name: installed
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Installed apps
+  /api/v1/store/apps/{appId}:
+    get:
+      summary: Get app manifest
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: App manifest
+        "404":
+          description: App not found
+  /api/v1/history/{runId}:
+    get:
+      summary: Get run detail
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Run detail payload
+        "404":
+          description: Run not found
+  /api/v1/billing/credits:
+    get:
+      summary: Get remaining credits
+      responses:
+        "200":
+          description: Credits summary
+  /api/v1/billing/plans:
+    get:
+      summary: Get membership plans
+      responses:
+        "200":
+          description: Available plans
+  /api/v1/billing/checkout:
+    post:
+      summary: Create checkout session
+      responses:
+        "200":
+          description: Checkout url
+        "400":
+          description: Invalid tier
+  /api/v1/oauth3/tokens:
+    post:
+      summary: Validate BYOK token
+      responses:
+        "200":
+          description: Validation result
+        "400":
+          description: Invalid token
+  /api/v1/tasks/{taskId}/approve:
+    post:
+      summary: Approve a pending run
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Approval accepted
+        "403":
+          description: Safety gate denied
+  /api/v1/tasks/{taskId}/abort:
+    post:
+      summary: Abort a pending run
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Task aborted
+  /api/v1/tasks/{taskId}/modify:
+    post:
+      summary: Modify a pending run
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Task preview updated
+
+components:
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true

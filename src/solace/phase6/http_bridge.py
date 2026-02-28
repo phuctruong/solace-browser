@@ -34,6 +34,12 @@ from aiohttp import web
 
 logger = logging.getLogger(__name__)
 
+try:
+    from websockets.exceptions import WebSocketException  # type: ignore
+except ImportError:  # pragma: no cover - optional dependency
+    class WebSocketException(Exception):
+        """Fallback when websockets is unavailable."""
+
 # Configuration
 HTTP_HOST = "127.0.0.1"
 HTTP_PORT = 9999
@@ -66,7 +72,7 @@ class BridgeState:
             self._ws_listener_task = asyncio.create_task(self._listen_ws())
             logger.info("Connected to WebSocket server at ws://%s:%s", WS_HOST, WS_PORT)
             return True
-        except Exception as e:
+        except (OSError, RuntimeError, WebSocketException) as e:
             logger.error("Failed to connect to WebSocket server: %s", e)
             self.ws_connection = None
             return False
@@ -78,7 +84,7 @@ class BridgeState:
             try:
                 await self._ws_listener_task
             except asyncio.CancelledError:
-                pass
+                logger.debug("Bridge WS listener cancelled during disconnect")
         if self.ws_connection:
             await self.ws_connection.close()
             self.ws_connection = None
@@ -99,8 +105,8 @@ class BridgeState:
                 except json.JSONDecodeError:
                     logger.error("Invalid JSON from WebSocket")
         except asyncio.CancelledError:
-            pass
-        except Exception as e:
+            logger.debug("Bridge WS listener stopped")
+        except (OSError, RuntimeError, WebSocketException) as e:
             logger.error("WebSocket listener error: %s", e)
             self.ws_connection = None
 
@@ -125,7 +131,7 @@ class BridgeState:
             self.pending_responses.pop(request_id, None)
             logger.error("Request %s timed out after %ss", request_id, timeout)
             return None
-        except Exception as e:
+        except (OSError, RuntimeError, TypeError, ValueError, WebSocketException) as e:
             self.pending_responses.pop(request_id, None)
             logger.error("Send error: %s", e)
             self.ws_connection = None
@@ -216,7 +222,7 @@ async def handle_record_episode(request: web.Request) -> web.Response:
         from urllib.parse import urlparse
         parsed = urlparse(url if "://" in url else f"https://{url}")
         domain = parsed.hostname or "unknown"
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         domain = "unknown"
 
     # Send START_RECORDING to extension via WebSocket

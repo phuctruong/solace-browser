@@ -1,0 +1,16 @@
+{
+  "node_id": "slack-urls",
+  "version": "1.0.0",
+  "platform": "slack",
+  "domain": "app.slack.com",
+  "authority": 65537,
+  "created": "2026-02-27",
+  "base_urls": {
+    "workspace_home": "https://app.slack.com/client",
+    "channel": "https://app.slack.com/client/{team_id}/{channel_id}"
+  },
+  "dynamic_patterns": {
+    "channel_url": "https://app.slack.com/client/{team_id}/{channel_id}",
+    "thread_url": "https://app.slack.com/client/{team_id}/{channel_id}/thread/{thread_ts}"
+  }
+}

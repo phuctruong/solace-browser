@@ -731,7 +731,7 @@ def get_platform_token_count(platform: str, token_dir: Optional[Path] = None) ->
             expires = _parse_iso8601(token.expires_at)
             if now > expires:
                 continue
-        except Exception:
+        except (TypeError, ValueError):
             continue
         if any(s.startswith(prefix) for s in token.scopes):
             count += 1
@@ -766,7 +766,7 @@ def build_scope_badge_html(platform: str, token_dir: Optional[Path] = None) -> s
             expires = _parse_iso8601(token.expires_at)
             if now > expires:
                 continue
-        except Exception:
+        except (TypeError, ValueError):
             continue
         total_scopes += sum(1 for s in token.scopes if s.startswith(prefix))
 
@@ -827,7 +827,7 @@ async def handle_consent_post(request) -> object:
 
     try:
         data = await request.json()
-    except Exception:
+    except (json.JSONDecodeError, TypeError, UnicodeDecodeError, ValueError):
         return web.json_response({"error": "invalid_json"}, status=400)
 
     requested_scopes = data.get("scopes", [])
@@ -1097,7 +1097,7 @@ async def handle_step_up_post(request) -> object:
 
     try:
         data = await request.json()
-    except Exception:
+    except (json.JSONDecodeError, TypeError, UnicodeDecodeError, ValueError):
         return web.json_response({"error": "invalid_json"}, status=400)
 
     token_id = data.get("token_id", "")
@@ -1128,7 +1128,7 @@ async def handle_step_up_post(request) -> object:
             {"error": "token_not_found", "token_id": token_id},
             status=401,
         )
-    except Exception as e:
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
         return web.json_response({"error": "token_load_error", "detail": str(e)}, status=401)
 
     is_valid, validity_error = token.validate()

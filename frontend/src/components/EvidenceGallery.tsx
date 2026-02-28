@@ -1,5 +1,7 @@
+import type { RunEvidence } from "../types/Run";
+
 interface EvidenceGalleryProps {
-  screenshots: string[];
+  screenshots: string[] | RunEvidence[];
 }
 
 export function EvidenceGallery({ screenshots }: EvidenceGalleryProps): JSX.Element {
@@ -10,12 +12,18 @@ export function EvidenceGallery({ screenshots }: EvidenceGalleryProps): JSX.Elem
     <section>
       <h4>Evidence Gallery</h4>
       <div className="gallery">
-        {screenshots.map((shot) => (
-          <figure key={shot}>
-            <img src={`/evidence/${shot}`} alt={shot} />
-            <figcaption>{shot}</figcaption>
+        {screenshots.map((shot, index) => {
+          const item =
+            typeof shot === "string"
+              ? { src: shot.startsWith("/") ? shot : `/evidence/${shot}`, label: shot.replace(/^.*\//, "") }
+              : shot;
+          return (
+          <figure key={`${item.src}-${index}`}>
+            <img src={item.src} alt={item.label} loading="lazy" />
+            <figcaption>{item.label}</figcaption>
           </figure>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

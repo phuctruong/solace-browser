@@ -16,11 +16,7 @@ export async function signInWithPopup(provider: "gmail" | "github" = "gmail"): P
   );
 
   if (!popup) {
-    return {
-      uid: `uid_${provider}_local`,
-      email: `${provider}@example.com`,
-      idToken: "idtok_local",
-    };
+    throw new Error("Authentication popup was blocked. Please allow popups for this site and try again.");
   }
 
   return new Promise<AuthResult>((resolve, reject) => {

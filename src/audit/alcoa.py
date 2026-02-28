@@ -21,6 +21,8 @@ References:
 Rung: 641
 """
 
+import json
+
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
@@ -201,7 +203,7 @@ def validate_alcoa(chain: "AuditChain") -> ALCOAReport:
             )
             temp.load()
             report.available = (temp.count == chain.count)
-        except Exception:
+        except (FileNotFoundError, OSError, TypeError, ValueError, json.JSONDecodeError):
             report.available = False
     else:
         # Nothing on disk → not available (unless chain is also empty)

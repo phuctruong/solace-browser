@@ -7,6 +7,11 @@ export interface RunStep {
   scope: string;
 }
 
+export interface RunEvidence {
+  src: string;
+  label: string;
+}
+
 export interface RunModel {
   id: string;
   appId: string;
@@ -22,4 +27,8 @@ export interface RunModel {
   firstHash: string;
   lastHash: string;
   hashVerified: boolean;
+  tokensConsumed?: number;
+  modelLevel?: string;
+  savingsVsFullLlm?: number;
+  evidence?: RunEvidence[];
 }

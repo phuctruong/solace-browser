@@ -1,6 +1,6 @@
 # Solace Browser
 
-**OAuth3 Reference Implementation + Browser Automation + Recipe Engine**
+**Deterministic web automation. Recipe flywheel economics. Cloud twin at [solaceagi.com](https://solaceagi.com).**
 
 > "The best way to prove OAuth3 is possible is to build it." — Phuc Truong
 
@@ -58,6 +58,24 @@ solace-browser auth revoke $token
 # Task halts immediately ✓
 # Evidence: revocation logged + timestamp captured
 ```
+
+---
+
+## Recipe Flywheel
+
+**First run expensive, subsequent runs cheap:**
+
+```
+LLM discovers solution (tokens spent)
+            ↓
+        Recipe extracted
+            ↓
+        Recipes replayed (Haiku, $0.001)
+            ↓
+        All users benefit + costs fall
+```
+
+As a community, costs fall as usage grows (opposite of token vendors). This is the competitive moat.
 
 ---
 
@@ -272,14 +290,26 @@ graph LR
 
 ---
 
+## Cloud Twin
+
+Run Solace Browser locally with `solace-cli`, or use the always-on cloud twin:
+
+**[solaceagi.com](https://solaceagi.com)** — Cloud vertex with:
+- 24/7 scheduling
+- Evidence Vault (search, export, audit)
+- Team sharing (private recipes)
+- Managed LLM routing (20% markup on tokens)
+
+See live app catalog: **[App Store](https://solaceagi.com/app-store.html)**
+
 ## Related Projects
 
-- **stillwater** — Core OS + skills + Stillwater Store
-- **solaceagi.com** — Hosted platform (uses solace-browser as cloud twin)
-- **solace-cli** — Terminal-native CLI (extends stillwater)
-- **paudio** — Voice synthesis (for avatar system)
-- **pvideo** — Video/avatar rendering (if theory)
-- **pzip** — Compression engine (for storage)
+- **[Stillwater OS](https://github.com/phuctruong/stillwater)** — Core OS + skills + Stillwater Store
+- **[Solace AGI](https://solaceagi.com)** — Hosted platform (uses solace-browser as cloud twin)
+- **[Solace CLI](https://github.com/phuctruong/solace-cli)** — Terminal-native CLI (extends stillwater)
+- **[Paudio](https://github.com/phuctruong/paudio)** — Voice synthesis (for avatar system)
+- **[PVideo](https://github.com/phuctruong/pvideo)** — Video/avatar rendering (IF Theory engine)
+- **[PZip](https://github.com/phuctruong/pzip)** — Compression engine (for storage)
 
 ---
 

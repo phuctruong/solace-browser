@@ -15,6 +15,7 @@ Rung: 641
 """
 
 import hashlib
+import logging
 import re
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
@@ -98,6 +99,8 @@ _INTERACTIVE_TAGS = frozenset({
     "a", "button", "details", "input", "label", "option",
     "select", "summary", "textarea",
 })
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -478,8 +481,8 @@ class DOMSnapshotEngine:
         parser = _DOMParser()
         try:
             parser.feed(page_html)
-        except Exception:
-            pass  # partial parse — use whatever refs we have
+        except (AssertionError, ValueError) as exc:
+            logger.debug("DOM parser stopped early for %s: %s", url, exc)
         refs = parser.get_refs()
 
         # Compute dom_hash from serialized refs

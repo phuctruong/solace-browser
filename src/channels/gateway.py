@@ -640,7 +640,7 @@ class ChannelGateway:
             try:
                 handler(message)
                 result["response_queued"] = True
-            except Exception as exc:
+            except (RuntimeError, TypeError, ValueError) as exc:
                 self._audit_log("handler_exception", {
                     "channel": message.channel.value,
                     "message_id": message.message_id,

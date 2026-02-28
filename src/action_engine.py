@@ -244,7 +244,7 @@ class ActionEngine:
 
         try:
             ok = self._dispatch(action, css_path, value)
-        except Exception as exc:
+        except (AttributeError, RuntimeError, TypeError, ValueError) as exc:
             return ActionResult(
                 success=False,
                 ref_used=ref.ref_id,

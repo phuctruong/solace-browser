@@ -21,8 +21,11 @@ const executeHeadlessMock = vi.fn().mockResolvedValue({
   output: { deterministic_nonce: 123 },
 });
 
-vi.mock("../../services/firebaseAuth", () => ({
+vi.mock("firebase/auth", () => ({
+  getAuth: vi.fn(() => ({})),
+  GoogleAuthProvider: vi.fn().mockImplementation(() => ({})),
   signInWithPopup: (...args: unknown[]) => signInWithPopupMock(...args),
+  createUserWithEmailAndPassword: vi.fn(),
 }));
 
 vi.mock("../../services/vault", () => ({
@@ -50,7 +53,7 @@ describe("integration: auth flow", () => {
     vi.clearAllMocks();
     localStorage.clear();
     useSessionStore.setState({ session: null });
-    signInWithPopupMock.mockResolvedValue({ uid: "u1", email: "u1@example.com", idToken: "idtok" });
+    signInWithPopupMock.mockResolvedValue({ user: { uid: "u1", email: "u1@example.com" } });
     registerBrowserMock.mockResolvedValue({ apiKey: "sk_browser_auth", deviceId: "device_1" });
     encryptSecretMock.mockResolvedValue("enc");
     setByokKeyMock.mockResolvedValue({ ok: true });
@@ -72,9 +75,9 @@ describe("integration: auth flow", () => {
 
   it("user logs in and reaches llm setup", async () => {
     renderFlow("/login");
-    fireEvent.click(screen.getByRole("button", { name: "Continue with Gmail" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
     await waitFor(() => {
-      expect(screen.getByText("Choose LLM Mode")).toBeInTheDocument();
+      expect(screen.getByText("Choose your inference mode")).toBeInTheDocument();
     });
   });
 
@@ -90,7 +93,7 @@ describe("integration: auth flow", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Managed" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     await waitFor(() => {
-      expect(screen.getByText("Select Membership")).toBeInTheDocument();
+      expect(screen.getByText("Select your plan")).toBeInTheDocument();
     });
   });
 
@@ -141,7 +144,7 @@ describe("integration: auth flow", () => {
     });
     renderFlow("/home");
     fireEvent.click(screen.getAllByRole("button", { name: "Run Now" })[1]);
-    fireEvent.click(screen.getByRole("button", { name: "APPROVE & RUN" }));
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
 
     await waitFor(() => {
       expect(createApprovalRecordMock).toHaveBeenCalled();
@@ -164,7 +167,7 @@ describe("integration: auth flow", () => {
     });
     renderFlow("/home");
     fireEvent.click(screen.getAllByRole("button", { name: "Run Now" })[1]);
-    fireEvent.click(screen.getByRole("button", { name: "APPROVE & RUN" }));
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
     await waitFor(() => {
       expect(screen.getByText("run_999")).toBeInTheDocument();
     });

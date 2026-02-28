@@ -28,6 +28,7 @@ Rung: 641
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from dataclasses import dataclass, field
@@ -57,6 +58,8 @@ DEFAULT_WAKE_WORD = "solace"
 SENSITIVITY_MIN = 0.0
 SENSITIVITY_MAX = 1.0
 SENSITIVITY_DEFAULT = 0.5
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -455,9 +458,8 @@ class WakeWordDetector:
         for cb in callbacks:
             try:
                 cb()
-            except Exception:  # noqa: BLE001
-                # Callbacks must not crash the detector
-                pass
+            except (RuntimeError, TypeError, ValueError) as exc:
+                logger.warning("Wake callback failed: %s", exc)
 
     # ------------------------------------------------------------------
     # Introspection (for tests)

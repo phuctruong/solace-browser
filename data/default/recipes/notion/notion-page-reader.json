@@ -1,0 +1,260 @@
+{
+  "id": "notion-page-reader",
+  "platform": "notion",
+  "version": "1.0.0",
+  "description": "Read a Notion page and return structured title, properties, and block content with hierarchy preserved, plus a generated summary.",
+  "author": "stillwater",
+  "rung": 641,
+  "created": "2026-02-21",
+  "oauth3_scopes": ["notion.read.page"],
+  "evidence_type": "lane_a",
+  "primewiki_reference": "data/default/primewiki/notion/actions.json",
+
+  "reasoning": {
+    "research": "Notion pages use a block-based architecture. The page title is in .notion-page-block or [data-block-id] with a contenteditable title. Properties (for database entries) appear in .notion-collection-property. Content blocks use [data-block-id] with nested children. Block types include: text (.notion-text-block), heading (.notion-header-block, .notion-sub_header-block, .notion-sub_sub_header-block), bulleted list (.notion-bulleted_list-block), numbered list (.notion-numbered_list-block), to-do (.notion-to_do-block), toggle (.notion-toggle-block), code (.notion-code-block), table (.notion-table-block), and image (.notion-image-block). Nested blocks are indented children within parent [data-block-id] containers.",
+    "selector_strategy": "Title: .notion-page-block [contenteditable], .notion-selectable.notion-page-block. Properties: .notion-collection_view-block .notion-collection-property. Content blocks: .notion-page-content > [data-block-id]. Block type detection via class prefix 'notion-{type}-block'. Nested children: [data-block-id] > [data-block-id]. Code blocks: .notion-code-block pre code. Tables: .notion-table-block table.",
+    "anti_bot_notes": "Notion pages load progressively. Some blocks lazy-load on scroll. Wait 3s after initial load for dynamic rendering. For long pages, scroll down to trigger lazy loading of below-fold blocks. Notion does not aggressively block read-only access with valid session.",
+    "performance": "Navigation 4s + auth check 2s + dynamic render wait 3s + title extraction 1s + property extraction 2s + content extraction 3-5s + nested block parsing 2s + LLM summary 5-8s + save 2s = ~25-35s."
+  },
+
+  "input_params": {
+    "page_url": {
+      "type": "string",
+      "description": "Full Notion page URL to read",
+      "required": true,
+      "example": "https://www.notion.so/My-Page-Title-abc123def456"
+    },
+    "include_properties": {
+      "type": "boolean",
+      "description": "Whether to extract database properties if the page is a database entry",
+      "required": false,
+      "example": true
+    },
+    "generate_summary": {
+      "type": "boolean",
+      "description": "Whether to generate an LLM summary of the page content",
+      "required": false,
+      "example": true
+    }
+  },
+
+  "budgets": {
+    "max_reads": 100,
+    "max_sends": 0,
+    "max_deletes": 0,
+    "max_llm_calls": 3,
+    "max_duration_seconds": 300
+  },
+
+  "mermaid_fsm": "stateDiagram-v2\n  [*] --> NavigatePage\n  NavigatePage --> Authenticate: page_loaded\n  Authenticate --> WaitForRender: auth_confirmed\n  WaitForRender --> ExtractTitle: rendered\n  ExtractTitle --> ExtractProperties: title_ready\n  ExtractProperties --> ExtractContentBlocks: properties_ready\n  ExtractContentBlocks --> ParseNestedBlocks: blocks_extracted\n  ParseNestedBlocks --> GenerateSummary: hierarchy_built\n  GenerateSummary --> SaveToOutbox: summary_ready\n  SaveToOutbox --> CaptureEvidence: saved\n  CaptureEvidence --> [*]",
+
+  "steps": [
+    {
+      "step_id": "step_01_navigate_page",
+      "action": "navigate",
+      "description": "Navigate to the Notion page URL. Wait for the primary page content container to render, indicating the page structure has loaded.",
+      "selector": ".notion-page-content",
+      "scope_required": "notion.read.page",
+      "evidence_capture": true,
+      "timeout_ms": 15000,
+      "on_error": "fail_with_screenshot",
+      "target": "{params.page_url}"
+    },
+    {
+      "step_id": "step_02_authenticate",
+      "action": "check_auth",
+      "description": "Verify the Notion session is authenticated by checking for the page content container. If redirected to the login or signup page, abort with SESSION_EXPIRED.",
+      "selector": ".notion-page-content",
+      "scope_required": "notion.read.page",
+      "evidence_capture": false,
+      "timeout_ms": 8000,
+      "on_error": "fail_with_screenshot",
+      "fallback_url_pattern": "notion.so/login"
+    },
+    {
+      "step_id": "step_03_wait_dynamic_render",
+      "action": "scroll",
+      "description": "Wait for dynamic content rendering. Notion pages lazy-load blocks below the fold. Scroll down slowly through the entire page to trigger loading of all content blocks. Pause 1500ms between scrolls to allow rendering. Then scroll back to top.",
+      "selector": ".notion-scroller",
+      "scope_required": "notion.read.page",
+      "evidence_capture": false,
+      "timeout_ms": 20000,
+      "on_error": "skip_with_warning",
+      "scroll_direction": "down",
+      "max_scroll_iterations": 10,
+      "pause_between_ms": 1500,
+      "scroll_back_to_top": true
+    },
+    {
+      "step_id": "step_04_extract_title",
+      "action": "extract",
+      "description": "Extract the page title from the Notion page block. The title is in a contenteditable element within the page header. Also extract the page icon (emoji or uploaded image) and cover image URL if present.",
+      "selector": ".notion-page-block [contenteditable]",
+      "scope_required": "notion.read.page",
+      "evidence_capture": true,
+      "timeout_ms": 5000,
+      "on_error": "fail_with_screenshot",
+      "extract_fields": {
+        "title": ".notion-page-block [contenteditable]",
+        "icon": ".notion-page-block .notion-record-icon img, .notion-page-block .notion-record-icon span",
+        "cover": ".notion-page-cover img"
+      }
+    },
+    {
+      "step_id": "step_05_extract_properties",
+      "action": "extract",
+      "description": "If the page is a database entry (has collection properties), extract all visible properties including their names and values. Properties may include text, select, multi-select, date, person, URL, checkbox, and relation types. Skip this step if include_properties is false or no properties container is found.",
+      "selector": ".notion-collection_view-block .notion-collection-property",
+      "scope_required": "notion.read.page",
+      "evidence_capture": true,
+      "timeout_ms": 8000,
+      "on_error": "skip_with_warning",
+      "condition": "{params.include_properties} is true",
+      "extract_fields": {
+        "property_name": ".notion-collection-property-name",
+        "property_value": ".notion-collection-property-value"
+      }
+    },
+    {
+      "step_id": "step_06_extract_content_blocks",
+      "action": "extract",
+      "description": "Extract all top-level content blocks from the page. For each block, determine its type by CSS class (notion-text-block, notion-header-block, notion-sub_header-block, notion-sub_sub_header-block, notion-bulleted_list-block, notion-numbered_list-block, notion-to_do-block, notion-toggle-block, notion-code-block, notion-table-block, notion-image-block). Extract the text content, block type, and data-block-id for each.",
+      "selector": ".notion-page-content > [data-block-id]",
+      "scope_required": "notion.read.page",
+      "evidence_capture": true,
+      "timeout_ms": 15000,
+      "on_error": "fail_with_screenshot",
+      "extract_fields": {
+        "block_id": "::attr(data-block-id)",
+        "block_type": "::class_prefix(notion-*-block)",
+        "text_content": "[contenteditable]",
+        "checked": "input[type='checkbox']::attr(checked)"
+      }
+    },
+    {
+      "step_id": "step_07_parse_nested_blocks",
+      "action": "extract",
+      "description": "For each top-level block that contains nested children (toggles, lists with sub-items), recursively extract child blocks preserving the parent-child hierarchy. Build a tree structure where each node has: block_id, block_type, text_content, depth_level, and children array. Maximum nesting depth of 5 levels.",
+      "selector": "[data-block-id] > [data-block-id]",
+      "scope_required": "notion.read.page",
+      "evidence_capture": false,
+      "timeout_ms": 10000,
+      "on_error": "skip_with_warning",
+      "max_depth": 5,
+      "extract_fields": {
+        "block_id": "::attr(data-block-id)",
+        "block_type": "::class_prefix(notion-*-block)",
+        "text_content": "[contenteditable]",
+        "depth_level": "::nesting_depth",
+        "parent_block_id": "::parent::attr(data-block-id)"
+      }
+    },
+    {
+      "step_id": "step_08_generate_summary",
+      "action": "summarize",
+      "description": "Generate a structured summary of the page content using the LLM. The summary includes: a one-paragraph overview, key points extracted from headings and bold text, any action items or to-dos found, and a content structure outline. Skip this step if generate_summary param is false.",
+      "selector": null,
+      "scope_required": "llm.generate.text",
+      "evidence_capture": true,
+      "timeout_ms": 20000,
+      "on_error": "skip_with_warning",
+      "condition": "{params.generate_summary} is true",
+      "llm_prompt_template": "Summarize the following Notion page content. Provide: 1) A one-paragraph overview, 2) Key points, 3) Any action items or to-dos, 4) Content structure outline. Be concise and preserve important details.",
+      "max_output_tokens": 1500
+    },
+    {
+      "step_id": "step_09_save_to_outbox",
+      "action": "save",
+      "description": "Save the extracted page content and summary to the local outbox directory as a structured markdown document. Include title, properties (if extracted), full content with hierarchy, and summary (if generated). File is named with page title slug and date.",
+      "selector": null,
+      "scope_required": "outbox.write",
+      "evidence_capture": true,
+      "timeout_ms": 5000,
+      "on_error": "fail_with_screenshot",
+      "output_path": "outbox/notion-page-{title_slug}-{date}.md",
+      "output_format": "markdown"
+    },
+    {
+      "step_id": "step_10_capture_evidence",
+      "action": "capture",
+      "description": "Take a final full-page evidence screenshot of the Notion page showing the rendered content. Capture includes page title, properties section, and visible content blocks for audit trail verification.",
+      "selector": null,
+      "scope_required": "notion.read.page",
+      "evidence_capture": true,
+      "timeout_ms": 8000,
+      "on_error": "skip_with_warning",
+      "full_page": true
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "page_url": {"type": "string", "example": "https://www.notion.so/My-Page-Title-abc123def456"},
+      "title": {"type": "string", "example": "Q1 Planning Document"},
+      "icon": {"type": "string", "example": "📋"},
+      "properties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {"type": "string", "example": "Status"},
+            "value": {"type": "string", "example": "In Progress"}
+          }
+        },
+        "example": [{"name": "Status", "value": "In Progress"}, {"name": "Due Date", "value": "2026-03-01"}]
+      },
+      "blocks": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "block_id": {"type": "string"},
+            "block_type": {"type": "string", "example": "heading"},
+            "text_content": {"type": "string"},
+            "depth_level": {"type": "number", "example": 0},
+            "children": {"type": "array"}
+          }
+        }
+      },
+      "block_count": {"type": "number", "example": 42},
+      "summary": {"type": "string", "example": "This page outlines the Q1 planning priorities..."},
+      "outbox_path": {"type": "string", "example": "outbox/notion-page-q1-planning-document-2026-02-21.md"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["page_url", "title", "blocks", "block_count", "timestamp"]
+  },
+
+  "expected_evidence": {
+    "screenshots": true,
+    "html_snapshots": true,
+    "action_log": true,
+    "agency_token": true,
+    "selector_matches": true
+  },
+
+  "error_handling": {
+    "session_expired": "Detect notion.so/login redirect — run notion-oauth-login recipe first",
+    "page_not_found": "Detect 404 or 'Page not found' message. Abort with PAGE_NOT_FOUND.",
+    "access_denied": "Detect 'No access' or permission wall. Abort with ACCESS_DENIED — user must share page or grant access.",
+    "lazy_load_incomplete": "If scroll-triggered loading misses blocks, retry with slower scroll intervals. Proceed with partially loaded content if retry fails.",
+    "empty_page": "Return structure with title only and empty blocks array. Do not generate summary for empty pages."
+  },
+
+  "anti_detection": {
+    "human_typing": false,
+    "natural_scroll_intervals": true,
+    "wait_for_dom_settle": true,
+    "wait_for_lazy_load": true
+  },
+
+  "metadata": {
+    "tags": ["notion", "read", "page", "extract", "blocks", "llm"],
+    "difficulty": "medium",
+    "prerequisites": ["notion_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 35,
+    "idempotent": true,
+    "destructive": false
+  }
+}

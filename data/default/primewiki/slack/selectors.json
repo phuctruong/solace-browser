@@ -1,0 +1,20 @@
+{
+  "node_id": "slack-selectors",
+  "version": "1.0.0",
+  "platform": "slack",
+  "domain": "app.slack.com",
+  "authority": 65537,
+  "created": "2026-02-27",
+  "selectors": {
+    "message_row": {
+      "selector": "[data-qa='virtual-list-item']",
+      "confidence": 0.91,
+      "type": "selector_list"
+    },
+    "channel_header": {
+      "selector": "[data-qa='channel_name_header']",
+      "confidence": 0.88,
+      "type": "wait_for"
+    }
+  }
+}

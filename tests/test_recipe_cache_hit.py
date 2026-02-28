@@ -23,3 +23,6 @@ def test_recipe_cache_hit_returns_cached_result(tmp_path: Path) -> None:
     assert cached is not None
     assert cached["output"]["x"] == 1
     assert cache.stats()["hits"] == 1
+    stats = cache.cache_stats()
+    assert stats.hit_count == 1
+    assert stats.miss_count == 0

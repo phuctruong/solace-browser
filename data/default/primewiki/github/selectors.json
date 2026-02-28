@@ -1,0 +1,25 @@
+{
+  "node_id": "github-selectors",
+  "version": "1.0.0",
+  "platform": "github",
+  "domain": "github.com",
+  "authority": 65537,
+  "created": "2026-02-27",
+  "selectors": {
+    "issue_row": {
+      "selector": "[data-testid='issue-row']",
+      "confidence": 0.95,
+      "type": "selector_list"
+    },
+    "issue_title_link": {
+      "selector": "[data-testid='issue-row'] a[data-testid='issue-pr-title-link']",
+      "confidence": 0.9,
+      "type": "text_extraction"
+    },
+    "comment_textarea": {
+      "selector": "textarea#new_comment_field",
+      "confidence": 0.92,
+      "type": "wait_for"
+    }
+  }
+}

@@ -14,11 +14,14 @@ Rung: 641 (local correctness)
 
 from __future__ import annotations
 
+import logging
 import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional, Set
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -419,8 +422,8 @@ class AgentOrchestrator:
                     if rollback_fn is not None:
                         try:
                             rollback_fn(step_id, ev)
-                        except Exception:  # noqa: BLE001
-                            pass
+                        except (RuntimeError, TypeError, ValueError) as exc:
+                            logger.warning("Rollback handler failed for %s: %s", step_id, exc)
                     rolled_back_steps.append(step_id)
                     # Update evidence status
                     rolled_ev = StepEvidence(

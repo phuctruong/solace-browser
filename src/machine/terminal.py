@@ -21,6 +21,7 @@ from __future__ import annotations
 import datetime
 import getpass
 import json
+import logging
 import os
 import platform
 import re
@@ -49,6 +50,7 @@ MAX_TIMEOUT_SECONDS: int = 300
 MAX_STDOUT_BYTES: int = 8_192       # 8 KB stdout cap in audit log
 MAX_STDERR_BYTES: int = 2_048       # 2 KB stderr cap in audit log
 AUDIT_LOG_PATH: Path = Path.home() / ".stillwater" / "machine_audit.jsonl"
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -187,8 +189,8 @@ def _audit(action: str, token: AgencyToken, command: str, extra: Optional[dict] 
         }
         with open(AUDIT_LOG_PATH, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(record) + "\n")
-    except Exception:
-        pass
+    except (OSError, TypeError, ValueError) as exc:
+        logger.warning("machine terminal audit write failed: %s", exc)
 
 
 def _gate_check(token: AgencyToken, required_scopes: list) -> Optional[dict]:
@@ -484,8 +486,8 @@ def get_system_info(token: AgencyToken) -> dict:
                         kb = int(line.split()[1])
                         memory_total_gb = round(kb / (1024 ** 2), 2)
                         break
-        except OSError:
-            pass
+        except OSError as exc:
+            logger.debug("Could not read /proc/meminfo: %s", exc)
     info["memory_total_gb"] = memory_total_gb
 
     # Disk usage for the home directory

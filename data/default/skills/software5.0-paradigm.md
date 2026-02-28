@@ -1,0 +1,1 @@
+../../../stillwater/data/default/skills/software5.0-paradigm.md

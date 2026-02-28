@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ApprovalModal } from "../components/ApprovalModal";
 
 describe("ApprovalModal", () => {
-  it("requires reason before override", () => {
+  it("requires reason before modify when override is enabled", () => {
     const onDecision = vi.fn();
     render(
       <ApprovalModal
@@ -18,14 +18,14 @@ describe("ApprovalModal", () => {
       />,
     );
 
-    const override = screen.getByRole("button", { name: "OVERRIDE & EXPLAIN" });
-    expect(override).toBeDisabled();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Override safety check" }));
+    const modify = screen.getByRole("button", { name: "Modify" });
 
     fireEvent.change(screen.getByLabelText("Override reason"), { target: { value: "Need manual exception" } });
-    expect(override).toBeEnabled();
+    expect(screen.getByLabelText("Override reason")).toBeEnabled();
 
-    fireEvent.click(override);
-    expect(onDecision).toHaveBeenCalledWith("override", "Need manual exception");
+    fireEvent.click(modify);
+    expect(onDecision).toHaveBeenCalledWith("modify", "Need manual exception");
   });
 
   it("supports approve decision", () => {
@@ -43,7 +43,7 @@ describe("ApprovalModal", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "APPROVE & RUN" }));
-    expect(onDecision).toHaveBeenCalledWith("approve");
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    expect(onDecision).toHaveBeenCalledWith("approve", undefined);
   });
 });

@@ -1,0 +1,30 @@
+{
+  "node_id": "slack-actions",
+  "version": "1.0.0",
+  "platform": "slack",
+  "domain": "app.slack.com",
+  "authority": 65537,
+  "created": "2026-02-27",
+  "actions": {
+    "read_channel_messages": {
+      "id": "read_channel_messages",
+      "description": "Open a Slack channel and extract recent messages for summarization.",
+      "oauth3_scope": "channel.slack.read",
+      "risk_level": "low",
+      "destructive": false,
+      "requires_step_up": false,
+      "sequence": [
+        {
+          "action": "navigate",
+          "url": "{channel_url}",
+          "wait_for": "[data-qa='virtual-list-item']"
+        },
+        {
+          "action": "extract_all",
+          "selector": "[data-qa='virtual-list-item']",
+          "fields": ["author", "timestamp", "content"]
+        }
+      ]
+    }
+  }
+}

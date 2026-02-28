@@ -26,6 +26,7 @@ from __future__ import annotations
 import datetime
 import fnmatch
 import json
+import logging
 import mimetypes
 import os
 import stat
@@ -51,6 +52,7 @@ from src.machine.scopes import (
 MAX_READ_BYTES: int = 1_000_000          # 1 MB
 MAX_SEARCH_RESULTS: int = 500            # cap on search hits
 AUDIT_LOG_PATH: Path = Path.home() / ".stillwater" / "machine_audit.jsonl"
+logger = logging.getLogger(__name__)
 
 # Paths that are NEVER accessible, regardless of scope.
 # These are matched against the resolved absolute path (as a string).
@@ -98,8 +100,8 @@ def _audit(action: str, token: AgencyToken, path: str, extra: Optional[dict] = N
         }
         with open(AUDIT_LOG_PATH, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(record) + "\n")
-    except Exception:
-        pass  # audit failure must never block the main operation
+    except (OSError, TypeError, ValueError) as exc:
+        logger.warning("machine file audit write failed for %s: %s", path, exc)
 
 
 def _redact_path(path: str) -> str:
@@ -166,8 +168,8 @@ def _resolve_safe(path: str, allowed_root: Optional[Path]) -> tuple:
                     f"symlink_escape: symlink at {path!r} resolves to "
                     f"{link_target!r} which is outside allowed root {allowed_root!r}"
                 )
-    except OSError:
-        pass  # non-existent symlink — will be caught below
+    except OSError as exc:
+        logger.debug("Symlink inspection failed for %s: %s", path, exc)
 
     if allowed_root and not _is_within(resolved, allowed_root):
         return None, (
@@ -592,8 +594,8 @@ def search_files(
             if allowed_root and not _is_within(match.resolve(), allowed_root):
                 continue
             results.append(_file_info(match))
-    except (OSError, PermissionError):
-        pass  # partial results are acceptable
+    except (OSError, PermissionError) as exc:
+        logger.debug("File search stopped early in %s: %s", resolved_dir, exc)
 
     _audit("search_files", token, str(resolved_dir), {"pattern": pattern, "hits": len(results)})
     return results

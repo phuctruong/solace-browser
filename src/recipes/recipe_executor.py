@@ -31,6 +31,10 @@ class ExecutionError(RuntimeError):
     """Raised when recipe execution is blocked or fails."""
 
 
+class ReplayError(RuntimeError):
+    """Raised when deterministic replay cannot be verified."""
+
+
 @dataclass(frozen=True)
 class ExecutionResult:
     status: str
@@ -72,6 +76,7 @@ class RecipeExecutor:
         self._prev_hash = self._load_tail_hash()
 
         self.metrics = metrics_tracker
+        self.last_replay_cost = 0.0
 
     async def execute(
         self,
@@ -155,7 +160,7 @@ class RecipeExecutor:
                 current_state = next_state
 
             raise ExecutionError("execution exceeded max_steps")
-        except Exception as exc:
+        except (ExecutionError, KeyError, PermissionError, RuntimeError, TypeError, ValueError) as exc:
             self._log_event(
                 "RECIPE_FAILED",
                 {
@@ -175,6 +180,42 @@ class RecipeExecutor:
             if isinstance(exc, ExecutionError):
                 raise
             raise ExecutionError(str(exc)) from exc
+
+    def seal_output(self, recipe: Dict[str, Any] | Any, result: Dict[str, Any] | ExecutionResult) -> Dict[str, Any]:
+        recipe_id = self._resolve_recipe_id(recipe)
+        payload = result.to_dict() if hasattr(result, "to_dict") else dict(result)
+        sealed = {
+            "schema_version": "1.0.0",
+            "recipe_id": recipe_id,
+            "seed": self.seed,
+            "status": str(payload.get("status") or ""),
+            "steps_executed": int(payload.get("steps_executed") or 0),
+            "final_state": str(payload.get("final_state") or ""),
+            "behavior_hash": str(payload.get("behavior_hash") or ""),
+            "output": dict(payload.get("output") or {}),
+        }
+        sealed["output_hash"] = self._replay_hash(sealed)
+        return sealed
+
+    def execute_replay(self, recipe: Dict[str, Any] | Any, sealed_output: Dict[str, Any]) -> bool:
+        started = time.perf_counter()
+        recipe_id = self._resolve_recipe_id(recipe)
+        if not isinstance(sealed_output, dict):
+            raise ReplayError("sealed output must be a mapping")
+
+        sealed_recipe_id = str(sealed_output.get("recipe_id") or "")
+        if not sealed_recipe_id:
+            raise ReplayError("sealed output missing recipe_id")
+        if sealed_recipe_id != recipe_id:
+            raise ReplayError(f"sealed output recipe_id mismatch: {sealed_recipe_id} != {recipe_id}")
+        if "output_hash" not in sealed_output:
+            raise ReplayError("sealed output missing output_hash")
+
+        canonical = {key: value for key, value in sealed_output.items() if key != "output_hash"}
+        expected_hash = self._replay_hash(canonical)
+        self.last_replay_cost = 0.0
+        _ = time.perf_counter() - started
+        return expected_hash == str(sealed_output.get("output_hash") or "")
 
     def _enforce_scope(self, action: str) -> None:
         scope = ACTION_SCOPE_MAP.get(action)
@@ -371,3 +412,20 @@ class RecipeExecutor:
 
         payload = json.loads(last)
         return str(payload.get("event_hash") or GENESIS_HASH)
+
+    @staticmethod
+    def _resolve_recipe_id(recipe: Dict[str, Any] | Any) -> str:
+        if hasattr(recipe, "to_dict"):
+            recipe = recipe.to_dict()
+        if not isinstance(recipe, dict):
+            raise ReplayError("recipe must be a mapping or support to_dict()")
+
+        recipe_id = str(recipe.get("recipe_id") or recipe.get("id") or "").strip()
+        if not recipe_id:
+            raise ReplayError("recipe missing recipe_id")
+        return recipe_id
+
+    @staticmethod
+    def _replay_hash(payload: Dict[str, Any]) -> str:
+        canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
