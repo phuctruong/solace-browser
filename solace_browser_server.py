@@ -309,6 +309,29 @@ class SolaceBrowser:
         """Register an async callback for post-seal Part 11 uploads."""
         self._part11_upload_hook = hook
 
+    # Yinyang rail injection state
+    _yinyang_port: int = 9222
+    _yinyang_enabled: bool = False
+
+    async def inject_yinyang_rails(self, page: Any, port: int = 0) -> bool:
+        """Inject Yinyang top + bottom rails into a page.
+
+        Uses add_init_script so rails persist across navigations.
+        Returns True if injection succeeded, False otherwise.
+        """
+        if not YINYANG_AVAILABLE or not self._yinyang_enabled:
+            return False
+        effective_port = port or self._yinyang_port
+        ws_url = f"ws://localhost:{effective_port}/ws/yinyang"
+        try:
+            await inject_top_rail(page)
+            await inject_bottom_rail(page, ws_url=ws_url)
+            logger.info("[Yinyang] Rails injected into page")
+            return True
+        except Exception as exc:
+            logger.warning(f"[Yinyang] Rail injection failed: {exc}")
+            return False
+
     @staticmethod
     def _part11_mode_or_raise(mode: str) -> str:
         if mode not in {"screenshot", "archive"}:
@@ -3002,6 +3025,12 @@ async def main():
         sync_config=build_sync_config(args),
         yinyang_bridge=yy_bridge,
     )
+
+    # Inject Yinyang rails into the browser's current page
+    if YINYANG_AVAILABLE and yy_bridge is not None and browser.current_page is not None:
+        browser._yinyang_enabled = True
+        browser._yinyang_port = args.port
+        await browser.inject_yinyang_rails(browser.current_page, port=args.port)
 
     try:
         await server.start()
