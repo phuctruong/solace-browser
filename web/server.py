@@ -36,6 +36,7 @@ SLUG_MAP = {
     "app-store": "app-store.html",
     "app-detail": "app-detail.html",
     "settings": "settings.html",
+    "demo": "demo.html",
 }
 
 DEFAULT_SETTINGS: dict[str, Any] = {

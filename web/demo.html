@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family Demo Day | Solace Browser</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    :root {
+      --sb-bg: #081019;
+      --sb-surface: #0f1825;
+      --sb-surface-strong: #172335;
+      --sb-border: rgba(163, 185, 214, 0.18);
+      --sb-text: #f4f7fb;
+      --sb-text-muted: #9cb1ca;
+      --sb-accent: #ff6b35;
+      --sb-accent-soft: rgba(255, 107, 53, 0.14);
+      --sb-signal: #64c4ff;
+      --sb-success: #46d9a7;
+      --sb-warning: #ffc75a;
+      --sb-danger: #ff7c7c;
+      --sb-purple: #AE67FA;
+      --sb-font-display: "Manrope", "Segoe UI", sans-serif;
+      --sb-font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
+      --sb-grad-hero-bg: linear-gradient(135deg, #081019 0%, #0f1a2e 50%, #1a1f3a 100%);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 100%; scroll-behavior: smooth; }
+    html, body {
+      min-height: 100%;
+      background: var(--sb-grad-hero-bg);
+      color: var(--sb-text);
+      font-family: var(--sb-font-body);
+      overflow-x: hidden;
+    }
+
+    /* ── Ambient glow background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse at 20% 15%, rgba(100, 196, 255, 0.06) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 85%, rgba(174, 103, 250, 0.05) 0%, transparent 55%),
+        radial-gradient(ellipse at 50% 50%, rgba(255, 107, 53, 0.03) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout ── */
+    .demo-page {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    /* ── Nav bar ── */
+    .demo-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0 24px;
+      border-bottom: 1px solid var(--sb-border);
+      margin-bottom: 40px;
+    }
+    .demo-nav-brand {
+      font-family: var(--sb-font-display);
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--sb-accent), var(--sb-signal), var(--sb-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-decoration: none;
+    }
+    .demo-nav-links {
+      display: flex;
+      gap: 16px;
+    }
+    .demo-nav-links a {
+      color: var(--sb-text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+    .demo-nav-links a:hover { color: var(--sb-signal); }
+
+    /* ── Hero header ── */
+    .demo-hero {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .demo-hero .yinyang {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      animation: spin-slow 20s linear infinite;
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .demo-hero h1 {
+      font-family: var(--sb-font-display);
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--sb-text) 0%, var(--sb-signal) 60%, var(--sb-purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .demo-hero .subtitle {
+      color: var(--sb-text-muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .demo-hero .birthday-tag {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: var(--sb-accent-soft);
+      border: 1px solid rgba(255, 107, 53, 0.3);
+      color: var(--sb-accent);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* ── Section styling ── */
+    .demo-section {
+      margin-bottom: 48px;
+    }
+    .demo-section h2 {
+      font-family: var(--sb-font-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .demo-section h2 .section-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .icon-blue { background: rgba(100, 196, 255, 0.12); border: 1px solid rgba(100, 196, 255, 0.25); }
+    .icon-orange { background: rgba(255, 107, 53, 0.12); border: 1px solid rgba(255, 107, 53, 0.25); }
+    .icon-green { background: rgba(70, 217, 167, 0.12); border: 1px solid rgba(70, 217, 167, 0.25); }
+    .icon-purple { background: rgba(174, 103, 250, 0.12); border: 1px solid rgba(174, 103, 250, 0.25); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--sb-surface);
+      border: 1px solid var(--sb-border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      border-color: rgba(100, 196, 255, 0.3);
+      box-shadow: 0 8px 32px rgba(2, 8, 18, 0.4);
+    }
+
+    /* ── How It Works grid ── */
+    .how-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .how-card {
+      background: var(--sb-surface);
+      border: 1px solid var(--sb-border);
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: center;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .how-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(100, 196, 255, 0.3);
+      box-shadow: 0 12px 40px rgba(2, 8, 18, 0.5);
+    }
+    .how-card .how-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .how-card .how-label {
+      font-family: var(--sb-font-display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      color: var(--sb-signal);
+    }
+    .how-card p {
+      color: var(--sb-text-muted);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    /* ── Try These buttons ── */
+    .try-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+    }
+    .try-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 24px 16px;
+      background: var(--sb-surface);
+      border: 1px solid var(--sb-border);
+      border-radius: 16px;
+      color: var(--sb-text);
+      text-decoration: none;
+      font-family: var(--sb-font-body);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .try-btn:hover {
+      border-color: var(--sb-signal);
+      background: var(--sb-surface-strong);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(100, 196, 255, 0.1);
+    }
+    .try-btn .try-icon {
+      font-size: 2rem;
+    }
+    .try-btn .try-label {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .try-btn .try-desc {
+      color: var(--sb-text-muted);
+      font-size: 0.78rem;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* ── Preview modal ── */
+    .preview-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .preview-overlay.active {
+      display: flex;
+    }
+    .preview-modal {
+      background: var(--sb-surface);
+      border: 1px solid var(--sb-border);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 520px;
+      width: calc(100% - 48px);
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
+      animation: modal-in 0.3s ease;
+    }
+    @keyframes modal-in {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .preview-modal h3 {
+      font-family: var(--sb-font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .preview-modal .preview-state {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+    .state-preview {
+      background: rgba(255, 199, 90, 0.15);
+      color: var(--sb-warning);
+      border: 1px solid rgba(255, 199, 90, 0.3);
+    }
+    .preview-modal .preview-content {
+      background: rgba(3, 8, 14, 0.65);
+      border: 1px solid var(--sb-border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--sb-text-muted);
+    }
+    .preview-modal .preview-content strong {
+      color: var(--sb-text);
+    }
+    .preview-modal .preview-content .preview-item {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(163, 185, 214, 0.08);
+    }
+    .preview-modal .preview-content .preview-item:last-child {
+      border-bottom: none;
+    }
+    .preview-modal .preview-content .unread-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: rgba(255, 107, 53, 0.18);
+      color: var(--sb-accent);
+      margin-left: 6px;
+    }
+    .preview-modal .preview-content .priority-high {
+      color: var(--sb-accent);
+    }
+    .preview-modal .preview-content .priority-normal {
+      color: var(--sb-signal);
+    }
+    .preview-modal .preview-content .priority-low {
+      color: var(--sb-text-muted);
+    }
+    .preview-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    .btn-approve {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: none;
+      background: var(--sb-success);
+      color: var(--sb-bg);
+      font-family: var(--sb-font-body);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-approve:hover { background: #5ee3b6; transform: translateY(-1px); }
+    .btn-dismiss {
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--sb-border);
+      background: transparent;
+      color: var(--sb-text-muted);
+      font-family: var(--sb-font-body);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-dismiss:hover { border-color: var(--sb-text-muted); color: var(--sb-text); }
+
+    /* ── Checklist ── */
+    .checklist {
+      list-style: none;
+      padding: 0;
+    }
+    .checklist li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(163, 185, 214, 0.08);
+      font-size: 0.9rem;
+      color: var(--sb-text);
+      transition: background 0.15s;
+    }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist li:hover { background: rgba(100, 196, 255, 0.03); }
+    .checklist input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--sb-border);
+      border-radius: 6px;
+      background: rgba(3, 8, 14, 0.4);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .checklist input[type="checkbox"]:checked {
+      background: var(--sb-success);
+      border-color: var(--sb-success);
+    }
+    .checklist input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 2px;
+      width: 6px;
+      height: 11px;
+      border: solid var(--sb-bg);
+      border-width: 0 2.5px 2.5px 0;
+      transform: rotate(45deg);
+    }
+    .checklist input[type="checkbox"]:hover {
+      border-color: var(--sb-signal);
+    }
+
+    /* ── Tester tip callout ── */
+    .tester-tip {
+      background: rgba(100, 196, 255, 0.06);
+      border: 1px solid rgba(100, 196, 255, 0.15);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--sb-text-muted);
+    }
+    .tester-tip strong {
+      color: var(--sb-signal);
+    }
+
+    /* ── System stats ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--sb-surface);
+      border: 1px solid var(--sb-border);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-card .stat-value {
+      font-family: var(--sb-font-display);
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .stat-card .stat-label {
+      color: var(--sb-text-muted);
+      font-size: 0.78rem;
+    }
+    .stat-green { color: var(--sb-success); }
+    .stat-blue { color: var(--sb-signal); }
+    .stat-orange { color: var(--sb-accent); }
+    .stat-purple { color: var(--sb-purple); }
+
+    /* ── Accounts table ── */
+    .accounts-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .accounts-table th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--sb-text-muted);
+      border-bottom: 1px solid var(--sb-border);
+    }
+    .accounts-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(163, 185, 214, 0.06);
+    }
+    .accounts-table tr:last-child td { border-bottom: none; }
+    .account-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .badge-pro {
+      background: rgba(174, 103, 250, 0.15);
+      color: var(--sb-purple);
+      border: 1px solid rgba(174, 103, 250, 0.3);
+    }
+    .badge-free {
+      background: rgba(100, 196, 255, 0.1);
+      color: var(--sb-signal);
+      border: 1px solid rgba(100, 196, 255, 0.2);
+    }
+    .badge-byok {
+      background: rgba(255, 107, 53, 0.12);
+      color: var(--sb-accent);
+      border: 1px solid rgba(255, 107, 53, 0.25);
+    }
+
+    /* ── Birthday banner ── */
+    .birthday-banner {
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.08), rgba(174, 103, 250, 0.08), rgba(100, 196, 255, 0.08));
+      border: 1px solid rgba(174, 103, 250, 0.2);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      margin-top: 8px;
+    }
+    .birthday-banner .birthday-text {
+      font-family: var(--sb-font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--sb-accent), var(--sb-purple), var(--sb-signal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+    .birthday-banner p {
+      color: var(--sb-text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* ── Footer ── */
+    .demo-footer {
+      text-align: center;
+      padding: 32px 0 16px;
+      border-top: 1px solid var(--sb-border);
+      margin-top: 24px;
+    }
+    .demo-footer p {
+      color: var(--sb-text-muted);
+      font-size: 0.78rem;
+      line-height: 1.6;
+    }
+    .demo-footer a {
+      color: var(--sb-signal);
+      text-decoration: none;
+    }
+    .demo-footer a:hover { text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .demo-hero h1 { font-size: 1.6rem; }
+      .how-grid { grid-template-columns: 1fr 1fr; }
+      .try-grid { grid-template-columns: 1fr 1fr; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .demo-nav { flex-direction: column; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-page">
+
+    <!-- Nav -->
+    <nav class="demo-nav">
+      <a href="/" class="demo-nav-brand">Solace Browser</a>
+      <div class="demo-nav-links">
+        <a href="/">Home</a>
+        <a href="/app-store">Apps</a>
+        <a href="/settings">Settings</a>
+        <a href="/demo" style="color: var(--sb-signal); font-weight: 600;">Demo</a>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="demo-hero">
+      <svg class="yinyang" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(100,196,255,0.25)" stroke-width="2"/>
+        <path d="M50 2 A48 48 0 0 1 50 98 A24 24 0 0 1 50 50 A24 24 0 0 0 50 2" fill="var(--sb-signal)" opacity="0.8"/>
+        <path d="M50 98 A48 48 0 0 1 50 2 A24 24 0 0 1 50 50 A24 24 0 0 0 50 98" fill="var(--sb-purple)" opacity="0.6"/>
+        <circle cx="50" cy="26" r="6" fill="var(--sb-purple)" opacity="0.7"/>
+        <circle cx="50" cy="74" r="6" fill="var(--sb-signal)" opacity="0.9"/>
+      </svg>
+      <h1>Welcome to Solace Browser<br>Family Demo Day!</h1>
+      <p class="subtitle">This is Dad's project. It's an AI that works <em>for</em> you inside a web browser, and you get to help test it today.</p>
+      <span class="birthday-tag">Hackathon Edition &mdash; March 2026</span>
+    </section>
+
+    <!-- How It Works -->
+    <section class="demo-section">
+      <h2><span class="section-icon icon-blue">?</span> How It Works</h2>
+      <div class="how-grid">
+        <div class="how-card">
+          <span class="how-icon">&#129302;</span>
+          <div class="how-label">AI Worker</div>
+          <p>Solace Browser is your AI worker that does tasks for you &mdash; like checking email or writing summaries.</p>
+        </div>
+        <div class="how-card">
+          <span class="how-icon">&#128065;</span>
+          <div class="how-label">Preview</div>
+          <p>It always asks for your permission before doing anything. We call this the <strong style="color:var(--sb-warning)">Preview</strong>.</p>
+        </div>
+        <div class="how-card">
+          <span class="how-icon">&#128220;</span>
+          <div class="how-label">Evidence</div>
+          <p>Everything it does is recorded so you can see exactly what happened. We call this <strong style="color:var(--sb-success)">Evidence</strong>.</p>
+        </div>
+        <div class="how-card">
+          <span class="how-icon">&#127859;</span>
+          <div class="how-label">Recipes</div>
+          <p>It gets better every time it runs a task. Saved workflows are called <strong style="color:var(--sb-purple)">Recipes</strong>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Try These -->
+    <section class="demo-section">
+      <h2><span class="section-icon icon-orange">&#9654;</span> Try These</h2>
+      <div class="try-grid">
+        <button class="try-btn" id="try-gmail" type="button">
+          <span class="try-icon">&#128231;</span>
+          <span class="try-label">Check my Gmail</span>
+          <span class="try-desc">See a simulated inbox triage preview</span>
+        </button>
+        <button class="try-btn" id="try-morning" type="button">
+          <span class="try-icon">&#9749;</span>
+          <span class="try-label">Morning Brief</span>
+          <span class="try-desc">See a simulated daily report</span>
+        </button>
+        <a class="try-btn" href="/app-store">
+          <span class="try-icon">&#128722;</span>
+          <span class="try-label">App Store</span>
+          <span class="try-desc">Browse all the AI apps</span>
+        </a>
+        <a class="try-btn" href="/settings">
+          <span class="try-icon">&#9881;</span>
+          <span class="try-label">Settings</span>
+          <span class="try-desc">See the configuration page</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- For Testers -->
+    <section class="demo-section">
+      <h2><span class="section-icon icon-green">&#10003;</span> For Testers</h2>
+      <div class="tester-tip">
+        <strong>Things to try:</strong> Sign in with Google, browse the app store, read an app's details page, and check the settings. <br>
+        <strong>If something breaks, tell Dad/Phuc</strong> &mdash; that's the best kind of help!
+      </div>
+      <div class="card">
+        <ul class="checklist">
+          <li>
+            <input type="checkbox" id="qa-1">
+            <label for="qa-1">Can you sign in?</label>
+          </li>
+          <li>
+            <input type="checkbox" id="qa-2">
+            <label for="qa-2">Does the app store load?</label>
+          </li>
+          <li>
+            <input type="checkbox" id="qa-3">
+            <label for="qa-3">Can you read an app's details?</label>
+          </li>
+          <li>
+            <input type="checkbox" id="qa-4">
+            <label for="qa-4">Do the settings save?</label>
+          </li>
+          <li>
+            <input type="checkbox" id="qa-5">
+            <label for="qa-5">Is anything confusing? (Write it down!)</label>
+          </li>
+          <li>
+            <input type="checkbox" id="qa-6">
+            <label for="qa-6">Did the demo preview buttons work?</label>
+          </li>
+          <li>
+            <input type="checkbox" id="qa-7">
+            <label for="qa-7">Does the page look good on your phone?</label>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- The System -->
+    <section class="demo-section">
+      <h2><span class="section-icon icon-purple">&#9733;</span> The System</h2>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value stat-green">4,270+</div>
+          <div class="stat-label">Tests Passing</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value stat-blue">28</div>
+          <div class="stat-label">AI Apps</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value stat-orange">81</div>
+          <div class="stat-label">Recipes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value stat-purple">9</div>
+          <div class="stat-label">Projects</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <table class="accounts-table">
+          <thead>
+            <tr>
+              <th>Tester</th>
+              <th>Code Name</th>
+              <th>Tier</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Tester 1</td>
+              <td>Dragon Rider</td>
+              <td><span class="account-badge badge-pro">Pro</span></td>
+            </tr>
+            <tr>
+              <td>Tester 2</td>
+              <td>Phoenix Scout</td>
+              <td><span class="account-badge badge-free">Free</span></td>
+            </tr>
+            <tr>
+              <td>Tester 3</td>
+              <td>Thunder Cadet</td>
+              <td><span class="account-badge badge-byok">BYOK</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="birthday-banner">
+        <div class="birthday-text">Built with love for Tyson's 15th birthday (March 9)</div>
+        <p>Every test you run today makes Solace Browser better. Thank you for being part of this.</p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="demo-footer">
+      <p>Solace Browser v0.5.0-dev &middot; Family Demo Day<br>
+        <a href="/">Back to Home</a> &middot; <a href="/app-store">App Store</a> &middot; <a href="/settings">Settings</a>
+      </p>
+    </footer>
+
+  </div>
+
+  <!-- Gmail Preview Modal -->
+  <div class="preview-overlay" id="gmail-preview">
+    <div class="preview-modal">
+      <h3>Gmail Inbox Triage</h3>
+      <span class="preview-state state-preview">Preview &mdash; Awaiting Approval</span>
+      <div class="preview-content">
+        <div class="preview-item">
+          <strong class="priority-high">School Office</strong> <span class="unread-badge">Unread</span><br>
+          Re: Permission slip for field trip &mdash; needs signature by Friday
+        </div>
+        <div class="preview-item">
+          <strong class="priority-normal">Amazon</strong><br>
+          Your order has shipped &mdash; arriving Thursday
+        </div>
+        <div class="preview-item">
+          <strong class="priority-normal">Google Photos</strong><br>
+          Your memories from this week are ready
+        </div>
+        <div class="preview-item">
+          <strong class="priority-low">Newsletter</strong><br>
+          Weekly digest from Substack &mdash; 3 new posts
+        </div>
+      </div>
+      <p style="font-size:0.78rem; color:var(--sb-text-muted); margin-bottom:14px;">
+        The AI sorted your inbox by priority. It will <strong>only act after you approve</strong>.
+      </p>
+      <div class="preview-buttons">
+        <button class="btn-approve" id="gmail-approve">Approve &amp; Run</button>
+        <button class="btn-dismiss" id="gmail-dismiss">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Morning Brief Preview Modal -->
+  <div class="preview-overlay" id="morning-preview">
+    <div class="preview-modal">
+      <h3>Morning Brief</h3>
+      <span class="preview-state state-preview">Preview &mdash; Awaiting Approval</span>
+      <div class="preview-content">
+        <div class="preview-item">
+          <strong style="color:var(--sb-warning);">Weather</strong><br>
+          Today: 72&deg;F, partly cloudy. Perfect for the hackathon.
+        </div>
+        <div class="preview-item">
+          <strong style="color:var(--sb-signal);">Calendar</strong><br>
+          Family Demo Day &mdash; all day<br>
+          Tyson's birthday dinner at 6pm (March 9)
+        </div>
+        <div class="preview-item">
+          <strong style="color:var(--sb-success);">Inbox Summary</strong><br>
+          4 unread emails, 1 needs action (school permission slip)
+        </div>
+        <div class="preview-item">
+          <strong style="color:var(--sb-purple);">Project Status</strong><br>
+          Solace Browser: 4,270 tests passing, demo page live
+        </div>
+      </div>
+      <p style="font-size:0.78rem; color:var(--sb-text-muted); margin-bottom:14px;">
+        This report was generated by your AI worker. It reads, you decide.
+      </p>
+      <div class="preview-buttons">
+        <button class="btn-approve" id="morning-approve">Looks Good!</button>
+        <button class="btn-dismiss" id="morning-dismiss">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approved toast -->
+  <div id="toast" style="
+    display: none;
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--sb-success);
+    color: var(--sb-bg);
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 8px 32px rgba(70, 217, 167, 0.3);
+    z-index: 200;
+    animation: toast-in 0.3s ease;
+  ">Task approved! Evidence recorded.</div>
+
+  <style>
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+  </style>
+
+  <script>
+    // Gmail preview
+    document.getElementById('try-gmail').addEventListener('click', function() {
+      document.getElementById('gmail-preview').classList.add('active');
+    });
+    document.getElementById('gmail-dismiss').addEventListener('click', function() {
+      document.getElementById('gmail-preview').classList.remove('active');
+    });
+    document.getElementById('gmail-approve').addEventListener('click', function() {
+      document.getElementById('gmail-preview').classList.remove('active');
+      showToast('Gmail triage approved! Evidence recorded.');
+    });
+
+    // Morning brief preview
+    document.getElementById('try-morning').addEventListener('click', function() {
+      document.getElementById('morning-preview').classList.add('active');
+    });
+    document.getElementById('morning-dismiss').addEventListener('click', function() {
+      document.getElementById('morning-preview').classList.remove('active');
+    });
+    document.getElementById('morning-approve').addEventListener('click', function() {
+      document.getElementById('morning-preview').classList.remove('active');
+      showToast('Morning brief acknowledged! Have a great day.');
+    });
+
+    // Close modals on overlay click
+    document.querySelectorAll('.preview-overlay').forEach(function(overlay) {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+          overlay.classList.remove('active');
+        }
+      });
+    });
+
+    // Close modals on Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.preview-overlay.active').forEach(function(overlay) {
+          overlay.classList.remove('active');
+        });
+      }
+    });
+
+    // Toast notification
+    function showToast(message) {
+      var toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      setTimeout(function() {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+
+    // Persist checkbox state in localStorage
+    document.querySelectorAll('.checklist input[type="checkbox"]').forEach(function(cb) {
+      var key = 'demo-qa-' + cb.id;
+      if (localStorage.getItem(key) === 'true') {
+        cb.checked = true;
+      }
+      cb.addEventListener('change', function() {
+        localStorage.setItem(key, cb.checked);
+      });
+    });
+  </script>
+</body>
+</html>
