@@ -481,7 +481,13 @@ class BrowserSessionManager:
         # Clean up incognito temp dir
         temp_dir = self._temp_dirs.pop(session_id, None)
         if temp_dir is not None and Path(temp_dir).exists():
-            shutil.rmtree(temp_dir, ignore_errors=True)
+            try:
+                shutil.rmtree(temp_dir)
+            except OSError as exc:
+                logger.warning(
+                    "Failed to remove incognito temp dir %s for session %s: %s",
+                    temp_dir, session_id, exc,
+                )
 
         # Revoke auth token if proxy is available
         if self._auth_proxy is not None and record.auth_token is not None:
@@ -490,7 +496,25 @@ class BrowserSessionManager:
                 token_hash = hash_token(record.auth_token)
                 self._auth_proxy.revoke_token(token_hash)
             except ImportError:
-                pass  # auth_proxy not available, token cannot be revoked
+                logger.warning(
+                    "auth_proxy module not available — token for session %s "
+                    "could not be revoked (token=%s...)",
+                    session_id, record.auth_token[:20],
+                )
+                # Record the unrevoked token in the session close evidence
+                if record.evidence_chain_path is not None and record.evidence_chain_path.exists():
+                    unrevoked_chain = _SessionEvidenceChain(
+                        record.evidence_chain_path, now_fn=self._now,
+                    )
+                    lines = record.evidence_chain_path.read_text(encoding="utf-8").strip().splitlines()
+                    if lines:
+                        last_entry = json.loads(lines[-1])
+                        unrevoked_chain._prev_hash = last_entry.get("entry_hash", GENESIS_HASH)
+                        unrevoked_chain._index = last_entry.get("entry_id", 0) + 1
+                    unrevoked_chain.append("token_revocation_failed", {
+                        "session_id": session_id,
+                        "reason": "auth_proxy module not available",
+                    })
 
         logger.info("Session closed: %s (duration=%.1fs)", session_id,
                      (now - record.created_at).total_seconds())

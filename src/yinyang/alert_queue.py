@@ -227,17 +227,29 @@ class YinyangAlertQueue:
     # -----------------------------------------------------------------------
 
     def _load_queue(self) -> list[dict[str, Any]]:
-        """Load the alert queue from disk."""
+        """Load the alert queue from disk.
+
+        Returns [] only for missing file (FileNotFoundError).
+        Corrupt JSON (JSONDecodeError) propagates — never silently return [].
+        """
         if not self._queue_file.exists():
             return []
 
         raw = json.loads(self._queue_file.read_text(encoding="utf-8"))
         if not isinstance(raw, dict):
-            return []
+            raise json.JSONDecodeError(
+                f"Expected JSON object, got {type(raw).__name__}",
+                str(self._queue_file),
+                0,
+            )
 
         alerts = raw.get("alerts", [])
         if not isinstance(alerts, list):
-            return []
+            raise json.JSONDecodeError(
+                f"Expected 'alerts' to be a list, got {type(alerts).__name__}",
+                str(self._queue_file),
+                0,
+            )
 
         return alerts
 

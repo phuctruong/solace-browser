@@ -286,35 +286,82 @@ class YinyangSupportBridge:
     # -----------------------------------------------------------------------
 
     def _handle_edit_config(self, app_id: str, params: dict[str, Any]) -> dict[str, Any]:
-        """Edit an app's config settings."""
+        """Edit an app's config settings.
+
+        Reads the config file from ~/.solace/config/{app_id}.json, updates
+        the specified key, and writes it back. Creates the file if it
+        does not exist.
+        """
         key = params.get("key", "")
         value = params.get("value", "")
         if not key:
             raise ValueError("params must include 'key' for edit_config action")
 
         try:
-            manifest = self._inbox_outbox.read_manifest(app_id)
+            self._inbox_outbox.read_manifest(app_id)
         except FileNotFoundError:
             return {
                 "success": False,
                 "result": f"App '{app_id}' not found or missing manifest.",
             }
 
-        # Record the config change intent (actual config editing requires
-        # the app's config.yaml, which is in inbox/conventions/)
+        # Actually write the config change to ~/.solace/config/{app_id}.json
+        config_dir = self._solace_home / "config"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        config_path = config_dir / f"{app_id}.json"
+
+        if config_path.exists():
+            config_data = json.loads(config_path.read_text(encoding="utf-8"))
+            if not isinstance(config_data, dict):
+                config_data = {}
+        else:
+            config_data = {}
+
+        config_data[key] = value
+        config_path.write_text(
+            json.dumps(config_data, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
         return {
             "success": True,
             "result": f"Config '{key}' set to '{value}' for app '{app_id}'.",
         }
 
     def _handle_toggle_setting(self, app_id: str, params: dict[str, Any]) -> dict[str, Any]:
-        """Toggle an app setting on or off."""
+        """Toggle an app setting on or off.
+
+        Reads ~/.solace/config/settings.json, updates the setting key
+        for the given app_id, and writes it back. Creates the file if
+        it does not exist.
+        """
         setting = params.get("setting", "")
         enabled = params.get("enabled")
         if not setting:
             raise ValueError("params must include 'setting' for toggle_setting action")
         if enabled is None:
             raise ValueError("params must include 'enabled' (bool) for toggle_setting action")
+
+        # Actually toggle the setting in ~/.solace/config/settings.json
+        config_dir = self._solace_home / "config"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        settings_path = config_dir / "settings.json"
+
+        if settings_path.exists():
+            settings_data = json.loads(settings_path.read_text(encoding="utf-8"))
+            if not isinstance(settings_data, dict):
+                settings_data = {}
+        else:
+            settings_data = {}
+
+        if app_id not in settings_data:
+            settings_data[app_id] = {}
+        settings_data[app_id][setting] = bool(enabled)
+
+        settings_path.write_text(
+            json.dumps(settings_data, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
 
         state_str = "enabled" if enabled else "disabled"
         return {
@@ -368,7 +415,11 @@ class YinyangSupportBridge:
         }
 
     def _handle_rerun(self, app_id: str, params: dict[str, Any]) -> dict[str, Any]:
-        """Re-run a previous task."""
+        """Re-run a previous task.
+
+        Raises NotImplementedError because rerun queuing requires the
+        full execution lifecycle which is not yet wired up here.
+        """
         run_id = params.get("run_id", "")
         if not run_id:
             raise ValueError("params must include 'run_id' for rerun action")
@@ -389,10 +440,7 @@ class YinyangSupportBridge:
                 "result": f"Run '{run_id}' not found for app '{app_id}'.",
             }
 
-        return {
-            "success": True,
-            "result": f"Re-run queued for '{run_id}' in app '{app_id}'.",
-        }
+        raise NotImplementedError("Rerun queuing not yet implemented")
 
     # -----------------------------------------------------------------------
     # Private: keyword matching

@@ -220,12 +220,11 @@ class TestHandleLocal:
         assert "1 runs" in result["result"]
 
     def test_handle_rerun(self, bridge):
-        """rerun action queues a re-run."""
-        result = bridge.handle_local(
-            "gmail", "rerun", {"run_id": "run-001"}
-        )
-        assert result["success"] is True
-        assert "run-001" in result["result"]
+        """rerun action raises NotImplementedError (lifecycle not wired)."""
+        with pytest.raises(NotImplementedError, match="Rerun queuing not yet implemented"):
+            bridge.handle_local(
+                "gmail", "rerun", {"run_id": "run-001"}
+            )
 
     def test_handle_rerun_nonexistent_run(self, bridge):
         """rerun with nonexistent run_id returns failure."""

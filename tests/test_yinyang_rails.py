@@ -367,6 +367,7 @@ class TestApproveTransition:
             trigger="manual",
             preview_callback=lambda _ctx: {"preview": "Draft reply", "actions": ["draft"]},
             execute_callback=lambda _sealed: {"status": "success", "actions_summary": "1 draft"},
+            budget_check=lambda _ctx: {"allowed": True},
             risk_level="low",
         )
 
@@ -406,6 +407,7 @@ class TestApproveTransition:
             trigger="manual",
             preview_callback=lambda _ctx: {"preview": "Draft"},
             execute_callback=lambda _sealed: {"status": "success"},
+            budget_check=lambda _ctx: {"allowed": True},
             risk_level="low",
         )
 
@@ -432,6 +434,7 @@ class TestApproveTransition:
             trigger="manual",
             preview_callback=lambda _ctx: {"preview": "Draft"},
             execute_callback=lambda _sealed: {"status": "success"},
+            budget_check=lambda _ctx: {"allowed": True},
             risk_level="low",
         )
 
@@ -464,6 +467,7 @@ class TestRejectTransition:
             trigger="manual",
             preview_callback=lambda _ctx: {"preview": "Draft reply"},
             execute_callback=lambda _sealed: {"status": "success"},
+            budget_check=lambda _ctx: {"allowed": True},
             risk_level="low",
         )
 
@@ -499,6 +503,7 @@ class TestRejectTransition:
             trigger="manual",
             preview_callback=lambda _ctx: {"preview": "Draft"},
             execute_callback=lambda _sealed: {"status": "success"},
+            budget_check=lambda _ctx: {"allowed": True},
             risk_level="low",
         )
 
@@ -523,6 +528,7 @@ class TestRejectTransition:
             trigger="manual",
             preview_callback=lambda _ctx: {"preview": "Draft"},
             execute_callback=lambda _sealed: {"status": "success"},
+            budget_check=lambda _ctx: {"allowed": True},
             risk_level="low",
         )
 
@@ -559,6 +565,7 @@ class TestListActiveRuns:
             trigger="manual",
             preview_callback=lambda _ctx: {"preview": "Draft reply"},
             execute_callback=lambda _sealed: {"status": "success"},
+            budget_check=lambda _ctx: {"allowed": True},
             risk_level="medium",
         )
 
@@ -637,6 +644,7 @@ class TestAntiClippy:
             trigger="manual",
             preview_callback=lambda _ctx: {"preview": "Draft"},
             execute_callback=lambda _sealed: {"status": "success"},
+            budget_check=lambda _ctx: {"allowed": True},
             risk_level="low",
         )
 
@@ -662,6 +670,7 @@ class TestAntiClippy:
             trigger="manual",
             preview_callback=lambda _ctx: {"preview": "Draft"},
             execute_callback=lambda _sealed: {"status": "success"},
+            budget_check=lambda _ctx: {"allowed": True},
             risk_level="low",
         )
 
@@ -884,6 +893,7 @@ class TestBottomRailPayload:
             trigger="manual",
             preview_callback=lambda _ctx: {"preview": "Email draft for review"},
             execute_callback=lambda _sealed: {"status": "success"},
+            budget_check=lambda _ctx: {"allowed": True},
             risk_level="medium",
         )
 

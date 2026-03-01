@@ -327,115 +327,11 @@ class YinyangStateBridge:
         budget_check: Callable[[dict[str, Any]], dict[str, Any]] | None,
         risk_level: str,
     ) -> None:
-        """Run the execution lifecycle, pausing at PREVIEW_READY for user decision."""
+        """Run the execution lifecycle, pausing at PREVIEW_READY for user decision.
 
-        def capturing_preview(context: dict[str, Any]) -> dict[str, Any]:
-            """Wrap preview callback to capture preview text and pause for user."""
-            result = preview_callback(context)
-            with self._lock:
-                run.preview_text = str(result.get("preview", ""))
-                run.state = ExecutionState.PREVIEW_READY
-            logger.info(f"[StateBridge] Run {run.run_id} → PREVIEW_READY, awaiting user")
-
-            # Wait for user decision (approve/reject)
-            run._decision_event.wait()
-
-            return result
-
-        # Determine the approval decision after preview
-        # The lifecycle manager needs this upfront, but we get it from the user.
-        # We use a wrapper that captures the preview, waits for user input,
-        # then returns. The approval_decision is read after the preview callback.
-        def get_decision() -> ApprovalDecision:
-            if run.user_decision is not None:
-                return run.user_decision
-            return ApprovalDecision.TIMEOUT
-
-        # We need to call lifecycle.run with the decision known upfront.
-        # To bridge this, we run the preview callback that waits, then
-        # check the decision.
-        def deciding_preview(context: dict[str, Any]) -> dict[str, Any]:
-            result = preview_callback(context)
-            with self._lock:
-                run.preview_text = str(result.get("preview", ""))
-                run.state = ExecutionState.PREVIEW_READY
-            logger.info(f"[StateBridge] Run {run.run_id} → PREVIEW_READY, awaiting user")
-            run._decision_event.wait()
-            return result
-
-        decision = ApprovalDecision.TIMEOUT
-        user_id = "guest"
-        meaning = "approved"
-
-        # Run the first phase: budget check + preview generation
-        # The lifecycle manager's run() is monolithic, so we run it with
-        # the deciding_preview callback that blocks until user decides.
-        def lifecycle_thread() -> None:
-            nonlocal decision, user_id, meaning
-            # Wait for the decision to be set
-            run._decision_event.wait()
-            decision = run.user_decision or ApprovalDecision.TIMEOUT
-            user_id = run.decision_user_id or "guest"
-            meaning = run.decision_meaning or "approved"
-
-        # Because ExecutionLifecycleManager.run() is synchronous and expects
-        # approval_decision upfront, we use a two-phase approach:
-        # Phase 1: Run with a preview callback that blocks at PREVIEW_READY
-        # Phase 2: When user decides, the callback unblocks and we know the decision
-
-        # The trick: we wrap preview_callback to block, and we pass the
-        # decision after unblocking. But the lifecycle manager needs the
-        # decision before the preview callback returns... Actually it doesn't.
-        # Looking at the code: the decision is checked AFTER preview_callback.
-        # So we can block in preview_callback, get the decision, then return.
-
-        # But we pass approval_decision at call time. The solution:
-        # We'll determine it in a wrapper that first captures preview, waits
-        # for user, then we know the decision. Since the decision is evaluated
-        # after the preview callback returns, we need to pass it as a parameter.
-
-        # Simplest approach: run lifecycle in a thread with a special callback
-        # that blocks. Use the decision event to communicate.
-
-        class _DecisionCapture:
-            """Mutable container to capture decision before lifecycle.run is called."""
-            approval = ApprovalDecision.TIMEOUT
-            uid = "guest"
-            msg = "approved"
-
-        capture = _DecisionCapture()
-
-        def blocking_preview(context: dict[str, Any]) -> dict[str, Any]:
-            result = preview_callback(context)
-            with self._lock:
-                run.preview_text = str(result.get("preview", ""))
-                run.state = ExecutionState.PREVIEW_READY
-            logger.info(f"[StateBridge] Run {run.run_id} → PREVIEW_READY")
-
-            # Block until user decides
-            run._decision_event.wait()
-            capture.approval = run.user_decision or ApprovalDecision.TIMEOUT
-            capture.uid = run.decision_user_id or "guest"
-            capture.msg = run.decision_meaning or "approved"
-            return result
-
-        # We cannot pass the decision dynamically to lifecycle.run() because
-        # it's a parameter. Instead, we run the lifecycle twice — once for
-        # preview/budget check only, and if the user approves, again for execution.
-        # BUT that would re-run preview and waste LLM calls.
-
-        # Better approach: We use the lifecycle manager directly by wrapping
-        # the preview callback. The lifecycle.run() checks approval_decision
-        # AFTER preview_callback returns. So if our preview_callback blocks
-        # until the user decides, we can then determine which decision to pass.
-
-        # The problem is that approval_decision is a parameter passed BEFORE
-        # preview_callback is called. We can't change it mid-flight.
-
-        # FINAL approach: Don't use lifecycle.run() for async flows.
-        # Instead, replicate the lifecycle logic with proper pause/resume.
-        # This is the cleanest architectural solution.
-
+        Delegates to _run_lifecycle_interactive which replicates the
+        lifecycle logic with proper pause/resume for UI interaction.
+        """
         self._run_lifecycle_interactive(
             run, preview_callback, execute_callback, budget_check, risk_level
         )
@@ -466,7 +362,7 @@ class YinyangStateBridge:
         if budget_check is not None:
             gate_result = budget_check(context)
         else:
-            gate_result = {"allowed": True}
+            gate_result = {"allowed": False, "reason": "No budget checker configured"}
 
         if not gate_result.get("allowed", False):
             reason = str(gate_result.get("reason", "blocked"))

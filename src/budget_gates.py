@@ -93,6 +93,12 @@ class BudgetGateChecker:
         """
         app_id = context["app_id"]
         trigger = context.get("trigger", "")
+
+        # Path traversal validation for app_id
+        resolved = (self._apps_root / app_id).resolve()
+        if not str(resolved).startswith(str(self._apps_root.resolve())):
+            raise ValueError(f"Invalid app_id: {app_id}")
+
         app_root = self._apps_root / app_id
 
         if not app_root.is_dir():
@@ -234,6 +240,11 @@ class BudgetGateChecker:
         3. Target budget > 0
         4. (MIN-cap computed by caller after this returns None)
         """
+        # Path traversal validation for target_app_id
+        resolved_target = (self._apps_root / target_app_id).resolve()
+        if not str(resolved_target).startswith(str(self._apps_root.resolve())):
+            raise ValueError(f"Invalid target_app_id: {target_app_id}")
+
         target_root = self._apps_root / target_app_id
 
         # B6.1: Target app installed
