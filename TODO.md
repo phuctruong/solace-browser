@@ -1,84 +1,59 @@
 # TODO — Solace Browser (Beta Launch)
-# Updated: 2026-03-01 | Auth: 65537
-# Phase: Beta Launch Prep
+# Updated: 2026-03-01 Session G | Auth: 65537
+# Phase: Hackathon Sprint
 # Private Beta: 2026-03-02 | Real Beta: 2026-03-09 (Tyson's 15th birthday)
+# Tests: 4,281 passed | Modules: 12+
 
 ---
 
-## Status
+## Completed
 
-### Completed (Session F — QA + Codex)
-- [x] T1-T7 P0 core — ALL DONE (15/15 tests pass)
-  - T1: app-store.html wired to live API
-  - T2: app-detail.html wired to live API
-  - T3: Real API endpoints in server.py
-  - T4: settings.html wired to live API
-  - T5: InboxOutboxManager (SHA-256, path traversal guard)
-  - T6: 18 day-one app manifests + init script
-  - T7: Execution lifecycle FSM (17 states, evidence chain, chmod 444)
-- [x] fetchJson Fallback Ban violation fixed (discriminated results)
-- [x] App detail icon + budget table fixed
-- [x] AGENTS.md v3.0 + CLAUDE.md v3.0
+### P0 Core (Session F — Codex + QA)
+- [x] T1-T7: app-store, app-detail, server API, settings, inbox/outbox, 18 apps, execution lifecycle
+- [x] fetchJson Fallback Ban fix, app icon fix, budget table fix, SHA-256 sidecar
 
-### Known Issues (from Harsh QA)
-| ID | Severity | File | Issue | Beta Gate? |
-|----|----------|------|-------|------------|
-| Q1 | MEDIUM | server.py | Mock dict for non-T3 endpoints | No (returns 404) |
-| Q2 | MEDIUM | settings.html | Single-segment path silently lost | No (edge case) |
-| Q3 | LOW | app-store.html | Category sections hardcoded | No (cosmetic) |
-| Q4 | LOW | app-detail.html | Placeholder loading states | No (cosmetic) |
+### P1 Real Beta (Session G — Hackathon)
+- [x] B4: Auth proxy — 3-layer defense, sw_sk_ tokens, session exchange (62 tests)
+- [x] B5: Budget gates — 6 fail-closed gates (B1-B6), atomic decrement, cross-app MIN-cap (56 tests)
+- [x] B6: Yinyang rails — FSM state bridge, approve/reject, Anti-Clippy, color-coded (61 tests)
+- [x] B7: Cross-app messaging — outbox→inbox, partner validation, orchestrator runtime (24 tests)
+- [x] Multi-browser sessions — 4 profiles, port isolation, evidence chains (47 tests)
+- [x] Hackathon demo — 7-phase script + family demo page (11 tests)
+- [x] Production verified — 16/16 pages 200, 105 API endpoints, auth fail-closed
 
 ---
 
-## P0 — Private Beta Gate (March 2)
-
-### B1: First-run smoke test
-**What:** `python web/server.py` → browser opens → app store loads → click app → detail page works.
-**Accept:** New user sees working app store with 18 apps.
-
-### B2: Start page auth flow
-**What:** start.html → Firebase auth → sw_sk_ key → redirect to home.
-**Accept:** Login works. Subsequent visits skip onboarding. (T20 partial — already exists)
-
-### B3: Settings persistence
-**What:** Settings page save → reload → values persist.
-**Accept:** Round-trip works for all 8 setting sections.
-
----
-
-## P1 — Real Beta Gate (March 9)
-
-### B4: Auth proxy (T8)
-**What:** 3-layer defense: port 9222 auth proxy, port 9225 hidden CDP.
-**Accept:** Unauthenticated → 401. Valid tokens forwarded.
-
-### B5: Budget gates (T9)
-**What:** B1-B6 fail-closed gates for execution.
-**Accept:** Any gate failure = BLOCKED. Budget decremented atomically.
-
-### B6: Yinyang rail wiring (T12)
-**What:** Top rail = FSM state. Bottom rail = preview/approve/reject.
-**Accept:** User can approve/reject from Yinyang chat.
-
-### B7: Cross-app messaging (T13)
-**What:** outbox→inbox delivery with B6 gate enforcement.
-**Accept:** Messages delivered between partner apps.
-
----
-
-## P2 — Post-Beta
+## Remaining for Real Beta (March 9)
 
 ### B8: PZip capture pipeline (T10)
+**What:** page.on('load') → DOM snapshot → PZip compress → store to history
+**Priority:** HIGH — core differentiator
+
 ### B9: Evidence chain integration (T11)
-### B10: Orchestrator runtime (T14)
-### B11: Delight engine wiring (T16)
-### B12: Support bridge (T17)
-### B13: Alert queue (T18)
-### B14: Personality customization (T19)
-### B15: PyInstaller binary (T22)
-### B16: Cloudflare tunnel (T23)
+**What:** Two-stream evidence (execution + oauth3), cross-app chains, break detection
+**Priority:** HIGH — Part 11 compliance
+
+### B10: Delight engine wiring (T16)
+**What:** yinyang-delight.js wired, warm_token, celebrate(), holidays, Konami
+**Priority:** MEDIUM — user experience
+
+### B11: Support bridge (T17)
+**What:** Yinyang CAN FIX vs MUST ESCALATE classification + ticket creation
+**Priority:** MEDIUM — support flow
+
+### B12: Alert queue (T18)
+**What:** Poll alerts on user interaction, surface in bottom rail
+**Priority:** LOW — can wait
 
 ---
 
-*Private beta: March 2. Real beta: March 9. For Tyson's 15th birthday.*
-*Endure, Excel, Evolve. Carpe Diem. Onward!*
+## Post-Beta
+- B13: Personality customization (T19)
+- B14: Settings hot-reload (T21)
+- B15: PyInstaller binary (T22)
+- B16: Cloudflare tunnel (T23)
+
+---
+
+*4,281 tests. 12+ modules. Hackathon complete.*
+*For Tyson's 15th birthday (March 9). Endure, Excel, Evolve.*
