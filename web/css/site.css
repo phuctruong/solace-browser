@@ -25,6 +25,11 @@
   --sb-on-accent: #081019;
   --sb-accent-warm: #ffbf69;
   --sb-terminal-text: #95ffcf;
+  --sb-purple: #AE67FA;
+  --sb-grad-header: linear-gradient(135deg, #81AFDD, #AE67FA);
+  --sb-grad-hero-bg: linear-gradient(135deg, #081019 0%, #1a1f3a 100%);
+  --sb-shadow-glow: 0 0 30px rgba(100, 196, 255, 0.4);
+  --sb-shadow-glow-lg: 0 0 60px rgba(100, 196, 255, 0.8);
 
   /* Hex backgrounds */
   --sb-bg-deep: #070d16;
@@ -657,6 +662,78 @@ main { display: block; }
   transition: opacity 320ms ease, transform 320ms ease;
 }
 .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+/* =========================================================================
+   GRADIENT TEXT + GLOW CARDS + ANIMATED HERO (solaceagi design language)
+   ========================================================================= */
+.section-title,
+.page-section h2 {
+    background: var(--sb-grad-header);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero--animated {
+    position: relative;
+    overflow: hidden;
+}
+.hero--animated::before,
+.hero--animated::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.15;
+    pointer-events: none;
+}
+.hero--animated::before {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, var(--sb-signal) 0%, transparent 70%);
+    top: -100px;
+    right: -100px;
+    animation: sb-float 6s ease-in-out infinite;
+}
+.hero--animated::after {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, var(--sb-purple) 0%, transparent 70%);
+    bottom: -80px;
+    left: -80px;
+    animation: sb-float-slow 8s ease-in-out infinite;
+}
+@keyframes sb-float {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-30px, 20px); }
+}
+@keyframes sb-float-slow {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(20px, -30px); }
+}
+
+.surface-card {
+    position: relative;
+    overflow: hidden;
+}
+.surface-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--sb-grad-header);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+.surface-card:hover::before {
+    transform: scaleX(1);
+}
+
+.btn-primary:hover {
+    box-shadow: var(--sb-shadow-glow-lg);
+}
 
 /* =========================================================================
    HAMBURGER MENU (mobile-first, hidden on desktop)

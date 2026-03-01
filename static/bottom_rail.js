@@ -10,11 +10,11 @@
     // Create rail container
     const rail = document.createElement('div');
     rail.id = 'solace-bottom-rail';
-    rail.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:' + COLLAPSED_HEIGHT + ';background:#1a1a2e;color:#fff;font-family:system-ui;font-size:13px;z-index:99998;transition:height 0.3s ease;display:flex;flex-direction:column;box-shadow:0 -2px 8px rgba(0,0,0,0.3);';
+    rail.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:' + COLLAPSED_HEIGHT + ';background:#081019;color:#fff;font-family:system-ui;font-size:13px;z-index:99998;transition:height 0.3s ease;display:flex;flex-direction:column;box-shadow:0 -2px 8px rgba(0,0,0,0.3);';
 
     // Header bar (always visible)
     const header = document.createElement('div');
-    header.style.cssText = 'display:flex;align-items:center;padding:0 12px;height:36px;min-height:36px;cursor:pointer;border-bottom:1px solid #333;';
+    header.style.cssText = 'display:flex;align-items:center;padding:0 12px;height:36px;min-height:36px;cursor:pointer;border-bottom:1px solid #172335;';
     header.innerHTML = '<span style="font-weight:600;">Yinyang</span><span style="margin-left:8px;opacity:0.6;font-size:11px;" id="solace-credits-summary"></span><span style="margin-left:auto;font-size:16px;" id="solace-toggle-btn">&#9650;</span>';
     header.onclick = toggleRail;
 
@@ -26,8 +26,8 @@
     // Input area
     const inputArea = document.createElement('div');
     inputArea.id = 'solace-input-area';
-    inputArea.style.cssText = 'display:none;padding:8px 12px;border-top:1px solid #333;';
-    inputArea.innerHTML = '<div style="display:flex;gap:8px;"><input id="solace-chat-input" type="text" placeholder="Ask Yinyang..." style="flex:1;background:#2a2a3e;border:1px solid #444;border-radius:6px;padding:6px 10px;color:#fff;font-size:13px;outline:none;" /><button id="solace-send-btn" style="background:#4a9eff;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;">Send</button></div>';
+    inputArea.style.cssText = 'display:none;padding:8px 12px;border-top:1px solid #172335;';
+    inputArea.innerHTML = '<div style="display:flex;gap:8px;"><input id="solace-chat-input" type="text" placeholder="Ask Yinyang..." style="flex:1;background:#0f1825;border:1px solid #172335;border-radius:6px;padding:6px 10px;color:#fff;font-size:13px;outline:none;" /><button id="solace-send-btn" style="background:#64c4ff;color:#081019;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;">Send</button></div>';
 
     rail.appendChild(header);
     rail.appendChild(chatArea);
@@ -61,7 +61,7 @@
     function addMessage(role, content) {
         const div = document.createElement('div');
         div.style.cssText = 'margin-bottom:8px;padding:6px 10px;border-radius:8px;max-width:85%;' +
-            (role === 'user' ? 'background:#2a3a5e;margin-left:auto;' : 'background:#2a2a3e;');
+            (role === 'user' ? 'background:#172335;margin-left:auto;' : 'background:#0f1825;');
         div.textContent = content;
         chatArea.appendChild(div);
         chatArea.scrollTop = chatArea.scrollHeight;
