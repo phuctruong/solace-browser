@@ -15,6 +15,7 @@ SLUG_MAP = {
     "download": "download.html",
     "machine-dashboard": "machine-dashboard.html",
     "tunnel-connect": "tunnel-connect.html",
+    "style-guide": "style-guide.html",
 }
 
 MOCK_JSON_GET = {

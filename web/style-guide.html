@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Style Guide | Solace Browser</title>
+  <meta name="description" content="Solace Browser design system reference: tokens, typography, components, and layout primitives.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, follow">
+  <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/solace.js" defer></script>
+  <style>
+    /* Style-guide-only utilities (not in site.css) */
+    .sg-swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+    }
+    .sg-swatch {
+      border-radius: var(--sb-radius-md);
+      border: 1px solid var(--sb-border);
+      overflow: hidden;
+    }
+    .sg-swatch__color {
+      height: 72px;
+    }
+    .sg-swatch__label {
+      padding: 10px 12px;
+      background: var(--sb-surface);
+      font-size: 0.82rem;
+    }
+    .sg-swatch__label strong { display: block; margin-bottom: 2px; }
+    .sg-swatch__label code {
+      color: var(--sb-text-muted);
+      font-family: var(--sb-font-mono);
+      font-size: 0.78rem;
+    }
+    .sg-type-sample { margin-bottom: 18px; }
+    .sg-type-sample small { color: var(--sb-text-muted); font-size: 0.82rem; display: block; margin-top: 4px; }
+    .sg-component-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .sg-code {
+      display: block;
+      margin-top: 10px;
+      padding: 14px 16px;
+      border-radius: var(--sb-radius-md);
+      background: var(--sb-bg-terminal);
+      border: 1px solid var(--sb-border);
+      color: var(--sb-terminal-text);
+      font: 500 0.88rem/1.5 var(--sb-font-mono);
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .sg-spacer { height: 12px; }
+    .sg-divider {
+      border: none;
+      border-top: 1px solid var(--sb-border);
+      margin: 32px 0;
+    }
+  </style>
+</head>
+<body data-page="style-guide">
+  <div class="site-shell">
+    <canvas data-particles-canvas aria-hidden="true"></canvas>
+    <div class="page-frame">
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a class="site-brand" href="/">
+            <span class="site-brand__icon">SB</span>
+            <span class="site-brand__text">
+              <span class="site-brand__name">Solace Browser</span>
+              <span class="site-brand__tag">OAuth3 web + machine + cloud</span>
+            </span>
+          </a>
+          <nav class="site-nav" aria-label="Primary">
+            <a class="nav-link" data-nav-path="/" href="/">Home</a>
+            <a class="nav-link" data-nav-path="/download" href="/download">Download</a>
+            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
+            <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect">Tunnel</a>
+            <a class="nav-link" data-nav-path="/style-guide" href="/style-guide">Style Guide</a>
+            <a class="nav-link nav-link--accent" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener">Full product</a>
+          </nav>
+          <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+        </div>
+      </header>
+      <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu__section">
+          <h3>Surfaces</h3>
+          <a data-nav-path="/" href="/">Home</a>
+          <a data-nav-path="/download" href="/download">Download</a>
+          <a data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine Dashboard</a>
+          <a data-nav-path="/tunnel-connect" href="/tunnel-connect">Tunnel Connect</a>
+        </div>
+        <div class="mobile-menu__section">
+          <h3>Reference</h3>
+          <a data-nav-path="/style-guide" href="/style-guide">Style Guide</a>
+        </div>
+        <div class="mobile-menu__section">
+          <h3>Platform</h3>
+          <a class="nav-link--accent" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener">Full product page</a>
+          <a href="https://www.solaceagi.com/app-store" target="_blank" rel="noopener">App Store</a>
+        </div>
+      </div>
+
+      <main>
+        <!-- Hero -->
+        <section class="hero hero--single hero--animated reveal">
+          <div>
+            <div class="eyebrow">Design System | --sb-* tokens</div>
+            <h1 class="display">Style Guide</h1>
+            <p class="lead">Live reference for Solace Browser's design tokens, typography, components, and layout primitives. Every element on this page uses the shared <code>site.css</code> and <code>solace.js</code>.</p>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- COLOR TOKENS                                            -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Color Tokens</h2>
+              <p class="section-copy">Core palette defined as CSS custom properties on <code>:root</code>. Every component references these tokens — no hardcoded hex values.</p>
+            </div>
+          </div>
+
+          <h3 style="margin-bottom:12px;font-family:var(--sb-font-display);">Core</h3>
+          <div class="sg-swatch-grid">
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:#081019;"></div>
+              <div class="sg-swatch__label"><strong>Background</strong><code>--sb-bg: #081019</code></div>
+            </div>
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:#0f1825;"></div>
+              <div class="sg-swatch__label"><strong>Surface</strong><code>--sb-surface: #0f1825</code></div>
+            </div>
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:#172335;"></div>
+              <div class="sg-swatch__label"><strong>Surface Strong</strong><code>--sb-surface-strong: #172335</code></div>
+            </div>
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:#f4f7fb;"></div>
+              <div class="sg-swatch__label"><strong>Text</strong><code>--sb-text: #f4f7fb</code></div>
+            </div>
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:#9cb1ca;"></div>
+              <div class="sg-swatch__label"><strong>Text Muted</strong><code>--sb-text-muted: #9cb1ca</code></div>
+            </div>
+          </div>
+
+          <div class="sg-spacer"></div>
+          <h3 style="margin-bottom:12px;font-family:var(--sb-font-display);">Semantic</h3>
+          <div class="sg-swatch-grid">
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:#ff6b35;"></div>
+              <div class="sg-swatch__label"><strong>Accent (Orange)</strong><code>--sb-accent: #ff6b35</code></div>
+            </div>
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:#64c4ff;"></div>
+              <div class="sg-swatch__label"><strong>Signal (Blue)</strong><code>--sb-signal: #64c4ff</code></div>
+            </div>
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:#AE67FA;"></div>
+              <div class="sg-swatch__label"><strong>Purple</strong><code>--sb-purple: #AE67FA</code></div>
+            </div>
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:#46d9a7;"></div>
+              <div class="sg-swatch__label"><strong>Success</strong><code>--sb-success: #46d9a7</code></div>
+            </div>
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:#ffc75a;"></div>
+              <div class="sg-swatch__label"><strong>Warning</strong><code>--sb-warning: #ffc75a</code></div>
+            </div>
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:#ff7c7c;"></div>
+              <div class="sg-swatch__label"><strong>Danger</strong><code>--sb-danger: #ff7c7c</code></div>
+            </div>
+          </div>
+
+          <div class="sg-spacer"></div>
+          <h3 style="margin-bottom:12px;font-family:var(--sb-font-display);">Gradients</h3>
+          <div class="sg-swatch-grid">
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:linear-gradient(135deg, #81AFDD, #AE67FA);"></div>
+              <div class="sg-swatch__label"><strong>Header Gradient</strong><code>--sb-grad-header</code></div>
+            </div>
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:linear-gradient(135deg, #081019, #1a1f3a);"></div>
+              <div class="sg-swatch__label"><strong>Hero Background</strong><code>--sb-grad-hero-bg</code></div>
+            </div>
+            <div class="sg-swatch">
+              <div class="sg-swatch__color" style="background:linear-gradient(135deg, #ff6b35, #ffbf69);"></div>
+              <div class="sg-swatch__label"><strong>Accent Warm</strong><code>accent → accent-warm</code></div>
+            </div>
+          </div>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- TYPOGRAPHY                                              -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Typography</h2>
+              <p class="section-copy">Three font stacks: <strong>Manrope</strong> for display, <strong>IBM Plex Sans</strong> for body, <strong>IBM Plex Mono</strong> for code.</p>
+            </div>
+          </div>
+
+          <div class="sg-type-sample">
+            <h1 class="display">Display heading <span>with signal accent</span></h1>
+            <small><code>.display</code> — font: 800 clamp(2.6rem, 6vw, 5rem)/0.94 Manrope. Gradient span via <code>.display span</code>.</small>
+          </div>
+
+          <div class="sg-type-sample">
+            <h2 class="section-title">Section title with gradient text</h2>
+            <small><code>.section-title</code> — 1.8rem, Manrope, gradient via --sb-grad-header.</small>
+          </div>
+
+          <div class="sg-type-sample">
+            <div class="eyebrow">Eyebrow label | pill border</div>
+            <small><code>.eyebrow</code> — 0.84rem uppercase, orange accent, pill shape.</small>
+          </div>
+
+          <div class="sg-type-sample">
+            <p class="lead">Lead paragraph for hero subtitles and introductory copy. Max-width 64ch, muted color, slightly larger than body.</p>
+            <small><code>.lead</code> — 1.08rem, --sb-text-muted, max-width: 64ch.</small>
+          </div>
+
+          <div class="sg-type-sample">
+            <p class="section-copy">Section copy for descriptive text under headings. Kept readable at max-width 60ch.</p>
+            <small><code>.section-copy</code> — muted, max-width: 60ch.</small>
+          </div>
+
+          <div class="sg-type-sample">
+            <p>Body text at the default 16px/1.6 IBM Plex Sans. Good for long-form descriptions and card content.</p>
+            <small>Default <code>body</code> — 400 16px/1.6 IBM Plex Sans.</small>
+          </div>
+
+          <div class="sg-type-sample">
+            <code class="sg-code">// Monospace: IBM Plex Mono
+const rung = 65537;
+console.log(`Auth: ${rung}`);</code>
+            <small><code>.sg-code</code> / <code>.terminal-output</code> — 0.92rem, --sb-terminal-text on dark background.</small>
+          </div>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- BUTTONS                                                 -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Buttons</h2>
+              <p class="section-copy">Pill-shaped, 48px min-height, 160ms transition. Primary uses the accent gradient; secondary is glass-style.</p>
+            </div>
+          </div>
+
+          <div class="sg-component-row">
+            <a class="btn btn-primary" href="#">Primary action</a>
+            <a class="btn btn-secondary" href="#">Secondary action</a>
+          </div>
+          <code class="sg-code">&lt;a class="btn btn-primary" href="#"&gt;Primary action&lt;/a&gt;
+&lt;a class="btn btn-secondary" href="#"&gt;Secondary action&lt;/a&gt;</code>
+
+          <div class="sg-spacer"></div>
+          <h3 style="margin:18px 0 12px;font-family:var(--sb-font-display);">Navigation Links</h3>
+          <div class="sg-component-row">
+            <a class="nav-link" href="#">Nav link</a>
+            <a class="nav-link is-active" href="#">Active nav</a>
+            <a class="nav-link nav-link--accent" href="#">Accent nav</a>
+          </div>
+          <code class="sg-code">&lt;a class="nav-link" href="#"&gt;Nav link&lt;/a&gt;
+&lt;a class="nav-link is-active" href="#"&gt;Active nav&lt;/a&gt;
+&lt;a class="nav-link nav-link--accent" href="#"&gt;Accent nav&lt;/a&gt;</code>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- CARDS                                                   -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Cards</h2>
+              <p class="section-copy">Surface cards are the primary content container. Gradient top-border animates on hover via <code>::before</code>. KPI cards nest inside for metric grids.</p>
+            </div>
+          </div>
+
+          <div class="surface-grid">
+            <article class="surface-card">
+              <div class="surface-card__kicker">Kicker</div>
+              <h2>Surface Card</h2>
+              <p>Primary content container with gradient border animation on hover. Uses --sb-surface-grad-top to --sb-surface-grad-bottom background.</p>
+              <div class="surface-card__links">
+                <a href="#">Link one</a>
+                <a href="#">Link two</a>
+              </div>
+            </article>
+            <article class="surface-card">
+              <div class="surface-card__kicker">Data</div>
+              <h2>Data Panel</h2>
+              <p>Same visual treatment as surface-card. Used for token tables, activity feeds, and scope summaries. Add <code>.data-panel</code> class.</p>
+            </article>
+            <article class="surface-card">
+              <div class="surface-card__kicker">Metric</div>
+              <h2>KPI Card (nested)</h2>
+              <p>Lightweight cards for key metrics. Three columns by default, single column on mobile.</p>
+            </article>
+          </div>
+
+          <div class="sg-spacer"></div>
+          <h3 style="margin:18px 0 12px;font-family:var(--sb-font-display);">KPI Grid</h3>
+          <div class="kpi-grid">
+            <div class="kpi-card"><strong>1,317</strong><span>Tests passing</span></div>
+            <div class="kpi-card"><strong>3 surfaces</strong><span>Browser, Machine, Cloud</span></div>
+            <div class="kpi-card"><strong>$8/mo</strong><span>Pro membership</span></div>
+          </div>
+          <code class="sg-code">&lt;div class="kpi-grid"&gt;
+  &lt;div class="kpi-card"&gt;&lt;strong&gt;1,317&lt;/strong&gt;&lt;span&gt;Tests passing&lt;/span&gt;&lt;/div&gt;
+&lt;/div&gt;</code>
+
+          <div class="sg-spacer"></div>
+          <h3 style="margin:18px 0 12px;font-family:var(--sb-font-display);">Hero Panel with Splash</h3>
+          <div style="max-width:400px;">
+            <aside class="hero-panel hero-panel--splash">
+              <div class="hero-splash-wrap">
+                <img class="hero-splash" src="/images/splash/solace-browser-loading-splash-image.png" alt="Solace Browser splash art">
+                <p class="hero-splash-label">Solace Browser</p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- STATUS INDICATORS                                       -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Status Indicators</h2>
+              <p class="section-copy">Pills and tags communicate system state: tunnel connected, machine blocked, OAuth3 grants.</p>
+            </div>
+          </div>
+
+          <h3 style="margin-bottom:12px;font-family:var(--sb-font-display);">Status Pills</h3>
+          <div class="sg-component-row">
+            <div class="status-pill"><span class="status-pill__dot"></span>Default (signal)</div>
+            <div class="status-pill status-pill--success"><span class="status-pill__dot"></span>Success</div>
+            <div class="status-pill status-pill--warning"><span class="status-pill__dot"></span>Warning</div>
+            <div class="status-pill status-pill--danger"><span class="status-pill__dot"></span>Danger</div>
+            <div class="status-pill status-pill--neutral"><span class="status-pill__dot"></span>Neutral</div>
+          </div>
+          <code class="sg-code">&lt;div class="status-pill status-pill--success"&gt;
+  &lt;span class="status-pill__dot"&gt;&lt;/span&gt;Success
+&lt;/div&gt;</code>
+
+          <div class="sg-spacer"></div>
+          <h3 style="margin:18px 0 12px;font-family:var(--sb-font-display);">Status Tags</h3>
+          <div class="sg-component-row">
+            <span class="status-tag">Default</span>
+            <span class="status-tag status-tag--success">Success</span>
+            <span class="status-tag status-tag--warning">Warning</span>
+            <span class="status-tag status-tag--danger">Danger</span>
+            <span class="recipe-tag">Recipe tag</span>
+            <span class="scope-tag">OAuth3</span>
+          </div>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- INPUTS                                                  -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Inputs</h2>
+              <p class="section-copy">Search and command inputs share the same base style. Focus ring uses --sb-signal blue.</p>
+            </div>
+          </div>
+
+          <div style="max-width:600px;display:grid;gap:14px;">
+            <input class="search-input" type="search" placeholder="Search recipes, sites, or approvals" aria-label="Search demo">
+            <div class="terminal-form">
+              <input class="command-input" type="text" placeholder="$ enter command" aria-label="Terminal demo">
+              <button class="btn btn-primary">Run</button>
+            </div>
+          </div>
+          <code class="sg-code">&lt;input class="search-input" type="search" placeholder="Search..."&gt;
+&lt;input class="command-input" type="text" placeholder="$ command"&gt;</code>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- TABLES                                                  -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Tables</h2>
+              <p class="section-copy">Minimal tables with subtle row borders. Headers are uppercase kickers. Wrap in <code>.table-wrap</code> for horizontal scroll.</p>
+            </div>
+          </div>
+
+          <article class="data-panel">
+            <div class="panel-kicker">OAuth3 vault</div>
+            <h3>Token posture</h3>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>App</th>
+                    <th>Scope</th>
+                    <th>Status</th>
+                    <th>Expiry</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>GitHub</td>
+                    <td>repo:read, user:email</td>
+                    <td><span class="status-tag status-tag--success">Ready</span></td>
+                    <td>Rotates on connect</td>
+                  </tr>
+                  <tr>
+                    <td>Slack</td>
+                    <td>channels:read, chat:write</td>
+                    <td><span class="status-tag status-tag--warning">Approval needed</span></td>
+                    <td>Pending grant</td>
+                  </tr>
+                  <tr>
+                    <td>Gmail</td>
+                    <td>mail:read, mail:send</td>
+                    <td><span class="status-tag status-tag--danger">Revoked</span></td>
+                    <td>Expired</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- LISTS                                                   -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Lists</h2>
+              <p class="section-copy">Recipe lists, file lists, and scope lists share the same base. Items are flex containers with tags on the right.</p>
+            </div>
+          </div>
+
+          <div class="data-grid">
+            <article class="data-panel">
+              <div class="panel-kicker">Recipes</div>
+              <h3>Recipe list</h3>
+              <ul class="recipe-list recipe-list--spaced">
+                <li data-recipe-name="publish github release"><span><strong>Publish GitHub release</strong><br>Draft notes in-browser, upload asset after approval.</span><span class="recipe-tag">web &rarr; cloud</span></li>
+                <li data-recipe-name="import bank statements"><span><strong>Import bank statements</strong><br>Read Downloads only, hand off CSV mapping.</span><span class="recipe-tag">machine</span></li>
+                <li data-recipe-name="share local dashboard"><span><strong>Share local dashboard</strong><br>Open tunnel for one port and expiry window.</span><span class="recipe-tag">cloud</span></li>
+              </ul>
+            </article>
+            <article class="data-panel">
+              <div class="panel-kicker">Machine</div>
+              <h3>File list</h3>
+              <ul class="file-list">
+                <li data-file-name="Downloads"><span>Downloads</span><span class="machine-tag">folder &middot; scoped</span></li>
+                <li data-file-name="Recipes"><span>Recipes</span><span class="machine-tag">folder &middot; editable</span></li>
+                <li data-file-name="session.log"><span>session.log</span><span class="machine-tag">file &middot; audit only</span></li>
+                <li data-file-name="Desktop"><span>Desktop</span><span class="machine-tag">folder &middot; blocked</span></li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- TERMINAL                                                -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Terminal</h2>
+              <p class="section-copy">Terminal output uses --sb-terminal-text (#95ffcf) on a deep background. Command input pairs with the primary button.</p>
+            </div>
+          </div>
+
+          <article class="data-panel" style="max-width:700px;">
+            <div class="panel-kicker">Shell preview</div>
+            <h3>Terminal panel</h3>
+            <pre class="terminal-output">$ solace-browser --head --yinyang
+[INFO] Starting Solace Browser (headless=False)
+[INFO] Start page loaded
+[INFO] CDP Server started on http://localhost:9222
+[INFO] Session saved to: artifacts/solace_session.json</pre>
+            <div class="terminal-form" style="margin-top:14px;">
+              <input class="command-input" type="text" placeholder="$ enter command" disabled>
+              <button class="btn btn-primary" disabled>Run</button>
+            </div>
+          </article>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- LAYOUT PRIMITIVES                                       -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Layout Primitives</h2>
+              <p class="section-copy">Grid systems, max-width shells, and responsive breakpoints.</p>
+            </div>
+          </div>
+
+          <article class="data-panel">
+            <div class="panel-kicker">Grid systems</div>
+            <h3>Available grids</h3>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Class</th>
+                    <th>Columns</th>
+                    <th>Usage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>.surface-grid</code></td>
+                    <td>3 &times; 1fr</td>
+                    <td>Feature cards, core surfaces</td>
+                  </tr>
+                  <tr>
+                    <td><code>.kpi-grid</code></td>
+                    <td>3 &times; 1fr</td>
+                    <td>Metric cards inside hero</td>
+                  </tr>
+                  <tr>
+                    <td><code>.data-grid</code></td>
+                    <td>1.1fr / 0.9fr</td>
+                    <td>Data panel + sidebar stack</td>
+                  </tr>
+                  <tr>
+                    <td><code>.download-grid</code></td>
+                    <td>3 &times; 1fr</td>
+                    <td>Platform download cards</td>
+                  </tr>
+                  <tr>
+                    <td><code>.dashboard-columns</code></td>
+                    <td>0.8fr / 1.4fr</td>
+                    <td>Sidebar + main content</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <div class="sg-spacer"></div>
+          <article class="data-panel">
+            <div class="panel-kicker">Breakpoints</div>
+            <h3>Responsive behavior</h3>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Breakpoint</th>
+                    <th>Effect</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>&le; 980px</code></td>
+                    <td>All grids collapse to single column. Header/footer stack vertically.</td>
+                  </tr>
+                  <tr>
+                    <td><code>&le; 768px</code></td>
+                    <td>Desktop nav hidden, hamburger menu visible.</td>
+                  </tr>
+                  <tr>
+                    <td><code>&le; 680px</code></td>
+                    <td>Tighter padding, display font shrinks to 2.5rem.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <div class="sg-spacer"></div>
+          <article class="data-panel">
+            <div class="panel-kicker">Design tokens</div>
+            <h3>Spacing and radius</h3>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Token</th>
+                    <th>Value</th>
+                    <th>Usage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>--sb-radius-lg</code></td>
+                    <td>24px</td>
+                    <td>Cards, panels, hero-panel</td>
+                  </tr>
+                  <tr>
+                    <td><code>--sb-radius-md</code></td>
+                    <td>16px</td>
+                    <td>KPI cards, list items, code blocks</td>
+                  </tr>
+                  <tr>
+                    <td><code>--sb-radius-sm</code></td>
+                    <td>10px</td>
+                    <td>Mobile menu items</td>
+                  </tr>
+                  <tr>
+                    <td><code>--sb-max</code></td>
+                    <td>1200px</td>
+                    <td>Max content width for all shells</td>
+                  </tr>
+                  <tr>
+                    <td><code>--sb-shadow</code></td>
+                    <td>0 18px 50px ...</td>
+                    <td>Card elevation</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- TUNNEL SPLASH (special component)                       -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Tunnel Splash Stage</h2>
+              <p class="section-copy">The orbital splash stage used on the tunnel-connect page. Features animated orbit rings and glow effects.</p>
+            </div>
+          </div>
+
+          <div class="tunnel-splash-stage">
+            <div class="tunnel-splash-orbit"></div>
+            <div class="tunnel-splash-frame">
+              <img class="tunnel-splash-image" src="/images/splash/solace-browser-loading-splash-image.png" alt="Tunnel splash demo">
+            </div>
+            <div class="tunnel-splash-copy">
+              <h2 class="tunnel-splash-title">Cloud relay</h2>
+              <p class="tunnel-splash-subtitle">Expose a narrow endpoint, not your whole laptop. Fail-closed by default.</p>
+            </div>
+          </div>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- YINYANG RAILS                                           -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Yinyang Rails (CDP-injected)</h2>
+              <p class="section-copy">Injected by the browser runtime via <code>page.add_init_script()</code>. Not part of static HTML — shown here for reference.</p>
+            </div>
+          </div>
+
+          <article class="data-panel">
+            <div class="panel-kicker">Top rail</div>
+            <h3>Status bar (32px fixed)</h3>
+            <div style="position:relative;height:32px;background:var(--sb-bg-alpha-92);border:1px solid var(--sb-border);border-radius:var(--sb-radius-sm);display:flex;align-items:center;justify-content:space-between;padding:0 16px;font:500 0.78rem/1 var(--sb-font-body);color:var(--sb-text-muted);">
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--sb-success);"></span> Idle</span>
+              <span>Credits: 42</span>
+            </div>
+            <small style="display:block;margin-top:8px;color:var(--sb-text-muted);font-size:0.82rem;">Classes: <code>.yy-top-rail</code>, <code>.yy-top-rail__state</code>, <code>.yy-top-rail__dot</code></small>
+          </article>
+
+          <div class="sg-spacer"></div>
+          <article class="data-panel">
+            <div class="panel-kicker">Bottom rail</div>
+            <h3>Chat panel (36px collapsed, 300px expanded)</h3>
+            <div style="position:relative;border:1px solid var(--sb-border);border-radius:var(--sb-radius-sm);overflow:hidden;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:36px;background:var(--sb-bg-alpha-96);font:600 0.82rem/1 var(--sb-font-body);color:var(--sb-text-muted);border-bottom:1px solid var(--sb-border);cursor:pointer;">
+                <span>Yinyang</span>
+                <span style="font-size:0.78rem;">Credits: 42</span>
+              </div>
+              <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px;background:var(--sb-bg-alpha-96);">
+                <div style="align-self:flex-start;max-width:80%;padding:10px 14px;border-radius:var(--sb-radius-md);background:var(--sb-bg-signal-alpha-08);border:1px solid var(--sb-border-signal-alpha-18);font-size:0.88rem;">Hello! I'm Yinyang, your AI assistant.</div>
+                <div style="align-self:flex-end;max-width:80%;padding:10px 14px;border-radius:var(--sb-radius-md);background:var(--sb-accent-soft);border:1px solid var(--sb-border-strong);font-size:0.88rem;">Triage my Gmail inbox please</div>
+              </div>
+              <div style="display:flex;gap:8px;padding:8px 16px 12px;border-top:1px solid var(--sb-border);background:var(--sb-bg-alpha-96);">
+                <input style="flex:1;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--sb-border);background:var(--sb-bg-input);color:var(--sb-text);" type="text" placeholder="Ask Yinyang..." disabled>
+                <button style="min-height:36px;padding:0 16px;border-radius:999px;border:none;background:var(--sb-accent);color:var(--sb-on-accent);font-weight:700;font-size:0.82rem;" disabled>Send</button>
+              </div>
+            </div>
+            <small style="display:block;margin-top:8px;color:var(--sb-text-muted);font-size:0.82rem;">Classes: <code>.yy-bottom-rail</code>, <code>.yy-msg--user</code>, <code>.yy-msg--assistant</code></small>
+          </article>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- TECH STACK                                              -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Tech Stack</h2>
+              <p class="section-copy">Architecture mirrors solaceagi.com: one CSS file, one JS file, Python server, zero CDN dependencies.</p>
+            </div>
+          </div>
+
+          <div class="surface-grid">
+            <article class="surface-card">
+              <div class="surface-card__kicker">CSS</div>
+              <h2>Single stylesheet</h2>
+              <p><code>web/css/site.css</code> — 100+ tokens, all components. No CSS-in-JS, no Tailwind, no preprocessor. SHA256 hash for cache busting.</p>
+            </article>
+            <article class="surface-card">
+              <div class="surface-card__kicker">JavaScript</div>
+              <h2>Vanilla JS</h2>
+              <p><code>web/js/solace.js</code> — IIFE with page-specific init. Particles, reveal observer, hamburger, nav highlight. No framework.</p>
+            </article>
+            <article class="surface-card">
+              <div class="surface-card__kicker">Server</div>
+              <h2>Python servers</h2>
+              <p><code>web/server.py</code> — dev server with slug routing. <code>solace_browser_server.py</code> — aiohttp CDP server with security middleware.</p>
+            </article>
+          </div>
+
+          <div class="sg-spacer"></div>
+          <article class="data-panel">
+            <div class="panel-kicker">File map</div>
+            <h3>Project structure</h3>
+            <pre class="terminal-output">web/
+  css/site.css              # Design tokens + all components (1015 lines)
+  js/solace.js              # Vanilla JS behaviors (452 lines)
+  images/splash/            # Product artwork (PNG)
+  favicon.svg               # SB monogram
+  home.html                 # Landing page
+  download.html             # Platform downloads
+  machine-dashboard.html    # Machine surface
+  tunnel-connect.html       # Tunnel surface
+  style-guide.html          # This page
+  start.html                # In-browser start page (file:// protocol)
+  server.py                 # Dev slug server (port 8791)
+
+static/
+  top_rail.js               # Yinyang top rail (CDP-injected)
+  bottom_rail.js            # Yinyang bottom rail (CDP-injected)
+
+solace_browser_server.py    # Main aiohttp + CDP server</pre>
+          </article>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="site-footer__inner">
+          <div>&copy; <span data-current-year></span> Solace Browser. Design system reference.</div>
+          <div class="site-footer__links">
+            <a href="/">Home</a>
+            <a href="/download">Download</a>
+            <a href="/machine-dashboard">Machine</a>
+            <a href="/tunnel-connect">Tunnel</a>
+            <a href="https://www.solaceagi.com/style-guide" target="_blank" rel="noopener">AGI Style Guide</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>
