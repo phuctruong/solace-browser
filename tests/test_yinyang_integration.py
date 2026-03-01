@@ -11,11 +11,12 @@ from yinyang.bottom_rail import _INLINE_BOTTOM_RAIL_JS, BOTTOM_RAIL_JS
 from yinyang.ws_bridge import YinyangWSBridge
 from yinyang.highlighter import YinyangHighlighter
 from yinyang.state_bridge import (
-    StateBridge,
-    YinyangState,
-    STATE_COLORS,
-    VALID_TRANSITIONS,
+    YinyangStateBridge,
+    STATE_COLOR_MAP,
+    AUTO_EXPAND_STATES,
+    AUTO_COLLAPSE_STATES,
 )
+from execution_lifecycle import ExecutionState
 
 
 class TestYinyangModule:
@@ -72,60 +73,48 @@ class TestHighlighter:
 
 
 class TestStateBridge:
-    def test_all_states_have_colors(self):
-        for state in YinyangState:
-            assert state in STATE_COLORS, f"Missing color for {state}"
+    def test_all_execution_states_have_colors(self):
+        """Every ExecutionState should have a color in STATE_COLOR_MAP."""
+        for state in ExecutionState:
+            assert state in STATE_COLOR_MAP, f"Missing color for {state}"
 
-    def test_all_states_have_transitions(self):
-        for state in YinyangState:
-            assert state in VALID_TRANSITIONS, f"Missing transitions for {state}"
+    def test_auto_expand_states_are_valid(self):
+        """Auto-expand states should be valid ExecutionState values."""
+        for state in AUTO_EXPAND_STATES:
+            assert isinstance(state, ExecutionState)
 
-    def test_idle_is_initial_state(self):
-        # Can't instantiate without a page, but verify the enum
-        assert YinyangState.IDLE.value == "idle"
+    def test_auto_collapse_states_are_valid(self):
+        """Auto-collapse states should be valid ExecutionState values."""
+        for state in AUTO_COLLAPSE_STATES:
+            assert isinstance(state, ExecutionState)
 
-    def test_error_returns_to_idle(self):
-        assert YinyangState.IDLE in VALID_TRANSITIONS[YinyangState.ERROR]
+    def test_preview_ready_auto_expands(self):
+        assert ExecutionState.PREVIEW_READY in AUTO_EXPAND_STATES
 
-    def test_blocked_returns_to_idle(self):
-        assert YinyangState.IDLE in VALID_TRANSITIONS[YinyangState.BLOCKED]
+    def test_blocked_auto_expands(self):
+        assert ExecutionState.BLOCKED in AUTO_EXPAND_STATES
 
-    def test_done_returns_to_idle(self):
-        assert YinyangState.IDLE in VALID_TRANSITIONS[YinyangState.DONE]
+    def test_failed_auto_expands(self):
+        assert ExecutionState.FAILED in AUTO_EXPAND_STATES
 
-    def test_full_happy_path_transitions(self):
-        """Verify the complete happy path: IDLE -> ... -> DONE -> IDLE."""
-        happy_path = [
-            YinyangState.IDLE,
-            YinyangState.LISTENING,
-            YinyangState.PROCESSING,
-            YinyangState.INTENT_CLASSIFIED,
-            YinyangState.PREVIEW_GENERATING,
-            YinyangState.PREVIEW_READY,
-            YinyangState.COOLDOWN,
-            YinyangState.APPROVED,
-            YinyangState.SEALED,
-            YinyangState.EXECUTING,
-            YinyangState.DONE,
-            YinyangState.IDLE,
-        ]
-        for i in range(len(happy_path) - 1):
-            current = happy_path[i]
-            next_state = happy_path[i + 1]
-            assert next_state in VALID_TRANSITIONS[current], \
-                f"Transition {current.value} -> {next_state.value} not in VALID_TRANSITIONS"
+    def test_done_auto_collapses(self):
+        assert ExecutionState.DONE in AUTO_COLLAPSE_STATES
 
-    def test_every_state_can_reach_idle(self):
-        """Every state should be able to reach IDLE (directly or via ERROR)."""
-        for state in YinyangState:
-            if state == YinyangState.IDLE:
-                continue
-            targets = VALID_TRANSITIONS[state]
-            can_reach_idle = (
-                YinyangState.IDLE in targets
-                or YinyangState.ERROR in targets  # ERROR -> IDLE
-            )
-            assert can_reach_idle, f"{state.value} cannot reach IDLE"
+    def test_sealed_abort_auto_collapses(self):
+        assert ExecutionState.SEALED_ABORT in AUTO_COLLAPSE_STATES
+
+    def test_done_is_green(self):
+        assert STATE_COLOR_MAP[ExecutionState.DONE] == "green"
+
+    def test_blocked_is_red(self):
+        assert STATE_COLOR_MAP[ExecutionState.BLOCKED] == "red"
+
+    def test_executing_is_blue(self):
+        assert STATE_COLOR_MAP[ExecutionState.EXECUTING] == "blue"
+
+    def test_no_overlap_expand_collapse(self):
+        """No state should be in both auto-expand and auto-collapse."""
+        assert AUTO_EXPAND_STATES.isdisjoint(AUTO_COLLAPSE_STATES)
 
 
 class TestWSBridge:
