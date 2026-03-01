@@ -22,16 +22,18 @@
       --sb-grad-hero-bg: linear-gradient(135deg, #081019 0%, #0f1a2e 50%, #1a1f3a 100%);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 200%; }
     html, body {
       height: 100%;
       background: var(--sb-grad-hero-bg);
       color: var(--sb-text);
       font-family: var(--sb-font-body);
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     .start-page {
-      height: 100%;
+      min-height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -51,7 +53,7 @@
     /* ── Login Card ── */
     .login-card {
       position: relative;
-      width: 420px;
+      width: 520px;
       max-width: calc(100% - 48px);
       background: var(--sb-surface);
       border: 1px solid var(--sb-border);
@@ -171,12 +173,50 @@
       text-decoration: none;
     }
     .footer-info a:hover { color: var(--sb-signal); }
+
+    /* ── Signed-in state ── */
+    .signed-in-card {
+      position: relative;
+      width: 520px;
+      max-width: calc(100% - 48px);
+      background: var(--sb-surface);
+      border: 1px solid var(--sb-border);
+      border-radius: 24px;
+      padding: 48px 40px 40px;
+      text-align: center;
+      box-shadow: 0 24px 80px rgba(2, 8, 18, 0.5);
+      display: none;
+    }
+    .signed-in-card .check-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(70, 217, 167, 0.12);
+      border: 2px solid var(--sb-success);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 1.6rem;
+    }
+    .signed-in-card h2 {
+      font-family: var(--sb-font-display);
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--sb-success);
+    }
+    .signed-in-card p {
+      color: var(--sb-text-muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
   <div class="start-page">
 
-    <div class="login-card">
+    <div class="login-card" id="login-card">
       <img class="splash-img" src="images/splash/solace-browser-loading-splash-image.png" alt="Solace Browser">
       <h1>Solace Browser</h1>
       <p class="tagline">Sign in to connect your AI worker</p>
@@ -206,6 +246,13 @@
       </div>
     </div>
 
+    <div class="signed-in-card" id="signed-in-card">
+      <img class="splash-img" src="images/splash/solace-browser-loading-splash-image.png" alt="Solace Browser">
+      <div class="check-icon">&#10003;</div>
+      <h2>Connected</h2>
+      <p>Your Solace Browser is linked. AI worker ready.</p>
+    </div>
+
     <div class="footer-info">
       <span>v1.0.0</span>
       <a href="https://www.solaceagi.com/privacy" target="_blank">Privacy</a>
@@ -217,14 +264,35 @@
   <script>
     var SOLACE_AUTH_URL = 'https://www.solaceagi.com';
 
+    // Check for token returned from auth redirect
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var token = params.get('token');
+      if (token) {
+        localStorage.setItem('solace_api_key', token);
+        // Clean token from URL
+        history.replaceState({}, '', window.location.pathname);
+        // Show signed-in state
+        document.getElementById('login-card').style.display = 'none';
+        document.getElementById('signed-in-card').style.display = 'block';
+        return;
+      }
+      // If already signed in, show signed-in state
+      if (localStorage.getItem('solace_api_key')) {
+        document.getElementById('login-card').style.display = 'none';
+        document.getElementById('signed-in-card').style.display = 'block';
+        return;
+      }
+    })();
+
     document.getElementById('btn-google').addEventListener('click', function() {
-      window.location.href = SOLACE_AUTH_URL + '/auth/login?provider=google&redirect=' + encodeURIComponent(window.location.href);
+      window.location.href = SOLACE_AUTH_URL + '/auth/login?provider=google&redirect=' + encodeURIComponent(window.location.origin + window.location.pathname);
     });
     document.getElementById('btn-github').addEventListener('click', function() {
-      window.location.href = SOLACE_AUTH_URL + '/auth/login?provider=github&redirect=' + encodeURIComponent(window.location.href);
+      window.location.href = SOLACE_AUTH_URL + '/auth/login?provider=github&redirect=' + encodeURIComponent(window.location.origin + window.location.pathname);
     });
     document.getElementById('btn-email').addEventListener('click', function() {
-      window.location.href = SOLACE_AUTH_URL + '/auth/login?provider=email&redirect=' + encodeURIComponent(window.location.href);
+      window.location.href = SOLACE_AUTH_URL + '/auth/login?provider=email&redirect=' + encodeURIComponent(window.location.origin + window.location.pathname);
     });
   </script>
 </body>
