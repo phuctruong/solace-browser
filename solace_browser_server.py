@@ -569,6 +569,12 @@ class SolaceBrowser:
         page.on('console', self._on_console)
         page.on('load', self._on_page_load)
 
+        # Navigate to branded start page
+        start_page = Path(__file__).parent / "web" / "start.html"
+        if start_page.exists():
+            await page.goto(f"file://{start_page.resolve()}", wait_until="domcontentloaded")
+            logger.info("Start page loaded")
+
         logger.info(f"✓ Solace Browser started (page_id={page_id})")
         return page_id
 
