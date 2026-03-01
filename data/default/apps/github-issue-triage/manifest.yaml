@@ -1,0 +1,29 @@
+id: github-issue-triage
+name: GitHub Issue Triage
+description: Review issues, classify urgency, and prepare follow-up drafts.
+category: engineering
+status: installed
+safety: B
+site: github.com
+type: standard
+orchestrates: []
+scopes:
+- github.read.issues
+- github.write.drafts
+- local.evidence
+partners:
+  produces_for:
+  - slack-triage
+  - morning-brief
+  consumes_from:
+  - weekly-digest
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

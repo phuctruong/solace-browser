@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>App Store | Solace Browser</title>
+  <meta name="description" content="Browse, install, and configure web-native AI automation apps. No vendor API keys required.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://browser.solaceagi.com/app-store">
+  <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/yinyang-delight.js" defer></script>
+  <script src="/js/solace.js" defer></script>
+</head>
+<body data-page="app-store">
+  <div class="site-shell">
+    <div class="page-frame">
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a class="site-brand" href="/">
+            <span class="site-brand__icon">SB</span>
+            <span class="site-brand__text">
+              <span class="site-brand__name">Solace Browser</span>
+              <span class="site-brand__tag">OAuth3 web + machine + cloud</span>
+            </span>
+          </a>
+          <nav class="site-nav" aria-label="Primary">
+            <a class="nav-link" data-nav-path="/" href="/">Home</a>
+            <a class="nav-link" data-nav-path="/app-store" href="/app-store">Apps</a>
+            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
+            <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect">Tunnel</a>
+            <a class="nav-link" data-nav-path="/settings" href="/settings">Settings</a>
+            <a class="nav-link nav-link--accent" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener">Full product</a>
+          </nav>
+          <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+        </div>
+      </header>
+      <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu__section">
+          <h3>Surfaces</h3>
+          <a data-nav-path="/" href="/">Home</a>
+          <a data-nav-path="/app-store" href="/app-store">App Store</a>
+          <a data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
+          <a data-nav-path="/tunnel-connect" href="/tunnel-connect">Tunnel</a>
+          <a data-nav-path="/settings" href="/settings">Settings</a>
+        </div>
+      </div>
+
+      <main>
+        <section class="hero reveal">
+          <div>
+            <div class="eyebrow">Web-native automation | No API keys | AI built into the browser</div>
+            <h1 class="display">App Store</h1>
+            <p class="lead">Every app uses web versions of services directly. No vendor API keys, no browser extensions. Your inbox customizes, the outbox shows AI work for your approval.</p>
+            <label class="sr-only" for="app-search">Search apps</label>
+            <input class="search-input" id="app-search" type="search" aria-label="Search apps" placeholder="Search apps by name, category, or service...">
+          </div>
+        </section>
+
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Communications, Productivity, Sales, Engineering, Social</h2>
+              <p class="section-copy">App categories are loaded from the live API and grouped dynamically. Search filters by name, category, and service.</p>
+            </div>
+          </div>
+          <div id="app-store-categories">
+            <article class="data-panel">
+              <p class="section-copy">Loading categories from <code>/api/apps</code>...</p>
+            </article>
+          </div>
+        </section>
+
+        <!-- No-API Exclusive -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">No-API Exclusives</h2>
+              <p class="section-copy">Services with no public API where Solace Browser is the <strong>only automation path</strong>.</p>
+            </div>
+          </div>
+          <article class="data-panel">
+            <ul class="data-list">
+              <li><strong>WhatsApp</strong> <span class="recipe-tag">web.whatsapp.com</span> — No public API. Solace = only automation.</li>
+              <li><strong>Amazon</strong> <span class="recipe-tag">amazon.com</span> — No API for consumer shopping. Solace = only path.</li>
+              <li><strong>Twitter/X</strong> <span class="recipe-tag">x.com</span> — API costs $100+/mo. Solace uses web version free.</li>
+              <li><strong>Instagram</strong> <span class="recipe-tag">instagram.com</span> — Business API only. Personal accounts = Solace only.</li>
+              <li><strong>LinkedIn</strong> <span class="recipe-tag">linkedin.com</span> — API severely restricted (2023). Solace = full access.</li>
+            </ul>
+          </article>
+        </section>
+
+        <!-- How it works -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">How every app works</h2>
+              <p class="section-copy">Universal contract: inbox customizes, outbox shows AI work, you approve.</p>
+            </div>
+          </div>
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <strong>1. Inbox</strong>
+              <span>You customize: prompts, templates, assets, policies. Drop files in <code>inbox/</code> to teach the AI.</span>
+            </div>
+            <div class="kpi-card">
+              <strong>2. Preview</strong>
+              <span>LLM called ONCE. Preview shown in Yinyang rail. You approve, edit, or reject.</span>
+            </div>
+            <div class="kpi-card">
+              <strong>3. Execute</strong>
+              <span>Approved output sealed (chmod 444). CPU replays deterministically. Evidence hash-chained.</span>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="site-footer__inner">
+          <div>© <span data-current-year></span> Solace Browser. No vendor API keys. Web-native automation.</div>
+          <div class="site-footer__links">
+            <a href="/app-store">Apps</a>
+            <a href="/settings">Settings</a>
+            <a href="/machine-dashboard">Machine</a>
+            <a href="https://github.com/solaceagi/solace-browser" target="_blank" rel="noopener">GitHub</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

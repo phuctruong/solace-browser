@@ -1,0 +1,12 @@
+{
+  "id": "instagram-poster",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview Instagram Poster",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

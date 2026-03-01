@@ -197,6 +197,13 @@ class RecipeExecutor:
         sealed["output_hash"] = self._replay_hash(sealed)
         return sealed
 
+    def write_sealed_output(self, output_path: str | Path, sealed_output: Dict[str, Any]) -> Path:
+        path = Path(output_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(sealed_output, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        path.chmod(0o444)
+        return path
+
     def execute_replay(self, recipe: Dict[str, Any] | Any, sealed_output: Dict[str, Any]) -> bool:
         started = time.perf_counter()
         recipe_id = self._resolve_recipe_id(recipe)

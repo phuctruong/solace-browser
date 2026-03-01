@@ -1,0 +1,12 @@
+{
+  "id": "reddit-scanner",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview Reddit Scanner",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

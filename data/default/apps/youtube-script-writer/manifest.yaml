@@ -1,0 +1,29 @@
+id: youtube-script-writer
+name: YouTube Script Writer
+description: Draft scripts from source notes and hand them to downstream apps.
+category: sales
+status: installed
+safety: B
+site: studio.youtube.com
+type: standard
+orchestrates: []
+scopes:
+- youtube.read.channel
+- youtube.write.drafts
+- local.evidence
+partners:
+  produces_for:
+  - google-drive-saver
+  - twitter-monitor
+  consumes_from:
+  - weekly-digest
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

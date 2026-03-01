@@ -1,0 +1,12 @@
+{
+  "id": "morning-brief",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview Morning Brief",
+      "id": "preview"
+    }
+  ],
+  "type": "orchestrator",
+  "version": "1.0.0"
+}

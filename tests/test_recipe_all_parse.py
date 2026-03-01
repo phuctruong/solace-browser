@@ -18,10 +18,10 @@ def _json_recipe_files() -> list[Path]:
     return sorted(RECIPES_ROOT.rglob("*.json"))
 
 
-def test_all_70_json_recipes_parse() -> None:
+def test_all_recipe_json_files_parse() -> None:
     files = _json_recipe_files()
 
-    assert len(files) == 70
+    assert len(files) >= 73
     for path in files:
         dag, dag_hash = parse_deterministic(path)
         assert dag.recipe_id

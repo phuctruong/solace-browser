@@ -1,0 +1,12 @@
+{
+  "id": "weekly-digest",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview Weekly Digest",
+      "id": "preview"
+    }
+  ],
+  "type": "orchestrator",
+  "version": "1.0.0"
+}

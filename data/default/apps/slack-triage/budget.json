@@ -1,0 +1,7 @@
+{
+  "cooldown_seconds": 5,
+  "drafts_per_run": 5,
+  "reads_per_run": 50,
+  "remaining_runs": 120,
+  "writes_per_run": 0
+}

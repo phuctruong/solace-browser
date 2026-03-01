@@ -1,0 +1,157 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "count": 20,
+    "rules": "Triggered by key moments. Each has visual effect + message + optional sound."
+  },
+  "celebrations": [
+    {
+      "id": "c001",
+      "trigger": "first_run_complete",
+      "message": "Your first run is complete! Everything worked.",
+      "effect": "confetti",
+      "confetti_config": {"particleCount": 100, "spread": 70},
+      "sound": "fanfare"
+    },
+    {
+      "id": "c002",
+      "trigger": "first_app_installed",
+      "message": "App installed! Your AI worker is ready.",
+      "effect": "sparkles",
+      "sound": "ding"
+    },
+    {
+      "id": "c003",
+      "trigger": "milestone_10_runs",
+      "message": "10 runs complete. You're getting the hang of this.",
+      "effect": "confetti",
+      "confetti_config": {"particleCount": 50, "spread": 60},
+      "sound": "ding"
+    },
+    {
+      "id": "c004",
+      "trigger": "milestone_100_runs",
+      "message": "100 runs! You're a power user now.",
+      "effect": "emoji_rain",
+      "emojis": ["🏆", "💯", "⭐", "🚀"],
+      "sound": "fanfare"
+    },
+    {
+      "id": "c005",
+      "trigger": "milestone_1000_runs",
+      "message": "1,000 runs. Legend status unlocked.",
+      "effect": "fireworks",
+      "sound": "fanfare"
+    },
+    {
+      "id": "c006",
+      "trigger": "streak_7_days",
+      "message": "7-day streak! Consistency is your superpower.",
+      "effect": "sparkles",
+      "sound": "ding"
+    },
+    {
+      "id": "c007",
+      "trigger": "streak_30_days",
+      "message": "30-day streak. That's discipline. Respect.",
+      "effect": "confetti",
+      "confetti_config": {"particleCount": 80, "spread": 90},
+      "sound": "fanfare"
+    },
+    {
+      "id": "c008",
+      "trigger": "birthday",
+      "message": "Happy birthday! Here's to another year of great work.",
+      "effect": "emoji_rain",
+      "emojis": ["🎂", "🎁", "🎈", "🥳"],
+      "sound": "birthday"
+    },
+    {
+      "id": "c009",
+      "trigger": "support_ticket_resolved",
+      "message": "Your support ticket has been resolved!",
+      "effect": "sparkles",
+      "sound": "ding"
+    },
+    {
+      "id": "c010",
+      "trigger": "new_app_available",
+      "message": "New app available in the store!",
+      "effect": "none",
+      "sound": "ding"
+    },
+    {
+      "id": "c011",
+      "trigger": "budget_saved",
+      "message": "Recipe replay saved you ${amount}. Efficiency wins.",
+      "effect": "sparkles",
+      "sound": "ding"
+    },
+    {
+      "id": "c012",
+      "trigger": "first_cross_app_workflow",
+      "message": "Your first cross-app workflow completed! Apps working together.",
+      "effect": "confetti",
+      "confetti_config": {"particleCount": 100, "spread": 120},
+      "sound": "fanfare"
+    },
+    {
+      "id": "c013",
+      "trigger": "morning_brief_ready",
+      "message": "Your morning brief is ready. Coffee + brief = great start.",
+      "effect": "none",
+      "sound": "ding"
+    },
+    {
+      "id": "c014",
+      "trigger": "evidence_chain_verified",
+      "message": "Evidence chain verified. Full audit trail intact.",
+      "effect": "sparkles",
+      "sound": "ding"
+    },
+    {
+      "id": "c015",
+      "trigger": "all_apps_healthy",
+      "message": "All apps healthy. Everything's running smoothly.",
+      "effect": "none",
+      "sound": "none"
+    },
+    {
+      "id": "c016",
+      "trigger": "custom_app_request_submitted",
+      "message": "App request submitted! We'll build it for you.",
+      "effect": "sparkles",
+      "sound": "ding"
+    },
+    {
+      "id": "c017",
+      "trigger": "first_approval",
+      "message": "First approval! You're in control — always.",
+      "effect": "confetti",
+      "confetti_config": {"particleCount": 50, "spread": 60},
+      "sound": "ding"
+    },
+    {
+      "id": "c018",
+      "trigger": "weekly_digest_ready",
+      "message": "Your weekly digest is ready. Here's your week in review.",
+      "effect": "none",
+      "sound": "ding"
+    },
+    {
+      "id": "c019",
+      "trigger": "konami_code",
+      "message": "You found the easter egg! You're clearly a person of culture.",
+      "effect": "emoji_rain",
+      "emojis": ["🏆", "👑", "⭐", "🎮"],
+      "sound": "fanfare"
+    },
+    {
+      "id": "c020",
+      "trigger": "zero_cost_run",
+      "message": "That run cost $0.00 — recipe replay from cache. Free is good.",
+      "effect": "sparkles",
+      "sound": "ding"
+    }
+  ]
+}

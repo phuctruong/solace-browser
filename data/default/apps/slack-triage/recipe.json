@@ -1,0 +1,12 @@
+{
+  "id": "slack-triage",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview Slack Triage",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

@@ -1,0 +1,26 @@
+id: twitter-monitor
+name: Twitter Monitor
+description: Watch timelines and produce read-only summaries.
+category: social
+status: installed
+safety: A
+site: x.com
+type: standard
+orchestrates: []
+scopes:
+- twitter.read.timeline
+- local.evidence
+partners:
+  produces_for:
+  - morning-brief
+  consumes_from: []
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

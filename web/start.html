@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solace Browser</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" href="images/solace-icon.png">
   <style>
     :root {
       --sb-bg: #081019;
@@ -22,7 +22,7 @@
       --sb-grad-hero-bg: linear-gradient(135deg, #081019 0%, #0f1a2e 50%, #1a1f3a 100%);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-size: 200%; }
+    html { font-size: 128%; }
     html, body {
       height: 100%;
       background: var(--sb-grad-hero-bg);
@@ -53,7 +53,7 @@
     /* ── Login Card ── */
     .login-card {
       position: relative;
-      width: 520px;
+      width: 600px;
       max-width: calc(100% - 48px);
       background: var(--sb-surface);
       border: 1px solid var(--sb-border);
@@ -63,8 +63,22 @@
       box-shadow: 0 24px 80px rgba(2, 8, 18, 0.5);
     }
 
+    .brand-name {
+      font-family: var(--sb-font-display);
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--sb-accent) 0%, var(--sb-signal) 50%, var(--sb-purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 2px 8px rgba(100, 196, 255, 0.25));
+    }
+
     .splash-img {
-      width: 160px;
+      width: 416px;
       height: auto;
       border-radius: 18px;
       margin: 0 auto 24px;
@@ -74,7 +88,7 @@
 
     h1 {
       font-family: var(--sb-font-display);
-      font-size: 1.65rem;
+      font-size: 1.45rem;
       font-weight: 700;
       letter-spacing: -0.5px;
       margin-bottom: 6px;
@@ -142,21 +156,49 @@
       background: var(--sb-border);
     }
 
-    /* ── Free Notice ── */
-    .free-notice {
-      background: rgba(70, 217, 167, 0.08);
-      border: 1px solid rgba(70, 217, 167, 0.18);
+    /* ── App Icon Strip ── */
+    .app-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .app-strip img {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      object-fit: cover;
+      opacity: 0.85;
+      transition: opacity 0.2s;
+    }
+    .app-strip img:hover { opacity: 1; }
+    .app-strip-label {
+      font-size: 0.72rem;
+      color: var(--sb-text-muted);
+      margin-bottom: 28px;
+    }
+
+    /* ── Offer Notice ── */
+    .offer-notice {
+      background: rgba(100, 196, 255, 0.06);
+      border: 1px solid rgba(100, 196, 255, 0.12);
       border-radius: 10px;
       padding: 14px 16px;
-      margin-top: 8px;
+      margin-top: 12px;
     }
-    .free-notice p {
-      font-size: 0.82rem;
+    .offer-notice p {
+      font-size: 0.78rem;
       color: var(--sb-text-muted);
-      line-height: 1.5;
+      line-height: 1.6;
+      margin: 0;
     }
-    .free-notice strong {
-      color: var(--sb-success);
+    .offer-notice strong {
+      color: var(--sb-signal);
+    }
+    .offer-notice .offer-or {
+      color: var(--sb-text-muted);
+      opacity: 0.6;
     }
 
     /* ── Footer ── */
@@ -217,9 +259,18 @@
   <div class="start-page">
 
     <div class="login-card" id="login-card">
+      <div class="brand-name">Solace Browser</div>
       <img class="splash-img" src="images/splash/solace-browser-loading-splash-image.png" alt="Solace Browser">
-      <h1>Solace Browser</h1>
-      <p class="tagline">Sign in to connect your AI worker</p>
+      <h1>The browser that works while you don't.</h1>
+      <p class="tagline">AI apps for Gmail, Slack, LinkedIn, and 25 more. You approve everything.</p>
+
+      <div class="app-strip">
+        <img src="images/apps/gmail.jpg" alt="Gmail">
+        <img src="images/apps/slack.png" alt="Slack">
+        <img src="images/apps/linkedin.png" alt="LinkedIn">
+        <img src="images/apps/substack.png" alt="Substack">
+        <img src="images/apps/google-calendar.png" alt="Calendar">
+      </div>
 
       <!-- Google -->
       <button class="auth-btn" id="btn-google">
@@ -241,8 +292,8 @@
         Sign in with Email
       </button>
 
-      <div class="free-notice">
-        <p><strong>Free to start.</strong> No credit card required. Get 2 apps and a managed LLM included. Upgrade anytime for $8/month.</p>
+      <div class="offer-notice">
+        <p><strong>Free forever</strong> with your own API key. <span class="offer-or">|</span> <strong>$8/mo</strong> and we handle everything for you. No credit card required.</p>
       </div>
     </div>
 

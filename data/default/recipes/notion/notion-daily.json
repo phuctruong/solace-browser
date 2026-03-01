@@ -1,0 +1,69 @@
+{
+  "id": "notion-daily",
+  "platform": "notion",
+  "version": "1.0.0",
+  "description": "Create a daily Notion note from a template, prefill carry-over tasks, and append a structured agenda block.",
+  "author": "codex",
+  "rung": 641,
+  "created": "2026-02-28",
+  "oauth3_scopes": ["notion.read.page", "notion.write.create", "notion.write.update"],
+  "primewiki_reference": "data/default/primewiki/notion/actions.json",
+  "budgets": {
+    "max_reads": 60,
+    "max_sends": 0,
+    "max_deletes": 0,
+    "max_llm_calls": 1,
+    "max_duration_seconds": 180
+  },
+  "mermaid_fsm": "stateDiagram-v2\n  [*] --> OpenTemplate\n  OpenTemplate --> ExtractCarryOver: template_loaded\n  ExtractCarryOver --> CreateDailyPage: carry_over_ready\n  CreateDailyPage --> UpdateAgenda: page_created\n  UpdateAgenda --> SaveDailyNote: agenda_ready\n  SaveDailyNote --> CaptureEvidence: saved\n  CaptureEvidence --> [*]",
+  "steps": [
+    {
+      "step_id": "step_01_open_template",
+      "action": "navigate",
+      "description": "Open the daily note template page and wait for the content blocks to render.",
+      "selector": ".notion-page-content",
+      "scope_required": "notion.read.page",
+      "timeout_ms": 15000
+    },
+    {
+      "step_id": "step_02_extract_carry_over",
+      "action": "extract",
+      "description": "Read carry-over tasks, yesterday summary, and pinned agenda blocks from the template source page.",
+      "selector": ".notion-page-content > [data-block-id]",
+      "scope_required": "notion.read.page",
+      "timeout_ms": 12000
+    },
+    {
+      "step_id": "step_03_create_daily_page",
+      "action": "create",
+      "description": "Create a fresh daily page from the target parent location using the configured date title.",
+      "selector": null,
+      "scope_required": "notion.write.create",
+      "timeout_ms": 12000
+    },
+    {
+      "step_id": "step_04_update_agenda",
+      "action": "transform",
+      "description": "Append the agenda, carry-over tasks, and meeting checklist to the new daily page.",
+      "selector": null,
+      "scope_required": "notion.write.update",
+      "timeout_ms": 12000
+    },
+    {
+      "step_id": "step_05_save_daily_note",
+      "action": "save",
+      "description": "Persist a local markdown export of the generated daily note for audit and replay.",
+      "selector": null,
+      "scope_required": "outbox.write",
+      "timeout_ms": 5000
+    },
+    {
+      "step_id": "step_06_capture_evidence",
+      "action": "capture",
+      "description": "Capture a final full-page screenshot of the generated daily note.",
+      "selector": null,
+      "scope_required": "notion.read.page",
+      "timeout_ms": 8000
+    }
+  ]
+}

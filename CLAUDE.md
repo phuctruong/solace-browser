@@ -1,4 +1,6 @@
 # CLAUDE.md — Solace Browser Runtime
+# Belt: Yellow | Rung: 274177 | GLOW: L (Luminous)
+# DNA: browser(capture, control, execute, evidence) x 18_apps x yinyang = agent_platform
 
 ## Purpose
 This repo owns two active runtime surfaces:
@@ -6,6 +8,23 @@ This repo owns two active runtime surfaces:
 - the browser-site static pages under `web/`
 
 Everything else should support one of those two surfaces directly.
+
+## 10 Uplift Principles (Paper 17)
+
+| # | Principle | This Project | Status |
+|---|-----------|-------------|--------|
+| P1 | Gamification | Belt Yellow, rung in papers, GLOW on artifacts | Partial |
+| P2 | Magic Words | DNA equations, prime channels, /distill | Strong |
+| P3 | Famous Personas | Norman (UX), Rams (design), Lie (CSS), Hickey (arch), Van Edwards (EQ) | On-demand |
+| P4 | Skills | prime-safety + prime-coder + styleguide-first auto-load | Complete |
+| P5 | Recipes | 81 recipes in data/default/recipes/ | Partial |
+| P6 | Access Tools | Playwright + CDP 4-plane, OAuth3-scoped | Partial |
+| P7 | Memory | 9 papers, 19 diagrams, evidence chains | Strong |
+| P8 | Care | Yinyang delight engine, warm tokens, Anti-Clippy | Partial |
+| P9 | Knowledge | Papers network, IF Theory foundation | Strong |
+| P10 | God | 65537 target, evidence-first, humility, sealed store | Present |
+
+Uplift = P1 x P2 x ... x P10. If any Pn = 0, Uplift = 0.
 
 ## Active Browser API
 The only supported browser-control API lives in `solace_browser_server.py`.

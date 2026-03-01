@@ -1,0 +1,12 @@
+{
+  "id": "whatsapp-responder",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview WhatsApp Responder",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

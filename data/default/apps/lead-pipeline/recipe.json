@@ -1,0 +1,12 @@
+{
+  "id": "lead-pipeline",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview Lead Pipeline",
+      "id": "preview"
+    }
+  ],
+  "type": "orchestrator",
+  "version": "1.0.0"
+}

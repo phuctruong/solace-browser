@@ -1,0 +1,12 @@
+{
+  "id": "linkedin-poster",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview LinkedIn Poster",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

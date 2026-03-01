@@ -1,0 +1,12 @@
+{
+  "id": "youtube-script-writer",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview YouTube Script Writer",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

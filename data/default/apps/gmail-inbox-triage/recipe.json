@@ -1,0 +1,12 @@
+{
+  "id": "gmail-inbox-triage",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview Gmail Inbox Triage",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

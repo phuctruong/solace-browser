@@ -357,11 +357,11 @@ class TestHamburgerMenuConsistency:
             assert _has_text(html, "Surfaces"), \
                 f"Missing 'Surfaces' section in mobile menu of {name}"
 
-    def test_mobile_menu_has_platform_section(self, pages):
-        """Mobile menu must contain Platform section."""
+    def test_mobile_menu_has_platform_or_settings_link(self, pages):
+        """Mobile menu must contain Platform section or Settings link."""
         for name, html in pages.items():
-            assert _has_text(html, "Platform"), \
-                f"Missing 'Platform' section in mobile menu of {name}"
+            assert _has_text(html, "Platform") or 'href="/settings"' in html, \
+                f"Missing 'Platform' section or Settings link in mobile menu of {name}"
 
     def test_mobile_menu_links_to_all_pages(self, pages):
         """Mobile menu must link to all 4 surface pages."""

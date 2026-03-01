@@ -1,0 +1,31 @@
+id: gmail-inbox-triage
+name: Gmail Inbox Triage
+description: Scan Gmail, prioritize messages, and draft safe replies.
+category: communications
+status: installed
+safety: B
+site: mail.google.com
+type: standard
+orchestrates: []
+scopes:
+- gmail.read.inbox
+- gmail.draft.create
+- local.evidence
+partners:
+  produces_for:
+  - google-drive-saver
+  - slack-triage
+  - calendar-brief
+  consumes_from:
+  - morning-brief
+  - linkedin-outreach
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

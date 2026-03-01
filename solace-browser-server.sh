@@ -44,6 +44,14 @@ start_all() {
   local mode="$1" # headless|headed
   ensure_dirs
 
+  local api_pid ui_pid
+  api_pid="$(read_pid "$API_PID_FILE")"
+  ui_pid="$(read_pid "$UI_PID_FILE")"
+  if is_running "$api_pid" || is_running "$ui_pid"; then
+    stop_all >/dev/null
+    sleep 1
+  fi
+
   if [[ "$mode" == "headless" ]]; then
     nohup env PYTHONPATH="$ROOT" "$PYTHON" "$ROOT/solace_browser_server.py" --port "$API_PORT" --headless >>"$API_LOG" 2>&1 &
   else

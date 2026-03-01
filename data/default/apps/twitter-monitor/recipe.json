@@ -1,0 +1,12 @@
+{
+  "id": "twitter-monitor",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview Twitter Monitor",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

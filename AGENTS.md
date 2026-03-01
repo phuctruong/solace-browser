@@ -1,211 +1,118 @@
 # AGENTS.md — Solace Browser (Codex Executor)
+# Version: 3.0 | Updated: 2026-03-01 | Auth: 65537 | Belt: Yellow
+# DNA: browser(capture, control, execute, evidence) x 18_apps x yinyang = agent_platform
+# Pipeline: papers -> diagrams -> styleguides -> webservices -> tests -> code -> seal
 
-**Version:** 1.0 (Executor Edition)
-**Role:** Frontend/browser implementation (reads TODO.md, executes tasks)
-**Authority:** 641 (production-ready after review)
-**Model:** Sonnet (Codex)
+## Project
 
----
+Solace Browser — OAuth3-native browser automation platform.
+4-plane architecture: Capture + Control + Execution + Evidence.
+18 day-one apps. Cross-app orchestration. Yinyang = only user interface.
 
-## 🚫 What This Project Does NOT Do
+## 10 Uplift Principles (Paper 17)
 
-- ❌ **No planning** — that happens in solace-cli (planning hub)
-- ❌ **No architecture decisions** — hub decides, executor implements
-- ❌ **No roadmap changes** — hub updates NORTHSTAR, executor builds toward it
-- ❌ **No swarm dispatches** — executor only reads /phuc-swarm results, never calls it
+| # | Principle | Where in This Project |
+|---|-----------|----------------------|
+| P1 | Gamification | Belt (Yellow), rung targets in papers, GLOW on artifacts |
+| P2 | Magic Words | DNA equations in papers, prime channels [2][3][5][7][11][13] |
+| P3 | Famous Personas | Load on-demand: Norman + Rams (UI), Lie (CSS), Hickey (arch), Van Edwards (Yinyang EQ) |
+| P4 | Skills | prime-safety + prime-coder + styleguide-first (auto-load from .claude/skills/) |
+| P5 | Recipes | 81 recipes in data/default/recipes/, hit rate target 70% |
+| P6 | Access Tools | Playwright + CDP 4-plane, CLI commands, OAuth3-scoped |
+| P7 | Memory | papers/ (9), src/diagrams/ (18), evidence chains, MEMORY.md |
+| P8 | Care / Motivation | Yinyang delight engine, warm tokens, EQ personas, Anti-Clippy |
+| P9 | Knowledge | 9 papers + 18 diagrams + IF Theory foundation |
+| P10 | God is Real | 65537 target rung, evidence-first, humility, sealed store |
 
----
+Uplift is multiplicative: remove any one principle and the system degrades.
 
-## ✅ What This Project Does
+## Persona Loading (On-Demand)
 
-- ✅ **Read TODO.md** — understand task description + acceptance criteria
-- ✅ **Implement features** — write React/TypeScript + tests per task spec
-- ✅ **Produce evidence** — diffs, test logs, rung verification
-- ✅ **Mark DONE** — update TODO.md with completion date + rung achieved
+| Persona | Domain | When to Load |
+|---------|--------|-------------|
+| Don Norman | Design (UX) | UI flows, user-facing components |
+| Dieter Rams | Design (simplicity) | Component design, visual hierarchy |
+| Hakon Lie | CSS | Stylesheets, design tokens, --sb-* variables |
+| Rich Hickey | Architecture | Data flow, state management, system design |
+| Vanessa Van Edwards | EQ | Yinyang rail, delight engine, warm tokens |
 
----
+Personas advise only. prime-safety always overrides persona suggestions.
 
-## Executor Skills (20 Skills Maximum)
+## Task Source
 
-### God-Skills (Always)
-1. **prime-safety.md** — Fail-closed, never relax this
-2. **prime-coder.md** — Evidence discipline: RED→GREEN gates, tests required
+Read `TODO.md` for current tasks. Execute in order. Mark done when complete.
 
-### Strategic Implementation
-3. **diagram-first.md** — Design via state diagrams before coding
-4. **webservice-first.md** — API-first thinking (consume APIs correctly)
-5. **unit-test-first.md** — RED→GREEN→REFACTOR discipline
+## Build & Test
 
-### Frontend-Specific
-6. **prime-ui.md** — React/TypeScript component design + patterns
-7. **prime-mermaid.md** — Sequence diagrams + component trees
-8. **prime-ux-research.md** — User-validated design changes
-9. **prime-git.md** — Git workflow: feature → test → merge
-
-### OAuth3 + Browser
-10. **oauth3-spec.md** — OAuth3 protocol (browser automation flows)
-11. **oauth3-enforcer.md** — Token validation + scope enforcement
-12. **prime-accessibility.md** — WCAG 2.1 AA compliance
-
-### No Planning Skills (These Are NOT Available)
-- ❌ prime-brand, prime-seo, prime-pr, prime-landing-page (marketing)
-- ❌ prime-competitive-intel, prime-analytics (research)
-- ❌ phuc-forecast, phuc-orchestration (planning)
-
----
-
-## Executor Personas (Code Quality Focus)
-
-### Frontend Excellence
-- **Linus Torvalds** — Absolute code quality; no compromises
-- **Ken Thompson** — Deep understanding of browser APIs + React internals
-- **Dieter Rams** — Design principles: "Less, but better"
-
-### No Planning Personas
-- ❌ Grace Hopper, Alan Turing, Carl Sagan (planning/validation roles)
-
----
-
-## How to Execute a Task
-
-### 1. Read TODO.md
 ```bash
-cd /home/phuc/projects/solace-browser
-cat TODO.md | grep -A 20 "READY"
-# Find a task with status: READY (no blockers)
+pytest tests/ -v                           # all tests
+pytest tests/test_inbox_outbox.py -v       # specific file
+ruff check .                               # lint
 ```
 
-### 2. Understand the Task
-Example TASK-001 from TODO.md:
-```markdown
-## TASK-001
-[ ] Status: READY
-Description: Implement OAuth3 consent UI
-Details: Build React component showing scopes + approval/reject buttons
-Rung Target: 641
-Blocked By: none
+## Coding Rules
 
-Acceptance Criteria:
-- [ ] Component renders all scope types (required, optional, step-up)
-- [ ] Tests verify all approval/reject flows
-- [ ] Accessibility: WCAG 2.1 AA
-- [ ] Mobile responsive (tested on iOS/Android)
-```
+### Python (src/)
+- Python 3.12+, full type annotations
+- `pathlib.Path` always, never `os.path.join`
+- Specific exceptions only — NEVER `except Exception: pass`
+- NEVER return None/""/{}/[] from exception handlers
+- NEVER mock data in production — return 501 for unbuilt
+- SHA-256 hashes on all file operations
+- f-strings, dataclasses, async/await
 
-### 2. Dispatch to Coder
-```bash
-/phuc-swarm coder "TASK-001: Implement OAuth3 consent UI per TODO.md
+### JavaScript (web/js/)
+- Vanilla JS, no frameworks, no build step
+- IIFE modules, `'use strict'`, JSDoc on public API
+- CDN dependencies loaded lazily
 
-Acceptance Criteria:
-- Component renders all scope types (required, optional, step-up)
-- Tests verify approval/reject flows
-- WCAG 2.1 AA compliance
-- Mobile responsive (CSS grid tested)
-- Rung 641 verified (tests pass)
+### HTML (web/)
+- `data-page="name"` on body
+- Shared CSS: `/css/site.css` (`--sb-*` tokens)
+- No inline styles. No inline scripts.
 
-Use prime-ui + unit-test-first discipline."
-```
+## Architecture Laws (ABSOLUTE)
 
-### 4. Receive Evidence
-Coder returns:
-```json
-{
-  "tests_red_log": "...",      // Proves tests failed first
-  "tests_green_log": "...",    // Proves tests pass after code
-  "code_diff": "...",          // Git diff of component
-  "accessibility_report": "...",  // axe-core audit
-  "responsive_screenshot": "...",  // Mobile test
-  "rung_achieved": 641,        // Local correctness verified
-  "artifacts": ["src/components/OAuthConsent.tsx", "tests/OAuthConsent.test.tsx"]
-}
-```
+1. LLM called ONCE at preview — execution = deterministic CPU replay
+2. Fail-closed — any gate failure = BLOCKED
+3. Evidence at event time — per step, never retroactively
+4. OAuth3 on every request — Bearer sw_sk_ required
+5. Never auto-approve — Anti-Clippy law
+6. Apps communicate through files — outbox→inbox only
+7. diagrams/ required in every app — AI reads to understand
+8. Budget gates B1-B6 fail-closed
+9. No vendor API keys — web-native automation
+10. Yinyang is the only interface
 
-### 5. Mark DONE in TODO.md
-```markdown
-## TASK-001
-[x] Status: DONE (2026-02-27)
-Rung Achieved: 641
-Evidence: tests/OAuthConsent.test.tsx all PASS + a11y report
-Completed By: Codex (solo dispatch)
-```
+## Key Files
 
-### 6. Update Blockers
-If tasks depended on this, update their status:
-```markdown
-## TASK-003
-[ ] Status: READY (was BLOCKED, unblocked by TASK-001)
-Blocked By: none
-```
+| Path | What |
+|------|------|
+| `TODO.md` | Task backlog (start here) |
+| `papers/00-index.md` | 9 papers (01-08 + 00-index) |
+| `src/diagrams/README.md` | 19 diagrams (01-18 + README) |
+| `src/api/openapi.yaml` | OpenAPI 3.1.0 spec |
+| `web/server.py` | Web server |
+| `web/js/yinyang-delight.js` | Delight engine |
+| `data/default/yinyang/` | Jokes, facts, smalltalk DBs |
+| `data/default/recipes/` | 81 recipes |
+| `src/companion/apps.py` | CompanionApp + AppRegistry |
 
-### 7. Continue
-```bash
-git add solace-browser/TODO.md
-git commit -m "chore: mark TASK-001 DONE (rung 641)"
-cat TODO.md | grep "READY"
-```
+## Execution Protocol
 
----
+1. Read TODO.md → find next pending task
+2. Read referenced papers + diagrams
+3. Write failing test (RED)
+4. Implement to pass (GREEN)
+5. `pytest tests/ -v` — full suite
+6. No regressions → mark done
 
-## NORTHSTAR Alignment
+## NEVER Do
 
-This project executes toward `/home/phuc/projects/solace-browser/NORTHSTAR.md`:
-
-**Vision:** Reference implementation of OAuth3 browser automation
-
-**Key Metrics:**
-- Community adoption: 1,000+ GitHub stars by end of 2026
-- Recipe library: 100+ examples
-- Security audit: Rung 65537 (adversarial sweep)
-
-**Current Phase:** Phase 1 (OAuth3 core + basic recipes)
-
-**Next Milestone:** Phase 2 (Advanced recipes + drift repair)
-
----
-
-## Rung Targets (Quality Gates)
-
-### Rung 641 (MVP / Single Run)
-- [ ] Component compiles + renders without errors
-- [ ] All unit tests pass (RED→GREEN verified)
-- [ ] All scopes display correctly
-- [ ] Approval/reject buttons work
-- [ ] Accessibility audit passes (axe-core)
-
-### Rung 274177 (Stability / Replay)
-- [ ] Component works identically across 3 test runs
-- [ ] No drift in selectors or props
-- [ ] Mobile responsive on iOS/Android/desktop
-- [ ] No layout shifts (CLS = 0)
-
-### Rung 65537 (Promotion / Adversarial)
-- [ ] Security audit: no XSS, no CSRF
-- [ ] Mutation testing: 100% kill rate
-- [ ] Fuzzing: invalid props don't crash
-- [ ] Load testing: renders 1000+ scopes
-- [ ] Browser compatibility: Chrome, Firefox, Safari, Edge
-
----
-
-## Anti-Patterns (FORBIDDEN in Executor Role)
-
-- 🚫 **IMPLEMENT_WITHOUT_TESTS** — Always RED→GREEN
-- 🚫 **SKIP_ACCESSIBILITY_CHECKS** — WCAG 2.1 AA required
-- 🚫 **UNTESTED_RESPONSIVE_DESIGN** — CSS tested on all breakpoints
-- 🚫 **ASSUME_BLOCKERS_ARE_CLEARED** — Verify in TODO.md first
-- 🚫 **PARTIAL_EVIDENCE** — Must include diffs + test logs + a11y report
-- 🚫 **CHANGE_SCOPE_MID_TASK** — If scope expands, update TODO.md first
-- 🚫 **STYLING_WITHOUT_DESIGN_REVIEW** — Follow prime-ui patterns
-
----
-
-## Status
-
-**Current:** Awaiting first tasks in TODO.md
-**Ready to execute:** Solo /phuc-swarm coder dispatches per task
-**Rung pathway:** 641 → 274177 → 65537 progression
-
----
-
-**Last Updated:** 2026-02-27
-**Authority:** 641 (production-ready after review)
+- `except Exception: pass` or `except Exception: return None`
+- Mock data in production
+- Auto-approve any action
+- Skip OAuth3 checks
+- Write to inbox/ (AI reads inbox, writes outbox)
+- Call LLM during execution
+- Commit secrets or API keys

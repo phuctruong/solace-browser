@@ -1,0 +1,34 @@
+id: morning-brief
+name: Morning Brief
+description: Orchestrate the daily cross-app brief.
+category: productivity
+status: installed
+safety: A
+site: multi-site
+type: orchestrator
+orchestrates:
+- gmail-inbox-triage
+- calendar-brief
+- github-issue-triage
+- slack-triage
+scopes:
+- local.evidence
+partners:
+  produces_for: []
+  consumes_from:
+  - gmail-inbox-triage
+  - calendar-brief
+  - github-issue-triage
+  - slack-triage
+  - twitter-monitor
+  - reddit-scanner
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

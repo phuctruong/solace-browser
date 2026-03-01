@@ -1,0 +1,69 @@
+{
+  "id": "slack-digest",
+  "platform": "slack",
+  "version": "1.0.0",
+  "description": "Collect unread Slack channel activity across a workspace and generate a daily digest with priority buckets and follow-up items.",
+  "author": "codex",
+  "rung": 641,
+  "created": "2026-02-28",
+  "oauth3_scopes": ["channel.slack.read"],
+  "primewiki_reference": "data/default/primewiki/slack/actions.json",
+  "budgets": {
+    "max_reads": 120,
+    "max_sends": 0,
+    "max_deletes": 0,
+    "max_llm_calls": 2,
+    "max_duration_seconds": 240
+  },
+  "mermaid_fsm": "stateDiagram-v2\n  [*] --> NavigateWorkspace\n  NavigateWorkspace --> CollectUnreadChannels: workspace_loaded\n  CollectUnreadChannels --> ExtractMessages: channels_identified\n  ExtractMessages --> SummarizeDigest: messages_collected\n  SummarizeDigest --> SaveDigest: digest_ready\n  SaveDigest --> CaptureEvidence: saved\n  CaptureEvidence --> [*]",
+  "steps": [
+    {
+      "step_id": "step_01_navigate_workspace",
+      "action": "navigate",
+      "description": "Open the Slack workspace home and wait for the sidebar and unread badges to render.",
+      "selector": ".p-channel_sidebar",
+      "scope_required": "channel.slack.read",
+      "timeout_ms": 15000
+    },
+    {
+      "step_id": "step_02_collect_unread_channels",
+      "action": "extract",
+      "description": "Extract unread channels from the sidebar, including channel name, unread indicator, and destination URL.",
+      "selector": ".p-channel_sidebar [data-qa='channel_sidebar_name']",
+      "scope_required": "channel.slack.read",
+      "timeout_ms": 10000
+    },
+    {
+      "step_id": "step_03_extract_messages",
+      "action": "extract",
+      "description": "Read the latest unread messages from each selected channel and normalize them into a digest input list.",
+      "selector": "[data-qa='virtual-list-item']",
+      "scope_required": "channel.slack.read",
+      "timeout_ms": 20000
+    },
+    {
+      "step_id": "step_04_summarize_digest",
+      "action": "summarize",
+      "description": "Generate a digest grouped into blockers, decisions, questions, and FYI sections with attribution.",
+      "selector": null,
+      "scope_required": "llm.generate.text",
+      "timeout_ms": 20000
+    },
+    {
+      "step_id": "step_05_save_digest",
+      "action": "save",
+      "description": "Persist the digest to the local outbox for downstream review and replay.",
+      "selector": null,
+      "scope_required": "outbox.write",
+      "timeout_ms": 5000
+    },
+    {
+      "step_id": "step_06_capture_evidence",
+      "action": "capture",
+      "description": "Capture a final evidence snapshot of the unread queue used for the digest.",
+      "selector": null,
+      "scope_required": "channel.slack.read",
+      "timeout_ms": 8000
+    }
+  ]
+}

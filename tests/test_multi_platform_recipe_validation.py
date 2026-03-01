@@ -112,8 +112,11 @@ class TestTask007MultiPlatformRecipeValidation:
             ("data/default/recipes/reddit/reddit-browse-subreddit.json", "data/default/primewiki/reddit/actions.json"),
             ("data/default/recipes/hackernews/hn-read-frontpage.json", "data/default/primewiki/hackernews/actions.json"),
             ("data/default/recipes/slack/slack-channel-summary.json", "data/default/primewiki/slack/actions.json"),
+            ("data/default/recipes/slack/slack-digest.json", "data/default/primewiki/slack/actions.json"),
             ("data/default/recipes/github/github-issue-triage.json", "data/default/primewiki/github/actions.json"),
+            ("data/default/recipes/github/github-pr-review.json", "data/default/primewiki/github/actions.json"),
             ("data/default/recipes/notion/notion-page-reader.json", "data/default/primewiki/notion/actions.json"),
+            ("data/default/recipes/notion/notion-daily.json", "data/default/primewiki/notion/actions.json"),
         ],
     )
     def test_scope_requirements_match_primewiki(self, recipe_rel: str, actions_rel: str):
@@ -181,8 +184,11 @@ class TestTask007MultiPlatformRecipeValidation:
     def test_new_recipes_exist_with_required_fields(self):
         new_recipes = [
             PROJECT_ROOT / "data/default/recipes/slack/slack-channel-summary.json",
+            PROJECT_ROOT / "data/default/recipes/slack/slack-digest.json",
             PROJECT_ROOT / "data/default/recipes/github/github-issue-triage.json",
+            PROJECT_ROOT / "data/default/recipes/github/github-pr-review.json",
             PROJECT_ROOT / "data/default/recipes/notion/notion-page-reader.json",
+            PROJECT_ROOT / "data/default/recipes/notion/notion-daily.json",
         ]
         required_fields = {"id", "platform", "oauth3_scopes", "budgets", "steps", "mermaid_fsm", "primewiki_reference"}
 
@@ -195,6 +201,11 @@ class TestTask007MultiPlatformRecipeValidation:
             assert isinstance(recipe["budgets"], dict) and recipe["budgets"]
             assert isinstance(recipe["steps"], list) and recipe["steps"]
             assert "stateDiagram" in recipe["mermaid_fsm"]
+            for step in recipe["steps"]:
+                assert isinstance(step, dict)
+                assert isinstance(step.get("step_id"), str) and step["step_id"]
+                assert isinstance(step.get("action"), str) and step["action"]
+                assert isinstance(step.get("scope_required"), str) and step["scope_required"]
 
             primewiki_path = PROJECT_ROOT / recipe["primewiki_reference"]
             assert primewiki_path.exists(), f"PrimeWiki reference not found: {primewiki_path}"

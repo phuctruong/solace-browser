@@ -539,6 +539,7 @@ class SolaceBrowser:
             launch_args.extend([
                 '--start-maximized',
                 '--disable-features=UseSkiaRenderer',
+                '--class=SolaceBrowser',
             ])
 
         self.browser = await playwright.chromium.launch(

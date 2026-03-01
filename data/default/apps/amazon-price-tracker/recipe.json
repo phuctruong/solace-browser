@@ -1,0 +1,12 @@
+{
+  "id": "amazon-price-tracker",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview Amazon Price Tracker",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

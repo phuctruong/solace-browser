@@ -1,0 +1,12 @@
+{
+  "id": "twitter-poster",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview Twitter Poster",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

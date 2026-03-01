@@ -1,0 +1,28 @@
+id: calendar-brief
+name: Calendar Brief
+description: Summarize the day and surface upcoming constraints.
+category: productivity
+status: installed
+safety: A
+site: calendar.google.com
+type: standard
+orchestrates: []
+scopes:
+- calendar.read.events
+- local.evidence
+partners:
+  produces_for:
+  - morning-brief
+  - lead-pipeline
+  consumes_from:
+  - gmail-inbox-triage
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

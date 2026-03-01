@@ -1,0 +1,12 @@
+{
+  "id": "linkedin-outreach",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview LinkedIn Outreach",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

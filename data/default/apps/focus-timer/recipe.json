@@ -1,0 +1,12 @@
+{
+  "id": "focus-timer",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview Focus Timer",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

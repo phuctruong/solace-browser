@@ -32,6 +32,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 
@@ -212,6 +213,35 @@ class AppManifest:
         )
         digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
         return f"sha256:{digest}"
+
+
+@dataclass(frozen=True)
+class InstalledAppRecord:
+    """Filesystem record for an installed day-one app."""
+
+    app_id: str
+    app_root: Path
+    manifest_path: Path
+
+
+def discover_installed_apps(apps_root: str | Path) -> List[InstalledAppRecord]:
+    """Return installed app folders that include a manifest."""
+
+    root = Path(apps_root).expanduser().resolve()
+    if not root.exists():
+        return []
+
+    records: List[InstalledAppRecord] = []
+    for manifest_path in sorted(root.glob("*/manifest.yaml")):
+        app_root = manifest_path.parent
+        records.append(
+            InstalledAppRecord(
+                app_id=app_root.name,
+                app_root=app_root,
+                manifest_path=manifest_path,
+            )
+        )
+    return records
 
 
 # ---------------------------------------------------------------------------

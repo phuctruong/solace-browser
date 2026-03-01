@@ -1,0 +1,12 @@
+{
+  "id": "google-drive-saver",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview Google Drive Saver",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

@@ -1,0 +1,69 @@
+{
+  "id": "github-pr-review",
+  "platform": "github",
+  "version": "1.0.0",
+  "description": "Review open pull requests for a repository, summarize risk areas, and draft a reviewer checklist for each PR.",
+  "author": "codex",
+  "rung": 641,
+  "created": "2026-02-28",
+  "oauth3_scopes": ["github.read.issues"],
+  "primewiki_reference": "data/default/primewiki/github/actions.json",
+  "budgets": {
+    "max_reads": 80,
+    "max_sends": 0,
+    "max_deletes": 0,
+    "max_llm_calls": 3,
+    "max_duration_seconds": 240
+  },
+  "mermaid_fsm": "stateDiagram-v2\n  [*] --> NavigatePullRequests\n  NavigatePullRequests --> ExtractPullRequestList: prs_loaded\n  ExtractPullRequestList --> ExtractPullRequestDetails: list_ready\n  ExtractPullRequestDetails --> SummarizeReviewRisk: details_ready\n  SummarizeReviewRisk --> SaveReviewPacket: packet_ready\n  SaveReviewPacket --> CaptureEvidence: saved\n  CaptureEvidence --> [*]",
+  "steps": [
+    {
+      "step_id": "step_01_navigate_pull_requests",
+      "action": "navigate",
+      "description": "Open the repository pull requests tab and wait for the pull request rows to render.",
+      "selector": "[data-testid='issue-row']",
+      "scope_required": "github.read.issues",
+      "timeout_ms": 15000
+    },
+    {
+      "step_id": "step_02_extract_pull_request_list",
+      "action": "extract",
+      "description": "Extract open pull requests including title, author, labels, review status, and updated timestamp.",
+      "selector": "[data-testid='issue-row']",
+      "scope_required": "github.read.issues",
+      "timeout_ms": 10000
+    },
+    {
+      "step_id": "step_03_extract_pull_request_details",
+      "action": "extract",
+      "description": "Read the PR description, changed files summary, and recent review comments for each candidate PR.",
+      "selector": ".js-comment-body",
+      "scope_required": "github.read.issues",
+      "timeout_ms": 30000
+    },
+    {
+      "step_id": "step_04_summarize_review_risk",
+      "action": "summarize",
+      "description": "Produce a concise review brief with risk areas, missing tests, and recommended reviewer focus points.",
+      "selector": null,
+      "scope_required": "llm.generate.text",
+      "timeout_ms": 20000
+    },
+    {
+      "step_id": "step_05_save_review_packet",
+      "action": "save",
+      "description": "Write the review packet to the local outbox as markdown.",
+      "selector": null,
+      "scope_required": "outbox.write",
+      "timeout_ms": 5000
+    },
+    {
+      "step_id": "step_06_capture_evidence",
+      "action": "capture",
+      "description": "Capture the PR queue used to assemble the review packet.",
+      "selector": null,
+      "scope_required": "github.read.issues",
+      "timeout_ms": 8000
+    }
+  ]
+}

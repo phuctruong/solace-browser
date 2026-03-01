@@ -115,7 +115,7 @@ export const MEMBERSHIP_PLANS = [
   },
   {
     id: "pro",
-    name: "Dragon Warrior",
+    name: "Solace Pro",
     priceLabel: "$8/month",
     current: true,
     features: ["Unlimited apps", "Managed LLM routing", "Replay history + outbox"],

@@ -1,0 +1,12 @@
+{
+  "id": "calendar-brief",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview Calendar Brief",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

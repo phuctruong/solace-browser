@@ -1,0 +1,12 @@
+{
+  "id": "github-issue-triage",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview GitHub Issue Triage",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

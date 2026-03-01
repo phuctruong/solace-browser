@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Settings | Solace Browser</title>
+  <meta name="description" content="Configure Solace Browser: account, history, LLM, tunnel, Part 11, privacy, Yinyang, and about.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/yinyang-delight.js" defer></script>
+  <script src="/js/solace.js" defer></script>
+</head>
+<body data-page="settings">
+  <div class="site-shell">
+    <div class="page-frame">
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a class="site-brand" href="/">
+            <span class="site-brand__icon">SB</span>
+            <span class="site-brand__text">
+              <span class="site-brand__name">Solace Browser</span>
+              <span class="site-brand__tag">OAuth3 web + machine + cloud</span>
+            </span>
+          </a>
+          <nav class="site-nav" aria-label="Primary">
+            <a class="nav-link" data-nav-path="/" href="/">Home</a>
+            <a class="nav-link" data-nav-path="/app-store" href="/app-store">Apps</a>
+            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
+            <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect">Tunnel</a>
+            <a class="nav-link" data-nav-path="/settings" href="/settings">Settings</a>
+            <a class="nav-link nav-link--accent" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener">Full product</a>
+          </nav>
+          <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+        </div>
+      </header>
+      <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu__section">
+          <h3>Surfaces</h3>
+          <a data-nav-path="/" href="/">Home</a>
+          <a data-nav-path="/app-store" href="/app-store">App Store</a>
+          <a data-nav-path="/settings" href="/settings">Settings</a>
+        </div>
+      </div>
+
+      <main>
+        <section class="hero reveal">
+          <div>
+            <div class="eyebrow">Persisted to ~/.solace/settings.json | Hot-reloaded on change</div>
+            <h1 class="display">Settings</h1>
+            <p class="lead">All configuration stored locally. No cloud dependency. Changes take effect immediately.</p>
+          </div>
+        </section>
+
+        <!-- Account -->
+        <section class="page-section reveal" id="account">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Account</h2>
+              <p class="section-copy">Authentication status and API key management.</p>
+            </div>
+          </div>
+          <article class="data-panel">
+            <div data-settings-section="account">
+            <div class="data-grid">
+              <div>
+                <table class="data-table">
+                  <tbody>
+                    <tr><td><strong>Status</strong></td><td><span class="status-tag status-tag--success">Logged in</span></td></tr>
+                    <tr><td><strong>User</strong></td><td>phuc@solaceagi.com</td></tr>
+                    <tr><td><strong>API Key</strong></td><td><code>sw_sk_****...****7f3a</code> <span class="status-tag status-tag--success">valid</span></td></tr>
+                    <tr><td><strong>Tier</strong></td><td>Pro ($8/mo)</td></tr>
+                    <tr><td><strong>Key stored</strong></td><td><code>~/.solace/vault.enc</code> (AES-256-GCM)</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div>
+                <div class="button-row" style="flex-direction:column;gap:12px">
+                  <button class="btn btn-secondary" style="width:100%">Rotate API key</button>
+                  <button class="btn btn-secondary" style="width:100%;color:var(--sb-danger)">Log out</button>
+                </div>
+              </div>
+            </div>
+            </div>
+            <div class="button-row" style="margin-top:18px">
+              <button class="btn btn-secondary" data-settings-save="account" type="button">Save account</button>
+            </div>
+          </article>
+        </section>
+
+        <!-- History / Capture -->
+        <section class="page-section reveal" id="history">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">History &amp; Capture</h2>
+              <p class="section-copy">Browsing history capture with PZip Stillwater compression.</p>
+            </div>
+          </div>
+          <article class="data-panel">
+            <div data-settings-section="history">
+            <table class="data-table">
+              <tbody>
+                <tr>
+                  <td><strong>History enabled</strong></td>
+                  <td><span class="status-tag status-tag--success">on</span></td>
+                  <td>Capture page loads to <code>~/.solace/history/</code></td>
+                </tr>
+                <tr>
+                  <td><strong>Screenshots</strong></td>
+                  <td><span class="status-tag status-tag--neutral">off</span></td>
+                  <td>Requires login. PNG on each page load.</td>
+                </tr>
+                <tr>
+                  <td><strong>PZip sync</strong></td>
+                  <td><span class="status-tag status-tag--success">on</span></td>
+                  <td>Sync ripples to Stillwater central DB</td>
+                </tr>
+                <tr>
+                  <td><strong>Prime Wiki</strong></td>
+                  <td><span class="status-tag status-tag--success">on</span></td>
+                  <td>Contribute sitemaps (free user data)</td>
+                </tr>
+                <tr>
+                  <td><strong>Prime Mermaid</strong></td>
+                  <td><span class="status-tag status-tag--success">on</span></td>
+                  <td>Page snapshot as Mermaid FSM</td>
+                </tr>
+                <tr>
+                  <td><strong>Storage dir</strong></td>
+                  <td colspan="2"><code>~/.solace/history/</code></td>
+                </tr>
+                <tr>
+                  <td><strong>Max storage</strong></td>
+                  <td colspan="2">10.0 GB (ripples are tiny; years of history)</td>
+                </tr>
+                <tr>
+                  <td><strong>Exclude domains</strong></td>
+                  <td colspan="2"><code>localhost, 127.0.0.1</code></td>
+                </tr>
+              </tbody>
+            </table>
+            </div>
+            <div class="button-row" style="margin-top:18px">
+              <button class="btn btn-secondary" data-settings-save="history" type="button">Save history</button>
+            </div>
+          </article>
+        </section>
+
+        <!-- LLM Configuration -->
+        <section class="page-section reveal" id="llm">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">LLM Backend</h2>
+              <p class="section-copy">Choose how the browser calls LLMs. BYOK = bring your own key, zero markup.</p>
+            </div>
+          </div>
+          <article class="data-panel">
+            <div data-settings-section="llm">
+            <div class="kpi-grid">
+              <div class="kpi-card" style="border:2px solid var(--sb-accent)">
+                <strong>Claude Code (dev)</strong>
+                <span>localhost:8080 wrapper. Best for local development.</span>
+                <span class="status-tag status-tag--success" style="margin-top:8px">active</span>
+              </div>
+              <div class="kpi-card">
+                <strong>Together.ai (prod)</strong>
+                <span>Llama 3.3 70B at $0.59/M tokens. Managed, no key needed.</span>
+                <span class="status-tag status-tag--neutral" style="margin-top:8px">available</span>
+              </div>
+              <div class="kpi-card">
+                <strong>None (offline)</strong>
+                <span>Recipes replay from sealed outbox only. Zero LLM cost.</span>
+                <span class="status-tag status-tag--neutral" style="margin-top:8px">available</span>
+              </div>
+            </div>
+            <table class="data-table" style="margin-top:18px">
+              <tbody>
+                <tr><td><strong>Backend</strong></td><td><code>claude_code</code></td></tr>
+                <tr><td><strong>Model</strong></td><td>claude-sonnet-4-6</td></tr>
+                <tr><td><strong>Endpoint</strong></td><td><code>http://localhost:8080</code></td></tr>
+                <tr><td><strong>BYOK key</strong></td><td>Not set (using managed)</td></tr>
+              </tbody>
+            </table>
+            </div>
+            <div class="button-row" style="margin-top:18px">
+              <button class="btn btn-secondary" data-settings-save="llm" type="button">Save LLM</button>
+            </div>
+          </article>
+        </section>
+
+        <!-- Tunnel -->
+        <section class="page-section reveal" id="tunnel">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Tunnel</h2>
+              <p class="section-copy">Expose local browser to cloud via Cloudflare tunnel. Approval required.</p>
+            </div>
+          </div>
+          <article class="data-panel">
+            <div data-settings-section="tunnel">
+            <table class="data-table">
+              <tbody>
+                <tr><td><strong>Tunnel enabled</strong></td><td><span class="status-tag status-tag--neutral">off</span></td></tr>
+                <tr><td><strong>Provider</strong></td><td>Cloudflare (cloudflared)</td></tr>
+                <tr><td><strong>Public URL</strong></td><td>Not connected</td></tr>
+                <tr><td><strong>Approval</strong></td><td>Required before every connect (fail-closed)</td></tr>
+              </tbody>
+            </table>
+            </div>
+            <div class="button-row" style="margin-top:18px">
+              <button class="btn btn-secondary" data-settings-save="tunnel" type="button">Save tunnel</button>
+            </div>
+          </article>
+        </section>
+
+        <!-- Part 11 -->
+        <section class="page-section reveal" id="part11">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Part 11 Compliance</h2>
+              <p class="section-copy">FDA 21 CFR Part 11 evidence mode. ALCOA+ compliant hash-chained audit trail.</p>
+            </div>
+          </div>
+          <article class="data-panel">
+            <div data-settings-section="part11">
+            <table class="data-table">
+              <tbody>
+                <tr><td><strong>Part 11 mode</strong></td><td><span class="status-tag status-tag--success">on</span></td></tr>
+                <tr>
+                  <td><strong>Evidence mode</strong></td>
+                  <td>
+                    <span class="status-tag status-tag--success">data</span>
+                    — Hash chain + Prime Mermaid snapshots. No screenshots.
+                  </td>
+                </tr>
+                <tr><td><strong>Audit dir</strong></td><td><code>~/.solace/audit/</code></td></tr>
+                <tr><td><strong>E-signing</strong></td><td><span class="status-tag status-tag--success">enabled</span> (logged-in users only)</td></tr>
+                <tr><td><strong>Cloud sync</strong></td><td>Push audit chain to Evidence Vault (90-day retention)</td></tr>
+                <tr><td><strong>Chain status</strong></td><td><span class="status-tag status-tag--success">valid</span> — 247 entries, no breaks</td></tr>
+              </tbody>
+            </table>
+            <div class="kpi-grid" style="margin-top:18px">
+              <div class="kpi-card">
+                <strong>ALCOA+ Properties</strong>
+                <span>Attributable, Legible, Contemporaneous, Original, Accurate + Complete, Consistent, Enduring, Available</span>
+              </div>
+              <div class="kpi-card">
+                <strong>Evidence Modes</strong>
+                <span><strong>off</strong> = no capture. <strong>data</strong> = hash chain + PM snapshots. <strong>visual</strong> = data + screenshots + MHTML.</span>
+              </div>
+              <div class="kpi-card">
+                <strong>E-Signature</strong>
+                <span>user_id + timestamp + meaning + SHA256(record). Cannot be detached (Part 11 §11.70).</span>
+              </div>
+            </div>
+            </div>
+            <div class="button-row" style="margin-top:18px">
+              <button class="btn btn-secondary" data-settings-save="part11" type="button">Save Part 11</button>
+            </div>
+          </article>
+        </section>
+
+        <!-- Privacy -->
+        <section class="page-section reveal" id="privacy">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Privacy</h2>
+              <p class="section-copy">Local-first. All data stays on your machine unless you opt into cloud sync.</p>
+            </div>
+          </div>
+          <article class="data-panel">
+            <div data-settings-section="privacy">
+            <div class="data-grid">
+              <div>
+                <ul class="data-list">
+                  <li><strong>History stored locally</strong> — <code>~/.solace/history/</code></li>
+                  <li><strong>Vault encrypted</strong> — AES-256-GCM with PBKDF2</li>
+                  <li><strong>Tokens in memory only</strong> — Never written to disk in browser</li>
+                  <li><strong>Cloud sync optional</strong> — Evidence + settings sync opt-in</li>
+                </ul>
+              </div>
+              <div>
+                <div class="button-row" style="flex-direction:column;gap:12px">
+                  <button class="btn btn-secondary" style="width:100%">Clear history</button>
+                  <button class="btn btn-secondary" style="width:100%">Export all data</button>
+                  <button class="btn btn-secondary" style="width:100%;color:var(--sb-danger)">Delete all data</button>
+                </div>
+              </div>
+            </div>
+            </div>
+            <div class="button-row" style="margin-top:18px">
+              <button class="btn btn-secondary" data-settings-save="privacy" type="button">Save privacy</button>
+            </div>
+          </article>
+        </section>
+
+        <!-- Yinyang -->
+        <section class="page-section reveal" id="yinyang">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Yinyang Chat Rail</h2>
+              <p class="section-copy">Dual rail: top (32px status) + bottom (36-300px chat). Never interrupts unless approval needed.</p>
+            </div>
+          </div>
+          <article class="data-panel">
+            <div data-settings-section="yinyang">
+            <table class="data-table">
+              <tbody>
+                <tr><td><strong>Top rail</strong></td><td><span class="status-tag status-tag--success">on</span> — 32px status bar, always visible during runs</td></tr>
+                <tr><td><strong>Bottom rail</strong></td><td><span class="status-tag status-tag--success">on</span> — 36px collapsed, 300px expanded. User-summoned.</td></tr>
+                <tr><td><strong>Auto-expand</strong></td><td>Only for PREVIEW_READY, BLOCKED, ERROR</td></tr>
+                <tr><td><strong>LLM backend</strong></td><td>Follows LLM Backend setting above</td></tr>
+                <tr><td><strong>Max transcript</strong></td><td>24 messages per session</td></tr>
+                <tr><td><strong>Session TTL</strong></td><td>30 min inactivity</td></tr>
+              </tbody>
+            </table>
+            </div>
+            <div class="button-row" style="margin-top:18px">
+              <button class="btn btn-secondary" data-settings-save="yinyang" type="button">Save Yinyang</button>
+            </div>
+          </article>
+        </section>
+
+        <!-- About -->
+        <section class="page-section reveal" id="about">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">About</h2>
+            </div>
+          </div>
+          <article class="data-panel">
+            <div data-settings-section="about">
+            <table class="data-table">
+              <tbody>
+                <tr><td><strong>Version</strong></td><td>0.5.0-dev</td></tr>
+                <tr><td><strong>Build</strong></td><td>source (not compiled)</td></tr>
+                <tr><td><strong>Chrome</strong></td><td>Bundled Chromium (Playwright)</td></tr>
+                <tr><td><strong>Auth proxy</strong></td><td>:9222 (public) &rarr; :9225 (hidden CDP)</td></tr>
+                <tr><td><strong>Web UI</strong></td><td>:8791 (this page)</td></tr>
+                <tr><td><strong>Config</strong></td><td><code>~/.solace/settings.json</code></td></tr>
+                <tr><td><strong>Vault</strong></td><td><code>~/.solace/vault.enc</code></td></tr>
+                <tr><td><strong>License</strong></td><td>MIT (OSS)</td></tr>
+              </tbody>
+            </table>
+            <div class="button-row" style="margin-top:18px">
+              <a class="btn btn-secondary" href="https://github.com/solaceagi/solace-browser" target="_blank" rel="noopener">GitHub</a>
+              <a class="btn btn-secondary" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener">Product page</a>
+            </div>
+            </div>
+            <div class="button-row" style="margin-top:18px">
+              <button class="btn btn-secondary" data-settings-save="about" type="button">Save about</button>
+            </div>
+          </article>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="site-footer__inner">
+          <div>© <span data-current-year></span> Solace Browser. Local-first. Your data, your machine.</div>
+          <div class="site-footer__links">
+            <a href="/app-store">Apps</a>
+            <a href="/">Home</a>
+            <a href="https://github.com/solaceagi/solace-browser" target="_blank" rel="noopener">GitHub</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

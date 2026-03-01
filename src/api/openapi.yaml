@@ -1,0 +1,632 @@
+openapi: 3.1.0
+info:
+  title: Solace Browser API
+  version: 0.5.0
+  description: |
+    Solace Browser local API. Four independent planes:
+    - Capture Plane (always-on, no auth)
+    - Control Plane (requires Bearer sw_sk_ token)
+    - Execution Plane (requires OAuth3 scoped token)
+    - Evidence Plane (always-on)
+
+    Auth proxy on :9222, real Chrome CDP hidden on :9225.
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:9222
+    description: Auth proxy (local)
+  - url: http://localhost:8791
+    description: Web UI (local)
+
+tags:
+  - name: auth
+    description: Authentication and token management
+  - name: apps
+    description: App store and app management
+  - name: inbox
+    description: App inbox (user customization)
+  - name: outbox
+    description: App outbox (AI output)
+  - name: execution
+    description: Recipe execution lifecycle
+  - name: evidence
+    description: Evidence chain and audit trail
+  - name: capture
+    description: Browsing history and PZip capture
+  - name: settings
+    description: Browser settings management
+  - name: control
+    description: Browser control plane (navigate, click, type)
+  - name: health
+    description: Health check and status
+
+paths:
+  /api/health:
+    get:
+      tags: [health]
+      summary: Health check
+      operationId: getHealth
+      responses:
+        '200':
+          description: Browser is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [healthy] }
+                  version: { type: string }
+                  planes:
+                    type: object
+                    properties:
+                      capture: { type: string, enum: [active, disabled] }
+                      control: { type: string, enum: [active, locked] }
+                      execution: { type: string, enum: [active, locked] }
+                      evidence: { type: string, enum: [active, disabled] }
+
+  /api/auth/verify:
+    get:
+      tags: [auth]
+      summary: Verify API key validity
+      operationId: verifyAuth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Key is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthStatus'
+        '401':
+          description: Invalid or expired key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/apps:
+    get:
+      tags: [apps]
+      summary: List all available apps
+      operationId: listApps
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [communications, productivity, sales, engineering, finance]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [available, beta, coming_soon, installed]
+      responses:
+        '200':
+          description: App list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apps:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AppSummary'
+
+  /api/apps/{appId}:
+    get:
+      tags: [apps]
+      summary: Get app details with inbox/outbox status
+      operationId: getApp
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: App detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppDetail'
+        '404':
+          description: App not found
+
+  /api/apps/{appId}/inbox:
+    get:
+      tags: [inbox]
+      summary: List inbox files for an app
+      operationId: listInbox
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Inbox file listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InboxListing'
+
+  /api/apps/{appId}/outbox:
+    get:
+      tags: [outbox]
+      summary: List outbox items for an app
+      operationId: listOutbox
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Outbox item listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboxListing'
+
+  /api/apps/{appId}/execute:
+    post:
+      tags: [execution]
+      summary: Trigger app execution (preview phase)
+      operationId: executeApp
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trigger: { type: string, enum: [manual, schedule] }
+      responses:
+        '200':
+          description: Execution started, preview generating
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionStatus'
+        '403':
+          description: Budget exceeded or scope denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/apps/{appId}/runs:
+    get:
+      tags: [execution]
+      summary: List execution runs for an app
+      operationId: listRuns
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Run history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  runs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RunSummary'
+
+  /api/apps/{appId}/runs/{runId}/approve:
+    post:
+      tags: [execution]
+      summary: Approve a preview (transitions PREVIEW_READY -> APPROVED)
+      operationId: approveRun
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                meaning:
+                  type: string
+                  enum: [reviewed, approved, authored, responsible]
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Approved, entering cooldown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionStatus'
+        '408':
+          description: Approval timeout (30s expired, treated as deny)
+
+  /api/evidence/chain:
+    get:
+      tags: [evidence]
+      summary: Get evidence chain status
+      operationId: getEvidenceChain
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Chain status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidenceChainStatus'
+
+  /api/evidence/chain/{runId}:
+    get:
+      tags: [evidence]
+      summary: Get evidence entries for a specific run
+      operationId: getRunEvidence
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Run evidence entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EvidenceEntry'
+
+  /api/capture/history:
+    get:
+      tags: [capture]
+      summary: List browsing history captures
+      operationId: listHistory
+      parameters:
+        - name: domain
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Capture history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  captures:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CaptureEntry'
+
+  /api/settings:
+    get:
+      tags: [settings]
+      summary: Get all settings
+      operationId: getSettings
+      responses:
+        '200':
+          description: Current settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+    put:
+      tags: [settings]
+      summary: Update settings (hot-reload)
+      operationId: updateSettings
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Settings'
+      responses:
+        '200':
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+
+  /rpc:
+    post:
+      tags: [control]
+      summary: JSON-RPC control plane
+      description: |
+        Methods: navigate, click, type, screenshot, evaluate.
+        Requires Bearer sw_sk_ token. All actions checked against OAuth3 scope gates.
+      operationId: rpc
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, params]
+              properties:
+                method:
+                  type: string
+                  enum: [navigate, click, type, screenshot, evaluate, aria_snapshot, dom_snapshot]
+                params:
+                  type: object
+                id:
+                  type: string
+      responses:
+        '200':
+          description: RPC result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result: {}
+                  id: { type: string }
+        '401':
+          description: Invalid or missing auth token
+        '403':
+          description: OAuth3 scope denied for this action
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer sw_sk_ API key from solaceagi.com
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        code: { type: string }
+
+    AuthStatus:
+      type: object
+      properties:
+        valid: { type: boolean }
+        user_id: { type: string }
+        tier: { type: string, enum: [free, pro, enterprise] }
+        last_used: { type: string, format: date-time }
+
+    AppSummary:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string }
+        status: { type: string, enum: [available, beta, coming_soon, installed] }
+        safety: { type: string, enum: [A, B, C] }
+        site: { type: string }
+
+    AppDetail:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        category: { type: string }
+        safety: { type: string }
+        site: { type: string }
+        scopes:
+          type: array
+          items: { type: string }
+        budgets:
+          type: object
+          additionalProperties: { type: integer }
+        inbox:
+          $ref: '#/components/schemas/InboxListing'
+        outbox:
+          $ref: '#/components/schemas/OutboxListing'
+
+    InboxListing:
+      type: object
+      properties:
+        prompts:
+          type: array
+          items:
+            $ref: '#/components/schemas/InboxFile'
+        templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/InboxFile'
+        assets:
+          type: array
+          items:
+            $ref: '#/components/schemas/InboxFile'
+        policies:
+          type: array
+          items:
+            $ref: '#/components/schemas/InboxFile'
+        datasets:
+          type: array
+          items:
+            $ref: '#/components/schemas/InboxFile'
+
+    InboxFile:
+      type: object
+      properties:
+        name: { type: string }
+        status: { type: string, enum: [loaded, optional, missing] }
+        size_bytes: { type: integer }
+
+    OutboxListing:
+      type: object
+      properties:
+        previews:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutboxItem'
+        drafts:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutboxItem'
+        reports:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutboxItem'
+        suggestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutboxItem'
+        runs:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutboxItem'
+
+    OutboxItem:
+      type: object
+      properties:
+        name: { type: string }
+        status: { type: string, enum: [pending_approval, delivered, sealed, suggested] }
+        created_at: { type: string, format: date-time }
+
+    ExecutionStatus:
+      type: object
+      properties:
+        run_id: { type: string }
+        app_id: { type: string }
+        state:
+          type: string
+          enum: [TRIGGER, INTENT, BUDGET_CHECK, PREVIEW, PREVIEW_READY, APPROVED, EDITED, REJECTED, TIMEOUT, COOLDOWN, E_SIGN, SEALED, EXECUTING, DONE, FAILED, BLOCKED, SEALED_ABORT, EVIDENCE_SEAL]
+        preview: { type: string }
+        cooldown_seconds: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    RunSummary:
+      type: object
+      properties:
+        run_id: { type: string }
+        trigger: { type: string, enum: [manual, schedule] }
+        actions_summary: { type: string }
+        cost_usd: { type: number }
+        state: { type: string }
+        created_at: { type: string, format: date-time }
+
+    EvidenceChainStatus:
+      type: object
+      properties:
+        total_entries: { type: integer }
+        chain_valid: { type: boolean }
+        mode: { type: string, enum: [off, data, visual] }
+        last_entry_at: { type: string, format: date-time }
+
+    EvidenceEntry:
+      type: object
+      properties:
+        entry_id: { type: string }
+        run_id: { type: string }
+        action_type: { type: string }
+        token_id: { type: string }
+        timestamp: { type: string, format: date-time }
+        input_hash: { type: string }
+        output_hash: { type: string }
+        chain_hash: { type: string }
+        prev_hash: { type: string }
+        scope_verified: { type: boolean }
+        realm_origin: { type: string, enum: [local, browser, cloud] }
+
+    CaptureEntry:
+      type: object
+      properties:
+        domain: { type: string }
+        url: { type: string }
+        timestamp: { type: string, format: date-time }
+        format: { type: string, enum: [html, ripple] }
+        has_screenshot: { type: boolean }
+        size_bytes: { type: integer }
+
+    Settings:
+      type: object
+      properties:
+        account:
+          type: object
+          properties:
+            status: { type: string }
+            user: { type: string }
+            tier: { type: string }
+        history:
+          type: object
+          properties:
+            enabled: { type: boolean }
+            screenshots: { type: boolean }
+            pzip_sync: { type: boolean }
+            prime_wiki: { type: boolean }
+            prime_mermaid: { type: boolean }
+            max_gb: { type: number }
+            exclude_domains:
+              type: array
+              items: { type: string }
+        llm:
+          type: object
+          properties:
+            backend: { type: string, enum: [claude_code, together, none] }
+            model: { type: string }
+            endpoint: { type: string }
+            byok_key: { type: string }
+        tunnel:
+          type: object
+          properties:
+            enabled: { type: boolean }
+            provider: { type: string }
+        part11:
+          type: object
+          properties:
+            enabled: { type: boolean }
+            mode: { type: string, enum: [off, data, visual] }
+            esigning: { type: boolean }
+        yinyang:
+          type: object
+          properties:
+            top_rail: { type: boolean }
+            bottom_rail: { type: boolean }
+            max_transcript: { type: integer }
+            session_ttl_min: { type: integer }

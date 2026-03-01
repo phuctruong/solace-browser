@@ -1,0 +1,27 @@
+id: instagram-poster
+name: Instagram Poster
+description: Draft and publish Instagram posts after approval.
+category: social
+status: installed
+safety: C
+site: instagram.com
+type: standard
+orchestrates: []
+scopes:
+- instagram.read.feed
+- instagram.write.posts
+- local.evidence
+partners:
+  produces_for: []
+  consumes_from:
+  - weekly-digest
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

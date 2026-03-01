@@ -1,7 +1,7 @@
 # solace-browser Diagram Index
 
-**Sources:** 8 files (7 active + 1 deprecated), ~4.5 KB
-**Purpose:** Mermaid diagrams for solace-browser runtime: auth, recipe execution, evidence, approval, session management, and customization. Aligned to deterministic, fail-closed, consent-native execution.
+**Sources:** 19 files (18 active + 1 deprecated), ~35 KB
+**Purpose:** Mermaid diagrams for solace-browser runtime: auth, recipe execution, evidence, approval, session management, customization, 4-plane architecture, capture pipeline, app inbox/outbox, Yinyang dual rail, budget gates, and competitive position. Aligned to deterministic, fail-closed, consent-native execution.
 
 ---
 
@@ -17,6 +17,17 @@
 | `05-customization-flow.md` | Inbox file load → validate overrides → merge with app defaults → execute recipe → write outbox + evidence |
 | `06-session-management.md` | Browser session lifecycle: OAuth3 token bind → revocation check → scoped actions → keepalive → release |
 | `07-approval-stepup-flow.md` | Risk tier → standard approval or step-up → 30s approval modal → execute or fail-closed → write approval record + evidence |
+| `08-4-plane-architecture.md` | Four independent planes: Capture (always-on), Control (OAuth3), Execution (recipes), Evidence (hash-chain) |
+| `09-oauth3-auth-proxy.md` | 3-layer defense: port 9222 auth proxy, port 9225 hidden Chrome, session token exchange |
+| `10-capture-pipeline.md` | page.on('load') → DOM snapshot → Prime Mermaid → PZip 100% RTC verification → ripple storage |
+| `11-app-inbox-outbox.md` | Universal folder contract: user inbox (prompts, templates, assets, policies) → AI outbox (previews, drafts, reports, suggestions) |
+| `12-yinyang-dual-rail.md` | Top rail (32px status) + bottom rail (36-300px chat): integration with app lifecycle and approval flow |
+| `13-budget-gates.md` | B1-B5 fail-closed budget gate sequence with MIN-cap resolution and delegation chains |
+| `14-preview-approve-execute.md` | Full app lifecycle: trigger → budget → LLM preview → approve → seal → cooldown → CPU execute → evidence |
+| `15-competitive-position.md` | 8 structural advantages vs 19 competitors, feature matrix, pricing, no-API exclusives |
+| `16-cross-app-orchestration.md` | Cross-app message flow, partner discovery, orchestrator pattern, B6 budget gate, required app directory structure |
+| `17-yinyang-delight-pipeline.md` | Warm token → delight effect pipeline, Yinyang universal interface, plugin architecture, alert queue |
+| `18-app-ecosystem-day-one.md` | 18 day-one apps (10 standard + 5 no-API + 3 orchestrators), safety tiers, cross-app partner map |
 
 ---
 
@@ -32,7 +43,7 @@ The active browser webservice is `solace_browser_server.py`. Snapshot and contro
 
 ## Architecture Rules Reflected in Diagrams
 
-- **No chat component in runtime path** — recipe runner is deterministic, not conversational (see 02, 03)
+- **Yinyang dual rail for chat + status** — top rail = status (32px), bottom rail = chat (36-300px); Yinyang can trigger apps but PREVIEW_READY → APPROVED always requires explicit user click (see 12)
 - **No triple-twin orchestration** — solace-browser does not run the triple-twin; that lives in stillwater/cli
 - **No runtime self-learning mutation** — CPU learner does not run in browser; recipes are static graphs
 - **Inbox-driven customization before execution** — overrides are validated and merged before any step runs (see 05)

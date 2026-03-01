@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>App Detail | Solace Browser</title>
+  <meta name="description" content="Configure app inbox, review outbox, and manage budgets for web-native AI automation.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/yinyang-delight.js" defer></script>
+  <script src="/js/solace.js" defer></script>
+</head>
+<body data-page="app-detail">
+  <div class="site-shell">
+    <div class="page-frame">
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a class="site-brand" href="/">
+            <span class="site-brand__icon">SB</span>
+            <span class="site-brand__text">
+              <span class="site-brand__name">Solace Browser</span>
+              <span class="site-brand__tag">OAuth3 web + machine + cloud</span>
+            </span>
+          </a>
+          <nav class="site-nav" aria-label="Primary">
+            <a class="nav-link" data-nav-path="/" href="/">Home</a>
+            <a class="nav-link" data-nav-path="/app-store" href="/app-store">Apps</a>
+            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
+            <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect">Tunnel</a>
+            <a class="nav-link" data-nav-path="/settings" href="/settings">Settings</a>
+            <a class="nav-link nav-link--accent" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener">Full product</a>
+          </nav>
+          <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+        </div>
+      </header>
+      <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu__section">
+          <h3>Surfaces</h3>
+          <a data-nav-path="/" href="/">Home</a>
+          <a data-nav-path="/app-store" href="/app-store">App Store</a>
+          <a data-nav-path="/settings" href="/settings">Settings</a>
+        </div>
+      </div>
+
+      <main>
+        <!-- App Header -->
+        <section class="hero reveal">
+          <div>
+            <a class="eyebrow" href="/app-store">&larr; Back to App Store</a>
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
+              <img id="app-icon" src="/images/apps/default.png" alt="App icon" width="56" height="56" style="border-radius:12px">
+              <div>
+                <h1 class="display" id="app-name" style="font-size:2.2rem;margin:0">Loading app...</h1>
+                <p class="lead" style="margin:4px 0 0" id="app-desc">Fetching app details</p>
+              </div>
+            </div>
+            <div class="status-strip">
+              <span class="status-pill status-pill--success" id="app-status"><span class="status-pill__dot"></span>Available</span>
+              <span class="recipe-tag" id="app-safety">Safety --</span>
+              <span class="recipe-tag" id="app-site">loading</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Two-column: Inbox + Outbox -->
+        <section class="page-section reveal">
+          <div class="data-grid">
+            <!-- Inbox Column -->
+            <div>
+              <div class="section-heading">
+                <div>
+                  <h2 class="section-title">Inbox <span style="font-size:0.6em;opacity:0.6">(you customize)</span></h2>
+                  <p class="section-copy">Drop files into the app's inbox folder to teach the AI your preferences.</p>
+                </div>
+              </div>
+              <article class="data-panel" id="app-inbox-sections">
+                <h3 style="margin-top:0">prompts/</h3>
+                <h3>templates/</h3>
+                <h3>assets/</h3>
+                <h3>policies/</h3>
+                <h3>datasets/</h3>
+                <p class="section-copy" id="app-inbox-path">Loading inbox path...</p>
+              </article>
+            </div>
+
+            <!-- Outbox Column -->
+            <div>
+              <div class="section-heading">
+                <div>
+                  <h2 class="section-title">Outbox <span style="font-size:0.6em;opacity:0.6">(AI shows work)</span></h2>
+                  <p class="section-copy">AI-generated outputs appear here for your review. Approve, edit, or reject each item.</p>
+                </div>
+              </div>
+              <article class="data-panel" id="app-outbox-sections">
+                <h3 style="margin-top:0">previews/</h3>
+                <h3>drafts/</h3>
+                <h3>reports/</h3>
+                <h3>suggestions/</h3>
+                <h3>runs/</h3>
+                <p class="section-copy">AI-generated outputs appear here for your review. Approve, edit, or reject each item.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <!-- Budget & Scopes -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Budget &amp; Scopes</h2>
+              <p class="section-copy">Fail-closed budget gates. Any limit exceeded = BLOCKED.</p>
+            </div>
+          </div>
+          <div class="data-grid">
+            <article class="data-panel">
+              <h3 style="margin-top:0">Action Budgets (per run)</h3>
+              <table class="data-table">
+                <thead><tr><th>Action</th><th>Value</th><th>Status</th></tr></thead>
+                <tbody id="app-budget-table-body">
+                  <tr><td colspan="3">Loading budget...</td></tr>
+                </tbody>
+              </table>
+            </article>
+            <article class="data-panel">
+              <h3 style="margin-top:0">OAuth3 Scopes</h3>
+              <ul class="data-list" id="app-scopes-list">
+                <li><span class="scope-tag">gmail.read.inbox</span> Loading scopes...</li>
+              </ul>
+              <p style="margin-top:12px;opacity:0.6;font-size:0.85em">Scopes are checked at gate time, not lazily. Revocation = immediate block.</p>
+            </article>
+          </div>
+        </section>
+
+        <!-- Recipe Execution -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Execution Model</h2>
+              <p class="section-copy">LLM called ONCE at preview. Execution is deterministic CPU replay of sealed output.</p>
+            </div>
+          </div>
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <strong>Preview cost</strong>
+              <span>~$0.003 per run (L2 classification + generation)</span>
+            </div>
+            <div class="kpi-card">
+              <strong>Replay cost</strong>
+              <span>~$0.001 per replay (no LLM, CPU only)</span>
+            </div>
+            <div class="kpi-card">
+              <strong>Cooldown</strong>
+              <span>5 seconds (Safety B — visible, reputation-impacting)</span>
+            </div>
+          </div>
+          <article class="data-panel" style="margin-top:24px">
+            <h3 style="margin-top:0">Lifecycle</h3>
+            <ul class="data-list">
+              <li><span class="recipe-tag">1</span> <strong>Trigger</strong> — Schedule or manual from Yinyang rail</li>
+              <li><span class="recipe-tag">2</span> <strong>Budget check</strong> — B1-B5 fail-closed gates</li>
+              <li><span class="recipe-tag">3</span> <strong>Preview</strong> — LLM generates output, shown in bottom rail</li>
+              <li><span class="recipe-tag">4</span> <strong>Approve</strong> — User clicks approve (30s timeout = deny)</li>
+              <li><span class="recipe-tag">5</span> <strong>Seal</strong> — Output sealed to outbox (chmod 444)</li>
+              <li><span class="recipe-tag">6</span> <strong>Execute</strong> — CPU replays sealed output on mail.google.com</li>
+              <li><span class="recipe-tag">7</span> <strong>Evidence</strong> — Hash chain sealed, budget decremented</li>
+            </ul>
+          </article>
+        </section>
+
+        <!-- Recent Runs -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Recent Runs</h2>
+              <p class="section-copy">Evidence-sealed execution history with hash chain verification.</p>
+            </div>
+          </div>
+          <article class="data-panel">
+            <table class="data-table">
+              <thead><tr><th>Run</th><th>Trigger</th><th>Actions</th><th>Cost</th><th>Status</th></tr></thead>
+              <tbody id="app-runs-table-body">
+                <tr><td colspan="5">Loading recent runs...</td></tr>
+              </tbody>
+            </table>
+          </article>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="site-footer__inner">
+          <div>© <span data-current-year></span> Solace Browser. Inbox customizes, outbox shows work, you approve.</div>
+          <div class="site-footer__links">
+            <a href="/app-store">Apps</a>
+            <a href="/settings">Settings</a>
+            <a href="https://github.com/solaceagi/solace-browser" target="_blank" rel="noopener">GitHub</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>
