@@ -16,34 +16,26 @@
       --sb-accent: #ff6b35;
       --sb-signal: #64c4ff;
       --sb-success: #46d9a7;
-      --sb-warning: #ffc75a;
-      --sb-danger: #ff7c7c;
       --sb-purple: #AE67FA;
       --sb-font-display: "Manrope", "Segoe UI", sans-serif;
       --sb-font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
-      --sb-font-mono: "IBM Plex Mono", "SFMono-Regular", monospace;
       --sb-grad-hero-bg: linear-gradient(135deg, #081019 0%, #0f1a2e 50%, #1a1f3a 100%);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html {
-      font-size: 200%;
-    }
     html, body {
       height: 100%;
       background: var(--sb-grad-hero-bg);
       color: var(--sb-text);
       font-family: var(--sb-font-body);
-      overflow-y: auto;
-      overflow-x: hidden;
+      overflow: hidden;
     }
 
-    /* ── Layout ── */
     .start-page {
-      min-height: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2.5rem 2rem 5rem;
+      justify-content: center;
       position: relative;
     }
     .start-page::before {
@@ -56,383 +48,183 @@
       pointer-events: none;
     }
 
-    /* ── Hero ── */
-    .hero {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    /* ── Login Card ── */
+    .login-card {
+      position: relative;
+      width: 420px;
+      max-width: calc(100% - 48px);
+      background: var(--sb-surface);
+      border: 1px solid var(--sb-border);
+      border-radius: 24px;
+      padding: 48px 40px 40px;
       text-align: center;
-      margin-bottom: 2rem;
+      box-shadow: 0 24px 80px rgba(2, 8, 18, 0.5);
     }
+
     .splash-img {
-      width: 220px;
+      width: 160px;
       height: auto;
-      border-radius: 20px;
-      margin-bottom: 1.5rem;
-      filter: drop-shadow(0 8px 32px rgba(100, 196, 255, 0.18));
+      border-radius: 18px;
+      margin: 0 auto 24px;
+      display: block;
+      filter: drop-shadow(0 8px 24px rgba(100, 196, 255, 0.15));
     }
+
     h1 {
       font-family: var(--sb-font-display);
-      font-size: 1.75rem;
+      font-size: 1.65rem;
       font-weight: 700;
       letter-spacing: -0.5px;
-      margin-bottom: 0.4rem;
+      margin-bottom: 6px;
       background: linear-gradient(135deg, var(--sb-text) 0%, var(--sb-signal) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
+
     .tagline {
       color: var(--sb-text-muted);
-      font-size: 0.9rem;
-      margin-bottom: 1.5rem;
+      font-size: 0.92rem;
+      margin-bottom: 32px;
+      line-height: 1.4;
     }
 
-    /* ── URL Bar ── */
-    .url-bar {
+    /* ── Auth Buttons ── */
+    .auth-btn {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      max-width: 1400px;
+      justify-content: center;
+      gap: 10px;
       width: 100%;
-      margin-bottom: 2.5rem;
-    }
-    .url-input {
-      flex: 1;
-      background: var(--sb-surface);
+      padding: 14px 20px;
+      border-radius: 12px;
       border: 1px solid var(--sb-border);
-      border-radius: 10px;
-      padding: 0.7rem 1rem;
+      background: var(--sb-surface-strong);
       color: var(--sb-text);
       font-family: var(--sb-font-body);
-      font-size: 0.88rem;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .url-input:focus { border-color: var(--sb-signal); }
-    .url-input::placeholder { color: var(--sb-text-muted); }
-    .go-btn {
-      background: var(--sb-accent);
-      color: var(--sb-bg);
-      border: none;
-      border-radius: 10px;
-      padding: 0.7rem 1.1rem;
-      font-weight: 600;
-      font-size: 0.88rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .go-btn:hover { background: #ff8d63; }
-
-    /* ── Section Headers ── */
-    .section-header {
-      width: 100%;
-      max-width: 1400px;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-    }
-    .section-header h2 {
-      font-family: var(--sb-font-display);
       font-size: 0.95rem;
       font-weight: 600;
-      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      margin-bottom: 12px;
     }
-    .section-header::after {
+    .auth-btn:hover {
+      border-color: var(--sb-signal);
+      background: #1d2d42;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(100, 196, 255, 0.08);
+    }
+    .auth-btn:active {
+      transform: translateY(0);
+    }
+    .auth-btn svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      color: var(--sb-text-muted);
+      font-size: 0.78rem;
+    }
+    .divider::before, .divider::after {
       content: '';
       flex: 1;
       height: 1px;
       background: var(--sb-border);
     }
 
-    /* ── App Store Grid ── */
-    .app-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 0.75rem;
-      max-width: 1400px;
-      width: 100%;
-      margin-bottom: 2.5rem;
+    /* ── Free Notice ── */
+    .free-notice {
+      background: rgba(70, 217, 167, 0.08);
+      border: 1px solid rgba(70, 217, 167, 0.18);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 8px;
     }
-    .app-card {
-      background: var(--sb-surface);
-      border: 1px solid var(--sb-border);
-      border-radius: 12px;
-      padding: 1rem 0.75rem;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      position: relative;
-    }
-    .app-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-    }
-    .app-card.free:hover {
-      border-color: var(--sb-success);
-    }
-    .app-card.locked {
-      opacity: 0.5;
-      cursor: default;
-    }
-    .app-card.locked:hover {
-      transform: none;
-      box-shadow: none;
-    }
-    .app-icon {
-      font-size: 1.6rem;
-      margin-bottom: 0.4rem;
-    }
-    .app-name {
-      font-size: 0.75rem;
-      font-weight: 600;
-      margin-bottom: 0.2rem;
-      line-height: 1.3;
-    }
-    .app-badge {
-      display: inline-block;
-      font-size: 0.6rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 1px 6px;
-      border-radius: 4px;
-    }
-    .badge-free {
-      background: rgba(70, 217, 167, 0.15);
-      color: var(--sb-success);
-    }
-    .badge-pro {
-      background: rgba(174, 103, 250, 0.12);
-      color: var(--sb-text-muted);
-      font-size: 0.55rem;
-    }
-    .lock-icon {
-      position: absolute;
-      top: 6px;
-      right: 8px;
-      font-size: 0.65rem;
-      opacity: 0.5;
-    }
-
-    /* ── Quick Links ── */
-    .quick-links {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.75rem;
-      max-width: 1400px;
-      width: 100%;
-      margin-bottom: 2.5rem;
-    }
-    .quick-card {
-      background: var(--sb-surface);
-      border: 1px solid var(--sb-border);
-      border-radius: 12px;
-      padding: 1rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .quick-card:hover {
-      border-color: var(--sb-signal);
-      background: var(--sb-surface-strong);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(100, 196, 255, 0.08);
-    }
-    .quick-card-label {
+    .free-notice p {
       font-size: 0.82rem;
-      font-weight: 600;
-      margin-bottom: 0.2rem;
-    }
-    .quick-card-desc {
-      font-size: 0.72rem;
       color: var(--sb-text-muted);
-      line-height: 1.3;
+      line-height: 1.5;
+    }
+    .free-notice strong {
+      color: var(--sb-success);
     }
 
     /* ── Footer ── */
     .footer-info {
+      position: absolute;
+      bottom: 24px;
       display: flex;
-      gap: 1.5rem;
+      gap: 20px;
       color: var(--sb-text-muted);
-      font-size: 0.72rem;
-      flex-wrap: wrap;
-      justify-content: center;
+      font-size: 0.75rem;
     }
-    .footer-info span {
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
+    .footer-info a {
+      color: var(--sb-text-muted);
+      text-decoration: none;
     }
-    .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-    .dot-green { background: var(--sb-success); }
-    .dot-blue { background: var(--sb-signal); }
-    .dot-purple { background: var(--sb-purple); }
+    .footer-info a:hover { color: var(--sb-signal); }
   </style>
 </head>
 <body>
   <div class="start-page">
 
-    <!-- Hero -->
-    <div class="hero">
+    <div class="login-card">
       <img class="splash-img" src="images/splash/solace-browser-loading-splash-image.png" alt="Solace Browser">
       <h1>Solace Browser</h1>
-      <p class="tagline">Your AI worker that browses with receipts</p>
-    </div>
+      <p class="tagline">Sign in to connect your AI worker</p>
 
-    <!-- URL Bar -->
-    <div class="url-bar">
-      <input class="url-input" type="text" id="url-input" placeholder="Enter a URL..." autofocus>
-      <button class="go-btn" id="go-btn">Go</button>
-    </div>
+      <!-- Google -->
+      <button class="auth-btn" id="btn-google">
+        <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Sign in with Google
+      </button>
 
-    <!-- App Store -->
-    <div class="section-header"><h2>Apps</h2></div>
-    <div class="app-grid">
-      <!-- 2 Free -->
-      <div class="app-card free" data-app="gmail-inbox-triage">
-        <div class="app-icon">&#9993;</div>
-        <div class="app-name">Gmail Inbox Triage</div>
-        <span class="app-badge badge-free">Free</span>
-      </div>
-      <div class="app-card free" data-app="morning-brief">
-        <div class="app-icon">&#9728;</div>
-        <div class="app-name">Morning Brief</div>
-        <span class="app-badge badge-free">Free</span>
-      </div>
-      <!-- 8 Locked -->
-      <div class="app-card locked" data-app="linkedin-outreach">
-        <span class="lock-icon">&#128274;</span>
-        <div class="app-icon">&#128101;</div>
-        <div class="app-name">LinkedIn Outreach</div>
-        <span class="app-badge badge-pro">Pro</span>
-      </div>
-      <div class="app-card locked" data-app="calendar-optimizer">
-        <span class="lock-icon">&#128274;</span>
-        <div class="app-icon">&#128197;</div>
-        <div class="app-name">Calendar Optimizer</div>
-        <span class="app-badge badge-pro">Pro</span>
-      </div>
-      <div class="app-card locked" data-app="slack-digest">
-        <span class="lock-icon">&#128274;</span>
-        <div class="app-icon">&#128172;</div>
-        <div class="app-name">Slack Digest</div>
-        <span class="app-badge badge-pro">Pro</span>
-      </div>
-      <div class="app-card locked" data-app="github-triage">
-        <span class="lock-icon">&#128274;</span>
-        <div class="app-icon">&#128736;</div>
-        <div class="app-name">GitHub Triage</div>
-        <span class="app-badge badge-pro">Pro</span>
-      </div>
-      <div class="app-card locked" data-app="notion-sync">
-        <span class="lock-icon">&#128274;</span>
-        <div class="app-icon">&#128221;</div>
-        <div class="app-name">Notion Sync</div>
-        <span class="app-badge badge-pro">Pro</span>
-      </div>
-      <div class="app-card locked" data-app="stripe-dashboard">
-        <span class="lock-icon">&#128274;</span>
-        <div class="app-icon">&#128179;</div>
-        <div class="app-name">Stripe Dashboard</div>
-        <span class="app-badge badge-pro">Pro</span>
-      </div>
-      <div class="app-card locked" data-app="shopify-orders">
-        <span class="lock-icon">&#128274;</span>
-        <div class="app-icon">&#128722;</div>
-        <div class="app-name">Shopify Orders</div>
-        <span class="app-badge badge-pro">Pro</span>
-      </div>
-      <div class="app-card locked" data-app="calendly-scheduler">
-        <span class="lock-icon">&#128274;</span>
-        <div class="app-icon">&#128198;</div>
-        <div class="app-name">Calendly Scheduler</div>
-        <span class="app-badge badge-pro">Pro</span>
+      <!-- GitHub -->
+      <button class="auth-btn" id="btn-github">
+        <svg viewBox="0 0 24 24"><path fill="#f4f7fb" d="M12 1.27a11 11 0 0 0-3.48 21.46c.55.1.75-.24.75-.53v-1.85c-3.07.67-3.72-1.48-3.72-1.48a2.93 2.93 0 0 0-1.23-1.61c-1-.69.08-.67.08-.67a2.32 2.32 0 0 1 1.7 1.14 2.36 2.36 0 0 0 3.22.92 2.36 2.36 0 0 1 .7-1.48c-2.45-.28-5.02-1.23-5.02-5.46a4.27 4.27 0 0 1 1.14-2.97 3.97 3.97 0 0 1 .11-2.93s.93-.3 3.04 1.13a10.48 10.48 0 0 1 5.54 0c2.11-1.43 3.04-1.13 3.04-1.13a3.97 3.97 0 0 1 .11 2.93 4.27 4.27 0 0 1 1.14 2.97c0 4.24-2.58 5.18-5.04 5.45a2.64 2.64 0 0 1 .75 2.05v3.04c0 .29.2.64.76.53A11 11 0 0 0 12 1.27z"/></svg>
+        Sign in with GitHub
+      </button>
+
+      <div class="divider">or</div>
+
+      <!-- Email -->
+      <button class="auth-btn" id="btn-email">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9cb1ca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/></svg>
+        Sign in with Email
+      </button>
+
+      <div class="free-notice">
+        <p><strong>Free to start.</strong> No credit card required. Get 2 apps and a managed LLM included. Upgrade anytime for $8/month.</p>
       </div>
     </div>
 
-    <!-- Quick Links -->
-    <div class="section-header"><h2>Navigate</h2></div>
-    <div class="quick-links">
-      <div class="quick-card" data-url="https://mail.google.com">
-        <div class="quick-card-label">&#9993; Gmail</div>
-        <div class="quick-card-desc">Triage inbox with evidence</div>
-      </div>
-      <div class="quick-card" data-url="https://www.linkedin.com">
-        <div class="quick-card-label">&#128101; LinkedIn</div>
-        <div class="quick-card-desc">Network outreach + posts</div>
-      </div>
-      <div class="quick-card" data-url="https://www.solaceagi.com">
-        <div class="quick-card-label">&#9881; Solace AGI</div>
-        <div class="quick-card-desc">Dashboard + settings</div>
-      </div>
-    </div>
-
-    <!-- Footer -->
     <div class="footer-info">
-      <span><span class="dot dot-green"></span> Local CLI</span>
-      <span><span class="dot dot-blue"></span> Browser</span>
-      <span><span class="dot dot-purple"></span> Cloud</span>
       <span>v1.0.0</span>
+      <a href="https://www.solaceagi.com/privacy" target="_blank">Privacy</a>
+      <a href="https://www.solaceagi.com/terms" target="_blank">Terms</a>
     </div>
+
   </div>
 
   <script>
-    /* URL bar navigation */
-    function navigateTo(url) {
-      if (!url) return;
-      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-      window.location.href = url;
-    }
+    var SOLACE_AUTH_URL = 'https://www.solaceagi.com';
 
-    document.getElementById('go-btn').addEventListener('click', function() {
-      navigateTo(document.getElementById('url-input').value.trim());
+    document.getElementById('btn-google').addEventListener('click', function() {
+      window.location.href = SOLACE_AUTH_URL + '/auth/login?provider=google&redirect=' + encodeURIComponent(window.location.href);
     });
-    document.getElementById('url-input').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') navigateTo(this.value.trim());
+    document.getElementById('btn-github').addEventListener('click', function() {
+      window.location.href = SOLACE_AUTH_URL + '/auth/login?provider=github&redirect=' + encodeURIComponent(window.location.href);
     });
-
-    /* Quick link cards */
-    document.querySelectorAll('.quick-card').forEach(function(card) {
-      card.addEventListener('click', function() { navigateTo(this.dataset.url); });
-    });
-
-    /* Free app cards — click to install */
-    document.querySelectorAll('.app-card.free').forEach(function(card) {
-      card.addEventListener('click', function() {
-        var app = this.dataset.app;
-        var badge = this.querySelector('.app-badge');
-        if (badge && badge.textContent.trim() === 'Installed') return;
-        if (badge) { badge.textContent = 'Installed'; badge.style.background = 'rgba(100,196,255,0.12)'; badge.style.color = '#64c4ff'; }
-      });
-    });
-
-    /* Locked app cards — show toast */
-    document.querySelectorAll('.app-card.locked').forEach(function(card) {
-      card.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var existing = document.getElementById('pro-toast');
-        if (existing) existing.remove();
-        var toast = document.createElement('div');
-        toast.id = 'pro-toast';
-        toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#172335;border:1px solid rgba(174,103,250,0.3);color:#f4f7fb;padding:12px 20px;border-radius:10px;font-size:0.82rem;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.4);';
-        toast.textContent = 'This app requires Pro membership. Upgrade for $8/month.';
-        document.body.appendChild(toast);
-        setTimeout(function() { toast.remove(); }, 3000);
-      });
-    });
-
-    /* Global keyboard — focus URL bar on typing */
-    document.addEventListener('keydown', function(e) {
-      var input = document.getElementById('url-input');
-      if (e.target !== input && !e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) {
-        input.focus();
-      }
+    document.getElementById('btn-email').addEventListener('click', function() {
+      window.location.href = SOLACE_AUTH_URL + '/auth/login?provider=email&redirect=' + encodeURIComponent(window.location.href);
     });
   </script>
 </body>
