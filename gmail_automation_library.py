@@ -7,10 +7,13 @@ All selectors tested and verified: 2026-02-15
 """
 
 import asyncio
+import logging
 import random
 import json
 from pathlib import Path
 from typing import Optional, List, Dict
+
+logger = logging.getLogger(__name__)
 
 class GmailAutomation:
     """
@@ -162,8 +165,8 @@ class GmailAutomation:
                     "subject": subject.strip(),
                     "unread": is_unread
                 })
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"Email row parse skipped: {e}")
 
         return emails
 

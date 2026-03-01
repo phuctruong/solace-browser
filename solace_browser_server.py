@@ -926,8 +926,8 @@ class SolaceBrowser:
                                     recovery_skipped = True
                                     await asyncio.sleep(2)
                                     break
-                                except:
-                                    pass
+                                except Exception as e:
+                                    logger.debug(f"Skip button click failed: {e}")
 
                     # Check for permission/consent button
                     buttons = await popup_page.query_selector_all("button")
@@ -940,8 +940,8 @@ class SolaceBrowser:
                                 logger.info("✓ Clicked permission button")
                                 await asyncio.sleep(2)
                                 break
-                            except:
-                                pass
+                            except Exception as e:
+                                logger.debug(f"Permission button click failed: {e}")
 
                     # Check if 2FA was completed by looking for success indicators
                     page_content = await popup_page.evaluate("() => document.body.innerText")
@@ -1546,6 +1546,17 @@ Support the journey: https://ko-fi.com/phucnet"""
             return await self._finalize_part11_result("act.exception", str(action.get("kind")), {"error": str(e)})
 
 
+@web.middleware
+async def security_headers_middleware(request, handler):
+    response = await handler(request)
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
+
+
 class SolaceBrowserServer:
     """HTTP/WebSocket server for CDP protocol"""
 
@@ -1558,7 +1569,7 @@ class SolaceBrowserServer:
     ):
         self.browser = browser
         self.port = port
-        self.app = web.Application()
+        self.app = web.Application(middlewares=[security_headers_middleware])
         self.proxy_config: dict[str, Any] = {"proxies": []}
         self._yinyang_bridge = yinyang_bridge
 

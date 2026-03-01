@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://browser.solaceagi.com/download">
   <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/css/site.css">
   <script src="/js/solace.js" defer></script>
 </head>
@@ -53,7 +54,7 @@
             <h1 class="display">Install the browser that keeps <span>approvals visible</span>.</h1>
             <p class="lead">One runtime for browsing, local machine access, and temporary cloud relay. Start locally, then connect stronger surfaces when the workflow proves itself.</p>
             <div class="button-row">
-              <a class="btn btn-primary" id="primary-download" href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-linux-amd64.AppImage"><span>↓</span><span>Download stable build</span></a>
+              <a class="btn btn-primary coming-soon" id="primary-download" href="#" data-coming-soon="true" data-href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-linux-amd64.AppImage"><span>↓</span><span>Download stable build (coming soon)</span></a>
               <a class="btn btn-secondary" href="https://github.com/solaceagi/solace-browser/releases" target="_blank" rel="noopener">Release notes</a>
             </div>
             <div class="release-strip">
@@ -70,23 +71,23 @@
               <h3>macOS</h3>
               <p>Apple Silicon and Intel DMGs for local-first operation.</p>
               <div class="platform-links">
-                <a class="platform-link" href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-mac-arm64.dmg"><span>Apple Silicon</span><span>DMG</span></a>
-                <a class="platform-link" href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-mac-x86_64.dmg"><span>Intel</span><span>DMG</span></a>
+                <a class="platform-link coming-soon" href="#" data-coming-soon="true" data-href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-mac-arm64.dmg"><span>Apple Silicon (coming soon)</span><span>DMG</span></a>
+                <a class="platform-link coming-soon" href="#" data-coming-soon="true" data-href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-mac-x86_64.dmg"><span>Intel (coming soon)</span><span>DMG</span></a>
               </div>
             </article>
             <article class="download-card">
               <h3>Linux</h3>
               <p>AppImage for fast trials, DEB for managed fleet installs.</p>
               <div class="platform-links">
-                <a class="platform-link" href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-linux-amd64.AppImage"><span>Universal</span><span>AppImage</span></a>
-                <a class="platform-link" href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-linux-amd64.deb"><span>Debian / Ubuntu</span><span>DEB</span></a>
+                <a class="platform-link coming-soon" href="#" data-coming-soon="true" data-href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-linux-amd64.AppImage"><span>Universal (coming soon)</span><span>AppImage</span></a>
+                <a class="platform-link coming-soon" href="#" data-coming-soon="true" data-href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-linux-amd64.deb"><span>Debian / Ubuntu (coming soon)</span><span>DEB</span></a>
               </div>
             </article>
             <article class="download-card">
               <h3>Windows</h3>
               <p>MSI installer with local profile persistence and signed build metadata.</p>
               <div class="platform-links">
-                <a class="platform-link" href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-windows-x64.msi"><span>Windows 11+</span><span>MSI</span></a>
+                <a class="platform-link coming-soon" href="#" data-coming-soon="true" data-href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-windows-x64.msi"><span>Windows 11+ (coming soon)</span><span>MSI</span></a>
                 <a class="platform-link" href="https://github.com/solaceagi/solace-browser/releases" target="_blank" rel="noopener"><span>Release archive</span><span>GitHub</span></a>
               </div>
             </article>
@@ -94,13 +95,15 @@
         </section>
 
         <section class="page-section reveal">
+          <div class="build-source">
+            <h3>Build from Source</h3>
+            <pre id="install-command"><code>git clone https://github.com/solaceagi/solace-browser.git
+cd solace-browser
+pip install -e .
+playwright install chromium
+python solace_browser_server.py</code></pre>
+          </div>
           <div class="data-grid">
-            <article class="download-card install-panel">
-              <div class="panel-kicker">CLI bootstrap</div>
-              <h3>Command-line install</h3>
-              <p>For repeatable workstation setup, keep the bootstrap in source control and let the browser update from signed releases.</p>
-              <pre id="install-command">curl -fsSL https://downloads.solaceagi.com/install.sh | bash</pre>
-            </article>
             <article class="download-card">
               <div class="panel-kicker">What ships</div>
               <h3>Build characteristics</h3>

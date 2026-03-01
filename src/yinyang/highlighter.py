@@ -93,8 +93,8 @@ class YinyangHighlighter:
         if cdp:
             try:
                 await cdp.send("Overlay.hideHighlight")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"CDP highlight clear failed: {e}")
 
         if self._highlighted_selector:
             try:
@@ -108,6 +108,6 @@ class YinyangHighlighter:
                         });
                     })()
                 """)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"DOM highlight cleanup failed: {e}")
         self._highlighted_selector = None

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "solace-browser"
-version = "0.1.0"
+version = "1.0.0"
 description = "Twin browser webservice with OAuth3 and Part 11 evidence capture"
 readme = "README.md"
 license = {text = "MIT"}
@@ -56,3 +56,9 @@ where = ["."]
 include = ["browser*", "src*"]
 exclude = ["tests*", "artifacts*", "episodes*"]
 namespaces = true
+
+[tool.pytest.ini_options]
+markers = [
+    "server_required: marks tests that require an external Stillwater server",
+    "integration: marks tests that make real external API or network calls",
+]

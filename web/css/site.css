@@ -942,6 +942,31 @@ main { display: block; }
 }
 
 /* =========================================================================
+   COMING SOON + BUILD FROM SOURCE
+   ========================================================================= */
+.coming-soon { opacity: 0.6; cursor: default; pointer-events: none; }
+.build-source {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--sb-surface);
+  border-radius: 8px;
+  border: 1px solid var(--sb-border);
+}
+.build-source h3 {
+  color: var(--sb-signal);
+  margin-top: 0;
+}
+.build-source pre {
+  background: var(--sb-bg);
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  color: var(--sb-text-muted);
+  margin: 0;
+  font: 500 0.92rem/1.5 var(--sb-font-mono);
+}
+
+/* =========================================================================
    RESPONSIVE
    ========================================================================= */
 @media (min-width: 769px) {
