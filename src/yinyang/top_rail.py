@@ -40,12 +40,31 @@ _INLINE_TOP_RAIL_JS = """
     rail.id = 'solace-top-rail';
     rail.style.cssText = 'position:fixed;top:0;left:0;right:0;height:32px;background:#1a1a2e;color:#fff;display:flex;align-items:center;padding:0 12px;font-family:system-ui;font-size:12px;z-index:99999;box-shadow:0 1px 3px rgba(0,0,0,0.3);';
 
-    rail.innerHTML = [
-        '<span style="margin-right:8px;width:8px;height:8px;border-radius:50%;background:#666;display:inline-block;" id="solace-state-dot"></span>',
-        '<span id="solace-state-text" style="font-weight:600;">IDLE</span>',
-        '<span id="solace-app-label" style="margin-left:8px;opacity:0.7;font-size:11px;"></span>',
-        '<span style="margin-left:auto;opacity:0.6;" id="solace-page-url"></span>'
-    ].join('');
+    var logo = document.createElement('img');
+    logo.src = 'data:image/png;base64,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';
+    logo.style.cssText = 'width:20px;height:20px;margin-right:8px;';
+    rail.appendChild(logo);
+
+    var dot = document.createElement('span');
+    dot.id = 'solace-state-dot';
+    dot.style.cssText = 'margin-right:8px;width:8px;height:8px;border-radius:50%;background:#666;display:inline-block;';
+    rail.appendChild(dot);
+
+    var stateText = document.createElement('span');
+    stateText.id = 'solace-state-text';
+    stateText.style.cssText = 'font-weight:600;';
+    stateText.textContent = 'IDLE';
+    rail.appendChild(stateText);
+
+    var appLabel = document.createElement('span');
+    appLabel.id = 'solace-app-label';
+    appLabel.style.cssText = 'margin-left:8px;opacity:0.7;font-size:11px;';
+    rail.appendChild(appLabel);
+
+    var urlSpan = document.createElement('span');
+    urlSpan.id = 'solace-page-url';
+    urlSpan.style.cssText = 'margin-left:auto;opacity:0.6;';
+    rail.appendChild(urlSpan);
     document.documentElement.appendChild(rail);
     document.body.style.marginTop = '32px';
 

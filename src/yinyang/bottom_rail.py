@@ -59,7 +59,23 @@ _INLINE_BOTTOM_RAIL_JS = """
     // Header bar (always visible)
     var header = document.createElement('div');
     header.style.cssText = 'display:flex;align-items:center;padding:0 12px;height:36px;min-height:36px;cursor:pointer;border-bottom:1px solid #333;';
-    header.innerHTML = '<span style="font-weight:600;">Yinyang</span><span style="margin-left:8px;opacity:0.6;font-size:11px;" id="solace-credits-summary"></span><span style="margin-left:auto;font-size:16px;" id="solace-toggle-btn">&#9650;</span>';
+    var yyLogo = document.createElement('img');
+    yyLogo.src = 'data:image/png;base64,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';
+    yyLogo.style.cssText = 'width:24px;height:24px;margin-right:8px;';
+    header.appendChild(yyLogo);
+    var yyTitle = document.createElement('span');
+    yyTitle.style.cssText = 'font-weight:600;';
+    yyTitle.textContent = 'Yinyang';
+    header.appendChild(yyTitle);
+    var creditsSummary = document.createElement('span');
+    creditsSummary.id = 'solace-credits-summary';
+    creditsSummary.style.cssText = 'margin-left:8px;opacity:0.6;font-size:11px;';
+    header.appendChild(creditsSummary);
+    var toggleBtn = document.createElement('span');
+    toggleBtn.id = 'solace-toggle-btn';
+    toggleBtn.style.cssText = 'margin-left:auto;font-size:16px;';
+    toggleBtn.textContent = '\\u25B2';
+    header.appendChild(toggleBtn);
     header.onclick = toggleRail;
 
     // Chat area
@@ -76,7 +92,20 @@ _INLINE_BOTTOM_RAIL_JS = """
     var inputArea = document.createElement('div');
     inputArea.id = 'solace-input-area';
     inputArea.style.cssText = 'display:none;padding:8px 12px;border-top:1px solid #333;';
-    inputArea.innerHTML = '<div style="display:flex;gap:8px;"><input id="solace-chat-input" type="text" placeholder="Ask Yinyang..." style="flex:1;background:#2a2a3e;border:1px solid #444;border-radius:6px;padding:6px 10px;color:#fff;font-size:13px;outline:none;" /><button id="solace-send-btn" style="background:#4a9eff;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;">Send</button></div>';
+    var inputRow = document.createElement('div');
+    inputRow.style.cssText = 'display:flex;gap:8px;';
+    var chatInput = document.createElement('input');
+    chatInput.id = 'solace-chat-input';
+    chatInput.type = 'text';
+    chatInput.placeholder = 'Ask Yinyang...';
+    chatInput.style.cssText = 'flex:1;background:#2a2a3e;border:1px solid #444;border-radius:6px;padding:6px 10px;color:#fff;font-size:13px;outline:none;';
+    inputRow.appendChild(chatInput);
+    var sendBtn = document.createElement('button');
+    sendBtn.id = 'solace-send-btn';
+    sendBtn.style.cssText = 'background:#4a9eff;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;';
+    sendBtn.textContent = 'Send';
+    inputRow.appendChild(sendBtn);
+    inputArea.appendChild(inputRow);
 
     rail.appendChild(header);
     rail.appendChild(chatArea);
@@ -94,7 +123,7 @@ _INLINE_BOTTOM_RAIL_JS = """
         chatArea.style.display = expanded ? 'block' : 'none';
         inputArea.style.display = expanded ? 'block' : 'none';
         fsmArea.style.display = expanded ? fsmArea.dataset.hasContent === 'true' ? 'block' : 'none' : 'none';
-        document.getElementById('solace-toggle-btn').innerHTML = expanded ? '&#9660;' : '&#9650;';
+        document.getElementById('solace-toggle-btn').textContent = expanded ? '\\u25BC' : '\\u25B2';
         if (expanded && !ws) connectWS();
     }
 
@@ -159,60 +188,68 @@ _INLINE_BOTTOM_RAIL_JS = """
     }
 
     function showPreviewPanel(payload) {
+        clearFsmArea();
         fsmArea.dataset.hasContent = 'true';
         fsmArea.style.display = expanded ? 'block' : 'none';
-        fsmArea.innerHTML = [
-            '<div style="margin-bottom:8px;">',
-            '  <div style="font-weight:600;color:#f5a623;margin-bottom:4px;">Preview Ready</div>',
-            '  <div style="background:#2a2a3e;padding:8px 12px;border-radius:6px;border-left:3px solid #f5a623;white-space:pre-wrap;max-height:120px;overflow-y:auto;" id="solace-preview-text"></div>',
-            '</div>',
-            '<div style="display:flex;gap:8px;">',
-            '  <button id="solace-approve-btn" style="background:#27ae60;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;">Approve</button>',
-            '  <button id="solace-reject-btn" style="background:#e74c3c;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;">Reject</button>',
-            '</div>'
-        ].join('\\n');
 
-        var previewEl = document.getElementById('solace-preview-text');
-        if (previewEl) previewEl.textContent = payload.preview_text;
+        var wrapper = document.createElement('div');
+        wrapper.style.cssText = 'margin-bottom:8px;';
+        var label = document.createElement('div');
+        label.style.cssText = 'font-weight:600;color:#f5a623;margin-bottom:4px;';
+        label.textContent = 'Preview Ready';
+        wrapper.appendChild(label);
+        var previewEl = document.createElement('div');
+        previewEl.id = 'solace-preview-text';
+        previewEl.style.cssText = 'background:#2a2a3e;padding:8px 12px;border-radius:6px;border-left:3px solid #f5a623;white-space:pre-wrap;max-height:120px;overflow-y:auto;';
+        previewEl.textContent = payload.preview_text || '';
+        wrapper.appendChild(previewEl);
+        fsmArea.appendChild(wrapper);
 
-        var approveBtn = document.getElementById('solace-approve-btn');
-        var rejectBtn = document.getElementById('solace-reject-btn');
+        var btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:8px;';
+        var approveBtn = document.createElement('button');
+        approveBtn.id = 'solace-approve-btn';
+        approveBtn.style.cssText = 'background:#27ae60;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;';
+        approveBtn.textContent = 'Approve';
+        var rejectBtn = document.createElement('button');
+        rejectBtn.id = 'solace-reject-btn';
+        rejectBtn.style.cssText = 'background:#e74c3c;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;';
+        rejectBtn.textContent = 'Reject';
+        btnRow.appendChild(approveBtn);
+        btnRow.appendChild(rejectBtn);
+        fsmArea.appendChild(btnRow);
+
         var runId = payload.run_id || '';
-
-        if (approveBtn) {
-            approveBtn.onclick = function() {
-                sendAction('approve', runId);
-                clearFsmArea();
-            };
-        }
-        if (rejectBtn) {
-            rejectBtn.onclick = function() {
-                sendAction('reject', runId);
-                clearFsmArea();
-            };
-        }
+        approveBtn.onclick = function() { sendAction('approve', runId); clearFsmArea(); };
+        rejectBtn.onclick = function() { sendAction('reject', runId); clearFsmArea(); };
     }
 
     function showBlockPanel(payload) {
+        clearFsmArea();
         fsmArea.dataset.hasContent = 'true';
         fsmArea.style.display = expanded ? 'block' : 'none';
-        fsmArea.innerHTML = [
-            '<div style="font-weight:600;color:#e74c3c;margin-bottom:4px;">Blocked</div>',
-            '<div style="background:#2a2a3e;padding:8px 12px;border-radius:6px;border-left:3px solid #e74c3c;" id="solace-block-reason"></div>'
-        ].join('\\n');
-        var reasonEl = document.getElementById('solace-block-reason');
-        if (reasonEl) reasonEl.textContent = payload.block_reason;
+        var label = document.createElement('div');
+        label.style.cssText = 'font-weight:600;color:#e74c3c;margin-bottom:4px;';
+        label.textContent = 'Blocked';
+        fsmArea.appendChild(label);
+        var reasonEl = document.createElement('div');
+        reasonEl.style.cssText = 'background:#2a2a3e;padding:8px 12px;border-radius:6px;border-left:3px solid #e74c3c;';
+        reasonEl.textContent = payload.block_reason || '';
+        fsmArea.appendChild(reasonEl);
     }
 
     function showErrorPanel(payload) {
+        clearFsmArea();
         fsmArea.dataset.hasContent = 'true';
         fsmArea.style.display = expanded ? 'block' : 'none';
-        fsmArea.innerHTML = [
-            '<div style="font-weight:600;color:#e74c3c;margin-bottom:4px;">Failed</div>',
-            '<div style="background:#2a2a3e;padding:8px 12px;border-radius:6px;border-left:3px solid #e74c3c;" id="solace-error-detail"></div>'
-        ].join('\\n');
-        var errorEl = document.getElementById('solace-error-detail');
-        if (errorEl) errorEl.textContent = payload.error_detail;
+        var label = document.createElement('div');
+        label.style.cssText = 'font-weight:600;color:#e74c3c;margin-bottom:4px;';
+        label.textContent = 'Failed';
+        fsmArea.appendChild(label);
+        var errorEl = document.createElement('div');
+        errorEl.style.cssText = 'background:#2a2a3e;padding:8px 12px;border-radius:6px;border-left:3px solid #e74c3c;';
+        errorEl.textContent = payload.error_detail || '';
+        fsmArea.appendChild(errorEl);
     }
 
     function clearFsmArea() {
