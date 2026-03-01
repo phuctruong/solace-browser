@@ -1,6 +1,12 @@
-"""Top Rail -- 32px status bar injected into every page.
+"""Top Rail -- 32px value dashboard injected into every page.
 
-Shows compact state indicator: "{app_name}: {state}" with color coding:
+Shows rotating value stats + delight content instead of boring URL:
+  Left:   [dot] [STATE] [app_name]
+  Center: Rotating stats (pages, LLM calls, cost, savings, duration)
+          + delight (tips, facts, quotes, feature updates)
+  Right:  Compact hostname
+
+State color coding:
   green  = DONE, EVIDENCE_SEAL
   yellow = PREVIEW_READY, COOLDOWN
   red    = BLOCKED, FAILED, REJECTED, TIMEOUT, SEALED_ABORT
