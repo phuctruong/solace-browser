@@ -62,11 +62,11 @@
         <div class="docs-shell docs-page">
           <p class="docs-breadcrumb"><a href="/docs">Documentation</a> / MCP &amp; Agents Guide</p>
 
-          <h1 class="display">MCP / Agents Guide</h1>
+          <h1 class="display" data-i18n="docs_mcp_h1">MCP / Agents Guide</h1>
           <p class="docs-meta">Paper 09 §6 — MCP Server Standard · Auth: 65537</p>
 
           <div class="docs-toc">
-            <strong style="color:var(--sb-text);font-size:0.9rem;">On this page</strong>
+            <strong style="color:var(--sb-text);font-size:0.9rem;" data-i18n="docs_toc_label">On this page</strong>
             <a href="#what">What is MCP?</a>
             <a href="#setup">Setup (30 seconds)</a>
             <a href="#claude-code">Claude Code</a>
@@ -76,11 +76,11 @@
             <a href="#oauth3">OAuth3 + budget gates</a>
           </div>
 
-          <h2 id="what">What is MCP?</h2>
+          <h2 id="what" data-i18n="docs_mcp_what_h2">What is MCP?</h2>
           <p><strong>Model Context Protocol (MCP)</strong> is the emerging standard for connecting AI agents to external tools via a stdio JSON-RPC 2.0 transport. Solace Browser implements an MCP server that exposes 7 browser tools to any MCP-capable agent: navigate, click, fill, screenshot, snapshot, evaluate, and aria_snapshot.</p>
           <p>This means your AI coding agent can browse the web, click buttons, fill forms, take screenshots, and capture evidence — all through Solace Browser's approval gates. <strong>Every action still requires your approval.</strong></p>
 
-          <h2 id="setup">Setup (30 seconds)</h2>
+          <h2 id="setup" data-i18n="docs_mcp_setup_h2">Setup (30 seconds)</h2>
           <p>Make sure Solace Browser is running first:</p>
           <pre>python3 solace_browser_server.py --port 9222 &amp;
 python3 web/server.py --port 8791 &amp;</pre>
@@ -90,7 +90,7 @@ python3 web/server.py --port 8791 &amp;</pre>
           <p>Or use npx:</p>
           <pre>npx solace-browser --mcp</pre>
 
-          <h2 id="claude-code">Claude Code</h2>
+          <h2 id="claude-code" data-i18n="docs_mcp_claude_h2">Claude Code</h2>
           <p>Add this to your <code>CLAUDE.md</code> or project settings:</p>
           <pre>{
   "mcpServers": {
@@ -111,7 +111,7 @@ python3 web/server.py --port 8791 &amp;</pre>
 }</pre>
           <p>After adding the config, Claude Code will show <code>solace</code> as an available MCP server. Ask Claude to navigate to a URL or take a screenshot and it will use Solace Browser automatically.</p>
 
-          <h2 id="cursor">Cursor / Codex</h2>
+          <h2 id="cursor" data-i18n="docs_mcp_cursor_h2">Cursor / Codex</h2>
           <p>Cursor and Codex support MCP servers via their tools configuration. Add the same JSON block to your agent's tools settings:</p>
           <pre># Cursor: .cursor/mcp.json
 {
@@ -123,7 +123,7 @@ python3 web/server.py --port 8791 &amp;</pre>
   }
 }</pre>
 
-          <h2 id="tools">The 7 browser tools</h2>
+          <h2 id="tools" data-i18n="docs_mcp_tools_h2">The 7 browser tools</h2>
 
           <h3>navigate</h3>
           <p>Navigate the browser to a URL. Returns page title, final URL, and HTTP status.</p>
@@ -181,7 +181,7 @@ python3 web/server.py --port 8791 &amp;</pre>
 // Output
 { "tree": [{ "role": "main", "name": "Inbox", "children": [...] }] }</pre>
 
-          <h2 id="examples">Usage examples</h2>
+          <h2 id="examples" data-i18n="docs_mcp_examples_h2">Usage examples</h2>
 
           <h3>Example: Ask Claude Code to take a screenshot</h3>
           <pre>// In your Claude Code chat:
@@ -198,7 +198,7 @@ solace.navigate({ url: "https://news.ycombinator.com" })
 solace.evaluate({ expression: "Array.from(document.querySelectorAll('.athing .title a')).slice(0,10).map(a=>a.textContent)" })
 // Returns: ["Story 1", "Story 2", ...]</pre>
 
-          <h2 id="oauth3">OAuth3 + budget gates</h2>
+          <h2 id="oauth3" data-i18n="docs_mcp_oauth3_h2">OAuth3 + budget gates</h2>
           <p>Even when called by an agent via MCP, <strong>every sensitive action requires your approval</strong>. The OAuth3 confirmation dialog appears in the Solace Browser UI. You approve or reject in the UI; the agent waits for your decision.</p>
           <p>Budget gates also apply: if an agent tries to send more emails than your daily budget allows, the action is blocked and the agent receives a budget error — not a silent failure.</p>
           <ul>

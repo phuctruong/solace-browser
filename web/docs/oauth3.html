@@ -62,11 +62,11 @@
         <div class="docs-shell docs-page">
           <p class="docs-breadcrumb"><a href="/docs">Documentation</a> / OAuth3 Safety</p>
 
-          <h1 class="display">OAuth3 Safety</h1>
+          <h1 class="display" data-i18n="docs_oauth3_h1">OAuth3 Safety</h1>
           <p class="docs-meta">Papers 07 + 09 §4 — Budget &amp; Wallet Enforcement · Auth: 65537</p>
 
           <div class="docs-toc">
-            <strong style="color:var(--sb-text);font-size:0.9rem;">On this page</strong>
+            <strong style="color:var(--sb-text);font-size:0.9rem;" data-i18n="docs_toc_label">On this page</strong>
             <a href="#what">What is OAuth3?</a>
             <a href="#approval">The approval gate</a>
             <a href="#budgets">Budget enforcement</a>
@@ -76,7 +76,7 @@
             <a href="#faq">FAQ</a>
           </div>
 
-          <h2 id="what">What is OAuth3?</h2>
+          <h2 id="what" data-i18n="docs_oauth3_what_h2">What is OAuth3?</h2>
           <p><strong>OAuth3</strong> is Solace Browser's agency delegation standard. It extends OAuth 2.0 with three missing properties that matter for AI agents:</p>
           <ul>
             <li><strong>Scoped authority</strong> — each token grants exactly the permissions it names, nothing more</li>
@@ -85,7 +85,7 @@
           </ul>
           <p>OAuth3 means: <em>your AI agent can only do what you explicitly approved, within the limits you set, for as long as you allow.</em></p>
 
-          <h2 id="approval">The approval gate</h2>
+          <h2 id="approval" data-i18n="docs_oauth3_approval_h2">The approval gate</h2>
           <p>Before any sensitive action, Solace Browser shows the <strong>OAuth3 confirmation dialog</strong>. This dialog displays:</p>
           <ul>
             <li>The app and action being requested</li>
@@ -113,7 +113,7 @@
 │  [Proceed]  [Cancel]  [Adjust Budget]   │
 └─────────────────────────────────────────┘</pre>
 
-          <h2 id="budgets">Budget enforcement</h2>
+          <h2 id="budgets" data-i18n="docs_oauth3_budgets_h2">Budget enforcement</h2>
           <p>Every app has two budget planes:</p>
 
           <h3>Action budgets (non-financial)</h3>
@@ -150,7 +150,7 @@ LinkedIn: {
           </ul>
           <p>Budget resolution: when global AND app budgets conflict, <strong>the stricter rule wins</strong>. Allowlists use intersection (smaller set). Step-up: if any policy requires it, it's required.</p>
 
-          <h2 id="evidence">Evidence trails</h2>
+          <h2 id="evidence" data-i18n="docs_oauth3_evidence_h2">Evidence trails</h2>
           <p>Every approved action is sealed to your evidence vault:</p>
           <ul>
             <li>SHA-256 hash of the action + inputs + outputs</li>
@@ -160,7 +160,7 @@ LinkedIn: {
           </ul>
           <p>Evidence is stored locally in <code>~/.solace/evidence/</code>. With a Solace Pro account, it syncs to encrypted cloud storage (30-day retention).</p>
 
-          <h2 id="fail-closed">Fail-closed model</h2>
+          <h2 id="fail-closed" data-i18n="docs_oauth3_failclosed_h2">Fail-closed model</h2>
           <p>Solace Browser is fail-closed: when in doubt, it does nothing.</p>
           <ul>
             <li><strong>No approval = no action</strong> — the 15-second countdown auto-cancels</li>
@@ -171,11 +171,11 @@ LinkedIn: {
           </ul>
           <p>This is the core invariant. It cannot be disabled by configuration.</p>
 
-          <h2 id="revoke">Revocation</h2>
+          <h2 id="revoke" data-i18n="docs_oauth3_revoke_h2">Revocation</h2>
           <p>You can revoke any OAuth3 token at any time from <a href="/settings" style="color:var(--sb-signal)">Settings → Account</a>. Revoked tokens cannot be used, even if they haven't expired. All active sessions using that token are terminated immediately.</p>
           <p>To adjust budgets: Settings → Apps → select app → Budget. Changes take effect on the next run.</p>
 
-          <h2 id="faq">FAQ</h2>
+          <h2 id="faq" data-i18n="docs_oauth3_faq_h2">FAQ</h2>
 
           <h3>Can an agent approve actions on my behalf?</h3>
           <p>No. The OAuth3 approval gate always requires a human action (clicking [Approve] in the UI). Agents cannot simulate this click — the UI checks that the approval came from the real browser interface, not from the API.</p>
