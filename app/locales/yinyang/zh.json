@@ -15,7 +15,33 @@
     "blocked": "已阻塞",
     "failed": "失败",
     "idle": "空闲",
-    "title": "阴阳"
+    "title": "阴阳",
+    "nav_home": "首页",
+    "nav_apps": "应用",
+    "nav_machine": "机器",
+    "nav_tunnel": "隧道",
+    "nav_settings": "设置",
+    "nav_full_product": "完整产品",
+    "nav_docs_back": "← 文档",
+    "nav_quick_start": "快速开始",
+    "nav_mcp_guide": "MCP 指南",
+    "nav_oauth3": "OAuth3",
+    "menu_surfaces": "界面",
+    "menu_documentation": "文档",
+    "menu_platform": "平台",
+    "menu_home": "首页",
+    "menu_app_store": "应用商店",
+    "menu_machine": "机器",
+    "menu_tunnel": "隧道",
+    "menu_settings": "设置",
+    "menu_docs_hub": "文档中心",
+    "menu_quick_start": "快速开始",
+    "menu_mcp_agents_guide": "MCP / Agents 指南",
+    "menu_oauth3_safety": "OAuth3 安全",
+    "menu_full_product": "完整产品页面",
+    "menu_download": "下载",
+    "auth_signed_in": "已登录",
+    "auth_sign_in": "登录"
   },
   "personality": {
     "professional": {
@@ -211,6 +237,54 @@
         "光明胜利。",
         "祝您光明交加，快乐无限。"
       ]
+    },
+    "tutorial": {
+      "step1_title": "认识 Yinyang ☯",
+      "step1_body": "我是 Yinyang — 你的 AI 浏览器导航员。我可以导航网络，单击按钮，填写表单，截取屏幕截图，并封存证据。始终在您的许可下。",
+      "step2_title": "已经在使用 Claude Code，Cursor，或 Codex?",
+      "step2_body": "Solace Browser 可以与任何 AI 编码代理一起工作。添加它作为 MCP 服务器，您的代理可以导航，单击，截取屏幕截图，并封存证据 —— 都需要您的许可。<a href=\"https://www.solaceagi.com/agents\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--sb-signal)\">查看完整的代理指南 →</a>",
+      "step2_code": "npx solace-browser --mcp",
+      "step3_title": "OAuth3 安全 🔒",
+      "step3_body": "我永远不会在没有您的明确许可的情况下采取行动。每个敏感操作都经过 OAuth3 网关 —— 时间范围，可撤销，并记录证据。您始终保持控制。",
+      "step4_title": "18 个应用程序准备就绪 🏪",
+      "step4_body": "浏览应用商店。18 个自动化程序已准备就绪 —— Gmail 文件夹整理，LinkedIn 推广，Slack 摘要等。配方重放成本为 $0.001。",
+      "step5_title": "开始！ 🎉",
+      "step5_body": "您已经完成了设置。我将随时出现在底部导航栏中，随时准备帮助您。只要问我，或者让我执行任务。",
+      "step5_joke": "计算机科学中只有两件困难的事情：缓存失效，命名事物，以及越界错误。",
+      "btn_next": "下一步 →",
+      "btn_prev": "← 返回",
+      "btn_skip": "跳过教程",
+      "btn_done": "出发！ ☯",
+      "progress": "第 {current} 步（共 {total} 步）",
+      "welcome_title": "欢迎使用 Solace Browser",
+      "welcome_body": "您的 AI 浏览器，带有 OAuth3 Approvals 和证据跟踪。",
+      "welcome_tour": "参加 2 分钟的导览",
+      "welcome_skip": "跳过，我知道自己在做什么"
+    },
+    "oauth3_confirm": {
+      "title": "OAuth3 授权 🔒",
+      "subtitle": "您即将通过 Solace AGI 授权一个应用程序。",
+      "scope_label": "请求范围:",
+      "budget_label": "当前预算:",
+      "benefits_title": "为什么 OAuth3 是安全的:",
+      "benefits": [
+        "⏱ 时间限制 — 代币自动过期",
+        "🚫 可撤销 — 可以在设置中随时取消",
+        "📋 证据封存 — 每个操作都进行了审计日志记录"
+      ],
+      "btn_proceed": "继续",
+      "btn_cancel": "取消",
+      "btn_adjust": "调整预算",
+      "countdown": "将在 {seconds}s 后自动取消",
+      "budget_adjust_label": "新预算 ($):",
+      "budget_save": "保存并继续"
+    },
+    "notifications": {
+      "type_info": "ℹ",
+      "type_success": "✓",
+      "type_warning": "⚠",
+      "type_error": "✕",
+      "from_agent": "来自 {agent_id}"
     }
   }
 }

@@ -169,7 +169,7 @@ const YinyangTutorial = (() => {
     div.setAttribute('aria-label', 'Yinyang Tutorial');
 
     const langMenuItems = LOCALES.map(l =>
-      `<a href="#" data-locale="${l.code}" aria-current="${l.code === _locale ? 'true' : 'false'}">${l.name}</a>`
+      `<a role="button" tabindex="0" data-locale="${l.code}" aria-current="${l.code === _locale ? 'true' : 'false'}">${l.name}</a>`
     ).join('');
 
     div.innerHTML = `
@@ -240,6 +240,8 @@ const YinyangTutorial = (() => {
         a.setAttribute('aria-current', a.dataset.locale === code ? 'true' : 'false');
       });
       _render();
+      // Also update page nav/UI strings via solace.js global
+      if (typeof window.SolacePageI18n === 'function') window.SolacePageI18n(code);
     });
     // Close lang menu on outside click
     document.addEventListener('click', (e) => {

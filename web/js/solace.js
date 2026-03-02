@@ -15,6 +15,8 @@
     markActiveNav();
     initHamburger();
     initLangSwitcher();
+    initAuthStatus();
+    initPageI18n();
     initFooterYear();
     initRevealObserver();
     initParticles();
@@ -127,6 +129,7 @@
       menu.querySelectorAll("[data-locale]").forEach((a) => {
         a.setAttribute("aria-current", a.dataset.locale === code ? "true" : "false");
       });
+      initPageI18n(code);
     });
 
     document.addEventListener("click", (e) => {
@@ -135,6 +138,37 @@
         btn.setAttribute("aria-expanded", "false");
       }
     });
+  }
+
+  function initAuthStatus() {
+    const el = document.querySelector("#sb-auth-status");
+    if (!el) return;
+    const key = localStorage.getItem("solace_api_key");
+    if (key) {
+      el.innerHTML = `<a class="sb-auth-indicator sb-auth-indicator--signed-in" href="/settings" data-i18n="auth_signed_in">Signed in</a>`;
+    } else {
+      el.innerHTML = `<a class="sb-auth-indicator" href="/start" data-i18n="auth_sign_in">Sign in</a>`;
+    }
+  }
+
+  // Expose globally so yinyang-tutorial.js can call it when locale changes
+  window.SolacePageI18n = function(loc) { initPageI18n(loc); };
+
+  async function initPageI18n(locale) {
+    const loc = locale || localStorage.getItem("sb_locale") || "en";
+    // English is already in HTML; still run to update after locale switch
+    try {
+      const resp = await fetch(`/api/locale?key=ui&locale=${encodeURIComponent(loc)}`);
+      const data = await resp.json();
+      const strings = data.ui || {};
+      if (!Object.keys(strings).length) return;
+      document.querySelectorAll("[data-i18n]").forEach((el) => {
+        const k = el.dataset.i18n;
+        if (strings[k] !== undefined) {
+          el.textContent = strings[k];
+        }
+      });
+    } catch (e) { /* fail silently — English fallback stays in place */ }
   }
 
   function initFooterYear() {

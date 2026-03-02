@@ -15,7 +15,33 @@
     "blocked": "Bloqueado",
     "failed": "Fallido",
     "idle": "INACTIVO",
-    "title": "Yinyang"
+    "title": "Yinyang",
+    "nav_home": "Inicio",
+    "nav_apps": "Aplicaciones",
+    "nav_machine": "Máquina",
+    "nav_tunnel": "Túnel",
+    "nav_settings": "Configuración",
+    "nav_full_product": "Producto completo",
+    "nav_docs_back": "← Documentos",
+    "nav_quick_start": "Inicio rápido",
+    "nav_mcp_guide": "Guía de MCP",
+    "nav_oauth3": "OAuth3",
+    "menu_surfaces": "Superficies",
+    "menu_documentation": "Documentación",
+    "menu_platform": "Plataforma",
+    "menu_home": "Inicio",
+    "menu_app_store": "Tienda de aplicaciones",
+    "menu_machine": "Máquina",
+    "menu_tunnel": "Túnel",
+    "menu_settings": "Configuración",
+    "menu_docs_hub": "Centro de documentos",
+    "menu_quick_start": "Inicio rápido",
+    "menu_mcp_agents_guide": "Guía de MCP / Agents",
+    "menu_oauth3_safety": "Seguridad de OAuth3",
+    "menu_full_product": "Página del producto completo",
+    "menu_download": "Descargar",
+    "auth_signed_in": "Sesión iniciada",
+    "auth_sign_in": "Iniciar sesión"
   },
   "personality": {
     "professional": {
@@ -211,6 +237,54 @@
         "La luz triunfa.",
         "Te deseamos luz y alegría."
       ]
+    },
+    "tutorial": {
+      "step1_title": "Conoce Yinyang ☯",
+      "step1_body": "Soy Yinyang — tu navegador de navegador de inteligencia artificial. Navego por la web, hago clic en botones, lleno formularios, tomo capturas de pantalla y sellado la evidencia. Siempre con tu aprobación.",
+      "step2_title": "¿Ya estás usando Claude Code, Cursor o Codex?",
+      "step2_body": "Solace Browser funciona junto con cualquier agente de codificación de inteligencia artificial. Agregalo como servidor MCP y tu agente podrá navegar, hacer clic, tomar capturas de pantalla y sellar evidencia — todo con tu aprobación. <a href=\"https://www.solaceagi.com/agents\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--sb-signal)\">Ver la guía completa de agentes →</a>",
+      "step2_code": "npx solace-browser --mcp",
+      "step3_title": "Seguridad OAuth3 🔒",
+      "step3_body": "Nunca actúo sin tu aprobación explícita. Cada acción sensible pasa por una puerta OAuth3 con alcance — limitada en el tiempo, revocable y registrada en la evidencia. Tú mantienes el control. Siempre.",
+      "step4_title": "18 Aplicaciones Listas 🏪",
+      "step4_body": "Navega por la Tienda de Aplicaciones. 18 automatizaciones listas para ejecutarse — clasificación de Gmail, contacto de LinkedIn, resúmenes de Slack y más. El costo de repetición de la receta es $0.001.",
+      "step5_title": "¡Empecemos! 🎉",
+      "step5_body": "Estás listo. Estaré aquí en la barra inferior siempre que me necesites. Solo pregunta — o indícame una tarea.",
+      "step5_joke": "Solo hay dos cosas difíciles en la informática: invalidación de caché, nominar cosas y errores de desfase.",
+      "btn_next": "Siguiente →",
+      "btn_prev": "← Atrás",
+      "btn_skip": "Omitir Tutorial",
+      "btn_done": "¡Vamos! ☯",
+      "progress": "Paso {current} de {total}",
+      "welcome_title": "Bienvenido a Solace Browser",
+      "welcome_body": "Tu navegador con inteligencia artificial con aprobaciones OAuth3 y rastros de evidencia.",
+      "welcome_tour": "Toma el tour de 2 minutos",
+      "welcome_skip": "Omitir, sé lo que estoy haciendo"
+    },
+    "oauth3_confirm": {
+      "title": "Autorización de OAuth3 🔒",
+      "subtitle": "Estás a punto de autorizar una aplicación a través de Solace AGI.",
+      "scope_label": "Solicitar scopes:",
+      "budget_label": "Presupuesto actual:",
+      "benefits_title": "Por qué OAuth3 es seguro:",
+      "benefits": [
+        "⏱ Limitado en el tiempo — el token caduca automáticamente",
+        "🚫 Revocable — cancelar en cualquier momento desde Ajustes",
+        "📋 Sellado de evidencia — cada acción registrada en un registro de auditoría"
+      ],
+      "btn_proceed": "Proceder",
+      "btn_cancel": "Cancelar",
+      "btn_adjust": "Ajustar presupuesto",
+      "countdown": "Se cancela automáticamente en {seconds}s",
+      "budget_adjust_label": "Nuevo presupuesto ($):",
+      "budget_save": "Guardar y proceder"
+    },
+    "notifications": {
+      "type_info": "ℹ",
+      "type_success": "✓",
+      "type_warning": "⚠",
+      "type_error": "✕",
+      "from_agent": "desde {agent_id}"
     }
   }
 }

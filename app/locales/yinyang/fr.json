@@ -211,6 +211,54 @@
         "La lumière l'emporte.",
         "Vous souhaitant lumière et joie."
       ]
+    },
+    "tutorial": {
+      "step1_title": "Découvrez Yinyang ☯",
+      "step1_body": "Je suis Yinyang — votre navigateur de browser IA. Je navigue sur le web, clique sur les boutons, remplis les formulaires, prends des captures d'écran et scelle les preuves. Toujours avec votre approbation.",
+      "step2_title": "Déjà utilisé Claude Code, Cursor, ou Codex?",
+      "step2_body": "Solace Browser fonctionne aux côtés de tout agent de codage IA. Ajoutez-le en tant que serveur MCP et votre agent peut naviguer, cliquer, capturer et sceller les preuves — tout cela avec votre approbation. <a href=\"https://www.solaceagi.com/agents\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--sb-signal)\">Voir le guide complet des agents →</a>",
+      "step2_code": "npx solace-browser --mcp",
+      "step3_title": "Sécurité OAuth3 🔒",
+      "step3_body": "Je n'agis jamais sans votre approbation explicite. Chaque action sensible passe par une porte OAuth3 avec étendue — limitée dans le temps, révocable et enregistrée dans les preuves. Vous restez en contrôle. Toujours.",
+      "step4_title": "18 Applications prêtes 🏪",
+      "step4_body": "Parcourez le magasin d'applications. 18 automatisations prêtes à exécuter — triage de Gmail, outreach de LinkedIn, résumés de Slack, et plus. Le coût de répétition de la recette est de 0,001 $.",
+      "step5_title": "Commençons ! 🎉",
+      "step5_body": "Vous êtes prêt. Je serai ici dans la barre inférieure chaque fois que vous en aurez besoin. Demandez-moi — ou pointez-moi vers une tâche.",
+      "step5_joke": "Il n'y a que deux choses difficiles en informatique : l'invalidation du cache, la dénomination des choses et les erreurs de décalage.",
+      "btn_next": "Suivant →",
+      "btn_prev": "← Précédent",
+      "btn_skip": "Sauter le didacticiel",
+      "btn_done": "Allons-y ! ☯",
+      "progress": "Étape {current} sur {total}",
+      "welcome_title": "Bienvenue dans Solace Browser",
+      "welcome_body": "Votre navigateur alimenté par IA avec approbations OAuth3 et traces de preuves.",
+      "welcome_tour": "Faites le tour de 2 minutes",
+      "welcome_skip": "Sauter, je sais ce que je fais"
+    },
+    "oauth3_confirm": {
+      "title": "Autorisation OAuth3 🔒",
+      "subtitle": "Vous êtes sur le point d'autoriser une application via Solace AGI.",
+      "scope_label": "Demande d'étendues:",
+      "budget_label": "Budget actuel:",
+      "benefits_title": "Pourquoi OAuth3 est sécurisé:",
+      "benefits": [
+        "⏱ Limité dans le temps — le jeton expire automatiquement",
+        "🚫 Révocable — annulable à tout moment depuis les Paramètres",
+        "📋 Scellé par preuve — chaque action est consignée dans les journaux d'audit"
+      ],
+      "btn_proceed": "Procéder",
+      "btn_cancel": "Annuler",
+      "btn_adjust": "Ajuster le budget",
+      "countdown": "Se désactive automatiquement dans {seconds}s",
+      "budget_adjust_label": "Nouveau budget ($):",
+      "budget_save": "Enregistrer & Procéder"
+    },
+    "notifications": {
+      "type_info": "ℹ",
+      "type_success": "✓",
+      "type_warning": "⚠",
+      "type_error": "✕",
+      "from_agent": "de {agent_id}"
     }
   }
 }

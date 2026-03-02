@@ -15,7 +15,33 @@
     "blocked": "Được chặn",
     "failed": "Thất bại",
     "idle": "NHẪN",
-    "title": "Yinyang"
+    "title": "Yinyang",
+    "nav_home": "Trang chủ",
+    "nav_apps": "Ứng dụng",
+    "nav_machine": "Máy",
+    "nav_tunnel": "Tunnel",
+    "nav_settings": "Cài đặt",
+    "nav_full_product": "Sản phẩm đầy đủ",
+    "nav_docs_back": "← Tài liệu",
+    "nav_quick_start": "Bắt đầu nhanh",
+    "nav_mcp_guide": "Hướng dẫn MCP",
+    "nav_oauth3": "OAuth3",
+    "menu_surfaces": "Bề mặt",
+    "menu_documentation": "Tài liệu",
+    "menu_platform": "Nền tảng",
+    "menu_home": "Trang chủ",
+    "menu_app_store": "Cửa hàng ứng dụng",
+    "menu_machine": "Máy",
+    "menu_tunnel": "Tunnel",
+    "menu_settings": "Cài đặt",
+    "menu_docs_hub": "Trung tâm tài liệu",
+    "menu_quick_start": "Bắt đầu nhanh",
+    "menu_mcp_agents_guide": "Hướng dẫn MCP / Agents",
+    "menu_oauth3_safety": "An toàn OAuth3",
+    "menu_full_product": "Trang sản phẩm đầy đủ",
+    "menu_download": "Tải xuống",
+    "auth_signed_in": "Đã đăng nhập",
+    "auth_sign_in": "Đăng nhập"
   },
   "personality": {
     "professional": {
@@ -211,6 +237,54 @@
         "Ánh sáng chiến thắng.",
         "Chúc bạn có ánh sáng và niềm vui."
       ]
+    },
+    "tutorial": {
+      "step1_title": "Gặp gỡ Yinyang ☯",
+      "step1_body": "Tôi là Yinyang — trình điều hướng trình duyệt AI của bạn. Tôi điều hướng web, nhấp vào nút, điền vào biểu mẫu, chụp ảnh màn hình và niêm phong bằng chứng. Luôn với sự phê duyệt của bạn.",
+      "step2_title": "Đã sử dụng Claude Code, Cursor, hoặc Codex?",
+      "step2_body": "Trình duyệt Solace hoạt động cùng với bất kỳ đại lý mã hóa AI nào. Thêm nó làm máy chủ MCP và đại lý của bạn có thể điều hướng, nhấp, chụp ảnh màn hình và niêm phong bằng chứng — tất cả với sự phê duyệt của bạn. <a href=\"https://www.solaceagi.com/agents\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--sb-signal)\">Xem hướng dẫn đại lý đầy đủ →</a>",
+      "step2_code": "npx solace-browser --mcp",
+      "step3_title": "An toàn OAuth3 🔒",
+      "step3_body": "Tôi không bao giờ hành động mà không có sự phê duyệt rõ ràng của bạn. Mỗi hành động nhạy cảm đều đi qua cổng OAuth3 có phạm vi — bị giới hạn thời gian, có thể thu hồi và ghi nhật ký bằng chứng. Bạn luôn kiểm soát.",
+      "step4_title": "18 Ứng dụng Sẵn sàng 🏪",
+      "step4_body": "Duyệt qua Cửa hàng Ứng dụng. 18 tự động hóa sẵn để chạy — Gmail sắp xếp, LinkedIn tiếp cận, tổng kết Slack, và nhiều hơn. Chi phí phát lại công thức là $0.001.",
+      "step5_title": "Bắt đầu! 🎉",
+      "step5_body": "Bạn đã sẵn sàng. Tôi sẽ ở đây trong giá đỡ dưới cùng bất cứ khi nào bạn cần tôi. Chỉ cần hỏi — hoặc chỉ tôi nhiệm vụ.",
+      "step5_joke": "Chỉ có hai điều khó trong khoa học máy tính: hủy bộ nhớ đệm, đặt tên cho thứ gì và lỗi đếm một.",
+      "btn_next": "Tiếp theo →",
+      "btn_prev": "← Quay lại",
+      "btn_skip": "Bỏ qua Hướng dẫn",
+      "btn_done": "Hãy đi! ☯",
+      "progress": "Bước {current} của {total}",
+      "welcome_title": "Chào mừng đến với Trình duyệt Solace",
+      "welcome_body": "Trình duyệt của bạn được hỗ trợ bởi AI với phê duyệt OAuth3 và đường dẫn bằng chứng.",
+      "welcome_tour": "Tham gia tour 2 phút",
+      "welcome_skip": "Bỏ qua, tôi biết mình đang làm gì"
+    },
+    "oauth3_confirm": {
+      "title": "OAuth3 Ủy quyền 🔒",
+      "subtitle": "Bạn đang về để ủy quyền một ứng dụng thông qua Solace AGI.",
+      "scope_label": "Yêu cầu phạm vi:",
+      "budget_label": "Ngân sách hiện tại:",
+      "benefits_title": "Tại sao OAuth3 an toàn:",
+      "benefits": [
+        "⏱ Giới hạn thời gian — token hết hạn tự động",
+        "🚫 Có thể thu hồi — hủy bất kỳ lúc nào từ Cài đặt",
+        "📋 Bằng chứng niêm phong — mỗi hành động được ghi nhật ký kiểm toán"
+      ],
+      "btn_proceed": "Tiếp tục",
+      "btn_cancel": "Hủy bỏ",
+      "btn_adjust": "Điều chỉnh Ngân sách",
+      "countdown": "Hủy tự động trong {seconds}s",
+      "budget_adjust_label": "Ngân sách mới ($):",
+      "budget_save": "Lưu & Tiếp tục"
+    },
+    "notifications": {
+      "type_info": "ℹ",
+      "type_success": "✓",
+      "type_warning": "⚠",
+      "type_error": "✕",
+      "from_agent": "từ {agent_id}"
     }
   }
 }

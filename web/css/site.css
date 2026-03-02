@@ -1049,12 +1049,14 @@ main { display: block; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--sb-border);
 }
 
 .yyT-gif {
-  width: 96px;
-  height: 96px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   flex-shrink: 0;
   display: block;
@@ -1068,8 +1070,8 @@ main { display: block; }
 }
 
 .yyT-step-icon {
-  font-size: 2.4rem;
-  margin-bottom: 10px;
+  font-size: 2.8rem;
+  margin-bottom: 14px;
   line-height: 1;
 }
 
@@ -1576,3 +1578,20 @@ main { display: block; }
 .docs-nav-links a { color: var(--sb-signal); text-decoration: none; font-size: 0.9rem; }
 .docs-nav-links a:hover { text-decoration: underline; }
 
+
+/* ── Auth Status Indicator ──────────────────────────────────────────────── */
+.sb-auth-status { display: flex; align-items: center; }
+.sb-auth-indicator {
+  font-size: 0.75rem;
+  text-decoration: none;
+  color: var(--sb-text-muted);
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--sb-border);
+  transition: border-color 0.2s, color 0.2s;
+}
+.sb-auth-indicator:hover { border-color: var(--sb-signal); color: var(--sb-signal); }
+.sb-auth-indicator--signed-in { color: var(--sb-signal); border-color: rgba(0,200,150,0.25); }
+.sb-auth-indicator--signed-in::before { content: '● '; font-size: 0.55rem; vertical-align: middle; }
+@media (max-width: 767px) { .sb-auth-status { display: none; } }

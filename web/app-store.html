@@ -29,12 +29,12 @@
             </span>
           </a>
           <nav class="site-nav" aria-label="Primary">
-            <a class="nav-link" data-nav-path="/" href="/">Home</a>
-            <a class="nav-link" data-nav-path="/app-store" href="/app-store">Apps</a>
-            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
-            <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect">Tunnel</a>
-            <a class="nav-link" data-nav-path="/settings" href="/settings">Settings</a>
-            <a class="nav-link nav-link--accent" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener">Full product</a>
+            <a class="nav-link" data-nav-path="/" href="/" data-i18n="nav_home">Home</a>
+            <a class="nav-link" data-nav-path="/app-store" href="/app-store" data-i18n="nav_apps">Apps</a>
+            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard" data-i18n="nav_machine">Machine</a>
+            <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect" data-i18n="nav_tunnel">Tunnel</a>
+            <a class="nav-link" data-nav-path="/settings" href="/settings" data-i18n="nav_settings">Settings</a>
+            <a class="nav-link nav-link--accent" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener" data-i18n="nav_full_product">Full product</a>
           </nav>
           <div class="sb-lang-switch" id="sb-lang-switch">
             <button class="sb-lang-btn" id="sb-lang-btn" aria-label="Select language" aria-expanded="false" aria-controls="sb-lang-menu">
@@ -42,27 +42,28 @@
               <img class="sb-lang-icon sb-lang-icon--hover" src="/images/icons/internationalization-2/160.png" alt="" width="22" height="22">
             </button>
             <div class="sb-lang-menu" id="sb-lang-menu">
-              <a href="#" data-locale="en">English</a><a href="#" data-locale="es">Español</a><a href="#" data-locale="vi">Tiếng Việt</a><a href="#" data-locale="zh">中文</a><a href="#" data-locale="pt">Português</a><a href="#" data-locale="fr">Français</a><a href="#" data-locale="ja">日本語</a><a href="#" data-locale="de">Deutsch</a><a href="#" data-locale="ar">العربية</a><a href="#" data-locale="hi">हिंदी</a><a href="#" data-locale="ko">한국어</a><a href="#" data-locale="id">Bahasa Indonesia</a><a href="#" data-locale="ru">Русский</a>
+              <a role="button" tabindex="0" data-locale="en">English</a><a role="button" tabindex="0" data-locale="es">Español</a><a role="button" tabindex="0" data-locale="vi">Tiếng Việt</a><a role="button" tabindex="0" data-locale="zh">中文</a><a role="button" tabindex="0" data-locale="pt">Português</a><a role="button" tabindex="0" data-locale="fr">Français</a><a role="button" tabindex="0" data-locale="ja">日本語</a><a role="button" tabindex="0" data-locale="de">Deutsch</a><a role="button" tabindex="0" data-locale="ar">العربية</a><a role="button" tabindex="0" data-locale="hi">हिंदी</a><a role="button" tabindex="0" data-locale="ko">한국어</a><a role="button" tabindex="0" data-locale="id">Bahasa Indonesia</a><a role="button" tabindex="0" data-locale="ru">Русский</a>
             </div>
           </div>
+          <div class="sb-auth-status" id="sb-auth-status"></div>
           <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
         </div>
       </header>
       <div class="mobile-menu" id="mobile-menu">
         <div class="mobile-menu__section">
-          <h3>Surfaces</h3>
-          <a data-nav-path="/" href="/">Home</a>
-          <a data-nav-path="/app-store" href="/app-store">App Store</a>
-          <a data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
-          <a data-nav-path="/tunnel-connect" href="/tunnel-connect">Tunnel</a>
-          <a data-nav-path="/settings" href="/settings">Settings</a>
+          <h3 data-i18n="menu_surfaces">Surfaces</h3>
+          <a data-nav-path="/" href="/" data-i18n="nav_home">Home</a>
+          <a data-nav-path="/app-store" href="/app-store" data-i18n="menu_app_store">App Store</a>
+          <a data-nav-path="/machine-dashboard" href="/machine-dashboard" data-i18n="nav_machine">Machine</a>
+          <a data-nav-path="/tunnel-connect" href="/tunnel-connect" data-i18n="nav_tunnel">Tunnel</a>
+          <a data-nav-path="/settings" href="/settings" data-i18n="nav_settings">Settings</a>
         </div>
         <div class="mobile-menu__section">
-          <h3>Documentation</h3>
-          <a href="/docs">Docs Hub</a>
-          <a href="/docs/quick-start">Quick Start</a>
-          <a href="/docs/mcp">MCP / Agents Guide</a>
-          <a href="/docs/oauth3">OAuth3 Safety</a>
+          <h3 data-i18n="menu_documentation">Documentation</h3>
+          <a href="/docs" data-i18n="menu_docs_hub">Docs Hub</a>
+          <a href="/docs/quick-start" data-i18n="nav_quick_start">Quick Start</a>
+          <a href="/docs/mcp" data-i18n="menu_mcp_agents_guide">MCP / Agents Guide</a>
+          <a href="/docs/oauth3" data-i18n="menu_oauth3_safety">OAuth3 Safety</a>
         </div>
       </div>
 
@@ -156,9 +157,9 @@
         <div class="site-footer__inner">
           <div>© <span data-current-year></span> Solace Browser. No vendor API keys. Web-native automation.</div>
           <div class="site-footer__links">
-            <a href="/app-store">Apps</a>
-            <a href="/settings">Settings</a>
-            <a href="/machine-dashboard">Machine</a>
+            <a href="/app-store" data-i18n="nav_apps">Apps</a>
+            <a href="/settings" data-i18n="nav_settings">Settings</a>
+            <a href="/machine-dashboard" data-i18n="nav_machine">Machine</a>
             <a href="https://github.com/solaceagi/solace-browser" target="_blank" rel="noopener">GitHub</a>
           </div>
         </div>

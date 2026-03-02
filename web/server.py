@@ -514,16 +514,15 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             data = json.loads(locale_path.read_text(encoding="utf-8"))
             # Strip _meta
             data = {k: v for k, v in data.items() if not k.startswith("_")}
-            if key and key in data.get("delight", {}):
-                self._send_json(HTTPStatus.OK, {key: data["delight"][key]}, send_body=send_body)
-            elif key:
-                # Look in top-level delight subkeys
-                found = {}
-                for section in data.values():
-                    if isinstance(section, dict) and key in section:
-                        found = {key: section[key]}
-                        break
-                self._send_json(HTTPStatus.OK, found if found else data, send_body=send_body)
+            if key:
+                # Check delight section first, then top-level sections
+                delight = data.get("delight", {})
+                if key in delight:
+                    self._send_json(HTTPStatus.OK, {key: delight[key]}, send_body=send_body)
+                elif key in data:
+                    self._send_json(HTTPStatus.OK, {key: data[key]}, send_body=send_body)
+                else:
+                    self._send_json(HTTPStatus.OK, {}, send_body=send_body)
             else:
                 self._send_json(HTTPStatus.OK, data, send_body=send_body)
         except Exception as exc:
