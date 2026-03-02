@@ -1,87 +1,115 @@
 # TODO — Solace Browser
-# Updated: 2026-03-01 | Auth: 65537
-# Agent: Antigravity / Gemini 2.5 Pro
-# Tests: 4,768 passed | Modules: 22+
-# Run: pytest tests/ -v
+# Updated: 2026-03-02 | Auth: 65537 | Belt: Yellow
+# Source: Virtual Focus Group (49 Personas × 5 Phases) + Competitive Analysis
+# Tests: 4,814 | Modules: 22+ | Rung Target: 65537
+# Pipeline: papers → diagrams → styleguides → webservices → tests → code → seal
 
 ---
 
-## P0 — Critical (DONE)
+## P0 — Critical Path (Beta Mar 9)
 
-### T1: Playwright browser auto-installer ✅
-- DONE: `scripts/install_browsers.py` — platform-aware Playwright browser download
-- CLI: --browser, --check, --dry-run, --install-deps, --timeout
-- 61 tests in tests/test_install_browsers.py
+### T1: Plain-English scope confirmation UI
+**Phase:** 4-VALUE | **Score:** 0.81 | **Source:** Norman, Sinek, Hopper
+**Acceptance:** Scope confirmation modal shows "Read your Gmail inbox" not "gmail.read.inbox"
+**Files:** src/ui/scope_display.py (new or extend existing)
+**Tests:** ~15
 
-### T2: Settings hot-reload ✅
-- DONE: `src/settings_manager.py` — background polling (5s), callback-based, thread-safe
-- register/unregister callbacks, force reload, daemon thread with clean shutdown
-- 32 tests in tests/test_settings_manager.py
+### T2: Step-by-step execution progress UI
+**Phase:** 4-VALUE | **Score:** 0.72 | **Source:** Dean, Gregg, Kernighan
+**Acceptance:** Progress bar: "Step 3/6: Extracting emails..." with green checkmarks on completion
+**Files:** src/ui/execution_progress.py (new)
+**Tests:** ~12
 
-### T3: Personality customization ✅
-- DONE: `src/yinyang/personality.py` — 5 personalities (Professional/Friendly/Playful/Minimal/Custom)
-- Content filtering by personality tags, tone parameters for each module
-- 37 tests in tests/test_personality.py
+### T3: First-success celebration (delight engine)
+**Phase:** 4-VALUE | **Score:** 0.84 | **Source:** Norman, Rams, Van Edwards
+**Acceptance:** Yinyang animation on first successful recipe, "Your first AI task is done!" message
+**Files:** src/delight_engine.py (extend existing)
+**Tests:** ~8
 
-### T4: macOS binary build ✅
-- DONE: `solace-browser-macos.spec` + `scripts/build-mac.sh` rewrite
-- Universal binary (x86_64+arm64), ad-hoc codesign, GCS upload, SHA-256
-- 30 tests in tests/test_macos_build.py
-
----
-
-## P1 — Important (Do After P0)
-
-### T5: Cloudflare tunnel integration
-- `src/tunnel_client.py` — real Cloudflare tunnel (replace fake URL placeholder)
-- Use `cloudflared` binary to create tunnel to local server
-- Expose local Solace Browser instance at `*.trycloudflare.com`
-- Auto-detect if `cloudflared` is installed, provide install instructions if not
-- Test: mock cloudflared subprocess, verify URL extraction from stdout
-
-### T6: Recipe versioning
-- `src/recipes/versioning.py` — track recipe versions with semantic versioning
-- Each recipe gets a `version` field in its JSON
-- On update: bump minor version, keep previous version in `~/.solace/recipes/history/`
-- Rollback support: `solace recipe rollback <name> <version>`
-- Test: create recipe v1.0 → update → verify v1.1 exists + v1.0 in history
-
-### T7: Offline mode improvements
-- `src/offline_manager.py` — graceful degradation when no internet
-- Cache last-known-good recipes locally
-- Queue outbox items for later sync
-- Show "offline" indicator in top rail (new state color: orange)
-- Test: mock network failure → verify cached recipes still work
-
-### T8: Evidence export
-- `src/audit/export.py` — export evidence chains to PDF/JSON/CSV
-- PDF: formatted report with hash chain verification
-- JSON: raw evidence bundle (compatible with external audit tools)
-- CSV: flattened for spreadsheet analysis
-- Test: create 5 evidence entries → export to each format → verify content
+### T4: Preview explainer ("what will happen")
+**Phase:** 4-VALUE | **Source:** Karpathy, Norman
+**Acceptance:** Preview screen shows plain-English description of each step before approval
+**Files:** src/ui/preview_explainer.py (new)
+**Tests:** ~10
 
 ---
 
-## P2 — Nice to Have
+## P1 — Launch (Mar 9 → Apr 1)
 
-### T9: Voice command integration
-- Wire `src/voice/` module to Yinyang for voice-triggered actions
-- "Hey Solace, run gmail compose" → trigger recipe
-- Test: mock audio input → verify intent classification
+### T5: Plain-English evidence summary
+**Phase:** 4-VALUE | **Score:** 2.00 | **Source:** Kernighan, Norman, Rams
+**Acceptance:** "6 emails triaged, 2 marked important, 1 draft created. Time: 47s"
+**Files:** src/evidence/summary_formatter.py (new)
+**Tests:** ~15
 
-### T10: Browser extension mode
-- Package core functionality as Chrome extension (Manifest V3)
-- Subset: top rail, budget display, recipe trigger
-- No full automation (extension sandbox limits)
+### T6: Live Mermaid execution diagram
+**Phase:** 4-VALUE | **Score:** 1.80 | **Source:** Mermaid Creator, Karpathy
+**Acceptance:** Mermaid stateDiagram in browser, nodes highlight green on completion, current pulses
+**Files:** src/ui/live_diagram.py (new)
+**Tests:** ~12
+
+### T7: Visual execution replay (screenshots per step)
+**Phase:** 4-VALUE | **Score:** 1.44 | **Source:** Karpathy, Norman
+**Acceptance:** Optional screenshot at each step, playable as slideshow, stored in evidence (encrypted)
+**Files:** src/capture_pipeline.py (extend existing)
+**Tests:** ~15
+
+### T8: Yinyang emotional indicators
+**Phase:** 5-HABIT | **Score:** 1.20 | **Source:** Ekman, Norman, Siegel
+**Acceptance:** Yinyang face changes: happy (healthy), concerned (tokens expiring), alert (failures)
+**Files:** src/yinyang/ (extend existing)
+**Tests:** ~10
 
 ---
 
-## Rules for Agent
+## P2 — Growth (Apr → May)
 
-1. Read `AGENTS.md` first — build commands, coding rules, architecture
-2. Run `pytest tests/ -v` after EVERY change — must stay at 4,608+ passed, 0 failures
-3. All new modules go in `src/` with matching `tests/test_<module>.py`
-4. NEVER `except Exception: pass` — Fallback Ban is ABSOLUTE
-5. Evidence captured at event time, never retroactively
-6. All Playwright interactions go through 4-plane architecture (capture/control/execute/evidence)
-7. Git commits need descriptive messages (no GLOW hook on this repo)
+### T9: Natural language recipe creation
+**Phase:** 4-VALUE | **Score:** 2.40 | **Source:** Hopper, Norman, Karpathy
+**Acceptance:** User describes task in English → AI generates recipe.json → preview before save
+**Files:** src/recipes/nl_compiler.py (new)
+**Tests:** ~20
+
+### T10: Proactive Yinyang suggestions
+**Phase:** 5-HABIT | **Score:** 1.92 | **Source:** Van Edwards, Ekman, Siegel
+**Acceptance:** Pattern learning: "Ready for morning brief?" at 8am. Anti-Clippy: never auto-execute
+**Files:** src/yinyang/proactive.py (new)
+**Tests:** ~15
+
+### T11: Cross-app recipe chaining (browser side)
+**Phase:** 4-VALUE | **Score:** 3.20 | **Source:** Lovelace, Kleppmann
+**Acceptance:** Execute pipeline across apps with single evidence chain, browser context switching
+**Files:** src/recipes/pipeline_executor.py (new)
+**Tests:** ~25
+
+### T12: Chrome extension (lightweight entry point)
+**Phase:** 3-INSTALL | **Score:** 1.44 | **Source:** Hashimoto, Hightower
+**Acceptance:** Chrome Web Store extension, shows recipes for current tab, delegates to CLI/cloud
+**Files:** extension/ (new directory)
+**Tests:** ~20
+
+---
+
+## P3 — Ecosystem (May → Jun)
+
+### T13: Recipe debugger (browser visualization)
+**Phase:** 5-HABIT | **Score:** 2.45 | **Source:** Guido, Fowler
+**Acceptance:** Visual debugger: DOM snapshot at each step, state inspection panel
+**Files:** src/ui/debugger.py (new)
+**Tests:** ~15
+
+### T14: Weekly value dashboard
+**Phase:** 5-HABIT | **Score:** 1.28 | **Source:** Allen, Van Edwards
+**Acceptance:** Dashboard: tasks completed, time saved, top recipes, week-over-week comparison
+**Files:** src/ui/value_dashboard.py (new)
+**Tests:** ~10
+
+---
+
+## Completed (Session G+L+M+N)
+
+### Previous P0+P1 (4,814 tests) ✅
+- Budget gates (56), Auth proxy (62), Yinyang rails (61), Session manager (47)
+- Cross-app (24), Capture pipeline (80), Evidence chain (48), Delight engine (43)
+- Support bridge (32), Alert queue (26), Install browsers (61), Settings manager (32)
+- Personality (37), macOS spec (30), Gmail recipe execution pipeline (38)
