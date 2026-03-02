@@ -127,6 +127,11 @@ try:
 except ImportError as e:
     logger_temp = logging.getLogger('solace-browser')
     logger_temp.warning(f"Could not import browser module: {e}")
+    format_aria_tree = None
+    get_dom_snapshot = None
+    get_page_state = None
+    execute_action = None
+    BrowserAction = None
 
 try:
     from competitive_features import (
@@ -1780,6 +1785,11 @@ class SolaceBrowserServer:
         self.app.router.add_post('/api/act', self._handle_act)
         self.app.router.add_get('/api/health', self._handle_health)
         self.app.router.add_get('/api/status', self._handle_status)
+        self.app.router.add_get('/agents.json', self._handle_agents_json)
+        self.app.router.add_post('/api/escalate', self._handle_escalate)
+        self.app.router.add_post('/api/estimate', self._handle_estimate)
+        self.app.router.add_post('/api/recipes/match', self._handle_recipes_match)
+        self.app.router.add_post('/api/evidence/search', self._handle_evidence_search)
         self.app.router.add_get('/api/events', self._handle_events)
         self.app.router.add_get('/api/v1/locale', self._handle_locale_get)
         self.app.router.add_post('/api/v1/locale', self._handle_locale_set)
@@ -1892,7 +1902,8 @@ class SolaceBrowserServer:
     async def _handle_evaluate(self, request):
         """Evaluate JavaScript"""
         data = await request.json()
-        result = await self.browser.evaluate(data.get('expression', ''))
+        expression = data.get('expression') or data.get('script', '')
+        result = await self.browser.evaluate(expression)
         return web.json_response(result)
 
     async def _handle_login_linkedin_google(self, request):
@@ -1978,11 +1989,194 @@ class SolaceBrowserServer:
         """Get accessibility tree (ARIA) snapshot with element references"""
         try:
             limit = int(request.query.get('limit', 500))
+            if format_aria_tree is None:
+                return web.json_response({"error": "ARIA module not available", "code": "MODULE_UNAVAILABLE", "retryable": False}, status=503)
             result = await self.browser.get_aria_snapshot(limit=limit)
             return web.json_response(result)
         except Exception as e:
             logger.error(f"ARIA snapshot handler error: {e}")
             return web.json_response({"error": str(e)}, status=500)
+
+    async def _handle_agents_json(self, request):
+        """Machine-readable capability manifest for agent discovery"""
+        import datetime
+        recipes_dir = Path(__file__).parent / "data" / "default" / "recipes"
+        recipe_count = len(list(recipes_dir.glob("**/*.recipe.json"))) if recipes_dir.exists() else 0
+        return web.json_response({
+            "name": "Solace Browser",
+            "version": "5.0",
+            "description": "AI browser automation with evidence chains. Recipes replace LLMs. $0.001 on replay.",
+            "api_base": f"http://localhost:{self.port}",
+            "status": "ready",
+            "capabilities": [
+                "web_navigation", "form_filling", "screenshot", "dom_snapshot",
+                "aria_snapshot", "javascript_evaluation", "evidence_capture",
+                "recipe_execution", "oauth3_delegation", "session_persistence",
+                "parallel_tabs", "part11_compliance"
+            ],
+            "endpoints": {
+                "navigate": "POST /api/navigate",
+                "click": "POST /api/click",
+                "fill": "POST /api/fill",
+                "screenshot": "POST /api/screenshot",
+                "snapshot": "POST /api/snapshot",
+                "aria_snapshot": "GET /api/aria-snapshot",
+                "evaluate": "POST /api/evaluate",
+                "status": "GET /api/status",
+                "escalate": "POST /api/escalate",
+                "estimate": "POST /api/estimate",
+                "recipes_match": "POST /api/recipes/match",
+                "evidence_search": "POST /api/evidence/search",
+                "oauth3_token": "POST /oauth3/token"
+            },
+            "oauth3_scopes": [
+                "browser.navigate", "browser.click", "browser.fill",
+                "browser.screenshot", "browser.evaluate", "evidence.write", "recipe.run"
+            ],
+            "agent_formats": {
+                "claude_code": "/agents/claude.md",
+                "codex": "/agents/codex",
+                "cursor": "/agents/cursor",
+                "windsurf": "/agents/windsurf",
+                "copilot": "/agents/copilot",
+                "aider": "/agents/aider",
+                "continue": "/agents/continue",
+                "llms_txt": "/agents/llms.txt"
+            },
+            "recipes_available": recipe_count,
+            "error_codes": [
+                "SELECTOR_NOT_FOUND", "NAVIGATION_TIMEOUT", "BUDGET_EXCEEDED",
+                "SCOPE_DENIED", "HUMAN_REQUIRED", "NETWORK_ERROR",
+                "SESSION_EXPIRED", "ELEMENT_NOT_INTERACTABLE"
+            ],
+            "generated_at": datetime.datetime.utcnow().isoformat() + "Z"
+        })
+
+    async def _handle_escalate(self, request):
+        """Human escalation — notify operator that agent needs intervention"""
+        import datetime
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        reason = data.get("reason", "Agent requested human intervention")
+        screenshot = data.get("screenshot")
+        blocking = data.get("blocking", False)
+        escalation_id = f"esc_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+        audit_dir = Path(self.browser.audit_dir) if hasattr(self.browser, 'audit_dir') else Path.home() / ".solace" / "audit"
+        audit_dir.mkdir(parents=True, exist_ok=True)
+        record = {
+            "escalation_id": escalation_id,
+            "reason": reason,
+            "screenshot": screenshot,
+            "blocking": blocking,
+            "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+            "status": "pending"
+        }
+        import json as _json
+        (audit_dir / f"{escalation_id}.json").write_text(_json.dumps(record, indent=2))
+        logger.warning(f"AGENT ESCALATION [{escalation_id}]: {reason}")
+        return web.json_response({
+            "escalation_id": escalation_id,
+            "status": "acknowledged",
+            "message": "Human operator notified. Await callback or check audit log.",
+            "audit_path": str(audit_dir / f"{escalation_id}.json"),
+            "blocking": blocking,
+            "timestamp": record["timestamp"]
+        })
+
+    async def _handle_estimate(self, request):
+        """Estimate cost and check recipe availability for a task"""
+        import datetime
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        task = data.get("task", "")
+        steps = data.get("steps", [])
+        recipes_dir = Path(__file__).parent / "data" / "default" / "recipes"
+        recipe_hit = False
+        recipe_id = None
+        if task and recipes_dir.exists():
+            task_lower = task.lower().replace(" ", "-")
+            for recipe_file in recipes_dir.glob("**/*.recipe.json"):
+                if any(word in recipe_file.stem.lower() for word in task_lower.split("-") if len(word) > 3):
+                    recipe_hit = True
+                    recipe_id = recipe_file.stem
+                    break
+        est_usd = 0.001 if recipe_hit else (0.01 * max(len(steps), 1))
+        return web.json_response({
+            "task": task,
+            "recipe_hit": recipe_hit,
+            "recipe_id": recipe_id,
+            "est_usd": est_usd,
+            "est_tokens": 0 if recipe_hit else max(len(steps), 1) * 500,
+            "confidence": 0.95 if recipe_hit else 0.7,
+            "note": "Recipe replay at $0.001. LLM discovery at ~$0.01/step." if recipe_hit else "No cached recipe. Will use LLM for discovery.",
+            "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+        })
+
+    async def _handle_recipes_match(self, request):
+        """Check if a recipe exists for the given task"""
+        import datetime
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        task = data.get("task", "")
+        recipes_dir = Path(__file__).parent / "data" / "default" / "recipes"
+        matches = []
+        if task and recipes_dir.exists():
+            task_words = [w for w in task.lower().split() if len(w) > 3]
+            for recipe_file in recipes_dir.glob("**/*.recipe.json"):
+                stem = recipe_file.stem.lower()
+                score = sum(1 for w in task_words if w in stem)
+                if score > 0:
+                    matches.append({"recipe_id": recipe_file.stem, "path": str(recipe_file), "score": score})
+            matches.sort(key=lambda x: x["score"], reverse=True)
+        hit = len(matches) > 0
+        return web.json_response({
+            "hit": hit,
+            "task": task,
+            "recipe_id": matches[0]["recipe_id"] if hit else None,
+            "matches": matches[:5],
+            "replay_cost_usd": 0.001 if hit else None,
+            "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+        })
+
+    async def _handle_evidence_search(self, request):
+        """Search past evidence bundles by query string"""
+        import datetime, json as _json
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        query = data.get("query", "").lower()
+        limit = int(data.get("limit", 10))
+        audit_dir = Path.home() / ".solace" / "audit"
+        results = []
+        if query and audit_dir.exists():
+            for f in sorted(audit_dir.glob("*.json"), key=lambda x: x.stat().st_mtime, reverse=True):
+                try:
+                    content = f.read_text(encoding="utf-8")
+                    if query in content.lower():
+                        record = _json.loads(content)
+                        results.append({
+                            "file": f.name,
+                            "path": str(f),
+                            "modified": datetime.datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
+                            "preview": content[:200]
+                        })
+                        if len(results) >= limit:
+                            break
+                except Exception:
+                    continue
+        return web.json_response({
+            "query": query,
+            "count": len(results),
+            "results": results,
+            "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+        })
 
     async def _handle_dom_snapshot(self, request):
         """Get DOM tree snapshot with element references"""
