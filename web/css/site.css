@@ -1116,6 +1116,51 @@ main { display: block; }
   text-align: left;
 }
 
+/* Language picker inline (step 1) */
+.yyT-lang-picker {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: rgba(100, 196, 255, 0.05);
+  border: 1px solid rgba(100, 196, 255, 0.15);
+  border-radius: 10px;
+  text-align: center;
+}
+.yyT-lang-picker__label {
+  font-size: 0.78rem;
+  color: var(--sb-text-muted, #9cb1ca);
+  margin-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+.yyT-lang-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+.yyT-lang-pill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(100, 196, 255, 0.2);
+  background: transparent;
+  color: var(--sb-text-muted, #9cb1ca);
+  font-size: 0.73rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+  font-family: inherit;
+}
+.yyT-lang-pill:hover {
+  border-color: var(--sb-signal, #64c4ff);
+  color: var(--sb-signal, #64c4ff);
+  background: rgba(100, 196, 255, 0.08);
+}
+.yyT-lang-pill--active {
+  border-color: var(--sb-signal, #64c4ff);
+  color: var(--sb-signal, #64c4ff);
+  background: rgba(100, 196, 255, 0.12);
+  font-weight: 600;
+}
+
 .yyT-dots {
   display: flex;
   justify-content: center;

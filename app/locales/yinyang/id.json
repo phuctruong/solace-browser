@@ -237,6 +237,54 @@
         "Cahaya menang.",
         "Mengucapkan cahaya dan kegembiraan untukmu."
       ]
+    },
+    "tutorial": {
+      "step1_title": "Halo Yinyang ☯",
+      "step1_body": "Saya Yinyang — navigator browser AI Anda. Saya menavigasi web, mengklik tombol, mengisi formulir, mengambil screenshot, dan menyegel bukti. Selalu dengan persetujuan Anda.",
+      "step2_title": "Sudah menggunakan Claude Code, Cursor, atau Codex?",
+      "step2_body": "Solace Browser bekerja bersama dengan agent coding AI mana pun. Tambahkan sebagai server MCP dan agent Anda dapat menavigasi, mengklik, screenshot, dan menyegel bukti — semua dengan persetujuan Anda. <a href=\"https://www.solaceagi.com/agents\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--sb-signal)\">Lihat panduan agent lengkap →</a>",
+      "step2_code": "npx solace-browser --mcp",
+      "step3_title": "Keamanan OAuth3 🔒",
+      "step3_body": "Saya tidak pernah bertindak tanpa persetujuan eksplisit Anda. Setiap tindakan sensitif melewati gerbang OAuth3 yang diberi batasan waktu — dapat dibatalkan dan dilog sebagai bukti. Anda tetap memiliki kontrol. Selalu.",
+      "step4_title": "18 Aplikasi Siap 🏪",
+      "step4_body": "Jelajahi App Store. 18 otomatisasi siap dijalankan — triase Gmail, pendekatan LinkedIn, ringkasan Slack, dan lainnya. Biaya replay resep $0,001.",
+      "step5_title": "Mari Mulai! 🎉",
+      "step5_body": "Anda siap. Saya akan ada di rel bawah kapan pun Anda membutuhkan saya. Tanya saja — atau tunjuk saya ke tugas.",
+      "step5_joke": "Hanya ada dua hal yang sulit dalam ilmu komputer: invalidasi cache, penamaan hal-hal, dan kesalahan off-by-one.",
+      "btn_next": "Lanjut →",
+      "btn_prev": "← Kembali",
+      "btn_skip": "Lewati Tutorial",
+      "btn_done": "Mari Kita Mulai! ☯",
+      "progress": "Langkah {current} dari {total}",
+      "welcome_title": "Selamat datang di Solace Browser",
+      "welcome_body": "Browser AI Anda dengan persetujuan OAuth3 dan jejak bukti.",
+      "welcome_tour": "Ambil tur 2 menit",
+      "welcome_skip": "Lewati, saya tahu apa yang saya lakukan"
+    },
+    "oauth3_confirm": {
+      "title": "Otorisasi OAuth3 🔒",
+      "subtitle": "Anda akan mengotorisasi aplikasi melalui Solace AGI.",
+      "scope_label": "Mengajukan ruang lingkup:",
+      "budget_label": "Anggaran saat ini:",
+      "benefits_title": "Mengapa OAuth3 aman:",
+      "benefits": [
+        "⏱ Terikat waktu — token kadaluarsa secara otomatis",
+        "🚫 Dapat dibatalkan — batalkan kapan saja dari Pengaturan",
+        "📋 Disegel bukti — setiap tindakan dicatat log audit"
+      ],
+      "btn_proceed": "Lanjutkan",
+      "btn_cancel": "Batal",
+      "btn_adjust": "Atur Anggaran",
+      "countdown": "Membatalkan otomatis dalam {seconds}s",
+      "budget_adjust_label": "Anggaran baru ($):",
+      "budget_save": "Simpan & Lanjutkan"
+    },
+    "notifications": {
+      "type_info": "ℹ",
+      "type_success": "✓",
+      "type_warning": "⚠",
+      "type_error": "✕",
+      "from_agent": "dari {agent_id}"
     }
   }
 }

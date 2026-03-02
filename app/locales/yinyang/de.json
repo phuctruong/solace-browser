@@ -237,6 +237,54 @@
         "Licht siegt.",
         "Wünschen Ihnen Licht und Freude."
       ]
+    },
+    "tutorial": {
+      "step1_title": "Entdecke Yinyang ☯",
+      "step1_body": "Ich bin Yinyang — dein künstlicher Browser-Navigator. Ich navigiere durch das Web, klicke auf Buttons, fülle Formulare aus, mache Screenshots und sichere die Beweise. Immer mit deiner Zustimmung.",
+      "step2_title": "Verwendest du bereits Claude Code, Cursor oder Codex?",
+      "step2_body": "Der Solace Browser funktioniert gemeinsam mit jedem künstlichen Codieragenten. Füge ihn als MCP-Server hinzu und dein Agent kann navigieren, klicken, Screenshots machen und Beweise sichern — alles mit deiner Zustimmung. <a href=\"https://www.solaceagi.com/agents\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--sb-signal)\">Sieh dir die vollständige Agenten-Anleitung an →</a>",
+      "step2_code": "npx solace-browser --mcp",
+      "step3_title": "OAuth3-Sicherheit 🔒",
+      "step3_body": "Ich handele nie ohne deine explizite Zustimmung. Jede sensible Aktion läuft durch ein OAuth3-Tor — zeitlich begrenzt, widerrufbar und protokolliert. Du bleibst immer in der Kontrolle.",
+      "step4_title": "18 Apps bereit 🏪",
+      "step4_body": "Durchstöbere den App-Store. 18 Automatisierungen sind bereit zum Ausführen — Gmail-Triage, LinkedIn-Auswahl, Slack-Zusammenfassungen und mehr. Die Kosten für die Wiedergabe eines Rezepts betragen 0,001 $.",
+      "step5_title": "Lass uns beginnen! 🎉",
+      "step5_body": "Du bist bereit. Ich werde hier in der unteren Leiste sein, wenn du mich brauchst. Frag einfach — oder zeige mir eine Aufgabe.",
+      "step5_joke": "Es gibt nur zwei schwierige Dinge in der Informatik: Cache-Invalidierung, das Benennen von Dingen und Off-by-One-Fehler.",
+      "btn_next": "Weiter →",
+      "btn_prev": "← Zurück",
+      "btn_skip": "Tutorial überspringen",
+      "btn_done": "Lass uns loslegen! ☯",
+      "progress": "Schritt {current} von {total}",
+      "welcome_title": "Willkommen im Solace Browser",
+      "welcome_body": "Dein browserbasierter KI-Assistent mit OAuth3-Genehmigungen und Beweisverfolgung.",
+      "welcome_tour": "Mach die 2-minütige Tour",
+      "welcome_skip": "Überspringen, ich weiß, was ich tue"
+    },
+    "oauth3_confirm": {
+      "title": "OAuth3-Autorisierung 🔒",
+      "subtitle": "Sie sind dabei, eine App über Solace AGI zu autorisieren.",
+      "scope_label": "Angeforderte Bereiche:",
+      "budget_label": "Aktuelles Budget:",
+      "benefits_title": "Warum OAuth3 sicher ist:",
+      "benefits": [
+        "⏱ Zeitlich begrenzt — Token läuft automatisch ab",
+        "🚫 Widerrufbar — jederzeit von den Einstellungen abbrechen",
+        "📋 Beweisversiegelt — jede Aktion protokolliert"
+      ],
+      "btn_proceed": "Weiter",
+      "btn_cancel": "Abbrechen",
+      "btn_adjust": "Budget anpassen",
+      "countdown": "Läuft automatisch ab in {seconds}s",
+      "budget_adjust_label": "Neues Budget ($):",
+      "budget_save": "Speichern und Weiter"
+    },
+    "notifications": {
+      "type_info": "ℹ",
+      "type_success": "✓",
+      "type_warning": "⚠",
+      "type_error": "✕",
+      "from_agent": "von {agent_id}"
     }
   }
 }

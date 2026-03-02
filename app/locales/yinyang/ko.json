@@ -237,6 +237,54 @@
         "빛이 이깁니다.",
         "빛과 기쁨이 당신에게 있기를 바랍니다."
       ]
+    },
+    "tutorial": {
+      "step1_title": "Meet Yinyang ☯",
+      "step1_body": "나는 Yinyang — votre AI 브라우저 내비게이터. 나는 웹을 탐색하고, 버튼을 클릭하고, 양식을 채우고, 스크린샷을 찍고, 증거를 bảo존합니다. 항상 귀하의 승인과 함께.",
+      "step2_title": "이미 Claude Code, Cursor, 또는 Codex를 사용 중이신가요?",
+      "step2_body": "Solace Browser는 모든 AI 코딩 에이전트와 함께 작동합니다. MCP 서버로 추가하면 에이전트가 탐색, 클릭, 스크린샷, 증거 보존을 모두 귀하의 승인과 함께 할 수 있습니다. <a href=\"https://www.solaceagi.com/agents\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--sb-signal)\">전체 에이전트 가이드 보기 →</a>",
+      "step2_code": "npx solace-browser --mcp",
+      "step3_title": "OAuth3 안전 🔒",
+      "step3_body": "나는 절대 귀하의 명시적인 승인 없이 작동하지 않습니다. 모든 민감한 동작은 시간 제한, 취소 가능, 증거 로깅이 가능한范围의 OAuth3 게이트를 거져갑니다. 귀하는 항상 제어합니다.",
+      "step4_title": "18개 앱 준비 완료 🏪",
+      "step4_body": "앱 스토어를 탐색하세요. 18개의 자동화가运行 준비 상태 — Gmail 분류, LinkedIn 아웃리치, Slack 요약, 등. 레시피 리플레이 비용은 $0.001입니다.",
+      "step5_title": "시작해 보세요! 🎉",
+      "step5_body": "귀하는 모든 설정이 완료되었습니다. 나는 언제든지 하단 레일에서 귀하를 도와드리도록 기다릴게요.#SBATCH — 또는 작업을 지시하기만 해주세요.",
+      "step5_joke": "컴퓨터 과학에서 어려운 두 가지는 캐시 무효화, 이름 지정, 오프바이원 에러입니다.",
+      "btn_next": "다음 →",
+      "btn_prev": "← 이전",
+      "btn_skip": "튜토리얼.skip",
+      "btn_done": "시작해요! ☯",
+      "progress": "현재 {current}단계 / {total}단계",
+      "welcome_title": "Solace Browser에 오신 것을 환영합니다",
+      "welcome_body": "OAuth3 승인과 증거 트레일이 있는 AI-Powered 브라우저.",
+      "welcome_tour": "2분 투어参加",
+      "welcome_skip": "Skip, 나는 Already 알아"
+    },
+    "oauth3_confirm": {
+      "title": "OAuth3 인증 🔒",
+      "subtitle": "Solace AGI를 통해 앱을 인증하는 중입니다.",
+      "scope_label": "요청 범위:",
+      "budget_label": "현재 예산:",
+      "benefits_title": "OAuth3이 안전한 이유:",
+      "benefits": [
+        "⏱ 시간 제한 — 토큰이 자동으로 만료됩니다",
+        "🚫 취소 가능 — 설정에서 언제든지 취소할 수 있습니다",
+        "📋 증거 보관 — 모든 동작을 감사 로그에 기록합니다"
+      ],
+      "btn_proceed": "진행",
+      "btn_cancel": "취소",
+      "btn_adjust": "예산 조정",
+      "countdown": "{seconds}초 후에 자동 취소",
+      "budget_adjust_label": "새 예산 ($):",
+      "budget_save": "저장 및 진행"
+    },
+    "notifications": {
+      "type_info": "ℹ",
+      "type_success": "✓",
+      "type_warning": "⚠",
+      "type_error": "✕",
+      "from_agent": "from {agent_id}"
     }
   }
 }

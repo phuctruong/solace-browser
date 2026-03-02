@@ -237,6 +237,54 @@
         "光が勝つ.",
         "あなたに光と喜びを願っています."
       ]
+    },
+    "tutorial": {
+      "step1_title": "Yinyang ☯ に會いましょう",
+      "step1_body": "私は Yinyang — あなたの AI ブラウザナビゲーターです。私は Web をナビゲートし、ボタンをクリックし、フォームを入力し、スクリーンショットを撮り、証拠を封印します。常にあなたの承認を得た上で。",
+      "step2_title": "既に Claude Code、Cursor、または Codex を使用していますか?",
+      "step2_body": "Solace Browser は、どの AI コーディングエージェントとも連携します。MCP サーバーとして追加し、エージェントはナビゲート、クリック、スクリーンショットを撮り、証拠を封印できる — すべてあなたの承認を得た上で。<a href=\"https://www.solaceagi.com/agents\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--sb-signal)\">エージェントのガイドを参照 →</a>",
+      "step2_code": "npx solace-browser --mcp",
+      "step3_title": "OAuth3 セーフティ 🔒",
+      "step3_body": "私は、明示的な承認なしに動作しません。すべての機密性の高いアクションは、OAuth3 ゲートを通過します — 時間制限付き、取り消し可能、証拠が記録された。あなたは常に管理を維持します。",
+      "step4_title": "18 個のアプリが利用可能 🏪",
+      "step4_body": "アプリストアを参照してください。18 個の自動化が実行できる — Gmail のトリアージ、LinkedIn のアウトリーチ、Slack の要約など。レシピの再生費用は $0.001 です。",
+      "step5_title": "始めましょう！ 🎉",
+      "step5_body": "あなたはすべてセットアップ完了です。私は常に下部のレールにいて、あなたが必要な時に::::|ean ください — またはタスクを指示してください。",
+      "step5_joke": "コンピューター科学における難しいことは 2 つだけです: キャッシュの無効化、名前付け、オフバイワンエラー。",
+      "btn_next": "次へ →",
+      "btn_prev": "← 戻る",
+      "btn_skip": "チュートリアルをスキップ",
+      "btn_done": "行きましょう！ ☯",
+      "progress": "ステップ {current} of {total}",
+      "welcome_title": "Solace Browser へようこそ",
+      "welcome_body": "あなたの AI パワードブラウザ — OAuth3 の承認と証拠の記録を備えて。",
+      "welcome_tour": "2 分間のツアーを受けて",
+      "welcome_skip": "スキップ、知っています"
+    },
+    "oauth3_confirm": {
+      "title": "OAuth3 認証 🔒",
+      "subtitle": "Solace AGI を通じてアプリを認証しようとしています",
+      "scope_label": "スコープの要求:",
+      "budget_label": "現在の予算:",
+      "benefits_title": "OAuth3 が安全な理由:",
+      "benefits": [
+        "⏱ 時間制限 — トークンは自動的に期限切れになる",
+        "🚫 取り消し可能 — 設定からいつでも取り消す",
+        "📋 証拠保管 — すべてのアクションが監査ログに記録される"
+      ],
+      "btn_proceed": "続行",
+      "btn_cancel": "取消",
+      "btn_adjust": "予算の調整",
+      "countdown": "{seconds} 秒後に自動的に取り消し",
+      "budget_adjust_label": "新しい予算 ($):",
+      "budget_save": "保存 & 続行"
+    },
+    "notifications": {
+      "type_info": "ℹ",
+      "type_success": "✓",
+      "type_warning": "⚠",
+      "type_error": "✕",
+      "from_agent": "from {agent_id}"
     }
   }
 }

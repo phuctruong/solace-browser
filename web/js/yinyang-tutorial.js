@@ -54,6 +54,7 @@ const YinyangTutorial = (() => {
     step5_title: "Let's Begin! &#127881;",
     step5_body: "You're all set. I'll be here in the bottom rail whenever you need me. Just ask — or point me at a task.",
     step5_joke: '',
+    lang_pick: 'Choose your language',
     btn_next: 'Next \u2192',
     btn_prev: '\u2190 Back',
     btn_skip: 'Skip Tutorial',
@@ -93,6 +94,19 @@ const YinyangTutorial = (() => {
   // ---------------------------------------------------------------------------
   // Build step HTML
   // ---------------------------------------------------------------------------
+  function _langPickerHTML() {
+    const label = _strings.lang_pick || 'Choose your language:';
+    const items = LOCALES.map(l =>
+      `<button class="yyT-lang-pill${l.code === _locale ? ' yyT-lang-pill--active' : ''}" data-locale-pill="${l.code}">${l.name}</button>`
+    ).join('');
+    return `
+      <div class="yyT-lang-picker">
+        <p class="yyT-lang-picker__label">&#127760; ${label}</p>
+        <div class="yyT-lang-pills">${items}</div>
+      </div>
+    `;
+  }
+
   function _stepHTML(step) {
     const stepKey = `step${step + 1}`;
     const title = _strings[`${stepKey}_title`] || '';
@@ -101,8 +115,11 @@ const YinyangTutorial = (() => {
     const joke = step === 4 ? (_strings.step5_joke || '') : '';
 
     let extra = '';
+    if (step === 0) {
+      extra = _langPickerHTML();
+    }
     if (code) {
-      extra = `<pre class="yyT-code">${code}</pre>`;
+      extra += `<pre class="yyT-code">${code}</pre>`;
     }
     if (joke) {
       extra += `<p class="yyT-joke">&#128172; "${joke}"</p>`;
@@ -249,6 +266,24 @@ const YinyangTutorial = (() => {
         langMenu.classList.remove('is-active');
         langBtn.setAttribute('aria-expanded', 'false');
       }
+    });
+
+    // Language pills (step 1 inline picker) — delegated on step-content
+    div.querySelector('.yyT-step-content').addEventListener('click', async (e) => {
+      const pill = e.target.closest('[data-locale-pill]');
+      if (!pill) return;
+      const code = pill.dataset.localePill;
+      localStorage.setItem(LOCALE_KEY, code);
+      await _loadLocale(code);
+      div.querySelector('.yyT-btn-prev').textContent = _strings.btn_prev;
+      div.querySelector('.yyT-btn-skip').textContent = _strings.btn_skip;
+      div.querySelector('.yyT-btn-next').textContent = _strings.btn_next;
+      div.querySelector('.yyT-btn-done').textContent = _strings.btn_done;
+      langMenu.querySelectorAll('[data-locale]').forEach(a => {
+        a.setAttribute('aria-current', a.dataset.locale === code ? 'true' : 'false');
+      });
+      _render();
+      if (typeof window.SolacePageI18n === 'function') window.SolacePageI18n(code);
     });
 
     // Dot navigation

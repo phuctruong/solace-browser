@@ -1,4 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#081019"/>
-  <text x="16" y="22" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="700" font-size="14" fill="#64c4ff">SB</text>
+  <!-- Outer circle (dark bg) -->
+  <circle cx="16" cy="16" r="16" fill="#081019"/>
+  <!-- Light half (top → bottom S-curve) -->
+  <path d="M16,0 A16,16,0,0,1,16,32 A8,8,0,0,1,16,16 A8,8,0,0,0,16,0 Z" fill="#64c4ff"/>
+  <!-- Small dots (yin/yang) -->
+  <circle cx="16" cy="8" r="3" fill="#081019"/>
+  <circle cx="16" cy="24" r="3" fill="#64c4ff"/>
+  <!-- Subtle border -->
+  <circle cx="16" cy="16" r="15.5" fill="none" stroke="#64c4ff" stroke-width="0.5" opacity="0.4"/>
 </svg>
