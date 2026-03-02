@@ -16,7 +16,7 @@ const YinyangTutorial = (() => {
   'use strict';
 
   const STORAGE_KEY = 'sb_tutorial_v1';
-  const YY_GIF = '/images/yinyang/yinyang-rotating_70pct_128px.gif';
+  const YY_GIF = '/images/yinyang/yinyang-logo-128.png';
 
   // ---------------------------------------------------------------------------
   // Embedded English fallback (used if /api/locale unreachable)

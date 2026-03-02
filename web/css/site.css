@@ -1053,10 +1053,12 @@ main { display: block; }
 }
 
 .yyT-gif {
-  width: 128px;
-  height: auto;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
   flex-shrink: 0;
   display: block;
+  object-fit: contain;
 }
 
 .yyT-progress {
