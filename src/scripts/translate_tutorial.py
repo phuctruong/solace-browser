@@ -26,6 +26,30 @@ PRESERVE = ["Solace", "Solace Browser", "Yinyang", "OAuth3", "MCP", "Claude", "C
             "Gmail", "Slack", "LinkedIn", "GitHub", "npx solace-browser --mcp",
             "solaceagi.com/agents", "localhost:9222", "localhost:8791"]
 
+
+def extract_json(raw: str) -> dict:
+    """Robustly extract a JSON object from raw model output."""
+    # Strip code fences
+    fenced = re.match(r"```(?:json)?\s*(.*?)\s*```", raw, re.S)
+    if fenced:
+        raw = fenced.group(1)
+    raw = raw.strip()
+    # Try direct parse
+    try:
+        obj, _ = json.JSONDecoder().raw_decode(raw)
+        return obj
+    except Exception:
+        pass
+    # Try to find first { ... } block
+    match = re.search(r"\{.*\}", raw, re.S)
+    if match:
+        try:
+            return json.loads(match.group(0))
+        except Exception:
+            pass
+    raise ValueError(f"Could not parse JSON from model output: {raw[:300]}")
+
+
 def translate_batch(texts: list[str], lang: str) -> list[str]:
     preserve = ", ".join(f'"{p}"' for p in PRESERVE)
     numbered = {str(i): v for i, v in enumerate(texts)}
@@ -33,7 +57,7 @@ def translate_batch(texts: list[str], lang: str) -> list[str]:
         f"Translate the values in this JSON object into {lang}. "
         f"Keep these terms exactly as-is: {preserve}. "
         "Preserve HTML tags like <a href=...>, emoji, and {placeholder} variables exactly. "
-        "Return ONLY a valid JSON object with the same keys and translated values. No commentary.\n\n"
+        "Return ONLY a valid JSON object with the same integer keys and translated values. No commentary.\n\n"
         + json.dumps(numbered, ensure_ascii=False)
     )
     resp = client.chat.completions.create(
@@ -42,10 +66,9 @@ def translate_batch(texts: list[str], lang: str) -> list[str]:
         messages=[{"role": "user", "content": prompt}],
     )
     raw = resp.choices[0].message.content.strip()
-    fenced = re.match(r"```(?:json)?\s*(.*)\s*```", raw, re.S)
-    if fenced: raw = fenced.group(1)
-    parsed, _ = json.JSONDecoder().raw_decode(raw.lstrip())
-    return [parsed[str(i)] for i in range(len(texts))]
+    parsed = extract_json(raw)
+    return [parsed.get(str(i), texts[i]) for i in range(len(texts))]
+
 
 def main():
     en = json.loads(SOURCE.read_text(encoding="utf-8"))
@@ -59,53 +82,78 @@ def main():
         lang = LANGUAGES[locale]
         path = LOCALES_DIR / f"{locale}.json"
         data = json.loads(path.read_text(encoding="utf-8"))
+        delight = data.setdefault("delight", {})
+        changed = False
 
-        if "tutorial" in data.get("delight", {}) and "oauth3_confirm" in data.get("delight", {}):
-            print(f"[{locale}] already has tutorial + oauth3_confirm, skipping")
-            continue
+        # Tutorial
+        if "tutorial" not in delight:
+            print(f"[{locale}] Translating tutorial ({len(tutorial_en)} keys)...", end=" ", flush=True)
+            keys = list(tutorial_en.keys())
+            values = list(tutorial_en.values())
+            try:
+                translated = translate_batch(values, lang)
+                delight["tutorial"] = dict(zip(keys, translated))
+                path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                print("ok")
+                changed = True
+            except Exception as e:
+                print(f"FAILED: {e}")
+        else:
+            print(f"[{locale}] tutorial already done, skipping")
 
-        print(f"[{locale}] Translating tutorial ({len(tutorial_en)} keys)...", end=" ", flush=True)
-        keys = list(tutorial_en.keys())
-        values = list(tutorial_en.values())
-        translated = translate_batch(values, lang)
-        data.setdefault("delight", {})["tutorial"] = dict(zip(keys, translated))
-        print("ok")
+        # OAuth3 confirm
+        if "oauth3_confirm" not in delight:
+            print(f"[{locale}] Translating oauth3_confirm ({len(oauth3_en)} keys)...", end=" ", flush=True)
+            flat_keys, flat_vals = [], []
+            for k, v in oauth3_en.items():
+                if isinstance(v, str):
+                    flat_keys.append(k); flat_vals.append(v)
+                elif isinstance(v, list):
+                    for i, s in enumerate(v):
+                        flat_keys.append(f"{k}[{i}]"); flat_vals.append(s)
+            try:
+                trans_flat = translate_batch(flat_vals, lang)
+                oauth3_translated: dict = {}
+                for k, v in zip(flat_keys, trans_flat):
+                    m = re.match(r"^(.+)\[(\d+)\]$", k)
+                    if m:
+                        base, idx = m.group(1), int(m.group(2))
+                        oauth3_translated.setdefault(base, [])
+                        while len(oauth3_translated[base]) <= idx:
+                            oauth3_translated[base].append("")
+                        oauth3_translated[base][idx] = v
+                    else:
+                        oauth3_translated[k] = v
+                delight["oauth3_confirm"] = oauth3_translated
+                path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                print("ok")
+                changed = True
+            except Exception as e:
+                print(f"FAILED: {e}")
+        else:
+            print(f"[{locale}] oauth3_confirm already done, skipping")
 
-        print(f"[{locale}] Translating oauth3_confirm ({len(oauth3_en)} keys)...", end=" ", flush=True)
-        # oauth3_confirm has a nested "benefits" list
-        flat_keys, flat_vals = [], []
-        for k, v in oauth3_en.items():
-            if isinstance(v, str):
-                flat_keys.append(k); flat_vals.append(v)
-            elif isinstance(v, list):
-                for i, s in enumerate(v):
-                    flat_keys.append(f"{k}[{i}]"); flat_vals.append(s)
-        trans_flat = translate_batch(flat_vals, lang)
-        oauth3_translated = {}
-        for k, v in zip(flat_keys, trans_flat):
-            m = re.match(r"^(.+)\[(\d+)\]$", k)
-            if m:
-                base, idx = m.group(1), int(m.group(2))
-                oauth3_translated.setdefault(base, [])
-                while len(oauth3_translated[base]) <= idx:
-                    oauth3_translated[base].append("")
-                oauth3_translated[base][idx] = v
-            else:
-                oauth3_translated[k] = v
-        data["delight"]["oauth3_confirm"] = oauth3_translated
-        print("ok")
+        # Notifications
+        if "notifications" not in delight:
+            print(f"[{locale}] Translating notifications ({len(notif_en)} keys)...", end=" ", flush=True)
+            nkeys = list(notif_en.keys())
+            nvals = list(notif_en.values())
+            try:
+                ntrans = translate_batch(nvals, lang)
+                delight["notifications"] = dict(zip(nkeys, ntrans))
+                path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                print("ok")
+                changed = True
+            except Exception as e:
+                print(f"FAILED: {e}")
+        else:
+            print(f"[{locale}] notifications already done, skipping")
 
-        print(f"[{locale}] Translating notifications ({len(notif_en)} keys)...", end=" ", flush=True)
-        nkeys = list(notif_en.keys())
-        nvals = list(notif_en.values())
-        ntrans = translate_batch(nvals, lang)
-        data["delight"]["notifications"] = dict(zip(nkeys, ntrans))
-        print("ok")
-
-        path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        print(f"[{locale}] Written to {path.name}")
+        if changed:
+            print(f"[{locale}] Written to {path.name}")
 
     print("\nDone!")
+
 
 if __name__ == "__main__":
     main()
