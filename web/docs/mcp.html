@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>MCP / Agents Guide | Solace Browser Docs</title>
+  <meta name="description" content="Connect Claude Code, Cursor, Codex or any MCP-compatible agent to Solace Browser. Full reference for the 7 browser tools.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/solace.js" defer></script>
+</head>
+<body data-page="docs">
+  <div class="site-shell">
+    <div class="page-frame">
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a class="site-brand" href="/">
+            <span class="site-brand__icon site-brand__icon--image">
+              <img class="site-brand__logo-image" src="/images/yinyang/yinyang-logo-48.png" alt="Solace Browser">
+            </span>
+            <span class="site-brand__text">
+              <span class="site-brand__name">Solace Browser</span>
+              <span class="site-brand__tag">Docs / MCP Guide</span>
+            </span>
+          </a>
+          <nav class="site-nav" aria-label="Primary">
+            <a class="nav-link" href="/docs">← Docs</a>
+            <a class="nav-link" href="/docs/quick-start">Quick Start</a>
+            <a class="nav-link" href="/docs/oauth3">OAuth3</a>
+          </nav>
+          <div class="sb-lang-switch" id="sb-lang-switch">
+            <button class="sb-lang-btn" id="sb-lang-btn" aria-label="Select language" aria-expanded="false" aria-controls="sb-lang-menu">
+              <img class="sb-lang-icon sb-lang-icon--default" src="/images/icons/internationalization/160.png" alt="Language" width="22" height="22">
+              <img class="sb-lang-icon sb-lang-icon--hover" src="/images/icons/internationalization-2/160.png" alt="" width="22" height="22">
+            </button>
+            <div class="sb-lang-menu" id="sb-lang-menu">
+              <a href="#" data-locale="en">English</a><a href="#" data-locale="es">Español</a><a href="#" data-locale="vi">Tiếng Việt</a><a href="#" data-locale="zh">中文</a><a href="#" data-locale="pt">Português</a><a href="#" data-locale="fr">Français</a><a href="#" data-locale="ja">日本語</a><a href="#" data-locale="de">Deutsch</a><a href="#" data-locale="ar">العربية</a><a href="#" data-locale="hi">हिंदी</a><a href="#" data-locale="ko">한국어</a><a href="#" data-locale="id">Bahasa Indonesia</a><a href="#" data-locale="ru">Русский</a>
+            </div>
+          </div>
+          <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+        </div>
+      </header>
+      <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu__section">
+          <h3>Documentation</h3>
+          <a href="/docs">Docs Hub</a>
+          <a href="/docs/quick-start">Quick Start</a>
+          <a href="/docs/mcp">MCP / Agents Guide</a>
+          <a href="/docs/oauth3">OAuth3 Safety</a>
+        </div>
+        <div class="mobile-menu__section">
+          <h3>Surfaces</h3>
+          <a href="/">Home</a>
+          <a href="/app-store">App Store</a>
+          <a href="/settings">Settings</a>
+        </div>
+      </div>
+
+      <main>
+        <div class="docs-shell docs-page">
+          <p class="docs-breadcrumb"><a href="/docs">Documentation</a> / MCP &amp; Agents Guide</p>
+
+          <h1 class="display">MCP / Agents Guide</h1>
+          <p class="docs-meta">Paper 09 §6 — MCP Server Standard · Auth: 65537</p>
+
+          <div class="docs-toc">
+            <strong style="color:var(--sb-text);font-size:0.9rem;">On this page</strong>
+            <a href="#what">What is MCP?</a>
+            <a href="#setup">Setup (30 seconds)</a>
+            <a href="#claude-code">Claude Code</a>
+            <a href="#cursor">Cursor / Codex</a>
+            <a href="#tools">The 7 browser tools</a>
+            <a href="#examples">Usage examples</a>
+            <a href="#oauth3">OAuth3 + budget gates</a>
+          </div>
+
+          <h2 id="what">What is MCP?</h2>
+          <p><strong>Model Context Protocol (MCP)</strong> is the emerging standard for connecting AI agents to external tools via a stdio JSON-RPC 2.0 transport. Solace Browser implements an MCP server that exposes 7 browser tools to any MCP-capable agent: navigate, click, fill, screenshot, snapshot, evaluate, and aria_snapshot.</p>
+          <p>This means your AI coding agent can browse the web, click buttons, fill forms, take screenshots, and capture evidence — all through Solace Browser's approval gates. <strong>Every action still requires your approval.</strong></p>
+
+          <h2 id="setup">Setup (30 seconds)</h2>
+          <p>Make sure Solace Browser is running first:</p>
+          <pre>python3 solace_browser_server.py --port 9222 &amp;
+python3 web/server.py --port 8791 &amp;</pre>
+
+          <p>Then start the MCP server:</p>
+          <pre>python3 mcp_server.py</pre>
+          <p>Or use npx:</p>
+          <pre>npx solace-browser --mcp</pre>
+
+          <h2 id="claude-code">Claude Code</h2>
+          <p>Add this to your <code>CLAUDE.md</code> or project settings:</p>
+          <pre>{
+  "mcpServers": {
+    "solace": {
+      "command": "python3",
+      "args": ["/path/to/solace-browser/mcp_server.py"]
+    }
+  }
+}</pre>
+          <p>Or using npx (no path needed):</p>
+          <pre>{
+  "mcpServers": {
+    "solace": {
+      "command": "npx",
+      "args": ["solace-browser", "--mcp"]
+    }
+  }
+}</pre>
+          <p>After adding the config, Claude Code will show <code>solace</code> as an available MCP server. Ask Claude to navigate to a URL or take a screenshot and it will use Solace Browser automatically.</p>
+
+          <h2 id="cursor">Cursor / Codex</h2>
+          <p>Cursor and Codex support MCP servers via their tools configuration. Add the same JSON block to your agent's tools settings:</p>
+          <pre># Cursor: .cursor/mcp.json
+{
+  "mcpServers": {
+    "solace": {
+      "command": "python3",
+      "args": ["/path/to/solace-browser/mcp_server.py"]
+    }
+  }
+}</pre>
+
+          <h2 id="tools">The 7 browser tools</h2>
+
+          <h3>navigate</h3>
+          <p>Navigate the browser to a URL. Returns page title, final URL, and HTTP status.</p>
+          <pre>// Input
+{ "url": "https://gmail.com", "wait_until": "load" }
+
+// Output
+{ "url": "https://mail.google.com/...", "title": "Inbox - Gmail", "status": 200 }</pre>
+
+          <h3>click</h3>
+          <p>Click a DOM element by CSS selector or ARIA role+name.</p>
+          <pre>// Input
+{ "selector": "button[aria-label='Compose']", "timeout_ms": 5000 }
+
+// Output
+{ "clicked": true, "element_text": "Compose", "elapsed_ms": 340 }</pre>
+
+          <h3>fill</h3>
+          <p>Fill a form field with text. Supports CSS selectors and label-based targeting.</p>
+          <pre>// Input
+{ "selector": "input[name='subject']", "value": "Hello from Solace" }
+
+// Output
+{ "filled": true, "selector": "input[name='subject']" }</pre>
+
+          <h3>screenshot</h3>
+          <p>Take a screenshot of the current page or a specific element. Returns base64-encoded PNG.</p>
+          <pre>// Input
+{ "selector": ".inbox-content", "full_page": false }
+
+// Output
+{ "format": "png", "data": "&lt;base64&gt;", "width": 1280, "height": 720 }</pre>
+
+          <h3>snapshot</h3>
+          <p>Capture a full-page HTML snapshot. Returns the cleaned HTML content.</p>
+          <pre>// Input
+{ "include_scripts": false }
+
+// Output
+{ "html": "&lt;!DOCTYPE html&gt;...", "url": "https://...", "title": "..." }</pre>
+
+          <h3>evaluate</h3>
+          <p>Execute JavaScript in the browser page context. Returns the result.</p>
+          <pre>// Input
+{ "expression": "document.querySelectorAll('.email').length" }
+
+// Output
+{ "result": 47, "type": "number" }</pre>
+
+          <h3>aria_snapshot</h3>
+          <p>Return the ARIA accessibility tree of the page. Ideal for agents that need to understand page structure without parsing HTML.</p>
+          <pre>// Input
+{}
+
+// Output
+{ "tree": [{ "role": "main", "name": "Inbox", "children": [...] }] }</pre>
+
+          <h2 id="examples">Usage examples</h2>
+
+          <h3>Example: Ask Claude Code to take a screenshot</h3>
+          <pre>// In your Claude Code chat:
+"Take a screenshot of https://gmail.com and tell me what you see"
+
+// Claude will call:
+solace.navigate({ url: "https://gmail.com" })
+solace.screenshot({})
+// Then describe what it sees in the screenshot</pre>
+
+          <h3>Example: Automated web research</h3>
+          <pre>// Claude Code navigates + extracts data:
+solace.navigate({ url: "https://news.ycombinator.com" })
+solace.evaluate({ expression: "Array.from(document.querySelectorAll('.athing .title a')).slice(0,10).map(a=>a.textContent)" })
+// Returns: ["Story 1", "Story 2", ...]</pre>
+
+          <h2 id="oauth3">OAuth3 + budget gates</h2>
+          <p>Even when called by an agent via MCP, <strong>every sensitive action requires your approval</strong>. The OAuth3 confirmation dialog appears in the Solace Browser UI. You approve or reject in the UI; the agent waits for your decision.</p>
+          <p>Budget gates also apply: if an agent tries to send more emails than your daily budget allows, the action is blocked and the agent receives a budget error — not a silent failure.</p>
+          <ul>
+            <li><strong>Navigate / screenshot / snapshot / evaluate / aria_snapshot</strong> — approved by default (read-only)</li>
+            <li><strong>Click / fill</strong> on sensitive targets — triggers OAuth3 approval gate</li>
+          </ul>
+          <p>See <a href="/docs/oauth3" style="color:var(--sb-signal)">OAuth3 Safety →</a> for the full security model.</p>
+
+          <div class="docs-nav-links">
+            <a href="/docs/quick-start">← Quick Start</a>
+            <a href="/docs/oauth3">OAuth3 Safety →</a>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

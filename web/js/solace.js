@@ -14,6 +14,7 @@
   function init() {
     markActiveNav();
     initHamburger();
+    initLangSwitcher();
     initFooterYear();
     initRevealObserver();
     initParticles();
@@ -95,6 +96,43 @@
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
         closeMenu();
+      }
+    });
+  }
+
+  function initLangSwitcher() {
+    const btn = document.querySelector("#sb-lang-btn");
+    const menu = document.querySelector("#sb-lang-menu");
+    if (!btn || !menu) return;
+
+    const current = localStorage.getItem("sb_locale") || "en";
+    menu.querySelectorAll("[data-locale]").forEach((a) => {
+      a.setAttribute("aria-current", a.dataset.locale === current ? "true" : "false");
+    });
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = menu.classList.toggle("is-active");
+      btn.setAttribute("aria-expanded", open);
+    });
+
+    menu.addEventListener("click", (e) => {
+      e.preventDefault();
+      const link = e.target.closest("[data-locale]");
+      if (!link) return;
+      const code = link.dataset.locale;
+      localStorage.setItem("sb_locale", code);
+      menu.classList.remove("is-active");
+      btn.setAttribute("aria-expanded", "false");
+      menu.querySelectorAll("[data-locale]").forEach((a) => {
+        a.setAttribute("aria-current", a.dataset.locale === code ? "true" : "false");
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      if (menu.classList.contains("is-active") && !btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.remove("is-active");
+        btn.setAttribute("aria-expanded", "false");
       }
     });
   }

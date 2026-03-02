@@ -16,7 +16,27 @@ const YinyangTutorial = (() => {
   'use strict';
 
   const STORAGE_KEY = 'sb_tutorial_v1';
+  const LOCALE_KEY = 'sb_locale';
   const YY_GIF = '/images/yinyang/yinyang-logo-128.png';
+
+  // 13 supported locales with native names
+  const LOCALES = [
+    { code: 'en', name: 'English' },
+    { code: 'es', name: 'Español' },
+    { code: 'vi', name: 'Tiếng Việt' },
+    { code: 'zh', name: '中文' },
+    { code: 'pt', name: 'Português' },
+    { code: 'fr', name: 'Français' },
+    { code: 'ja', name: '日本語' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'ar', name: 'العربية' },
+    { code: 'hi', name: 'हिंदी' },
+    { code: 'ko', name: '한국어' },
+    { code: 'id', name: 'Bahasa Indonesia' },
+    { code: 'ru', name: 'Русский' },
+  ];
+
+  let _locale = localStorage.getItem(LOCALE_KEY) || 'en';
 
   // ---------------------------------------------------------------------------
   // Embedded English fallback (used if /api/locale unreachable)
@@ -24,9 +44,9 @@ const YinyangTutorial = (() => {
   const STRINGS_EN = {
     step1_title: 'Meet Yinyang ☯',
     step1_body: "I'm Yinyang — your AI browser navigator. I navigate the web, click buttons, fill forms, take screenshots, and capture evidence. All on your behalf, always with your approval.",
-    step2_title: 'Browser Control',
-    step2_body: 'Point me at any URL and I\'ll navigate it. Ask me to click, fill, or screenshot — I\'ll do it and seal the evidence. Every action produces a SHA-256 audit trail.',
-    step2_code: 'curl http://localhost:9222/api/navigate -d \'{"url":"https://example.com"}\'',
+    step2_title: 'Already using Claude Code, Cursor, or Codex?',
+    step2_body: 'Solace Browser works alongside any AI coding agent. Add it as an MCP server and your agent can navigate, click, screenshot, and seal evidence — all with your approval. <a href="https://www.solaceagi.com/agents" target="_blank" rel="noopener" style="color:var(--sb-signal)">See the full agents guide →</a>',
+    step2_code: 'npx solace-browser --mcp',
     step3_title: 'OAuth3 Safety &#128274;',
     step3_body: 'I never act without your explicit approval. Sensitive actions go through a scoped OAuth3 gate — time-bounded, revocable, and audited. You stay in control. Always.',
     step4_title: '18 Apps Ready &#127981;',
@@ -55,9 +75,10 @@ const YinyangTutorial = (() => {
   // ---------------------------------------------------------------------------
   // Locale loading
   // ---------------------------------------------------------------------------
-  async function _loadLocale() {
+  async function _loadLocale(locale) {
+    if (locale) _locale = locale;
     try {
-      const resp = await fetch('/api/locale?key=tutorial', { signal: AbortSignal.timeout(3000) });
+      const resp = await fetch(`/api/locale?key=tutorial&locale=${_locale}`, { signal: AbortSignal.timeout(3000) });
       if (resp.ok) {
         const data = await resp.json();
         if (data && data.tutorial) {
@@ -147,11 +168,21 @@ const YinyangTutorial = (() => {
     div.setAttribute('aria-modal', 'true');
     div.setAttribute('aria-label', 'Yinyang Tutorial');
 
+    const langMenuItems = LOCALES.map(l =>
+      `<a href="#" data-locale="${l.code}" aria-current="${l.code === _locale ? 'true' : 'false'}">${l.name}</a>`
+    ).join('');
+
     div.innerHTML = `
       <div class="yyT-card">
         <div class="yyT-header">
           <img class="yyT-gif" src="${YY_GIF}" alt="Yinyang">
           <span class="yyT-progress"></span>
+          <div class="yyT-lang-wrap">
+            <button class="yyT-lang-btn" aria-label="Select language" aria-expanded="false" aria-controls="yyT-lang-menu">
+              <img src="/images/icons/internationalization/160.png" alt="Language" width="20" height="20" style="width:20px;height:20px;object-fit:contain;display:block;">
+            </button>
+            <div class="yyT-lang-menu" id="yyT-lang-menu">${langMenuItems}</div>
+          </div>
         </div>
         <div class="yyT-step-content"></div>
         <div class="yyT-dots"></div>
@@ -181,6 +212,42 @@ const YinyangTutorial = (() => {
 
     div.querySelector('.yyT-btn-skip').addEventListener('click', _skip);
     div.querySelector('.yyT-btn-done').addEventListener('click', _done);
+
+    // Language switcher
+    const langBtn = div.querySelector('.yyT-lang-btn');
+    const langMenu = div.querySelector('.yyT-lang-menu');
+    langBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = langMenu.classList.toggle('is-active');
+      langBtn.setAttribute('aria-expanded', open);
+    });
+    langMenu.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const link = e.target.closest('[data-locale]');
+      if (!link) return;
+      const code = link.dataset.locale;
+      localStorage.setItem(LOCALE_KEY, code);
+      langMenu.classList.remove('is-active');
+      langBtn.setAttribute('aria-expanded', 'false');
+      await _loadLocale(code);
+      // Rebuild buttons with new strings
+      div.querySelector('.yyT-btn-prev').textContent = _strings.btn_prev;
+      div.querySelector('.yyT-btn-skip').textContent = _strings.btn_skip;
+      div.querySelector('.yyT-btn-next').textContent = _strings.btn_next;
+      div.querySelector('.yyT-btn-done').textContent = _strings.btn_done;
+      // Update aria-current on menu items
+      langMenu.querySelectorAll('[data-locale]').forEach(a => {
+        a.setAttribute('aria-current', a.dataset.locale === code ? 'true' : 'false');
+      });
+      _render();
+    });
+    // Close lang menu on outside click
+    document.addEventListener('click', (e) => {
+      if (langMenu.classList.contains('is-active') && !langBtn.contains(e.target) && !langMenu.contains(e.target)) {
+        langMenu.classList.remove('is-active');
+        langBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
 
     // Dot navigation
     div.querySelector('.yyT-dots').addEventListener('click', (e) => {

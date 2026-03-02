@@ -141,9 +141,9 @@
     "tutorial": {
       "step1_title": "Meet Yinyang ☯",
       "step1_body": "I'm Yinyang — your AI browser navigator. I navigate the web, click buttons, fill forms, take screenshots, and seal the evidence. Always with your approval.",
-      "step2_title": "Browser Control",
-      "step2_body": "Point me at any URL and I'll navigate, click, fill, or screenshot it. Every action produces a SHA-256 audit trail sealed to your evidence vault.",
-      "step2_code": "curl http://localhost:9222/api/navigate -d '{\"url\":\"https://example.com\"}'",
+      "step2_title": "Already using Claude Code, Cursor, or Codex?",
+      "step2_body": "Solace Browser works alongside any AI coding agent. Add it as an MCP server and your agent can navigate, click, screenshot, and seal evidence — all with your approval. <a href=\"https://www.solaceagi.com/agents\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--sb-signal)\">See the full agents guide →</a>",
+      "step2_code": "npx solace-browser --mcp",
       "step3_title": "OAuth3 Safety 🔒",
       "step3_body": "I never act without your explicit approval. Every sensitive action goes through a scoped OAuth3 gate — time-bounded, revocable, and evidence-logged. You stay in control. Always.",
       "step4_title": "18 Apps Ready 🏪",

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>OAuth3 Safety | Solace Browser Docs</title>
+  <meta name="description" content="How OAuth3 protects you in Solace Browser: scoped tokens, time-bounded authority, budget gates, fail-closed model, and evidence trails.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/solace.js" defer></script>
+</head>
+<body data-page="docs">
+  <div class="site-shell">
+    <div class="page-frame">
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a class="site-brand" href="/">
+            <span class="site-brand__icon site-brand__icon--image">
+              <img class="site-brand__logo-image" src="/images/yinyang/yinyang-logo-48.png" alt="Solace Browser">
+            </span>
+            <span class="site-brand__text">
+              <span class="site-brand__name">Solace Browser</span>
+              <span class="site-brand__tag">Docs / OAuth3</span>
+            </span>
+          </a>
+          <nav class="site-nav" aria-label="Primary">
+            <a class="nav-link" href="/docs">← Docs</a>
+            <a class="nav-link" href="/docs/quick-start">Quick Start</a>
+            <a class="nav-link" href="/docs/mcp">MCP Guide</a>
+          </nav>
+          <div class="sb-lang-switch" id="sb-lang-switch">
+            <button class="sb-lang-btn" id="sb-lang-btn" aria-label="Select language" aria-expanded="false" aria-controls="sb-lang-menu">
+              <img class="sb-lang-icon sb-lang-icon--default" src="/images/icons/internationalization/160.png" alt="Language" width="22" height="22">
+              <img class="sb-lang-icon sb-lang-icon--hover" src="/images/icons/internationalization-2/160.png" alt="" width="22" height="22">
+            </button>
+            <div class="sb-lang-menu" id="sb-lang-menu">
+              <a href="#" data-locale="en">English</a><a href="#" data-locale="es">Español</a><a href="#" data-locale="vi">Tiếng Việt</a><a href="#" data-locale="zh">中文</a><a href="#" data-locale="pt">Português</a><a href="#" data-locale="fr">Français</a><a href="#" data-locale="ja">日本語</a><a href="#" data-locale="de">Deutsch</a><a href="#" data-locale="ar">العربية</a><a href="#" data-locale="hi">हिंदी</a><a href="#" data-locale="ko">한국어</a><a href="#" data-locale="id">Bahasa Indonesia</a><a href="#" data-locale="ru">Русский</a>
+            </div>
+          </div>
+          <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+        </div>
+      </header>
+      <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu__section">
+          <h3>Documentation</h3>
+          <a href="/docs">Docs Hub</a>
+          <a href="/docs/quick-start">Quick Start</a>
+          <a href="/docs/mcp">MCP / Agents Guide</a>
+          <a href="/docs/oauth3">OAuth3 Safety</a>
+        </div>
+        <div class="mobile-menu__section">
+          <h3>Surfaces</h3>
+          <a href="/">Home</a>
+          <a href="/app-store">App Store</a>
+          <a href="/settings">Settings</a>
+        </div>
+      </div>
+
+      <main>
+        <div class="docs-shell docs-page">
+          <p class="docs-breadcrumb"><a href="/docs">Documentation</a> / OAuth3 Safety</p>
+
+          <h1 class="display">OAuth3 Safety</h1>
+          <p class="docs-meta">Papers 07 + 09 §4 — Budget &amp; Wallet Enforcement · Auth: 65537</p>
+
+          <div class="docs-toc">
+            <strong style="color:var(--sb-text);font-size:0.9rem;">On this page</strong>
+            <a href="#what">What is OAuth3?</a>
+            <a href="#approval">The approval gate</a>
+            <a href="#budgets">Budget enforcement</a>
+            <a href="#evidence">Evidence trails</a>
+            <a href="#fail-closed">Fail-closed model</a>
+            <a href="#revoke">Revocation</a>
+            <a href="#faq">FAQ</a>
+          </div>
+
+          <h2 id="what">What is OAuth3?</h2>
+          <p><strong>OAuth3</strong> is Solace Browser's agency delegation standard. It extends OAuth 2.0 with three missing properties that matter for AI agents:</p>
+          <ul>
+            <li><strong>Scoped authority</strong> — each token grants exactly the permissions it names, nothing more</li>
+            <li><strong>Time-bounded</strong> — every token has an expiry, after which it cannot be used</li>
+            <li><strong>Budget-gated</strong> — every action checks a budget before executing (action count + spend caps)</li>
+          </ul>
+          <p>OAuth3 means: <em>your AI agent can only do what you explicitly approved, within the limits you set, for as long as you allow.</em></p>
+
+          <h2 id="approval">The approval gate</h2>
+          <p>Before any sensitive action, Solace Browser shows the <strong>OAuth3 confirmation dialog</strong>. This dialog displays:</p>
+          <ul>
+            <li>The app and action being requested</li>
+            <li>The OAuth3 scopes (what permissions are being used)</li>
+            <li>Your remaining budget for this action type</li>
+            <li>Three safety guarantees (time-bounded, revocable, evidence-sealed)</li>
+          </ul>
+          <p>You have 15 seconds to approve or reject. <strong>If you do nothing, the action is automatically cancelled</strong> (fail-closed). There is no auto-approve, ever.</p>
+          <pre>┌─────────────────────────────────────────┐
+│  OAuth3 Authorization 🔒                │
+│  You're about to authorize Gmail via    │
+│  Solace AGI.                            │
+│                                         │
+│  Requesting scopes:                     │
+│  • gmail.readonly                       │
+│  • gmail.modify                         │
+│                                         │
+│  Current budget: 8 sends remaining      │
+│                                         │
+│  ✓ Time-bounded (expires in 1h)         │
+│  ✓ Revocable from Settings              │
+│  ✓ Evidence-sealed (SHA-256)            │
+│                                         │
+│  Auto-cancels in 12s                    │
+│  [Proceed]  [Cancel]  [Adjust Budget]   │
+└─────────────────────────────────────────┘</pre>
+
+          <h2 id="budgets">Budget enforcement</h2>
+          <p>Every app has two budget planes:</p>
+
+          <h3>Action budgets (non-financial)</h3>
+          <p>Controls what actions the app can take and how many:</p>
+          <pre>Gmail: {
+  sends_per_day: 10,
+  deletes_per_day: 3,
+  max_recipients_per_email: 3,
+  reads_per_run: 50
+}
+
+LinkedIn: {
+  posts_per_day: 1,
+  comments_per_day: 5,
+  connection_requests_per_day: 10
+}</pre>
+
+          <h3>Spend budgets (financial)</h3>
+          <p>Controls LLM costs and payment authority:</p>
+          <pre>{
+  llm_per_day_cents: 50,     // $0.50/day max on AI
+  llm_per_run_cents: 10,     // $0.10/run max
+  per_transaction_max: 200   // $200 max per payment
+}</pre>
+
+          <h3>The 5 budget gates</h3>
+          <p>Every action passes through 5 gates. Any failure = blocked:</p>
+          <ul>
+            <li><strong>B1 Policy Present</strong> — scope requires policy → policy must exist</li>
+            <li><strong>B2 Limit Remaining</strong> — action count must not exceed remaining budget</li>
+            <li><strong>B3 Target Allowed</strong> — target must be on your allowlist</li>
+            <li><strong>B4 Step-Up Required</strong> — if re-consent required → pauses for approval</li>
+            <li><strong>B5 Evidence Mode</strong> — if policy requires evidence → must comply</li>
+          </ul>
+          <p>Budget resolution: when global AND app budgets conflict, <strong>the stricter rule wins</strong>. Allowlists use intersection (smaller set). Step-up: if any policy requires it, it's required.</p>
+
+          <h2 id="evidence">Evidence trails</h2>
+          <p>Every approved action is sealed to your evidence vault:</p>
+          <ul>
+            <li>SHA-256 hash of the action + inputs + outputs</li>
+            <li>Timestamp and user approval record</li>
+            <li>Sequential hash chain (tamper-evident)</li>
+            <li>Part 11 compliant — audit trail cannot be edited</li>
+          </ul>
+          <p>Evidence is stored locally in <code>~/.solace/evidence/</code>. With a Solace Pro account, it syncs to encrypted cloud storage (30-day retention).</p>
+
+          <h2 id="fail-closed">Fail-closed model</h2>
+          <p>Solace Browser is fail-closed: when in doubt, it does nothing.</p>
+          <ul>
+            <li><strong>No approval = no action</strong> — the 15-second countdown auto-cancels</li>
+            <li><strong>No credits = no LLM call</strong> — if your credit balance is zero, execution stops</li>
+            <li><strong>No scope = no token</strong> — every action validates OAuth3 scope at runtime</li>
+            <li><strong>No seal = no evidence</strong> — every run creates a hash chain or it doesn't complete</li>
+            <li><strong>No consent = no billing</strong> — every charge requires a prior user action</li>
+          </ul>
+          <p>This is the core invariant. It cannot be disabled by configuration.</p>
+
+          <h2 id="revoke">Revocation</h2>
+          <p>You can revoke any OAuth3 token at any time from <a href="/settings" style="color:var(--sb-signal)">Settings → Account</a>. Revoked tokens cannot be used, even if they haven't expired. All active sessions using that token are terminated immediately.</p>
+          <p>To adjust budgets: Settings → Apps → select app → Budget. Changes take effect on the next run.</p>
+
+          <h2 id="faq">FAQ</h2>
+
+          <h3>Can an agent approve actions on my behalf?</h3>
+          <p>No. The OAuth3 approval gate always requires a human action (clicking [Approve] in the UI). Agents cannot simulate this click — the UI checks that the approval came from the real browser interface, not from the API.</p>
+
+          <h3>What if I close the browser during a run?</h3>
+          <p>The run is cancelled. No partial actions are committed. The evidence vault records "run cancelled" with the reason.</p>
+
+          <h3>Can I pre-approve a category of actions?</h3>
+          <p>Yes — via recipe pinning. If you pin a recipe and set auto-approve for read-only actions, those specific actions in that recipe can proceed without manual approval. Write actions (send, delete, post) always require manual approval.</p>
+
+          <h3>Is OAuth3 the same as OAuth 2.0?</h3>
+          <p>OAuth3 builds on OAuth 2.0 patterns but adds budget enforcement, evidence sealing, and the fail-closed model. It is not a replacement for OAuth 2.0 — it is a higher-level agency delegation standard.</p>
+
+          <div class="docs-nav-links">
+            <a href="/docs/mcp">← MCP / Agents Guide</a>
+            <a href="/docs">Documentation Hub</a>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

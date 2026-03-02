@@ -19,7 +19,9 @@
       <header class="site-header">
         <div class="site-header__inner">
           <a class="site-brand" href="/">
-            <span class="site-brand__icon">SB</span>
+            <span class="site-brand__icon site-brand__icon--image">
+              <img class="site-brand__logo-image" src="/images/yinyang/yinyang-logo-48.png" alt="Solace Browser">
+            </span>
             <span class="site-brand__text">
               <span class="site-brand__name">Solace Browser</span>
               <span class="site-brand__tag">OAuth3 web + machine + cloud</span>
@@ -33,6 +35,15 @@
             <a class="nav-link" data-nav-path="/settings" href="/settings">Settings</a>
             <a class="nav-link nav-link--accent" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener">Full product</a>
           </nav>
+          <div class="sb-lang-switch" id="sb-lang-switch">
+            <button class="sb-lang-btn" id="sb-lang-btn" aria-label="Select language" aria-expanded="false" aria-controls="sb-lang-menu">
+              <img class="sb-lang-icon sb-lang-icon--default" src="/images/icons/internationalization/160.png" alt="Language" width="22" height="22">
+              <img class="sb-lang-icon sb-lang-icon--hover" src="/images/icons/internationalization-2/160.png" alt="" width="22" height="22">
+            </button>
+            <div class="sb-lang-menu" id="sb-lang-menu">
+              <a href="#" data-locale="en">English</a><a href="#" data-locale="es">Español</a><a href="#" data-locale="vi">Tiếng Việt</a><a href="#" data-locale="zh">中文</a><a href="#" data-locale="pt">Português</a><a href="#" data-locale="fr">Français</a><a href="#" data-locale="ja">日本語</a><a href="#" data-locale="de">Deutsch</a><a href="#" data-locale="ar">العربية</a><a href="#" data-locale="hi">हिंदी</a><a href="#" data-locale="ko">한국어</a><a href="#" data-locale="id">Bahasa Indonesia</a><a href="#" data-locale="ru">Русский</a>
+            </div>
+          </div>
           <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
         </div>
       </header>
@@ -42,6 +53,13 @@
           <a data-nav-path="/" href="/">Home</a>
           <a data-nav-path="/app-store" href="/app-store">App Store</a>
           <a data-nav-path="/settings" href="/settings">Settings</a>
+        </div>
+        <div class="mobile-menu__section">
+          <h3>Documentation</h3>
+          <a href="/docs">Docs Hub</a>
+          <a href="/docs/quick-start">Quick Start</a>
+          <a href="/docs/mcp">MCP / Agents Guide</a>
+          <a href="/docs/oauth3">OAuth3 Safety</a>
         </div>
       </div>
 

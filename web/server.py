@@ -43,6 +43,10 @@ SLUG_MAP = {
     "app-detail": "app-detail.html",
     "settings": "settings.html",
     "demo": "demo.html",
+    "docs": "docs.html",
+    "docs/quick-start": "docs/quick-start.html",
+    "docs/mcp": "docs/mcp.html",
+    "docs/oauth3": "docs/oauth3.html",
 }
 
 DEFAULT_SETTINGS: dict[str, Any] = {

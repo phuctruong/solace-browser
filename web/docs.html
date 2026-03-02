@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Documentation | Solace Browser</title>
+  <meta name="description" content="Solace Browser documentation hub — quick start, MCP server, OAuth3 safety, recipes, and more.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/solace.js" defer></script>
+</head>
+<body data-page="docs">
+  <div class="site-shell">
+    <div class="page-frame">
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a class="site-brand" href="/">
+            <span class="site-brand__icon site-brand__icon--image">
+              <img class="site-brand__logo-image" src="/images/yinyang/yinyang-logo-48.png" alt="Solace Browser">
+            </span>
+            <span class="site-brand__text">
+              <span class="site-brand__name">Solace Browser</span>
+              <span class="site-brand__tag">Documentation</span>
+            </span>
+          </a>
+          <nav class="site-nav" aria-label="Primary">
+            <a class="nav-link" data-nav-path="/" href="/">Home</a>
+            <a class="nav-link" data-nav-path="/app-store" href="/app-store">Apps</a>
+            <a class="nav-link" data-nav-path="/settings" href="/settings">Settings</a>
+            <a class="nav-link nav-link--accent" href="https://www.solaceagi.com/agents" target="_blank" rel="noopener">Agents →</a>
+          </nav>
+          <div class="sb-lang-switch" id="sb-lang-switch">
+            <button class="sb-lang-btn" id="sb-lang-btn" aria-label="Select language" aria-expanded="false" aria-controls="sb-lang-menu">
+              <img class="sb-lang-icon sb-lang-icon--default" src="/images/icons/internationalization/160.png" alt="Language" width="22" height="22">
+              <img class="sb-lang-icon sb-lang-icon--hover" src="/images/icons/internationalization-2/160.png" alt="" width="22" height="22">
+            </button>
+            <div class="sb-lang-menu" id="sb-lang-menu">
+              <a href="#" data-locale="en">English</a><a href="#" data-locale="es">Español</a><a href="#" data-locale="vi">Tiếng Việt</a><a href="#" data-locale="zh">中文</a><a href="#" data-locale="pt">Português</a><a href="#" data-locale="fr">Français</a><a href="#" data-locale="ja">日本語</a><a href="#" data-locale="de">Deutsch</a><a href="#" data-locale="ar">العربية</a><a href="#" data-locale="hi">हिंदी</a><a href="#" data-locale="ko">한국어</a><a href="#" data-locale="id">Bahasa Indonesia</a><a href="#" data-locale="ru">Русский</a>
+            </div>
+          </div>
+          <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+        </div>
+      </header>
+      <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu__section">
+          <h3>Surfaces</h3>
+          <a data-nav-path="/" href="/">Home</a>
+          <a data-nav-path="/app-store" href="/app-store">App Store</a>
+          <a data-nav-path="/settings" href="/settings">Settings</a>
+        </div>
+        <div class="mobile-menu__section">
+          <h3>Documentation</h3>
+          <a href="/docs">Docs Hub</a>
+          <a href="/docs/quick-start">Quick Start</a>
+          <a href="/docs/mcp">MCP / Agents Guide</a>
+          <a href="/docs/oauth3">OAuth3 Safety</a>
+        </div>
+      </div>
+
+      <main>
+        <div class="docs-shell">
+          <section class="hero reveal" style="padding-top:40px">
+            <div>
+              <div class="eyebrow">Solace Browser Docs | Paper network: 9 canonical papers</div>
+              <h1 class="display">Documentation</h1>
+              <p class="lead">Everything you need to understand, configure, and extend Solace Browser. Built on the <a href="https://www.solaceagi.com/software5" target="_blank" rel="noopener" style="color:var(--sb-signal)">Software 5.0</a> paper network.</p>
+            </div>
+          </section>
+
+          <div class="docs-hub-grid">
+            <a class="docs-card reveal" href="/docs/quick-start">
+              <div class="docs-card__icon">🚀</div>
+              <div class="docs-card__title">Quick Start</div>
+              <div class="docs-card__desc">Install Solace Browser, run your first automation, and understand the approval flow in 5 minutes.</div>
+            </a>
+            <a class="docs-card reveal" href="/docs/mcp">
+              <div class="docs-card__icon">🔌</div>
+              <div class="docs-card__title">MCP / Agents Guide</div>
+              <div class="docs-card__desc">Connect Claude Code, Cursor, Codex, or any MCP-compatible agent to Solace Browser as a tool server.</div>
+            </a>
+            <a class="docs-card reveal" href="/docs/oauth3">
+              <div class="docs-card__icon">🔒</div>
+              <div class="docs-card__title">OAuth3 Safety</div>
+              <div class="docs-card__desc">How OAuth3 protects you: scoped tokens, time-bounded authority, budget gates, and the fail-closed model.</div>
+            </a>
+            <a class="docs-card reveal" href="https://www.solaceagi.com/agents" target="_blank" rel="noopener">
+              <div class="docs-card__icon">🤖</div>
+              <div class="docs-card__title">Agent Integrations ↗</div>
+              <div class="docs-card__desc">Full guide to integrating Solace Browser with AI coding agents. Hosted at solaceagi.com.</div>
+            </a>
+            <a class="docs-card reveal" href="/app-store">
+              <div class="docs-card__icon">🏪</div>
+              <div class="docs-card__title">App Store</div>
+              <div class="docs-card__desc">Browse 18+ automations ready to run — Gmail triage, LinkedIn outreach, Slack summaries, and more.</div>
+            </a>
+            <a class="docs-card reveal" href="/settings">
+              <div class="docs-card__icon">⚙️</div>
+              <div class="docs-card__title">Settings Reference</div>
+              <div class="docs-card__desc">All configuration options: account, LLM, tunnel, machine scope, privacy, and Yinyang personality.</div>
+            </a>
+          </div>
+
+          <section class="page-section reveal" style="margin-top:64px">
+            <div class="section-heading">
+              <div>
+                <h2 class="section-title">Paper Network</h2>
+                <p class="section-copy">Solace Browser is backed by 9 canonical papers. Each paper defines an invariant of the system.</p>
+              </div>
+            </div>
+            <div class="surface-grid">
+              <article class="surface-card">
+                <div class="surface-card__kicker">Paper 04</div>
+                <h2>YinYang Dual-Rail Browser</h2>
+                <p>The top rail and bottom rail architecture. How YinYang surfaces state without interrupting flow.</p>
+              </article>
+              <article class="surface-card">
+                <div class="surface-card__kicker">Paper 07</div>
+                <h2>Budget &amp; Wallet Enforcement</h2>
+                <p>Per-app action budgets, spend caps, fail-closed gates, and step-up authentication.</p>
+              </article>
+              <article class="surface-card">
+                <div class="surface-card__kicker">Paper 09</div>
+                <h2>Tutorial, Fun Packs, MCP &amp; Chat</h2>
+                <p>First-run onboarding, downloadable personality packs, MCP server standard, and YinYang chat.</p>
+              </article>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
