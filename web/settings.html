@@ -9,6 +9,8 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/css/site.css">
   <script src="/js/yinyang-delight.js" defer></script>
+  <script src="/js/yinyang-tutorial.js" defer></script>
+  <script src="/js/yinyang-oauth3-confirm.js" defer></script>
   <script src="/js/solace.js" defer></script>
 </head>
 <body data-page="settings">
@@ -317,6 +319,36 @@
             </div>
             <div class="button-row" style="margin-top:18px">
               <button class="btn btn-secondary" data-settings-save="yinyang" type="button">Save Yinyang</button>
+            </div>
+          </article>
+        </section>
+
+        <!-- Ask YinYang -->
+        <section class="page-section reveal" id="ask-yinyang">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Ask YinYang</h2>
+              <p class="section-copy">Get help with any setting, generate a report, or ask about browser state. Powered by OpenRouter.</p>
+            </div>
+          </div>
+          <article class="data-panel" id="yinyang-chat-panel">
+            <ul class="data-list" id="yinyang-chat-history" style="min-height:120px;margin-bottom:16px"></ul>
+            <div style="display:flex;gap:10px;align-items:flex-end">
+              <label class="sr-only" for="yinyang-chat-input">Ask YinYang</label>
+              <textarea
+                id="yinyang-chat-input"
+                rows="2"
+                placeholder="Ask YinYang anything… What is my current budget? Explain my LLM settings. Generate a privacy report."
+                style="flex:1;background:var(--sb-surface-strong);border:1px solid var(--sb-border);border-radius:10px;color:var(--sb-text);padding:10px 14px;font-family:var(--sb-font-body);font-size:0.9rem;resize:vertical"
+              ></textarea>
+              <button class="btn btn-primary" id="yinyang-chat-send" style="white-space:nowrap">Ask ☯</button>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+              <button class="btn btn-secondary" data-yy-prefill="What is my current API budget remaining?">Budget?</button>
+              <button class="btn btn-secondary" data-yy-prefill="Explain my current LLM backend configuration.">LLM config</button>
+              <button class="btn btn-secondary" data-yy-prefill="Generate a privacy report for my local data storage.">Privacy report</button>
+              <button class="btn btn-secondary" data-yy-prefill="Show me a summary of my Part 11 audit chain status.">Audit status</button>
+              <button class="btn btn-secondary" data-yy-prefill="What fun packs are installed?">Fun packs</button>
             </div>
           </article>
         </section>

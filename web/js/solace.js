@@ -308,7 +308,42 @@
     state.apps = Array.isArray(result.ok && result.data && result.data.apps) ? result.data.apps : [];
     renderAppStoreCategories(state.apps);
     bindAppStoreSearch();
+    loadFunPacks();
     emitWarmToken({ mode: "warm_friendly", trigger: "app_store_loaded" });
+  }
+
+  async function loadFunPacks() {
+    const grid = document.querySelector("#fun-pack-grid");
+    if (!grid) {
+      return;
+    }
+    const result = await fetchJson("/api/fun-packs", { headers: { Accept: "application/json" } });
+    const packs = Array.isArray(result.ok && result.data && result.data.packs) ? result.data.packs : null;
+
+    if (!packs || packs.length === 0) {
+      grid.innerHTML = `
+        <div class="kpi-card">
+          <strong>Default English Pack</strong>
+          <span>100 jokes + 100 facts. Installed automatically.</span>
+          <span class="status-tag status-tag--success" style="margin-top:8px">installed</span>
+        </div>
+        <div class="kpi-card">
+          <strong>More packs coming</strong>
+          <span>Community packs in 13 languages downloadable from packs.solaceagi.com.</span>
+          <span class="status-tag status-tag--neutral" style="margin-top:8px">soon</span>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = packs.map((pack) => `
+      <div class="kpi-card">
+        <strong>${escapeHtml(pack.name || pack.id)}</strong>
+        <span>${escapeHtml(pack.description || `${pack.jokes_count || "?"} jokes · ${pack.facts_count || "?"} facts`)}</span>
+        <span class="recipe-tag" style="margin-top:8px">${escapeHtml(pack.locale || "en")}</span>
+        <span class="status-tag status-tag--success" style="margin-top:4px">installed</span>
+      </div>
+    `).join("");
   }
 
   function bindAppStoreSearch() {
@@ -547,7 +582,75 @@
     }
     renderAllSettingsSections();
     bindSettingsSaveButtons();
+    initYinyangChat();
     emitWarmToken({ mode: "warm_friendly", trigger: "settings_loaded" });
+  }
+
+  function initYinyangChat() {
+    const input = document.querySelector("#yinyang-chat-input");
+    const sendBtn = document.querySelector("#yinyang-chat-send");
+    const history = document.querySelector("#yinyang-chat-history");
+    if (!input || !sendBtn || !history) {
+      return;
+    }
+
+    // Pre-fill buttons
+    document.querySelectorAll("[data-yy-prefill]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        input.value = btn.getAttribute("data-yy-prefill");
+        input.focus();
+      });
+    });
+
+    // Send on button click
+    sendBtn.addEventListener("click", sendYinyangMessage);
+
+    // Send on Ctrl+Enter / Cmd+Enter
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        sendYinyangMessage();
+      }
+    });
+
+    async function sendYinyangMessage() {
+      const message = input.value.trim();
+      if (!message) {
+        return;
+      }
+      input.value = "";
+      sendBtn.disabled = true;
+
+      // Append user message
+      const userItem = document.createElement("li");
+      userItem.innerHTML = `<strong>You:</strong> ${escapeHtml(message)}`;
+      history.appendChild(userItem);
+
+      // Append thinking indicator
+      const thinkItem = document.createElement("li");
+      thinkItem.innerHTML = `<em>YinYang is thinking…</em>`;
+      history.appendChild(thinkItem);
+      history.scrollTop = history.scrollHeight;
+
+      const result = await fetchJson("/api/yinyang/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ message }),
+      });
+
+      history.removeChild(thinkItem);
+      const replyItem = document.createElement("li");
+
+      if (!result.ok) {
+        replyItem.innerHTML = `<strong>YinYang:</strong> <em>Could not reach the chat API — is the server running?</em>`;
+      } else {
+        const reply = (result.data && (result.data.reply || result.data.message)) || JSON.stringify(result.data);
+        replyItem.innerHTML = `<strong>YinYang ☯:</strong> ${escapeHtml(String(reply))}`;
+      }
+      history.appendChild(replyItem);
+      history.scrollTop = history.scrollHeight;
+      sendBtn.disabled = false;
+    }
   }
 
   function renderAllSettingsSections() {

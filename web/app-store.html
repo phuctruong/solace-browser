@@ -10,6 +10,8 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/css/site.css">
   <script src="/js/yinyang-delight.js" defer></script>
+  <script src="/js/yinyang-tutorial.js" defer></script>
+  <script src="/js/yinyang-oauth3-confirm.js" defer></script>
   <script src="/js/solace.js" defer></script>
 </head>
 <body data-page="app-store">
@@ -88,6 +90,23 @@
               <li><strong>LinkedIn</strong> <span class="recipe-tag">linkedin.com</span> — API severely restricted (2023). Solace = full access.</li>
             </ul>
           </article>
+        </section>
+
+        <!-- Fun & Personality Packs -->
+        <section class="page-section reveal" id="fun-packs">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Fun &amp; Personality Packs</h2>
+              <p class="section-copy">Downloadable content packs that give YinYang more jokes, facts, and personality flavors. All 13 languages supported.</p>
+            </div>
+            <a class="text-link" href="/settings#yinyang">YinYang settings</a>
+          </div>
+          <div id="fun-pack-grid" class="kpi-grid">
+            <div class="kpi-card">
+              <strong>Loading packs…</strong>
+              <span>Fetching from <code>/api/fun-packs</code></span>
+            </div>
+          </div>
         </section>
 
         <!-- How it works -->

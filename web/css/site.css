@@ -1012,3 +1012,397 @@ main { display: block; }
   .display { font-size: 2.5rem; }
   .terminal-form { flex-direction: column; }
 }
+
+/* =============================================================================
+   YINYANG TUTORIAL OVERLAY
+   Paper 09 | Auth: 65537
+   ============================================================================= */
+
+.yyT-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(3, 8, 14, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  padding: 16px;
+}
+
+.yyT-overlay--visible { opacity: 1; }
+.yyT-overlay--exit { opacity: 0; }
+
+.yyT-card {
+  background: var(--sb-surface-strong);
+  border: 1px solid var(--sb-border);
+  border-radius: 24px;
+  padding: 32px 36px 28px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 24px 80px rgba(3, 9, 19, 0.6), 0 0 0 1px rgba(255, 107, 53, 0.08);
+  text-align: center;
+}
+
+.yyT-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.yyT-gif {
+  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+
+.yyT-progress {
+  font-size: 0.78rem;
+  color: var(--sb-text-muted);
+  font-family: var(--sb-font-mono);
+}
+
+.yyT-step-icon {
+  font-size: 2.4rem;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+
+.yyT-step-title {
+  font-family: var(--sb-font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--sb-text);
+  margin-bottom: 12px;
+}
+
+.yyT-step-body {
+  color: var(--sb-text-muted);
+  font-size: 0.97rem;
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+
+.yyT-code {
+  background: var(--sb-bg-terminal);
+  border: 1px solid var(--sb-border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-family: var(--sb-font-mono);
+  font-size: 0.78rem;
+  color: var(--sb-terminal-text);
+  text-align: left;
+  overflow-x: auto;
+  white-space: nowrap;
+  margin-bottom: 16px;
+}
+
+.yyT-joke {
+  font-size: 0.88rem;
+  color: var(--sb-accent-warm);
+  font-style: italic;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 191, 105, 0.06);
+  border-left: 3px solid var(--sb-accent-warm);
+  border-radius: 4px;
+  text-align: left;
+}
+
+.yyT-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 20px 0 16px;
+}
+
+.yyT-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sb-border);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.yyT-dot--active {
+  background: var(--sb-accent);
+  transform: scale(1.3);
+}
+
+.yyT-btns {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.yyT-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-family: var(--sb-font-body);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--sb-border);
+  background: transparent;
+  color: var(--sb-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.yyT-btn:hover { background: var(--sb-bg-white-alpha-05); color: var(--sb-text); }
+
+.yyT-btn--primary {
+  background: var(--sb-accent);
+  color: var(--sb-on-accent);
+  border-color: transparent;
+  font-weight: 600;
+}
+.yyT-btn--primary:hover { background: var(--sb-accent-hover); }
+
+.yyT-btn-skip {
+  font-size: 0.8rem;
+  padding: 8px 14px;
+  color: var(--sb-text-muted);
+  border-color: transparent;
+  margin: 0 auto;
+}
+
+@media (max-width: 500px) {
+  .yyT-card { padding: 24px 20px 20px; }
+  .yyT-btns { justify-content: center; }
+  .yyT-btn-prev { display: none !important; }
+}
+
+/* =============================================================================
+   YINYANG OAUTH3 CONFIRMATION DIALOG
+   Paper 09 | Auth: 65537
+   ============================================================================= */
+
+.yyO3-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9100;
+  background: rgba(3, 8, 14, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  padding: 16px;
+}
+
+.yyO3-overlay--visible { opacity: 1; }
+.yyO3-overlay--exit { opacity: 0; }
+
+.yyO3-card {
+  background: var(--sb-surface-strong);
+  border: 1px solid rgba(255, 124, 124, 0.3);
+  border-radius: 20px;
+  padding: 28px 32px 24px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 24px 80px rgba(3, 9, 19, 0.6);
+}
+
+.yyO3-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.yyO3-gif { border-radius: 50%; flex-shrink: 0; }
+
+.yyO3-title {
+  font-family: var(--sb-font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--sb-text);
+}
+
+.yyO3-subtitle {
+  color: var(--sb-text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.yyO3-section { margin-bottom: 16px; }
+
+.yyO3-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--sb-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.yyO3-scopes { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.yyO3-scope-chip {
+  background: var(--sb-bg-white-alpha-04);
+  border: 1px solid var(--sb-border);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-family: var(--sb-font-mono);
+  font-size: 0.78rem;
+  color: var(--sb-signal);
+}
+
+.yyO3-budget-val {
+  color: var(--sb-success);
+  font-family: var(--sb-font-mono);
+}
+
+.yyO3-benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.yyO3-benefits li {
+  font-size: 0.87rem;
+  color: var(--sb-text-muted);
+  padding-left: 4px;
+}
+
+.yyO3-budget-adjust {
+  background: var(--sb-bg-white-alpha-03);
+  border: 1px solid var(--sb-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.yyO3-adjust-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.yyO3-input {
+  background: var(--sb-bg-input);
+  border: 1px solid var(--sb-border);
+  border-radius: 8px;
+  color: var(--sb-text);
+  font-family: var(--sb-font-mono);
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  width: 100px;
+  outline: none;
+}
+.yyO3-input:focus { border-color: var(--sb-accent); }
+
+.yyO3-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.yyO3-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-family: var(--sb-font-body);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--sb-border);
+  background: transparent;
+  color: var(--sb-text);
+}
+
+.yyO3-btn--ghost { color: var(--sb-text-muted); border-color: transparent; }
+.yyO3-btn--ghost:hover { background: var(--sb-bg-white-alpha-03); }
+.yyO3-btn--outline:hover { border-color: var(--sb-signal); color: var(--sb-signal); }
+.yyO3-btn--primary {
+  background: var(--sb-accent);
+  color: var(--sb-on-accent);
+  border-color: transparent;
+  font-weight: 600;
+}
+.yyO3-btn--primary:hover { background: var(--sb-accent-hover); }
+
+.yyO3-countdown {
+  font-family: var(--sb-font-mono);
+  font-size: 0.82em;
+  opacity: 0.8;
+}
+
+/* =============================================================================
+   YINYANG NOTIFICATION TOAST (agent-pushed)
+   Paper 09 | Auth: 65537
+   ============================================================================= */
+
+#yyNotifContainer {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  z-index: 8500;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 10px;
+  max-width: 340px;
+  pointer-events: none;
+}
+
+.yyNotif {
+  background: var(--sb-surface-strong);
+  border: 1px solid var(--sb-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: var(--sb-shadow);
+  pointer-events: auto;
+  animation: yyNotif-in 0.25s ease forwards;
+  font-size: 0.88rem;
+  color: var(--sb-text);
+}
+
+.yyNotif--info    { border-left: 3px solid var(--sb-signal); }
+.yyNotif--success { border-left: 3px solid var(--sb-success); }
+.yyNotif--warning { border-left: 3px solid var(--sb-warning); }
+.yyNotif--error   { border-left: 3px solid var(--sb-danger); }
+
+.yyNotif-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+
+.yyNotif-body { flex: 1; }
+.yyNotif-agent {
+  font-size: 0.72rem;
+  color: var(--sb-text-muted);
+  font-family: var(--sb-font-mono);
+  margin-bottom: 3px;
+}
+
+.yyNotif-dismiss {
+  background: none;
+  border: none;
+  color: var(--sb-text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+}
+.yyNotif-dismiss:hover { color: var(--sb-text); }
+
+@keyframes yyNotif-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+

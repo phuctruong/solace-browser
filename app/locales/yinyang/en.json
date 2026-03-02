@@ -138,6 +138,54 @@
       "s083": "Go rest. I'll keep watch.",
       "s084": "Take care. I'll miss you. Statistically speaking."
     },
+    "tutorial": {
+      "step1_title": "Meet Yinyang ☯",
+      "step1_body": "I'm Yinyang — your AI browser navigator. I navigate the web, click buttons, fill forms, take screenshots, and seal the evidence. Always with your approval.",
+      "step2_title": "Browser Control",
+      "step2_body": "Point me at any URL and I'll navigate, click, fill, or screenshot it. Every action produces a SHA-256 audit trail sealed to your evidence vault.",
+      "step2_code": "curl http://localhost:9222/api/navigate -d '{\"url\":\"https://example.com\"}'",
+      "step3_title": "OAuth3 Safety 🔒",
+      "step3_body": "I never act without your explicit approval. Every sensitive action goes through a scoped OAuth3 gate — time-bounded, revocable, and evidence-logged. You stay in control. Always.",
+      "step4_title": "18 Apps Ready 🏪",
+      "step4_body": "Browse the App Store. 18 automations ready to run — Gmail triage, LinkedIn outreach, Slack summaries, and more. Recipe replay costs $0.001.",
+      "step5_title": "Let's Begin! 🎉",
+      "step5_body": "You're all set. I'll be here in the bottom rail whenever you need me. Just ask — or point me at a task.",
+      "step5_joke": "There are only two hard things in computer science: cache invalidation, naming things, and off-by-one errors.",
+      "btn_next": "Next →",
+      "btn_prev": "← Back",
+      "btn_skip": "Skip Tutorial",
+      "btn_done": "Let's Go! ☯",
+      "progress": "Step {current} of {total}",
+      "welcome_title": "Welcome to Solace Browser",
+      "welcome_body": "Your AI-powered browser with OAuth3 approvals and evidence trails.",
+      "welcome_tour": "Take the 2-minute tour",
+      "welcome_skip": "Skip, I know what I'm doing"
+    },
+    "oauth3_confirm": {
+      "title": "OAuth3 Authorization 🔒",
+      "subtitle": "You're about to authorize an app through Solace AGI.",
+      "scope_label": "Requesting scopes:",
+      "budget_label": "Current budget:",
+      "benefits_title": "Why OAuth3 is safe:",
+      "benefits": [
+        "⏱ Time-bounded — token expires automatically",
+        "🚫 Revocable — cancel any time from Settings",
+        "📋 Evidence-sealed — every action audit-logged"
+      ],
+      "btn_proceed": "Proceed",
+      "btn_cancel": "Cancel",
+      "btn_adjust": "Adjust Budget",
+      "countdown": "Auto-cancels in {seconds}s",
+      "budget_adjust_label": "New budget ($):",
+      "budget_save": "Save & Proceed"
+    },
+    "notifications": {
+      "type_info": "ℹ",
+      "type_success": "✓",
+      "type_warning": "⚠",
+      "type_error": "✕",
+      "from_agent": "from {agent_id}"
+    },
     "holidays": {
       "h001_name": "New Year",
       "h001_greetings": ["Happy New Year!", "New year, new automations.", "Here's to a fresh start."],

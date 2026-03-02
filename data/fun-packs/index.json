@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "updated": "2026-03-02"
+  },
+  "packs": [
+    {
+      "id": "default-en",
+      "name": "Default Fun Pack",
+      "locale": "en",
+      "jokes": 100,
+      "facts": 100,
+      "file": "default-en.json",
+      "tags": ["programming", "tech", "ai", "science"]
+    }
+  ]
+}
