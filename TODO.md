@@ -8,29 +8,17 @@
 
 ## P0 — Critical Path (Beta Mar 9)
 
-### T1: Plain-English scope confirmation UI
-**Phase:** 4-VALUE | **Score:** 0.81 | **Source:** Norman, Sinek, Hopper
-**Acceptance:** Scope confirmation modal shows "Read your Gmail inbox" not "gmail.read.inbox"
-**Files:** src/ui/scope_display.py (new or extend existing)
-**Tests:** ~15
+### T1: Plain-English scope confirmation UI ✅
+**Files:** src/ui/scope_display.py — 668 lines, tests/test_scope_display.py
 
-### T2: Step-by-step execution progress UI
-**Phase:** 4-VALUE | **Score:** 0.72 | **Source:** Dean, Gregg, Kernighan
-**Acceptance:** Progress bar: "Step 3/6: Extracting emails..." with green checkmarks on completion
-**Files:** src/ui/execution_progress.py (new)
-**Tests:** ~12
+### T2: Step-by-step execution progress UI ✅
+**Files:** src/ui/execution_progress.py — 324 lines, tests/test_execution_progress.py
 
-### T3: First-success celebration (delight engine)
-**Phase:** 4-VALUE | **Score:** 0.84 | **Source:** Norman, Rams, Van Edwards
-**Acceptance:** Yinyang animation on first successful recipe, "Your first AI task is done!" message
-**Files:** src/delight_engine.py (extend existing)
-**Tests:** ~8
+### T3: First-success celebration (delight engine) ✅
+**Files:** src/yinyang/delight_engine.py — 677 lines, 28 tests pass (bug fixed 7fa691e)
 
-### T4: Preview explainer ("what will happen")
-**Phase:** 4-VALUE | **Source:** Karpathy, Norman
-**Acceptance:** Preview screen shows plain-English description of each step before approval
-**Files:** src/ui/preview_explainer.py (new)
-**Tests:** ~10
+### T4: Preview explainer ("what will happen") ✅
+**Files:** src/ui/preview_explainer.py — 414 lines, tests/test_preview_explainer.py
 
 ---
 
@@ -64,7 +52,27 @@
 
 ## P2 — Growth (Apr → May)
 
-### T9: Natural language recipe creation
+### T9: Prime Wiki + PZip snapshot engine
+**Phase:** 4-VALUE | **Score:** 3.80 | **Source:** Paper 22 (Berners-Lee, Karpathy, Larry Page)
+**Acceptance:** On navigate, capture Prime Wiki snapshot (LLM once → cache forever). PZip 66:1 compress. RTC verified. Local cache at ~/.solace/prime-wiki/
+**Settings:**
+  - prime_wiki.enabled (bool, default: true)
+  - prime_wiki.depth: "full" | "shallow" | "headings_only"
+  - prime_mermaid.enabled (bool, default: true)
+  - prime_mermaid.auto_capture (bool, default: true)
+  - screenshots.enabled (bool, default: true)
+  - community.sync_enabled (bool, default: false — explicit opt-in)
+  - community.auto_pull (bool, default: true for paid)
+**API endpoints (browser, port 9222):**
+  - POST /api/prime-wiki/capture
+  - GET  /api/prime-wiki/mermaid?url=<encoded>
+  - POST /api/prime-wiki/rtc
+  - POST /api/prime-wiki/push (OAuth3: community.write, Pro only)
+  - GET  /api/prime-wiki/pull?url_hash=<sha256> (OAuth3: community.read)
+**Files:** src/prime_wiki/extractor.py, src/prime_wiki/pzip_bridge.py, src/prime_wiki/community_sync.py
+**Tests:** ~40
+
+### T10: Natural language recipe creation
 **Phase:** 4-VALUE | **Score:** 2.40 | **Source:** Hopper, Norman, Karpathy
 **Acceptance:** User describes task in English → AI generates recipe.json → preview before save
 **Files:** src/recipes/nl_compiler.py (new)
