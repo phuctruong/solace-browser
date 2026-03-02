@@ -1,42 +1,32 @@
 # TODO — Solace Browser
 # Updated: 2026-03-01 | Auth: 65537
 # Agent: Antigravity / Gemini 2.5 Pro
-# Tests: 4,608 passed | Modules: 18+
+# Tests: 4,768 passed | Modules: 22+
 # Run: pytest tests/ -v
 
 ---
 
-## P0 — Critical (Do First)
+## P0 — Critical (DONE)
 
-### T1: Playwright browser auto-installer
-- Create `scripts/install_browsers.py` that downloads Playwright browsers
-- Detect platform (Linux/macOS/Windows) and install correct binaries
-- Show progress bar during download (~1.8GB)
-- After install, verify with `playwright install --check`
-- This is needed because PyInstaller binary (267MB) cannot bundle browsers
-- Test: mock subprocess calls, verify platform detection logic
+### T1: Playwright browser auto-installer ✅
+- DONE: `scripts/install_browsers.py` — platform-aware Playwright browser download
+- CLI: --browser, --check, --dry-run, --install-deps, --timeout
+- 61 tests in tests/test_install_browsers.py
 
-### T2: Settings hot-reload
-- `src/settings_manager.py` — watch `~/.solace/settings.json` for changes
-- Use `watchdog` or polling (every 5s) to detect file modifications
-- Emit `settings_changed` event to all active modules
-- Modules that need hot-reload: budget_gates (limits), auth_proxy (tokens), delight_engine (content)
-- Test: write settings file → verify modules pick up changes within 10s
+### T2: Settings hot-reload ✅
+- DONE: `src/settings_manager.py` — background polling (5s), callback-based, thread-safe
+- register/unregister callbacks, force reload, daemon thread with clean shutdown
+- 32 tests in tests/test_settings_manager.py
 
-### T3: Personality customization
-- `src/yinyang/personality.py` — user-selectable personality for Yinyang responses
-- Personalities: Professional, Friendly, Playful, Minimal, Custom
-- Stored in `~/.solace/settings.json` under `personality` key
-- Affects: delight_engine content selection, support_bridge tone, warm_token style
-- Default: Friendly
-- Test: set personality → verify delight pool filters by personality tag
+### T3: Personality customization ✅
+- DONE: `src/yinyang/personality.py` — 5 personalities (Professional/Friendly/Playful/Minimal/Custom)
+- Content filtering by personality tags, tone parameters for each module
+- 37 tests in tests/test_personality.py
 
-### T4: macOS binary build
-- Create `solace-browser-macos.spec` for PyInstaller on macOS
-- Handle macOS-specific: code signing (ad-hoc), universal binary (x86_64 + arm64)
-- Update `scripts/build_binary.sh` to detect platform
-- Upload to GCS: `gs://solace-downloads/solace-browser/v1.0.0/solace-browser-macos-universal`
-- Test: spec file generates without errors (CI can't actually build macOS on Linux)
+### T4: macOS binary build ✅
+- DONE: `solace-browser-macos.spec` + `scripts/build-mac.sh` rewrite
+- Universal binary (x86_64+arm64), ad-hoc codesign, GCS upload, SHA-256
+- 30 tests in tests/test_macos_build.py
 
 ---
 
