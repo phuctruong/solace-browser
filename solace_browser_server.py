@@ -145,6 +145,7 @@ except ImportError as _llm_import_error:
 try:
     from yinyang.top_rail import inject_top_rail
     from yinyang.bottom_rail import inject_bottom_rail
+    from yinyang.push_alerts import inject_push_alerts
     from yinyang.ws_bridge import YinyangWSBridge
     YINYANG_AVAILABLE = True
 except ImportError as _yy_import_error:
@@ -314,9 +315,10 @@ class SolaceBrowser:
     _yinyang_enabled: bool = False
 
     async def inject_yinyang_rails(self, page: Any, port: int = 0) -> bool:
-        """Inject Yinyang top + bottom rails into a page.
+        """Inject Yinyang top + bottom rails + push alerts into a page.
 
         Uses add_init_script so rails persist across navigations.
+        Includes push alert system with toast/popup/takeover channels.
         Returns True if injection succeeded, False otherwise.
         """
         if not YINYANG_AVAILABLE or not self._yinyang_enabled:
@@ -326,7 +328,8 @@ class SolaceBrowser:
         try:
             await inject_top_rail(page)
             await inject_bottom_rail(page, ws_url=ws_url)
-            logger.info("[Yinyang] Rails injected into page")
+            await inject_push_alerts(page, img_base_url="/images/yinyang")
+            logger.info("[Yinyang] Rails + push alerts injected into page")
             return True
         except Exception as exc:
             logger.warning(f"[Yinyang] Rail injection failed: {exc}")
