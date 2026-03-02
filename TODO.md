@@ -36,13 +36,13 @@
 
 ## P1 — Launch (Mar 9 → Apr 1)
 
-### T5: Plain-English evidence summary
+### T5: Plain-English evidence summary ✅
 **Phase:** 4-VALUE | **Score:** 2.00 | **Source:** Kernighan, Norman, Rams
 **Acceptance:** "6 emails triaged, 2 marked important, 1 draft created. Time: 47s"
 **Files:** src/evidence/summary_formatter.py (new)
 **Tests:** ~15
 
-### T6: Live Mermaid execution diagram
+### T6: Live Mermaid execution diagram ✅
 **Phase:** 4-VALUE | **Score:** 1.80 | **Source:** Mermaid Creator, Karpathy
 **Acceptance:** Mermaid stateDiagram in browser, nodes highlight green on completion, current pulses
 **Files:** src/ui/live_diagram.py (new)
