@@ -356,6 +356,7 @@ _LEGACY_SCOPE_ALIASES: Dict[str, Dict] = {
     "browser.screenshot": {"platform": "browser", "description": "Capture browser screenshots", "risk_level": "low", "destructive": False},
     "browser.dom": {"platform": "browser", "description": "Read DOM content / execute safe inspection scripts", "risk_level": "low", "destructive": False},
     "browser.verify": {"platform": "browser", "description": "Verify page state via DOM checks", "risk_level": "low", "destructive": False},
+    "browser.session": {"platform": "browser", "description": "Load or save browser session state (cookies/localStorage)", "risk_level": "medium", "destructive": False},
     # LinkedIn legacy two-segment scopes (used by old tests and consent UI)
     "linkedin.create_post": {"platform": "linkedin", "description": "Create posts on your behalf", "risk_level": "medium", "destructive": False},
     "linkedin.edit_post": {"platform": "linkedin", "description": "Edit posts on your behalf", "risk_level": "medium", "destructive": False},

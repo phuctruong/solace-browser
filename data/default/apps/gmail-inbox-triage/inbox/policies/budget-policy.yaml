@@ -1,0 +1,7 @@
+enabled: true
+allowed_domains:
+  - mail.google.com
+  - accounts.google.com
+evidence_mode: full
+max_runs_per_day: 24
+high_risk_operations: []

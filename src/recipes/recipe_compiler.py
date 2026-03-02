@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
+from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 from .recipe_parser import RecipeAST, RecipeParseError, RecipeTransition
@@ -20,6 +21,12 @@ ACTION_SCOPE_MAP: Dict[str, str] = {
     "fill": "browser.fill",
     "screenshot": "browser.screenshot",
     "verify": "browser.verify",
+    "session": "browser.session",
+    "extract": "browser.read",
+    "wait": "browser.read",
+    "return": "browser.read",
+    "scroll": "browser.read",
+    "inspect": "browser.read",
 }
 
 
@@ -135,6 +142,108 @@ def compile_mermaid(recipe_text: str, recipe_id: str = "recipe", determinism_see
     except RecipeParseError as exc:
         raise CompilationError(str(exc)) from exc
     return compile(ast=ast, determinism_seed=determinism_seed)
+
+
+def compile_from_steps(
+    recipe_id: str,
+    steps: list[dict[str, Any]] | tuple[dict[str, Any], ...],
+    *,
+    scopes: tuple[str, ...] = (),
+    version: str = "1.0.0",
+    determinism_seed: int = 65537,
+) -> RecipeIR:
+    """Compile a linear JSON steps array into RecipeIR.
+
+    Unlike compile(), this uses the actual step data (action, target, params)
+    instead of inferring from state names. Used for JSON recipes that have
+    explicit steps arrays (e.g., gmail-read-inbox.json).
+    """
+    if not steps:
+        raise CompilationError("recipe has no steps")
+
+    compiled_steps: List[RecipeStepIR] = []
+    scopes_used: set[str] = set(scopes)
+
+    step_list = list(steps)
+    for idx, step in enumerate(step_list):
+        step_id = str(step.get("step_id", f"s{idx + 1:03d}"))
+        action = str(step.get("action", "noop"))
+        target = step.get("target")
+        # Build params from all step fields except the standard ones
+        standard_keys = {"step_id", "index", "action", "target", "description", "step"}
+        params = {k: v for k, v in step.items() if k not in standard_keys}
+
+        # Map action scope
+        scope = ACTION_SCOPE_MAP.get(action)
+        if scope:
+            scopes_used.add(scope)
+
+        # Build transitions: linear chain s001 → s002 → ... → [*]
+        if idx < len(step_list) - 1:
+            next_step_id = str(step_list[idx + 1].get("step_id", f"s{idx + 2:03d}"))
+            condition_next_state = ({"condition": "always", "next_state": next_step_id},)
+        else:
+            condition_next_state = ({"condition": "done", "next_state": "[*]"},)
+
+        compiled_steps.append(
+            RecipeStepIR(
+                step_id=step_id,
+                state=step_id,
+                action=action,
+                target=target,
+                params=params,
+                condition_next_state=condition_next_state,
+            )
+        )
+
+    initial_state = compiled_steps[0].step_id
+
+    payload = {
+        "recipe_id": recipe_id,
+        "version": version,
+        "determinism_seed": int(determinism_seed),
+        "initial_state": initial_state,
+        "scopes_required": sorted(scopes_used),
+        "steps": [s.to_dict() for s in compiled_steps],
+    }
+    ir_hash = hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+    return RecipeIR(
+        recipe_id=recipe_id,
+        version=version,
+        determinism_seed=int(determinism_seed),
+        initial_state=initial_state,
+        scopes_required=tuple(sorted(scopes_used)),
+        steps=tuple(compiled_steps),
+        ir_hash=ir_hash,
+    )
+
+
+def compile_json_recipe(recipe_path: str | Path, determinism_seed: int = 65537) -> RecipeIR:
+    """Load a JSON recipe file and compile it to IR.
+
+    Handles both Mermaid FSM recipes and linear steps recipes.
+    """
+    from .recipe_parser import parse_deterministic
+
+    dag, _dag_hash = parse_deterministic(recipe_path)
+
+    # Check if the original file has a mermaid_fsm
+    path = Path(recipe_path)
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    mermaid_fsm = raw.get("mermaid_fsm")
+    if mermaid_fsm:
+        return compile_mermaid(mermaid_fsm, recipe_id=dag.recipe_id, determinism_seed=determinism_seed)
+
+    return compile_from_steps(
+        recipe_id=dag.recipe_id,
+        steps=list(dag.steps),
+        scopes=dag.scopes,
+        version=dag.version,
+        determinism_seed=determinism_seed,
+    )
 
 
 def _group_outgoing(transitions: Tuple[RecipeTransition, ...]) -> Dict[str, List[RecipeTransition]]:

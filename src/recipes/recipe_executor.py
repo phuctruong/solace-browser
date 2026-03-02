@@ -24,6 +24,12 @@ ACTION_SCOPE_MAP: Dict[str, str] = {
     "fill": "browser.fill",
     "screenshot": "browser.screenshot",
     "verify": "browser.verify",
+    "session": "browser.session",
+    "extract": "browser.read",
+    "wait": "browser.read",
+    "return": "browser.read",
+    "scroll": "browser.read",
+    "inspect": "browser.read",
 }
 
 
@@ -294,6 +300,69 @@ class RecipeExecutor:
             return {
                 "status": "success",
                 "noop": True,
+            }
+
+        if action == "session":
+            # Load or save browser session (cookies/localStorage)
+            path = str(target or params.get("path") or "")
+            operation = str(params.get("operation", "load"))
+            return {
+                "status": "success",
+                "session_action": operation,
+                "path": path,
+            }
+
+        if action == "wait":
+            # Wait for a CSS selector to appear
+            selector = str(target or params.get("selector") or "")
+            if not selector:
+                raise ExecutionError("wait requires selector target or params.selector")
+            timeout_ms = int(params.get("timeout_ms", 5000))
+            return {
+                "status": "success",
+                "waited_for": selector,
+                "timeout_ms": timeout_ms,
+            }
+
+        if action == "extract":
+            # Extract structured data from DOM elements
+            selector = str(target or params.get("selector") or "")
+            if not selector:
+                raise ExecutionError("extract requires selector target or params.selector")
+            fields = params.get("fields", {})
+            limit = params.get("limit", 10)
+            if isinstance(limit, str) and limit.startswith("{"):
+                limit = inputs.get("limit", 10)
+            return {
+                "status": "success",
+                "selector": selector,
+                "fields_requested": list(fields.keys()) if isinstance(fields, dict) else [],
+                "limit": int(limit) if isinstance(limit, (int, float, str)) and str(limit).isdigit() else 10,
+                "extracted": [],
+            }
+
+        if action == "return":
+            # Package and return accumulated results
+            return {
+                "status": "success",
+                "returned": True,
+            }
+
+        if action == "scroll":
+            direction = str(params.get("direction", "down"))
+            amount = int(params.get("amount", 500))
+            return {
+                "status": "success",
+                "scrolled": direction,
+                "amount": amount,
+            }
+
+        if action == "inspect":
+            # Read-only DOM inspection
+            selector = str(target or params.get("selector") or "")
+            return {
+                "status": "success",
+                "inspected": selector or "page",
             }
 
         raise ExecutionError(f"unknown action: {action}")
