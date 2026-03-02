@@ -19,6 +19,8 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
+from src.i18n import get_strings, get_locale
+
 logger = logging.getLogger("solace-browser.yinyang.delight")
 
 # Default data directory (relative to project root)
@@ -55,7 +57,7 @@ _FALLBACK_CELEBRATIONS: dict[str, dict[str, str]] = {
     "first_run": {"text": "Your first app run! Welcome to the Solace family.", "emoji": "party_popper"},
     "app_installed": {"text": "New app installed! Your AI worker is growing.", "emoji": "package"},
     "run_complete": {"text": "Run complete! Evidence sealed and verified.", "emoji": "check_mark"},
-    "streak_3": {"text": "3 runs in a row! You're building momentum.", "emoji": "fire"},
+    "streak_3": {"text": "3 days in a row! You're building momentum.", "emoji": "fire"},
     "streak_7": {"text": "7-day streak! Consistency is the secret.", "emoji": "star"},
 }
 
@@ -492,7 +494,26 @@ class YinyangDelightEngine:
         1000: "1000th",
     }
 
-    # Streak thresholds + messages (P8 Care)
+    # Streak thresholds + i18n keys (P8 Care)
+    _STREAK_KEYS: dict[int, str] = {
+        3:  "streak_3",
+        7:  "streak_7_long",
+        14: "streak_14",
+        30: "streak_30",
+        60: "streak_60",
+        90: "streak_90",
+    }
+
+    def _streak_map(self) -> dict[int, str]:
+        """Return streak messages in the active locale."""
+        strings = get_strings()
+        milestones = strings.get("delight", {}).get("milestones", {})
+        return {
+            threshold: milestones.get(key, self._STREAK_MAP.get(threshold, "Keep going!"))
+            for threshold, key in self._STREAK_KEYS.items()
+        }
+
+    # Keep static fallback for tests that don't set locale
     _STREAK_MAP: dict[int, str] = {
         3:  "3 days in a row — you're building momentum.",
         7:  "7-day streak! One full week of consistency.",
@@ -592,9 +613,12 @@ class YinyangDelightEngine:
             raise TypeError(f"streak_days must be int, got {type(streak_days).__name__}")
 
         best_threshold = 0
-        best_message = "Keep going! Every day builds momentum."
+        strings = get_strings()
+        best_message = strings.get("delight", {}).get("milestones", {}).get(
+            "keep_going", "Keep going! Every day builds momentum."
+        )
 
-        for threshold, message in self._STREAK_MAP.items():
+        for threshold, message in self._streak_map().items():
             if streak_days >= threshold and threshold >= best_threshold:
                 best_threshold = threshold
                 best_message = message
