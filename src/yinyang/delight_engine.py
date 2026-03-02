@@ -467,6 +467,178 @@ class YinyangDelightEngine:
                 return c
         return None
 
+    # -----------------------------------------------------------------------
+    # First-success celebration (P1 Gamification + P8 Care)
+    # -----------------------------------------------------------------------
+
+    # ASCII Yinyang art — 5 lines, pure ASCII, no external deps
+    _YINYANG_ART: str = (
+        "    .oOo.\n"
+        "   (  (  )\n"
+        "   (o  o )\n"
+        "    `oOo'\n"
+        "  ~ Yinyang ~"
+    )
+
+    # Milestone thresholds + labels (P1 Gamification)
+    _MILESTONE_MAP: dict[int, str] = {
+        1: "first",
+        5: "5th",
+        10: "10th",
+        25: "25th",
+        50: "50th",
+        100: "100th",
+        500: "500th",
+        1000: "1000th",
+    }
+
+    # Streak thresholds + messages (P8 Care)
+    _STREAK_MAP: dict[int, str] = {
+        3:  "3 days in a row — you're building momentum.",
+        7:  "7-day streak! One full week of consistency.",
+        14: "14 days — two weeks of discipline. You're for real.",
+        30: "30-day streak! A month of daily practice.",
+        60: "60 days — two months. This is a habit now.",
+        90: "90 days — mastery is forming. Keep going.",
+    }
+
+    def celebrate_first_success(
+        self,
+        recipe_name: str,
+        completion_time: str | None = None,
+        evidence_hash: str | None = None,
+    ) -> str:
+        """Return a first-success celebration message for a completed recipe.
+
+        Includes:
+          - Header with yinyang art
+          - Recipe name and optional completion time
+          - Abbreviated evidence bundle hash
+          - Verifiability statement
+
+        Args:
+            recipe_name:     Name of the recipe that completed.
+            completion_time: Human-readable elapsed time (e.g. "1.3s"). Optional.
+            evidence_hash:   Full SHA-256 hex digest of the evidence bundle. Optional.
+
+        Returns:
+            Multi-line celebration string suitable for terminal output.
+        """
+        if not isinstance(recipe_name, str):
+            raise TypeError(f"recipe_name must be str, got {type(recipe_name).__name__}")
+
+        lines: list[str] = []
+        lines.append(self._YINYANG_ART)
+        lines.append("")
+        lines.append("Your first AI task is done!")
+        lines.append("")
+        lines.append(f"  Recipe : {recipe_name}")
+
+        if completion_time is not None:
+            lines.append(f"  Time   : {completion_time}")
+
+        if evidence_hash is not None:
+            # Abbreviate: first 8 + "..." + last 4 characters
+            abbrev = self._abbreviate_hash(evidence_hash)
+            lines.append(f"  Bundle : {abbrev}")
+
+        lines.append("")
+        lines.append("Your evidence is sealed and verifiable.")
+
+        return "\n".join(lines)
+
+    def celebrate_milestone(self, milestone: str, count: int) -> str:
+        """Return a milestone celebration message.
+
+        Milestone thresholds: 1, 5, 10, 25, 50, 100, 500, 1000.
+        Picks the highest threshold not exceeding count, or uses count
+        verbatim if it does not match any known milestone.
+
+        Args:
+            milestone: Category label (e.g. "recipe", "run", "task").
+            count:     Number of completions.
+
+        Returns:
+            Celebration string (e.g. "Your 10th recipe!").
+        """
+        if not isinstance(milestone, str):
+            raise TypeError(f"milestone must be str, got {type(milestone).__name__}")
+        if not isinstance(count, int):
+            raise TypeError(f"count must be int, got {type(count).__name__}")
+
+        # Find the highest known threshold that matches exactly
+        ordinal = self._MILESTONE_MAP.get(count)
+        if ordinal is None:
+            # Not a recognised threshold — use plain count
+            ordinal = f"{count}th"
+
+        label = milestone.strip() or "task"
+        return f"Your {ordinal} {label}!"
+
+    def get_encouragement(self, streak_days: int) -> str:
+        """Return a streak-based encouragement message.
+
+        Streak thresholds: 3, 7, 14, 30, 60, 90 days.
+        Returns the message for the highest threshold not exceeding streak_days.
+        Returns a neutral "Keep going!" for streaks below the lowest threshold.
+
+        Args:
+            streak_days: Number of consecutive days of activity.
+
+        Returns:
+            Encouragement string.
+        """
+        if not isinstance(streak_days, int):
+            raise TypeError(f"streak_days must be int, got {type(streak_days).__name__}")
+
+        best_threshold = 0
+        best_message = "Keep going! Every day builds momentum."
+
+        for threshold, message in self._STREAK_MAP.items():
+            if streak_days >= threshold and threshold >= best_threshold:
+                best_threshold = threshold
+                best_message = message
+
+        return best_message
+
+    def format_celebration(
+        self,
+        message: str,
+        include_yinyang: bool = True,
+    ) -> str:
+        """Wrap an arbitrary celebration message with optional ASCII Yinyang art.
+
+        Args:
+            message:         The celebration message to wrap.
+            include_yinyang: When True (default), prepend the Yinyang ASCII art.
+
+        Returns:
+            Formatted string ready for terminal display.
+        """
+        if not isinstance(message, str):
+            raise TypeError(f"message must be str, got {type(message).__name__}")
+
+        parts: list[str] = []
+        if include_yinyang:
+            parts.append(self._YINYANG_ART)
+            parts.append("")
+        parts.append(message)
+        return "\n".join(parts)
+
+    # -----------------------------------------------------------------------
+    # Private helper — hash abbreviation
+    # -----------------------------------------------------------------------
+
+    @staticmethod
+    def _abbreviate_hash(digest: str) -> str:
+        """Shorten a hex digest to first-8 + '...' + last-4 characters.
+
+        If digest is shorter than 12 characters, returns it unchanged.
+        """
+        if len(digest) < 12:
+            return digest
+        return f"{digest[:8]}...{digest[-4:]}"
+
     @staticmethod
     def _date_in_range(today_mmdd: str, start_mmdd: str, end_mmdd: str) -> bool:
         """Check if today (MM-DD) falls within [start, end] range.
