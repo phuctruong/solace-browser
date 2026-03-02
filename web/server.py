@@ -34,6 +34,7 @@ from inbox_outbox import AppFolderNotFoundError, InboxOutboxManager
 SLUG_MAP = {
     "": "home.html",
     "home": "home.html",
+    "start": "start.html",
     "download": "download.html",
     "machine-dashboard": "machine-dashboard.html",
     "tunnel-connect": "tunnel-connect.html",
@@ -320,9 +321,12 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
 
         # YinYang notification status: /api/yinyang/status
         if request_path == "/api/yinyang/status":
+            notifs = list(_notif_queue)
+            unread = sum(1 for n in notifs if not n.get("read"))
             self._send_json(HTTPStatus.OK, {
-                "queue_length": len(_notif_queue),
-                "notifications": list(_notif_queue),
+                "queue_size": len(notifs),
+                "unread": unread,
+                "notifications": notifs,
             }, send_body=send_body)
             return
 
