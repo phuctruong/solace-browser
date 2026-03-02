@@ -150,7 +150,7 @@ const YinyangTutorial = (() => {
     div.innerHTML = `
       <div class="yyT-card">
         <div class="yyT-header">
-          <img class="yyT-gif" src="${YY_GIF}" alt="Yinyang" width="64" height="64">
+          <img class="yyT-gif" src="${YY_GIF}" alt="Yinyang">
           <span class="yyT-progress"></span>
         </div>
         <div class="yyT-step-content"></div>
