@@ -318,6 +318,7 @@ class TestFileChangeDetect:
         time.sleep(0.4)
         mgr.stop()
 
+        # >= 1 because polling may fire multiple times before stop(); at least one is required
         assert len(received) >= 1
         assert received[-1]["created_after_start"] is True
 
@@ -335,8 +336,8 @@ class TestFileChangeDetect:
         time.sleep(0.4)
         manager.stop()
 
-        # Manager should still be functional
-        assert manager.get("budget_limit") is not None or manager.get("budget_limit") is None
+        # After file deletion, manager retains cached settings from initial load
+        assert manager.get("budget_limit") == 100  # Cached value persists
 
 
 # ---------------------------------------------------------------------------

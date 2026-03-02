@@ -5,9 +5,9 @@ Rung: 641 (local correctness)
 Coverage:
   TestMacOSSpecFile       (10 tests) — file existence, parsing, macOS-specific fields
   TestMacOSSpecContent    (10 tests) — hidden imports, exclusions, data bundles, info_plist
-  TestBuildMacScript      (10 tests) — script content, platform detection, GCS upload, SHA-256
+  TestBuildMacScript      (13 tests) — script content, platform detection, GCS upload, SHA-256, fallback ban
 
-Total: 30 tests
+Total: 33 tests
 Run:
     cd /home/phuc/projects/solace-browser
     PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_macos_build.py -v --tb=short
@@ -255,7 +255,7 @@ class TestMacOSSpecContent:
 # ===========================================================================
 
 class TestBuildMacScript:
-    """10 tests: script structure, platform detection, GCS upload, SHA-256."""
+    """13 tests: script structure, platform detection, GCS upload, SHA-256, fallback ban."""
 
     @pytest.fixture(autouse=True)
     def _load_script(self):
@@ -298,3 +298,25 @@ class TestBuildMacScript:
 
     def test_script_reads_version_file(self):
         assert "VERSION" in self.content, "Must read VERSION file for version string"
+
+    def test_script_no_fallback_ban_violations(self):
+        """build-mac.sh must not silently swallow errors."""
+        # These patterns indicate silent error swallowing
+        banned_patterns = ["|| true", "|| :", "set +e"]
+        for pattern in banned_patterns:
+            assert pattern not in self.content, (
+                f"FALLBACK BAN violation: '{pattern}' found in build-mac.sh"
+            )
+
+    def test_script_verifies_sha256(self):
+        """SHA-256 must be verified after generation, not just created."""
+        # Must contain verification command (shasum -c or sha256sum -c)
+        assert "-c" in self.content and "sha256" in self.content.lower(), (
+            "build-mac.sh must verify SHA-256 checksum after generation (shasum -c)"
+        )
+
+    def test_script_verifies_universal_binary(self):
+        """Script must verify the binary contains both architectures."""
+        assert "lipo" in self.content, (
+            "build-mac.sh must use lipo to verify universal2 binary architectures"
+        )

@@ -51,11 +51,21 @@ fi
 echo "Binary built: ${BINARY_PATH}"
 echo "Binary size: $(du -h "${BINARY_PATH}" | cut -f1)"
 
-# ---- Ad-hoc code signing verification ----
-if command -v codesign >/dev/null 2>&1; then
-    echo "Verifying ad-hoc code signature..."
-    codesign --verify --verbose "${BINARY_PATH}" 2>&1 || echo "WARNING: codesign verify returned non-zero (ad-hoc signing may need re-sign)"
+# Verify universal binary contains both architectures
+echo "Verifying universal binary architectures..."
+if command -v lipo >/dev/null 2>&1; then
+    ARCHS=$(lipo -info "${BINARY_PATH}" 2>&1)
+    echo "Architectures: ${ARCHS}"
+    if [[ "${ARCHS}" != *"x86_64"* ]] || [[ "${ARCHS}" != *"arm64"* ]]; then
+        echo "WARNING: Binary may not be truly universal2. Expected x86_64 + arm64."
+        echo "This may happen if cross-compilation support is not available."
+    fi
 fi
+
+# ---- Ad-hoc code signing verification ----
+echo "Verifying codesign..."
+codesign --verify --verbose "${BINARY_PATH}" 2>&1
+echo "Codesign verification passed."
 
 # ---- SHA-256 checksum ----
 if command -v shasum >/dev/null 2>&1; then
@@ -66,16 +76,24 @@ fi
 
 echo "SHA-256 checksum written to: ${DIST_DIR}/${BINARY_NAME}-${VERSION}-macos-universal.sha256"
 
-# ---- Upload to GCS (if gsutil available) ----
-if command -v gsutil >/dev/null 2>&1; then
-    echo "Uploading to ${GCS_BUCKET}/..."
-    gsutil cp "${BINARY_PATH}" "${GCS_BUCKET}/${BINARY_NAME}-macos-universal"
-    gsutil cp "${DIST_DIR}/${BINARY_NAME}-${VERSION}-macos-universal.sha256" \
-        "${GCS_BUCKET}/${BINARY_NAME}-macos-universal.sha256"
-    echo "Upload complete."
+echo "Verifying SHA-256 checksum..."
+if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 -c "${DIST_DIR}/${BINARY_NAME}-${VERSION}-macos-universal.sha256"
 else
-    echo "gsutil not found — skipping GCS upload."
-    echo "Manual upload target: ${GCS_BUCKET}/${BINARY_NAME}-macos-universal"
+    sha256sum -c "${DIST_DIR}/${BINARY_NAME}-${VERSION}-macos-universal.sha256"
 fi
+echo "SHA-256 verification passed."
+
+# ---- Upload to GCS ----
+echo "Uploading to ${GCS_BUCKET}/..."
+if ! command -v gsutil >/dev/null 2>&1; then
+    echo "ERROR: gsutil not found. Install Google Cloud SDK for distribution upload."
+    echo "Manual upload target: ${GCS_BUCKET}/${BINARY_NAME}-macos-universal"
+    exit 1
+fi
+gsutil cp "${BINARY_PATH}" "${GCS_BUCKET}/${BINARY_NAME}-macos-universal"
+gsutil cp "${DIST_DIR}/${BINARY_NAME}-${VERSION}-macos-universal.sha256" \
+    "${GCS_BUCKET}/${BINARY_NAME}-macos-universal.sha256"
+echo "Upload complete."
 
 echo "macOS build complete: v${VERSION} universal binary"

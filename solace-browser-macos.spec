@@ -92,13 +92,17 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,  # Disabled: UPX can corrupt universal2 (multi-arch) binaries
     upx_exclude=[],
     runtime_tmpdir=None,
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch='universal2',
+    # WARNING: Ad-hoc signing ('-') is for local development and CI testing ONLY.
+    # For production distribution, replace with a real Apple Developer ID:
+    #   codesign_identity='Developer ID Application: Your Name (TEAM_ID)',
+    #   entitlements_file='Entitlements.plist',
     codesign_identity='-',
     entitlements_file=None,
     info_plist={

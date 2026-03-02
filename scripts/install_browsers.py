@@ -15,14 +15,17 @@ Auth: 65537 | Rung: 641
 
 from __future__ import annotations
 
+import logging
 import platform
 import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
 from typing import TextIO
+
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -185,39 +188,6 @@ class ProgressIndicator:
 # Playwright subprocess interface
 # ---------------------------------------------------------------------------
 
-def find_playwright_cli() -> Path:
-    """Locate the playwright CLI executable.
-
-    Returns:
-        Path to the playwright CLI.
-
-    Raises:
-        FileNotFoundError: If playwright is not installed.
-    """
-    # Try 'playwright' as a command first
-    try:
-        result = subprocess.run(
-            [sys.executable, "-m", "playwright", "--version"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        if result.returncode == 0:
-            return Path(sys.executable)
-    except FileNotFoundError:
-        raise FileNotFoundError(
-            "Playwright is not installed. Install it with: pip install playwright"
-        )
-    except subprocess.TimeoutExpired:
-        raise FileNotFoundError(
-            "Playwright CLI timed out. Verify your installation with: pip install playwright"
-        )
-
-    raise FileNotFoundError(
-        "Playwright CLI not found. Install it with: pip install playwright"
-    )
-
-
 def build_install_command(browser: str) -> list[str]:
     """Build the subprocess command to install a specific browser.
 
@@ -345,8 +315,15 @@ def run_browser_install(
                         f"{browser}: browser installed but system deps failed "
                         f"(may need sudo)"
                     )
-        except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-            pass  # System deps are best-effort
+        except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as exc:
+            logger.warning(
+                "System dependency installation failed for %s: %s",
+                browser, exc,
+            )
+            if progress:
+                progress.update(
+                    f"{browser}: browser installed but system deps failed ({exc})"
+                )
 
     if progress:
         progress.finish(f"{browser} installed ({duration:.1f}s)")
@@ -375,7 +352,18 @@ def verify_browser_installed(browser: str, *, timeout_seconds: int = 30) -> bool
 
     Returns:
         True if the browser appears to be installed, False otherwise.
+
+    Raises:
+        ValueError: If the browser name is not in SUPPORTED_BROWSERS or
+            contains non-alphanumeric characters (prevents injection).
     """
+    # Validate browser name to prevent injection
+    if browser not in SUPPORTED_BROWSERS:
+        raise ValueError(f"Unknown browser: {browser!r}")
+    # Use only the validated name (alphanumeric only)
+    if not browser.isalnum():
+        raise ValueError(f"Invalid browser name: {browser!r}")
+
     # Try running a minimal script that checks if the browser can be launched
     check_script = (
         f"from playwright.sync_api import sync_playwright; "
@@ -549,10 +537,12 @@ def parse_args(argv: list[str] | None = None) -> dict[str, object]:
         "--timeout",
         type=int,
         default=600,
-        help="Timeout in seconds per browser install (default: 600).",
+        help="Timeout in seconds per browser install (default: 600, min: 1).",
     )
 
     args = parser.parse_args(argv)
+    if args.timeout < 1:
+        parser.error("--timeout must be at least 1 second")
     return {
         "browsers": args.browsers,
         "check": args.check,

@@ -250,6 +250,25 @@ class TestCustomTone:
         with pytest.raises(TypeError, match="must be a dict"):
             manager.set_custom_tone("not a dict")  # type: ignore[arg-type]
 
+    def test_custom_tone_filters_non_string_values(
+        self, manager: PersonalityManager, settings_path: Path,
+    ) -> None:
+        """Non-string values in custom tone are filtered out."""
+        manager.set_custom_tone({
+            "greeting": "Hello",
+            "bad_int": 123,
+            "bad_list": ["a", "b"],
+            "bad_none": None,
+            "farewell": "Goodbye",
+        })
+        tone = manager.get_custom_tone()
+        # Only string values survive
+        assert tone["greeting"] == "Hello"
+        assert tone["farewell"] == "Goodbye"
+        assert "bad_int" not in tone
+        assert "bad_list" not in tone
+        assert "bad_none" not in tone
+
 
 # ===========================================================================
 # TestFilterContent
@@ -359,6 +378,44 @@ class TestFilterContent:
         assert "j3" in ids  # science
         assert "j4" in ids  # no tags
         assert "j5" in ids  # business
+
+    def test_filter_content_with_string_tags(
+        self, manager: PersonalityManager,
+    ) -> None:
+        """String tags (not list) should not crash — item included as untagged."""
+        items = [
+            {"id": 1, "tags": "programming"},  # string, not list
+            {"id": 2, "tags": ["tech"]},
+        ]
+        result = manager.filter_content(
+            items, personality=PersonalityType.PROFESSIONAL,
+        )
+        # Item with string tags is included (treated as untagged)
+        assert any(i["id"] == 1 for i in result)
+
+    def test_filter_content_with_int_tags(
+        self, manager: PersonalityManager,
+    ) -> None:
+        """Int tags should not crash — item included as untagged."""
+        items = [
+            {"id": 1, "tags": 42},  # int, not list
+        ]
+        result = manager.filter_content(
+            items, personality=PersonalityType.PROFESSIONAL,
+        )
+        assert len(result) == 1
+
+    def test_filter_content_custom_personality(
+        self, manager: PersonalityManager,
+    ) -> None:
+        """CUSTOM personality should include all items (empty tag filter)."""
+        items = [
+            {"id": 1, "tags": ["tech"]},
+            {"id": 2, "tags": ["humor"]},
+            {"id": 3, "tags": ["personal"]},
+        ]
+        result = manager.filter_content(items, personality=PersonalityType.CUSTOM)
+        assert len(result) == len(items)
 
 
 # ===========================================================================

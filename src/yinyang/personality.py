@@ -221,7 +221,13 @@ class PersonalityManager:
         settings = self._read_settings()
         custom = settings.get(_CUSTOM_TONE_KEY)
         if isinstance(custom, dict) and custom:
-            return custom
+            # Validate all values are strings — reject non-string types
+            validated = {
+                k: v for k, v in custom.items()
+                if isinstance(k, str) and isinstance(v, str)
+            }
+            if validated:
+                return validated
         return dict(_PERSONALITY_TONES[PersonalityType.CUSTOM])
 
     def filter_content(
@@ -260,6 +266,10 @@ class PersonalityManager:
             filtered = []
             for item in items:
                 item_tags = item.get("tags", [])
+                if not isinstance(item_tags, list):
+                    # Non-list tags are treated as untagged — include the item
+                    filtered.append(item)
+                    continue
                 if not item_tags:
                     # Items without tags pass through
                     filtered.append(item)

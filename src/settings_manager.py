@@ -12,7 +12,7 @@ Modules that use hot-reload:
 Design rules:
   - Thread-safe: uses threading.Lock for callback list and settings dict
   - Background thread: daemon=True, stopped cleanly via Event
-  - FAIL-CLOSED: missing file -> FileNotFoundError raised on initial load
+  - GRACEFUL START: missing or malformed settings file logs a warning and starts with empty settings
   - Specific exceptions only: FileNotFoundError, json.JSONDecodeError
   - pathlib.Path always, never os.path.join
 
@@ -173,6 +173,10 @@ class SettingsManager:
 
         self._stop_event.set()
         self._thread.join(timeout=self._poll_interval + 1.0)
+        if self._thread.is_alive():
+            logger.error(
+                "Settings polling thread did not stop within timeout; thread may be leaked"
+            )
         self._thread = None
         logger.info("Settings manager stopped.")
 
@@ -339,6 +343,7 @@ class SettingsManager:
         try:
             return self._settings_path.stat().st_mtime
         except FileNotFoundError:
+            logger.warning("Settings file not found: %s", self._settings_path)
             return None
 
     def _fire_callbacks(
@@ -354,9 +359,10 @@ class SettingsManager:
         for callback in callbacks:
             try:
                 callback(settings)
-            except TypeError as exc:
-                logger.warning("Callback %s raised TypeError: %s", callback, exc)
-            except ValueError as exc:
-                logger.warning("Callback %s raised ValueError: %s", callback, exc)
-            except RuntimeError as exc:
-                logger.warning("Callback %s raised RuntimeError: %s", callback, exc)
+            except Exception as exc:
+                logger.error(
+                    "Callback %s raised %s: %s",
+                    getattr(callback, '__name__', callback),
+                    type(exc).__name__,
+                    exc,
+                )

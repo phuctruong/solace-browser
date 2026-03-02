@@ -47,7 +47,6 @@ from install_browsers import (
     build_install_deps_command,
     detect_platform,
     filter_browsers,
-    find_playwright_cli,
     get_supported_browsers,
     install_browsers,
     main,
@@ -259,7 +258,11 @@ class TestRunBrowserInstall:
 
     @patch("install_browsers.subprocess.run")
     def test_deps_failure_does_not_fail_install(self, mock_run: MagicMock) -> None:
-        """System deps failure is best-effort; browser install still succeeds."""
+        """System deps failure is best-effort; browser install still succeeds.
+
+        Must assert that the progress indicator was updated with a deps
+        failure message (not silently swallowed).
+        """
         def side_effect(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
             cmd = args[0] if args else kwargs.get("args", [])
             if isinstance(cmd, list) and "install-deps" in cmd:
@@ -271,8 +274,47 @@ class TestRunBrowserInstall:
             )
 
         mock_run.side_effect = side_effect
-        result = run_browser_install("chromium", install_deps=True)
+        progress = MagicMock(spec=ProgressIndicator)
+        result = run_browser_install("chromium", install_deps=True, progress=progress)
         assert result.status == InstallStatus.SUCCESS
+        # Verify the progress indicator was updated with deps failure info
+        update_messages = [
+            str(call) for call in progress.update.call_args_list
+        ]
+        assert any("deps failed" in msg for msg in update_messages), (
+            f"Expected a progress.update call mentioning deps failure, "
+            f"got: {update_messages}"
+        )
+
+    @patch("install_browsers.subprocess.run")
+    def test_deps_exception_logs_warning_and_updates_progress(
+        self, mock_run: MagicMock
+    ) -> None:
+        """When deps install raises an exception, it should log and update progress."""
+        call_count = [0]
+
+        def side_effect(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+            call_count[0] += 1
+            if call_count[0] == 1:
+                # First call: browser install succeeds
+                return subprocess.CompletedProcess(
+                    args=[], returncode=0, stdout="OK\n", stderr=""
+                )
+            # Second call: deps install raises OSError
+            raise OSError("Permission denied")
+
+        mock_run.side_effect = side_effect
+        progress = MagicMock(spec=ProgressIndicator)
+        result = run_browser_install("chromium", install_deps=True, progress=progress)
+        assert result.status == InstallStatus.SUCCESS
+        # Verify progress was updated with the exception info
+        update_messages = [
+            str(call) for call in progress.update.call_args_list
+        ]
+        assert any("deps failed" in msg for msg in update_messages), (
+            f"Expected a progress.update call mentioning deps failure, "
+            f"got: {update_messages}"
+        )
 
 
 # ===========================================================================
@@ -310,6 +352,16 @@ class TestVerifyBrowserInstalled:
     def test_verification_os_error(self, mock_run: MagicMock) -> None:
         mock_run.side_effect = OSError("disk error")
         assert verify_browser_installed("firefox") is False
+
+    def test_verify_browser_rejects_injection_attack(self) -> None:
+        """Ensure malicious browser names are rejected."""
+        with pytest.raises(ValueError, match="Unknown browser"):
+            verify_browser_installed("chromium; echo pwned")
+
+    def test_verify_browser_rejects_unknown_name(self) -> None:
+        """Ensure unknown browser names are rejected."""
+        with pytest.raises(ValueError, match="Unknown browser"):
+            verify_browser_installed("opera")
 
 
 class TestVerifyAllBrowsers:
@@ -554,6 +606,16 @@ class TestParseArgs:
         args = parse_args(["--timeout", "120"])
         assert args["timeout"] == 120
 
+    def test_negative_timeout_rejected(self) -> None:
+        """--timeout must be positive."""
+        with pytest.raises(SystemExit):
+            parse_args(["--timeout", "-1"])
+
+    def test_zero_timeout_rejected(self) -> None:
+        """--timeout=0 must be rejected."""
+        with pytest.raises(SystemExit):
+            parse_args(["--timeout", "0"])
+
 
 # ===========================================================================
 # CLI main() tests
@@ -630,37 +692,3 @@ class TestMain:
         mock_run.assert_not_called()
 
 
-# ===========================================================================
-# find_playwright_cli tests
-# ===========================================================================
-
-class TestFindPlaywrightCli:
-    """Tests for find_playwright_cli()."""
-
-    @patch("install_browsers.subprocess.run")
-    def test_found_via_python_module(self, mock_run: MagicMock) -> None:
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="Version 1.57.0\n", stderr=""
-        )
-        result = find_playwright_cli()
-        assert result == Path(sys.executable)
-
-    @patch("install_browsers.subprocess.run")
-    def test_not_found_raises(self, mock_run: MagicMock) -> None:
-        mock_run.side_effect = FileNotFoundError("not found")
-        with pytest.raises(FileNotFoundError, match="Playwright is not installed"):
-            find_playwright_cli()
-
-    @patch("install_browsers.subprocess.run")
-    def test_timeout_raises(self, mock_run: MagicMock) -> None:
-        mock_run.side_effect = subprocess.TimeoutExpired(cmd="check", timeout=30)
-        with pytest.raises(FileNotFoundError, match="timed out"):
-            find_playwright_cli()
-
-    @patch("install_browsers.subprocess.run")
-    def test_nonzero_exit_raises(self, mock_run: MagicMock) -> None:
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=1, stdout="", stderr="error"
-        )
-        with pytest.raises(FileNotFoundError, match="not found"):
-            find_playwright_cli()
