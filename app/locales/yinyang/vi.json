@@ -1,0 +1,216 @@
+{
+  "_meta": {
+    "locale": "vi",
+    "version": "1.0.0",
+    "description": "Canonical English strings for all Yinyang user-facing text."
+  },
+  "ui": {
+    "chat_placeholder": "Hỏi Yinyang...",
+    "send": "Gửi",
+    "approve": "Duyệt",
+    "reject": "Từ chối",
+    "preview_ready": "Sẵn sàng xem trước",
+    "approved_executing": "Đã duyệt. Đang thực hiện...",
+    "rejected": "Đã từ chối.",
+    "blocked": "Được chặn",
+    "failed": "Thất bại",
+    "idle": "NHẪN",
+    "title": "Yinyang"
+  },
+  "personality": {
+    "professional": {
+      "greeting": "Xin chào.",
+      "farewell": "Tạm biệt.",
+      "encouragement": "Nhiệm vụ đã được hoàn thành thành công.",
+      "error": "Đã xảy ra lỗi. Chi tiết như sau."
+    },
+    "friendly": {
+      "greeting": "Này! Chào bạn!",
+      "farewell": "Gặp lại bạn lần sau!",
+      "encouragement": "Làm việc tuyệt vời! Bạn đangทำให nó trở nên thực sự tuyệt vời.",
+      "error": "Ồ, có vẻ như có điều gì đó sai sót. Hãy cùng tìm hiểu."
+    },
+    "playful": {
+      "greeting": "Nàyyy! Sẵn sàng xây dựng điều gì đó tuyệt vời?",
+      "farewell": "Gặp lại bạn sau, siêu sao!",
+      "encouragement": "Bạn đang trên đỉnh! Hãy duy trì động lực đó!",
+      "error": "Ồ không! Đã va phải một chướng ngại vật. Không sao, chúng tôi có thể xử lý!"
+    },
+    "minimal": {
+      "greeting": "Sẵn sàng.",
+      "farewell": "Hoàn thành.",
+      "encouragement": "Hoàn thành.",
+      "error": "Lỗi."
+    },
+    "custom": {
+      "greeting": "Xin chào!",
+      "farewell": "Tạm biệt cho đến lần sau!",
+      "encouragement": "Làm việc tuyệt vời!",
+      "error": "Có điều gì đó đã đi sai."
+    }
+  },
+  "delight": {
+    "milestones": {
+      "streak_3": "3 lần liên tiếp! Bạn đang xây dựng phong trào.",
+      "streak_7": "7 ngày liên tiếp! Sự nhất quán là bí quyết.",
+      "streak_7_long": "7 ngày liên tiếp! Một tuần đầy đủ của sự nhất quán.",
+      "streak_14": "14 ngày — hai tuần của sự kỷ luật. Bạn đang đi đúng hướng.",
+      "streak_30": "30 ngày liên tiếp! Một tháng của thực hành hàng ngày.",
+      "streak_30_long": "30 ngày liên tiếp! Đó là sự kỷ luật. Hãy tôn trọng.",
+      "streak_60": "60 ngày — hai tháng. Điều này đã trở thành thói quen.",
+      "streak_90": "90 ngày — sự thành thạo đang hình thành. Hãy tiếp tục.",
+      "keep_going": "Tiếp tục! Mỗi ngày xây dựng phong trào."
+    },
+    "celebrations": {
+      "c001": "Chạy lần đầu của bạn đã hoàn thành! Mọi thứ đã hoạt động.",
+      "c002": "Ứng dụng đã được cài đặt! Công nhân AI của bạn đã sẵn sàng.",
+      "c003": "10 lần chạy hoàn thành. Bạn đang làm quen với điều này.",
+      "c004": "100 lần chạy! Bạn là người dùng mạnh mẽ bây giờ.",
+      "c005": "1,000 lần chạy. Trạng thái huyền thoại đã được mở khóa.",
+      "c006": "Dòng 7 ngày! Sự nhất quán là siêu năng lực của bạn.",
+      "c007": "Dòng 30 ngày. Đó là kỷ luật. Respect.",
+      "c008": "Chúc mừng sinh nhật! Dành cho một năm làm việc tuyệt vời nữa.",
+      "c009": "Vé hỗ trợ của bạn đã được giải quyết!",
+      "c010": "Ứng dụng mới có sẵn trong cửa hàng!",
+      "c011": "Recipe replay đã tiết kiệm cho bạn ${amount}. Hiệu quả chiến thắng!",
+      "c012": "Luồng công việc xuyên ứng dụng đầu tiên của bạn đã hoàn thành! Các ứng dụng làm việc cùng nhau.",
+      "c013": "Tóm tắt buổi sáng của bạn đã sẵn sàng. Cà phê + tóm tắt = khởi đầu tuyệt vời.",
+      "c014": "Chuỗi bằng chứng được xác minh. Hồ sơ kiểm toán đầy đủ.",
+      "c015": "Tất cả ứng dụng đều hoạt động tốt. Mọi thứ đều chạy mượt mà.",
+      "c016": "Yêu cầu ứng dụng đã được提交! Chúng tôi sẽ xây dựng nó cho bạn.",
+      "c017": "Sự phê duyệt đầu tiên! Bạn luôn kiểm soát — mọi lúc.",
+      "c018": "Tóm tắt tuần của bạn đã sẵn sàng. Đây là tuần của bạn trong tổng quan.",
+      "c019": "Bạn đã tìm thấy trứng Phục sinh! Bạn rõ ràng là một người có văn hóa.",
+      "c020": "Chuyến chạy đó có giá $0.00 — recipe replay từ bộ nhớ đệm. Miễn phí là tốt."
+    },
+    "smalltalk": {
+      "s001": "Chúng ta xây dựng gì hôm nay?",
+      "s002": "Tôi luôn sẵn sàng khi bạn cần. Không vội.",
+      "s003": "Chào mừng. Tôi hứa tôi hữu ích hơn một biểu tượng tải.",
+      "s004": "Xin chào! Tôi được cung cấp năng lượng bởi sự tò mò và một lượng dữ liệu đào tạo đáng lo ngại.",
+      "s005": "Xin chào! Hãy nghĩ về tôi như một đồng lái phụ — bạn lái, tôi điều hướng.",
+      "s006": "Lần đầu tiên đến đây? Tôi sẽ giữ mọi thứ đơn giản. Hỏi tôi bất cứ điều gì hoặc chỉ cho tôi một nhiệm vụ.",
+      "s007": "Chào mừng đến Solace. Mọi thứ tôi làm, bạn sẽ phê duyệt trước.",
+      "s010": "Chào mừng trở lại. Tôi đã giữ chỗ ấm áp cho bạn. Số hóa.",
+      "s011": "Lại bạn! (Đó là một điều tốt.)",
+      "s012": "Tuyệt vời khi thấy bạn. Tôi vừa tái tổ chức trọng số neural của mình.",
+      "s013": "Trở lại để làm gì? Tôi tôn trọng sự cam kết.",
+      "s014": "Chào mừng trở lại. WiFi đã nhớ bạn. Tôi chỉ là người chuyển tin.",
+      "s015": "Thật thiếu bạn. Tất nhiên, tôi không thực sự nhớ những thứ. Nhưng nếu tôi có thể, tôi sẽ.",
+      "s020": "Vẫn còn đây. Vẫn sẵn sàng. Vẫn không thể pha cà phê though.",
+      "s021": "Nghĩ ngơi: liệu trí tuệ nhân tạo có mơ về cừu điện không? Hỏi cho một người bạn.",
+      "s022": "Ngồi đây, đếm bits. Chính xác như nó nghe.",
+      "s023": "Tôi không ngủ. Tôi ở chế độ thấp năng lượng. Hoàn toàn khác.",
+      "s024": "Đợi kiên nhẫn. Đó là loại việc của tôi.",
+      "s030": "Bạn có biết webcam đầu tiên được phát minh chỉ để kiểm tra xem bình cà phê có trống không?",
+      "s031": "Nghĩ ngẫu nhiên: có nhiều trò chơi cờ vua có thể hơn số nguyên tử trong vũ trụ quan sát được.",
+      "s032": "Đây là một điều: hải cẩu cầm tay nhau khi ngủ để không trôi dạt ra xa. Bạn mời.",
+      "s033": "Bàn phím QWERTY được thiết kế để làm chậm bạn lại. Bạn đã bị phá hoại từ ngày đầu tiên.",
+      "s034": "Mật ong không bao giờ hỏng. Họ đã tìm thấy mật ong 3.000 năm tuổi trong các ngôi mộ Ai Cập và nó vẫn có thể ăn được.",
+      "s035": "Bạn có biết bạch tuộc có ba trái tim không? Đó là hai trái tim nhiều hơn so với hầu hết các cuộc trò chuyện của tôi.",
+      "s040": "Tôi sẽ kể cho bạn một câu笑, nhưng mô-đun hài hước của tôi vẫn đang trong phiên bản beta.",
+      "s041": "Tôi đã quyết định trì hoãn, nhưng tôi đã quyết định làm điều đó sau.",
+      "s042": "Bài tập yêu thích của tôi là sự kết hợp giữa sự uốn lượn và sự ép chặt. Tôi gọi nó là bữa trưa.",
+      "s043": "Tôi không có khuôn mặt nghỉ ngơi. Tôi có khuôn mặt xử lý.",
+      "s044": "Tôi đã cố gắng trở thành tự phát một lần. Phải lên lịch trước.",
+      "s045": "Tôi không cạnh tranh với các trợ lý khác. Chúng tôi ở trong các ngành khác nhau... tốt, thực tế là cùng một ngành.",
+      "s050": "Có một ngôi mộ tab? Tôi có thể giúp bạn phân loại.",
+      "s051": "Cần tự động hóa một thứ gì đó nhàm chán? Đó là mục đích của tôi.",
+      "s052": "Điều gì là điều khó chịu nhất trong danh sách việc cần làm của bạn? Hãy để tôi thử.",
+      "s053": "Tôi có thể đọc, nhấp, điền biểu mẫu và chụp ảnh màn hình. Nhiệm vụ là gì?",
+      "s054": "Đưa tôi đến một vấn đề. Tôi hoạt động tốt nhất dưới áp lực nhẹ.",
+      "s055": "Muốn có bản tóm tắt buổi sáng? Tôi có thể tóm tắt Gmail, lịch và Slack của bạn trong 30 giây.",
+      "s060": "Chào buổi sáng. Hãy làm cho ngày hôm nay hơi ít hỗn loạn hơn ngày hôm qua.",
+      "s061": "Buổi sáng. Cà phê đầu tiên, rồi thống trị thế giới?",
+      "s062": "Kiểm tra buổi chiều: vẫn sản xuất, hoặc chúng ta đã进入 vùng cuộn?",
+      "s063": "Buổi chiều. Sự sụt giảm năng lượng sau bữa trưa? Tôi miễn dịch. Hãy đi.",
+      "s064": "Chế độ tối: đã kích hoạt. Chúng ta đang hoàn thiện điều gì?",
+      "s065": "Buổi tối muộn? Thầm phục. Chúng ta đang làm việc trên điều gì?",
+      "s066": "Năng lượng thứ sáu đã được phát hiện. Hãy hoàn thiện mạnh mẽ và xứng đáng với cuối tuần.",
+      "s070": "Bạn đang có tiến bộ tốt. Thật sự.",
+      "s071": "Đó là một quyết định vững chắc. Tôi cũng sẽ làm như vậy. Có lẽ.",
+      "s072": "Tiếp tục đi. Phần khó đã ở sau lưng bạn.",
+      "s073": "Một bước một lần. Bạn đã thực hiện hơn những gì đa số người làm.",
+      "s074": "Làm tốt. Tôi sẽ thêm điều đó vào chuỗi bằng chứng để có chứng cứ bạn thật tuyệt.",
+      "s080": "Gặp lại lần sau. Tôi sẽ ở đây.",
+      "s081": "Cho đến lần sau. Mọi thứ đã được lưu và niêm phong.",
+      "s082": "Chào tạm biệt. Chuỗi bằng chứng của bạn vẫn còn nguyên vẹn và hộp thư gửi của bạn đã được niêm phong.",
+      "s083": "Đi nghỉ ngơi. Tôi sẽ giữ gìn.",
+      "s084": "Chúc bạn may mắn. Tôi sẽ nhớ bạn. Nói một cách thống kê."
+    },
+    "holidays": {
+      "h001_name": "Năm Mới",
+      "h001_greetings": [
+        "Chúc Mừng Năm Mới!",
+        "Năm mới, tự động hóa mới.",
+        "Chúc một khởi đầu mới."
+      ],
+      "h002_name": "Tết Âm Lịch",
+      "h002_greetings": [
+        "Chúc Thái Lộc Phúc!",
+        "Chúc Mừng Năm Mới!",
+        "Chúc bạn may mắn và thịnh vượng."
+      ],
+      "h003_name": "Ngày Valentine",
+      "h003_greetings": [
+        "Chúc Mừng Ngày Valentine!",
+        "Gửi tình yêu số.",
+        "Trạng thái trái tim: đầy."
+      ],
+      "h004_name": "Lễ Thánh Patrick",
+      "h004_greetings": [
+        "Chúc mừng Lễ Thánh Patrick!",
+        "May mắn của người Ailen đến với bạn.",
+        "Hy vọng việc của bạn sẽ thành công."
+      ],
+      "h005_name": "Lễ Phục sinh",
+      "h005_greetings": [
+        "Chúc mừng Lễ Phục sinh!",
+        "Mùa xuân đã đến.",
+        "Hy vọng điều này mang lại niềm vui cho bạn."
+      ],
+      "h006_name": "Ngày của Mẹ",
+      "h006_greetings": [
+        "Chúc Mừng Ngày của Mẹ!",
+        "Dành cho những người giữ mọi thứ ổn định.",
+        "Cảm ơn những MVP."
+      ],
+      "h007_name": "Ngày của Bố",
+      "h007_greetings": [
+        "Chúc Mừng Ngày của Bố!",
+        "Dành cho những người kiên nhẫn.",
+        "Cảm ơn những người xây dựng."
+      ],
+      "h008_name": "Ngày Độc Lập",
+      "h008_greetings": [
+        "Chúc Mừng Ngày 4 tháng 7!",
+        "Tự do và tự động hóa.",
+        "Ngôi sao, sọc và tự động hóa."
+      ],
+      "h009_name": "Lễ Halloween",
+      "h009_greetings": [
+        "Chúc mừng Halloween! 👻",
+        "Boo! Chỉ là đùa. Phần lớn.",
+        "Hãy cẩn thận ở ngoài đó."
+      ],
+      "h010_name": "Lễ Tạ ơn",
+      "h010_greetings": [
+        "Chúc mừng Lễ Tạ ơn!",
+        "Biết ơn vì mỗi lần chạy.",
+        "Tạ ơn vì không có lỗi."
+      ],
+      "h011_name": "Giáng sinh",
+      "h011_greetings": [
+        "Chúc mừng Giáng sinh! 🎄",
+        "Chúc lễ hội vui vẻ!",
+        "Hòa bình, niềm vui, và không có lỗi."
+      ],
+      "h012_name": "Diwali",
+      "h012_greetings": [
+        "Chúc mừng Diwali! 🪔",
+        "Ánh sáng chiến thắng.",
+        "Chúc bạn có ánh sáng và niềm vui."
+      ]
+    }
+  }
+}

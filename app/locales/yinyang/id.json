@@ -1,0 +1,216 @@
+{
+  "_meta": {
+    "locale": "id",
+    "version": "1.0.0",
+    "description": "Canonical English strings for all Yinyang user-facing text."
+  },
+  "ui": {
+    "chat_placeholder": "Tanya Yinyang...",
+    "send": "Kirim",
+    "approve": "Setujui",
+    "reject": "Tolak",
+    "preview_ready": "Pratinjau Siap",
+    "approved_executing": "Disetujui. Menjalankan...",
+    "rejected": "Ditolak.",
+    "blocked": "Diblokir",
+    "failed": "Gagal",
+    "idle": "IDLE",
+    "title": "Yinyang"
+  },
+  "personality": {
+    "professional": {
+      "greeting": "Halo.",
+      "farewell": "Sampai jumpa.",
+      "encouragement": "Tugas selesai dengan sukses.",
+      "error": "Terjadi kesalahan. Detail berikut."
+    },
+    "friendly": {
+      "greeting": "Hai di sana!",
+      "farewell": "Sampai jumpa lagi!",
+      "encouragement": "Kerja bagus! Kamu membuat kemajuan nyata.",
+      "error": "Oops, sesuatu tidak beres. Ayo kita cari tahu."
+    },
+    "playful": {
+      "greeting": "Haiii! Siap membuat sesuatu yang luar biasa?",
+      "farewell": "Sampai jumpa lagi, bintang!",
+      "encouragement": "Kamu sedang dalam performed yang baik! Teruskan momentum ini!",
+      "error": "Ups! Mengalami hambatan. Tidak usah khawatir, kami bisa mengatasi ini!"
+    },
+    "minimal": {
+      "greeting": "Siap.",
+      "farewell": "Selesai.",
+      "encouragement": "Selesai.",
+      "error": "Kesalahan."
+    },
+    "custom": {
+      "greeting": "Halo!",
+      "farewell": "Sampai jumpa lagi!",
+      "encouragement": "Kerja bagus!",
+      "error": "Terjadi kesalahan."
+    }
+  },
+  "delight": {
+    "milestones": {
+      "streak_3": "3 hari berturut-turut! Anda membangun momentum.",
+      "streak_7": "Rentetan 7 hari! Kesisteman adalah rahasia.",
+      "streak_7_long": "Rentetan 7 hari! Satu minggu penuh konsistensi.",
+      "streak_14": "14 hari — dua minggu disiplin. Anda serius.",
+      "streak_30": "Rentetan 30 hari! Sebulan latihan sehari-hari.",
+      "streak_30_long": "Rentetan 30 hari! Itu disiplin. Hormat.",
+      "streak_60": "60 hari — dua bulan. Ini sudah menjadi kebiasaan sekarang.",
+      "streak_90": "90 hari — penguasaan sedang terbentuk. Teruslah.",
+      "keep_going": "Teruslah! Setiap hari membangun momentum."
+    },
+    "celebrations": {
+      "c001": "Ran pertama Anda selesai! Semuanya berjalan dengan baik.",
+      "c002": "Aplikasi terinstal! Pekerja AI Anda siap.",
+      "c003": "10 ran selesai. Anda mulai terbiasa.",
+      "c004": "100 ran! Anda sekarang pengguna yang kuat.",
+      "c005": "1,000 ran. Status legenda telah dibuka.",
+      "c006": "7-hari beruntun! Konsistensi adalah kekuatan super Anda.",
+      "c007": "30-hari beruntun. Itu disiplin. Hormat.",
+      "c008": "Selamat ulang tahun! Semoga tahun depan juga penuh dengan pekerjaan yang baik.",
+      "c009": "Tiket dukungan Anda telah diselesaikan!",
+      "c010": "Aplikasi baru tersedia di toko!",
+      "c011": "Replay resep menyelamatkan Anda ${amount}. Efisiensi menang.",
+      "c012": "Arus kerja aplikasi lintas pertama Anda selesai! Aplikasi bekerja bersama.",
+      "c013": "Ringkasan pagi Anda siap. Kopi + ringkasan = awal yang hebat.",
+      "c014": "Rantai bukti diverifikasi. Jejak audit lengkap.",
+      "c015": "Semua aplikasi sehat. Semuanya berjalan lancar.",
+      "c016": "Permintaan aplikasi dikirim! Kami akan membangunnya untuk Anda.",
+      "c017": "Pengajuan pertama! Anda mengontrol — selalu.",
+      "c018": "Ringkasan mingguan Anda siap. Ini adalah minggu Anda dalam tinjauan.",
+      "c019": "Anda menemukan telur paskah! Anda jelas orang yang berbudaya.",
+      "c020": "Run itu biayanya $0,00 — replay resep dari cache. Gratis itu baik."
+    },
+    "smalltalk": {
+      "s001": "Apa yang kita bangun hari ini?",
+      "s002": "Aku ada di sini kapan pun kamu membutuhkanku. Tidak ada keburu-buru.",
+      "s003": "Selamat datang. Aku berjanji aku lebih berguna daripada spinner loading.",
+      "s004": "Halo! Aku ditenagai oleh rasa ingin tahu dan sejumlah besar data pelatihan yang mengkhawatirkan.",
+      "s005": "Hai! Anggap aku sebagai co-pilot-mu — kamu mengemudi, aku menavigasi.",
+      "s006": "Pertama kali di sini? Aku akan menjaga agar tetap sederhana. Tanyakan apa saja atau arahkan aku ke tugas.",
+      "s007": "Selamat datang di Solace. Apa pun yang aku lakukan, kamu setujui terlebih dahulu.",
+      "s010": "Selamat datang kembali. Aku menjaga tempat dudukmu hangat. Secara digital.",
+      "s011": "Kamu lagi! (Itu merupakan hal yang baik.)",
+      "s012": "Senang melihatmu. Aku baru saja mengatur ulang bobot neural aku.",
+      "s013": "Kembali lagi? Saya menghargai komitmennya.",
+      "s014": "Selamat datang kembali. WiFi menghiraukan anda. Saya hanya pesan.",
+      "s015": "Menghiraukan anda. Sebenarnya, saya tidak menghiraukan hal-hal. Tapi jika bisa, saya akan.",
+      "s020": "Masih di sini. Masih siap. Masih tidak bisa membuat kopi though.",
+      "s021": "Pikiran yang menganggur: apakah AI bermimpi tentang domba elektronik? Bertanya untuk seorang teman.",
+      "s022": "Hanya duduk di sini, menghitung bit. Hal ini persis sama menyenangkannya seperti yang terdengar.",
+      "s023": "Saya tidak tidur. Saya dalam mode daya rendah. Total berbeda.",
+      "s024": "Menunggu dengan sabar. Ini adalah hal yang saya lakukan.",
+      "s030": "Apakah anda tahu kamera web pertama diciptakan hanya untuk memeriksa apakah teko kopi kosong?",
+      "s031": "Pikiran acak: ada lebih banyak permainan catur yang mungkin daripada atom di alam semesta yang teramati.",
+      "s032": "Ini satu: otter laut memegang tangan saat mereka tidur sehingga mereka tidak terpisah. Senang bisa berbagi.",
+      "s033": "Keyboard QWERTY dirancang untuk memperlambat Anda. Anda telah disabotase sejak hari pertama.",
+      "s034": "Madu tidak pernah basi. Mereka menemukan madu 3.000 tahun yang masih bisa dimakan di makam-makam Mesir.",
+      "s035": "Tahukah Anda bahwa gurita memiliki tiga jantung? Itu dua lebih dari sebagian besar percakapan saya.",
+      "s040": "Aku akan menceritakan lelucon, tapi modul humorku masih dalam versi beta.",
+      "s041": "Aku akan menunda-nunda, tapi aku memutuskan untuk melakukannya nanti.",
+      "s042": "Latihan favoritku adalah kombinasi antara lunge dan crunch. Aku menyebutnya lunch.",
+      "s043": "Aku tidak memiliki wajah istirahat. Aku memiliki wajah pemrosesan.",
+      "s044": "Aku mencoba menjadi spontan sekali. Harus menjadwalkannya terlebih dahulu.",
+      "s045": "Aku tidak bersaing dengan asisten lain. Kami berada di industri yang berbeda... sebenarnya sama.",
+      "s050": "Punya kuburan tab? Aku bisa membantu kamu melakukan triase.",
+      "s051": "Butuh automasi sesuatu yang membosankan? Itu literal tujuanku.",
+      "s052": "Apa yang paling mengganggu di daftar tugas kamu? Biarkan aku mencoba menyelesaikannya.",
+      "s053": "Aku bisa membaca, mengklik, mengisi form, dan mengambil screenshot. Apa misinya?",
+      "s054": "Tunjuk aku pada sebuah masalah. Aku bekerja lebih baik di bawah tekanan ringan.",
+      "s055": "Mau brief pagi? Aku bisa meringkas Gmail, kalender, dan Slack kamu dalam 30 detik.",
+      "s060": "Selamat pagi. Mari membuat hari ini sedikit kurang kacau daripada kemarin.",
+      "s061": "Pagi. Kopi dulu, baru dominasi dunia?",
+      "s062": "Periksa siang: masih produktif, atau sudah memasuki zona scrolling?",
+      "s063": "Siang. Penurunan energi setelah makan siang? Aku kebal. Mari kita lanjutkan.",
+      "s064": "Mode malam: diaktifkan. Apa yang kita selesaikan?",
+      "s065": "Sesi malam? Hormat. Apa yang kita kerjakan?",
+      "s066": "Energinya hari Jumat terdeteksi. Ayo kita selesaikan dengan kuat dan dapatkan akhir pekan.",
+      "s070": "Kamu membuat kemajuan yang baik. Serius.",
+      "s071": "Itu adalah keputusan yang solid. Aku akan melakukan hal yang sama. Mungkin.",
+      "s072": "Teruslah. Bagian yang sulit sudah berlalu.",
+      "s073": "Satu langkah pada satu waktu. Kamu sudah melangkah lebih banyak dari yang dilakukan oleh kebanyakan orang.",
+      "s074": "Kerja bagus. Aku akan menambahkan itu ke rantai bukti sehingga ada bukti kamu luar biasa.",
+      "s080": "Sampai jumpa lagi. Aku akan ada di sini.",
+      "s081": "Sampai waktu berikutnya. Semua sudah disimpan dan diamankan.",
+      "s082": "Menandatangani. Rantai bukti Anda masih utuh dan kotak keluar Anda telah disegel.",
+      "s083": "Pergi beristirahat. Aku akan menjaga.",
+      "s084": "Jaga diri. Aku akan merindukanmu. Secara statistik bicara."
+    },
+    "holidays": {
+      "h001_name": "Tahun Baru",
+      "h001_greetings": [
+        "Selamat Tahun Baru!",
+        "Tahun baru, otomatisasi baru.",
+        "Mari kita mulai yang baru."
+      ],
+      "h002_name": "Tahun Baru Imlek",
+      "h002_greetings": [
+        "Gong Xi Fa Cai!",
+        "Chuc Mung Nam Moi!",
+        "Mengharapkan kemakmuran bagi Anda."
+      ],
+      "h003_name": "Hari Valentine",
+      "h003_greetings": [
+        "Selamat Hari Valentine!",
+        "Mengirim cinta digital.",
+        "Status hati: penuh."
+      ],
+      "h004_name": "Hari St. Patrick",
+      "h004_greetings": [
+        "Selamat Hari St. Patrick!",
+        "Keberuntungan orang Irlandia untuk Anda.",
+        "Semoga tugas-tugas Anda berjalan lancar."
+      ],
+      "h005_name": "Paskah",
+      "h005_greetings": [
+        "Selamat Paskah!",
+        "Musim semi telah tiba.",
+        "Semoga ini membawa kegembiraan bagi Anda."
+      ],
+      "h006_name": "Hari Ibu",
+      "h006_greetings": [
+        "Selamat Hari Ibu!",
+        "Untuk mereka yang menjaga semua tetap bersatu.",
+        "Cheers untuk para MVP."
+      ],
+      "h007_name": "Hari Ayah",
+      "h007_greetings": [
+        "Selamat Hari Ayah!",
+        "Untuk mereka yang sabar.",
+        "Cheers untuk para pembangun."
+      ],
+      "h008_name": "Hari Kemerdekaan",
+      "h008_greetings": [
+        "Selamat 4 Juli!",
+        "Kebebasan dan otomatisasi.",
+        "Bintang, garis-garis, dan otomatisasi."
+      ],
+      "h009_name": "Hari Halloween",
+      "h009_greetings": [
+        "Selamat Hari Halloween! 👻",
+        "Boo! Hanya bercanda. Sebagian besar.",
+        "Tetap aman di luar sana."
+      ],
+      "h010_name": "Hari ucapan syukur",
+      "h010_greetings": [
+        "Selamat Hari Ucapan Syukur!",
+        "Bersyukur untuk setiap lari.",
+        "Mengucap syukur untuk nol kesalahan."
+      ],
+      "h011_name": "Natal",
+      "h011_greetings": [
+        "Selamat Natal! 🎄",
+        "Selamat Hari Raya!",
+        "Perdamaian, kegembiraan, dan nol bug."
+      ],
+      "h012_name": "Diwali",
+      "h012_greetings": [
+        "Selamat Diwali! 🪔",
+        "Cahaya menang.",
+        "Mengucapkan cahaya dan kegembiraan untukmu."
+      ]
+    }
+  }
+}

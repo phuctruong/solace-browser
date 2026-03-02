@@ -106,6 +106,15 @@ except ImportError:
     print("Install with: pip install aiohttp")
     sys.exit(1)
 
+try:
+    from src.i18n import set_locale, get_locale, detect_locale
+    _I18N_AVAILABLE = True
+except ImportError:
+    _I18N_AVAILABLE = False
+    def set_locale(locale: str) -> None: pass  # noqa: E704
+    def get_locale() -> str: return "en"  # noqa: E704
+    def detect_locale(header: str | None) -> str: return "en"  # noqa: E704
+
 # Import browser module (consolidated from browser_interactions + enhanced_browser_interactions)
 try:
     from browser import (
@@ -1581,12 +1590,18 @@ Support the journey: https://ko-fi.com/phucnet"""
 
 @web.middleware
 async def security_headers_middleware(request, handler):
+    # Detect locale from Accept-Language header and set for this request
+    accept_lang = request.headers.get('Accept-Language')
+    locale = detect_locale(accept_lang)
+    set_locale(locale)
+
     response = await handler(request)
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Content-Language'] = locale
     return response
 
 
@@ -1766,6 +1781,8 @@ class SolaceBrowserServer:
         self.app.router.add_get('/api/health', self._handle_health)
         self.app.router.add_get('/api/status', self._handle_status)
         self.app.router.add_get('/api/events', self._handle_events)
+        self.app.router.add_get('/api/v1/locale', self._handle_locale_get)
+        self.app.router.add_post('/api/v1/locale', self._handle_locale_set)
         self.app.router.add_post('/api/discovery/map-site', self._handle_discovery_map_site)
         self.app.router.add_post('/api/competitive/captcha/solve', self._handle_captcha_solve)
         self.app.router.add_post('/api/competitive/proxy/load', self._handle_proxy_load)
@@ -2044,6 +2061,20 @@ class SolaceBrowserServer:
         """Get event history"""
         limit = int(request.query.get('limit', 100))
         return web.json_response(self.browser.event_history[-limit:])
+
+    async def _handle_locale_get(self, request):
+        """Return the current locale.  GET /api/v1/locale"""
+        return web.json_response({"locale": get_locale(), "i18n_available": _I18N_AVAILABLE})
+
+    async def _handle_locale_set(self, request):
+        """Set the active locale.  POST /api/v1/locale  {"locale": "es"}"""
+        try:
+            data = await request.json()
+        except Exception:
+            return web.json_response({"error": "invalid JSON"}, status=400)
+        locale = data.get("locale", "en")
+        set_locale(locale)
+        return web.json_response({"locale": get_locale(), "ok": True})
 
     async def _handle_discovery_map_site(self, request):
         """

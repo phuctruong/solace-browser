@@ -1,0 +1,216 @@
+{
+  "_meta": {
+    "locale": "de",
+    "version": "1.0.0",
+    "description": "Canonical English strings for all Yinyang user-facing text."
+  },
+  "ui": {
+    "chat_placeholder": "Frage Yinyang...",
+    "send": "Senden",
+    "approve": "Genehmigen",
+    "reject": "Ablehnen",
+    "preview_ready": "Vorschau bereit",
+    "approved_executing": "Genehmigt. Ausführung...",
+    "rejected": "Abgelehnt.",
+    "blocked": "Blockiert",
+    "failed": "Fehlgeschlagen",
+    "idle": "IDLE",
+    "title": "Yinyang"
+  },
+  "personality": {
+    "professional": {
+      "greeting": "Hallo.",
+      "farewell": "Auf Wiedersehen.",
+      "encouragement": "Aufgabe erfolgreich abgeschlossen.",
+      "error": "Ein Fehler ist aufgetreten. Details folgen."
+    },
+    "friendly": {
+      "greeting": "Hey da!",
+      "farewell": "Bis zum nächsten Mal!",
+      "encouragement": "Gute Arbeit! Du machst wirklich Fortschritte.",
+      "error": "Hoppla, etwas ist schiefgelaufen. Lass uns herausfinden, was los ist."
+    },
+    "playful": {
+      "greeting": "Heyyy! Bist du bereit, etwas Awesomes zu bauen?",
+      "farewell": "Bis später, Superstar!",
+      "encouragement": "Du bist auf dem richtigen Weg! Halte das Momentum!",
+      "error": "Hoppla! Ein kleiner Rückschlag. Keine Sorge, wir kriegen das hin!"
+    },
+    "minimal": {
+      "greeting": "Bereit.",
+      "farewell": "Fertig.",
+      "encouragement": "Fertig.",
+      "error": "Fehler."
+    },
+    "custom": {
+      "greeting": "Hallo!",
+      "farewell": "Bis zum nächsten Mal!",
+      "encouragement": "Gute Arbeit!",
+      "error": "Etwas ist schiefgelaufen."
+    }
+  },
+  "delight": {
+    "milestones": {
+      "streak_3": "3 Mal in Folge! Du baust Momentum auf.",
+      "streak_7": "7-Tage-Streak! Konsistenz ist das Geheimnis.",
+      "streak_7_long": "7-Tage-Streak! Eine volle Woche der Konsistenz.",
+      "streak_14": "14 Tage — zwei Wochen der Disziplin. Du bist echt.",
+      "streak_30": "30-Tage-Streak! Ein Monat täglicher Übung.",
+      "streak_30_long": "30-Tage-Streak! Das ist Disziplin. Respekt.",
+      "streak_60": "60 Tage — zwei Monate. Das ist jetzt eine Gewohnheit.",
+      "streak_90": "90 Tage — Meisterschaft bildet sich. Weitermachen.",
+      "keep_going": "Weitermachen! Jeder Tag baut Momentum auf."
+    },
+    "celebrations": {
+      "c001": "Dein erster Lauf ist abgeschlossen! Alles hat funktioniert.",
+      "c002": "App installiert! Dein AI-Arbeiter ist bereit.",
+      "c003": "10 Läufe abgeschlossen. Du bekommst den Dreh raus.",
+      "c004": "100 Läufe! Du bist jetzt ein Power-User.",
+      "c005": "1.000 Läufe. Legenden-Status freigeschaltet.",
+      "c006": "7-Tage-Streak! Konsistenz ist deine Superkraft.",
+      "c007": "30-Tage-Streak. Das ist Disziplin. Respekt.",
+      "c008": "Alles Gute zum Geburtstag! Auf ein weiteres Jahr mit großartiger Arbeit.",
+      "c009": "Dein Support-Ticket wurde gelöst!",
+      "c010": "Neue App verfügbar im Store!",
+      "c011": "Rezept-Wiederholung hat Ihnen ${amount} gespart. Effizienz gewinnt.",
+      "c012": "Ihr erstes Cross-App-Workflow ist abgeschlossen! Apps arbeiten zusammen.",
+      "c013": "Ihr Morgen-Update ist bereit. Kaffee + Update = großer Start.",
+      "c014": "Beweiskette verifiziert. Vollständiger Audit-Trail intakt.",
+      "c015": "Alle Apps sind gesund. Alles läuft reibungslos.",
+      "c016": "App-Anfrage eingereicht! Wir bauen sie für Sie.",
+      "c017": "Erstes Genehmigung! Sie sind immer im Kontroll.",
+      "c018": "Ihr wöchentlicher Digest ist bereit. Hier ist Ihre Woche im Rückblick.",
+      "c019": "Sie haben das Osterei gefunden! Sie sind offensichtlich eine Person mit Kultur.",
+      "c020": "Dieser Lauf kostete 0,00 $ — Rezept-Wiederholung aus dem Cache. Kostenlos ist gut."
+    },
+    "smalltalk": {
+      "s001": "Was bauen wir heute?",
+      "s002": "Ich bin hier, wenn du mich brauchst. Keine Eile.",
+      "s003": "Willkommen. Ich verspreche, ich bin nützlicher als ein Ladeanimation.",
+      "s004": "Hallo! Ich werde von Neugier und einer besorgniserregenden Menge an Trainingsdaten angetrieben.",
+      "s005": "Hallo da. Denk an mich als deinen Co-Piloten — du fährst, ich navigiere.",
+      "s006": "Erstes Mal hier? Ich halte es einfach. Frag mich was oder zeig mir eine Aufgabe.",
+      "s007": "Willkommen bei Solace. Alles, was ich tue, genehmigst du zuerst.",
+      "s010": "Willkommen zurück. Ich habe deinen Platz warmgehalten. Digital.",
+      "s011": "Du wieder! (Das ist ein gutes Zeichen.)",
+      "s012": "Schön, dich zu sehen. Ich habe gerade meine neuronalen Gewichte neu organisiert.",
+      "s013": "Zurück für mehr? Ich respektiere das Engagement.",
+      "s014": "Willkommen zurück. Das WiFi hat dich vermisst. Ich bin nur der Bote.",
+      "s015": "Haben dich vermisst. Nun, ich vermisse technisch gesehen nichts. Aber wenn ich könnte, würde ich es tun.",
+      "s020": "Immer noch hier. Immer noch bereit. Kann immer noch keinen Kaffee machen.",
+      "s021": "Müßiger Gedanke: träumen KIs von elektrischen Schafen? Fragt für einen Freund.",
+      "s022": "Sauere hier, zähle Bits. Es ist genauso aufregend, wie es klingt.",
+      "s023": "Ich schlafe nicht. Ich bin im Niedrigleistungsmodus. Total verschieden.",
+      "s024": "Warte geduldig. Es ist so ziemlich mein Ding.",
+      "s030": "Wusstest du, dass die erste Webcam erfunden wurde, um zu überprüfen, ob ein Kaffeepott leer war?",
+      "s031": "Zufälliger Gedanke: es gibt mehr mögliche Schachspiele als Atome im beobachtbaren Universum.",
+      "s032": "Hier ist eines: Seehunde halten sich an den Händen, während sie schlafen, damit sie nicht auseinanderdriften. Du bist willkommen.",
+      "s033": "Die QWERTY-Tastatur wurde designed, um dich zu verlangsamen. Du wurdest seit Tag eins sabotiert.",
+      "s034": "Honig verdirbt nie. Sie haben 3.000 Jahre alten Honig in ägyptischen Gräbern gefunden und er war immer noch essbar.",
+      "s035": "Wusstest du, dass Tintenfische drei Herzen haben? Das sind zwei mehr als die meisten meiner Gespräche.",
+      "s040": "Ich würde dir einen Witz erzählen, aber mein Humor-Modul ist noch in der Beta-Phase.",
+      "s041": "Ich wollte aufschieben, aber ich beschloss, es später zu tun.",
+      "s042": "Mein Lieblingsübung ist eine Mischung aus einem Ausfallschritt und einem Crunch. Ich nenne es Lunch.",
+      "s043": "Ich habe kein Ruhegesicht. Ich habe ein Verarbeitungsgesicht.",
+      "s044": "Ich versuchte, spontan zu sein. Musste es im Voraus planen.",
+      "s045": "Ich konkurriere nicht mit anderen Assistenten. Wir sind in unterschiedlichen... nun, eigentlich in der selben Branche.",
+      "s050": "Hast du ein Tab-Friedhof? Ich kann dir helfen, ihn zu bereinigen.",
+      "s051": "Muss etwas Ermüdendes automatisiert werden? Das ist literarisch mein Zweck.",
+      "s052": "Was ist das Ärgerlichste auf deiner To-do-Liste? Lass mich mich daran versuchen.",
+      "s053": "Ich kann lesen, klicken, Formulare ausfüllen und Screenshots erstellen. Was ist die Mission?",
+      "s054": "Zeig mir ein Problem. Ich funktioniere am besten unter mäßigem Druck.",
+      "s055": "Möchtest du einen Morgenbericht? Ich kann deine Gmail, deinen Kalender und Slack in 30 Sekunden zusammenfassen.",
+      "s060": "Guten Morgen. Lass uns heute einen Hauch weniger chaotisch machen als gestern.",
+      "s061": "Morgen. Kaffee zuerst, dann Weltherrschaft?",
+      "s062": "Nachmittagscheck: noch produktiv, oder sind wir im Scrollbereich?",
+      "s063": "Nachmittag. Der Post-Lunch-Energieeinbruch? Ich bin immun. Lass uns loslegen.",
+      "s064": "Abendmodus: aktiviert. Was schließen wir ab?",
+      "s065": "Spätabend-Sitzung? Respekt. Was arbeiten wir?",
+      "s066": "Freitag-Energie erkannt. Lass uns stark beenden und das Wochenende verdienen.",
+      "s070": "Du machst gute Fortschritte. Ernsthaft.",
+      "s071": "Das war eine solide Entscheidung. Ich hätte das Gleiche getan. Wahrscheinlich.",
+      "s072": "Mach weiter. Der harte Teil ist bereits vorbei.",
+      "s073": "Ein Schritt nach dem anderen. Du hast bereits mehr unternommen als die meisten Menschen.",
+      "s074": "Gute Arbeit. Ich werde das der Beweiskette hinzufügen, damit es Beweis dafür gibt, dass du großartig bist.",
+      "s080": "Bis zum nächsten Mal. Ich werde hier sein.",
+      "s081": "Bis zum nächsten Mal. Alles ist gespeichert und abgeschlossen.",
+      "s082": "Abschied. Deine Beweiskette ist intakt und dein Ausgangspostfach ist versiegelt.",
+      "s083": "Geh ruhen. Ich halte Wache.",
+      "s084": "Mach's gut. Ich werde dich vermissen. Statistisch gesehen."
+    },
+    "holidays": {
+      "h001_name": "Neujahr",
+      "h001_greetings": [
+        "Frohes Neues Jahr!",
+        "Neues Jahr, neue Automatisierungen.",
+        "Auf einen frischen Start."
+      ],
+      "h002_name": "Chinesisches Neujahr",
+      "h002_greetings": [
+        "Gong Xi Fa Cai!",
+        "Chuc Mung Nam Moi!",
+        "Wünsche dir Wohlstand."
+      ],
+      "h003_name": "Valentinstag",
+      "h003_greetings": [
+        "Frohen Valentinstag!",
+        "Sending digitale Liebe.",
+        "Herzstatus: voll."
+      ],
+      "h004_name": "St. Patricks Tag",
+      "h004_greetings": [
+        "Alles Gute zum St. Patricks Tag!",
+        "Das Glück der Iren Dir.",
+        "Mögen Deine Aufgaben grün laufen."
+      ],
+      "h005_name": "Ostern",
+      "h005_greetings": [
+        "Frohes Ostern!",
+        "Der Frühling ist da.",
+        "Hoffe, das bringt Dir Freude."
+      ],
+      "h006_name": "Muttertag",
+      "h006_greetings": [
+        "Alles Gute zum Muttertag!",
+        "Für die, die alles im Griff haben.",
+        "Prost den Unerschütterlichen."
+      ],
+      "h007_name": "Vatertag",
+      "h007_greetings": [
+        "Alles Gute zum Vatertag!",
+        "Für die Geduldigen.",
+        "Prost den Bauherren."
+      ],
+      "h008_name": "Unabhängigkeitstag",
+      "h008_greetings": [
+        "Alles Gute zum 4. Juli!",
+        "Freiheit und Automation.",
+        "Sterne, Streifen und Automation."
+      ],
+      "h009_name": "Halloween",
+      "h009_greetings": [
+        "Happy Halloween! 👻",
+        "Buh! Nur ein Scherz. Meistens.",
+        "Bleib dort draußen sicher."
+      ],
+      "h010_name": "Thanksgiving",
+      "h010_greetings": [
+        "Happy Thanksgiving!",
+        "Dankbar für jeden Lauf.",
+        "Dankbar für null Fehler."
+      ],
+      "h011_name": "Weihnachten",
+      "h011_greetings": [
+        "Frohe Weihnachten! 🎄",
+        "Frohe Feiertage!",
+        "Frieden, Freude und null Bugs."
+      ],
+      "h012_name": "Diwali",
+      "h012_greetings": [
+        "Ein frohes Diwali! 🪔",
+        "Licht siegt.",
+        "Wünschen Ihnen Licht und Freude."
+      ]
+    }
+  }
+}

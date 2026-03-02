@@ -17,21 +17,34 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from src.i18n import js_bundle, get_locale
+
 logger = logging.getLogger("solace-browser.yinyang")
 
 BOTTOM_RAIL_JS = (Path(__file__).parent.parent.parent / "static" / "bottom_rail.js").resolve()
 
 
-async def inject_bottom_rail(page: Any, ws_url: str = "ws://localhost:9222/ws/yinyang") -> None:
-    """Inject bottom rail chat panel into a Playwright page."""
+async def inject_bottom_rail(
+    page: Any,
+    ws_url: str = "ws://localhost:9222/ws/yinyang",
+    locale: str | None = None,
+) -> None:
+    """Inject bottom rail chat panel into a Playwright page.
+
+    Injects window.YINYANG_I18N first so JS can read locale strings.
+    """
     try:
+        # 1. Inject i18n bundle so JS can read translations
+        await page.add_init_script(js_bundle(locale or get_locale()))
+
+        # 2. Inject bottom rail JS
         if BOTTOM_RAIL_JS.exists():
             js_code = BOTTOM_RAIL_JS.read_text(encoding="utf-8")
         else:
             js_code = _INLINE_BOTTOM_RAIL_JS
         js_code = js_code.replace("__WS_URL__", ws_url)
         await page.add_init_script(js_code)
-        logger.debug("Bottom rail injected")
+        logger.debug("Bottom rail injected (locale: %s)", locale or get_locale())
     except Exception as exc:
         logger.warning(f"Failed to inject bottom rail: {exc}")
 
@@ -39,6 +52,10 @@ async def inject_bottom_rail(page: Any, ws_url: str = "ws://localhost:9222/ws/yi
 _INLINE_BOTTOM_RAIL_JS = """
 (function() {
     if (document.getElementById('solace-bottom-rail')) return;
+
+    // i18n helper — reads from window.YINYANG_I18N injected by Python
+    var _i18n = window.YINYANG_I18N || {};
+    function i(key, fallback) { return _i18n[key] || fallback; }
 
     var COLLAPSED_HEIGHT = '36px';
     var EXPANDED_HEIGHT = '300px';
@@ -65,7 +82,7 @@ _INLINE_BOTTOM_RAIL_JS = """
     header.appendChild(yyLogo);
     var yyTitle = document.createElement('span');
     yyTitle.style.cssText = 'font-weight:600;';
-    yyTitle.textContent = 'Yinyang';
+    yyTitle.textContent = i('title', 'Yinyang');
     header.appendChild(yyTitle);
     var creditsSummary = document.createElement('span');
     creditsSummary.id = 'solace-credits-summary';
@@ -97,13 +114,13 @@ _INLINE_BOTTOM_RAIL_JS = """
     var chatInput = document.createElement('input');
     chatInput.id = 'solace-chat-input';
     chatInput.type = 'text';
-    chatInput.placeholder = 'Ask Yinyang...';
+    chatInput.placeholder = i('chat_placeholder', 'Ask Yinyang...');
     chatInput.style.cssText = 'flex:1;background:#2a2a3e;border:1px solid #444;border-radius:6px;padding:6px 10px;color:#fff;font-size:13px;outline:none;';
     inputRow.appendChild(chatInput);
     var sendBtn = document.createElement('button');
     sendBtn.id = 'solace-send-btn';
     sendBtn.style.cssText = 'background:#4a9eff;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;';
-    sendBtn.textContent = 'Send';
+    sendBtn.textContent = i('send', 'Send');
     inputRow.appendChild(sendBtn);
     inputArea.appendChild(inputRow);
 
@@ -196,7 +213,7 @@ _INLINE_BOTTOM_RAIL_JS = """
         wrapper.style.cssText = 'margin-bottom:8px;';
         var label = document.createElement('div');
         label.style.cssText = 'font-weight:600;color:#f5a623;margin-bottom:4px;';
-        label.textContent = 'Preview Ready';
+        label.textContent = i('preview_ready', 'Preview Ready');
         wrapper.appendChild(label);
         var previewEl = document.createElement('div');
         previewEl.id = 'solace-preview-text';
@@ -210,11 +227,11 @@ _INLINE_BOTTOM_RAIL_JS = """
         var approveBtn = document.createElement('button');
         approveBtn.id = 'solace-approve-btn';
         approveBtn.style.cssText = 'background:#27ae60;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;';
-        approveBtn.textContent = 'Approve';
+        approveBtn.textContent = i('approve', 'Approve');
         var rejectBtn = document.createElement('button');
         rejectBtn.id = 'solace-reject-btn';
         rejectBtn.style.cssText = 'background:#e74c3c;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;';
-        rejectBtn.textContent = 'Reject';
+        rejectBtn.textContent = i('reject', 'Reject');
         btnRow.appendChild(approveBtn);
         btnRow.appendChild(rejectBtn);
         fsmArea.appendChild(btnRow);
@@ -230,7 +247,7 @@ _INLINE_BOTTOM_RAIL_JS = """
         fsmArea.style.display = expanded ? 'block' : 'none';
         var label = document.createElement('div');
         label.style.cssText = 'font-weight:600;color:#e74c3c;margin-bottom:4px;';
-        label.textContent = 'Blocked';
+        label.textContent = i('blocked', 'Blocked');
         fsmArea.appendChild(label);
         var reasonEl = document.createElement('div');
         reasonEl.style.cssText = 'background:#2a2a3e;padding:8px 12px;border-radius:6px;border-left:3px solid #e74c3c;';
@@ -244,7 +261,7 @@ _INLINE_BOTTOM_RAIL_JS = """
         fsmArea.style.display = expanded ? 'block' : 'none';
         var label = document.createElement('div');
         label.style.cssText = 'font-weight:600;color:#e74c3c;margin-bottom:4px;';
-        label.textContent = 'Failed';
+        label.textContent = i('failed', 'Failed');
         fsmArea.appendChild(label);
         var errorEl = document.createElement('div');
         errorEl.style.cssText = 'background:#2a2a3e;padding:8px 12px;border-radius:6px;border-left:3px solid #e74c3c;';
@@ -265,7 +282,7 @@ _INLINE_BOTTOM_RAIL_JS = """
                 payload: { action: action, run_id: runId }
             }));
         }
-        addMessage('system', action === 'approve' ? 'Approved. Executing...' : 'Rejected.');
+        addMessage('system', action === 'approve' ? i('approved_executing', 'Approved. Executing...') : i('rejected', 'Rejected.'));
     }
 
     function connectWS() {
@@ -315,7 +332,7 @@ _INLINE_BOTTOM_RAIL_JS = """
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({type: 'chat', payload: {content: text}}));
         } else {
-            addMessage('assistant', 'Not connected. Reconnecting...');
+            addMessage('assistant', i('not_connected', 'Not connected. Reconnecting...'));
             connectWS();
         }
     }

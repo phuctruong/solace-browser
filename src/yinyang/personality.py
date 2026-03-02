@@ -24,6 +24,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from src.i18n import get_strings
+
 logger = logging.getLogger("solace-browser.yinyang.personality")
 
 _DEFAULT_SOLACE_HOME = Path("~/.solace").expanduser()
@@ -301,7 +303,17 @@ class PersonalityManager:
         if personality is None:
             personality = self.get_personality()
 
+        # Load i18n strings for translatable tone keys
+        strings = get_strings()
+        i18n_p = strings.get("personality", {})
+        pkey = personality.value.lower()
+        i18n_tone = i18n_p.get(pkey, {})
+
         base_tone = dict(_PERSONALITY_TONES.get(personality, _PERSONALITY_TONES[PersonalityType.FRIENDLY]))
+        # Overlay translated greeting/farewell/encouragement/error
+        for k in ("greeting", "farewell", "encouragement", "error"):
+            if k in i18n_tone:
+                base_tone[k] = i18n_tone[k]
 
         if personality == PersonalityType.CUSTOM:
             custom = self.get_custom_tone()
