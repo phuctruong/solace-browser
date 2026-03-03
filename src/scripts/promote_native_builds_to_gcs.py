@@ -186,11 +186,12 @@ def _verify_binary(target_os: str, binary_path: Path) -> None:
         raise RuntimeError(f"{binary_path} is not a PE binary.")
 
 
-def _gcloud_cp(source: Path, destination: str) -> None:
-    subprocess.run(
-        ["gcloud", "storage", "cp", str(source), destination],
-        check=True,
-    )
+def _gcloud_cp(source: Path, destination: str, cache_control: str | None = None) -> None:
+    cmd = ["gcloud", "storage", "cp"]
+    if cache_control:
+        cmd.append(f"--cache-control={cache_control}")
+    cmd.extend([str(source), destination])
+    subprocess.run(cmd, check=True)
 
 
 def main() -> int:
@@ -201,6 +202,16 @@ def main() -> int:
     parser.add_argument("--object-prefix", default="solace-browser", help="GCS object prefix")
     parser.add_argument("--version", default=None, help="Version override (default: VERSION file)")
     parser.add_argument("--project-root", default=None, help="Project root override")
+    parser.add_argument(
+        "--versioned-cache-control",
+        default="public,max-age=31536000,immutable",
+        help="Cache-Control for versioned objects",
+    )
+    parser.add_argument(
+        "--latest-cache-control",
+        default="no-store,max-age=0,must-revalidate",
+        help="Cache-Control for latest objects",
+    )
     args = parser.parse_args()
 
     project_root = (
@@ -235,6 +246,8 @@ def main() -> int:
         "version": version,
         "bucket": args.bucket,
         "object_prefix": args.object_prefix,
+        "versioned_cache_control": args.versioned_cache_control,
+        "latest_cache_control": args.latest_cache_control,
         "platforms": [],
     }
 
@@ -264,10 +277,10 @@ def main() -> int:
             versioned_sha = versioned_binary + ".sha256"
             latest_sha = latest_binary + ".sha256"
 
-            _gcloud_cp(binary, versioned_binary)
-            _gcloud_cp(binary, latest_binary)
-            _gcloud_cp(checksum, versioned_sha)
-            _gcloud_cp(checksum, latest_sha)
+            _gcloud_cp(binary, versioned_binary, cache_control=args.versioned_cache_control)
+            _gcloud_cp(binary, latest_binary, cache_control=args.latest_cache_control)
+            _gcloud_cp(checksum, versioned_sha, cache_control=args.versioned_cache_control)
+            _gcloud_cp(checksum, latest_sha, cache_control=args.latest_cache_control)
 
             promotion_summary["platforms"].append(
                 {

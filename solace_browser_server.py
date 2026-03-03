@@ -23,6 +23,7 @@ import logging
 import sys
 import argparse
 import os
+import subprocess
 from pathlib import Path
 from typing import Dict, Optional, Any
 import uuid
@@ -173,6 +174,62 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger('solace-browser')
+
+
+def _default_playwright_browsers_path() -> Path:
+    return Path.home() / ".cache" / "ms-playwright"
+
+
+def _ensure_playwright_browsers_path() -> Path:
+    configured = os.environ.get("PLAYWRIGHT_BROWSERS_PATH", "").strip()
+    path = Path(configured).expanduser() if configured else _default_playwright_browsers_path()
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(path)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _is_missing_playwright_executable_error(exc: BaseException) -> bool:
+    message = str(exc)
+    return "Executable doesn't exist at" in message and "playwright install" in message
+
+
+def _install_playwright_browser(browser_name: str = "chromium", timeout_seconds: int = 900) -> None:
+    install_path = _ensure_playwright_browsers_path()
+    from playwright._impl._driver import compute_driver_executable, get_driver_env
+
+    driver_executable, driver_cli = compute_driver_executable()
+    env = get_driver_env()
+    env["PLAYWRIGHT_BROWSERS_PATH"] = str(install_path)
+    cmd = [driver_executable, driver_cli, "install", browser_name]
+    logger.info(
+        "Installing missing Playwright browser '%s' into %s",
+        browser_name,
+        install_path,
+    )
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(
+            f"Timed out installing Playwright browser '{browser_name}' after {timeout_seconds}s"
+        ) from exc
+    except OSError as exc:
+        raise RuntimeError(
+            f"Failed to execute Playwright installer for '{browser_name}': {exc}"
+        ) from exc
+
+    if result.returncode != 0:
+        stderr = result.stderr.strip()
+        stdout = result.stdout.strip()
+        detail = stderr or stdout or "no output"
+        raise RuntimeError(
+            f"Playwright install failed for '{browser_name}' (exit {result.returncode}): {detail}"
+        )
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -567,6 +624,7 @@ class SolaceBrowser:
     async def start(self):
         """Start the Solace Browser"""
         logger.info(f"Starting Solace Browser (headless={self.headless})")
+        _ensure_playwright_browsers_path()
 
         playwright = await async_playwright().start()
         launch_args = [
@@ -582,10 +640,23 @@ class SolaceBrowser:
                 '--class=SolaceBrowser',
             ])
 
-        self.browser = await playwright.chromium.launch(
-            headless=self.headless,
-            args=launch_args,
-        )
+        try:
+            self.browser = await playwright.chromium.launch(
+                headless=self.headless,
+                args=launch_args,
+            )
+        except Exception as exc:
+            if not _is_missing_playwright_executable_error(exc):
+                raise
+            logger.warning(
+                "Playwright Chromium executable missing. Attempting one-time install: %s",
+                exc,
+            )
+            _install_playwright_browser("chromium")
+            self.browser = await playwright.chromium.launch(
+                headless=self.headless,
+                args=launch_args,
+            )
 
         # Create initial page with optional session state
         context_options = {}

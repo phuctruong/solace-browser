@@ -23,6 +23,8 @@ Release loop is now platform-scoped and supports:
    - Windows target must be `PE`
 6. macOS build currently emits runner-native Mach-O (arm64 on `macos-latest`) under stable object key `solace-browser-macos-universal`.
 7. Linux CI build pins `ubuntu-22.04` to avoid shipping binaries that require newer glibc than common Ubuntu hosts.
+8. Runtime self-heals missing Playwright Chromium by installing into `~/.cache/ms-playwright` on first boot.
+9. Cache policy is split: immutable on `v{VERSION}` and no-store on `latest` to avoid stale checksum/binary drift.
 
 Validation evidence:
 - `scripts/build-mac.sh` on Linux returns: `ERROR: build-mac.sh must run on macOS`.
@@ -46,6 +48,7 @@ Every release must satisfy:
 4. Boot with `--head` and pass API smoke.
 5. Run production API matrix against `https://www.solaceagi.com`.
 6. Write metrics to `scratch/` for each round.
+7. First-boot missing-browser path is recoverable (auto-install or explicit error with deterministic guidance).
 
 ## Deployment Loop
 1. Select target platform (`TARGET_OS=linux|macos|windows`).

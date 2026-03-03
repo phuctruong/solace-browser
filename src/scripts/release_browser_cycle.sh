@@ -21,6 +21,8 @@ ALLOW_NON_NATIVE_TARGET="${ALLOW_NON_NATIVE_TARGET:-0}"
 HEAD_MODE="${HEAD_MODE:---head}"
 SMOKE_PORT="${SMOKE_PORT:-9232}"
 COMPILE_TIMEOUT="${COMPILE_TIMEOUT:-1800}"
+VERSIONED_CACHE_CONTROL="${VERSIONED_CACHE_CONTROL:-public,max-age=31536000,immutable}"
+LATEST_CACHE_CONTROL="${LATEST_CACHE_CONTROL:-no-store,max-age=0,must-revalidate}"
 
 log() { printf "[release-cycle] %s\n" "$*"; }
 
@@ -257,7 +259,7 @@ if [[ "$UPLOAD_ENABLED" == "1" ]]; then
   UPLOAD_START="$(t_ms)"
   log "Step 2/6: upload versioned artifact -> $UPLOAD_V_PATH"
   set +e
-  gcloud storage cp "$DIST_OBJECT_PATH" "$UPLOAD_V_PATH" >"$OUT_DIR/upload-versioned.log" 2>&1
+  gcloud storage cp --cache-control="$VERSIONED_CACHE_CONTROL" "$DIST_OBJECT_PATH" "$UPLOAD_V_PATH" >"$OUT_DIR/upload-versioned.log" 2>&1
   UPLOAD_V_RC=$?
   set -e
   if [[ "$UPLOAD_V_RC" -ne 0 ]]; then
@@ -266,7 +268,7 @@ if [[ "$UPLOAD_ENABLED" == "1" ]]; then
   fi
   log "Step 3/6: upload latest artifact -> $UPLOAD_LATEST_PATH"
   set +e
-  gcloud storage cp "$DIST_OBJECT_PATH" "$UPLOAD_LATEST_PATH" >"$OUT_DIR/upload-latest.log" 2>&1
+  gcloud storage cp --cache-control="$LATEST_CACHE_CONTROL" "$DIST_OBJECT_PATH" "$UPLOAD_LATEST_PATH" >"$OUT_DIR/upload-latest.log" 2>&1
   UPLOAD_L_RC=$?
   set -e
   if [[ "$UPLOAD_L_RC" -ne 0 ]]; then

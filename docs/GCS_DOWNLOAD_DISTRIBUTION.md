@@ -55,6 +55,10 @@ GitHub Actions native promotion path:
 python3 src/scripts/promote_native_builds_to_gcs.py --tag <v-tag>
 ```
 
+Cache-control policy:
+1. `v{VERSION}/` objects: `public,max-age=31536000,immutable`
+2. `latest/` objects: `no-store,max-age=0,must-revalidate`
+
 ## Release Gate
 Before merging website download-link changes:
 1. All 3 platform URLs return `HTTP 200`.
@@ -64,3 +68,4 @@ Before merging website download-link changes:
    - Linux download starts with `ELF`
    - macOS download starts with Mach-O magic
    - Windows download starts with PE (`MZ` + `PE\0\0`)
+5. `latest` binary and `latest` checksum must hash-match without query-string cache busting.

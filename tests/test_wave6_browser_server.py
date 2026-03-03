@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -185,6 +186,63 @@ def test_version_flag_prints_version_and_exits(capsys: pytest.CaptureFixture[str
     captured = capsys.readouterr()
     assert excinfo.value.code == 0
     assert captured.out.strip() == f"solace-browser {sbs.__version__}"
+
+
+def test_ensure_playwright_browsers_path_sets_default(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.delenv("PLAYWRIGHT_BROWSERS_PATH", raising=False)
+    monkeypatch.setattr(sbs.Path, "home", lambda *args, **kwargs: tmp_path)
+
+    path = sbs._ensure_playwright_browsers_path()
+
+    assert path == tmp_path / ".cache" / "ms-playwright"
+    assert path.is_dir()
+    assert sbs.os.environ["PLAYWRIGHT_BROWSERS_PATH"] == str(path)
+
+
+def test_is_missing_playwright_executable_error_detects_expected_message() -> None:
+    exc = RuntimeError(
+        "BrowserType.launch: Executable doesn't exist at /tmp/x\n"
+        "Please run the following command to download new browsers: playwright install"
+    )
+    assert sbs._is_missing_playwright_executable_error(exc) is True
+    assert sbs._is_missing_playwright_executable_error(RuntimeError("other")) is False
+
+
+def test_install_playwright_browser_uses_driver_cli(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    import playwright._impl._driver as driver
+
+    target = tmp_path / "pw-cache"
+    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(target))
+    monkeypatch.setattr(driver, "compute_driver_executable", lambda: ("/tmp/node", "/tmp/cli.js"))
+    monkeypatch.setattr(driver, "get_driver_env", lambda: {"BASE": "1"})
+
+    calls: list[dict[str, object]] = []
+
+    def fake_run(cmd, *, capture_output, text, env, timeout):
+        calls.append(
+            {
+                "cmd": cmd,
+                "capture_output": capture_output,
+                "text": text,
+                "env": env,
+                "timeout": timeout,
+            }
+        )
+        return subprocess.CompletedProcess(cmd, 0, stdout="ok", stderr="")
+
+    monkeypatch.setattr(sbs.subprocess, "run", fake_run)
+
+    sbs._install_playwright_browser("chromium", timeout_seconds=12)
+
+    assert len(calls) == 1
+    assert calls[0]["cmd"] == ["/tmp/node", "/tmp/cli.js", "install", "chromium"]
+    assert calls[0]["timeout"] == 12
+    env = calls[0]["env"]
+    assert isinstance(env, dict)
+    assert env["PLAYWRIGHT_BROWSERS_PATH"] == str(target)
 
 
 @pytest.mark.asyncio
