@@ -8,14 +8,14 @@
 >  and coordinate with humans. Not checking — testing."
 > — James Bach (simulated via Dragon's Den protocol)
 
-## Current GLOW: 88 → Target: 95 (Article Published)
+## Current GLOW: 90 → Target: 95 (100 sealed reports)
 
 ```
-GLOW 89  ← First clean commit (all files + renamed)        [ ] IN PROGRESS
-GLOW 90  ← Self-diagnostic passes all 5 pages              [ ] PENDING
-GLOW 91  ← CLI mode working (solace-cli tested)            [ ] PENDING
+GLOW 89  ← First clean commit (all files + renamed)        [✅] DONE 2026-03-03 (commit: 3cca5ee)
+GLOW 90  ← Featured on solaceagi.com/agents + /qa-evidence [✅] DONE 2026-03-03 (commit: edaeab5)
+GLOW 91  ← CLI mode working (solace-cli tested)            [ ] NEXT
 GLOW 92  ← First HITL loop: agent → fix → human approve    [ ] PENDING
-GLOW 93  ← Article published on solaceagi.com              [ ] PENDING
+GLOW 93  ← Self-diagnostic passes all 5 pages              [ ] PENDING
 GLOW 94  ← Inspector Dashboard on cloud                    [ ] PENDING
 GLOW 95  ← 100 sealed QA reports in vault                  [ ] PENDING
 ```
@@ -53,15 +53,15 @@ WRONG MODEL (deprecated):
 
 ### solace-browser/papers/
 - [x] 42-solace-inspector.md (CANONICAL)
-- [ ] 42-web-qa-inspector.md → DELETE (superseded)
+- [x] 42-web-qa-inspector.md → DELETED
 
 ### solace-browser/src/diagrams/
-- [ ] 42-web-qa-inspector.md → RENAME to 42-solace-inspector.md
+- [x] 42-solace-inspector.md (RENAMED + UPDATED with agent-native architecture)
 
 ### solace-browser/scripts/
-- [ ] run_web_qa.py → RENAME to run_solace_inspector.py
-- [ ] Fix APP_DIR path (web-qa-inspector → solace-inspector)
-- [ ] Fix llm_analyze (no OpenRouter — return prompt template instead)
+- [x] run_solace_inspector.py (RENAMED from run_web_qa.py)
+- [x] APP_DIR path fixed (web-qa-inspector → solace-inspector)
+- [x] llm_analyze → build_agent_analysis_request (NO API call, $0.00)
 
 ### solace-browser/scratch/
 - [x] web-qa-before.md
