@@ -75,6 +75,20 @@
       ]
     },
     {
+      "id": "default-hi",
+      "name": "Default Fun Pack (Hindi)",
+      "locale": "hi",
+      "jokes": 100,
+      "facts": 100,
+      "file": "default-hi.json",
+      "tags": [
+        "programming",
+        "tech",
+        "ai",
+        "science"
+      ]
+    },
+    {
       "id": "default-id",
       "name": "Default Fun Pack (Indonesian)",
       "locale": "id",
@@ -95,6 +109,20 @@
       "jokes": 100,
       "facts": 100,
       "file": "default-ja.json",
+      "tags": [
+        "programming",
+        "tech",
+        "ai",
+        "science"
+      ]
+    },
+    {
+      "id": "default-ko",
+      "name": "Default Fun Pack (Korean)",
+      "locale": "ko",
+      "jokes": 100,
+      "facts": 100,
+      "file": "default-ko.json",
       "tags": [
         "programming",
         "tech",
