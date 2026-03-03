@@ -20,6 +20,8 @@ Artifacts in `latest/`:
 5. `solace-browser-windows-x86_64.exe`
 6. `solace-browser-windows-x86_64.exe.sha256`
 
+Note: `solace-browser-macos-universal` is currently a runner-native Mach-O artifact (arm64 on `macos-latest`) while preserving stable URL naming.
+
 ## Public URLs (Website Must Use)
 1. Linux:
    - `https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-linux-x86_64`

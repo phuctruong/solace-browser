@@ -21,6 +21,7 @@ Release loop is now platform-scoped and supports:
    - Linux target must be `ELF`
    - macOS target must be `Mach-O`
    - Windows target must be `PE`
+6. macOS build currently emits runner-native Mach-O (arm64 on `macos-latest`) under stable object key `solace-browser-macos-universal`.
 
 Validation evidence:
 - `scripts/build-mac.sh` on Linux returns: `ERROR: build-mac.sh must run on macOS`.
@@ -91,6 +92,7 @@ If GitHub Actions cannot authenticate to GCP:
 2. Run promotion script locally:
    - `python3 src/scripts/promote_native_builds_to_gcs.py --tag <v-tag>`
 3. Promotion script is fail-closed on binary-type mismatch.
+4. Native artifact step uploads `scratch/release-cycle/**` with `if: always()` so compile failures keep diagnostic evidence.
 
 ### Canonical Commands
 1. Linux release round:

@@ -215,6 +215,10 @@ if [[ "$BUILD_ENABLED" == "1" ]]; then
   set -e
   if [[ "$BUILD_RC" -ne 0 ]]; then
     log "ERROR: compile step failed (rc=$BUILD_RC). See $OUT_DIR/pyinstaller.log"
+    if [[ -f "$OUT_DIR/pyinstaller.log" ]]; then
+      log "Last 80 lines from pyinstaller.log:"
+      tail -n 80 "$OUT_DIR/pyinstaller.log" >&2 || true
+    fi
     exit 1
   fi
 else

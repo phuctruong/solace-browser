@@ -29,7 +29,7 @@ flowchart TD
   - Windows: `solace-browser-windows-x86_64.exe`
 - Native host requirements:
   - Linux artifacts on Linux
-  - macOS artifacts on macOS
+  - macOS artifacts on macOS (runner-native Mach-O)
   - Windows artifacts on Windows
 - Binary-type gate is fail-closed:
   - reject upload if target artifact type does not match platform

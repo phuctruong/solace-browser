@@ -1,21 +1,18 @@
 # -*- mode: python ; coding: utf-8 -*-
-# solace-browser-macos.spec — PyInstaller spec for macOS universal binary
+# solace-browser-macos.spec — PyInstaller spec for macOS native binary
 # Rung: 641 | Belt: Yellow | Channel: [3]
 #
 # Build:
 #   pyinstaller solace-browser-macos.spec
 #
 # Produces:
-#   dist/solace-browser  (universal binary: x86_64 + arm64)
+#   dist/solace-browser  (native binary for runner architecture)
 #
 # Upload target:
 #   gs://solace-downloads/solace-browser/v1.0.0/solace-browser-macos-universal
 #
-# Code signing: ad-hoc (codesign_identity='-')
+# Code signing: disabled in CI builds
 # Bundle ID: com.solaceagi.browser
-
-
-import platform
 
 a = Analysis(
     ['solace_browser_server.py'],
@@ -92,18 +89,16 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=False,  # Disabled: UPX can corrupt universal2 (multi-arch) binaries
+    upx=False,  # Disabled on macOS to avoid binary corruption issues
     upx_exclude=[],
     runtime_tmpdir=None,
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
-    target_arch='universal2',
-    # WARNING: Ad-hoc signing ('-') is for local development and CI testing ONLY.
-    # For production distribution, replace with a real Apple Developer ID:
-    #   codesign_identity='Developer ID Application: Your Name (TEAM_ID)',
-    #   entitlements_file='Entitlements.plist',
-    codesign_identity='-',
+    # Build native to the runner architecture for stable CI output.
+    target_arch=None,
+    # Unsigned binary for direct download distribution.
+    codesign_identity=None,
     entitlements_file=None,
     info_plist={
         'CFBundleName': 'Solace Browser',

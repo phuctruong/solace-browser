@@ -53,6 +53,7 @@ jobs:
           src/scripts/release_browser_cycle.sh
 
       - name: Upload native artifact bundle
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: native-${{ matrix.target_os }}
@@ -60,3 +61,4 @@ jobs:
             dist/${{ matrix.object_name }}
             dist/${{ matrix.object_name }}.sha256
             scratch/release-cycle/**
+          if-no-files-found: ignore
