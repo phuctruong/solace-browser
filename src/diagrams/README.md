@@ -30,7 +30,7 @@
 | `18-app-ecosystem-day-one.md` | 18 day-one apps (10 standard + 5 no-API + 3 orchestrators), safety tiers, cross-app partner map |
 | `19-browser-release-loop.md` | Cross-platform release loop (linux/macos/windows): compile -> upload -> download -> head-on smoke -> production API matrix with fail gates and metrics writeback |
 | `20-app-store-sync-governance.md` | Official git catalog + proposal queue (file dev / Firestore prod) with promotion loop and website/browser sync path |
-| `21-deployment-surface-mapping.md` | Domain -> Cloud Run service mapping and repository/trigger ownership split between `solace-browser` and `solaceagi` |
+| `21-deployment-surface-mapping.md` | Domain -> Cloud Run service mapping, repo/trigger ownership split, and `solaceagi.com` -> GCS download-link contract |
 
 ---
 

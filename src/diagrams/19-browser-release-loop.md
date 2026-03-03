@@ -7,7 +7,8 @@ flowchart TD
     BUILD --> HASH[Generate SHA-256]
     HASH --> UP_V[Upload versioned artifact to GCS]
     UP_V --> UP_L[Upload latest artifact to GCS]
-    UP_L --> DL[Download from production URL]
+    UP_L --> LINK[Publish/verify solaceagi.com download links]
+    LINK --> DL[Download from production URL]
     DL --> SMOKE[Run binary with --head]
     SMOKE --> STATUS{GET /api/status OK?}
     STATUS -->|No| FAIL[Fail release + keep previous latest]
@@ -28,6 +29,8 @@ flowchart TD
   - macOS artifacts on macOS
   - Windows artifacts on Windows
 - Versioned path is immutable (`v{VERSION}`), latest is mutable.
+- Website contract:
+  - `www.solaceagi.com` must link to `https://storage.googleapis.com/solace-downloads/solace-browser/latest/<artifact>`
 - Smoke runtime is head-on by default (`--head`), not headless.
 - Production API matrix validates routing, auth gates, and server stability.
 - Every round writes evidence and timings to `scratch/release-cycle/<timestamp>/`.

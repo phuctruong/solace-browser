@@ -6,7 +6,7 @@ flowchart TD
     SB --> SBPROD[Push branch prod]
     SBQA --> BPIPE[Browser CI/CD pipeline]
     SBPROD --> BPIPE
-    BPIPE --> BDL[downloads.solaceagi.com artifacts]
+    BPIPE --> BDL[GCS bucket: solace-downloads/solace-browser]
     BPIPE --> BUI[browser runtime surfaces]
 
     SA[Repo: phuctruong/solaceagi] --> SAQA[Push branch qa]
@@ -19,10 +19,16 @@ flowchart TD
     QSVC --> QDOM[qa.solaceagi.com]
     PSVC --> DOM1[solaceagi.com]
     PSVC --> DOM2[www.solaceagi.com]
+    DOM1 --> DL1[Download links on website]
+    DOM2 --> DL1
+    DL1 --> BDL
 ```
 
 ## Notes
 - `www.solaceagi.com` app-store is served by Cloud Run service `solaceagi`.
 - `solaceagi` and `solaceagi-qa` deploy from repo `phuctruong/solaceagi`, not `phuctruong/solace-browser`.
+- Website download links are contract-bound to GCS:
+  - Linux: `.../solace-browser-linux-x86_64`
+  - macOS: `.../solace-browser-macos-universal`
+  - Windows: `.../solace-browser-windows-x86_64.exe`
 - Deployment claims must validate domain mapping + trigger source before QA sign-off.
-

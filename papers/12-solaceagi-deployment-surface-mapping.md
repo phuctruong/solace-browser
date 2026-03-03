@@ -29,6 +29,18 @@ Implication:
 2. `solaceagi` repo:
    - Public website and production app-store surface at `www.solaceagi.com`.
 
+## Download Surface Contract
+Public website download links must resolve to GCS bucket `solace-downloads`:
+1. Linux binary:
+   - `https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-linux-x86_64`
+2. macOS binary:
+   - `https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-macos-universal`
+3. Windows binary:
+   - `https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-windows-x86_64.exe`
+
+Fail-closed condition:
+- If any platform URL returns non-200 on release validation, block claim that production download surface is healthy.
+
 ## Release Gate Addendum
 Before asserting production parity:
 1. Confirm domain mapping target service.
@@ -39,4 +51,3 @@ Before asserting production parity:
 ## Operational Rule
 Fail closed on deployment assumptions:
 - If domain/service/trigger source do not match the edited repository, block release claim and redirect changes to the correct repository pipeline.
-

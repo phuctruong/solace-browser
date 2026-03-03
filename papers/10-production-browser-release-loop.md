@@ -58,6 +58,20 @@ Every release must satisfy:
 7. Run production API matrix from OpenAPI.
 8. Persist run report + timings into `scratch/release-cycle/<timestamp>/`.
 
+## Website Link Contract (solaceagi.com)
+`solaceagi.com` and `www.solaceagi.com` download CTAs must point to GCS `latest` objects:
+1. Linux:
+   - `https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-linux-x86_64`
+2. macOS:
+   - `https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-macos-universal`
+3. Windows:
+   - `https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-windows-x86_64.exe`
+
+Checksum links (same page):
+1. Linux checksum: `https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-linux-x86_64.sha256`
+2. macOS checksum: `https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-macos-universal.sha256`
+3. Windows checksum: `https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-windows-x86_64.exe.sha256`
+
 ## Reusable Scripts
 - `src/scripts/release_browser_cycle.sh`
   - platform-aware compile, upload, download, smoke, timing report.

@@ -41,6 +41,7 @@ Important:
 
 Full contract:
 - [docs/BROWSER_API.md](/home/phuc/projects/solace-browser/docs/BROWSER_API.md)
+- [docs/GCS_DOWNLOAD_DISTRIBUTION.md](/home/phuc/projects/solace-browser/docs/GCS_DOWNLOAD_DISTRIBUTION.md)
 
 ## Local Web Site
 Start the browser-site local server:
