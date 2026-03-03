@@ -17,6 +17,7 @@ UPLOAD_ENABLED="${UPLOAD_ENABLED:-1}"
 DOWNLOAD_ENABLED="${DOWNLOAD_ENABLED:-auto}"
 RUN_SMOKE="${RUN_SMOKE:-auto}"
 BUILD_ENABLED="${BUILD_ENABLED:-1}"
+ALLOW_NON_NATIVE_TARGET="${ALLOW_NON_NATIVE_TARGET:-0}"
 HEAD_MODE="${HEAD_MODE:---head}"
 SMOKE_PORT="${SMOKE_PORT:-9232}"
 COMPILE_TIMEOUT="${COMPILE_TIMEOUT:-1800}"
@@ -86,6 +87,7 @@ detect_arch() {
 
 TARGET_OS="${TARGET_OS:-$(detect_os)}"
 TARGET_ARCH="${TARGET_ARCH:-$(detect_arch)}"
+HOST_OS="$(detect_os)"
 
 case "$TARGET_OS" in
   linux)
@@ -112,6 +114,12 @@ esac
 OBJECT_NAME="${OBJECT_NAME:-$DEFAULT_OBJECT_NAME}"
 SPEC_FILE="${SPEC_FILE:-$DEFAULT_SPEC_FILE}"
 BUILD_BIN_PATH="${BUILD_BIN_PATH:-$DEFAULT_BUILD_BIN_PATH}"
+
+if [[ "$BUILD_ENABLED" == "1" && "$ALLOW_NON_NATIVE_TARGET" != "1" && "$TARGET_OS" != "$HOST_OS" ]]; then
+  log "ERROR: native build required for TARGET_OS=$TARGET_OS but host is $HOST_OS."
+  log "Use a native CI runner (macos-latest/windows-latest) or set ALLOW_NON_NATIVE_TARGET=1 only for non-release diagnostics."
+  exit 1
+fi
 
 if [[ "$DOWNLOAD_ENABLED" == "auto" ]]; then
   if [[ "$TARGET_OS" == "windows" ]]; then

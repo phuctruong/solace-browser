@@ -12,6 +12,17 @@ Release loop is now platform-scoped and supports:
 2. macOS: `solace-browser-macos-universal`
 3. Windows: `solace-browser-windows-x86_64.exe`
 
+## Native Build Reality (2026-03-03)
+1. macOS binaries must be built on macOS runners/hosts.
+2. Windows binaries must be built on Windows runners/hosts.
+3. Linux host cannot produce valid native macOS/Windows artifacts for release channels.
+4. Release script is fail-closed for non-native targets when `BUILD_ENABLED=1`.
+
+Validation evidence:
+- `scripts/build-mac.sh` on Linux returns: `ERROR: build-mac.sh must run on macOS`.
+- `scripts/build-windows.sh` now fails on non-Windows hosts instead of emitting mislabeled artifacts.
+- Native matrix path is GitHub Actions (`ubuntu-latest`, `macos-latest`, `windows-latest`).
+
 ## Committee (5 personas)
 This release loop is reviewed by:
 1. Rory Sutherland — perceived value, trust framing, adoption friction.

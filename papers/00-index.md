@@ -16,6 +16,7 @@
 | 09 | yinyang-tutorial-funpack-mcp | Tutorial popup (5-step, 13 locales), Fun Pack standard, OAuth3 leave-app gate, Agent Notification API, MCP server (7 tools), YinYang Chat (OpenRouter) | CANONICAL |
 | 10 | production-browser-release-loop | Compile -> upload -> download -> head-on smoke -> production API matrix, timed release loop, default bundle policy | CANONICAL |
 | 11 | app-store-sync-governance | Git-backed official catalog, Firestore proposal queue, local file backend for dev, promotion workflow | CANONICAL |
+| 12 | solaceagi-deployment-surface-mapping | Domain mapping + trigger source verification, repo/service ownership matrix for qa/prod | CANONICAL |
 
 ## Cross-References
 
@@ -32,6 +33,7 @@
 | 09 tutorial-funpack-mcp | papers/22+25 (Yinyang), 04+19 (Wallet) | Paper 04 (Triple-Twin), Diagram 13 (Yinyang FSM) |
 | 10 production-browser-release-loop | solaceagi download + API deployment docs | Diagram 19 (Browser Release Loop) |
 | 11 app-store-sync-governance | app-store release + community submission process | Diagram 20 (App Store Sync Governance) |
+| 12 deployment-surface-mapping | Cloud Run domain + trigger ownership | Diagram 21 (Deployment Surface Mapping) |
 
 ## Invariants (All Papers)
 

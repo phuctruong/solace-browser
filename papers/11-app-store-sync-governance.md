@@ -52,3 +52,5 @@ Unify Solace website app store and Solace Browser app store around one official 
 4. Catalog re-sync script runs.
 5. Git commit + deploy publishes to both website and browser surfaces.
 
+## Deployment Ownership Note
+This governance model defines data contracts. Actual public `www.solaceagi.com` deployment ownership is validated separately in Paper 12 (domain mapping + trigger source). If the website surface is deployed from another repository, this paper's catalog/API changes must be ported there before claiming production parity.

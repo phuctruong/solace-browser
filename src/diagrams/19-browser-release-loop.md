@@ -23,6 +23,10 @@ flowchart TD
   - Linux: `solace-browser-linux-x86_64`
   - macOS: `solace-browser-macos-universal`
   - Windows: `solace-browser-windows-x86_64.exe`
+- Native host requirements:
+  - Linux artifacts on Linux
+  - macOS artifacts on macOS
+  - Windows artifacts on Windows
 - Versioned path is immutable (`v{VERSION}`), latest is mutable.
 - Smoke runtime is head-on by default (`--head`), not headless.
 - Production API matrix validates routing, auth gates, and server stability.
