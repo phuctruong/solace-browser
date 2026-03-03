@@ -1,0 +1,614 @@
+/* schedule.css — Agent Activity Calendar & Sign-Off Queue
+   Jony Ive principle: 2 accent colors, 2 font sizes, infinite whitespace */
+
+/* ── Variables ─────────────────────────────────────────────────────────────── */
+:root {
+  --sched-past:    #374151;  /* neutral gray — past runs */
+  --sched-success: #065f46;  /* deep green — success */
+  --sched-failed:  #7f1d1d;  /* deep red — failed */
+  --sched-pending: #92400e;  /* amber — needs sign-off */
+  --sched-future:  #1e3a5f;  /* deep blue — scheduled future */
+  --sched-cancel:  #374151;  /* gray — cancelled */
+
+  --sched-pill-success: #d1fae5;
+  --sched-pill-failed:  #fee2e2;
+  --sched-pill-pending: #fef3c7;
+  --sched-pill-future:  #dbeafe;
+  --sched-pill-cancel:  #f3f4f6;
+
+  --sched-text: #e2e8f0;
+  --sched-text-dim: #94a3b8;
+  --sched-bg: #0d1b2a;
+  --sched-card-bg: #112240;
+  --sched-border: rgba(255,255,255,0.08);
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────────── */
+.schedule-shell {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 80vh;
+}
+
+/* ── ROI Panel ──────────────────────────────────────────────────────────────── */
+.roi-panel {
+  background: var(--sched-card-bg);
+  border: 1px solid var(--sched-border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.roi-inner {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.roi-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.roi-num {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--sched-text);
+  line-height: 1;
+}
+
+.roi-label {
+  font-size: 0.75rem;
+  color: var(--sched-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.roi-stat--highlight .roi-num {
+  color: #34d399;  /* green — savings positive signal */
+}
+
+/* ── Sign-Off Alert ─────────────────────────────────────────────────────────── */
+.signoff-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #2d1a00;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1.5rem;
+  animation: pulse-amber 2s ease-in-out infinite;
+}
+
+@keyframes pulse-amber {
+  0%, 100% { border-color: #f59e0b; }
+  50% { border-color: #fbbf24; box-shadow: 0 0 12px rgba(245,158,11,0.3); }
+}
+
+.signoff-alert__icon { font-size: 1.25rem; }
+.signoff-alert__msg  { flex: 1; color: #fde68a; font-size: 0.9rem; }
+.signoff-alert__btn  {
+  background: #f59e0b;
+  color: #111;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.signoff-alert__btn:hover { background: #fbbf24; }
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────────── */
+.schedule-toolbar {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.view-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--sched-card-bg);
+  border: 1px solid var(--sched-border);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.view-tab {
+  background: none;
+  border: none;
+  color: var(--sched-text-dim);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.view-tab--active {
+  background: #1e40af;
+  color: #fff;
+}
+
+.view-tab:hover:not(.view-tab--active) {
+  background: rgba(255,255,255,0.06);
+  color: var(--sched-text);
+}
+
+.schedule-filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.filter-select {
+  background: var(--sched-card-bg);
+  border: 1px solid var(--sched-border);
+  color: var(--sched-text);
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+/* ── Calendar View ──────────────────────────────────────────────────────────── */
+.cal-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.cal-nav {
+  background: var(--sched-card-bg);
+  border: 1px solid var(--sched-border);
+  color: var(--sched-text);
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal-nav:hover { background: rgba(255,255,255,0.08); }
+
+.cal-month {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--sched-text);
+  margin: 0;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--sched-border);
+  border: 1px solid var(--sched-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cal-day-header {
+  background: var(--sched-card-bg);
+  color: var(--sched-text-dim);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.cal-cell {
+  background: var(--sched-bg);
+  min-height: 90px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.cal-cell:hover { background: rgba(255,255,255,0.03); }
+
+.cal-cell--empty { background: rgba(0,0,0,0.2); cursor: default; }
+.cal-cell--today { background: rgba(30,64,175,0.12); }
+
+.cal-date {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sched-text-dim);
+  line-height: 1;
+}
+
+.cal-cell--today .cal-date {
+  color: #60a5fa;
+}
+
+.app-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  cursor: pointer;
+}
+
+.app-pill--success  { background: var(--sched-pill-success); color: #065f46; }
+.app-pill--failed   { background: var(--sched-pill-failed);  color: #7f1d1d; }
+.app-pill--pending  { background: var(--sched-pill-pending); color: #78350f; animation: pulse-amber 2s infinite; }
+.app-pill--future   { background: var(--sched-pill-future);  color: #1e3a8a; }
+.app-pill--cancelled { background: var(--sched-pill-cancel); color: #374151; }
+
+.cal-overflow {
+  font-size: 0.6rem;
+  color: var(--sched-text-dim);
+  padding: 1px 4px;
+}
+
+/* ── Kanban View ────────────────────────────────────────────────────────────── */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.kanban-col {
+  background: var(--sched-card-bg);
+  border: 1px solid var(--sched-border);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.kanban-col--amber {
+  border-color: rgba(245,158,11,0.4);
+  background: #1a1000;
+}
+
+.kanban-col__title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--sched-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--sched-border);
+}
+
+.kanban-col--amber .kanban-col__title { color: #fbbf24; }
+
+.kanban-cards { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.kanban-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--sched-border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.kanban-card:hover { transform: translateY(-1px); }
+
+.kanban-card__app {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--sched-text);
+  margin-bottom: 4px;
+}
+
+.kanban-card__meta {
+  font-size: 0.7rem;
+  color: var(--sched-text-dim);
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.kanban-card__badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.badge--A { background: #d1fae5; color: #065f46; }
+.badge--B { background: #fef3c7; color: #78350f; }
+.badge--C { background: #fee2e2; color: #7f1d1d; }
+
+/* Countdown timer in pending cards */
+.countdown {
+  font-size: 0.7rem;
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.approve-btn, .reject-btn {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  margin-top: 6px;
+  margin-right: 4px;
+}
+
+.approve-btn { background: #10b981; color: #fff; }
+.approve-btn:hover { background: #059669; }
+.reject-btn  { background: #374151; color: #e5e7eb; }
+.reject-btn:hover { background: #4b5563; }
+
+/* ── Timeline View ──────────────────────────────────────────────────────────── */
+.timeline-container {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  left: 0.65rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--sched-border);
+}
+
+.timeline-node {
+  position: relative;
+  margin-bottom: 1.5rem;
+  padding: 0.875rem 1rem;
+  background: var(--sched-card-bg);
+  border: 1px solid var(--sched-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.timeline-node::before {
+  content: '';
+  position: absolute;
+  left: -1.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #374151;
+  border: 2px solid #1f2937;
+}
+
+.timeline-node--success::before { background: #10b981; }
+.timeline-node--failed::before  { background: #ef4444; }
+.timeline-node--pending::before { background: #f59e0b; }
+.timeline-node--future::before  { background: #3b82f6; }
+
+.timeline-node__app   { font-size: 0.9rem; font-weight: 600; color: var(--sched-text); }
+.timeline-node__time  { font-size: 0.7rem; color: var(--sched-text-dim); }
+.timeline-node__chain {
+  font-size: 0.7rem;
+  color: #60a5fa;
+  margin-top: 4px;
+}
+
+.timeline-empty { color: var(--sched-text-dim); text-align: center; padding: 2rem; }
+
+/* ── List View ──────────────────────────────────────────────────────────────── */
+.activity-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.activity-table th {
+  text-align: left;
+  padding: 0.625rem 0.75rem;
+  color: var(--sched-text-dim);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--sched-border);
+}
+
+.activity-table td {
+  padding: 0.75rem;
+  color: var(--sched-text);
+  border-bottom: 1px solid var(--sched-border);
+  vertical-align: middle;
+}
+
+.activity-table tr:hover td { background: rgba(255,255,255,0.03); cursor: pointer; }
+
+.table-loading { text-align: center; color: var(--sched-text-dim); padding: 2rem; }
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge--success   { background: #d1fae5; color: #065f46; }
+.status-badge--failed    { background: #fee2e2; color: #7f1d1d; }
+.status-badge--pending   { background: #fef3c7; color: #78350f; }
+.status-badge--cancelled { background: #f3f4f6; color: #374151; }
+.status-badge--scheduled { background: #dbeafe; color: #1e3a8a; }
+
+/* ── Sign-Off Bottom Sheet ──────────────────────────────────────────────────── */
+.signoff-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 900;
+}
+
+.signoff-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #0f1e33;
+  border-top: 2px solid #f59e0b;
+  border-radius: 16px 16px 0 0;
+  z-index: 901;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.signoff-sheet__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.signoff-sheet__header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #fde68a;
+}
+
+.signoff-sheet__sub {
+  color: var(--sched-text-dim);
+  font-size: 0.85rem;
+  margin: 4px 0 0;
+}
+
+.signoff-sheet__close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--sched-text-dim);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.signoff-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.signoff-item__app    { font-size: 0.95rem; font-weight: 600; color: var(--sched-text); }
+.signoff-item__scope  { font-size: 0.8rem; color: #fde68a; margin: 6px 0; }
+.signoff-item__desc   { font-size: 0.8rem; color: var(--sched-text-dim); margin-bottom: 10px; }
+.signoff-item__footer { display: flex; gap: 0.5rem; align-items: center; }
+
+/* ── Run Detail Drawer ──────────────────────────────────────────────────────── */
+.run-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 800;
+}
+
+.run-drawer {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 400px;
+  max-width: 90vw;
+  background: #0f1e33;
+  border-left: 1px solid var(--sched-border);
+  z-index: 801;
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.run-drawer__header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.run-drawer__header h3 {
+  margin: 0;
+  flex: 1;
+  font-size: 1rem;
+  color: var(--sched-text);
+}
+
+.run-drawer__close {
+  background: none;
+  border: none;
+  color: var(--sched-text-dim);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.run-drawer__body {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--sched-text);
+  line-height: 1.6;
+}
+
+.drawer-field { margin-bottom: 1rem; }
+.drawer-field__label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--sched-text-dim); margin-bottom: 4px; }
+.drawer-field__val   { color: var(--sched-text); word-break: break-all; }
+
+.drawer-hash {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: #60a5fa;
+  word-break: break-all;
+}
+
+/* ── Mobile ─────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .schedule-shell { padding: 1rem; }
+
+  .roi-inner { gap: 1rem; }
+  .roi-num { font-size: 1.25rem; }
+
+  /* Mobile: always show List view, hide complex views */
+  .kanban-board { grid-template-columns: 1fr; }
+  .view-tab[data-view="calendar"],
+  .view-tab[data-view="timeline"] {
+    display: none;
+  }
+
+  .cal-grid { grid-template-columns: repeat(7, 1fr); font-size: 0.6rem; }
+  .cal-cell { min-height: 60px; padding: 3px; }
+  .cal-date { font-size: 0.6rem; }
+
+  .run-drawer { width: 100%; border-left: none; border-top: 1px solid var(--sched-border); }
+  .schedule-filters { display: none; }
+}

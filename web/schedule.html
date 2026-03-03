@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Schedule | Solace Browser</title>
+  <meta name="description" content="Your agent's activity calendar — past runs, pending sign-offs, and upcoming scheduled tasks.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://browser.solaceagi.com/schedule">
+  <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/site.css">
+  <link rel="stylesheet" href="/css/schedule.css">
+  <script src="/js/solace.js" defer></script>
+</head>
+<body data-page="schedule">
+  <div class="site-shell">
+    <div class="page-frame">
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a class="site-brand" href="/">
+            <span class="site-brand__icon">SB</span>
+            <span class="site-brand__text">
+              <span class="site-brand__name">Schedule</span>
+              <span class="site-brand__tag">Your agent's diary</span>
+            </span>
+          </a>
+          <nav class="site-nav" aria-label="Primary">
+            <a class="nav-link" data-nav-path="/" href="/">Home</a>
+            <a class="nav-link" data-nav-path="/app-store" href="/app-store">Apps</a>
+            <a class="nav-link" data-nav-path="/schedule" href="/schedule">Schedule</a>
+            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
+            <a class="nav-link" data-nav-path="/settings" href="/settings">Settings</a>
+          </nav>
+          <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+        </div>
+      </header>
+      <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu__section">
+          <h3>Navigation</h3>
+          <a data-nav-path="/" href="/">Home</a>
+          <a data-nav-path="/app-store" href="/app-store">App Store</a>
+          <a data-nav-path="/schedule" href="/schedule">Schedule</a>
+          <a data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
+          <a data-nav-path="/settings" href="/settings">Settings</a>
+        </div>
+      </div>
+
+      <main class="schedule-shell">
+
+        <!-- ROI Panel -->
+        <section class="roi-panel reveal" id="roiPanel">
+          <div class="roi-inner">
+            <div class="roi-stat" id="roiRuns">
+              <span class="roi-num">—</span>
+              <span class="roi-label">runs this week</span>
+            </div>
+            <div class="roi-stat" id="roiTimeSaved">
+              <span class="roi-num">—</span>
+              <span class="roi-label">hours saved</span>
+            </div>
+            <div class="roi-stat" id="roiCost">
+              <span class="roi-num">—</span>
+              <span class="roi-label">agent cost</span>
+            </div>
+            <div class="roi-stat roi-stat--highlight" id="roiNet">
+              <span class="roi-num">—</span>
+              <span class="roi-label">net savings (vs $30/hr)</span>
+            </div>
+            <div class="roi-stat" id="roiStreak">
+              <span class="roi-num">—</span>
+              <span class="roi-label">day streak</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sign-Off Queue Alert -->
+        <div class="signoff-alert" id="signoffAlert" style="display:none">
+          <span class="signoff-alert__icon">⏳</span>
+          <span class="signoff-alert__msg">Your agent paused and is waiting for you —
+            <strong id="signoffCount">0</strong> action(s) need your approval</span>
+          <button class="signoff-alert__btn" id="signoffOpenBtn">Review Now</button>
+        </div>
+
+        <!-- View Switcher -->
+        <div class="schedule-toolbar reveal">
+          <div class="view-tabs" role="tablist">
+            <button class="view-tab view-tab--active" data-view="calendar" role="tab" aria-selected="true">
+              📅 Calendar
+            </button>
+            <button class="view-tab" data-view="kanban" role="tab" aria-selected="false">
+              📋 Kanban
+            </button>
+            <button class="view-tab" data-view="timeline" role="tab" aria-selected="false">
+              ⛓ Timeline
+            </button>
+            <button class="view-tab" data-view="list" role="tab" aria-selected="false">
+              📊 List
+            </button>
+          </div>
+          <div class="schedule-filters">
+            <select id="filterApp" class="filter-select">
+              <option value="">All apps</option>
+            </select>
+            <select id="filterStatus" class="filter-select">
+              <option value="">All statuses</option>
+              <option value="success">✅ Success</option>
+              <option value="failed">❌ Failed</option>
+              <option value="pending_approval">⏳ Pending</option>
+              <option value="cancelled">🚫 Cancelled</option>
+              <option value="scheduled">📅 Scheduled</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Calendar View -->
+        <div class="schedule-view" id="viewCalendar">
+          <div class="cal-header">
+            <button class="cal-nav" id="calPrev">‹</button>
+            <h2 class="cal-month" id="calMonthLabel">—</h2>
+            <button class="cal-nav" id="calNext">›</button>
+          </div>
+          <div class="cal-grid" id="calGrid">
+            <div class="cal-day-header">Mon</div>
+            <div class="cal-day-header">Tue</div>
+            <div class="cal-day-header">Wed</div>
+            <div class="cal-day-header">Thu</div>
+            <div class="cal-day-header">Fri</div>
+            <div class="cal-day-header">Sat</div>
+            <div class="cal-day-header">Sun</div>
+          </div>
+        </div>
+
+        <!-- Kanban View -->
+        <div class="schedule-view" id="viewKanban" style="display:none">
+          <div class="kanban-board">
+            <div class="kanban-col" id="kanbanQueued">
+              <h3 class="kanban-col__title">📥 Queued</h3>
+              <div class="kanban-cards" id="kanbanQueuedCards"></div>
+            </div>
+            <div class="kanban-col" id="kanbanRunning">
+              <h3 class="kanban-col__title">⚡ Running</h3>
+              <div class="kanban-cards" id="kanbanRunningCards"></div>
+            </div>
+            <div class="kanban-col kanban-col--amber" id="kanbanWaiting">
+              <h3 class="kanban-col__title">⏳ Waiting Sign-Off</h3>
+              <div class="kanban-cards" id="kanbanWaitingCards"></div>
+            </div>
+            <div class="kanban-col" id="kanbanDone">
+              <h3 class="kanban-col__title">✅ Done</h3>
+              <div class="kanban-cards" id="kanbanDoneCards"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline View -->
+        <div class="schedule-view" id="viewTimeline" style="display:none">
+          <div class="timeline-container" id="timelineContainer">
+            <p class="timeline-empty">Loading activity timeline…</p>
+          </div>
+        </div>
+
+        <!-- List View -->
+        <div class="schedule-view" id="viewList" style="display:none">
+          <table class="activity-table" id="activityTable">
+            <thead>
+              <tr>
+                <th>App</th>
+                <th>Status</th>
+                <th>Time</th>
+                <th>Duration</th>
+                <th>Cost</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="activityTableBody">
+              <tr><td colspan="6" class="table-loading">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </main><!-- /schedule-shell -->
+
+      <!-- Sign-Off Bottom Sheet -->
+      <div class="signoff-sheet" id="signoffSheet" style="display:none" role="dialog" aria-label="Sign-off queue">
+        <div class="signoff-sheet__header">
+          <h3>⏳ Your agent is waiting</h3>
+          <p class="signoff-sheet__sub">Review and approve or reject each action before it proceeds.</p>
+          <button class="signoff-sheet__close" id="signoffClose" aria-label="Close">✕</button>
+        </div>
+        <div class="signoff-sheet__items" id="signoffItems">
+          <!-- injected by JS -->
+        </div>
+      </div>
+      <div class="signoff-overlay" id="signoffOverlay" style="display:none"></div>
+
+      <!-- Run Detail Drawer -->
+      <div class="run-drawer" id="runDrawer" style="display:none" role="dialog" aria-label="Run detail">
+        <div class="run-drawer__header">
+          <h3 id="drawerTitle">Run detail</h3>
+          <button class="run-drawer__close" id="drawerClose" aria-label="Close">✕</button>
+        </div>
+        <div class="run-drawer__body" id="drawerBody"></div>
+      </div>
+      <div class="run-overlay" id="runOverlay" style="display:none"></div>
+
+    </div><!-- /page-frame -->
+  </div><!-- /site-shell -->
+
+  <!-- YinYang Rail -->
+  <div id="yyRail" class="sa-yinyang-panel" data-page="schedule">
+    <div id="yyRailHeader" class="sa-yinyang-panel__header">
+      <img src="/images/yinyang/yinyang-rotating_70pct_128px.gif" alt="Yinyang" class="sa-yinyang-panel__avatar">
+      <div class="sa-yinyang-panel__title">
+        <span class="sa-yinyang-panel__name">Yinyang</span>
+        <span id="yyPendingBadge" class="sa-yinyang-panel__badge" style="display:none">●</span>
+      </div>
+      <button class="sa-yinyang-panel__toggle" id="yyToggle" aria-label="Expand Yinyang">▲</button>
+    </div>
+    <div class="sa-yinyang-panel__body" id="yyBody" style="display:none">
+      <div class="sa-yinyang-messages" id="yyMessages"></div>
+      <div class="sa-yinyang-input">
+        <input type="text" id="yyInput" placeholder="Ask Yinyang about your schedule…" autocomplete="off">
+        <button id="yySend">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/schedule.js" defer></script>
+</body>
+</html>

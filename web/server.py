@@ -37,6 +37,7 @@ SLUG_MAP = {
     "start": "start.html",
     "download": "download.html",
     "machine-dashboard": "machine-dashboard.html",
+    "schedule": "schedule.html",
     "tunnel-connect": "tunnel-connect.html",
     "style-guide": "style-guide.html",
     "app-store": "app-store.html",
@@ -323,6 +324,17 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             self._handle_fun_packs_list(send_body=send_body)
             return
 
+        # Schedule Viewer: /api/schedule, /api/schedule/queue, /api/schedule/upcoming
+        if request_path == "/api/schedule":
+            self._handle_schedule_list(send_body=send_body)
+            return
+        if request_path == "/api/schedule/queue":
+            self._handle_schedule_queue(send_body=send_body)
+            return
+        if request_path == "/api/schedule/upcoming":
+            self._handle_schedule_upcoming(send_body=send_body)
+            return
+
         # YinYang notification status: /api/yinyang/status
         if request_path == "/api/yinyang/status":
             notifs = list(_notif_queue)
@@ -481,6 +493,19 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         # YinYang notify (agent pushes notification): /api/yinyang/notify
         if request_path == "/api/yinyang/notify":
             self._handle_yinyang_notify(payload)
+            return
+
+        # Schedule Viewer: approve / cancel
+        if request_path.startswith("/api/schedule/approve/"):
+            run_id = request_path.split("/api/schedule/approve/")[-1]
+            self._handle_schedule_approve(run_id, payload)
+            return
+        if request_path.startswith("/api/schedule/cancel/"):
+            run_id = request_path.split("/api/schedule/cancel/")[-1]
+            self._handle_schedule_cancel(run_id, payload)
+            return
+        if request_path == "/api/schedule/plan":
+            self._handle_schedule_plan(payload)
             return
 
         # Fun pack download: /api/fun-packs/download
@@ -658,6 +683,176 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                     _notif_subscribers.remove(q)
 
     # ── Fun Packs ────────────────────────────────────────────────────────────────
+
+    # ── Schedule Viewer Handlers ─────────────────────────────────────────────
+
+    def _handle_schedule_list(self, *, send_body: bool) -> None:
+        """Read ~/.solace/audit/*.jsonl and return structured activity list."""
+        audit_dir = Path.home() / ".solace" / "audit"
+        activities = []
+        if audit_dir.exists():
+            for jf in sorted(audit_dir.glob("*.jsonl"), reverse=True)[:50]:
+                try:
+                    for line in jf.read_text(encoding="utf-8").strip().splitlines():
+                        if not line.strip():
+                            continue
+                        try:
+                            obj = json.loads(line)
+                            # Normalize to activity schema
+                            activity = {
+                                "id": obj.get("run_id") or obj.get("id") or jf.stem,
+                                "app_id":   obj.get("app_id", jf.stem.split("-")[0]),
+                                "app_name": obj.get("app_name") or obj.get("app_id") or jf.stem,
+                                "status":   obj.get("status", "success"),
+                                "safety_tier": obj.get("safety_tier", "A"),
+                                "started_at":  obj.get("started_at") or obj.get("timestamp"),
+                                "ended_at":    obj.get("ended_at"),
+                                "duration_ms": obj.get("duration_ms"),
+                                "cost_usd":    obj.get("cost_usd"),
+                                "tokens_used": obj.get("tokens_used"),
+                                "output_summary": obj.get("output_summary") or obj.get("summary"),
+                                "scopes_used": obj.get("scopes_used", []),
+                                "evidence_hash": obj.get("evidence_hash") or obj.get("hash"),
+                                "cross_app_triggers": obj.get("cross_app_triggers", []),
+                                "approval_deadline": obj.get("approval_deadline"),
+                                "schedule_pattern": obj.get("schedule_pattern"),
+                            }
+                            activities.append(activity)
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+        # Also check outbox for pending approvals
+        outbox = Path.home() / ".solace" / "outbox" / "apps"
+        if outbox.exists():
+            for app_dir in outbox.iterdir():
+                for run_dir in app_dir.iterdir() if app_dir.is_dir() else []:
+                    approved_path = run_dir / "approved_v1.json"
+                    if approved_path.exists():
+                        continue  # already approved
+                    preview_path = run_dir / "preview.json"
+                    if preview_path.exists():
+                        try:
+                            pdata = json.loads(preview_path.read_text())
+                            activities.append({
+                                "id": run_dir.name,
+                                "app_id": app_dir.name,
+                                "app_name": pdata.get("app_name", app_dir.name),
+                                "status": "pending_approval",
+                                "safety_tier": pdata.get("safety_tier", "B"),
+                                "started_at": pdata.get("created_at"),
+                                "output_summary": pdata.get("preview_summary"),
+                                "scopes_used": pdata.get("scopes", []),
+                                "approval_deadline": pdata.get("approval_deadline"),
+                            })
+                        except Exception:
+                            pass
+        # Sort by started_at descending
+        activities.sort(key=lambda a: a.get("started_at") or "", reverse=True)
+        self._send_json(HTTPStatus.OK, {"activities": activities, "total": len(activities)},
+                        send_body=send_body)
+
+    def _handle_schedule_queue(self, *, send_body: bool) -> None:
+        """Return only pending_approval and cooldown items."""
+        audit_dir = Path.home() / ".solace" / "audit"
+        pending = []
+        # Check outbox for preview files without approved_v1.json
+        outbox = Path.home() / ".solace" / "outbox" / "apps"
+        if outbox.exists():
+            for app_dir in outbox.iterdir():
+                for run_dir in (app_dir.iterdir() if app_dir.is_dir() else []):
+                    if (run_dir / "approved_v1.json").exists():
+                        continue
+                    preview_path = run_dir / "preview.json"
+                    if preview_path.exists():
+                        try:
+                            pdata = json.loads(preview_path.read_text())
+                            pending.append({
+                                "id": run_dir.name,
+                                "app_id": app_dir.name,
+                                "status": "pending_approval",
+                                "output_summary": pdata.get("preview_summary", ""),
+                                "scopes_used": pdata.get("scopes", []),
+                                "safety_tier": pdata.get("safety_tier", "B"),
+                                "approval_deadline": pdata.get("approval_deadline"),
+                            })
+                        except Exception:
+                            pass
+        self._send_json(HTTPStatus.OK, {"queue": pending, "count": len(pending)},
+                        send_body=send_body)
+
+    def _handle_schedule_upcoming(self, *, send_body: bool) -> None:
+        """Return scheduled future runs from settings cron config."""
+        settings = self.data_store.read_settings()
+        schedule_config = settings.get("schedule", {})
+        upcoming = []
+        for app_id, cfg in schedule_config.items():
+            if cfg.get("enabled"):
+                upcoming.append({
+                    "app_id": app_id,
+                    "pattern": cfg.get("pattern", "manual"),
+                    "next_run": cfg.get("next_run"),
+                    "status": "scheduled",
+                })
+        self._send_json(HTTPStatus.OK, {"upcoming": upcoming, "count": len(upcoming)},
+                        send_body=send_body)
+
+    def _handle_schedule_approve(self, run_id: str, payload: dict) -> None:
+        """Approve a pending run — write approved_v1.json + audit entry."""
+        import time as _time
+        outbox = Path.home() / ".solace" / "outbox" / "apps"
+        approved = False
+        for app_dir in (outbox.iterdir() if outbox.exists() else []):
+            run_dir = app_dir / run_id if app_dir.is_dir() else None
+            if run_dir and run_dir.exists():
+                approval_record = {
+                    "run_id": run_id,
+                    "approved_by": payload.get("approved_by", "user"),
+                    "timestamp": payload.get("timestamp", _time.strftime("%Y-%m-%dT%H:%M:%SZ")),
+                    "approval_type": "standard",
+                }
+                (run_dir / "approved_v1.json").write_text(json.dumps(approval_record, indent=2))
+                # Audit log
+                audit_dir = Path.home() / ".solace" / "audit"
+                audit_dir.mkdir(parents=True, exist_ok=True)
+                with open(audit_dir / "schedule_actions.jsonl", "a") as f:
+                    f.write(json.dumps({"event": "approved", **approval_record}) + "\n")
+                approved = True
+                break
+        self._send_json(HTTPStatus.OK, {"ok": approved, "run_id": run_id})
+
+    def _handle_schedule_cancel(self, run_id: str, payload: dict) -> None:
+        """Cancel a pending run — write cancelled.json + audit entry."""
+        import time as _time
+        audit_dir = Path.home() / ".solace" / "audit"
+        audit_dir.mkdir(parents=True, exist_ok=True)
+        record = {
+            "run_id": run_id,
+            "event": "cancelled",
+            "reason": payload.get("reason", "user_rejected"),
+            "timestamp": payload.get("timestamp", _time.strftime("%Y-%m-%dT%H:%M:%SZ")),
+        }
+        with open(audit_dir / "schedule_actions.jsonl", "a") as f:
+            f.write(json.dumps(record) + "\n")
+        self._send_json(HTTPStatus.OK, {"ok": True, "run_id": run_id})
+
+    def _handle_schedule_plan(self, payload: dict) -> None:
+        """Add a future run to the schedule config."""
+        app_id = payload.get("app_id", "")
+        pattern = payload.get("pattern", "manual")
+        if not app_id:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "app_id required"})
+            return
+        settings = self.data_store.read_settings()
+        if "schedule" not in settings:
+            settings["schedule"] = {}
+        settings["schedule"][app_id] = {
+            "enabled": True,
+            "pattern": pattern,
+            "next_run": payload.get("next_run"),
+        }
+        self.data_store.write_settings(settings)
+        self._send_json(HTTPStatus.OK, {"ok": True, "app_id": app_id, "pattern": pattern})
 
     def _handle_fun_packs_list(self, *, send_body: bool) -> None:
         FUN_PACKS_DIR.mkdir(parents=True, exist_ok=True)
