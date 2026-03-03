@@ -47,6 +47,11 @@ gcloud storage cp dist/solace-browser-windows-x86_64.exe gs://solace-downloads/s
 gcloud storage cp dist/solace-browser-windows-x86_64.exe.sha256 gs://solace-downloads/solace-browser/latest/solace-browser-windows-x86_64.exe.sha256
 ```
 
+GitHub Actions native promotion path:
+```bash
+python3 src/scripts/promote_native_builds_to_gcs.py --tag <v-tag>
+```
+
 ## Release Gate
 Before merging website download-link changes:
 1. All 3 platform URLs return `HTTP 200`.

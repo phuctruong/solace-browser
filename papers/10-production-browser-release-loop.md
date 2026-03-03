@@ -82,6 +82,15 @@ Checksum links (same page):
   - platform-aware compile, upload, download, smoke, timing report.
 - `src/scripts/test_solaceagi_api_matrix.py`
   - OpenAPI-driven matrix test for production APIs.
+- `src/scripts/promote_native_builds_to_gcs.py`
+  - downloads native GitHub Actions artifact bundles, verifies ELF/Mach-O/PE headers, uploads to GCS `v{VERSION}` + `latest`.
+
+## CI Without GCP Secret
+If GitHub Actions cannot authenticate to GCP:
+1. Run native matrix build with `UPLOAD_ENABLED=0` and upload artifacts (`native-linux`, `native-macos`, `native-windows`).
+2. Run promotion script locally:
+   - `python3 src/scripts/promote_native_builds_to_gcs.py --tag <v-tag>`
+3. Promotion script is fail-closed on binary-type mismatch.
 
 ### Canonical Commands
 1. Linux release round:

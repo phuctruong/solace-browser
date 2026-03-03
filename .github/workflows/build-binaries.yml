@@ -41,15 +41,7 @@ jobs:
           fi
           python -m pip install pyinstaller
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Build + upload via release loop
+      - name: Build native artifact via release loop
         shell: bash
         run: |
           chmod +x src/scripts/release_browser_cycle.sh
@@ -57,11 +49,14 @@ jobs:
           OBJECT_NAME="${{ matrix.object_name }}" \
           DOWNLOAD_ENABLED=0 \
           RUN_SMOKE=0 \
-          UPLOAD_ENABLED=1 \
+          UPLOAD_ENABLED=0 \
           src/scripts/release_browser_cycle.sh
 
-      - name: Upload release-cycle evidence artifact
+      - name: Upload native artifact bundle
         uses: actions/upload-artifact@v4
         with:
-          name: release-cycle-${{ matrix.target_os }}
-          path: scratch/release-cycle/**
+          name: native-${{ matrix.target_os }}
+          path: |
+            dist/${{ matrix.object_name }}
+            dist/${{ matrix.object_name }}.sha256
+            scratch/release-cycle/**
