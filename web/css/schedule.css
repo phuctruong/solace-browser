@@ -6,8 +6,8 @@
   --sched-past:    #374151;  /* neutral gray — past runs */
   --sched-success: #065f46;  /* deep green — success */
   --sched-failed:  #7f1d1d;  /* deep red — failed */
-  --sched-pending: #92400e;  /* amber — needs sign-off */
-  --sched-future:  #1e3a5f;  /* deep blue — scheduled future */
+  --sched-pending: #78350f;  /* amber — needs sign-off */
+  --sched-future:  #1e3a8a;  /* deep blue — scheduled future */
   --sched-cancel:  #374151;  /* gray — cancelled */
 
   --sched-pill-success: #d1fae5;
@@ -18,8 +18,8 @@
 
   --sched-text: #e2e8f0;
   --sched-text-dim: #94a3b8;
-  --sched-bg: #0d1b2a;
-  --sched-card-bg: #112240;
+  --sched-bg: #0f1e33;
+  --sched-card-bg: #0f1e33;
   --sched-border: rgba(255,255,255,0.08);
 }
 
@@ -68,7 +68,7 @@
 }
 
 .roi-stat--highlight .roi-num {
-  color: #34d399;  /* green — savings positive signal */
+  color: #10b981;  /* green — savings positive signal */
 }
 
 /* ── Sign-Off Alert ─────────────────────────────────────────────────────────── */
@@ -90,10 +90,10 @@
 }
 
 .signoff-alert__icon { font-size: 1.25rem; }
-.signoff-alert__msg  { flex: 1; color: #fde68a; font-size: 0.9rem; }
+.signoff-alert__msg  { flex: 1; color: #fbbf24; font-size: 0.9rem; }
 .signoff-alert__btn  {
   background: #f59e0b;
-  color: #111;
+  color: #0f1e33;
   border: none;
   border-radius: 6px;
   padding: 0.5rem 1rem;
@@ -136,7 +136,7 @@
 }
 
 .view-tab--active {
-  background: #1e40af;
+  background: #1e3a8a;
   color: #fff;
 }
 
@@ -284,7 +284,7 @@
 
 .kanban-col--amber {
   border-color: rgba(245,158,11,0.4);
-  background: #1a1000;
+  background: #2d1a00;
 }
 
 .kanban-col__title {
@@ -360,9 +360,9 @@
 }
 
 .approve-btn { background: #10b981; color: #fff; }
-.approve-btn:hover { background: #059669; }
-.reject-btn  { background: #374151; color: #e5e7eb; }
-.reject-btn:hover { background: #4b5563; }
+.approve-btn:hover { background: #10b981; }
+.reject-btn  { background: #374151; color: #e2e8f0; }
+.reject-btn:hover { background: #374151; }
 
 /* ── Timeline View ──────────────────────────────────────────────────────────── */
 .timeline-container {
@@ -400,13 +400,13 @@
   height: 12px;
   border-radius: 50%;
   background: #374151;
-  border: 2px solid #1f2937;
+  border: 2px solid #374151;
 }
 
 .timeline-node--success::before { background: #10b981; }
 .timeline-node--failed::before  { background: #ef4444; }
 .timeline-node--pending::before { background: #f59e0b; }
-.timeline-node--future::before  { background: #3b82f6; }
+.timeline-node--future::before  { background: #60a5fa; }
 
 .timeline-node__app   { font-size: 0.9rem; font-weight: 600; color: var(--sched-text); }
 .timeline-node__time  { font-size: 0.7rem; color: var(--sched-text-dim); }
@@ -495,7 +495,7 @@
 .signoff-sheet__header h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: #fde68a;
+  color: #fbbf24;
 }
 
 .signoff-sheet__sub {
@@ -524,7 +524,7 @@
 }
 
 .signoff-item__app    { font-size: 0.95rem; font-weight: 600; color: var(--sched-text); }
-.signoff-item__scope  { font-size: 0.8rem; color: #fde68a; margin: 6px 0; }
+.signoff-item__scope  { font-size: 0.8rem; color: #fbbf24; margin: 6px 0; }
 .signoff-item__desc   { font-size: 0.8rem; color: var(--sched-text-dim); margin-bottom: 10px; }
 .signoff-item__footer { display: flex; gap: 0.5rem; align-items: center; }
 
@@ -611,4 +611,95 @@
 
   .run-drawer { width: 100%; border-left: none; border-top: 1px solid var(--sched-border); }
   .schedule-filters { display: none; }
+}
+
+/* ── Savings Dashboard Header ─────────────────────────────────────────────── */
+.savings-dashboard {
+  background: linear-gradient(135deg, #0f1e33 0%, #2d1a00 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.savings-dashboard__icon { font-size: 1.4rem; }
+.savings-dashboard__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fbbf24;
+  margin: 0;
+  flex: 1;
+}
+.savings-dashboard__badge {
+  font-size: 0.75rem;
+  background: rgba(245,158,11,0.2);
+  border: 1px solid #f59e0b;
+  color: #fbbf24;
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+.savings-dashboard__period-toggle {
+  display: flex;
+  gap: 4px;
+}
+.period-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.period-btn--active {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #0f1e33;
+  font-weight: 700;
+}
+.period-btn:hover:not(.period-btn--active) { background: rgba(255,255,255,0.1); }
+
+/* ── ROI Hit Rate Bar ─────────────────────────────────────────────────────── */
+.roi-savings-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  flex-wrap: wrap;
+}
+.roi-savings-bar__label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  min-width: 100px;
+}
+.roi-savings-bar__track {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 100px;
+}
+.roi-savings-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #60a5fa);
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+.roi-savings-bar__pct {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #10b981;
+  min-width: 36px;
+}
+.roi-savings-bar__note {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  width: 100%;
 }

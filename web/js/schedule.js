@@ -48,9 +48,23 @@
     setupNavButtons();
     setupSignOffSheet();
     setupRunDrawer();
+    setupPeriodToggle();
     loadActivities();
     setInterval(loadActivities, 30_000);  // refresh every 30s
   });
+
+  // ── Period Toggle (7d / 30d / All-time) ────────────────────────────────────
+  function setupPeriodToggle() {
+    document.querySelectorAll('.period-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('period-btn--active'));
+        btn.classList.add('period-btn--active');
+        const period = btn.dataset.period;
+        const days = period === 'all' ? 9999 : period === 'month' ? 30 : 7;
+        updateROIPanel(days);
+      });
+    });
+  }
 
   // ── Data Loading ───────────────────────────────────────────────────────────
   async function loadActivities() {
@@ -413,33 +427,70 @@
   }
 
   // ── ROI PANEL ──────────────────────────────────────────────────────────────
-  function updateROIPanel() {
-    const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
-    const weekActivities = activities.filter(a => a.started_at && new Date(a.started_at) > weekAgo && a.status === 'success');
-    const totalCost = weekActivities.reduce((s, a) => s + (a.cost_usd || 0), 0);
-    const totalDuration = weekActivities.reduce((s, a) => s + (a.duration_ms || 15000), 0);
-    // Each run would take ~30min manually
-    const humanHours = (weekActivities.length * 30) / 60;
-    const savings = humanHours * 30 - totalCost;
+  function updateROIPanel(periodDays) {
+    const days = periodDays || 7;
+    const cutoff = Date.now() - days * 24 * 3600 * 1000;
+    const periodActivities = activities.filter(
+      a => a.started_at && new Date(a.started_at) > cutoff && a.status === 'success'
+    );
+    const totalCost      = periodActivities.reduce((s, a) => s + (a.cost_usd     || 0), 0);
+    const totalTokens    = periodActivities.reduce((s, a) => s + (a.tokens_used  || 1200), 0);
+    const replayCount    = periodActivities.filter(a => a.recipe_hit).length;
 
-    // Streak calculation (consecutive days with at least one run)
+    // Token savings: GPT-4o rate ≈ $0.005/1K tokens vs Solace avg $0.00035/1K
+    const GPT4_RATE      = 0.005  / 1000;   // $0.005 per 1K tokens
+    const SOLACE_RATE    = 0.00035 / 1000;  // Together.ai Llama 3.3
+    const gpt4Cost       = totalTokens * GPT4_RATE;
+    const tokenSavings   = gpt4Cost - totalCost;
+
+    // Time savings: 30 min / manual run → $30/hr baseline
+    const humanHours     = (periodActivities.length * 30) / 60;
+    const netSavings     = humanHours * 30 - totalCost;
+
+    // Recipe hit rate
+    const hitRate        = periodActivities.length > 0
+      ? Math.round((replayCount / periodActivities.length) * 100)
+      : 0;
+
+    // Streak calculation (consecutive days with at least one success run)
     let streak = 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 90; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
       const ds = d.toISOString().split('T')[0];
-      const hasRun = activities.some(a => a.started_at && a.started_at.startsWith(ds) && a.status === 'success');
+      const hasRun = activities.some(
+        a => a.started_at && a.started_at.startsWith(ds) && a.status === 'success'
+      );
       if (hasRun) streak++;
       else if (i > 0) break;
     }
 
-    setText('roiRuns',      weekActivities.length + ' runs');
-    setText('roiTimeSaved', humanHours.toFixed(1) + ' hrs');
-    setText('roiCost',      '$' + totalCost.toFixed(2));
-    setText('roiNet',       savings > 0 ? '+$' + savings.toFixed(0) : '$0');
-    setText('roiStreak',    streak + ' days 🔥');
+    // Update badge label
+    const badge = document.getElementById('savingsBadge');
+    if (badge) {
+      const labels = { 7: 'This Week', 30: 'This Month', 9999: 'All Time' };
+      badge.textContent = labels[days] || `${days} days`;
+    }
+
+    setText('roiRuns',       periodActivities.length + ' runs');
+    setText('roiTimeSaved',  humanHours.toFixed(1) + ' hrs');
+    setText('roiTokens',     totalTokens > 999
+      ? (totalTokens / 1000).toFixed(1) + 'K tokens'
+      : totalTokens + ' tokens');
+    setText('roiTokenSaved', tokenSavings > 0
+      ? '$' + tokenSavings.toFixed(2)
+      : '$0.00');
+    setText('roiCost',       '$' + totalCost.toFixed(4));
+    setText('roiNet',        netSavings > 0 ? '+$' + netSavings.toFixed(0) : '$0');
+    setText('roiStreak',     streak + ' days');
+
+    // Hit rate progress bar
+    const bar = document.getElementById('roiHitBar');
+    const pct = document.getElementById('roiHitPct');
+    if (bar) bar.style.width = hitRate + '%';
+    if (pct) pct.textContent = hitRate + '%';
   }
 
   function setText(id, val) {

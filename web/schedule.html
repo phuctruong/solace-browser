@@ -47,6 +47,20 @@
 
       <main class="schedule-shell">
 
+        <!-- Token Savings Dashboard -->
+        <section class="savings-dashboard reveal" id="savingsDashboard">
+          <div class="savings-dashboard__header">
+            <span class="savings-dashboard__icon">📊</span>
+            <h2 class="savings-dashboard__title">Your Savings Report</h2>
+            <span class="savings-dashboard__badge" id="savingsBadge">This Week</span>
+            <div class="savings-dashboard__period-toggle">
+              <button class="period-btn period-btn--active" data-period="week">7 days</button>
+              <button class="period-btn" data-period="month">30 days</button>
+              <button class="period-btn" data-period="all">All time</button>
+            </div>
+          </div>
+        </section>
+
         <!-- ROI Panel -->
         <section class="roi-panel reveal" id="roiPanel">
           <div class="roi-inner">
@@ -58,6 +72,14 @@
               <span class="roi-num">—</span>
               <span class="roi-label">hours saved</span>
             </div>
+            <div class="roi-stat" id="roiTokens">
+              <span class="roi-num">—</span>
+              <span class="roi-label">tokens used</span>
+            </div>
+            <div class="roi-stat" id="roiTokenSaved">
+              <span class="roi-num">—</span>
+              <span class="roi-label">saved vs GPT-4</span>
+            </div>
             <div class="roi-stat" id="roiCost">
               <span class="roi-num">—</span>
               <span class="roi-label">agent cost</span>
@@ -68,8 +90,16 @@
             </div>
             <div class="roi-stat" id="roiStreak">
               <span class="roi-num">—</span>
-              <span class="roi-label">day streak</span>
+              <span class="roi-label">day streak 🔥</span>
             </div>
+          </div>
+          <div class="roi-savings-bar">
+            <div class="roi-savings-bar__label">Recipe hit rate</div>
+            <div class="roi-savings-bar__track">
+              <div class="roi-savings-bar__fill" id="roiHitBar" style="width:0%"></div>
+            </div>
+            <div class="roi-savings-bar__pct" id="roiHitPct">—%</div>
+            <div class="roi-savings-bar__note">Replays cost $0.001 each (99% cheaper than fresh LLM call)</div>
           </div>
         </section>
 
