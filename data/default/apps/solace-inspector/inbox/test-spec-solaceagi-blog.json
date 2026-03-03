@@ -1,0 +1,19 @@
+{
+  "spec_id": "solaceagi-blog-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "web",
+  "target_url": "https://www.solaceagi.com/blog",
+  "page_name": "SolaceAGI Blog Index",
+  "checks": {
+    "aria": true,
+    "heuristics": true,
+    "llm_analysis": true,
+    "screenshot": true,
+    "baseline_diff": false
+  },
+  "persona": "james_bach",
+  "priority": "normal",
+  "context": "Blog index: verify no empty state without messaging, H1 present, card links accessible with descriptive text (not just 'Read More'). WCAG 2.2: links must have descriptive text. James Bach: what does the blog say about the company? Does it build trust?",
+  "created_at": "2026-03-03T00:00:00Z"
+}

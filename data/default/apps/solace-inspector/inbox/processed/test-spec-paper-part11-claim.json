@@ -1,0 +1,18 @@
+{
+  "spec_id": "paper-part11-claim-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "curl -sf https://www.solaceagi.com/api/v1/qa-evidence/sync -X POST -H 'Content-Type: application/json' -d '{\"project\":\"inspector-test\",\"qa_score\":100,\"belt\":\"Green\",\"run_id\":\"test-001\",\"glow\":0}'",
+  "target_name": "Paper 06 (Part 11) — Evidence Sync Endpoint Accepts Payload",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": ["ok"],
+    "stderr_empty": false,
+    "llm_analysis": true
+  },
+  "persona": "cem_kaner",
+  "priority": "high",
+  "context": "Paper 06 (Part 11 Evidence): SHA-256 sealed results must be pushable to cloud. POST /api/v1/qa-evidence/sync must accept JSON payload and return {ok:true}. This verifies the HITL chain works end-to-end. Cem Kaner: a seal without a destination is just theater.",
+  "created_at": "2026-03-03T00:00:00Z"
+}
