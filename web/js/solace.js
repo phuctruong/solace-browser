@@ -573,10 +573,76 @@
     `).join("");
   }
 
+  var ICON_IMG_MAP = {
+    'gmail': '/images/app-icons/gmail.jpg',
+    'gmail-inbox-triage': '/images/app-icons/gmail.jpg',
+    'slack': '/images/app-icons/slack.png',
+    'slack-triage': '/images/app-icons/slack.png',
+    'linkedin': '/images/app-icons/linkedin.png',
+    'linkedin-outreach': '/images/app-icons/linkedin.png',
+    'linkedin-poster': '/images/app-icons/linkedin.png',
+    'github': '/images/app-icons/github.png',
+    'github-issue-triage': '/images/app-icons/github.png',
+    'youtube': '/images/app-icons/youtube.jpg',
+    'youtube-research': '/images/app-icons/youtube.jpg',
+    'instagram': '/images/app-icons/instagram.jpg',
+    'instagram-poster': '/images/app-icons/instagram.jpg',
+    'twitter': '/images/app-icons/twitter.jpg',
+    'twitter-monitor': '/images/app-icons/twitter.jpg',
+    'twitter-poster': '/images/app-icons/twitter.jpg',
+    'reddit': '/images/app-icons/reddit.jpg',
+    'reddit-scanner': '/images/app-icons/reddit.jpg',
+    'morning-brief': '/images/app-icons/morning-digest.png',
+    'morning-intelligence-brief': '/images/app-icons/morning-digest.png',
+    'calendar': '/images/app-icons/google-calendar.png',
+    'calendar-brief': '/images/app-icons/google-calendar.png',
+    'substack': '/images/app-icons/substack.png',
+    'whatsapp': '/images/app-icons/whats-app.jpg',
+    'whatsapp-responses': '/images/app-icons/whats-app.jpg',
+    'facebook': '/images/app-icons/facebook.jpg',
+    'tiktok': '/images/app-icons/tiktok.jpg',
+    'podcast': '/images/app-icons/podcast.jpg',
+    'podcast-production': '/images/app-icons/podcast.jpg',
+    'lead-discovery': '/images/app-icons/lead-discovery.jpg',
+    'lead-pipeline': '/images/app-icons/lead-discovery.jpg',
+    'meeting-prep': '/images/app-icons/meeting-prep.jpg',
+    'amazon': '/images/app-icons/app-pack.jpg',
+    'amazon-price-tracker': '/images/app-icons/app-pack.jpg',
+    'weather': '/images/app-icons/weather.jpg',
+    'medium': '/images/app-icons/medium.jpg',
+    'snapchat': '/images/app-icons/snapchat.jpg',
+    'pinterest': '/images/app-icons/pinterest.jpg',
+  };
+
+  function resolveAppIconUrl(app) {
+    // 1. Prefer icon_url from API response
+    if (app.icon_url) {
+      return app.icon_url;
+    }
+    var id = (app.id || '').toLowerCase();
+    // 2. Exact match in ICON_IMG_MAP
+    if (ICON_IMG_MAP[id]) {
+      return ICON_IMG_MAP[id];
+    }
+    // 3. Partial match — first key that is a substring of app.id
+    var keys = Object.keys(ICON_IMG_MAP);
+    for (var i = 0; i < keys.length; i++) {
+      if (id.indexOf(keys[i]) !== -1) {
+        return ICON_IMG_MAP[keys[i]];
+      }
+    }
+    // 4. No image available
+    return null;
+  }
+
   function renderAppCard(app) {
+    var iconUrl = resolveAppIconUrl(app);
+    var iconHtml = iconUrl
+      ? '<img src="' + escapeHtml(iconUrl) + '" alt="' + escapeHtml(app.name || app.id) + ' icon" style="object-fit:cover;border-radius:12px;width:100%;height:100%;" loading="lazy">'
+      : escapeHtml((app.name || app.id).slice(0, 2).toUpperCase());
     return `
       <a class="surface-card" href="/app-detail?app=${encodeURIComponent(app.id)}" data-app-name="${escapeHtml(app.name || app.id)}">
-        <div class="surface-card__icon">${escapeHtml((app.name || app.id).slice(0, 2).toUpperCase())}</div>
+        <div class="surface-card__icon">${iconHtml}</div>
         <h3>${escapeHtml(app.name || app.id)}</h3>
         <p>${escapeHtml(app.description || "Live app manifest loaded from the filesystem.")}</p>
         <div class="status-strip">

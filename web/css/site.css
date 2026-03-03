@@ -211,6 +211,8 @@ main { display: block; }
 .site-brand__text { display: flex; flex-direction: column; gap: 2px; }
 .site-brand__name { font-size: 1.02rem; }
 .site-brand__tag { color: var(--sb-text-muted); font-size: 0.75rem; font-weight: 600; }
+.site-brand__tag-link { color: var(--sb-text-muted); text-decoration: none; transition: color 0.15s; }
+.site-brand__tag-link:hover { color: var(--sb-signal); text-decoration: underline; }
 .site-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .nav-link {
   padding: 10px 14px;
