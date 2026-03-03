@@ -7,8 +7,10 @@
   "target_name": "SolaceAGI API Health Endpoint",
   "checks": {
     "exit_code": 0,
-    "stdout_contains": ["ok"],
-    "stderr_empty": false,
+    "stdout_contains": [
+      "ok"
+    ],
+    "stderr_empty": true,
     "llm_analysis": true
   },
   "persona": "kent_beck",

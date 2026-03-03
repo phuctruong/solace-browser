@@ -7,8 +7,10 @@
   "target_name": "SolaceAGI OAuth3 Scopes Registry",
   "checks": {
     "exit_code": 0,
-    "stdout_contains": ["scopes"],
-    "stderr_empty": false,
+    "stdout_contains": [
+      "scopes"
+    ],
+    "stderr_empty": true,
     "llm_analysis": true
   },
   "persona": "james_bach",

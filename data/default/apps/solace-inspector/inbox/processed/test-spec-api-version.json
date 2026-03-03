@@ -7,8 +7,11 @@
   "target_name": "SolaceAGI API Version Endpoint",
   "checks": {
     "exit_code": 0,
-    "stdout_contains": ["version", "sha"],
-    "stderr_empty": false,
+    "stdout_contains": [
+      "version",
+      "sha"
+    ],
+    "stderr_empty": true,
     "llm_analysis": true
   },
   "persona": "elisabeth_hendrickson",

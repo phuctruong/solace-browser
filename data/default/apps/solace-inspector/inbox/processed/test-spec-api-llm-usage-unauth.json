@@ -4,11 +4,13 @@
   "requested_by": "claude-code",
   "mode": "cli",
   "target_cmd": "curl -s -o /dev/null -w \"%{http_code}\" https://www.solaceagi.com/api/v1/llm/usage",
-  "target_name": "SolaceAGI LLM Usage — Auth Required",
+  "target_name": "SolaceAGI LLM Usage \u2014 Auth Required",
   "checks": {
     "exit_code": 0,
-    "stdout_contains": ["401"],
-    "stderr_empty": false,
+    "stdout_contains": [
+      "401"
+    ],
+    "stderr_empty": true,
     "llm_analysis": true
   },
   "persona": "michael_bolton",

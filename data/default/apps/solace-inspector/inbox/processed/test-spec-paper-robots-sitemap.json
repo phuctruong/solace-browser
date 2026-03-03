@@ -4,11 +4,14 @@
   "requested_by": "claude-code",
   "mode": "cli",
   "target_cmd": "curl -sf https://www.solaceagi.com/robots.txt && curl -sf https://www.solaceagi.com/sitemap.xml",
-  "target_name": "SEO Best Practice — robots.txt + sitemap.xml Reachable",
+  "target_name": "SEO Best Practice \u2014 robots.txt + sitemap.xml Reachable",
   "checks": {
     "exit_code": 0,
-    "stdout_contains": ["User-agent", "sitemap"],
-    "stderr_empty": false,
+    "stdout_contains": [
+      "User-agent",
+      "sitemap"
+    ],
+    "stderr_empty": true,
     "llm_analysis": true
   },
   "persona": "james_bach",

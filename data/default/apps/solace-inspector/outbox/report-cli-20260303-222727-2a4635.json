@@ -1,0 +1,97 @@
+{
+  "run_id": "cli-20260303-222727-2a4635",
+  "spec_id": "api-cors-headers-001",
+  "mode": "cli",
+  "target_cmd": "curl -s https://www.solaceagi.com/api/v1/health",
+  "target_cwd": "/home/phuc/projects/solace-browser",
+  "persona_used": "cem_kaner",
+  "committee": [
+    "kent_beck",
+    "james_bach",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-03T22:27:27.386135Z",
+  "steps_completed": [
+    "execute",
+    "assert",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "exit_code": 0,
+  "stdout": "{\"status\":\"ok\",\"version\":\"2.0.0\",\"timestamp\":\"2026-03-03T22:27:27.524386\",\"chat_service\":true}",
+  "stderr": "",
+  "duration_seconds": 0.171,
+  "assertions": [
+    {
+      "check": "exit_code",
+      "expected": 0,
+      "actual": 0,
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "ok",
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "version",
+      "passed": true
+    },
+    {
+      "check": "stderr_empty",
+      "expected_empty": true,
+      "actual_empty": true,
+      "passed": true
+    }
+  ],
+  "assertions_passed": 4,
+  "assertions_total": 4,
+  "agent_analysis_request": {
+    "persona": "cem_kaner",
+    "system_prompt": "You are Cem Kaner, context-driven testing expert and BBST author. Apply context-driven principles: value of any practice depends on context. What is the most important quality risk here? What's the purpose of this page and how well does it serve that purpose? Output: (1) Context assessment, (2) Top quality risk, (3) Fix proposals.",
+    "evidence_summary": {
+      "cmd": "curl -s https://www.solaceagi.com/api/v1/health",
+      "exit_code": 0,
+      "stdout_first_500": "{\"status\":\"ok\",\"version\":\"2.0.0\",\"timestamp\":\"2026-03-03T22:27:27.524386\",\"chat_service\":true}",
+      "stderr_first_200": "",
+      "duration_seconds": 0.171,
+      "assertions": [
+        {
+          "check": "exit_code",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "ok",
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "version",
+          "passed": true
+        },
+        {
+          "check": "stderr_empty",
+          "expected_empty": true,
+          "actual_empty": true,
+          "passed": true
+        }
+      ],
+      "assertions_passed": "4/4"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "agent_analysis_response": null,
+  "qa_score": 100,
+  "belt": "Green",
+  "glow": 105,
+  "evidence_hash": "sha256:207a780b26ad245fba48d98622b9232853ce9c7864722dc1acc677114344b8d8"
+}

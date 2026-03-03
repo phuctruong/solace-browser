@@ -7,8 +7,11 @@
   "target_name": "SolaceAGI LLM Models API",
   "checks": {
     "exit_code": 0,
-    "stdout_contains": ["models"],
-    "stderr_empty": false,
+    "stdout_contains": [
+      "levels",
+      "openrouter"
+    ],
+    "stderr_empty": true,
     "llm_analysis": true
   },
   "persona": "james_bach",

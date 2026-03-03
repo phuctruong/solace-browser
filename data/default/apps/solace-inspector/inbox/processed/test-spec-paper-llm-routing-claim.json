@@ -4,11 +4,14 @@
   "requested_by": "claude-code",
   "mode": "cli",
   "target_cmd": "curl -sf https://www.solaceagi.com/api/v1/llm/models",
-  "target_name": "Paper 12 (LLM L1-L5) — Model List Includes Together.ai",
+  "target_name": "Paper 12 (LLM L1-L5) \u2014 Model List Includes Together.ai",
   "checks": {
     "exit_code": 0,
-    "stdout_contains": ["models"],
-    "stderr_empty": false,
+    "stdout_contains": [
+      "levels",
+      "openrouter"
+    ],
+    "stderr_empty": true,
     "llm_analysis": true
   },
   "persona": "kent_beck",

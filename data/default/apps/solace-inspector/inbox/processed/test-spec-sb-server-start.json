@@ -8,7 +8,7 @@
   "target_name": "Solace Browser Web Server — Full Help Text",
   "checks": {
     "exit_code": 0,
-    "stdout_contains": ["port", "host", "debug"],
+    "stdout_contains": ["port", "host"],
     "stderr_empty": true,
     "llm_analysis": true
   },

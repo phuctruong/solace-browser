@@ -4,11 +4,13 @@
   "requested_by": "claude-code",
   "mode": "cli",
   "target_cmd": "curl -s -o /dev/null -w \"%{http_code}\" https://www.solaceagi.com/api/v1/this-endpoint-does-not-exist-xyz",
-  "target_name": "SolaceAGI API — 404 Not 500 for Unknown Routes",
+  "target_name": "SolaceAGI API \u2014 404 Not 500 for Unknown Routes",
   "checks": {
     "exit_code": 0,
-    "stdout_contains": ["404"],
-    "stderr_empty": false,
+    "stdout_contains": [
+      "404"
+    ],
+    "stderr_empty": true,
     "llm_analysis": true
   },
   "persona": "michael_bolton",

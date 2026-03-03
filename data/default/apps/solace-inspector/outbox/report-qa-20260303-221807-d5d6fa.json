@@ -1,0 +1,121 @@
+{
+  "run_id": "qa-20260303-221807-d5d6fa",
+  "spec_id": "solaceagi-compare-001",
+  "mode": "web",
+  "target_url": "https://www.solaceagi.com/compare",
+  "page_name": "SolaceAGI Compare Page",
+  "persona_used": "james_bach",
+  "committee": [
+    "james_bach",
+    "elisabeth_hendrickson",
+    "kent_beck",
+    "cem_kaner",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-03T22:18:07.018865Z",
+  "steps_completed": [
+    "navigate",
+    "aria_snapshot",
+    "dom_snapshot",
+    "heuristic_check",
+    "screenshot",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "agent_analysis_response": null,
+  "aria_tree_length": 0,
+  "aria_tree_excerpt": "",
+  "dom_title": "Google Calendar - Sign in to Access & Edit Your Schedule",
+  "dom_h1s": [
+    "Sign in"
+  ],
+  "dom_links_count": 6,
+  "dom_images_count": 1,
+  "dom_forms": 2,
+  "dom_links_sample": [
+    {
+      "text": "Forgot email?",
+      "href": "https://accounts.google.com/signin/usernamerecovery?continue=https://calendar.google.com/calendar/u/0/r&dsh=S-1153755631:1772576288006005&emr=1&flowEntry=ServiceLogin&flowName=WebLiteSignIn&followup=https://calendar.google.com/calendar/u/0/r&ifkv=ASfE1-oi39DgsWbZYihE3KBxTgIsJP96arwCl9I5BjHUQlJVEIKVTb_TqkjRJzHKwFSS5AkWLjtF&osid=1&service=cl"
+    },
+    {
+      "text": "Learn more about using Guest mode",
+      "href": "https://support.google.com/accounts?p=signin_privatebrowsing&hl=en-US"
+    },
+    {
+      "text": "Create account",
+      "href": "https://accounts.google.com/lifecycle/flows/signup?continue=https://calendar.google.com/calendar/u/0/r&dsh=S-1153755631:1772576288006005&emr=1&flowEntry=SignUp&flowName=GlifWebSignIn&followup=https://calendar.google.com/calendar/u/0/r&ifkv=ASfE1-oi39DgsWbZYihE3KBxTgIsJP96arwCl9I5BjHUQlJVEIKVTb_TqkjRJzHKwFSS5AkWLjtF&osid=1&service=cl"
+    },
+    {
+      "text": "Help",
+      "href": "https://support.google.com/accounts?hl=en-US&p=account_iph"
+    },
+    {
+      "text": "Privacy",
+      "href": "https://accounts.google.com/TOS?loc=US&hl=en-US&privacy=true"
+    },
+    {
+      "text": "Terms",
+      "href": "https://accounts.google.com/TOS?loc=US&hl=en-US"
+    }
+  ],
+  "heuristic_issues": [],
+  "heuristic_error_count": 0,
+  "heuristic_warning_count": 0,
+  "screenshot_path": "screenshot-20260303-171808.png",
+  "agent_analysis_request": {
+    "persona": "james_bach",
+    "system_prompt": "You are James Bach, world-class exploratory tester. Apply SBTM (Session-Based Test Management) and HICCUPPS oracle heuristics (History, Image, Comparable, Claims, User, Product, Purpose, Standards). Review the evidence below and identify quality risks, bugs, and testing insights. Be specific, direct, exploratory. Focus on what could go WRONG. Output: (1) Top 3 quality risks, (2) Bugs found, (3) Recommended fix proposals.",
+    "evidence_summary": {
+      "url": "https://www.solaceagi.com/compare",
+      "page_name": "SolaceAGI Compare Page",
+      "dom_title": "Google Calendar - Sign in to Access & Edit Your Schedule",
+      "dom_h1s": [
+        "Sign in"
+      ],
+      "dom_links_count": 6,
+      "dom_links_sample": [
+        {
+          "text": "Forgot email?",
+          "href": "https://accounts.google.com/signin/usernamerecovery?continue=https://calendar.google.com/calendar/u/0/r&dsh=S-1153755631:1772576288006005&emr=1&flowEntry=ServiceLogin&flowName=WebLiteSignIn&followup=https://calendar.google.com/calendar/u/0/r&ifkv=ASfE1-oi39DgsWbZYihE3KBxTgIsJP96arwCl9I5BjHUQlJVEIKVTb_TqkjRJzHKwFSS5AkWLjtF&osid=1&service=cl"
+        },
+        {
+          "text": "Learn more about using Guest mode",
+          "href": "https://support.google.com/accounts?p=signin_privatebrowsing&hl=en-US"
+        },
+        {
+          "text": "Create account",
+          "href": "https://accounts.google.com/lifecycle/flows/signup?continue=https://calendar.google.com/calendar/u/0/r&dsh=S-1153755631:1772576288006005&emr=1&flowEntry=SignUp&flowName=GlifWebSignIn&followup=https://calendar.google.com/calendar/u/0/r&ifkv=ASfE1-oi39DgsWbZYihE3KBxTgIsJP96arwCl9I5BjHUQlJVEIKVTb_TqkjRJzHKwFSS5AkWLjtF&osid=1&service=cl"
+        },
+        {
+          "text": "Help",
+          "href": "https://support.google.com/accounts?hl=en-US&p=account_iph"
+        },
+        {
+          "text": "Privacy",
+          "href": "https://accounts.google.com/TOS?loc=US&hl=en-US&privacy=true"
+        },
+        {
+          "text": "Terms",
+          "href": "https://accounts.google.com/TOS?loc=US&hl=en-US"
+        }
+      ],
+      "dom_images_count": 1,
+      "dom_forms": 2,
+      "aria_tree_excerpt": "",
+      "heuristic_issues": [],
+      "heuristic_error_count": 0,
+      "heuristic_warning_count": 0,
+      "screenshot_path": "screenshot-20260303-171808.png"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "qa_score": 100,
+  "belt": "Green",
+  "glow": 105,
+  "evidence_hash": "sha256:bb12469bf6d7484ae38e202ce47b878075122a537f2476351299a48779b37f64"
+}

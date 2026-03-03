@@ -4,11 +4,13 @@
   "requested_by": "claude-code",
   "mode": "cli",
   "target_cmd": "curl -s -o /dev/null -w \"%{http_code}\" https://www.solaceagi.com/api/v1/auth/me",
-  "target_name": "SolaceAGI Auth Me — Unauthenticated Returns 401",
+  "target_name": "SolaceAGI Auth Me \u2014 Unauthenticated Returns 401",
   "checks": {
     "exit_code": 0,
-    "stdout_contains": ["401"],
-    "stderr_empty": false,
+    "stdout_contains": [
+      "401"
+    ],
+    "stderr_empty": true,
     "llm_analysis": true
   },
   "persona": "cem_kaner",

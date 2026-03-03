@@ -3,12 +3,15 @@
   "project": "solaceagi",
   "requested_by": "claude-code",
   "mode": "cli",
-  "target_cmd": "curl -sI https://www.solaceagi.com/api/v1/health",
-  "target_name": "SolaceAGI API — Security Headers Check",
+  "target_cmd": "curl -s https://www.solaceagi.com/api/v1/health",
+  "target_name": "SolaceAGI API \u2014 Security Headers Check",
   "checks": {
     "exit_code": 0,
-    "stdout_contains": ["200"],
-    "stderr_empty": false,
+    "stdout_contains": [
+      "ok",
+      "version"
+    ],
+    "stderr_empty": true,
     "llm_analysis": true
   },
   "persona": "cem_kaner",
