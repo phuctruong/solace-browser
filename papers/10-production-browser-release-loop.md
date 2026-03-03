@@ -17,10 +17,15 @@ Release loop is now platform-scoped and supports:
 2. Windows binaries must be built on Windows runners/hosts.
 3. Linux host cannot produce valid native macOS/Windows artifacts for release channels.
 4. Release script is fail-closed for non-native targets when `BUILD_ENABLED=1`.
+5. Release script validates binary format before upload:
+   - Linux target must be `ELF`
+   - macOS target must be `Mach-O`
+   - Windows target must be `PE`
 
 Validation evidence:
 - `scripts/build-mac.sh` on Linux returns: `ERROR: build-mac.sh must run on macOS`.
 - `scripts/build-windows.sh` now fails on non-Windows hosts instead of emitting mislabeled artifacts.
+- `src/scripts/release_browser_cycle.sh` rejects non-native binary headers (e.g., Linux ELF mislabeled as `.exe`).
 - Native matrix path is GitHub Actions (`ubuntu-latest`, `macos-latest`, `windows-latest`).
 
 ## Committee (5 personas)

@@ -64,6 +64,69 @@ Path(r"$output_file").write_text(f"{digest}  {source.name}\n", encoding="utf-8")
 PY
 }
 
+verify_binary_format() {
+  local target_os="$1"
+  local binary_path="$2"
+  TARGET_OS="$target_os" BINARY_PATH="$binary_path" python3 - <<'PY'
+from pathlib import Path
+import os
+import struct
+import sys
+
+target_os = os.environ["TARGET_OS"]
+binary_path = Path(os.environ["BINARY_PATH"])
+data = binary_path.read_bytes()[:64]
+
+def fail(msg: str) -> None:
+    print(f"[release-cycle] ERROR: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+if len(data) < 4:
+    fail(f"artifact too small to classify: {binary_path}")
+
+def is_elf(blob: bytes) -> bool:
+    return blob.startswith(b"\x7fELF")
+
+def is_pe(blob: bytes, full_path: Path) -> bool:
+    if not blob.startswith(b"MZ"):
+        return False
+    full = full_path.read_bytes()
+    if len(full) < 0x40:
+        return False
+    pe_offset = struct.unpack("<I", full[0x3C:0x40])[0]
+    if pe_offset + 4 > len(full):
+        return False
+    return full[pe_offset:pe_offset + 4] == b"PE\x00\x00"
+
+def is_macho(blob: bytes) -> bool:
+    magic = blob[:4]
+    return magic in {
+        b"\xfe\xed\xfa\xce",  # MH_MAGIC
+        b"\xce\xfa\xed\xfe",  # MH_CIGAM
+        b"\xfe\xed\xfa\xcf",  # MH_MAGIC_64
+        b"\xcf\xfa\xed\xfe",  # MH_CIGAM_64
+        b"\xca\xfe\xba\xbe",  # FAT_MAGIC
+        b"\xbe\xba\xfe\xca",  # FAT_CIGAM
+        b"\xca\xfe\xba\xbf",  # FAT_MAGIC_64
+        b"\xbf\xba\xfe\xca",  # FAT_CIGAM_64
+    }
+
+if target_os == "linux":
+    if not is_elf(data):
+        fail(f"expected Linux ELF artifact but got non-ELF file: {binary_path}")
+elif target_os == "windows":
+    if not is_pe(data, binary_path):
+        fail(f"expected Windows PE artifact but got non-PE file: {binary_path}")
+elif target_os == "macos":
+    if not is_macho(data):
+        fail(f"expected macOS Mach-O artifact but got non-Mach-O file: {binary_path}")
+else:
+    fail(f"unsupported TARGET_OS for binary verification: {target_os}")
+
+print(f"[release-cycle] Binary format verified for {target_os}: {binary_path}")
+PY
+}
+
 detect_os() {
   local uname_s
   uname_s="$(uname -s 2>/dev/null || echo unknown)"
@@ -159,9 +222,6 @@ else
 fi
 BUILD_END="$(t_ms)"
 
-if [[ ! -f "$BUILD_BIN_PATH" && "$TARGET_OS" == "windows" && -f "$PROJECT_ROOT/dist/solace-browser" ]]; then
-  BUILD_BIN_PATH="$PROJECT_ROOT/dist/solace-browser"
-fi
 if [[ ! -f "$BUILD_BIN_PATH" ]]; then
   log "ERROR: expected build output not found at $BUILD_BIN_PATH"
   exit 1
@@ -179,6 +239,7 @@ PY
 if [[ "$SAME_PATH" != "1" ]]; then
   cp "$BUILD_BIN_PATH" "$DIST_OBJECT_PATH"
 fi
+verify_binary_format "$TARGET_OS" "$DIST_OBJECT_PATH"
 write_sha256 "$DIST_OBJECT_PATH" "$DIST_SHA_PATH"
 cp "$DIST_OBJECT_PATH" "$OUT_DIR/$OBJECT_NAME"
 cp "$DIST_SHA_PATH" "$OUT_DIR/$OBJECT_NAME.sha256"

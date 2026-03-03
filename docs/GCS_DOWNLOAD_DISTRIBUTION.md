@@ -52,3 +52,7 @@ Before merging website download-link changes:
 1. All 3 platform URLs return `HTTP 200`.
 2. All 3 checksum URLs return `HTTP 200`.
 3. Website download buttons point to the exact URLs above (no `github.com/releases` fallback).
+4. Binary header checks pass:
+   - Linux download starts with `ELF`
+   - macOS download starts with Mach-O magic
+   - Windows download starts with PE (`MZ` + `PE\0\0`)

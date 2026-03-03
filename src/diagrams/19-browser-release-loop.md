@@ -4,7 +4,8 @@
 flowchart TD
     START[Start release round] --> TARGET[Select TARGET_OS: linux/macos/windows]
     TARGET --> BUILD[Compile binary with PyInstaller]
-    BUILD --> HASH[Generate SHA-256]
+    BUILD --> TYPE[Verify native binary format<br/>ELF or Mach-O or PE]
+    TYPE --> HASH[Generate SHA-256]
     HASH --> UP_V[Upload versioned artifact to GCS]
     UP_V --> UP_L[Upload latest artifact to GCS]
     UP_L --> LINK[Publish/verify solaceagi.com download links]
@@ -28,6 +29,8 @@ flowchart TD
   - Linux artifacts on Linux
   - macOS artifacts on macOS
   - Windows artifacts on Windows
+- Binary-type gate is fail-closed:
+  - reject upload if target artifact type does not match platform
 - Versioned path is immutable (`v{VERSION}`), latest is mutable.
 - Website contract:
   - `www.solaceagi.com` must link to `https://storage.googleapis.com/solace-downloads/solace-browser/latest/<artifact>`
