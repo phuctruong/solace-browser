@@ -11,9 +11,39 @@
     rail.id = 'solace-top-rail';
     rail.style.cssText = 'position:fixed;top:0;left:0;right:0;height:32px;background:linear-gradient(90deg,#081019 0%,#0d1b2a 50%,#081019 100%);color:#fff;display:flex;align-items:center;padding:0 12px;font-family:system-ui;font-size:12px;z-index:99999;box-shadow:0 2px 8px rgba(0,0,0,0.4);';
 
-    /* Left: Logo + State */
+    /* Left: Home button + State */
     var leftGroup = document.createElement('div');
-    leftGroup.style.cssText = 'display:flex;align-items:center;flex-shrink:0;';
+    leftGroup.style.cssText = 'display:flex;align-items:center;flex-shrink:0;gap:6px;';
+
+    /* YinYang home button — always takes you back to Solace Browser home */
+    var homeBtn = document.createElement('button');
+    homeBtn.id = 'solace-home-btn';
+    homeBtn.style.cssText = 'background:none;border:none;cursor:pointer;padding:0 4px 0 0;display:flex;align-items:center;gap:4px;color:#64c4ff;font-size:11px;font-weight:700;letter-spacing:0.03em;opacity:0.9;transition:opacity 0.2s;';
+    homeBtn.title = 'Back to Solace Browser Home';
+    var yyGlyph = document.createElement('span');
+    yyGlyph.style.cssText = 'font-size:15px;line-height:1;';
+    yyGlyph.textContent = '\u262F';
+    var homeLabel = document.createElement('span');
+    homeLabel.textContent = 'Solace';
+    homeBtn.appendChild(yyGlyph);
+    homeBtn.appendChild(homeLabel);
+    homeBtn.addEventListener('mouseenter', function() { homeBtn.style.opacity = '1'; });
+    homeBtn.addEventListener('mouseleave', function() { homeBtn.style.opacity = '0.9'; });
+    homeBtn.addEventListener('click', function() {
+        /* Navigate to Solace Browser home — works both locally and via cloud */
+        var homeUrl = 'http://localhost:3000/home.html';
+        if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            homeUrl = 'http://localhost:3000/home.html';
+        }
+        window.location.href = homeUrl;
+    });
+    leftGroup.appendChild(homeBtn);
+
+    /* Separator */
+    var sep = document.createElement('span');
+    sep.style.cssText = 'color:#1e3048;font-size:14px;';
+    sep.textContent = '\u2502';
+    leftGroup.appendChild(sep);
 
     var dot = document.createElement('span');
     dot.id = 'solace-state-dot';
@@ -132,7 +162,7 @@
                 items.push('\ud83d\udcdd ' + stats.evidence_captured + ' evidence');
             }
 
-            display.innerHTML = '';
+            while (display.firstChild) display.removeChild(display.firstChild);
             items.forEach(function(item) {
                 var span = document.createElement('span');
                 span.textContent = item;
@@ -142,7 +172,7 @@
         } else {
             /* Show delight content */
             var d = DELIGHT_POOL[delightIndex % DELIGHT_POOL.length];
-            display.innerHTML = '';
+            while (display.firstChild) display.removeChild(display.firstChild);
             var span = document.createElement('span');
             span.textContent = d.icon + ' ' + d.text;
             span.style.cssText = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:600px;transition:opacity 0.5s;';

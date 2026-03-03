@@ -270,7 +270,7 @@ _INLINE_BOTTOM_RAIL_JS = """
     }
 
     function clearFsmArea() {
-        fsmArea.innerHTML = '';
+        while (fsmArea.firstChild) fsmArea.removeChild(fsmArea.firstChild);
         fsmArea.dataset.hasContent = 'false';
         fsmArea.style.display = 'none';
     }
