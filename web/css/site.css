@@ -1267,7 +1267,7 @@ main { display: block; }
   margin-bottom: 16px;
 }
 
-.yyO3-gif { border-radius: 50%; flex-shrink: 0; }
+.yyO3-gif { border-radius: 14px; flex-shrink: 0; }
 
 .yyO3-title {
   font-family: var(--sb-font-display);

@@ -58,7 +58,7 @@
 
     #sbOnboardCard .ob-logo {
       display: block; margin: 0 auto 20px;
-      width: 64px; height: 64px; border-radius: 50%;
+      width: 160px; height: auto; border-radius: 14px;
       box-shadow: 0 0 24px rgba(0,200,150,0.25);
     }
 
