@@ -1024,9 +1024,32 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         with open(audit_dir / f"esign-{run_id}.jsonl", "a") as f:
             f.write(json.dumps(esign_record) + "\n")
 
+        # Capture screenshot as Part 11 visual evidence (best-effort, non-blocking)
+        screenshot_path: str | None = None
+        try:
+            import urllib.request as _urlreq
+            screenshot_payload = json.dumps({"filename": f"esign-{run_id}.png"}).encode()
+            req = _urlreq.Request(
+                "http://localhost:9222/api/screenshot",
+                data=screenshot_payload,
+                method="POST",
+                headers={"Content-Type": "application/json"},
+            )
+            with _urlreq.urlopen(req, timeout=5) as resp:
+                screenshot_result = json.loads(resp.read())
+                screenshot_path = screenshot_result.get("filepath")
+                # Append screenshot path to esign record
+                esign_record["screenshot"] = screenshot_path
+                with open(audit_dir / f"esign-{run_id}.jsonl", "a") as f:
+                    f.write(json.dumps({"event_type": "SCREENSHOT", "path": screenshot_path,
+                                        "run_id": run_id, "timestamp": ts}) + "\n")
+        except Exception:
+            pass  # Screenshot failure must never block approval
+
         self._send_json(HTTPStatus.OK, {"ok": True, "run_id": run_id,
                                         "in_outbox": approved_in_outbox,
-                                        "esign_hash": esign_hash})
+                                        "esign_hash": esign_hash,
+                                        "screenshot": screenshot_path})
 
     def _handle_schedule_cancel(self, run_id: str, payload: dict) -> None:
         """Cancel a pending run — write cancelled.json + audit entry."""
