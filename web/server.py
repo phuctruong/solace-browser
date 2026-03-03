@@ -1008,8 +1008,25 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         with open(audit_dir / "schedule_actions.jsonl", "a") as f:
             f.write(json.dumps({"event": "approved", "in_outbox": approved_in_outbox,
                                 **approval_record}) + "\n")
+
+        # Auto-generate e-sign record for approved run (FDA Part 11 §11.100)
+        import hashlib as _hashlib
+        user_id = payload.get("approved_by", "user")
+        ts = approval_record["timestamp"]
+        meaning = "reviewed_and_approved"
+        action_desc = f"Approved scheduled run {run_id}"
+        action_hash = _hashlib.sha256(action_desc.encode()).hexdigest()
+        esign_hash = _hashlib.sha256((user_id + ts + meaning + action_hash).encode()).hexdigest()
+        esign_record = {"event_type": "ESIGN", "user_id": user_id, "run_id": run_id,
+                        "meaning": meaning, "action_description": action_desc,
+                        "action_hash": action_hash, "esign_hash": esign_hash,
+                        "timestamp": ts, "sealed_at": ts}
+        with open(audit_dir / f"esign-{run_id}.jsonl", "a") as f:
+            f.write(json.dumps(esign_record) + "\n")
+
         self._send_json(HTTPStatus.OK, {"ok": True, "run_id": run_id,
-                                        "in_outbox": approved_in_outbox})
+                                        "in_outbox": approved_in_outbox,
+                                        "esign_hash": esign_hash})
 
     def _handle_schedule_cancel(self, run_id: str, payload: dict) -> None:
         """Cancel a pending run — write cancelled.json + audit entry."""

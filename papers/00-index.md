@@ -17,6 +17,10 @@
 | 10 | production-browser-release-loop | Compile -> upload -> download -> head-on smoke -> production API matrix, timed release loop, default bundle policy | CANONICAL |
 | 11 | app-store-sync-governance | Git-backed official catalog, Firestore proposal queue, local file backend for dev, promotion workflow | CANONICAL |
 | 12 | solaceagi-deployment-surface-mapping | Domain mapping + trigger source verification, repo/service ownership matrix, website -> GCS download-link contract | CANONICAL |
+| 38 | remote-browser-control-tunnel | Remote browser tunnel architecture | CANONICAL |
+| 39 | marketing-asset-pipeline | Test sessions → screenshots → GIFs → social → tutorials → viral | CANONICAL |
+| 40 | part11-compliance-selfcert | 21 CFR Part 11 full mapping, self-certification template, SOPs, evidence chain architecture | CANONICAL |
+| SOP-01 | sop-01-evidence-audit | Evidence Capture and Audit Trail Management SOP (v1.0) | CANONICAL |
 
 ## Cross-References
 
@@ -34,6 +38,7 @@
 | 10 production-browser-release-loop | solaceagi download + API deployment docs | Diagram 19 (Browser Release Loop) |
 | 11 app-store-sync-governance | app-store release + community submission process | Diagram 20 (App Store Sync Governance) |
 | 12 deployment-surface-mapping | Cloud Run domain + trigger ownership | Diagram 21 (Deployment Surface Mapping) |
+| 40 part11-compliance-selfcert | papers/07+11 (Part 11), CLAUDE.md Part 11 arch | Diagram 40 (Evidence Chain FSM), part11-alcoa-mapping |
 
 ## Invariants (All Papers)
 

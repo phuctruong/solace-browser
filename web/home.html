@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Home | Solace Browser</title>
+  <meta name="description" content="Solace Browser — AI browser automation with evidence trails, OAuth3, and $0.001 recipe replay.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/png" href="/images/yinyang/yinyang-logo-32.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/solace.js" defer></script>
+  <script src="/js/yinyang-delight.js" defer></script>
+  <script src="/js/yinyang-rail.js" defer></script>
+  <script src="/js/yinyang-tutorial.js" defer></script>
+  <script src="/js/yinyang-oauth3-confirm.js" defer></script>
+  <style>
+    /* ── Home page layout ─────────────────────────────── */
+    .home-shell { padding: 24px 32px 80px; max-width: 1200px; margin: 0 auto; }
+
+    /* ── Headless banner ──────────────────────────────── */
+    .headless-banner {
+      display: none;
+      align-items: center; gap: 16px; flex-wrap: wrap;
+      background: linear-gradient(135deg, rgba(255,195,0,0.15), rgba(0,204,102,0.08));
+      border: 1px solid rgba(255,195,0,0.5);
+      border-radius: 12px; padding: 16px 24px; margin-bottom: 28px;
+    }
+    .headless-banner.is-visible { display: flex; }
+    .headless-banner__icon { font-size: 1.8em; }
+    .headless-banner__text { flex: 1; }
+    .headless-banner__title { color: #ffc300; font-weight: 700; font-size: 1em; margin: 0; }
+    .headless-banner__sub { color: var(--sb-text-muted, #8bafc4); font-size: 0.85em; margin: 2px 0 0; }
+    .headless-banner__btn {
+      background: #ffc300; color: #0a1520; border: none; border-radius: 8px;
+      padding: 8px 18px; font-size: 0.88em; font-weight: 700; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .headless-banner__btn:hover { background: #ffce33; }
+
+    /* ── Status row ───────────────────────────────────── */
+    .status-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+    .status-pill {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(129,175,221,0.08); border: 1px solid rgba(129,175,221,0.2);
+      border-radius: 24px; padding: 8px 16px; font-size: 0.85em; color: var(--sb-text, #c5daea);
+    }
+    .status-pill__dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #666; flex-shrink: 0;
+    }
+    .status-pill--running .status-pill__dot { background: #00cc66; animation: pulse-dot 2s infinite; }
+    .status-pill--stopped .status-pill__dot { background: #cc4444; }
+    .status-pill--headless .status-pill__dot { background: #ffc300; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── Stats grid ───────────────────────────────────── */
+    .home-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card {
+      background: rgba(129,175,221,0.06); border: 1px solid rgba(129,175,221,0.15);
+      border-radius: 12px; padding: 20px; text-align: center;
+    }
+    .stat-card__num { font-size: 2em; font-weight: 800; color: #00cc66; display: block; }
+    .stat-card__label { font-size: 0.78em; color: var(--sb-text-muted, #8bafc4); margin-top: 4px; display: block; }
+
+    /* ── Two-column layout ────────────────────────────── */
+    .home-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+    @media (max-width: 720px) { .home-cols { grid-template-columns: 1fr; } .home-shell { padding: 16px 16px 80px; } }
+
+    /* ── Section cards ────────────────────────────────── */
+    .home-card {
+      background: rgba(129,175,221,0.06); border: 1px solid rgba(129,175,221,0.15);
+      border-radius: 14px; padding: 24px;
+    }
+    .home-card__title {
+      font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--sb-text-muted, #8bafc4); margin: 0 0 16px; font-weight: 600;
+    }
+    .home-card__empty { color: var(--sb-text-muted, #8bafc4); font-size: 0.88em; padding: 8px 0; }
+
+    /* ── Sign-off queue item ──────────────────────────── */
+    .signoff-item {
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid rgba(129,175,221,0.1); padding: 10px 0;
+    }
+    .signoff-item:last-child { border-bottom: none; }
+    .signoff-item__icon { font-size: 1.2em; }
+    .signoff-item__text { flex: 1; }
+    .signoff-item__app { font-size: 0.9em; font-weight: 600; color: var(--sb-text, #c5daea); }
+    .signoff-item__desc { font-size: 0.78em; color: var(--sb-text-muted, #8bafc4); }
+    .signoff-item__actions { display: flex; gap: 6px; }
+    .btn-approve {
+      background: #00cc66; color: #0a1520; border: none; border-radius: 6px;
+      padding: 5px 12px; font-size: 0.78em; font-weight: 700; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-approve:hover { background: #00e672; }
+    .btn-reject {
+      background: transparent; color: #cc4444; border: 1px solid rgba(204,68,68,0.4);
+      border-radius: 6px; padding: 5px 12px; font-size: 0.78em; cursor: pointer;
+    }
+    .btn-reject:hover { background: rgba(204,68,68,0.1); }
+
+    /* ── Schedule items ───────────────────────────────── */
+    .schedule-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(129,175,221,0.1); }
+    .schedule-item:last-child { border-bottom: none; }
+    .schedule-item__app { font-size: 0.88em; color: var(--sb-text, #c5daea); }
+    .schedule-item__time { font-size: 0.78em; color: #00cc66; }
+
+    /* ── Evidence log items ───────────────────────────── */
+    .evidence-item { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(129,175,221,0.1); }
+    .evidence-item:last-child { border-bottom: none; }
+    .evidence-item__hash { font-family: monospace; font-size: 0.75em; color: #00cc66; flex-shrink: 0; }
+    .evidence-item__desc { font-size: 0.78em; color: var(--sb-text-muted, #8bafc4); }
+    .evidence-item__time { font-size: 0.72em; color: #667788; }
+
+    /* ── Quick actions grid ───────────────────────────── */
+    .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 12px; margin-bottom: 32px; }
+    .quick-action {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      background: rgba(129,175,221,0.06); border: 1px solid rgba(129,175,221,0.15);
+      border-radius: 12px; padding: 20px 12px; text-decoration: none;
+      transition: background 0.2s, border-color 0.2s; cursor: pointer;
+    }
+    .quick-action:hover { background: rgba(129,175,221,0.12); border-color: rgba(129,175,221,0.4); }
+    .quick-action__icon { font-size: 1.8em; }
+    .quick-action__label { font-size: 0.8em; color: var(--sb-text-muted, #8bafc4); text-align: center; font-weight: 500; }
+
+    /* ── URL display ──────────────────────────────────── */
+    .current-url {
+      font-family: monospace; font-size: 0.8em; color: #81afdd;
+      background: rgba(129,175,221,0.06); border: 1px solid rgba(129,175,221,0.15);
+      border-radius: 6px; padding: 6px 12px; word-break: break-all;
+      display: block; margin-top: 8px;
+    }
+
+    /* ── Page title ───────────────────────────────────── */
+    .home-eyebrow { font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sb-text-muted, #8bafc4); margin: 0 0 8px; }
+    .home-title { font-size: 1.6em; font-weight: 800; color: var(--sb-text, #c5daea); margin: 0 0 24px; }
+    .home-title span { color: #00cc66; }
+  </style>
+</head>
+<body data-page="home">
+  <div class="site-shell">
+    <div class="page-frame">
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a class="site-brand" href="/">
+            <span class="site-brand__icon">☯</span>
+            <span class="site-brand__text">
+              <span class="site-brand__name">Solace Browser</span>
+              <span class="site-brand__tag">AI browser with evidence</span>
+            </span>
+          </a>
+          <nav class="site-nav" aria-label="Primary">
+            <a class="nav-link is-current" data-nav-path="/" href="/">Home</a>
+            <a class="nav-link" data-nav-path="/app-store" href="/app-store">Apps</a>
+            <a class="nav-link" data-nav-path="/schedule" href="/schedule">Schedule</a>
+            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
+            <a class="nav-link" data-nav-path="/settings" href="/settings">Settings</a>
+          </nav>
+          <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </header>
+      <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu__section">
+          <h3>Navigation</h3>
+          <a data-nav-path="/" href="/">Home</a>
+          <a data-nav-path="/app-store" href="/app-store">App Store</a>
+          <a data-nav-path="/schedule" href="/schedule">Schedule</a>
+          <a data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
+          <a data-nav-path="/settings" href="/settings">Settings</a>
+        </div>
+      </div>
+
+      <main class="home-shell">
+
+        <!-- Headless Mode Banner -->
+        <div class="headless-banner" id="headless-banner" role="alert" aria-live="polite">
+          <div class="headless-banner__icon">👻</div>
+          <div class="headless-banner__text">
+            <p class="headless-banner__title">Running in Headless Mode</p>
+            <p class="headless-banner__sub">No browser window is visible. You're controlling the browser through this web UI. All apps and automation are fully functional.</p>
+          </div>
+          <button class="headless-banner__btn" id="show-headed-btn" title="Restart Solace Browser in headed mode (shows Chromium window)">
+            Show Browser Window
+          </button>
+        </div>
+
+        <!-- Page Title -->
+        <p class="home-eyebrow">Control Panel</p>
+        <h1 class="home-title">Solace Browser <span id="status-text">● Loading…</span></h1>
+
+        <!-- Status Row -->
+        <div class="status-row" id="status-row">
+          <div class="status-pill status-pill--running" id="pill-running">
+            <span class="status-pill__dot"></span>
+            <span id="pill-running-text">Browser running</span>
+          </div>
+          <div class="status-pill" id="pill-headless">
+            <span class="status-pill__dot"></span>
+            <span id="pill-headless-text">Mode: checking…</span>
+          </div>
+          <div class="status-pill" id="pill-session">
+            <span class="status-pill__dot"></span>
+            <span id="pill-session-text">Session: loading…</span>
+          </div>
+          <div class="status-pill" id="pill-url" style="display:none;">
+            <span class="status-pill__dot" style="background:#81afdd"></span>
+            <span id="pill-url-text">Current URL</span>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="home-stats">
+          <div class="stat-card">
+            <span class="stat-card__num" id="stat-runs">—</span>
+            <span class="stat-card__label">Total runs</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__num" id="stat-apps">—</span>
+            <span class="stat-card__label">Apps installed</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__num" id="stat-esigns">—</span>
+            <span class="stat-card__label">E-signs today</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__num" id="stat-evidence">—</span>
+            <span class="stat-card__label">Evidence records</span>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <a class="quick-action" href="/app-store">
+            <span class="quick-action__icon">📦</span>
+            <span class="quick-action__label">App Store</span>
+          </a>
+          <a class="quick-action" href="/schedule">
+            <span class="quick-action__icon">📅</span>
+            <span class="quick-action__label">Schedule</span>
+          </a>
+          <a class="quick-action" href="/machine-dashboard">
+            <span class="quick-action__icon">🖥️</span>
+            <span class="quick-action__label">Machine</span>
+          </a>
+          <a class="quick-action" href="/settings">
+            <span class="quick-action__icon">⚙️</span>
+            <span class="quick-action__label">Settings</span>
+          </a>
+          <a class="quick-action" href="/docs">
+            <span class="quick-action__icon">📖</span>
+            <span class="quick-action__label">Docs</span>
+          </a>
+          <button class="quick-action" id="screenshot-btn" type="button" title="Take a screenshot of the current page">
+            <span class="quick-action__icon">📷</span>
+            <span class="quick-action__label">Screenshot</span>
+          </button>
+        </div>
+
+        <!-- Two-column: Sign-off Queue + Schedule -->
+        <div class="home-cols">
+
+          <!-- Sign-off queue -->
+          <div class="home-card">
+            <p class="home-card__title">✍️ Sign-Off Queue</p>
+            <div id="signoff-list">
+              <p class="home-card__empty" id="signoff-empty">No items awaiting approval.</p>
+            </div>
+          </div>
+
+          <!-- Upcoming schedule -->
+          <div class="home-card">
+            <p class="home-card__title">⏰ Upcoming Runs</p>
+            <div id="schedule-list">
+              <p class="home-card__empty" id="schedule-empty">No scheduled runs configured.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Two-column: Recent Evidence + Current Page -->
+        <div class="home-cols">
+
+          <!-- Recent evidence -->
+          <div class="home-card">
+            <p class="home-card__title">🔐 Recent Evidence (FDA Part 11)</p>
+            <div id="evidence-list">
+              <p class="home-card__empty" id="evidence-empty">No evidence records found.</p>
+            </div>
+          </div>
+
+          <!-- Current browser state -->
+          <div class="home-card">
+            <p class="home-card__title">🌐 Browser State</p>
+            <div id="browser-state">
+              <p class="home-card__empty">Loading browser state…</p>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    /* ── Home Page Controller ─────────────────────────────────────────── */
+    const API = 'http://127.0.0.1:9222';
+
+    async function apiFetch(path, opts = {}) {
+      try {
+        const r = await fetch(API + path, opts);
+        return await r.json();
+      } catch (_) { return null; }
+    }
+
+    async function loadStatus() {
+      const s = await apiFetch('/api/status');
+      if (!s) {
+        document.getElementById('status-text').textContent = '● Offline';
+        document.getElementById('pill-running').className = 'status-pill status-pill--stopped';
+        document.getElementById('pill-running-text').textContent = 'Browser offline';
+        return;
+      }
+
+      // Running pill
+      document.getElementById('status-text').textContent = s.running ? '● Running' : '● Stopped';
+      document.getElementById('pill-running').className = s.running ? 'status-pill status-pill--running' : 'status-pill status-pill--stopped';
+      document.getElementById('pill-running-text').textContent = s.running ? 'Browser running' : 'Browser stopped';
+
+      // Headless pill
+      const headless = s.headless !== false; // default true if field absent
+      const headlessPill = document.getElementById('pill-headless');
+      headlessPill.className = headless ? 'status-pill status-pill--headless' : 'status-pill status-pill--running';
+      document.getElementById('pill-headless-text').textContent = headless ? 'Headless mode' : 'Headed mode (window visible)';
+
+      // Show headless banner if headless
+      if (headless) {
+        document.getElementById('headless-banner').classList.add('is-visible');
+      }
+
+      // Session pill
+      const sessionPill = document.getElementById('pill-session');
+      const hasSess = s.session && s.session !== 'none';
+      sessionPill.className = hasSess ? 'status-pill status-pill--running' : 'status-pill';
+      document.getElementById('pill-session-text').textContent = hasSess ? `Session: ${s.session}` : 'No session';
+
+      // URL pill
+      if (s.current_url) {
+        document.getElementById('pill-url').style.display = 'flex';
+        document.getElementById('pill-url-text').textContent = s.current_url.replace(/^https?:\/\//, '').slice(0, 40);
+      }
+
+      // Browser state panel
+      const bsEl = document.getElementById('browser-state');
+      bsEl.innerHTML = `
+        <div class="evidence-item">
+          <span class="evidence-item__hash">${headless ? 'HEADLESS' : 'HEADED'}</span>
+          <span class="evidence-item__desc">Browser mode</span>
+        </div>
+        <div class="evidence-item">
+          <span class="evidence-item__hash">${s.running ? 'RUNNING' : 'STOPPED'}</span>
+          <span class="evidence-item__desc">Process status</span>
+        </div>
+        ${s.current_url ? `<div class="evidence-item">
+          <span class="evidence-item__desc" style="word-break:break-all;color:#81afdd">${s.current_url}</span>
+        </div>` : ''}
+        ${s.version ? `<div class="evidence-item">
+          <span class="evidence-item__hash">v${s.version}</span>
+          <span class="evidence-item__desc">Server version</span>
+        </div>` : ''}
+      `;
+    }
+
+    async function loadSchedule() {
+      const d = await apiFetch('/api/schedule/upcoming');
+      const el = document.getElementById('schedule-list');
+      const empty = document.getElementById('schedule-empty');
+      if (!d || !d.upcoming || d.upcoming.length === 0) return;
+      empty.style.display = 'none';
+      d.upcoming.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'schedule-item';
+        const nextRun = item.next_run ? new Date(item.next_run).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
+        div.innerHTML = `<span class="schedule-item__app">📱 ${item.app_id || item.app}</span><span class="schedule-item__time">${nextRun}</span>`;
+        el.insertBefore(div, empty);
+      });
+    }
+
+    async function loadQueue() {
+      const d = await apiFetch('/api/schedule/queue');
+      const el = document.getElementById('signoff-list');
+      const empty = document.getElementById('signoff-empty');
+      if (!d || !d.queue || d.queue.length === 0) return;
+      empty.style.display = 'none';
+      d.queue.slice(0, 5).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'signoff-item';
+        div.innerHTML = `
+          <span class="signoff-item__icon">📬</span>
+          <div class="signoff-item__text">
+            <div class="signoff-item__app">${item.app_id || item.app}</div>
+            <div class="signoff-item__desc">${item.description || item.run_id || 'Pending approval'}</div>
+          </div>
+          <div class="signoff-item__actions">
+            <button class="btn-approve" data-run="${item.run_id}">✓ Approve</button>
+            <button class="btn-reject" data-run="${item.run_id}">✗</button>
+          </div>
+        `;
+        el.insertBefore(div, empty);
+      });
+      // Wire approve/reject buttons
+      el.querySelectorAll('.btn-approve').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const run_id = btn.dataset.run;
+          await fetch('http://127.0.0.1:8791/api/schedule/approve/' + run_id, {method:'POST', body:'{}', headers:{'Content-Type':'application/json'}});
+          btn.closest('.signoff-item').style.opacity = '0.4';
+          btn.textContent = '✓ Approved';
+          btn.disabled = true;
+        });
+      });
+      el.querySelectorAll('.btn-reject').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const run_id = btn.dataset.run;
+          await fetch('http://127.0.0.1:8791/api/schedule/cancel/' + run_id, {method:'POST', body:'{"reason":"user_rejected"}', headers:{'Content-Type':'application/json'}});
+          btn.closest('.signoff-item').style.opacity = '0.4';
+        });
+      });
+    }
+
+    async function loadEvidence() {
+      const el = document.getElementById('evidence-list');
+      const empty = document.getElementById('evidence-empty');
+      // Search evidence dir for recent esign records
+      const d = await apiFetch('/api/evidence/search', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query: 'ESIGN', limit: 5})
+      });
+      if (!d || !d.results || d.results.length === 0) {
+        // Also try searching for any audit records
+        const d2 = await apiFetch('/api/evidence/search', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({query: 'approved', limit: 5})
+        });
+        if (!d2 || !d2.results || d2.results.length === 0) return;
+        d2.results.forEach(r => renderEvidenceItem(el, empty, r));
+        return;
+      }
+      d.results.forEach(r => renderEvidenceItem(el, empty, r));
+    }
+
+    function renderEvidenceItem(el, empty, r) {
+      empty.style.display = 'none';
+      const div = document.createElement('div');
+      div.className = 'evidence-item';
+      const preview = (r.preview || '').slice(0, 60).replace(/[{}"]/g, ' ').trim();
+      const ts = r.modified ? new Date(r.modified).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+      div.innerHTML = `
+        <span class="evidence-item__hash" title="${r.path}">SHA256</span>
+        <div>
+          <div class="evidence-item__desc">${r.file}</div>
+          <div class="evidence-item__time">${ts} — ${preview}</div>
+        </div>
+      `;
+      el.insertBefore(div, empty);
+    }
+
+    async function loadStats() {
+      // Count apps in app store via API
+      const apps = await apiFetch('/api/apps') || {};
+      const appCount = Array.isArray(apps.apps) ? apps.apps.length : (apps.total || '—');
+      document.getElementById('stat-apps').textContent = appCount;
+
+      // Count history runs
+      const hist = await apiFetch('/history') || {};
+      const runs = Array.isArray(hist.sessions) ? hist.sessions.length : (hist.count || 0);
+      document.getElementById('stat-runs').textContent = runs || '—';
+
+      // Count esign records from evidence search
+      const esigns = await apiFetch('/api/evidence/search', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query: 'ESIGN', limit: 100})
+      });
+      const esignCount = (esigns && esigns.count) ? esigns.count : 0;
+      document.getElementById('stat-esigns').textContent = esignCount || '0';
+
+      // Count all evidence files
+      const allEvidence = await apiFetch('/api/evidence/search', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query: 'event', limit: 100})
+      });
+      document.getElementById('stat-evidence').textContent = (allEvidence && allEvidence.count) ? allEvidence.count : '—';
+    }
+
+    // Screenshot button
+    document.getElementById('screenshot-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('screenshot-btn');
+      btn.querySelector('.quick-action__icon').textContent = '⏳';
+      const result = await apiFetch('/api/screenshot', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+      btn.querySelector('.quick-action__icon').textContent = '📷';
+      if (result && result.filepath) {
+        alert('Screenshot saved: ' + result.filepath);
+      } else {
+        alert('Screenshot failed — is the browser running?');
+      }
+    });
+
+    // Show headed mode button
+    document.getElementById('show-headed-btn').addEventListener('click', () => {
+      if (confirm('Restart Solace Browser in headed mode? This will show the Chromium window. The browser will restart.')) {
+        apiFetch('/api/navigate', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{"url":"about:blank"}'});
+        alert('To switch to headed mode, restart with: python3 solace_browser_server.py --head\n\nOr update your desktop launcher to add the --head flag.');
+      }
+    });
+
+    // Boot sequence
+    Promise.all([loadStatus(), loadSchedule(), loadQueue(), loadEvidence(), loadStats()]);
+    // Auto-refresh status every 30s
+    setInterval(loadStatus, 30000);
+  </script>
+</body>
+</html>
