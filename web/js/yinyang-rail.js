@@ -53,7 +53,8 @@ const YinyangRail = (() => {
       <div class="yy-bottom-rail__header" id="yyRailHeader" tabindex="0" role="button"
            aria-expanded="${_expanded}" aria-controls="yyRailBody">
         <div class="yy-bottom-rail__credits${creditsClass}">
-          <span>&#9775; Yinyang</span>
+          <img class="yy-logo-img" src="/images/yinyang/yinyang-logo-32.png" alt="Yinyang" width="20" height="20">
+          <span class="yy-name">Yinyang</span>
           <span id="yyCredits">$${s.credits}</span>
           <span id="yyBelt">${s.belt}</span>
           <span id="yyActions">${s.actions} actions</span>
@@ -62,9 +63,10 @@ const YinyangRail = (() => {
       </div>
       <div class="yy-bottom-rail__body" id="yyRailBody" aria-live="polite"></div>
       <div class="yy-bottom-rail__input" id="yyRailInput">
+        <img class="yy-input-logo" src="/images/yinyang/yinyang-logo-32.png" alt="" width="22" height="22" aria-hidden="true">
         <input type="text" id="yyInput" placeholder="Ask Yinyang anything&#8230;" autocomplete="off" spellcheck="false"
                aria-label="Message Yinyang">
-        <button id="yySend" aria-label="Send message">&#9775; Ask</button>
+        <button id="yySend" aria-label="Send message">Ask</button>
       </div>
     `;
 

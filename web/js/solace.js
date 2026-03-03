@@ -144,11 +144,36 @@
     const el = document.querySelector("#sb-auth-status");
     if (!el) return;
     const key = localStorage.getItem("solace_api_key");
-    if (key) {
-      el.innerHTML = `<a class="sb-auth-indicator sb-auth-indicator--signed-in" href="/settings" data-i18n="auth_signed_in">Signed in</a>`;
-    } else {
+    if (!key) {
       el.innerHTML = `<a class="sb-auth-indicator" href="/start" data-i18n="auth_sign_in">Sign in</a>`;
+      return;
     }
+    // Optimistic render from localStorage cache
+    const cachedEmail = localStorage.getItem("solace_user_email") || "";
+    const displayName = cachedEmail ? cachedEmail.split("@")[0] : "Account";
+    el.innerHTML = _buildAuthBadge(displayName);
+
+    // Fetch live profile to refresh name + tier
+    fetch("https://www.solaceagi.com/api/v1/auth/me", {
+      headers: { "Authorization": "Bearer " + key }
+    }).then(r => r.ok ? r.json() : null).then(d => {
+      if (!d) return;
+      const email = d.email || cachedEmail;
+      if (email) localStorage.setItem("solace_user_email", email);
+      const name = email ? email.split("@")[0] : "Account";
+      el.innerHTML = _buildAuthBadge(name, d.tier);
+    }).catch(() => {}); // fail silently — cached name stays
+  }
+
+  function _buildAuthBadge(name, tier) {
+    const tierBadge = (tier && tier !== "free")
+      ? `<span class="sb-auth-tier">${tier}</span>`
+      : "";
+    return `<a class="sb-auth-indicator sb-auth-indicator--signed-in" href="/settings">` +
+      `<img class="sb-auth-yy-icon" src="/images/yinyang/yinyang-logo-32.png" alt="" width="18" height="18" aria-hidden="true">` +
+      `<span class="sb-auth-name">${name}</span>` +
+      tierBadge +
+      `</a>`;
   }
 
   // Expose globally so yinyang-tutorial.js can call it when locale changes
