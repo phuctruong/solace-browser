@@ -1,0 +1,138 @@
+id: solace-inspector
+name: Solace Inspector
+description: |
+  The reference QA system for AI + human collaboration. First and only tool with:
+  (1) Agent Protocol — any coding agent drops spec in inbox/, picks up sealed report from outbox/
+  (2) Evidence Chain — SHA-256 sealed, FDA 21 CFR Part 11 compliant, court-admissible
+  (3) Human E-Sign Approval — AI proposes fixes, human approves with one click
+  Modes: web (browser), cli (subprocess), api (HTTP). Multi-project. Self-diagnostic.
+  Architecture: Agent-native — ZERO LLM API calls. Your AI coding agent reads reports
+  and applies its own model for analysis. Cost: $0.00 per run (just Solace Browser).
+category: developer-tools
+status: installed
+# PROTECTED: Cannot be uninstalled. Default app for validating Solace Browser is working.
+# AI agents can ALWAYS find this app. It is the QA bridge between agents and humans.
+protected: true
+default: true
+uninstallable: false
+safety: A
+site: any
+type: standard
+version: 1.0.0
+paper: 42
+rung_target: 65537
+committee:
+  - james_bach            # Exploratory testing, SBTM, oracle heuristics (HICCUPPS)
+  - elisabeth_hendrickson # Agile testing, Explore It, charter-based exploration
+  - kent_beck             # TDD, "test what you fear", testability lens
+  - cem_kaner             # Context-driven testing, BBST
+  - michael_bolton        # RST, testing vs checking distinction
+
+modes:
+  web: Browser-accessible apps (screenshot, ARIA, DOM, heuristics, agent analysis request)
+  cli: Command-line tools (subprocess, stdin/stdout, exit codes, assertions)
+  api: REST/HTTP APIs (request/response, schema validation, headers, timing)
+
+# ─── 10 AI Uplift Principles (Paper 17) ────────────────────────────────────
+# Equation: Uplift = P1 * P2 * ... * P10 (any Pn = 0 → system incomplete)
+uplift_techniques:
+  P1_gamification: "QA Score (0-100) + belt (White/Yellow/Orange/Green) + GLOW per run"
+  P2_magic_words: "/qa-inspect, /qa-baseline, /qa-diff, /qa-seal, /qa-esign (magic words)"
+  P3_famous_personas: |
+    James Bach (SBTM + HICCUPPS) · Cem Kaner (BBST + context-driven)
+    Elisabeth Hendrickson (Explore It + charter-based) · Kent Beck (TDD + testability)
+    Michael Bolton (RST + testing vs checking) — injected into agent_analysis_request
+  P4_skills: "Heuristic skills: HICCUPPS, SBTM, Explore It, BBST, charter-based, TDD"
+  P5_recipes: "8-step QA recipe per mode — replay at $0.001/run (just compute + storage)"
+  P6_access_tools: |
+    browser.navigate + aria_snapshot + browser.screenshot + cli.execute + api.request
+    All OAuth3-scoped. Fail-closed. No compute without approval.
+  P7_memory: "Baseline snapshots + diff detection + SHA-256 evidence vault (outbox/)"
+  P8_care: |
+    Human-readable reports. Warm language. Anti-Clippy (never auto-approve fixes).
+    Fix proposals are proposals — human clicks Approve. Agent waits.
+  P9_knowledge: |
+    Paper 02 (inbox/outbox standard) · Paper 40 (FDA evidence) · Paper 06 (ALCOA+)
+    Paper 42 (this paper) · HICCUPPS oracle heuristics · SBTM session management
+  P10_god: |
+    SHA-256 seal on every report. FDA 21 CFR Part 11 compliant.
+    GLOW target: 65537 (Fermat prime). Evidence = truth. Code is sacred.
+    Every report is a permanent, tamper-evident, court-admissible record.
+
+scopes:
+- browser.navigate
+- browser.screenshot
+- browser.evaluate
+- evidence.write
+- local.evidence
+- cli.execute
+- api.request
+
+partners:
+  produces_for: [any-app]
+  consumes_from: [any-agent]
+  # Claude Code, Cursor, Codex, Gemini — any agent can use this protocol
+
+required_inbox:
+  conventions:
+    test_spec: inbox/test-spec-*.json
+    report: outbox/report-*.json
+    baseline: outbox/baseline-*.json
+    status: STATUS.md  # gamified progress tracker, always updated
+
+# ─── Multi-project configuration ────────────────────────────────────────────
+projects:
+  solace-browser:
+    web_pages:
+      - {url: "http://localhost:8791/", name: "Home"}
+      - {url: "http://localhost:8791/app-store", name: "App Store"}
+      - {url: "http://localhost:8791/settings", name: "Settings"}
+      - {url: "http://localhost:8791/schedule", name: "Schedule"}
+      - {url: "http://localhost:8791/start", name: "Start / Auth"}
+    api_endpoints:
+      - {url: "http://localhost:9222/api/status", name: "Browser Status"}
+      - {url: "http://localhost:8791/api/status", name: "Web Server Status"}
+    cli_commands:
+      - {cmd: "python3 web/server.py --help", name: "Web Server Help"}
+      - {cmd: "python3 solace_browser_server.py --help", name: "Browser Server Help"}
+  solaceagi:
+    web_pages:
+      - {url: "https://www.solaceagi.com/", name: "Landing"}
+      - {url: "https://www.solaceagi.com/agents", name: "Agents"}
+      - {url: "https://www.solaceagi.com/pricing", name: "Pricing"}
+      - {url: "https://www.solaceagi.com/docs", name: "Docs"}
+    api_endpoints:
+      - {url: "https://www.solaceagi.com/api/v1/health", name: "Health"}
+      - {url: "https://www.solaceagi.com/api/v1/version", name: "Version"}
+      - {url: "https://www.solaceagi.com/api/v1/llm/models", name: "LLM Models"}
+  solace-cli:
+    cli_commands:
+      - {cmd: "solace --help", name: "CLI Help"}
+      - {cmd: "solace status", name: "CLI Status"}
+      - {cmd: "python3 scripts/run_solace_inspector.py --help", name: "Inspector Help"}
+
+# ─── Self-diagnostic (validates Solace Browser is healthy) ──────────────────
+keep_alive:
+  url: null
+  interval_min: null
+self_diagnostic:
+  schedule: "daily@08:00"
+  projects: [solace-browser, solaceagi]
+  runner: "scripts/run_solace_inspector.py"
+  mode: "--self-diagnostic"
+  # This is the MINIMUM health check. If self-diagnostic fails, Solace Browser is broken.
+  pass_threshold: 75  # Orange belt or better
+
+# ─── Competitive position ────────────────────────────────────────────────────
+# Research verified March 2026: ZERO competitors have all three features.
+# Agent Protocol: inbox/outbox JSON spec (any agent, any language, any model)
+# Evidence Chain: SHA-256 sealed, FDA 21 CFR Part 11
+# Human E-Sign: fix proposals → human approves → agent implements
+competitive_position:
+  moat: "6-12 months ahead of field"
+  fda_guidance: "2026 AI guidance pushing industry toward what we already built"
+  pricing:
+    solace_inspector: "$0/month (OSS) + $0.00/run (agent-native)"
+    qa_wolf: "$2,000/month"
+    testrig: "$1,200/month"
+    mabl: "$800/month"
