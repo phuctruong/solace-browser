@@ -771,6 +771,382 @@ static/
 solace_browser_server.py    # Main aiohttp + CDP server</pre>
           </article>
         </section>
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- YINYANG PALETTE COLLECTION                              -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">YinYang Palette Collection</h2>
+              <p class="section-copy">6 personalities. Same PNG. Pure CSS <code>filter:</code> magic — no extra image assets. Click a palette to apply it to all YinYang logos.</p>
+            </div>
+          </div>
+          <p style="color:var(--sb-text-muted);font-size:0.88rem;margin-bottom:18px;">Palette cycles each time the bottom rail opens. Each maps to a <strong>warm_token delight state</strong> (Paper 08 §4.2).</p>
+          <div class="sg-swatch-grid">
+            <div class="sg-swatch" style="cursor:pointer;" onclick="document.querySelectorAll('.sg-yy-logo').forEach(el=>el.setAttribute('data-palette','0'));this.closest('.sg-swatch-grid').querySelectorAll('.sg-swatch').forEach(s=>s.style.outline='');this.style.outline='2px solid var(--sb-signal)'">
+              <div class="sg-swatch__color" style="background:linear-gradient(135deg,#081019,#64c4ff22);display:flex;align-items:center;justify-content:center;"><img class="sg-yy-logo" src="/images/yinyang/yinyang-logo-64.png" width="48" height="48" style="border-radius:50%;transition:filter 0.6s ease;" data-palette="0" alt="YinYang Cyan"></div>
+              <div class="sg-swatch__label"><strong>0 — Cyan</strong><code>filter: none (default)</code><br><small style="color:var(--sb-text-muted);">warm_token: neutral</small></div>
+            </div>
+            <div class="sg-swatch" style="cursor:pointer;" onclick="document.querySelectorAll('.sg-yy-logo').forEach(el=>el.setAttribute('data-palette','1'));this.closest('.sg-swatch-grid').querySelectorAll('.sg-swatch').forEach(s=>s.style.outline='');this.style.outline='2px solid var(--sb-signal)'">
+              <div class="sg-swatch__color" style="background:linear-gradient(135deg,#081019,#1a44cc22);display:flex;align-items:center;justify-content:center;"><img class="sg-yy-logo" src="/images/yinyang/yinyang-logo-64.png" width="48" height="48" style="border-radius:50%;transition:filter 0.6s ease;filter:hue-rotate(180deg) saturate(1.5);" data-palette="1" alt="YinYang Ocean"></div>
+              <div class="sg-swatch__label"><strong>1 — Ocean</strong><code>hue-rotate(180deg) saturate(1.5)</code><br><small style="color:var(--sb-text-muted);">warm_token: professional</small></div>
+            </div>
+            <div class="sg-swatch" style="cursor:pointer;" onclick="document.querySelectorAll('.sg-yy-logo').forEach(el=>el.setAttribute('data-palette','2'));this.closest('.sg-swatch-grid').querySelectorAll('.sg-swatch').forEach(s=>s.style.outline='');this.style.outline='2px solid var(--sb-signal)'">
+              <div class="sg-swatch__color" style="background:linear-gradient(135deg,#081019,#ff6b3522);display:flex;align-items:center;justify-content:center;"><img class="sg-yy-logo" src="/images/yinyang/yinyang-logo-64.png" width="48" height="48" style="border-radius:50%;transition:filter 0.6s ease;filter:hue-rotate(30deg) saturate(2) brightness(1.08);" data-palette="2" alt="YinYang Sunset"></div>
+              <div class="sg-swatch__label"><strong>2 — Sunset</strong><code>hue-rotate(30deg) saturate(2)</code><br><small style="color:var(--sb-text-muted);">warm_token: celebrate</small></div>
+            </div>
+            <div class="sg-swatch" style="cursor:pointer;" onclick="document.querySelectorAll('.sg-yy-logo').forEach(el=>el.setAttribute('data-palette','3'));this.closest('.sg-swatch-grid').querySelectorAll('.sg-swatch').forEach(s=>s.style.outline='');this.style.outline='2px solid var(--sb-signal)'">
+              <div class="sg-swatch__color" style="background:linear-gradient(135deg,#081019,#AE67FA22);display:flex;align-items:center;justify-content:center;"><img class="sg-yy-logo" src="/images/yinyang/yinyang-logo-64.png" width="48" height="48" style="border-radius:50%;transition:filter 0.6s ease;filter:hue-rotate(270deg) saturate(1.6) brightness(1.05);" data-palette="3" alt="YinYang Aurora"></div>
+              <div class="sg-swatch__label"><strong>3 — Aurora</strong><code>hue-rotate(270deg) saturate(1.6)</code><br><small style="color:var(--sb-text-muted);">warm_token: encourage</small></div>
+            </div>
+            <div class="sg-swatch" style="cursor:pointer;" onclick="document.querySelectorAll('.sg-yy-logo').forEach(el=>el.setAttribute('data-palette','4'));this.closest('.sg-swatch-grid').querySelectorAll('.sg-swatch').forEach(s=>s.style.outline='');this.style.outline='2px solid var(--sb-signal)'">
+              <div class="sg-swatch__color" style="background:linear-gradient(135deg,#081019,#ff3c0022);display:flex;align-items:center;justify-content:center;"><img class="sg-yy-logo" src="/images/yinyang/yinyang-logo-64.png" width="48" height="48" style="border-radius:50%;transition:filter 0.6s ease;filter:hue-rotate(0deg) saturate(2.5) brightness(1.1);" data-palette="4" alt="YinYang Fire"></div>
+              <div class="sg-swatch__label"><strong>4 — Fire</strong><code>hue-rotate(0deg) saturate(2.5)</code><br><small style="color:var(--sb-text-muted);">warm_token: birthday</small></div>
+            </div>
+            <div class="sg-swatch" style="cursor:pointer;" onclick="document.querySelectorAll('.sg-yy-logo').forEach(el=>el.setAttribute('data-palette','5'));this.closest('.sg-swatch-grid').querySelectorAll('.sg-swatch').forEach(s=>s.style.outline='');this.style.outline='2px solid var(--sb-signal)'">
+              <div class="sg-swatch__color" style="background:linear-gradient(135deg,#081019,#ffffff11);display:flex;align-items:center;justify-content:center;"><img class="sg-yy-logo" src="/images/yinyang/yinyang-logo-64.png" width="48" height="48" style="border-radius:50%;transition:filter 0.6s ease;filter:grayscale(0.8) brightness(1.3) contrast(1.1);" data-palette="5" alt="YinYang Lunar"></div>
+              <div class="sg-swatch__label"><strong>5 — Lunar</strong><code>grayscale(0.8) brightness(1.3)</code><br><small style="color:var(--sb-text-muted);">warm_token: suppress_humor</small></div>
+            </div>
+          </div>
+          <div style="margin-top:18px;padding:14px 16px;border-radius:var(--sb-radius-md);background:var(--sb-surface-strong);border:1px solid var(--sb-border);font-size:0.88rem;color:var(--sb-text-muted);">
+            Live demo: <strong style="color:var(--sb-text);">open the YinYang rail below</strong> (Ctrl+Y) — logo twists on open and cycles to next palette. Palette persisted in <code>localStorage['yy_palette']</code>.
+          </div>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- YINYANG TUTORIAL MODAL (5-step)                        -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">YinYang Tutorial — First-Time Onboarding</h2>
+              <p class="section-copy">5-step modal for first-time users. Triggered when <code>localStorage['sb_tutorial_v1']</code> is null. Anti-Clippy compliant — user always has Skip. (Paper 09 §2)</p>
+            </div>
+          </div>
+          <div class="sg-component-row">
+            <button class="btn btn-primary" onclick="document.getElementById('sgTutorial').style.display='flex'">▶ Launch Tutorial Demo</button>
+            <button class="btn btn-secondary" onclick="localStorage.removeItem('sb_tutorial_v1');alert('Tutorial reset. Reload home.html to re-trigger.')">Reset Tutorial</button>
+          </div>
+
+          <!-- Tutorial Modal -->
+          <div id="sgTutorial" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(8,16,25,0.85);align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+            <div style="background:var(--sb-surface);border:1px solid var(--sb-border);border-radius:var(--sb-radius-lg);padding:32px;max-width:480px;width:calc(100% - 48px);position:relative;box-shadow:var(--sb-shadow);">
+              <button onclick="document.getElementById('sgTutorial').style.display='none';document.getElementById('sgTutStep').textContent='1';" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--sb-text-muted);font-size:0.82rem;cursor:pointer;">Skip tutorial</button>
+              <div style="text-align:right;color:var(--sb-text-muted);font-size:0.8rem;margin-bottom:16px;">Step <span id="sgTutStep">1</span> of 5</div>
+              <div style="text-align:center;margin-bottom:20px;">
+                <img src="/images/yinyang/yinyang-rotating_70pct_128px.gif" width="100" height="100" alt="YinYang" style="border-radius:50%;">
+              </div>
+              <div id="sgTutContent">
+                <h3 style="font-family:var(--sb-font-display);font-size:1.4rem;margin-bottom:10px;text-align:center;">Welcome to Solace Browser</h3>
+                <p style="color:var(--sb-text-muted);text-align:center;line-height:1.6;">I'm Yinyang, your AI browser companion. I automate the web so you don't have to. Everything I do needs <strong style="color:var(--sb-text);">your approval first</strong>.</p>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:28px;">
+                <div style="display:flex;gap:6px;" id="sgTutDots">
+                  <span style="width:8px;height:8px;border-radius:50%;background:var(--sb-signal);"></span>
+                  <span style="width:8px;height:8px;border-radius:50%;background:var(--sb-border);"></span>
+                  <span style="width:8px;height:8px;border-radius:50%;background:var(--sb-border);"></span>
+                  <span style="width:8px;height:8px;border-radius:50%;background:var(--sb-border);"></span>
+                  <span style="width:8px;height:8px;border-radius:50%;background:var(--sb-border);"></span>
+                </div>
+                <div style="display:flex;gap:10px;">
+                  <button id="sgTutPrev" onclick="sgTutNav(-1)" style="background:none;border:1px solid var(--sb-border);color:var(--sb-text-muted);padding:8px 18px;border-radius:999px;cursor:pointer;font-size:0.88rem;display:none;">← Prev</button>
+                  <button id="sgTutNext" onclick="sgTutNav(1)" style="background:var(--sb-signal);color:var(--sb-bg);border:none;padding:8px 22px;border-radius:999px;cursor:pointer;font-weight:700;font-size:0.88rem;">Next →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <script>
+            var sgTutSteps = [
+              { title: "Welcome to Solace Browser", body: "I'm Yinyang, your AI browser companion. I automate the web so you don't have to. Everything I do needs <strong style='color:#f4f7fb'>your approval first</strong>." },
+              { title: "I Control the Browser", body: "I navigate, click, read, and fill forms — just like you would. But I show you a <strong style='color:#f4f7fb'>preview</strong> before doing anything. You're always in control." },
+              { title: "OAuth3 Safety — Always", body: "Every action is <strong style='color:#46d9a7'>budget-gated</strong>. I can't send more emails or spend more credits than you've allowed. You can revoke my access anytime — instantly." },
+              { title: "18 Apps, One Click Each", body: "Browse Gmail, Slack, LinkedIn, GitHub, and 14 more — without API keys. The apps are pre-configured by the Solace team. <strong style='color:#f4f7fb'>No setup required.</strong>" },
+              { title: "Let's Get Started! 🎉", body: "Ask me anything. Run your first app. I'll be right here in the bottom bar. <strong style='color:#64c4ff'>Ctrl+Y</strong> to talk to me anytime." }
+            ];
+            var sgTutCur = 1;
+            function sgTutNav(dir) {
+              sgTutCur = Math.min(5, Math.max(1, sgTutCur + dir));
+              document.getElementById('sgTutStep').textContent = sgTutCur;
+              var s = sgTutSteps[sgTutCur - 1];
+              document.getElementById('sgTutContent').innerHTML = '<h3 style="font-family:var(--sb-font-display);font-size:1.4rem;margin-bottom:10px;text-align:center;">' + s.title + '</h3><p style="color:var(--sb-text-muted);text-align:center;line-height:1.6;">' + s.body + '</p>';
+              var dots = document.getElementById('sgTutDots').querySelectorAll('span');
+              dots.forEach(function(d, i) { d.style.background = i === sgTutCur - 1 ? 'var(--sb-signal)' : 'var(--sb-border)'; });
+              document.getElementById('sgTutPrev').style.display = sgTutCur > 1 ? '' : 'none';
+              var nextBtn = document.getElementById('sgTutNext');
+              if (sgTutCur === 5) { nextBtn.textContent = 'Done!'; nextBtn.onclick = function() { document.getElementById('sgTutorial').style.display='none'; sgTutCur=1; nextBtn.textContent='Next →'; nextBtn.onclick = function(){ sgTutNav(1); }; }; }
+              else { nextBtn.textContent = 'Next →'; nextBtn.onclick = function() { sgTutNav(1); }; }
+            }
+          </script>
+          <small style="display:block;margin-top:12px;color:var(--sb-text-muted);font-size:0.82rem;">Paper 09 §2 | Storage: <code>localStorage['sb_tutorial_v1']</code> | Trigger: home.html + start.html on first visit</small>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- DELIGHT ENGINE                                          -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Delight Engine — warm_token Effects</h2>
+              <p class="section-copy">Celebration effects triggered by <code>warm_token</code> delight states. YinyangDelight.respond(token). Never random. Never interruptive. Always earned. (Paper 08 §4)</p>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:18px;">
+            <div style="background:var(--sb-surface-strong);border:1px solid var(--sb-border);border-radius:var(--sb-radius-md);padding:16px;text-align:center;">
+              <div style="font-size:2rem;margin-bottom:8px;">🎉</div>
+              <strong style="display:block;font-size:0.92rem;margin-bottom:4px;">celebrate</strong>
+              <small style="color:var(--sb-text-muted);">Confetti burst + success toast</small>
+              <button onclick="sgDelight('celebrate')" style="margin-top:12px;background:var(--sb-success);color:var(--sb-bg);border:none;padding:6px 16px;border-radius:999px;cursor:pointer;font-size:0.82rem;font-weight:700;width:100%;">Fire 🎉</button>
+            </div>
+            <div style="background:var(--sb-surface-strong);border:1px solid var(--sb-border);border-radius:var(--sb-radius-md);padding:16px;text-align:center;">
+              <div style="font-size:2rem;margin-bottom:8px;">✨</div>
+              <strong style="display:block;font-size:0.92rem;margin-bottom:4px;">encourage</strong>
+              <small style="color:var(--sb-text-muted);">Sparkle + gentle ding</small>
+              <button onclick="sgDelight('encourage')" style="margin-top:12px;background:var(--sb-signal);color:var(--sb-bg);border:none;padding:6px 16px;border-radius:999px;cursor:pointer;font-size:0.82rem;font-weight:700;width:100%;">Fire ✨</button>
+            </div>
+            <div style="background:var(--sb-surface-strong);border:1px solid var(--sb-border);border-radius:var(--sb-radius-md);padding:16px;text-align:center;">
+              <div style="font-size:2rem;margin-bottom:8px;">🎂</div>
+              <strong style="display:block;font-size:0.92rem;margin-bottom:4px;">birthday</strong>
+              <small style="color:var(--sb-text-muted);">Emoji rain 🎂🎁🎈🥳</small>
+              <button onclick="sgDelight('birthday')" style="margin-top:12px;background:var(--sb-accent);color:var(--sb-bg);border:none;padding:6px 16px;border-radius:999px;cursor:pointer;font-size:0.82rem;font-weight:700;width:100%;">Fire 🎂</button>
+            </div>
+            <div style="background:var(--sb-surface-strong);border:1px solid var(--sb-border);border-radius:var(--sb-radius-md);padding:16px;text-align:center;">
+              <div style="font-size:2rem;margin-bottom:8px;">🏆</div>
+              <strong style="display:block;font-size:0.92rem;margin-bottom:4px;">milestone</strong>
+              <small style="color:var(--sb-text-muted);">Trophy emoji rain + toast</small>
+              <button onclick="sgDelight('milestone')" style="margin-top:12px;background:var(--sb-purple);color:var(--sb-bg);border:none;padding:6px 16px;border-radius:999px;cursor:pointer;font-size:0.82rem;font-weight:700;width:100%;">Fire 🏆</button>
+            </div>
+          </div>
+          <!-- Toast container -->
+          <div id="sgToastContainer" style="position:fixed;bottom:60px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:8000;pointer-events:none;"></div>
+          <!-- Confetti canvas -->
+          <canvas id="sgConfettiCanvas" style="position:fixed;inset:0;z-index:7999;pointer-events:none;"></canvas>
+          <script>
+            function sgDelight(mode) {
+              if (mode === 'celebrate') { sgConfetti(['#64c4ff','#46d9a7','#ff6b35','#AE67FA'], 120); sgToast('🎉 Achievement unlocked!', '#46d9a7'); }
+              else if (mode === 'encourage') { sgConfetti(['#64c4ff','#f4f7fb'], 60); sgToast('✨ Keep going, you\'ve got this.', '#64c4ff'); }
+              else if (mode === 'birthday') { sgConfetti(['#ff69b4','#ff6b35','#ffc75a','#46d9a7'], 80, ['🎂','🎁','🎈','🥳']); sgToast('🎂 Happy birthday!', '#ff69b4'); }
+              else if (mode === 'milestone') { sgConfetti(['#AE67FA','#64c4ff','#ffc75a'], 100, ['🏆','💯','⭐','🚀']); sgToast('🏆 100 runs! You\'re a power user.', '#AE67FA'); }
+            }
+            function sgToast(msg, color) {
+              var t = document.createElement('div');
+              t.style.cssText = 'background:' + color + ';color:#081019;padding:10px 18px;border-radius:999px;font-size:0.88rem;font-weight:700;opacity:0;transition:opacity 0.25s ease;pointer-events:none;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+              t.textContent = msg;
+              document.getElementById('sgToastContainer').appendChild(t);
+              setTimeout(function() { t.style.opacity = '1'; }, 10);
+              setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 300); }, 3000);
+            }
+            function sgConfetti(colors, count, emojis) {
+              var canvas = document.getElementById('sgConfettiCanvas');
+              canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+              var ctx = canvas.getContext('2d');
+              var particles = [];
+              for (var i = 0; i < count; i++) {
+                particles.push({ x: Math.random() * canvas.width, y: -20, r: Math.random() * 6 + 3, vx: (Math.random() - 0.5) * 4, vy: Math.random() * 3 + 2, color: colors[Math.floor(Math.random() * colors.length)], emoji: emojis ? emojis[Math.floor(Math.random() * emojis.length)] : null, rot: Math.random() * 360, rotV: (Math.random() - 0.5) * 8 });
+              }
+              var frames = 0;
+              function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(function(p) {
+                  p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.rot += p.rotV;
+                  ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+                  if (p.emoji) { ctx.font = (p.r * 3) + 'px serif'; ctx.fillText(p.emoji, 0, 0); }
+                  else { ctx.fillStyle = p.color; ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r); }
+                  ctx.restore();
+                });
+                particles = particles.filter(function(p) { return p.y < canvas.height + 20; });
+                if (particles.length > 0 && frames < 180) { frames++; requestAnimationFrame(draw); }
+                else { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+              }
+              draw();
+            }
+          </script>
+          <small style="display:block;margin-top:12px;color:var(--sb-text-muted);font-size:0.82rem;">Paper 08 §4 | warm_token → YinyangDelight.respond(token) | Never auto-fires | Earned by user milestones</small>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- FDA PART 11 EVIDENCE BROWSER                            -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">FDA Part 11 Evidence Browser</h2>
+              <p class="section-copy">Tamper-evident audit chain viewer. SHA-256 hash chain proves temporal order. Every approval is e-signed. (Paper 06 + Paper 40)</p>
+            </div>
+          </div>
+          <article class="data-panel">
+            <div class="panel-kicker">ALCOA+ Compliant | 21 CFR Part 11</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+              <h3>Audit Chain — Gmail Inbox Triage</h3>
+              <div style="display:flex;gap:8px;">
+                <span class="status-tag status-tag--success">Chain Intact ✓</span>
+                <span class="status-tag">3 entries</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <!-- Entry 1 -->
+              <div style="background:var(--sb-surface);border:1px solid var(--sb-border);border-radius:var(--sb-radius-md);padding:14px 16px;border-left:3px solid var(--sb-success);">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--success">✓ APPROVED</span>
+                  <span style="font-family:var(--sb-font-mono);font-size:0.78rem;color:var(--sb-text-muted);">seq:1042 | 2026-03-03T11:30:22Z</span>
+                </div>
+                <div style="font-size:0.88rem;margin-bottom:4px;"><strong>WHO:</strong> phuc@solaceagi.com &nbsp;|&nbsp; <strong>WHAT:</strong> Approved Gmail Inbox Triage run &nbsp;|&nbsp; <strong>WHY:</strong> Recipe step 1</div>
+                <div style="font-family:var(--sb-font-mono);font-size:0.75rem;color:var(--sb-text-muted);margin-top:6px;word-break:break-all;">chain_hash: sha256:a3f1c8d9e2b047f6aa1234...</div>
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                  <button style="background:none;border:1px solid var(--sb-border);color:var(--sb-text-muted);padding:4px 10px;border-radius:6px;font-size:0.78rem;cursor:pointer;">📋 View Snapshot</button>
+                  <button style="background:none;border:1px solid var(--sb-border);color:var(--sb-text-muted);padding:4px 10px;border-radius:6px;font-size:0.78rem;cursor:pointer;">🔏 Verify Hash</button>
+                </div>
+              </div>
+              <!-- Entry 2 -->
+              <div style="background:var(--sb-surface);border:1px solid var(--sb-border);border-radius:var(--sb-radius-md);padding:14px 16px;border-left:3px solid var(--sb-signal);">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+                  <span class="status-tag">📧 form_submit</span>
+                  <span style="font-family:var(--sb-font-mono);font-size:0.78rem;color:var(--sb-text-muted);">seq:1043 | 2026-03-03T11:30:45Z</span>
+                </div>
+                <div style="font-size:0.88rem;margin-bottom:4px;"><strong>WHO:</strong> phuc@solaceagi.com &nbsp;|&nbsp; <strong>WHAT:</strong> Drafted reply to john@example.com &nbsp;|&nbsp; <strong>WHY:</strong> Recipe step 2</div>
+                <div style="font-family:var(--sb-font-mono);font-size:0.75rem;color:var(--sb-text-muted);margin-top:6px;word-break:break-all;">chain_hash: sha256:b7e2d4f0a9c358e1bb5678...</div>
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                  <button style="background:none;border:1px solid var(--sb-border);color:var(--sb-text-muted);padding:4px 10px;border-radius:6px;font-size:0.78rem;cursor:pointer;">📋 View Snapshot</button>
+                  <button style="background:none;border:1px solid var(--sb-border);color:var(--sb-text-muted);padding:4px 10px;border-radius:6px;font-size:0.78rem;cursor:pointer;">🔏 Verify Hash</button>
+                </div>
+              </div>
+              <!-- Entry 3 - E-Signature -->
+              <div style="background:var(--sb-surface);border:1px solid var(--sb-border);border-radius:var(--sb-radius-md);padding:14px 16px;border-left:3px solid var(--sb-purple);">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+                  <span class="status-tag" style="background:rgba(174,103,250,0.15);color:var(--sb-purple);">🔏 E-SIGNED</span>
+                  <span style="font-family:var(--sb-font-mono);font-size:0.78rem;color:var(--sb-text-muted);">seq:1044 | 2026-03-03T11:31:02Z</span>
+                </div>
+                <div style="font-size:0.88rem;margin-bottom:4px;"><strong>WHO:</strong> phuc@solaceagi.com &nbsp;|&nbsp; <strong>MEANING:</strong> "approved_execution" &nbsp;|&nbsp; <strong>WHY:</strong> Part 11 §11.70</div>
+                <div style="font-family:var(--sb-font-mono);font-size:0.75rem;color:var(--sb-text-muted);margin-top:6px;word-break:break-all;">signature: sha256(user_id + timestamp + meaning + record_hash)</div>
+                <div style="font-family:var(--sb-font-mono);font-size:0.75rem;color:var(--sb-success);margin-top:4px;">Status: chmod 444 — sealed forever ✓</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+              <button class="btn btn-secondary" style="font-size:0.82rem;padding:8px 16px;">📤 Export to JSON</button>
+              <button class="btn btn-secondary" style="font-size:0.82rem;padding:8px 16px;">📋 Export to PDF</button>
+              <button class="btn btn-secondary" style="font-size:0.82rem;padding:8px 16px;">🔍 Verify Chain</button>
+            </div>
+          </article>
+          <small style="display:block;margin-top:12px;color:var(--sb-text-muted);font-size:0.82rem;">Paper 06 §3 | Storage: <code>~/.solace/audit/audit_chain.jsonl</code> | E-sign: Paper 06 §5 | Cloud sync: solaceagi.com Evidence Vault</small>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- BUDGET DASHBOARD                                        -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Budget Dashboard — Per-App Governance</h2>
+              <p class="section-copy">Visual display of action + spend budgets. Fail-closed: any gate failure blocks the action. (Paper 07)</p>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
+            <!-- Gmail budget -->
+            <article class="data-panel">
+              <div class="panel-kicker">Gmail Inbox Triage</div>
+              <h3 style="margin-bottom:14px;">Budget Status</h3>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:4px;"><span style="color:var(--sb-text-muted);">Emails read today</span><span><strong>12</strong> / 50</span></div>
+                  <div style="height:6px;background:var(--sb-border);border-radius:3px;overflow:hidden;"><div style="height:100%;width:24%;background:var(--sb-signal);border-radius:3px;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:4px;"><span style="color:var(--sb-text-muted);">Drafts created</span><span><strong>3</strong> / 5</span></div>
+                  <div style="height:6px;background:var(--sb-border);border-radius:3px;overflow:hidden;"><div style="height:100%;width:60%;background:var(--sb-warning);border-radius:3px;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:4px;"><span style="color:var(--sb-text-muted);">LLM cost today</span><span style="font-family:var(--sb-font-mono);">$0.08 / $0.50</span></div>
+                  <div style="height:6px;background:var(--sb-border);border-radius:3px;overflow:hidden;"><div style="height:100%;width:16%;background:var(--sb-success);border-radius:3px;"></div></div>
+                </div>
+                <div style="margin-top:4px;padding-top:10px;border-top:1px solid var(--sb-border);display:flex;gap:6px;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--success">B1 Policy ✓</span>
+                  <span class="status-tag status-tag--success">B2 Limits ✓</span>
+                  <span class="status-tag status-tag--success">B3 Targets ✓</span>
+                  <span class="status-tag status-tag--warning">B4 Step-Up</span>
+                  <span class="status-tag status-tag--success">B5 Evidence ✓</span>
+                </div>
+              </div>
+            </article>
+            <!-- Slack budget -->
+            <article class="data-panel">
+              <div class="panel-kicker">Slack Triage</div>
+              <h3 style="margin-bottom:14px;">Budget Status</h3>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:4px;"><span style="color:var(--sb-text-muted);">Messages read</span><span><strong>47</strong> / 200</span></div>
+                  <div style="height:6px;background:var(--sb-border);border-radius:3px;overflow:hidden;"><div style="height:100%;width:23%;background:var(--sb-signal);border-radius:3px;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:4px;"><span style="color:var(--sb-text-muted);">Posts sent</span><span><strong>0</strong> / 3</span></div>
+                  <div style="height:6px;background:var(--sb-border);border-radius:3px;overflow:hidden;"><div style="height:100%;width:0%;background:var(--sb-success);border-radius:3px;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:4px;"><span style="color:var(--sb-text-muted);">LLM cost today</span><span style="font-family:var(--sb-font-mono);">$0.03 / $0.50</span></div>
+                  <div style="height:6px;background:var(--sb-border);border-radius:3px;overflow:hidden;"><div style="height:100%;width:6%;background:var(--sb-success);border-radius:3px;"></div></div>
+                </div>
+                <div style="margin-top:4px;padding-top:10px;border-top:1px solid var(--sb-border);display:flex;gap:6px;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--success">All 5 Gates ✓</span>
+                  <span class="status-tag status-tag--success">Ready</span>
+                </div>
+              </div>
+            </article>
+          </div>
+          <small style="display:block;margin-top:14px;color:var(--sb-text-muted);font-size:0.82rem;">Paper 07 §3-6 | 5 budget gates (B1-B5) | Fail-closed | Change via: budget.json edit or Yinyang ("set Gmail budget to 100/day")</small>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- E-SIGN APPROVAL FLOW                                    -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">E-Sign Approval Flow</h2>
+              <p class="section-copy">Part 11 §11.70 compliant. Every approval creates a non-transferable e-signature. (Paper 06 §5)</p>
+            </div>
+          </div>
+          <div class="sg-component-row">
+            <button class="btn btn-primary" onclick="document.getElementById('sgEsign').style.display='flex'">▶ Launch E-Sign Demo</button>
+          </div>
+          <!-- E-Sign Modal -->
+          <div id="sgEsign" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(8,16,25,0.85);align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+            <div style="background:var(--sb-surface);border:2px solid rgba(255,107,53,0.4);border-radius:var(--sb-radius-lg);padding:28px;max-width:440px;width:calc(100% - 48px);position:relative;box-shadow:var(--sb-shadow);">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                <img src="/images/yinyang/yinyang-logo-32.png" width="28" height="28" alt="YinYang" style="border-radius:50%;">
+                <strong style="font-family:var(--sb-font-display);">Review before running</strong>
+              </div>
+              <div style="background:var(--sb-surface-strong);border-radius:var(--sb-radius-md);padding:14px;margin-bottom:16px;font-size:0.88rem;">
+                <div style="color:var(--sb-text-muted);font-size:0.78rem;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Preview — Step 1 of 3</div>
+                <div style="margin-bottom:6px;">📧 <strong>Navigate</strong> to mail.google.com/inbox</div>
+                <div style="margin-bottom:6px;">🔍 <strong>Read</strong> 47 unread emails (budget: 50/50 available)</div>
+                <div>✍️ <strong>Draft</strong> up to 3 replies — <em>no sends without another approval</em></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.82rem;margin-bottom:16px;">
+                <div style="background:var(--sb-surface-strong);padding:10px;border-radius:8px;"><span style="color:var(--sb-text-muted);">Est. cost</span><br><strong style="font-family:var(--sb-font-mono);">~$0.12</strong></div>
+                <div style="background:var(--sb-surface-strong);padding:10px;border-radius:8px;"><span style="color:var(--sb-text-muted);">Est. time</span><br><strong>~18 seconds</strong></div>
+                <div style="background:var(--sb-surface-strong);padding:10px;border-radius:8px;"><span style="color:var(--sb-text-muted);">Credits remaining</span><br><strong style="font-family:var(--sb-font-mono);color:var(--sb-success);">$4.88</strong></div>
+                <div style="background:var(--sb-surface-strong);padding:10px;border-radius:8px;"><span style="color:var(--sb-text-muted);">Safety</span><br><strong>B — your approval</strong></div>
+              </div>
+              <p style="font-size:0.78rem;color:var(--sb-text-muted);margin-bottom:14px;">By clicking Approve, you e-sign this action. Your digital signature is permanently sealed with SHA-256 (Part 11 §11.70). This cannot be transferred or copied.</p>
+              <div style="display:flex;gap:10px;">
+                <button onclick="document.getElementById('sgEsign').style.display='none';sgDelight('celebrate');" style="flex:1;background:var(--sb-success);color:var(--sb-bg);border:none;padding:11px;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">✓ Approve &amp; Sign</button>
+                <button onclick="document.getElementById('sgEsign').style.display='none';" style="flex:0 0 auto;background:var(--sb-danger);color:#fff;border:none;padding:11px 20px;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">✗ Reject</button>
+              </div>
+            </div>
+          </div>
+          <small style="display:block;margin-top:12px;color:var(--sb-text-muted);font-size:0.82rem;">Paper 06 §5 | E-Signature = SHA256(user_id + timestamp + meaning + record_hash) | Meaning: reviewed | approved | authored | responsible</small>
+        </section>
+
       </main>
 
       <footer class="site-footer">

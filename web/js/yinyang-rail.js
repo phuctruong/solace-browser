@@ -25,6 +25,9 @@ const YinyangRail = (() => {
   const STORAGE_KEY_BELT = 'yy_belt';
   const STORAGE_KEY_CREDITS = 'yy_credits';
   const STORAGE_KEY_ACTIONS = 'yy_actions';
+  const STORAGE_KEY_PALETTE = 'yy_palette';
+  const YY_PALETTE_COUNT = 6;
+  const YY_PALETTE_NAMES = ['Cyan', 'Ocean', 'Sunset', 'Aurora', 'Fire', 'Lunar'];
 
   let _rail = null;
   let _expanded = localStorage.getItem(STORAGE_KEY_EXPANDED) === 'true';
@@ -96,11 +99,39 @@ const YinyangRail = (() => {
     }
   }
 
+  // ─── Palette ──────────────────────────────────────────────────
+  function _applyPalette(idx) {
+    if (!_rail) return;
+    _rail.querySelectorAll('.yy-logo-img, .yy-input-logo').forEach(img => {
+      img.setAttribute('data-palette', String(idx));
+    });
+  }
+
+  function _spinLogos() {
+    if (!_rail) return;
+    _rail.querySelectorAll('.yy-logo-img, .yy-input-logo').forEach(img => {
+      img.classList.remove('is-spinning');
+      void img.offsetWidth; // force reflow so animation restarts
+      img.classList.add('is-spinning');
+      img.addEventListener('animationend', () => img.classList.remove('is-spinning'), { once: true });
+    });
+  }
+
+  function _cyclePalette() {
+    const cur = parseInt(localStorage.getItem(STORAGE_KEY_PALETTE) || '0', 10);
+    const next = (cur + 1) % YY_PALETTE_COUNT;
+    localStorage.setItem(STORAGE_KEY_PALETTE, next);
+    _applyPalette(next);
+    return next;
+  }
+
   function _toggle() {
     _expanded = !_expanded;
     localStorage.setItem(STORAGE_KEY_EXPANDED, _expanded);
     _applyExpandState(_rail);
     if (_expanded) {
+      _cyclePalette();
+      _spinLogos();
       setTimeout(() => _rail.querySelector('#yyInput').focus(), 50);
     }
   }
@@ -237,6 +268,10 @@ const YinyangRail = (() => {
     if (document.getElementById('yyRail')) return; // already injected
     _rail = _buildRail();
     document.body.appendChild(_rail);
+
+    // Restore saved palette
+    const savedPalette = parseInt(localStorage.getItem(STORAGE_KEY_PALETTE) || '0', 10);
+    _applyPalette(savedPalette);
 
     // Adjust page bottom margin so content isn't hidden behind the rail
     document.body.style.paddingBottom = '44px';
