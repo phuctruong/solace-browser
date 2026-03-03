@@ -184,10 +184,23 @@
       const data = await resp.json();
       const strings = data.ui || {};
       if (!Object.keys(strings).length) return;
+      // Standard text nodes
       document.querySelectorAll("[data-i18n]").forEach((el) => {
         const k = el.dataset.i18n;
         if (strings[k] !== undefined) {
-          el.textContent = strings[k];
+          // Use innerHTML only if the translated string contains HTML tags
+          if (strings[k].includes("<")) {
+            el.innerHTML = strings[k];
+          } else {
+            el.textContent = strings[k];
+          }
+        }
+      });
+      // Input placeholders
+      document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+        const k = el.dataset.i18nPlaceholder;
+        if (strings[k] !== undefined) {
+          el.placeholder = strings[k];
         }
       });
     } catch (e) { /* fail silently — English fallback stays in place */ }
@@ -199,16 +212,30 @@
     });
   }
 
+  let _revealObserver = null;
+
   function initRevealObserver() {
-    const observer = new IntersectionObserver((entries) => {
+    _revealObserver = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add("is-visible");
         }
       });
-    }, { threshold: 0.15 });
+    }, { threshold: 0.05 });
 
-    document.querySelectorAll(".reveal").forEach((node) => observer.observe(node));
+    document.querySelectorAll(".reveal").forEach((node) => _revealObserver.observe(node));
+  }
+
+  // Call after dynamic DOM injection to observe newly added .reveal elements
+  function observeNewRevealNodes(root) {
+    const target = root || document;
+    target.querySelectorAll(".reveal:not(.is-visible)").forEach((node) => {
+      if (_revealObserver) {
+        _revealObserver.observe(node);
+      } else {
+        node.classList.add("is-visible");
+      }
+    });
   }
 
   function initParticles() {
@@ -559,7 +586,7 @@
     });
 
     mount.innerHTML = Object.keys(categories).sort().map((category) => `
-      <section class="page-section reveal">
+      <section class="page-section reveal is-visible">
         <div class="section-heading">
           <div>
             <h3 class="section-title">${escapeHtml(titleCase(category))}</h3>
@@ -571,6 +598,7 @@
         </div>
       </section>
     `).join("");
+    observeNewRevealNodes(mount);
   }
 
   var ICON_IMG_MAP = {

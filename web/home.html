@@ -360,7 +360,6 @@
             <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard" data-i18n="nav_machine">Machine</a>
             <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect" data-i18n="nav_tunnel">Tunnel</a>
             <a class="nav-link" data-nav-path="/settings" href="/settings" data-i18n="nav_settings">Settings</a>
-            <a class="nav-link nav-link--accent" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener" data-i18n="nav_full_product">Full product</a>
           </nav>
           <div class="sb-lang-switch" id="sb-lang-switch">
             <button class="sb-lang-btn" id="sb-lang-btn" aria-label="Select language" aria-expanded="false" aria-controls="sb-lang-menu">
@@ -395,7 +394,6 @@
         </div>
         <div class="mobile-menu__section">
           <h3 data-i18n="menu_platform">Platform</h3>
-          <a class="nav-link--accent" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener" data-i18n="menu_full_product">Full product page</a>
           <a href="/download" data-i18n="menu_download">Download</a>
         </div>
       </div>
@@ -407,42 +405,42 @@
           <div class="home-setup-prompt" id="homeSetupPrompt" style="display:none">
             <div class="home-setup-prompt__icon">⚡</div>
             <div class="home-setup-prompt__text">
-              <h3>Add your power source to unlock all apps</h3>
-              <p>Bring your own API key (free) or use Solace Managed LLM ($8/mo).</p>
+              <h3 data-i18n="home_setup_h3">Add your power source to unlock all apps</h3>
+              <p data-i18n="home_setup_p">Bring your own API key (free) or use Solace Managed LLM ($8/mo).</p>
             </div>
-            <button class="home-setup-prompt__cta" id="homeSetupCta">Set up now</button>
+            <button class="home-setup-prompt__cta" id="homeSetupCta" data-i18n="home_setup_cta">Set up now</button>
           </div>
 
           <!-- Hero — Jony Ive: one idea. "Your AI agent for the web." -->
           <section class="home-hero reveal">
             <div class="home-hero__text">
-              <h1>Your AI agent for<br><span>the web.</span></h1>
-              <p>Every action approved by you. Recipes capture what worked. Evidence keeps every run sealed and audit-ready forever.</p>
+              <h1 data-i18n="home_hero_h1">Your AI agent for<br><span>the web.</span></h1>
+              <p data-i18n="home_hero_p">Every action approved by you. Recipes capture what worked. Evidence keeps every run sealed and audit-ready forever.</p>
               <div class="home-hero__ctas">
-                <a class="btn btn-primary" href="/app-store">Browse Apps</a>
-                <a class="btn btn-secondary" href="/settings">Settings</a>
+                <a class="btn btn-primary" href="/app-store" data-i18n="home_hero_browse">Browse Apps</a>
+                <a class="btn btn-secondary" href="/settings" data-i18n="nav_settings">Settings</a>
               </div>
               <!-- Remote control pill — shows when tunnel is connected -->
               <a class="home-remote-pill" href="/tunnel-connect" id="homeRemotePill" title="Control this browser remotely from solaceagi.com">
                 <span class="home-remote-pill__dot" id="homeRemoteDot"></span>
-                <span id="homeRemoteLabel">Remote control</span>
+                <span id="homeRemoteLabel" data-i18n="home_remote_label">Remote control</span>
               </a>
             </div>
             <div class="home-hero__visual">
               <img class="home-hero__yy" src="/images/yinyang/yinyang-loading-128.gif" alt="Yinyang">
-              <div class="home-hero__status" id="heroStatus">● Agent ready</div>
+              <div class="home-hero__status" id="heroStatus" data-i18n="home_hero_status">● Agent ready</div>
             </div>
           </section>
 
           <!-- Featured app: Today's pick -->
           <section class="home-featured reveal">
-            <div class="home-featured__label">Today's pick</div>
+            <div class="home-featured__label" data-i18n="home_featured_label">Today's pick</div>
             <a class="home-featured-card" href="/app-store" id="homeFeatured">
               <div>
-                <div class="home-featured-card__kicker">Featured app</div>
-                <h2>Gmail Inbox Triage</h2>
-                <p>Reads your inbox, surfaces only what needs attention, drafts replies for your review. You approve every send. Your AI assistant that respects your time and your inbox.</p>
-                <span class="home-featured-card__btn">Open app →</span>
+                <div class="home-featured-card__kicker" data-i18n="home_featured_kicker">Featured app</div>
+                <h2 data-i18n="home_featured_h2">Gmail Inbox Triage</h2>
+                <p data-i18n="home_featured_p">Reads your inbox, surfaces only what needs attention, drafts replies for your review. You approve every send. Your AI assistant that respects your time and your inbox.</p>
+                <span class="home-featured-card__btn" data-i18n="home_featured_btn">Open app →</span>
               </div>
               <img class="home-featured-card__icon" src="/images/app-icons/gmail.png"
                    onerror="this.style.display='none'"
@@ -453,8 +451,8 @@
           <!-- Your apps grid — Apple Home Screen style -->
           <section class="home-apps-section reveal">
             <div class="home-apps-label">
-              <span>Your apps</span>
-              <a href="/app-store">See all →</a>
+              <span data-i18n="home_apps_label">Your apps</span>
+              <a href="/app-store" data-i18n="home_apps_see_all">See all →</a>
             </div>
             <div class="home-app-grid" id="homeAppGrid">
               <!-- populated by JS from /api/apps -->
@@ -466,18 +464,18 @@
                Rory Sutherland: "A screenshot isn't surveillance. It's your digital alibi — proof you were never there without permission." -->
           <section class="home-wow-section reveal" id="homeActivitySection">
             <div class="home-wow-label">
-              <span>Recent activity</span>
-              <a href="/activity">All runs →</a>
+              <span data-i18n="home_activity_label">Recent activity</span>
+              <a href="/activity" data-i18n="home_activity_all">All runs →</a>
             </div>
             <div class="home-run-strip" id="homeRunStrip">
-              <div class="home-empty">No runs yet — launch your first app to see activity here.</div>
+              <div class="home-empty" data-i18n="home_empty_runs">No runs yet — launch your first app to see activity here.</div>
             </div>
             <!-- Part 11 compliance strip -->
             <div class="home-compliance" style="margin-top:12px">
               <div class="home-compliance__icon">🔐</div>
               <div class="home-compliance__text">
-                <h4>Every run is sealed and audit-ready</h4>
-                <p>SHA-256 hash chain on all agent actions. You approved every step. Evidence kept forever. Competitors delete evidence — we build it.</p>
+                <h4 data-i18n="home_compliance_h4">Every run is sealed and audit-ready</h4>
+                <p data-i18n="home_compliance_p">SHA-256 hash chain on all agent actions. You approved every step. Evidence kept forever. Competitors delete evidence — we build it.</p>
               </div>
               <div class="home-compliance__badge" id="homeComplianceBadge">✓ Part 11</div>
             </div>
@@ -488,13 +486,13 @@
                Vanessa Van Edwards: "We remember what you need, so you don't have to." -->
           <section class="home-wow-section reveal" id="homeScheduleSection">
             <div class="home-wow-label">
-              <span>Upcoming schedule</span>
-              <a href="/schedule">Manage →</a>
+              <span data-i18n="home_schedule_label">Upcoming schedule</span>
+              <a href="/schedule" data-i18n="home_schedule_manage">Manage →</a>
             </div>
             <div class="home-schedule-strip" id="homeScheduleStrip">
-              <div class="home-empty">No scheduled runs yet.</div>
+              <div class="home-empty" data-i18n="home_empty_schedule">No scheduled runs yet.</div>
             </div>
-            <a class="home-schedule-add" href="/schedule">+ Schedule a recurring task</a>
+            <a class="home-schedule-add" href="/schedule" data-i18n="home_schedule_add">+ Schedule a recurring task</a>
           </section>
 
           <!-- BUILD YOUR OWN APP
@@ -503,12 +501,12 @@
                YinYang guides the creation. Submit to App Store → stored in Firestore → team reviews → merged to GitHub. -->
           <section class="home-create reveal" id="homeCreateSection">
             <div>
-              <div class="home-create__label">Build with Yinyang</div>
-              <h3>Create your own app</h3>
-              <p>Describe what you want to automate. Yinyang turns your idea into a working recipe in minutes. Submit it to the Solace App Store — our AI triages it, the team reviews, and it goes live on GitHub for everyone.</p>
+              <div class="home-create__label" data-i18n="home_create_label">Build with Yinyang</div>
+              <h3 data-i18n="home_create_h3">Create your own app</h3>
+              <p data-i18n="home_create_p">Describe what you want to automate. Yinyang turns your idea into a working recipe in minutes. Submit it to the Solace App Store — our AI triages it and the team reviews it.</p>
               <div class="home-create__actions">
-                <a class="home-create__btn home-create__btn--primary" href="/create-app">+ Create App</a>
-                <a class="home-create__btn home-create__btn--secondary" href="/app-store#community">Community Apps</a>
+                <a class="home-create__btn home-create__btn--primary" href="/create-app" data-i18n="home_create_btn">+ Create App</a>
+                <a class="home-create__btn home-create__btn--secondary" href="/app-store#community" data-i18n="home_create_community">Community Apps</a>
               </div>
             </div>
             <img class="home-create__yy" src="/images/yinyang/yinyang-loading-128.gif" alt="Yinyang builds your app">

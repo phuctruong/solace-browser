@@ -36,7 +36,6 @@
             <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard" data-i18n="nav_machine">Machine</a>
             <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect" data-i18n="nav_tunnel">Tunnel</a>
             <a class="nav-link" data-nav-path="/settings" href="/settings" data-i18n="nav_settings">Settings</a>
-            <a class="nav-link nav-link--accent" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener" data-i18n="nav_full_product">Full product</a>
           </nav>
           <div class="sb-lang-switch" id="sb-lang-switch">
             <button class="sb-lang-btn" id="sb-lang-btn" aria-label="Select language" aria-expanded="false" aria-controls="sb-lang-menu">
@@ -72,19 +71,19 @@
       <main>
         <section class="hero reveal">
           <div>
-            <div class="eyebrow">Web-native automation | No API keys | AI built into the browser</div>
-            <h1 class="display">App Store</h1>
-            <p class="lead">Every app uses web versions of services directly. No vendor API keys, no browser extensions. Your inbox customizes, the outbox shows AI work for your approval.</p>
-            <label class="sr-only" for="app-search">Search apps</label>
-            <input class="search-input" id="app-search" type="search" aria-label="Search apps" placeholder="Search apps by name, category, or service...">
+            <div class="eyebrow" data-i18n="appstore_eyebrow">Web-native automation | No API keys | AI built into the browser</div>
+            <h1 class="display" data-i18n="appstore_h1">App Store</h1>
+            <p class="lead" data-i18n="appstore_lead">Every app uses web versions of services directly. No vendor API keys, no browser extensions. Your inbox customizes, the outbox shows AI work for your approval.</p>
+            <label class="sr-only" for="app-search" data-i18n="appstore_search_label">Search apps</label>
+            <input class="search-input" id="app-search" type="search" aria-label="Search apps" data-i18n-placeholder="appstore_search_placeholder" placeholder="Search apps by name, category, or service...">
           </div>
         </section>
 
         <section class="page-section reveal">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">Communications, Productivity, Sales, Engineering, Social</h2>
-              <p class="section-copy">App categories are loaded from the live API and grouped dynamically. Search filters by name, category, and service.</p>
+              <h2 class="section-title" data-i18n="appstore_categories_h2">Communications, Productivity, Sales, Engineering, Social</h2>
+              <p class="section-copy" data-i18n="appstore_categories_copy">Browse all available automations. Search by name, category, or the website it works with.</p>
             </div>
           </div>
           <div id="app-store-categories">
@@ -97,29 +96,29 @@
         <section class="page-section reveal">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">Store Sync + Community Queue</h2>
-              <p class="section-copy">Official catalog is git-backed. User proposals route to a review queue (local file in dev, Firestore in production).</p>
+              <h2 class="section-title" data-i18n="appstore_sync_h2">Suggest an App</h2>
+              <p class="section-copy" data-i18n="appstore_sync_copy">Missing an app you need? Submit a suggestion — our team reviews every request.</p>
             </div>
           </div>
           <article class="data-panel">
-            <h3>Sync status</h3>
+            <h3 data-i18n="appstore_sync_h3">Community queue</h3>
             <p class="section-copy" id="app-store-sync-panel">Loading <code>/api/app-store/sync</code>...</p>
           </article>
           <div class="kpi-grid">
             <article class="kpi-card">
-              <h3>Propose an app</h3>
+              <h3 data-i18n="appstore_propose_h3">Propose an app</h3>
               <form id="app-proposal-form">
-                <p><label for="proposal-name">Name</label><br><input id="proposal-name" name="name" type="text" required></p>
-                <p><label for="proposal-site">Site</label><br><input id="proposal-site" name="site" type="text" placeholder="example.com" required></p>
-                <p><label for="proposal-category">Category</label><br><input id="proposal-category" name="category" type="text" placeholder="productivity" required></p>
-                <p><label for="proposal-description">Description</label><br><textarea id="proposal-description" name="description" rows="4" required></textarea></p>
-                <p><label for="proposal-submitted-by">Submitted by</label><br><input id="proposal-submitted-by" name="submitted_by" type="text" placeholder="you@company.com"></p>
-                <p><button class="btn btn-secondary" type="submit">Submit proposal</button></p>
+                <p><label for="proposal-name" data-i18n="appstore_propose_name">Name</label><br><input id="proposal-name" name="name" type="text" required></p>
+                <p><label for="proposal-site" data-i18n="appstore_propose_site">Site</label><br><input id="proposal-site" name="site" type="text" placeholder="example.com" required></p>
+                <p><label for="proposal-category" data-i18n="appstore_propose_category">Category</label><br><input id="proposal-category" name="category" type="text" placeholder="productivity" required></p>
+                <p><label for="proposal-description" data-i18n="appstore_propose_desc">Description</label><br><textarea id="proposal-description" name="description" rows="4" required></textarea></p>
+                <p><label for="proposal-submitted-by" data-i18n="appstore_propose_by">Submitted by</label><br><input id="proposal-submitted-by" name="submitted_by" type="text" placeholder="you@company.com"></p>
+                <p><button class="btn btn-secondary" type="submit" data-i18n="appstore_propose_submit">Submit proposal</button></p>
               </form>
-              <p class="section-copy" id="app-proposal-status">Queue status unavailable.</p>
+              <p class="section-copy" id="app-proposal-status">Suggestions welcome — we review every one.</p>
             </article>
             <article class="kpi-card">
-              <h3>Recent proposals</h3>
+              <h3 data-i18n="appstore_proposals_h3">Recent proposals</h3>
               <ul class="data-list" id="app-proposal-list">
                 <li>Loading <code>/api/app-store/proposals</code>...</li>
               </ul>
@@ -131,8 +130,8 @@
         <section class="page-section reveal">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">No-API Exclusives</h2>
-              <p class="section-copy">Services with no public API where Solace Browser is the <strong>only automation path</strong>.</p>
+              <h2 class="section-title" data-i18n="appstore_noapi_h2">No-API Exclusives</h2>
+              <p class="section-copy">These services have no official API. Solace Browser is the <strong>only way to automate</strong> them.</p>
             </div>
           </div>
           <article class="data-panel">
@@ -150,10 +149,10 @@
         <section class="page-section reveal" id="fun-packs">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">Fun &amp; Personality Packs</h2>
-              <p class="section-copy">Downloadable content packs that give YinYang more jokes, facts, and personality flavors. All 13 languages supported.</p>
+              <h2 class="section-title" data-i18n="appstore_funpacks_h2">Fun &amp; Personality Packs</h2>
+              <p class="section-copy" data-i18n="appstore_funpacks_copy">Downloadable content packs that give YinYang more jokes, facts, and personality flavors. All 13 languages supported.</p>
             </div>
-            <a class="text-link" href="/settings#yinyang">YinYang settings</a>
+            <a class="text-link" href="/settings#yinyang" data-i18n="appstore_funpacks_settings">YinYang settings</a>
           </div>
           <div id="fun-pack-grid" class="kpi-grid">
             <div class="kpi-card">
@@ -167,21 +166,21 @@
         <section class="page-section reveal">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">How every app works</h2>
-              <p class="section-copy">Universal contract: inbox customizes, outbox shows AI work, you approve.</p>
+              <h2 class="section-title" data-i18n="appstore_how_h2">How every app works</h2>
+              <p class="section-copy" data-i18n="appstore_how_copy">Universal contract: inbox customizes, outbox shows AI work, you approve.</p>
             </div>
           </div>
           <div class="kpi-grid">
             <div class="kpi-card">
-              <strong>1. Inbox</strong>
+              <strong data-i18n="appstore_how_1_title">1. Inbox</strong>
               <span>You customize: prompts, templates, assets, policies. Drop files in <code>inbox/</code> to teach the AI.</span>
             </div>
             <div class="kpi-card">
-              <strong>2. Preview</strong>
+              <strong data-i18n="appstore_how_2_title">2. Preview</strong>
               <span>LLM called ONCE. Preview shown in Yinyang rail. You approve, edit, or reject.</span>
             </div>
             <div class="kpi-card">
-              <strong>3. Execute</strong>
+              <strong data-i18n="appstore_how_3_title">3. Execute</strong>
               <span>Approved output sealed (chmod 444). CPU replays deterministically. Evidence hash-chained.</span>
             </div>
           </div>
@@ -191,13 +190,13 @@
         <section class="page-section reveal" id="community" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 40px;">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">Build Your Own App</h2>
-              <p class="section-copy">Describe what you want to automate. Yinyang guides you. Submit to the store — our AI triages, team reviews, approved apps go live on GitHub.</p>
+              <h2 class="section-title" data-i18n="appstore_build_h2">Build Your Own App</h2>
+              <p class="section-copy" data-i18n="appstore_build_copy">Describe what you want to automate. Yinyang guides you. Submit to the store — our AI triages, team reviews, and approved apps go live.</p>
             </div>
           </div>
           <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:16px;">
-            <a class="btn btn-primary" href="/create-app">+ Create App with Yinyang</a>
-            <a class="btn btn-secondary" href="https://www.solaceagi.com/app-store" target="_blank" rel="noopener">Solace AGI App Store</a>
+            <a class="btn btn-primary" href="/create-app" data-i18n="appstore_build_create">+ Create App with Yinyang</a>
+            <a class="btn btn-secondary" href="https://www.solaceagi.com/app-store" target="_blank" rel="noopener" data-i18n="appstore_build_store">Solace AGI App Store</a>
           </div>
         </section>
       </main>

@@ -92,7 +92,67 @@
     "docs_oauth3_evidence_h2": "Evidence trails",
     "docs_oauth3_failclosed_h2": "Fail-closed model",
     "docs_oauth3_revoke_h2": "Revocation",
-    "docs_oauth3_faq_h2": "FAQ"
+    "docs_oauth3_faq_h2": "FAQ",
+    "home_setup_h3": "Add your power source to unlock all apps",
+    "home_setup_p": "Bring your own API key (free) or use Solace Managed LLM ($8/mo).",
+    "home_setup_cta": "Set up now",
+    "home_hero_h1": "Your AI agent for the web.",
+    "home_hero_p": "Every action approved by you. Recipes capture what worked. Evidence keeps every run sealed and audit-ready forever.",
+    "home_hero_browse": "Browse Apps",
+    "home_hero_status": "● Agent ready",
+    "home_remote_label": "Remote control",
+    "home_featured_label": "Today's pick",
+    "home_featured_kicker": "Featured app",
+    "home_featured_h2": "Gmail Inbox Triage",
+    "home_featured_p": "Reads your inbox, surfaces only what needs attention, drafts replies for your review. You approve every send.",
+    "home_featured_btn": "Open app →",
+    "home_apps_label": "Your apps",
+    "home_apps_see_all": "See all →",
+    "home_activity_label": "Recent activity",
+    "home_activity_all": "All runs →",
+    "home_empty_runs": "No runs yet — launch your first app to see activity here.",
+    "home_compliance_h4": "Every run is sealed and audit-ready",
+    "home_compliance_p": "SHA-256 hash chain on all agent actions. You approved every step. Evidence kept forever.",
+    "home_schedule_label": "Upcoming schedule",
+    "home_schedule_manage": "Manage →",
+    "home_empty_schedule": "No scheduled runs yet.",
+    "home_schedule_add": "+ Schedule a recurring task",
+    "home_create_label": "Build with Yinyang",
+    "home_create_h3": "Create your own app",
+    "home_create_p": "Describe what you want to automate. Yinyang turns your idea into a working recipe in minutes. Submit it to the Solace App Store — our AI triages it and the team reviews it.",
+    "home_create_btn": "+ Create App",
+    "home_create_community": "Community Apps",
+    "appstore_eyebrow": "Web-native automation | No API keys | AI built into the browser",
+    "appstore_h1": "App Store",
+    "appstore_lead": "Every app uses web versions of services directly. No vendor API keys, no browser extensions. Your inbox customizes, the outbox shows AI work for your approval.",
+    "appstore_search_label": "Search apps",
+    "appstore_search_placeholder": "Search apps by name, category, or service...",
+    "appstore_categories_h2": "Communications, Productivity, Sales, Engineering, Social",
+    "appstore_categories_copy": "App categories are loaded from the live API and grouped dynamically. Search filters by name, category, and service.",
+    "appstore_sync_h2": "Store Sync + Community Queue",
+    "appstore_sync_copy": "Official catalog is git-backed. User proposals route to a review queue (local file in dev, Firestore in production).",
+    "appstore_sync_h3": "Sync status",
+    "appstore_propose_h3": "Propose an app",
+    "appstore_propose_name": "Name",
+    "appstore_propose_site": "Site",
+    "appstore_propose_category": "Category",
+    "appstore_propose_desc": "Description",
+    "appstore_propose_by": "Submitted by",
+    "appstore_propose_submit": "Submit proposal",
+    "appstore_proposals_h3": "Recent proposals",
+    "appstore_noapi_h2": "No-API Exclusives",
+    "appstore_funpacks_h2": "Fun & Personality Packs",
+    "appstore_funpacks_copy": "Downloadable content packs that give YinYang more jokes, facts, and personality flavors. All 13 languages supported.",
+    "appstore_funpacks_settings": "YinYang settings",
+    "appstore_how_h2": "How every app works",
+    "appstore_how_copy": "Universal contract: inbox customizes, outbox shows AI work, you approve.",
+    "appstore_how_1_title": "1. Inbox",
+    "appstore_how_2_title": "2. Preview",
+    "appstore_how_3_title": "3. Execute",
+    "appstore_build_h2": "Build Your Own App",
+    "appstore_build_copy": "Describe what you want to automate. Yinyang guides you. Submit to the store — our AI triages, team reviews, and approved apps go live.",
+    "appstore_build_create": "+ Create App with Yinyang",
+    "appstore_build_store": "Solace AGI App Store"
   },
   "personality": {
     "professional": {
@@ -266,29 +326,77 @@
     },
     "holidays": {
       "h001_name": "New Year",
-      "h001_greetings": ["Happy New Year!", "New year, new automations.", "Here's to a fresh start."],
+      "h001_greetings": [
+        "Happy New Year!",
+        "New year, new automations.",
+        "Here's to a fresh start."
+      ],
       "h002_name": "Lunar New Year",
-      "h002_greetings": ["Gong Xi Fa Cai!", "Chuc Mung Nam Moi!", "Wishing you prosperity."],
+      "h002_greetings": [
+        "Gong Xi Fa Cai!",
+        "Chuc Mung Nam Moi!",
+        "Wishing you prosperity."
+      ],
       "h003_name": "Valentine's Day",
-      "h003_greetings": ["Happy Valentine's Day!", "Sending digital love.", "Heart status: full."],
+      "h003_greetings": [
+        "Happy Valentine's Day!",
+        "Sending digital love.",
+        "Heart status: full."
+      ],
       "h004_name": "St. Patrick's Day",
-      "h004_greetings": ["Happy St. Patrick's Day!", "Luck of the Irish to you.", "May your tasks run green."],
+      "h004_greetings": [
+        "Happy St. Patrick's Day!",
+        "Luck of the Irish to you.",
+        "May your tasks run green."
+      ],
       "h005_name": "Easter",
-      "h005_greetings": ["Happy Easter!", "Spring is here.", "Hope this brings you joy."],
+      "h005_greetings": [
+        "Happy Easter!",
+        "Spring is here.",
+        "Hope this brings you joy."
+      ],
       "h006_name": "Mother's Day",
-      "h006_greetings": ["Happy Mother's Day!", "Here's to the ones who keep everything together.", "Cheers to the MVPs."],
+      "h006_greetings": [
+        "Happy Mother's Day!",
+        "Here's to the ones who keep everything together.",
+        "Cheers to the MVPs."
+      ],
       "h007_name": "Father's Day",
-      "h007_greetings": ["Happy Father's Day!", "To the patient ones.", "Cheers to the builders."],
+      "h007_greetings": [
+        "Happy Father's Day!",
+        "To the patient ones.",
+        "Cheers to the builders."
+      ],
       "h008_name": "Independence Day",
-      "h008_greetings": ["Happy 4th of July!", "Freedom and automation.", "Stars, stripes, and automation."],
+      "h008_greetings": [
+        "Happy 4th of July!",
+        "Freedom and automation.",
+        "Stars, stripes, and automation."
+      ],
       "h009_name": "Halloween",
-      "h009_greetings": ["Happy Halloween! 👻", "Boo! Just kidding. Mostly.", "Stay safe out there."],
+      "h009_greetings": [
+        "Happy Halloween! 👻",
+        "Boo! Just kidding. Mostly.",
+        "Stay safe out there."
+      ],
       "h010_name": "Thanksgiving",
-      "h010_greetings": ["Happy Thanksgiving!", "Grateful for every run.", "Giving thanks for zero errors."],
+      "h010_greetings": [
+        "Happy Thanksgiving!",
+        "Grateful for every run.",
+        "Giving thanks for zero errors."
+      ],
       "h011_name": "Christmas",
-      "h011_greetings": ["Merry Christmas! 🎄", "Happy Holidays!", "Peace, joy, and zero bugs."],
+      "h011_greetings": [
+        "Merry Christmas! 🎄",
+        "Happy Holidays!",
+        "Peace, joy, and zero bugs."
+      ],
       "h012_name": "Diwali",
-      "h012_greetings": ["Happy Diwali! 🪔", "Light wins.", "Wishing you light and joy."]
+      "h012_greetings": [
+        "Happy Diwali! 🪔",
+        "Light wins.",
+        "Wishing you light and joy."
+      ]
     }
   }
 }
