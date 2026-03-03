@@ -28,7 +28,7 @@ flowchart TD
   - macOS: `solace-browser-macos-universal`
   - Windows: `solace-browser-windows-x86_64.exe`
 - Native host requirements:
-  - Linux artifacts on Linux
+  - Linux artifacts on Linux (`ubuntu-22.04` baseline in CI)
   - macOS artifacts on macOS (runner-native Mach-O)
   - Windows artifacts on Windows
 - Binary-type gate is fail-closed:

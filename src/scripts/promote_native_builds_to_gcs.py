@@ -18,6 +18,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
@@ -25,6 +26,11 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, hdrs, newurl):
+        return None
 
 
 REPO_OWNER = "phuctruong"
@@ -85,8 +91,19 @@ def _github_download(url: str, destination: Path, username: str, password: str) 
     token = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("utf-8")
     request.add_header("Authorization", f"Basic {token}")
     request.add_header("Accept", "application/vnd.github+json")
-    with urllib.request.urlopen(request, timeout=120) as response:
-        destination.write_bytes(response.read())
+    opener = urllib.request.build_opener(_NoRedirect)
+    try:
+        with opener.open(request, timeout=120) as response:
+            destination.write_bytes(response.read())
+            return
+    except urllib.error.HTTPError as exc:
+        if exc.code not in {301, 302, 303, 307, 308}:
+            raise
+        location = exc.headers.get("Location")
+        if not location:
+            raise RuntimeError(f"GitHub artifact redirect missing Location header for {url}.")
+        with urllib.request.urlopen(location, timeout=120) as response:
+            destination.write_bytes(response.read())
 
 
 def _resolve_run_id(tag: str | None, run_id: int | None, username: str, password: str) -> int:

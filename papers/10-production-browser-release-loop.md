@@ -22,6 +22,7 @@ Release loop is now platform-scoped and supports:
    - macOS target must be `Mach-O`
    - Windows target must be `PE`
 6. macOS build currently emits runner-native Mach-O (arm64 on `macos-latest`) under stable object key `solace-browser-macos-universal`.
+7. Linux CI build pins `ubuntu-22.04` to avoid shipping binaries that require newer glibc than common Ubuntu hosts.
 
 Validation evidence:
 - `scripts/build-mac.sh` on Linux returns: `ERROR: build-mac.sh must run on macOS`.

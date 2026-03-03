@@ -21,6 +21,7 @@ Artifacts in `latest/`:
 6. `solace-browser-windows-x86_64.exe.sha256`
 
 Note: `solace-browser-macos-universal` is currently a runner-native Mach-O artifact (arm64 on `macos-latest`) while preserving stable URL naming.
+Linux compatibility baseline: build on `ubuntu-22.04` in CI to keep glibc requirements compatible with common Ubuntu installations.
 
 ## Public URLs (Website Must Use)
 1. Linux:
