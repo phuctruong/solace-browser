@@ -1,0 +1,153 @@
+{
+  "run_id": "qa-20260303-230745-57e5d1",
+  "spec_id": "solace-browser-sb-docs-001",
+  "mode": "web",
+  "target_url": "http://127.0.0.1:8791/docs",
+  "page_name": "Solace Browser Sb Docs",
+  "persona_used": "kent_beck",
+  "committee": [
+    "james_bach",
+    "elisabeth_hendrickson",
+    "kent_beck",
+    "cem_kaner",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-03T23:07:45.388975Z",
+  "steps_completed": [
+    "navigate",
+    "aria_snapshot",
+    "dom_snapshot",
+    "heuristic_check",
+    "screenshot",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "agent_analysis_response": null,
+  "aria_tree_length": 0,
+  "aria_tree_excerpt": "",
+  "dom_title": "Documentation | Solace Browser",
+  "dom_h1s": [
+    "Documentation"
+  ],
+  "dom_links_count": 19,
+  "dom_images_count": 3,
+  "dom_forms": 0,
+  "dom_links_sample": [
+    {
+      "text": "Solace Browser\n              Documentation",
+      "href": "http://127.0.0.1:8791/"
+    },
+    {
+      "text": "Home",
+      "href": "http://127.0.0.1:8791/"
+    },
+    {
+      "text": "Apps",
+      "href": "http://127.0.0.1:8791/app-store"
+    },
+    {
+      "text": "Settings",
+      "href": "http://127.0.0.1:8791/settings"
+    },
+    {
+      "text": "Agents \u2192",
+      "href": "https://www.solaceagi.com/agents"
+    },
+    {
+      "text": "Sign in",
+      "href": "http://127.0.0.1:8791/start"
+    },
+    {
+      "text": "Home",
+      "href": "http://127.0.0.1:8791/"
+    },
+    {
+      "text": "App Store",
+      "href": "http://127.0.0.1:8791/app-store"
+    },
+    {
+      "text": "Settings",
+      "href": "http://127.0.0.1:8791/settings"
+    },
+    {
+      "text": "Docs Hub",
+      "href": "http://127.0.0.1:8791/docs"
+    }
+  ],
+  "heuristic_issues": [],
+  "heuristic_error_count": 0,
+  "heuristic_warning_count": 0,
+  "screenshot_path": "screenshot-20260303-180746.png",
+  "agent_analysis_request": {
+    "persona": "kent_beck",
+    "system_prompt": "You are Kent Beck, creator of TDD and XP. Think about testability: what makes this surface hard to test? What behavior should be tested first? What do you fear is broken? If you had to write one test for this surface, what would it be? Output: (1) Testability assessment, (2) What to test first, (3) Fix proposals.",
+    "evidence_summary": {
+      "url": "http://127.0.0.1:8791/docs",
+      "page_name": "Solace Browser Sb Docs",
+      "dom_title": "Documentation | Solace Browser",
+      "dom_h1s": [
+        "Documentation"
+      ],
+      "dom_links_count": 19,
+      "dom_links_sample": [
+        {
+          "text": "Solace Browser\n              Documentation",
+          "href": "http://127.0.0.1:8791/"
+        },
+        {
+          "text": "Home",
+          "href": "http://127.0.0.1:8791/"
+        },
+        {
+          "text": "Apps",
+          "href": "http://127.0.0.1:8791/app-store"
+        },
+        {
+          "text": "Settings",
+          "href": "http://127.0.0.1:8791/settings"
+        },
+        {
+          "text": "Agents \u2192",
+          "href": "https://www.solaceagi.com/agents"
+        },
+        {
+          "text": "Sign in",
+          "href": "http://127.0.0.1:8791/start"
+        },
+        {
+          "text": "Home",
+          "href": "http://127.0.0.1:8791/"
+        },
+        {
+          "text": "App Store",
+          "href": "http://127.0.0.1:8791/app-store"
+        },
+        {
+          "text": "Settings",
+          "href": "http://127.0.0.1:8791/settings"
+        },
+        {
+          "text": "Docs Hub",
+          "href": "http://127.0.0.1:8791/docs"
+        }
+      ],
+      "dom_images_count": 3,
+      "dom_forms": 0,
+      "aria_tree_excerpt": "",
+      "heuristic_issues": [],
+      "heuristic_error_count": 0,
+      "heuristic_warning_count": 0,
+      "screenshot_path": "screenshot-20260303-180746.png"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "qa_score": 100,
+  "belt": "Green",
+  "glow": 105,
+  "evidence_hash": "sha256:01a198abcd8cd99de16bf65103fbcec74f4e12044fa62187fccc8e1ec1983ed3"
+}

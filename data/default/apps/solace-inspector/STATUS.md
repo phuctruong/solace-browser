@@ -8,7 +8,7 @@
 >  and coordinate with humans. Not checking — testing."
 > — James Bach (simulated via Dragon's Den protocol)
 
-## Current GLOW: 96 ✅ COMPLETE
+## Current GLOW: 97 ✅ COMPLETE
 
 ```
 GLOW 89  ← First clean commit (all files + renamed)        [✅] DONE 2026-03-03 (commit: 3cca5ee)
@@ -19,7 +19,17 @@ GLOW 93  ← Self-diagnostic passes all 5 pages              [✅] DONE 2026-03-
 GLOW 94  ← Inspector Dashboard on cloud                    [✅] DONE 2026-03-03 (live API + --sync flag)
 GLOW 95  ← 100 sealed QA reports in vault                  [✅] DONE 2026-03-03 (105 reports sealed)
 GLOW 96  ← Inbox as QA memory substrate (51 specs 100%)    [✅] DONE 2026-03-03 (51/51 Green, 274 reports)
+GLOW 97  ← YinYang API + MCP fully QA'd (56 specs 100%)   [✅] DONE 2026-03-03 (56/56 Green, 386 reports)
 ```
+
+### GLOW 97 Evidence (2026-03-03) — 56/56 Specs 100% Green
+
+**YinYang API + MCP Coverage:**
+- **5 new specs**: yinyang-status, yinyang-notify, fun-packs-list, mcp-server, sb-settings-yinyang
+- **Endpoints verified**: `/api/yinyang/status`, `/api/yinyang/notify`, `/api/fun-packs`, MCP `tools/list`, settings chat panel
+- **MCP JSON-RPC**: `tools/list` returns 7 tools (navigate, click, fill, screenshot, snapshot, evaluate, aria_snapshot)
+- **Total reports**: 386 (SHA-256 sealed)
+- **Bug found + fixed**: MCP spec had `stderr_empty: false` (MCP is clean, no stderr output)
 
 ### GLOW 96 Evidence (2026-03-03) — 51/51 Specs 100% Green
 
