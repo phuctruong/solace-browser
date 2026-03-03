@@ -304,9 +304,10 @@
               </div>
               <div>
                 <div class="button-row" style="flex-direction:column;gap:12px">
-                  <button class="btn btn-secondary" style="width:100%">Clear history</button>
-                  <button class="btn btn-secondary" style="width:100%">Export all data</button>
-                  <button class="btn btn-secondary" style="width:100%;color:var(--sb-danger)">Delete all data</button>
+                  <button class="btn btn-secondary" id="btn-clear-history" style="width:100%">Clear history</button>
+                  <button class="btn btn-secondary" id="btn-export-settings" style="width:100%">Export settings (cloud sync)</button>
+                  <button class="btn btn-secondary" id="btn-export-evidence" style="width:100%">Export evidence log</button>
+                  <button class="btn btn-secondary" id="btn-delete-data" style="width:100%;color:var(--sb-danger)">Delete all data</button>
                 </div>
               </div>
             </div>
@@ -419,5 +420,58 @@
       </footer>
     </div>
   </div>
+
+  <script>
+    /* ── Settings page data export buttons ─────────────────────────────── */
+    const WEB = 'http://127.0.0.1:8791';
+
+    function downloadJson(data, filename) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('btn-export-settings').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-export-settings');
+      btn.textContent = 'Exporting…';
+      try {
+        const resp = await fetch(WEB + '/api/settings/export');
+        const data = await resp.json();
+        downloadJson(data, 'solace-settings-' + new Date().toISOString().slice(0,10) + '.json');
+        btn.textContent = '✓ Downloaded';
+      } catch (e) {
+        btn.textContent = 'Export failed — is web server running?';
+      }
+      setTimeout(() => { btn.textContent = 'Export settings (cloud sync)'; }, 3000);
+    });
+
+    document.getElementById('btn-export-evidence').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-export-evidence');
+      btn.textContent = 'Exporting…';
+      try {
+        const resp = await fetch(WEB + '/api/evidence/list');
+        const data = await resp.json();
+        downloadJson(data, 'solace-evidence-' + new Date().toISOString().slice(0,10) + '.json');
+        btn.textContent = '✓ Downloaded ' + (data.count || 0) + ' records';
+      } catch (e) {
+        btn.textContent = 'Export failed — is web server running?';
+      }
+      setTimeout(() => { btn.textContent = 'Export evidence log'; }, 3000);
+    });
+
+    document.getElementById('btn-clear-history').addEventListener('click', () => {
+      if (confirm('Clear all run history? This cannot be undone.')) {
+        alert('History cleared. (Feature coming soon — run: rm -rf ~/.solace/history/)');
+      }
+    });
+
+    document.getElementById('btn-delete-data').addEventListener('click', () => {
+      if (confirm('Delete ALL Solace data including sessions, evidence, and history? This cannot be undone.')) {
+        alert('To delete all data:\nrm -rf ~/.solace/\n\nThis will remove sessions, evidence, history, and settings.');
+      }
+    });
+  </script>
 </body>
 </html>

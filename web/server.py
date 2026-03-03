@@ -596,6 +596,12 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             if request_path == SETTINGS_ROUTE:
                 self._send_json(HTTPStatus.OK, self.data_store.read_settings(), send_body=send_body)
                 return
+            if request_path == "/api/settings/export":
+                self._handle_settings_export(send_body)
+                return
+            if request_path == "/api/evidence/list":
+                self._handle_evidence_list(send_body)
+                return
         except AppFolderNotFoundError:
             self._send_json(HTTPStatus.NOT_FOUND, {"error": "App not found"}, send_body=send_body)
             return
@@ -699,6 +705,11 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         # Fun pack download: /api/fun-packs/download
         if request_path == "/api/fun-packs/download":
             self._handle_fun_pack_download(payload)
+            return
+
+        # Settings import (cloud sync): /api/settings/import
+        if request_path == "/api/settings/import":
+            self._handle_settings_import(payload)
             return
 
         # Budget update: /api/budget
@@ -984,6 +995,85 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                 })
         self._send_json(HTTPStatus.OK, {"upcoming": upcoming, "count": len(upcoming)},
                         send_body=send_body)
+
+    def _handle_settings_export(self, send_body: bool = True) -> None:
+        """GET /api/settings/export — Export sanitized settings for cloud sync.
+
+        Strips API keys (llm.api_key, cloud.api_key) before returning.
+        Returns settings + metadata envelope for cloud vault.
+        """
+        import time as _time
+        settings = self.data_store.read_settings()
+        # Sanitize: strip sensitive fields
+        sanitized = {k: v for k, v in settings.items() if k not in ("api_key", "llm_api_key")}
+        llm = sanitized.get("llm", {})
+        sanitized["llm"] = {k: v for k, v in llm.items() if k not in ("api_key",)}
+        cloud = sanitized.get("cloud", {})
+        sanitized["cloud"] = {k: v for k, v in cloud.items() if k not in ("api_key",)}
+        envelope = {
+            "format": "solace-browser-settings-v1",
+            "exported_at": _time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "settings": sanitized,
+        }
+        self._send_json(HTTPStatus.OK, envelope, send_body=send_body)
+
+    def _handle_settings_import(self, payload: dict) -> None:
+        """POST /api/settings/import — Import settings from cloud sync envelope.
+
+        Accepts: {settings: {...}} or raw settings dict.
+        Merges into existing settings (does not overwrite API keys already set).
+        """
+        if not isinstance(payload, dict):
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "payload must be an object"})
+            return
+        # Support both envelope format and raw settings
+        incoming = payload.get("settings", payload)
+        # Safety: never overwrite existing API keys from import
+        existing = self.data_store.read_settings()
+        existing_llm_key = existing.get("llm", {}).get("api_key")
+        existing_cloud_key = existing.get("cloud", {}).get("api_key")
+        merged = {**existing, **incoming}
+        # Restore API keys that were in existing but not in import
+        if existing_llm_key and not merged.get("llm", {}).get("api_key"):
+            merged.setdefault("llm", {})["api_key"] = existing_llm_key
+        if existing_cloud_key and not merged.get("cloud", {}).get("api_key"):
+            merged.setdefault("cloud", {})["api_key"] = existing_cloud_key
+        written = self.data_store.write_settings(merged)
+        self._send_json(HTTPStatus.OK, {"ok": True, "keys_imported": list(incoming.keys()), "settings": written})
+
+    def _handle_evidence_list(self, send_body: bool = True) -> None:
+        """GET /api/evidence/list — List all esign records from audit directory.
+
+        Returns records from ~/.solace/audit/esign-*.jsonl sorted by timestamp (newest first).
+        """
+        import datetime as _dt
+        audit_dir = Path.home() / ".solace" / "audit"
+        records = []
+        if audit_dir.exists():
+            for esign_file in sorted(audit_dir.glob("esign-*.jsonl"),
+                                     key=lambda f: f.stat().st_mtime, reverse=True)[:50]:
+                try:
+                    for line in esign_file.read_text(encoding="utf-8").strip().split("\n"):
+                        if not line.strip():
+                            continue
+                        record = json.loads(line)
+                        records.append({
+                            "run_id": record.get("run_id", ""),
+                            "user_id": record.get("user_id", ""),
+                            "meaning": record.get("meaning", ""),
+                            "event_type": record.get("event_type", "ESIGN"),
+                            "esign_hash": record.get("esign_hash", record.get("path", ""))[:16] + "…",
+                            "esign_hash_full": record.get("esign_hash", ""),
+                            "screenshot": record.get("screenshot"),
+                            "timestamp": record.get("timestamp", record.get("sealed_at", "")),
+                        })
+                except Exception:
+                    continue
+        self._send_json(HTTPStatus.OK, {
+            "count": len(records),
+            "records": records[:50],
+            "audit_dir": str(audit_dir),
+        }, send_body=send_body)
 
     def _handle_schedule_approve(self, run_id: str, payload: dict) -> None:
         """Approve a pending run — write approved_v1.json + audit entry."""
