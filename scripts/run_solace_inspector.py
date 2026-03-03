@@ -691,10 +691,11 @@ def process_inbox() -> list[dict]:
             continue
 
         reports.append(r)
-        # Archive processed spec
+        # Copy to processed/ as timestamped record (keep original in inbox/ for re-runs)
         done_dir = INBOX_DIR / "processed"
         done_dir.mkdir(exist_ok=True)
-        spec_path.rename(done_dir / spec_path.name)
+        import shutil
+        shutil.copy2(spec_path, done_dir / spec_path.name)
 
     return reports
 
