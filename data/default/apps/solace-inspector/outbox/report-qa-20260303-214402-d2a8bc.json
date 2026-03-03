@@ -1,0 +1,26 @@
+{
+  "run_id": "qa-20260303-214402-d2a8bc",
+  "spec_id": "solaceagi-browser-001",
+  "mode": "web",
+  "target_url": "https://www.solaceagi.com/browser",
+  "page_name": "SolaceAGI Browser",
+  "persona_used": "james_bach",
+  "committee": [
+    "james_bach",
+    "elisabeth_hendrickson",
+    "kent_beck",
+    "cem_kaner",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-03T21:44:02.323588Z",
+  "steps_completed": [],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "agent_analysis_response": null,
+  "error": "Navigation failed: HTTPConnectionPool(host='localhost', port=9222): Read timed out. (read timeout=20)",
+  "qa_score": 0,
+  "belt": "White",
+  "glow": 0,
+  "evidence_hash": "sha256:9269f7fa606a29b6d52e1248df2d6ef3dbd917a11934478e152a078754a32e26"
+}

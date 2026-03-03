@@ -1,0 +1,119 @@
+{
+  "run_id": "qa-20260303-214100-c65480",
+  "spec_id": "solaceagi-manifesto-001",
+  "mode": "web",
+  "target_url": "https://www.solaceagi.com/manifesto",
+  "page_name": "SolaceAGI Manifesto",
+  "persona_used": "michael_bolton",
+  "committee": [
+    "james_bach",
+    "elisabeth_hendrickson",
+    "kent_beck",
+    "cem_kaner",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-03T21:41:00.653865Z",
+  "steps_completed": [
+    "navigate",
+    "aria_snapshot",
+    "dom_snapshot",
+    "heuristic_check",
+    "screenshot",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "agent_analysis_response": null,
+  "aria_tree_length": 0,
+  "aria_tree_excerpt": "",
+  "dom_title": "phuc.net Mail",
+  "dom_h1s": [],
+  "dom_links_count": 3,
+  "dom_images_count": 1,
+  "dom_forms": 1,
+  "dom_links_sample": [
+    {
+      "text": "Gmail help center",
+      "href": "https://support.google.com/mail?p=fix-gmail-loading&authuser=0"
+    },
+    {
+      "text": "Try reloading the page",
+      "href": "https://mail.google.com/mail/u/0/"
+    },
+    {
+      "text": "help center",
+      "href": "https://support.google.com/mail/answer/8767?src=sl&hl=en"
+    }
+  ],
+  "heuristic_issues": [
+    {
+      "severity": "error",
+      "type": "seo",
+      "msg": "No H1 heading found on page",
+      "heuristic": "SEO-1"
+    },
+    {
+      "severity": "error",
+      "type": "mobile",
+      "msg": "No viewport meta tag \u2014 will not render correctly on mobile",
+      "heuristic": "MOBILE-1"
+    }
+  ],
+  "heuristic_error_count": 2,
+  "heuristic_warning_count": 0,
+  "screenshot_path": "screenshot-20260303-164103.png",
+  "agent_analysis_request": {
+    "persona": "michael_bolton",
+    "system_prompt": "You are Michael Bolton, RST practitioner and testing/checking distinction expert. Distinguish: what was CHECKED (automated assertions) vs what needs TESTING (human judgment)? What does the evidence reveal about product quality that the numbers don't show? Output: (1) Check vs test distinction, (2) Quality insights, (3) Fix proposals.",
+    "evidence_summary": {
+      "url": "https://www.solaceagi.com/manifesto",
+      "page_name": "SolaceAGI Manifesto",
+      "dom_title": "phuc.net Mail",
+      "dom_h1s": [],
+      "dom_links_count": 3,
+      "dom_links_sample": [
+        {
+          "text": "Gmail help center",
+          "href": "https://support.google.com/mail?p=fix-gmail-loading&authuser=0"
+        },
+        {
+          "text": "Try reloading the page",
+          "href": "https://mail.google.com/mail/u/0/"
+        },
+        {
+          "text": "help center",
+          "href": "https://support.google.com/mail/answer/8767?src=sl&hl=en"
+        }
+      ],
+      "dom_images_count": 1,
+      "dom_forms": 1,
+      "aria_tree_excerpt": "",
+      "heuristic_issues": [
+        {
+          "severity": "error",
+          "type": "seo",
+          "msg": "No H1 heading found on page",
+          "heuristic": "SEO-1"
+        },
+        {
+          "severity": "error",
+          "type": "mobile",
+          "msg": "No viewport meta tag \u2014 will not render correctly on mobile",
+          "heuristic": "MOBILE-1"
+        }
+      ],
+      "heuristic_error_count": 2,
+      "heuristic_warning_count": 0,
+      "screenshot_path": "screenshot-20260303-164103.png"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "qa_score": 70,
+  "belt": "Yellow",
+  "glow": 72,
+  "evidence_hash": "sha256:f93d3e778d5ecb7b4ae4ab45627e1f16a7acdd9aaf6e411699eef7959714b33c"
+}

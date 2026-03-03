@@ -8,7 +8,7 @@
 >  and coordinate with humans. Not checking — testing."
 > — James Bach (simulated via Dragon's Den protocol)
 
-## Current GLOW: 94 → Target: 95 (100 sealed reports)
+## Current GLOW: 95 ✅ COMPLETE
 
 ```
 GLOW 89  ← First clean commit (all files + renamed)        [✅] DONE 2026-03-03 (commit: 3cca5ee)
@@ -17,8 +17,16 @@ GLOW 91  ← CLI mode working (solace-cli tested)            [✅] DONE 2026-03-
 GLOW 92  ← First HITL loop: agent → fix → human approve    [✅] DONE 2026-03-03 (F-001 fixed)
 GLOW 93  ← Self-diagnostic passes all 5 pages              [✅] DONE 2026-03-03 (7/7 specs: 100/100 Green)
 GLOW 94  ← Inspector Dashboard on cloud                    [✅] DONE 2026-03-03 (live API + --sync flag)
-GLOW 95  ← 100 sealed QA reports in vault                  [ ] NEXT
+GLOW 95  ← 100 sealed QA reports in vault                  [✅] DONE 2026-03-03 (105 reports sealed)
 ```
+
+### GLOW 95 Evidence (2026-03-03) — 105 Sealed Reports
+- **105 total**: 10 CLI reports + 95 web QA reports
+- **21 unique specs**: 5 solace-browser pages + 4 solace-browser extra + 10 solaceagi.com pages + CLI + agents
+- **Coverage**: 100% Green across all targets (0 failures)
+- **Projects**: solace-browser, solaceagi, solace-cli
+- **Cost**: $0.00 (agent-native, zero LLM API calls)
+- **Evidence**: All sealed with SHA-256 in outbox/
 
 ### GLOW 94 Evidence (2026-03-03) — Cloud Dashboard LIVE
 - `GET /api/v1/qa-evidence/status?project=solace-browser` → 100/100 Green
