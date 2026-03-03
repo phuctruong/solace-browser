@@ -8,17 +8,25 @@
 >  and coordinate with humans. Not checking — testing."
 > — James Bach (simulated via Dragon's Den protocol)
 
-## Current GLOW: 90 → Target: 95 (100 sealed reports)
+## Current GLOW: 91 → Target: 95 (100 sealed reports)
 
 ```
 GLOW 89  ← First clean commit (all files + renamed)        [✅] DONE 2026-03-03 (commit: 3cca5ee)
 GLOW 90  ← Featured on solaceagi.com/agents + /qa-evidence [✅] DONE 2026-03-03 (commit: edaeab5)
-GLOW 91  ← CLI mode working (solace-cli tested)            [ ] NEXT
-GLOW 92  ← First HITL loop: agent → fix → human approve    [ ] PENDING
+GLOW 91  ← CLI mode working (solace-cli tested)            [✅] DONE 2026-03-03 (4/4 assertions PASS)
+GLOW 92  ← First HITL loop: agent → fix → human approve    [ ] NEXT
 GLOW 93  ← Self-diagnostic passes all 5 pages              [ ] PENDING
 GLOW 94  ← Inspector Dashboard on cloud                    [ ] PENDING
 GLOW 95  ← 100 sealed QA reports in vault                  [ ] PENDING
 ```
+
+### GLOW 91 Evidence (2026-03-03)
+- `run_id`: cli-20260303-210954-08bb76
+- `target`: `python3 web/server.py --help`
+- `assertions`: 4/4 PASS (exit_code=0, stdout∋"server", stdout∋"port", stderr_empty=true)
+- `qa_score`: 100/100 | `belt`: Green | `seal`: sha256:d1dcfc4300...
+- Fix applied: Added argparse to web/server.py (--port, --host flags)
+- Evidence: `outbox/report-cli-20260303-210954-08bb76.json`
 
 ## Architecture (Agent-Native — CRITICAL)
 

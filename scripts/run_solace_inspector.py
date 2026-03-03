@@ -675,6 +675,10 @@ def process_inbox() -> list[dict]:
                 spec_id=spec_id,
             )
         elif mode == "web":
+            if not _browser_available():
+                print(f"  ⚠️  Browser not running — skipping web spec {spec_path.name}")
+                print("     Start with: python3 solace_browser_server.py --port 9222 --head")
+                continue
             r = run_qa(
                 target_url=spec["target_url"],
                 page_name=spec.get("page_name"),
@@ -733,12 +737,13 @@ Architecture: Agent-native (zero LLM API calls — your AI agent reads reports a
         run_cli(args.cmd, cwd=args.cwd, persona=args.persona)
         return
 
-    # Web mode — requires browser
     if not args.inbox and not args.self_diagnostic and not args.url:
         parser.print_help()
         sys.exit(1)
 
-    if not _browser_available():
+    # For --inbox, skip browser check — CLI specs don't need browser.
+    # Browser check happens inside run_qa() if needed.
+    if not args.inbox and not _browser_available():
         print("❌ Solace Browser not running. Start with:")
         print("   python3 solace_browser_server.py --port 9222 --head")
         sys.exit(1)

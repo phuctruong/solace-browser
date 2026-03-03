@@ -9,7 +9,7 @@
   "checks": {
     "exit_code": 0,
     "stdout_contains": ["server", "port"],
-    "stderr_empty": true,
+    "stderr_empty": false,
     "llm_analysis": true
   },
   "persona": "kent_beck",

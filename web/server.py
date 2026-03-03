@@ -1258,11 +1258,21 @@ def create_server(host: str, port: int, *, data_store: SolaceDataStore | None = 
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", "8791"))
-    host = os.environ.get("BIND_ADDR", "127.0.0.1")
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        prog="python3 web/server.py",
+        description="Solace Browser Web Server — serves the browser UI and API",
+    )
+    parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8791")),
+                        help="Port to listen on (default: 8791, env: PORT)")
+    parser.add_argument("--host", default=os.environ.get("BIND_ADDR", "127.0.0.1"),
+                        help="Host to bind to (default: 127.0.0.1, env: BIND_ADDR)")
+    args = parser.parse_args()
+
     os.chdir(ROOT)
-    server = create_server(host, port)
-    print(f"Serving Solace Browser web at http://{host}:{port}")
+    server = create_server(args.host, args.port)
+    print(f"Serving Solace Browser web at http://{args.host}:{args.port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
