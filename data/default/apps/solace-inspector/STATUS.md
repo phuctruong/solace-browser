@@ -8,7 +8,7 @@
 >  and coordinate with humans. Not checking — testing."
 > — James Bach (simulated via Dragon's Den protocol)
 
-## Current GLOW: 95 ✅ COMPLETE
+## Current GLOW: 96 ✅ COMPLETE
 
 ```
 GLOW 89  ← First clean commit (all files + renamed)        [✅] DONE 2026-03-03 (commit: 3cca5ee)
@@ -18,7 +18,23 @@ GLOW 92  ← First HITL loop: agent → fix → human approve    [✅] DONE 2026
 GLOW 93  ← Self-diagnostic passes all 5 pages              [✅] DONE 2026-03-03 (7/7 specs: 100/100 Green)
 GLOW 94  ← Inspector Dashboard on cloud                    [✅] DONE 2026-03-03 (live API + --sync flag)
 GLOW 95  ← 100 sealed QA reports in vault                  [✅] DONE 2026-03-03 (105 reports sealed)
+GLOW 96  ← Inbox as QA memory substrate (51 specs 100%)    [✅] DONE 2026-03-03 (51/51 Green, 274 reports)
 ```
+
+### GLOW 96 Evidence (2026-03-03) — 51/51 Specs 100% Green
+
+**QA Board: Inbox = Official Jira/Kanban Replacement**
+- **51 specs**: 21 original + 30 new (API tests, page tests, paper claims, architecture)
+- **3 rounds**: Round 1 (33/51 Green) → Round 2 (49/51) → Round 3 (51/51 ✅)
+- **274 total reports** in outbox (SHA-256 sealed)
+- **Bugs fixed via HITL**: F-002 (blog missing image), F-003 (gallery images undeployed)
+- **QA best practices applied**: WCAG 2.2 AA, OWASP API Security, BBST heuristics
+- **Spec categories**:
+  - 10 API security tests (auth/unauth 401, 404 handler, billing protection)
+  - 10 new solaceagi pages (docs, gallery, compare, papers, blog, auth-login, etc.)
+  - 5 paper claim verifications (Part 11, LLM routing, robots.txt+sitemap, /api/docs)
+  - 5 architecture specs (YinYang rail, app store 18 tiles, CLI help flags)
+- **Persona committee**: Bach/Kaner/Hendrickson/Beck/Bolton — all 51 specs chartered
 
 ### GLOW 95 Evidence (2026-03-03) — 105 Sealed Reports
 - **105 total**: 10 CLI reports + 95 web QA reports
