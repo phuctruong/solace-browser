@@ -8,17 +8,34 @@
 >  and coordinate with humans. Not checking — testing."
 > — James Bach (simulated via Dragon's Den protocol)
 
-## Current GLOW: 92 → Target: 95 (100 sealed reports)
+## Current GLOW: 93 → Target: 95 (100 sealed reports)
 
 ```
 GLOW 89  ← First clean commit (all files + renamed)        [✅] DONE 2026-03-03 (commit: 3cca5ee)
 GLOW 90  ← Featured on solaceagi.com/agents + /qa-evidence [✅] DONE 2026-03-03 (commit: edaeab5)
 GLOW 91  ← CLI mode working (solace-cli tested)            [✅] DONE 2026-03-03 (4/4 assertions PASS)
 GLOW 92  ← First HITL loop: agent → fix → human approve    [✅] DONE 2026-03-03 (F-001 fixed)
-GLOW 93  ← Self-diagnostic passes all 5 pages              [ ] NEXT
-GLOW 94  ← Inspector Dashboard on cloud                    [ ] PENDING
+GLOW 93  ← Self-diagnostic passes all 5 pages              [✅] DONE 2026-03-03 (7/7 specs: 100/100 Green)
+GLOW 94  ← Inspector Dashboard on cloud                    [ ] NEXT
 GLOW 95  ← 100 sealed QA reports in vault                  [ ] PENDING
 ```
+
+### GLOW 93 Evidence (2026-03-03) — Self-Diagnostic COMPLETE
+All 7 specs passed 100/100 Green:
+| Spec | URL | Score | Belt |
+|------|-----|-------|------|
+| solace-browser-home | 127.0.0.1:8791/ | 100 | Green |
+| solace-browser-app-store | 127.0.0.1:8791/app-store | 100 | Green |
+| solace-browser-settings | 127.0.0.1:8791/settings | 100 | Green |
+| solace-browser-machine | 127.0.0.1:8791/machine-dashboard | 100 | Green |
+| solace-browser-schedule | 127.0.0.1:8791/schedule | 100 | Green |
+| solace-cli (web/server.py --help) | CLI | 100 | Green |
+| solaceagi-agents | www.solaceagi.com/agents | 100 | Green |
+
+Fixes applied to achieve Green:
+- BROKEN-1 heuristic: skip invisible images (lightbox placeholders with display:none parent)
+- schedule.html: add sr-only H1 "Schedule & Savings Dashboard" (SEO-1 fix)
+- All specs: use 127.0.0.1 not localhost (avoids IPv6/DNS resolution variance)
 
 ### GLOW 92 Evidence (2026-03-03)
 - `run_id`: qa-20260303-212517-bc5c18

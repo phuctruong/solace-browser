@@ -1,0 +1,19 @@
+{
+  "spec_id": "solace-browser-machine-001",
+  "project": "solace-browser",
+  "requested_by": "claude-code",
+  "mode": "web",
+  "target_url": "http://127.0.0.1:8791/machine-dashboard",
+  "page_name": "Solace Browser Machine Dashboard",
+  "checks": {
+    "aria": true,
+    "heuristics": true,
+    "llm_analysis": true,
+    "screenshot": true,
+    "baseline_diff": false
+  },
+  "persona": "michael_bolton",
+  "priority": "high",
+  "context": "Self-diagnostic: Machine dashboard shows browser state, session info, and automation controls. Verify all status indicators are readable and controls are labeled.",
+  "created_at": "2026-03-03T00:00:00Z"
+}

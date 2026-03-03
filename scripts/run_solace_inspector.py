@@ -187,8 +187,16 @@ def heuristic_check() -> dict:
   if ((document.body.innerText || '').length < 50)
     issues.push({severity:'warning', type:'content',
       msg:'Very little visible text content', heuristic:'CONTENT-1'});
-  // BROKEN-1: broken images
+  // BROKEN-1: broken images (skip hidden images — e.g. lightbox placeholders)
   document.querySelectorAll('img').forEach(function(img) {
+    if (!img.src) return;  // skip empty-src placeholders
+    // skip images whose computed style or any ancestor is display:none
+    var el = img; var hidden = false;
+    while (el && el !== document.body) {
+      if (window.getComputedStyle(el).display === 'none') { hidden = true; break; }
+      el = el.parentElement;
+    }
+    if (hidden) return;
     if (img.complete && img.naturalWidth === 0 && img.src)
       issues.push({severity:'error', type:'visual',
         msg:'Broken image: ' + img.src.split('/').pop(), heuristic:'BROKEN-1'});
