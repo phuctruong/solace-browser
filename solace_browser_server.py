@@ -1873,6 +1873,9 @@ class SolaceBrowserServer:
         # E-sign + evidence verify (FDA Part 11 §11.100)
         self.app.router.add_post('/api/v1/esign/token', self._handle_esign_create)
         self.app.router.add_post('/api/v1/evidence/verify', self._handle_evidence_verify)
+        # Screenshots — list + serve artifact files
+        self.app.router.add_get('/api/screenshots', self._handle_list_screenshots)
+        self.app.router.add_get('/api/artifacts/{filename}', self._handle_serve_artifact)
         self.app.router.add_get('/api/events', self._handle_events)
         self.app.router.add_get('/api/v1/locale', self._handle_locale_get)
         self.app.router.add_post('/api/v1/locale', self._handle_locale_set)
@@ -3323,6 +3326,73 @@ class SolaceBrowserServer:
             return web.json_response(
                 {"error": f"sync pull error: {exc}"}, status=500
             )
+
+    async def _handle_list_screenshots(self, request):
+        """GET /api/screenshots — List recent screenshots from the artifacts directory.
+
+        Returns the 20 most recent PNG files with metadata.
+        """
+        import datetime as _dt
+        artifacts_dir = Path("artifacts")
+        screenshots = []
+        if artifacts_dir.exists():
+            # Gather all PNG files, sorted by modification time (newest first)
+            pngs = sorted(
+                artifacts_dir.glob("**/*.png"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )[:20]
+            for p in pngs:
+                stat = p.stat()
+                screenshots.append({
+                    "filename": p.name,
+                    "path": str(p),
+                    "relative_path": str(p.relative_to(artifacts_dir)),
+                    "url": f"/api/artifacts/{p.name}",
+                    "size_bytes": stat.st_size,
+                    "modified": _dt.datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                    "age_s": int(_dt.datetime.now().timestamp() - stat.st_mtime),
+                })
+        return web.json_response({
+            "count": len(screenshots),
+            "screenshots": screenshots,
+            "artifacts_dir": str(artifacts_dir.resolve()),
+        })
+
+    async def _handle_serve_artifact(self, request):
+        """GET /api/artifacts/{filename} — Serve a screenshot or artifact file.
+
+        Only serves files from the artifacts/ directory (no path traversal).
+        Supports PNG, JPEG, GIF, JSON.
+        """
+        import mimetypes
+        filename = request.match_info.get("filename", "")
+        # Security: strip directory components — only serve from artifacts/
+        safe_name = Path(filename).name
+        artifacts_dir = Path("artifacts")
+
+        # Try direct match first, then recursive search
+        candidate = artifacts_dir / safe_name
+        if not candidate.exists():
+            # Search one level deep (e.g. artifacts/part11/<session>/<event>/evidence.png)
+            found = list(artifacts_dir.glob(f"**/{safe_name}"))
+            if found:
+                candidate = found[0]
+
+        if not candidate.exists() or not candidate.is_file():
+            return web.Response(status=404, text=f"Artifact not found: {safe_name}")
+
+        mime, _ = mimetypes.guess_type(str(candidate))
+        mime = mime or "application/octet-stream"
+        content = candidate.read_bytes()
+        return web.Response(
+            body=content,
+            content_type=mime,
+            headers={
+                "Cache-Control": "max-age=300",
+                "X-Artifact-Path": str(candidate),
+            },
+        )
 
     async def _handle_esign_create(self, request):
         """POST /api/v1/esign/token — Create a FDA 21 CFR Part 11 e-signature record.

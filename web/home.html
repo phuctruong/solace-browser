@@ -113,6 +113,17 @@
     .evidence-item__desc { font-size: 0.78em; color: var(--sb-text-muted, #8bafc4); }
     .evidence-item__time { font-size: 0.72em; color: #667788; }
 
+    /* ── Screenshot gallery ───────────────────────────── */
+    .screenshot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px,1fr)); gap: 8px; margin-top: 8px; }
+    .screenshot-thumb { position: relative; border-radius: 6px; overflow: hidden; border: 1px solid rgba(129,175,221,0.2); cursor: pointer; }
+    .screenshot-thumb img { width: 100%; height: 70px; object-fit: cover; display: block; }
+    .screenshot-thumb__name { font-size: 0.65em; color: #667788; padding: 2px 4px; background: rgba(10,20,40,0.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .screenshot-thumb:hover img { opacity: 0.8; }
+    .screenshot-lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+    .screenshot-lightbox.open { display: flex; }
+    .screenshot-lightbox img { max-width: 90vw; max-height: 80vh; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+    .screenshot-lightbox__close { color: #fff; font-size: 1.2em; cursor: pointer; padding: 8px 20px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; background: none; }
+
     /* ── Quick actions grid ───────────────────────────── */
     .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 12px; margin-bottom: 32px; }
     .quick-action {
@@ -281,6 +292,15 @@
 
         </div>
 
+        <!-- Screenshots Gallery (Part 11 visual evidence) -->
+        <div class="home-card" style="margin-bottom:24px">
+          <p class="home-card__title">📸 Screenshot Evidence (Part 11)</p>
+          <div id="screenshot-gallery">
+            <p class="home-card__empty" id="screenshot-empty">No screenshots captured yet. Run an app to generate evidence.</p>
+            <div class="screenshot-grid" id="screenshot-grid" style="display:none"></div>
+          </div>
+        </div>
+
         <!-- Two-column: Recent Evidence + Current Page -->
         <div class="home-cols">
 
@@ -300,6 +320,12 @@
             </div>
           </div>
 
+        </div>
+
+        <!-- Screenshot lightbox (full-size view) -->
+        <div class="screenshot-lightbox" id="screenshot-lightbox" role="dialog" aria-modal="true">
+          <img id="lightbox-img" src="" alt="Screenshot evidence">
+          <button class="screenshot-lightbox__close" id="lightbox-close">✕ Close</button>
         </div>
 
       </main>
@@ -431,6 +457,43 @@
       });
     }
 
+    async function loadScreenshots() {
+      const grid = document.getElementById('screenshot-grid');
+      const empty = document.getElementById('screenshot-empty');
+      const d = await apiFetch('/api/screenshots');
+      if (!d || !d.screenshots || d.screenshots.length === 0) return;
+
+      empty.style.display = 'none';
+      grid.style.display = '';
+      d.screenshots.slice(0, 12).forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'screenshot-thumb';
+        div.title = `${s.filename} — ${new Date(s.modified).toLocaleString()}`;
+        const img = document.createElement('img');
+        img.src = `${API}/api/artifacts/${s.filename}`;
+        img.alt = s.filename;
+        img.onerror = () => { div.style.display = 'none'; };
+        const name = document.createElement('div');
+        name.className = 'screenshot-thumb__name';
+        name.textContent = s.filename;
+        div.appendChild(img);
+        div.appendChild(name);
+        div.addEventListener('click', () => openLightbox(`${API}/api/artifacts/${s.filename}`));
+        grid.appendChild(div);
+      });
+    }
+
+    function openLightbox(src) {
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('screenshot-lightbox').classList.add('open');
+    }
+    document.getElementById('lightbox-close').addEventListener('click', () => {
+      document.getElementById('screenshot-lightbox').classList.remove('open');
+    });
+    document.getElementById('screenshot-lightbox').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) document.getElementById('screenshot-lightbox').classList.remove('open');
+    });
+
     async function loadEvidence() {
       const el = document.getElementById('evidence-list');
       const empty = document.getElementById('evidence-empty');
@@ -521,7 +584,7 @@
     });
 
     // Boot sequence
-    Promise.all([loadStatus(), loadSchedule(), loadQueue(), loadEvidence(), loadStats()]);
+    Promise.all([loadStatus(), loadSchedule(), loadQueue(), loadEvidence(), loadStats(), loadScreenshots()]);
     // Auto-refresh status every 30s
     setInterval(loadStatus, 30000);
   </script>
