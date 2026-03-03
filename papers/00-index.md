@@ -1,5 +1,5 @@
 # Solace Browser Papers Index
-**Updated:** 2026-03-02 | **Auth:** 65537
+**Updated:** 2026-03-03 | **Auth:** 65537
 
 ## Papers
 
@@ -15,6 +15,7 @@
 | 08 | cross-app-yinyang-delight | Cross-app orchestration, Yinyang universal interface, delight engine, 18 day-one apps | CANONICAL |
 | 09 | yinyang-tutorial-funpack-mcp | Tutorial popup (5-step, 13 locales), Fun Pack standard, OAuth3 leave-app gate, Agent Notification API, MCP server (7 tools), YinYang Chat (OpenRouter) | CANONICAL |
 | 10 | production-browser-release-loop | Compile -> upload -> download -> head-on smoke -> production API matrix, timed release loop, default bundle policy | CANONICAL |
+| 11 | app-store-sync-governance | Git-backed official catalog, Firestore proposal queue, local file backend for dev, promotion workflow | CANONICAL |
 
 ## Cross-References
 
@@ -30,6 +31,7 @@
 | 08 cross-app-delight | papers/13 (Inbox/Outbox), 22+25 (Yinyang) | Paper 04 (Triple-Twin warm tokens), Diagrams 16-18 |
 | 09 tutorial-funpack-mcp | papers/22+25 (Yinyang), 04+19 (Wallet) | Paper 04 (Triple-Twin), Diagram 13 (Yinyang FSM) |
 | 10 production-browser-release-loop | solaceagi download + API deployment docs | Diagram 19 (Browser Release Loop) |
+| 11 app-store-sync-governance | app-store release + community submission process | Diagram 20 (App Store Sync Governance) |
 
 ## Invariants (All Papers)
 

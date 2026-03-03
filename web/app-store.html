@@ -94,6 +94,39 @@
           </div>
         </section>
 
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Store Sync + Community Queue</h2>
+              <p class="section-copy">Official catalog is git-backed. User proposals route to a review queue (local file in dev, Firestore in production).</p>
+            </div>
+          </div>
+          <article class="data-panel">
+            <h3>Sync status</h3>
+            <p class="section-copy" id="app-store-sync-panel">Loading <code>/api/app-store/sync</code>...</p>
+          </article>
+          <div class="kpi-grid">
+            <article class="kpi-card">
+              <h3>Propose an app</h3>
+              <form id="app-proposal-form">
+                <p><label for="proposal-name">Name</label><br><input id="proposal-name" name="name" type="text" required></p>
+                <p><label for="proposal-site">Site</label><br><input id="proposal-site" name="site" type="text" placeholder="example.com" required></p>
+                <p><label for="proposal-category">Category</label><br><input id="proposal-category" name="category" type="text" placeholder="productivity" required></p>
+                <p><label for="proposal-description">Description</label><br><textarea id="proposal-description" name="description" rows="4" required></textarea></p>
+                <p><label for="proposal-submitted-by">Submitted by</label><br><input id="proposal-submitted-by" name="submitted_by" type="text" placeholder="you@company.com"></p>
+                <p><button class="btn btn-secondary" type="submit">Submit proposal</button></p>
+              </form>
+              <p class="section-copy" id="app-proposal-status">Queue status unavailable.</p>
+            </article>
+            <article class="kpi-card">
+              <h3>Recent proposals</h3>
+              <ul class="data-list" id="app-proposal-list">
+                <li>Loading <code>/api/app-store/proposals</code>...</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
         <!-- No-API Exclusive -->
         <section class="page-section reveal">
           <div class="section-heading">

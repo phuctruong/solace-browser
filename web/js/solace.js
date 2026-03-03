@@ -380,8 +380,88 @@
     state.apps = Array.isArray(result.ok && result.data && result.data.apps) ? result.data.apps : [];
     renderAppStoreCategories(state.apps);
     bindAppStoreSearch();
+    await loadAppStoreSync();
+    bindAppProposalForm();
+    await loadAppStoreProposals();
     loadFunPacks();
     emitWarmToken({ mode: "warm_friendly", trigger: "app_store_loaded" });
+  }
+
+  async function loadAppStoreSync() {
+    const mount = document.querySelector("#app-store-sync-panel");
+    if (!mount) {
+      return;
+    }
+    const result = await fetchJson("/api/app-store/sync", { headers: { Accept: "application/json" } });
+    if (!result.ok) {
+      mount.textContent = "Sync metadata unavailable: " + result.error;
+      return;
+    }
+    const data = result.data || {};
+    const official = data.official_source || {};
+    const counts = data.counts || {};
+    const proposal = data.proposal_source || {};
+    mount.innerHTML = `
+      Source: <code>${escapeHtml(String(official.mode || "unknown"))}</code> |
+      Catalog apps: <strong>${escapeHtml(String(counts.official_apps || 0))}</strong> |
+      Installed: <strong>${escapeHtml(String(counts.installed_apps || 0))}</strong> |
+      Proposals backend: <code>${escapeHtml(String(proposal.backend || "disabled"))}</code>
+    `;
+  }
+
+  function bindAppProposalForm() {
+    const form = document.querySelector("#app-proposal-form");
+    const status = document.querySelector("#app-proposal-status");
+    if (!form || !status) {
+      return;
+    }
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const formData = new FormData(form);
+      const payload = {
+        name: String(formData.get("name") || "").trim(),
+        site: String(formData.get("site") || "").trim(),
+        category: String(formData.get("category") || "").trim(),
+        description: String(formData.get("description") || "").trim(),
+        submitted_by: String(formData.get("submitted_by") || "").trim(),
+      };
+      const result = await fetchJson("/api/app-store/proposals", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!result.ok) {
+        status.textContent = "Proposal rejected: " + result.error;
+        return;
+      }
+      status.textContent = "Proposal submitted: " + ((result.data && result.data.proposal && result.data.proposal.proposal_id) || "ok");
+      form.reset();
+      await loadAppStoreProposals();
+    });
+  }
+
+  async function loadAppStoreProposals() {
+    const mount = document.querySelector("#app-proposal-list");
+    if (!mount) {
+      return;
+    }
+    const result = await fetchJson("/api/app-store/proposals?limit=10", { headers: { Accept: "application/json" } });
+    if (!result.ok) {
+      mount.innerHTML = `<li>Proposal queue unavailable: ${escapeHtml(result.error || "unknown error")}</li>`;
+      return;
+    }
+    const proposals = Array.isArray(result.data && result.data.proposals) ? result.data.proposals : [];
+    if (proposals.length === 0) {
+      mount.innerHTML = "<li>No proposals yet.</li>";
+      return;
+    }
+    mount.innerHTML = proposals.map((proposal) => `
+      <li>
+        <strong>${escapeHtml(proposal.name || proposal.proposal_id || "Proposal")}</strong>
+        <span class="recipe-tag">${escapeHtml(proposal.category || "uncategorized")}</span>
+        <span class="status-tag status-tag--neutral">${escapeHtml(proposal.status || "proposed")}</span>
+      </li>
+    `).join("");
   }
 
   async function loadFunPacks() {

@@ -169,8 +169,10 @@ def running_server(solace_home: Path) -> str:
 def test_get_apps_reads_installed_manifests(running_server: str) -> None:
     status, payload = _request_json(f"{running_server}/api/apps")
     assert status == 200
-    assert payload["apps"][0]["id"] == "gmail-inbox-triage"
-    assert payload["apps"][0]["status"] == "installed"
+    apps = {entry["id"]: entry for entry in payload["apps"]}
+    assert "gmail-inbox-triage" in apps
+    assert apps["gmail-inbox-triage"]["status"] == "installed"
+    assert apps["gmail-inbox-triage"]["source"] in {"official_git", "local_filesystem"}
 
 
 def test_get_app_detail_includes_inbox_outbox_and_runs(running_server: str) -> None:
@@ -220,3 +222,114 @@ def test_yinyang_data_assets_are_served(running_server: str) -> None:
     status, payload = _request_json(f"{running_server}/data/default/yinyang/jokes.json")
     assert status == 200
     assert "jokes" in payload
+
+
+def test_app_store_sync_endpoint_exposes_source_metadata(running_server: str) -> None:
+    status, payload = _request_json(f"{running_server}/api/app-store/sync")
+    assert status == 200
+    assert payload["official_source"]["mode"] == "git"
+    assert payload["counts"]["official_apps"] >= 1
+
+
+def test_app_store_proposals_file_backend_round_trip(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    solace_home: Path,
+) -> None:
+    monkeypatch.setenv("SOLACE_APP_STORE_PROPOSALS_BACKEND", "file")
+    proposals_path = tmp_path / "proposals.jsonl"
+    monkeypatch.setenv("SOLACE_APP_STORE_PROPOSALS_FILE", str(proposals_path))
+
+    server_module = _load_server_module()
+    port = _find_free_port()
+    server = server_module.create_server(
+        "127.0.0.1",
+        port,
+        data_store=server_module.SolaceDataStore(solace_home=solace_home),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base = f"http://127.0.0.1:{port}"
+    try:
+        create_status, create_payload = _request_json(
+            f"{base}/api/app-store/proposals",
+            method="POST",
+            payload={
+                "name": "Notion Follow-up Agent",
+                "description": "Summarize stale action items and draft follow-up tasks.",
+                "site": "notion.so",
+                "category": "productivity",
+                "submitted_by": "qa-user@solace.local",
+            },
+        )
+        assert create_status == 201
+        assert create_payload["proposal"]["proposal_id"]
+        assert create_payload["proposal"]["source"] == "local_file"
+
+        list_status, list_payload = _request_json(f"{base}/api/app-store/proposals")
+        assert list_status == 200
+        assert len(list_payload["proposals"]) == 1
+        assert list_payload["proposals"][0]["name"] == "Notion Follow-up Agent"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_app_store_proposals_reject_invalid_payload(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    solace_home: Path,
+) -> None:
+    monkeypatch.setenv("SOLACE_APP_STORE_PROPOSALS_BACKEND", "file")
+    proposals_path = tmp_path / "proposals.jsonl"
+    monkeypatch.setenv("SOLACE_APP_STORE_PROPOSALS_FILE", str(proposals_path))
+
+    server_module = _load_server_module()
+    port = _find_free_port()
+    server = server_module.create_server(
+        "127.0.0.1",
+        port,
+        data_store=server_module.SolaceDataStore(solace_home=solace_home),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base = f"http://127.0.0.1:{port}"
+    try:
+        status, payload = _request_json(
+            f"{base}/api/app-store/proposals",
+            method="POST",
+            payload={"name": "   ", "description": "", "site": "", "category": ""},
+        )
+        assert status == 400
+        assert payload["error"] == "Invalid proposal payload"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_app_store_proposals_disabled_backend_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+    solace_home: Path,
+) -> None:
+    monkeypatch.setenv("SOLACE_APP_STORE_PROPOSALS_BACKEND", "disabled")
+
+    server_module = _load_server_module()
+    port = _find_free_port()
+    server = server_module.create_server(
+        "127.0.0.1",
+        port,
+        data_store=server_module.SolaceDataStore(solace_home=solace_home),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base = f"http://127.0.0.1:{port}"
+    try:
+        status, payload = _request_json(f"{base}/api/app-store/proposals")
+        assert status == 501
+        assert "disabled" in payload["error"]
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)

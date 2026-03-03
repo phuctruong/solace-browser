@@ -1,6 +1,6 @@
 # solace-browser Diagram Index
 
-**Sources:** 20 files (19 active + 1 deprecated), ~37 KB
+**Sources:** 21 files (20 active + 1 deprecated), ~39 KB
 **Purpose:** Mermaid diagrams for solace-browser runtime: auth, recipe execution, evidence, approval, session management, customization, 4-plane architecture, capture pipeline, app inbox/outbox, Yinyang dual rail, budget gates, and competitive position. Aligned to deterministic, fail-closed, consent-native execution.
 
 ---
@@ -29,6 +29,7 @@
 | `17-yinyang-delight-pipeline.md` | Warm token → delight effect pipeline, Yinyang universal interface, plugin architecture, alert queue |
 | `18-app-ecosystem-day-one.md` | 18 day-one apps (10 standard + 5 no-API + 3 orchestrators), safety tiers, cross-app partner map |
 | `19-browser-release-loop.md` | Cross-platform release loop (linux/macos/windows): compile -> upload -> download -> head-on smoke -> production API matrix with fail gates and metrics writeback |
+| `20-app-store-sync-governance.md` | Official git catalog + proposal queue (file dev / Firestore prod) with promotion loop and website/browser sync path |
 
 ---
 

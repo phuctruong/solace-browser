@@ -357,6 +357,87 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Settings'
+
+  /api/app-store/sync:
+    get:
+      tags: [apps]
+      summary: Official app-store sync metadata
+      operationId: getAppStoreSync
+      responses:
+        '200':
+          description: Catalog source and sync counts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppStoreSync'
+
+  /api/app-store/proposals:
+    get:
+      tags: [apps]
+      summary: List proposed apps from proposal backend
+      operationId: listAppStoreProposals
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [proposed, triage, accepted, rejected]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Proposal listing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  backend: { type: string }
+                  proposals:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AppProposal'
+        '501':
+          description: Proposal backend is unavailable or disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags: [apps]
+      summary: Submit a proposed app to review queue
+      operationId: createAppStoreProposal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppProposalCreate'
+      responses:
+        '201':
+          description: Proposal accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  backend: { type: string }
+                  proposal:
+                    $ref: '#/components/schemas/AppProposal'
+        '400':
+          description: Invalid proposal payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '501':
+          description: Proposal backend is unavailable or disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     put:
       tags: [settings]
       summary: Update settings (hot-reload)
@@ -442,10 +523,13 @@ components:
       properties:
         id: { type: string }
         name: { type: string }
+        description: { type: string }
         category: { type: string }
         status: { type: string, enum: [available, beta, coming_soon, installed] }
         safety: { type: string, enum: [A, B, C] }
         site: { type: string }
+        type: { type: string }
+        source: { type: string }
 
     AppDetail:
       type: object
@@ -466,6 +550,57 @@ components:
           $ref: '#/components/schemas/InboxListing'
         outbox:
           $ref: '#/components/schemas/OutboxListing'
+
+    AppStoreSync:
+      type: object
+      properties:
+        official_source:
+          type: object
+          properties:
+            mode: { type: string, enum: [git, manifest_fallback] }
+            catalog_path: { type: string }
+            catalog_sha256: { type: string }
+            generated_at: { type: string }
+        proposal_source:
+          type: object
+          properties:
+            backend: { type: string }
+            error: { type: string, nullable: true }
+        counts:
+          type: object
+          properties:
+            official_apps: { type: integer }
+            installed_apps: { type: integer }
+
+    AppProposalCreate:
+      type: object
+      required: [name, description, site, category]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        site: { type: string }
+        category: { type: string }
+        submitted_by: { type: string }
+        links:
+          type: array
+          items: { type: string }
+
+    AppProposal:
+      type: object
+      properties:
+        proposal_id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        site: { type: string }
+        category: { type: string }
+        submitted_by: { type: string }
+        links:
+          type: array
+          items: { type: string }
+        status: { type: string, enum: [proposed, triage, accepted, rejected] }
+        source: { type: string, enum: [local_file, firestore] }
+        submitted_at: { type: string }
+        record_sha256: { type: string }
 
     InboxListing:
       type: object

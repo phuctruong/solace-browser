@@ -27,6 +27,12 @@ SRC_ROOT = REPO_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from app_store.backend import (
+    AppStoreBackendConfigError,
+    AppStoreCatalog,
+    AppStoreProposalValidationError,
+    create_proposal_store_from_env,
+)
 from companion.apps import discover_installed_apps
 from inbox_outbox import AppFolderNotFoundError, InboxOutboxManager
 
@@ -146,6 +152,8 @@ APP_DETAIL_ROUTE_EXAMPLE = "/api/apps/gmail-inbox-triage"
 APP_LIST_ROUTE = "/api/apps"
 APP_INBOX_ROUTE = "/api/apps/{appId}/inbox"
 APP_OUTBOX_ROUTE = "/api/apps/{appId}/outbox"
+APP_STORE_SYNC_ROUTE = "/api/app-store/sync"
+APP_STORE_PROPOSALS_ROUTE = "/api/app-store/proposals"
 SETTINGS_ROUTE = "/api/settings"
 LOCALES_DIR = REPO_ROOT / "app" / "locales" / "yinyang"
 FUN_PACKS_DIR = REPO_ROOT / "data" / "fun-packs"
@@ -197,56 +205,129 @@ class SolaceDataStore:
         *,
         solace_home: str | Path | None = None,
         default_library_root: str | Path | None = None,
+        official_catalog_path: str | Path | None = None,
     ) -> None:
         self.solace_home = Path(solace_home or "~/.solace").expanduser().resolve()
         self.apps_root = self.solace_home / "apps"
         self.default_library_root = Path(default_library_root or REPO_ROOT / "data" / "default" / "apps").resolve()
+        self.official_catalog_path = Path(
+            official_catalog_path or REPO_ROOT / "data" / "default" / "app-store" / "official-store.json"
+        ).resolve()
         self.settings_path = self.solace_home / "settings.json"
+        self.catalog_store = AppStoreCatalog(
+            catalog_path=self.official_catalog_path,
+            default_apps_root=self.default_library_root,
+        )
+        self.proposal_store_error: str | None = None
+        self.proposal_store = None
+        try:
+            self.proposal_store = create_proposal_store_from_env(
+                repo_root=REPO_ROOT,
+                solace_home=self.solace_home,
+            )
+        except AppStoreBackendConfigError as exc:
+            self.proposal_store_error = str(exc)
 
     def list_apps(self, *, category: str | None = None, status: str | None = None) -> dict[str, Any]:
         apps: list[dict[str, Any]] = []
-        for app_root in self._app_index().values():
-            manifest = _safe_read_yaml(app_root / "manifest.yaml")
+        installed_index = self._installed_index()
+        catalog = self.catalog_store.load_catalog()
+        catalog_map = {entry["id"]: entry for entry in catalog["apps"]}
+
+        for entry in catalog["apps"]:
             app_summary = {
-                "id": manifest.get("id", app_root.name),
-                "name": manifest.get("name", app_root.name),
-                "category": manifest.get("category", "uncategorized"),
-                "status": manifest.get("status", "available"),
-                "safety": manifest.get("safety", "A"),
-                "site": manifest.get("site", ""),
-                "description": manifest.get("description", ""),
-                "type": manifest.get("type", "standard"),
+                "id": entry["id"],
+                "name": entry["name"],
+                "category": entry["category"],
+                "status": "installed" if entry["id"] in installed_index else entry["status"],
+                "safety": entry["safety"],
+                "site": entry["site"],
+                "description": entry["description"],
+                "type": entry["type"],
+                "source": entry.get("source", "official_git"),
             }
             if category and app_summary["category"] != category:
                 continue
             if status and app_summary["status"] != status:
                 continue
             apps.append(app_summary)
+
+        # Include local-installed apps that are not in official git catalog yet.
+        for app_id, app_root in installed_index.items():
+            if app_id in catalog_map:
+                continue
+            manifest = _safe_read_yaml(app_root / "manifest.yaml")
+            app_summary = {
+                "id": manifest.get("id", app_id),
+                "name": manifest.get("name", app_id),
+                "category": manifest.get("category", "uncategorized"),
+                "status": "installed",
+                "safety": manifest.get("safety", "A"),
+                "site": manifest.get("site", ""),
+                "description": manifest.get("description", ""),
+                "type": manifest.get("type", "standard"),
+                "source": "local_filesystem",
+            }
+            if category and app_summary["category"] != category:
+                continue
+            if status and app_summary["status"] != status:
+                continue
+            apps.append(app_summary)
+
         apps.sort(key=lambda item: str(item["name"]).lower())
         return {"apps": apps}
 
     def get_app_detail(self, app_id: str) -> dict[str, Any]:
-        app_root = self._get_app_root(app_id)
-        manager = InboxOutboxManager(apps_root=app_root.parent)
-        manifest = manager.read_manifest(app_id)
-        detail = {
-            "id": manifest.get("id", app_id),
-            "name": manifest.get("name", app_id),
-            "description": manifest.get("description", ""),
-            "category": manifest.get("category", "uncategorized"),
-            "status": manifest.get("status", "available"),
-            "safety": manifest.get("safety", "A"),
-            "site": manifest.get("site", ""),
-            "type": manifest.get("type", "standard"),
-            "scopes": manifest.get("scopes", []),
-            "budgets": manager.read_budget(app_id),
-            "inbox": manager.list_inbox(app_id),
-            "outbox": manager.list_outbox(app_id),
-            "recent_runs": manager.list_runs(app_id),
-            "partners": manifest.get("partners", {}),
-            "orchestrates": manifest.get("orchestrates", []),
-        }
-        return detail
+        catalog = self.catalog_store.load_catalog()
+        catalog_map = {entry["id"]: entry for entry in catalog["apps"]}
+        app_root = self._app_index().get(app_id)
+
+        if app_root is not None:
+            manager = InboxOutboxManager(apps_root=app_root.parent)
+            manifest = manager.read_manifest(app_id)
+            official = catalog_map.get(app_id, {})
+            detail = {
+                "id": manifest.get("id", app_id),
+                "name": manifest.get("name", official.get("name", app_id)),
+                "description": manifest.get("description", official.get("description", "")),
+                "category": manifest.get("category", official.get("category", "uncategorized")),
+                "status": "installed",
+                "safety": manifest.get("safety", official.get("safety", "A")),
+                "site": manifest.get("site", official.get("site", "")),
+                "type": manifest.get("type", official.get("type", "standard")),
+                "scopes": manifest.get("scopes", official.get("scopes", [])),
+                "budgets": manager.read_budget(app_id),
+                "inbox": manager.list_inbox(app_id),
+                "outbox": manager.list_outbox(app_id),
+                "recent_runs": manager.list_runs(app_id),
+                "partners": manifest.get("partners", {}),
+                "orchestrates": manifest.get("orchestrates", []),
+                "source": official.get("source", "local_filesystem"),
+            }
+            return detail
+
+        official = catalog_map.get(app_id)
+        if official is not None:
+            return {
+                "id": official["id"],
+                "name": official["name"],
+                "description": official["description"],
+                "category": official["category"],
+                "status": official["status"],
+                "safety": official["safety"],
+                "site": official["site"],
+                "type": official["type"],
+                "scopes": official.get("scopes", []),
+                "budgets": {},
+                "inbox": self._empty_inbox_listing(),
+                "outbox": self._empty_outbox_listing(),
+                "recent_runs": [],
+                "partners": {},
+                "orchestrates": [],
+                "source": official.get("source", "official_git"),
+            }
+
+        raise AppFolderNotFoundError(app_id)
 
     def get_inbox_listing(self, app_id: str) -> dict[str, Any]:
         app_root = self._get_app_root(app_id)
@@ -268,10 +349,56 @@ class SolaceDataStore:
         self.settings_path.write_text(json.dumps(merged, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         return merged
 
+    def get_app_store_sync(self) -> dict[str, Any]:
+        catalog = self.catalog_store.load_catalog()
+        installed_apps = self._installed_index()
+        official_apps = catalog["apps"]
+        return {
+            "official_source": {
+                "mode": catalog["metadata"]["mode"],
+                "catalog_path": catalog["metadata"]["catalog_path"],
+                "catalog_sha256": catalog["metadata"]["catalog_sha256"],
+                "generated_at": catalog["metadata"]["generated_at"],
+            },
+            "proposal_source": {
+                "backend": self.proposal_store.backend_name() if self.proposal_store is not None else "disabled",
+                "error": self.proposal_store_error,
+            },
+            "counts": {
+                "official_apps": len(official_apps),
+                "installed_apps": len(installed_apps),
+            },
+        }
+
+    def list_app_proposals(self, *, status: str | None = None, limit: int = 100) -> dict[str, Any]:
+        if self.proposal_store is None:
+            raise AppStoreBackendConfigError(self.proposal_store_error or "Proposal backend unavailable")
+        proposals = self.proposal_store.list_proposals(status=status, limit=limit)
+        return {
+            "backend": self.proposal_store.backend_name(),
+            "proposals": proposals,
+        }
+
+    def submit_app_proposal(self, payload: dict[str, Any]) -> dict[str, Any]:
+        if self.proposal_store is None:
+            raise AppStoreBackendConfigError(self.proposal_store_error or "Proposal backend unavailable")
+        proposal = self.proposal_store.submit_proposal(payload)
+        return {
+            "backend": self.proposal_store.backend_name(),
+            "proposal": proposal,
+        }
+
     def _app_index(self) -> dict[str, Path]:
-        installed = discover_installed_apps(self.apps_root)
+        installed = self._installed_index()
         if installed:
-            return {record.app_id: record.app_root for record in installed}
+            return installed
+        return self._default_index()
+
+    def _installed_index(self) -> dict[str, Path]:
+        installed = discover_installed_apps(self.apps_root)
+        return {record.app_id: record.app_root for record in installed}
+
+    def _default_index(self) -> dict[str, Path]:
         return {record.app_id: record.app_root for record in discover_installed_apps(self.default_library_root)}
 
     def _get_app_root(self, app_id: str) -> Path:
@@ -279,6 +406,28 @@ class SolaceDataStore:
         if app_root is None:
             raise AppFolderNotFoundError(app_id)
         return app_root
+
+    @staticmethod
+    def _empty_inbox_listing() -> dict[str, Any]:
+        return {
+            "prompts": [],
+            "templates": [],
+            "assets": [],
+            "policies": [],
+            "datasets": [],
+            "requests": [],
+            "conventions": {"config": None, "defaults": None},
+        }
+
+    @staticmethod
+    def _empty_outbox_listing() -> dict[str, Any]:
+        return {
+            "previews": [],
+            "drafts": [],
+            "reports": [],
+            "suggestions": [],
+            "runs": [],
+        }
 
 
 class SlugRequestHandler(SimpleHTTPRequestHandler):
@@ -358,7 +507,12 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             self._handle_sse_events()
             return
 
-        if request_path.startswith("/api/apps") or request_path == SETTINGS_ROUTE:
+        if (
+            request_path.startswith("/api/apps")
+            or request_path == SETTINGS_ROUTE
+            or request_path == APP_STORE_SYNC_ROUTE
+            or request_path == APP_STORE_PROPOSALS_ROUTE
+        ):
             self._handle_api_get(send_body=send_body)
             return
         if request_path in MOCK_JSON_GET:
@@ -405,6 +559,21 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         app_outbox_match = re.fullmatch(r"/api/apps/([^/]+)/outbox", request_path)
 
         try:
+            if request_path == APP_STORE_SYNC_ROUTE:
+                payload = self.data_store.get_app_store_sync()
+                self._send_json(HTTPStatus.OK, payload, send_body=send_body)
+                return
+            if request_path == APP_STORE_PROPOSALS_ROUTE:
+                status_filter = query.get("status", [None])[0]
+                limit_raw = query.get("limit", ["100"])[0]
+                try:
+                    limit = int(limit_raw) if limit_raw else 100
+                except ValueError:
+                    self._send_json(HTTPStatus.BAD_REQUEST, {"error": "limit must be an integer"}, send_body=send_body)
+                    return
+                payload = self.data_store.list_app_proposals(status=status_filter, limit=limit)
+                self._send_json(HTTPStatus.OK, payload, send_body=send_body)
+                return
             if request_path == APP_LIST_ROUTE:
                 payload = self.data_store.list_apps(
                     category=query.get("category", [None])[0],
@@ -429,6 +598,12 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                 return
         except AppFolderNotFoundError:
             self._send_json(HTTPStatus.NOT_FOUND, {"error": "App not found"}, send_body=send_body)
+            return
+        except ValueError as exc:
+            self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": str(exc)}, send_body=send_body)
+            return
+        except AppStoreBackendConfigError as exc:
+            self._send_json(HTTPStatus.NOT_IMPLEMENTED, {"error": str(exc)}, send_body=send_body)
             return
 
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "Not found"}, send_body=send_body)
@@ -455,6 +630,19 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             payload = self._read_json_body()
         except JSONDecodeError:
             self._send_json(HTTPStatus.BAD_REQUEST, {"error": "Invalid JSON"})
+            return
+
+        if request_path == APP_STORE_PROPOSALS_ROUTE:
+            if not isinstance(payload, dict):
+                self._send_json(HTTPStatus.BAD_REQUEST, {"error": "Invalid proposal payload"})
+                return
+            try:
+                created = self.data_store.submit_app_proposal(payload)
+                self._send_json(HTTPStatus.CREATED, created)
+            except AppStoreProposalValidationError:
+                self._send_json(HTTPStatus.BAD_REQUEST, {"error": "Invalid proposal payload"})
+            except AppStoreBackendConfigError as exc:
+                self._send_json(HTTPStatus.NOT_IMPLEMENTED, {"error": str(exc)})
             return
 
         if request_path == "/machine/terminal/execute":
@@ -801,25 +989,27 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         """Approve a pending run — write approved_v1.json + audit entry."""
         import time as _time
         outbox = Path.home() / ".solace" / "outbox" / "apps"
-        approved = False
+        approved_in_outbox = False
+        approval_record = {
+            "run_id": run_id,
+            "approved_by": payload.get("approved_by", "user"),
+            "timestamp": payload.get("timestamp", _time.strftime("%Y-%m-%dT%H:%M:%SZ")),
+            "approval_type": "standard",
+        }
         for app_dir in (outbox.iterdir() if outbox.exists() else []):
             run_dir = app_dir / run_id if app_dir.is_dir() else None
             if run_dir and run_dir.exists():
-                approval_record = {
-                    "run_id": run_id,
-                    "approved_by": payload.get("approved_by", "user"),
-                    "timestamp": payload.get("timestamp", _time.strftime("%Y-%m-%dT%H:%M:%SZ")),
-                    "approval_type": "standard",
-                }
                 (run_dir / "approved_v1.json").write_text(json.dumps(approval_record, indent=2))
-                # Audit log
-                audit_dir = Path.home() / ".solace" / "audit"
-                audit_dir.mkdir(parents=True, exist_ok=True)
-                with open(audit_dir / "schedule_actions.jsonl", "a") as f:
-                    f.write(json.dumps({"event": "approved", **approval_record}) + "\n")
-                approved = True
+                approved_in_outbox = True
                 break
-        self._send_json(HTTPStatus.OK, {"ok": approved, "run_id": run_id})
+        # Always write audit log (Part 11 — every approval decision is logged)
+        audit_dir = Path.home() / ".solace" / "audit"
+        audit_dir.mkdir(parents=True, exist_ok=True)
+        with open(audit_dir / "schedule_actions.jsonl", "a") as f:
+            f.write(json.dumps({"event": "approved", "in_outbox": approved_in_outbox,
+                                **approval_record}) + "\n")
+        self._send_json(HTTPStatus.OK, {"ok": True, "run_id": run_id,
+                                        "in_outbox": approved_in_outbox})
 
     def _handle_schedule_cancel(self, run_id: str, payload: dict) -> None:
         """Cancel a pending run — write cancelled.json + audit entry."""

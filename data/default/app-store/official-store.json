@@ -1,0 +1,284 @@
+{
+  "generated_at": "2026-03-03T12:59:04.327096+00:00",
+  "source_mode": "git",
+  "apps": [
+    {
+      "id": "amazon-price-tracker",
+      "name": "Amazon Price Tracker",
+      "description": "Monitor wishlist prices through the consumer web UI.",
+      "category": "shopping",
+      "status": "installed",
+      "safety": "A",
+      "site": "amazon.com",
+      "type": "standard",
+      "scopes": [
+        "amazon.read.product",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "calendar-brief",
+      "name": "Calendar Brief",
+      "description": "Summarize the day and surface upcoming constraints.",
+      "category": "productivity",
+      "status": "installed",
+      "safety": "A",
+      "site": "calendar.google.com",
+      "type": "standard",
+      "scopes": [
+        "calendar.read.events",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "focus-timer",
+      "name": "Focus Timer",
+      "description": "Run local focus sessions and produce lightweight reports.",
+      "category": "productivity",
+      "status": "installed",
+      "safety": "A",
+      "site": "local-machine",
+      "type": "standard",
+      "scopes": [
+        "machine.read.clock",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "github-issue-triage",
+      "name": "GitHub Issue Triage",
+      "description": "Review issues, classify urgency, and prepare follow-up drafts.",
+      "category": "engineering",
+      "status": "installed",
+      "safety": "B",
+      "site": "github.com",
+      "type": "standard",
+      "scopes": [
+        "github.read.issues",
+        "github.write.drafts",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "gmail-inbox-triage",
+      "name": "Gmail Inbox Triage",
+      "description": "Scan Gmail, prioritize messages, and draft safe replies.",
+      "category": "communications",
+      "status": "installed",
+      "safety": "B",
+      "site": "mail.google.com",
+      "type": "standard",
+      "scopes": [
+        "gmail.read.inbox",
+        "gmail.draft.create",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "google-drive-saver",
+      "name": "Google Drive Saver",
+      "description": "Save approved artifacts into Drive using the web UI.",
+      "category": "productivity",
+      "status": "installed",
+      "safety": "A",
+      "site": "drive.google.com",
+      "type": "standard",
+      "scopes": [
+        "drive.read.files",
+        "drive.write.files",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "instagram-poster",
+      "name": "Instagram Poster",
+      "description": "Draft and publish Instagram posts after approval.",
+      "category": "social",
+      "status": "installed",
+      "safety": "C",
+      "site": "instagram.com",
+      "type": "standard",
+      "scopes": [
+        "instagram.read.feed",
+        "instagram.write.posts",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "lead-pipeline",
+      "name": "Lead Pipeline",
+      "description": "Coordinate outreach, email follow-up, and schedule matching.",
+      "category": "sales",
+      "status": "installed",
+      "safety": "A",
+      "site": "multi-site",
+      "type": "orchestrator",
+      "scopes": [
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "linkedin-outreach",
+      "name": "LinkedIn Outreach",
+      "description": "Draft outreach sequences and manage lead handoff safely.",
+      "category": "sales",
+      "status": "installed",
+      "safety": "C",
+      "site": "linkedin.com",
+      "type": "standard",
+      "scopes": [
+        "linkedin.read.profile",
+        "linkedin.write.drafts",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "linkedin-poster",
+      "name": "LinkedIn Poster",
+      "description": "Draft and publish LinkedIn posts through the native web UI.",
+      "category": "social",
+      "status": "installed",
+      "safety": "C",
+      "site": "linkedin.com",
+      "type": "standard",
+      "scopes": [
+        "linkedin.read.profile",
+        "linkedin.write.posts",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "morning-brief",
+      "name": "Morning Brief",
+      "description": "Orchestrate the daily cross-app brief.",
+      "category": "productivity",
+      "status": "installed",
+      "safety": "A",
+      "site": "multi-site",
+      "type": "orchestrator",
+      "scopes": [
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "reddit-scanner",
+      "name": "Reddit Scanner",
+      "description": "Scan communities and surface relevant discussions.",
+      "category": "engineering",
+      "status": "installed",
+      "safety": "A",
+      "site": "reddit.com",
+      "type": "standard",
+      "scopes": [
+        "reddit.read.posts",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "slack-triage",
+      "name": "Slack Triage",
+      "description": "Summarize channels, draft responses, and escalate urgent items.",
+      "category": "communications",
+      "status": "installed",
+      "safety": "B",
+      "site": "app.slack.com",
+      "type": "standard",
+      "scopes": [
+        "slack.read.channels",
+        "slack.write.drafts",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "twitter-monitor",
+      "name": "Twitter Monitor",
+      "description": "Watch timelines and produce read-only summaries.",
+      "category": "social",
+      "status": "installed",
+      "safety": "A",
+      "site": "x.com",
+      "type": "standard",
+      "scopes": [
+        "twitter.read.timeline",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "twitter-poster",
+      "name": "Twitter Poster",
+      "description": "Queue tweets and threads without relying on the paid API.",
+      "category": "social",
+      "status": "installed",
+      "safety": "C",
+      "site": "x.com",
+      "type": "standard",
+      "scopes": [
+        "twitter.read.timeline",
+        "twitter.write.posts",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "weekly-digest",
+      "name": "Weekly Digest",
+      "description": "Collect five days of reports and synthesize one weekly view.",
+      "category": "productivity",
+      "status": "installed",
+      "safety": "A",
+      "site": "multi-site",
+      "type": "orchestrator",
+      "scopes": [
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "whatsapp-responder",
+      "name": "WhatsApp Responder",
+      "description": "Prepare responses in WhatsApp Web with explicit approval.",
+      "category": "communications",
+      "status": "installed",
+      "safety": "C",
+      "site": "web.whatsapp.com",
+      "type": "standard",
+      "scopes": [
+        "whatsapp.read.messages",
+        "whatsapp.write.drafts",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "youtube-script-writer",
+      "name": "YouTube Script Writer",
+      "description": "Draft scripts from source notes and hand them to downstream apps.",
+      "category": "sales",
+      "status": "installed",
+      "safety": "B",
+      "site": "studio.youtube.com",
+      "type": "standard",
+      "scopes": [
+        "youtube.read.channel",
+        "youtube.write.drafts",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    }
+  ],
+  "catalog_sha256": "18e8fd6a6f5400df4a85c73bd9407fc864242d22f0bfb6382f48aaa02b25fa3b"
+}
