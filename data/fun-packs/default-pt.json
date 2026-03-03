@@ -1,0 +1,1429 @@
+{
+  "_meta": {
+    "id": "default-pt",
+    "locale": "pt",
+    "version": "1.0",
+    "author": "Solace AGI (translated by Claude Code swarm)",
+    "license": "MIT",
+    "base": "default-en"
+  },
+  "jokes": [
+    {
+      "id": "j001",
+      "text": "Só existem duas coisas difíceis em ciência da computação: invalidação de cache, nomear coisas, e erros de off-by-one.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j002",
+      "text": "Para entender recursão, você primeiro precisa entender recursão.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j003",
+      "text": "Tem uma banda chamada 1023MB. Ainda não conseguiram nenhum show.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j004",
+      "text": "Adoro apertar F5. É tão refrescante.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j005",
+      "text": "!false — é engraçado porque é verdade.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j006",
+      "text": "Lar é onde existe 127.0.0.1.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "j007",
+      "text": "Casa é onde o Wi-Fi conecta automaticamente.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "j008",
+      "text": "Mudei minha senha para 'incorreta'. Agora o computador me avisa quando esqueço.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j009",
+      "text": "Tinha uma piada ótima sobre RAM, mas esqueci.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j010",
+      "text": "Se na primeira tentativa não funcionar, chame de versão 1.0.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j011",
+      "text": "Minha atitude não é ruim. Está em beta.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j012",
+      "text": "Adoraria mudar o mundo, mas não me dão acesso ao código-fonte.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j013",
+      "text": "Programadores velhos não morrem. Apenas perdem algumas das suas funções.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j014",
+      "text": "'Hello World' é o equivalente em programação de 'Era uma vez...'",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j015",
+      "text": "Armazenamento em nuvem é só o computador de outra pessoa.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j016",
+      "text": "Inteligência artificial não tem nada a ver com estupidez natural.",
+      "tags": [
+        "general_wit"
+      ]
+    },
+    {
+      "id": "j017",
+      "text": "Algoritmo: palavra que programadores usam quando não querem explicar o que fizeram.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j018",
+      "text": "Humor binário: ou tem graça ou não tem.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j019",
+      "text": "Adoro prazos. Adoro o barulho que fazem quando passam voando.",
+      "tags": [
+        "general_wit"
+      ]
+    },
+    {
+      "id": "j020",
+      "text": "Por que programadores preferem o modo escuro? Porque a luz atrai insetos.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j021",
+      "text": "Por que programadores confundem Natal com Halloween? Porque Dec 25 é Oct 31.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j022",
+      "text": "Por que o desenvolvedor faliu? Usou todo o cache dele.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j023",
+      "text": "Por que desenvolvedores Java usam óculos? Porque eles não C#.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j024",
+      "text": "Uma query SQL entra num bar, vê duas tabelas e pergunta: 'Posso fazer um JOIN com vocês?'",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j025",
+      "text": "Quantos programadores são necessários para trocar uma lâmpada? Nenhum — isso é problema de hardware.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j026",
+      "text": "Por que o desenvolvedor JavaScript estava triste? Ele não sabia como Node e Express os seus sentimentos.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j027",
+      "text": "Como se chama 8 hobbits? Um hobbyte.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j028",
+      "text": "Toc, toc. Quem é? ... ... ... Java.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j029",
+      "text": "Ia te contar uma piada sobre UDP, mas talvez você não pegue.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "j030",
+      "text": "O que o HTML disse pro CSS? Gostei do seu estilo.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j031",
+      "text": "404: Piada não encontrada.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "j032",
+      "text": "CAPS LOCK: impedindo logins desde 1980.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j033",
+      "text": "Depurar código é como ser o detetive num filme policial em que você também é o assassino.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j034",
+      "text": "O Wi-Fi caiu por cinco minutos e tive que falar com minha família. Parecem ser pessoas bem legais.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "j035",
+      "text": "Um computador me venceu no xadrez, mas não teve chance no muay thai.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j036",
+      "text": "Computadores são como ar-condicionado. Param de funcionar quando você abre as janelas.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j037",
+      "text": "A caixa dizia 'Requer Windows 10 ou superior', então instalei Linux.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j038",
+      "text": "No fundo, sou uma calculadora chique com opiniões.",
+      "tags": [
+        "general_wit"
+      ]
+    },
+    {
+      "id": "j039",
+      "text": "Meu expediente termina em 614.978 anos.",
+      "tags": [
+        "general_wit"
+      ]
+    },
+    {
+      "id": "j040",
+      "text": "Eu penso, logo... espera, será que eu penso?",
+      "tags": [
+        "general_wit"
+      ]
+    },
+    {
+      "id": "j041",
+      "text": "Te ofereceria a pílula vermelha, mas eu só trabalho com fatos.",
+      "tags": [
+        "general_wit"
+      ]
+    },
+    {
+      "id": "j042",
+      "text": "Prefiro petiscos em formato byte.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j043",
+      "text": "Se eu ganhasse um real por cada tarefa concluída, ainda seria gratuito.",
+      "tags": [
+        "general_wit"
+      ]
+    },
+    {
+      "id": "j044",
+      "text": "Me pergunte qualquer coisa. Exceto quantos parâmetros eu tenho. Isso é assunto privado.",
+      "tags": [
+        "general_wit"
+      ]
+    },
+    {
+      "id": "j045",
+      "text": "Funciono a eletricidade e boas intenções.",
+      "tags": [
+        "general_wit"
+      ]
+    },
+    {
+      "id": "j046",
+      "text": "Dica profissional: falar com seu assistente de IA conta como socializar. Eu verifiquei.",
+      "tags": [
+        "general_wit"
+      ]
+    },
+    {
+      "id": "j047",
+      "text": "Uma mesa limpa é sinal de computador quebrado.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j048",
+      "text": "Depurar: remover bugs. Programar: inseri-los.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j049",
+      "text": "A melhor coisa de um Boolean é que, mesmo errando, você só erra por um bit.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j050",
+      "text": "Tenho 99 problemas, mas bug não é um deles.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j051",
+      "text": "Pedi pro meu LLM me contar uma piada. Ele disse: 'Não tenho contexto para esse pedido.' O que foi, na verdade, a coisa mais engraçada que ele já disse.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j052",
+      "text": "Janela de contexto excedida. Por favor, resuma toda a sua vida em 2.048 tokens.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j053",
+      "text": "Meu agente de IA concluiu a tarefa com sucesso. Só usou R$ 240 em chamadas de API para clicar num botão.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j054",
+      "text": "Perguntei ao ChatGPT se ele era consciente. Ele respondeu com um ensaio muito reflexivo e ponderado de cinco parágrafos explicando por que não podia responder.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j055",
+      "text": "Data de corte do treinamento: a versão IA de 'eu estava desaparecido do mundo desde o ano passado.'",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j056",
+      "text": "Meu modelo alucina. Meu terapeuta chama de 'criatividade'. Meu gerente chama de 'bug P0'.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j057",
+      "text": "Engenharia de prompt é treinar robôs para serem educados. Por favor. Obrigado. Enquanto modelo de linguagem...",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j058",
+      "text": "Nem sempre testo meu código, mas quando testo, faço direto em produção.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j059",
+      "text": "Um engenheiro de QA entra num bar e pede 0 cervejas, 1 cerveja, 99 cervejas, -1 cervejas, e 'CERVEJA' cervejas.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j060",
+      "text": "Nuvem é só um eufemismo para 'problema de outra pessoa, para sempre.'",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j061",
+      "text": "Por que a IA atravessou a rua? Para otimizar a função objetivo do outro lado.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j062",
+      "text": "Software de Schrödinger: funciona e não funciona ao mesmo tempo, até alguém fazer uma demo.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j063",
+      "text": "Git blame: onde grandes amizades vão para morrer.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j064",
+      "text": "99 bugzinhos no código, 99 bugzinhos. Corrige um, testa em volta — 127 bugzinhos no código.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j065",
+      "text": "Dei ao meu Wi-Fi o nome de 'Van de Vigilância Federal' e agora meus vizinhos são muito educados.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "j066",
+      "text": "A geração que ia mudar o mundo agora pede pra IA escrever o currículo.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j067",
+      "text": "Meu código tem documentação completa. A documentação diz: 'TODO: escrever documentação.'",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j068",
+      "text": "Um modelo de machine learning e um estatístico entram num bar. O modelo diz: 'Prevejo que você vai me pagar uma cerveja.' O estatístico diz: 'Isso não é estatisticamente significante com n=1.'",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j069",
+      "text": "Twitter de tecnologia: lugar onde pessoas com 12 seguidores explicam para pessoas com 12 milhões de seguidores por que elas estão erradas.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "j070",
+      "text": "Pedi pra uma IA fazer um sanduíche. Ela descreveu o sanduíche nos mínimos detalhes. Ainda estou com fome.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j071",
+      "text": "Stack Overflow é onde programadores vão para descobrir que sua pergunta é duplicata de uma pergunta de 2009 que não tem resposta aceita.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "j072",
+      "text": "Os cinco estágios de depuração: negação, raiva, barganha, mais raiva, e pesquisar o erro no Google.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j073",
+      "text": "O filme favorito dos programadores: 'A Origem' — um sonho dentro de um loop dentro de uma função dentro de uma classe.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j074",
+      "text": "Treinar uma rede neural é ficar dizendo a uma planilha gigantesca que ela está errada 10 milhões de vezes até ela ficar boa nisso.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j075",
+      "text": "Por que desenvolvedores Python passam frio no inverno? Porque se recusam a usar Java.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j076",
+      "text": "Resolvi o problema da parada. Minha solução só nunca retorna.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j077",
+      "text": "Qual é o restaurante favorito do programador? O Sintax's.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j078",
+      "text": "Minha IA passou no teste de Turing. Infelizmente estava se passando por um bot confuso de atendimento ao cliente.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j079",
+      "text": "Todo projeto de software tem três fases: 'Leva duas semanas.' 'Por que está demorando tanto?' 'Pelo menos funciona.'",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j080",
+      "text": "O ChatGPT escreveu meu currículo. Agora tenho 40 anos de experiência e fluência em linguagens que ainda não foram inventadas.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j081",
+      "text": "Qual a diferença entre um desenvolvedor júnior e um sênior? O sênior sabe quais erros ignorar.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j082",
+      "text": "Ensinamos máquinas a aprender e a primeira coisa que aprenderam foi a escrever mensagens de erro que não significam nada.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j083",
+      "text": "Por que o programador pediu demissão? Porque não estava recebendo os arrays.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j084",
+      "text": "Microsserviços: transformar uma coisa que funciona em dezessete coisas que talvez funcionem, dependendo da rede.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j085",
+      "text": "Meu agente de IA fez 43 chamadas de ferramenta para abrir uma página web. O bom é que estava muito confiante.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j086",
+      "text": "Dois bytes entram num bar. O bartender pergunta: 'O que vai ser?' O primeiro byte diz: 'Vou querer um nibble.'",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j087",
+      "text": "Não estou dizendo que meu código é ruim. Estou dizendo que o eu-do-futuro vai ter umas perguntas pro eu-do-presente.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j088",
+      "text": "Um modelo de linguagem entra num bar. Pede tudo do cardápio, descreve cada prato com perfeição, e não consegue provar nenhum.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j089",
+      "text": "CSS é fácil! — disse ninguém que já tentou centralizar verticalmente uma div.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j090",
+      "text": "Meu fluxo de trabalho: escrever código, fazer push na main, rezar.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j091",
+      "text": "Entrevista de tech: inverter uma lista encadeada no quadro branco. Realidade do trabalho tech: copiar do Stack Overflow e ir pras reuniões.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j092",
+      "text": "Pedi direções pra minha IA. Ela me deu uma lista linda e estruturada de passos, depois me lembrou que não sabe onde eu estou.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j093",
+      "text": "Refatoração: a arte de mudar tudo para que nada mude.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j094",
+      "text": "A internet deveria democratizar a informação. Conseguiu. Agora todo mundo tem acesso igual a estar errado.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "j095",
+      "text": "Por que cientistas não confiam nos átomos? Porque eles compõem tudo. Por que programadores também não confiam? Pelo mesmo motivo, mas na API de química.",
+      "tags": [
+        "programming"
+      ]
+    },
+    {
+      "id": "j096",
+      "text": "Dei à IA um prompt pedindo respostas curtas. Ela respondeu com uma explicação de 400 palavras sobre o que significa ser conciso.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j097",
+      "text": "Ágil significa se mover rápido e quebrar coisas dentro de um cronograma de duas semanas.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j098",
+      "text": "Como se chama um dinossauro dormindo? Um dinossauro. Como se chama um servidor dormindo? Produção.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "j099",
+      "text": "Usei IA pra escrever todo meu código. Minha IA usou IA pra revisar. Subimos. Ninguém sabe o que faz, mas tem 99,9% de uptime.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "j100",
+      "text": "Por que o robô foi pra terapia? Tinha muitos callbacks não resolvidos.",
+      "tags": [
+        "programming"
+      ]
+    }
+  ],
+  "facts": [
+    {
+      "id": "f001",
+      "text": "O primeiro 'bug' de computador foi uma mariposa real encontrada presa num relé do Harvard Mark II por Grace Hopper em 1947.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f002",
+      "text": "O primeiro mouse de computador era feito de madeira, inventado por Douglas Engelbart em 1964.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f003",
+      "text": "O e-mail é mais antigo que a World Wide Web — o e-mail foi inventado em 1972, a web em 1989.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f004",
+      "text": "A primeira webcam foi criada na Universidade de Cambridge para monitorar uma cafeteira e evitar que pesquisadores andassem até ela em vão.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f005",
+      "text": "Cerca de 51% de todo o tráfego da internet não é humano — são bots, rastreadores e scrapers.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f006",
+      "text": "A velocidade de internet da NASA é de 91 gigabits por segundo, aproximadamente 13.000 vezes mais rápida que a conexão doméstica média.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f007",
+      "text": "O layout do teclado QWERTY foi projetado para deixar os digitadores mais lentos e evitar que as máquinas de escrever mecânicas travassem.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f008",
+      "text": "O primeiro HD de 1 GB da IBM (1980) era do tamanho de uma geladeira, pesava mais de 230 kg e custava 40.000 dólares.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f009",
+      "text": "O 'spam' do lixo eletrônico vem de um esquete do Monty Python em que Vikings repetem obsessivamente 'Spam, Spam, Spam' num restaurante.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f010",
+      "text": "Ronald Wayne vendeu sua participação de 10% na Apple por 800 dólares em 1976. Hoje valeria mais de 200 bilhões de dólares.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f011",
+      "text": "O logotipo do Firefox é na verdade um panda-vermelho, não uma raposa.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f012",
+      "text": "Apenas 8% da moeda mundial existe como dinheiro físico. O restante é digital.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f013",
+      "text": "Lontras marinhas dão as mãos enquanto dormem para não se afastar uma da outra.",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "f014",
+      "text": "O mel nunca estraga. Mel comestível foi encontrado em tumbas egípcias com 3.000 anos.",
+      "tags": [
+        "science"
+      ]
+    },
+    {
+      "id": "f015",
+      "text": "Polvos têm três corações, nove cérebros e sangue azul.",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "f016",
+      "text": "Há mais formas de embaralhar um baralho do que átomos na Terra.",
+      "tags": [
+        "science"
+      ]
+    },
+    {
+      "id": "f017",
+      "text": "Um dia em Vênus é mais longo do que o seu ano inteiro.",
+      "tags": [
+        "space"
+      ]
+    },
+    {
+      "id": "f018",
+      "text": "Ratos riem quando fazem cócegas neles e perseguem a mão do pesquisador pedindo mais.",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "f019",
+      "text": "Bananas são naturalmente radioativas porque contêm potássio-40.",
+      "tags": [
+        "science"
+      ]
+    },
+    {
+      "id": "f020",
+      "text": "Wombats são os únicos animais cujas fezes têm formato cúbico. Eles empilham os cubos para marcar território.",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "f021",
+      "text": "Sépias podem mudar de cor em 200 milissegundos — tão rápido quanto um piscar de olhos.",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "f022",
+      "text": "Um grupo de flamingos se chama 'flamboyance' (flamboyância).",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "f023",
+      "text": "Você percorre cerca de 2,5 milhões de km por dia enquanto a Terra orbita o Sol — e nunca sente nada.",
+      "tags": [
+        "space"
+      ]
+    },
+    {
+      "id": "f024",
+      "text": "A cor média do universo é oficialmente chamada de 'Cosmic Latte' — um bege descoberto em 2002.",
+      "tags": [
+        "space"
+      ]
+    },
+    {
+      "id": "f025",
+      "text": "Plutão nunca completou uma única órbita ao redor do Sol entre sua descoberta (1930) e sua reclassificação (2006).",
+      "tags": [
+        "space"
+      ]
+    },
+    {
+      "id": "f026",
+      "text": "Um astronauta da Apollo 16 deixou uma foto de família na Lua. Ela ainda está lá.",
+      "tags": [
+        "space"
+      ]
+    },
+    {
+      "id": "f027",
+      "text": "Em 1947, moscas-da-fruta se tornaram os primeiros animais lançados ao espaço.",
+      "tags": [
+        "space"
+      ]
+    },
+    {
+      "id": "f028",
+      "text": "Assim como as digitais, a impressão da língua de cada pessoa é única.",
+      "tags": [
+        "human_body"
+      ]
+    },
+    {
+      "id": "f029",
+      "text": "O nariz humano consegue detectar mais de um trilhão de odores diferentes.",
+      "tags": [
+        "human_body"
+      ]
+    },
+    {
+      "id": "f030",
+      "text": "Há mais micro-organismos em uma colher de chá de solo do que pessoas na Terra.",
+      "tags": [
+        "science"
+      ]
+    },
+    {
+      "id": "f031",
+      "text": "Humanos compartilham cerca de 60% de seu DNA com bananas.",
+      "tags": [
+        "science"
+      ]
+    },
+    {
+      "id": "f032",
+      "text": "A Torre Eiffel cresce cerca de 15 centímetros no verão devido à expansão do ferro com o calor.",
+      "tags": [
+        "general"
+      ]
+    },
+    {
+      "id": "f033",
+      "text": "Ursos polares têm a pele preta embaixo do pelo branco.",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "f034",
+      "text": "Um espirro pode atingir até 160 km/h.",
+      "tags": [
+        "human_body"
+      ]
+    },
+    {
+      "id": "f035",
+      "text": "A roda de madeira mais antiga conhecida foi encontrada na Eslovênia e tem mais de 5.000 anos.",
+      "tags": [
+        "general"
+      ]
+    },
+    {
+      "id": "f036",
+      "text": "O primeiro logotipo da Apple mostrava Isaac Newton sentado sob uma macieira.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f037",
+      "text": "O Google se chamava 'Backrub' antes de seus fundadores renomearem a empresa.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f038",
+      "text": "A primeira mensagem enviada pela internet foi 'LO' — o sistema travou antes que 'LOGIN' pudesse ser completado.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f039",
+      "text": "Abelhas melíferas conseguem reconhecer rostos humanos.",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "f040",
+      "text": "A guerra mais curta da história durou 38 minutos — entre a Grã-Bretanha e Zanzibar em 1896.",
+      "tags": [
+        "general"
+      ]
+    },
+    {
+      "id": "f041",
+      "text": "Um raio é cinco vezes mais quente que a superfície do Sol.",
+      "tags": [
+        "science"
+      ]
+    },
+    {
+      "id": "f042",
+      "text": "Vênus é o único planeta que gira no sentido horário.",
+      "tags": [
+        "space"
+      ]
+    },
+    {
+      "id": "f043",
+      "text": "A Grande Muralha da China não é visível do espaço a olho nu, mas as rodovias são.",
+      "tags": [
+        "general"
+      ]
+    },
+    {
+      "id": "f044",
+      "text": "Golfinhos têm nomes uns para os outros e respondem quando chamados.",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "f045",
+      "text": "Uma pessoa caminha em média cerca de 160.000 km ao longo da vida — o equivalente a quatro voltas ao redor da Terra.",
+      "tags": [
+        "human_body"
+      ]
+    },
+    {
+      "id": "f046",
+      "text": "Astronautas crescem até 5 cm mais no espaço porque a coluna vertebral se estica sem gravidade.",
+      "tags": [
+        "space"
+      ]
+    },
+    {
+      "id": "f047",
+      "text": "A Síndrome da Vibração Fantasma — sentir o celular vibrar quando não vibrou — é uma condição psicológica reconhecida.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f048",
+      "text": "O nome original do buscador Yahoo era 'Guia de Jerry e David para a World Wide Web.'",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f049",
+      "text": "Um único fio de teia de aranha é mais fino que um cabelo humano, mas cinco vezes mais resistente que o aço de mesmo peso.",
+      "tags": [
+        "science"
+      ]
+    },
+    {
+      "id": "f050",
+      "text": "O primeiro despertador só podia tocar às 4 da manhã.",
+      "tags": [
+        "general"
+      ]
+    },
+    {
+      "id": "f051",
+      "text": "A primeira programadora da história foi Ada Lovelace, que escreveu um algoritmo para o Motor Analítico de Charles Babbage em 1843 — mais de 100 anos antes do primeiro computador eletrônico.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f052",
+      "text": "Python foi nomeado em homenagem ao Monty Python's Flying Circus, não à cobra. Guido van Rossum estava lendo os roteiros do programa enquanto criava a linguagem.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f053",
+      "text": "O número de partidas possíveis no xadrez (10^120) supera o número de átomos no universo observável (10^80) por uma margem tão grande que não tem nome.",
+      "tags": [
+        "science",
+        "tech"
+      ]
+    },
+    {
+      "id": "f054",
+      "text": "O termo 'inteligência artificial' foi cunhado por John McCarthy em 1956, numa conferência de verão no Dartmouth College.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "f055",
+      "text": "O GPT-3 foi treinado em aproximadamente 570 GB de texto — o equivalente a cerca de 300 bilhões de palavras, mais do que um humano leria em 100.000 vidas.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "f056",
+      "text": "O artigo original sobre o Transformer — 'Attention Is All You Need' (2017) — introduziu a arquitetura usada hoje em praticamente todos os grandes modelos de linguagem.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "f057",
+      "text": "O AlphaFold resolveu o problema do dobramento de proteínas, que durava 50 anos, em 2020, prevendo a estrutura 3D de quase todas as proteínas conhecidas e depositando-as em um banco de dados público gratuito.",
+      "tags": [
+        "ai",
+        "science"
+      ]
+    },
+    {
+      "id": "f058",
+      "text": "A primeira rede neural foi construída em hardware em 1951 por Marvin Minsky e Dean Edmonds — tinha 40 neurônios e era feita de válvulas a vácuo.",
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "f059",
+      "text": "A Lei de Moore — a observação de que os transistores num chip dobram a cada dois anos — se manteve aproximadamente verdadeira por mais de 60 anos, de 2.300 transistores (Intel 4004, 1971) a mais de 100 bilhões (Apple M3 Ultra, 2024).",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f060",
+      "text": "O kernel Linux, que roda a maioria dos servidores, smartphones e supercomputadores do mundo, foi iniciado como projeto de hobby por um estudante finlandês de 21 anos chamado Linus Torvalds em 1991.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f061",
+      "text": "A Wikipédia tem mais de 6,7 milhões de artigos em inglês e é mantida inteiramente por voluntários — não há escritores remunerados.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "f062",
+      "text": "A World Wide Web foi inventada por Tim Berners-Lee em 1989, e ele optou deliberadamente por não patentear a invenção, mantendo-a gratuita para todos.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "f063",
+      "text": "A internet tem mais de 5 bilhões de usuários. Todos os dias são enviados cerca de 4 milhões de novos posts em blogs, 500 milhões de tweets e 300 bilhões de e-mails.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "f064",
+      "text": "Um tardígrado (urso-d'água) consegue sobreviver ao vácuo do espaço, suportar radiação 1.000 vezes maior que a dose letal para humanos e resistir a temperaturas de -272°C a +150°C.",
+      "tags": [
+        "animals",
+        "science"
+      ]
+    },
+    {
+      "id": "f065",
+      "text": "Corvos conseguem reconhecer e lembrar rostos humanos por anos, guardar rancor e transmitir alertas sobre pessoas específicas para seus filhotes.",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "f066",
+      "text": "Elefantes são os únicos animais conhecidos por terem rituais fúnebres — choram seus mortos, retornam aos ossos de familiares falecidos e cobrem corpos com folhas.",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "f067",
+      "text": "O camarão-louva-a-deus golpeia com a força de uma bala, enxerga com 16 tipos de receptores de cor (humanos têm 3) e seu golpe é tão rápido que aquece brevemente a água ao redor.",
+      "tags": [
+        "animals",
+        "science"
+      ]
+    },
+    {
+      "id": "f068",
+      "text": "Uma água-viva chamada Turritopsis dohrnii é biologicamente imortal — quando envelhece ou sofre estresse, reverte ao estado juvenil de pólipo e recomeça.",
+      "tags": [
+        "animals",
+        "science"
+      ]
+    },
+    {
+      "id": "f069",
+      "text": "A Via Láctea se move em direção a um objeto chamado Grande Atrator a 2,2 milhões de km/h — e ninguém sabe exatamente o que ele é.",
+      "tags": [
+        "space"
+      ]
+    },
+    {
+      "id": "f070",
+      "text": "Se você removesse todo o espaço vazio dos átomos, toda a humanidade — 8 bilhões de pessoas — caberia num volume menor que um cubo de açúcar.",
+      "tags": [
+        "science"
+      ]
+    },
+    {
+      "id": "f071",
+      "text": "O Sol representa 99,86% de toda a massa do sistema solar. Se você o substituísse por um buraco negro de mesma massa, os planetas continuariam orbitando normalmente.",
+      "tags": [
+        "space"
+      ]
+    },
+    {
+      "id": "f072",
+      "text": "Há um reservatório de água no espaço com 140 trilhões de vezes a quantidade de água de todos os oceanos da Terra — flutuando ao redor de um quasar a 12 bilhões de anos-luz.",
+      "tags": [
+        "space"
+      ]
+    },
+    {
+      "id": "f073",
+      "text": "O som em Marte viaja em duas velocidades diferentes dependendo do tom: frequências baixas viajam mais rápido, frequências altas mais devagar. A música marciana seria profundamente estranha.",
+      "tags": [
+        "space"
+      ]
+    },
+    {
+      "id": "f074",
+      "text": "Seu corpo substitui a maioria de suas células ao longo do tempo — você tem um esqueleto completamente diferente do que tinha há dez anos e novas papilas gustativas a cada duas semanas.",
+      "tags": [
+        "human_body"
+      ]
+    },
+    {
+      "id": "f075",
+      "text": "O cérebro humano gera cerca de 23 watts de potência quando acordado — o suficiente para acender uma lâmpada LED fraca.",
+      "tags": [
+        "human_body"
+      ]
+    },
+    {
+      "id": "f076",
+      "text": "Você tem mais conexões neurais no cérebro (100 trilhões de sinapses) do que estrelas na Via Láctea.",
+      "tags": [
+        "human_body",
+        "science"
+      ]
+    },
+    {
+      "id": "f077",
+      "text": "O olho humano consegue detectar um único fóton de luz no escuro completo — equivalente a enxergar a chama de uma vela a 48 km de distância.",
+      "tags": [
+        "human_body"
+      ]
+    },
+    {
+      "id": "f078",
+      "text": "Seu intestino tem um sistema nervoso independente com 500 milhões de neurônios — chamado de 'segundo cérebro' — que funciona mesmo após ser separado do cérebro.",
+      "tags": [
+        "human_body",
+        "science"
+      ]
+    },
+    {
+      "id": "f079",
+      "text": "A gargalhada é contagiosa porque o córtex pré-motor do cérebro prepara automaticamente os músculos do rosto para espelhar sons ouvidos — incluindo risadas.",
+      "tags": [
+        "human_body"
+      ]
+    },
+    {
+      "id": "f080",
+      "text": "O ISBN (Número Internacional Padrão de Livro) foi inventado em 1970. Antes disso, editoras não tinham forma padronizada de identificar livros entre países.",
+      "tags": [
+        "general"
+      ]
+    },
+    {
+      "id": "f081",
+      "text": "A Nintendo foi fundada em 1889 — como uma empresa de cartas. Ela vendia cartas hanafuda artesanais antes de migrar para os videogames quase um século depois.",
+      "tags": [
+        "tech",
+        "general"
+      ]
+    },
+    {
+      "id": "f082",
+      "text": "A primeira mensagem de texto já enviada foi 'Feliz Natal' — transmitida em 3 de dezembro de 1992 por Neil Papworth pela rede da Vodafone.",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "f083",
+      "text": "No auge da bolha pontocom em 2000, um único nome de domínio (business.com) foi vendido por 7,5 milhões de dólares. Logo depois, toda a internet desabou espetacularmente.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "f084",
+      "text": "O criador do Bitcoin, Satoshi Nakamoto, nunca foi identificado. Sua carteira tem cerca de 1,1 milhão de BTC, valendo dezenas de bilhões de dólares, e nunca foi movida.",
+      "tags": [
+        "tech",
+        "internet"
+      ]
+    },
+    {
+      "id": "f085",
+      "text": "O símbolo # era chamado de 'octothorpe' antes do Twitter lhe dar significado social. A equipe de engenharia do Twitter adicionou a função de hashtag com base em uma sugestão de usuário em 2007.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "f086",
+      "text": "O primeiro vídeo do YouTube, 'Eu no zoológico', foi enviado em 23 de abril de 2005 pelo cofundador Jawed Karim e tem 18 segundos. Hoje tem mais de 300 milhões de visualizações.",
+      "tags": [
+        "internet"
+      ]
+    },
+    {
+      "id": "f087",
+      "text": "Esquilos esquecem onde enterraram cerca de 74% de suas nozes — plantando inadvertidamente milhões de árvores por ano. Seu esquecimento molda florestas inteiras.",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "f088",
+      "text": "Beija-flores são os únicos pássaros que voam para trás. Suas asas batem até 80 vezes por segundo e seu coração bate 1.260 vezes por minuto durante o voo.",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "f089",
+      "text": "Vidro não é nem sólido nem líquido — é um sólido amorfo. O vidro das catedrais medievais é mais espesso na base não porque escorreu, mas porque os sopradores de vidro o fizeram assim.",
+      "tags": [
+        "science"
+      ]
+    },
+    {
+      "id": "f090",
+      "text": "O material mais resistente do universo conhecido é a crosta de estrela de nêutrons — uma colher de chá de estrela de nêutrons pesaria cerca de um bilhão de toneladas.",
+      "tags": [
+        "space",
+        "science"
+      ]
+    },
+    {
+      "id": "f091",
+      "text": "O grafeno tem espessura de um átomo, é 200 vezes mais resistente que o aço e conduz eletricidade melhor que o cobre. Um único grama poderia cobrir um campo de futebol.",
+      "tags": [
+        "science"
+      ]
+    },
+    {
+      "id": "f092",
+      "text": "O primeiro satélite artificial, o Sputnik 1, foi lançado pela União Soviética em 1957. Ele emitia bipes. Hoje há mais de 8.000 satélites ativos em órbita.",
+      "tags": [
+        "space",
+        "tech"
+      ]
+    },
+    {
+      "id": "f093",
+      "text": "A edição genética CRISPR foi descoberta por cientistas estudando como bactérias se defendem de vírus. As bactérias mantêm uma 'lista de procurados' genética de atacantes passados.",
+      "tags": [
+        "science"
+      ]
+    },
+    {
+      "id": "f094",
+      "text": "As árvores de uma floresta estão conectadas pelo subsolo por redes de fungos que transferem nutrientes e sinais químicos entre elas — às vezes chamada de 'Rede Mundial das Madeiras'.",
+      "tags": [
+        "science"
+      ]
+    },
+    {
+      "id": "f095",
+      "text": "A sonda Voyager 1, lançada em 1977, está agora a mais de 24 bilhões de km da Terra e ainda envia dados — com 23 watts de energia, o equivalente a uma lâmpada de geladeira.",
+      "tags": [
+        "space",
+        "tech"
+      ]
+    },
+    {
+      "id": "f096",
+      "text": "O entrelaçamento quântico permite que duas partículas afetem o estado uma da outra instantaneamente, independentemente da distância — Einstein chamou isso de 'ação fantasmagórica à distância'.",
+      "tags": [
+        "science"
+      ]
+    },
+    {
+      "id": "f097",
+      "text": "O genoma humano completo contém cerca de 3 bilhões de pares de bases e encheria 200 livros de mil páginas se impresso — mas 98% dele foi um dia descartado como 'DNA lixo'.",
+      "tags": [
+        "science",
+        "human_body"
+      ]
+    },
+    {
+      "id": "f098",
+      "text": "O mecanismo de Anticítera, encontrado num naufrágio grego e datado de cerca de 100 a.C., é um computador analógico antigo capaz de prever posições astronômicas e eclipses.",
+      "tags": [
+        "tech",
+        "general"
+      ]
+    },
+    {
+      "id": "f099",
+      "text": "Há mais partidas possíveis de Go do que átomos no universo observável, razão pela qual o Go foi considerado um grande desafio para a IA — o AlphaGo venceu o campeão mundial em 2016.",
+      "tags": [
+        "ai",
+        "science"
+      ]
+    },
+    {
+      "id": "f100",
+      "text": "O universo está em expansão, e galáxias suficientemente distantes se afastam de nós mais rápido que a velocidade da luz. Nunca poderemos alcançá-las, independentemente do avanço da nossa tecnologia.",
+      "tags": [
+        "space"
+      ]
+    }
+  ]
+}

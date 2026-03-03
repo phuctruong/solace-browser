@@ -1,17 +1,162 @@
 {
   "_meta": {
     "version": "1.0.0",
-    "updated": "2026-03-02"
+    "updated": "2026-03-03"
   },
   "packs": [
     {
+      "id": "default-ar",
+      "name": "Default Fun Pack (Arabic)",
+      "locale": "ar",
+      "jokes": 100,
+      "facts": 100,
+      "file": "default-ar.json",
+      "tags": [
+        "programming",
+        "tech",
+        "ai",
+        "science"
+      ]
+    },
+    {
+      "id": "default-de",
+      "name": "Default Fun Pack (German)",
+      "locale": "de",
+      "jokes": 100,
+      "facts": 100,
+      "file": "default-de.json",
+      "tags": [
+        "programming",
+        "tech",
+        "ai",
+        "science"
+      ]
+    },
+    {
       "id": "default-en",
-      "name": "Default Fun Pack",
+      "name": "Default Fun Pack (English)",
       "locale": "en",
       "jokes": 100,
       "facts": 100,
       "file": "default-en.json",
-      "tags": ["programming", "tech", "ai", "science"]
+      "tags": [
+        "programming",
+        "tech",
+        "ai",
+        "science"
+      ]
+    },
+    {
+      "id": "default-es",
+      "name": "Default Fun Pack (Spanish)",
+      "locale": "es",
+      "jokes": 100,
+      "facts": 100,
+      "file": "default-es.json",
+      "tags": [
+        "programming",
+        "tech",
+        "ai",
+        "science"
+      ]
+    },
+    {
+      "id": "default-fr",
+      "name": "Default Fun Pack (French)",
+      "locale": "fr",
+      "jokes": 100,
+      "facts": 100,
+      "file": "default-fr.json",
+      "tags": [
+        "programming",
+        "tech",
+        "ai",
+        "science"
+      ]
+    },
+    {
+      "id": "default-id",
+      "name": "Default Fun Pack (Indonesian)",
+      "locale": "id",
+      "jokes": 100,
+      "facts": 100,
+      "file": "default-id.json",
+      "tags": [
+        "programming",
+        "tech",
+        "ai",
+        "science"
+      ]
+    },
+    {
+      "id": "default-ja",
+      "name": "Default Fun Pack (Japanese)",
+      "locale": "ja",
+      "jokes": 100,
+      "facts": 100,
+      "file": "default-ja.json",
+      "tags": [
+        "programming",
+        "tech",
+        "ai",
+        "science"
+      ]
+    },
+    {
+      "id": "default-pt",
+      "name": "Default Fun Pack (Portuguese (Brazilian))",
+      "locale": "pt",
+      "jokes": 100,
+      "facts": 100,
+      "file": "default-pt.json",
+      "tags": [
+        "programming",
+        "tech",
+        "ai",
+        "science"
+      ]
+    },
+    {
+      "id": "default-ru",
+      "name": "Default Fun Pack (Russian)",
+      "locale": "ru",
+      "jokes": 100,
+      "facts": 100,
+      "file": "default-ru.json",
+      "tags": [
+        "programming",
+        "tech",
+        "ai",
+        "science"
+      ]
+    },
+    {
+      "id": "default-vi",
+      "name": "Default Fun Pack (Vietnamese)",
+      "locale": "vi",
+      "jokes": 100,
+      "facts": 100,
+      "file": "default-vi.json",
+      "tags": [
+        "programming",
+        "tech",
+        "ai",
+        "science"
+      ]
+    },
+    {
+      "id": "default-zh",
+      "name": "Default Fun Pack (Chinese (Simplified))",
+      "locale": "zh",
+      "jokes": 100,
+      "facts": 100,
+      "file": "default-zh.json",
+      "tags": [
+        "programming",
+        "tech",
+        "ai",
+        "science"
+      ]
     }
   ]
 }
