@@ -166,13 +166,10 @@
   }
 
   function _buildAuthBadge(name, tier) {
-    const tierBadge = (tier && tier !== "free")
-      ? `<span class="sb-auth-tier">${tier}</span>`
-      : "";
-    return `<a class="sb-auth-indicator sb-auth-indicator--signed-in" href="/settings">` +
-      `<img class="sb-auth-yy-icon" src="/images/yinyang/yinyang-logo-32.png" alt="" width="18" height="18" aria-hidden="true">` +
-      `<span class="sb-auth-name">${name}</span>` +
-      tierBadge +
+    // Keep the original "Signed in" style — just add the user's name after it
+    const tierStr = (tier && tier !== "free") ? ` · ${tier}` : "";
+    return `<a class="sb-auth-indicator sb-auth-indicator--signed-in" href="/settings" data-i18n="auth_signed_in">` +
+      `Signed in, ${name}${tierStr}` +
       `</a>`;
   }
 

@@ -1627,33 +1627,18 @@ main { display: block; }
 /* ── Auth Status Indicator ──────────────────────────────────────────────── */
 .sb-auth-status { display: flex; align-items: center; }
 .sb-auth-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.75rem;
   text-decoration: none;
   color: var(--sb-text-muted);
   white-space: nowrap;
-  padding: 5px 10px 5px 6px;
-  border-radius: 20px;
-  border: 1px solid var(--sb-border);
-  transition: border-color 0.2s, color 0.2s, background 0.2s;
-}
-.sb-auth-indicator:hover { border-color: var(--sb-signal); color: var(--sb-signal); background: rgba(0,200,150,0.06); }
-.sb-auth-indicator--signed-in { color: var(--sb-signal); border-color: rgba(0,200,150,0.3); background: rgba(0,200,150,0.05); }
-.sb-auth-yy-icon { border-radius: 50%; flex-shrink: 0; }
-.sb-auth-name { max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
-.sb-auth-tier {
-  font-size: 0.62rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 1px 5px;
+  padding: 4px 8px;
   border-radius: 4px;
-  background: rgba(0,200,150,0.15);
-  color: var(--sb-signal);
+  border: 1px solid var(--sb-border);
+  transition: border-color 0.2s, color 0.2s;
 }
+.sb-auth-indicator:hover { border-color: var(--sb-signal); color: var(--sb-signal); }
+.sb-auth-indicator--signed-in { color: var(--sb-signal); border-color: rgba(0,200,150,0.25); }
+.sb-auth-indicator--signed-in::before { content: '● '; font-size: 0.55rem; vertical-align: middle; }
 @media (max-width: 767px) { .sb-auth-status { display: none; } }
 
 /* ── YinYang Rail — logo + input layout ────────────────────────────────── */
