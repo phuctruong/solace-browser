@@ -305,8 +305,10 @@
               <div>
                 <div class="button-row" style="flex-direction:column;gap:12px">
                   <button class="btn btn-secondary" id="btn-clear-history" style="width:100%">Clear history</button>
-                  <button class="btn btn-secondary" id="btn-export-settings" style="width:100%">Export settings (cloud sync)</button>
-                  <button class="btn btn-secondary" id="btn-export-evidence" style="width:100%">Export evidence log</button>
+                  <button class="btn btn-secondary" id="btn-export-settings" style="width:100%">Export settings (download)</button>
+                  <button class="btn btn-primary" id="btn-sync-settings-cloud" style="width:100%">&#9729; Sync settings to cloud</button>
+                  <button class="btn btn-secondary" id="btn-export-evidence" style="width:100%">Export evidence log (download)</button>
+                  <button class="btn btn-primary" id="btn-sync-evidence-cloud" style="width:100%">&#9729; Sync evidence to cloud</button>
                   <button class="btn btn-secondary" id="btn-delete-data" style="width:100%;color:var(--sb-danger)">Delete all data</button>
                 </div>
               </div>
@@ -459,6 +461,51 @@
         btn.textContent = 'Export failed — is web server running?';
       }
       setTimeout(() => { btn.textContent = 'Export evidence log'; }, 3000);
+    });
+
+    const CLOUD = 'https://www.solaceagi.com';
+
+    document.getElementById('btn-sync-settings-cloud').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-sync-settings-cloud');
+      const apiKey = localStorage.getItem('solace_api_key');
+      if (!apiKey) { btn.textContent = '✗ Not signed in to Solace'; setTimeout(() => { btn.textContent = '☁ Sync settings to cloud'; }, 3000); return; }
+      btn.textContent = 'Syncing…';
+      try {
+        const export_resp = await fetch(WEB + '/api/settings/export');
+        const settings = await export_resp.json();
+        const resp = await fetch(CLOUD + '/api/v1/browser/settings', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings)
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        btn.textContent = '✓ Settings synced';
+      } catch (e) {
+        btn.textContent = '✗ Sync failed: ' + e.message;
+      }
+      setTimeout(() => { btn.textContent = '☁ Sync settings to cloud'; }, 4000);
+    });
+
+    document.getElementById('btn-sync-evidence-cloud').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-sync-evidence-cloud');
+      const apiKey = localStorage.getItem('solace_api_key');
+      if (!apiKey) { btn.textContent = '✗ Not signed in to Solace'; setTimeout(() => { btn.textContent = '☁ Sync evidence to cloud'; }, 3000); return; }
+      btn.textContent = 'Syncing…';
+      try {
+        const export_resp = await fetch(WEB + '/api/evidence/list');
+        const data = await export_resp.json();
+        const resp = await fetch(CLOUD + '/api/v1/browser/evidence/sync', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ records: data.records || [] })
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const result = await resp.json();
+        btn.textContent = '✓ ' + (result.synced || 0) + ' records synced';
+      } catch (e) {
+        btn.textContent = '✗ Sync failed: ' + e.message;
+      }
+      setTimeout(() => { btn.textContent = '☁ Sync evidence to cloud'; }, 4000);
     });
 
     document.getElementById('btn-clear-history').addEventListener('click', () => {
