@@ -2073,6 +2073,27 @@ class SolaceBrowserServer:
         import datetime
         recipes_dir = Path(__file__).parent / "data" / "default" / "recipes"
         recipe_count = len(list(recipes_dir.glob("**/*.recipe.json"))) if recipes_dir.exists() else 0
+        endpoint_methods: Dict[str, str] = {
+            "navigate": "POST",
+            "click": "POST",
+            "fill": "POST",
+            "screenshot": "POST",
+            "snapshot": "POST",
+            "aria_snapshot": "GET",
+            "dom_snapshot": "GET",
+            "page_snapshot": "GET",
+            "evaluate": "POST",
+            "status": "GET",
+            "health": "GET",
+            "agents_json": "GET",
+            "escalate": "POST",
+            "estimate": "POST",
+            "recipes_match": "POST",
+            "evidence_search": "POST",
+            "oauth3_token": "POST",
+            "part11_status": "GET",
+            "part11_config": "POST",
+        }
         return web.json_response({
             "name": "Solace Browser",
             "version": "5.0",
@@ -2085,6 +2106,7 @@ class SolaceBrowserServer:
                 "recipe_execution", "oauth3_delegation", "session_persistence",
                 "parallel_tabs", "part11_compliance"
             ],
+            "api_methods": endpoint_methods,
             "endpoints": {
                 "navigate": "POST /api/navigate",
                 "click": "POST /api/click",
@@ -2297,6 +2319,31 @@ class SolaceBrowserServer:
                 "reason": "browser_missing_part11_interface",
             }
         session_exists = Path(self.browser.session_file).exists()
+        api_methods: Dict[str, str] = {
+            "navigate": "POST",
+            "click": "POST",
+            "fill": "POST",
+            "screenshot": "POST",
+            "snapshot": "POST",
+            "aria_snapshot": "GET",
+            "dom_snapshot": "GET",
+            "page_snapshot": "GET",
+            "evaluate": "POST",
+            "status": "GET",
+            "health": "GET",
+            "agents_json": "GET",
+            "part11_status": "GET",
+            "part11_config": "POST",
+        }
+        capabilities: Dict[str, Any] = {
+            "part11": bool(part11_status.get("enabled", False)),
+            "oauth3": bool(OAUTH3_AVAILABLE),
+            "yinyang": bool(YINYANG_AVAILABLE),
+            "sync": bool(SYNC_AVAILABLE),
+            "prime_wiki_local": False,
+            "prime_mermaid_local": False,
+            "snapshot_modes": ["aria", "dom", "page", "screenshot", "snapshot"],
+        }
         return web.json_response({
             "running": self.browser.browser is not None,
             "mode": "headless" if self.browser.headless else "headed",
@@ -2310,6 +2357,8 @@ class SolaceBrowserServer:
                 "session_file": self.browser.session_file,
                 "exists": session_exists,
             },
+            "api_methods": api_methods,
+            "capabilities": capabilities,
         })
 
     async def _handle_health(self, request):

@@ -102,6 +102,19 @@ async def test_status_includes_mode_and_session_block() -> None:
 
 
 @pytest.mark.asyncio
+async def test_status_includes_api_contract_and_capabilities() -> None:
+    server = sbs.SolaceBrowserServer(_DummyBrowser(headless=True), port=9222)
+    resp = await server._handle_status(None)  # type: ignore[arg-type]
+    data = json.loads(resp.text)
+    assert data["api_methods"]["screenshot"] == "POST"
+    assert data["api_methods"]["snapshot"] == "POST"
+    assert data["api_methods"]["page_snapshot"] == "GET"
+    assert data["capabilities"]["snapshot_modes"] == ["aria", "dom", "page", "screenshot", "snapshot"]
+    assert data["capabilities"]["prime_wiki_local"] is False
+    assert data["capabilities"]["prime_mermaid_local"] is False
+
+
+@pytest.mark.asyncio
 async def test_discovery_rejects_invalid_json() -> None:
     server = sbs.SolaceBrowserServer(_DummyBrowser(headless=True), port=9222)
     resp = await server._handle_discovery_map_site(_Req(fail_json=True))

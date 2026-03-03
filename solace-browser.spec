@@ -76,4 +76,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='resources/windows/solace-browser.ico',
+    version='resources/windows/version_info.txt',
 )

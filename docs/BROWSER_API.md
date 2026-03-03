@@ -24,6 +24,15 @@ Response:
 `GET /api/status`
 
 Returns current URL, page count, event count, session checkpoint state, and Part 11 runtime status.
+Also includes:
+- `api_methods` method map (fail-closed contract source of truth)
+- `capabilities` flags (for example `part11`, `prime_wiki_local`, `prime_mermaid_local`)
+
+Example checks:
+```bash
+curl -fsS http://127.0.0.1:9222/api/status | jq '.api_methods'
+curl -fsS http://127.0.0.1:9222/api/status | jq '.capabilities'
+```
 
 ### Navigate
 `POST /api/navigate`
