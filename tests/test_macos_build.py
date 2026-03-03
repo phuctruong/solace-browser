@@ -158,17 +158,17 @@ class TestMacOSSpecContent:
         self.analysis_call = _find_call_by_func_name(self.tree, "Analysis")
         assert self.analysis_call is not None
 
-    def test_codesign_identity_adhoc(self):
-        """codesign_identity must be '-' for ad-hoc signing."""
+    def test_codesign_identity_disabled_for_ci(self):
+        """codesign_identity should be unset for CI-native downloadable artifacts."""
         val = _get_keyword_value(self.exe_call, "codesign_identity")
         assert val is not None, "EXE must have codesign_identity keyword"
-        assert _ast_to_python(val) == "-"
+        assert _ast_to_python(val) is None
 
-    def test_target_arch_universal2(self):
-        """target_arch must be 'universal2' for x86_64 + arm64."""
+    def test_target_arch_native_runner(self):
+        """target_arch should be native runner architecture for CI stability."""
         val = _get_keyword_value(self.exe_call, "target_arch")
         assert val is not None, "EXE must have target_arch keyword"
-        assert _ast_to_python(val) == "universal2"
+        assert _ast_to_python(val) is None
 
     def test_info_plist_present(self):
         """EXE must include an info_plist dict."""

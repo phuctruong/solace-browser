@@ -184,14 +184,16 @@ class TestBuildWorkflow:
 
     def test_release_workflow_uses_platform_matrix(self):
         content = WORKFLOW_FILE.read_text(encoding="utf-8")
-        assert "ubuntu-latest" in content
+        assert "ubuntu-22.04" in content
         assert "macos-latest" in content
         assert "windows-latest" in content
 
-    def test_release_workflow_uploads_to_gcs(self):
+    def test_release_workflow_uploads_native_artifact_bundles(self):
         content = WORKFLOW_FILE.read_text(encoding="utf-8")
-        assert "gs://solace-downloads/" in content
-        assert "storage.googleapis.com/solace-downloads/" in content or "gsutil cp" in content
+        assert "actions/upload-artifact@v4" in content
+        assert "name: native-${{ matrix.target_os }}" in content
+        assert "UPLOAD_ENABLED=0" in content
+        assert "dist/${{ matrix.object_name }}" in content
 
 
 # ===========================================================================
