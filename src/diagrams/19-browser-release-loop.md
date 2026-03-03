@@ -2,7 +2,8 @@
 
 ```mermaid
 flowchart TD
-    START[Start release round] --> BUILD[Compile binary with PyInstaller]
+    START[Start release round] --> TARGET[Select TARGET_OS: linux/macos/windows]
+    TARGET --> BUILD[Compile binary with PyInstaller]
     BUILD --> HASH[Generate SHA-256]
     HASH --> UP_V[Upload versioned artifact to GCS]
     UP_V --> UP_L[Upload latest artifact to GCS]
@@ -18,6 +19,10 @@ flowchart TD
 ```
 
 ## Notes
+- Platform object names:
+  - Linux: `solace-browser-linux-x86_64`
+  - macOS: `solace-browser-macos-universal`
+  - Windows: `solace-browser-windows-x86_64.exe`
 - Versioned path is immutable (`v{VERSION}`), latest is mutable.
 - Smoke runtime is head-on by default (`--head`), not headless.
 - Production API matrix validates routing, auth gates, and server stability.

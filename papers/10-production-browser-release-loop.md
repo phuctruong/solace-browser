@@ -6,6 +6,12 @@
 ## Purpose
 Define a repeatable pipeline for shipping a new Solace Browser build to real production (`solaceagi.com`) with measurable speed and deterministic validation.
 
+## Platform Targets
+Release loop is now platform-scoped and supports:
+1. Linux: `solace-browser-linux-x86_64`
+2. macOS: `solace-browser-macos-universal`
+3. Windows: `solace-browser-windows-x86_64.exe`
+
 ## Committee (5 personas)
 This release loop is reviewed by:
 1. Rory Sutherland — perceived value, trust framing, adoption friction.
@@ -24,27 +30,42 @@ Every release must satisfy:
 6. Write metrics to `scratch/` for each round.
 
 ## Deployment Loop
-1. Compile binary (`pyinstaller` spec in this repo).
-2. Generate SHA-256 checksum.
-3. Upload to:
+1. Select target platform (`TARGET_OS=linux|macos|windows`).
+2. Compile binary (PyInstaller spec in this repo).
+3. Generate SHA-256 checksum.
+4. Upload to:
    - `gs://solace-downloads/solace-browser/v{VERSION}/solace-browser-linux-x86_64`
    - `gs://solace-downloads/solace-browser/latest/solace-browser-linux-x86_64`
-4. Download from `https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-linux-x86_64`
-5. Run smoke:
+   - `gs://solace-downloads/solace-browser/v{VERSION}/solace-browser-macos-universal`
+   - `gs://solace-downloads/solace-browser/latest/solace-browser-macos-universal`
+   - `gs://solace-downloads/solace-browser/v{VERSION}/solace-browser-windows-x86_64.exe`
+   - `gs://solace-downloads/solace-browser/latest/solace-browser-windows-x86_64.exe`
+5. Download from `https://storage.googleapis.com/solace-downloads/solace-browser/latest/<platform-artifact>`
+6. Run smoke:
    - start binary with `--head --port <port>`
    - verify `/api/status`
-6. Run production API matrix from OpenAPI.
-7. Persist run report + timings into `scratch/release-cycle/<timestamp>/`.
+7. Run production API matrix from OpenAPI.
+8. Persist run report + timings into `scratch/release-cycle/<timestamp>/`.
 
 ## Reusable Scripts
 - `src/scripts/release_browser_cycle.sh`
-  - compile, upload, download, smoke, timing report.
+  - platform-aware compile, upload, download, smoke, timing report.
 - `src/scripts/test_solaceagi_api_matrix.py`
   - OpenAPI-driven matrix test for production APIs.
 
+### Canonical Commands
+1. Linux release round:
+   - `TARGET_OS=linux src/scripts/release_browser_cycle.sh`
+2. macOS release round:
+   - `TARGET_OS=macos src/scripts/release_browser_cycle.sh`
+3. Windows release round:
+   - `TARGET_OS=windows src/scripts/release_browser_cycle.sh`
+4. CI compile/upload only (no smoke/download):
+   - `TARGET_OS=<platform> DOWNLOAD_ENABLED=0 RUN_SMOKE=0 src/scripts/release_browser_cycle.sh`
+
 ## Default Bundle Policy
 Ship by default:
-1. `solace-browser` Linux x86_64 binary.
+1. Platform binary (`linux`, `macos`, `windows` target artifact).
 2. SHA-256 checksum file.
 3. Minimal runtime dependencies to boot `--head`.
 4. OAuth3-aware API surface (`/api/status`, `/api/navigate`, `/api/snapshot`, `/api/screenshot`).
@@ -57,11 +78,11 @@ Do not bundle by default:
 
 ## Speed Metrics
 Track every release:
-1. build_ms
-2. upload_ms
-3. download_ms
-4. smoke_ms
-5. api_matrix_total_ms
+1. build_ms (per platform)
+2. upload_ms (per platform)
+3. download_ms (per platform where enabled)
+4. smoke_ms (per platform where enabled)
+5. api_matrix_total_ms (linux production round)
 
 Success threshold (initial):
 - total release loop (build+upload+download+smoke) < 15 minutes on dev host.

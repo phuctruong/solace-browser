@@ -1,26 +1,27 @@
 name: build-binaries
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - "v*"
 
 jobs:
-  build:
+  build-and-upload:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
-            shell: bash
-            build_script: scripts/build-linux.sh
+            target_os: linux
+            object_name: solace-browser-linux-x86_64
           - os: macos-latest
-            shell: bash
-            build_script: scripts/build-mac.sh
+            target_os: macos
+            object_name: solace-browser-macos-universal
           - os: windows-latest
-            shell: bash
-            build_script: scripts/build-windows.sh
+            target_os: windows
+            object_name: solace-browser-windows-x86_64.exe
 
     steps:
       - name: Checkout
@@ -29,10 +30,10 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.12"
 
       - name: Install build dependencies
-        shell: ${{ matrix.shell }}
+        shell: bash
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then
@@ -48,26 +49,19 @@ jobs:
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Build platform binary
-        shell: ${{ matrix.shell }}
+      - name: Build + upload via release loop
+        shell: bash
         run: |
-          chmod +x scripts/build-*.sh
-          "${{ matrix.build_script }}"
+          chmod +x src/scripts/release_browser_cycle.sh
+          TARGET_OS="${{ matrix.target_os }}" \
+          OBJECT_NAME="${{ matrix.object_name }}" \
+          DOWNLOAD_ENABLED=0 \
+          RUN_SMOKE=0 \
+          UPLOAD_ENABLED=1 \
+          src/scripts/release_browser_cycle.sh
 
-      - name: Upload binaries to GCS
-        shell: ${{ matrix.shell }}
-        run: |
-          VERSION="$(tr -d '[:space:]' < VERSION)"
-          gsutil -m cp dist/* "gs://solace-downloads/${VERSION}/"
-
-      - name: Publish release metadata
-        shell: ${{ matrix.shell }}
-        run: |
-          VERSION="$(tr -d '[:space:]' < VERSION)"
-          cat > dist/release-metadata.json <<EOF
-          {
-            "version": "${VERSION}",
-            "bucket": "gs://solace-downloads/${VERSION}/",
-            "download_base": "https://storage.googleapis.com/solace-downloads/${VERSION}/"
-          }
-          EOF
+      - name: Upload release-cycle evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-cycle-${{ matrix.target_os }}
+          path: scratch/release-cycle/**

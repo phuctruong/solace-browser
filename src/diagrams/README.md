@@ -28,7 +28,7 @@
 | `16-cross-app-orchestration.md` | Cross-app message flow, partner discovery, orchestrator pattern, B6 budget gate, required app directory structure |
 | `17-yinyang-delight-pipeline.md` | Warm token → delight effect pipeline, Yinyang universal interface, plugin architecture, alert queue |
 | `18-app-ecosystem-day-one.md` | 18 day-one apps (10 standard + 5 no-API + 3 orchestrators), safety tiers, cross-app partner map |
-| `19-browser-release-loop.md` | Compile -> upload -> download -> head-on smoke -> production API matrix with fail gates and metrics writeback |
+| `19-browser-release-loop.md` | Cross-platform release loop (linux/macos/windows): compile -> upload -> download -> head-on smoke -> production API matrix with fail gates and metrics writeback |
 
 ---
 
