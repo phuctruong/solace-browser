@@ -739,6 +739,9 @@ Architecture: Agent-native (zero LLM API calls — your AI agent reads reports a
     parser.add_argument("--name", help="Human-readable target name")
     parser.add_argument("--cwd", help="[cli mode] Working directory for command")
     parser.add_argument("--baseline", help="[web mode] Baseline run_id to diff against")
+    parser.add_argument("--sync", metavar="URL", nargs="?",
+                        const="https://www.solaceagi.com/api/v1/qa-evidence/sync",
+                        help="Push sealed reports to cloud dashboard (default: solaceagi.com)")
     args = parser.parse_args()
 
     if args.cmd:
@@ -758,11 +761,44 @@ Architecture: Agent-native (zero LLM API calls — your AI agent reads reports a
         sys.exit(1)
 
     if args.self_diagnostic:
-        run_self_diagnostic()
+        summary = run_self_diagnostic()
+        reports = summary.get("page_results", []) if isinstance(summary, dict) else []
     elif args.inbox:
-        process_inbox()
+        reports = process_inbox()
     elif args.url:
-        run_qa(args.url, page_name=args.name, persona=args.persona, baseline_id=args.baseline)
+        r = run_qa(args.url, page_name=args.name, persona=args.persona, baseline_id=args.baseline)
+        reports = [r] if r else []
+    else:
+        reports = []
+
+    # --sync: push sealed reports to cloud dashboard
+    if args.sync and reports:
+        sync_url = args.sync
+        synced, failed = 0, 0
+        for report in reports:
+            if not isinstance(report, dict):
+                continue
+            # Determine project from run_id or spec
+            project = report.get("spec_id", "").split("-")[0] or "solace-browser"
+            payload = {
+                "project": project,
+                "qa_score": report.get("qa_score"),
+                "belt": report.get("belt"),
+                "glow": report.get("glow"),
+                "run_at": report.get("run_at"),
+                "run_id": report.get("run_id"),
+                "evidence_hash": report.get("evidence_hash"),
+                "page_name": report.get("target_url") or report.get("target_cmd") or project,
+            }
+            try:
+                r = requests.post(sync_url, json=payload, timeout=10)
+                if r.ok:
+                    synced += 1
+                else:
+                    failed += 1
+            except Exception:
+                failed += 1
+        print(f"\n☁️  Synced {synced} reports to {sync_url} ({failed} failed)")
 
 
 if __name__ == "__main__":

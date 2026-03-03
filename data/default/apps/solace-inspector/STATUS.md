@@ -8,7 +8,7 @@
 >  and coordinate with humans. Not checking — testing."
 > — James Bach (simulated via Dragon's Den protocol)
 
-## Current GLOW: 93 → Target: 95 (100 sealed reports)
+## Current GLOW: 94 → Target: 95 (100 sealed reports)
 
 ```
 GLOW 89  ← First clean commit (all files + renamed)        [✅] DONE 2026-03-03 (commit: 3cca5ee)
@@ -16,9 +16,18 @@ GLOW 90  ← Featured on solaceagi.com/agents + /qa-evidence [✅] DONE 2026-03-
 GLOW 91  ← CLI mode working (solace-cli tested)            [✅] DONE 2026-03-03 (4/4 assertions PASS)
 GLOW 92  ← First HITL loop: agent → fix → human approve    [✅] DONE 2026-03-03 (F-001 fixed)
 GLOW 93  ← Self-diagnostic passes all 5 pages              [✅] DONE 2026-03-03 (7/7 specs: 100/100 Green)
-GLOW 94  ← Inspector Dashboard on cloud                    [ ] NEXT
-GLOW 95  ← 100 sealed QA reports in vault                  [ ] PENDING
+GLOW 94  ← Inspector Dashboard on cloud                    [✅] DONE 2026-03-03 (live API + --sync flag)
+GLOW 95  ← 100 sealed QA reports in vault                  [ ] NEXT
 ```
+
+### GLOW 94 Evidence (2026-03-03) — Cloud Dashboard LIVE
+- `GET /api/v1/qa-evidence/status?project=solace-browser` → 100/100 Green
+- `GET /api/v1/qa-evidence/status?project=solaceagi` → 100/100 Green
+- `GET /api/v1/qa-evidence/status?project=solace-cli` → 100/100 Green
+- `POST /api/v1/qa-evidence/sync` → inspector pushes real-time results
+- `--sync` flag added to inspector: auto-push to cloud after every run
+- Dashboard seeded with GLOW 93 verified results (all Green)
+- Usage: `python3 scripts/run_solace_inspector.py --inbox --sync`
 
 ### GLOW 93 Evidence (2026-03-03) — Self-Diagnostic COMPLETE
 All 7 specs passed 100/100 Green:
