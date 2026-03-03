@@ -49,11 +49,26 @@ run_with_timeout() {
 write_sha256() {
   local source_file="$1"
   local output_file="$2"
-  # Always emit "<sha256>  <basename>" so `sha256sum -c` works after download.
-  python3 - <<PY
+  local source_name
+  source_name="$(basename "$source_file")"
+  if command -v sha256sum >/dev/null 2>&1; then
+    local digest
+    digest="$(sha256sum "$source_file" | awk '{print $1}')"
+    printf "%s  %s\n" "$digest" "$source_name" >"$output_file"
+    return 0
+  fi
+  if command -v shasum >/dev/null 2>&1; then
+    local digest
+    digest="$(shasum -a 256 "$source_file" | awk '{print $1}')"
+    printf "%s  %s\n" "$digest" "$source_name" >"$output_file"
+    return 0
+  fi
+  SOURCE_FILE="$source_file" OUTPUT_FILE="$output_file" SOURCE_NAME="$source_name" python3 - <<'PY'
 from pathlib import Path
 import hashlib
-source = Path(r"$source_file")
+import os
+
+source = Path(os.environ["SOURCE_FILE"])
 hasher = hashlib.sha256()
 with source.open("rb") as handle:
     while True:
@@ -62,7 +77,10 @@ with source.open("rb") as handle:
             break
         hasher.update(chunk)
 digest = hasher.hexdigest()
-Path(r"$output_file").write_text(f"{digest}  {source.name}\n", encoding="utf-8")
+Path(os.environ["OUTPUT_FILE"]).write_text(
+    f"{digest}  {os.environ['SOURCE_NAME']}\n",
+    encoding="utf-8",
+)
 PY
 }
 
