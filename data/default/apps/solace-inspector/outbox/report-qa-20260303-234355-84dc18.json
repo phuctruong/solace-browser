@@ -1,0 +1,153 @@
+{
+  "run_id": "qa-20260303-234355-84dc18",
+  "spec_id": "solace-browser-sb-demo-001",
+  "mode": "web",
+  "target_url": "http://127.0.0.1:8791/demo",
+  "page_name": "Solace Browser Sb Demo",
+  "persona_used": "cem_kaner",
+  "committee": [
+    "james_bach",
+    "elisabeth_hendrickson",
+    "kent_beck",
+    "cem_kaner",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-03T23:43:55.773625Z",
+  "steps_completed": [
+    "navigate",
+    "aria_snapshot",
+    "dom_snapshot",
+    "heuristic_check",
+    "screenshot",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "agent_analysis_response": null,
+  "aria_tree_length": 0,
+  "aria_tree_excerpt": "",
+  "dom_title": "Family Demo Day | Solace Browser",
+  "dom_h1s": [
+    "Welcome to Solace BrowserFamily Demo Day!"
+  ],
+  "dom_links_count": 10,
+  "dom_images_count": 2,
+  "dom_forms": 0,
+  "dom_links_sample": [
+    {
+      "text": "Solace Browser",
+      "href": "http://127.0.0.1:8791/"
+    },
+    {
+      "text": "Home",
+      "href": "http://127.0.0.1:8791/"
+    },
+    {
+      "text": "Apps",
+      "href": "http://127.0.0.1:8791/app-store"
+    },
+    {
+      "text": "Settings",
+      "href": "http://127.0.0.1:8791/settings"
+    },
+    {
+      "text": "Demo",
+      "href": "http://127.0.0.1:8791/demo"
+    },
+    {
+      "text": "\ud83d\uded2\n          App Store\n          Browse all the AI apps",
+      "href": "http://127.0.0.1:8791/app-store"
+    },
+    {
+      "text": "\u2699\n          Settings\n          See the configuration page",
+      "href": "http://127.0.0.1:8791/settings"
+    },
+    {
+      "text": "Back to Home",
+      "href": "http://127.0.0.1:8791/"
+    },
+    {
+      "text": "App Store",
+      "href": "http://127.0.0.1:8791/app-store"
+    },
+    {
+      "text": "Settings",
+      "href": "http://127.0.0.1:8791/settings"
+    }
+  ],
+  "heuristic_issues": [],
+  "heuristic_error_count": 0,
+  "heuristic_warning_count": 0,
+  "screenshot_path": "screenshot-20260303-184356.png",
+  "agent_analysis_request": {
+    "persona": "cem_kaner",
+    "system_prompt": "You are Cem Kaner, context-driven testing expert and BBST author. Apply context-driven principles: value of any practice depends on context. What is the most important quality risk here? What's the purpose of this page and how well does it serve that purpose? Output: (1) Context assessment, (2) Top quality risk, (3) Fix proposals.",
+    "evidence_summary": {
+      "url": "http://127.0.0.1:8791/demo",
+      "page_name": "Solace Browser Sb Demo",
+      "dom_title": "Family Demo Day | Solace Browser",
+      "dom_h1s": [
+        "Welcome to Solace BrowserFamily Demo Day!"
+      ],
+      "dom_links_count": 10,
+      "dom_links_sample": [
+        {
+          "text": "Solace Browser",
+          "href": "http://127.0.0.1:8791/"
+        },
+        {
+          "text": "Home",
+          "href": "http://127.0.0.1:8791/"
+        },
+        {
+          "text": "Apps",
+          "href": "http://127.0.0.1:8791/app-store"
+        },
+        {
+          "text": "Settings",
+          "href": "http://127.0.0.1:8791/settings"
+        },
+        {
+          "text": "Demo",
+          "href": "http://127.0.0.1:8791/demo"
+        },
+        {
+          "text": "\ud83d\uded2\n          App Store\n          Browse all the AI apps",
+          "href": "http://127.0.0.1:8791/app-store"
+        },
+        {
+          "text": "\u2699\n          Settings\n          See the configuration page",
+          "href": "http://127.0.0.1:8791/settings"
+        },
+        {
+          "text": "Back to Home",
+          "href": "http://127.0.0.1:8791/"
+        },
+        {
+          "text": "App Store",
+          "href": "http://127.0.0.1:8791/app-store"
+        },
+        {
+          "text": "Settings",
+          "href": "http://127.0.0.1:8791/settings"
+        }
+      ],
+      "dom_images_count": 2,
+      "dom_forms": 0,
+      "aria_tree_excerpt": "",
+      "heuristic_issues": [],
+      "heuristic_error_count": 0,
+      "heuristic_warning_count": 0,
+      "screenshot_path": "screenshot-20260303-184356.png"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "qa_score": 100,
+  "belt": "Green",
+  "glow": 105,
+  "evidence_hash": "sha256:6de5632de35013a88aaf9f6d409c20500aad6aad2e967aaa947bbc8cd8336231"
+}

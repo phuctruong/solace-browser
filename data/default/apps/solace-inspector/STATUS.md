@@ -8,7 +8,7 @@
 >  and coordinate with humans. Not checking — testing."
 > — James Bach (simulated via Dragon's Den protocol)
 
-## Current GLOW: 97 ✅ COMPLETE
+## Current GLOW: 99 ✅ COMPLETE
 
 ```
 GLOW 89  ← First clean commit (all files + renamed)        [✅] DONE 2026-03-03 (commit: 3cca5ee)
@@ -20,6 +20,8 @@ GLOW 94  ← Inspector Dashboard on cloud                    [✅] DONE 2026-03-
 GLOW 95  ← 100 sealed QA reports in vault                  [✅] DONE 2026-03-03 (105 reports sealed)
 GLOW 96  ← Inbox as QA memory substrate (51 specs 100%)    [✅] DONE 2026-03-03 (51/51 Green, 274 reports)
 GLOW 97  ← YinYang API + MCP fully QA'd (56 specs 100%)   [✅] DONE 2026-03-03 (56/56 Green, 386 reports)
+GLOW 98  ← Fun packs all 13 locales (2,600 translations)  [✅] DONE 2026-03-03 (swarms, $0.00)
+GLOW 99  ← OWASP adversarial specs + fun-pack validation  [✅] DONE 2026-03-03 (62/62 Green, 511 reports)
 ```
 
 ### GLOW 97 Evidence (2026-03-03) — 56/56 Specs 100% Green

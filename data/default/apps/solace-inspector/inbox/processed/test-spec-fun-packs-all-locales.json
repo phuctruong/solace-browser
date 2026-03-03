@@ -1,0 +1,18 @@
+{
+  "spec_id": "fun-packs-all-locales-001",
+  "project": "solace-browser",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "python3 -c \"import json,pathlib; packs=list(pathlib.Path('/home/phuc/projects/solace-browser/data/fun-packs').glob('default-*.json')); valid=[p for p in packs if len(json.loads(p.read_text()).get('jokes',[]))==100 and len(json.loads(p.read_text()).get('facts',[]))==100]; print(f'valid={len(valid)} total={len(packs)} locales={sorted([json.loads(p.read_text())[\\\"_meta\\\"][\\\"locale\\\"] for p in valid])}')\"",
+  "target_name": "Fun Packs — All 13 Locales Valid (100 jokes + 100 facts each)",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": ["valid=13", "total=13"],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "elisabeth_hendrickson",
+  "priority": "high",
+  "context": "Elisabeth Hendrickson: charter-based exploration of delight — if any locale is missing or truncated, 1 billion+ speakers get a broken experience. Verify all 13 packs (ar de en es fr hi id ja ko pt ru vi zh) each have exactly 100 jokes + 100 facts. Valid JSON, correct structure.",
+  "created_at": "2026-03-03T00:00:00Z"
+}
