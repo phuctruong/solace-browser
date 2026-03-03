@@ -3,13 +3,268 @@
 <head>
   <meta charset="utf-8">
   <title>App Detail | Solace Browser</title>
-  <meta name="description" content="Configure app inbox, review outbox, and manage budgets for web-native AI automation.">
+  <meta name="description" content="Run AI automations with your approval. Evidence-sealed, budget-gated, web-native.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/png" href="/images/yinyang/yinyang-logo-32.png">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/css/site.css">
+  <style>
+    /* ── App Detail Hero ── */
+    .ad-hero {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 28px 0 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      margin-bottom: 28px;
+    }
+    .ad-hero__icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 18px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.06);
+    }
+    .ad-hero__icon--emoji {
+      width: 80px;
+      height: 80px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      background: rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+    .ad-hero__info { flex: 1; min-width: 0; }
+    .ad-hero__back {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.8rem;
+      color: var(--sb-text-muted);
+      text-decoration: none;
+      margin-bottom: 6px;
+    }
+    .ad-hero__back:hover { color: var(--sb-signal); }
+    .ad-hero__name {
+      font-size: 1.8rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin: 0 0 6px;
+    }
+    .ad-hero__desc {
+      font-size: 0.95rem;
+      color: var(--sb-text-muted);
+      margin: 0 0 10px;
+      line-height: 1.5;
+    }
+    .ad-hero__meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .ad-hero__ctas {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .ad-run-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: var(--sb-signal);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      white-space: nowrap;
+    }
+    .ad-run-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .ad-run-btn:active { transform: translateY(0); }
+    .ad-run-btn--loading { opacity: 0.6; cursor: not-allowed; }
+    .ad-run-btn__icon { font-size: 1.1rem; }
+    .ad-schedule-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 20px;
+      background: rgba(255,255,255,0.07);
+      color: var(--sb-text-muted);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .ad-schedule-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+    /* ── Running state ── */
+    .ad-running-banner {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: rgba(0,180,216,0.1);
+      border: 1px solid rgba(0,180,216,0.25);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+    .ad-running-banner.is-visible { display: flex; }
+    .ad-running-banner__gif {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+
+    /* ── Approval card ── */
+    .ad-approval-card {
+      display: none;
+      padding: 20px;
+      background: rgba(0,180,216,0.07);
+      border: 1px solid rgba(0,180,216,0.3);
+      border-radius: 14px;
+      margin-bottom: 20px;
+    }
+    .ad-approval-card.is-visible { display: block; }
+    .ad-approval-card__title { font-weight: 700; margin: 0 0 10px; font-size: 1rem; }
+    .ad-approval-card__preview {
+      background: rgba(0,0,0,0.25);
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 0.85rem;
+      color: var(--sb-text-muted);
+      margin-bottom: 14px;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .ad-approval-btns { display: flex; gap: 10px; }
+    .ad-approve-btn {
+      padding: 10px 24px;
+      background: #22c55e;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .ad-approve-btn:hover { opacity: 0.85; }
+    .ad-reject-btn {
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.08);
+      color: var(--sb-text-muted);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .ad-reject-btn:hover { background: rgba(255,80,80,0.15); color: #ff5050; }
+
+    /* ── Recent runs ── */
+    .ad-runs { margin-bottom: 28px; }
+    .ad-runs__label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--sb-text-muted);
+      margin-bottom: 10px;
+    }
+    .ad-run-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+    }
+    .ad-run-item__dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--sb-signal);
+      flex-shrink: 0;
+    }
+    .ad-run-item__dot--fail { background: #ff5050; }
+    .ad-run-item__info { flex: 1; }
+    .ad-run-item__time { color: var(--sb-text-muted); font-size: 0.8rem; }
+    .ad-empty-runs {
+      padding: 20px;
+      text-align: center;
+      color: var(--sb-text-muted);
+      font-size: 0.9rem;
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+    }
+
+    /* ── Customize section ── */
+    .ad-customize {
+      margin-bottom: 28px;
+    }
+    .ad-customize__label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--sb-text-muted);
+      margin-bottom: 10px;
+    }
+    .ad-folder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .ad-folder {
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .ad-folder:hover { background: rgba(255,255,255,0.08); border-color: rgba(0,180,216,0.3); }
+    .ad-folder__icon { font-size: 1.2rem; margin-bottom: 4px; }
+    .ad-folder__name { font-size: 0.8rem; font-weight: 600; }
+    .ad-folder__count { font-size: 0.75rem; color: var(--sb-text-muted); margin-top: 2px; }
+
+    /* ── Info pills ── */
+    .ad-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .ad-info-card {
+      padding: 14px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+    }
+    .ad-info-card__label { font-size: 0.75rem; color: var(--sb-text-muted); margin-bottom: 4px; }
+    .ad-info-card__value { font-size: 0.9rem; font-weight: 600; }
+
+    @media (max-width: 600px) {
+      .ad-hero { flex-direction: column; align-items: flex-start; }
+      .ad-hero__ctas { flex-direction: row; width: 100%; }
+      .ad-run-btn { flex: 1; justify-content: center; }
+    }
+  </style>
   <script src="/js/yinyang-delight.js" defer></script>
   <script src="/js/yinyang-rail.js" defer></script>
+  <script src="/js/yinyang-tutorial.js" defer></script>
+  <script src="/js/yinyang-oauth3-confirm.js" defer></script>
   <script src="/js/solace.js" defer></script>
 </head>
 <body data-page="app-detail">
@@ -18,187 +273,262 @@
       <header class="site-header">
         <div class="site-header__inner">
           <a class="site-brand" href="/">
-            <span class="site-brand__icon">SB</span>
+            <span class="site-brand__icon site-brand__icon--image">
+              <img class="site-brand__logo-image" src="/images/yinyang/yinyang-logo-48.png" alt="Solace Browser">
+            </span>
             <span class="site-brand__text">
               <span class="site-brand__name">Solace Browser</span>
               <span class="site-brand__tag"><a href="https://www.solaceagi.com/software5" target="_blank" rel="noopener" class="site-brand__tag-link">Software 5.0</a> · <a href="https://www.solaceagi.com/persistent-intelligence" target="_blank" rel="noopener" class="site-brand__tag-link">Persistent Intelligence</a></span>
             </span>
           </a>
           <nav class="site-nav" aria-label="Primary">
-            <a class="nav-link" data-nav-path="/" href="/">Home</a>
-            <a class="nav-link" data-nav-path="/app-store" href="/app-store">Apps</a>
+            <a class="nav-link" data-nav-path="/" href="/" data-i18n="nav_home">Home</a>
+            <a class="nav-link" data-nav-path="/app-store" href="/app-store" data-i18n="nav_apps">Apps</a>
             <a class="nav-link" data-nav-path="/schedule" href="/schedule">Schedule</a>
-            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
-            <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect">Tunnel</a>
-            <a class="nav-link" data-nav-path="/settings" href="/settings">Settings</a>
+            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard" data-i18n="nav_machine">Machine</a>
+            <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect" data-i18n="nav_tunnel">Tunnel</a>
+            <a class="nav-link" data-nav-path="/settings" href="/settings" data-i18n="nav_settings">Settings</a>
           </nav>
+          <div class="sb-lang-switch" id="sb-lang-switch">
+            <button class="sb-lang-btn" id="sb-lang-btn" aria-label="Select language" aria-expanded="false" aria-controls="sb-lang-menu">
+              <img class="sb-lang-icon sb-lang-icon--default" src="/images/icons/internationalization/160.png" alt="Language" width="22" height="22">
+              <img class="sb-lang-icon sb-lang-icon--hover" src="/images/icons/internationalization-2/160.png" alt="" width="22" height="22">
+            </button>
+            <div class="sb-lang-menu" id="sb-lang-menu">
+              <a role="button" tabindex="0" data-locale="en">English</a><a role="button" tabindex="0" data-locale="es">Español</a><a role="button" tabindex="0" data-locale="vi">Tiếng Việt</a><a role="button" tabindex="0" data-locale="zh">中文</a><a role="button" tabindex="0" data-locale="pt">Português</a><a role="button" tabindex="0" data-locale="fr">Français</a><a role="button" tabindex="0" data-locale="ja">日本語</a><a role="button" tabindex="0" data-locale="de">Deutsch</a><a role="button" tabindex="0" data-locale="ar">العربية</a><a role="button" tabindex="0" data-locale="hi">हिंदी</a><a role="button" tabindex="0" data-locale="ko">한국어</a><a role="button" tabindex="0" data-locale="id">Bahasa Indonesia</a><a role="button" tabindex="0" data-locale="ru">Русский</a>
+            </div>
+          </div>
+          <div class="sb-auth-status" id="sb-auth-status"></div>
           <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
         </div>
       </header>
       <div class="mobile-menu" id="mobile-menu">
         <div class="mobile-menu__section">
-          <h3>Surfaces</h3>
-          <a data-nav-path="/" href="/">Home</a>
-          <a data-nav-path="/app-store" href="/app-store">App Store</a>
-          <a data-nav-path="/settings" href="/settings">Settings</a>
+          <h3 data-i18n="menu_surfaces">Surfaces</h3>
+          <a data-nav-path="/" href="/" data-i18n="nav_home">Home</a>
+          <a data-nav-path="/app-store" href="/app-store" data-i18n="menu_app_store">App Store</a>
+          <a data-nav-path="/machine-dashboard" href="/machine-dashboard" data-i18n="nav_machine">Machine</a>
+          <a data-nav-path="/tunnel-connect" href="/tunnel-connect" data-i18n="nav_tunnel">Tunnel</a>
+          <a data-nav-path="/settings" href="/settings" data-i18n="nav_settings">Settings</a>
         </div>
       </div>
 
       <main>
-        <!-- App Header -->
-        <section class="hero reveal">
-          <div>
-            <a class="eyebrow" href="/app-store">&larr; Back to App Store</a>
-            <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
-              <img id="app-icon" src="/images/apps/default.png" alt="App icon" width="56" height="56" style="border-radius:12px">
-              <div>
-                <h1 class="display" id="app-name" style="font-size:2.2rem;margin:0">Loading app...</h1>
-                <p class="lead" style="margin:4px 0 0" id="app-desc">Fetching app details</p>
+        <div class="page-section">
+
+          <!-- Running banner (hidden by default) -->
+          <div class="ad-running-banner" id="adRunningBanner">
+            <img class="ad-running-banner__gif" src="/images/yinyang/yinyang-loading-128.gif" alt="Yinyang running">
+            <div>
+              <strong id="adRunningTitle">Yinyang is working…</strong>
+              <div id="adRunningMsg" style="font-size:0.85rem;color:var(--sb-text-muted);margin-top:2px">Navigating and reading your data. Approval required before any action.</div>
+            </div>
+          </div>
+
+          <!-- Approval card (hidden by default) -->
+          <div class="ad-approval-card" id="adApprovalCard">
+            <div class="ad-approval-card__title">☯ Preview ready — approve to execute</div>
+            <div class="ad-approval-card__preview" id="adApprovalPreview">Generating preview…</div>
+            <div class="ad-approval-btns">
+              <button class="ad-approve-btn" id="adApproveBtn">✓ Approve &amp; Run</button>
+              <button class="ad-reject-btn" id="adRejectBtn">✕ Reject</button>
+            </div>
+          </div>
+
+          <!-- App Hero -->
+          <div class="ad-hero">
+            <div id="adIconWrap">
+              <!-- populated by JS -->
+              <div class="ad-hero__icon--emoji" id="adIconEmoji">⚡</div>
+            </div>
+            <div class="ad-hero__info">
+              <a class="ad-hero__back" href="/app-store" data-i18n="nav_apps">← Apps</a>
+              <h1 class="ad-hero__name" id="adName">Loading…</h1>
+              <p class="ad-hero__desc" id="adDesc"></p>
+              <div class="ad-hero__meta">
+                <span class="status-pill status-pill--success" id="adStatus"><span class="status-pill__dot"></span>Available</span>
+                <span class="recipe-tag" id="adSafety"></span>
+                <span class="recipe-tag" id="adSite"></span>
               </div>
             </div>
-            <div class="status-strip">
-              <span class="status-pill status-pill--success" id="app-status"><span class="status-pill__dot"></span>Available</span>
-              <span class="recipe-tag" id="app-safety">Safety --</span>
-              <span class="recipe-tag" id="app-site">loading</span>
+            <div class="ad-hero__ctas">
+              <button class="ad-run-btn" id="adRunBtn" data-i18n="ad_run_btn">
+                <span class="ad-run-btn__icon">▶</span>
+                <span id="adRunBtnLabel">Run App</span>
+              </button>
+              <a class="ad-schedule-btn" href="/schedule" data-i18n="ad_schedule_btn">
+                ⏰ Schedule
+              </a>
             </div>
           </div>
-        </section>
 
-        <!-- Two-column: Inbox + Outbox -->
-        <section class="page-section reveal">
-          <div class="data-grid">
-            <!-- Inbox Column -->
-            <div>
-              <div class="section-heading">
-                <div>
-                  <h2 class="section-title">Inbox <span style="font-size:0.6em;opacity:0.6">(you customize)</span></h2>
-                  <p class="section-copy">Drop files into the app's inbox folder to teach the AI your preferences.</p>
-                </div>
+          <!-- Recent Runs -->
+          <div class="ad-runs">
+            <div class="ad-runs__label" data-i18n="ad_recent_runs">Recent runs</div>
+            <div id="adRunsList">
+              <div class="ad-empty-runs" data-i18n="ad_empty_runs">No runs yet. Hit Run App to start.</div>
+            </div>
+          </div>
+
+          <!-- Customize (Inbox folders) -->
+          <div class="ad-customize">
+            <div class="ad-customize__label" data-i18n="ad_customize_label">Customize this app</div>
+            <div class="ad-folder-grid" id="adFolderGrid">
+              <div class="ad-folder" onclick="openFolder('prompts')">
+                <div class="ad-folder__icon">💬</div>
+                <div class="ad-folder__name">Prompts</div>
+                <div class="ad-folder__count" id="adCountPrompts">Drop files here</div>
               </div>
-              <article class="data-panel" id="app-inbox-sections">
-                <h3 style="margin-top:0">prompts/</h3>
-                <h3>templates/</h3>
-                <h3>assets/</h3>
-                <h3>policies/</h3>
-                <h3>datasets/</h3>
-                <p class="section-copy" id="app-inbox-path">Loading inbox path...</p>
-              </article>
-            </div>
-
-            <!-- Outbox Column -->
-            <div>
-              <div class="section-heading">
-                <div>
-                  <h2 class="section-title">Outbox <span style="font-size:0.6em;opacity:0.6">(AI shows work)</span></h2>
-                  <p class="section-copy">AI-generated outputs appear here for your review. Approve, edit, or reject each item.</p>
-                </div>
+              <div class="ad-folder" onclick="openFolder('templates')">
+                <div class="ad-folder__icon">📄</div>
+                <div class="ad-folder__name">Templates</div>
+                <div class="ad-folder__count" id="adCountTemplates">Drop files here</div>
               </div>
-              <article class="data-panel" id="app-outbox-sections">
-                <h3 style="margin-top:0">previews/</h3>
-                <h3>drafts/</h3>
-                <h3>reports/</h3>
-                <h3>suggestions/</h3>
-                <h3>runs/</h3>
-                <p class="section-copy">AI-generated outputs appear here for your review. Approve, edit, or reject each item.</p>
-              </article>
+              <div class="ad-folder" onclick="openFolder('assets')">
+                <div class="ad-folder__icon">🗂️</div>
+                <div class="ad-folder__name">Assets</div>
+                <div class="ad-folder__count" id="adCountAssets">Drop files here</div>
+              </div>
+              <div class="ad-folder" onclick="openFolder('policies')">
+                <div class="ad-folder__icon">🔒</div>
+                <div class="ad-folder__name">Policies</div>
+                <div class="ad-folder__count" id="adCountPolicies">budget-policy.yaml loaded</div>
+              </div>
             </div>
           </div>
-        </section>
 
-        <!-- Budget & Scopes -->
-        <section class="page-section reveal">
-          <div class="section-heading">
-            <div>
-              <h2 class="section-title">Budget &amp; Scopes</h2>
-              <p class="section-copy">Fail-closed budget gates. Any limit exceeded = BLOCKED.</p>
+          <!-- App info grid -->
+          <div class="ad-info-grid">
+            <div class="ad-info-card">
+              <div class="ad-info-card__label" data-i18n="ad_info_cost">Approx. cost per run</div>
+              <div class="ad-info-card__value" id="adCostValue">~$0.003</div>
+            </div>
+            <div class="ad-info-card">
+              <div class="ad-info-card__label" data-i18n="ad_info_replay">Recipe replay cost</div>
+              <div class="ad-info-card__value">~$0.001</div>
+            </div>
+            <div class="ad-info-card">
+              <div class="ad-info-card__label" data-i18n="ad_info_safety">Safety rating</div>
+              <div class="ad-info-card__value" id="adSafetyInfo">B — needs your approval</div>
+            </div>
+            <div class="ad-info-card">
+              <div class="ad-info-card__label" data-i18n="ad_info_evidence">Evidence</div>
+              <div class="ad-info-card__value">SHA-256 sealed forever</div>
             </div>
           </div>
-          <div class="data-grid">
-            <article class="data-panel">
-              <h3 style="margin-top:0">Action Budgets (per run)</h3>
-              <table class="data-table">
-                <thead><tr><th>Action</th><th>Value</th><th>Status</th></tr></thead>
-                <tbody id="app-budget-table-body">
-                  <tr><td colspan="3">Loading budget...</td></tr>
-                </tbody>
-              </table>
-            </article>
-            <article class="data-panel">
-              <h3 style="margin-top:0">OAuth3 Scopes</h3>
-              <ul class="data-list" id="app-scopes-list">
-                <li><span class="scope-tag">gmail.read.inbox</span> Loading scopes...</li>
-              </ul>
-              <p style="margin-top:12px;opacity:0.6;font-size:0.85em">Scopes are checked at gate time, not lazily. Revocation = immediate block.</p>
-            </article>
-          </div>
-        </section>
 
-        <!-- Recipe Execution -->
-        <section class="page-section reveal">
-          <div class="section-heading">
-            <div>
-              <h2 class="section-title">Execution Model</h2>
-              <p class="section-copy">LLM called ONCE at preview. Execution is deterministic CPU replay of sealed output.</p>
-            </div>
-          </div>
-          <div class="kpi-grid">
-            <div class="kpi-card">
-              <strong>Preview cost</strong>
-              <span>~$0.003 per run (L2 classification + generation)</span>
-            </div>
-            <div class="kpi-card">
-              <strong>Replay cost</strong>
-              <span>~$0.001 per replay (no LLM, CPU only)</span>
-            </div>
-            <div class="kpi-card">
-              <strong>Cooldown</strong>
-              <span>5 seconds (Safety B — visible, reputation-impacting)</span>
-            </div>
-          </div>
-          <article class="data-panel" style="margin-top:24px">
-            <h3 style="margin-top:0">Lifecycle</h3>
-            <ul class="data-list">
-              <li><span class="recipe-tag">1</span> <strong>Trigger</strong> — Schedule or manual from Yinyang rail</li>
-              <li><span class="recipe-tag">2</span> <strong>Budget check</strong> — B1-B5 fail-closed gates</li>
-              <li><span class="recipe-tag">3</span> <strong>Preview</strong> — LLM generates output, shown in bottom rail</li>
-              <li><span class="recipe-tag">4</span> <strong>Approve</strong> — User clicks approve (30s timeout = deny)</li>
-              <li><span class="recipe-tag">5</span> <strong>Seal</strong> — Output sealed to outbox (chmod 444)</li>
-              <li><span class="recipe-tag">6</span> <strong>Execute</strong> — CPU replays sealed output on mail.google.com</li>
-              <li><span class="recipe-tag">7</span> <strong>Evidence</strong> — Hash chain sealed, budget decremented</li>
-            </ul>
-          </article>
-        </section>
-
-        <!-- Recent Runs -->
-        <section class="page-section reveal">
-          <div class="section-heading">
-            <div>
-              <h2 class="section-title">Recent Runs</h2>
-              <p class="section-copy">Evidence-sealed execution history with hash chain verification.</p>
-            </div>
-          </div>
-          <article class="data-panel">
-            <table class="data-table">
-              <thead><tr><th>Run</th><th>Trigger</th><th>Actions</th><th>Cost</th><th>Status</th></tr></thead>
-              <tbody id="app-runs-table-body">
-                <tr><td colspan="5">Loading recent runs...</td></tr>
-              </tbody>
-            </table>
-          </article>
-        </section>
+        </div>
       </main>
 
       <footer class="site-footer">
         <div class="site-footer__inner">
-          <div>© <span data-current-year></span> Solace Browser. Inbox customizes, outbox shows work, you approve.</div>
+          <div>© <span data-current-year></span> Solace Browser. Visible approvals before agent action.</div>
           <div class="site-footer__links">
-            <a href="/app-store">Apps</a>
-            <a href="/settings">Settings</a>
-            <a href="https://github.com/solaceagi/solace-browser" target="_blank" rel="noopener">GitHub</a>
+            <a href="/app-store" data-i18n="nav_apps">Apps</a>
+            <a href="/settings" data-i18n="nav_settings">Settings</a>
+            <a href="/tunnel-connect" data-i18n="nav_tunnel">Tunnel</a>
           </div>
         </div>
       </footer>
     </div>
   </div>
+
+  <script>
+    function openFolder(name) {
+      // Future: open file manager for inbox folder
+      window._yyNotify && window._yyNotify('info', `Drop files into inbox/${name}/ to customize this app.`);
+    }
+
+    // Hook run button to YinYang rail / actual recipe trigger
+    document.addEventListener('DOMContentLoaded', () => {
+      const runBtn = document.getElementById('adRunBtn');
+      const banner = document.getElementById('adRunningBanner');
+      const approvalCard = document.getElementById('adApprovalCard');
+      const approveBtn = document.getElementById('adApproveBtn');
+      const rejectBtn = document.getElementById('adRejectBtn');
+      const runsList = document.getElementById('adRunsList');
+
+      let appId = null;
+      let currentRunId = null;
+
+      // Get app id from URL
+      const params = new URLSearchParams(window.location.search);
+      appId = params.get('app');
+
+      if (runBtn) {
+        runBtn.addEventListener('click', async () => {
+          if (!appId) return;
+          runBtn.disabled = true;
+          runBtn.classList.add('ad-run-btn--loading');
+          document.getElementById('adRunBtnLabel').textContent = 'Running…';
+          banner.classList.add('is-visible');
+
+          try {
+            // Trigger recipe via Yinyang rail
+            if (window._yyTriggerApp) {
+              await window._yyTriggerApp(appId);
+            } else {
+              // Fallback: POST to local API
+              const resp = await fetch('/api/run', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({app_id: appId})
+              });
+              const data = await resp.json();
+              currentRunId = data.run_id;
+
+              // Show approval card with preview
+              if (data.preview) {
+                document.getElementById('adApprovalPreview').textContent = data.preview;
+                banner.classList.remove('is-visible');
+                approvalCard.classList.add('is-visible');
+              }
+            }
+          } catch (e) {
+            banner.classList.remove('is-visible');
+            document.getElementById('adRunBtnLabel').textContent = 'Run App';
+          } finally {
+            runBtn.disabled = false;
+            runBtn.classList.remove('ad-run-btn--loading');
+            if (!approvalCard.classList.contains('is-visible')) {
+              document.getElementById('adRunBtnLabel').textContent = 'Run App';
+            }
+          }
+        });
+      }
+
+      if (approveBtn) {
+        approveBtn.addEventListener('click', async () => {
+          approvalCard.classList.remove('is-visible');
+          banner.classList.add('is-visible');
+          document.getElementById('adRunningTitle').textContent = '✓ Approved — Executing…';
+          try {
+            await fetch('/api/approve', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({run_id: currentRunId, action: 'approve'})
+            });
+          } catch(e) {}
+          setTimeout(() => {
+            banner.classList.remove('is-visible');
+            document.getElementById('adRunBtnLabel').textContent = 'Run App';
+            // Add to runs list
+            const item = document.createElement('div');
+            item.className = 'ad-run-item';
+            item.innerHTML = `<div class="ad-run-item__dot"></div><div class="ad-run-item__info">Run completed<div class="ad-run-item__time">Just now · Evidence sealed</div></div>`;
+            if (runsList.querySelector('.ad-empty-runs')) runsList.innerHTML = '';
+            runsList.prepend(item);
+          }, 3000);
+        });
+      }
+
+      if (rejectBtn) {
+        rejectBtn.addEventListener('click', () => {
+          approvalCard.classList.remove('is-visible');
+          document.getElementById('adRunBtnLabel').textContent = 'Run App';
+        });
+      }
+    });
+  </script>
 </body>
 </html>

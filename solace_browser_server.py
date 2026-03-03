@@ -386,24 +386,27 @@ class SolaceBrowser:
     _yinyang_enabled: bool = False
 
     async def inject_yinyang_rails(self, page: Any, port: int = 0) -> bool:
-        """Inject Yinyang top + bottom rails + push alerts into a page.
+        """Register Yinyang push alerts into a page (only — no DOM rails).
 
-        Uses add_init_script so rails persist across navigations.
-        Includes push alert system with toast/popup/takeover channels.
-        Returns True if injection succeeded, False otherwise.
+        The top/bottom rails live in the Solace Browser web UI (home.html,
+        the side panel) — they are NOT injected into pages being automated.
+        Injecting DOM elements into external pages (Gmail, Google Chat, etc.)
+        breaks images, layouts, and CSP-sensitive functionality.
+
+        Only push alerts are registered here: these use postMessage and do
+        not modify the page DOM outside of temporary toast overlays triggered
+        explicitly by user-visible events.
+
+        Returns True if alert injection succeeded, False otherwise.
         """
         if not YINYANG_AVAILABLE or not self._yinyang_enabled:
             return False
-        effective_port = port or self._yinyang_port
-        ws_url = f"ws://localhost:{effective_port}/ws/yinyang"
         try:
-            await inject_top_rail(page)
-            await inject_bottom_rail(page, ws_url=ws_url)
             await inject_push_alerts(page, img_base_url="/images/yinyang")
-            logger.info("[Yinyang] Rails + push alerts injected into page")
+            logger.info("[Yinyang] Push alerts registered for page")
             return True
         except Exception as exc:
-            logger.warning(f"[Yinyang] Rail injection failed: {exc}")
+            logger.warning(f"[Yinyang] Push alert registration failed: {exc}")
             return False
 
     @staticmethod
@@ -681,11 +684,17 @@ class SolaceBrowser:
         page.on('console', self._on_console)
         page.on('load', self._on_page_load)
 
-        # Navigate to branded start page
-        start_page = Path(__file__).parent / "web" / "start.html"
-        if start_page.exists():
-            await page.goto(f"file://{start_page.resolve()}", wait_until="domcontentloaded")
-            logger.info("Start page loaded")
+        # Navigate to branded home via web server (correct favicon + API access)
+        home_url = os.getenv("SOLACE_HOME_URL", "http://127.0.0.1:8791/")
+        try:
+            await page.goto(home_url, wait_until="domcontentloaded", timeout=5000)
+            logger.info(f"Home page loaded: {home_url}")
+        except Exception:
+            # Fallback to local file if web server not yet ready
+            start_page = Path(__file__).parent / "web" / "start.html"
+            if start_page.exists():
+                await page.goto(f"file://{start_page.resolve()}", wait_until="domcontentloaded")
+                logger.info("Fallback: start page loaded from file")
 
         logger.info(f"✓ Solace Browser started (page_id={page_id})")
         return page_id
