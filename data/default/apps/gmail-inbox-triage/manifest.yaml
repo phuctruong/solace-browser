@@ -29,3 +29,6 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
+keep_alive:
+  url: https://mail.google.com/mail/u/0/#inbox
+  interval_min: 20

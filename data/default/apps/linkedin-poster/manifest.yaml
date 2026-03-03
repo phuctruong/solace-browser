@@ -26,3 +26,6 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
+keep_alive:
+  url: https://www.linkedin.com/feed/
+  interval_min: 30

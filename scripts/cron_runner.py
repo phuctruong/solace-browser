@@ -18,6 +18,7 @@ from pathlib import Path
 SETTINGS_PATH = Path.home() / ".solace" / "settings.json"
 BROWSER_API   = "http://127.0.0.1:9222"
 WEB_API       = "http://127.0.0.1:8791"
+APPS_DIR      = Path(__file__).parent.parent / "data" / "default" / "apps"
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -64,37 +65,79 @@ def get_current_url() -> str:
 
 # ── Keep-Alive ────────────────────────────────────────────────────────────────
 
+def load_keep_alive_specs() -> dict:
+    """
+    Read keep_alive specs from app manifests.
+    Returns {site: {url, interval_min}} sourced from manifest.yaml keep_alive blocks.
+    """
+    specs: dict = {}
+    if not APPS_DIR.exists():
+        return specs
+    for app_dir in APPS_DIR.iterdir():
+        manifest = app_dir / "manifest.yaml"
+        if not manifest.exists():
+            continue
+        txt = manifest.read_text(encoding="utf-8")
+        # Minimal YAML parse — extract site, keep_alive.url, keep_alive.interval_min
+        site = None
+        ka_url = None
+        ka_interval = None
+        in_ka = False
+        for line in txt.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("site:"):
+                site = stripped.split(":", 1)[1].strip()
+            if stripped == "keep_alive:":
+                in_ka = True
+                continue
+            if in_ka:
+                if stripped.startswith("url:"):
+                    ka_url = stripped.split(":", 1)[1].strip()
+                elif stripped.startswith("interval_min:"):
+                    try:
+                        ka_interval = int(stripped.split(":", 1)[1].strip())
+                    except ValueError:
+                        pass
+                elif not stripped.startswith("#") and ":" in stripped and not stripped.startswith(" "):
+                    in_ka = False  # left keep_alive block
+        if site and ka_url and ka_interval and site not in specs:
+            specs[site] = {"url": ka_url, "interval_min": ka_interval}
+    return specs
+
+
 def run_keep_alive(settings: dict) -> bool:
     """
     Ping each site that has a due keep-alive.
+    Intervals/URLs come from app manifests; enabled/last_ping from settings.
     Returns True if any ping was done (settings needs saving).
     """
-    keep_alive = settings.get("keep_alive", {})
-    if not keep_alive:
+    specs = load_keep_alive_specs()
+    if not specs:
         return False
 
+    user_state = settings.get("keep_alive", {})
     now = datetime.now()
-    saved_url = get_current_url()  # remember where browser is now
+    saved_url = get_current_url()
     any_pinged = False
 
-    for site, cfg in keep_alive.items():
+    for site, spec in specs.items():
+        cfg = user_state.get(site, {})
         if not cfg.get("enabled", True):
             continue
 
-        interval_min = cfg.get("interval_min", 30)
+        interval_min  = spec["interval_min"]   # from manifest
         last_ping_str = cfg.get("last_ping")
 
-        # Check if due
         if last_ping_str:
             try:
                 last_ping = datetime.fromisoformat(last_ping_str)
                 if (now - last_ping).total_seconds() < interval_min * 60:
-                    continue  # not due yet
+                    continue
             except Exception:
                 pass
 
-        ping_url = cfg.get("url", f"https://{site}/")
-        log(f"keep-alive ping: {site} → {ping_url}")
+        ping_url = spec["url"]
+        log(f"keep-alive ping: {site} ({interval_min}m) → {ping_url}")
 
         result = api_post(f"{BROWSER_API}/api/navigate", {
             "url": ping_url,
@@ -102,11 +145,12 @@ def run_keep_alive(settings: dict) -> bool:
         }, timeout=15)
 
         if result and result.get("success"):
-            cfg["last_ping"] = now.isoformat()
+            user_state.setdefault(site, {})["last_ping"] = now.isoformat()
+            user_state.setdefault(site, {})["enabled"]   = True
             any_pinged = True
             log(f"  ✓ {site} session refreshed")
         else:
-            log(f"  ✗ {site} ping failed (browser may not be on this account)")
+            log(f"  ✗ {site} ping failed")
 
         time.sleep(1)  # brief pause between pings
 
@@ -116,6 +160,9 @@ def run_keep_alive(settings: dict) -> bool:
             "url": saved_url,
             "wait_for": "domcontentloaded",
         }, timeout=10)
+
+    if any_pinged:
+        settings["keep_alive"] = user_state
 
     return any_pinged
 
