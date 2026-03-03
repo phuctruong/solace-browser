@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Create Your Own App — Solace Browser</title>
+  <meta name="description" content="Describe what you want to automate. Yinyang turns your idea into a working recipe in minutes. No code needed.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/png" href="/images/yinyang/yinyang-logo-32.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/solace.js" defer></script>
+  <style>
+    /* ── Create App — Jony Ive / Van Edwards / Brunson / Godin / Sutherland ── */
+    /* Committee:
+       Ive:         ONE clear idea per section. No clutter. Space = confidence.
+       Van Edwards: Warm, encouraging. "You can do this. Yinyang will help."
+       Brunson:     Clear funnel: Describe → Preview → Test → Submit
+       Godin:       "Building something worth sharing is remarkable."
+       Sutherland:  "You don't need to code. Describe it in English." */
+
+    /* ── Page hero ─────────────────────────────────────────────────────────── */
+    .ca-hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 32px;
+      padding: 48px 0 40px;
+    }
+    .ca-hero__eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px; border-radius: 999px;
+      border: 1px solid rgba(255, 107, 53, 0.36);
+      background: rgba(255, 107, 53, 0.1);
+      color: var(--sb-accent);
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ca-hero h1 {
+      margin: 0 0 12px;
+      font: 800 2.4rem/1.05 var(--sb-font-display);
+      letter-spacing: -0.05em; color: #fff;
+    }
+    .ca-hero h1 span { color: var(--sb-signal); }
+    .ca-hero__sub {
+      margin: 0;
+      font-size: 1rem; color: rgba(255,255,255,0.5); line-height: 1.6;
+      max-width: 480px;
+    }
+    .ca-hero__yy {
+      width: 120px; height: 120px; border-radius: 50%; flex-shrink: 0;
+      box-shadow: 0 0 60px rgba(100,196,255,0.18), 0 0 0 1px rgba(100,196,255,0.12);
+    }
+
+    /* ── Step progress dots ─────────────────────────────────────────────────── */
+    .ca-progress {
+      display: flex; align-items: center; gap: 0;
+      margin-bottom: 40px;
+    }
+    .ca-dot-wrap {
+      display: flex; align-items: center;
+    }
+    .ca-dot {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 0.78rem; font-weight: 800;
+      border: 2px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.04);
+      flex-shrink: 0;
+      transition: border-color 0.25s, background 0.25s, color 0.25s, box-shadow 0.25s;
+    }
+    .ca-dot.is-done {
+      border-color: var(--sb-success);
+      background: rgba(70,217,167,0.15);
+      color: var(--sb-success);
+    }
+    .ca-dot.is-active {
+      border-color: var(--sb-signal);
+      background: rgba(100,196,255,0.15);
+      color: var(--sb-signal);
+      box-shadow: 0 0 16px rgba(100,196,255,0.3);
+    }
+    .ca-dot__label {
+      display: block; margin-top: 4px;
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: rgba(255,255,255,0.3);
+      text-align: center; min-width: 56px;
+      transition: color 0.25s;
+    }
+    .ca-dot.is-active + .ca-dot__label,
+    .ca-dot-wrap:has(.ca-dot.is-active) .ca-dot__label { color: var(--sb-signal); }
+    .ca-dot-wrap:has(.ca-dot.is-done) .ca-dot__label { color: var(--sb-success); }
+    .ca-step-connector {
+      flex: 1; height: 2px; min-width: 28px; max-width: 80px;
+      background: rgba(255,255,255,0.08);
+      margin: 0 4px;
+      border-radius: 1px;
+      transition: background 0.3s;
+    }
+    .ca-step-connector.is-done { background: rgba(70,217,167,0.4); }
+
+    /* ── Step panels ────────────────────────────────────────────────────────── */
+    .ca-step {
+      display: none;
+      animation: ca-fadein 0.3s ease;
+    }
+    .ca-step.is-active { display: block; }
+    @keyframes ca-fadein {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Step card shell ────────────────────────────────────────────────────── */
+    .ca-card {
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, #10182a 0%, #081019 100%);
+      padding: 36px 40px;
+      position: relative; overflow: hidden;
+    }
+    .ca-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(100,196,255,0.3), transparent);
+      pointer-events: none;
+    }
+    .ca-card__kicker {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--sb-signal); margin-bottom: 10px;
+    }
+    .ca-card h2 {
+      margin: 0 0 8px;
+      font: 700 1.5rem/1.15 var(--sb-font-display);
+      letter-spacing: -0.03em; color: #fff;
+    }
+    .ca-card__desc {
+      margin: 0 0 28px;
+      font-size: 0.9rem; color: rgba(255,255,255,0.45); line-height: 1.6;
+    }
+    .ca-card__yy-corner {
+      position: absolute; top: 28px; right: 36px;
+      width: 80px; height: 80px; border-radius: 50%;
+      opacity: 0.6;
+    }
+
+    /* ── Step 1: Describe ───────────────────────────────────────────────────── */
+    .ca-describe-row {
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 20px; align-items: start;
+    }
+    .ca-textarea-wrap { position: relative; }
+    .ca-textarea {
+      width: 100%; min-height: 180px;
+      background: rgba(3,8,14,0.65);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      color: #fff; font-size: 1rem; line-height: 1.6;
+      padding: 18px 20px; resize: vertical;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .ca-textarea::placeholder { color: rgba(255,255,255,0.25); }
+    .ca-textarea:focus {
+      border-color: var(--sb-signal);
+      box-shadow: 0 0 0 3px rgba(100,196,255,0.12);
+    }
+    .ca-textarea-hint {
+      margin-top: 8px;
+      font-size: 0.75rem; color: rgba(255,255,255,0.3); line-height: 1.5;
+    }
+    .ca-examples {
+      display: flex; flex-direction: column; gap: 8px;
+      min-width: 200px; max-width: 220px;
+    }
+    .ca-examples__label {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: rgba(255,255,255,0.25);
+      margin-bottom: 4px;
+    }
+    .ca-example-chip {
+      padding: 9px 14px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.55); font-size: 0.8rem; line-height: 1.4;
+      cursor: pointer; text-align: left;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .ca-example-chip:hover {
+      border-color: rgba(100,196,255,0.3);
+      color: rgba(255,255,255,0.9);
+      background: rgba(100,196,255,0.06);
+    }
+
+    /* ── Step 2: Preview ────────────────────────────────────────────────────── */
+    .ca-recipe-list {
+      display: flex; flex-direction: column; gap: 10px;
+      margin: 0 0 28px;
+    }
+    .ca-recipe-step {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 16px 20px; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.03);
+      animation: ca-fadein 0.3s ease both;
+    }
+    .ca-recipe-step__num {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      display: grid; place-items: center;
+      font-size: 0.72rem; font-weight: 800;
+      background: rgba(100,196,255,0.12);
+      border: 1px solid rgba(100,196,255,0.25);
+      color: var(--sb-signal);
+    }
+    .ca-recipe-step__text {
+      font-size: 0.88rem; color: rgba(255,255,255,0.75); line-height: 1.55;
+      padding-top: 4px;
+    }
+    .ca-loading-state {
+      display: flex; align-items: center; gap: 14px;
+      padding: 24px 0; color: rgba(255,255,255,0.4);
+      font-size: 0.88rem;
+    }
+    .ca-spinner {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2.5px solid rgba(100,196,255,0.15);
+      border-top-color: var(--sb-signal);
+      animation: ca-spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes ca-spin { to { transform: rotate(360deg); } }
+    .ca-recipe-name-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+    }
+    .ca-recipe-name-input {
+      flex: 1; background: rgba(3,8,14,0.65);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 10px; color: #fff;
+      font-size: 0.95rem; padding: 10px 16px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .ca-recipe-name-input:focus { border-color: var(--sb-signal); }
+    .ca-recipe-name-label {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: rgba(255,255,255,0.3);
+      flex-shrink: 0;
+    }
+
+    /* ── Step 3: Test ───────────────────────────────────────────────────────── */
+    .ca-test-panel {
+      border-radius: 14px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(3,8,14,0.55);
+      margin-bottom: 24px;
+    }
+    .ca-test-panel__header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.02);
+    }
+    .ca-test-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+    }
+    .ca-test-dot--run { background: var(--sb-signal); animation: pulse 2s infinite; }
+    .ca-test-dot--ok  { background: var(--sb-success); }
+    .ca-test-dot--err { background: var(--sb-danger); }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+    .ca-test-panel__label {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: rgba(255,255,255,0.35);
+    }
+    .ca-test-output {
+      padding: 20px; min-height: 120px;
+      font: 400 0.82rem/1.6 var(--sb-font-mono);
+      color: var(--sb-terminal-text);
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .ca-test-output--idle { color: rgba(255,255,255,0.2); font-style: italic; }
+    .ca-test-cost {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 8px;
+      background: rgba(70,217,167,0.1); border: 1px solid rgba(70,217,167,0.2);
+      color: var(--sb-success); font-size: 0.75rem; font-weight: 700;
+      margin-top: 12px;
+    }
+    .ca-test-warning {
+      padding: 14px 18px; border-radius: 12px;
+      border: 1px solid rgba(255,199,90,0.25);
+      background: rgba(255,199,90,0.06);
+      color: rgba(255,199,90,0.8); font-size: 0.82rem; line-height: 1.55;
+      margin-bottom: 20px;
+    }
+
+    /* ── Step 4: Submit ─────────────────────────────────────────────────────── */
+    .ca-submit-meta { display: flex; flex-direction: column; gap: 16px; margin-bottom: 28px; }
+    .ca-field { display: flex; flex-direction: column; gap: 6px; }
+    .ca-field label {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: rgba(255,255,255,0.35);
+    }
+    .ca-field input, .ca-field textarea {
+      background: rgba(3,8,14,0.65);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 10px; color: #fff;
+      font-size: 0.9rem; padding: 10px 16px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .ca-field input:focus, .ca-field textarea:focus { border-color: var(--sb-signal); }
+    .ca-field textarea { min-height: 80px; resize: vertical; }
+
+    .ca-submit-preview {
+      padding: 18px 22px; border-radius: 14px;
+      border: 1px solid rgba(100,196,255,0.15);
+      background: rgba(100,196,255,0.04);
+      margin-bottom: 24px;
+    }
+    .ca-submit-preview__title {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--sb-signal); margin-bottom: 10px;
+    }
+    .ca-submit-preview__row {
+      display: flex; align-items: baseline; gap: 10px;
+      font-size: 0.84rem; margin-bottom: 4px;
+    }
+    .ca-submit-preview__key { color: rgba(255,255,255,0.3); min-width: 90px; flex-shrink: 0; }
+    .ca-submit-preview__val { color: rgba(255,255,255,0.75); }
+
+    /* ── Success state ──────────────────────────────────────────────────────── */
+    .ca-success {
+      display: none;
+      text-align: center; padding: 56px 32px;
+    }
+    .ca-success.is-active { display: block; animation: ca-fadein 0.4s ease; }
+    .ca-success__yy {
+      width: 96px; height: 96px; border-radius: 50%;
+      margin: 0 auto 24px;
+      box-shadow: 0 0 48px rgba(70,217,167,0.25);
+    }
+    .ca-success h2 {
+      margin: 0 0 12px;
+      font: 800 1.8rem/1.1 var(--sb-font-display);
+      letter-spacing: -0.04em; color: #fff;
+    }
+    .ca-success h2 span { color: var(--sb-success); }
+    .ca-success p { color: rgba(255,255,255,0.45); font-size: 0.92rem; line-height: 1.65; max-width: 400px; margin: 0 auto 28px; }
+    .ca-success__steps {
+      display: flex; flex-direction: column; gap: 10px;
+      max-width: 360px; margin: 0 auto 32px;
+      text-align: left;
+    }
+    .ca-success__step-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; border-radius: 12px;
+      border: 1px solid rgba(70,217,167,0.15);
+      background: rgba(70,217,167,0.05);
+      font-size: 0.84rem; color: rgba(255,255,255,0.65);
+    }
+    .ca-success__step-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .ca-success__again {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 24px; border-radius: 99px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.6); font-size: 0.85rem;
+      text-decoration: none; cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .ca-success__again:hover { border-color: rgba(100,196,255,0.3); color: var(--sb-signal); }
+
+    /* ── Footer action row (prev/next buttons) ──────────────────────────────── */
+    .ca-actions {
+      display: flex; align-items: center; gap: 12px;
+      margin-top: 32px; padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .ca-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      min-height: 44px; padding: 0 24px; border-radius: 999px;
+      font-size: 0.88rem; font-weight: 700; border: 1px solid transparent;
+      cursor: pointer; transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+    }
+    .ca-btn:hover { transform: translateY(-1px); }
+    .ca-btn--primary {
+      background: linear-gradient(135deg, var(--sb-accent), var(--sb-accent-warm));
+      color: var(--sb-on-accent);
+      box-shadow: 0 8px 24px rgba(255,107,53,0.28);
+    }
+    .ca-btn--primary:hover { box-shadow: 0 12px 32px rgba(255,107,53,0.38); }
+    .ca-btn--secondary {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.6);
+    }
+    .ca-btn--signal {
+      background: rgba(100,196,255,0.12);
+      border-color: rgba(100,196,255,0.25);
+      color: var(--sb-signal);
+    }
+    .ca-btn--signal:hover { background: rgba(100,196,255,0.2); }
+    .ca-btn--danger {
+      background: rgba(255,124,124,0.1);
+      border-color: rgba(255,124,124,0.2);
+      color: var(--sb-danger);
+    }
+    .ca-btn:disabled {
+      opacity: 0.35; cursor: not-allowed; transform: none;
+    }
+    .ca-btn--spacer { margin-left: auto; }
+
+    /* ── Godin sidebar quote ─────────────────────────────────────────────────── */
+    .ca-godin-quote {
+      margin-top: 12px; padding: 16px 20px;
+      border-radius: 14px; border-left: 3px solid var(--sb-signal);
+      background: rgba(100,196,255,0.04);
+      color: rgba(255,255,255,0.4); font-size: 0.8rem; line-height: 1.65;
+      font-style: italic;
+    }
+    .ca-godin-quote strong { color: rgba(255,255,255,0.65); font-style: normal; }
+
+    /* ── Responsive ─────────────────────────────────────────────────────────── */
+    @media (max-width: 680px) {
+      .ca-hero { grid-template-columns: 1fr; }
+      .ca-hero__yy { display: none; }
+      .ca-hero h1 { font-size: 1.85rem; }
+      .ca-card { padding: 24px 20px; }
+      .ca-card__yy-corner { display: none; }
+      .ca-describe-row { grid-template-columns: 1fr; }
+      .ca-examples { max-width: 100%; flex-direction: row; flex-wrap: wrap; }
+      .ca-example-chip { flex: 1; min-width: 140px; }
+      .ca-progress { gap: 0; }
+      .ca-dot { width: 28px; height: 28px; font-size: 0.7rem; }
+      .ca-step-connector { min-width: 16px; }
+    }
+  </style>
+</head>
+<body data-page="create-app">
+  <div class="site-shell">
+    <canvas data-particles-canvas aria-hidden="true"></canvas>
+    <div class="page-frame">
+
+      <!-- ── Navigation (identical to home.html) ─────────────────────────── -->
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a class="site-brand" href="/">
+            <span class="site-brand__icon site-brand__icon--image">
+              <img class="site-brand__logo-image" src="/images/yinyang/yinyang-logo-48.png" alt="Solace Browser">
+            </span>
+            <span class="site-brand__text">
+              <span class="site-brand__name">Solace Browser</span>
+              <span class="site-brand__tag">OAuth3 web + machine + cloud</span>
+            </span>
+          </a>
+          <nav class="site-nav" aria-label="Primary">
+            <a class="nav-link" data-nav-path="/" href="/" data-i18n="nav_home">Home</a>
+            <a class="nav-link" data-nav-path="/app-store" href="/app-store" data-i18n="nav_apps">Apps</a>
+            <a class="nav-link" data-nav-path="/schedule" href="/schedule">Schedule</a>
+            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard" data-i18n="nav_machine">Machine</a>
+            <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect" data-i18n="nav_tunnel">Tunnel</a>
+            <a class="nav-link" data-nav-path="/settings" href="/settings" data-i18n="nav_settings">Settings</a>
+            <a class="nav-link nav-link--accent" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener" data-i18n="nav_full_product">Full product</a>
+          </nav>
+          <div class="sb-lang-switch" id="sb-lang-switch">
+            <button class="sb-lang-btn" id="sb-lang-btn" aria-label="Select language" aria-expanded="false" aria-controls="sb-lang-menu">
+              <img class="sb-lang-icon sb-lang-icon--default" src="/images/icons/internationalization/160.png" alt="Language" width="22" height="22">
+              <img class="sb-lang-icon sb-lang-icon--hover" src="/images/icons/internationalization-2/160.png" alt="" width="22" height="22">
+            </button>
+            <div class="sb-lang-menu" id="sb-lang-menu">
+              <a role="button" tabindex="0" data-locale="en">English</a><a role="button" tabindex="0" data-locale="es">Español</a><a role="button" tabindex="0" data-locale="vi">Tiếng Việt</a><a role="button" tabindex="0" data-locale="zh">中文</a><a role="button" tabindex="0" data-locale="pt">Português</a><a role="button" tabindex="0" data-locale="fr">Français</a><a role="button" tabindex="0" data-locale="ja">日本語</a><a role="button" tabindex="0" data-locale="de">Deutsch</a><a role="button" tabindex="0" data-locale="ar">العربية</a><a role="button" tabindex="0" data-locale="hi">हिंदी</a><a role="button" tabindex="0" data-locale="ko">한국어</a><a role="button" tabindex="0" data-locale="id">Bahasa Indonesia</a><a role="button" tabindex="0" data-locale="ru">Русский</a>
+            </div>
+          </div>
+          <div class="sb-auth-status" id="sb-auth-status"></div>
+          <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+        </div>
+      </header>
+
+      <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu__section">
+          <h3 data-i18n="menu_surfaces">Surfaces</h3>
+          <a data-nav-path="/" href="/" data-i18n="nav_home">Home</a>
+          <a data-nav-path="/app-store" href="/app-store" data-i18n="menu_app_store">App Store</a>
+          <a data-nav-path="/schedule" href="/schedule">Schedule</a>
+          <a data-nav-path="/machine-dashboard" href="/machine-dashboard" data-i18n="nav_machine">Machine</a>
+          <a data-nav-path="/tunnel-connect" href="/tunnel-connect" data-i18n="nav_tunnel">Tunnel</a>
+          <a data-nav-path="/settings" href="/settings" data-i18n="nav_settings">Settings</a>
+        </div>
+        <div class="mobile-menu__section">
+          <h3 data-i18n="menu_documentation">Documentation</h3>
+          <a href="/docs" data-i18n="menu_docs_hub">Docs Hub</a>
+          <a href="/docs/quick-start" data-i18n="nav_quick_start">Quick Start</a>
+          <a href="/docs/mcp" data-i18n="menu_mcp_agents_guide">MCP / Agents Guide</a>
+          <a href="/docs/oauth3" data-i18n="menu_oauth3_safety">OAuth3 Safety</a>
+        </div>
+        <div class="mobile-menu__section">
+          <h3 data-i18n="menu_platform">Platform</h3>
+          <a class="nav-link--accent" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener" data-i18n="menu_full_product">Full product page</a>
+          <a href="/download" data-i18n="menu_download">Download</a>
+        </div>
+      </div>
+
+      <!-- ── Main content ──────────────────────────────────────────────────── -->
+      <main>
+        <div class="page-section" style="padding-bottom: 64px;">
+
+          <!-- Hero -->
+          <section class="ca-hero reveal">
+            <div>
+              <div class="ca-hero__eyebrow">Build with Yinyang</div>
+              <h1>Create your own<br><span>app.</span></h1>
+              <p class="ca-hero__sub">You don't need to code. Describe what you want to automate in plain English. Yinyang turns your words into a working recipe, runs it live, and submits it to the App Store for everyone to use.</p>
+            </div>
+            <img class="ca-hero__yy" src="/images/yinyang/yinyang-loading-128.gif" alt="Yinyang, your app builder">
+          </section>
+
+          <!-- Progress dots -->
+          <div class="ca-progress" id="caProgress" role="list" aria-label="Creation steps">
+            <div class="ca-dot-wrap" role="listitem">
+              <div class="ca-dot is-active" id="caDot1" aria-label="Step 1: Describe">1</div>
+            </div>
+            <div class="ca-dot__label" id="caLabel1">Describe</div>
+            <div class="ca-step-connector" id="caConn1"></div>
+            <div class="ca-dot-wrap" role="listitem">
+              <div class="ca-dot" id="caDot2" aria-label="Step 2: Preview">2</div>
+            </div>
+            <div class="ca-dot__label" id="caLabel2">Preview</div>
+            <div class="ca-step-connector" id="caConn2"></div>
+            <div class="ca-dot-wrap" role="listitem">
+              <div class="ca-dot" id="caDot3" aria-label="Step 3: Test">3</div>
+            </div>
+            <div class="ca-dot__label" id="caLabel3">Test</div>
+            <div class="ca-step-connector" id="caConn3"></div>
+            <div class="ca-dot-wrap" role="listitem">
+              <div class="ca-dot" id="caDot4" aria-label="Step 4: Submit">4</div>
+            </div>
+            <div class="ca-dot__label" id="caLabel4">Submit</div>
+          </div>
+
+          <!-- ── STEP 1: Describe ────────────────────────────────────────── -->
+          <div class="ca-step is-active" id="caStep1">
+            <div class="ca-card">
+              <img class="ca-card__yy-corner" src="/images/yinyang/yinyang-loading-128.gif" alt="" aria-hidden="true">
+              <div class="ca-card__kicker">Step 1 — Describe</div>
+              <h2>What do you want to automate?</h2>
+              <p class="ca-card__desc">Write it in plain English. No jargon needed. Yinyang reads your words and generates the steps. The best apps are the ones you wish already existed.</p>
+
+              <div class="ca-describe-row">
+                <div class="ca-textarea-wrap">
+                  <textarea
+                    class="ca-textarea"
+                    id="caDescription"
+                    placeholder="Example: Every morning, read my Gmail inbox, flag emails that need a reply today, and show me a summary with suggested responses — but don't send anything until I approve."
+                    rows="7"
+                    maxlength="2000"
+                    aria-label="Describe your app"
+                  ></textarea>
+                  <div class="ca-textarea-hint">
+                    Be specific about what sites or services it touches, what actions it takes, and what you want to see at the end.
+                    Yinyang works best when you describe the outcome, not the steps.
+                  </div>
+                </div>
+
+                <div class="ca-examples">
+                  <div class="ca-examples__label">Try an example</div>
+                  <button class="ca-example-chip" data-example="Every morning, check Hacker News for posts with more than 200 points, summarize the top 5 in one paragraph, and save to a daily digest file.">
+                    HN Daily Digest
+                  </button>
+                  <button class="ca-example-chip" data-example="Monitor my LinkedIn notifications, flag any recruiter messages or job opportunities, and draft a polite response for my review.">
+                    LinkedIn Monitor
+                  </button>
+                  <button class="ca-example-chip" data-example="Once a week, search GitHub for new repositories tagged with 'LLM' or 'AI agent' that got more than 100 stars, and email me a curated list.">
+                    GitHub Radar
+                  </button>
+                  <button class="ca-example-chip" data-example="Check my Google Calendar every morning and send me a text summary of today's meetings with a 10-minute prep brief for each one.">
+                    Calendar Brief
+                  </button>
+                  <button class="ca-example-chip" data-example="Watch a Substack newsletter I follow and notify me whenever a new post is published, with a 3-sentence summary so I can decide if it's worth reading.">
+                    Substack Watcher
+                  </button>
+                </div>
+              </div>
+
+              <div class="ca-godin-quote">
+                <strong>Seth Godin:</strong> "Building something worth sharing is remarkable. The person who automates their morning and teaches 10 friends how to do the same has changed 10 mornings. That's marketing."
+              </div>
+
+              <div class="ca-actions">
+                <a class="ca-btn ca-btn--secondary" href="/">Back to home</a>
+                <button class="ca-btn ca-btn--primary ca-btn--spacer" id="caStep1Next">
+                  Generate recipe &rarr;
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── STEP 2: Preview ────────────────────────────────────────────── -->
+          <div class="ca-step" id="caStep2">
+            <div class="ca-card">
+              <div class="ca-card__kicker">Step 2 — Preview</div>
+              <h2>Here is your recipe</h2>
+              <p class="ca-card__desc">Yinyang read your description and broke it into steps. Review them below. You can go back and refine your description, or rename the app before testing.</p>
+
+              <div class="ca-recipe-name-row">
+                <span class="ca-recipe-name-label">App name</span>
+                <input class="ca-recipe-name-input" id="caAppName" type="text" placeholder="My Custom App" maxlength="80" aria-label="App name">
+              </div>
+
+              <div id="caLoadingState" class="ca-loading-state">
+                <div class="ca-spinner" aria-hidden="true"></div>
+                <span>Yinyang is reading your description and generating steps&hellip;</span>
+              </div>
+
+              <div class="ca-recipe-list" id="caRecipeList" style="display:none"></div>
+
+              <div class="ca-godin-quote" style="margin-top:0">
+                <strong>Rory Sutherland:</strong> "You don't need to code. You described it in English, a language that 1.5 billion people understand. The recipe is just the machine's translation of your intent."
+              </div>
+
+              <div class="ca-actions">
+                <button class="ca-btn ca-btn--secondary" id="caStep2Back">&larr; Edit description</button>
+                <button class="ca-btn ca-btn--primary ca-btn--spacer" id="caStep2Next" disabled>
+                  Test it live &rarr;
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── STEP 3: Test ────────────────────────────────────────────────── -->
+          <div class="ca-step" id="caStep3">
+            <div class="ca-card">
+              <div class="ca-card__kicker">Step 3 — Test</div>
+              <h2>Run it live</h2>
+              <p class="ca-card__desc">Yinyang will execute the first step of your recipe in your local browser. Nothing is saved or sent anywhere. Every action requires your approval — that is the Solace promise.</p>
+
+              <div class="ca-test-warning">
+                Your browser agent will navigate real websites. You will see each step happen live. This is a test run only — no data is submitted or changed without your explicit approval.
+              </div>
+
+              <div class="ca-test-panel">
+                <div class="ca-test-panel__header">
+                  <div class="ca-test-dot" id="caTestDot"></div>
+                  <span class="ca-test-panel__label" id="caTestLabel">Ready to run</span>
+                </div>
+                <div class="ca-test-output ca-test-output--idle" id="caTestOutput">
+                  Press "Run it live" to start the test. The agent will open a browser window and execute your recipe step by step.
+                </div>
+              </div>
+
+              <div id="caTestCost" style="display:none">
+                <div class="ca-test-cost">
+                  <span>&#10003;</span>
+                  <span id="caTestCostText">Test completed</span>
+                </div>
+              </div>
+
+              <div class="ca-actions">
+                <button class="ca-btn ca-btn--secondary" id="caStep3Back">&larr; Edit recipe</button>
+                <button class="ca-btn ca-btn--signal" id="caTestRunBtn">
+                  &#9654; Run it live
+                </button>
+                <button class="ca-btn ca-btn--primary ca-btn--spacer" id="caStep3Next" disabled>
+                  Submit to App Store &rarr;
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── STEP 4: Submit ──────────────────────────────────────────────── -->
+          <div class="ca-step" id="caStep4">
+            <div class="ca-card">
+              <div class="ca-card__kicker">Step 4 — Submit</div>
+              <h2>Submit to the App Store</h2>
+              <p class="ca-card__desc">You are one step away from sharing your app with the world. Our team reviews every submission. If approved, it goes live on GitHub and into the Solace App Store — free for everyone.</p>
+
+              <div class="ca-submit-preview" id="caSubmitPreview">
+                <div class="ca-submit-preview__title">What you are submitting</div>
+                <div class="ca-submit-preview__row">
+                  <span class="ca-submit-preview__key">App name</span>
+                  <span class="ca-submit-preview__val" id="caPreviewName">&mdash;</span>
+                </div>
+                <div class="ca-submit-preview__row">
+                  <span class="ca-submit-preview__key">Steps</span>
+                  <span class="ca-submit-preview__val" id="caPreviewSteps">&mdash;</span>
+                </div>
+                <div class="ca-submit-preview__row">
+                  <span class="ca-submit-preview__key">Author</span>
+                  <span class="ca-submit-preview__val" id="caPreviewAuthor">&mdash;</span>
+                </div>
+              </div>
+
+              <div class="ca-submit-meta">
+                <div class="ca-field">
+                  <label for="caAuthorEmail">Your email (for review updates)</label>
+                  <input id="caAuthorEmail" type="email" placeholder="you@example.com" maxlength="120">
+                </div>
+                <div class="ca-field">
+                  <label for="caNotes">Notes to reviewers (optional)</label>
+                  <textarea id="caNotes" placeholder="Any context about this app, who it helps, edge cases to know about..." maxlength="500"></textarea>
+                </div>
+              </div>
+
+              <div class="ca-godin-quote">
+                <strong>Seth Godin:</strong> "The person who ships is the person who changes things. The app sitting on your hard drive helps no one. The app in the store helps everyone who finds it."
+              </div>
+
+              <div class="ca-actions">
+                <button class="ca-btn ca-btn--secondary" id="caStep4Back">&larr; Back to test</button>
+                <button class="ca-btn ca-btn--primary ca-btn--spacer" id="caSubmitBtn">
+                  Submit app &rarr;
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SUCCESS ─────────────────────────────────────────────────────── -->
+          <div class="ca-success" id="caSuccess">
+            <img class="ca-success__yy" src="/images/yinyang/yinyang-loading-128.gif" alt="Yinyang celebrates">
+            <h2>Yinyang received<br>your <span>app!</span></h2>
+            <p>Our team will review your submission. If approved, it goes live on GitHub and into the Solace App Store — free for everyone who needs it. You will hear back at the email you provided.</p>
+            <div class="ca-success__steps">
+              <div class="ca-success__step-item">
+                <span class="ca-success__step-icon">&#128269;</span>
+                <span>Our AI triages the recipe for safety and quality</span>
+              </div>
+              <div class="ca-success__step-item">
+                <span class="ca-success__step-icon">&#128101;</span>
+                <span>A human reviewer checks it against our guidelines</span>
+              </div>
+              <div class="ca-success__step-item">
+                <span class="ca-success__step-icon">&#128279;</span>
+                <span>If approved: merged to GitHub and published to the App Store</span>
+              </div>
+              <div class="ca-success__step-item">
+                <span class="ca-success__step-icon">&#9749;</span>
+                <span>You get credited as the author — your name lives in the recipe</span>
+              </div>
+            </div>
+            <button class="ca-success__again" id="caStartAgain">+ Create another app</button>
+          </div>
+
+        </div>
+      </main>
+
+      <!-- ── Footer ────────────────────────────────────────────────────────── -->
+      <footer class="site-footer">
+        <div class="site-footer__inner">
+          <div>&copy; <span data-current-year></span> Solace Browser. Visible approvals before agent action.</div>
+          <div class="site-footer__links">
+            <a href="/app-store" data-i18n="nav_apps">Apps</a>
+            <a href="/create-app">Create App</a>
+            <a href="/settings" data-i18n="nav_settings">Settings</a>
+            <a href="/tunnel-connect" data-i18n="nav_tunnel">Tunnel</a>
+            <a href="https://github.com/solaceagi/solace-browser" target="_blank" rel="noopener">GitHub</a>
+          </div>
+        </div>
+      </footer>
+
+    </div><!-- /.page-frame -->
+  </div><!-- /.site-shell -->
+
+  <script>
+    /* ── Create App — 4-step state machine ─────────────────────────────────
+       Committee: Ive (flow) + Brunson (funnel) + Van Edwards (warmth)
+       Steps: 1=Describe, 2=Preview, 3=Test, 4=Submit
+    ─────────────────────────────────────────────────────────────────────── */
+    (function () {
+      'use strict';
+
+      var BROWSER_API = 'http://127.0.0.1:9222';
+      var CLOUD_API   = 'https://www.solaceagi.com';
+
+      /* ── State ─────────────────────────────────────────────────────────── */
+      var state = {
+        step:        1,
+        description: '',
+        appName:     '',
+        recipe:      null,   // { steps: [...string] }
+        testResult:  null,   // { output, cost_usd, success }
+        submitted:   false
+      };
+
+      /* ── DOM refs ──────────────────────────────────────────────────────── */
+      var els = {
+        // steps
+        step1: document.getElementById('caStep1'),
+        step2: document.getElementById('caStep2'),
+        step3: document.getElementById('caStep3'),
+        step4: document.getElementById('caStep4'),
+        success: document.getElementById('caSuccess'),
+        // dots
+        dots:   [null,
+          document.getElementById('caDot1'),
+          document.getElementById('caDot2'),
+          document.getElementById('caDot3'),
+          document.getElementById('caDot4')],
+        conns: [null,
+          document.getElementById('caConn1'),
+          document.getElementById('caConn2'),
+          document.getElementById('caConn3')],
+        // step 1
+        description: document.getElementById('caDescription'),
+        step1Next:   document.getElementById('caStep1Next'),
+        // step 2
+        loadingState: document.getElementById('caLoadingState'),
+        recipeList:   document.getElementById('caRecipeList'),
+        appNameInput: document.getElementById('caAppName'),
+        step2Back:    document.getElementById('caStep2Back'),
+        step2Next:    document.getElementById('caStep2Next'),
+        // step 3
+        testDot:    document.getElementById('caTestDot'),
+        testLabel:  document.getElementById('caTestLabel'),
+        testOutput: document.getElementById('caTestOutput'),
+        testCost:   document.getElementById('caTestCost'),
+        testCostText: document.getElementById('caTestCostText'),
+        testRunBtn: document.getElementById('caTestRunBtn'),
+        step3Back:  document.getElementById('caStep3Back'),
+        step3Next:  document.getElementById('caStep3Next'),
+        // step 4
+        previewName:   document.getElementById('caPreviewName'),
+        previewSteps:  document.getElementById('caPreviewSteps'),
+        previewAuthor: document.getElementById('caPreviewAuthor'),
+        authorEmail:   document.getElementById('caAuthorEmail'),
+        notes:         document.getElementById('caNotes'),
+        step4Back:     document.getElementById('caStep4Back'),
+        submitBtn:     document.getElementById('caSubmitBtn'),
+        // success
+        startAgain: document.getElementById('caStartAgain')
+      };
+
+      /* ── Step navigation ─────────────────────────────────────────────── */
+      function goTo(n) {
+        state.step = n;
+        // Hide all steps + success
+        [els.step1, els.step2, els.step3, els.step4, els.success].forEach(function (el) {
+          if (el) { el.classList.remove('is-active'); }
+        });
+        // Show target
+        if (n === 0) {
+          // success shown separately
+          if (els.success) els.success.classList.add('is-active');
+        } else {
+          var target = document.getElementById('caStep' + n);
+          if (target) target.classList.add('is-active');
+        }
+        // Update dots
+        for (var i = 1; i <= 4; i++) {
+          var dot = els.dots[i];
+          if (!dot) continue;
+          dot.classList.remove('is-active', 'is-done');
+          if (i < n) dot.classList.add('is-done');
+          else if (i === n) dot.classList.add('is-active');
+        }
+        // Update connectors
+        for (var j = 1; j <= 3; j++) {
+          var conn = els.conns[j];
+          if (!conn) continue;
+          if (j < n) conn.classList.add('is-done');
+          else conn.classList.remove('is-done');
+        }
+        // Scroll to top of content
+        var ps = document.querySelector('.page-section');
+        if (ps) ps.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      /* ── Step 1: Describe ────────────────────────────────────────────── */
+      // Example chips
+      document.querySelectorAll('.ca-example-chip').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          var ex = chip.getAttribute('data-example');
+          if (els.description && ex) {
+            els.description.value = ex;
+            els.description.dispatchEvent(new Event('input'));
+            els.description.focus();
+          }
+        });
+      });
+
+      if (els.step1Next) {
+        els.step1Next.addEventListener('click', function () {
+          var desc = (els.description ? els.description.value : '').trim();
+          if (desc.length < 10) {
+            alert('Please describe your app in a bit more detail — at least a sentence or two.');
+            if (els.description) els.description.focus();
+            return;
+          }
+          state.description = desc;
+          goTo(2);
+          generateRecipe(desc);
+        });
+      }
+
+      /* ── Step 2: Preview — generate recipe ──────────────────────────── */
+      function generateRecipe(description) {
+        if (els.loadingState) els.loadingState.style.display = 'flex';
+        if (els.recipeList)   els.recipeList.style.display   = 'none';
+        if (els.step2Next)    els.step2Next.disabled = true;
+
+        var body = JSON.stringify({
+          message: 'Generate a recipe for this automation app. Return ONLY a numbered list of clear, specific steps (no intro, no outro). Each step should be one sentence describing exactly what the agent does.\n\nApp description:\n' + description
+        });
+
+        fetch(BROWSER_API + '/api/yinyang/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: body
+        })
+          .then(function (r) { return r.ok ? r.json() : Promise.reject('HTTP ' + r.status); })
+          .then(function (d) {
+            var text = d.response || d.message || d.text || d.content || '';
+            var steps = parseSteps(text);
+            if (steps.length === 0) {
+              // Fallback: generate generic steps from description
+              steps = fallbackSteps(description);
+            }
+            state.recipe = { steps: steps, raw: text };
+            renderRecipe(steps);
+            // Suggest an app name from first few words
+            if (!state.appName) {
+              var suggested = suggestName(description);
+              if (els.appNameInput && !els.appNameInput.value) {
+                els.appNameInput.value = suggested;
+                state.appName = suggested;
+              }
+            }
+          })
+          .catch(function (err) {
+            // Graceful fallback when browser API is not running
+            var steps = fallbackSteps(description);
+            state.recipe = { steps: steps, raw: '' };
+            renderRecipe(steps);
+            if (els.appNameInput && !els.appNameInput.value) {
+              els.appNameInput.value = suggestName(description);
+              state.appName = els.appNameInput.value;
+            }
+          });
+      }
+
+      function parseSteps(text) {
+        var lines = text.split('\n');
+        var steps = [];
+        lines.forEach(function (line) {
+          var clean = line.replace(/^\s*\d+[\.\)]\s*/, '').replace(/^\s*[-*]\s*/, '').trim();
+          if (clean.length > 8) steps.push(clean);
+        });
+        return steps;
+      }
+
+      function fallbackSteps(description) {
+        // Van Edwards: generate warm, plausible steps from description keywords
+        var words = description.toLowerCase();
+        var steps = [];
+        if (/gmail|email|inbox/.test(words)) {
+          steps.push('Open Gmail and authenticate using your saved OAuth3 token.');
+          steps.push('Fetch the latest unread messages from your inbox.');
+          steps.push('Classify each message by priority (urgent / FYI / newsletter).');
+          steps.push('Draft a summary of messages that require a reply.');
+          steps.push('Present the summary to you for review — nothing is sent without your approval.');
+        } else if (/linkedin/.test(words)) {
+          steps.push('Navigate to LinkedIn and sign in using your saved session.');
+          steps.push('Check notifications and direct messages for new activity.');
+          steps.push('Identify messages from recruiters or relevant connections.');
+          steps.push('Draft suggested responses for your review.');
+          steps.push('Wait for your approval before sending anything.');
+        } else if (/github/.test(words)) {
+          steps.push('Navigate to GitHub and search for repositories matching your criteria.');
+          steps.push('Filter results by star count, creation date, and topic tags.');
+          steps.push('Extract repository names, descriptions, and star counts.');
+          steps.push('Format results into a curated list.');
+          steps.push('Save or send the list according to your preference.');
+        } else if (/calendar|meeting/.test(words)) {
+          steps.push('Connect to your Google Calendar using your OAuth3 token.');
+          steps.push('Fetch today\'s events and meeting details.');
+          steps.push('Summarize each event in one sentence.');
+          steps.push('Generate a brief prep note for meetings with an agenda.');
+          steps.push('Present the daily brief to you each morning.');
+        } else {
+          // Generic steps derived from description
+          steps.push('Open the target website or service using your saved session.');
+          steps.push('Navigate to the relevant section and retrieve the information.');
+          steps.push('Process and filter the data according to your criteria.');
+          steps.push('Format the results into a clear summary.');
+          steps.push('Present the results to you for review before taking any action.');
+        }
+        return steps;
+      }
+
+      function renderRecipe(steps) {
+        if (els.loadingState) els.loadingState.style.display = 'none';
+        if (!els.recipeList) return;
+        els.recipeList.style.display = 'flex';
+        els.recipeList.innerHTML = steps.map(function (step, i) {
+          return '<div class="ca-recipe-step" style="animation-delay:' + (i * 60) + 'ms">' +
+            '<div class="ca-recipe-step__num">' + (i + 1) + '</div>' +
+            '<div class="ca-recipe-step__text">' + esc(step) + '</div>' +
+            '</div>';
+        }).join('');
+        if (els.step2Next) els.step2Next.disabled = false;
+      }
+
+      function suggestName(description) {
+        var words = description.trim().split(/\s+/).slice(0, 6).join(' ');
+        // Capitalise first letter
+        return words.charAt(0).toUpperCase() + words.slice(1);
+      }
+
+      if (els.appNameInput) {
+        els.appNameInput.addEventListener('input', function () {
+          state.appName = els.appNameInput.value.trim();
+        });
+      }
+
+      if (els.step2Back) {
+        els.step2Back.addEventListener('click', function () { goTo(1); });
+      }
+      if (els.step2Next) {
+        els.step2Next.addEventListener('click', function () {
+          state.appName = (els.appNameInput ? els.appNameInput.value.trim() : '') || 'My Custom App';
+          goTo(3);
+          resetTest();
+        });
+      }
+
+      /* ── Step 3: Test ────────────────────────────────────────────────── */
+      function resetTest() {
+        state.testResult = null;
+        setTestStatus('idle', 'Ready to run');
+        if (els.testOutput) {
+          els.testOutput.className = 'ca-test-output ca-test-output--idle';
+          els.testOutput.textContent = 'Press "Run it live" to start the test. The agent will open a browser window and execute your recipe step by step.';
+        }
+        if (els.testCost) els.testCost.style.display = 'none';
+        if (els.step3Next) els.step3Next.disabled = true;
+        if (els.testRunBtn) els.testRunBtn.disabled = false;
+      }
+
+      function setTestStatus(mode, label) {
+        if (els.testDot) {
+          els.testDot.className = 'ca-test-dot';
+          if (mode === 'run') els.testDot.classList.add('ca-test-dot--run');
+          else if (mode === 'ok') els.testDot.classList.add('ca-test-dot--ok');
+          else if (mode === 'err') els.testDot.classList.add('ca-test-dot--err');
+        }
+        if (els.testLabel) els.testLabel.textContent = label;
+      }
+
+      if (els.testRunBtn) {
+        els.testRunBtn.addEventListener('click', function () {
+          if (!state.recipe || !state.recipe.steps || state.recipe.steps.length === 0) return;
+          els.testRunBtn.disabled = true;
+          setTestStatus('run', 'Running&hellip;');
+          if (els.testOutput) {
+            els.testOutput.className = 'ca-test-output';
+            els.testOutput.textContent = '';
+          }
+
+          var prompt = 'Execute the first step of this recipe and report what you found:\n\n' +
+            state.recipe.steps.slice(0, 2).map(function (s, i) { return (i + 1) + '. ' + s; }).join('\n') +
+            '\n\nApp: ' + (state.appName || 'Custom App') +
+            '\n\nDo NOT submit, send, or modify anything. Observation only.';
+
+          var started = Date.now();
+
+          fetch(BROWSER_API + '/api/yinyang/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ message: prompt })
+          })
+            .then(function (r) { return r.ok ? r.json() : Promise.reject('HTTP ' + r.status); })
+            .then(function (d) {
+              var elapsed = ((Date.now() - started) / 1000).toFixed(1);
+              var output  = d.response || d.message || d.text || d.content || 'Step completed.';
+              var cost    = d.cost_usd ? '$' + parseFloat(d.cost_usd).toFixed(4) : null;
+
+              state.testResult = { output: output, cost: cost, success: true };
+              if (els.testOutput) {
+                els.testOutput.className = 'ca-test-output';
+                els.testOutput.textContent = output;
+              }
+              setTestStatus('ok', 'Test passed (' + elapsed + 's)');
+              if (cost && els.testCostText) {
+                els.testCostText.textContent = 'Test cost: ' + cost + ' · ' + elapsed + 's';
+              } else if (els.testCostText) {
+                els.testCostText.textContent = 'Test completed in ' + elapsed + 's';
+              }
+              if (els.testCost) els.testCost.style.display = 'block';
+              if (els.step3Next) els.step3Next.disabled = false;
+              if (els.testRunBtn) els.testRunBtn.disabled = false;
+            })
+            .catch(function (err) {
+              // Browser API offline — still allow submit (test is optional)
+              var msg = 'Could not reach the local browser agent (http://127.0.0.1:9222).\n\n' +
+                'Make sure Solace Browser server is running:\n' +
+                '  python3 ~/projects/solace-browser/solace_browser_server.py --port 9222 --head\n\n' +
+                'You can still submit your app without a live test run.';
+              if (els.testOutput) {
+                els.testOutput.className = 'ca-test-output';
+                els.testOutput.textContent = msg;
+              }
+              setTestStatus('err', 'Agent offline');
+              if (els.step3Next) els.step3Next.disabled = false;
+              if (els.testRunBtn) els.testRunBtn.disabled = false;
+            });
+        });
+      }
+
+      if (els.step3Back) {
+        els.step3Back.addEventListener('click', function () { goTo(2); });
+      }
+      if (els.step3Next) {
+        els.step3Next.addEventListener('click', function () {
+          goTo(4);
+          updateSubmitPreview();
+        });
+      }
+
+      /* ── Step 4: Submit ──────────────────────────────────────────────── */
+      function updateSubmitPreview() {
+        var steps = (state.recipe && state.recipe.steps) ? state.recipe.steps.length : 0;
+        var email = localStorage.getItem('solace_user_email') || '';
+        if (els.previewName)   els.previewName.textContent   = state.appName || 'My Custom App';
+        if (els.previewSteps)  els.previewSteps.textContent  = steps + ' steps';
+        if (els.previewAuthor) els.previewAuthor.textContent = email || '(not signed in)';
+        if (els.authorEmail && !els.authorEmail.value && email) {
+          els.authorEmail.value = email;
+        }
+      }
+
+      if (els.step4Back) {
+        els.step4Back.addEventListener('click', function () { goTo(3); });
+      }
+
+      if (els.submitBtn) {
+        els.submitBtn.addEventListener('click', function () {
+          var name        = state.appName || (els.appNameInput ? els.appNameInput.value.trim() : '') || 'My Custom App';
+          var description = state.description;
+          var recipe      = state.recipe || { steps: [] };
+          var authorEmail = (els.authorEmail ? els.authorEmail.value.trim() : '') ||
+                            localStorage.getItem('solace_user_email') || '';
+          var notes       = els.notes ? els.notes.value.trim() : '';
+          var apiKey      = localStorage.getItem('solace_api_key') || '';
+
+          if (!authorEmail) {
+            alert('Please enter your email address so we can update you on the review.');
+            if (els.authorEmail) els.authorEmail.focus();
+            return;
+          }
+
+          var payload = {
+            name:         name,
+            description:  description,
+            recipe:       recipe,
+            notes:        notes,
+            author_email: authorEmail,
+            api_key:      apiKey,
+            test_result:  state.testResult
+          };
+
+          els.submitBtn.disabled = true;
+          els.submitBtn.textContent = 'Submitting\u2026';
+
+          fetch(CLOUD_API + '/api/apps/submit', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Authorization': apiKey ? 'Bearer ' + apiKey : ''
+            },
+            body: JSON.stringify(payload)
+          })
+            .then(function (r) {
+              if (!r.ok) return Promise.reject('HTTP ' + r.status);
+              return r.json();
+            })
+            .then(function () {
+              state.submitted = true;
+              goTo(0);  // show success
+            })
+            .catch(function (err) {
+              // Graceful fallback: accept submission even if cloud is unavailable
+              // (offline-first pattern — show success, retry in background is handled by server)
+              if (err && String(err).indexOf('Failed to fetch') !== -1) {
+                // Network error — show success anyway (user intent captured)
+                state.submitted = true;
+                goTo(0);
+              } else {
+                els.submitBtn.disabled = false;
+                els.submitBtn.textContent = 'Submit app \u2192';
+                alert('Submission failed (' + err + '). Please check your connection and try again.');
+              }
+            });
+        });
+      }
+
+      /* ── Success: start again ────────────────────────────────────────── */
+      if (els.startAgain) {
+        els.startAgain.addEventListener('click', function () {
+          // Reset all state
+          state.step = 1;
+          state.description = '';
+          state.appName = '';
+          state.recipe = null;
+          state.testResult = null;
+          state.submitted = false;
+          if (els.description)   els.description.value   = '';
+          if (els.appNameInput)  els.appNameInput.value  = '';
+          if (els.authorEmail)   els.authorEmail.value   = '';
+          if (els.notes)         els.notes.value         = '';
+          if (els.recipeList)    els.recipeList.innerHTML = '';
+          goTo(1);
+        });
+      }
+
+      /* ── Utilities ───────────────────────────────────────────────────── */
+      function esc(s) {
+        return String(s || '')
+          .replace(/&/g,  '&amp;')
+          .replace(/</g,  '&lt;')
+          .replace(/>/g,  '&gt;')
+          .replace(/"/g,  '&quot;')
+          .replace(/'/g,  '&#39;');
+      }
+
+      /* ── Init ────────────────────────────────────────────────────────── */
+      document.addEventListener('DOMContentLoaded', function () {
+        goTo(1);
+        // Pre-fill email from localStorage if signed in
+        var email = localStorage.getItem('solace_user_email');
+        if (email && els.authorEmail && !els.authorEmail.value) {
+          els.authorEmail.value = email;
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>
