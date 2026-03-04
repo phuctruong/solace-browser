@@ -1,9 +1,0 @@
-{
-  "app_id": "web-qa-inspector",
-  "monthly_limit_usd": 5.00,
-  "per_run_limit_usd": 0.25,
-  "llm_tokens_per_run_limit": 2000,
-  "screenshot_limit_per_run": 5,
-  "currency": "USD",
-  "note": "LLM analysis uses L2 (Llama-3.3-70B). Replay at $0.001. Full run ~$0.05."
-}
