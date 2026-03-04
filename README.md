@@ -141,3 +141,20 @@ solace-browser/
 - structured snapshot endpoints are working
 - browser site uses shared CSS/JS and slug routes
 - browser-driven QA artifacts can be generated through the live control API
+
+## Part of the Solace Ecosystem
+
+Solace Browser is the **web automation vertex** of the triangle architecture:
+
+| Vertex | Role | License |
+|--------|------|---------|
+| **Solace Browser** (this) | Web automation, OAuth3-gated, recipe-driven | Source-Available (FSL) |
+| [Stillwater OS](https://github.com/phuctruong/stillwater) | Verification layer, skills, recipes | OSS (MIT) |
+| [solaceagi.com](https://www.solaceagi.com) | Hosted platform, sync, store | Paid |
+
+## License
+
+[Functional Source License (FSL-1.1-Apache-2.0)](LICENSE) — free to use, readable, auditable.
+Converts to Apache 2.0 on 2030-03-04.
+
+*"Be water, my friend."* — Bruce Lee
