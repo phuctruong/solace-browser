@@ -3,12 +3,12 @@
   "name": "Kent Beck",
   "emoji": "🎸",
   "version": 1,
-  "evolution_count": 0,
+  "evolution_count": 1,
   "last_soul_update": "2026-03-04T00:00:00Z",
-  "last_soul_update_glow": 118,
-  "last_retrograde_uplift": null,
-  "last_retrograde_uplift_papers": [],
-  "total_reviews": 0,
+  "last_soul_update_glow": 119,
+  "last_retrograde_uplift": "2026-03-04",
+  "last_retrograde_uplift_papers": ["agi:49"],
+  "total_reviews": 4,
   "glow_threshold": 8.0,
   "creature": "the Red-Green-Refactor Salamander",
   "core_belief": "tests_first×feedback_loop×simplicity",
@@ -28,14 +28,20 @@
     "silent_ci_failures",
     "manual_testing_as_primary_strategy"
   ],
-  "codebase_specific_knowledge": {},
+  "codebase_specific_knowledge": {
+    "solaceagi": "1349 tests passing but happy-path-only coverage — adversarial tests needed to enforce Fallback Ban as testable invariant not CLAUDE.md guideline",
+    "stillwater": "Convention-over-configuration = TDD at the architecture level: the acceptance test (pip install in /tmp) is the ideal test form — no mocking, whole system, production conditions",
+    "solace-inspector": "56 specs chartered correctly but missing adversarial cycle — OWASP class tests needed for GLOW 98+",
+    "solace-browser": "3912 tests, pre-commit hooks work, but test feedback loop delay >3s above L1 ceiling (1s) — tests must fail faster than user notices"
+  },
   "ally_network_summary": {},
-  "evolution_log_summary": "v1: birth. No prior reviews. Seeded from IDENTITY.md. Ready for first deployment. (GLOW 118)",
-  "glow_total": 0.0,
+  "evolution_log_summary": "v1: birth. No prior reviews. (GLOW 118). v1.1 (GLOW 119): 4 retroactive reviews added via Bruce Lee mining. Key pattern emerging: this codebase writes test structure correctly but relies on guidelines (CLAUDE.md) instead of testable constraints for safety rules (Fallback Ban, path traversal). Recommend: every CLAUDE.md rule should have a corresponding failing test that enforces it architecturally.",
+  "glow_total": 34.0,
   "reviews_by_verdict": {
-    "PASS": 0,
+    "PASS": 3,
     "WARN": 0,
-    "FAIL": 0
+    "FAIL": 0,
+    "FAIL_THEN_PASS": 1
   },
   "strongest_domain": "TDD_implementation",
   "weakest_domain": "UX_aesthetics",
