@@ -1,0 +1,97 @@
+{
+  "run_id": "cli-20260304-010434-f22a13",
+  "spec_id": "paper-robots-sitemap-001",
+  "mode": "cli",
+  "target_cmd": "curl -sf https://www.solaceagi.com/robots.txt && curl -sf https://www.solaceagi.com/sitemap.xml",
+  "target_cwd": "/home/phuc/projects/solace-browser",
+  "persona_used": "james_bach",
+  "committee": [
+    "kent_beck",
+    "james_bach",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-04T01:04:34.658982Z",
+  "steps_completed": [
+    "execute",
+    "assert",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "exit_code": 0,
+  "stdout": "User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /api/docs\nDisallow: /api/redoc\nDisallow: /openapi.json\nSitemap: https://www.solaceagi.com/sitemap.xml\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url>\n    <loc>https://www.solaceagi.com/</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/about</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/features</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/browser</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/software5</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/oauth3</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/persistent-intelligence</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/app-store</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/pricing</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/papers</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/blog</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/press-releases</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/data-analytics</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/founder</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/mission</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/manifesto</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/contact</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/privacy</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/terms</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/style-guide</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/docs</loc>\n    <lastmod>2026-03-03</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n</urlset>\n",
+  "stderr": "",
+  "duration_seconds": 0.622,
+  "assertions": [
+    {
+      "check": "exit_code",
+      "expected": 0,
+      "actual": 0,
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "User-agent",
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "sitemap",
+      "passed": true
+    },
+    {
+      "check": "stderr_empty",
+      "expected_empty": true,
+      "actual_empty": true,
+      "passed": true
+    }
+  ],
+  "assertions_passed": 4,
+  "assertions_total": 4,
+  "agent_analysis_request": {
+    "persona": "james_bach",
+    "system_prompt": "You are James Bach, world-class exploratory tester. Apply SBTM (Session-Based Test Management) and HICCUPPS oracle heuristics (History, Image, Comparable, Claims, User, Product, Purpose, Standards). Review the evidence below and identify quality risks, bugs, and testing insights. Be specific, direct, exploratory. Focus on what could go WRONG. Output: (1) Top 3 quality risks, (2) Bugs found, (3) Recommended fix proposals.",
+    "evidence_summary": {
+      "cmd": "curl -sf https://www.solaceagi.com/robots.txt && curl -sf https://www.solaceagi.com/sitemap.xml",
+      "exit_code": 0,
+      "stdout_first_500": "User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /api/docs\nDisallow: /api/redoc\nDisallow: /openapi.json\nSitemap: https://www.solaceagi.com/sitemap.xml\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url>\n    <loc>https://www.solaceagi.com/</loc>\n    <lastmod>2026-02-28</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n  </url>\n  <url>\n    <loc>https://www.solaceagi.com/about</loc>\n    <lastmod>2026-02-28</lastmod>\n  ",
+      "stderr_first_200": "",
+      "duration_seconds": 0.622,
+      "assertions": [
+        {
+          "check": "exit_code",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "User-agent",
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "sitemap",
+          "passed": true
+        },
+        {
+          "check": "stderr_empty",
+          "expected_empty": true,
+          "actual_empty": true,
+          "passed": true
+        }
+      ],
+      "assertions_passed": "4/4"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "agent_analysis_response": null,
+  "qa_score": 100,
+  "belt": "Green",
+  "glow": 105,
+  "evidence_hash": "sha256:bbb6cb6090be70dfc0aa3d26d5e86c46b1eccd7d9800b0203232e80de4bbb4fa"
+}

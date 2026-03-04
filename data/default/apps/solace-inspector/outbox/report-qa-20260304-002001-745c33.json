@@ -1,0 +1,153 @@
+{
+  "run_id": "qa-20260304-002001-745c33",
+  "spec_id": "solace-browser-sb-demo-001",
+  "mode": "web",
+  "target_url": "http://127.0.0.1:8791/demo",
+  "page_name": "Solace Browser Sb Demo",
+  "persona_used": "cem_kaner",
+  "committee": [
+    "james_bach",
+    "elisabeth_hendrickson",
+    "kent_beck",
+    "cem_kaner",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-04T00:20:01.014359Z",
+  "steps_completed": [
+    "navigate",
+    "aria_snapshot",
+    "dom_snapshot",
+    "heuristic_check",
+    "screenshot",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "agent_analysis_response": null,
+  "aria_tree_length": 0,
+  "aria_tree_excerpt": "",
+  "dom_title": "LinkedIn Login, Sign in | LinkedIn",
+  "dom_h1s": [
+    "Sign in"
+  ],
+  "dom_links_count": 16,
+  "dom_images_count": 0,
+  "dom_forms": 2,
+  "dom_links_sample": [
+    {
+      "text": "",
+      "href": "https://www.linkedin.com/"
+    },
+    {
+      "text": "User Agreement",
+      "href": "https://www.linkedin.com/legal/user-agreement"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "https://www.linkedin.com/legal/privacy-policy"
+    },
+    {
+      "text": "Cookie Policy",
+      "href": "https://www.linkedin.com/legal/cookie-policy"
+    },
+    {
+      "text": "Forgot password?",
+      "href": "https://www.linkedin.com/checkpoint/rp/request-password-reset?session_redirect=https%3A%2F%2Fwww%2Elinkedin%2Ecom%2Ffeed%2F"
+    },
+    {
+      "text": "Join now",
+      "href": "https://www.linkedin.com/signup/cold-join?session_redirect=https%3A%2F%2Fwww.linkedin.com%2Ffeed%2F"
+    },
+    {
+      "text": "User Agreement",
+      "href": "https://www.linkedin.com/legal/user-agreement"
+    },
+    {
+      "text": "Privacy Policy",
+      "href": "https://www.linkedin.com/legal/privacy-policy"
+    },
+    {
+      "text": "Cookie Policy",
+      "href": "https://www.linkedin.com/legal/cookie-policy"
+    },
+    {
+      "text": "User Agreement",
+      "href": "https://www.linkedin.com/legal/user-agreement?trk=d_checkpoint_lg_consumer_login_ft_user_agreement"
+    }
+  ],
+  "heuristic_issues": [],
+  "heuristic_error_count": 0,
+  "heuristic_warning_count": 0,
+  "screenshot_path": "screenshot-20260303-192002.png",
+  "agent_analysis_request": {
+    "persona": "cem_kaner",
+    "system_prompt": "You are Cem Kaner, context-driven testing expert and BBST author. Apply context-driven principles: value of any practice depends on context. What is the most important quality risk here? What's the purpose of this page and how well does it serve that purpose? Output: (1) Context assessment, (2) Top quality risk, (3) Fix proposals.",
+    "evidence_summary": {
+      "url": "http://127.0.0.1:8791/demo",
+      "page_name": "Solace Browser Sb Demo",
+      "dom_title": "LinkedIn Login, Sign in | LinkedIn",
+      "dom_h1s": [
+        "Sign in"
+      ],
+      "dom_links_count": 16,
+      "dom_links_sample": [
+        {
+          "text": "",
+          "href": "https://www.linkedin.com/"
+        },
+        {
+          "text": "User Agreement",
+          "href": "https://www.linkedin.com/legal/user-agreement"
+        },
+        {
+          "text": "Privacy Policy",
+          "href": "https://www.linkedin.com/legal/privacy-policy"
+        },
+        {
+          "text": "Cookie Policy",
+          "href": "https://www.linkedin.com/legal/cookie-policy"
+        },
+        {
+          "text": "Forgot password?",
+          "href": "https://www.linkedin.com/checkpoint/rp/request-password-reset?session_redirect=https%3A%2F%2Fwww%2Elinkedin%2Ecom%2Ffeed%2F"
+        },
+        {
+          "text": "Join now",
+          "href": "https://www.linkedin.com/signup/cold-join?session_redirect=https%3A%2F%2Fwww.linkedin.com%2Ffeed%2F"
+        },
+        {
+          "text": "User Agreement",
+          "href": "https://www.linkedin.com/legal/user-agreement"
+        },
+        {
+          "text": "Privacy Policy",
+          "href": "https://www.linkedin.com/legal/privacy-policy"
+        },
+        {
+          "text": "Cookie Policy",
+          "href": "https://www.linkedin.com/legal/cookie-policy"
+        },
+        {
+          "text": "User Agreement",
+          "href": "https://www.linkedin.com/legal/user-agreement?trk=d_checkpoint_lg_consumer_login_ft_user_agreement"
+        }
+      ],
+      "dom_images_count": 0,
+      "dom_forms": 2,
+      "aria_tree_excerpt": "",
+      "heuristic_issues": [],
+      "heuristic_error_count": 0,
+      "heuristic_warning_count": 0,
+      "screenshot_path": "screenshot-20260303-192002.png"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "qa_score": 100,
+  "belt": "Green",
+  "glow": 105,
+  "evidence_hash": "sha256:1a3f757a0ebf29fa5aedbb917ae3b7918ae72d52328643246bfcfabad621a258"
+}

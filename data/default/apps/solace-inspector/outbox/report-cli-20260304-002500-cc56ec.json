@@ -1,0 +1,97 @@
+{
+  "run_id": "cli-20260304-002500-cc56ec",
+  "spec_id": "mcp-server-001",
+  "mode": "cli",
+  "target_cmd": "echo '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}' | timeout 5 python3 /home/phuc/projects/solace-browser/mcp_server.py 2>/dev/null",
+  "target_cwd": "/home/phuc/projects/solace-browser",
+  "persona_used": "kent_beck",
+  "committee": [
+    "kent_beck",
+    "james_bach",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-04T00:25:00.399338Z",
+  "steps_completed": [
+    "execute",
+    "assert",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "exit_code": 0,
+  "stdout": "{\"jsonrpc\": \"2.0\", \"result\": {\"tools\": [{\"name\": \"navigate\", \"description\": \"Navigate the browser to a URL. Waits for the page to load before returning.\", \"inputSchema\": {\"type\": \"object\", \"properties\": {\"url\": {\"type\": \"string\", \"description\": \"The URL to navigate to (must start with http:// or https://)\"}, \"wait_until\": {\"type\": \"string\", \"enum\": [\"load\", \"domcontentloaded\", \"networkidle\"], \"default\": \"load\", \"description\": \"When to consider navigation complete\"}}, \"required\": [\"url\"]}}, {\"name\": \"click\", \"description\": \"Click on an element matching the CSS selector.\", \"inputSchema\": {\"type\": \"object\", \"properties\": {\"selector\": {\"type\": \"string\", \"description\": \"CSS selector identifying the element to click\"}, \"timeout_ms\": {\"type\": \"integer\", \"default\": 5000, \"description\": \"Milliseconds to wait for the element to be visible\"}}, \"required\": [\"selector\"]}}, {\"name\": \"fill\", \"description\": \"Fill a form input with text. Focuses the element, clears it if requested, then types the value.\", \"inputSchema\": {\"type\": \"object\", \"properties\": {\"selector\": {\"type\": \"string\", \"description\": \"CSS selector identifying the input element\"}, \"value\": {\"type\": \"string\", \"description\": \"Text value to type into the element\"}, \"clear_first\": {\"type\": \"boolean\", \"default\": true, \"description\": \"Clear existing content before typing\"}}, \"required\": [\"selector\", \"value\"]}}, {\"name\": \"screenshot\", \"description\": \"Capture a screenshot of the current page or a specific element. Returns base64-encoded PNG.\", \"inputSchema\": {\"type\": \"object\", \"properties\": {\"selector\": {\"type\": \"string\", \"description\": \"CSS selector to capture (omit for full page)\"}, \"full_page\": {\"type\": \"boolean\", \"default\": false, \"description\": \"Capture the full scrollable page (ignored if selector is set)\"}, \"format\": {\"type\": \"string\", \"enum\": [\"png\", \"jpeg\"], \"default\": \"png\"}}}}, {\"name\": \"snapshot\", \"description\": \"Capture a Prime Mermaid DOM snapshot \\u2014 a Mermaid-formatted accessibility tree of the current page with a SHA-256 integrity hash. Useful for understanding page structure.\", \"inputSchema\": {\"type\": \"object\", \"properties\": {\"selector\": {\"type\": \"string\", \"description\": \"Scope snapshot to elements within this CSS selector (omit for full page)\"}}}}, {\"name\": \"evaluate\", \"description\": \"Execute JavaScript in the page context and return the result. Use for reading DOM state, triggering events, or performing calculations.\", \"inputSchema\": {\"type\": \"object\", \"properties\": {\"expression\": {\"type\": \"string\", \"description\": \"JavaScript expression to evaluate. May return any JSON-serializable value.\"}}, \"required\": [\"expression\"]}}, {\"name\": \"aria_snapshot\", \"description\": \"Return the ARIA accessibility tree of the current page as structured text. Useful for understanding what screen readers see and for locating interactive elements.\", \"inputSchema\": {\"type\": \"object\", \"properties\": {\"selector\": {\"type\": \"string\", \"description\": \"Scope the ARIA tree to this CSS selector (omit for full page)\"}}}}]}, \"id\": 1}\n",
+  "stderr": "",
+  "duration_seconds": 0.049,
+  "assertions": [
+    {
+      "check": "exit_code",
+      "expected": 0,
+      "actual": 0,
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "tools",
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "navigate",
+      "passed": true
+    },
+    {
+      "check": "stderr_empty",
+      "expected_empty": true,
+      "actual_empty": true,
+      "passed": true
+    }
+  ],
+  "assertions_passed": 4,
+  "assertions_total": 4,
+  "agent_analysis_request": {
+    "persona": "kent_beck",
+    "system_prompt": "You are Kent Beck, creator of TDD and XP. Think about testability: what makes this surface hard to test? What behavior should be tested first? What do you fear is broken? If you had to write one test for this surface, what would it be? Output: (1) Testability assessment, (2) What to test first, (3) Fix proposals.",
+    "evidence_summary": {
+      "cmd": "echo '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}' | timeout 5 python3 /home/phuc/projects/solace-browser/mcp_server.py 2>/dev/null",
+      "exit_code": 0,
+      "stdout_first_500": "{\"jsonrpc\": \"2.0\", \"result\": {\"tools\": [{\"name\": \"navigate\", \"description\": \"Navigate the browser to a URL. Waits for the page to load before returning.\", \"inputSchema\": {\"type\": \"object\", \"properties\": {\"url\": {\"type\": \"string\", \"description\": \"The URL to navigate to (must start with http:// or https://)\"}, \"wait_until\": {\"type\": \"string\", \"enum\": [\"load\", \"domcontentloaded\", \"networkidle\"], \"default\": \"load\", \"description\": \"When to consider navigation complete\"}}, \"required\": [\"url\"]}}, {\"nam",
+      "stderr_first_200": "",
+      "duration_seconds": 0.049,
+      "assertions": [
+        {
+          "check": "exit_code",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "tools",
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "navigate",
+          "passed": true
+        },
+        {
+          "check": "stderr_empty",
+          "expected_empty": true,
+          "actual_empty": true,
+          "passed": true
+        }
+      ],
+      "assertions_passed": "4/4"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "agent_analysis_response": null,
+  "qa_score": 100,
+  "belt": "Green",
+  "glow": 105,
+  "evidence_hash": "sha256:1bfa1bbda3aed1beb3b2ca22d0e27c6367ef1721370368b66d26fdfd48d4160e"
+}

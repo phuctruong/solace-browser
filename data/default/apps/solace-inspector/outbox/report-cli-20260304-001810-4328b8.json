@@ -1,0 +1,97 @@
+{
+  "run_id": "cli-20260304-001810-4328b8",
+  "spec_id": "fun-packs-all-locales-001",
+  "mode": "cli",
+  "target_cmd": "python3 -c \"import json,pathlib; packs=list(pathlib.Path('/home/phuc/projects/solace-browser/data/fun-packs').glob('default-*.json')); valid=[p for p in packs if len(json.loads(p.read_text()).get('jokes',[]))==100 and len(json.loads(p.read_text()).get('facts',[]))==100]; print(f'valid={len(valid)} total={len(packs)} locales={sorted([json.loads(p.read_text())[\\\"_meta\\\"][\\\"locale\\\"] for p in valid])}')\"",
+  "target_cwd": "/home/phuc/projects/solace-browser",
+  "persona_used": "elisabeth_hendrickson",
+  "committee": [
+    "kent_beck",
+    "james_bach",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-04T00:18:10.713532Z",
+  "steps_completed": [
+    "execute",
+    "assert",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "exit_code": 0,
+  "stdout": "valid=13 total=13 locales=['ar', 'de', 'en', 'es', 'fr', 'hi', 'id', 'ja', 'ko', 'pt', 'ru', 'vi', 'zh']\n",
+  "stderr": "",
+  "duration_seconds": 0.038,
+  "assertions": [
+    {
+      "check": "exit_code",
+      "expected": 0,
+      "actual": 0,
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "valid=13",
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "total=13",
+      "passed": true
+    },
+    {
+      "check": "stderr_empty",
+      "expected_empty": true,
+      "actual_empty": true,
+      "passed": true
+    }
+  ],
+  "assertions_passed": 4,
+  "assertions_total": 4,
+  "agent_analysis_request": {
+    "persona": "elisabeth_hendrickson",
+    "system_prompt": "You are Elisabeth Hendrickson, agile testing expert and author of Explore It!. Apply charter-based exploration: what is the charter for this surface? What broken flows, missing error handling, and usability issues do you see? Think about what a user encounters when things go wrong. Output: (1) Exploration charter, (2) Broken flows found, (3) Fix proposals.",
+    "evidence_summary": {
+      "cmd": "python3 -c \"import json,pathlib; packs=list(pathlib.Path('/home/phuc/projects/solace-browser/data/fun-packs').glob('default-*.json')); valid=[p for p in packs if len(json.loads(p.read_text()).get('jokes',[]))==100 and len(json.loads(p.read_text()).get('facts',[]))==100]; print(f'valid={len(valid)} total={len(packs)} locales={sorted([json.loads(p.read_text())[\\\"_meta\\\"][\\\"locale\\\"] for p in valid])}')\"",
+      "exit_code": 0,
+      "stdout_first_500": "valid=13 total=13 locales=['ar', 'de', 'en', 'es', 'fr', 'hi', 'id', 'ja', 'ko', 'pt', 'ru', 'vi', 'zh']\n",
+      "stderr_first_200": "",
+      "duration_seconds": 0.038,
+      "assertions": [
+        {
+          "check": "exit_code",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "valid=13",
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "total=13",
+          "passed": true
+        },
+        {
+          "check": "stderr_empty",
+          "expected_empty": true,
+          "actual_empty": true,
+          "passed": true
+        }
+      ],
+      "assertions_passed": "4/4"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "agent_analysis_response": null,
+  "qa_score": 100,
+  "belt": "Green",
+  "glow": 105,
+  "evidence_hash": "sha256:d09716d358b1fe66cea0e39c40eecd2091c0550f9da468ed7214121b85d8c933"
+}

@@ -1,0 +1,87 @@
+{
+  "run_id": "cli-20260304-010425-2ba014",
+  "spec_id": "agi-ci-oracle-001",
+  "mode": "cli",
+  "target_cmd": "cat /home/phuc/projects/solaceagi/cloudbuild.yaml | head -60",
+  "target_cwd": "/home/phuc/projects/solaceagi",
+  "persona_used": "kent_beck",
+  "committee": [
+    "kent_beck",
+    "james_bach",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-04T01:04:25.194045Z",
+  "steps_completed": [
+    "execute",
+    "assert",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "exit_code": 0,
+  "stdout": "steps:\n  # Build the container image (root Dockerfile = nginx + uvicorn + FastAPI)\n  - name: 'gcr.io/cloud-builders/docker'\n    args:\n      - 'build'\n      - '-t'\n      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/solaceagi/solaceagi-qa:$SHORT_SHA'\n      - '-t'\n      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/solaceagi/solaceagi-qa:latest'\n      - '.'\n    id: Build\n\n  # Push both SHA-tagged and latest\n  - name: 'gcr.io/cloud-builders/docker'\n    args:\n      - 'push'\n      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/solaceagi/solaceagi-qa:$SHORT_SHA'\n    id: Push\n\n  # Deploy to Cloud Run (QA)\n  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'\n    entrypoint: gcloud\n    args:\n      - 'run'\n      - 'deploy'\n      - 'solaceagi-qa'\n      - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/solaceagi/solaceagi-qa:$SHORT_SHA'\n      - '--region=us-central1'\n      - '--platform=managed'\n      - '--allow-unauthenticated'\n      - '--port=80'\n      - '--memory=512Mi'\n      - '--cpu=1'\n      - '--cpu-boost'\n      - '--concurrency=80'\n      - '--timeout=300'\n      - '--max-instances=5'\n      - '--min-instances=1'\n      # ----------------------------------------------------------------\n      # The following env vars are set by Cloud Build (safe to include):\n      #   BUILD_SHA, BUILD_ENV, BUILD_DATE\n      #\n      # The following env vars MUST be set directly in the Cloud Run\n      # service configuration (Console or gcloud CLI) \u2014 never in this\n      # build file, as they contain secrets:\n      #   STRIPE_SECRET_KEY          \u2014 Stripe API secret key\n      #   STRIPE_WEBHOOK_SECRET      \u2014 Stripe webhook signing secret\n      #   STRIPE_PRICE_YELLOW        \u2014 Stripe price ID (Yellow tier)\n      #   STRIPE_PRICE_ORANGE        \u2014 Stripe price ID (Orange tier)\n      #   STRIPE_PRICE_GREEN         \u2014 Stripe price ID (Green tier)\n      #   STRIPE_PRICE_BLACK         \u2014 Stripe price ID (Black tier)\n      #   TOGETHER_API_KEY           \u2014 Together AI API key\n      #   OPENROUTER_API_KEY         \u2014 OpenRouter API key\n      #   DEFAULT_LLM_PROVIDER       \u2014 LLM provider (together/openrouter)\n      #   OAUTH3_ENCRYPTION_KEY      \u2014 AES-256-GCM encryption key\n      #   FIREBASE_PROJECT_ID        \u2014 Firebase/GCP project ID\n      #   FIREBASE_CREDENTIALS_PATH  \u2014 Path to service account JSON\n      #   GOOGLE_ANALYTICS_MEASUREMENT_ID \u2014 GA4 measurement ID\n      #   GMAIL_USER                 \u2014 Gmail sender address\n      #   GMAIL_APP_PASSWORD         \u2014 Gmail app password\n",
+  "stderr": "",
+  "duration_seconds": 0.001,
+  "assertions": [
+    {
+      "check": "exit_code",
+      "expected": 0,
+      "actual": 0,
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "python",
+      "passed": false
+    },
+    {
+      "check": "stderr_empty",
+      "expected_empty": true,
+      "actual_empty": true,
+      "passed": true
+    }
+  ],
+  "assertions_passed": 2,
+  "assertions_total": 3,
+  "agent_analysis_request": {
+    "persona": "kent_beck",
+    "system_prompt": "You are Kent Beck, creator of TDD and XP. Think about testability: what makes this surface hard to test? What behavior should be tested first? What do you fear is broken? If you had to write one test for this surface, what would it be? Output: (1) Testability assessment, (2) What to test first, (3) Fix proposals.",
+    "evidence_summary": {
+      "cmd": "cat /home/phuc/projects/solaceagi/cloudbuild.yaml | head -60",
+      "exit_code": 0,
+      "stdout_first_500": "steps:\n  # Build the container image (root Dockerfile = nginx + uvicorn + FastAPI)\n  - name: 'gcr.io/cloud-builders/docker'\n    args:\n      - 'build'\n      - '-t'\n      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/solaceagi/solaceagi-qa:$SHORT_SHA'\n      - '-t'\n      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/solaceagi/solaceagi-qa:latest'\n      - '.'\n    id: Build\n\n  # Push both SHA-tagged and latest\n  - name: 'gcr.io/cloud-builders/docker'\n    args:\n",
+      "stderr_first_200": "",
+      "duration_seconds": 0.001,
+      "assertions": [
+        {
+          "check": "exit_code",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "python",
+          "passed": false
+        },
+        {
+          "check": "stderr_empty",
+          "expected_empty": true,
+          "actual_empty": true,
+          "passed": true
+        }
+      ],
+      "assertions_passed": "2/3"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "agent_analysis_response": null,
+  "qa_score": 66,
+  "belt": "Yellow",
+  "glow": 68,
+  "evidence_hash": "sha256:35f3eab04a5ce35d44e5f47355a40137b02ddcf68ee0cefd0d111e6ac2a13d01"
+}

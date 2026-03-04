@@ -1,0 +1,153 @@
+{
+  "run_id": "qa-20260304-001557-1b7827",
+  "spec_id": "solaceagi-features-001",
+  "mode": "web",
+  "target_url": "https://www.solaceagi.com/features",
+  "page_name": "SolaceAGI Features Page",
+  "persona_used": "james_bach",
+  "committee": [
+    "james_bach",
+    "elisabeth_hendrickson",
+    "kent_beck",
+    "cem_kaner",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-04T00:15:57.845454Z",
+  "steps_completed": [
+    "navigate",
+    "aria_snapshot",
+    "dom_snapshot",
+    "heuristic_check",
+    "screenshot",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "agent_analysis_response": null,
+  "aria_tree_length": 0,
+  "aria_tree_excerpt": "",
+  "dom_title": "Features | Solace AGI Platform",
+  "dom_h1s": [
+    "Platform Features"
+  ],
+  "dom_links_count": 40,
+  "dom_images_count": 3,
+  "dom_forms": 0,
+  "dom_links_sample": [
+    {
+      "text": "Solace AGI",
+      "href": "https://www.solaceagi.com/"
+    },
+    {
+      "text": "Software 5.0",
+      "href": "https://www.solaceagi.com/software5"
+    },
+    {
+      "text": "Persistent Intelligence",
+      "href": "https://www.solaceagi.com/persistent-intelligence"
+    },
+    {
+      "text": "Solace Browser \u2192",
+      "href": "https://www.solaceagi.com/browser"
+    },
+    {
+      "text": "English",
+      "href": "https://www.solaceagi.com/features"
+    },
+    {
+      "text": "Espa\u00f1ol",
+      "href": "https://www.solaceagi.com/es/features"
+    },
+    {
+      "text": "Ti\u1ebfng Vi\u1ec7t",
+      "href": "https://www.solaceagi.com/vi/features"
+    },
+    {
+      "text": "\u4e2d\u6587",
+      "href": "https://www.solaceagi.com/zh/features"
+    },
+    {
+      "text": "Portugu\u00eas",
+      "href": "https://www.solaceagi.com/pt/features"
+    },
+    {
+      "text": "Fran\u00e7ais",
+      "href": "https://www.solaceagi.com/fr/features"
+    }
+  ],
+  "heuristic_issues": [],
+  "heuristic_error_count": 0,
+  "heuristic_warning_count": 0,
+  "screenshot_path": "screenshot-20260303-191559.png",
+  "agent_analysis_request": {
+    "persona": "james_bach",
+    "system_prompt": "You are James Bach, world-class exploratory tester. Apply SBTM (Session-Based Test Management) and HICCUPPS oracle heuristics (History, Image, Comparable, Claims, User, Product, Purpose, Standards). Review the evidence below and identify quality risks, bugs, and testing insights. Be specific, direct, exploratory. Focus on what could go WRONG. Output: (1) Top 3 quality risks, (2) Bugs found, (3) Recommended fix proposals.",
+    "evidence_summary": {
+      "url": "https://www.solaceagi.com/features",
+      "page_name": "SolaceAGI Features Page",
+      "dom_title": "Features | Solace AGI Platform",
+      "dom_h1s": [
+        "Platform Features"
+      ],
+      "dom_links_count": 40,
+      "dom_links_sample": [
+        {
+          "text": "Solace AGI",
+          "href": "https://www.solaceagi.com/"
+        },
+        {
+          "text": "Software 5.0",
+          "href": "https://www.solaceagi.com/software5"
+        },
+        {
+          "text": "Persistent Intelligence",
+          "href": "https://www.solaceagi.com/persistent-intelligence"
+        },
+        {
+          "text": "Solace Browser \u2192",
+          "href": "https://www.solaceagi.com/browser"
+        },
+        {
+          "text": "English",
+          "href": "https://www.solaceagi.com/features"
+        },
+        {
+          "text": "Espa\u00f1ol",
+          "href": "https://www.solaceagi.com/es/features"
+        },
+        {
+          "text": "Ti\u1ebfng Vi\u1ec7t",
+          "href": "https://www.solaceagi.com/vi/features"
+        },
+        {
+          "text": "\u4e2d\u6587",
+          "href": "https://www.solaceagi.com/zh/features"
+        },
+        {
+          "text": "Portugu\u00eas",
+          "href": "https://www.solaceagi.com/pt/features"
+        },
+        {
+          "text": "Fran\u00e7ais",
+          "href": "https://www.solaceagi.com/fr/features"
+        }
+      ],
+      "dom_images_count": 3,
+      "dom_forms": 0,
+      "aria_tree_excerpt": "",
+      "heuristic_issues": [],
+      "heuristic_error_count": 0,
+      "heuristic_warning_count": 0,
+      "screenshot_path": "screenshot-20260303-191559.png"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "qa_score": 100,
+  "belt": "Green",
+  "glow": 105,
+  "evidence_hash": "sha256:552de5a2dbe74ae469286bcf00635d9debfc6c988d1aa9a8fe0876d6074458f0"
+}
