@@ -1,0 +1,18 @@
+{
+  "spec_id": "agi-buddha-middle-path-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "curl -s https://www.solaceagi.com | wc -c && curl -s https://www.solaceagi.com | grep -c '<section'",
+  "target_name": "Buddha Middle Path — Homepage Size and Section Count Balance",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": ["1"],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "buddha",
+  "priority": "medium",
+  "context": "Buddha Middle Path oracle (q-agi-058): 'Suffering arises from excess or lack.' The homepage should follow the Middle Path: not too long (excess = suffering), not too short (lack = insufficient). Measure: total bytes (should be between 20KB-200KB for a focused landing page) and section count (should be 5-12 sections: enough to persuade, not too many to overwhelm). Output line 1: byte count. Line 2: section count. Buddha assesses the balance.",
+  "created_at": "2026-03-04T00:00:00Z"
+}
