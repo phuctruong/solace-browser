@@ -1,0 +1,21 @@
+{
+  "spec_id": "sb-yinyang-chat-northstar-001",
+  "project": "solace-browser",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "curl -s http://127.0.0.1:8791/api/yinyang/status",
+  "target_name": "Solace Browser YinYang Service — Liveness Check (Northstar)",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": [
+      "queue_size"
+    ],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "elisabeth_hendrickson",
+  "priority": "high",
+  "northstar": "northstar-sb-yinyang-chat.json",
+  "context": "Northstar contract: YinYang service must be live before chat is possible. Tests /api/yinyang/status as the liveness proxy — if queue_size is present, the service is up and the notification pipeline is running. Elisabeth Hendrickson: the delight layer must be alive before it can delight. This is the canary that guards the chat endpoint.",
+  "created_at": "2026-03-04T00:00:00Z"
+}

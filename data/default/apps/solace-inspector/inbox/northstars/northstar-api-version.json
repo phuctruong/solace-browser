@@ -1,0 +1,53 @@
+{
+  "spec_id": "northstar-api-version",
+  "type": "northstar",
+  "version": "1.0",
+  "authored": "2026-03-04",
+  "committee": ["kent_beck", "elisabeth_hendrickson"],
+
+  "webservice": {
+    "method": "GET",
+    "endpoint": "/api/v1/version",
+    "base_url": "https://www.solaceagi.com",
+    "description": "Deployment traceability endpoint — returns semantic version, git sha, env, and build metadata for the running service",
+    "auth": "None — public endpoint (no Bearer token required)",
+    "content_type": "none"
+  },
+
+  "contract": {
+    "inputs": {},
+    "outputs": {
+      "version": "string — semantic version string (e.g. '1.3.2')",
+      "sha": "string — git commit sha of deployed build",
+      "env": "string — 'qa' or 'prod'",
+      "built_at": "string — ISO 8601 build timestamp",
+      "service": "string — service name (e.g. 'solaceagi')"
+    },
+    "guarantees": [
+      "Always returns HTTP 200 (never 4xx or 5xx)",
+      "Always has a 'version' field with non-empty string",
+      "Always has a 'sha' field — matches the deployed git commit",
+      "No authentication required",
+      "Response time < 2s (no DB or LLM in path)"
+    ],
+    "owasp_guarantees": []
+  },
+
+  "cost_class": "CPU",
+  "abcd_models": null,
+
+  "cpu_tests": [
+    "test-spec-api-version-northstar.json"
+  ],
+  "abcd_tests": [],
+
+  "frontend_dependencies": [
+    "web/js/solace.js → version badge fetches /api/v1/version on page load",
+    "web/software5.html → version badge in bottom-right corner"
+  ],
+
+  "certification_status": "CPU_CERTIFIED",
+  "certified_at": "2026-03-04",
+  "evidence_notes": "Northstar contract for deployment traceability. Elisabeth Hendrickson: trace code → deployed artifact. sha field is the chain of custody.",
+  "evidence_hash": null
+}
