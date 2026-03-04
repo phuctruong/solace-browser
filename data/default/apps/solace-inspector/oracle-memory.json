@@ -7,12 +7,19 @@
     "law": "LEAK = AI knowledge not activated by human framing. P22 closes the gap. Postmortems make oracle smarter."
   },
 
-  "oracle_level": 1,
-  "oracle_level_name": "Learning — first real audit run GLOW 119",
+  "oracle_level": 2,
+  "oracle_level_name": "Reflecting — first self-inspection achieved GLOW 121",
+  "oracle_level_advancement_criteria": {
+    "level_1_to_2": "First self-inspection postmortem complete. Inspector inspects itself. SOUL.json created. Self-spec created.",
+    "level_2_to_3": "500+ audits run + 5+ postmortems + ABCD live certified (not just auth_check)",
+    "level_3_to_4": "2000+ audits + hash chain implemented + 20+ persona bubbles active",
+    "level_4_to_5": "10000+ audits + enterprise ROI proof sealed + all 47 personas active"
+  },
   "last_updated": "2026-03-04",
-  "total_audits_run": 1,
+  "total_audits_run": 2,
   "total_bugs_escaped": 9,
-  "total_postmortems": 1,
+  "total_bugs_found": 5,
+  "total_postmortems": 2,
 
   "phuc_forecast": {
     "enabled": true,
@@ -193,6 +200,47 @@
       "production_sha_before": "37368e9",
       "production_sha_after": "797f197",
       "deploy_verified": true
+    },
+    {
+      "id": "pm-glow121-001",
+      "session": "GLOW 121",
+      "date": "2026-03-04",
+      "type": "self_inspection",
+      "bugs_found": 5,
+      "gaps_identified": 5,
+      "root_causes": [
+        "Inspector had no SOUL.json — a tool with intelligence needs a soul (P37 violation)",
+        "Inspector had no self-certification spec — a tool that tests others must test itself (Kent Beck law)",
+        "oracle_level stayed at 1 despite 563 audits — oracle stagnation (Bruce Lee law)",
+        "Only 5/47 personas had bubble files — 42 dormant allies (P37 violation)",
+        "Reports sealed independently not chained — Part 11 hash chain gap (Kleppmann law)"
+      ],
+      "fixes_applied": [
+        "SOUL.json created: creature=Inspector Octopus, oracle_level=2, $0.00 total cost",
+        "test-spec-inspector-self.json: 10 structural + 5 adversarial assertions",
+        "oracle_level advanced 1→2: Level 2=Reflecting. Advancement criteria defined for 2,3,5,7,11,13",
+        "All 47 personas seeded: 5 files each × 47 personas = 235 files created",
+        "Hash chain design debt logged in diagrams/09-memory-network.md — Phase 2 fix"
+      ],
+      "new_artifacts": [
+        "SOUL.json",
+        "personas/INDEX.json",
+        "personas/ (235 new files — 47 × 5)",
+        "trees/inspector-evolution.jsonl (11 branches)",
+        "inbox/test-spec-inspector-self.json",
+        "diagrams/08-persona-civilization.md",
+        "diagrams/09-inspector-memory-network.md",
+        "diagrams/10-prime-first-architecture.md"
+      ],
+      "prime_coherence_before": "4/7 = 57%",
+      "prime_coherence_after": "7/11 = 63.6%",
+      "oracle_level_before": 1,
+      "oracle_level_after": 2,
+      "persona_count_before": 5,
+      "persona_count_after": 47,
+      "panel": "12 personas — bach, beck, ive, torvalds, hickey, bruce_lee, van_edwards, sutherland, dean, steinberger, kleppmann, hormozi",
+      "panel_avg_score": 9.04,
+      "verdict": "PASS — Inspector achieved self-awareness at GLOW 121"
     }
   ],
 

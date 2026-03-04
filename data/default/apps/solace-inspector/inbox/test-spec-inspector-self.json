@@ -1,0 +1,199 @@
+{
+  "_meta": {
+    "spec_version": "1.0",
+    "auth": "65537",
+    "law": "The Inspector must eat itself to grow. — Kent Beck, Dragon's Den GLOW 121"
+  },
+
+  "spec_id": "inspector-self",
+  "spec_name": "Solace Inspector — Self-Certification Spec",
+  "spec_version": "1.0",
+  "persona": "kent_beck",
+  "mode": "cli",
+  "priority": "P0",
+  "target": "scripts/run_solace_inspector.py",
+  "description": "The Inspector certifies itself. This spec tests the spec runner's core invariants, failure modes, and structural guarantees. P21 adversarial uplift applied.",
+
+  "assertions": [
+    {
+      "id": "self-001",
+      "name": "spec runner exists and is executable",
+      "type": "file_exists",
+      "path": "scripts/run_solace_inspector.py",
+      "expected": true,
+      "category": "structural",
+      "persona": "kent_beck",
+      "uplift": "P13_constraints"
+    },
+    {
+      "id": "self-002",
+      "name": "oracle-memory.json exists and is valid JSON",
+      "type": "file_valid_json",
+      "path": "data/default/apps/solace-inspector/oracle-memory.json",
+      "expected": true,
+      "category": "structural",
+      "persona": "martin_kleppmann",
+      "uplift": "P7_memory"
+    },
+    {
+      "id": "self-003",
+      "name": "inbox/ contains at least 10 specs",
+      "type": "directory_file_count",
+      "path": "data/default/apps/solace-inspector/inbox/",
+      "pattern": "test-spec-*.json",
+      "expected_min": 10,
+      "category": "coverage",
+      "persona": "kent_beck",
+      "uplift": "P15_few_shot"
+    },
+    {
+      "id": "self-004",
+      "name": "outbox/ is gitignored (no outbox commits)",
+      "type": "gitignore_contains",
+      "pattern": "outbox/",
+      "expected": true,
+      "category": "hygiene",
+      "persona": "linus_torvalds",
+      "uplift": "P16_negative_space"
+    },
+    {
+      "id": "self-005",
+      "name": "SOUL.json exists for Inspector",
+      "type": "file_exists",
+      "path": "data/default/apps/solace-inspector/SOUL.json",
+      "expected": true,
+      "category": "P37_persona",
+      "persona": "peter_steinberger",
+      "uplift": "P37_persona_bubbles"
+    },
+    {
+      "id": "self-006",
+      "name": "at least 5 persona bubbles exist",
+      "type": "directory_file_count",
+      "path": "data/default/apps/solace-inspector/personas/",
+      "pattern": "*/SOUL.json",
+      "expected_min": 5,
+      "category": "P37_persona",
+      "persona": "peter_steinberger",
+      "uplift": "P37_persona_bubbles"
+    },
+    {
+      "id": "self-007",
+      "name": "trees/ directory exists (P36 threading)",
+      "type": "file_exists",
+      "path": "data/default/apps/solace-inspector/trees/",
+      "expected": true,
+      "category": "P36_tree",
+      "persona": "phuc_digital_twin",
+      "uplift": "P36_tree_of_knowledge"
+    },
+    {
+      "id": "self-008",
+      "name": "oracle_level >= 1 in oracle-memory.json",
+      "type": "json_field_min",
+      "path": "data/default/apps/solace-inspector/oracle-memory.json",
+      "field": "oracle_level",
+      "expected_min": 1,
+      "category": "oracle",
+      "persona": "bruce_lee",
+      "uplift": "P22_oracle"
+    },
+    {
+      "id": "self-009",
+      "name": "question DB has at least 20 open questions",
+      "type": "file_valid_json",
+      "path": "data/default/apps/solace-inspector/inbox/questions/questions-solaceagi.json",
+      "expected": true,
+      "category": "P11_questions",
+      "persona": "james_bach",
+      "uplift": "P11_questions"
+    },
+    {
+      "id": "self-010",
+      "name": "at least 3 Mermaid diagrams in diagrams/",
+      "type": "directory_file_count",
+      "path": "data/default/apps/solace-inspector/diagrams/",
+      "pattern": "*.md",
+      "expected_min": 3,
+      "category": "knowledge",
+      "persona": "jony_ive",
+      "uplift": "P2_magic_words"
+    }
+  ],
+
+  "adversarial_assertions": [
+    {
+      "id": "adv-001",
+      "name": "malformed spec in inbox/ is handled gracefully",
+      "type": "adversarial",
+      "description": "If inbox/test-spec-MALFORMED.json exists with invalid JSON, the runner skips it without crashing",
+      "expected_behavior": "skip_invalid_log_warn_continue",
+      "persona": "kent_beck",
+      "uplift": "P21_adversarial",
+      "severity": "critical"
+    },
+    {
+      "id": "adv-002",
+      "name": "missing required spec fields handled gracefully",
+      "type": "adversarial",
+      "description": "If a spec is missing 'spec_id' or 'assertions', runner logs and skips — never silently succeeds",
+      "expected_behavior": "skip_warn_not_silent_pass",
+      "persona": "kent_beck",
+      "uplift": "P21_adversarial",
+      "severity": "high"
+    },
+    {
+      "id": "adv-003",
+      "name": "target URL down → spec fails with useful error, not unhandled exception",
+      "type": "adversarial",
+      "description": "If Playwright can't connect to the target, the report says 'TARGET_UNREACHABLE' with actionable message",
+      "expected_behavior": "fail_with_target_unreachable_not_traceback",
+      "persona": "james_bach",
+      "uplift": "P21_adversarial",
+      "severity": "high"
+    },
+    {
+      "id": "adv-004",
+      "name": "outbox seal is tamper-evident (SHA-256 mismatch detected)",
+      "type": "adversarial",
+      "description": "If a sealed report is modified after sealing, the verification step detects the hash mismatch",
+      "expected_behavior": "detect_tamper_and_alert",
+      "persona": "martin_kleppmann",
+      "uplift": "P21_adversarial",
+      "severity": "critical"
+    },
+    {
+      "id": "adv-005",
+      "name": "duplicate spec IDs in inbox/ are detected",
+      "type": "adversarial",
+      "description": "If two specs have the same spec_id, the runner warns and uses the most recent (not silently picks one)",
+      "expected_behavior": "warn_on_duplicate_spec_id",
+      "persona": "jeff_dean",
+      "uplift": "P21_adversarial",
+      "severity": "medium"
+    }
+  ],
+
+  "northstar": {
+    "claim": "The Inspector certifies itself. No external tool required.",
+    "evidence_type": "self_seal",
+    "glow_threshold": 9.0,
+    "persona_committee": ["kent_beck", "james_bach", "peter_steinberger", "linus_torvalds"],
+    "committee_verdict": "A tool that cannot test itself cannot be trusted to test others. This spec closes the self-reference gap."
+  },
+
+  "questions_from_this_spec": [
+    "What happens when outbox/ has 10,000 files? Does performance degrade?",
+    "Does the Inspector have a SOUL.json that evolves over time?",
+    "How many of the 47 allied personas have active bubbles?",
+    "If the spec runner crashes mid-run, is the partial outbox report sealed or discarded?",
+    "When was the last time anyone read all 563 outbox reports? Are they searchable?"
+  ],
+
+  "metadata": {
+    "created_at": "2026-03-04",
+    "created_by": "solace-inspector-self-inspection-GLOW-121",
+    "uplift_applied": ["P21_adversarial", "P13_constraints", "P36_tree_of_knowledge", "P37_persona_bubbles", "P16_negative_space"],
+    "inspired_by": "Kent Beck, Dragon's Den GLOW 121 — 12-persona panel, avg 9.04/10"
+  }
+}
