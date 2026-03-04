@@ -7,12 +7,12 @@
     "law": "LEAK = AI knowledge not activated by human framing. P22 closes the gap. Postmortems make oracle smarter."
   },
 
-  "oracle_level": 0,
-  "oracle_level_name": "Fixed List — no learning yet",
+  "oracle_level": 1,
+  "oracle_level_name": "Learning — first real audit run GLOW 119",
   "last_updated": "2026-03-04",
-  "total_audits_run": 0,
-  "total_bugs_escaped": 0,
-  "total_postmortems": 0,
+  "total_audits_run": 1,
+  "total_bugs_escaped": 9,
+  "total_postmortems": 1,
 
   "phuc_forecast": {
     "enabled": true,
@@ -34,7 +34,11 @@
         "P16_negative_space": 0.90,
         "P17_stakes": 0.80,
         "P13_constraints": 0.85,
-        "source": "No formal page audits yet — initialized from first principles"
+        "P36_tree_of_knowledge": 0.95,
+        "P37_persona_bubbles": 0.95,
+        "free_tier_messaging": 0.85,
+        "stale_test_assertions": 0.80,
+        "source": "GLOW 119 — first real audit. 9 bugs found: 5 stale test assertions, 4 missing i18n keys, 1 stale hash, 3 content gaps"
       },
       "code": {
         "P21_adversarial": 0.75,
@@ -156,9 +160,53 @@
     ]
   },
 
-  "postmortems": [],
+  "postmortems": [
+    {
+      "id": "pm-glow119-001",
+      "session": "GLOW 119",
+      "date": "2026-03-04",
+      "bugs_found": 9,
+      "bugs_escaped_before_session": 9,
+      "root_causes": [
+        "Stale test assertions not updated when billing page templates were redesigned (billing-success.html, billing-cancel.html) — 5 tests stale",
+        "PRICING_PLANS expanded from 4 to 5 tiers but test_esign.py still asserted 4 tiers — 4 tests stale",
+        "download_coming_macos + download_coming_windows keys present in en.json but missing from TRANSLATIONS dict in i18n_site.py — 4 i18n tests failing",
+        "site.css.sha256 hash sidecar stale (CSS modified but hash file not regenerated) — 1 test failing",
+        "Homepage hero: 'The World's First Software 5.0 Platform' positioning vs target 'Linux of AI' — messaging gap",
+        "Compare page: missing n8n as competitor, missing P36 Tree of Knowledge row, missing P37 personas row, missing free-tier/BYOK rows, missing zero-telemetry row — coverage gap",
+        "Free tier messaging did not clearly state: unlimited local tasks, all 18 apps, BYOK zero markup, zero telemetry"
+      ],
+      "fixes_applied": [
+        "Updated test_checkout_flow.py: billing-success asserts bs-plan-badge/bs-features presence instead of old IDs",
+        "Updated test_checkout_flow.py: billing-cancel asserts 'charged' + 'free' presence instead of old headline text",
+        "Updated test_esign.py: TestPricingTiers now expects 5 tiers [Free, Starter, Pro, Team, Enterprise] with correct prices",
+        "Added download_coming_macos + download_coming_windows to TRANSLATIONS['en'] in i18n_site.py",
+        "Regenerated web/css/site.css.sha256 from actual file hash",
+        "Homepage hero: updated to 'The Linux of AI: Your AI. Your Data. Your Rules.' with free tier emphasis",
+        "Homepage pricing: updated free tier card to emphasize unlimited local tasks, all 18 apps, BYOK zero markup, zero telemetry",
+        "Compare page: added Linux of AI frame section, expanded table with n8n (8th competitor column), added P36 Tree of Knowledge row, P37 47 personas row (bolded), zero telemetry row, free tier unlimited row, BYOK row, FDA Part 11 bolded row, persistent AI allies row",
+        "Compare page: upgraded Why Governance Matters section with 6 value cards including P36/P37, free tier framing, and 'The Race That Matters'",
+        "Compare page: upgraded final CTA to 'Join the open alternative. Free forever.'"
+      ],
+      "test_result_before": "2153 pass, 9 fail",
+      "test_result_after": "2162 pass, 0 fail",
+      "production_sha_before": "37368e9",
+      "production_sha_after": "797f197",
+      "deploy_verified": true
+    }
+  ],
 
-  "audit_history": [],
+  "audit_history": [
+    {
+      "id": "audit-glow119-001",
+      "session": "GLOW 119",
+      "date": "2026-03-04",
+      "artifacts_audited": ["tests/test_checkout_flow.py", "tests/test_esign.py", "app/i18n_site.py", "web/css/site.css.sha256", "templates/index.html", "templates/compare.html"],
+      "uplifts_applied": ["P1 (GLOW visible)", "P2 (Linux of AI magic frame)", "P17 (Stakes — the race for AI future)", "P21 (Adversarial — crush 8 competitors)", "P36 (Tree of Knowledge row in compare)", "P37 (47 Expert Personas bolded in compare)"],
+      "bugs_fixed": 9,
+      "production_deployed": true
+    }
+  ],
 
   "oracle_rules": {
     "auto_inject_uplifts": {
