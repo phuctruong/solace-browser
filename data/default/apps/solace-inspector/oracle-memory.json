@@ -1,0 +1,186 @@
+{
+  "_meta": {
+    "schema": "inspector-oracle-memory",
+    "version": "1.0",
+    "auth": "65537",
+    "doctrine": "Paper 42 (LEAK + Oracle). This file is the Inspector's evolving memory. Never delete — only append.",
+    "law": "LEAK = AI knowledge not activated by human framing. P22 closes the gap. Postmortems make oracle smarter."
+  },
+
+  "oracle_level": 0,
+  "oracle_level_name": "Fixed List — no learning yet",
+  "last_updated": "2026-03-04",
+  "total_audits_run": 0,
+  "total_bugs_escaped": 0,
+  "total_postmortems": 0,
+
+  "phuc_forecast": {
+    "enabled": true,
+    "algorithm": "rule_based_v1",
+    "description": "Before every audit, predict which uplifts are likely missing based on artifact type + historical miss rates",
+    "miss_rates_by_artifact_type": {
+      "paper": {
+        "P21_adversarial": 0.87,
+        "P16_negative_space": 0.61,
+        "P11_questions": 0.45,
+        "P20_temporal": 0.40,
+        "P12_analogies": 0.55,
+        "P15_few_shot": 0.70,
+        "source": "Prior 3 sessions of BAR spec review (GLOW 115-117)"
+      },
+      "page": {
+        "P11_questions": 0.95,
+        "P21_adversarial": 0.98,
+        "P16_negative_space": 0.90,
+        "P17_stakes": 0.80,
+        "P13_constraints": 0.85,
+        "source": "No formal page audits yet — initialized from first principles"
+      },
+      "code": {
+        "P21_adversarial": 0.75,
+        "P16_negative_space": 0.60,
+        "P17_stakes": 0.50,
+        "P20_temporal": 0.65,
+        "source": "Linus QA sessions (GLOW 116-118)"
+      },
+      "diagram": {
+        "P11_questions": 0.90,
+        "P21_adversarial": 0.95,
+        "P17_stakes": 0.85,
+        "P22_framing": 1.0,
+        "source": "No formal diagram audits yet — initialized from first principles"
+      },
+      "app": {
+        "P21_adversarial": 0.90,
+        "P15_few_shot": 0.80,
+        "P16_negative_space": 0.75,
+        "source": "No formal app audits yet — initialized from first principles"
+      }
+    }
+  },
+
+  "question_db": {
+    "paper": [
+      {
+        "id": "q-paper-001",
+        "question": "What guarantee does this paper claim that it does NOT actually provide evidence for?",
+        "uplift": "P16_negative_space",
+        "added_at": "GLOW 118",
+        "source": "Paper 42 bootstrap — absence detection",
+        "miss_count": 0
+      },
+      {
+        "id": "q-paper-002",
+        "question": "How would a direct competitor (e.g., OpenClaw/OpenAI) exploit the weakness described in this paper?",
+        "uplift": "P21_adversarial",
+        "added_at": "GLOW 118",
+        "source": "Paper 40 bootstrap — adversarial uplift",
+        "miss_count": 0
+      },
+      {
+        "id": "q-paper-003",
+        "question": "Will this paper's approach still be defensible in 12 months given current AI market trends?",
+        "uplift": "P20_temporal",
+        "added_at": "GLOW 118",
+        "source": "Paper 42 bootstrap — temporal anchoring",
+        "miss_count": 0
+      },
+      {
+        "id": "q-paper-004",
+        "question": "What would a hostile enterprise CIO say is missing from this paper before their procurement team approves it?",
+        "uplift": "P21_adversarial",
+        "added_at": "GLOW 118",
+        "source": "Paper 40 bootstrap — enterprise adversarial",
+        "miss_count": 0
+      },
+      {
+        "id": "q-paper-005",
+        "question": "What cross-domain analogy would make this paper's core insight MORE memorable and actionable?",
+        "uplift": "P12_analogies",
+        "added_at": "GLOW 118",
+        "source": "Paper 42 bootstrap — analogy bridging",
+        "miss_count": 0
+      }
+    ],
+    "code": [
+      {
+        "id": "q-code-001",
+        "question": "What exception is NOT caught that WILL occur in production within 30 days?",
+        "uplift": "P16_negative_space",
+        "added_at": "GLOW 118",
+        "source": "Linus QA GLOW 116 — absence detection in code",
+        "miss_count": 0
+      },
+      {
+        "id": "q-code-002",
+        "question": "You are the engineer paged at 3am when this fails. What do you fear is broken?",
+        "uplift": "P17_stakes",
+        "added_at": "GLOW 118",
+        "source": "Paper 42 bootstrap — stakes framing for code review",
+        "miss_count": 0
+      },
+      {
+        "id": "q-code-003",
+        "question": "What race condition or concurrency bug is NOT prevented in this code?",
+        "uplift": "P16_negative_space",
+        "added_at": "GLOW 118",
+        "source": "Linus QA GLOW 116 — concurrent write findings",
+        "miss_count": 0
+      }
+    ],
+    "page": [
+      {
+        "id": "q-page-001",
+        "question": "What user flow SHOULD be possible from this page but is MISSING?",
+        "uplift": "P16_negative_space",
+        "added_at": "GLOW 118",
+        "source": "Paper 42 bootstrap — page absence detection",
+        "miss_count": 0
+      },
+      {
+        "id": "q-page-002",
+        "question": "Can anyone's mum use this page in under 5 minutes without reading documentation?",
+        "uplift": "P21_adversarial",
+        "added_at": "GLOW 118",
+        "source": "Peter Steinberger adversarial persona — usability attack",
+        "miss_count": 0
+      },
+      {
+        "id": "q-page-003",
+        "question": "What does a first-time user EXPECT to see here that is absent?",
+        "uplift": "P16_negative_space",
+        "added_at": "GLOW 118",
+        "source": "Dragon's Den GLOW 113 — committee findings",
+        "miss_count": 0
+      }
+    ]
+  },
+
+  "postmortems": [],
+
+  "audit_history": [],
+
+  "oracle_rules": {
+    "auto_inject_uplifts": {
+      "paper": ["P16_negative_space", "P11_questions"],
+      "page": ["P16_negative_space", "P11_questions"],
+      "code": ["P16_negative_space", "P17_stakes"],
+      "diagram": ["P11_questions"],
+      "app": ["P15_few_shot", "P16_negative_space"]
+    },
+    "require_human_confirmation_uplifts": {
+      "paper": ["P21_adversarial"],
+      "page": ["P21_adversarial"],
+      "code": ["P21_adversarial"],
+      "diagram": ["P21_adversarial"],
+      "app": ["P21_adversarial"]
+    },
+    "mandatory_uplifts_by_artifact_type": {
+      "paper": ["P11", "P13", "P17", "P21"],
+      "page": ["P11", "P13", "P16", "P21"],
+      "code": ["P13", "P16", "P17"],
+      "diagram": ["P2", "P11"],
+      "app": ["P5", "P13", "P15"]
+    }
+  }
+}
