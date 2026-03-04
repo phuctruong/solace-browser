@@ -635,6 +635,10 @@ class SolaceBrowser:
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--use-gl=swiftshader',
+            '--no-first-run',
+            '--no-default-browser-check',
+            '--disable-features=ChromeWhatsNewUI,PrivacySandboxSettings4,NtpModules',
+            '--disable-background-networking',
         ]
         if not self.headless:
             launch_args.extend([

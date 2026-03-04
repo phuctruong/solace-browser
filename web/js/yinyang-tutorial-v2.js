@@ -17,7 +17,7 @@ const YinyangTutorial = (() => {
 
   const STORAGE_KEY = 'sb_tutorial_v1';
   const LOCALE_KEY = 'sb_locale';
-  const YY_GIF = '/images/yinyang/yinyang-logo-128.png';
+  const YY_GIF = '/images/yinyang/yinyang-rotating_70pct_128px.gif';
 
   // 13 supported locales with native names
   const LOCALES = [
@@ -42,18 +42,18 @@ const YinyangTutorial = (() => {
   // Embedded English fallback (used if /api/locale unreachable)
   // ---------------------------------------------------------------------------
   const STRINGS_EN = {
-    step1_title: '847 emails → 47 seconds → $0.12',
-    step1_body: "I'm Yinyang ☯ — your AI browser. I triage your inbox, draft replies, post to LinkedIn, and seal every action as evidence. You approve everything. Let's go.",
-    step2_title: 'Your inbox. Triaged in 47 seconds. &#128247;',
-    step2_body: 'I read every email, classify it — Urgent / Respond / Archive — and draft replies. Then I show you everything <strong style="color:var(--sb-signal)">before</strong> sending. You click Approve. Nothing leaves without your sign-off.',
+    step1_title: '847 emails. 3 hours of your life. Or 47 seconds.',
+    step1_body: "That\u2019s your Monday morning, every Monday. I handle it while you sleep \u2014 classify, draft, seal the evidence. You approve everything before anything moves. Then you go about your day.",
+    step2_title: 'That \u2018inbox zero\u2019 feeling. Every morning.',
+    step2_body: 'I read every email and sort it: Urgent, Respond, Archive. I draft the replies. You see exactly what I found and what I wrote \u2014 <strong style="color:var(--sb-signal)">before anything is sent</strong>. You click Approve. That\u2019s it.',
     step2_code: '',
-    step3_title: 'You stay in control. Always. &#128274;',
-    step3_body: 'Every action is logged, time-stamped, and sealed with a SHA-256 hash chain. Revoke my access in one click. No surprises. This is what OAuth3 governance looks like.',
-    step4_title: '18 Apps. One click each. &#127981;',
-    step4_body: 'Gmail triage, LinkedIn outreach, Slack summaries, Google Calendar — and 14 more. First run uses AI. Repeat runs cost <strong style="color:var(--sb-signal)">$0.001</strong>.',
-    step5_title: "Sign in free \u2014 let\u2019s run it &#9889;",
-    step5_body: "Sign in with Google below. I\u2019ll triage your inbox right now. No credit card. No setup. <strong style=\"color:var(--sb-signal)\">47 seconds.</strong>",
-    step5_joke: '',
+    step3_title: 'I show you everything. You decide. Then I act.',
+    step3_body: 'Every action requires your explicit approval before it happens. Revoke my access in one click from Settings \u2014 any time, instantly. I have never surprised anyone. I won\u2019t start with you.',
+    step4_title: '18 Apps. It learns once, then costs almost nothing.',
+    step4_body: 'Gmail triage, LinkedIn outreach, Slack summaries, Calendar \u2014 and 14 more. The first run uses AI to figure out what works. After that, replaying what worked costs <strong style="color:var(--sb-signal)">$0.001</strong>. Less than a search.',
+    step5_title: "Sign in free \u2014 your inbox runs in 47 seconds &#9889;",
+    step5_body: "Your colleagues are going to wonder how you\u2019re suddenly so on top of everything. Sign in with Google \u2014 10 seconds. Inbox triage starts immediately after.",
+    step5_joke: 'People think you got more focused. You just got smarter about what to delegate. \u2014 YinYang',
     lang_pick: 'Choose your language',
     btn_next: 'Next \u2192',
     btn_prev: '\u2190 Back',
@@ -114,11 +114,18 @@ const YinyangTutorial = (() => {
     const code = _strings[`${stepKey}_code`] || '';
     const joke = step === 4 ? (_strings.step5_joke || '') : '';
 
-    let extra = '';
+    // Step 1 — hero layout: big YinYang first, no small icon, no lang pills
     if (step === 0) {
-      // Language on step 1: one subtle link only — don't bury the hook
-      extra = `<p class="yyT-lang-hint">&#127760; <a href="#" class="yyT-lang-hint-link" onclick="document.querySelector('.yyT-lang-btn').click();return false;">${_locale.toUpperCase()} · Change language</a></p>`;
+      const langLink = `<p class="yyT-lang-hint">&#127760; <a href="#" class="yyT-lang-hint-link" onclick="document.querySelector('.yyT-lang-btn').click();return false;">${_locale.toUpperCase()} · Change language</a></p>`;
+      return `
+        <img class="yyT-hero-gif" src="${YY_GIF}" alt="Yinyang">
+        <h2 class="yyT-step-title yyT-step-title--hero">${title}</h2>
+        <p class="yyT-step-body">${body}</p>
+        ${langLink}
+      `;
     }
+
+    let extra = '';
     if (code) {
       extra += `<pre class="yyT-code">${code}</pre>`;
     }
