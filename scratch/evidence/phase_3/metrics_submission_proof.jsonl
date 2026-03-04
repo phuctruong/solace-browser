@@ -1,8 +1,0 @@
-{"data": {"queue_size": 1, "recipe_id": "compose-email"}, "event_type": "QUEUE_APPEND", "timestamp": "2026-02-26T00:21:35.805902+00:00"}
-{"data": {"count": 1, "recipe_id": "compose-email", "response": {"metrics_count": 1, "recipe_id": "compose-email", "status": "recorded"}}, "event_type": "METRICS_SUBMITTED", "timestamp": "2026-02-26T00:21:35.805992+00:00"}
-{"data": {"queue_size": 1, "recipe_id": "compose-email"}, "event_type": "QUEUE_APPEND", "timestamp": "2026-02-26T00:21:35.807163+00:00"}
-{"data": {"count": 1, "recipe_id": "compose-email", "response": {"metrics_count": 1, "recipe_id": "compose-email", "status": "recorded"}}, "event_type": "METRICS_SUBMITTED", "timestamp": "2026-02-26T00:21:35.807241+00:00"}
-{"data": {"queue_size": 1, "recipe_id": "compose-email"}, "event_type": "QUEUE_APPEND", "timestamp": "2026-02-26T00:21:35.829976+00:00"}
-{"data": {"count": 1, "recipe_id": "compose-email", "response": {"metrics_count": 1, "recipe_id": "compose-email", "status": "recorded"}}, "event_type": "METRICS_SUBMITTED", "timestamp": "2026-02-26T00:21:35.830051+00:00"}
-{"data": {"queue_size": 1, "recipe_id": "compose-email"}, "event_type": "QUEUE_APPEND", "timestamp": "2026-02-26T00:21:35.830776+00:00"}
-{"data": {"count": 1, "recipe_id": "compose-email", "response": {"metrics_count": 1, "recipe_id": "compose-email", "status": "recorded"}}, "event_type": "METRICS_SUBMITTED", "timestamp": "2026-02-26T00:21:35.830831+00:00"}

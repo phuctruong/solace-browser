@@ -74,3 +74,11 @@ source_full/
 
 # Claude Code commands and config (local only)
 .claude/
+
+# Private session data — never commit
+scratch/
+dragon/
+artifacts/
+reports/
+checkpoints/
+episodes/
