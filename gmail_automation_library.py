@@ -381,7 +381,7 @@ async def example_usage():
 
     # Example: Send email
     await gmail.compose_email(
-        to="phuc.truong@gmail.com",
+        to="user@example.com",
         subject="Test from Gmail Automation Library",
         body="This email was sent using the Gmail automation library!"
     )

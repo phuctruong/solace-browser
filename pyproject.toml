@@ -7,7 +7,7 @@ name = "solace-browser"
 version = "1.0.0"
 description = "Twin browser webservice with OAuth3 and Part 11 evidence capture"
 readme = "README.md"
-license = {text = "MIT"}
+license = {text = "FSL-1.1-Apache-2.0"}
 requires-python = ">=3.10"
 authors = [{name = "Phuc Vinh Truong", email = "phuc@phuc.net"}]
 dependencies = [
@@ -26,7 +26,7 @@ dependencies = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: Other/Proprietary License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",

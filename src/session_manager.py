@@ -9,9 +9,9 @@ Manages multiple simultaneous browser sessions, each with its own:
 - Evidence chain entries
 
 Pre-configured profiles:
-- phuc-gmail      -> phuc.truong@gmail.com
+- phuc-gmail      -> user@example.com
 - phuc-phucnet    -> phuc@phuc.net
-- phuc-phuclabs   -> phuc@phuclabs.com
+- phuc-phuclabs   -> user@work.example.com
 - incognito       -> no account, fresh temp dir each time
 
 Design:
@@ -56,7 +56,7 @@ GENESIS_HASH = "0" * 64
 # Pre-configured profiles: profile_name -> (user_email, default_scopes)
 PRECONFIGURED_PROFILES: dict[str, tuple[str, list[str]]] = {
     "phuc-gmail": (
-        "phuc.truong@gmail.com",
+        "user@example.com",
         ["browser.read.dom", "browser.write.input", "browser.navigate"],
     ),
     "phuc-phucnet": (
@@ -64,7 +64,7 @@ PRECONFIGURED_PROFILES: dict[str, tuple[str, list[str]]] = {
         ["browser.read.dom", "browser.write.input", "browser.navigate"],
     ),
     "phuc-phuclabs": (
-        "phuc@phuclabs.com",
+        "user@work.example.com",
         ["browser.read.dom", "browser.write.input", "browser.navigate"],
     ),
     "incognito": (

@@ -106,7 +106,7 @@ class TestCreateSession:
         )
         assert result["session_id"] == "test-gmail"
         assert result["profile"] == "phuc-gmail"
-        assert result["user_email"] == "phuc.truong@gmail.com"
+        assert result["user_email"] == "user@example.com"
         assert result["status"] == SESSION_STATUS_ACTIVE
         assert PORT_RANGE_START <= result["port"] <= PORT_RANGE_END
         assert "created_at" in result
@@ -129,7 +129,7 @@ class TestCreateSession:
             session_id="test-phuclabs",
             profile="phuc-phuclabs",
         )
-        assert result["user_email"] == "phuc@phuclabs.com"
+        assert result["user_email"] == "user@work.example.com"
         assert result["profile"] == "phuc-phuclabs"
 
     def test_create_session_with_email_override(self, tmp_path: Path) -> None:
@@ -512,7 +512,7 @@ class TestSessionManifest:
         assert manifest["session_id"] == "manifest-test"
         assert manifest["profile"] == "phuc-gmail"
         assert manifest["status"] == SESSION_STATUS_ACTIVE
-        assert manifest["user_email"] == "phuc.truong@gmail.com"
+        assert manifest["user_email"] == "user@example.com"
 
     def test_manifest_updated_on_close(self, tmp_path: Path) -> None:
         """session.json is updated with closed status and closed_at on close."""

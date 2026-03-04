@@ -10,9 +10,9 @@ Demonstrates:
 6. Full lifecycle: trigger -> preview -> approve -> execute -> seal
 
 Accounts:
-- phuc.truong@gmail.com (primary)
+- user@example.com (primary)
 - phuc@phuc.net (secondary)
-- phuc@phuclabs.com (work)
+- user@work.example.com (work)
 - incognito (logged out testing)
 
 Run: python scripts/hackathon_demo.py
@@ -319,7 +319,7 @@ def gmail_preview_callback(context: dict[str, Any]) -> dict[str, Any]:
             "Gmail Inbox Triage Preview (3 accounts)\n"
             "=========================================\n"
             "\n"
-            "Account: phuc.truong@gmail.com (primary)\n"
+            "Account: user@example.com (primary)\n"
             "  - 14 new messages since last scan\n"
             "  - 3 HIGH priority: Invoice from AWS, Meeting invite from CTO, Security alert\n"
             "  - 8 MEDIUM priority: GitHub notifications, newsletter\n"
@@ -332,7 +332,7 @@ def gmail_preview_callback(context: dict[str, Any]) -> dict[str, Any]:
             "  - 3 MEDIUM priority: Blog comments, contact form\n"
             "  - 2 LOW priority: Subscriptions\n"
             "\n"
-            "Account: phuc@phuclabs.com (work)\n"
+            "Account: user@work.example.com (work)\n"
             "  - 22 new messages\n"
             "  - 5 HIGH priority: Client deliverable review, Sprint planning, CI failure\n"
             "  - 12 MEDIUM priority: Code reviews, Slack thread summaries\n"
@@ -345,10 +345,10 @@ def gmail_preview_callback(context: dict[str, Any]) -> dict[str, Any]:
             " After approval, execution replays deterministically -- no second LLM call.]"
         ),
         "actions": [
-            {"type": "flag", "account": "phuc.truong@gmail.com", "count": 3, "priority": "HIGH"},
+            {"type": "flag", "account": "user@example.com", "count": 3, "priority": "HIGH"},
             {"type": "flag", "account": "phuc@phuc.net", "count": 1, "priority": "HIGH"},
-            {"type": "flag", "account": "phuc@phuclabs.com", "count": 5, "priority": "HIGH"},
-            {"type": "draft_reply", "account": "phuc.truong@gmail.com", "count": 2},
+            {"type": "flag", "account": "user@work.example.com", "count": 5, "priority": "HIGH"},
+            {"type": "draft_reply", "account": "user@example.com", "count": 2},
         ],
     }
 
@@ -488,9 +488,9 @@ def run_demo(solace_home: Path) -> dict[str, Any]:
     session_mgr = BrowserSessionManager(solace_home=solace_home, now_fn=demo_now)
 
     sessions_config = [
-        ("phuc-gmail-session", "phuc-gmail", "phuc.truong@gmail.com"),
+        ("phuc-gmail-session", "phuc-gmail", "user@example.com"),
         ("phuc-phucnet-session", "phuc-phucnet", "phuc@phuc.net"),
-        ("phuc-phuclabs-session", "phuc-phuclabs", "phuc@phuclabs.com"),
+        ("phuc-phuclabs-session", "phuc-phuclabs", "user@work.example.com"),
         ("incognito-session", "incognito", None),
     ]
 
@@ -621,9 +621,9 @@ def run_demo(solace_home: Path) -> dict[str, Any]:
             "drafts_prepared": 2,
             "accounts_scanned": 3,
             "accounts": [
-                "phuc.truong@gmail.com",
+                "user@example.com",
                 "phuc@phuc.net",
-                "phuc@phuclabs.com",
+                "user@work.example.com",
             ],
         },
     )

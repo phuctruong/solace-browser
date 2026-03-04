@@ -212,8 +212,8 @@ hit_rate_tracking:
   economic_model:
     hit_cost_per_task:   "$0.001 (Haiku replay, no new LLM call)"
     miss_cost_per_task:  "$0.020 (Sonnet generation + validation)"
-    target_cogs_per_user_per_month: "$5.75"
-    calculation: "0.70 × $0.001 + 0.30 × $0.020 = $0.0007 + $0.006 = $0.0067/task"
+    target_cogs_per_user_per_month: "(see internal docs)"
+    calculation: "0.70 × hit_cost + 0.30 × miss_cost = blended_cost/task"
 
   alert_thresholds:
     warning: "hit_rate < 0.65 for 100 consecutive requests"
@@ -624,7 +624,7 @@ three_pillars:
 ```yaml
 glow_integration:
   northstar_alignment: "Directly advances 'Recipe hit rate 70%' NORTHSTAR metric"
-  economic_proof: "At 70% hit rate: COGS = $5.75/user/mo → 70% margin at $19/mo"
+  economic_proof: "At 70% hit rate: recipe replay costs approach zero — see internal pricing docs"
   forbidden:
     - GLOW_WITHOUT_HIT_RATE_MEASUREMENT
     - INFLATED_GLOW_FROM_UNVALIDATED_RECIPES
