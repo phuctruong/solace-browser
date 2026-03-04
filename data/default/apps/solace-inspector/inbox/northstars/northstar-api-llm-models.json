@@ -1,0 +1,55 @@
+{
+  "spec_id": "northstar-api-llm-models",
+  "type": "northstar",
+  "version": "1.0",
+  "authored": "2026-03-03",
+  "committee": ["kent_beck", "james_bach"],
+
+  "webservice": {
+    "method": "GET",
+    "endpoint": "/api/v1/llm/models",
+    "base_url": "https://www.solaceagi.com",
+    "description": "Returns list of available LLM models with pricing — CPU (no LLM in path)",
+    "auth": "Bearer token required — returns 401 if missing",
+    "content_type": "none"
+  },
+
+  "contract": {
+    "inputs": {},
+    "outputs": {
+      "models": "array — [{id, name, provider, cost_per_1m_usd, tier, context_window}]",
+      "default": "string — default model id for unspecified requests",
+      "abcd_winner": "object — {task_class: model_id} — current ABCD-certified routing table"
+    },
+    "guarantees": [
+      "Returns 401 if no valid Bearer token",
+      "Returns at least 4 models (A/B/C/D tiers)",
+      "Includes cost_per_1m_usd for each model (pricing transparency)",
+      "abcd_winner reflects latest sealed ABCD test results",
+      "Response time < 2s (cached, no LLM call)"
+    ],
+    "owasp_guarantees": [
+      "No token → 401 (not 200 with empty list)",
+      "Invalid token → 401 (not 500)"
+    ]
+  },
+
+  "cost_class": "CPU",
+  "abcd_models": null,
+
+  "cpu_tests": [
+    "test-spec-api-llm-models.json"
+  ],
+  "abcd_tests": [],
+
+  "frontend_dependencies": [
+    "web/settings.html → BYOK model picker dropdown",
+    "web/onboarding.html → model selection step",
+    "web/app-store.html → model capability display"
+  ],
+
+  "certification_status": "CPU_CERTIFIED",
+  "certified_at": "2026-03-03",
+  "evidence_notes": "Sealed in GLOW 97 batch. 100/100 Green.",
+  "evidence_hash": null
+}

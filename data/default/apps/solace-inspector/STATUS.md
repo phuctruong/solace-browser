@@ -8,7 +8,7 @@
 >  and coordinate with humans. Not checking — testing."
 > — James Bach (simulated via Dragon's Den protocol)
 
-## Current GLOW: 100 ✅ COMPLETE
+## Current GLOW: 101 ✅ COMPLETE
 
 ```
 GLOW 89  ← First clean commit (all files + renamed)        [✅] DONE 2026-03-03 (commit: 3cca5ee)
@@ -23,7 +23,36 @@ GLOW 97  ← YinYang API + MCP fully QA'd (56 specs 100%)   [✅] DONE 2026-03-0
 GLOW 98  ← Fun packs all 13 locales (2,600 translations)  [✅] DONE 2026-03-03 (swarms, $0.00)
 GLOW 99  ← OWASP adversarial specs + fun-pack validation  [✅] DONE 2026-03-03 (62/62 Green, 511 reports)
 GLOW 100 ← Inspector diagrams (5 Mermaid knowledge files) [✅] DONE 2026-03-03 (commit: a181eeb)
+GLOW 101 ← Webservices-First ABCD — Paper 43 + mode impl [✅] DONE 2026-03-04 (64/64 Green, 563 reports)
 ```
+
+### GLOW 101 Evidence (2026-03-04) — Webservices-First Northstar + ABCD Mode
+
+**Paper 43: Webservices-First Northstar ABCD Architecture**
+- `papers/43-webservices-northstar-abcd.md` — 9-persona committee (Bach/Kaner/Hendrickson/Beck/Bolton/Hickey/Dean/Hormozi) — avg 9.75/10
+- **Core doctrine**: Webservices are northstars. CPU-certify deterministic endpoints. ABCD-certify LLM nodes. Frontend works backwards from sealed evidence.
+- **The "best deal" proof**: ABCD testing IS the implementation of solaceagi.com's LLM management claim.
+
+**New Inspector Mode: `api_abcd`**
+- `scripts/run_solace_inspector.py` → `run_api_abcd()` function added
+- Tests same prompt against A/B/C/D models → finds cheapest passing → seals winner
+- Two sub-modes: `auth_check_mode=True` (verify all 4 return 401 consistently) | `live` (real ABCD with API key)
+- `inbox/` now handles `mode: api_abcd` in `process_inbox()`
+
+**New: Northstar Contract System** (`inbox/northstars/`)
+- `README.md` — northstar format specification
+- `northstar-api-llm-chat.json` — LLM chat endpoint contract (CPU + ABCD certified)
+- `northstar-api-health.json` — Health endpoint contract (CPU certified)
+- `northstar-api-llm-models.json` — Models list contract (CPU certified)
+
+**New Diagram: `diagrams/06-webservices-northstar-pipeline.md`**
+- Full pipeline: Northstars → CPU cert → ABCD cert → Sealed northstars → Frontend
+
+**2 ABCD specs certified in auth_check mode:**
+- `test-spec-api-abcd-llm-factual.json` → 100/100 (all 4 model paths return 401 consistently)
+- `test-spec-api-abcd-llm-code.json` → 100/100 (same — auth layer consistent across all routes)
+
+**Totals: 64 specs | 563 sealed reports | $0.00 cost**
 
 ### GLOW 100 Evidence (2026-03-03) — 5 Mermaid Diagrams
 

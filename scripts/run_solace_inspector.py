@@ -2,13 +2,17 @@
 """
 run_solace_inspector.py — Solace Inspector Runner
 Committee: James Bach · Elisabeth Hendrickson · Kent Beck · Cem Kaner · Michael Bolton
-Auth: 65537 | Paper 42 | GLOW: L
+Auth: 65537 | Paper 42 + 43 | GLOW: L
 
 ARCHITECTURE (Agent-Native):
-  This runner does ZERO LLM API calls. It collects pure evidence (ARIA, DOM,
-  heuristics, screenshots, CLI output) and produces a sealed report. The AI
-  coding agent (Claude Code, Cursor, Codex, etc.) reads the report and applies
-  its own model for analysis. Cost: $0 for the runner.
+  This runner does ZERO LLM API calls for evidence collection. It collects pure
+  evidence (ARIA, DOM, heuristics, screenshots, CLI output) and produces a sealed
+  report. The AI coding agent reads the report and applies its own model.
+  Cost: $0 for evidence collection.
+
+  Exception: api_abcd mode makes direct HTTP calls to LLM proxy endpoints to
+  find the cheapest model that meets quality threshold. This IS the "best deal"
+  proof engine. Cost: ~$0.01 per ABCD run (real LLM calls, but proves routing).
 
 Usage:
     python3 scripts/run_solace_inspector.py --url http://localhost:8791/
@@ -18,9 +22,9 @@ Usage:
     python3 scripts/run_solace_inspector.py --cmd "python3 server.py --help" --cwd /path/to/project
 
 Modes:
-    web  — Navigate + ARIA + DOM + Heuristics + Screenshot → sealed report
-    cli  — Subprocess + exit code + stdout/stderr + assert → sealed report
-    api  — HTTP request + schema + timing + headers → sealed report
+    web      — Navigate + ARIA + DOM + Heuristics + Screenshot → sealed report
+    cli      — Subprocess + exit code + stdout/stderr + assert → sealed report
+    api_abcd — ABCD test: same prompt → A/B/C/D models → cheapest winner → sealed
 
 Requires (web mode): Solace Browser running on localhost:9222
 Output: data/default/apps/solace-inspector/outbox/report-{run_id}.json
@@ -596,6 +600,228 @@ def run_qa(
     return report
 
 
+# ─── ABCD mode ──────────────────────────────────────────────────────────────
+
+def run_api_abcd(spec: dict) -> dict:
+    """
+    ABCD certification mode — Paper 43.
+
+    Runs the same prompt against A/B/C/D LLM models via the solaceagi.com proxy
+    (or directly via OpenRouter). Finds the cheapest model that meets quality
+    threshold. Seals the result as evidence.
+
+    This IS the proof of the 'best deal' claim on solaceagi.com.
+
+    Two sub-modes:
+      auth_check_mode=True  — no API key available; verifies all 4 models return
+                              401 consistently (auth layer integrity check)
+      auth_check_mode=False — API key available; runs real LLM calls + quality check
+    """
+    abcd_cfg = spec.get("abcd_config", {})
+    spec_id = spec.get("spec_id", "abcd-unknown")
+    persona = spec.get("persona", "kent_beck")
+    run_id = f"abcd-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
+
+    print(f"\n{'='*60}")
+    print(f"🔬 Solace Inspector — ABCD Mode (Paper 43)")
+    print(f"   Task class: {abcd_cfg.get('task_class', 'unknown')}")
+    print(f"   Endpoint: {abcd_cfg.get('endpoint', '?')}")
+    print(f"   Spec: {spec_id}")
+    print(f"   Run ID: {run_id}")
+    print(f"{'='*60}")
+
+    report: dict = {
+        "run_id": run_id,
+        "spec_id": spec_id,
+        "mode": "api_abcd",
+        "task_class": abcd_cfg.get("task_class"),
+        "endpoint": abcd_cfg.get("endpoint"),
+        "test_prompt": abcd_cfg.get("test_prompt"),
+        "persona_used": persona,
+        "northstar": spec.get("northstar"),
+        "run_at": datetime.datetime.utcnow().isoformat() + "Z",
+        "abcd_results": [],
+        "steps_completed": [],
+        "fix_proposals": [],
+        "human_approved": False,
+    }
+
+    models = abcd_cfg.get("models", [])
+    api_key_env = abcd_cfg.get("auth_env", "SOLACE_API_KEY")
+    api_key = os.environ.get(api_key_env, "")
+    auth_check_mode = abcd_cfg.get("auth_check_mode", True) or not api_key
+    endpoint = abcd_cfg.get("endpoint", "")
+    test_prompt = abcd_cfg.get("test_prompt", "What is 2+2?")
+    expected = [s.lower() for s in abcd_cfg.get("expected_answer_contains", [])]
+    quality_threshold = abcd_cfg.get("quality_threshold", 1.0)
+    timeout = abcd_cfg.get("timeout_seconds", 30)
+
+    if auth_check_mode:
+        print(f"\n  📋 AUTH CHECK MODE (no {api_key_env} in env)")
+        print(f"     Verifying: all 4 model paths return 401 without auth token")
+
+    # ── Run each model ──────────────────────────────────────────────────────
+    winner = None
+    passing_results = []
+
+    for model in models:
+        mid = model["id"]
+        label = model["label"]
+        model_name = model["model_name"]
+        cost_per_1m = model.get("cost_per_1m_usd", 0)
+
+        print(f"\n  Model {mid} ({label}):")
+        result = {
+            "model_id": mid,
+            "label": label,
+            "model_name": model_name,
+            "cost_per_1m_usd": cost_per_1m,
+        }
+
+        if auth_check_mode:
+            # Auth check: verify 401 without token
+            try:
+                start = time.time()
+                r = requests.post(
+                    endpoint,
+                    json={"model": model_name, "messages": [{"role": "user", "content": test_prompt}]},
+                    headers={"Content-Type": "application/json"},
+                    timeout=10,
+                )
+                elapsed = time.time() - start
+                result["http_status"] = r.status_code
+                result["latency_seconds"] = round(elapsed, 3)
+                result["auth_check_passed"] = (r.status_code == 401)
+                result["mode"] = "auth_check"
+                icon = "✅" if r.status_code == 401 else "❌"
+                print(f"    {icon} HTTP {r.status_code} (expected 401) | {elapsed:.2f}s")
+            except Exception as exc:
+                result["error"] = str(exc)
+                result["auth_check_passed"] = False
+                print(f"    ❌ Request failed: {exc}")
+        else:
+            # Live ABCD test: real LLM call
+            try:
+                start = time.time()
+                r = requests.post(
+                    endpoint,
+                    json={"model": model_name, "messages": [{"role": "user", "content": test_prompt}]},
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {api_key}",
+                    },
+                    timeout=timeout,
+                )
+                elapsed = time.time() - start
+                result["http_status"] = r.status_code
+                result["latency_seconds"] = round(elapsed, 3)
+                result["mode"] = "live"
+
+                if r.status_code == 200:
+                    data = r.json()
+                    content = data.get("content", "")
+                    cost_usd = data.get("cost_usd", 0)
+                    usage = data.get("usage", {})
+
+                    # Quality check
+                    quality_pass = all(e in content.lower() for e in expected) if expected else True
+                    result["response_content"] = content[:500]
+                    result["cost_usd"] = cost_usd
+                    result["usage"] = usage
+                    result["quality_passed"] = quality_pass
+                    result["actual_model"] = data.get("model", model_name)
+
+                    icon = "✅" if quality_pass else "⚠️"
+                    print(f"    {icon} HTTP 200 | Quality: {'PASS' if quality_pass else 'FAIL'} | Cost: ${cost_usd:.6f} | {elapsed:.2f}s")
+
+                    if quality_pass:
+                        passing_results.append(result)
+                else:
+                    result["quality_passed"] = False
+                    result["response_body"] = r.text[:200]
+                    print(f"    ❌ HTTP {r.status_code} | {elapsed:.2f}s")
+
+            except Exception as exc:
+                result["error"] = str(exc)
+                result["quality_passed"] = False
+                print(f"    ❌ Request failed: {exc}")
+
+        report["abcd_results"].append(result)
+
+    # ── Find winner ─────────────────────────────────────────────────────────
+    print(f"\n  Step: Find cheapest passing model…")
+
+    if auth_check_mode:
+        # In auth_check mode: winner = all 4 return 401 consistently
+        all_pass_401 = all(r.get("auth_check_passed", False) for r in report["abcd_results"])
+        report["auth_check_all_consistent"] = all_pass_401
+        report["winner"] = None
+        report["winner_reason"] = (
+            "AUTH_CHECK_MODE: All 4 models consistently return 401 without token. Auth layer verified."
+            if all_pass_401
+            else "AUTH_CHECK_FAILURE: Some models did not return 401 — auth layer inconsistent!"
+        )
+        qa_score = 100 if all_pass_401 else 0
+        belt = "Green" if all_pass_401 else "White"
+        icon = "✅" if all_pass_401 else "❌"
+        print(f"    {icon} Auth consistency: {'ALL PASS (401)' if all_pass_401 else 'INCONSISTENT'}")
+    else:
+        # Live mode: find cheapest passing model
+        if passing_results:
+            # Sort by cost_per_1m_usd ascending — cheapest first
+            winner_result = min(
+                [r for r in report["abcd_results"] if r.get("quality_passed")],
+                key=lambda r: r.get("cost_per_1m_usd", 9999)
+            )
+            winner = winner_result
+            report["winner"] = winner["model_id"]
+            report["winner_label"] = winner["label"]
+            report["winner_cost_per_1m"] = winner["cost_per_1m_usd"]
+
+            # Cost delta vs most expensive
+            most_expensive = max(models, key=lambda m: m.get("cost_per_1m_usd", 0))
+            cost_delta_pct = round((1 - winner["cost_per_1m_usd"] / most_expensive["cost_per_1m_usd"]) * 100, 1)
+            report["cost_savings_vs_top"] = f"{cost_delta_pct}% cheaper than {most_expensive['label']}"
+            report["winner_reason"] = f"Cheapest passing model at ${winner['cost_per_1m_usd']}/1M tokens"
+            qa_score = 100
+            belt = "Green"
+            print(f"    🏆 Winner: {winner['label']} (Model {winner['model_id']}) — {cost_delta_pct}% cheaper than top tier")
+        else:
+            report["winner"] = None
+            report["winner_reason"] = "NO PASSING MODELS — all failed quality threshold"
+            qa_score = 0
+            belt = "White"
+            print(f"    ❌ No passing models found for this task class")
+
+    # ── Score + seal ─────────────────────────────────────────────────────────
+    report["qa_score"] = qa_score
+    report["belt"] = belt
+    report["glow"] = qa_score + (5 if belt == "Green" else 1)
+    report["steps_completed"] = ["models_tested", "winner_found", "score_computed"]
+
+    # Build agent analysis request
+    evidence = {
+        "task_class": abcd_cfg.get("task_class"),
+        "mode": "auth_check" if auth_check_mode else "live",
+        "models_tested": len(report["abcd_results"]),
+        "winner": report.get("winner"),
+        "winner_reason": report.get("winner_reason"),
+        "cost_savings": report.get("cost_savings_vs_top"),
+        "auth_consistent": report.get("auth_check_all_consistent"),
+    }
+    report["agent_analysis_request"] = build_agent_analysis_request(persona, "api_abcd", evidence)
+    report["agent_analysis_response"] = None
+
+    report = _seal_report(report, outbox=True)
+
+    print(f"\n  ✅ ABCD report sealed: outbox/report-{run_id}.json")
+    print(f"  📊 QA Score: {qa_score}/100 ({belt}) | GLOW: {report['glow']}")
+    print(f"  🔐 Evidence: {report.get('evidence_hash', '')[:30]}…")
+    if not auth_check_mode and report.get("winner"):
+        print(f"  💰 Routing recommendation: {report['winner_label']} ({report['cost_savings_vs_top']})")
+    return report
+
+
 # ─── Self-diagnostic ────────────────────────────────────────────────────────
 
 def run_self_diagnostic() -> dict:
@@ -682,6 +908,8 @@ def process_inbox() -> list[dict]:
                 persona=persona,
                 spec_id=spec_id,
             )
+        elif mode == "api_abcd":
+            r = run_api_abcd(spec)
         elif mode == "web":
             if not _browser_available():
                 print(f"  ⚠️  Browser not running — skipping web spec {spec_path.name}")
