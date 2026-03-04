@@ -551,6 +551,14 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         else:
             super().do_HEAD()
 
+    def end_headers(self):  # noqa: N802
+        """Inject Cache-Control: no-store for JS and CSS assets."""
+        path = urlsplit(self.path).path
+        if path.endswith(('.js', '.css')):
+            self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate')
+            self.send_header('Pragma', 'no-cache')
+        super().end_headers()
+
     def _handle_api_get(self, *, send_body: bool) -> None:
         request_path = urlsplit(self.path).path
         query = parse_qs(urlsplit(self.path).query)
@@ -677,6 +685,12 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                     "message": "Tunnel has been closed. Nothing is exposed.",
                 },
             )
+            return
+
+        # App run: POST /api/apps/{id}/run  — dogfood execution endpoint
+        app_run_match = re.fullmatch(r"/api/apps/([^/]+)/run", request_path)
+        if app_run_match:
+            self._handle_app_run(app_run_match.group(1), payload)
             return
 
         # YinYang chat: /api/yinyang/chat
