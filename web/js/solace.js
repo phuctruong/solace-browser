@@ -950,6 +950,50 @@
     `;
   }
 
+  const SETTINGS_LABELS = {
+    "account.status": "Sign-in status",
+    "account.user": "Email address",
+    "account.tier": "Plan",
+    "account.api_key_hint": "Access key (last 4)",
+    "history.enabled": "Capture history",
+    "history.screenshots": "Screenshot on load",
+    "history.pzip_sync": "PZip compression",
+    "history.prime_wiki": "Contribute to Prime Wiki",
+    "history.prime_mermaid": "Page snapshots (Mermaid)",
+    "history.max_gb": "Max storage (GB)",
+    "history.exclude_domains": "Skip these domains",
+    "llm.backend": "LLM provider",
+    "llm.model": "Model",
+    "llm.endpoint": "Endpoint URL",
+    "llm.byok_key": "Your API key (BYOK)",
+    "llm.openrouter_api_key": "OpenRouter key",
+    "tunnel.enabled": "Cloud tunnel",
+    "tunnel.provider": "Tunnel provider",
+    "tunnel.public_url": "Your public URL",
+    "tunnel.approval": "Approval policy",
+    "part11.enabled": "Evidence logging",
+    "part11.mode": "Logging mode",
+    "part11.esigning": "E-signing",
+    "part11.chain_entries": "Evidence entries",
+    "part11.audit_dir": "Audit folder",
+    "privacy.history_local_only": "Keep history local only",
+    "privacy.vault_encrypted": "Encrypt vault",
+    "privacy.cloud_sync_optional": "Cloud sync (opt-in only)",
+    "privacy.tokens_memory_only": "Tokens stay in memory",
+    "yinyang.top_rail": "Status bar",
+    "yinyang.bottom_rail": "Chat assistant",
+    "yinyang.auto_expand": "Auto-open on events",
+    "about.version": "Version",
+    "about.build": "Build",
+  };
+
+  const SETTINGS_VALUE_TRANSFORMS = {
+    "account.status": v => ({ logged_out: "Not signed in", logged_in: "Signed in", "": "Not signed in" }[v] || v),
+    "account.tier": v => ({ free: "Free (BYOK)", dragon: "Dragon Warrior ($8/mo)", enterprise: "Enterprise ($99/mo)" }[v] || v),
+    "account.user": v => v || "(not signed in)",
+    "account.api_key_hint": v => v || "(none)",
+  };
+
   function flattenSettingsSection(sectionName, payload) {
     const fields = [];
 
@@ -957,16 +1001,19 @@
       Object.keys(value).forEach((key) => {
         const nextPath = prefix ? `${prefix}.${key}` : key;
         const current = value[key];
+        const label = SETTINGS_LABELS[nextPath] || key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+        const transform = SETTINGS_VALUE_TRANSFORMS[nextPath];
         if (Array.isArray(current)) {
-          fields.push({ name: nextPath, label: key, type: "array", value: current.join(", ") });
+          fields.push({ name: nextPath, label, type: "array", value: current.join(", ") });
         } else if (typeof current === "boolean") {
-          fields.push({ name: nextPath, label: key, type: "boolean", value: current });
+          fields.push({ name: nextPath, label, type: "boolean", value: current });
         } else if (typeof current === "number") {
-          fields.push({ name: nextPath, label: key, type: "number", value: current });
+          fields.push({ name: nextPath, label, type: "number", value: current });
         } else if (current && typeof current === "object") {
           walk(nextPath, current);
         } else {
-          fields.push({ name: nextPath, label: key, type: "string", value: current == null ? "" : current });
+          const rawVal = current == null ? "" : current;
+          fields.push({ name: nextPath, label, type: "string", value: transform ? transform(rawVal) : rawVal });
         }
       });
     }

@@ -62,6 +62,24 @@
     .stat-card__num { font-size: 2em; font-weight: 800; color: #00cc66; display: block; }
     .stat-card__label { font-size: 0.78em; color: var(--sb-text-muted, #8bafc4); margin-top: 4px; display: block; }
 
+    /* ── First-run banner ─────────────────────────────── */
+    .first-run-banner { margin-bottom: 24px; }
+    .first-run-banner__inner {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      background: linear-gradient(135deg, rgba(100,196,255,0.1) 0%, rgba(174,103,250,0.08) 100%);
+      border: 1px solid rgba(100,196,255,0.25); border-radius: 14px; padding: 18px 24px;
+    }
+    .first-run-banner__icon { font-size: 2em; flex-shrink: 0; }
+    .first-run-banner__inner > div { flex: 1; min-width: 0; }
+    .first-run-banner__inner strong { color: var(--sb-signal, #64c4ff); display: block; margin-bottom: 4px; }
+    .first-run-banner__inner span { font-size: 0.88em; color: var(--sb-text-muted, #8bafc4); }
+    .first-run-banner__cta {
+      white-space: nowrap; background: var(--sb-signal, #64c4ff); color: #030810;
+      padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.9em;
+      text-decoration: none; flex-shrink: 0;
+    }
+    .first-run-banner__cta:hover { opacity: 0.9; }
+
     /* ── Two-column layout ────────────────────────────── */
     .home-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
     @media (max-width: 720px) { .home-cols { grid-template-columns: 1fr; } .home-shell { padding: 16px 16px 80px; } }
@@ -243,6 +261,18 @@
           </div>
         </div>
 
+        <!-- First-run welcome banner (hidden after first run) -->
+        <div class="first-run-banner" id="first-run-banner" style="display:none">
+          <div class="first-run-banner__inner">
+            <span class="first-run-banner__icon">☯</span>
+            <div>
+              <strong>Your AI morning assistant is ready.</strong>
+              <span>Pick an app and YinYang handles the rest — you approve everything before it acts.</span>
+            </div>
+            <a href="/app-store" class="first-run-banner__cta">Browse Apps →</a>
+          </div>
+        </div>
+
         <!-- Quick Actions -->
         <div class="quick-actions">
           <a class="quick-action" href="/app-store">
@@ -278,7 +308,7 @@
           <div class="home-card">
             <p class="home-card__title">✍️ Sign-Off Queue</p>
             <div id="signoff-list">
-              <p class="home-card__empty" id="signoff-empty">No items awaiting approval.</p>
+              <p class="home-card__empty" id="signoff-empty">All clear. YinYang is ready when you are.</p>
             </div>
           </div>
 
@@ -286,7 +316,7 @@
           <div class="home-card">
             <p class="home-card__title">⏰ Upcoming Runs</p>
             <div id="schedule-list">
-              <p class="home-card__empty" id="schedule-empty">No scheduled runs configured.</p>
+              <p class="home-card__empty" id="schedule-empty">Nothing scheduled yet. Set up an app in the <a href="/app-store" style="color:var(--sb-signal)">App Store</a>.</p>
             </div>
           </div>
 
@@ -294,9 +324,9 @@
 
         <!-- Screenshots Gallery (Part 11 visual evidence) -->
         <div class="home-card" style="margin-bottom:24px">
-          <p class="home-card__title">📸 Screenshot Evidence (Part 11)</p>
+          <p class="home-card__title">📸 Recent Screenshots</p>
           <div id="screenshot-gallery">
-            <p class="home-card__empty" id="screenshot-empty">No screenshots captured yet. Run an app to generate evidence.</p>
+            <p class="home-card__empty" id="screenshot-empty">No screenshots yet. Run an app to see your work here.</p>
             <div class="screenshot-grid" id="screenshot-grid" style="display:none"></div>
           </div>
         </div>
@@ -306,9 +336,9 @@
 
           <!-- Recent evidence -->
           <div class="home-card">
-            <p class="home-card__title">🔐 Recent Evidence (FDA Part 11)</p>
+            <p class="home-card__title">🔐 Activity Log</p>
             <div id="evidence-list">
-              <p class="home-card__empty" id="evidence-empty">No evidence records found.</p>
+              <p class="home-card__empty" id="evidence-empty">No activity yet. Your first run will appear here.</p>
             </div>
           </div>
 
@@ -370,9 +400,10 @@
 
       // Session pill
       const sessionPill = document.getElementById('pill-session');
-      const hasSess = s.session && s.session !== 'none';
+      const sessObj = s.session;
+      const hasSess = sessObj && (sessObj.exists === true || (typeof sessObj === 'string' && sessObj !== 'none'));
       sessionPill.className = hasSess ? 'status-pill status-pill--running' : 'status-pill';
-      document.getElementById('pill-session-text').textContent = hasSess ? `Session: ${s.session}` : 'No session';
+      document.getElementById('pill-session-text').textContent = hasSess ? 'Session: saved' : 'No session';
 
       // URL pill
       if (s.current_url) {
@@ -543,6 +574,8 @@
       const hist = await apiFetch('/history') || {};
       const runs = Array.isArray(hist.sessions) ? hist.sessions.length : (hist.count || 0);
       document.getElementById('stat-runs').textContent = runs || '—';
+      // Show first-run banner when no runs yet
+      if (!runs) document.getElementById('first-run-banner').style.display = 'block';
 
       // Count esign records from evidence search
       const esigns = await apiFetch('/api/evidence/search', {
@@ -551,7 +584,7 @@
         body: JSON.stringify({query: 'ESIGN', limit: 100})
       });
       const esignCount = (esigns && esigns.count) ? esigns.count : 0;
-      document.getElementById('stat-esigns').textContent = esignCount || '0';
+      document.getElementById('stat-esigns').textContent = esignCount || '—';
 
       // Count all evidence files
       const allEvidence = await apiFetch('/api/evidence/search', {
