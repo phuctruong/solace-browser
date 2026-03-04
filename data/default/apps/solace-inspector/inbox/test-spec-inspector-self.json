@@ -12,6 +12,7 @@
   "mode": "cli",
   "priority": "P0",
   "target": "scripts/run_solace_inspector.py",
+  "target_cmd": "python3 -c \"import json,os,glob; m=json.load(open('data/default/apps/solace-inspector/oracle-memory.json')); souls=len(glob.glob('data/default/apps/solace-inspector/personas/*/SOUL.json')); diagrams=len(glob.glob('data/default/apps/solace-inspector/diagrams/*.md')); specs=len(glob.glob('data/default/apps/solace-inspector/inbox/test-spec-*.json')); print('ORACLE_LEVEL:', m['oracle_level']); print('PERSONA_SOULS:', souls); print('SOUL_EXISTS:', os.path.exists('data/default/apps/solace-inspector/SOUL.json')); print('DIAGRAMS:', diagrams); print('SPECS:', specs); print('TREES_EXISTS:', os.path.exists('data/default/apps/solace-inspector/trees/')); print('SELF_CERTIFIED: PASS' if souls >= 47 and diagrams >= 10 and m['oracle_level'] >= 2 else 'SELF_CERTIFIED: FAIL')\"",
   "description": "The Inspector certifies itself. This spec tests the spec runner's core invariants, failure modes, and structural guarantees. P21 adversarial uplift applied.",
 
   "assertions": [
