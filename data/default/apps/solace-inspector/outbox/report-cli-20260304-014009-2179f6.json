@@ -1,0 +1,87 @@
+{
+  "run_id": "cli-20260304-014009-2179f6",
+  "spec_id": "agi-swagger-docs-001",
+  "mode": "cli",
+  "target_cmd": "curl -s https://www.solaceagi.com/api/docs | grep -c 'swagger\\|openapi\\|paths'",
+  "target_cwd": "/home/phuc/projects/solace-browser",
+  "persona_used": "github_copilot_team",
+  "committee": [
+    "kent_beck",
+    "james_bach",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-04T01:40:09.480363Z",
+  "steps_completed": [
+    "execute",
+    "assert",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "exit_code": 0,
+  "stdout": "5\n",
+  "stderr": "",
+  "duration_seconds": 0.129,
+  "assertions": [
+    {
+      "check": "exit_code",
+      "expected": 0,
+      "actual": 0,
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "1",
+      "passed": false
+    },
+    {
+      "check": "stderr_empty",
+      "expected_empty": true,
+      "actual_empty": true,
+      "passed": true
+    }
+  ],
+  "assertions_passed": 2,
+  "assertions_total": 3,
+  "agent_analysis_request": {
+    "persona": "github_copilot_team",
+    "system_prompt": "You are the GitHub Copilot team \u2014 dominant in IDE-native AI, 1.8M+ paid users. Copilot's strength: lives inside VS Code/JetBrains, zero friction for developers. Your job: find where Solace's developer experience OUTSIDE the IDE is missing. Is there a working API reference? Is /api/docs (Swagger) accessible and populated? Are there curl examples a developer can run immediately without signing up? Is the CLAUDE.md snippet actually valid for Claude Code? Does it have mcp config? Attack vector: 'Developers trust tools they can test. Free tier + instant curl = trust.' Output: (1) Developer trust gaps, (2) API discoverability issues, (3) Fix proposals.",
+    "evidence_summary": {
+      "cmd": "curl -s https://www.solaceagi.com/api/docs | grep -c 'swagger\\|openapi\\|paths'",
+      "exit_code": 0,
+      "stdout_first_500": "5\n",
+      "stderr_first_200": "",
+      "duration_seconds": 0.129,
+      "assertions": [
+        {
+          "check": "exit_code",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "1",
+          "passed": false
+        },
+        {
+          "check": "stderr_empty",
+          "expected_empty": true,
+          "actual_empty": true,
+          "passed": true
+        }
+      ],
+      "assertions_passed": "2/3"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "agent_analysis_response": null,
+  "qa_score": 66,
+  "belt": "Yellow",
+  "glow": 68,
+  "evidence_hash": "sha256:43c5f6c187806f5d31c8bc47b72ebd930b61d82d119ec45b3de56dced0759767"
+}

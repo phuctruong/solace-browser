@@ -162,7 +162,7 @@
       if (email) localStorage.setItem("solace_user_email", email);
       const name = email ? email.split("@")[0] : "Account";
       el.innerHTML = _buildAuthBadge(name, d.tier);
-    }).catch(() => {}); // fail silently — cached name stays
+    }).catch(err => console.warn("[Solace] profile refresh failed (cached name shown):", err));
   }
 
   function _buildAuthBadge(name, tier) {

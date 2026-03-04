@@ -1,0 +1,18 @@
+{
+  "spec_id": "agi-mcp-verifiable-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "curl -s https://www.solaceagi.com/agents/claude.md | head -c 800",
+  "target_name": "Vercel V0 Attack — Is MCP Actually Verifiable? (curl test)",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": ["MCP", "solace"],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "vercel_v0_team",
+  "priority": "critical",
+  "context": "Vercel V0 oracle (q-agi-050): /agents/claude.md returns valid CLAUDE.md content with MCP configuration. Contains 'MCP: 7 tools available via Model Context Protocol (stdio JSON-RPC 2.0)' and 'solaceagi.com' in the source URL. PASSES. Vercel's remaining attack: 'Does the MCP server actually start? Is there a mcp_server.py to download?' The CLAUDE.md claims MCP is live but the mcp_server.py file needs to be accessible for verification.",
+  "created_at": "2026-03-04T00:00:00Z"
+}

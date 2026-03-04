@@ -701,12 +701,12 @@ class TestPart11SectionMapping:
     def test_11_50_electronic_signature_present(self, evidence_bundle):
         """
         §11.50: Electronic signatures — legally binding per bundle.
-        Every bundle must carry a non-null signature field (AES-256-GCM).
+        Every bundle must carry a non-null signature field (SHA256-CHAIN-LINK tamper-evident checksum).
         """
         checker = Part11Checker()
         result = checker.check_section_11_50(evidence_bundle)
         assert result.passed is True
-        assert result.signature_algorithm == "AES-256-GCM"
+        assert result.signature_algorithm == "SHA256-CHAIN-LINK"
 
     @_NEEDS_COMPLIANCE
     def test_11_50_signature_fails_for_unsigned_bundle(self, evidence_bundle):

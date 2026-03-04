@@ -1,0 +1,153 @@
+{
+  "run_id": "qa-20260304-014050-4bace8",
+  "spec_id": "solaceagi-onboarding-001",
+  "mode": "web",
+  "target_url": "https://www.solaceagi.com/onboarding",
+  "page_name": "SolaceAGI Onboarding Flow",
+  "persona_used": "kent_beck",
+  "committee": [
+    "james_bach",
+    "elisabeth_hendrickson",
+    "kent_beck",
+    "cem_kaner",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-04T01:40:50.269216Z",
+  "steps_completed": [
+    "navigate",
+    "aria_snapshot",
+    "dom_snapshot",
+    "heuristic_check",
+    "screenshot",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "agent_analysis_response": null,
+  "aria_tree_length": 0,
+  "aria_tree_excerpt": "",
+  "dom_title": "Choose Your Plan \u2014 Solace AGI",
+  "dom_h1s": [
+    "Welcome to Solace"
+  ],
+  "dom_links_count": 40,
+  "dom_images_count": 4,
+  "dom_forms": 1,
+  "dom_links_sample": [
+    {
+      "text": "Solace AGI",
+      "href": "https://www.solaceagi.com/"
+    },
+    {
+      "text": "Software 5.0",
+      "href": "https://www.solaceagi.com/software5"
+    },
+    {
+      "text": "Persistent Intelligence",
+      "href": "https://www.solaceagi.com/persistent-intelligence"
+    },
+    {
+      "text": "Solace Browser \u2192",
+      "href": "https://www.solaceagi.com/browser"
+    },
+    {
+      "text": "English",
+      "href": "https://www.solaceagi.com/onboarding"
+    },
+    {
+      "text": "Espa\u00f1ol",
+      "href": "https://www.solaceagi.com/es/onboarding"
+    },
+    {
+      "text": "Ti\u1ebfng Vi\u1ec7t",
+      "href": "https://www.solaceagi.com/vi/onboarding"
+    },
+    {
+      "text": "\u4e2d\u6587",
+      "href": "https://www.solaceagi.com/zh/onboarding"
+    },
+    {
+      "text": "Portugu\u00eas",
+      "href": "https://www.solaceagi.com/pt/onboarding"
+    },
+    {
+      "text": "Fran\u00e7ais",
+      "href": "https://www.solaceagi.com/fr/onboarding"
+    }
+  ],
+  "heuristic_issues": [],
+  "heuristic_error_count": 0,
+  "heuristic_warning_count": 0,
+  "screenshot_path": "screenshot-20260303-204051.png",
+  "agent_analysis_request": {
+    "persona": "kent_beck",
+    "system_prompt": "You are Kent Beck, creator of TDD and XP. Think about testability: what makes this surface hard to test? What behavior should be tested first? What do you fear is broken? If you had to write one test for this surface, what would it be? Output: (1) Testability assessment, (2) What to test first, (3) Fix proposals.",
+    "evidence_summary": {
+      "url": "https://www.solaceagi.com/onboarding",
+      "page_name": "SolaceAGI Onboarding Flow",
+      "dom_title": "Choose Your Plan \u2014 Solace AGI",
+      "dom_h1s": [
+        "Welcome to Solace"
+      ],
+      "dom_links_count": 40,
+      "dom_links_sample": [
+        {
+          "text": "Solace AGI",
+          "href": "https://www.solaceagi.com/"
+        },
+        {
+          "text": "Software 5.0",
+          "href": "https://www.solaceagi.com/software5"
+        },
+        {
+          "text": "Persistent Intelligence",
+          "href": "https://www.solaceagi.com/persistent-intelligence"
+        },
+        {
+          "text": "Solace Browser \u2192",
+          "href": "https://www.solaceagi.com/browser"
+        },
+        {
+          "text": "English",
+          "href": "https://www.solaceagi.com/onboarding"
+        },
+        {
+          "text": "Espa\u00f1ol",
+          "href": "https://www.solaceagi.com/es/onboarding"
+        },
+        {
+          "text": "Ti\u1ebfng Vi\u1ec7t",
+          "href": "https://www.solaceagi.com/vi/onboarding"
+        },
+        {
+          "text": "\u4e2d\u6587",
+          "href": "https://www.solaceagi.com/zh/onboarding"
+        },
+        {
+          "text": "Portugu\u00eas",
+          "href": "https://www.solaceagi.com/pt/onboarding"
+        },
+        {
+          "text": "Fran\u00e7ais",
+          "href": "https://www.solaceagi.com/fr/onboarding"
+        }
+      ],
+      "dom_images_count": 4,
+      "dom_forms": 1,
+      "aria_tree_excerpt": "",
+      "heuristic_issues": [],
+      "heuristic_error_count": 0,
+      "heuristic_warning_count": 0,
+      "screenshot_path": "screenshot-20260303-204051.png"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "qa_score": 100,
+  "belt": "Green",
+  "glow": 105,
+  "evidence_hash": "sha256:8bbbb8f12bd356e892ffb9a253175b42af1a0d150c058d473424b237efe2c76b"
+}

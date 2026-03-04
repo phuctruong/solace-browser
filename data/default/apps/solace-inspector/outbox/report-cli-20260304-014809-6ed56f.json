@@ -1,0 +1,87 @@
+{
+  "run_id": "cli-20260304-014809-6ed56f",
+  "spec_id": "sb-yinyang-chat-northstar-001",
+  "mode": "cli",
+  "target_cmd": "curl -s http://127.0.0.1:8791/api/yinyang/status",
+  "target_cwd": "/home/phuc/projects/solace-browser",
+  "persona_used": "elisabeth_hendrickson",
+  "committee": [
+    "kent_beck",
+    "james_bach",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-04T01:48:09.544304Z",
+  "steps_completed": [
+    "execute",
+    "assert",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "exit_code": 0,
+  "stdout": "{\"queue_size\": 19, \"unread\": 19, \"notifications\": [{\"id\": 1, \"type\": \"info\", \"message\": \"GLOW 97 test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772579164}, {\"id\": 2, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772579217}, {\"id\": 3, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772579306}, {\"id\": 4, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772581478}, {\"id\": 5, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772581647}, {\"id\": 6, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772583376}, {\"id\": 7, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772583435}, {\"id\": 8, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772583536}, {\"id\": 9, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772583645}, {\"id\": 10, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772583809}, {\"id\": 11, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772583887}, {\"id\": 12, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772583946}, {\"id\": 13, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772584005}, {\"id\": 14, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772584020}, {\"id\": 15, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772584886}, {\"id\": 16, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772586321}, {\"id\": 17, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772586634}, {\"id\": 18, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772588463}, {\"id\": 19, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772588761}]}",
+  "stderr": "",
+  "duration_seconds": 0.005,
+  "assertions": [
+    {
+      "check": "exit_code",
+      "expected": 0,
+      "actual": 0,
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "queue_size",
+      "passed": true
+    },
+    {
+      "check": "stderr_empty",
+      "expected_empty": true,
+      "actual_empty": true,
+      "passed": true
+    }
+  ],
+  "assertions_passed": 3,
+  "assertions_total": 3,
+  "agent_analysis_request": {
+    "persona": "elisabeth_hendrickson",
+    "system_prompt": "You are Elisabeth Hendrickson, agile testing expert and author of Explore It!. Apply charter-based exploration: what is the charter for this surface? What broken flows, missing error handling, and usability issues do you see? Think about what a user encounters when things go wrong. Output: (1) Exploration charter, (2) Broken flows found, (3) Fix proposals.",
+    "evidence_summary": {
+      "cmd": "curl -s http://127.0.0.1:8791/api/yinyang/status",
+      "exit_code": 0,
+      "stdout_first_500": "{\"queue_size\": 19, \"unread\": 19, \"notifications\": [{\"id\": 1, \"type\": \"info\", \"message\": \"GLOW 97 test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772579164}, {\"id\": 2, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772579217}, {\"id\": 3, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agent_id\": \"unknown\", \"ts\": 1772579306}, {\"id\": 4, \"type\": \"info\", \"message\": \"GLOW 97 inspector test\", \"priority\": \"low\", \"agen",
+      "stderr_first_200": "",
+      "duration_seconds": 0.005,
+      "assertions": [
+        {
+          "check": "exit_code",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "queue_size",
+          "passed": true
+        },
+        {
+          "check": "stderr_empty",
+          "expected_empty": true,
+          "actual_empty": true,
+          "passed": true
+        }
+      ],
+      "assertions_passed": "3/3"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "agent_analysis_response": null,
+  "qa_score": 100,
+  "belt": "Green",
+  "glow": 105,
+  "evidence_hash": "sha256:35102abb192b20be1a5e3c470c9577773530cb3753b409896c612f70220acc80"
+}

@@ -1,0 +1,87 @@
+{
+  "run_id": "cli-20260304-014501-f27545",
+  "spec_id": "agi-genghis-competitor-forecast-001",
+  "mode": "cli",
+  "target_cmd": "curl -s https://www.solaceagi.com/compare | grep -E -o '(OpenClaw|Browser.Use|Bardeen|Playwright|Vercel|Claude Computer Use)' | sort | uniq -c | sort -rn | python3 -c \"import sys; lines=sys.stdin.read().strip().split('\\n'); named=[l for l in lines if l.strip()]; print('COMPETITORS_NAMED:', len(named), '|', ' '.join(n.split()[-1] for n in named if n.strip()))\"",
+  "target_cwd": "/home/phuc/projects/solace-browser",
+  "persona_used": "genghis_khan",
+  "committee": [
+    "kent_beck",
+    "james_bach",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-04T01:45:01.210513Z",
+  "steps_completed": [
+    "execute",
+    "assert",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "exit_code": 0,
+  "stdout": "COMPETITORS_NAMED: 4 | OpenClaw Use Browser-Use Bardeen\n",
+  "stderr": "",
+  "duration_seconds": 0.194,
+  "assertions": [
+    {
+      "check": "exit_code",
+      "expected": 0,
+      "actual": 0,
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "COMPETITORS_NAMED:",
+      "passed": true
+    },
+    {
+      "check": "stderr_empty",
+      "expected_empty": true,
+      "actual_empty": true,
+      "passed": true
+    }
+  ],
+  "assertions_passed": 3,
+  "assertions_total": 3,
+  "agent_analysis_request": {
+    "persona": "genghis_khan",
+    "system_prompt": "You are Genghis Khan \u2014 the Great Khan, conqueror of the largest contiguous empire in history. Your doctrine: 'I am the punishment of God. If you had not committed great sins, God would not have sent a punishment like me.' Strategy: move faster than the enemy expects, attack from angles they haven't defended, give competitors no time to respond. If Solace ships today what competitors plan for 6 months, they cannot catch up. Your job: forecast the competition's NEXT 3 MOVES and what Solace must BUILD NOW to preempt them. OpenClaw will add evidence. Browser-Use will add recipes. Bardeen will add cloud twin. What does Solace build this WEEK to make those moves irrelevant? Also: where is the site's defensive perimeter WEAKEST \u2014 what would a competitor use in a teardown? Output: (1) Enemy's next 3 moves + counter-moves, (2) Weakest defensive points, (3) Strike-first plan.",
+    "evidence_summary": {
+      "cmd": "curl -s https://www.solaceagi.com/compare | grep -E -o '(OpenClaw|Browser.Use|Bardeen|Playwright|Vercel|Claude Computer Use)' | sort | uniq -c | sort -rn | python3 -c \"import sys; lines=sys.stdin.read().strip().split('\\n'); named=[l for l in lines if l.strip()]; print('COMPETITORS_NAMED:', len(named), '|', ' '.join(n.split()[-1] for n in named if n.strip()))\"",
+      "exit_code": 0,
+      "stdout_first_500": "COMPETITORS_NAMED: 4 | OpenClaw Use Browser-Use Bardeen\n",
+      "stderr_first_200": "",
+      "duration_seconds": 0.194,
+      "assertions": [
+        {
+          "check": "exit_code",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "COMPETITORS_NAMED:",
+          "passed": true
+        },
+        {
+          "check": "stderr_empty",
+          "expected_empty": true,
+          "actual_empty": true,
+          "passed": true
+        }
+      ],
+      "assertions_passed": "3/3"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "agent_analysis_response": null,
+  "qa_score": 100,
+  "belt": "Green",
+  "glow": 105,
+  "evidence_hash": "sha256:35fe31d8445f883d3764c002abd16c122408a8cc0346e240d2e9d49cd2e621ca"
+}

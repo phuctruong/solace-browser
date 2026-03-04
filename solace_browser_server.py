@@ -360,6 +360,7 @@ class SolaceBrowser:
         self.event_history = []
         self._audit_chain: Optional[AuditChain] = None
         self._part11_upload_hook: Optional[Any] = None
+        self._session_lock = asyncio.Lock()  # prevents concurrent session save/load
         self.part11: Dict[str, Any] = {
             "enabled": False,
             "mode": "screenshot",
@@ -418,7 +419,7 @@ class SolaceBrowser:
     @staticmethod
     def _new_part11_session_id() -> str:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-        return f"part11-{stamp}-{uuid.uuid4().hex[:8]}"
+        return f"part11-{stamp}-{uuid.uuid4().hex}"  # full 128-bit UUID, no collision risk
 
     def get_part11_status(self) -> Dict[str, Any]:
         status = dict(self.part11)
@@ -670,13 +671,12 @@ class SolaceBrowser:
         if not self.headless:
             context_options['no_viewport'] = True
 
-        # Load saved session if it exists
-        if Path(self.session_file).exists():
-            logger.info(f"Loading saved session from: {self.session_file}")
-            try:
+        # Load saved session if it exists (lock prevents race with concurrent save)
+        async with self._session_lock:
+            session_path = Path(self.session_file)
+            if session_path.exists():
+                logger.info(f"Loading saved session from: {self.session_file}")
                 context_options['storage_state'] = self.session_file
-            except Exception as e:
-                logger.warning(f"Could not load session: {e}")
 
         self.context = await self.browser.new_context(**context_options)
         page = await self.context.new_page()
@@ -693,12 +693,14 @@ class SolaceBrowser:
         try:
             await page.goto(home_url, wait_until="domcontentloaded", timeout=5000)
             logger.info(f"Home page loaded: {home_url}")
-        except Exception:
-            # Fallback to local file if web server not yet ready
+        except Exception as exc:
+            logger.warning(f"Web server not ready ({home_url}): {exc} — falling back to local file")
             start_page = Path(__file__).parent / "web" / "start.html"
             if start_page.exists():
                 await page.goto(f"file://{start_page.resolve()}", wait_until="domcontentloaded")
                 logger.info("Fallback: start page loaded from file")
+            else:
+                logger.error("Neither web server nor local start.html available — browser started on blank page")
 
         logger.info(f"✓ Solace Browser started (page_id={page_id})")
         return page_id
@@ -712,8 +714,9 @@ class SolaceBrowser:
             # Create artifacts directory if it doesn't exist
             Path("artifacts").mkdir(exist_ok=True)
 
-            # Save storage state (cookies, localStorage, indexedDB)
-            storage_state = await self.context.storage_state(path=self.session_file)
+            # Lock prevents concurrent load/save race conditions
+            async with self._session_lock:
+                await self.context.storage_state(path=self.session_file)
 
             logger.info(f"✓ Session saved to: {self.session_file}")
             return {
@@ -822,6 +825,38 @@ class SolaceBrowser:
             logger.error(f"Screenshot failed: {e}")
             target = filename or "screenshot"
             return await self._finalize_part11_result("take_screenshot", target, {"error": str(e)})
+
+    async def screenshot_bg(self, url: str, filename: Optional[str] = None) -> Dict[str, Any]:
+        """Screenshot a URL in a hidden background page — main visible page is never touched."""
+        if not self.context:
+            return {"error": "No browser context"}
+        try:
+            if not filename:
+                filename = f"screenshot-bg-{datetime.now().strftime('%Y%m%d-%H%M%S')}.png"
+            artifacts_dir = Path("artifacts")
+            artifacts_dir.mkdir(exist_ok=True)
+            filepath = artifacts_dir / filename
+
+            bg_page = await self.context.new_page()
+            try:
+                await bg_page.set_viewport_size({"width": 1280, "height": 900})
+                await bg_page.goto(url, wait_until="domcontentloaded", timeout=10000)
+                await bg_page.wait_for_timeout(800)
+                await bg_page.screenshot(path=str(filepath))
+            finally:
+                await bg_page.close()
+
+            return {
+                "success": True,
+                "filename": filename,
+                "filepath": str(filepath),
+                "size": filepath.stat().st_size if filepath.exists() else 0,
+                "url": url,
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            logger.error(f"Background screenshot failed: {e}")
+            return {"error": str(e)}
 
     async def get_snapshot(self) -> Dict[str, Any]:
         """Get page HTML snapshot"""
@@ -1853,6 +1888,7 @@ class SolaceBrowserServer:
         self.app.router.add_post('/api/click', self._handle_click)
         self.app.router.add_post('/api/fill', self._handle_fill)
         self.app.router.add_post('/api/screenshot', self._handle_screenshot)
+        self.app.router.add_post('/api/screenshot-bg', self._handle_screenshot_bg)
         self.app.router.add_post('/api/snapshot', self._handle_snapshot)
         self.app.router.add_post('/api/evaluate', self._handle_evaluate)
         self.app.router.add_post('/api/login-linkedin-google', self._handle_login_linkedin_google)
@@ -1957,17 +1993,22 @@ class SolaceBrowserServer:
             "webSocketDebuggerUrl": f"ws://localhost:{self.port}/ws"
         }])
 
+    @staticmethod
+    def _result_status(result: Dict[str, Any]) -> int:
+        """Return 500 when the result dict contains an error key, 200 otherwise."""
+        return 500 if "error" in result else 200
+
     async def _handle_navigate(self, request):
         """Navigate to URL"""
         data = await request.json()
         result = await self.browser.navigate(data.get('url', ''))
-        return web.json_response(result)
+        return web.json_response(result, status=self._result_status(result))
 
     async def _handle_click(self, request):
         """Click element"""
         data = await request.json()
         result = await self.browser.click(data.get('selector', ''))
-        return web.json_response(result)
+        return web.json_response(result, status=self._result_status(result))
 
     async def _handle_fill(self, request):
         """Fill form field"""
@@ -1976,12 +2017,21 @@ class SolaceBrowserServer:
             data.get('selector', ''),
             data.get('text', '')
         )
-        return web.json_response(result)
+        return web.json_response(result, status=self._result_status(result))
 
     async def _handle_screenshot(self, request):
         """Take screenshot"""
         data = await request.json()
         result = await self.browser.take_screenshot(data.get('filename'))
+        return web.json_response(result, status=self._result_status(result))
+
+    async def _handle_screenshot_bg(self, request):
+        """Screenshot a URL in a hidden background page (main visible page untouched)."""
+        data = await request.json()
+        url = data.get('url', '')
+        if not url:
+            return web.json_response({"error": "url required"}, status=400)
+        result = await self.browser.screenshot_bg(url, data.get('filename'))
         return web.json_response(result)
 
     async def _handle_snapshot(self, request):

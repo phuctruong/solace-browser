@@ -20,6 +20,9 @@
 | 38 | remote-browser-control-tunnel | Remote browser tunnel architecture | CANONICAL |
 | 39 | marketing-asset-pipeline | Test sessions → screenshots → GIFs → social → tutorials → viral | CANONICAL |
 | 40 | part11-compliance-selfcert | 21 CFR Part 11 full mapping, self-certification template, SOPs, evidence chain architecture | CANONICAL |
+| 42 | solace-inspector | Agent-native HITL QA system: inbox/outbox protocol, SHA-256 sealing, esign gate, 64 specs, 563 reports, $0.00/run | CANONICAL |
+| 43 | webservices-northstar-abcd | Webservices-First Northstar architecture + ABCD cost-optimization protocol | CANONICAL |
+| 45 | launch-blessing-47-personas | STORY-47 prime completion: all 47 voices, avg 9.43/10, formal launch blessing for solaceagi.com/inspectors | CANONICAL |
 | SOP-01 | sop-01-evidence-audit | Evidence Capture and Audit Trail Management SOP (v1.0) | CANONICAL |
 
 ## Cross-References
@@ -39,6 +42,7 @@
 | 11 app-store-sync-governance | app-store release + community submission process | Diagram 20 (App Store Sync Governance) |
 | 12 deployment-surface-mapping | Cloud Run domain + trigger ownership | Diagram 21 (Deployment Surface Mapping) |
 | 40 part11-compliance-selfcert | papers/07+11 (Part 11), CLAUDE.md Part 11 arch | Diagram 40 (Evidence Chain FSM), part11-alcoa-mapping |
+| 45 launch-blessing-47-personas | Papers 42, 43, 44 (Inspector chain) | STORY-47 prime, all 9 project domains |
 
 ## Invariants (All Papers)
 

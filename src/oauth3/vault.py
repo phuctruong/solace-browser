@@ -47,6 +47,32 @@ class ScopeViolationError(OAuth3VaultError):
 class OAuth3Vault:
     """OAuth3 token vault with immediate revocation semantics."""
 
+    @staticmethod
+    def _load_or_create_key(key_path: Path) -> bytes:
+        """Load a persisted AES-256 key or generate and save a new one.
+
+        The key is stored as base64 in a 0o600 file next to the token store.
+        This ensures the vault survives process restarts without requiring the
+        caller to supply and persist the key manually.
+        """
+        if key_path.exists():
+            raw = key_path.read_bytes().strip()
+            key = base64.b64decode(raw)
+            if len(key) != 32:
+                raise OAuth3VaultError(
+                    f"Corrupt key file {key_path}: expected 32 bytes, got {len(key)}"
+                )
+            return key
+        # First run: generate, persist, and lock down permissions.
+        key = secrets.token_bytes(32)
+        key_path.parent.mkdir(parents=True, exist_ok=True)
+        key_path.write_bytes(base64.b64encode(key))
+        try:
+            key_path.chmod(0o600)
+        except OSError:
+            pass  # Windows / restricted filesystems — best-effort only
+        return key
+
     def __init__(
         self,
         encryption_key: Optional[bytes] = None,
@@ -57,7 +83,19 @@ class OAuth3Vault:
         storage_path: Optional[Path | str] = None,
         issuer: str = "https://www.solaceagi.com",
     ) -> None:
-        self.encryption_key = encryption_key or secrets.token_bytes(32)
+        self.storage_path = Path(storage_path) if storage_path else None
+
+        if encryption_key is not None:
+            self.encryption_key = encryption_key
+        elif self.storage_path is not None:
+            # Auto-persist the key beside the token store so the vault
+            # survives restarts without losing access to encrypted tokens.
+            key_path = self.storage_path.with_suffix(".key")
+            self.encryption_key = self._load_or_create_key(key_path)
+        else:
+            # In-memory only vault: ephemeral key is fine (nothing to reload).
+            self.encryption_key = secrets.token_bytes(32)
+
         if len(self.encryption_key) != 32:
             raise ValueError("encryption_key must be exactly 32 bytes (AES-256).")
 
@@ -68,7 +106,6 @@ class OAuth3Vault:
             log = evidence_log or Path("scratch") / "evidence" / "phase_1" / "oauth3_audit.jsonl"
             self.evidence = EvidenceChain(logfile=log)
 
-        self.storage_path = Path(storage_path) if storage_path else None
         self.issuer = issuer
 
         if self.storage_path is not None:

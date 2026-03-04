@@ -2,17 +2,16 @@
   "_meta": {
     "format": "solace-inspector-questions-v1",
     "project": "solaceagi",
-    "description": "Question database for solaceagi.com — 47-persona committee + web research",
+    "description": "Question database for solaceagi.com \u2014 47-persona committee + web research",
     "doctrine": "Each bug is a missing question. Max questions = Max love = Max QA quality.",
     "created_at": "2026-03-04T00:00:00Z",
-    "total_questions": 85,
+    "total_questions": 46,
     "answered": 12,
-    "open": 58,
+    "open": 32,
     "testable": 10,
     "deferred": 5
   },
   "questions": [
-
     {
       "question_id": "q-agi-001",
       "mode": "question",
@@ -26,7 +25,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["oauth3", "session", "expiry", "ux"],
+      "tags": [
+        "oauth3",
+        "session",
+        "expiry",
+        "ux"
+      ],
       "framework": "SFDIPOT-Time"
     },
     {
@@ -36,13 +40,18 @@
       "category": "architecture",
       "asked_by": "james_bach",
       "question": "What does 'Green' actually mean to a user? Can a system be Green but wrong?",
-      "motivation": "The Green belt score is our main quality signal — if it's gameable or misleading, all evidence is worthless",
+      "motivation": "The Green belt score is our main quality signal \u2014 if it's gameable or misleading, all evidence is worthless",
       "oracle": "SFDIPOT: Function. Can a passing spec coexist with a broken user experience?",
       "risk": "critical",
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["qa-score", "belt", "oracle", "evidence"],
+      "tags": [
+        "qa-score",
+        "belt",
+        "oracle",
+        "evidence"
+      ],
       "framework": "FEW-HICCUPPS-Explainability"
     },
     {
@@ -58,7 +67,12 @@
       "status": "testable",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["billing", "credits", "boundary", "fail-closed"],
+      "tags": [
+        "billing",
+        "credits",
+        "boundary",
+        "fail-closed"
+      ],
       "framework": "SFDIPOT-Data"
     },
     {
@@ -74,7 +88,12 @@
       "status": "answered",
       "answer": "Both /api/v1/billing/subscription and /api/v1/billing/credits return 401 without auth (verified GLOW 102)",
       "evidence_spec_id": "api-billing-credits-northstar-001",
-      "tags": ["billing", "gdpr", "pii", "auth"],
+      "tags": [
+        "billing",
+        "gdpr",
+        "pii",
+        "auth"
+      ],
       "framework": "FEW-HICCUPPS-Statutes"
     },
     {
@@ -90,7 +109,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["marketing", "claims", "evidence", "agents"],
+      "tags": [
+        "marketing",
+        "claims",
+        "evidence",
+        "agents"
+      ],
       "framework": "FEW-HICCUPPS-Claims"
     },
     {
@@ -106,7 +130,12 @@
       "status": "deferred",
       "answer": "Deferred: requires legal review, not code review",
       "evidence_spec_id": null,
-      "tags": ["part-11", "compliance", "legal", "evidence"],
+      "tags": [
+        "part-11",
+        "compliance",
+        "legal",
+        "evidence"
+      ],
       "framework": "FEW-HICCUPPS-Statutes"
     },
     {
@@ -117,12 +146,17 @@
       "asked_by": "kent_beck",
       "question": "What test would tell us, immediately, if the LLM routing feature is broken?",
       "motivation": "The ABCD routing claim ('find cheapest passing model') needs a fast automated check",
-      "oracle": "TDD oracle: POST /api/v1/llm/chat with known prompt → verify model field in response",
+      "oracle": "TDD oracle: POST /api/v1/llm/chat with known prompt \u2192 verify model field in response",
       "risk": "high",
       "status": "answered",
       "answer": "ABCD specs in auth_check_mode verify all 4 routing paths return 401 consistently (GLOW 101)",
       "evidence_spec_id": "api-abcd-llm-factual-001",
-      "tags": ["llm-routing", "abcd", "tdd", "northstar"],
+      "tags": [
+        "llm-routing",
+        "abcd",
+        "tdd",
+        "northstar"
+      ],
       "framework": "TDD-Red-Green"
     },
     {
@@ -138,7 +172,12 @@
       "status": "answered",
       "answer": "/health endpoint exists, returns 200 (verified GLOW 96). Cloud Run provides basic monitoring.",
       "evidence_spec_id": "api-health-northstar-001",
-      "tags": ["monitoring", "health", "sre", "alerting"],
+      "tags": [
+        "monitoring",
+        "health",
+        "sre",
+        "alerting"
+      ],
       "framework": "SRE-MTTR"
     },
     {
@@ -154,7 +193,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["rst", "exploratory", "human-testing", "mental-model"],
+      "tags": [
+        "rst",
+        "exploratory",
+        "human-testing",
+        "mental-model"
+      ],
       "framework": "RST-Human-vs-Machine"
     },
     {
@@ -165,12 +209,17 @@
       "asked_by": "michael_bolton",
       "question": "Can a sophisticated attacker replay a captured evidence_hash to forge a QA report?",
       "motivation": "If the hash is deterministic from content, an attacker who knows the content can pre-compute it",
-      "oracle": "Test: same report content → same hash (deterministic)? If so, forge risk exists",
+      "oracle": "Test: same report content \u2192 same hash (deterministic)? If so, forge risk exists",
       "risk": "critical",
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["evidence", "sha256", "security", "forgery"],
+      "tags": [
+        "evidence",
+        "sha256",
+        "security",
+        "forgery"
+      ],
       "framework": "OWASP-Cryptography"
     },
     {
@@ -186,7 +235,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["sign-up", "mobile", "ux", "accessibility"],
+      "tags": [
+        "sign-up",
+        "mobile",
+        "ux",
+        "accessibility"
+      ],
       "framework": "Explore-It-User-Tour"
     },
     {
@@ -202,7 +256,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["performance", "load", "cloud-run", "scalability"],
+      "tags": [
+        "performance",
+        "load",
+        "cloud-run",
+        "scalability"
+      ],
       "framework": "Jeff-Dean-10x-Rule"
     },
     {
@@ -218,7 +277,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["spof", "resilience", "architecture", "failure"],
+      "tags": [
+        "spof",
+        "resilience",
+        "architecture",
+        "failure"
+      ],
       "framework": "SFDIPOT-Platform"
     },
     {
@@ -228,13 +292,18 @@
       "category": "architecture",
       "asked_by": "martin_kleppmann",
       "question": "What are the consistency guarantees? What breaks if we get a network partition?",
-      "motivation": "CAP theorem applies. What does solaceagi.com sacrifice — consistency or availability?",
+      "motivation": "CAP theorem applies. What does solaceagi.com sacrifice \u2014 consistency or availability?",
       "oracle": "Data oracle: does the system return stale data, error, or block during Firestore partition?",
       "risk": "high",
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["consistency", "cap", "firestore", "partition"],
+      "tags": [
+        "consistency",
+        "cap",
+        "firestore",
+        "partition"
+      ],
       "framework": "Kleppmann-DDIA"
     },
     {
@@ -250,7 +319,12 @@
       "status": "testable",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["cold-start", "cloud-run", "latency", "ux"],
+      "tags": [
+        "cold-start",
+        "cloud-run",
+        "latency",
+        "ux"
+      ],
       "framework": "Brendan-Gregg-USE"
     },
     {
@@ -261,12 +335,17 @@
       "asked_by": "michal_zalewski",
       "question": "Is there a CSRF vulnerability in any API endpoints?",
       "motivation": "POST endpoints without CSRF tokens are vulnerable if cookies are used for auth",
-      "oracle": "OWASP-5: Forge a POST request from a different origin — does it succeed?",
+      "oracle": "OWASP-5: Forge a POST request from a different origin \u2014 does it succeed?",
       "risk": "high",
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["csrf", "owasp", "security", "auth"],
+      "tags": [
+        "csrf",
+        "owasp",
+        "security",
+        "auth"
+      ],
       "framework": "OWASP-Top-10"
     },
     {
@@ -277,12 +356,17 @@
       "asked_by": "michal_zalewski",
       "question": "Can an attacker enumerate user accounts by timing differences in auth responses?",
       "motivation": "Timing oracles in auth endpoints leak user existence even when response text is identical",
-      "oracle": "Security oracle: time 1000 login attempts with known vs unknown emails — is the delta measurable?",
+      "oracle": "Security oracle: time 1000 login attempts with known vs unknown emails \u2014 is the delta measurable?",
       "risk": "medium",
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["timing-attack", "user-enumeration", "auth", "security"],
+      "tags": [
+        "timing-attack",
+        "user-enumeration",
+        "auth",
+        "security"
+      ],
       "framework": "OWASP-Authentication"
     },
     {
@@ -298,7 +382,12 @@
       "status": "deferred",
       "answer": "Deferred: requires A/B test infrastructure",
       "evidence_spec_id": null,
-      "tags": ["behavioral-economics", "framing", "marketing", "ux"],
+      "tags": [
+        "behavioral-economics",
+        "framing",
+        "marketing",
+        "ux"
+      ],
       "framework": "Sutherland-Behavioral"
     },
     {
@@ -314,7 +403,11 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["pricing", "behavioral-economics", "positioning"],
+      "tags": [
+        "pricing",
+        "behavioral-economics",
+        "positioning"
+      ],
       "framework": "Sutherland-Perception"
     },
     {
@@ -330,7 +423,12 @@
       "status": "testable",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["marketing", "persona", "positioning", "gtm"],
+      "tags": [
+        "marketing",
+        "persona",
+        "positioning",
+        "gtm"
+      ],
       "framework": "Godin-Purple-Cow"
     },
     {
@@ -346,7 +444,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["marketing", "word-of-mouth", "story", "clarity"],
+      "tags": [
+        "marketing",
+        "word-of-mouth",
+        "story",
+        "clarity"
+      ],
       "framework": "Godin-Tribe"
     },
     {
@@ -357,12 +460,17 @@
       "asked_by": "russell_brunson",
       "question": "Where does the funnel break? Where do users drop off?",
       "motivation": "Every drop-off point is a question that wasn't answered before the user left",
-      "oracle": "Funnel oracle: Log drop-off rates at: landing → agents → download → install → sign-up → activate",
+      "oracle": "Funnel oracle: Log drop-off rates at: landing \u2192 agents \u2192 download \u2192 install \u2192 sign-up \u2192 activate",
       "risk": "high",
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["funnel", "conversion", "analytics", "gtm"],
+      "tags": [
+        "funnel",
+        "conversion",
+        "analytics",
+        "gtm"
+      ],
       "framework": "Brunson-Funnel"
     },
     {
@@ -378,7 +486,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["ux", "first-impression", "landing-page", "conversion"],
+      "tags": [
+        "ux",
+        "first-impression",
+        "landing-page",
+        "conversion"
+      ],
       "framework": "Van-Edwards-7-Seconds"
     },
     {
@@ -394,7 +507,13 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["ux", "emotion", "approve", "part-11", "trust"],
+      "tags": [
+        "ux",
+        "emotion",
+        "approve",
+        "part-11",
+        "trust"
+      ],
       "framework": "Van-Edwards-EQ"
     },
     {
@@ -410,7 +529,12 @@
       "status": "testable",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["landing-page", "hook", "conversion", "attention"],
+      "tags": [
+        "landing-page",
+        "hook",
+        "conversion",
+        "attention"
+      ],
       "framework": "MrBeast-3-Second-Rule"
     },
     {
@@ -419,14 +543,19 @@
       "project": "solaceagi",
       "category": "business",
       "asked_by": "mr_beast",
-      "question": "Is there a 'wow moment' — something so impressive that users immediately want to share it?",
+      "question": "Is there a 'wow moment' \u2014 something so impressive that users immediately want to share it?",
       "motivation": "Virality requires a moment so remarkable users feel compelled to share. What is ours?",
       "oracle": "Virality oracle: Demo the product to 10 people. Do any of them say 'Can I send this to someone?'",
       "risk": "medium",
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["virality", "wow-moment", "marketing", "demo"],
+      "tags": [
+        "virality",
+        "wow-moment",
+        "marketing",
+        "demo"
+      ],
       "framework": "MrBeast-Virality"
     },
     {
@@ -442,7 +571,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["care", "ux", "uplift-p8", "error-messages"],
+      "tags": [
+        "care",
+        "ux",
+        "uplift-p8",
+        "error-messages"
+      ],
       "framework": "Uplift-P8-Care"
     },
     {
@@ -458,7 +592,13 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["evidence", "sha256", "signing", "part-11", "non-repudiation"],
+      "tags": [
+        "evidence",
+        "sha256",
+        "signing",
+        "part-11",
+        "non-repudiation"
+      ],
       "framework": "Part-11-NonRepudiation"
     },
     {
@@ -469,12 +609,17 @@
       "asked_by": "james_bach",
       "question": "What inputs have we never tried? What file types, encodings, locale edge cases?",
       "motivation": "SFDIPOT-Data: we test English UTF-8. What about Arabic RTL, Chinese CJK, emoji in user inputs?",
-      "oracle": "Data tour: send Arabic name, Chinese email, emoji in API key field — what breaks?",
+      "oracle": "Data tour: send Arabic name, Chinese email, emoji in API key field \u2014 what breaks?",
       "risk": "medium",
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["i18n", "encoding", "edge-cases", "data"],
+      "tags": [
+        "i18n",
+        "encoding",
+        "edge-cases",
+        "data"
+      ],
       "framework": "SFDIPOT-Data"
     },
     {
@@ -490,7 +635,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["latency", "p99", "performance", "llm"],
+      "tags": [
+        "latency",
+        "p99",
+        "performance",
+        "llm"
+      ],
       "framework": "Brendan-Gregg-USE"
     },
     {
@@ -506,7 +656,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["gdpr", "right-to-erasure", "compliance", "data"],
+      "tags": [
+        "gdpr",
+        "right-to-erasure",
+        "compliance",
+        "data"
+      ],
       "framework": "GDPR-Article-17"
     },
     {
@@ -522,7 +677,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["complexity", "architecture", "simplicity", "hickey"],
+      "tags": [
+        "complexity",
+        "architecture",
+        "simplicity",
+        "hickey"
+      ],
       "framework": "Hickey-Simple-Made-Easy"
     },
     {
@@ -533,12 +693,17 @@
       "asked_by": "michal_zalewski",
       "question": "What happens if an attacker sends a 10MB payload to /api/v1/llm/chat?",
       "motivation": "DoS via oversized payloads is a common attack. Our OWASP-2 spec verified 401 first, but what happens with valid auth?",
-      "oracle": "OWASP oracle: POST 10MB with valid Bearer token → 413 with max_tokens error message",
+      "oracle": "OWASP oracle: POST 10MB with valid Bearer token \u2192 413 with max_tokens error message",
       "risk": "high",
       "status": "testable",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["dos", "payload-size", "owasp", "security"],
+      "tags": [
+        "dos",
+        "payload-size",
+        "owasp",
+        "security"
+      ],
       "framework": "OWASP-Top-10"
     },
     {
@@ -554,7 +719,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["resilience", "ux", "recovery", "network"],
+      "tags": [
+        "resilience",
+        "ux",
+        "recovery",
+        "network"
+      ],
       "framework": "Explore-It-Scenario"
     },
     {
@@ -570,7 +740,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["pricing", "value-prop", "business", "hormozi"],
+      "tags": [
+        "pricing",
+        "value-prop",
+        "business",
+        "hormozi"
+      ],
       "framework": "Hormozi-Grand-Slam"
     },
     {
@@ -586,7 +761,12 @@
       "status": "deferred",
       "answer": "Deferred: strategic question, not testable in code",
       "evidence_spec_id": null,
-      "tags": ["strategy", "zero-to-one", "thiel", "competitive"],
+      "tags": [
+        "strategy",
+        "zero-to-one",
+        "thiel",
+        "competitive"
+      ],
       "framework": "Thiel-Zero-One"
     },
     {
@@ -602,7 +782,11 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["test-coverage", "rst", "meta-testing"],
+      "tags": [
+        "test-coverage",
+        "rst",
+        "meta-testing"
+      ],
       "framework": "RST-Coverage"
     },
     {
@@ -618,7 +802,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["error-handling", "ux", "silent-failure", "oracle"],
+      "tags": [
+        "error-handling",
+        "ux",
+        "silent-failure",
+        "oracle"
+      ],
       "framework": "BBST-Oracles"
     },
     {
@@ -634,7 +823,12 @@
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["concurrency", "race-condition", "security", "credits"],
+      "tags": [
+        "concurrency",
+        "race-condition",
+        "security",
+        "credits"
+      ],
       "framework": "SFDIPOT-Time"
     },
     {
@@ -645,15 +839,19 @@
       "asked_by": "kent_beck",
       "question": "Is every critical path covered by a test that runs in CI?",
       "motivation": "TDD: if it's not tested, it's not done. What's in CI vs only tested manually?",
-      "oracle": "CI oracle: review cloudbuild.yaml — what tests run before every deploy?",
+      "oracle": "CI oracle: review cloudbuild.yaml \u2014 what tests run before every deploy?",
       "risk": "high",
       "status": "testable",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["ci", "tdd", "automation", "deploy"],
+      "tags": [
+        "ci",
+        "tdd",
+        "automation",
+        "deploy"
+      ],
       "framework": "TDD-Continuous-Integration"
     },
-
     {
       "question_id": "q-agi-bugs-001",
       "mode": "question",
@@ -662,12 +860,17 @@
       "asked_by": "saint_solace",
       "question": "[FROM BUG F-001] Does the heading text render correctly in all contexts including machine-readable ones?",
       "motivation": "Bug F-001: H1 missing space before <br> tag created 'AgentInstitutional' concatenation. Bug was the answer to this unasked question.",
-      "oracle": "SEO oracle: parse H1 text content with BeautifulSoup/cheerio — does it contain concatenated words?",
+      "oracle": "SEO oracle: parse H1 text content with BeautifulSoup/cheerio \u2014 does it contain concatenated words?",
       "risk": "medium",
       "status": "answered",
       "answer": "Fixed in GLOW 92. Space added before <br> in agents.html. Evidence: sealed report qa-20260303-212517-bc5c18",
       "evidence_spec_id": "solaceagi-agents-001",
-      "tags": ["bug-f001", "seo", "accessibility", "h1"],
+      "tags": [
+        "bug-f001",
+        "seo",
+        "accessibility",
+        "h1"
+      ],
       "framework": "Bug-To-Question"
     },
     {
@@ -678,12 +881,17 @@
       "asked_by": "saint_solace",
       "question": "[FROM BUG] Do all navigation links that appear in the UI have corresponding routes?",
       "motivation": "Bug: /settings returned 404 in production. Any UI link that routes to nowhere is a broken promise.",
-      "oracle": "Navigation oracle: crawl all <a href> tags on every page — verify each URL returns 200 or 301",
+      "oracle": "Navigation oracle: crawl all <a href> tags on every page \u2014 verify each URL returns 200 or 301",
       "risk": "high",
       "status": "answered",
       "answer": "Fixed in GLOW 103. /settings now redirects to /dashboard (301). Next: audit all nav links systematically.",
       "evidence_spec_id": null,
-      "tags": ["bug", "navigation", "404", "routes"],
+      "tags": [
+        "bug",
+        "navigation",
+        "404",
+        "routes"
+      ],
       "framework": "Bug-To-Question"
     },
     {
@@ -694,13 +902,84 @@
       "asked_by": "saint_solace",
       "question": "[FROM BUG] Does the qa-evidence sync endpoint require auth in production?",
       "motivation": "The sync endpoint accepts writes without auth (demo mode KNOWN_LIMITATION). Any agent can write evidence.",
-      "oracle": "Auth oracle: POST /api/v1/qa-evidence/sync without Bearer token — should return 401",
+      "oracle": "Auth oracle: POST /api/v1/qa-evidence/sync without Bearer token \u2014 should return 401",
       "risk": "critical",
       "status": "open",
       "answer": null,
       "evidence_spec_id": null,
-      "tags": ["auth", "security", "qa-evidence", "known-limitation"],
+      "tags": [
+        "auth",
+        "security",
+        "qa-evidence",
+        "known-limitation"
+      ],
       "framework": "Bug-To-Question"
+    },
+    {
+      "question_id": "q-agi-bugs-004",
+      "mode": "question",
+      "project": "solaceagi + solace-browser",
+      "category": "app-execution",
+      "asked_by": "phuc_forecast",
+      "question": "Does /api/apps/{id}/run exist? Can any of the 18 installed apps actually execute end-to-end and produce a sealed evidence bundle?",
+      "motivation": "The apps appear in the catalog but the execution API is missing. Apps say installed but Run button has no backend. This is the most critical gap between what we claim and what exists.",
+      "oracle": "Try: POST /api/apps/gmail-inbox-triage/run. If 404 \u2014 the execution layer is missing. The gap between catalog and execution is the #1 product risk.",
+      "risk": "critical",
+      "status": "open",
+      "answer": "CONFIRMED: POST /api/apps/gmail-inbox-triage/run returns 404. No run endpoint exists in web/server.py. Apps are catalog entries only \u2014 execution engine not yet connected to web UI.",
+      "evidence_spec_id": null,
+      "tags": [
+        "execution",
+        "run",
+        "app-store",
+        "end-to-end",
+        "critical-gap"
+      ],
+      "framework": "SFDIPOT-Function"
+    },
+    {
+      "question_id": "q-agi-bugs-005",
+      "mode": "question",
+      "project": "solaceagi",
+      "category": "marketing",
+      "asked_by": "mr_beast",
+      "question": "Has the Dragon ever actually posted anything for a real user? Is there a single sealed evidence bundle of a real app execution in the wild?",
+      "motivation": "MrBeast doctrine: seeing is believing. All the Inspector specs verify the website loads, not that apps WORK. Zero sealed evidence bundles from real runs means zero proof of product claims.",
+      "oracle": "Count sealed evidence bundles in production outbox. If 0, the product is a catalog + architecture, not a working product.",
+      "risk": "critical",
+      "status": "open",
+      "answer": null,
+      "evidence_spec_id": null,
+      "tags": [
+        "execution",
+        "evidence",
+        "mrbeast",
+        "real-world",
+        "critical-gap"
+      ],
+      "framework": "SFDIPOT-Function"
+    },
+    {
+      "question_id": "q-agi-bugs-006",
+      "mode": "question",
+      "project": "solace-browser",
+      "category": "viral-marketing",
+      "asked_by": "mr_beast",
+      "question": "What is the single most viral demo we could record of Solace Browser doing something undeniably impressive? Something MrBeast would give 10/10?",
+      "motivation": "MrBeast formula: massive claim + visual proof + stakes + satisfying payoff. For Solace: overflowing inbox (1000 emails) \u2192 Solace triages all in 60 seconds \u2192 sealed evidence bundle as receipt \u2192 cost comparison vs hiring human assistant.",
+      "oracle": "Demo must: (1) Show a real problem everyone has, (2) Solve it visually in under 2 minutes, (3) Show exact cost (/bin/bash.12), (4) Show the evidence bundle as proof. No demo = no viral = no users.",
+      "risk": "high",
+      "status": "open",
+      "answer": null,
+      "evidence_spec_id": null,
+      "tags": [
+        "viral",
+        "mrbeast",
+        "demo",
+        "marketing",
+        "gallery"
+      ],
+      "framework": "MrBeast-Hook"
     }
   ]
 }

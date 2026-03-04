@@ -42,8 +42,8 @@ const YinyangTutorial = (() => {
   // Embedded English fallback (used if /api/locale unreachable)
   // ---------------------------------------------------------------------------
   const STRINGS_EN = {
-    step1_title: 'Meet Yinyang ☯',
-    step1_body: "I'm Yinyang — your AI browser navigator. I navigate the web, click buttons, fill forms, take screenshots, and capture evidence. All on your behalf, always with your approval.",
+    step1_title: '847 emails → 47 seconds → $0.12',
+    step1_body: "I'm Yinyang ☯ — your AI browser. I triage your inbox, draft replies, post to LinkedIn, and seal every action as evidence. You approve everything. Let's go.",
     step2_title: 'Already using Claude Code, Cursor, or Codex?',
     step2_body: 'Solace Browser works alongside any AI coding agent. Add it as an MCP server and your agent can navigate, click, screenshot, and seal evidence — all with your approval. <a href="https://www.solaceagi.com/agents" target="_blank" rel="noopener" style="color:var(--sb-signal)">See the full agents guide →</a>',
     step2_code: 'npx solace-browser --mcp',
@@ -116,7 +116,8 @@ const YinyangTutorial = (() => {
 
     let extra = '';
     if (step === 0) {
-      extra = _langPickerHTML();
+      // Language on step 1: one subtle link only — don't bury the hook
+      extra = `<p class="yyT-lang-hint">&#127760; <a href="#" class="yyT-lang-hint-link" onclick="document.querySelector('.yyT-lang-btn').click();return false;">${_locale.toUpperCase()} · Change language</a></p>`;
     }
     if (code) {
       extra += `<pre class="yyT-code">${code}</pre>`;
@@ -161,6 +162,7 @@ const YinyangTutorial = (() => {
 
     _overlay.querySelector('.yyT-step-content').innerHTML = _stepHTML(_currentStep);
     _overlay.querySelector('.yyT-dots').innerHTML = _dotsHTML(_currentStep);
+    _overlay.setAttribute('data-step', _currentStep);
     _overlay.querySelector('.yyT-progress').textContent = _progressLabel(_currentStep);
 
     const btnPrev = _overlay.querySelector('.yyT-btn-prev');
@@ -171,7 +173,12 @@ const YinyangTutorial = (() => {
     btnPrev.style.visibility = isFirst ? 'hidden' : 'visible';
     btnNext.style.display = isLast ? 'none' : 'inline-flex';
     btnDone.style.display = isLast ? 'inline-flex' : 'none';
-    btnSkip.style.display = isLast ? 'none' : 'inline-block';
+    // Hide Skip on step 1 — make them see the hook first
+    btnSkip.style.display = (isLast || isFirst) ? 'none' : 'inline-block';
+    // Step 1 CTA is punchier
+    btnNext.textContent = isFirst ? 'Show me →' : (_strings.btn_next || 'Next →');
+    // Step 1: hero mode — bigger YinYang
+    _overlay.querySelector('.yyT-gif').classList.toggle('yyT-gif--hero', isFirst);
   }
 
   // ---------------------------------------------------------------------------

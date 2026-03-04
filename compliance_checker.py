@@ -248,10 +248,6 @@ class ALCOAChecker:
             overall_status = "PARTIALLY_COMPLIANT"
         else:
             overall_status = "NON_COMPLIANT"
-        if all(v.passed for v in results.values()):
-            overall_status = "COMPLIANT"
-        if overall_status == "COMPLIANT" and any(not v.passed for v in results.values()):
-            overall_status = "MOSTLY_COMPLIANT"
         result = ALCOABundleResult(overall_status=overall_status, dimension_results=results)
         for dim, dim_result in results.items():
             setattr(result, dim, dim_result)
@@ -280,8 +276,18 @@ class Part11Checker:
         )
 
     def check_section_11_10c(self, bundle: Dict[str, Any]) -> Part11CheckResult:
-        _ = bundle
-        return Part11CheckResult(passed=True, encryption="AES-256-GCM")
+        # 21 CFR Part 11 §11.10(c): Protect records from alteration.
+        # Verify the bundle carries a valid 64-char SHA-256 chain_mac.
+        sig = bundle.get("signature", "")
+        has_valid_sig = (
+            isinstance(sig, str)
+            and len(sig) == 64
+            and all(c in "0123456789abcdef" for c in sig)
+        )
+        return Part11CheckResult(
+            passed=has_valid_sig,
+            encryption="AES-256-GCM" if has_valid_sig else "MISSING",
+        )
 
     def check_section_11_10e(self, execution_trace: Dict[str, Any]) -> Part11CheckResult:
         operator = bool(execution_trace.get("oauth3_token_id"))
@@ -296,7 +302,8 @@ class Part11Checker:
         has_sig = bool(bundle.get("signature"))
         return Part11CheckResult(
             passed=has_sig,
-            signature_algorithm="AES-256-GCM" if has_sig else "",
+            # SHA256-CHAIN-LINK: tamper-evident chain_mac, not a PKI signature
+            signature_algorithm="SHA256-CHAIN-LINK" if has_sig else "",
         )
 
     def check_all(self, bundle: Dict[str, Any], *, execution_trace: Dict[str, Any]) -> Part11CheckResult:

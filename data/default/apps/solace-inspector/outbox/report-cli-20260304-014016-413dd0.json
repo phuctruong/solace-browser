@@ -1,0 +1,97 @@
+{
+  "run_id": "cli-20260304-014016-413dd0",
+  "spec_id": "api-version-001",
+  "mode": "cli",
+  "target_cmd": "curl -sf https://www.solaceagi.com/api/v1/version",
+  "target_cwd": "/home/phuc/projects/solace-browser",
+  "persona_used": "elisabeth_hendrickson",
+  "committee": [
+    "kent_beck",
+    "james_bach",
+    "michael_bolton"
+  ],
+  "run_at": "2026-03-04T01:40:16.955861Z",
+  "steps_completed": [
+    "execute",
+    "assert",
+    "agent_analysis_request",
+    "compute_score"
+  ],
+  "fix_proposals": [],
+  "human_approved": false,
+  "approved_at": null,
+  "exit_code": 0,
+  "stdout": "{\"version\":\"2.0.0\",\"sha\":\"15932c9\",\"env\":\"prod\",\"built_at\":\"473b8d99-f2ca-494d-a47f-6c60ae602d3a\",\"service\":\"solaceagi\"}",
+  "stderr": "",
+  "duration_seconds": 0.192,
+  "assertions": [
+    {
+      "check": "exit_code",
+      "expected": 0,
+      "actual": 0,
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "version",
+      "passed": true
+    },
+    {
+      "check": "stdout_contains",
+      "pattern": "sha",
+      "passed": true
+    },
+    {
+      "check": "stderr_empty",
+      "expected_empty": true,
+      "actual_empty": true,
+      "passed": true
+    }
+  ],
+  "assertions_passed": 4,
+  "assertions_total": 4,
+  "agent_analysis_request": {
+    "persona": "elisabeth_hendrickson",
+    "system_prompt": "You are Elisabeth Hendrickson, agile testing expert and author of Explore It!. Apply charter-based exploration: what is the charter for this surface? What broken flows, missing error handling, and usability issues do you see? Think about what a user encounters when things go wrong. Output: (1) Exploration charter, (2) Broken flows found, (3) Fix proposals.",
+    "evidence_summary": {
+      "cmd": "curl -sf https://www.solaceagi.com/api/v1/version",
+      "exit_code": 0,
+      "stdout_first_500": "{\"version\":\"2.0.0\",\"sha\":\"15932c9\",\"env\":\"prod\",\"built_at\":\"473b8d99-f2ca-494d-a47f-6c60ae602d3a\",\"service\":\"solaceagi\"}",
+      "stderr_first_200": "",
+      "duration_seconds": 0.192,
+      "assertions": [
+        {
+          "check": "exit_code",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "version",
+          "passed": true
+        },
+        {
+          "check": "stdout_contains",
+          "pattern": "sha",
+          "passed": true
+        },
+        {
+          "check": "stderr_empty",
+          "expected_empty": true,
+          "actual_empty": true,
+          "passed": true
+        }
+      ],
+      "assertions_passed": "4/4"
+    },
+    "instruction": "Read the evidence_summary above. Apply the persona's framework. Add your analysis to report.agent_analysis_response with: top_risks (list), bugs_found (list), fix_proposals (list of {description, severity, file_path (if known), priority}).",
+    "cost": "$0.00",
+    "model": "agent-native (no API call \u2014 agent uses own model)"
+  },
+  "agent_analysis_response": null,
+  "qa_score": 100,
+  "belt": "Green",
+  "glow": 105,
+  "evidence_hash": "sha256:ef521a53ea0ac80b3763e59ce10181dba8f1ff32e2ddd9ca2c1214814aef26cc"
+}
