@@ -1,0 +1,41 @@
+{
+  "spec_id": "bar-cli-paper-17-rich-hickey-GLOW117",
+  "mode": "business_acceptance",
+  "review_mode": "individual",
+  "scoring": "binary_not_average",
+  "persona": "rich_hickey",
+  "persona_full_name": "Rich Hickey",
+  "persona_acting_as": "CEO",
+  "persona_domain": "functional_architecture_simplicity",
+  "persona_bio": "Creator of Clojure and Datomic, author of 'Simple Made Easy' — the definitive work on separating essential from accidental complexity in software systems.",
+  "paper_id": "cli:17",
+  "paper_title": "Ten Uplift Principles for AGI Systems",
+  "paper_path": "/home/phuc/projects/solace-cli/papers/17-ten-uplift-principles.md",
+  "project": "solace-cli",
+  "context_injection": {
+    "skills": ["prime-safety", "prime-coder"],
+    "papers_to_read": ["cli:16-prime-paper-format", "browser:46-questions-as-uplift"],
+    "diagrams": ["cli:28-ten-uplift-principles"],
+    "note": "Load Rich Hickey's 'Simple Made Easy' framework + Paper 16 format context before review. Key distinction: simple = one role/one concept. Easy = familiar/near at hand. Complexity = interleaving of multiple roles. Ask: does Paper 17 conflate simple with easy?"
+  },
+  "target_cmd": "cat '/home/phuc/projects/solace-cli/papers/17-ten-uplift-principles.md'",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": [],
+    "stderr_empty": false,
+    "llm_analysis": true,
+    "llm_verdict_required": "You are Rich Hickey acting as CEO. Read the paper. Answer each question PASS/FAIL with one sentence of justification. Then render: 'AS CEO, I SIGN OFF ON THIS PAPER' or 'AS CEO, I REFUSE TO SIGN — REASON: [specific blocker with suggested fix]'"
+  },
+  "domain_questions": [
+    "Does the '10 Uplift Principles' framework have essential complexity or accidental complexity? Is 10 the right number, or did we stop at 10 because it's a round number?",
+    "The equation 'Uplift = P1 × P2 × ... × P10' is presented as multiplicative. Is this proven empirically or is it a convenient metaphor? What would falsify this claim?",
+    "P4 (Skills) and P5 (Recipes) seem to overlap. What's the essential difference? Could they be unified into one principle without losing expressiveness?",
+    "The paper has 10 sections but the principles themselves have varying levels of development — some have empirical data, some have none. Is this paper consistent with itself?",
+    "What would a simpler version of the 10 Uplift Principles look like? Could the same insight be expressed in 3 principles instead of 10?"
+  ],
+  "sign_off_required": true,
+  "sign_off_keywords": ["AS CEO, I SIGN OFF", "AS CEO, I REFUSE TO SIGN"],
+  "pass_threshold": "All domain questions PASS AND sign_off verdict is positive",
+  "created_at": "2026-03-04T00:00:00Z",
+  "glow": "GLOW117"
+}

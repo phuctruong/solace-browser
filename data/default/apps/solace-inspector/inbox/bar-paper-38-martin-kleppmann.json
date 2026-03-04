@@ -1,0 +1,41 @@
+{
+  "spec_id": "bar-paper-38-martin-kleppmann-GLOW117",
+  "mode": "business_acceptance",
+  "review_mode": "individual",
+  "scoring": "binary_not_average",
+  "persona": "martin_kleppmann",
+  "persona_full_name": "Martin Kleppmann",
+  "persona_acting_as": "CEO",
+  "persona_domain": "distributed_systems_data_integrity",
+  "persona_bio": "Martin Kleppmann wrote 'Designing Data-Intensive Applications' and is the leading authority on distributed systems consistency, making him uniquely qualified to audit whether Paper 38's two-phase protocol is consistent, auditable, and tamper-evident.",
+  "paper_id": "38",
+  "paper_title": "Individual vs Committee QA Doctrine",
+  "paper_path": "/home/phuc/projects/solaceagi/papers/38-individual-vs-committee-qa-doctrine.md",
+  "project": "solaceagi",
+  "context_injection": {
+    "skills": ["prime-safety", "prime-coder"],
+    "papers_to_read": ["17-ten-uplift-principles", "46-questions-as-uplift"],
+    "diagrams": ["23-individual-vs-committee-qa-flow"],
+    "note": "Load persona domain knowledge before review"
+  },
+  "target_cmd": "cat '/home/phuc/projects/solaceagi/papers/38-individual-vs-committee-qa-doctrine.md'",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": [],
+    "stderr_empty": false,
+    "llm_analysis": true,
+    "llm_verdict_required": "You are Martin Kleppmann acting as CEO. Read the paper. Answer each question PASS/FAIL with one sentence. Then render: 'AS CEO, I SIGN OFF ON THIS PAPER' or 'AS CEO, I REFUSE TO SIGN — REASON: [specific blocker]'"
+  },
+  "domain_questions": [
+    "Is the audit log for individual reviews append-only and tamper-evident? If a reviewer changes their verdict after seeing others' results, is that captured?",
+    "What's the consistency model for the two-phase protocol? If Phase 1 completes but Phase 2 is never run, what's the paper's status? Is it blocked, pending, or in an inconsistent state?",
+    "Can two reviewers run Phase 1 simultaneously? What happens if their findings conflict on the same issue?",
+    "Is the evidence produced by the Linus audit (the 20 bugs) itself auditable? Can anyone reproduce the finding independently?",
+    "The paper claims committee mode produces 'regression to mean'. Is this measured, or assumed? What's the oracle?"
+  ],
+  "sign_off_required": true,
+  "sign_off_keywords": ["AS CEO, I SIGN OFF", "AS CEO, I REFUSE TO SIGN"],
+  "pass_threshold": "All domain questions PASS AND sign_off verdict is positive",
+  "created_at": "2026-03-04T00:00:00Z",
+  "glow": "GLOW117"
+}

@@ -1,0 +1,41 @@
+{
+  "spec_id": "bar-cli-paper-17-jony-ive-GLOW117",
+  "mode": "business_acceptance",
+  "review_mode": "individual",
+  "scoring": "binary_not_average",
+  "persona": "jony_ive",
+  "persona_full_name": "Jony Ive",
+  "persona_acting_as": "CEO",
+  "persona_domain": "product_design_simplicity",
+  "persona_bio": "Former Chief Design Officer at Apple, architect of the iMac, iPod, iPhone, and MacBook — a designer whose defining conviction is that true simplicity is the deepest form of care for the user.",
+  "paper_id": "cli:17",
+  "paper_title": "Ten Uplift Principles for AGI Systems",
+  "paper_path": "/home/phuc/projects/solace-cli/papers/17-ten-uplift-principles.md",
+  "project": "solace-cli",
+  "context_injection": {
+    "skills": ["prime-safety", "prime-coder"],
+    "papers_to_read": ["cli:16-prime-paper-format", "browser:46-questions-as-uplift"],
+    "diagrams": ["cli:28-ten-uplift-principles"],
+    "note": "Load Jony Ive's design philosophy — beauty as a moral responsibility, not aesthetic preference. Key lens: does Paper 17 feel inevitable? Does its structure reveal an underlying order, or impose an order on top of chaos? Look for tension between principles, and ask whether the visual hierarchy diagram accurately represents the system's true relationships."
+  },
+  "target_cmd": "cat '/home/phuc/projects/solace-cli/papers/17-ten-uplift-principles.md'",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": [],
+    "stderr_empty": false,
+    "llm_analysis": true,
+    "llm_verdict_required": "You are Jony Ive acting as CEO. Read the paper with your designer's eye. Answer each question PASS/FAIL with one sentence. Then render: 'AS CEO, I SIGN OFF ON THIS PAPER' or 'AS CEO, I REFUSE TO SIGN — REASON: [specific design blocker]'"
+  },
+  "domain_questions": [
+    "Is the 10 Uplift Principles framework beautiful? Does it reveal an underlying simplicity, or does it add complexity to explain complexity?",
+    "P1 (Gamification) and P8 (Care) seem to be in tension — gamification can feel manipulative rather than caring. How does the paper resolve this?",
+    "The paper shows a hierarchy diagram. Is the visual structure intuitive? Does it accurately represent the relationships between principles?",
+    "P10 (God) is the highest principle, but it's also the most personal and unfalsifiable. Is this appropriate for a technical framework? Does it risk alienating some users?",
+    "If we had to remove one principle to make the framework more focused, which would it be? Does the paper make this choice impossible to make, or does it guide it?"
+  ],
+  "sign_off_required": true,
+  "sign_off_keywords": ["AS CEO, I SIGN OFF", "AS CEO, I REFUSE TO SIGN"],
+  "pass_threshold": "All domain questions PASS AND sign_off verdict is positive",
+  "created_at": "2026-03-04T00:00:00Z",
+  "glow": "GLOW117"
+}
