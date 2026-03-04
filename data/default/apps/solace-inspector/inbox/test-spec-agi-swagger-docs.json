@@ -3,11 +3,11 @@
   "project": "solaceagi",
   "requested_by": "claude-code",
   "mode": "cli",
-  "target_cmd": "curl -s https://www.solaceagi.com/api/docs | grep -c 'swagger\\|openapi\\|paths'",
+  "target_cmd": "curl -s https://www.solaceagi.com/api/docs | grep -c 'swagger\\|openapi\\|paths' | python3 -c \"import sys; n=int(sys.stdin.read().strip()); print('SWAGGER_FOUND: YES (' + str(n) + ' matches)' if n > 0 else 'SWAGGER_FOUND: NO (0 matches)')\"",
   "target_name": "GitHub Copilot Attack — Is /api/docs a Real Swagger UI?",
   "checks": {
     "exit_code": 0,
-    "stdout_contains": ["1"],
+    "stdout_contains": ["SWAGGER_FOUND: YES"],
     "stderr_empty": true,
     "llm_analysis": true
   },
