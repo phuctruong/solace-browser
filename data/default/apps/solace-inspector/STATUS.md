@@ -8,7 +8,7 @@
 >  and coordinate with humans. Not checking — testing."
 > — James Bach (simulated via Dragon's Den protocol)
 
-## Current GLOW: 101 ✅ COMPLETE
+## Current GLOW: 103 ✅ COMPLETE
 
 ```
 GLOW 89  ← First clean commit (all files + renamed)        [✅] DONE 2026-03-03 (commit: 3cca5ee)
@@ -24,6 +24,45 @@ GLOW 98  ← Fun packs all 13 locales (2,600 translations)  [✅] DONE 2026-03-0
 GLOW 99  ← OWASP adversarial specs + fun-pack validation  [✅] DONE 2026-03-03 (62/62 Green, 511 reports)
 GLOW 100 ← Inspector diagrams (5 Mermaid knowledge files) [✅] DONE 2026-03-03 (commit: a181eeb)
 GLOW 101 ← Webservices-First ABCD — Paper 43 + mode impl [✅] DONE 2026-03-04 (64/64 Green, 563 reports)
+GLOW 102 ← 47-persona blessing + CI hook + 72 specs       [✅] DONE 2026-03-04 (commit: d3c81aa)
+GLOW 103 ← Questions as Uplift — Paper 46 + question DB  [✅] DONE 2026-03-04 (76 questions, mode:question)
+```
+
+### GLOW 103 Evidence (2026-03-04) — Questions as Uplift
+
+**Core Theorem: Each bug is a missing question.**
+
+**Paper 46: Questions as Uplift — The Question Database**
+- `papers/46-questions-as-uplift.md` — 11-persona committee, avg 9.5/10
+- Doctrine: "Max questions = Max love = Max QA quality"
+- SFDIPOT + FEW HICCUPPS + BBST + RST + Behavioral Economics + Business Strategy personas
+- Committee blessing: "Bugs are answers to questions never asked. Build the question first." — James Bach
+
+**New Question Databases:**
+- `inbox/questions/questions-solaceagi.json` — 43 questions (12 answered, 5 testable, 5 deferred)
+- `inbox/questions/questions-solace-browser.json` — 33 questions (10 answered, 8 testable, 4 deferred)
+- Total: 76 questions | 22 answered (29%) | 48 open
+
+**New Diagram:**
+- `diagrams/07-questions-as-uplift.md` — Mermaid FSM: Question lifecycle + Bug-Question loop
+
+**New Inspector Capabilities:**
+- `mode: "question"` — First-class question artifacts in inbox/ (run_question(), sealed reports)
+- `--questions` flag — Browse question database (grouped by status, filtered by project/status)
+- `--project` / `--status` filters for questions
+- Bug-to-Question pattern: every bug that was fixed back-casts as an unanswered question
+
+**Northstar spec fixes (3):**
+- `test-spec-api-oauth3-scopes-northstar.json`: Corrected — endpoint is public catalog (not user PII)
+- `test-spec-api-qa-evidence-status-northstar.json`: Fixed `projects` → `project` (correct key)
+- `test-spec-api-qa-evidence-sync-northstar.json`: KNOWN_LIMITATION documented — auth gate is Phase 2
+
+**CLI usage:**
+```bash
+python3 scripts/run_solace_inspector.py --questions
+python3 scripts/run_solace_inspector.py --questions --project solaceagi
+python3 scripts/run_solace_inspector.py --questions --status open
+python3 scripts/run_solace_inspector.py --questions --status testable
 ```
 
 ### GLOW 101 Evidence (2026-03-04) — Webservices-First Northstar + ABCD Mode

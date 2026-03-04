@@ -881,6 +881,144 @@ def run_self_diagnostic() -> dict:
 
 # ─── Inbox processor ────────────────────────────────────────────────────────
 
+QUESTIONS_DIR = INBOX_DIR / "questions"
+
+STATUS_COLORS = {
+    "open": "🔴",
+    "exploring": "🟡",
+    "testable": "🟠",
+    "answered": "🟢",
+    "deferred": "⚪",
+    "wont_answer": "⚫",
+}
+
+
+def run_question(spec: dict) -> dict:
+    """Register a question in the question database. No browser needed. $0.00."""
+    run_id = f"q-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
+    question_id = spec.get("question_id", run_id)
+    project = spec.get("project", "unknown")
+    category = spec.get("category", "general")
+    asked_by = spec.get("asked_by", "unknown")
+    question = spec.get("question", "")
+    motivation = spec.get("motivation", "")
+    oracle = spec.get("oracle", "")
+    risk = spec.get("risk", "medium")
+    status = spec.get("status", "open")
+    answer = spec.get("answer")
+    evidence_spec_id = spec.get("evidence_spec_id")
+    tags = spec.get("tags", [])
+    framework = spec.get("framework", "")
+
+    color = STATUS_COLORS.get(status, "❓")
+    print(f"  {color} [{risk.upper()}] {question_id} ({asked_by}): {question[:80]}")
+    if status == "answered":
+        print(f"     ✓ ANSWERED: {answer[:80] if answer else 'See evidence'}")
+    elif status == "testable":
+        print(f"     📝 TESTABLE → Write spec: {oracle[:60] if oracle else ''}")
+
+    report = {
+        "run_id": run_id,
+        "question_id": question_id,
+        "mode": "question",
+        "project": project,
+        "category": category,
+        "asked_by": asked_by,
+        "question": question,
+        "motivation": motivation,
+        "oracle": oracle,
+        "risk": risk,
+        "status": status,
+        "answer": answer,
+        "evidence_spec_id": evidence_spec_id,
+        "tags": tags,
+        "framework": framework,
+        "run_at": datetime.datetime.utcnow().isoformat() + "Z",
+        "belt": "Green" if status == "answered" else ("Yellow" if status == "testable" else "White"),
+        "qa_score": 100 if status == "answered" else (75 if status == "testable" else 50),
+    }
+
+    # Seal the question report
+    content = json.dumps(report, sort_keys=True).encode()
+    report["evidence_hash"] = "sha256:" + hashlib.sha256(content).hexdigest()
+
+    outbox_path = OUTBOX_DIR / f"report-{run_id}.json"
+    OUTBOX_DIR.mkdir(parents=True, exist_ok=True)
+    with open(outbox_path, "w") as f:
+        json.dump(report, f, indent=2)
+
+    return report
+
+
+def show_questions_report(project_filter: str | None = None, status_filter: str | None = None):
+    """Display all questions from all question databases. --questions flag."""
+    QUESTIONS_DIR.mkdir(parents=True, exist_ok=True)
+    q_files = sorted(QUESTIONS_DIR.glob("questions-*.json"))
+
+    if not q_files:
+        print("📭 No question databases found. Drop questions-{project}.json files in inbox/questions/")
+        return
+
+    all_questions = []
+    for qf in q_files:
+        with open(qf) as f:
+            db = json.load(f)
+        project = db.get("_meta", {}).get("project", qf.stem)
+        if project_filter and project_filter not in project:
+            continue
+        for q in db.get("questions", []):
+            q["_project"] = project
+            all_questions.append(q)
+
+    if status_filter:
+        all_questions = [q for q in all_questions if q.get("status") == status_filter]
+
+    # Group by status
+    by_status: dict = {}
+    for q in all_questions:
+        s = q.get("status", "open")
+        by_status.setdefault(s, []).append(q)
+
+    print(f"\n{'='*60}")
+    print("📋 SOLACE INSPECTOR — QUESTION DATABASE")
+    if project_filter:
+        print(f"   Project: {project_filter}")
+    print(f"   Total: {len(all_questions)} questions")
+    print(f"{'='*60}")
+
+    order = ["open", "testable", "exploring", "answered", "deferred", "wont_answer"]
+    for status in order:
+        qs = by_status.get(status, [])
+        if not qs:
+            continue
+        color = STATUS_COLORS.get(status, "❓")
+        label = status.upper().replace("_", " ")
+        print(f"\n{color} {label} ({len(qs)}):")
+        for q in sorted(qs, key=lambda x: x.get("risk", "medium")):
+            risk = q.get("risk", "medium").upper()
+            qid = q.get("question_id", "?")
+            asked = q.get("asked_by", "?")
+            text = q.get("question", "")[:72]
+            proj = q.get("_project", "")
+            print(f"  [{risk:8}] {qid} ({asked}) [{proj}]")
+            print(f"            {text}")
+            if status == "answered" and q.get("answer"):
+                print(f"            → {q['answer'][:70]}")
+            elif status == "testable" and q.get("oracle"):
+                print(f"            → WRITE SPEC: {q['oracle'][:60]}")
+
+    # Summary line
+    open_count = len(by_status.get("open", []))
+    answered_count = len(by_status.get("answered", []))
+    testable_count = len(by_status.get("testable", []))
+    total = len(all_questions)
+    pct = int(answered_count * 100 / total) if total else 0
+    print(f"\n{'='*60}")
+    print(f"Max Questions = Max Love = Max QA Quality")
+    print(f"Total: {total} | Answered: {answered_count} ({pct}%) | Open: {open_count} | Testable: {testable_count}")
+    print(f"{'='*60}\n")
+
+
 def process_inbox() -> list[dict]:
     """Process all test specs in inbox/. Returns list of reports."""
     INBOX_DIR.mkdir(parents=True, exist_ok=True)
@@ -908,6 +1046,8 @@ def process_inbox() -> list[dict]:
                 persona=persona,
                 spec_id=spec_id,
             )
+        elif mode == "question":
+            r = run_question(spec)
         elif mode == "api_abcd":
             r = run_api_abcd(spec)
         elif mode == "web":
@@ -961,6 +1101,8 @@ Architecture: Agent-native (zero LLM API calls — your AI agent reads reports a
                        help="QA all solace-browser pages (web mode)")
     group.add_argument("--inbox", action="store_true",
                        help="Process all inbox/ test specs (auto-detect mode)")
+    group.add_argument("--questions", action="store_true",
+                       help="Display question database (all projects). Use with --project and --status filters.")
     parser.add_argument("--persona", default="james_bach",
                         choices=list(PERSONA_PROMPTS.keys()),
                         help="Analysis persona (for agent_analysis_request)")
@@ -970,11 +1112,20 @@ Architecture: Agent-native (zero LLM API calls — your AI agent reads reports a
     parser.add_argument("--sync", metavar="URL", nargs="?",
                         const="https://www.solaceagi.com/api/v1/qa-evidence/sync",
                         help="Push sealed reports to cloud dashboard (default: solaceagi.com)")
+    parser.add_argument("--project", help="Filter --questions by project name")
+    parser.add_argument("--status", help="Filter --questions by status (open|testable|answered|deferred)")
     args = parser.parse_args()
 
     if args.cmd:
         # CLI mode — no browser required
         run_cli(args.cmd, cwd=args.cwd, persona=args.persona)
+        return
+
+    if args.questions:
+        show_questions_report(
+            project_filter=args.project,
+            status_filter=args.status,
+        )
         return
 
     if not args.inbox and not args.self_diagnostic and not args.url:
