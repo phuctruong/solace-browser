@@ -364,25 +364,26 @@
 
           <!-- Recent Runs -->
           <div class="ad-runs">
-            <div class="ad-runs__label" data-i18n="ad_recent_runs">Recent runs</div>
+            <div class="ad-runs__label" data-i18n="ad_recent_runs">Recent Runs</div>
+            <table class="token-table" style="display:none"><tbody id="app-runs-table-body"></tbody></table>
             <div id="adRunsList">
               <div class="ad-empty-runs" data-i18n="ad_empty_runs">No runs yet. Hit Run App to start.</div>
             </div>
           </div>
 
-          <!-- Customize (Inbox folders) -->
-          <div class="ad-customize">
-            <div class="ad-customize__label" data-i18n="ad_customize_label">Customize this app</div>
+          <!-- Inbox folders -->
+          <div class="ad-customize" id="app-inbox-sections">
+            <div class="ad-customize__label" data-i18n="ad_inbox_label">Inbox — Customize this app</div>
             <div class="ad-folder-grid" id="adFolderGrid">
               <div class="ad-folder" onclick="openFolder('prompts')">
                 <div class="ad-folder__icon">💬</div>
                 <div class="ad-folder__name">Prompts</div>
-                <div class="ad-folder__count" id="adCountPrompts">Drop files here</div>
+                <div class="ad-folder__count" id="adCountPrompts">prompts/ — Drop files here</div>
               </div>
               <div class="ad-folder" onclick="openFolder('templates')">
                 <div class="ad-folder__icon">📄</div>
                 <div class="ad-folder__name">Templates</div>
-                <div class="ad-folder__count" id="adCountTemplates">Drop files here</div>
+                <div class="ad-folder__count" id="adCountTemplates">templates/ — Drop files here</div>
               </div>
               <div class="ad-folder" onclick="openFolder('assets')">
                 <div class="ad-folder__icon">🗂️</div>
@@ -392,13 +393,42 @@
               <div class="ad-folder" onclick="openFolder('policies')">
                 <div class="ad-folder__icon">🔒</div>
                 <div class="ad-folder__name">Policies</div>
-                <div class="ad-folder__count" id="adCountPolicies">budget-policy.yaml loaded</div>
+                <div class="ad-folder__count" id="adCountPolicies">policies/ — budget-policy.yaml loaded</div>
               </div>
             </div>
           </div>
 
-          <!-- App info grid -->
+          <!-- Outbox folders -->
+          <div class="ad-customize" id="app-outbox-sections">
+            <div class="ad-customize__label" data-i18n="ad_outbox_label">Outbox — Run outputs</div>
+            <div class="ad-folder-grid" id="adOutboxGrid">
+              <div class="ad-folder" onclick="openFolder('previews')">
+                <div class="ad-folder__icon">👁️</div>
+                <div class="ad-folder__name">Previews</div>
+                <div class="ad-folder__count" id="adCountPreviews">previews/ — output snapshots</div>
+              </div>
+              <div class="ad-folder" onclick="openFolder('evidence')">
+                <div class="ad-folder__icon">🔐</div>
+                <div class="ad-folder__name">Evidence</div>
+                <div class="ad-folder__count" id="adCountEvidence">SHA-256 sealed bundles</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Budget & OAuth3 Scopes -->
           <div class="ad-info-grid">
+            <div class="ad-info-card">
+              <div class="ad-info-card__label" data-i18n="ad_budget_label">Budget</div>
+              <div class="ad-info-card__value" id="adBudgetValue">$0.10 / run limit</div>
+            </div>
+            <div class="ad-info-card">
+              <div class="ad-info-card__label" data-i18n="ad_oauth3_scopes">OAuth3 Scopes</div>
+              <div class="ad-info-card__value" id="adScopesValue">gmail.read.inbox</div>
+            </div>
+            <div class="ad-info-card">
+              <div class="ad-info-card__label" data-i18n="ad_execution_model">Execution Model</div>
+              <div class="ad-info-card__value" id="adExecutionModel">Local — on your machine</div>
+            </div>
             <div class="ad-info-card">
               <div class="ad-info-card__label" data-i18n="ad_info_cost">Approx. cost per run</div>
               <div class="ad-info-card__value" id="adCostValue">~$0.003</div>
