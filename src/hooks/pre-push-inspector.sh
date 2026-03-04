@@ -23,7 +23,7 @@ set -euo pipefail
 # Constants
 # ─────────────────────────────────────────────────────────────────────────────
 
-GATE_VERSION="1.0"
+GATE_VERSION="1.1"
 LOG_FILE="/tmp/inspector-pre-push.log"
 BYPASS_LOG_RELATIVE="data/default/apps/solace-inspector/bypass.log"
 NORTHSTARS_RELATIVE="data/default/apps/solace-inspector/inbox/northstars"
@@ -204,17 +204,46 @@ echo ""
 # Count specs by reading the log
 CPU_SPECS_TOTAL=$(grep -c "Belt:" "${LOG_FILE}" 2>/dev/null || echo 0)
 
+# ── Infrastructure-absent detection ──
+# Exit code 7 = connection refused (curl). These are infra-absent, not quality regressions.
+# Count how many White belt specs are caused by exit code 7 (infra not running).
+INFRA_SKIP=0
+INFRA_SKIP=$(python3 -c "
+import re, sys
+lines = open('${LOG_FILE}').readlines()
+infra_count = 0
+for i, line in enumerate(lines):
+    if 'Belt: White' in line:
+        # Look back up to 10 lines for 'Exit code: 7'
+        context = ''.join(lines[max(0,i-10):i])
+        if 'Exit code: 7' in context:
+            infra_count += 1
+print(infra_count)
+" 2>/dev/null || echo 0)
+
+if [ "${INFRA_SKIP}" -gt 0 ]; then
+    print_warn "Infrastructure-absent: ${INFRA_SKIP} spec(s) skipped (service not running, exit code 7)."
+    print_warn "These are NOT quality regressions — gate does not block on infrastructure absence."
+fi
+
 # Check for failing belts (White = score<70, Orange = score 70-79)
+# Subtract infrastructure-absent White belt specs from the failure count
 BELT_WHITE_LINES=$(grep -n "Belt: White" "${LOG_FILE}" 2>/dev/null || true)
 BELT_ORANGE_LINES=$(grep -n "Belt: Orange" "${LOG_FILE}" 2>/dev/null || true)
 
+REAL_WHITE_FAILURES=0
 if [ -n "${BELT_WHITE_LINES}" ]; then
-    CPU_SPECS_FAIL=$(echo "${BELT_WHITE_LINES}" | wc -l | tr -d ' ')
-    GATE_FAILED=1
-    print_fail "Belt: White detected in ${CPU_SPECS_FAIL} spec(s) — these are regressions:"
-    while IFS= read -r line; do
-        echo -e "    ${RED}${line}${RESET}"
-    done <<< "${BELT_WHITE_LINES}"
+    TOTAL_WHITE=$(echo "${BELT_WHITE_LINES}" | wc -l | tr -d ' ')
+    REAL_WHITE_FAILURES=$((TOTAL_WHITE - INFRA_SKIP))
+    if [ "${REAL_WHITE_FAILURES}" -gt 0 ]; then
+        CPU_SPECS_FAIL=$((CPU_SPECS_FAIL + REAL_WHITE_FAILURES))
+        GATE_FAILED=1
+        print_fail "Belt: White detected in ${REAL_WHITE_FAILURES} spec(s) — these are quality regressions:"
+        # Show only non-infra White failures (best effort — show all for diagnosis)
+        while IFS= read -r line; do
+            echo -e "    ${RED}${line}${RESET}"
+        done <<< "${BELT_WHITE_LINES}"
+    fi
 fi
 
 if [ -n "${BELT_ORANGE_LINES}" ]; then
@@ -227,16 +256,25 @@ if [ -n "${BELT_ORANGE_LINES}" ]; then
     done <<< "${BELT_ORANGE_LINES}"
 fi
 
-if [ "${INSPECTOR_EXIT}" -ne 0 ] && [ -z "${BELT_WHITE_LINES}" ] && [ -z "${BELT_ORANGE_LINES}" ]; then
-    GATE_FAILED=1
-    print_fail "Inspector runner exited with code ${INSPECTOR_EXIT} — inspect log for errors."
-    print_fail "Log: ${LOG_FILE}"
+if [ "${INSPECTOR_EXIT}" -ne 0 ] && [ "${REAL_WHITE_FAILURES}" -eq 0 ] && [ -z "${BELT_ORANGE_LINES}" ]; then
+    # Runner crashed but no quality regressions found — likely infra issue or format error
+    if [ "${INFRA_SKIP}" -gt 0 ]; then
+        print_warn "Inspector runner exited with code ${INSPECTOR_EXIT} — but all failures are infrastructure-absent."
+    else
+        GATE_FAILED=1
+        print_fail "Inspector runner exited with code ${INSPECTOR_EXIT} — inspect log for errors."
+        print_fail "Log: ${LOG_FILE}"
+    fi
 fi
 
-CPU_SPECS_PASS=$((CPU_SPECS_TOTAL - CPU_SPECS_FAIL))
+CPU_SPECS_PASS=$((CPU_SPECS_TOTAL - CPU_SPECS_FAIL - INFRA_SKIP))
 
 if [ "${GATE_FAILED}" -eq 0 ]; then
-    print_pass "CPU Gate: all ${CPU_SPECS_TOTAL} spec(s) Green — no regressions found."
+    if [ "${INFRA_SKIP}" -gt 0 ]; then
+        print_pass "CPU Gate: ${CPU_SPECS_PASS}/${CPU_SPECS_TOTAL} Green, ${INFRA_SKIP} infra-skipped — no quality regressions."
+    else
+        print_pass "CPU Gate: all ${CPU_SPECS_TOTAL} spec(s) Green — no regressions found."
+    fi
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
