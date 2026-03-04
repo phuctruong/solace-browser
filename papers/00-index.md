@@ -1,56 +1,64 @@
 # Solace Browser Papers Index
-**Updated:** 2026-03-03 | **Auth:** 65537
+# Auth: 65537 | Updated: GLOW 123 (2026-03-04) | Classification: OSS (public)
+# Private papers (Inspector, competitive, deployment) → solace-cli/papers/
 
-## Papers
+---
+
+## Papers (OSS — Browser Features + Standards)
 
 | # | Paper | Content | Status |
 |---|-------|---------|--------|
-| 01 | competitive-landscape | 19 competitors analyzed, 7 structural gaps, pricing | CANONICAL |
-| 02 | app-inbox-outbox-standard | Universal app contract, inbox/outbox convention | CANONICAL |
-| 03 | web-native-automation | No API keys, web versions, exclusive categories | CANONICAL |
-| 04 | yinyang-dual-rail-browser | Top rail (status) + bottom rail (chat), Anti-Clippy laws | CANONICAL |
-| 05 | pzip-stillwater-capture | PZip architecture, 100% RTC, Prime Mermaid as ripple | CANONICAL |
-| 06 | part11-evidence-browser | ALCOA+ compliance, data vs visual mode, e-signing | CANONICAL |
-| 07 | budget-wallet-enforcement | Per-app budgets, fail-closed gates, MIN-cap delegation | CANONICAL |
-| 08 | cross-app-yinyang-delight | Cross-app orchestration, Yinyang universal interface, delight engine, 18 day-one apps | CANONICAL |
-| 09 | yinyang-tutorial-funpack-mcp | Tutorial popup (5-step, 13 locales), Fun Pack standard, OAuth3 leave-app gate, Agent Notification API, MCP server (7 tools), YinYang Chat (OpenRouter) | CANONICAL |
-| 10 | production-browser-release-loop | Compile -> upload -> download -> head-on smoke -> production API matrix, timed release loop, default bundle policy | CANONICAL |
-| 11 | app-store-sync-governance | Git-backed official catalog, Firestore proposal queue, local file backend for dev, promotion workflow | CANONICAL |
-| 12 | solaceagi-deployment-surface-mapping | Domain mapping + trigger source verification, repo/service ownership matrix, website -> GCS download-link contract | CANONICAL |
-| 38 | remote-browser-control-tunnel | Remote browser tunnel architecture | CANONICAL |
-| 39 | marketing-asset-pipeline | Test sessions → screenshots → GIFs → social → tutorials → viral | CANONICAL |
-| 40 | part11-compliance-selfcert | 21 CFR Part 11 full mapping, self-certification template, SOPs, evidence chain architecture | CANONICAL |
-| 42 | solace-inspector | Agent-native HITL QA system: inbox/outbox protocol, SHA-256 sealing, esign gate, 64 specs, 563 reports, $0.00/run | CANONICAL |
-| 43 | webservices-northstar-abcd | Webservices-First Northstar architecture + ABCD cost-optimization protocol | CANONICAL |
-| 45 | launch-blessing-47-personas | STORY-47 prime completion: all 47 voices, avg 9.43/10, formal launch blessing for solaceagi.com/inspectors | CANONICAL |
-| SOP-01 | sop-01-evidence-audit | Evidence Capture and Audit Trail Management SOP (v1.0) | CANONICAL |
+| 02 | [app-inbox-outbox-standard](02-app-inbox-outbox-standard.md) | Universal app contract, inbox/outbox convention | CANONICAL |
+| 03 | [web-native-automation](03-web-native-automation.md) | No API keys, web versions, exclusive categories | CANONICAL |
+| 04 | [yinyang-dual-rail-browser](04-yinyang-dual-rail-browser.md) | Top rail (status) + bottom rail (chat), Anti-Clippy laws | CANONICAL |
+| 05 | [pzip-stillwater-capture](05-pzip-stillwater-capture.md) | PZip architecture, 100% RTC, Prime Mermaid as ripple | CANONICAL |
+| 06 | [part11-evidence-browser](06-part11-evidence-browser.md) | ALCOA+ compliance, data vs visual mode, e-signing | CANONICAL |
+| 07 | [budget-wallet-enforcement](07-budget-wallet-enforcement.md) | Per-app budgets, fail-closed gates, MIN-cap delegation | CANONICAL |
+| 08 | [cross-app-yinyang-delight](08-cross-app-yinyang-delight.md) | Cross-app orchestration, Yinyang universal interface, delight engine, 18 day-one apps | CANONICAL |
+| 09 | [yinyang-tutorial-funpack-mcp](09-yinyang-tutorial-funpack-mcp.md) | Tutorial popup (5-step, 13 locales), Fun Pack standard, OAuth3 leave-app gate, Agent Notification API, MCP server (7 tools) | CANONICAL |
+| 10 | [production-browser-release-loop](10-production-browser-release-loop.md) | Compile → upload → download → smoke → production matrix | CANONICAL |
+| 11 | [app-store-sync-governance](11-app-store-sync-governance.md) | Git-backed catalog, Firestore proposal queue, promotion workflow | CANONICAL |
+| 38 | [remote-browser-control-tunnel](38-remote-browser-control-tunnel.md) | Secure remote browser control via tunnel architecture | CANONICAL |
+| 40 | [part11-compliance-selfcert](40-part11-compliance-selfcert.md) | 21 CFR Part 11 full mapping, self-cert template, SOPs | CANONICAL |
+| 41 | [central-apps-architecture](41-central-apps-architecture.md) | Central apps architecture standard | CANONICAL |
+| 44 | [ci-hook-certification-gate](44-ci-hook-certification-gate.md) | Pre-push CI hook as certification gate | CANONICAL |
+| 46 | [questions-as-uplift](46-questions-as-uplift.md) | Question database as uplift mechanism | CANONICAL |
 
-## Cross-References
+---
 
-| This Paper | solaceagi Papers | solace-cli Papers/Diagrams |
-|-----------|-----------------|---------------------------|
-| 01 competitive-landscape | solace-marketing/STRATEGY.md | Paper 09 (SW5.0 Triangle) |
-| 02 app-inbox-outbox | papers/13-agent-inbox-outbox.md | Diagram 07 (Sync Bus) |
-| 03 web-native-automation | papers/01-solace-browser-white-paper.md | Paper 07 (Three Realms) |
-| 04 yinyang-dual-rail | papers/22+25 (Yinyang proposal+spec) | Diagram 13 (Yinyang FSM) |
-| 05 pzip-stillwater | papers/14+20 (PZip+PrimeWiki) | Paper 12 (Prime Vision), Diagram 11 (PM Snapshot) |
-| 06 part11-evidence | papers/07+11 (Part 11) | Diagram 03 (Evidence Bundling) |
-| 07 budget-wallet | papers/04+19 (Wallet+Preview) | Paper 14 (Phase 4 Dispatch), Diagram 10 (Core Flow) |
-| 08 cross-app-delight | papers/13 (Inbox/Outbox), 22+25 (Yinyang) | Paper 04 (Triple-Twin warm tokens), Diagrams 16-18 |
-| 09 tutorial-funpack-mcp | papers/22+25 (Yinyang), 04+19 (Wallet) | Paper 04 (Triple-Twin), Diagram 13 (Yinyang FSM) |
-| 10 production-browser-release-loop | solaceagi download + API deployment docs | Diagram 19 (Browser Release Loop) |
-| 11 app-store-sync-governance | app-store release + community submission process | Diagram 20 (App Store Sync Governance) |
-| 12 deployment-surface-mapping | Cloud Run domain + trigger ownership | Diagram 21 (Deployment Surface Mapping) |
-| 40 part11-compliance-selfcert | papers/07+11 (Part 11), CLAUDE.md Part 11 arch | Diagram 40 (Evidence Chain FSM), part11-alcoa-mapping |
-| 45 launch-blessing-47-personas | Papers 42, 43, 44 (Inspector chain) | STORY-47 prime, all 9 project domains |
+## Diagrams (OSS)
 
-## Invariants (All Papers)
+| # | Diagram | Content |
+|---|---------|---------|
+| 01 | [browser-startup-sequence](../diagrams/01-browser-startup-sequence.md) | 3-step boot (server + Playwright + webservice) |
+| 02 | [cron-scheduler-patterns](../diagrams/02-cron-scheduler-patterns.md) | Cron job canonical patterns |
+| 03 | [first-install-ux-flow](../diagrams/03-first-install-ux-flow.md) | 4-step onboarding flow |
+| 04 | [tunnel-architecture](../diagrams/04-tunnel-architecture.md) | Secure remote browser control |
+| 05 | [alcoa-evidence-chain](../diagrams/05-alcoa-evidence-chain.md) | FDA Part 11 evidence architecture |
+
+---
+
+## Private Papers (→ solace-cli/papers/)
+
+Moved for trade secret protection. See solace-cli/papers/00-index.md.
+
+| Was | Now at | Why |
+|-----|--------|-----|
+| 01-competitive-landscape | solace-cli/papers/23 | Competitive intel = private |
+| 12-deployment-surface-mapping | solace-cli/papers/27 | Deployment strategy = private |
+| 39-marketing-asset-pipeline | solace-cli/papers/39 | GTM strategy = private |
+| 42-solace-inspector | solace-cli/papers/42 | **TRADE SECRET** |
+| 43-webservices-northstar-abcd | solace-cli/papers/43 | Internal protocol = private |
+| 45-launch-blessing-47-personas | solace-cli/papers/45 | Personas system = private |
+| sop-01, sop-02 | solace-cli/papers/sop-* | Internal SOPs = private |
+
+---
+
+## Invariants (All Browser Papers)
 
 1. LLM called ONCE at preview, never during execution
 2. Evidence captured at event time, never retroactively
-3. Fail-closed: any gate failure = BLOCKED, never degrade
-4. OAuth3 scoped delegation: Bearer sw_sk_ on every request
-5. Local-first: all computation runs in browser, cloud = sync only
-6. Zero CRUD in browser UI: read-only display + VS Code + Yinyang
-7. File = single source of truth, browser watches for changes
-8. No vendor API keys: web versions of all services
+3. Fail-closed: any gate failure = BLOCKED
+4. OAuth3 scoped delegation on every request
+5. Local-first: computation in browser, cloud = sync only
+6. No vendor API keys: web versions of all services
