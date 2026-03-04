@@ -8,7 +8,7 @@
 >  and coordinate with humans. Not checking — testing."
 > — James Bach (simulated via Dragon's Den protocol)
 
-## Current GLOW: 99 ✅ COMPLETE
+## Current GLOW: 100 ✅ COMPLETE
 
 ```
 GLOW 89  ← First clean commit (all files + renamed)        [✅] DONE 2026-03-03 (commit: 3cca5ee)
@@ -22,7 +22,33 @@ GLOW 96  ← Inbox as QA memory substrate (51 specs 100%)    [✅] DONE 2026-03-
 GLOW 97  ← YinYang API + MCP fully QA'd (56 specs 100%)   [✅] DONE 2026-03-03 (56/56 Green, 386 reports)
 GLOW 98  ← Fun packs all 13 locales (2,600 translations)  [✅] DONE 2026-03-03 (swarms, $0.00)
 GLOW 99  ← OWASP adversarial specs + fun-pack validation  [✅] DONE 2026-03-03 (62/62 Green, 511 reports)
+GLOW 100 ← Inspector diagrams (5 Mermaid knowledge files) [✅] DONE 2026-03-03 (commit: a181eeb)
 ```
+
+### GLOW 100 Evidence (2026-03-03) — 5 Mermaid Diagrams
+
+**Inspector Knowledge Base — diagrams/ folder populated:**
+- `01-hitl-loop.md` — Full HITL evidence chain: Agent → Inspector → Human. Quality gates G1-G4.
+- `02-inbox-as-qa-board.md` — Inbox vs Jira comparison. 62-spec taxonomy table. Part 11 retention.
+- `03-spec-taxonomy.md` — 3 modes × 18 heuristics decision tree. Scoring formula. `stderr_empty` trap.
+- `04-glow-progression.md` — Mermaid timeline GLOW 89→99. Evidence accumulation. F-001/F-002/F-003 bugs.
+- `05-competitive-position.md` — Quadrant chart (zero competitors). Feature matrix. Swarm economics ($0.00).
+
+**SW5.0 pipeline stage**: PAPERS ✅ → DIAGRAMS ✅ → STYLEGUIDES → WEBSERVICES → TESTS → CODE → SEAL
+
+### GLOW 99 Evidence (2026-03-03) — 62/62 Specs 100% Green
+
+**OWASP Adversarial Security Coverage:**
+- **6 new specs**: fun-packs-all-locales + 5 OWASP adversarial
+- **OWASP-1**: Malformed JSON → 401/422 not 500 ✅
+- **OWASP-2**: Oversized payload → 401 not 200 ✅ (auth checked before size)
+- **OWASP-3**: SQL injection → safe response ✅
+- **OWASP-4**: Invalid Bearer token → 401 not 500 ✅
+- **OWASP-5**: Rate resilience — 20 rapid requests → no crash ✅
+- **Fun packs**: All 13 locale packs validated (100 jokes + 100 facts each = 2,600 items)
+- **Total reports**: 511 (SHA-256 sealed)
+- **Key fix**: `curl -sf` → `curl -s` (adversarial specs expect 4xx; `-f` exits 22 on 4xx)
+- **Key fix**: auth-first FastAPI pattern — malformed/oversized + no auth → 401 (not 422/413)
 
 ### GLOW 97 Evidence (2026-03-03) — 56/56 Specs 100% Green
 
