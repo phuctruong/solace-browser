@@ -61,6 +61,34 @@
           <p>AI browser automation with evidence trails, OAuth3, and $0.001 recipe replay.</p>
         </section>
 
+        <!-- Cloud Account Card -->
+        <div class="home-card home-cloud-account mb-24" id="home-cloud-account-card">
+          <div class="home-cloud-account__row">
+            <div class="home-cloud-account__left">
+              <span class="home-cloud-account__icon">☯</span>
+              <div>
+                <p class="home-cloud-account__title">Solace Cloud</p>
+                <p class="home-cloud-account__sub" id="cloud-account-email">Checking…</p>
+              </div>
+            </div>
+            <div class="home-cloud-account__stats">
+              <div class="home-cloud-stat">
+                <span class="home-cloud-stat__val" id="cloud-stat-balance">—</span>
+                <span class="home-cloud-stat__label">Balance</span>
+              </div>
+              <div class="home-cloud-stat">
+                <span class="home-cloud-stat__val" id="cloud-stat-plan">—</span>
+                <span class="home-cloud-stat__label">Plan</span>
+              </div>
+              <div class="home-cloud-stat">
+                <span class="home-cloud-stat__val" id="cloud-stat-sync">—</span>
+                <span class="home-cloud-stat__label">Last sync</span>
+              </div>
+            </div>
+            <a class="home-cloud-account__cta" href="https://www.solaceagi.com/dashboard" target="_blank">Dashboard →</a>
+          </div>
+        </div>
+
         <!-- KPI Grid -->
         <div class="kpi-grid home-kpi-grid" id="kpi-grid">
           <div class="stat-card">
@@ -535,8 +563,47 @@
       }
     });
 
+    async function loadCloudAccount() {
+      var card = document.getElementById('home-cloud-account-card');
+      var key = typeof localStorage !== 'undefined' && localStorage.getItem('solace_api_key');
+      var CLOUD = 'https://www.solaceagi.com';
+      if (!key) {
+        document.getElementById('cloud-account-email').textContent = 'Not signed in';
+        document.getElementById('cloud-stat-balance').textContent = '—';
+        document.getElementById('cloud-stat-plan').textContent = '—';
+        document.getElementById('cloud-stat-sync').textContent = '—';
+        if (card) card.style.borderColor = 'rgba(163,185,214,0.10)';
+        return;
+      }
+      var headers = { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' };
+      try {
+        var [meResp, panelResp, syncResp] = await Promise.all([
+          fetch(CLOUD + '/api/v1/auth/me', { headers: headers }),
+          fetch(CLOUD + '/api/v1/billing/credits/panel', { headers: headers }),
+          fetch(CLOUD + '/api/v1/browser/evidence', { headers: headers })
+        ]);
+        var me = meResp.ok ? await meResp.json() : null;
+        var panel = panelResp.ok ? await panelResp.json() : null;
+        var sync = syncResp.ok ? await syncResp.json() : null;
+        if (me) document.getElementById('cloud-account-email').textContent = me.email || 'Signed in';
+        if (panel) {
+          document.getElementById('cloud-stat-balance').textContent = '$' + (panel.balance || 0).toFixed(2);
+          var plan = panel.plan || 'free';
+          document.getElementById('cloud-stat-plan').textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
+          if (card && panel.low_balance) card.style.borderColor = 'rgba(255,100,50,0.4)';
+        }
+        if (sync && sync.last_sync) {
+          document.getElementById('cloud-stat-sync').textContent = new Date(sync.last_sync).toLocaleDateString();
+        } else {
+          document.getElementById('cloud-stat-sync').textContent = 'Never';
+        }
+      } catch (_) {
+        document.getElementById('cloud-account-email').textContent = 'Cloud offline';
+      }
+    }
+
     // Boot sequence
-    Promise.all([loadStatus(), loadSchedule(), loadQueue(), loadEvidence(), loadStats(), loadScreenshots()]);
+    Promise.all([loadStatus(), loadSchedule(), loadQueue(), loadEvidence(), loadStats(), loadScreenshots(), loadCloudAccount()]);
     // Auto-refresh status every 30s
     setInterval(loadStatus, 30000);
   </script>
