@@ -105,9 +105,41 @@ def load_keep_alive_specs() -> dict:
     return specs
 
 
+def get_active_token_sites() -> set:
+    """
+    Return the set of site names that have at least one active (non-revoked,
+    non-expired) OAuth3 token.  Token scopes are prefixed with the site name
+    (e.g. "linkedin.read.feed" → site "linkedin").
+    """
+    token_dir = Path.home() / ".solace" / "tokens"
+    if not token_dir.exists():
+        return set()
+    now = datetime.now()
+    sites: set = set()
+    for fp in token_dir.glob("*.json"):
+        try:
+            d = json.loads(fp.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if d.get("revoked"):
+            continue
+        expires_raw = d.get("expires_at", "")
+        try:
+            # Handle timezone-aware ISO strings
+            exp_str = expires_raw.replace("+00:00", "").replace("Z", "")
+            if datetime.fromisoformat(exp_str) < now:
+                continue
+        except Exception:
+            pass  # unparseable → treat as valid (fail-open)
+        for scope in d.get("scopes", []):
+            if "." in scope:
+                sites.add(scope.split(".")[0])
+    return sites
+
+
 def run_keep_alive(settings: dict) -> bool:
     """
-    Ping each site that has a due keep-alive.
+    Ping each site that has a due keep-alive AND an active OAuth3 token.
     Intervals/URLs come from app manifests; enabled/last_ping from settings.
     Returns True if any ping was done (settings needs saving).
     """
@@ -115,6 +147,7 @@ def run_keep_alive(settings: dict) -> bool:
     if not specs:
         return False
 
+    active_sites = get_active_token_sites()
     user_state = settings.get("keep_alive", {})
     now = datetime.now()
     saved_url = get_current_url()
@@ -123,6 +156,11 @@ def run_keep_alive(settings: dict) -> bool:
     for site, spec in specs.items():
         cfg = user_state.get(site, {})
         if not cfg.get("enabled", True):
+            continue
+
+        # Only keep-alive if the user has an active OAuth3 token for this site
+        if site not in active_sites:
+            log(f"keep-alive skip: {site} — no active OAuth3 token")
             continue
 
         interval_min  = spec["interval_min"]   # from manifest
