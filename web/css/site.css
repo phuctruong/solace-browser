@@ -1964,3 +1964,105 @@ main { display: block; }
 .token-table th { text-align: left; color: var(--sb-text-muted, #8bafc4); padding: 8px 10px; border-bottom: 1px solid rgba(129,175,221,0.15); font-weight: 600; }
 .token-table td { padding: 8px 10px; border-bottom: 1px solid rgba(129,175,221,0.08); color: var(--sb-text, #c5daea); }
 .surface-card__kicker { font-size: 0.72em; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sb-text-muted, #8bafc4); margin: 0 0 4px; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   YinYang Tutorial WOW Edition — v2.0 (GLOW 123)
+   Persona: Jony Ive · Rory Sutherland · Vanessa Van Edwards · Russell · Seth
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Step 1 — time subtitle */
+.yyT-step-body--time {
+  font-size: 1rem;
+  color: var(--sb-signal, #64c4ff);
+  font-style: italic;
+  margin-bottom: 8px;
+  margin-top: -10px;
+}
+
+/* Step 2 — demo terminal */
+.yyT-demo-terminal {
+  background: #010a12;
+  border: 1px solid rgba(100,196,255,0.18);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 16px;
+  font-family: var(--sb-font-mono, 'SF Mono', monospace);
+  font-size: 0.82rem;
+  text-align: left;
+}
+.yyT-demo-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  color: var(--sb-text-muted, #9cb1ca);
+  border-bottom: 1px solid rgba(100,196,255,0.07);
+}
+.yyT-demo-line:last-child { border-bottom: none; }
+.yyT-demo-time { margin-left: auto; font-size: 0.74rem; color: rgba(100,196,255,0.45); flex-shrink: 0; }
+.yyT-demo-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.yyT-demo-dot--running { background: #f59e0b; animation: yyT-dot-pulse 1s ease-in-out infinite; }
+.yyT-demo-dot--done    { background: #46d9a7; }
+.yyT-demo-dot--seal    { background: #64c4ff; }
+@keyframes yyT-dot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* Step 3 — savings display */
+.yyT-savings-display {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(100,196,255,0.04);
+  border: 1px solid rgba(100,196,255,0.13);
+  border-radius: 12px;
+}
+.yyT-savings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(100,196,255,0.08);
+  font-size: 0.88rem;
+}
+.yyT-savings-row:last-child { border-bottom: none; }
+.yyT-savings-label { color: var(--sb-text-muted, #9cb1ca); font-size: 0.8rem; flex-shrink: 0; }
+.yyT-savings-value { text-align: right; line-height: 1.4; }
+.yyT-savings-value--bad  { color: rgba(255,100,100,0.75); }
+.yyT-savings-value--good { color: var(--sb-success, #46d9a7); }
+.yyT-savings-total {
+  margin-top: 14px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--sb-signal, #64c4ff);
+  font-family: var(--sb-font-display, sans-serif);
+}
+.yyT-savings-total strong { font-size: 1.5rem; }
+
+/* Step 4 — trust grid */
+.yyT-trust-grid { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.yyT-trust-item { display: flex; align-items: flex-start; gap: 14px; opacity: 0; transform: translateY(10px); }
+.yyT-trust-item--animate { animation: yyT-slide-in 0.4s ease forwards; }
+@keyframes yyT-slide-in { to { opacity: 1; transform: translateY(0); } }
+.yyT-trust-icon { font-size: 1.6rem; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+.yyT-trust-item strong { color: var(--sb-signal, #64c4ff); display: block; margin-bottom: 3px; font-size: 0.95rem; }
+.yyT-trust-item p { color: var(--sb-text-muted, #9cb1ca); font-size: 0.82rem; margin: 0; line-height: 1.5; }
+
+/* Step 5 — hero CTA button (Jony: one button, absolute confidence) */
+.yyT-cta-btn {
+  display: block;
+  width: 100%;
+  padding: 16px 24px;
+  margin: 24px 0 0;
+  background: linear-gradient(135deg, var(--sb-accent, #ff6b35) 0%, var(--sb-signal, #64c4ff) 100%);
+  color: #000;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: var(--sb-font-body, sans-serif);
+  animation: yyT-hero-pulse 2.5s ease-in-out infinite;
+  transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.yyT-cta-btn:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 8px 32px rgba(100,196,255,0.4); }
+.yyT-cta-btn:disabled { opacity: 0.6; animation: none; cursor: not-allowed; }
