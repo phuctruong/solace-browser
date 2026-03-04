@@ -826,6 +826,20 @@ class SolaceBrowser:
             target = filename or "screenshot"
             return await self._finalize_part11_result("take_screenshot", target, {"error": str(e)})
 
+    async def navigate_background(self, url: str) -> Dict[str, Any]:
+        """Navigate URL in an invisible background tab — main visible page untouched, tab auto-closes."""
+        if not self.context:
+            return {"error": "No browser context"}
+        try:
+            bg_page = await self.context.new_page()
+            try:
+                await bg_page.goto(url, wait_until="domcontentloaded", timeout=15000)
+            finally:
+                await bg_page.close()
+            return {"success": True, "url": url, "mode": "background"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     async def screenshot_bg(self, url: str, filename: Optional[str] = None) -> Dict[str, Any]:
         """Screenshot a URL in a hidden background page — main visible page is never touched."""
         if not self.context:
@@ -1885,6 +1899,7 @@ class SolaceBrowserServer:
         self.app.router.add_get('/json/version', self._handle_version)
         self.app.router.add_get('/json/list', self._handle_list)
         self.app.router.add_post('/api/navigate', self._handle_navigate)
+        self.app.router.add_post('/api/navigate/background', self._handle_navigate_background)
         self.app.router.add_post('/api/click', self._handle_click)
         self.app.router.add_post('/api/fill', self._handle_fill)
         self.app.router.add_post('/api/screenshot', self._handle_screenshot)
@@ -2002,6 +2017,15 @@ class SolaceBrowserServer:
         """Navigate to URL"""
         data = await request.json()
         result = await self.browser.navigate(data.get('url', ''))
+        return web.json_response(result, status=self._result_status(result))
+
+    async def _handle_navigate_background(self, request):
+        """Navigate URL in an invisible background tab — main visible page is never touched."""
+        data = await request.json()
+        url = data.get('url', '')
+        if not url:
+            return web.json_response({"error": "url required"}, status=400)
+        result = await self.browser.navigate_background(url)
         return web.json_response(result, status=self._result_status(result))
 
     async def _handle_click(self, request):

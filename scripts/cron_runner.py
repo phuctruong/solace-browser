@@ -150,7 +150,6 @@ def run_keep_alive(settings: dict) -> bool:
     active_sites = get_active_token_sites()
     user_state = settings.get("keep_alive", {})
     now = datetime.now()
-    saved_url = get_current_url()
     any_pinged = False
 
     for site, spec in specs.items():
@@ -175,12 +174,12 @@ def run_keep_alive(settings: dict) -> bool:
                 pass
 
         ping_url = spec["url"]
-        log(f"keep-alive ping: {site} ({interval_min}m) → {ping_url}")
+        log(f"keep-alive ping: {site} ({interval_min}m) → {ping_url} [background]")
 
-        result = api_post(f"{BROWSER_API}/api/navigate", {
+        # Use background tab — invisible to user, main visible page untouched
+        result = api_post(f"{BROWSER_API}/api/navigate/background", {
             "url": ping_url,
-            "wait_for": "domcontentloaded",
-        }, timeout=15)
+        }, timeout=20)
 
         if result and result.get("success"):
             user_state.setdefault(site, {})["last_ping"] = now.isoformat()
@@ -191,13 +190,7 @@ def run_keep_alive(settings: dict) -> bool:
             log(f"  ✗ {site} ping failed")
 
         time.sleep(1)  # brief pause between pings
-
-    # Navigate back to where the browser was
-    if any_pinged and saved_url and saved_url != get_current_url():
-        api_post(f"{BROWSER_API}/api/navigate", {
-            "url": saved_url,
-            "wait_for": "domcontentloaded",
-        }, timeout=10)
+        # Note: background navigation — no need to navigate back, main page was never changed
 
     if any_pinged:
         settings["keep_alive"] = user_state
