@@ -180,6 +180,22 @@ def _default_playwright_browsers_path() -> Path:
     return Path.home() / ".cache" / "ms-playwright"
 
 
+def _solace_data_dir() -> Path:
+    """Return a user-writable data directory for Solace Browser artifacts.
+
+    On Windows installed via MSI, the binary lives in Program Files which is
+    read-only.  Use ~/.solace/ instead so sessions, artifacts, and evidence
+    can always be written.
+    """
+    env = os.environ.get("SOLACE_DATA_DIR", "").strip()
+    if env:
+        p = Path(env).expanduser()
+    else:
+        p = Path.home() / ".solace"
+    p.mkdir(parents=True, exist_ok=True)
+    return p
+
+
 def _ensure_playwright_browsers_path() -> Path:
     configured = os.environ.get("PLAYWRIGHT_BROWSERS_PATH", "").strip()
     path = Path(configured).expanduser() if configured else _default_playwright_browsers_path()
@@ -239,14 +255,14 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     mode_group = parser.add_mutually_exclusive_group()
     mode_group.add_argument(
-        '--head',
-        action='store_true',
-        help='Run in headed mode (show browser window)',
-    )
-    mode_group.add_argument(
         '--headless',
         action='store_true',
-        help='Run in headless mode',
+        help='Run in headless mode (developer/server use only)',
+    )
+    mode_group.add_argument(
+        '--head',
+        action='store_true',
+        help='Run in headed mode (default — show browser window)',
     )
     parser.add_argument(
         '--show-ui',
@@ -351,7 +367,8 @@ class SolaceBrowser:
     ):
         self.headless = headless
         self.debug_ui = debug_ui
-        self.session_file = session_file or os.getenv("SOLACE_SESSION_FILE") or "artifacts/solace_session.json"
+        _data = _solace_data_dir()
+        self.session_file = session_file or os.getenv("SOLACE_SESSION_FILE") or str(_data / "artifacts" / "solace_session.json")
         self.browser: Optional[Browser] = None
         self.context = None
         self.pages: Dict[str, Page] = {}
@@ -365,7 +382,7 @@ class SolaceBrowser:
             "enabled": False,
             "mode": "screenshot",
             "audit_dir": "",
-            "artifacts_dir": os.getenv("SOLACE_PART11_ARTIFACT_DIR", "artifacts/part11"),
+            "artifacts_dir": os.getenv("SOLACE_PART11_ARTIFACT_DIR", str(_data / "artifacts" / "part11")),
             "session_id": "",
             "events": 0,
             "bytes_written": 0,
@@ -711,8 +728,8 @@ class SolaceBrowser:
             if not self.context:
                 return {"error": "No active context"}
 
-            # Create artifacts directory if it doesn't exist
-            Path("artifacts").mkdir(exist_ok=True)
+            # Ensure parent directory exists (uses ~/.solace/ on Windows installs)
+            Path(self.session_file).parent.mkdir(parents=True, exist_ok=True)
 
             # Lock prevents concurrent load/save race conditions
             async with self._session_lock:
@@ -806,7 +823,7 @@ class SolaceBrowser:
             if not filename:
                 filename = f"screenshot-{datetime.now().strftime('%Y%m%d-%H%M%S')}.png"
 
-            artifacts_dir = Path("artifacts")
+            artifacts_dir = _solace_data_dir() / "artifacts"
             artifacts_dir.mkdir(exist_ok=True)
             filepath = artifacts_dir / filename
 
@@ -847,7 +864,7 @@ class SolaceBrowser:
         try:
             if not filename:
                 filename = f"screenshot-bg-{datetime.now().strftime('%Y%m%d-%H%M%S')}.png"
-            artifacts_dir = Path("artifacts")
+            artifacts_dir = _solace_data_dir() / "artifacts"
             artifacts_dir.mkdir(exist_ok=True)
             filepath = artifacts_dir / filename
 
@@ -3416,7 +3433,7 @@ class SolaceBrowserServer:
         Returns the 20 most recent PNG files with metadata.
         """
         import datetime as _dt
-        artifacts_dir = Path("artifacts")
+        artifacts_dir = _solace_data_dir() / "artifacts"
         screenshots = []
         if artifacts_dir.exists():
             # Gather all PNG files, sorted by modification time (newest first)
@@ -3452,7 +3469,7 @@ class SolaceBrowserServer:
         filename = request.match_info.get("filename", "")
         # Security: strip directory components — only serve from artifacts/
         safe_name = Path(filename).name
-        artifacts_dir = Path("artifacts")
+        artifacts_dir = _solace_data_dir() / "artifacts"
 
         # Try direct match first, then recursive search
         candidate = artifacts_dir / safe_name
@@ -3705,10 +3722,8 @@ async def main():
     web_ui_port = int(os.getenv("SOLACE_WEB_UI_PORT", "8791"))
     _start_web_ui_server(port=web_ui_port)
 
-    # Create and start browser
-    headless = not args.head
-    if args.headless:
-        headless = True
+    # Create and start browser — headed by default, headless only with --headless
+    headless = args.headless
     env_part11 = os.getenv("SOLACE_PART11", "").strip().lower() in {"1", "true", "yes", "on"}
     browser = SolaceBrowser(
         headless=headless,
