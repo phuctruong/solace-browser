@@ -1,0 +1,32 @@
+id: competitor-watch
+name: Competitor Watch
+description: Monitor competitor activity — OpenAI, Anthropic, Bardeen, Browser-Use, Microsoft Copilot. Track product launches, pricing changes, hiring signals, and social media mentions.
+category: research
+status: installed
+safety: A
+site: google.com
+type: standard
+orchestrates: []
+scopes:
+- google.read.search
+- local.evidence
+partners:
+  produces_for:
+  - google-search-trends
+  - linkedin-poster
+  - weekly-digest
+  consumes_from:
+  - google-search-trends
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml
+keep_alive:
+  url: https://www.google.com/
+  interval_min: 1440

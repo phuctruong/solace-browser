@@ -1,0 +1,32 @@
+id: google-search-trends
+name: Tech Trends Daily
+description: Scan Google News, Hacker News, and LinkedIn for AI/automation trends. Delivers a prioritized digest of what matters for SaaS marketing and product positioning.
+category: research
+status: installed
+safety: A
+site: news.google.com
+type: standard
+orchestrates: []
+scopes:
+- google.read.search
+- local.evidence
+partners:
+  produces_for:
+  - linkedin-poster
+  - morning-brief
+  - weekly-digest
+  consumes_from:
+  - morning-brief
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml
+keep_alive:
+  url: https://news.google.com/topics/CAAqIggKIhxDQkFTRHdvSkwyMHZNREUwZERrU0FtVnVLQUFQAQ
+  interval_min: 60
