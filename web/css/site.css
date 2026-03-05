@@ -274,6 +274,7 @@ main { display: block; }
   justify-content: center;
   gap: 10px;
   min-height: 48px;
+  min-width: 44px;
   padding: 0 22px;
   border-radius: 999px;
   border: 1px solid var(--sb-border);
@@ -2142,11 +2143,13 @@ main { display: block; }
   background: #00cc66; color: #0a1520; border: none; border-radius: 6px;
   padding: 5px 12px; font-size: 0.78em; font-weight: 700; cursor: pointer;
   transition: background 0.2s;
+  min-height: 44px; min-width: 44px;
 }
 .btn-approve:hover { background: #00e672; }
 .btn-reject {
   background: transparent; color: #cc4444; border: 1px solid rgba(204,68,68,0.4);
   border-radius: 6px; padding: 5px 12px; font-size: 0.78em; cursor: pointer;
+  min-height: 44px; min-width: 44px;
 }
 .btn-reject:hover { background: rgba(204,68,68,0.1); }
 
@@ -3532,10 +3535,16 @@ main { display: block; }
    Ensures UI remains usable when the OS forces its own color palette.
    ========================================================================= */
 @media (forced-colors: active) {
+  * { border-color: ButtonText; }
+  a, button { color: LinkText; }
+  button, .btn, [role="button"] { border: 2px solid ButtonText; }
+  *:focus-visible { outline: 3px solid Highlight; outline-offset: 2px; }
   .btn,
   .yyO3-btn,
   .approve-btn,
   .reject-btn,
+  .btn-approve,
+  .btn-reject,
   .nav-link,
   .skip-nav {
     border: 2px solid ButtonText;
@@ -3546,15 +3555,19 @@ main { display: block; }
   .btn:hover,
   .yyO3-btn:hover,
   .approve-btn:hover,
-  .reject-btn:hover {
+  .reject-btn:hover,
+  .btn-approve:hover,
+  .btn-reject:hover {
     border-color: Highlight;
     color: Highlight;
   }
   .btn:focus-visible,
   .yyO3-btn:focus-visible,
   .approve-btn:focus-visible,
-  .reject-btn:focus-visible {
-    outline: 2px solid Highlight;
+  .reject-btn:focus-visible,
+  .btn-approve:focus-visible,
+  .btn-reject:focus-visible {
+    outline: 3px solid Highlight;
     outline-offset: 2px;
   }
   .yyO3-overlay {
@@ -3655,4 +3668,17 @@ body.simple-mode .download-card,
 body.simple-mode .dl-feature {
   padding: 24px;
   margin-bottom: 24px;
+}
+
+/* =========================================================================
+   Reduced Motion — WCAG 2.3.3 (AAA)
+   Universal override: disables ALL animations/transitions for users who
+   prefer reduced motion. Complements the targeted rules above.
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
