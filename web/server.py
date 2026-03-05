@@ -251,6 +251,7 @@ SLUG_MAP = {
     "docs/quick-start": "docs/quick-start.html",
     "docs/mcp": "docs/mcp.html",
     "docs/oauth3": "docs/oauth3.html",
+    "guide": "guide.html",
 }
 
 DEFAULT_SETTINGS: dict[str, Any] = {

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Getting Started Guide | Solace Browser</title>
+  <meta name="description" content="Step-by-step guide to link your accounts and run your first app in Solace Browser.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://127.0.0.1:* https://www.solaceagi.com https://*.solaceagi.com; font-src 'self'; frame-ancestors 'none'">
+  <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/theme.js" defer></script>
+  <script src="/js/layout.js" defer></script>
+  <script src="/js/solace.js" defer></script>
+  <link rel="icon" type="image/png" href="/images/yinyang/yinyang-logo-32.png">
+  <style>
+    .guide-shell { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+    .guide-shell h1 { font-size: 2rem; margin-bottom: 8px; }
+    .guide-lead { color: var(--sb-text-muted); font-size: 1rem; margin-bottom: 36px; line-height: 1.6; }
+    .guide-section { margin-bottom: 48px; }
+    .guide-section h2 { font-size: 1.25rem; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .guide-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--sb-signal); color: var(--sb-bg); font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+    .guide-steps { list-style: none; padding: 0; margin: 0; }
+    .guide-steps li { position: relative; padding: 14px 16px 14px 44px; background: var(--sb-bg); border: 1px solid var(--sb-border); border-radius: 12px; margin-bottom: 10px; line-height: 1.55; font-size: 0.92rem; }
+    .guide-steps li::before { content: attr(data-step); position: absolute; left: 14px; top: 14px; color: var(--sb-signal); font-weight: 700; font-size: 0.85rem; }
+    .guide-steps code { background: rgba(100,196,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+    .guide-tip { background: rgba(100,196,255,0.08); border: 1px solid rgba(100,196,255,0.2); border-radius: 12px; padding: 16px 20px; font-size: 0.88rem; color: var(--sb-text-muted); line-height: 1.55; margin-top: 12px; }
+    .guide-tip strong { color: var(--sb-signal); }
+    .guide-back { display: inline-flex; align-items: center; gap: 6px; color: var(--sb-signal); text-decoration: none; font-size: 0.9rem; margin-bottom: 24px; }
+    .guide-back:hover { text-decoration: underline; }
+    .guide-app-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
+    .guide-app-card { background: var(--sb-bg); border: 1px solid var(--sb-border); border-radius: 12px; padding: 20px 16px; text-align: center; cursor: pointer; transition: border-color 0.2s; text-decoration: none; color: var(--sb-text); }
+    .guide-app-card:hover { border-color: var(--sb-signal); }
+    .guide-app-icon { font-size: 2rem; margin-bottom: 8px; }
+    .guide-app-name { font-weight: 600; font-size: 0.95rem; }
+    .guide-app-desc { font-size: 0.78rem; color: var(--sb-text-muted); margin-top: 4px; }
+  </style>
+</head>
+<body data-page="guide">
+  <div class="site-shell">
+    <div class="page-frame">
+      <div id="header-slot"></div>
+
+      <main>
+        <div class="guide-shell">
+          <a href="/start" class="guide-back">&larr; Back to Home</a>
+
+          <h1>Getting Started Guide</h1>
+          <p class="guide-lead">Welcome to Solace Browser! This guide walks you through connecting your accounts and running your first automation. Everything happens with your approval — nothing runs without you saying yes.</p>
+
+          <!-- Section 1: Sign In -->
+          <div class="guide-section">
+            <h2><span class="guide-num">1</span> Sign In to Solace</h2>
+            <ul class="guide-steps">
+              <li data-step="a.">Open Solace Browser — the start page loads automatically</li>
+              <li data-step="b.">Click <strong>Continue with Google</strong> (or GitHub/Email)</li>
+              <li data-step="c.">Complete the sign-in popup — this creates your Solace account</li>
+              <li data-step="d.">You'll see the <strong>"Connected to Solace"</strong> card with your credits and plan</li>
+            </ul>
+            <div class="guide-tip">
+              <strong>Tip:</strong> Your API key is stored locally on your device, encrypted. We never see your passwords. You can revoke access anytime from Settings.
+            </div>
+          </div>
+
+          <!-- Section 2: Browse the App Store -->
+          <div class="guide-section">
+            <h2><span class="guide-num">2</span> Browse the App Store</h2>
+            <ul class="guide-steps">
+              <li data-step="a.">Click <strong>Open App Store</strong> from the home screen</li>
+              <li data-step="b.">Browse available automations — each app shows what it does and what permissions it needs</li>
+              <li data-step="c.">Click an app to see its full details, steps, and approval flow</li>
+            </ul>
+
+            <h3 style="margin-top:20px;font-size:1rem;color:var(--sb-text-muted);">Available Apps</h3>
+            <div class="guide-app-grid">
+              <a href="/app-store" class="guide-app-card">
+                <div class="guide-app-icon">&#9993;</div>
+                <div class="guide-app-name">Gmail Inbox Triage</div>
+                <div class="guide-app-desc">Read, categorize, archive emails</div>
+              </a>
+              <a href="/app-store" class="guide-app-card">
+                <div class="guide-app-icon">&#128101;</div>
+                <div class="guide-app-name">LinkedIn Helper</div>
+                <div class="guide-app-desc">Update profile, track trends</div>
+              </a>
+              <a href="/app-store" class="guide-app-card">
+                <div class="guide-app-icon">&#128172;</div>
+                <div class="guide-app-name">WhatsApp Digest</div>
+                <div class="guide-app-desc">Summarize group messages</div>
+              </a>
+              <a href="/app-store" class="guide-app-card">
+                <div class="guide-app-icon">&#128200;</div>
+                <div class="guide-app-name">Tech Trends Daily</div>
+                <div class="guide-app-desc">Scan news, surface trends</div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Section 3: Link Your Account -->
+          <div class="guide-section">
+            <h2><span class="guide-num">3</span> Link an Account (e.g. LinkedIn)</h2>
+            <p style="color:var(--sb-text-muted);font-size:0.92rem;margin-bottom:16px;">When you run an app for the first time, Solace Browser will help you sign in to the target service. Here's how it works with LinkedIn:</p>
+            <ul class="guide-steps">
+              <li data-step="1.">Click the <strong>LinkedIn Helper</strong> app in the App Store</li>
+              <li data-step="2.">Click <strong>Run Now</strong> — Solace opens LinkedIn's login page in the browser</li>
+              <li data-step="3.">You'll see LinkedIn's real login page. Enter your credentials directly — Solace watches but never stores your password</li>
+              <li data-step="4.">If LinkedIn asks for 2FA, complete it normally</li>
+              <li data-step="5.">Once logged in, Solace saves a <strong>session cookie</strong> (not your password) so future runs don't need re-login</li>
+              <li data-step="6.">The app starts its automation — you approve each action before it executes</li>
+            </ul>
+            <div class="guide-tip">
+              <strong>How is this secure?</strong> Solace uses the same browser session model as if you opened Chrome yourself. Your credentials go directly to LinkedIn — Solace only sees the resulting session cookie. You can clear sessions anytime from Settings.
+            </div>
+          </div>
+
+          <!-- Section 4: Run Your First App -->
+          <div class="guide-section">
+            <h2><span class="guide-num">4</span> Run Your First App</h2>
+            <p style="color:var(--sb-text-muted);font-size:0.92rem;margin-bottom:16px;">Let's walk through Gmail Inbox Triage as an example:</p>
+            <ul class="guide-steps">
+              <li data-step="1.">Open <strong>App Store</strong> &rarr; click <strong>Gmail Inbox Triage</strong></li>
+              <li data-step="2.">Click <strong>Run Now</strong> — the browser navigates to Gmail</li>
+              <li data-step="3.">If not logged in, sign in to Gmail (same process as LinkedIn above)</li>
+              <li data-step="4.">The app reads your inbox and generates a <strong>preview</strong> of proposed actions</li>
+              <li data-step="5.">Review the preview: "Archive 12 newsletters, flag 3 urgent items"</li>
+              <li data-step="6.">Click <strong>Approve</strong> to execute, or <strong>Decline</strong> to cancel</li>
+              <li data-step="7.">Watch each action execute in real-time — screenshots captured as evidence</li>
+            </ul>
+            <div class="guide-tip">
+              <strong>Nothing happens without approval.</strong> If you close the browser or navigate away, all pending actions are cancelled (fail-closed). There is no auto-approve. You are always in control.
+            </div>
+          </div>
+
+          <!-- Section 5: Check Tech Trends -->
+          <div class="guide-section">
+            <h2><span class="guide-num">5</span> Daily Tech Trends with LinkedIn</h2>
+            <p style="color:var(--sb-text-muted);font-size:0.92rem;margin-bottom:16px;">Want to stay on top of technology trends? Here's how to set it up:</p>
+            <ul class="guide-steps">
+              <li data-step="1.">Install the <strong>LinkedIn Helper</strong> or <strong>Tech Trends Daily</strong> app</li>
+              <li data-step="2.">Run it once to link your LinkedIn account (see Step 3 above)</li>
+              <li data-step="3.">Go to <strong>Schedule</strong> (from the sidebar) and set it to run daily</li>
+              <li data-step="4.">Each morning, the app scans your LinkedIn feed, Hacker News, and tech blogs</li>
+              <li data-step="5.">You get a digest of top trends — approve which ones to save or share</li>
+            </ul>
+            <div class="guide-tip">
+              <strong>Scheduled runs</strong> still require approval on first run. After the first approval, the app will use the same session and follow the same scopes. Budget limits apply (e.g., max 50 page visits per day).
+            </div>
+          </div>
+
+          <!-- Section 6: Feedback -->
+          <div class="guide-section">
+            <h2><span class="guide-num">6</span> Send Us Feedback</h2>
+            <ul class="guide-steps">
+              <li data-step="a.">Click the <strong>Send Feedback</strong> button on the home screen</li>
+              <li data-step="b.">Select a category: Bug, Confusing, Feature Request, or Love It</li>
+              <li data-step="c.">Write a brief description of your experience</li>
+              <li data-step="d.">Click Send — your feedback goes directly to our team</li>
+            </ul>
+            <div class="guide-tip">
+              <strong>Your feedback drives real changes.</strong> We read every submission and use it to improve Solace Browser daily. The more specific you are, the faster we can fix it.
+            </div>
+          </div>
+
+          <div style="text-align:center;margin-top:48px;padding-top:32px;border-top:1px solid var(--sb-border);">
+            <a href="/app-store" style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--sb-accent),var(--sb-accent-warm,#e85d2c));color:#fff;padding:14px 32px;border-radius:12px;font-weight:600;text-decoration:none;font-size:1rem;">Open App Store</a>
+            <p style="color:var(--sb-text-muted);font-size:0.82rem;margin-top:12px;">Ready to automate? Start with Gmail Inbox Triage.</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
