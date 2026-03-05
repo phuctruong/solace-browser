@@ -139,23 +139,25 @@ if target_os == "linux":
     if not is_elf(data):
         fail(f"expected Linux ELF artifact but got non-ELF file: {binary_path}")
 elif target_os == "windows":
-    if not is_pe(data, binary_path):
-        fail(f"expected Windows PE artifact but got non-PE file: {binary_path}")
     if windows_package_mode == "msi":
-        full = binary_path.read_bytes()
         ole2_header = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
-        if not full.startswith(ole2_header):
+        if not data[:8] == ole2_header:
             fail(
                 "expected Windows MSI artifact with OLE2 header "
                 f"but header missing: {binary_path}"
             )
     elif windows_package_mode == "installer":
+        if not is_pe(data, binary_path):
+            fail(f"expected Windows PE artifact but got non-PE file: {binary_path}")
         full = binary_path.read_bytes()
         if b"Inno Setup Setup Data" not in full:
             fail(
                 "expected Windows installer artifact with Inno Setup marker "
                 f"but marker missing: {binary_path}"
             )
+    else:
+        if not is_pe(data, binary_path):
+            fail(f"expected Windows PE artifact but got non-PE file: {binary_path}")
 elif target_os == "macos":
     if not is_macho(data):
         fail(f"expected macOS Mach-O artifact but got non-Mach-O file: {binary_path}")
