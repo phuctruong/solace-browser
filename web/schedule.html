@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Schedule | Solace Browser</title>
-  <meta name="description" content="Your agent's activity calendar — past runs, pending sign-offs, and upcoming scheduled tasks.">
+  <title>Your Agent's Work — Solace Browser</title>
+  <meta name="description" content="See what your AI agent accomplished, approve pending actions, and track your automation savings.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://browser.solaceagi.com/schedule">
   <meta name="theme-color" content="#081019">
+  <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/png" href="/images/yinyang/yinyang-logo-32.png">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/css/site.css">
@@ -16,12 +17,9 @@
   <script src="/js/solace.js" defer></script>
   <script src="/js/yinyang-delight.js" defer></script>
   <script src="/js/yinyang-rail.js" defer></script>
-  <script src="/js/yinyang-tutorial.js" defer></script>
-  <script src="/js/yinyang-oauth3-confirm.js" defer></script>
-  <script src="/vendor/jquery/jquery-3.7.1.min.js" defer></script>
-  <script src="/vendor/amcharts/index.js" defer></script>
-  <script src="/vendor/amcharts/xy.js" defer></script>
-  <script src="/vendor/amcharts/Animated.js" defer></script>
+  <!-- yinyang-tutorial.js removed: only triggers on home/start pages -->
+  <!-- yinyang-oauth3-confirm.js removed: intercepts auth navigation, not needed on schedule -->
+  <!-- jQuery + amcharts removed: not used on this page (Torvalds: 400KB wasted) -->
 </head>
 <body data-page="schedule">
   <div class="site-shell">
@@ -33,48 +31,49 @@
       <main class="schedule-shell">
 
         <!-- Page heading (visually hidden — screen reader + SEO anchor) -->
-        <h1 class="sr-only">Schedule &amp; Savings Dashboard</h1>
+        <h1 class="sr-only">Your Agent's Activity &amp; Savings</h1>
 
-        <!-- Token Savings Dashboard -->
-        <section class="savings-dashboard reveal" id="savingsDashboard">
+        <!-- Operations Dashboard — Jony Ive: one glance = full system state -->
+        <!-- reveal class: scroll animation from site.css -->
+        <section class="savings-dashboard reveal" id="savingsDashboard" aria-label="Savings Dashboard">
           <div class="savings-dashboard__header">
-            <span class="savings-dashboard__icon">📊</span>
-            <h2 class="savings-dashboard__title">Your Savings Report</h2>
-            <span class="savings-dashboard__badge" id="savingsBadge">This Week</span>
-            <div class="savings-dashboard__period-toggle">
-              <button class="period-btn period-btn--active" data-period="week">7 days</button>
-              <button class="period-btn" data-period="month">30 days</button>
-              <button class="period-btn" data-period="all">All time</button>
+            <img src="/images/yinyang/yinyang-rotating_70pct_256px.gif" alt="" style="width:28px;height:28px;border-radius:50%">
+            <h2 class="savings-dashboard__title">Savings</h2>
+            <span class="savings-dashboard__badge" id="savingsBadge" aria-live="polite" aria-atomic="true">This Week</span>
+            <div class="savings-dashboard__period-toggle" role="radiogroup" aria-label="Time period">
+              <button type="button" class="period-btn period-btn--active" data-period="week" role="radio" aria-checked="true">7 days</button>
+              <button type="button" class="period-btn" data-period="month" role="radio" aria-checked="false">30 days</button>
+              <button type="button" class="period-btn" data-period="all" role="radio" aria-checked="false">All time</button>
             </div>
           </div>
         </section>
 
         <!-- ROI Panel -->
-        <section class="roi-panel reveal" id="roiPanel">
+        <section class="roi-panel reveal" id="roiPanel" aria-label="ROI Summary">
           <div class="roi-inner">
             <div class="roi-stat" id="roiRuns">
               <span class="roi-num">—</span>
               <span class="roi-label">runs this week</span>
             </div>
-            <div class="roi-stat" id="roiTimeSaved">
+            <div class="roi-stat" id="roiTimeSaved" title="Based on estimated 30 min manual time per task at $30/hr. Adjust in Settings.">
               <span class="roi-num">—</span>
-              <span class="roi-label">hours saved</span>
+              <span class="roi-label">hrs est. saved</span>
             </div>
-            <div class="roi-stat" id="roiTokens">
+            <div class="roi-stat" id="roiTasks">
               <span class="roi-num">—</span>
-              <span class="roi-label">tokens used</span>
+              <span class="roi-label">tasks automated</span>
             </div>
-            <div class="roi-stat" id="roiTokenSaved">
+            <div class="roi-stat" id="roiTokenSaved" title="Market average blended rate for LLM tokens as of 2026.">
               <span class="roi-num">—</span>
-              <span class="roi-label">saved vs GPT-4</span>
+              <span class="roi-label">saved vs market rate (est.)</span>
             </div>
             <div class="roi-stat" id="roiCost">
               <span class="roi-num">—</span>
               <span class="roi-label">agent cost</span>
             </div>
-            <div class="roi-stat roi-stat--highlight" id="roiNet">
+            <div class="roi-stat roi-stat--highlight" id="roiNet" title="Based on estimated 30 min manual time per task at $30/hr. Adjust in Settings.">
               <span class="roi-num">—</span>
-              <span class="roi-label">net savings (vs $30/hr)</span>
+              <span class="roi-label">net savings (est.)</span>
             </div>
             <div class="roi-stat" id="roiStreak">
               <span class="roi-num">—</span>
@@ -82,127 +81,166 @@
             </div>
           </div>
           <div class="roi-savings-bar">
-            <div class="roi-savings-bar__label">Recipe hit rate</div>
-            <div class="roi-savings-bar__track">
+            <div class="roi-savings-bar__label">Task automation rate</div>
+            <div class="roi-savings-bar__track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Task automation rate">
               <div class="roi-savings-bar__fill" id="roiHitBar" style="width:0%"></div>
             </div>
             <div class="roi-savings-bar__pct" id="roiHitPct">—%</div>
-            <div class="roi-savings-bar__note">Replays cost $0.001 each (99% cheaper than fresh LLM call)</div>
+            <div class="roi-savings-bar__note">Replays cost $0.001 each (99% cheaper than market average at $0.084/task)</div>
           </div>
         </section>
 
         <!-- Sign-Off Queue Alert -->
-        <div class="signoff-alert" id="signoffAlert" style="display:none">
-          <span class="signoff-alert__icon">⏳</span>
-          <span class="signoff-alert__msg">Your agent paused and is waiting for you —
-            <strong id="signoffCount">0</strong> action(s) need your approval</span>
-          <button class="signoff-alert__btn" id="signoffOpenBtn">Review Now</button>
+        <div class="signoff-alert" id="signoffAlert" style="display:none" aria-live="assertive" aria-atomic="true">
+          <span class="signoff-alert__icon">👋</span>
+          <span class="signoff-alert__msg">Your agent has a question —
+            <strong id="signoffCount">0</strong> action(s) need your OK</span>
+          <button class="signoff-alert__btn" id="signoffOpenBtn">Review &amp; Approve</button>
         </div>
 
-        <!-- View Switcher -->
+        <!-- Tab Switcher — Jony Ive: 4 purposeful tabs, not 4 redundant views -->
         <div class="schedule-toolbar reveal">
           <div class="view-tabs" role="tablist">
-            <button class="view-tab view-tab--active" data-view="calendar" role="tab" aria-selected="true">
-              📅 Calendar
+            <button class="view-tab view-tab--active" data-view="upcoming" role="tab" aria-selected="true" aria-controls="viewUpcoming" id="tab-upcoming">
+              Upcoming
             </button>
-            <button class="view-tab" data-view="kanban" role="tab" aria-selected="false">
-              📋 Kanban
+            <button class="view-tab" data-view="approvals" role="tab" aria-selected="false" aria-controls="viewApprovals" id="tab-approvals">
+              Approvals <span id="approvalBadge" class="tab-badge" style="display:none">0</span>
             </button>
-            <button class="view-tab" data-view="timeline" role="tab" aria-selected="false">
-              ⛓ Timeline
+            <button class="view-tab" data-view="history" role="tab" aria-selected="false" aria-controls="viewHistory" id="tab-history">
+              History
             </button>
-            <button class="view-tab" data-view="list" role="tab" aria-selected="false">
-              📊 List
+            <button class="view-tab" data-view="esign" role="tab" aria-selected="false" aria-controls="viewEsign" id="tab-esign">
+              eSign
             </button>
           </div>
+          <div class="kill-switch-container" id="killSwitchSlot"></div>
           <div class="schedule-filters">
+            <label for="filterApp" class="sr-only">Filter by app</label>
             <select id="filterApp" class="filter-select">
               <option value="">All apps</option>
             </select>
+            <label for="filterStatus" class="sr-only">Filter by status</label>
             <select id="filterStatus" class="filter-select">
               <option value="">All statuses</option>
-              <option value="success">✅ Success</option>
-              <option value="failed">❌ Failed</option>
-              <option value="pending_approval">⏳ Pending</option>
-              <option value="cancelled">🚫 Cancelled</option>
-              <option value="scheduled">📅 Scheduled</option>
+              <option value="success">Success</option>
+              <option value="failed">Failed</option>
+              <option value="pending_approval">Pending</option>
+              <option value="scheduled">Scheduled</option>
             </select>
           </div>
         </div>
 
-        <!-- Calendar View -->
-        <div class="schedule-view" id="viewCalendar">
-          <div class="cal-header">
-            <button class="cal-nav" id="calPrev">‹</button>
-            <h2 class="cal-month" id="calMonthLabel">—</h2>
-            <button class="cal-nav" id="calNext">›</button>
+        <!-- TAB 1: Upcoming — What's about to happen -->
+        <div class="schedule-view" id="viewUpcoming" role="tabpanel" aria-labelledby="tab-upcoming">
+          <div class="upcoming-section">
+            <h3 class="upcoming-section__title">App Schedules</h3>
+            <div id="upcomingApps" class="upcoming-list">
+              <p class="timeline-empty">Nothing scheduled yet — once you <a href="/home">activate your first app</a>, it will run automatically on your schedule. You're always in control of what runs and when.</p>
+            </div>
           </div>
-          <div class="cal-grid" id="calGrid">
-            <div class="cal-day-header">Mon</div>
-            <div class="cal-day-header">Tue</div>
-            <div class="cal-day-header">Wed</div>
-            <div class="cal-day-header">Thu</div>
-            <div class="cal-day-header">Fri</div>
-            <div class="cal-day-header">Sat</div>
-            <div class="cal-day-header">Sun</div>
+          <div class="upcoming-section" style="margin-top:20px">
+            <h3 class="upcoming-section__title">Keep-Alive Sessions <span id="keepAliveCount" class="upcoming-count"></span></h3>
+            <div id="upcomingKeepAlive" class="upcoming-list"></div>
           </div>
-        </div>
-
-        <!-- Kanban View -->
-        <div class="schedule-view" id="viewKanban" style="display:none">
-          <div class="kanban-board">
-            <div class="kanban-col" id="kanbanQueued">
-              <h3 class="kanban-col__title">📥 Queued</h3>
-              <div class="kanban-cards" id="kanbanQueuedCards"></div>
+          <div class="upcoming-section" style="margin-top:20px">
+            <h3 class="upcoming-section__title">Calendar</h3>
+            <div class="cal-header">
+              <button class="cal-nav" id="calPrev" aria-label="Previous month">&lsaquo;</button>
+              <span class="cal-month" id="calMonthLabel" role="heading" aria-level="4">&mdash;</span>
+              <button class="cal-nav" id="calNext" aria-label="Next month">&rsaquo;</button>
             </div>
-            <div class="kanban-col" id="kanbanRunning">
-              <h3 class="kanban-col__title">⚡ Running</h3>
-              <div class="kanban-cards" id="kanbanRunningCards"></div>
-            </div>
-            <div class="kanban-col kanban-col--amber" id="kanbanWaiting">
-              <h3 class="kanban-col__title">⏳ Waiting Sign-Off</h3>
-              <div class="kanban-cards" id="kanbanWaitingCards"></div>
-            </div>
-            <div class="kanban-col" id="kanbanDone">
-              <h3 class="kanban-col__title">✅ Done</h3>
-              <div class="kanban-cards" id="kanbanDoneCards"></div>
+            <!-- Calendar cells are clickable: JS must add role="button" tabindex="0" to each .cal-cell it creates -->
+            <div class="cal-grid" id="calGrid">
+              <div class="cal-day-header">Mon</div>
+              <div class="cal-day-header">Tue</div>
+              <div class="cal-day-header">Wed</div>
+              <div class="cal-day-header">Thu</div>
+              <div class="cal-day-header">Fri</div>
+              <div class="cal-day-header">Sat</div>
+              <div class="cal-day-header">Sun</div>
             </div>
           </div>
         </div>
 
-        <!-- Timeline View -->
-        <div class="schedule-view" id="viewTimeline" style="display:none">
-          <div class="timeline-container" id="timelineContainer">
-            <p class="timeline-empty">Loading activity timeline…</p>
+        <!-- TAB 2: Approvals — Items waiting for human sign-off -->
+        <div class="schedule-view" id="viewApprovals" style="display:none" role="tabpanel" aria-labelledby="tab-approvals">
+          <div id="approvalsList">
+            <div class="kanban-board">
+              <div class="kanban-col kanban-col--amber" id="kanbanWaiting" role="region" aria-label="Pending Approvals">
+                <h3 class="kanban-col__title">Waiting for Your Approval</h3>
+                <div class="kanban-cards" id="kanbanWaitingCards"></div>
+              </div>
+              <div class="kanban-col" id="kanbanDone" role="region" aria-label="Recently Approved">
+                <h3 class="kanban-col__title">Recently Approved</h3>
+                <div class="kanban-cards" id="kanbanDoneCards"></div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- List View -->
-        <div class="schedule-view" id="viewList" style="display:none">
+        <!-- TAB 3: History — Past runs with evidence -->
+        <!-- JS should wrap Time column values in <time datetime="ISO8601" class="sched-time"> for machine-readability -->
+        <div class="schedule-view" id="viewHistory" style="display:none" role="tabpanel" aria-labelledby="tab-history">
           <table class="activity-table" id="activityTable">
+            <caption class="sr-only">Agent run history</caption>
             <thead>
               <tr>
-                <th>App</th>
-                <th>Status</th>
-                <th>Time</th>
-                <th>Duration</th>
-                <th>Cost</th>
-                <th>Actions</th>
+                <th scope="col">App</th>
+                <th scope="col">Status</th>
+                <th scope="col">Time</th>
+                <th scope="col">Duration</th>
+                <th scope="col">Cost</th>
+                <th scope="col">Evidence</th>
+                <th scope="col" title="Flag runs as incorrect or misaligned">Flag</th>
               </tr>
             </thead>
             <tbody id="activityTableBody">
-              <tr><td colspan="6" class="table-loading">Loading…</td></tr>
+              <tr><td colspan="7" class="table-loading">Loading&hellip;</td></tr>
             </tbody>
           </table>
         </div>
 
+        <!-- TAB 4: eSign — Attestation management -->
+        <div class="schedule-view" id="viewEsign" style="display:none" role="tabpanel" aria-labelledby="tab-esign">
+          <div class="esign-dashboard">
+            <div class="esign-stats" id="esignStats">
+              <div class="esign-stat">
+                <span class="esign-stat__num" id="esignTotal">0</span>
+                <span class="esign-stat__label">Total Attestations</span>
+              </div>
+              <div class="esign-stat">
+                <span class="esign-stat__num" id="esignThisMonth">0</span>
+                <span class="esign-stat__label">This Month</span>
+              </div>
+              <div class="esign-stat">
+                <span class="esign-stat__num" id="esignRemaining">0</span>
+                <span class="esign-stat__label">Remaining Signatures</span>
+              </div>
+            </div>
+            <div class="esign-section">
+              <h3 class="upcoming-section__title">Recent Attestations</h3>
+              <div id="esignList" class="upcoming-list">
+                <p class="timeline-empty">No signed approvals yet. When you use "Approve + Sign," you create a tamper-evident record of your decision that protects you legally.</p>
+              </div>
+            </div>
+            <div class="esign-section" style="margin-top:16px">
+              <h3 class="upcoming-section__title">Part 11 Evidence Capture</h3>
+              <div id="part11Status" class="upcoming-list">
+                <p class="timeline-empty">Checking evidence chain integrity&hellip;</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <noscript><p style="padding:2rem;color:#e2e8f0;text-align:center">This page requires JavaScript to display your agent's activity.</p></noscript>
       </main><!-- /schedule-shell -->
 
       <!-- Sign-Off Bottom Sheet -->
-      <div class="signoff-sheet" id="signoffSheet" style="display:none" role="dialog" aria-label="Sign-off queue">
+      <div class="signoff-sheet" id="signoffSheet" style="display:none" role="dialog" aria-modal="true" aria-label="Sign-off queue">
         <div class="signoff-sheet__header">
-          <h3>⏳ Your agent is waiting</h3>
-          <p class="signoff-sheet__sub">Review and approve or reject each action before it proceeds.</p>
+          <h3>Your agent has a question</h3>
+          <p class="signoff-sheet__sub">Review each action — you're in control. If you don't respond, actions are safely blocked.</p>
           <button class="signoff-sheet__close" id="signoffClose" aria-label="Close">✕</button>
         </div>
         <div class="signoff-sheet__items" id="signoffItems">
@@ -212,7 +250,7 @@
       <div class="signoff-overlay" id="signoffOverlay" style="display:none"></div>
 
       <!-- Run Detail Drawer -->
-      <div class="run-drawer" id="runDrawer" style="display:none" role="dialog" aria-label="Run detail">
+      <div class="run-drawer" id="runDrawer" style="display:none" role="dialog" aria-modal="true" aria-label="Run detail">
         <div class="run-drawer__header">
           <h3 id="drawerTitle">Run detail</h3>
           <button class="run-drawer__close" id="drawerClose" aria-label="Close">✕</button>
@@ -243,6 +281,9 @@
     </div>
   </div>
 
-  <script src="/js/schedule.js" defer></script>
+  <script src="/js/schedule-core.js" defer></script>
+  <script src="/js/schedule-approvals.js" defer></script>
+  <script src="/js/schedule-calendar.js" defer></script>
+  <script src="/js/schedule-evidence.js" defer></script>
 </body>
 </html>

@@ -487,7 +487,7 @@
         body: JSON.stringify(payload),
       });
       if (!result.ok) {
-        status.textContent = "Proposal rejected: " + result.error;
+        status.textContent = "Proposal declined: " + result.error;
         return;
       }
       status.textContent = "Proposal submitted: " + ((result.data && result.data.proposal && result.data.proposal.proposal_id) || "ok");

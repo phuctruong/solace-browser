@@ -45,7 +45,7 @@ async def inject_bottom_rail(
         js_code = js_code.replace("__WS_URL__", ws_url)
         await page.add_init_script(js_code)
         logger.debug("Bottom rail injected (locale: %s)", locale or get_locale())
-    except Exception as exc:
+    except (OSError, RuntimeError) as exc:
         logger.warning(f"Failed to inject bottom rail: {exc}")
 
 

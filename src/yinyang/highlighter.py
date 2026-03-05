@@ -24,7 +24,7 @@ class YinyangHighlighter:
             try:
                 self._cdp = await self._page.context.new_cdp_session(self._page)
                 logger.debug("[Highlighter] CDP session established")
-            except Exception as exc:
+            except (RuntimeError, OSError, AttributeError) as exc:
                 logger.debug(f"[Highlighter] CDP unavailable, using JS fallback: {exc}")
         return self._cdp
 
@@ -61,7 +61,7 @@ class YinyangHighlighter:
             })
             logger.debug(f"[Highlighter] CDP highlight on: {selector}")
             return True
-        except Exception as exc:
+        except (RuntimeError, OSError, KeyError) as exc:
             logger.debug(f"[Highlighter] CDP highlight failed: {exc}")
             return await self._highlight_js(selector)
 
@@ -83,7 +83,7 @@ class YinyangHighlighter:
             if result:
                 logger.debug(f"[Highlighter] JS highlight on: {selector}")
             return bool(result)
-        except Exception as exc:
+        except (RuntimeError, OSError) as exc:
             logger.warning(f"[Highlighter] JS highlight failed: {exc}")
             return False
 
@@ -93,7 +93,7 @@ class YinyangHighlighter:
         if cdp:
             try:
                 await cdp.send("Overlay.hideHighlight")
-            except Exception as e:
+            except (RuntimeError, OSError) as e:
                 logger.debug(f"CDP highlight clear failed: {e}")
 
         if self._highlighted_selector:
@@ -108,6 +108,6 @@ class YinyangHighlighter:
                         });
                     })()
                 """)
-            except Exception as e:
+            except (RuntimeError, OSError) as e:
                 logger.debug(f"DOM highlight cleanup failed: {e}")
         self._highlighted_selector = None

@@ -46,6 +46,16 @@ LANGUAGE_NAMES = {
     "ko": "Korean",
     "id": "Indonesian",
     "ru": "Russian",
+    "zh-hant": "Traditional Chinese",
+    "tr": "Turkish",
+    "pl": "Polish",
+    "th": "Thai",
+    "nl": "Dutch",
+    "it": "Italian",
+    "uk": "Ukrainian",
+    "sv": "Swedish",
+    "he": "Hebrew",
+    "fa": "Farsi",
 }
 
 # Brand/tech terms never translated

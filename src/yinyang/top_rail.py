@@ -34,7 +34,7 @@ async def inject_top_rail(page: Any) -> None:
             js_code = _INLINE_TOP_RAIL_JS
         await page.add_init_script(js_code)
         logger.debug("Top rail injected")
-    except Exception as exc:
+    except (OSError, RuntimeError) as exc:
         logger.warning(f"Failed to inject top rail: {exc}")
 
 

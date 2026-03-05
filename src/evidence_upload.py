@@ -291,7 +291,7 @@ async def upload_pending_evidence(
                 item.session_id,
                 item.bundle_hash[:16],
             )
-        except Exception as exc:
+        except (OSError, ConnectionError, ValueError, RuntimeError) as exc:
             failed += 1
             error_msg = f"session={item.session_id}: {exc}"
             logger.error("Evidence upload failed: %s", error_msg)

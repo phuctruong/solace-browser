@@ -309,6 +309,6 @@ if __name__ == "__main__":
     except subprocess.CalledProcessError as exc:
         print(f"ERROR: command failed with exit code {exc.returncode}: {exc.cmd}", file=sys.stderr)
         raise
-    except Exception as exc:
+    except (OSError, ValueError, RuntimeError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)

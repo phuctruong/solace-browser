@@ -25,7 +25,11 @@ logger = logging.getLogger("solace-browser.i18n")
 _LOCALES_DIR = Path(__file__).resolve().parent.parent / "app" / "locales" / "yinyang"
 _SUPPORTED = {
     "en", "es", "vi", "zh", "pt", "fr", "ja", "de", "ar", "hi", "ko", "id", "ru",
+    "zh-hant", "tr", "pl", "th", "nl", "it", "uk", "sv", "he", "fa",
 }
+
+# Locales that use right-to-left text direction
+_RTL_LOCALES: set[str] = {"ar", "he", "fa"}
 
 # Active locale for process-wide default (can be overridden per-request)
 _active_locale: str = "en"
@@ -43,7 +47,7 @@ def _load(locale: str) -> dict:
         data = json.loads(path.read_text(encoding="utf-8"))
         # Strip _meta key
         return {k: v for k, v in data.items() if not k.startswith("_")}
-    except Exception as exc:
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError) as exc:
         logger.error("Failed to load locale '%s': %s — using 'en'", locale, exc)
         return _load("en")
 
@@ -181,7 +185,20 @@ def js_bundle(locale: str | None = None) -> str:
     strings = get_strings(loc)
     ui_strings = strings.get("ui", {})
     payload = json.dumps(ui_strings, ensure_ascii=False)
-    return f"window.YINYANG_I18N = {payload};"
+    direction = get_direction(loc)
+    return f"window.YINYANG_I18N = {payload};\nwindow.YINYANG_DIR = \"{direction}\";"
+
+
+def is_rtl(locale: str | None = None) -> bool:
+    """Return True if the given locale uses right-to-left text direction."""
+    loc = locale or _active_locale
+    loc = loc if loc in _SUPPORTED else "en"
+    return loc in _RTL_LOCALES
+
+
+def get_direction(locale: str | None = None) -> str:
+    """Return 'rtl' or 'ltr' for the given locale."""
+    return "rtl" if is_rtl(locale) else "ltr"
 
 
 def detect_locale(accept_language: str | None) -> str:
@@ -197,6 +214,9 @@ def detect_locale(accept_language: str | None) -> str:
         "es": "es", "vi": "vi", "zh": "zh", "zh-hans": "zh", "zh-cn": "zh",
         "pt": "pt", "pt-br": "pt", "fr": "fr", "ja": "ja", "de": "de",
         "ar": "ar", "hi": "hi", "ko": "ko", "id": "id", "ru": "ru",
+        "zh-hant": "zh-hant", "zh-tw": "zh-hant",
+        "tr": "tr", "pl": "pl", "th": "th", "nl": "nl", "it": "it",
+        "uk": "uk", "sv": "sv", "he": "he", "fa": "fa",
         "en": "en",
     }
 

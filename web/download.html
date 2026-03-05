@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>Download Solace Browser</title>
-  <meta name="description" content="Download the Solace Browser desktop build for macOS, Linux, or Windows.">
+  <meta name="description" content="Download Solace Browser for macOS, Linux, or Windows. Source-available, local-first, OAuth3-ready.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://browser.solaceagi.com/download">
   <meta name="theme-color" content="#081019">
@@ -29,78 +29,247 @@
 
 
       <main class="download-shell">
+        <!-- ── HERO ── -->
         <section class="hero hero--single reveal">
           <div>
-            <div class="eyebrow">Stable desktop build</div>
-            <h1 class="display">Install the browser that keeps <span>approvals visible</span>.</h1>
-            <p class="lead">One runtime for browsing, local machine access, and temporary cloud relay. Start locally, then connect stronger surfaces when the workflow proves itself.</p>
+            <div class="eyebrow">v1.0.0 — Source-Available Release</div>
+            <h1 class="display">The browser that keeps <span>approvals visible</span>.</h1>
+            <p class="lead">Local-first browsing with OAuth3 authorization, evidence capture, and AI automation. Download the desktop build or build from source.</p>
             <div class="button-row">
-              <a class="btn btn-primary coming-soon" id="primary-download" href="#" data-coming-soon="true" data-href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-linux-amd64.AppImage"><span>↓</span><span>Download stable build (coming soon)</span></a>
-              <a class="btn btn-secondary" href="https://github.com/solaceagi/solace-browser/releases" target="_blank" rel="noopener">Release notes</a>
+              <a class="btn btn-primary" id="primary-download" href="https://github.com/solaceagi/solace-browser/releases/latest"><span>&#8595;</span><span id="primary-download-label">Download for your platform</span></a>
+              <a class="btn btn-secondary" href="https://github.com/solaceagi/solace-browser/releases" target="_blank" rel="noopener">All releases</a>
             </div>
             <div class="release-strip">
-              <span id="detected-platform">Detecting platform…</span>
+              <span id="detected-platform">Detecting platform...</span>
               <span>Version 1.0.0</span>
-              <span>Signed desktop artifacts</span>
+              <span>SHA-256 verified</span>
+              <span>FSL-1.1-Apache-2.0</span>
             </div>
           </div>
         </section>
 
+        <!-- ── PLATFORM CARDS ── -->
         <section class="page-section reveal">
           <div class="download-grid">
+
+            <!-- macOS -->
             <article class="download-card">
-              <h3>macOS</h3>
-              <p>Apple Silicon and Intel DMGs for local-first operation.</p>
+              <div class="dl-card-header">
+                <span class="dl-platform-icon">&#63743;</span>
+                <h3>macOS</h3>
+              </div>
+              <p>Universal binary for Apple Silicon and Intel Macs.</p>
               <div class="platform-links">
-                <a class="platform-link coming-soon" href="#" data-coming-soon="true" data-href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-mac-arm64.dmg"><span>Apple Silicon (coming soon)</span><span>DMG</span></a>
-                <a class="platform-link coming-soon" href="#" data-coming-soon="true" data-href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-mac-x86_64.dmg"><span>Intel (coming soon)</span><span>DMG</span></a>
+                <a class="platform-link" href="https://github.com/solaceagi/solace-browser/releases/latest"><span>Apple Silicon + Intel</span><span class="dl-badge">Universal</span></a>
+              </div>
+              <div class="dl-steps">
+                <div class="dl-step"><span class="dl-step-num">1</span><span>Download <code>.dmg</code> from GitHub Releases</span></div>
+                <div class="dl-step"><span class="dl-step-num">2</span><span>Clear quarantine: <code>xattr -d com.apple.quarantine SolaceBrowser.app</code></span></div>
+                <div class="dl-step"><span class="dl-step-num">3</span><span>Open the app &mdash; done</span></div>
               </div>
             </article>
+
+            <!-- Linux -->
             <article class="download-card">
-              <h3>Linux</h3>
-              <p>AppImage for fast trials, DEB for managed fleet installs.</p>
+              <div class="dl-card-header">
+                <span class="dl-platform-icon">&#128039;</span>
+                <h3>Linux</h3>
+              </div>
+              <p>AppImage for any distro, DEB for Debian/Ubuntu fleet installs.</p>
               <div class="platform-links">
-                <a class="platform-link coming-soon" href="#" data-coming-soon="true" data-href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-linux-amd64.AppImage"><span>Universal (coming soon)</span><span>AppImage</span></a>
-                <a class="platform-link coming-soon" href="#" data-coming-soon="true" data-href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-linux-amd64.deb"><span>Debian / Ubuntu (coming soon)</span><span>DEB</span></a>
+                <a class="platform-link" href="https://github.com/solaceagi/solace-browser/releases/latest"><span>Universal</span><span class="dl-badge">AppImage</span></a>
+                <a class="platform-link" href="https://github.com/solaceagi/solace-browser/releases/latest"><span>Debian / Ubuntu</span><span class="dl-badge">DEB</span></a>
+              </div>
+              <div class="dl-steps">
+                <div class="dl-step"><span class="dl-step-num">1</span><span>Download from GitHub Releases</span></div>
+                <div class="dl-step"><span class="dl-step-num">2</span><span>Make executable: <code>chmod +x SolaceBrowser*.AppImage</code></span></div>
+                <div class="dl-step"><span class="dl-step-num">3</span><span>Run: <code>./SolaceBrowser*.AppImage</code></span></div>
               </div>
             </article>
+
+            <!-- Windows -->
             <article class="download-card">
-              <h3>Windows</h3>
-              <p>MSI installer with local profile persistence and signed build metadata.</p>
+              <div class="dl-card-header">
+                <span class="dl-platform-icon">&#9638;</span>
+                <h3>Windows</h3>
+              </div>
+              <p>MSI installer with profile persistence and signed metadata.</p>
               <div class="platform-links">
-                <a class="platform-link coming-soon" href="#" data-coming-soon="true" data-href="https://storage.googleapis.com/solace-downloads/v1.0.0/SolaceBrowser-1.0.0-windows-x64.msi"><span>Windows 11+ (coming soon)</span><span>MSI</span></a>
-                <a class="platform-link" href="https://github.com/solaceagi/solace-browser/releases" target="_blank" rel="noopener"><span>Release archive</span><span>GitHub</span></a>
+                <a class="platform-link" href="https://github.com/solaceagi/solace-browser/releases/latest"><span>Windows 10+</span><span class="dl-badge">MSI</span></a>
+              </div>
+              <div class="dl-steps">
+                <div class="dl-step"><span class="dl-step-num">1</span><span>Download <code>.msi</code> from GitHub Releases</span></div>
+                <div class="dl-step"><span class="dl-step-num">2</span><span>Run the installer</span></div>
+                <div class="dl-step"><span class="dl-step-num">3</span><span>Launch Solace Browser from Start Menu</span></div>
               </div>
             </article>
           </div>
         </section>
 
+        <!-- ── VERIFY + QUICK START ── -->
+        <section class="page-section reveal">
+          <div class="dl-two-col">
+
+            <div class="dl-verify-card">
+              <div class="panel-kicker">Verify your download</div>
+              <h3>SHA-256 Checksum</h3>
+              <p>Every release includes SHA-256 checksums on the <a href="https://github.com/solaceagi/solace-browser/releases/latest" target="_blank" rel="noopener">GitHub Releases page</a>. Verify your download matches before running.</p>
+              <div class="dl-terminal">
+                <div class="dl-terminal-header">
+                  <span class="dl-terminal-dot dl-terminal-dot--red"></span>
+                  <span class="dl-terminal-dot dl-terminal-dot--yellow"></span>
+                  <span class="dl-terminal-dot dl-terminal-dot--green"></span>
+                  <span class="dl-terminal-title">Terminal</span>
+                </div>
+<pre><code><span class="dl-comment"># Linux / macOS</span>
+sha256sum SolaceBrowser-*.AppImage
+<span class="dl-comment"># Compare with checksum on the release page</span>
+
+<span class="dl-comment"># Windows (PowerShell)</span>
+Get-FileHash SolaceBrowser-*.msi -Algorithm SHA256</code></pre>
+              </div>
+            </div>
+
+            <div class="dl-quickstart-card">
+              <div class="panel-kicker">Quick start</div>
+              <h3>Up and running in 60 seconds</h3>
+              <div class="dl-terminal">
+                <div class="dl-terminal-header">
+                  <span class="dl-terminal-dot dl-terminal-dot--red"></span>
+                  <span class="dl-terminal-dot dl-terminal-dot--yellow"></span>
+                  <span class="dl-terminal-dot dl-terminal-dot--green"></span>
+                  <span class="dl-terminal-title">Terminal</span>
+                </div>
+<pre><code><span class="dl-comment"># 1. Check the install</span>
+solace --version
+
+<span class="dl-comment"># 2. Launch with the Yinyang assistant</span>
+solace --head --yinyang
+
+<span class="dl-comment"># 3. Or run headless (server mode)</span>
+solace --headless --port 9222</code></pre>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ── BUILD FROM SOURCE ── -->
         <section class="page-section reveal">
           <div class="build-source">
+            <div class="panel-kicker">Alternative</div>
             <h3>Build from Source</h3>
-            <pre id="install-command"><code>git clone https://github.com/solaceagi/solace-browser.git
+            <p class="dl-build-desc">Solace Browser is source-available under the <a href="https://github.com/solaceagi/solace-browser/blob/main/LICENSE" target="_blank" rel="noopener">Functional Source License (FSL-1.1-Apache-2.0)</a>. Audit the code, build locally, contribute improvements.</p>
+            <div class="dl-terminal">
+              <div class="dl-terminal-header">
+                <span class="dl-terminal-dot dl-terminal-dot--red"></span>
+                <span class="dl-terminal-dot dl-terminal-dot--yellow"></span>
+                <span class="dl-terminal-dot dl-terminal-dot--green"></span>
+                <span class="dl-terminal-title">Terminal</span>
+              </div>
+<pre><code>git clone https://github.com/solaceagi/solace-browser.git
 cd solace-browser
 pip install -e .
 playwright install chromium
 python solace_browser_server.py</code></pre>
-          </div>
-          <div class="data-grid">
-            <article class="download-card">
-              <div class="panel-kicker">What ships</div>
-              <h3>Build characteristics</h3>
-              <ul class="data-list">
-                <li><strong>Local-first profile</strong><br>Cookies and session state stay on your machine by default.</li>
-                <li><strong>OAuth3 vault hooks</strong><br>Tokens stay scoped and auditable before recipes use them.</li>
-                <li><strong>Machine + tunnel surfaces</strong><br>Disabled until you grant narrower permissions.</li>
-              </ul>
-            </article>
+            </div>
           </div>
         </section>
+
+        <!-- ── WHAT SHIPS ── -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <h2 class="section-title">What ships in every build</h2>
+          </div>
+          <div class="dl-features-grid">
+            <div class="dl-feature">
+              <div class="dl-feature-icon">&#128274;</div>
+              <strong>OAuth3 Authorization</strong>
+              <p>Tokens stay scoped, time-limited, and auditable. Revoke any delegation instantly.</p>
+            </div>
+            <div class="dl-feature">
+              <div class="dl-feature-icon">&#128203;</div>
+              <strong>Part 11 Evidence</strong>
+              <p>SHA-256 hash-chained evidence trail. Every action captured, tamper-evident by default.</p>
+            </div>
+            <div class="dl-feature">
+              <div class="dl-feature-icon">&#9775;</div>
+              <strong>Yinyang Assistant</strong>
+              <p>Conversational AI companion with budget gates and step-up consent for sensitive actions.</p>
+            </div>
+            <div class="dl-feature">
+              <div class="dl-feature-icon">&#128736;</div>
+              <strong>81 Recipes</strong>
+              <p>Pre-built automation recipes. Preview once with LLM, replay deterministically at near-zero cost.</p>
+            </div>
+            <div class="dl-feature">
+              <div class="dl-feature-icon">&#127760;</div>
+              <strong>Local-First Architecture</strong>
+              <p>Cookies, sessions, and profile data stay on your machine. Cloud relay is optional and consent-gated.</p>
+            </div>
+            <div class="dl-feature">
+              <div class="dl-feature-icon">&#128065;</div>
+              <strong>Full Source Access</strong>
+              <p>Read every line. Audit the security model. Build from source. Trust through transparency.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── SYSTEM REQUIREMENTS ── -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <h2 class="section-title">System requirements</h2>
+          </div>
+          <div class="dl-req-grid">
+            <div class="dl-req">
+              <strong>macOS</strong>
+              <span>macOS 12 Monterey or later (Apple Silicon or Intel)</span>
+            </div>
+            <div class="dl-req">
+              <strong>Linux</strong>
+              <span>Ubuntu 20.04+, Debian 11+, Fedora 36+, or equivalent (x86_64)</span>
+            </div>
+            <div class="dl-req">
+              <strong>Windows</strong>
+              <span>Windows 10 version 1903+ or Windows 11 (x86_64)</span>
+            </div>
+            <div class="dl-req">
+              <strong>RAM</strong>
+              <span>4 GB minimum, 8 GB recommended</span>
+            </div>
+            <div class="dl-req">
+              <strong>Disk</strong>
+              <span>500 MB for the browser + Chromium runtime</span>
+            </div>
+          </div>
+        </section>
+
       </main>
       <!-- Shared footer injected by layout.js -->
       <div id="footer-slot"></div>
 
     </div>
   </div>
+
+  <script>
+  (function() {
+    var ua = navigator.userAgent;
+    var platform = 'your platform';
+    var label = 'Download for ';
+    if (/Mac/i.test(ua)) {
+      platform = 'macOS';
+    } else if (/Linux/i.test(ua)) {
+      platform = 'Linux';
+    } else if (/Win/i.test(ua)) {
+      platform = 'Windows';
+    }
+    var el = document.getElementById('detected-platform');
+    if (el) el.textContent = 'Detected: ' + platform;
+    var btn = document.getElementById('primary-download-label');
+    if (btn && platform !== 'your platform') {
+      btn.textContent = label + platform;
+    }
+  })();
+  </script>
 </body>
 </html>

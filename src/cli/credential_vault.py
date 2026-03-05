@@ -88,6 +88,6 @@ class CredentialVault:
             algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
-            iterations=390000,
+            iterations=600000,
         )
         return kdf.derive(password.encode("utf-8"))

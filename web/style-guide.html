@@ -376,6 +376,248 @@ console.log(`Auth: ${rung}`);</code>
         <hr class="sg-divider">
 
         <!-- ════════════════════════════════════════════════════════ -->
+        <!-- EDITABLE FIELDS (hover-to-edit pattern)                 -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Editable Fields</h2>
+              <p class="section-copy">Display-only by default. Hover reveals a pencil icon and subtle highlight. Click to edit inline. Enter or blur saves. Adapted from CRIO's clinical data entry pattern for Solace's dark theme.</p>
+            </div>
+          </div>
+
+          <div class="sg-demo-box">
+            <h3 style="font-size:0.82rem;color:var(--sb-signal);margin:0 0 14px;text-transform:uppercase;letter-spacing:0.06em;">Live Demo — hover any value to edit</h3>
+            <div class="sb-field">
+              <span class="sb-field__label">Email</span>
+              <span class="sb-field__value sb-editable" data-field="email" data-placeholder="your@email.com">phuc@phuc.net</span>
+            </div>
+            <div class="sb-field">
+              <span class="sb-field__label">Reply Tone</span>
+              <span class="sb-field__value sb-editable" data-field="tone" data-placeholder="e.g. professional, casual">neutral_professional</span>
+            </div>
+            <div class="sb-field">
+              <span class="sb-field__label">Signature</span>
+              <span class="sb-field__value sb-editable sb-editable--block sb-editable--multi" data-field="signature" data-placeholder="Your email signature">Best,
+Phuc
+Founder, Solace AGI
+https://solaceagi.com</span>
+            </div>
+            <div class="sb-field">
+              <span class="sb-field__label">Max Emails</span>
+              <span class="sb-field__value sb-editable" data-field="max_emails" data-placeholder="20">20</span>
+            </div>
+            <div class="sb-field">
+              <span class="sb-field__label">Empty Field</span>
+              <span class="sb-field__value sb-editable sb-editable--empty" data-field="empty" data-placeholder="Click to add a value"></span>
+            </div>
+          </div>
+
+          <code class="sg-code">&lt;div class="sb-field"&gt;
+  &lt;span class="sb-field__label"&gt;Email&lt;/span&gt;
+  &lt;span class="sb-field__value sb-editable" data-field="email"&gt;phuc@phuc.net&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;!-- Multiline variant --&gt;
+&lt;span class="sb-editable sb-editable--block sb-editable--multi"&gt;Line 1\nLine 2&lt;/span&gt;
+
+&lt;!-- Empty with placeholder --&gt;
+&lt;span class="sb-editable sb-editable--empty" data-placeholder="Click to add"&gt;&lt;/span&gt;</code>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- FIELD GROUPS                                            -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Field Groups</h2>
+              <p class="section-copy">Titled card sections that group related editable fields. Used on app dashboards for setup config (Account, Behavior, Rules, etc.).</p>
+            </div>
+          </div>
+
+          <div style="max-width:640px;">
+            <div class="sb-field-group">
+              <h3 class="sb-field-group__title">Account</h3>
+              <div class="sb-field">
+                <span class="sb-field__label">Gmail</span>
+                <span class="sb-field__value sb-editable" data-field="email">phuc@phuc.net</span>
+              </div>
+              <div class="sb-field">
+                <span class="sb-field__label">Scan Window</span>
+                <span class="sb-field__value sb-editable" data-field="window">last_7_days</span>
+              </div>
+              <div class="sb-field">
+                <span class="sb-field__label">Max Emails</span>
+                <span class="sb-field__value sb-editable" data-field="limit">20</span>
+              </div>
+            </div>
+
+            <div class="sb-field-group">
+              <h3 class="sb-field-group__title">Reply Behavior</h3>
+              <div class="sb-field">
+                <span class="sb-field__label">Tone</span>
+                <span class="sb-field__value sb-editable" data-field="tone">neutral_professional</span>
+              </div>
+              <div class="sb-field">
+                <span class="sb-field__label">Max Drafts</span>
+                <span class="sb-field__value sb-editable" data-field="drafts">5</span>
+              </div>
+              <div class="sb-field">
+                <span class="sb-field__label">Language</span>
+                <span class="sb-field__value sb-editable" data-field="lang">en</span>
+              </div>
+            </div>
+          </div>
+
+          <code class="sg-code">&lt;div class="sb-field-group"&gt;
+  &lt;h3 class="sb-field-group__title"&gt;Account&lt;/h3&gt;
+  &lt;div class="sb-field"&gt;
+    &lt;span class="sb-field__label"&gt;Gmail&lt;/span&gt;
+    &lt;span class="sb-field__value sb-editable"&gt;phuc@phuc.net&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- PILLS                                                   -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Pills</h2>
+              <p class="section-copy">Compact inline badges for status, categories, and metadata. Five semantic variants.</p>
+            </div>
+          </div>
+          <div class="sg-component-row">
+            <span class="sb-pill">Default</span>
+            <span class="sb-pill sb-pill--accent">Accent</span>
+            <span class="sb-pill sb-pill--signal">Signal</span>
+            <span class="sb-pill sb-pill--success">Success</span>
+            <span class="sb-pill sb-pill--warning">Warning</span>
+            <span class="sb-pill sb-pill--danger">Danger</span>
+          </div>
+          <code class="sg-code">&lt;span class="sb-pill sb-pill--success"&gt;Installed&lt;/span&gt;</code>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- TABS                                                    -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Tabs</h2>
+              <p class="section-copy">Reusable tab bar. Active tab uses accent bottom border. Content panels toggle with <code>.is-active</code>.</p>
+            </div>
+          </div>
+
+          <div class="sg-demo-box">
+            <div class="sb-tabs" id="sg-tabs">
+              <button class="sb-tab is-active" data-tab="sg-tab-1">Setup</button>
+              <button class="sb-tab" data-tab="sg-tab-2">Runs</button>
+              <button class="sb-tab" data-tab="sg-tab-3">Diagrams</button>
+              <button class="sb-tab" data-tab="sg-tab-4">Files</button>
+            </div>
+            <div class="sb-tab-panel is-active" id="sg-tab-1"><p>Setup panel content — editable field groups go here.</p></div>
+            <div class="sb-tab-panel" id="sg-tab-2"><p>Run history with DataTables.</p></div>
+            <div class="sb-tab-panel" id="sg-tab-3"><p>Mermaid diagrams rendered here.</p></div>
+            <div class="sb-tab-panel" id="sg-tab-4"><p>Inbox/outbox file browser.</p></div>
+          </div>
+          <code class="sg-code">&lt;div class="sb-tabs"&gt;
+  &lt;button class="sb-tab is-active" data-tab="panel-1"&gt;Tab 1&lt;/button&gt;
+  &lt;button class="sb-tab" data-tab="panel-2"&gt;Tab 2&lt;/button&gt;
+&lt;/div&gt;
+&lt;div class="sb-tab-panel is-active" id="panel-1"&gt;...&lt;/div&gt;
+&lt;div class="sb-tab-panel" id="panel-2"&gt;...&lt;/div&gt;</code>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- STATE CARDS                                             -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">State Cards</h2>
+              <p class="section-copy">Feedback cards for run progress, approval queues, and results. Three semantic variants: signal (info), success, danger.</p>
+            </div>
+          </div>
+
+          <div style="max-width:500px;display:grid;gap:14px;">
+            <div class="sb-state-card sb-state-card--signal">
+              <div class="sb-state-card__title">Running Gmail Triage...</div>
+              <div class="sb-state-card__body">Navigating to mail.google.com — extracting inbox data</div>
+            </div>
+            <div class="sb-state-card sb-state-card--success">
+              <div class="sb-state-card__title">Run Complete</div>
+              <div class="sb-state-card__body">17 emails scanned, 4 drafts created, 8 archived. Evidence sealed.</div>
+            </div>
+            <div class="sb-state-card sb-state-card--danger">
+              <div class="sb-state-card__title">Run Failed</div>
+              <div class="sb-state-card__body">Browser offline — could not connect to port 9222.</div>
+            </div>
+          </div>
+          <code class="sg-code">&lt;div class="sb-state-card sb-state-card--success"&gt;
+  &lt;div class="sb-state-card__title"&gt;Run Complete&lt;/div&gt;
+  &lt;div class="sb-state-card__body"&gt;17 emails scanned...&lt;/div&gt;
+&lt;/div&gt;</code>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- APP HEADER                                              -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <section class="page-section reveal">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">App Header</h2>
+              <p class="section-copy">Standard hero for every app detail page. Icon, name, description, meta pills, and CTA buttons.</p>
+            </div>
+          </div>
+
+          <div class="sg-demo-box">
+            <div class="sb-app-header">
+              <img class="sb-app-header__icon" src="/images/apps/gmail.jpg" alt="Gmail" width="64" height="64">
+              <div class="sb-app-header__info">
+                <h2 class="sb-app-header__name">Gmail Inbox Triage</h2>
+                <p class="sb-app-header__desc">Scan Gmail, prioritize emails, draft replies, archive noise</p>
+                <div class="sb-app-header__meta">
+                  <span class="sb-pill sb-pill--success">Installed</span>
+                  <span class="sb-pill">Safety B</span>
+                  <span class="sb-pill sb-pill--signal">mail.google.com</span>
+                </div>
+              </div>
+              <div class="sb-app-header__ctas">
+                <button class="sb-run-btn">&#9654; Run Now</button>
+              </div>
+            </div>
+          </div>
+          <code class="sg-code">&lt;div class="sb-app-header"&gt;
+  &lt;img class="sb-app-header__icon" src="/images/apps/gmail.jpg"&gt;
+  &lt;div class="sb-app-header__info"&gt;
+    &lt;h2 class="sb-app-header__name"&gt;Gmail Inbox Triage&lt;/h2&gt;
+    &lt;p class="sb-app-header__desc"&gt;...&lt;/p&gt;
+    &lt;div class="sb-app-header__meta"&gt;
+      &lt;span class="sb-pill sb-pill--success"&gt;Installed&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="sb-app-header__ctas"&gt;
+    &lt;button class="sb-run-btn"&gt;&amp;#9654; Run Now&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code>
+        </section>
+
+        <hr class="sg-divider">
+
+        <!-- ════════════════════════════════════════════════════════ -->
         <!-- TABLES                                                  -->
         <!-- ════════════════════════════════════════════════════════ -->
         <section class="page-section reveal">
@@ -1113,7 +1355,7 @@ solace_browser_server.py    # Main aiohttp + CDP server</pre>
               <p style="font-size:0.78rem;color:var(--sb-text-muted);margin-bottom:14px;">By clicking Approve, you e-sign this action. Your digital signature is permanently sealed with SHA-256 (Part 11 §11.70). This cannot be transferred or copied.</p>
               <div style="display:flex;gap:10px;">
                 <button onclick="document.getElementById('sgEsign').style.display='none';sgDelight('celebrate');" style="flex:1;background:var(--sb-success);color:var(--sb-bg);border:none;padding:11px;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">✓ Approve &amp; Sign</button>
-                <button onclick="document.getElementById('sgEsign').style.display='none';" style="flex:0 0 auto;background:var(--sb-danger);color:#fff;border:none;padding:11px 20px;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">✗ Reject</button>
+                <button onclick="document.getElementById('sgEsign').style.display='none';" style="flex:0 0 auto;background:var(--sb-danger);color:#fff;border:none;padding:11px 20px;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">✗ Decline</button>
               </div>
             </div>
           </div>
@@ -1126,5 +1368,88 @@ solace_browser_server.py    # Main aiohttp + CDP server</pre>
 
     </div>
   </div>
+
+  <!-- ═══ Editable Fields + Tabs JS ═══ -->
+  <script>
+  (function() {
+    'use strict';
+
+    /* ── Editable: click to edit, enter/blur to save ── */
+    document.addEventListener('click', function(e) {
+      var el = e.target.closest('.sb-editable');
+      if (!el || el.classList.contains('is-editing')) return;
+
+      var isMulti = el.classList.contains('sb-editable--multi');
+      var origText = el.textContent.trim();
+
+      el.classList.add('is-editing');
+      el.classList.remove('sb-editable--empty');
+
+      if (isMulti) {
+        var ta = document.createElement('textarea');
+        ta.value = origText;
+        el.textContent = '';
+        el.appendChild(ta);
+        ta.style.height = 'auto';
+        ta.style.height = Math.max(ta.scrollHeight, 60) + 'px';
+        ta.addEventListener('input', function() { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; });
+        ta.focus();
+        ta.addEventListener('blur', function() { save(el, ta.value, origText); });
+        ta.addEventListener('keydown', function(ev) {
+          if (ev.key === 'Escape') { save(el, origText, origText); ev.preventDefault(); }
+        });
+      } else {
+        var inp = document.createElement('input');
+        inp.type = 'text';
+        inp.value = origText;
+        el.textContent = '';
+        el.appendChild(inp);
+        inp.focus();
+        inp.select();
+        inp.addEventListener('blur', function() { save(el, inp.value, origText); });
+        inp.addEventListener('keydown', function(ev) {
+          if (ev.key === 'Enter') { save(el, inp.value, origText); ev.preventDefault(); }
+          if (ev.key === 'Escape') { save(el, origText, origText); ev.preventDefault(); }
+        });
+      }
+    });
+
+    function save(el, newVal, origVal) {
+      el.classList.remove('is-editing');
+      var val = newVal.trim();
+      el.textContent = val;
+      if (!val) {
+        el.classList.add('sb-editable--empty');
+        el.textContent = '';
+      }
+      /* Green glow save confirmation */
+      if (val !== origVal) {
+        el.classList.add('is-saved');
+        setTimeout(function() { el.classList.remove('is-saved'); }, 800);
+        el.dispatchEvent(new CustomEvent('sb-field-change', {
+          bubbles: true,
+          detail: { field: el.dataset.field, value: val, previous: origVal }
+        }));
+      }
+    }
+
+    /* ── Tabs: generic click handler ── */
+    document.addEventListener('click', function(e) {
+      var tab = e.target.closest('.sb-tab');
+      if (!tab) return;
+      var container = tab.parentElement;
+      var panelId = tab.dataset.tab;
+      if (!panelId) return;
+
+      container.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('is-active'); });
+      tab.classList.add('is-active');
+
+      var parent = container.parentElement;
+      parent.querySelectorAll('.sb-tab-panel').forEach(function(p) { p.classList.remove('is-active'); });
+      var panel = document.getElementById(panelId);
+      if (panel) panel.classList.add('is-active');
+    });
+  })();
+  </script>
 </body>
 </html>

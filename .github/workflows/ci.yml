@@ -84,13 +84,13 @@ jobs:
       - name: Build binary
         shell: bash
         run: |
-          chmod +x scripts/release_browser_cycle.sh
+          chmod +x src/scripts/release_browser_cycle.sh
           TARGET_OS="${{ matrix.target_os }}" \
           OBJECT_NAME="${{ matrix.object_name }}" \
           DOWNLOAD_ENABLED=0 \
           RUN_SMOKE=0 \
           UPLOAD_ENABLED=0 \
-          scripts/release_browser_cycle.sh
+          src/scripts/release_browser_cycle.sh
 
       - name: Compute SHA256
         shell: bash

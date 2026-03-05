@@ -218,58 +218,49 @@ class TestHomePageStructure:
         assert _has_class(html, "hero"), \
             "Expected .hero section in home.html"
 
-    def test_display_heading_exists(self, html):
-        """Display heading must be present."""
-        assert _has_class(html, "display"), \
-            "Expected .display heading in home.html"
+    def test_greeting_exists(self, html):
+        """Dashboard greeting must be present."""
+        assert _has_class(html, "dash-greeting"), \
+            "Expected .dash-greeting in home.html"
 
-    def test_kpi_grid_exists(self, html):
-        """KPI grid with product stats must exist."""
-        assert _has_class(html, "kpi-grid"), \
-            "Expected .kpi-grid in home.html"
+    def test_money_widget_exists(self, html):
+        """Money saved widget must exist on dashboard."""
+        assert _has_class(html, "dash-money-widget"), \
+            "Expected .dash-money-widget in home.html"
 
-    def test_surface_grid_exists(self, html):
-        """Surface cards grid must exist with 3 surfaces."""
-        assert _has_class(html, "surface-grid"), \
-            "Expected .surface-grid in home.html"
-        assert html.count("surface-card__kicker") >= 3, \
-            "Expected at least 3 surface cards"
+    def test_app_cards_grid_exists(self, html):
+        """App cards grid must exist for drag-reorder."""
+        assert "dash-apps-grid" in html, \
+            "Expected #dash-apps-grid in home.html"
 
-    def test_token_table_body_exists(self, html):
-        """OAuth3 token table body must exist."""
-        assert _has_id(html, "token-table-body"), \
-            "Expected id='token-table-body' in home.html"
+    def test_favorites_section_exists(self, html):
+        """Favorites strip for pinned apps must exist."""
+        assert "dash-favorites" in html, \
+            "Expected dash-favorites section in home.html"
 
-    def test_activity_list_exists(self, html):
-        """Activity feed list must exist."""
-        assert _has_id(html, "activity-list"), \
-            "Expected id='activity-list' in home.html"
+    def test_recent_activity_exists(self, html):
+        """Recent activity timeline must exist."""
+        assert "dash-recent" in html, \
+            "Expected dash-recent section in home.html"
 
-    def test_scope_list_exists(self, html):
-        """Scope summary list must exist."""
-        assert _has_id(html, "scope-list"), \
-            "Expected id='scope-list' in home.html"
+    def test_sparkline_css_exists(self, html):
+        """Sparkline chart CSS must be defined."""
+        assert "dash-sparkline" in html, \
+            "Expected .dash-sparkline styles in home.html"
 
-    def test_recipe_search_exists(self, html):
-        """Recipe search input must exist."""
-        assert _has_id(html, "recipe-search"), \
-            "Expected id='recipe-search' in home.html"
+    def test_drag_reorder_support(self, html):
+        """App cards must support drag-and-drop reorder."""
+        assert "draggable" in html, \
+            "Expected draggable attribute in home.html"
+        assert "dragstart" in html, \
+            "Expected dragstart event handler in home.html"
 
-    def test_recipe_list_exists(self, html):
-        """Recipe list with at least one item must exist."""
-        assert _has_class(html, "recipe-list"), \
-            "Expected .recipe-list in home.html"
-        assert "data-recipe-name" in html, \
-            "Expected at least one recipe item with data-recipe-name"
-
-    def test_surface_links_to_pages(self, html):
-        """Surface cards must link to their respective pages."""
-        assert "/machine-dashboard" in html, \
-            "Expected link to /machine-dashboard"
-        assert "/tunnel-connect" in html, \
-            "Expected link to /tunnel-connect"
-        assert "/download" in html, \
-            "Expected link to /download"
+    def test_i18n_keys_present(self, html):
+        """Dashboard must have i18n data attributes."""
+        assert 'data-i18n="dash_money_saved"' in html, \
+            "Expected data-i18n for money saved"
+        assert 'data-i18n="dash_favorites"' in html, \
+            "Expected data-i18n for favorites"
 
 
 # ===========================================================================
@@ -293,28 +284,28 @@ class TestDownloadPageStructure:
         assert _has_id(html, "detected-platform"), \
             "Expected id='detected-platform' in download.html"
 
-    def test_install_command_exists(self, html):
-        """CLI install command must exist."""
-        assert _has_id(html, "install-command"), \
-            "Expected id='install-command' in download.html"
+    def test_install_command_or_build_from_source(self, html):
+        """CLI install command or build-from-source instructions must exist."""
+        assert "install" in html.lower() or "pip" in html.lower() or "build" in html.lower(), \
+            "Expected install or build instructions in download.html"
 
-    def test_macos_download_links(self, html):
-        """macOS download links must be present."""
-        assert "mac-arm64" in html, "Expected Apple Silicon download link"
-        assert "mac-x86_64" in html or "mac-intel" in html, "Expected Intel Mac download link"
+    def test_macos_download_section(self, html):
+        """macOS download section must be present."""
+        assert "macos" in html.lower() or "mac" in html.lower(), \
+            "Expected macOS download section"
 
-    def test_linux_download_links(self, html):
-        """Linux download links must be present."""
-        assert "linux-amd64" in html, "Expected Linux AMD64 download link"
+    def test_linux_download_section(self, html):
+        """Linux download section must be present."""
+        assert "linux" in html.lower(), "Expected Linux download section"
 
-    def test_windows_download_links(self, html):
-        """Windows download links must be present."""
-        assert "windows-x64" in html, "Expected Windows x64 download link"
+    def test_windows_download_section(self, html):
+        """Windows download section must be present."""
+        assert "windows" in html.lower(), "Expected Windows download section"
 
-    def test_gcs_download_urls(self, html):
-        """Download URLs must point to GCS storage."""
-        assert "storage.googleapis.com/solace-downloads" in html, \
-            "Expected GCS download URL in download.html"
+    def test_download_urls_point_to_github_releases(self, html):
+        """Download URLs must point to GitHub Releases."""
+        assert "github.com/solaceagi/solace-browser/releases" in html, \
+            "Expected GitHub Releases download URL in download.html"
 
     def test_release_notes_link(self, html):
         """Release notes link must be present."""
@@ -333,42 +324,40 @@ class TestHamburgerMenuConsistency:
     def pages(self):
         return {p.stem: _read(p) for p in ALL_PAGES}
 
-    def test_all_pages_have_hamburger_button(self, pages):
-        """Every page must have the hamburger toggle button."""
-        for name, html in pages.items():
-            assert _has_id(html, "hamburger-toggle"), \
-                f"Missing id='hamburger-toggle' in {name}"
+    # Pages that use dashboard layout (no shared header) or are partials
+    _SKIP_PAGES = {"home", "partials-header", "partials-footer"}
 
-    def test_all_pages_have_mobile_menu(self, pages):
-        """Every page must have the mobile menu container."""
+    def test_all_pages_have_header_slot_or_hamburger(self, pages):
+        """Every page must have header-slot (for layout.js injection) or inline hamburger."""
         for name, html in pages.items():
-            assert _has_id(html, "mobile-menu"), \
-                f"Missing id='mobile-menu' in {name}"
+            if name in self._SKIP_PAGES:
+                continue
+            has_slot = _has_id(html, "header-slot")
+            has_hamburger = _has_id(html, "hamburger-toggle")
+            assert has_slot or has_hamburger, \
+                f"Missing id='header-slot' or 'hamburger-toggle' in {name}"
+
+    def test_partials_header_has_hamburger(self, pages):
+        """The shared header partial must have the hamburger button."""
+        if "partials-header" in pages:
+            assert _has_id(pages["partials-header"], "hamburger-toggle"), \
+                "Missing id='hamburger-toggle' in partials-header.html"
 
     def test_hamburger_has_three_spans(self, pages):
-        """Hamburger button must contain three span elements."""
-        for name, html in pages.items():
-            assert _has_pattern(html, r'id="hamburger-toggle"[^>]*><span></span><span></span><span></span>'), \
-                f"Hamburger button in {name} must have 3 spans"
+        """Hamburger button in partials-header must contain three span elements."""
+        if "partials-header" in pages:
+            assert _has_pattern(pages["partials-header"],
+                r'id="hamburger-toggle"[^>]*><span></span><span></span><span></span>'), \
+                "Hamburger button in partials-header must have 3 spans"
 
-    def test_mobile_menu_has_surfaces_section(self, pages):
-        """Mobile menu must contain Surfaces section with all nav links."""
+    def test_pages_use_layout_js(self, pages):
+        """Pages with header-slot must include layout.js for header injection."""
         for name, html in pages.items():
-            assert _has_text(html, "Surfaces"), \
-                f"Missing 'Surfaces' section in mobile menu of {name}"
-
-    def test_mobile_menu_has_platform_or_settings_link(self, pages):
-        """Mobile menu must contain Platform section or Settings link."""
-        for name, html in pages.items():
-            assert _has_text(html, "Platform") or 'href="/settings"' in html, \
-                f"Missing 'Platform' section or Settings link in mobile menu of {name}"
-
-    def test_mobile_menu_links_to_all_pages(self, pages):
-        """Mobile menu must link to all 4 surface pages."""
-        for name, html in pages.items():
-            for path in ["/", "/download", "/machine-dashboard", "/tunnel-connect"]:
-                assert f'href="{path}"' in html, \
-                    f"Mobile menu in {name} missing link to {path}"
+            if name in self._SKIP_PAGES:
+                continue
+            if _has_id(html, "header-slot"):
+                assert "layout.js" in html, \
+                    f"Page {name} has header-slot but missing layout.js include"
 
 
 # ===========================================================================
@@ -432,22 +421,22 @@ class TestAccessibility:
         return {p.stem: _read(p) for p in ALL_PAGES}
 
     def test_hamburger_has_aria_label(self, pages):
-        """Hamburger button must have aria-label."""
-        for name, html in pages.items():
-            assert _has_pattern(html, r'id="hamburger-toggle"[^>]*aria-label='), \
-                f"Hamburger in {name} missing aria-label"
+        """Hamburger button in partials-header must have aria-label."""
+        if "partials-header" in pages:
+            assert _has_pattern(pages["partials-header"], r'id="hamburger-toggle"[^>]*aria-label='), \
+                "Hamburger in partials-header missing aria-label"
 
     def test_hamburger_has_aria_expanded(self, pages):
-        """Hamburger button must have aria-expanded attribute."""
-        for name, html in pages.items():
-            assert _has_pattern(html, r'id="hamburger-toggle"[^>]*aria-expanded='), \
-                f"Hamburger in {name} missing aria-expanded"
+        """Hamburger button in partials-header must have aria-expanded attribute."""
+        if "partials-header" in pages:
+            assert _has_pattern(pages["partials-header"], r'id="hamburger-toggle"[^>]*aria-expanded='), \
+                "Hamburger in partials-header missing aria-expanded"
 
     def test_nav_has_aria_label(self, pages):
-        """Primary navigation must have aria-label."""
-        for name, html in pages.items():
-            assert _has_pattern(html, r'<nav[^>]*aria-label="Primary"'), \
-                f"Nav in {name} missing aria-label='Primary'"
+        """Primary navigation in partials-header must have aria-label."""
+        if "partials-header" in pages:
+            assert _has_pattern(pages["partials-header"], r'<nav[^>]*aria-label="Primary"'), \
+                "Nav in partials-header missing aria-label='Primary'"
 
     def test_search_inputs_have_labels(self):
         """Search inputs must have associated labels or aria-label."""

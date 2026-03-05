@@ -116,13 +116,13 @@ def extract_json(raw: str) -> dict:
     try:
         obj, _ = json.JSONDecoder().raw_decode(raw)
         return obj
-    except Exception:
+    except (json.JSONDecodeError, ValueError):
         pass
     match = re.search(r"\{.*\}", raw, re.S)
     if match:
         try:
             return json.loads(match.group(0))
-        except Exception:
+        except (json.JSONDecodeError, ValueError):
             pass
     raise ValueError(f"Could not parse JSON from model output:\n{raw[:400]}")
 
@@ -203,7 +203,7 @@ def main() -> None:
                 translated = translate_batch(batch, lang_name)
                 all_translated.update(translated)
                 print("ok")
-            except Exception as exc:
+            except (ValueError, OSError, KeyError) as exc:
                 print(f"FAILED: {exc}")
                 # Use English fallback for this batch
                 all_translated.update(batch)

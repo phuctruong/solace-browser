@@ -771,7 +771,7 @@ Users can configure gate behavior in `~/.solace/settings.json`:
 {
   "oauth3_gate": {
     "enabled": true,            // false = disable gate (not recommended)
-    "countdown_seconds": 15,    // 5-60 range
+    "countdown_seconds": 120,   // WCAG 2.2.1: minimum 120s or adjustable
     "trusted_clients": [        // skip gate for these client_ids
       "gmail-inbox-triage"
     ],

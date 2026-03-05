@@ -3,9 +3,47 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from typing import Any, Optional
 
 logger = logging.getLogger("solace-browser.yinyang")
+
+# ── Content filter (COPPA + safety baseline) ──
+# Patterns that must be blocked in user-generated content.
+# Kept minimal and deterministic — no external deps.
+_BLOCKED_PATTERNS: list[re.Pattern] = [
+    re.compile(p, re.IGNORECASE) for p in [
+        # Profanity / slurs (compact list — extend as needed)
+        r"\b(?:f+u+c+k+|s+h+i+t+|a+s+s+h+o+l+e+|b+i+t+c+h+|d+a+m+n+|c+u+n+t+)\b",
+        # Threats / violence
+        r"\b(?:kill\s+(?:you|her|him|them|myself)|bomb\s+threat|shoot\s+up)\b",
+        # Self-harm
+        r"\b(?:how\s+to\s+(?:kill|harm)\s+(?:myself|yourself))\b",
+        # PII solicitation targeting minors
+        r"\b(?:what\s+is\s+your\s+(?:address|phone|school))\b",
+    ]
+]
+
+# Age-gate: if user identifies as under 13, block data collection
+_MINOR_PATTERN = re.compile(
+    r"\b(?:i\s+am|i'm|im)\s+(\d{1,2})\s*(?:years?\s*old|yo|y\.?o\.?)\b", re.IGNORECASE
+)
+
+
+def _check_content(text: str) -> str | None:
+    """Return a rejection reason if content violates filters, else None."""
+    for pattern in _BLOCKED_PATTERNS:
+        if pattern.search(text):
+            return "Your message was filtered. Please keep the conversation respectful and safe."
+    match = _MINOR_PATTERN.search(text)
+    if match:
+        age = int(match.group(1))
+        if age < 13:
+            return (
+                "For your safety, users under 13 cannot share personal information. "
+                "Please use Solace Browser with a parent or guardian."
+            )
+    return None
 
 class YinyangWSBridge:
     """Local WebSocket handler for Yinyang chat relay."""
@@ -51,6 +89,12 @@ class YinyangWSBridge:
 
         if msg_type == "chat":
             content = payload.get("content", "")
+            rejection = _check_content(content)
+            if rejection is not None:
+                return {
+                    "type": "chat",
+                    "payload": {"content": rejection, "role": "assistant", "filtered": True},
+                }
             response_text = self._local_response(content)
             return {
                 "type": "chat",

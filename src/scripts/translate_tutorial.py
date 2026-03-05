@@ -38,14 +38,14 @@ def extract_json(raw: str) -> dict:
     try:
         obj, _ = json.JSONDecoder().raw_decode(raw)
         return obj
-    except Exception:
+    except (json.JSONDecodeError, ValueError):
         pass
     # Try to find first { ... } block
     match = re.search(r"\{.*\}", raw, re.S)
     if match:
         try:
             return json.loads(match.group(0))
-        except Exception:
+        except (json.JSONDecodeError, ValueError):
             pass
     raise ValueError(f"Could not parse JSON from model output: {raw[:300]}")
 
@@ -96,7 +96,7 @@ def main():
                 path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
                 print("ok")
                 changed = True
-            except Exception as e:
+            except (ValueError, OSError, KeyError) as e:
                 print(f"FAILED: {e}")
         else:
             print(f"[{locale}] tutorial already done, skipping")
@@ -128,7 +128,7 @@ def main():
                 path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
                 print("ok")
                 changed = True
-            except Exception as e:
+            except (ValueError, OSError, KeyError) as e:
                 print(f"FAILED: {e}")
         else:
             print(f"[{locale}] oauth3_confirm already done, skipping")
@@ -144,7 +144,7 @@ def main():
                 path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
                 print("ok")
                 changed = True
-            except Exception as e:
+            except (ValueError, OSError, KeyError) as e:
                 print(f"FAILED: {e}")
         else:
             print(f"[{locale}] notifications already done, skipping")

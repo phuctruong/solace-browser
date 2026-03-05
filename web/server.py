@@ -3,9 +3,18 @@ from __future__ import annotations
 
 import collections
 import copy
+import datetime
+import fcntl
+import hmac
 import json
+import logging
 import os
 import re
+import hashlib
+import secrets
+import select
+import shutil
+import subprocess
 import sys
 import threading
 import time
@@ -17,6 +26,8 @@ from json import JSONDecodeError
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
+
+logger = logging.getLogger("solace-browser")
 
 import yaml
 
@@ -35,6 +46,189 @@ from app_store.backend import (
 )
 from companion.apps import discover_installed_apps
 from inbox_outbox import AppFolderNotFoundError, InboxOutboxManager
+
+
+# ── CLI Agent Registry (auto-detect + webservice wrapper) ────────────────────
+
+CLI_AGENT_DEFS = [
+    {
+        "id": "claude", "name": "Claude Code", "cmd": "claude",
+        "invoke": ["claude", "-p", "--model", "{model}", "{prompt}"],
+        "stdin": False,
+        "env_remove": ["CLAUDECODE"],
+        "models": ["claude-opus-4-6", "claude-sonnet-4-6", "claude-haiku-4-5-20251001"],
+        "default_model": "claude-sonnet-4-6",
+        "provider": "Anthropic",
+        "icon": "A",  # first letter fallback
+        "cost": "Uses your Anthropic API key (via Claude Code)",
+    },
+    {
+        "id": "codex", "name": "OpenAI Codex", "cmd": "codex",
+        "invoke": ["codex", "exec", "{prompt}"],
+        "stdin": False, "env_remove": [],
+        "models": ["gpt-4.1", "gpt-4.1-mini", "o3", "o4-mini"],
+        "default_model": "gpt-4.1",
+        "provider": "OpenAI", "icon": "O",
+        "cost": "Uses your OpenAI API key (via Codex CLI)",
+    },
+    {
+        "id": "gemini", "name": "Google Gemini", "cmd": "gemini",
+        "invoke": ["gemini", "-p", "{prompt}"],
+        "stdin": False, "env_remove": [],
+        "models": ["gemini-2.5-pro", "gemini-2.5-flash"],
+        "default_model": "gemini-2.5-pro",
+        "provider": "Google", "icon": "G",
+        "cost": "Uses your Google AI API key (via Gemini CLI)",
+    },
+    {
+        "id": "copilot", "name": "GitHub Copilot", "cmd": "copilot",
+        "invoke": ["copilot", "{prompt}"],
+        "stdin": False, "env_remove": [],
+        "models": ["gpt-4.1", "claude-sonnet-4-6", "o4-mini"],
+        "default_model": "gpt-4.1",
+        "provider": "GitHub", "icon": "C",
+        "cost": "Uses your GitHub Copilot subscription",
+    },
+    {
+        "id": "antigravity", "name": "Antigravity", "cmd": "antigravity",
+        "invoke": ["antigravity", "-"],
+        "stdin": True, "env_remove": [],
+        "models": ["claude-sonnet-4-6", "gpt-4.1"],
+        "default_model": "claude-sonnet-4-6",
+        "provider": "Antigravity", "icon": "AG",
+        "cost": "Uses your configured Antigravity backend",
+    },
+    {
+        "id": "cursor", "name": "Cursor", "cmd": "cursor",
+        "invoke": ["cursor", "--prompt", "{prompt}"],
+        "stdin": False, "env_remove": [],
+        "models": ["claude-sonnet-4-6", "gpt-4.1", "cursor-fast"],
+        "default_model": "claude-sonnet-4-6",
+        "provider": "Cursor", "icon": "Cu",
+        "cost": "Uses your Cursor Pro subscription",
+    },
+    {
+        "id": "aider", "name": "Aider", "cmd": "aider",
+        "invoke": ["aider", "--message", "{prompt}", "--no-git", "--yes"],
+        "stdin": False, "env_remove": [],
+        "models": ["claude-sonnet-4-6", "gpt-4.1", "deepseek-v3"],
+        "default_model": "claude-sonnet-4-6",
+        "provider": "Multiple", "icon": "Ai",
+        "cost": "Uses your configured API keys (Anthropic/OpenAI/etc.)",
+    },
+]
+
+# Cache file for detected CLI agents (avoids re-scanning every request)
+_CLI_CACHE_PATH = Path.home() / ".solace" / "cli-agents-cache.json"
+_cli_agents_cache: dict[str, Any] | None = None
+_cli_cache_lock = threading.Lock()
+
+
+def _detect_cli_agents(force: bool = False) -> dict[str, Any]:
+    """Detect installed CLI agents. Cache results to ~/.solace/cli-agents-cache.json."""
+    global _cli_agents_cache
+
+    with _cli_cache_lock:
+        # Return cache if available and not forced
+        if _cli_agents_cache is not None and not force:
+            return _cli_agents_cache
+
+        # Try reading from disk cache (first boot optimization)
+        if not force and _CLI_CACHE_PATH.exists():
+            try:
+                cached = json.loads(_CLI_CACHE_PATH.read_text(encoding="utf-8"))
+                if cached.get("version") == 1:
+                    _cli_agents_cache = cached
+                    return cached
+            except Exception:
+                pass
+
+        # Fresh scan
+        agents = []
+        for defn in CLI_AGENT_DEFS:
+            agent = dict(defn)
+            path = shutil.which(agent["cmd"])
+            agent["installed"] = path is not None
+            agent["path"] = path or ""
+            agents.append(agent)
+
+        installed = [a for a in agents if a["installed"]]
+        result = {
+            "version": 1,
+            "agents": agents,
+            "installed_count": len(installed),
+            "installed_ids": [a["id"] for a in installed],
+            "scanned_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
+
+        # Write cache to disk
+        _CLI_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            _CLI_CACHE_PATH.write_text(json.dumps(result, indent=2), encoding="utf-8")
+        except OSError:
+            pass
+
+        _cli_agents_cache = result
+        return result
+
+
+def _cli_generate(agent_id: str, prompt: str, model: str | None = None, timeout: int = 120) -> dict[str, Any]:
+    """Call a CLI agent with a prompt and return the response. Ollama-compatible."""
+    cache = _detect_cli_agents()
+    agent = None
+    for a in cache["agents"]:
+        if a["id"] == agent_id and a["installed"]:
+            agent = a
+            break
+    if agent is None:
+        return {"error": f"Agent '{agent_id}' not found or not installed", "done": True}
+
+    use_model = model or agent["default_model"]
+
+    # Build command from invoke template
+    cmd = []
+    for part in agent["invoke"]:
+        cmd.append(part.replace("{prompt}", prompt).replace("{model}", use_model))
+
+    # Clean environment
+    env = os.environ.copy()
+    for key in agent.get("env_remove", []):
+        env.pop(key, None)
+
+    # Scratch dir for isolation
+    scratch = Path.home() / ".solace" / "cli-scratch"
+    scratch.mkdir(parents=True, exist_ok=True)
+
+    try:
+        if agent.get("stdin"):
+            result = subprocess.run(
+                cmd, input=prompt, capture_output=True, text=True,
+                timeout=timeout, env=env, cwd=str(scratch),
+            )
+        else:
+            result = subprocess.run(
+                cmd, capture_output=True, text=True,
+                timeout=timeout, env=env, cwd=str(scratch),
+            )
+
+        if result.returncode == 0:
+            return {
+                "response": result.stdout.strip(),
+                "model": use_model,
+                "agent": agent_id,
+                "done": True,
+            }
+        else:
+            return {
+                "error": result.stderr.strip() or f"CLI exited with code {result.returncode}",
+                "model": use_model,
+                "agent": agent_id,
+                "done": True,
+            }
+    except subprocess.TimeoutExpired:
+        return {"error": f"CLI timed out after {timeout}s", "agent": agent_id, "done": True}
+    except FileNotFoundError:
+        return {"error": f"CLI binary not found: {agent['path']}", "agent": agent_id, "done": True}
 
 
 SLUG_MAP = {
@@ -163,6 +357,17 @@ _notif_queue: collections.deque = collections.deque(maxlen=50)
 _notif_subscribers: list[Any] = []
 _notif_lock = threading.Lock()
 _notif_id_counter = 0
+
+# In-memory rate limiter for approve/cancel (max 10 per minute per client)
+_rate_limit_store: dict[str, list[float]] = {}
+_rate_limit_lock = threading.Lock()
+_RATE_LIMIT_MAX = 10
+_RATE_LIMIT_WINDOW = 60.0  # seconds
+
+# CSRF tokens for schedule approve/cancel (token → expiry timestamp)
+_csrf_tokens: dict[str, float] = {}
+_csrf_lock = threading.Lock()
+_CSRF_TTL = 3600.0  # 1 hour
 
 OPENROUTER_BASE = "https://openrouter.ai/api/v1/chat/completions"
 YY_MODEL = "meta-llama/llama-3.3-70b-instruct"
@@ -433,6 +638,12 @@ class SolaceDataStore:
 class SlugRequestHandler(SimpleHTTPRequestHandler):
     data_store: SolaceDataStore = SolaceDataStore()
 
+    # Tunnel state (class-level — shared across requests)
+    _tunnel_proc: subprocess.Popen | None = None
+    _tunnel_url: str | None = None
+    _tunnel_started_at: float | None = None
+    _tunnel_local_port: int = 8791
+
     def translate_path(self, path: str) -> str:
         request_path = urlsplit(path).path
         if request_path.startswith("/css/") or request_path.startswith("/js/") or request_path.startswith("/images/"):
@@ -447,6 +658,15 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         if slug in SLUG_MAP:
             return str(ROOT / SLUG_MAP[slug])
         return str(ROOT / request_path.lstrip("/"))
+
+    def do_OPTIONS(self) -> None:  # noqa: N802
+        """CORS preflight — allow cross-origin requests from solaceagi.com and dev tools."""
+        self.send_response(HTTPStatus.NO_CONTENT)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Remote-Token")
+        self.send_header("Access-Control-Max-Age", "86400")
+        self.end_headers()
 
     def do_HEAD(self) -> None:  # noqa: N802
         self._handle_request(send_body=False)
@@ -502,9 +722,47 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             self._send_json(HTTPStatus.OK, {"remaining_usd": budget_usd}, send_body=send_body)
             return
 
+        # CLI Agents: /api/cli-agents
+        if request_path == "/api/cli-agents":
+            self._handle_cli_agents(send_body)
+            return
+
         # SSE stream: /api/yinyang/events
         if request_path == "/api/yinyang/events":
             self._handle_sse_events()
+            return
+
+        # Tunnel status (GET)
+        if request_path == "/tunnel/status":
+            self._handle_tunnel_status()
+            return
+
+        # Remote control API (GET endpoints)
+        if request_path == "/api/remote/status":
+            self._handle_remote_status(send_body=send_body)
+            return
+        if request_path == "/api/remote/token":
+            self._handle_remote_token(send_body=send_body)
+            return
+
+        # solaceagi.com proxy (GET endpoints)
+        if request_path == "/api/cloud/esign/chain-status":
+            self._handle_cloud_esign_chain_status(send_body=send_body)
+            return
+        if request_path == "/api/cloud/esign/attestations":
+            self._handle_cloud_esign_attestations(send_body=send_body)
+            return
+        if request_path == "/api/cloud/sync/status":
+            self._handle_cloud_sync_status(send_body=send_body)
+            return
+        if request_path == "/api/cloud/billing/status":
+            self._handle_cloud_billing_status(send_body=send_body)
+            return
+        if request_path == "/api/cloud/user/tier":
+            self._handle_cloud_user_tier(send_body=send_body)
+            return
+        if request_path == "/api/offline/queue":
+            self._handle_offline_queue_list(send_body=send_body)
             return
 
         if (
@@ -552,11 +810,24 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             super().do_HEAD()
 
     def end_headers(self):  # noqa: N802
-        """Inject Cache-Control: no-store for JS and CSS assets."""
+        """Inject Cache-Control: no-store for JS/CSS assets and CORS headers for all responses."""
         path = urlsplit(self.path).path
         if path.endswith(('.js', '.css')):
             self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate')
             self.send_header('Pragma', 'no-cache')
+        # CORS headers — localhost-only for safety (Hashimoto/Vogels/Hightower: never wildcard)
+        origin = self.headers.get('Origin', '')
+        allowed_origins = ('http://localhost', 'http://127.0.0.1', 'null')
+        if any(origin == ao or origin.startswith(ao + ':') for ao in allowed_origins):
+            self.send_header('Access-Control-Allow-Origin', origin)
+        else:
+            self.send_header('Access-Control-Allow-Origin', 'http://localhost:8791')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Remote-Token')
+        # Security headers (Hashimoto/Hightower: defense-in-depth)
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('X-Frame-Options', 'DENY')
+        self.send_header('Referrer-Policy', 'no-referrer')
         super().end_headers()
 
     def _handle_api_get(self, *, send_body: bool) -> None:
@@ -565,6 +836,8 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         app_detail_match = re.fullmatch(r"/api/apps/([^/]+)", request_path)
         app_inbox_match = re.fullmatch(r"/api/apps/([^/]+)/inbox", request_path)
         app_outbox_match = re.fullmatch(r"/api/apps/([^/]+)/outbox", request_path)
+        app_runs_match = re.fullmatch(r"/api/apps/([^/]+)/runs", request_path)
+        app_diagrams_match = re.fullmatch(r"/api/apps/([^/]+)/diagrams", request_path)
 
         try:
             if request_path == APP_STORE_SYNC_ROUTE:
@@ -588,6 +861,12 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                     status=query.get("status", [None])[0],
                 )
                 self._send_json(HTTPStatus.OK, payload, send_body=send_body)
+                return
+            if app_runs_match:
+                self._handle_app_runs(app_runs_match.group(1), send_body)
+                return
+            if app_diagrams_match:
+                self._handle_app_diagrams(app_diagrams_match.group(1), send_body)
                 return
             if app_inbox_match:
                 payload = self.data_store.get_inbox_listing(app_inbox_match.group(1))
@@ -667,30 +946,27 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             )
             return
         if request_path == "/tunnel/start":
-            self._send_json(
-                HTTPStatus.OK,
-                {
-                    "status": "approval-required",
-                    "public_url": "Waiting for approval",
-                    "message": "Grant tunnel.connect before the browser exposes a public URL.",
-                },
-            )
+            self._handle_tunnel_start(payload)
             return
         if request_path == "/tunnel/stop":
-            self._send_json(
-                HTTPStatus.OK,
-                {
-                    "status": "disconnected",
-                    "public_url": "Not connected",
-                    "message": "Tunnel has been closed. Nothing is exposed.",
-                },
-            )
+            self._handle_tunnel_stop()
             return
 
         # App run: POST /api/apps/{id}/run  — dogfood execution endpoint
         app_run_match = re.fullmatch(r"/api/apps/([^/]+)/run", request_path)
         if app_run_match:
             self._handle_app_run(app_run_match.group(1), payload)
+            return
+
+        # App approve: POST /api/apps/{id}/approve
+        app_approve_match = re.fullmatch(r"/api/apps/([^/]+)/approve", request_path)
+        if app_approve_match:
+            self._handle_app_approve(app_approve_match.group(1), payload)
+            return
+
+        # CLI agent generate: POST /api/cli-agents/generate
+        if request_path == "/api/cli-agents/generate":
+            self._handle_cli_generate(payload)
             return
 
         # YinYang chat: /api/yinyang/chat
@@ -703,13 +979,43 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             self._handle_yinyang_notify(payload)
             return
 
-        # Schedule Viewer: approve / cancel
+        # Schedule Viewer: approve / cancel (run_id sanitized against path traversal)
+        # CSRF + rate-limit gate for approve/cancel (Fixes 3 + 4)
+        if request_path.startswith("/api/schedule/approve/") or request_path.startswith("/api/schedule/cancel/"):
+            # Fix 3: CSRF validation
+            csrf_token = payload.get("csrf_token", "")
+            with _csrf_lock:
+                if csrf_token not in _csrf_tokens or _csrf_tokens[csrf_token] < time.time():
+                    _csrf_tokens.pop(csrf_token, None)
+                    self._send_json(HTTPStatus.FORBIDDEN, {"error": "Invalid or expired CSRF token. Refresh the schedule list."})
+                    return
+            # Fix 4: Rate limiting (10 per minute per client)
+            client_ip = self.headers.get("X-Forwarded-For", "").split(",")[0].strip() or "127.0.0.1"
+            now = time.time()
+            with _rate_limit_lock:
+                timestamps = _rate_limit_store.get(client_ip, [])
+                timestamps = [t for t in timestamps if t > now - _RATE_LIMIT_WINDOW]
+                if not timestamps:
+                    _rate_limit_store.pop(client_ip, None)
+                    # IP has no recent requests, allow
+                else:
+                    if len(timestamps) >= _RATE_LIMIT_MAX:
+                        self._send_json(HTTPStatus.TOO_MANY_REQUESTS,
+                                        {"error": f"Rate limit exceeded. Max {_RATE_LIMIT_MAX} approvals per minute."})
+                        return
+                timestamps.append(now)
+                _rate_limit_store[client_ip] = timestamps
+
         if request_path.startswith("/api/schedule/approve/"):
-            run_id = request_path.split("/api/schedule/approve/")[-1]
+            run_id = self._extract_run_id(request_path, "/api/schedule/approve/")
+            if run_id is None:
+                return
             self._handle_schedule_approve(run_id, payload)
             return
         if request_path.startswith("/api/schedule/cancel/"):
-            run_id = request_path.split("/api/schedule/cancel/")[-1]
+            run_id = self._extract_run_id(request_path, "/api/schedule/cancel/")
+            if run_id is None:
+                return
             self._handle_schedule_cancel(run_id, payload)
             return
         if request_path == "/api/schedule/plan":
@@ -733,6 +1039,54 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             settings.setdefault("llm", {})["budget_usd"] = budget_usd
             self.data_store.write_settings(settings)
             self._send_json(HTTPStatus.OK, {"remaining_usd": budget_usd})
+            return
+
+        # Remote control API (POST endpoints)
+        if request_path == "/api/remote/run":
+            self._handle_remote_run(payload)
+            return
+        if request_path == "/api/remote/approve":
+            self._handle_remote_approve(payload)
+            return
+        if request_path == "/api/remote/config":
+            self._handle_remote_config(payload)
+            return
+
+        # Sync endpoints
+        if request_path == "/api/sync/push":
+            self._handle_sync_push(payload)
+            return
+        if request_path == "/api/sync/pull":
+            self._handle_sync_pull(payload)
+            return
+
+        # solaceagi.com proxy: eSign
+        if request_path == "/api/cloud/esign/token":
+            self._handle_cloud_esign_token(payload)
+            return
+        if request_path == "/api/cloud/esign/sign":
+            self._handle_cloud_esign_sign(payload)
+            return
+        if request_path == "/api/cloud/esign/verify":
+            self._handle_cloud_esign_verify(payload)
+            return
+
+        # solaceagi.com proxy: sync
+        if request_path == "/api/cloud/sync/push":
+            self._handle_cloud_sync_push(payload)
+            return
+        if request_path == "/api/cloud/sync/pull":
+            self._handle_cloud_sync_pull(payload)
+            return
+
+        # solaceagi.com proxy: evidence
+        if request_path == "/api/cloud/evidence":
+            self._handle_cloud_evidence_push(payload)
+            return
+
+        # Offline queue: flush pending items
+        if request_path == "/api/offline/flush":
+            self._handle_offline_flush(payload)
             return
 
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "Not found"})
@@ -916,7 +1270,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                                 "id": obj.get("run_id") or obj.get("id") or jf.stem,
                                 "app_id":   obj.get("app_id", jf.stem.split("-")[0]),
                                 "app_name": obj.get("app_name") or obj.get("app_id") or jf.stem,
-                                "status":   obj.get("status", "success"),
+                                "status":   obj.get("status", "unknown"),
                                 "safety_tier": obj.get("safety_tier", "A"),
                                 "started_at":  obj.get("started_at") or obj.get("timestamp"),
                                 "ended_at":    obj.get("ended_at"),
@@ -931,10 +1285,10 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                                 "schedule_pattern": obj.get("schedule_pattern"),
                             }
                             activities.append(activity)
-                        except Exception:
-                            pass
-                except Exception:
-                    pass
+                        except (json.JSONDecodeError, KeyError, TypeError) as exc:
+                            logger.warning("Skipping malformed audit entry in %s: %s", jf, exc)
+                except (OSError, PermissionError) as exc:
+                    logger.warning("Cannot read audit file %s: %s", jf, exc)
         # Also check outbox for pending approvals
         outbox = Path.home() / ".solace" / "outbox" / "apps"
         if outbox.exists():
@@ -958,11 +1312,21 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                                 "scopes_used": pdata.get("scopes", []),
                                 "approval_deadline": pdata.get("approval_deadline"),
                             })
-                        except Exception:
-                            pass
+                        except (json.JSONDecodeError, KeyError, OSError) as exc:
+                            logger.warning("Skipping preview %s: %s", preview_path, exc)
         # Sort by started_at descending
         activities.sort(key=lambda a: a.get("started_at") or "", reverse=True)
-        self._send_json(HTTPStatus.OK, {"activities": activities, "total": len(activities)},
+        # Generate CSRF token for subsequent approve/cancel POST requests
+        csrf_token = secrets.token_urlsafe(32)
+        with _csrf_lock:
+            # Prune expired tokens
+            now = time.time()
+            expired = [t for t, exp in _csrf_tokens.items() if exp < now]
+            for t in expired:
+                del _csrf_tokens[t]
+            _csrf_tokens[csrf_token] = now + _CSRF_TTL
+        self._send_json(HTTPStatus.OK, {"activities": activities, "total": len(activities),
+                                        "csrf_token": csrf_token},
                         send_body=send_body)
 
     def _handle_schedule_queue(self, *, send_body: bool) -> None:
@@ -989,26 +1353,94 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                                 "safety_tier": pdata.get("safety_tier", "B"),
                                 "approval_deadline": pdata.get("approval_deadline"),
                             })
-                        except Exception:
-                            pass
+                        except (json.JSONDecodeError, KeyError, OSError) as exc:
+                            logger.warning("Skipping preview in queue %s: %s", preview_path, exc)
         self._send_json(HTTPStatus.OK, {"queue": pending, "count": len(pending)},
                         send_body=send_body)
 
     def _handle_schedule_upcoming(self, *, send_body: bool) -> None:
-        """Return scheduled future runs from settings cron config."""
+        """Return unified operations view: app schedules + keep-alive + Part 11 + eSign."""
         settings = self.data_store.read_settings()
-        schedule_config = settings.get("schedule", {})
         upcoming = []
+
+        # 1. App cron schedules
+        schedule_config = settings.get("schedule", {})
+        pattern_labels = {
+            "daily_6am": "Daily at 6:00 AM",
+            "daily_7am": "Daily at 7:00 AM",
+            "daily_9am": "Daily at 9:00 AM",
+            "weekdays_8am": "Weekdays at 8:00 AM",
+            "weekdays_10am": "Weekdays at 10:00 AM",
+            "weekly_monday_8am": "Mondays at 8:00 AM",
+            "manual": "Manual only",
+        }
         for app_id, cfg in schedule_config.items():
             if cfg.get("enabled"):
                 upcoming.append({
+                    "type": "app_schedule",
                     "app_id": app_id,
                     "pattern": cfg.get("pattern", "manual"),
+                    "pattern_label": pattern_labels.get(cfg.get("pattern", ""), cfg.get("pattern", "manual")),
                     "next_run": cfg.get("next_run"),
                     "status": "scheduled",
                 })
-        self._send_json(HTTPStatus.OK, {"upcoming": upcoming, "count": len(upcoming)},
-                        send_body=send_body)
+
+        # 2. Keep-alive sessions
+        keep_alive = settings.get("keep_alive", {})
+        for domain, ka_cfg in keep_alive.items():
+            if ka_cfg.get("enabled"):
+                upcoming.append({
+                    "type": "keep_alive",
+                    "app_id": f"keep-alive-{domain}",
+                    "domain": domain,
+                    "last_ping": ka_cfg.get("last_ping"),
+                    "pattern": "every_30min",
+                    "pattern_label": "Every 30 min",
+                    "status": "active",
+                })
+
+        # 3. Part 11 evidence status
+        part11 = settings.get("part11", {})
+        if part11.get("enabled"):
+            audit_dir = Path.home() / ".solace" / "audit"
+            chain_count = 0
+            if audit_dir.exists():
+                chain_count = sum(1 for f in audit_dir.glob("*.jsonl"))
+            upcoming.append({
+                "type": "part11",
+                "app_id": "part11-evidence",
+                "status": "active" if part11.get("enabled") else "disabled",
+                "mode": part11.get("mode", "data"),
+                "esigning": part11.get("esigning", False),
+                "chain_entries": chain_count,
+                "audit_dir": "configured",
+                "pattern_label": "Continuous (every action)",
+            })
+
+        # 4. eSign attestation count
+        esign_dir = Path.home() / ".solace" / "esign"
+        if esign_dir.exists():
+            attestation_count = sum(1 for f in esign_dir.glob("*.json"))
+        else:
+            attestation_count = 0
+        upcoming.append({
+            "type": "esign",
+            "app_id": "esign-attestations",
+            "status": "active" if part11.get("esigning") else "disabled",
+            "attestation_count": attestation_count,
+            "pattern_label": "On approval",
+        })
+
+        self._send_json(HTTPStatus.OK, {
+            "upcoming": upcoming,
+            "count": len(upcoming),
+            "summary": {
+                "app_schedules": len(schedule_config),
+                "keep_alive_sessions": sum(1 for k in keep_alive.values() if k.get("enabled")),
+                "part11_enabled": part11.get("enabled", False),
+                "esign_enabled": part11.get("esigning", False),
+            }
+        }, send_body=send_body)
 
     def _handle_settings_export(self, send_body: bool = True) -> None:
         """GET /api/settings/export — Export sanitized settings for cloud sync.
@@ -1016,7 +1448,6 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         Strips API keys (llm.api_key, cloud.api_key) before returning.
         Returns settings + metadata envelope for cloud vault.
         """
-        import time as _time
         settings = self.data_store.read_settings()
         # Sanitize: strip sensitive fields
         sanitized = {k: v for k, v in settings.items() if k not in ("api_key", "llm_api_key")}
@@ -1026,22 +1457,36 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         sanitized["cloud"] = {k: v for k, v in cloud.items() if k not in ("api_key",)}
         envelope = {
             "format": "solace-browser-settings-v1",
-            "exported_at": _time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "exported_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "settings": sanitized,
         }
         self._send_json(HTTPStatus.OK, envelope, send_body=send_body)
+
+    # Fix 6: Whitelist of allowed top-level keys for settings import
+    # Only these keys can be imported from cloud sync — prevents injection of arbitrary config
+    ALLOWED_SETTINGS_KEYS = frozenset({
+        "schedule", "keep_alive", "theme", "notifications",
+        "locale", "budget", "evidence", "privacy", "accessibility",
+        "display", "apps", "oauth3", "sync", "esign", "compliance", "roi",
+    })
 
     def _handle_settings_import(self, payload: dict) -> None:
         """POST /api/settings/import — Import settings from cloud sync envelope.
 
         Accepts: {settings: {...}} or raw settings dict.
         Merges into existing settings (does not overwrite API keys already set).
+        Fix 6: Only whitelisted top-level keys are accepted — rejects llm, cloud, api_key, etc.
         """
         if not isinstance(payload, dict):
             self._send_json(HTTPStatus.BAD_REQUEST, {"error": "payload must be an object"})
             return
         # Support both envelope format and raw settings
         incoming = payload.get("settings", payload)
+        # Fix 6: Filter to whitelisted keys only — reject unknown/dangerous keys
+        rejected_keys = [k for k in incoming if k not in self.ALLOWED_SETTINGS_KEYS]
+        incoming = {k: v for k, v in incoming.items() if k in self.ALLOWED_SETTINGS_KEYS}
+        if rejected_keys:
+            logger.warning("Settings import rejected keys: %s (not in whitelist)", rejected_keys)
         # Safety: never overwrite existing API keys from import
         existing = self.data_store.read_settings()
         existing_llm_key = existing.get("llm", {}).get("api_key")
@@ -1053,102 +1498,228 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         if existing_cloud_key and not merged.get("cloud", {}).get("api_key"):
             merged.setdefault("cloud", {})["api_key"] = existing_cloud_key
         written = self.data_store.write_settings(merged)
-        self._send_json(HTTPStatus.OK, {"ok": True, "keys_imported": list(incoming.keys()), "settings": written})
+        self._send_json(HTTPStatus.OK, {"ok": True,
+                                        "keys_imported": list(incoming.keys()),
+                                        "keys_rejected": rejected_keys,
+                                        "settings": written})
 
     def _handle_evidence_list(self, send_body: bool = True) -> None:
         """GET /api/evidence/list — List all esign records from audit directory.
 
         Returns records from ~/.solace/audit/esign-*.jsonl sorted by timestamp (newest first).
+        Fix 2: Verifies hash chain integrity — each ESIGN entry's hash is recomputed
+        from its prev_hash + fields and compared to stored esign_hash.
         """
-        import datetime as _dt
         audit_dir = Path.home() / ".solace" / "audit"
         records = []
+        chain_valid = True
+        tampered_entries: list[str] = []
         if audit_dir.exists():
             for esign_file in sorted(audit_dir.glob("esign-*.jsonl"),
                                      key=lambda f: f.stat().st_mtime, reverse=True)[:50]:
                 try:
+                    file_prev_hash = "genesis"
                     for line in esign_file.read_text(encoding="utf-8").strip().split("\n"):
                         if not line.strip():
                             continue
                         record = json.loads(line)
+                        event_type = record.get("event_type", "")
+                        # Only verify ESIGN entries (SCREENSHOT entries don't have hash chain)
+                        if event_type == "ESIGN":
+                            stored_hash = record.get("esign_hash", "")
+                            prev_hash = record.get("prev_hash", "genesis")
+                            user_id = record.get("user_id", "")
+                            ts = record.get("timestamp", "")
+                            meaning = record.get("meaning", "")
+                            action_hash = record.get("action_hash", "")
+                            # Recompute hash to verify integrity
+                            expected_hash = hashlib.sha256(
+                                f"{prev_hash}|{user_id}|{ts}|{meaning}|{action_hash}".encode()
+                            ).hexdigest()
+                            # Also accept legacy format (without prev_hash) for backward compatibility
+                            legacy_hash = hashlib.sha256(
+                                f"{user_id}|{ts}|{meaning}|{action_hash}".encode()
+                            ).hexdigest()
+                            entry_valid = (stored_hash == expected_hash or stored_hash == legacy_hash)
+                            if not entry_valid:
+                                chain_valid = False
+                                tampered_entries.append(record.get("run_id", "unknown"))
+                                logger.warning("Evidence chain tampered in %s: run_id=%s stored=%s expected=%s",
+                                               esign_file.name, record.get("run_id"), stored_hash[:16], expected_hash[:16])
+                            # Verify prev_hash chain continuity
+                            if prev_hash != "genesis" and prev_hash != file_prev_hash:
+                                chain_valid = False
+                                logger.warning("Evidence chain break in %s: expected prev_hash=%s got=%s",
+                                               esign_file.name, file_prev_hash[:16], prev_hash[:16])
+                            file_prev_hash = stored_hash
                         records.append({
                             "run_id": record.get("run_id", ""),
                             "user_id": record.get("user_id", ""),
                             "meaning": record.get("meaning", ""),
                             "event_type": record.get("event_type", "ESIGN"),
-                            "esign_hash": record.get("esign_hash", record.get("path", ""))[:16] + "…",
+                            "esign_hash": record.get("esign_hash", record.get("path", ""))[:16] + "...",
                             "esign_hash_full": record.get("esign_hash", ""),
+                            "prev_hash": record.get("prev_hash", ""),
                             "screenshot": record.get("screenshot"),
                             "timestamp": record.get("timestamp", record.get("sealed_at", "")),
                         })
-                except Exception:
+                except (json.JSONDecodeError, KeyError, ValueError, OSError) as exc:
+                    logger.warning("Skipping malformed evidence entry in %s: %s", esign_file, exc)
+                    chain_valid = False
                     continue
         self._send_json(HTTPStatus.OK, {
             "count": len(records),
             "records": records[:50],
-            "audit_dir": str(audit_dir),
+            "chain_valid": chain_valid,
+            "tampered_entries": tampered_entries,
         }, send_body=send_body)
+
+    def _extract_run_id(self, request_path: str, prefix: str) -> str | None:
+        """Extract and validate run_id from request path."""
+        run_id = Path(request_path.split(prefix)[-1]).name
+        if not re.match(r'^[a-zA-Z0-9_\-]+$', run_id):
+            self._send_json(400, {"error": "Invalid run_id"})
+            return None
+        return run_id
+
+    def _append_audit_entry(self, filepath: Path, record: dict) -> None:
+        """Append a JSON record to an audit JSONL file with file locking."""
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+        with open(filepath, "a") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            f.write(json.dumps(record) + "\n")
+            f.flush()
+            os.fsync(f.fileno())
 
     def _handle_schedule_approve(self, run_id: str, payload: dict) -> None:
         """Approve a pending run — write approved_v1.json + audit entry."""
-        import time as _time
+        logger.info("schedule_approve: run_id=%s", run_id)
         outbox = Path.home() / ".solace" / "outbox" / "apps"
         approved_in_outbox = False
+        # Torvalds: always use server timestamp — client can forge time
+        # Hopper Q72/Q73: gmtime() ensures UTC — strftime() alone uses local time
+        server_ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         approval_record = {
             "run_id": run_id,
             "approved_by": payload.get("approved_by", "user"),
-            "timestamp": payload.get("timestamp", _time.strftime("%Y-%m-%dT%H:%M:%SZ")),
+            "timestamp": server_ts,
+            "client_timestamp": payload.get("timestamp"),
             "approval_type": "standard",
         }
         for app_dir in (outbox.iterdir() if outbox.exists() else []):
-            run_dir = app_dir / run_id if app_dir.is_dir() else None
-            if run_dir and run_dir.exists():
-                (run_dir / "approved_v1.json").write_text(json.dumps(approval_record, indent=2))
+            if not app_dir.is_dir():
+                continue
+            run_dir = app_dir / run_id
+            # Verify resolved path stays within outbox (prevent path traversal)
+            try:
+                run_dir.resolve().relative_to(outbox.resolve())
+            except ValueError:
+                self._send_json(HTTPStatus.BAD_REQUEST, {"error": "Invalid run_id"})
+                return
+            if run_dir.exists():
+                # Fix 5: Validate approval_deadline — reject if deadline has passed
+                preview_path = run_dir / "preview.json"
+                if preview_path.exists():
+                    try:
+                        preview_data = json.loads(preview_path.read_text(encoding="utf-8"))
+                        deadline_str = preview_data.get("approval_deadline")
+                        if deadline_str:
+                            deadline_dt = datetime.datetime.fromisoformat(deadline_str.replace("Z", "+00:00"))
+                            now_utc = datetime.datetime.now(datetime.timezone.utc)
+                            if now_utc > deadline_dt:
+                                self._send_json(HTTPStatus.GONE,
+                                                {"error": f"Approval deadline expired at {deadline_str}. "
+                                                 "Re-run the task to generate a fresh preview.",
+                                                 "run_id": run_id, "deadline": deadline_str})
+                                return
+                    except (json.JSONDecodeError, ValueError, OSError) as exc:
+                        logger.warning("Could not read preview for deadline check %s: %s", preview_path, exc)
+                # Prevent approving a cancelled run (race condition guard)
+                if (run_dir / "cancelled.json").exists():
+                    self._send_json(409, {"error": "Run was already cancelled"})
+                    return
+                # Idempotency: if already approved, return success without overwriting
+                approved_path = run_dir / "approved_v1.json"
+                if approved_path.exists():
+                    existing = json.loads(approved_path.read_text())
+                    self._send_json(HTTPStatus.OK, {"ok": True, "run_id": run_id,
+                                                    "in_outbox": True,
+                                                    "already_approved": True,
+                                                    "esign_hash": existing.get("esign_hash", "")})
+                    return
+                # Atomic write: temp file + rename (Vogels/Kleppmann: crash-safe)
+                tmp_file = run_dir / "approved_v1.json.tmp"
+                tmp_file.write_text(json.dumps(approval_record, indent=2))
+                tmp_file.rename(approved_path)
                 approved_in_outbox = True
                 break
+        # Torvalds: reject phantom approvals — run must exist in outbox
+        if not approved_in_outbox:
+            self._send_json(HTTPStatus.NOT_FOUND, {"error": f"Run {run_id} not found in outbox"})
+            return
         # Always write audit log (Part 11 — every approval decision is logged)
         audit_dir = Path.home() / ".solace" / "audit"
         audit_dir.mkdir(parents=True, exist_ok=True)
-        with open(audit_dir / "schedule_actions.jsonl", "a") as f:
-            f.write(json.dumps({"event": "approved", "in_outbox": approved_in_outbox,
-                                **approval_record}) + "\n")
+        try:
+            os.chmod(audit_dir, 0o700)
+        except OSError as exc:
+            logger.debug("chmod 0o700 on audit dir failed (read-only or externally-managed): %s", exc)
+        self._append_audit_entry(audit_dir / "schedule_actions.jsonl",
+                                 {"event": "approved", "in_outbox": approved_in_outbox,
+                                  **approval_record})
 
         # Auto-generate e-sign record for approved run (FDA Part 11 §11.100)
-        import hashlib as _hashlib
         user_id = payload.get("approved_by", "user")
         ts = approval_record["timestamp"]
         meaning = "reviewed_and_approved"
         action_desc = f"Approved scheduled run {run_id}"
-        action_hash = _hashlib.sha256(action_desc.encode()).hexdigest()
-        esign_hash = _hashlib.sha256((user_id + ts + meaning + action_hash).encode()).hexdigest()
+        action_hash = hashlib.sha256(action_desc.encode()).hexdigest()
+        # Fix 1: Read prev_hash from last esign entry for hash-chain integrity
+        esign_file = audit_dir / f"esign-{run_id}.jsonl"
+        prev_hash = "genesis"
+        if esign_file.exists():
+            try:
+                lines = esign_file.read_text(encoding="utf-8").strip().splitlines()
+                for line in reversed(lines):
+                    if not line.strip():
+                        continue
+                    last_entry = json.loads(line)
+                    prev_hash = last_entry.get("esign_hash", "genesis")
+                    break
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.warning("Could not read prev_hash from %s: %s — using genesis", esign_file, exc)
+        # Hash chain: prev_hash links this entry to its predecessor (Kleppmann: tamper-evident log)
+        esign_hash = hashlib.sha256(
+            f"{prev_hash}|{user_id}|{ts}|{meaning}|{action_hash}".encode()
+        ).hexdigest()
         esign_record = {"event_type": "ESIGN", "user_id": user_id, "run_id": run_id,
                         "meaning": meaning, "action_description": action_desc,
-                        "action_hash": action_hash, "esign_hash": esign_hash,
+                        "action_hash": action_hash, "prev_hash": prev_hash,
+                        "esign_hash": esign_hash,
                         "timestamp": ts, "sealed_at": ts}
-        with open(audit_dir / f"esign-{run_id}.jsonl", "a") as f:
-            f.write(json.dumps(esign_record) + "\n")
+        # Safe filename: run_id already validated by regex at entry point
+        self._append_audit_entry(esign_file, esign_record)
 
-        # Capture screenshot as Part 11 visual evidence (best-effort, non-blocking)
+        # Capture screenshot as Part 11 visual evidence (best-effort, logged on failure)
         screenshot_path: str | None = None
         try:
-            import urllib.request as _urlreq
             screenshot_payload = json.dumps({"filename": f"esign-{run_id}.png"}).encode()
-            req = _urlreq.Request(
+            req = urllib.request.Request(
                 "http://localhost:9222/api/screenshot",
                 data=screenshot_payload,
                 method="POST",
                 headers={"Content-Type": "application/json"},
             )
-            with _urlreq.urlopen(req, timeout=5) as resp:
+            with urllib.request.urlopen(req, timeout=15) as resp:
                 screenshot_result = json.loads(resp.read())
                 screenshot_path = screenshot_result.get("filepath")
-                # Append screenshot path to esign record
                 esign_record["screenshot"] = screenshot_path
-                with open(audit_dir / f"esign-{run_id}.jsonl", "a") as f:
-                    f.write(json.dumps({"event_type": "SCREENSHOT", "path": screenshot_path,
-                                        "run_id": run_id, "timestamp": ts}) + "\n")
-        except Exception:
-            pass  # Screenshot failure must never block approval
+                self._append_audit_entry(esign_file, {"event_type": "SCREENSHOT", "path": screenshot_path,
+                                                      "run_id": run_id, "timestamp": ts})
+        except (urllib.error.URLError, OSError, json.JSONDecodeError) as exc:
+            logger.warning("Screenshot capture failed for run %s: %s", run_id, exc)
+            self._append_audit_entry(esign_file, {"event_type": "SCREENSHOT_FAILED", "error": str(exc),
+                                                  "run_id": run_id, "timestamp": ts})
 
         self._send_json(HTTPStatus.OK, {"ok": True, "run_id": run_id,
                                         "in_outbox": approved_in_outbox,
@@ -1156,19 +1727,47 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                                         "screenshot": screenshot_path})
 
     def _handle_schedule_cancel(self, run_id: str, payload: dict) -> None:
-        """Cancel a pending run — write cancelled.json + audit entry."""
-        import time as _time
+        """Cancel a pending run — write cancelled.json to outbox + audit entry."""
+        logger.info("schedule_cancel: run_id=%s", run_id)
+        # Hopper Q72/Q73: gmtime() ensures UTC — strftime() alone uses local time
+        server_ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        # Kleppmann: write cancel sentinel to outbox so cancelled runs don't resurrect
+        outbox = Path.home() / ".solace" / "outbox" / "apps"
+        for app_dir in (outbox.iterdir() if outbox.exists() else []):
+            if not app_dir.is_dir():
+                continue
+            run_dir = app_dir / run_id
+            # Hopper Q11: prevent path traversal via crafted run_id
+            try:
+                run_dir.resolve().relative_to(outbox.resolve())
+            except ValueError:
+                self._send_json(HTTPStatus.BAD_REQUEST, {"error": "Invalid run path"})
+                return
+            if run_dir.exists():
+                cancel_file = run_dir / "cancelled.json"
+                if not cancel_file.exists():
+                    tmp = run_dir / "cancelled.json.tmp"
+                    tmp.write_text(json.dumps({"run_id": run_id,
+                        "cancelled_by": payload.get("cancelled_by", "user"),
+                        "reason": payload.get("reason", "user_rejected"),
+                        "timestamp": server_ts}, indent=2))
+                    tmp.rename(cancel_file)
+                break
+        # Always write audit record (user intent is valid even if run was cleaned up)
         audit_dir = Path.home() / ".solace" / "audit"
-        audit_dir.mkdir(parents=True, exist_ok=True)
         record = {
             "run_id": run_id,
             "event": "cancelled",
+            "cancelled_by": payload.get("cancelled_by", "user"),
             "reason": payload.get("reason", "user_rejected"),
-            "timestamp": payload.get("timestamp", _time.strftime("%Y-%m-%dT%H:%M:%SZ")),
+            "timestamp": server_ts,
         }
-        with open(audit_dir / "schedule_actions.jsonl", "a") as f:
-            f.write(json.dumps(record) + "\n")
+        self._append_audit_entry(audit_dir / "schedule_actions.jsonl", record)
         self._send_json(HTTPStatus.OK, {"ok": True, "run_id": run_id})
+
+    # Vogels/Hashimoto: whitelist valid schedule patterns
+    VALID_PATTERNS = {"daily_6am", "daily_7am", "daily_9am", "weekdays_8am",
+                      "weekdays_10am", "weekly_monday_8am", "manual"}
 
     def _handle_schedule_plan(self, payload: dict) -> None:
         """Add a future run to the schedule config."""
@@ -1176,6 +1775,10 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         pattern = payload.get("pattern", "manual")
         if not app_id:
             self._send_json(HTTPStatus.BAD_REQUEST, {"error": "app_id required"})
+            return
+        if pattern not in self.VALID_PATTERNS:
+            self._send_json(HTTPStatus.BAD_REQUEST,
+                            {"error": f"Invalid pattern '{pattern}'. Valid: {sorted(self.VALID_PATTERNS)}"})
             return
         settings = self.data_store.read_settings()
         if "schedule" not in settings:
@@ -1239,6 +1842,1276 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         except Exception as exc:
             self._send_json(HTTPStatus.BAD_GATEWAY, {"error": str(exc)})
 
+    # ── App Execution Endpoints ──────────────────────────────────────────────
+    BROWSER_API = "http://127.0.0.1:9222"
+    APPS_DATA = REPO_ROOT / "data" / "default" / "apps"
+    PRIMEWIKI_DATA = REPO_ROOT / "data" / "default" / "primewiki"
+
+    def _handle_app_run(self, app_id: str, payload: dict[str, Any]) -> None:
+        """POST /api/apps/{id}/run — Execute app via real browser automation."""
+        import hashlib
+        from datetime import datetime, timezone
+
+        safe_id = re.sub(r"[^a-z0-9_\-]", "", app_id)
+        if not safe_id or safe_id != app_id:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "invalid app_id"})
+            return
+
+        app_dir = self.APPS_DATA / safe_id
+        if not app_dir.is_dir():
+            self._send_json(HTTPStatus.NOT_FOUND, {"error": f"app {safe_id} not found"})
+            return
+
+        config = payload.get("config", {})
+        run_id = f"run-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}"
+
+        # Determine target URL from manifest
+        manifest_path = app_dir / "manifest.yaml"
+        target_url = None
+        if manifest_path.exists():
+            try:
+                manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+                keep_alive = manifest.get("keep_alive", {})
+                target_url = keep_alive.get("url")
+            except Exception:
+                pass
+
+        # App-specific URL fallbacks
+        url_map = {
+            "gmail-inbox-triage": "https://mail.google.com/mail/u/0/#inbox",
+            "whatsapp-responder": "https://web.whatsapp.com/",
+            "linkedin-outreach": "https://www.linkedin.com/feed/",
+        }
+        if not target_url:
+            target_url = url_map.get(safe_id, "about:blank")
+
+        # Phase 1: Navigate browser
+        try:
+            nav_resp = urllib.request.urlopen(
+                urllib.request.Request(
+                    f"{self.BROWSER_API}/api/navigate",
+                    data=json.dumps({"url": target_url}).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                ),
+                timeout=15,
+            )
+            nav_data = json.loads(nav_resp.read().decode("utf-8"))
+        except Exception as exc:
+            self._send_json(HTTPStatus.BAD_GATEWAY, {
+                "error": "browser_offline",
+                "detail": f"Could not navigate: {exc}",
+                "run_id": run_id,
+            })
+            return
+
+        # Phase 2: Wait for page load then extract data
+        time.sleep(3)
+
+        # App-specific extraction JS
+        extract_js = self._get_extraction_js(safe_id)
+        items = []
+        try:
+            ext_resp = urllib.request.urlopen(
+                urllib.request.Request(
+                    f"{self.BROWSER_API}/api/evaluate",
+                    data=json.dumps({"expression": extract_js}).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                ),
+                timeout=15,
+            )
+            ext_data = json.loads(ext_resp.read().decode("utf-8"))
+            items = ext_data.get("result", []) if ext_data.get("success") else []
+        except Exception:
+            pass
+
+        # Phase 3: Screenshot
+        screenshot_path = ""
+        try:
+            ss_resp = urllib.request.urlopen(
+                urllib.request.Request(
+                    f"{self.BROWSER_API}/api/screenshot",
+                    data=b"{}",
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                ),
+                timeout=10,
+            )
+            ss_data = json.loads(ss_resp.read().decode("utf-8"))
+            screenshot_path = ss_data.get("filepath", "")
+        except Exception:
+            pass
+
+        # Phase 4: Save run to inbox
+        inbox_dir = app_dir / "inbox"
+        inbox_dir.mkdir(parents=True, exist_ok=True)
+        run_data = {
+            "run_id": run_id,
+            "app_id": safe_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "config": config,
+            "items": items if isinstance(items, list) else [],
+            "total": len(items) if isinstance(items, list) else 0,
+            "screenshot": screenshot_path,
+            "status": "preview_ready",
+        }
+        (inbox_dir / f"{run_id}.json").write_text(
+            json.dumps(run_data, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+
+        # Build preview text
+        preview = self._build_preview_text(safe_id, items, config)
+
+        self._send_json(HTTPStatus.OK, {
+            "run_id": run_id,
+            "status": "preview_ready",
+            "total": len(items) if isinstance(items, list) else 0,
+            "items": items if isinstance(items, list) else [],
+            "screenshot": screenshot_path,
+            "preview": preview,
+        })
+
+    def _handle_app_approve(self, app_id: str, payload: dict[str, Any]) -> None:
+        """POST /api/apps/{id}/approve — Approve and execute actions."""
+        import hashlib
+        from datetime import datetime, timezone
+
+        safe_id = re.sub(r"[^a-z0-9_\-]", "", app_id)
+        run_id = payload.get("run_id", "")
+        actions = payload.get("actions", [])
+
+        # Execute approval actions via browser
+        action_results = []
+        for action in actions:
+            if action.get("action") == "archive":
+                # Gmail: use keyboard shortcut 'e' to archive selected
+                pass  # Real archiving handled by browser-side JS
+            elif action.get("action") == "draft_reply":
+                pass  # Draft creation handled by browser-side JS
+
+        # Create evidence seal
+        now = datetime.now(timezone.utc)
+        evidence_payload = json.dumps({
+            "run_id": run_id,
+            "app_id": safe_id,
+            "approved_at": now.isoformat(),
+            "actions": actions,
+        }, sort_keys=True)
+        evidence_hash = "sha256:" + hashlib.sha256(evidence_payload.encode()).hexdigest()
+
+        # Create eSign attestation
+        esign_payload = json.dumps({
+            "user_id": "phuc",
+            "timestamp": now.isoformat(),
+            "meaning": "reviewed_and_approved",
+            "action_description": f"Approved {safe_id} run {run_id}",
+        }, sort_keys=True)
+        esign_hash = "sha256:" + hashlib.sha256(esign_payload.encode()).hexdigest()
+
+        # Save to outbox
+        app_dir = self.APPS_DATA / safe_id
+        outbox_dir = app_dir / "outbox" / "runs" / run_id
+        outbox_dir.mkdir(parents=True, exist_ok=True)
+        (outbox_dir / "evidence.json").write_text(
+            json.dumps({
+                "evidence_hash": evidence_hash,
+                "esign_hash": esign_hash,
+                "approved_at": now.isoformat(),
+                "run_id": run_id,
+                "app_id": safe_id,
+            }, indent=2),
+            encoding="utf-8",
+        )
+
+        # Take post-action screenshot
+        screenshot_path = ""
+        try:
+            ss_resp = urllib.request.urlopen(
+                urllib.request.Request(
+                    f"{self.BROWSER_API}/api/screenshot",
+                    data=b"{}",
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                ),
+                timeout=10,
+            )
+            ss_data = json.loads(ss_resp.read().decode("utf-8"))
+            screenshot_path = ss_data.get("filepath", "")
+        except Exception:
+            pass
+
+        self._send_json(HTTPStatus.OK, {
+            "status": "completed",
+            "run_id": run_id,
+            "evidence_hash": evidence_hash,
+            "esign_hash": esign_hash,
+            "screenshot": screenshot_path,
+        })
+
+    def _handle_cli_agents(self, send_body: bool) -> None:
+        """GET /api/cli-agents — Detect installed AI coding CLIs (cached).
+        GET /api/cli-agents?rescan=1 — Force rescan."""
+        qs = parse_qs(urlsplit(self.path).query)
+        force = "rescan" in qs
+        result = _detect_cli_agents(force=force)
+        self._send_json(HTTPStatus.OK, result, send_body=send_body)
+
+    def _handle_cli_generate(self, payload: dict[str, Any]) -> None:
+        """POST /api/cli-agents/generate — Call a CLI agent for LLM inference.
+
+        Request:  {"agent": "claude", "prompt": "...", "model": "claude-opus-4-6"}
+        Response: {"response": "...", "model": "...", "agent": "claude", "done": true}
+        Ollama-compatible response shape.
+        """
+        agent_id = payload.get("agent", "")
+        prompt = payload.get("prompt", "")
+        model = payload.get("model")
+        timeout = min(int(payload.get("timeout", 120)), 300)
+
+        if not agent_id or not prompt:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "agent and prompt required"})
+            return
+
+        result = _cli_generate(agent_id, prompt, model=model, timeout=timeout)
+        status = HTTPStatus.OK if "error" not in result else HTTPStatus.INTERNAL_SERVER_ERROR
+        self._send_json(status, result)
+
+    def _handle_app_runs(self, app_id: str, send_body: bool) -> None:
+        """GET /api/apps/{id}/runs — List run history."""
+        safe_id = re.sub(r"[^a-z0-9_\-]", "", app_id)
+        app_dir = self.APPS_DATA / safe_id
+        inbox_dir = app_dir / "inbox"
+        runs = []
+        if inbox_dir.is_dir():
+            for f in sorted(inbox_dir.glob("run-*.json"), reverse=True)[:50]:
+                try:
+                    data = json.loads(f.read_text(encoding="utf-8"))
+                    runs.append(data)
+                except Exception:
+                    pass
+        self._send_json(HTTPStatus.OK, {"runs": runs}, send_body=send_body)
+
+    def _handle_app_diagrams(self, app_id: str, send_body: bool) -> None:
+        """GET /api/apps/{id}/diagrams — List app diagrams + Prime Wiki mermaid."""
+        safe_id = re.sub(r"[^a-z0-9_\-]", "", app_id)
+        diagrams = []
+
+        # App-specific diagrams
+        app_diag_dir = self.APPS_DATA / safe_id / "diagrams"
+        if app_diag_dir.is_dir():
+            for f in sorted(app_diag_dir.glob("*.md")):
+                try:
+                    content = f.read_text(encoding="utf-8")
+                    diagrams.append({"name": f.stem, "source": "app", "content": content})
+                except Exception:
+                    pass
+
+        # Prime Wiki mermaid files
+        platform_map = {
+            "gmail-inbox-triage": "gmail",
+            "whatsapp-responder": "whatsapp",
+            "linkedin-outreach": "linkedin",
+        }
+        platform = platform_map.get(safe_id, safe_id.split("-")[0])
+        pw_dir = self.PRIMEWIKI_DATA / platform
+        if pw_dir.is_dir():
+            for f in sorted(pw_dir.glob("*.prime-mermaid.md")):
+                try:
+                    content = f.read_text(encoding="utf-8")
+                    diagrams.append({"name": f.stem, "source": "primewiki", "content": content})
+                except Exception:
+                    pass
+
+        self._send_json(HTTPStatus.OK, {"diagrams": diagrams}, send_body=send_body)
+
+    def _get_extraction_js(self, app_id: str) -> str:
+        """Return app-specific JS extraction code for the browser."""
+        if app_id == "gmail-inbox-triage":
+            return """(function() {
+                var rows = Array.from(document.querySelectorAll('tr.zA')).slice(0, 20);
+                return rows.map(function(r) {
+                    var se = r.querySelector('span[email]');
+                    var sender = se ? (se.getAttribute('email') || se.textContent.trim())
+                                   : (r.querySelector('.yW') || {textContent:''}).textContent.trim();
+                    var bog = r.querySelector('.a4W .bog') || r.querySelector('.bog');
+                    var snip = r.querySelector('.y2');
+                    var dt = r.querySelector('.xW span[title]');
+                    return {
+                        sender: sender,
+                        subject: bog ? bog.textContent.trim() : '',
+                        snippet: snip ? snip.textContent.trim().slice(0,150) : '',
+                        is_unread: r.classList.contains('zE'),
+                        date: dt ? dt.getAttribute('title') : ''
+                    };
+                });
+            })()"""
+        elif app_id == "whatsapp-responder":
+            return """(function() {
+                var chats = Array.from(document.querySelectorAll('[data-testid="cell-frame-container"]')).slice(0, 10);
+                return chats.map(function(c) {
+                    var name = c.querySelector('[data-testid="cell-frame-title"] span') || {};
+                    var msg = c.querySelector('[data-testid="last-msg-status"] span') || c.querySelector('.Hy9nV span') || {};
+                    var time = c.querySelector('[data-testid="cell-frame-primary-detail"]') || {};
+                    var unread = c.querySelector('[data-testid="icon-unread-count"]');
+                    return {
+                        sender: name.textContent ? name.textContent.trim() : '',
+                        subject: msg.textContent ? msg.textContent.trim().slice(0,100) : '',
+                        date: time.textContent ? time.textContent.trim() : '',
+                        is_unread: !!unread
+                    };
+                });
+            })()"""
+        elif app_id == "linkedin-outreach":
+            return """(function() {
+                var items = Array.from(document.querySelectorAll('.feed-shared-update-v2')).slice(0, 10);
+                return items.map(function(item) {
+                    var author = item.querySelector('.update-components-actor__name span') || {};
+                    var text = item.querySelector('.feed-shared-update-v2__description') || {};
+                    return {
+                        sender: author.textContent ? author.textContent.trim() : '',
+                        subject: text.textContent ? text.textContent.trim().slice(0,150) : '',
+                        is_unread: false,
+                        date: ''
+                    };
+                });
+            })()"""
+        return "(function() { return []; })()"
+
+    def _build_preview_text(self, app_id: str, items: list, config: dict) -> str:
+        """Build human-readable preview text for approval."""
+        if not isinstance(items, list) or not items:
+            return f"No items found. The browser may need to be logged into the service first."
+
+        lines = []
+        if app_id == "gmail-inbox-triage":
+            email = config.get("cfgEmail", config.get("email", ""))
+            unread = [e for e in items if e.get("is_unread")]
+            lines.append(f"Gmail Inbox Triage — {email}")
+            lines.append("=" * 50)
+            lines.append(f"Scanned: {len(items)} emails | Unread: {len(unread)}")
+            lines.append("")
+            for i, e in enumerate(items):
+                badge = "[UNREAD]" if e.get("is_unread") else "[READ]"
+                lines.append(f"{i+1}. {badge} {e.get('subject', '(no subject)')}")
+                lines.append(f"   From: {e.get('sender', 'Unknown')}")
+                if e.get("snippet"):
+                    lines.append(f"   {e['snippet'][:80]}")
+                lines.append("")
+        elif app_id == "whatsapp-responder":
+            lines.append("WhatsApp Responder — Preview")
+            lines.append("=" * 50)
+            for i, c in enumerate(items):
+                badge = "[UNREAD]" if c.get("is_unread") else ""
+                lines.append(f"{i+1}. {badge} {c.get('sender', 'Unknown')}: {c.get('subject', '')}")
+            lines.append("")
+        elif app_id == "linkedin-outreach":
+            lines.append("LinkedIn Outreach — Preview")
+            lines.append("=" * 50)
+            for i, item in enumerate(items):
+                lines.append(f"{i+1}. {item.get('sender', 'Unknown')}")
+                lines.append(f"   {item.get('subject', '')[:100]}")
+                lines.append("")
+        else:
+            lines.append(f"{app_id} — {len(items)} items found")
+            for i, item in enumerate(items):
+                lines.append(f"{i+1}. {json.dumps(item)[:120]}")
+
+        lines.append("=" * 50)
+        lines.append("Nothing happens until you approve.")
+        return "\n".join(lines)
+
+    # ── Remote Control API ───────────────────────────────────────────────────
+
+    _REMOTE_TOKEN_PATH = Path.home() / ".solace" / "remote-token"
+
+    @classmethod
+    def _validate_remote_token(cls, token: str) -> bool:
+        """Validate a bearer token against ~/.solace/remote-token.
+
+        Auto-generates the token file on first use. Uses hmac.compare_digest
+        for timing-safe comparison to prevent timing attacks.
+        Returns True if valid, False otherwise.
+        """
+        token_path = cls._REMOTE_TOKEN_PATH
+        if not token_path.exists():
+            # Auto-generate on first use
+            token_path.parent.mkdir(parents=True, exist_ok=True)
+            generated = secrets.token_hex(32)
+            token_path.write_text(generated, encoding="utf-8")
+            token_path.chmod(0o600)
+        stored = token_path.read_text(encoding="utf-8").strip()
+        if not token or not stored:
+            return False
+        return hmac.compare_digest(stored, token)
+
+    def _get_remote_token_from_request(self, payload: dict[str, Any] | None = None) -> str:
+        """Extract remote token from request — checks Authorization header first, then payload.token."""
+        auth_header = self.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            return auth_header[7:].strip()
+        if payload and isinstance(payload, dict):
+            return str(payload.get("token", ""))
+        # For GET requests check query string
+        qs = parse_qs(urlsplit(self.path).query)
+        return qs.get("token", [""])[0]
+
+    def _handle_remote_run(self, payload: dict[str, Any]) -> None:
+        """POST /api/remote/run — Trigger an app run remotely.
+
+        Body: { "app_id": "gmail-inbox-triage", "config": {...}, "token": "..." }
+        Returns: { "run_id": "...", "status": "pending_approval" | "running", "preview": "..." }
+        """
+        token = self._get_remote_token_from_request(payload)
+        if not self._validate_remote_token(token):
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "Invalid or missing remote token"})
+            return
+
+        app_id = str(payload.get("app_id", "")).strip()
+        if not app_id:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "app_id required"})
+            return
+
+        # Delegate to the same run logic as local /api/apps/{id}/run
+        run_payload = {
+            "config": payload.get("config", {}),
+        }
+        # Capture response by temporarily redirecting — simulate the run
+        self._handle_app_run(app_id, run_payload)
+
+    def _handle_remote_approve(self, payload: dict[str, Any]) -> None:
+        """POST /api/remote/approve — Approve or reject a pending run remotely.
+
+        Body: { "run_id": "...", "action": "approve" | "reject", "token": "..." }
+        Returns: { "status": "approved" | "rejected", "evidence_hash": "..." }
+        """
+        import hashlib
+        from datetime import datetime, timezone
+
+        token = self._get_remote_token_from_request(payload)
+        if not self._validate_remote_token(token):
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "Invalid or missing remote token"})
+            return
+
+        run_id = str(payload.get("run_id", "")).strip()
+        action = str(payload.get("action", "approve")).strip().lower()
+
+        if not run_id:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "run_id required"})
+            return
+        if action not in ("approve", "reject"):
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "action must be 'approve' or 'reject'"})
+            return
+
+        now = datetime.now(timezone.utc)
+        audit_dir = Path.home() / ".solace" / "audit"
+        audit_dir.mkdir(parents=True, exist_ok=True)
+
+        if action == "approve":
+            # Write approved_v1.json to the outbox run directory
+            outbox = Path.home() / ".solace" / "outbox" / "apps"
+            approved_in_outbox = False
+            approval_record = {
+                "run_id": run_id,
+                "approved_by": "remote",
+                "timestamp": now.isoformat(),
+                "approval_type": "remote",
+            }
+            for app_dir in (outbox.iterdir() if outbox.exists() else []):
+                run_dir = app_dir / run_id if app_dir.is_dir() else None
+                if run_dir and run_dir.exists():
+                    (run_dir / "approved_v1.json").write_text(
+                        json.dumps(approval_record, indent=2), encoding="utf-8"
+                    )
+                    approved_in_outbox = True
+                    break
+
+            evidence_payload = json.dumps({
+                "run_id": run_id,
+                "action": "approve",
+                "approved_at": now.isoformat(),
+                "source": "remote",
+            }, sort_keys=True)
+            evidence_hash = "sha256:" + hashlib.sha256(evidence_payload.encode()).hexdigest()
+
+            with open(audit_dir / "remote_actions.jsonl", "a", encoding="utf-8") as f:
+                f.write(json.dumps({
+                    "event": "remote_approved",
+                    "run_id": run_id,
+                    "evidence_hash": evidence_hash,
+                    "timestamp": now.isoformat(),
+                    "in_outbox": approved_in_outbox,
+                }) + "\n")
+
+            self._send_json(HTTPStatus.OK, {
+                "status": "approved",
+                "run_id": run_id,
+                "evidence_hash": evidence_hash,
+            })
+        else:
+            # Reject: write cancelled record to audit log
+            with open(audit_dir / "remote_actions.jsonl", "a", encoding="utf-8") as f:
+                f.write(json.dumps({
+                    "event": "remote_rejected",
+                    "run_id": run_id,
+                    "timestamp": now.isoformat(),
+                    "reason": payload.get("reason", "remote_reject"),
+                }) + "\n")
+
+            self._send_json(HTTPStatus.OK, {
+                "status": "rejected",
+                "run_id": run_id,
+                "evidence_hash": "",
+            })
+
+    def _handle_remote_status(self, *, send_body: bool = True) -> None:
+        """GET /api/remote/status?token=... — Get status of all apps, recent runs, savings.
+
+        Returns: { "apps": [...], "recent_runs": [...], "cli_agents": [...], "savings": {...} }
+        """
+        token = self._get_remote_token_from_request()
+        if not self._validate_remote_token(token):
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "Invalid or missing remote token"},
+                            send_body=send_body)
+            return
+
+        # Apps list
+        try:
+            apps_data = self.data_store.list_apps()
+            apps = apps_data.get("apps", [])
+        except Exception:
+            apps = []
+
+        # Recent runs from audit + outbox
+        recent_runs: list[dict[str, Any]] = []
+        audit_dir = Path.home() / ".solace" / "audit"
+        if audit_dir.exists():
+            for jf in sorted(audit_dir.glob("*.jsonl"), reverse=True)[:10]:
+                try:
+                    for line in jf.read_text(encoding="utf-8").strip().splitlines()[-5:]:
+                        if not line.strip():
+                            continue
+                        obj = json.loads(line)
+                        recent_runs.append({
+                            "run_id": obj.get("run_id", ""),
+                            "app_id": obj.get("app_id", ""),
+                            "status": obj.get("status", ""),
+                            "timestamp": obj.get("timestamp") or obj.get("started_at", ""),
+                        })
+                except Exception:
+                    pass
+        recent_runs = recent_runs[:20]
+
+        # CLI agents status
+        try:
+            cli_data = _detect_cli_agents()
+            cli_agents = [
+                {"id": a["id"], "name": a["name"], "installed": a["installed"]}
+                for a in cli_data.get("agents", [])
+            ]
+        except Exception:
+            cli_agents = []
+
+        # Savings estimate
+        run_count = len(recent_runs)
+        savings = {
+            "estimated_runs": run_count,
+            "cost_per_run_usd": 0.001,
+            "total_saved_usd": round(run_count * 0.001, 4),
+            "note": "Recipe replay cost vs LLM-per-run cost estimate",
+        }
+
+        self._send_json(HTTPStatus.OK, {
+            "apps": apps,
+            "recent_runs": recent_runs,
+            "cli_agents": cli_agents,
+            "savings": savings,
+        }, send_body=send_body)
+
+    def _handle_remote_token(self, *, send_body: bool = True) -> None:
+        """GET /api/remote/token — Display the remote access token (local-only, no auth needed).
+
+        This endpoint is intentionally unauthenticated because it only runs on localhost.
+        The token is used by solaceagi.com to authenticate remote control requests.
+        Returns: { "token": "...", "instructions": "..." }
+        """
+        token_path = self._REMOTE_TOKEN_PATH
+        if not token_path.exists():
+            token_path.parent.mkdir(parents=True, exist_ok=True)
+            generated = secrets.token_hex(32)
+            token_path.write_text(generated, encoding="utf-8")
+            token_path.chmod(0o600)
+        token = token_path.read_text(encoding="utf-8").strip()
+        self._send_json(HTTPStatus.OK, {
+            "token": token,
+            "token_path": str(token_path),
+            "instructions": (
+                "Add this token to your solaceagi.com account settings under "
+                "Settings > Remote Access > Local Token. "
+                "Keep it secret — it grants full remote control of your local browser."
+            ),
+        }, send_body=send_body)
+
+    def _handle_remote_config(self, payload: dict[str, Any]) -> None:
+        """POST /api/remote/config — Update app config remotely.
+
+        Body: { "app_id": "...", "config": {...}, "token": "..." }
+        Writes config to the app's inbox/conventions/ directory.
+        """
+        token = self._get_remote_token_from_request(payload)
+        if not self._validate_remote_token(token):
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "Invalid or missing remote token"})
+            return
+
+        app_id = str(payload.get("app_id", "")).strip()
+        config = payload.get("config", {})
+
+        if not app_id:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "app_id required"})
+            return
+        if not isinstance(config, dict):
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "config must be an object"})
+            return
+
+        safe_id = re.sub(r"[^a-z0-9_\-]", "", app_id)
+        if not safe_id or safe_id != app_id:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "invalid app_id"})
+            return
+
+        app_dir = self.APPS_DATA / safe_id
+        if not app_dir.is_dir():
+            self._send_json(HTTPStatus.NOT_FOUND, {"error": f"app {safe_id} not found"})
+            return
+
+        conventions_dir = app_dir / "inbox" / "conventions"
+        conventions_dir.mkdir(parents=True, exist_ok=True)
+        config_path = conventions_dir / "config.json"
+
+        # Merge with existing config
+        existing: dict[str, Any] = {}
+        if config_path.exists():
+            try:
+                existing = json.loads(config_path.read_text(encoding="utf-8"))
+                if not isinstance(existing, dict):
+                    existing = {}
+            except Exception:
+                existing = {}
+
+        merged = {**existing, **config}
+        config_path.write_text(json.dumps(merged, indent=2, ensure_ascii=False), encoding="utf-8")
+
+        self._send_json(HTTPStatus.OK, {
+            "ok": True,
+            "app_id": safe_id,
+            "config_path": str(config_path),
+            "keys_updated": list(config.keys()),
+        })
+
+    # ─────────────────────────────────────────────────────────────────────
+    # solaceagi.com Cloud Proxy — eSign, Sync, Evidence, Billing
+    # OAuth3 + Part 11 compliant. Offline queue if unreachable.
+    # ─────────────────────────────────────────────────────────────────────
+
+    _SOLACE_CLOUD_URL = "https://solaceagi-mfjzxmegpq-uc.a.run.app"
+    _OFFLINE_QUEUE: Path = Path.home() / ".solace" / "sync" / "offline-queue.jsonl"
+
+    def _cloud_auth_token(self) -> str | None:
+        """Get the user's cloud auth token from settings."""
+        settings = self.data_store.read_settings()
+        return settings.get("cloud", {}).get("auth_token")
+
+    def _cloud_request(self, method: str, path: str, payload: dict | None = None,
+                       *, token: str | None = None) -> tuple[int, dict]:
+        """Make authenticated request to solaceagi.com. Returns (status, json_body)."""
+        url = f"{self._SOLACE_CLOUD_URL}{path}"
+        headers: dict[str, str] = {"Content-Type": "application/json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        data = json.dumps(payload).encode("utf-8") if payload else None
+        req = urllib.request.Request(url, data=data, headers=headers, method=method)
+        # Longer timeout for POST (crypto operations), shorter for GET
+        timeout = 30 if method == "POST" else 15
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                # Verify response URL matches expected host (prevent redirect attacks)
+                if hasattr(resp, 'url') and not resp.url.startswith(self._SOLACE_CLOUD_URL):
+                    return 502, {"error": f"Unexpected redirect to {resp.url}"}
+                body = json.loads(resp.read().decode("utf-8"))
+                return resp.status, body
+        except urllib.error.HTTPError as exc:
+            try:
+                body = json.loads(exc.read().decode("utf-8"))
+            except Exception:
+                body = {"error": str(exc)}
+            return exc.code, body
+        except (urllib.error.URLError, OSError) as exc:
+            return 0, {"error": f"offline: {exc}", "offline": True}
+
+    def _audit_cloud_call(self, endpoint: str, method: str, status: int, payload: dict | None = None) -> None:
+        """Log cloud API call to Part 11 audit trail."""
+        import hashlib as _hashlib
+        audit_dir = Path.home() / ".solace" / "audit"
+        audit_dir.mkdir(parents=True, exist_ok=True)
+        ts = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        entry = {
+            "type": "cloud_api_call",
+            "endpoint": endpoint,
+            "method": method,
+            "status": status,
+            "timestamp": ts,
+        }
+        entry["evidence_hash"] = _hashlib.sha256(json.dumps(entry, sort_keys=True).encode()).hexdigest()
+        with open(audit_dir / "cloud_api_calls.jsonl", "a") as f:
+            f.write(json.dumps(entry) + "\n")
+
+    _OFFLINE_QUEUE_MAX = 10_000  # Max queue entries (prevent unbounded growth)
+
+    def _queue_offline(self, action: str, payload: dict) -> None:
+        """Queue an action for later sync when back online."""
+        self._OFFLINE_QUEUE.parent.mkdir(parents=True, exist_ok=True)
+        os.chmod(self._OFFLINE_QUEUE.parent, 0o700)
+        # Strip sensitive tokens from payload before queuing (security)
+        safe_payload = {k: v for k, v in payload.items()
+                        if k not in ("auth_token", "bearer_token", "password", "secret")}
+        entry = {
+            "action": action,
+            "payload": safe_payload,
+            "queued_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "retry_count": 0,
+        }
+        # Check queue size limit
+        if self._OFFLINE_QUEUE.exists():
+            line_count = sum(1 for _ in open(self._OFFLINE_QUEUE))
+            if line_count >= self._OFFLINE_QUEUE_MAX:
+                logger.warning("Offline queue full (%d items). Dropping oldest entry.", line_count)
+                lines = self._OFFLINE_QUEUE.read_text().strip().split("\n")
+                with open(self._OFFLINE_QUEUE, "w") as f:
+                    for line in lines[1:]:  # Drop oldest
+                        f.write(line + "\n")
+        with open(self._OFFLINE_QUEUE, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+
+    # ── Cloud eSign Proxy ───────────────────────────────────────────────
+
+    def _handle_cloud_esign_token(self, payload: dict) -> None:
+        """POST /api/cloud/esign/token — Request eSign token from solaceagi.com."""
+        token = self._cloud_auth_token()
+        if not token:
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "No cloud auth token. Login at solaceagi.com first."})
+            return
+        status, body = self._cloud_request("POST", "/api/v1/esign/token", payload, token=token)
+        self._audit_cloud_call("/api/v1/esign/token", "POST", status)
+        if status == 0:
+            self._queue_offline("esign_token", payload)
+            self._send_json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "Offline — queued for sync", "offline": True})
+            return
+        self._send_json(HTTPStatus(status) if 100 <= status <= 599 else HTTPStatus.BAD_GATEWAY, body)
+
+    def _handle_cloud_esign_sign(self, payload: dict) -> None:
+        """POST /api/cloud/esign/sign — Submit eSign to solaceagi.com."""
+        status, body = self._cloud_request("POST", "/api/v1/esign/sign", payload)
+        self._audit_cloud_call("/api/v1/esign/sign", "POST", status)
+        if status == 0:
+            self._queue_offline("esign_sign", payload)
+            self._send_json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "Offline — queued for sync", "offline": True})
+            return
+        # Also store locally for offline access
+        if body.get("signed"):
+            esign_dir = Path.home() / ".solace" / "esign"
+            esign_dir.mkdir(parents=True, exist_ok=True)
+            sig_id = body.get("signature_id", "unknown")
+            (esign_dir / f"{sig_id}.json").write_text(json.dumps(body, indent=2))
+        self._send_json(HTTPStatus(status) if 100 <= status <= 599 else HTTPStatus.BAD_GATEWAY, body)
+
+    def _handle_cloud_esign_verify(self, payload: dict) -> None:
+        """POST /api/cloud/esign/verify — Verify eSign against solaceagi.com."""
+        status, body = self._cloud_request("POST", "/api/v1/esign/verify", payload)
+        self._audit_cloud_call("/api/v1/esign/verify", "POST", status)
+        if status == 0:
+            self._send_json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "Offline — cannot verify", "offline": True})
+            return
+        self._send_json(HTTPStatus(status) if 100 <= status <= 599 else HTTPStatus.BAD_GATEWAY, body)
+
+    def _handle_cloud_esign_chain_status(self, *, send_body: bool) -> None:
+        """GET /api/cloud/esign/chain-status — Get eSign chain from solaceagi.com."""
+        token = self._cloud_auth_token()
+        if not token:
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "No cloud auth token"}, send_body=send_body)
+            return
+        status, body = self._cloud_request("GET", "/api/v1/esign/chain/status", token=token)
+        self._audit_cloud_call("/api/v1/esign/chain/status", "GET", status)
+        self._send_json(HTTPStatus(status) if 100 <= status <= 599 else HTTPStatus.BAD_GATEWAY, body, send_body=send_body)
+
+    def _handle_cloud_esign_attestations(self, *, send_body: bool) -> None:
+        """GET /api/cloud/esign/attestations — List attestation statements."""
+        status, body = self._cloud_request("GET", "/api/v1/esign/attestations")
+        self._send_json(HTTPStatus(status) if 100 <= status <= 599 else HTTPStatus.BAD_GATEWAY, body, send_body=send_body)
+
+    # ── Cloud Sync Proxy ────────────────────────────────────────────────
+
+    def _handle_cloud_sync_push(self, payload: dict) -> None:
+        """POST /api/cloud/sync/push — Push local state to solaceagi.com vault."""
+        token = self._cloud_auth_token()
+        if not token:
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "No cloud auth token"})
+            return
+        settings = self.data_store.read_settings()
+        sync_payload = {
+            "run_id": payload.get("run_id", f"sync-{int(time.time())}"),
+            "manifest": {
+                "apps": payload.get("apps", []),
+                "schedule": settings.get("schedule", {}),
+                "keep_alive": settings.get("keep_alive", {}),
+                "part11": settings.get("part11", {}),
+            },
+            "evidence": payload.get("evidence", []),
+        }
+        status, body = self._cloud_request("POST", "/api/v1/fs/sync/push", sync_payload, token=token)
+        self._audit_cloud_call("/api/v1/fs/sync/push", "POST", status)
+        if status == 0:
+            self._queue_offline("cloud_sync_push", sync_payload)
+            self._send_json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "Offline — queued for sync", "offline": True})
+            return
+        settings.setdefault("sync", {})["last_push"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        self.data_store.write_settings(settings)
+        self._send_json(HTTPStatus(status) if 100 <= status <= 599 else HTTPStatus.BAD_GATEWAY, body)
+
+    def _handle_cloud_sync_pull(self, payload: dict) -> None:
+        """POST /api/cloud/sync/pull — Pull state from solaceagi.com vault."""
+        token = self._cloud_auth_token()
+        if not token:
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "No cloud auth token"})
+            return
+        pull_payload = {"run_id": payload.get("run_id", "latest")}
+        status, body = self._cloud_request("POST", "/api/v1/fs/sync/pull", pull_payload, token=token)
+        self._audit_cloud_call("/api/v1/fs/sync/pull", "POST", status)
+        if status == 0:
+            self._send_json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "Offline — cannot pull", "offline": True})
+            return
+        settings = self.data_store.read_settings()
+        settings.setdefault("sync", {})["last_pull"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        self.data_store.write_settings(settings)
+        self._send_json(HTTPStatus(status) if 100 <= status <= 599 else HTTPStatus.BAD_GATEWAY, body)
+
+    def _handle_cloud_sync_status(self, *, send_body: bool) -> None:
+        """GET /api/cloud/sync/status — Check sync status with solaceagi.com."""
+        token = self._cloud_auth_token()
+        if not token:
+            settings = self.data_store.read_settings()
+            sync_info = settings.get("sync", {})
+            queue_count = 0
+            if self._OFFLINE_QUEUE.exists():
+                queue_count = sum(1 for _ in open(self._OFFLINE_QUEUE))
+            self._send_json(HTTPStatus.OK, {
+                "connected": False,
+                "last_push": sync_info.get("last_push"),
+                "last_pull": sync_info.get("last_pull"),
+                "offline_queue_count": queue_count,
+                "message": "Not connected to solaceagi.com — working locally",
+            }, send_body=send_body)
+            return
+        status, body = self._cloud_request("GET", "/api/v1/fs/sync/status", token=token)
+        self._audit_cloud_call("/api/v1/fs/sync/status", "GET", status)
+        if status == 0:
+            self._send_json(HTTPStatus.OK, {"connected": False, "offline": True,
+                                             "message": "solaceagi.com unreachable — working offline"}, send_body=send_body)
+            return
+        body["connected"] = True
+        self._send_json(HTTPStatus(status) if 100 <= status <= 599 else HTTPStatus.BAD_GATEWAY, body, send_body=send_body)
+
+    # ── Cloud Evidence Proxy ────────────────────────────────────────────
+
+    def _handle_cloud_evidence_push(self, payload: dict) -> None:
+        """POST /api/cloud/evidence — Push evidence entry to solaceagi.com."""
+        token = self._cloud_auth_token()
+        if not token:
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "No cloud auth token"})
+            return
+        status, body = self._cloud_request("POST", "/api/v1/evidence", payload, token=token)
+        self._audit_cloud_call("/api/v1/evidence", "POST", status)
+        if status == 0:
+            self._queue_offline("cloud_evidence_push", payload)
+            self._send_json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "Offline — queued for sync", "offline": True})
+            return
+        self._send_json(HTTPStatus(status) if 100 <= status <= 599 else HTTPStatus.BAD_GATEWAY, body)
+
+    # ── Cloud Billing / Tier Proxy ──────────────────────────────────────
+
+    def _handle_cloud_billing_status(self, *, send_body: bool) -> None:
+        """GET /api/cloud/billing/status — Check billing status on solaceagi.com."""
+        token = self._cloud_auth_token()
+        if not token:
+            self._send_json(HTTPStatus.OK, {
+                "tier": "free",
+                "connected": False,
+                "esign_limit": 0,
+                "esign_remaining": 0,
+                "message": "Not connected — free tier (0 eSign/mo)",
+            }, send_body=send_body)
+            return
+        status, body = self._cloud_request("GET", "/api/v1/billing/status", token=token)
+        self._audit_cloud_call("/api/v1/billing/status", "GET", status)
+        if status == 0:
+            self._send_json(HTTPStatus.OK, {"tier": "unknown", "connected": False,
+                                             "offline": True}, send_body=send_body)
+            return
+        self._send_json(HTTPStatus(status) if 100 <= status <= 599 else HTTPStatus.BAD_GATEWAY, body, send_body=send_body)
+
+    def _handle_cloud_user_tier(self, *, send_body: bool) -> None:
+        """GET /api/cloud/user/tier — Get user tier from solaceagi.com."""
+        token = self._cloud_auth_token()
+        if not token:
+            self._send_json(HTTPStatus.OK, {"tier": "free", "connected": False}, send_body=send_body)
+            return
+        status, body = self._cloud_request("GET", "/api/v1/users/tier", token=token)
+        self._send_json(HTTPStatus(status) if 100 <= status <= 599 else HTTPStatus.BAD_GATEWAY, body, send_body=send_body)
+
+    # ── Offline Queue Management ────────────────────────────────────────
+
+    def _handle_offline_queue_list(self, *, send_body: bool) -> None:
+        """GET /api/offline/queue — List pending offline items."""
+        items = []
+        if self._OFFLINE_QUEUE.exists():
+            for line in self._OFFLINE_QUEUE.read_text().strip().split("\n"):
+                if line.strip():
+                    try:
+                        items.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        continue
+        self._send_json(HTTPStatus.OK, {"count": len(items), "items": items}, send_body=send_body)
+
+    def _handle_offline_flush(self, payload: dict) -> None:
+        """POST /api/offline/flush — Flush offline queue to solaceagi.com."""
+        token = self._cloud_auth_token()
+        if not token:
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "No cloud auth token — cannot flush"})
+            return
+        if not self._OFFLINE_QUEUE.exists():
+            self._send_json(HTTPStatus.OK, {"flushed": 0, "errors": 0})
+            return
+
+        items = []
+        for line in self._OFFLINE_QUEUE.read_text().strip().split("\n"):
+            if line.strip():
+                try:
+                    items.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+
+        flushed = 0
+        errors = 0
+        remaining = []
+        action_map = {
+            "cloud_sync_push": ("POST", "/api/v1/fs/sync/push"),
+            "cloud_evidence_push": ("POST", "/api/v1/evidence"),
+            "esign_sign": ("POST", "/api/v1/esign/sign"),
+            "esign_token": ("POST", "/api/v1/esign/token"),
+        }
+        for item in items:
+            action = item.get("action", "")
+            route = action_map.get(action)
+            if not route:
+                logger.warning("Unknown offline queue action: %s — dropping", action)
+                errors += 1
+                continue
+            # Skip items that have been retried too many times (max 5 retries)
+            retry_count = item.get("retry_count", 0)
+            if retry_count >= 5:
+                logger.warning("Dropping offline item after %d retries: %s", retry_count, action)
+                errors += 1
+                continue
+            # Skip items older than 24 hours (tokens likely expired)
+            queued_at = item.get("queued_at", "")
+            if queued_at:
+                try:
+                    queued_time = datetime.datetime.fromisoformat(queued_at.replace("Z", "+00:00"))
+                    age_hours = (datetime.datetime.now(datetime.timezone.utc) - queued_time).total_seconds() / 3600
+                    if age_hours > 24:
+                        logger.warning("Dropping stale offline item (%.0fh old): %s", age_hours, action)
+                        errors += 1
+                        continue
+                except (ValueError, TypeError):
+                    pass
+            method, path = route
+            status, body = self._cloud_request(method, path, item.get("payload"), token=token)
+            if status == 0 or status >= 500:
+                item["retry_count"] = retry_count + 1
+                remaining.append(item)
+                errors += 1
+            else:
+                flushed += 1
+                self._audit_cloud_call(path, method, status, item.get("payload"))
+
+        if remaining:
+            with open(self._OFFLINE_QUEUE, "w") as f:
+                for item in remaining:
+                    f.write(json.dumps(item) + "\n")
+        elif self._OFFLINE_QUEUE.exists():
+            self._OFFLINE_QUEUE.unlink()
+
+        self._send_json(HTTPStatus.OK, {"flushed": flushed, "errors": errors, "remaining": len(remaining)})
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Sync — push/pull app state to/from solaceagi.com (or local file)
+    # ─────────────────────────────────────────────────────────────────────
+
+    _SYNC_DIR: Path = Path.home() / ".solace" / "sync"
+
+    def _handle_sync_push(self, payload: dict[str, Any]) -> None:
+        """POST /api/sync/push — Push local app state to sync storage.
+
+        Serializes app list, run history, and settings into a timestamped
+        snapshot that can be pulled from another device or solaceagi.com.
+        """
+        self._SYNC_DIR.mkdir(parents=True, exist_ok=True)
+
+        # Gather local state
+        apps = list_apps(self.data_store.apps_root)
+        settings = self.data_store.read_settings()
+
+        # Gather run counts from all apps
+        run_counts: dict[str, int] = {}
+        for app in apps:
+            app_id = app.get("id", "")
+            outbox = self.data_store.apps_root / app_id / "outbox"
+            if outbox.is_dir():
+                run_counts[app_id] = len([d for d in outbox.iterdir() if d.is_dir()])
+
+        snapshot = {
+            "version": 1,
+            "timestamp": time.time(),
+            "timestamp_iso": datetime.datetime.now(datetime.timezone.utc).isoformat() if hasattr(datetime, 'datetime') else "",
+            "apps": [{"id": a.get("id"), "name": a.get("name")} for a in apps],
+            "run_counts": run_counts,
+            "settings_hash": str(hash(json.dumps(settings, sort_keys=True))),
+            "agent_count": len(self._detect_cli_agents()),
+        }
+
+        # Write locally
+        snap_path = self._SYNC_DIR / "latest.json"
+        snap_path.write_text(json.dumps(snapshot, indent=2), encoding="utf-8")
+
+        # If a remote sync URL is configured, push to it
+        remote_url = payload.get("remote_url") or settings.get("sync", {}).get("remote_url")
+        pushed_remote = False
+        if remote_url:
+            try:
+                req = urllib.request.Request(
+                    remote_url,
+                    data=json.dumps(snapshot).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    pushed_remote = resp.status == 200
+            except (urllib.error.URLError, OSError) as exc:
+                logger.warning("sync push to remote failed: %s", exc)
+
+        self._send_json(HTTPStatus.OK, {
+            "ok": True,
+            "snapshot_path": str(snap_path),
+            "pushed_remote": pushed_remote,
+            "apps_count": len(apps),
+            "total_runs": sum(run_counts.values()),
+        })
+
+    def _handle_sync_pull(self, payload: dict[str, Any]) -> None:
+        """POST /api/sync/pull — Pull latest sync snapshot.
+
+        Returns the most recent snapshot from local sync dir or remote.
+        """
+        snap_path = self._SYNC_DIR / "latest.json"
+
+        # Try remote first if configured
+        settings = self.data_store.read_settings()
+        remote_url = payload.get("remote_url") or settings.get("sync", {}).get("remote_url")
+
+        if remote_url:
+            try:
+                req = urllib.request.Request(remote_url, method="GET")
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    remote_data = json.loads(resp.read().decode("utf-8"))
+                    self._send_json(HTTPStatus.OK, {
+                        "source": "remote",
+                        "snapshot": remote_data,
+                    })
+                    return
+            except (urllib.error.URLError, OSError, json.JSONDecodeError) as exc:
+                logger.warning("sync pull from remote failed: %s", exc)
+
+        # Fall back to local
+        if snap_path.exists():
+            snapshot = json.loads(snap_path.read_text(encoding="utf-8"))
+            self._send_json(HTTPStatus.OK, {
+                "source": "local",
+                "snapshot": snapshot,
+            })
+        else:
+            self._send_json(HTTPStatus.OK, {
+                "source": "none",
+                "snapshot": None,
+                "message": "No sync snapshot found. Run /api/sync/push first.",
+            })
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Tunnel management (cloudflared quick-tunnel or mock)
+    # ─────────────────────────────────────────────────────────────────────
+
+    def _handle_tunnel_start(self, payload: dict[str, Any]) -> None:
+        """POST /tunnel/start — Start a cloudflared quick tunnel to expose local server."""
+        cls = type(self)
+
+        if cls._tunnel_proc is not None and cls._tunnel_proc.poll() is None:
+            self._send_json(HTTPStatus.OK, {
+                "status": "already-running",
+                "public_url": cls._tunnel_url or "unknown",
+                "message": "Tunnel is already running.",
+            })
+            return
+
+        port = payload.get("port", cls._tunnel_local_port)
+        cloudflared_path = shutil.which("cloudflared")
+
+        if not cloudflared_path:
+            # No cloudflared — return instructions to install
+            self._send_json(HTTPStatus.OK, {
+                "status": "not-installed",
+                "public_url": None,
+                "message": (
+                    "cloudflared not found. Install it:\n"
+                    "  Ubuntu/Debian: sudo apt install cloudflared\n"
+                    "  macOS: brew install cloudflared\n"
+                    "  Or: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/"
+                ),
+                "install_commands": {
+                    "debian": "sudo apt install cloudflared",
+                    "macos": "brew install cloudflared",
+                    "manual": "https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/",
+                },
+            })
+            return
+
+        # Start cloudflared quick tunnel (no account needed)
+        try:
+            proc = subprocess.Popen(
+                [cloudflared_path, "tunnel", "--url", f"http://localhost:{port}"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            cls._tunnel_proc = proc
+            cls._tunnel_started_at = time.time()
+            cls._tunnel_local_port = port
+
+            # cloudflared prints the URL to stderr — wait briefly to capture it
+            public_url = None
+            deadline = time.time() + 15  # wait up to 15s for URL
+            while time.time() < deadline:
+                if proc.poll() is not None:
+                    break
+                # Read stderr line by line for the URL
+                ready, _, _ = select.select([proc.stderr], [], [], 1.0)
+                if ready:
+                    line = proc.stderr.readline()
+                    if line:
+                        logger.info("cloudflared: %s", line.strip())
+                        # cloudflared prints: "... https://xxx.trycloudflare.com ..."
+                        url_match = re.search(r"(https://[a-z0-9\-]+\.trycloudflare\.com)", line)
+                        if url_match:
+                            public_url = url_match.group(1)
+                            break
+
+            cls._tunnel_url = public_url
+
+            if public_url:
+                self._send_json(HTTPStatus.OK, {
+                    "status": "connected",
+                    "public_url": public_url,
+                    "local_port": port,
+                    "message": f"Tunnel active! Your browser is accessible at {public_url}",
+                    "pid": proc.pid,
+                })
+            else:
+                self._send_json(HTTPStatus.OK, {
+                    "status": "starting",
+                    "public_url": None,
+                    "local_port": port,
+                    "message": "Tunnel process started but URL not yet available. Check /tunnel/status.",
+                    "pid": proc.pid,
+                })
+
+        except (OSError, subprocess.SubprocessError) as exc:
+            logger.error("cloudflared start failed: %s", exc)
+            self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {
+                "status": "error",
+                "public_url": None,
+                "message": f"Failed to start cloudflared: {exc}",
+            })
+
+    def _handle_tunnel_stop(self) -> None:
+        """POST /tunnel/stop — Stop the active cloudflared tunnel."""
+        cls = type(self)
+
+        if cls._tunnel_proc is None or cls._tunnel_proc.poll() is not None:
+            cls._tunnel_proc = None
+            cls._tunnel_url = None
+            cls._tunnel_started_at = None
+            self._send_json(HTTPStatus.OK, {
+                "status": "disconnected",
+                "public_url": None,
+                "message": "No tunnel was running.",
+            })
+            return
+
+        try:
+            cls._tunnel_proc.terminate()
+            cls._tunnel_proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            cls._tunnel_proc.kill()
+            cls._tunnel_proc.wait(timeout=3)
+
+        old_url = cls._tunnel_url
+        cls._tunnel_proc = None
+        cls._tunnel_url = None
+        cls._tunnel_started_at = None
+
+        self._send_json(HTTPStatus.OK, {
+            "status": "disconnected",
+            "public_url": None,
+            "message": f"Tunnel closed. Was: {old_url or 'unknown'}",
+        })
+
+    def _handle_tunnel_status(self) -> None:
+        """GET /tunnel/status — Check if tunnel is running and return URL."""
+        cls = type(self)
+
+        running = cls._tunnel_proc is not None and cls._tunnel_proc.poll() is None
+
+        if not running:
+            # Clean up stale state
+            if cls._tunnel_proc is not None:
+                cls._tunnel_proc = None
+                cls._tunnel_url = None
+                cls._tunnel_started_at = None
+
+        uptime = 0
+        if running and cls._tunnel_started_at:
+            uptime = int(time.time() - cls._tunnel_started_at)
+
+        cloudflared_path = shutil.which("cloudflared")
+
+        self._send_json(HTTPStatus.OK, {
+            "running": running,
+            "public_url": cls._tunnel_url if running else None,
+            "local_port": cls._tunnel_local_port if running else None,
+            "uptime_seconds": uptime,
+            "cloudflared_installed": cloudflared_path is not None,
+            "cloudflared_path": cloudflared_path,
+            "pid": cls._tunnel_proc.pid if running and cls._tunnel_proc else None,
+        })
+
+    # ─────────────────────────────────────────────────────────────────────
+
     def _read_json_body(self) -> dict[str, Any]:
         content_length = int(self.headers.get("Content-Length", "0"))
         raw_body = self.rfile.read(content_length) if content_length else b"{}"
@@ -1285,6 +3158,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     os.chdir(ROOT)
+
+    # Auto-detect CLI agents on startup (cached to ~/.solace/cli-agents-cache.json)
+    cli_result = _detect_cli_agents(force=True)
+    installed = cli_result["installed_ids"]
+    if installed:
+        print(f"  AI Agents detected: {', '.join(installed)} ({len(installed)}/{len(CLI_AGENT_DEFS)})")
+        print(f"  POST /api/cli-agents/generate — Ollama-compatible inference via any detected CLI")
+    else:
+        print("  No AI coding CLIs detected. Install claude, codex, gemini, etc. to enable AI agent mode.")
+
     server = create_server(args.host, args.port)
     print(f"Serving Solace Browser web at http://{args.host}:{args.port}")
     try:

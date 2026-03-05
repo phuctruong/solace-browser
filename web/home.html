@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Solace Browser — Your AI Morning Assistant</title>
-  <meta name="description" content="AI browser automation with evidence trails, OAuth3, and $0.001 recipe replay. Your accounts. Your machine. Your approval.">
+  <title>Solace Browser — Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#081019">
   <link rel="icon" type="image/png" href="/images/yinyang/yinyang-logo-32.png">
@@ -13,12 +12,495 @@
   <script src="/js/solace.js" defer></script>
   <script src="/js/yinyang-delight.js" defer></script>
   <script src="/js/yinyang-rail.js" defer></script>
-  <script src="/js/yinyang-tutorial.js" defer></script>
+  <script src="/js/onboarding.js" defer></script>
   <script src="/js/yinyang-oauth3-confirm.js" defer></script>
   <script src="/vendor/jquery/jquery-3.7.1.min.js" defer></script>
   <script src="/vendor/amcharts/index.js" defer></script>
   <script src="/vendor/amcharts/xy.js" defer></script>
   <script src="/vendor/amcharts/Animated.js" defer></script>
+
+  <style>
+    /* ═══════════════════════════════════════════════════
+       MONEY SAVED HERO WIDGET
+       ═══════════════════════════════════════════════════ */
+    .dash-money-widget {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 20px 24px;
+      background: linear-gradient(135deg,
+        rgba(70, 217, 167, 0.08) 0%,
+        rgba(70, 217, 167, 0.03) 100%);
+      border: 1px solid rgba(70, 217, 167, 0.22);
+      border-radius: var(--sb-radius-md, 16px);
+      margin: 8px 0 4px;
+    }
+    .dash-money-widget__icon {
+      font-size: 2rem;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .dash-money-widget__body { flex: 1; }
+    .dash-money-widget__label {
+      font: 700 0.72rem/1 var(--sb-font-display, "Manrope", sans-serif);
+      color: var(--sb-success, #46d9a7);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 0 0 4px;
+    }
+    .dash-money-widget__hero {
+      font: 800 2.4rem/1 var(--sb-font-display, "Manrope", sans-serif);
+      color: var(--sb-success, #46d9a7);
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+    .dash-money-widget__sub {
+      font-size: 0.78rem;
+      color: var(--sb-text-muted, #9cb1ca);
+      margin: 6px 0 0;
+    }
+    .dash-money-widget__meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .dash-money-widget__runs {
+      font: 700 1.1rem/1 var(--sb-font-display, "Manrope", sans-serif);
+      color: var(--sb-text, #f4f7fb);
+    }
+    .dash-money-widget__runs-label {
+      font-size: 0.72rem;
+      color: var(--sb-text-muted, #9cb1ca);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       FAVORITES STRIP
+       ═══════════════════════════════════════════════════ */
+    .dash-favorites {
+      padding: 12px 0 4px;
+    }
+    .dash-favorites__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .dash-favorites__title {
+      font: 700 0.82rem/1 var(--sb-font-display, "Manrope", sans-serif);
+      color: var(--sb-text-muted, #9cb1ca);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0;
+    }
+    .dash-favorites__strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .dash-fav-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px 8px 10px;
+      background: var(--sb-surface, #0f1825);
+      border: 1px solid rgba(255, 199, 90, 0.28);
+      border-radius: 24px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, background 0.15s;
+      cursor: pointer;
+      position: relative;
+    }
+    .dash-fav-pill:hover {
+      border-color: rgba(255, 199, 90, 0.55);
+      background: rgba(255, 199, 90, 0.05);
+    }
+    .dash-fav-pill__icon {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .dash-fav-pill__icon--text {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem;
+      background: var(--sb-surface-strong, #172335);
+      border: 1px solid var(--sb-border, rgba(163, 185, 214, 0.18));
+    }
+    .dash-fav-pill__name {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--sb-text, #f4f7fb);
+      white-space: nowrap;
+    }
+    .dash-fav-pill__star {
+      font-size: 0.75rem;
+      line-height: 1;
+      color: var(--sb-warning, #ffc75a);
+    }
+    .dash-favorites__empty {
+      font-size: 0.82rem;
+      color: var(--sb-text-muted, #9cb1ca);
+      opacity: 0.6;
+      padding: 4px 0;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       APP CARDS GRID (drag-to-reorder)
+       ═══════════════════════════════════════════════════ */
+    .dash-apps-section {
+      padding: 12px 0 4px;
+    }
+    .dash-apps__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .dash-apps__title {
+      font: 700 0.82rem/1 var(--sb-font-display, "Manrope", sans-serif);
+      color: var(--sb-text-muted, #9cb1ca);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0;
+    }
+    .dash-apps__hint {
+      font-size: 0.72rem;
+      color: var(--sb-text-muted, #9cb1ca);
+      opacity: 0.55;
+    }
+    .dash-apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    /* App card */
+    .dash-app-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 14px 14px 14px;
+      background: var(--sb-surface, #0f1825);
+      border: 1px solid var(--sb-border, rgba(163, 185, 214, 0.18));
+      border-radius: 14px;
+      cursor: grab;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, opacity 0.15s;
+      user-select: none;
+      position: relative;
+    }
+    .dash-app-card:hover {
+      border-color: var(--sb-accent, #ff6b35);
+      background: rgba(255, 107, 53, 0.03);
+    }
+    .dash-app-card.drag-over {
+      border-color: var(--sb-signal, #64c4ff);
+      background: rgba(100, 196, 255, 0.04);
+      box-shadow: 0 0 0 2px rgba(100, 196, 255, 0.18);
+    }
+    .dash-app-card.dragging {
+      opacity: 0.4;
+      cursor: grabbing;
+    }
+    /* ─── Inactive/unactivated app (Paper 24: grey-to-color lifecycle) ─── */
+    .dash-app-card--inactive {
+      opacity: 0.45;
+      filter: grayscale(0.7);
+      border-color: rgba(163, 185, 214, 0.08);
+      border-style: dashed;
+      transition: opacity 0.4s ease, filter 0.4s ease, border-color 0.4s ease, border-style 0.4s;
+    }
+    .dash-app-card--inactive:hover {
+      opacity: 0.7;
+      filter: grayscale(0.3);
+      border-style: solid;
+    }
+    .dash-app-card__setup-btn {
+      display: inline-block;
+      padding: 3px 10px;
+      font: 600 0.72rem/1.4 var(--sb-font-display, "Manrope", sans-serif);
+      color: var(--sb-accent, #64c4ff);
+      border: 1px solid var(--sb-accent, #64c4ff);
+      border-radius: var(--sb-radius-sm, 6px);
+      text-decoration: none;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .dash-app-card__setup-btn:hover {
+      background: var(--sb-accent, #64c4ff);
+      color: var(--sb-bg, #0a0f1a);
+    }
+    /* ─── First-time Onboarding banner ─── */
+    .dash-onboarding {
+      background: linear-gradient(135deg, rgba(100,196,255,0.08), rgba(70,217,167,0.08));
+      border: 1px solid rgba(100,196,255,0.2);
+      border-radius: var(--sb-radius-lg, 12px);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .dash-onboarding__title {
+      font: 700 1.05rem/1.3 var(--sb-font-display, "Manrope", sans-serif);
+      color: var(--sb-text, #f4f7fb);
+      margin: 0 0 6px;
+    }
+    .dash-onboarding__sub {
+      font-size: 0.82rem;
+      color: var(--sb-text-muted, #8da4bf);
+      margin: 0 0 14px;
+    }
+    .dash-onboarding__steps {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .dash-onboarding__step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--sb-surface, #111827);
+      border-radius: var(--sb-radius-md, 8px);
+      font-size: 0.82rem;
+    }
+    .dash-onboarding__step--done {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
+    .dash-onboarding__check {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--sb-accent, #64c4ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      color: var(--sb-success, #46d9a7);
+    }
+    .dash-onboarding__check--done {
+      background: var(--sb-success, #46d9a7);
+      border-color: var(--sb-success, #46d9a7);
+      color: #0a0f1a;
+    }
+    .dash-onboarding__dismiss {
+      margin-top: 12px;
+      padding: 4px 12px;
+      background: transparent;
+      border: 1px solid var(--sb-border, rgba(163,185,214,0.18));
+      border-radius: var(--sb-radius-sm, 6px);
+      color: var(--sb-text-muted, #8da4bf);
+      cursor: pointer;
+      font-size: 0.72rem;
+    }
+    .dash-app-card__icon {
+      width: 44px; height: 44px;
+      border-radius: 11px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .dash-app-card__icon--text {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      background: var(--sb-surface-strong, #172335);
+      border: 1px solid var(--sb-border, rgba(163, 185, 214, 0.18));
+    }
+    .dash-app-card__body {
+      flex: 1;
+      min-width: 0;
+    }
+    .dash-app-card__name {
+      font: 700 0.88rem/1.2 var(--sb-font-display, "Manrope", sans-serif);
+      color: var(--sb-text, #f4f7fb);
+      margin: 0 0 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dash-app-card__runs {
+      font-size: 0.72rem;
+      color: var(--sb-text-muted, #9cb1ca);
+      margin: 0 0 6px;
+    }
+
+    /* Sparkline (7-day bars) */
+    .dash-sparkline {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 22px;
+    }
+    .dash-sparkline__bar {
+      flex: 1;
+      border-radius: 2px 2px 0 0;
+      background: rgba(100, 196, 255, 0.35);
+      min-height: 2px;
+      transition: background 0.15s;
+    }
+    .dash-sparkline__bar--today {
+      background: rgba(100, 196, 255, 0.75);
+    }
+    .dash-sparkline__bar--zero {
+      background: rgba(163, 185, 214, 0.1);
+    }
+
+    /* Star toggle */
+    .dash-app-card__star {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      color: var(--sb-text-muted, #9cb1ca);
+      opacity: 0.45;
+      transition: opacity 0.15s, transform 0.1s;
+      border-radius: 6px;
+    }
+    .dash-app-card__star:hover {
+      opacity: 1;
+    }
+    .dash-app-card__star.starred {
+      color: var(--sb-warning, #ffc75a);
+      opacity: 1;
+    }
+    .dash-app-card__star.starred:hover {
+      transform: scale(1.2);
+    }
+
+    /* Run button on card */
+    .dash-app-card__run {
+      flex-shrink: 0;
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: var(--sb-accent, #ff6b35);
+      color: #fff;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .dash-app-card__run:hover {
+      background: var(--sb-accent-hover, #ff8d63);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       RECENT RUNS TIMELINE
+       ═══════════════════════════════════════════════════ */
+    .dash-recent-section {
+      padding: 12px 0 4px;
+    }
+    .dash-recent__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .dash-recent__title {
+      font: 700 0.82rem/1 var(--sb-font-display, "Manrope", sans-serif);
+      color: var(--sb-text-muted, #9cb1ca);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0;
+    }
+    .dash-recent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .dash-recent-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      background: var(--sb-surface, #0f1825);
+      border: 1px solid var(--sb-border, rgba(163, 185, 214, 0.18));
+      border-radius: 10px;
+      font-size: 0.82rem;
+    }
+    .dash-recent-item__icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .dash-recent-item__icon--text {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+      background: var(--sb-surface-strong, #172335);
+      border: 1px solid var(--sb-border, rgba(163, 185, 214, 0.18));
+    }
+    .dash-recent-item__info {
+      flex: 1;
+      min-width: 0;
+    }
+    .dash-recent-item__name {
+      font-weight: 700;
+      color: var(--sb-text, #f4f7fb);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dash-recent-item__time {
+      font-size: 0.72rem;
+      color: var(--sb-text-muted, #9cb1ca);
+      margin-top: 1px;
+    }
+    .dash-recent-item__status {
+      flex-shrink: 0;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 5px;
+      letter-spacing: 0.04em;
+    }
+    .dash-recent-item__status--completed {
+      background: rgba(70, 217, 167, 0.12);
+      color: var(--sb-success, #46d9a7);
+    }
+    .dash-recent-item__status--running {
+      background: rgba(100, 196, 255, 0.12);
+      color: var(--sb-signal, #64c4ff);
+    }
+    .dash-recent-item__status--failed {
+      background: rgba(255, 107, 53, 0.12);
+      color: var(--sb-accent, #ff6b35);
+    }
+    .dash-recent-empty {
+      font-size: 0.82rem;
+      color: var(--sb-text-muted, #9cb1ca);
+      opacity: 0.6;
+      padding: 4px 0;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════ */
+    @media (max-width: 600px) {
+      .dash-money-widget {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .dash-money-widget__meta {
+        align-items: flex-start;
+        flex-direction: row;
+        gap: 16px;
+      }
+      .dash-apps-grid {
+        grid-template-columns: 1fr;
+      }
+      .dash-money-widget__hero {
+        font-size: 1.9rem;
+      }
+    }
+  </style>
 </head>
 <body data-page="home">
   <div class="site-shell">
@@ -27,59 +509,21 @@
       <!-- Shared header injected by layout.js -->
       <div id="header-slot"></div>
 
-      <main>
+      <main class="dash">
 
-        <!-- ═══ SECTION 1: CINEMATIC HERO ═══
-             Jony Ive: "One idea. One image. One action."
-             MrBeast: "Would I screenshot this?" YES.
-             Russell Brunson: "Hook — the transformation, not the product." -->
-        <section class="home-hero-new">
-          <!-- Particle canvas background -->
-          <canvas data-particles-canvas aria-hidden="true" style="position:absolute;inset:0;z-index:0;pointer-events:none;"></canvas>
-
-          <div class="home-hero__logo-wrap">
-            <img class="home-hero__logo"
-                 src="/images/yinyang/yinyang-rotating_70pct_256px.gif"
-                 alt="Solace Browser — YinYang AI"
-                 width="256" height="256"
-                 loading="eager" decoding="async" fetchpriority="high">
+        <!-- ═══ GREETING — YinYang says hi ═══ -->
+        <section class="dash-greeting">
+          <div class="dash-greeting__yy">
+            <img src="/images/yinyang/yinyang-rotating_70pct_256px.gif"
+                 alt="YinYang" loading="eager" decoding="async" fetchpriority="high">
           </div>
-
-          <h1 class="home-hero__title" data-i18n="home_hero_title">
-            Your AI <em>Morning Assistant</em>
-          </h1>
-
-          <p class="home-hero__sub" data-i18n="home_hero_sub">
-            Automate Gmail, Slack, LinkedIn, and 15 more services — using your existing accounts.
-            No new logins. No extensions. Every action waits for your approval.
-          </p>
-
-          <div class="home-hero__actions">
-            <a class="home-hero__cta" href="/app-store" data-i18n="home_hero_cta">
-              Browse Apps
-            </a>
-            <a class="home-hero__cta-secondary" href="/docs/quick-start" data-i18n="home_hero_cta2">
-              Quick Start Guide
-            </a>
-          </div>
-
-          <div class="home-hero__trust">
-            <span class="home-hero__trust-item">
-              <img src="/images/icon-security.png" alt="" width="20" height="20" class="home-hero__trust-icon" loading="lazy">
-              <span data-i18n="home_trust_local">Runs on your machine</span>
-            </span>
-            <span class="home-hero__trust-item">
-              <img src="/images/icon-evidence.png" alt="" width="20" height="20" class="home-hero__trust-icon" loading="lazy">
-              <span data-i18n="home_trust_evidence">Every action evidence-sealed</span>
-            </span>
-            <span class="home-hero__trust-item">
-              <img src="/images/icon-approve.png" alt="" width="20" height="20" class="home-hero__trust-icon" loading="lazy">
-              <span data-i18n="home_trust_approve">You approve everything</span>
-            </span>
+          <div class="dash-greeting__text">
+            <h1 class="dash-greeting__hello" id="dash-hello" data-i18n="dash_hello">Good morning!</h1>
+            <p class="dash-greeting__sub" id="dash-sub" data-i18n="dash_sub">What would you like to automate today?</p>
           </div>
         </section>
 
-        <!-- ═══ STATUS BAR — Compact live status ═══ -->
+        <!-- ═══ STATUS BAR — Live browser status ═══ -->
         <div class="home-status-bar" id="home-status-bar" role="status" aria-live="polite">
           <span class="home-status-bar__item">
             <span class="home-status-bar__dot" id="status-dot"></span>
@@ -95,104 +539,114 @@
           </span>
         </div>
 
-        <!-- ═══ SECTION 2: APP SPOTLIGHT ═══
-             Jony Ive: "Show 3 things beautifully, not 20 things in a list."
-             Rory Sutherland: "Price next to the name — perceived value anchor." -->
-        <section class="home-spotlight reveal">
-          <div class="home-spotlight__header">
-            <h2 class="home-spotlight__title" data-i18n="home_spotlight_title">Featured Apps</h2>
-            <p class="home-spotlight__sub" data-i18n="home_spotlight_sub">Install an app. YinYang handles the rest.</p>
+        <!-- ═══ FIRST-TIME ONBOARDING — YinYang guided walkthrough ═══ -->
+        <div class="dash-onboarding" id="dash-onboarding" style="display:none">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <img src="/images/yinyang/yinyang-rotating_70pct_256px.gif" alt="YinYang" style="width:40px;height:40px;border-radius:50%">
+            <div>
+              <h2 class="dash-onboarding__title" style="margin:0" data-i18n="dash_onboarding_title">Let's get your apps running!</h2>
+              <p class="dash-onboarding__sub" style="margin:4px 0 0" data-i18n="dash_onboarding_sub">I'll walk you through setup. Pick any app below to activate it.</p>
+            </div>
           </div>
-          <div class="home-spotlight__grid" id="app-spotlight-grid">
-
-            <a class="app-card reveal" href="/app-store#gmail-inbox-triage">
-              <img class="app-card__icon-img" src="/images/apps/gmail.jpg" alt="Gmail" width="64" height="64" loading="lazy">
-              <h3 class="app-card__name" data-i18n="app_gmail_name">Gmail Inbox Triage</h3>
-              <p class="app-card__desc" data-i18n="app_gmail_desc">Reads your inbox, drafts replies, archives noise. You approve before anything sends.</p>
-              <span class="app-card__cta" data-i18n="app_card_install">Install — $0.003/run</span>
-            </a>
-
-            <a class="app-card reveal" href="/app-store#slack-standup">
-              <img class="app-card__icon-img" src="/images/apps/slack.jpg" alt="Slack" width="64" height="64" loading="lazy">
-              <h3 class="app-card__name" data-i18n="app_slack_name">Slack Standup</h3>
-              <p class="app-card__desc" data-i18n="app_slack_desc">Summarizes channels overnight, posts your standup. 2 minutes instead of 30.</p>
-              <span class="app-card__cta" data-i18n="app_card_install2">Install — $0.002/run</span>
-            </a>
-
-            <a class="app-card reveal" href="/app-store#linkedin-outreach">
-              <img class="app-card__icon-img" src="/images/apps/linkedin.png" alt="LinkedIn" width="64" height="64" loading="lazy">
-              <h3 class="app-card__name" data-i18n="app_linkedin_name">LinkedIn Outreach</h3>
-              <p class="app-card__desc" data-i18n="app_linkedin_desc">Personalized connection requests and follow-ups. No API needed — uses your browser session.</p>
-              <span class="app-card__cta app-card__cta--coming" data-i18n="app_card_coming">Coming Soon</span>
-            </a>
-
+          <div class="dash-onboarding__steps" id="dash-onboarding-steps">
+            <!-- Steps rendered by JS -->
           </div>
-          <div style="text-align:center;margin-top:32px;">
-            <a class="home-hero__cta-secondary" href="/app-store" data-i18n="home_spotlight_all">View All Apps</a>
+          <button class="dash-onboarding__dismiss" id="dash-onboarding-dismiss" data-i18n="dash_onboarding_dismiss">I'll set up later</button>
+        </div>
+
+        <!-- ═══ MONEY SAVED WIDGET ═══ -->
+        <div class="dash-money-widget" id="dash-money-widget" aria-label="Money saved summary">
+          <div class="dash-money-widget__icon" aria-hidden="true">💰</div>
+          <div class="dash-money-widget__body">
+            <p class="dash-money-widget__label" data-i18n="dash_money_saved">Total Money Saved</p>
+            <p class="dash-money-widget__hero" id="dash-money-hero">$0.00</p>
+            <p class="dash-money-widget__sub" data-i18n="dash_money_sub">15 min saved per run × $75/hr = $18.75/run</p>
+          </div>
+          <div class="dash-money-widget__meta">
+            <span class="dash-money-widget__runs" id="dash-total-runs">0</span>
+            <span class="dash-money-widget__runs-label" data-i18n="dash_total_runs">total runs</span>
+          </div>
+        </div>
+
+        <!-- ═══ QUICK ACTIONS — Hidden for first-time users (Paper 24: show only when ≥1 app activated) ═══ -->
+        <section class="dash-actions" id="dash-quick-actions" style="display:none">
+          <a class="dash-action" href="/app-detail?app=gmail-inbox-triage">
+            <img class="dash-action__icon" src="/images/apps/gmail.jpg" alt="Gmail" width="40" height="40" loading="lazy">
+            <div class="dash-action__info">
+              <h3 data-i18n="app_gmail_name">Gmail Inbox Triage</h3>
+              <p data-i18n="dash_gmail_desc">Classify, draft replies, archive noise</p>
+            </div>
+            <span class="dash-action__badge" data-i18n="dash_action_run">Run</span>
+          </a>
+          <a class="dash-action" href="/app-detail?app=slack-standup">
+            <img class="dash-action__icon" src="/images/apps/slack.jpg" alt="Slack" width="40" height="40" loading="lazy">
+            <div class="dash-action__info">
+              <h3 data-i18n="app_slack_name">Slack Standup</h3>
+              <p data-i18n="dash_slack_desc">Summarize channels, post standup</p>
+            </div>
+            <span class="dash-action__badge" data-i18n="dash_action_run">Run</span>
+          </a>
+          <a class="dash-action" href="/app-store">
+            <div class="dash-action__icon dash-action__icon--browse">+</div>
+            <div class="dash-action__info">
+              <h3 data-i18n="dash_browse_apps">Browse App Store</h3>
+              <p data-i18n="dash_browse_desc">18 automations ready to install</p>
+            </div>
+            <span class="dash-action__badge dash-action__badge--muted" data-i18n="dash_action_browse">Browse</span>
+          </a>
+        </section>
+
+        <!-- ═══ FAVORITES STRIP ═══ -->
+        <section class="dash-favorites" id="dash-favorites-section" aria-labelledby="dash-fav-heading">
+          <div class="dash-favorites__header">
+            <h2 class="dash-favorites__title" id="dash-fav-heading" data-i18n="dash_favorites">Favorites</h2>
+          </div>
+          <div class="dash-favorites__strip" id="dash-favorites-strip">
+            <p class="dash-favorites__empty" data-i18n="dash_favorites_empty">Star an app below to pin it here.</p>
           </div>
         </section>
 
-        <!-- ═══ SECTION 3: HOW IT WORKS ═══
-             Vanessa Van Edwards: "Warm, not bureaucratic. Empowering, not technical."
-             Russell Brunson: "Story → micro-commitment → offer." -->
-        <section class="home-how reveal">
-          <div class="home-how__header">
-            <h2 class="home-how__title" data-i18n="home_how_title">See It. Approve It. Watch It Work.</h2>
-            <p class="home-how__sub" data-i18n="home_how_sub">Three steps. No API keys. No extensions. No new accounts.</p>
+        <!-- ═══ APP CARDS — Drag to reorder, star to favorite ═══ -->
+        <section class="dash-apps-section" aria-labelledby="dash-apps-heading">
+          <div class="dash-apps__header">
+            <h2 class="dash-apps__title" id="dash-apps-heading" data-i18n="dash_my_apps">My Apps</h2>
+            <span class="dash-apps__hint" data-i18n="dash_drag_hint">drag to reorder</span>
           </div>
-          <div class="home-how__steps">
-            <div class="home-how__step reveal">
-              <div class="home-how__num">1</div>
-              <img class="home-how__step-icon" src="/images/icon-record.png" alt="" width="48" height="48" loading="lazy">
-              <h3 class="home-how__step-title" data-i18n="home_how_step1_title">Install an App</h3>
-              <p class="home-how__step-desc" data-i18n="home_how_step1_desc">Browse the App Store. Pick Gmail Triage, Slack Standup, or any of 18 automations. One click to install.</p>
-            </div>
-            <div class="home-how__step reveal">
-              <div class="home-how__num">2</div>
-              <img class="home-how__step-icon" src="/images/icon-approve.png" alt="" width="48" height="48" loading="lazy">
-              <h3 class="home-how__step-title" data-i18n="home_how_step2_title">Preview &amp; Approve</h3>
-              <p class="home-how__step-desc" data-i18n="home_how_step2_desc">YinYang shows you exactly what it will do. Edit, approve, or reject. Nothing happens without your say.</p>
-            </div>
-            <div class="home-how__step reveal">
-              <div class="home-how__num">3</div>
-              <img class="home-how__step-icon" src="/images/icon-evidence.png" alt="" width="48" height="48" loading="lazy">
-              <h3 class="home-how__step-title" data-i18n="home_how_step3_title">Evidence-Sealed Execution</h3>
-              <p class="home-how__step-desc" data-i18n="home_how_step3_desc">Every action is SHA-256 sealed. Screenshots captured. Full audit trail. FDA Part 11 ready out of the box.</p>
-            </div>
+          <div class="dash-apps-grid" id="dash-apps-grid">
+            <!-- Populated by JS -->
           </div>
         </section>
 
-        <!-- ═══ SECTION 4: WHY DIFFERENT ═══
-             Rory Sutherland: "Perceived value ≠ functional value. Reframe everything." -->
-        <section class="home-spotlight reveal" style="border-top:1px solid var(--sb-border-white-alpha-06);">
-          <div class="home-spotlight__header">
-            <h2 class="home-spotlight__title" data-i18n="home_why_title">Why Solace Browser?</h2>
-            <p class="home-spotlight__sub" data-i18n="home_why_sub">The only AI browser where your credentials never leave your machine.</p>
+        <!-- ═══ RECENT RUNS TIMELINE ═══ -->
+        <section class="dash-recent-section" aria-labelledby="dash-recent-heading">
+          <div class="dash-recent__header">
+            <h2 class="dash-recent__title" id="dash-recent-heading" data-i18n="dash_recent">Recent Activity</h2>
           </div>
-          <div class="home-spotlight__grid">
-
-            <div class="app-card reveal" style="cursor:default;">
-              <div class="app-card__icon">&#128274;</div>
-              <h3 class="app-card__name" data-i18n="home_why_local_title">Local-First</h3>
-              <p class="app-card__desc" data-i18n="home_why_local_desc">Your passwords, cookies, and sessions stay on your machine. We never see them. Ever.</p>
-            </div>
-
-            <div class="app-card reveal" style="cursor:default;">
-              <div class="app-card__icon">&#128176;</div>
-              <h3 class="app-card__name" data-i18n="home_why_cost_title">$0.001 Per Replay</h3>
-              <p class="app-card__desc" data-i18n="home_why_cost_desc">LLM called once at preview. After that, CPU replays deterministically. 99% cheaper than competitors.</p>
-            </div>
-
-            <div class="app-card reveal" style="cursor:default;">
-              <div class="app-card__icon">&#127760;</div>
-              <h3 class="app-card__name" data-i18n="home_why_noapi_title">No API Required</h3>
-              <p class="app-card__desc" data-i18n="home_why_noapi_desc">WhatsApp, Instagram, Amazon — services with no API. Solace Browser is the only way to automate them.</p>
-            </div>
-
+          <div class="dash-recent-list" id="dash-recent-list">
+            <p class="dash-recent-empty" data-i18n="dash_recent_empty">No runs yet. Run an app to see activity here.</p>
           </div>
         </section>
 
-        <!-- Final CTA removed — browser is already installed, no need for download CTA -->
+        <!-- ═══ DASHBOARD GRID — Schedule + Sign-Off ═══ -->
+        <section class="dash-grid">
+
+          <!-- Upcoming Schedule -->
+          <div class="dash-card">
+            <h2 class="dash-card__title" data-i18n="dash_schedule_title">Schedule</h2>
+            <div class="dash-card__body" id="dash-schedule">
+              <p class="dash-empty" data-i18n="dash_schedule_empty">No scheduled runs. <a href="/schedule">Set one up →</a></p>
+            </div>
+          </div>
+
+          <!-- Sign-Off Queue -->
+          <div class="dash-card">
+            <h2 class="dash-card__title" data-i18n="dash_signoff_title">Approval Queue</h2>
+            <div class="dash-card__body" id="dash-signoff">
+              <p class="dash-empty" data-i18n="dash_signoff_empty">Nothing waiting for approval.</p>
+            </div>
+          </div>
+
+        </section>
 
       </main>
 
@@ -203,64 +657,619 @@
   </div>
 
   <script>
-    /* ── Home Page Status Bar (lightweight, Linus-approved: no leaks) ── */
+    /* ── Dashboard Logic (Linus-approved: AbortController, no leaks) ── */
     (function() {
       'use strict';
       var API = 'http://127.0.0.1:9222';
+      var CLOUD = 'https://www.solaceagi.com';
       var controller = new AbortController();
 
+      /* ── Constants ── */
+      var SAVINGS_PER_RUN = 18.75;           // 15 min × $75/hr
+      var LS_FAVORITES    = 'solace_favorites';
+      var LS_ORDER        = 'solace_app_order';
+      var LS_RECENT_RUNS  = 'solace_recent_runs';
+      var RUNS_PREFIX     = 'solace_runs_';
+      var LS_ACTIVATED    = 'solace_activated_';
+      var LS_ONBOARD_DONE = 'solace_onboard_done';
+
+      /* ── Known apps manifest (used for cards + run lookup) ── */
+      var APPS_MANIFEST = [
+        { id: 'gmail-inbox-triage',    name: 'Gmail Inbox Triage',    icon: '/images/apps/gmail.jpg',    emoji: '📧', href: '/app-store#gmail-inbox-triage' },
+        { id: 'slack-standup',         name: 'Slack Standup',         icon: '/images/apps/slack.jpg',    emoji: '💬', href: '/app-store#slack-standup' },
+        { id: 'linkedin-poster',       name: 'LinkedIn Poster',       icon: '/images/apps/linkedin.png', emoji: '💼', href: '/app-store#linkedin-poster' },
+        { id: 'morning-brief',         name: 'Morning Brief',         icon: null,                        emoji: '☀️', href: '/app-store#morning-brief' },
+        { id: 'github-pr-review',      name: 'GitHub PR Review',      icon: null,                        emoji: '🔍', href: '/app-store#github-pr-review' },
+        { id: 'substack-digest',       name: 'Substack Digest',       icon: null,                        emoji: '📰', href: '/app-store#substack-digest' }
+      ];
+
+      /* ─────────────────────────────────────────────
+         LOCAL STORAGE HELPERS
+         ───────────────────────────────────────────── */
+      function lsGet(key, fallback) {
+        try {
+          var raw = localStorage.getItem(key);
+          return raw !== null ? JSON.parse(raw) : fallback;
+        } catch (_) { return fallback; }
+      }
+      function lsSet(key, val) {
+        try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {}
+      }
+
+      /* ─────────────────────────────────────────────
+         FAVORITES
+         ───────────────────────────────────────────── */
+      function getFavorites() { return lsGet(LS_FAVORITES, []); }
+      function setFavorites(arr) { lsSet(LS_FAVORITES, arr); }
+      function isFavorite(appId) { return getFavorites().indexOf(appId) !== -1; }
+
+      function toggleFavorite(appId) {
+        var favs = getFavorites();
+        var idx  = favs.indexOf(appId);
+        if (idx === -1) {
+          favs.push(appId);
+        } else {
+          favs.splice(idx, 1);
+        }
+        setFavorites(favs);
+        renderFavoritesStrip();
+        // Update all star buttons for this app
+        document.querySelectorAll('.dash-app-card__star[data-app-id="' + appId + '"]').forEach(function(btn) {
+          applyStarState(btn, favs.indexOf(appId) !== -1);
+        });
+      }
+
+      function applyStarState(btn, starred) {
+        btn.textContent = '★';
+        if (starred) {
+          btn.classList.add('starred');
+          btn.setAttribute('aria-label', 'Remove from favorites');
+          btn.setAttribute('title', 'Remove from favorites');
+        } else {
+          btn.classList.remove('starred');
+          btn.setAttribute('aria-label', 'Add to favorites');
+          btn.setAttribute('title', 'Add to favorites');
+        }
+      }
+
+      function renderFavoritesStrip() {
+        var strip = document.getElementById('dash-favorites-strip');
+        if (!strip) return;
+        var favs  = getFavorites();
+        if (favs.length === 0) {
+          strip.innerHTML = '<p class="dash-favorites__empty" data-i18n="dash_favorites_empty">Star an app below to pin it here.</p>';
+          return;
+        }
+        strip.innerHTML = favs.map(function(id) {
+          var app = findApp(id);
+          if (!app) return '';
+          var iconHtml = app.icon
+            ? '<img class="dash-fav-pill__icon" src="' + app.icon + '" alt="' + escHtml(app.name) + '" width="28" height="28" loading="lazy">'
+            : '<div class="dash-fav-pill__icon dash-fav-pill__icon--text">' + app.emoji + '</div>';
+          return '<a class="dash-fav-pill" href="' + escHtml(app.href) + '">' +
+            '<span class="dash-fav-pill__star" aria-hidden="true">★</span>' +
+            iconHtml +
+            '<span class="dash-fav-pill__name">' + escHtml(app.name) + '</span>' +
+          '</a>';
+        }).filter(Boolean).join('');
+      }
+
+      /* ─────────────────────────────────────────────
+         APP ORDER
+         ───────────────────────────────────────────── */
+      function getOrder() { return lsGet(LS_ORDER, []); }
+      function setOrder(arr) { lsSet(LS_ORDER, arr); }
+
+      function getOrderedApps() {
+        var order = getOrder();
+        var ordered = [];
+        // First: apps in saved order
+        order.forEach(function(id) {
+          var app = findApp(id);
+          if (app) ordered.push(app);
+        });
+        // Then: apps not yet in order
+        APPS_MANIFEST.forEach(function(app) {
+          if (order.indexOf(app.id) === -1) ordered.push(app);
+        });
+        return ordered;
+      }
+
+      /* ─────────────────────────────────────────────
+         RUN DATA (sparklines + money saved)
+         ───────────────────────────────────────────── */
+      function getRunsForApp(appId) {
+        return lsGet(RUNS_PREFIX + appId, []);
+      }
+
+      function getTotalRuns() {
+        var total = 0;
+        APPS_MANIFEST.forEach(function(app) {
+          total += getRunsForApp(app.id).length;
+        });
+        // Also scan any unknown solace_runs_* keys
+        try {
+          for (var i = 0; i < localStorage.length; i++) {
+            var key = localStorage.key(i);
+            if (key && key.indexOf(RUNS_PREFIX) === 0) {
+              var knownId = key.slice(RUNS_PREFIX.length);
+              var isKnown = APPS_MANIFEST.some(function(a) { return a.id === knownId; });
+              if (!isKnown) {
+                total += lsGet(key, []).length;
+              }
+            }
+          }
+        } catch (_) {}
+        return total;
+      }
+
+      /* Get runs per day for last 7 days (array of 7 counts, index 0 = oldest) */
+      function getSparklineData(appId) {
+        var runs   = getRunsForApp(appId);
+        var now    = Date.now();
+        var counts = [0, 0, 0, 0, 0, 0, 0];
+        runs.forEach(function(run) {
+          var ts = typeof run === 'object' ? (run.ts || run.timestamp || 0) : Number(run);
+          var diffDays = Math.floor((now - ts) / 86400000);
+          if (diffDays >= 0 && diffDays < 7) {
+            counts[6 - diffDays]++;
+          }
+        });
+        return counts;
+      }
+
+      function buildSparkline(appId) {
+        var data = getSparklineData(appId);
+        var max  = Math.max.apply(null, data) || 1;
+        return '<div class="dash-sparkline" aria-hidden="true">' +
+          data.map(function(v, i) {
+            var h   = Math.round((v / max) * 100);
+            var cls = v === 0 ? 'dash-sparkline__bar dash-sparkline__bar--zero'
+                    : i === 6 ? 'dash-sparkline__bar dash-sparkline__bar--today'
+                    : 'dash-sparkline__bar';
+            return '<div class="' + cls + '" style="height:' + Math.max(h, 8) + '%" title="' + v + ' runs"></div>';
+          }).join('') +
+        '</div>';
+      }
+
+      /* ─────────────────────────────────────────────
+         RECENT RUNS (cross-app)
+         ───────────────────────────────────────────── */
+      function getRecentRuns() {
+        return lsGet(LS_RECENT_RUNS, []);
+      }
+
+      function renderRecentRuns() {
+        var list = document.getElementById('dash-recent-list');
+        if (!list) return;
+        var runs = getRecentRuns().slice(0, 5);
+        if (runs.length === 0) {
+          list.innerHTML = '<p class="dash-recent-empty" data-i18n="dash_recent_empty">No runs yet. Run an app to see activity here.</p>';
+          return;
+        }
+        list.innerHTML = runs.map(function(run) {
+          var app     = findApp(run.app_id) || { name: run.app_name || run.app_id || 'Unknown', icon: null, emoji: '🤖' };
+          var status  = run.status || 'completed';
+          var ts      = run.ts || run.timestamp || run.started_at || 0;
+          var timeStr = ts ? relativeTime(ts) : '';
+          var iconHtml = app.icon
+            ? '<img class="dash-recent-item__icon" src="' + app.icon + '" alt="' + escHtml(app.name) + '" width="32" height="32" loading="lazy">'
+            : '<div class="dash-recent-item__icon dash-recent-item__icon--text">' + app.emoji + '</div>';
+          return '<div class="dash-recent-item">' +
+            iconHtml +
+            '<div class="dash-recent-item__info">' +
+              '<div class="dash-recent-item__name">' + escHtml(app.name) + '</div>' +
+              '<div class="dash-recent-item__time">' + escHtml(timeStr) + '</div>' +
+            '</div>' +
+            '<span class="dash-recent-item__status dash-recent-item__status--' + escHtml(status) + '">' +
+              escHtml(status) +
+            '</span>' +
+          '</div>';
+        }).join('');
+      }
+
+      /* Also merge recent runs from individual solace_runs_* keys */
+      function mergeAndStoreRecentRuns() {
+        var all = [];
+        APPS_MANIFEST.forEach(function(app) {
+          var runs = getRunsForApp(app.id);
+          runs.forEach(function(run) {
+            var entry = typeof run === 'object' ? run : { ts: Number(run) };
+            all.push({
+              app_id:   app.id,
+              app_name: app.name,
+              ts:       entry.ts || entry.timestamp || 0,
+              status:   entry.status || 'completed'
+            });
+          });
+        });
+        // Also check LS_RECENT_RUNS for server-pushed entries
+        getRecentRuns().forEach(function(run) {
+          var already = all.some(function(r) { return r.ts === run.ts && r.app_id === run.app_id; });
+          if (!already) all.push(run);
+        });
+        all.sort(function(a, b) { return b.ts - a.ts; });
+        lsSet(LS_RECENT_RUNS, all.slice(0, 50));
+        renderRecentRuns();
+      }
+
+      /* ─────────────────────────────────────────────
+         APP ACTIVATION STATE
+         ───────────────────────────────────────────── */
+      function isActivated(appId) {
+        return localStorage.getItem(LS_ACTIVATED + appId) === '1';
+      }
+      function activateApp(appId) {
+        localStorage.setItem(LS_ACTIVATED + appId, '1');
+      }
+      function getActivatedCount() {
+        return APPS_MANIFEST.filter(function(a) { return isActivated(a.id); }).length;
+      }
+
+      /* ─────────────────────────────────────────────
+         APP CARDS RENDER
+         ───────────────────────────────────────────── */
+      function renderAppCards() {
+        var grid = document.getElementById('dash-apps-grid');
+        if (!grid) return;
+        var apps  = getOrderedApps();
+        var favs  = getFavorites();
+        grid.innerHTML = '';
+        apps.forEach(function(app) {
+          var active     = isActivated(app.id);
+          var card       = document.createElement('div');
+          card.className = 'dash-app-card' + (active ? '' : ' dash-app-card--inactive');
+          card.setAttribute('draggable', 'true');
+          card.dataset.appId = app.id;
+
+          var totalRuns = getRunsForApp(app.id).length;
+          var starred   = favs.indexOf(app.id) !== -1;
+          var iconHtml  = app.icon
+            ? '<img class="dash-app-card__icon" src="' + app.icon + '" alt="' + escHtml(app.name) + '" width="44" height="44" loading="lazy">'
+            : '<div class="dash-app-card__icon dash-app-card__icon--text" aria-hidden="true">' + app.emoji + '</div>';
+
+          var actionHtml = active
+            ? '<a class="dash-app-card__run" href="/app-detail?app=' + encodeURIComponent(app.id) + '" data-i18n="dash_action_run">Run</a>'
+            : '<a class="dash-app-card__setup-btn" href="/app-detail?app=' + encodeURIComponent(app.id) + '">Set Up</a>';
+
+          card.innerHTML =
+            iconHtml +
+            '<div class="dash-app-card__body">' +
+              '<p class="dash-app-card__name">' + escHtml(app.name) + '</p>' +
+              '<p class="dash-app-card__runs">' + (active ? totalRuns + ' run' + (totalRuns !== 1 ? 's' : '') : 'Needs setup') + '</p>' +
+              (active ? buildSparkline(app.id) : '') +
+            '</div>' +
+            '<button class="dash-app-card__star' + (starred ? ' starred' : '') + '"' +
+              ' data-app-id="' + escAttr(app.id) + '"' +
+              ' aria-label="' + (starred ? 'Remove from favorites' : 'Add to favorites') + '"' +
+              ' title="' + (starred ? 'Remove from favorites' : 'Add to favorites') + '"' +
+            '>★</button>' +
+            actionHtml;
+
+          // Star click
+          card.querySelector('.dash-app-card__star').addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFavorite(app.id);
+          });
+
+          // Drag events
+          card.addEventListener('dragstart', onDragStart);
+          card.addEventListener('dragend',   onDragEnd);
+          card.addEventListener('dragover',  onDragOver);
+          card.addEventListener('dragleave', onDragLeave);
+          card.addEventListener('drop',      onDrop);
+
+          grid.appendChild(card);
+        });
+      }
+
+      /* ─────────────────────────────────────────────
+         DRAG AND DROP
+         ───────────────────────────────────────────── */
+      var dragSrcId = null;
+
+      function onDragStart(e) {
+        dragSrcId = this.dataset.appId;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', dragSrcId);
+      }
+
+      function onDragEnd() {
+        this.classList.remove('dragging');
+        document.querySelectorAll('.dash-app-card.drag-over').forEach(function(el) {
+          el.classList.remove('drag-over');
+        });
+      }
+
+      function onDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (this.dataset.appId !== dragSrcId) {
+          this.classList.add('drag-over');
+        }
+      }
+
+      function onDragLeave() {
+        this.classList.remove('drag-over');
+      }
+
+      function onDrop(e) {
+        e.preventDefault();
+        this.classList.remove('drag-over');
+        var targetId = this.dataset.appId;
+        if (!dragSrcId || dragSrcId === targetId) return;
+
+        // Reorder in DOM
+        var grid = document.getElementById('dash-apps-grid');
+        var cards = Array.from(grid.querySelectorAll('.dash-app-card'));
+        var srcCard  = cards.find(function(c) { return c.dataset.appId === dragSrcId; });
+        var tgtCard  = cards.find(function(c) { return c.dataset.appId === targetId; });
+        if (!srcCard || !tgtCard) return;
+
+        // Insert before or after depending on position
+        var srcIndex = cards.indexOf(srcCard);
+        var tgtIndex = cards.indexOf(tgtCard);
+        if (srcIndex < tgtIndex) {
+          grid.insertBefore(srcCard, tgtCard.nextSibling);
+        } else {
+          grid.insertBefore(srcCard, tgtCard);
+        }
+
+        // Persist new order
+        var newOrder = Array.from(grid.querySelectorAll('.dash-app-card')).map(function(c) {
+          return c.dataset.appId;
+        });
+        setOrder(newOrder);
+        dragSrcId = null;
+      }
+
+      /* ─────────────────────────────────────────────
+         MONEY SAVED WIDGET
+         ───────────────────────────────────────────── */
+      function renderMoneySaved() {
+        var totalRuns = getTotalRuns();
+        var saved     = totalRuns * SAVINGS_PER_RUN;
+        var heroEl    = document.getElementById('dash-money-hero');
+        var runsEl    = document.getElementById('dash-total-runs');
+        if (heroEl) heroEl.textContent = '$' + saved.toFixed(2);
+        if (runsEl) runsEl.textContent = String(totalRuns);
+      }
+
+      /* ─────────────────────────────────────────────
+         UTILITIES
+         ───────────────────────────────────────────── */
+      function findApp(id) {
+        return APPS_MANIFEST.find(function(a) { return a.id === id; }) || null;
+      }
+
+      function escHtml(str) {
+        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      function escAttr(str) {
+        return String(str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+
+      function relativeTime(ts) {
+        var diff = Date.now() - ts;
+        if (diff < 60000)    return 'just now';
+        if (diff < 3600000)  return Math.floor(diff / 60000)   + 'm ago';
+        if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+        return Math.floor(diff / 86400000) + 'd ago';
+      }
+
+      /* ─────────────────────────────────────────────
+         GREETING
+         ───────────────────────────────────────────── */
+      function setGreeting() {
+        var h      = new Date().getHours();
+        var period = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+        var el     = document.getElementById('dash-hello');
+        var name   = (localStorage.getItem('solace_user_email') || '').split('@')[0];
+        if (name) {
+          el.textContent = 'Good ' + period + ', ' + name + '!';
+        } else {
+          el.textContent = 'Good ' + period + '!';
+        }
+      }
+
+      /* ─────────────────────────────────────────────
+         BROWSER STATUS
+         ───────────────────────────────────────────── */
       async function loadStatus() {
         try {
           var r = await fetch(API + '/api/status', { signal: controller.signal });
           var s = await r.json();
-          var dot = document.getElementById('status-dot');
+          var dot  = document.getElementById('status-dot');
           var text = document.getElementById('status-text');
           if (s.running) {
-            dot.className = 'home-status-bar__dot';
+            dot.className  = 'home-status-bar__dot';
             text.textContent = 'Browser running';
           } else {
-            dot.className = 'home-status-bar__dot home-status-bar__dot--offline';
+            dot.className  = 'home-status-bar__dot home-status-bar__dot--offline';
             text.textContent = 'Browser offline';
           }
           var modeItem = document.getElementById('status-mode-item');
           var modeText = document.getElementById('status-mode');
           if (modeItem) {
             modeItem.style.display = 'flex';
-            modeText.textContent = s.headless !== false ? 'Headless' : 'Headed';
+            modeText.textContent   = s.headless !== false ? 'Headless' : 'Headed';
           }
         } catch (_) {
-          var dot2 = document.getElementById('status-dot');
+          var dot2  = document.getElementById('status-dot');
           var text2 = document.getElementById('status-text');
-          if (dot2) dot2.className = 'home-status-bar__dot home-status-bar__dot--offline';
+          if (dot2)  dot2.className    = 'home-status-bar__dot home-status-bar__dot--offline';
           if (text2) text2.textContent = 'Browser offline';
         }
       }
 
       async function loadAppCount() {
         try {
-          var r = await fetch(API + '/api/apps', { signal: controller.signal });
-          var d = await r.json();
+          var r     = await fetch(API + '/api/apps', { signal: controller.signal });
+          var d     = await r.json();
           var count = Array.isArray(d.apps) ? d.apps.length : 0;
-          var item = document.getElementById('status-apps-item');
-          var el = document.getElementById('status-apps-count');
+          var item  = document.getElementById('status-apps-item');
+          var el    = document.getElementById('status-apps-count');
           if (item && count > 0) {
             item.style.display = 'flex';
-            el.textContent = count;
+            el.textContent     = count;
           }
-        } catch (_) { /* offline — status bar already shows offline */ }
+        } catch (_) {}
+      }
+
+      /* ─────────────────────────────────────────────
+         SCHEDULE
+         ───────────────────────────────────────────── */
+      async function loadSchedule() {
+        try {
+          var r     = await fetch('/api/schedule', { signal: controller.signal });
+          var d     = await r.json();
+          var el    = document.getElementById('dash-schedule');
+          var items = d.schedules || d.jobs || [];
+          if (items.length > 0) {
+            el.innerHTML = items.slice(0, 3).map(function(s) {
+              return '<div class="dash-schedule-item">' +
+                '<span class="dash-schedule-item__name">' + escHtml(s.app_name || s.app_id || '') + '</span>' +
+                '<span class="dash-schedule-item__cron">' + escHtml(s.cron || s.schedule || '') + '</span>' +
+              '</div>';
+            }).join('');
+          }
+        } catch (_) {}
+      }
+
+      /* ─────────────────────────────────────────────
+         SIGN-OFF QUEUE
+         ───────────────────────────────────────────── */
+      async function loadSignoff() {
+        try {
+          var r     = await fetch('/api/signoff-queue', { signal: controller.signal });
+          var d     = await r.json();
+          var el    = document.getElementById('dash-signoff');
+          var items = d.items || d.queue || [];
+          if (items.length > 0) {
+            el.innerHTML = items.slice(0, 3).map(function(s) {
+              return '<div class="dash-signoff-item">' +
+                '<span class="dash-signoff-item__name">' + escHtml(s.app_name || s.title || '') + '</span>' +
+                '<a href="/schedule#approve" class="dash-signoff-item__btn">Review</a>' +
+              '</div>';
+            }).join('');
+          }
+        } catch (_) {}
+      }
+
+      /* ─────────────────────────────────────────────
+         FIRST-TIME ONBOARDING — YinYang guided walkthrough (Paper 24)
+         ───────────────────────────────────────────── */
+      function renderOnboarding() {
+        var el = document.getElementById('dash-onboarding');
+        var quickActions = document.getElementById('dash-quick-actions');
+        if (!el) return;
+
+        var activated = getActivatedCount();
+        var total = APPS_MANIFEST.length;
+        var dismissed = localStorage.getItem(LS_ONBOARD_DONE) === '1';
+
+        // Show Quick Actions only when at least 1 app is activated
+        if (quickActions) {
+          quickActions.style.display = activated > 0 ? '' : 'none';
+        }
+
+        // Hide onboarding if all activated or dismissed
+        if (activated >= total || dismissed) {
+          el.style.display = 'none';
+          return;
+        }
+
+        el.style.display = 'block';
+
+        var steps = document.getElementById('dash-onboarding-steps');
+
+        // YinYang conversational messages based on progress
+        var yyMsg = '';
+        if (activated === 0) {
+          yyMsg = 'Pick any app below to set it up. Each one takes about 30 seconds — I\'ll walk you through it.';
+        } else if (activated < total) {
+          yyMsg = 'Nice! ' + activated + ' of ' + total + ' apps ready. ' + (total - activated) + ' more to go — or I can set up the rest for you.';
+        }
+
+        var stepsHtml = '';
+
+        // Progress bar
+        var pct = Math.round((activated / total) * 100);
+        stepsHtml += '<div style="margin-bottom:10px">' +
+          '<div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--sb-text-muted);margin-bottom:4px">' +
+            '<span>' + activated + ' of ' + total + ' apps activated</span>' +
+            '<span>' + pct + '%</span>' +
+          '</div>' +
+          '<div style="height:6px;background:var(--sb-surface-strong,#172335);border-radius:3px;overflow:hidden">' +
+            '<div style="height:100%;width:' + pct + '%;background:var(--sb-success,#46d9a7);border-radius:3px;transition:width 0.4s ease"></div>' +
+          '</div>' +
+        '</div>';
+
+        // App quick-setup cards (greyed apps only)
+        var inactiveApps = APPS_MANIFEST.filter(function(a) { return !isActivated(a.id); });
+        if (inactiveApps.length > 0) {
+          stepsHtml += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
+          inactiveApps.forEach(function(app) {
+            stepsHtml += '<a href="/app-detail?app=' + encodeURIComponent(app.id) + '" ' +
+              'style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--sb-surface,#0f1825);' +
+              'border:1px solid var(--sb-border,rgba(163,185,214,0.18));border-radius:8px;text-decoration:none;color:inherit;font-size:0.78rem;transition:border-color 0.15s"' +
+              ' onmouseover="this.style.borderColor=\'var(--sb-signal,#64c4ff)\'" onmouseout="this.style.borderColor=\'var(--sb-border,rgba(163,185,214,0.18))\'">' +
+              '<span>' + app.emoji + '</span>' +
+              '<span style="font-weight:600;color:var(--sb-text)">' + escHtml(app.name) + '</span>' +
+              '<span style="color:var(--sb-signal,#64c4ff);font-weight:700;font-size:0.72rem">Set Up</span>' +
+            '</a>';
+          });
+          stepsHtml += '</div>';
+        }
+
+        // AI agent auto-setup option
+        stepsHtml += '<div class="dash-onboarding__step">' +
+          '<span class="dash-onboarding__check" style="background:var(--sb-signal,#64c4ff);border-color:var(--sb-signal,#64c4ff);color:#0a0f1a;font-size:0.65rem">AI</span>' +
+          '<span>Or let your AI agent do it all: <code style="font-size:0.75rem;background:var(--sb-surface-strong);padding:2px 6px;border-radius:4px">solace apps setup --all</code></span></div>';
+
+        // Update YinYang message
+        var subEl = el.querySelector('.dash-onboarding__sub');
+        if (subEl) subEl.textContent = yyMsg;
+
+        steps.innerHTML = stepsHtml;
+
+        // Dismiss button
+        var dismissBtn = document.getElementById('dash-onboarding-dismiss');
+        if (dismissBtn && !dismissBtn._bound) {
+          dismissBtn._bound = true;
+          dismissBtn.addEventListener('click', function() {
+            localStorage.setItem(LS_ONBOARD_DONE, '1');
+            el.style.display = 'none';
+            if (quickActions) quickActions.style.display = '';
+          });
+        }
+      }
+
+      /* ─────────────────────────────────────────────
+         BOOT
+         ───────────────────────────────────────────── */
+      function boot() {
+        setGreeting();
+        renderOnboarding();
+        renderMoneySaved();
+        renderAppCards();
+        renderFavoritesStrip();
+        mergeAndStoreRecentRuns();
+        loadStatus();
+        loadAppCount();
+        loadSchedule();
+        loadSignoff();
       }
 
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-          loadStatus();
-          loadAppCount();
-        });
+        document.addEventListener('DOMContentLoaded', boot);
       } else {
-        loadStatus();
-        loadAppCount();
+        boot();
       }
 
-      // Refresh status every 30s (Linus: use AbortController for cleanup)
       var interval = setInterval(loadStatus, 30000);
       window.addEventListener('beforeunload', function() {
         clearInterval(interval);

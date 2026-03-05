@@ -37,25 +37,38 @@
       <a href="https://github.com/solaceagi/solace-browser/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener" data-i18n="footer_contributing">Contributing</a>
       <a href="https://github.com/solaceagi/solace-browser/blob/main/SECURITY.md" target="_blank" rel="noopener" data-i18n="footer_security">Security</a>
     </div>
-    <div class="footer-section">
-      <h3 data-i18n="footer_languages">Languages</h3>
-      <a role="button" tabindex="0" data-locale="en">English</a>
-      <a role="button" tabindex="0" data-locale="es">Español</a>
-      <a role="button" tabindex="0" data-locale="vi">Tiếng Việt</a>
-      <a role="button" tabindex="0" data-locale="zh">中文</a>
-      <a role="button" tabindex="0" data-locale="pt">Português</a>
-      <a role="button" tabindex="0" data-locale="fr">Français</a>
-      <a role="button" tabindex="0" data-locale="ja">日本語</a>
-      <a role="button" tabindex="0" data-locale="de">Deutsch</a>
-      <a role="button" tabindex="0" data-locale="ar">العربية</a>
-      <a role="button" tabindex="0" data-locale="hi">हिंदी</a>
-      <a role="button" tabindex="0" data-locale="ko">한국어</a>
-      <a role="button" tabindex="0" data-locale="id">Bahasa Indonesia</a>
-      <a role="button" tabindex="0" data-locale="ru">Русский</a>
-    </div>
   </div>
   <div class="site-footer__bottom">
     <p><strong>Solace Browser</strong> — Your accounts. Your machine. Your approval.</p>
+    <p>Need help? <a href="mailto:support@solaceagi.com">Contact support@solaceagi.com</a></p>
     <p>© <span data-current-year></span> Phuc Labs. Source-available under <a href="https://github.com/solaceagi/solace-browser/blob/main/LICENSE" target="_blank" rel="noopener">FSL-1.1-Apache-2.0</a>.</p>
   </div>
 </footer>
+
+<!-- ── Cookie Consent Banner (GDPR) ── -->
+<div id="cookie-consent-banner" class="cookie-consent" style="display:none;" role="dialog" aria-label="Cookie consent">
+  <div class="cookie-consent__inner">
+    <p>We use essential cookies to make Solace Browser work. We do not use tracking or advertising cookies. By clicking "Accept" you consent to essential cookies. <a href="https://www.solaceagi.com/privacy" target="_blank" rel="noopener">Privacy Policy</a></p>
+    <div class="cookie-consent__actions">
+      <button id="cookie-accept" class="btn btn-primary" type="button">Accept</button>
+      <button id="cookie-decline" class="btn btn-secondary" type="button">Decline</button>
+    </div>
+  </div>
+</div>
+<script>
+(function() {
+  var consent = localStorage.getItem('solace_cookie_consent');
+  if (consent !== null) return; // already answered
+  var banner = document.getElementById('cookie-consent-banner');
+  if (!banner) return;
+  banner.style.display = 'block';
+  document.getElementById('cookie-accept').addEventListener('click', function() {
+    localStorage.setItem('solace_cookie_consent', 'accepted');
+    banner.style.display = 'none';
+  });
+  document.getElementById('cookie-decline').addEventListener('click', function() {
+    localStorage.setItem('solace_cookie_consent', 'declined');
+    banner.style.display = 'none';
+  });
+})();
+</script>

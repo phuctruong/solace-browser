@@ -1,3 +1,556 @@
+# Gmail Inbox Triage — Complete Reference Defaults (Phuc Truong)
+# Replace these with your own settings. YinYang uses these to personalize your triage.
+# Last updated: 2026-03-04 | Auth: 65537 | GLOW: 124
+# DNA: gmail_triage(inbox) = classify × prioritize × draft × seal → zero_inbox
+#
+# This file is the REFERENCE CONFIG — every possible customization documented.
+# Users can copy this and modify for their own workflow.
+
 enabled: true
-window: last_7_days
-tone: neutral_professional
+
+# ═══════════════════════════════════════════════════════════════
+# 1. ACCOUNT
+# ═══════════════════════════════════════════════════════════════
+email: phuc@phuc.net
+scan_window: last_7_days          # last_1h | last_24h | last_7_days | last_30_days | all
+max_emails: 20                    # 10 | 20 | 50 | 100
+labels_to_scan:
+  - INBOX
+  - IMPORTANT
+  - STARRED
+skip_labels:                      # labels to NEVER scan
+  - TRASH
+  - SPAM
+  - DRAFTS
+  - SENT
+
+# ═══════════════════════════════════════════════════════════════
+# 2. AI BACKEND — which CLI + model powers this app (P6 + ABCD)
+#    Solace Browser auto-detects installed CLIs on startup.
+#    Pick the best cost/quality combo per task class.
+# ═══════════════════════════════════════════════════════════════
+ai_backend:
+  # Primary agent for email classification + reply drafting
+  primary:
+    agent: claude                 # claude | codex | gemini | copilot | antigravity | cursor | aider
+    model: claude-sonnet-4-6      # see /api/cli-agents for available models
+    timeout_seconds: 60
+
+  # Fallback if primary agent is unavailable
+  fallback:
+    agent: gemini
+    model: gemini-2.5-flash
+    timeout_seconds: 30
+
+  # ABCD testing — find cheapest model per task class
+  abcd:
+    enabled: true
+    test_interval: weekly         # daily | weekly | monthly | manual
+    task_classes:
+      classify:
+        description: "Email priority classification (urgent/high/medium/low/archive)"
+        models:
+          - { agent: claude, model: claude-haiku-4-5-20251001, cost_per_1m: 0.25 }
+          - { agent: gemini, model: gemini-2.5-flash, cost_per_1m: 0.15 }
+          - { agent: codex, model: gpt-4.1-mini, cost_per_1m: 0.40 }
+          - { agent: aider, model: deepseek-v3, cost_per_1m: 0.14 }
+        quality_threshold: 0.9
+        winner: null              # auto-filled after ABCD test
+      draft_reply:
+        description: "Draft email reply matching tone + context"
+        models:
+          - { agent: claude, model: claude-sonnet-4-6, cost_per_1m: 3.00 }
+          - { agent: codex, model: gpt-4.1, cost_per_1m: 2.00 }
+          - { agent: gemini, model: gemini-2.5-pro, cost_per_1m: 1.25 }
+          - { agent: aider, model: claude-sonnet-4-6, cost_per_1m: 3.00 }
+        quality_threshold: 0.85
+        winner: null
+      summarize:
+        description: "Summarize email thread for quick review"
+        models:
+          - { agent: claude, model: claude-haiku-4-5-20251001, cost_per_1m: 0.25 }
+          - { agent: gemini, model: gemini-2.5-flash, cost_per_1m: 0.15 }
+          - { agent: codex, model: gpt-4.1-mini, cost_per_1m: 0.40 }
+        quality_threshold: 0.8
+        winner: null
+
+# ═══════════════════════════════════════════════════════════════
+# 3. REPLY BEHAVIOR
+# ═══════════════════════════════════════════════════════════════
+reply_tone: neutral_professional  # casual | neutral_professional | formal | friendly_brief | helpful
+max_drafts_per_run: 5             # 1-20
+language: en                      # en | es | fr | de | ja | zh | ko | pt | ar | hi | ru | vi | th
+max_reply_length: 200             # max words per reply
+include_greeting: true            # "Hi {first_name},"
+include_sign_off: true            # signature block
+
+signature: |
+  Best,
+  Phuc
+  Founder, Solace AGI
+  https://solaceagi.com
+
+signature_casual: |
+  - Phuc
+
+signature_investor: |
+  Best regards,
+  Phuc Truong
+  Founder & CEO, Solace AGI
+  https://solaceagi.com | @phuctruong
+
+# ═══════════════════════════════════════════════════════════════
+# 4. PRIORITY CONTACTS — always float to top, always draft reply
+# ═══════════════════════════════════════════════════════════════
+priority_contacts:
+  # ── Family (critical — respond immediately) ──
+  - pattern: "tyson@phuc.net"
+    label: "Family"
+    priority: critical
+    action: always_draft_reply
+    tone: casual
+    signature: signature_casual
+    note: "Phuc's son Tyson — always respond immediately"
+  - pattern: "*@phuc.net"
+    label: "Family"
+    priority: critical
+    action: always_draft_reply
+    tone: casual
+    signature: signature_casual
+
+  # ── Investors (high — respond within 2h) ──
+  - pattern: "*@ycombinator.com"
+    label: "Investors"
+    priority: high
+    action: always_draft_reply
+    tone: professional_warm
+    signature: signature_investor
+    sla_hours: 2
+  - pattern: "*@investorcorp.vc"
+    label: "Investors"
+    priority: high
+    action: always_draft_reply
+    tone: professional_warm
+    signature: signature_investor
+  - pattern: "*@sequoiacap.com"
+    label: "Investors"
+    priority: high
+    action: always_draft_reply
+    tone: professional_warm
+    signature: signature_investor
+  - pattern: "*@a16z.com"
+    label: "Investors"
+    priority: high
+    action: always_draft_reply
+    tone: professional_warm
+    signature: signature_investor
+
+  # ── Partners (high — respond within 4h) ──
+  - pattern: "*@anthropic.com"
+    label: "Partners"
+    priority: high
+    action: always_draft_reply
+    tone: professional_warm
+    sla_hours: 4
+  - pattern: "*@google.com subject:partnership|collaboration"
+    label: "Partners"
+    priority: high
+    action: always_draft_reply
+    tone: professional_warm
+
+  # ── Team (medium — respond same day) ──
+  - pattern: "*@solaceagi.com"
+    label: "Team"
+    priority: medium
+    action: always_draft_reply
+    tone: casual
+
+# ═══════════════════════════════════════════════════════════════
+# 5. ARCHIVE RULES — auto-categorize noise
+# ═══════════════════════════════════════════════════════════════
+archive_rules:
+  # ── GitHub ──
+  - match: "from:notifications@github.com"
+    action: archive
+    label: "GitHub Notifications"
+    reason: "Auto-generated notifications"
+  - match: "from:noreply@github.com"
+    action: archive
+    label: "GitHub Automated"
+  - match: "from:notifications@github.com subject:review requested"
+    action: flag
+    label: "GitHub Reviews"
+    reason: "Code reviews need attention"
+    override: true
+
+  # ── LinkedIn ──
+  - match: "from:*@linkedin.com subject:connection|endorsement|anniversary"
+    action: archive
+    label: "LinkedIn Noise"
+  - match: "from:*@linkedin.com subject:invitation"
+    action: flag
+    label: "LinkedIn Connections"
+    reason: "May want to accept"
+  - match: "from:*@linkedin.com subject:message from"
+    action: flag
+    label: "LinkedIn Messages"
+    reason: "Direct messages — may be important"
+
+  # ── Billing & Receipts ──
+  - match: "from:*@google.com subject:usage|billing|invoice|alert"
+    action: archive
+    label: "Google Billing"
+  - match: "from:*@stripe.com subject:invoice|receipt"
+    action: archive
+    label: "Stripe Billing"
+  - match: "from:*@cloudflare.com"
+    action: archive
+    label: "Cloudflare"
+
+  # ── Newsletters & Marketing ──
+  - match: "from:*newsletter*"
+    action: archive
+    label: "Newsletters"
+  - match: "from:noreply@*"
+    action: archive
+    label: "Automated"
+  - match: "subject:unsubscribe"
+    action: archive
+    label: "Marketing"
+  - match: "from:*@substack.com"
+    action: archive
+    label: "Substack"
+    reason: "Batch-read newsletters weekly"
+
+  # ── Calendar ──
+  - match: "from:calendar-notification@google.com"
+    action: skip
+    label: "Calendar"
+    reason: "Calendar notifications handled separately"
+
+  # ── Security Alerts (never archive — always flag) ──
+  - match: "subject:security alert|suspicious sign-in|password reset"
+    action: flag_high
+    label: "Security"
+    reason: "Security alerts are never noise"
+
+# ═══════════════════════════════════════════════════════════════
+# 6. REPLY PROMPTS — templates for different contexts
+# ═══════════════════════════════════════════════════════════════
+reply_prompts:
+  investor:
+    tone: professional_warm
+    max_length: 150
+    template: |
+      Hi {first_name},
+
+      Thank you for reaching out. {context_response}
+
+      Best regards,
+      Phuc
+  family:
+    tone: casual
+    max_length: 50
+    template: "{context_response}"
+  business:
+    tone: neutral_professional
+    max_length: 200
+    template: |
+      Hi {first_name},
+
+      {context_response}
+
+      Best,
+      Phuc
+      Founder, Solace AGI
+  cold_outreach:
+    tone: friendly_brief
+    max_length: 100
+    template: |
+      Hi {first_name},
+
+      Thanks for reaching out! {context_response}
+
+      Phuc
+  support:
+    tone: helpful
+    max_length: 200
+    template: |
+      Hi {first_name},
+
+      {context_response}
+
+      Let me know if you have any other questions.
+
+      Best,
+      Phuc
+  decline:
+    tone: warm_but_firm
+    max_length: 80
+    template: |
+      Hi {first_name},
+
+      Thank you for thinking of me. {context_response}
+
+      Best,
+      Phuc
+  follow_up:
+    tone: professional_warm
+    max_length: 120
+    template: |
+      Hi {first_name},
+
+      Just following up on my previous message. {context_response}
+
+      Best,
+      Phuc
+
+# ═══════════════════════════════════════════════════════════════
+# 7. AUTO-ATTACHMENTS — attach files based on email context
+# ═══════════════════════════════════════════════════════════════
+auto_attachments:
+  - trigger: "pitch|deck|presentation|demo"
+    file: "assets/solace-pitch-deck-2026.pdf"
+    note: "Attach pitch deck for investor/partner meetings"
+  - trigger: "resume|cv|bio|about you"
+    file: "assets/phuc-bio.md"
+    note: "Attach bio for press/partnerships"
+  - trigger: "pricing|plan|cost|subscription"
+    file: "assets/solace-pricing-2026.pdf"
+    note: "Attach pricing sheet"
+  - trigger: "one-pager|overview|summary"
+    file: "assets/solace-one-pager.pdf"
+    note: "Attach product one-pager"
+
+# ═══════════════════════════════════════════════════════════════
+# 8. SMART CATEGORIZATION — keyword-based classification
+# ═══════════════════════════════════════════════════════════════
+categories:
+  urgent:
+    keywords: ["urgent", "asap", "emergency", "deadline", "today", "eod", "critical"]
+    action: flag_high
+    sla_minutes: 30
+  meeting:
+    keywords: ["meeting", "call", "zoom", "schedule", "calendar", "invite", "agenda"]
+    action: flag_medium
+  financial:
+    keywords: ["invoice", "payment", "billing", "receipt", "tax", "wire", "ach"]
+    action: archive_label
+    label: "Financial"
+  hiring:
+    keywords: ["application", "candidate", "interview", "resume", "offer", "compensation"]
+    action: flag_medium
+    label: "Hiring"
+  legal:
+    keywords: ["agreement", "contract", "nda", "terms", "compliance", "subpoena"]
+    action: flag_high
+    label: "Legal"
+    note: "Legal emails always need human review"
+  press:
+    keywords: ["press", "media", "journalist", "interview request", "article", "coverage"]
+    action: flag_medium
+    label: "Press"
+  feedback:
+    keywords: ["feedback", "bug report", "feature request", "suggestion", "complaint"]
+    action: flag_medium
+    label: "Feedback"
+
+# ═══════════════════════════════════════════════════════════════
+# 9. FOLLOW-UP TRACKING
+# ═══════════════════════════════════════════════════════════════
+follow_up:
+  enabled: true
+  track_sent: true                # track emails you sent that got no reply
+  stale_after_days: 3             # flag if no response after N days
+  auto_follow_up: false           # auto-draft follow-up (requires approval)
+  max_follow_ups: 2               # max auto-follow-ups per thread
+  exclude_labels:
+    - "Newsletters"
+    - "Automated"
+    - "GitHub Notifications"
+
+# ═══════════════════════════════════════════════════════════════
+# 10. SNOOZE RULES
+# ═══════════════════════════════════════════════════════════════
+snooze:
+  enabled: true
+  default_duration: "tomorrow_8am"  # tomorrow_8am | in_3_hours | next_monday | custom
+  auto_snooze:
+    - match: "from:*@linkedin.com subject:weekly digest"
+      until: "next_monday"
+    - match: "subject:newsletter|weekly roundup"
+      until: "saturday_9am"
+
+# ═══════════════════════════════════════════════════════════════
+# 11. DIGEST MODE — batch low-priority into summary
+# ═══════════════════════════════════════════════════════════════
+digest:
+  enabled: true
+  frequency: daily                # hourly | daily | weekly
+  time: "08:00"
+  timezone: "America/Los_Angeles"
+  include_labels:
+    - "Newsletters"
+    - "GitHub Notifications"
+    - "Automated"
+    - "LinkedIn Noise"
+  max_items: 25
+  format: summary                 # summary | full | headlines_only
+
+# ═══════════════════════════════════════════════════════════════
+# 12. THREAD HANDLING
+# ═══════════════════════════════════════════════════════════════
+threads:
+  collapse_long: true             # collapse threads > N messages
+  collapse_threshold: 5           # messages before collapsing
+  show_summary: true              # show AI summary of collapsed threads
+  quote_style: trimmed            # full | trimmed | none
+
+# ═══════════════════════════════════════════════════════════════
+# 13. BOUNCE & ERROR DETECTION
+# ═══════════════════════════════════════════════════════════════
+bounce_detection:
+  enabled: true
+  patterns:
+    - "delivery status notification"
+    - "undeliverable"
+    - "mailbox full"
+    - "address not found"
+    - "550 5.1.1"
+  action: flag_high
+  label: "Bounced"
+  note: "Update contact records when detected"
+
+# ═══════════════════════════════════════════════════════════════
+# 14. VIP AUTO-ESCALATION
+# ═══════════════════════════════════════════════════════════════
+vip_escalation:
+  enabled: true
+  notify_channel: null            # slack_channel_id | null (local notification only)
+  escalation_rules:
+    - from: "*@ycombinator.com"
+      if_no_reply_within_hours: 4
+      action: push_notification
+    - from: "*@anthropic.com"
+      if_no_reply_within_hours: 8
+      action: push_notification
+    - from: "tyson@phuc.net"
+      if_no_reply_within_hours: 1
+      action: push_notification
+      note: "Family first — always"
+
+# ═══════════════════════════════════════════════════════════════
+# 15. CUSTOM LABELS MAPPING
+# ═══════════════════════════════════════════════════════════════
+custom_labels:
+  "Action Required": { color: "red", auto_apply_if: "urgent|action needed|please respond" }
+  "FYI Only": { color: "blue", auto_apply_if: "fyi|no action|for your information" }
+  "Waiting on Reply": { color: "yellow", auto_apply_if_sent: true }
+  "Delegated": { color: "purple", auto_apply_if: "forwarded to|cc'd|delegating" }
+
+# ═══════════════════════════════════════════════════════════════
+# 16. ATTACHMENT HANDLING
+# ═══════════════════════════════════════════════════════════════
+attachments:
+  auto_save: false                # auto-save attachments to drive
+  save_path: "~/Documents/Solace/Gmail Attachments/{label}/{date}"
+  max_size_mb: 25
+  block_extensions:               # never download these
+    - ".exe"
+    - ".bat"
+    - ".cmd"
+    - ".scr"
+  scan_for_malware: true
+  extract_text: true              # OCR/extract text from PDFs for context
+
+# ═══════════════════════════════════════════════════════════════
+# 17. BUDGET & SAFETY
+# ═══════════════════════════════════════════════════════════════
+budget_per_run_usd: 0.10
+max_actions_per_run: 50
+require_approval: true            # true | high_risk_only | false
+approval_timeout_minutes: 60      # auto-cancel unapproved actions after N min
+safety_rating: B                  # A (read-only) | B (draft only) | C (send enabled)
+
+# ═══════════════════════════════════════════════════════════════
+# 18. KEEP ALIVE
+# ═══════════════════════════════════════════════════════════════
+keep_alive_url: "https://mail.google.com/mail/u/0/#inbox"
+keep_alive_interval_min: 20
+
+# ═══════════════════════════════════════════════════════════════
+# 19. SCHEDULE
+# ═══════════════════════════════════════════════════════════════
+schedule: "daily@08:00"
+schedule_timezone: "America/Los_Angeles"
+schedule_days:                    # which days to run (empty = every day)
+  - monday
+  - tuesday
+  - wednesday
+  - thursday
+  - friday
+quiet_hours:                      # never run during these hours
+  start: "22:00"
+  end: "06:00"
+
+# ═══════════════════════════════════════════════════════════════
+# 20. EVIDENCE & COMPLIANCE (Part 11)
+# ═══════════════════════════════════════════════════════════════
+evidence_level: full              # none | basic | full
+hash_algorithm: sha256
+retain_screenshots: true
+retain_days: 90
+evidence_chain: true              # hash-chain evidence for Part 11 compliance
+esign_required: true              # require e-sign attestation for send actions
+
+# ═══════════════════════════════════════════════════════════════
+# 21. OAUTH3 SCOPES REQUIRED
+# ═══════════════════════════════════════════════════════════════
+scopes:
+  - gmail.read.inbox
+  - gmail.draft.create
+  - gmail.label.manage
+  - local.evidence
+
+# ═══════════════════════════════════════════════════════════════
+# 22. UPLIFT SKILLS ACTIVE (P1-P38 injection into LLM prompts)
+# ═══════════════════════════════════════════════════════════════
+uplift_skills:
+  # P1: Gamification — track triage score per run
+  gamification: true
+  # P2: Magic Words — DNA equation in system prompt
+  magic_words: true
+  # P3: Personas — use persona perspective for reply tone
+  personas: true
+  persona_for_classify: "james_bach"     # QA perspective for classification
+  persona_for_reply: "vanessa_van_edwards"  # EQ perspective for reply drafting
+  # P5: Recipes — replay successful triage patterns
+  recipes: true
+  # P8: Care — warm, honest, Anti-Clippy
+  care: true
+  # P11: Questions — probe for missing context before replying
+  questions: true
+  # P12: Analogies — bridge unfamiliar topics
+  analogies: true
+  # P13: Constraints — binary classification, no fuzzy answers
+  constraints: true
+  # P14: Chain-of-thought — reason through classification
+  chain_of_thought: true
+  # P15: Few-shot — include 3 example classifications
+  few_shot: true
+  # P16: Negative space — detect what's missing from emails
+  negative_space: true
+  # P17: Stakes — "this is the CEO's inbox"
+  stakes: true
+  # P18: Audience — "writing as a startup founder"
+  audience: true
+  # P19: Compression — concise replies
+  compression: true
+  # P20: Temporal — consider email age and urgency
+  temporal: true
+  # P21: Adversarial — detect phishing, scams, manipulation
+  adversarial: true
+  # P22: LEAK — predict what context the LLM is missing
+  leak_prediction: true
+  # P23: Breathing — expand then compress for portal quality
+  breathing: true
