@@ -1,309 +1,475 @@
 /**
- * onboarding.js — Solace Browser onboarding wizard
+ * onboarding.js — Solace Browser first-run LLM setup
  *
- * Committee panel: Jony Ive (design) + Russell Brunson (funnel) +
- *   Vanessa Van Edwards (warmth) + Rory Sutherland (reframing) + Seth Godin (remarkable)
+ * 4 paths offered:
+ *   1. Auto-Detect AI Agents — scans for installed CLIs, auto-mounts webservices
+ *   2. AI Agent Mode (MCP) — manual MCP config
+ *   3. BYOK — paste your own API key (free forever)
+ *   4. Managed — Solace handles it ($8/mo Starter)
  *
- * Shows a 3-step overlay wizard when the user hasn't set up their LLM yet:
- *   Step 1: Welcome (shows if logged in, greets by name)
- *   Step 2: Choose power source — BYOK or Managed ($8/mo)
- *   Step 3: Ready! — App Store CTA
+ * On first boot: auto-detect runs automatically, shows activation cards.
+ * Cache persists in ~/.solace/cli-agents-cache.json (server) + localStorage (client).
  *
- * Skipped if: localStorage.solace_llm_configured === '1'
- * Forced: add ?onboard=1 to any URL to re-show
+ * Storage: localStorage['solace_llm_configured'] = '1'
+ * Force re-show: ?onboard=1
  */
 
 (function () {
   'use strict';
 
   var STORAGE_KEY = 'solace_llm_configured';
+  var AGENTS_KEY = 'solace_cli_agents';
   var CLOUD = 'https://www.solaceagi.com';
 
   function shouldShow() {
     var params = new URLSearchParams(window.location.search);
     if (params.get('onboard') === '1') return true;
-    return !localStorage.getItem(STORAGE_KEY);
+    if (localStorage.getItem(STORAGE_KEY) === '1') return false;
+    if (localStorage.getItem('sb_tutorial_v1') === 'done') return false;
+    var path = window.location.pathname.replace(/\/$/, '') || '/';
+    if (path !== '/' && path !== '/home') return false;
+    return true;
   }
 
-  function getUser() {
-    return {
-      name: (localStorage.getItem('solace_user_email') || '').split('@')[0] || '',
-      email: localStorage.getItem('solace_user_email') || '',
-      key: localStorage.getItem('solace_api_key') || '',
-    };
-  }
-
-  // ── CSS ─────────────────────────────────────────────────────────────────────
   var CSS = `
     #sbOnboard {
       position: fixed; inset: 0; z-index: 9999;
-      background: rgba(2,8,18,0.88);
-      backdrop-filter: blur(8px);
+      background: rgba(2,8,18,0.92);
+      backdrop-filter: blur(12px);
       display: flex; align-items: center; justify-content: center;
       padding: 24px;
-      animation: sbFadeIn 0.25s ease;
+      opacity: 0; transition: opacity 0.3s ease;
     }
-    @keyframes sbFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    #sbOnboard.is-visible { opacity: 1; }
+    #sbOnboard.is-exit { opacity: 0; }
 
     #sbOnboardCard {
       background: linear-gradient(160deg, #0d1a26 0%, #081019 100%);
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 20px;
-      padding: 40px 44px;
-      max-width: 540px;
+      padding: 32px 36px;
+      max-width: 520px;
       width: 100%;
-      box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,200,150,0.08);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
       position: relative;
+      transform: translateY(20px); opacity: 0;
+      transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+    #sbOnboard.is-visible #sbOnboardCard {
+      transform: translateY(0); opacity: 1;
     }
 
-    #sbOnboardCard .ob-logo {
-      display: block; margin: 0 auto 20px;
-      width: 160px; height: auto; border-radius: 14px;
-      box-shadow: 0 0 24px rgba(0,200,150,0.25);
+    .ob-yy {
+      display: block; margin: 0 auto 12px;
+      width: 64px; height: 64px;
+      border-radius: 50%; overflow: hidden;
+      box-shadow: 0 0 24px rgba(100,196,255,0.25);
     }
+    .ob-yy img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 
-    #sbOnboardCard h2 {
-      margin: 0 0 10px;
-      font-size: 1.6rem; font-weight: 800;
-      letter-spacing: -0.04em; line-height: 1.1;
+    .ob-title {
+      margin: 0 0 6px;
+      font-size: 1.2rem; font-weight: 800;
       text-align: center; color: #fff;
     }
-
-    #sbOnboardCard .ob-sub {
-      margin: 0 0 28px;
-      font-size: 0.9rem; color: rgba(255,255,255,0.5);
-      text-align: center; line-height: 1.5;
+    .ob-sub {
+      margin: 0 0 20px;
+      font-size: 0.82rem; color: rgba(255,255,255,0.45);
+      text-align: center; line-height: 1.4;
     }
 
-    /* Step dots */
-    .ob-dots {
-      display: flex; gap: 6px; justify-content: center; margin-bottom: 28px;
+    .ob-paths { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .ob-path {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer; transition: all 0.15s;
+      background: rgba(255,255,255,0.02);
     }
-    .ob-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: rgba(255,255,255,0.15);
-      transition: background 0.2s, transform 0.2s;
-    }
-    .ob-dot.is-active { background: #00c896; transform: scale(1.25); }
-    .ob-dot.is-done   { background: rgba(0,200,150,0.4); }
-
-    /* Option cards (step 2) */
-    .ob-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-    .ob-option {
-      padding: 20px 16px; border-radius: 14px;
-      border: 2px solid rgba(255,255,255,0.1);
-      cursor: pointer; text-align: center;
-      transition: border-color 0.2s, background 0.2s;
-      background: rgba(255,255,255,0.03);
-    }
-    .ob-option:hover { border-color: rgba(0,200,150,0.5); background: rgba(0,200,150,0.05); }
-    .ob-option.is-selected { border-color: #00c896; background: rgba(0,200,150,0.08); }
-    .ob-option .ob-opt-icon { font-size: 1.8rem; margin-bottom: 8px; }
-    .ob-option h3 { margin: 0 0 5px; font-size: 0.96rem; font-weight: 700; color: #fff; }
-    .ob-option p  { margin: 0; font-size: 0.78rem; color: rgba(255,255,255,0.5); line-height: 1.4; }
-    .ob-option .ob-opt-badge {
-      display: inline-block; margin-top: 8px;
-      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-      padding: 2px 8px; border-radius: 4px;
-      background: rgba(0,200,150,0.15); color: #00c896;
+    .ob-path:hover { border-color: rgba(100,196,255,0.3); background: rgba(100,196,255,0.03); }
+    .ob-path__icon { font-size: 1.3rem; flex-shrink: 0; width: 32px; text-align: center; }
+    .ob-path__info h4 { margin: 0; font-size: 0.85rem; font-weight: 700; color: #fff; }
+    .ob-path__info p { margin: 2px 0 0; font-size: 0.72rem; color: rgba(255,255,255,0.4); }
+    .ob-path__price {
+      margin-left: auto;
+      font-size: 0.7rem; font-weight: 700;
+      padding: 3px 8px; border-radius: 4px;
+      background: rgba(0,200,150,0.12); color: #00c896;
+      white-space: nowrap;
     }
 
-    /* BYOK key input */
-    .ob-byok { margin-bottom: 20px; display: none; }
-    .ob-byok label { display: block; font-size: 0.78rem; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
-    .ob-byok select, .ob-byok input {
-      width: 100%; padding: 10px 12px; border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.05); color: #fff;
-      font-size: 0.88rem; margin-bottom: 8px; box-sizing: border-box;
+    /* Detection overlay */
+    .ob-detect {
+      display: none; text-align: center;
     }
-    .ob-byok input:focus, .ob-byok select:focus {
-      outline: none; border-color: rgba(0,200,150,0.5);
+    .ob-detect.is-active { display: block; }
+
+    .ob-detect__splash {
+      width: 120px; height: 120px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(100,196,255,0.3);
+      animation: ob-pulse 2s ease-in-out infinite;
+    }
+    .ob-detect__splash img { width: 100%; height: 100%; object-fit: cover; }
+
+    @keyframes ob-pulse {
+      0%, 100% { box-shadow: 0 0 40px rgba(100,196,255,0.3); }
+      50% { box-shadow: 0 0 60px rgba(100,196,255,0.5); }
     }
 
-    /* Buttons */
-    .ob-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
-    .ob-btn {
-      padding: 11px 24px; border-radius: 10px; border: none;
-      font-size: 0.9rem; font-weight: 700; cursor: pointer;
-      transition: opacity 0.15s, transform 0.15s;
+    .ob-detect__status {
+      font-size: 0.9rem; font-weight: 700; color: #fff;
+      margin: 0 0 4px;
     }
-    .ob-btn:hover { opacity: 0.88; transform: translateY(-1px); }
-    .ob-btn--primary { background: #00c896; color: #000; }
-    .ob-btn--secondary { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.7); }
-    .ob-btn--ghost { background: transparent; color: rgba(255,255,255,0.35); font-size: 0.8rem; }
+    .ob-detect__sub {
+      font-size: 0.72rem; color: rgba(255,255,255,0.4);
+      margin: 0 0 20px;
+    }
 
-    /* Success state */
-    .ob-success-check {
-      width: 64px; height: 64px; border-radius: 50%;
-      background: rgba(0,200,150,0.12); border: 2px solid #00c896;
+    .ob-agents-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .ob-agent-card {
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      text-align: left;
+      opacity: 0.3;
+      transform: scale(0.95);
+      transition: all 0.4s ease;
+    }
+    .ob-agent-card.is-scanning {
+      opacity: 0.5;
+      border-color: rgba(100,196,255,0.2);
+    }
+    .ob-agent-card.is-found {
+      opacity: 1;
+      transform: scale(1);
+      border-color: rgba(0,200,150,0.4);
+      background: rgba(0,200,150,0.05);
+    }
+    .ob-agent-card.is-missing {
+      opacity: 0.25;
+    }
+
+    .ob-agent-card__head {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+    }
+    .ob-agent-card__icon {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.8rem; margin: 0 auto 20px; color: #00c896;
+      font-size: 0.7rem; font-weight: 800; color: rgba(255,255,255,0.5);
+      flex-shrink: 0;
     }
+    .ob-agent-card.is-found .ob-agent-card__icon {
+      background: rgba(0,200,150,0.15);
+      color: #00c896;
+    }
+    .ob-agent-card__name {
+      font-size: 0.78rem; font-weight: 700; color: #fff;
+    }
+    .ob-agent-card__status {
+      font-size: 0.65rem; color: rgba(255,255,255,0.3);
+      margin: 0;
+    }
+    .ob-agent-card.is-found .ob-agent-card__status {
+      color: #00c896;
+    }
+    .ob-agent-card.is-scanning .ob-agent-card__status {
+      color: rgba(100,196,255,0.6);
+    }
+
+    .ob-detect__done {
+      font-size: 0.85rem; font-weight: 700; color: #00c896;
+      margin: 0 0 12px;
+    }
+    .ob-detect__continue {
+      padding: 10px 24px; border-radius: 10px; border: none;
+      background: linear-gradient(135deg, #00c896, #00a87a);
+      color: #000; font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; width: 100%;
+      transition: opacity 0.15s;
+    }
+    .ob-detect__continue:hover { opacity: 0.88; }
+
+    .ob-detect__rescan {
+      display: inline-block; margin-top: 8px;
+      color: rgba(255,255,255,0.3); font-size: 0.68rem;
+      cursor: pointer; background: none; border: none; padding: 4px 8px;
+    }
+    .ob-detect__rescan:hover { color: rgba(255,255,255,0.5); }
+
+    /* BYOK expand */
+    .ob-byok { display: none; padding: 12px 0 0; }
+    .ob-byok.is-active { display: block; }
+    .ob-byok label { display: block; font-size: 0.72rem; color: rgba(255,255,255,0.35); margin-bottom: 4px; }
+    .ob-byok select, .ob-byok input {
+      width: 100%; padding: 8px 10px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04); color: #fff;
+      font-size: 0.82rem; margin-bottom: 6px; box-sizing: border-box;
+    }
+    .ob-byok input:focus, .ob-byok select:focus { outline: none; border-color: rgba(0,200,150,0.5); }
+    .ob-byok-save {
+      margin-top: 6px; padding: 8px 16px; border-radius: 8px; border: none;
+      background: #00c896; color: #000; font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; width: 100%;
+    }
+    .ob-byok-save:hover { opacity: 0.88; }
 
     .ob-skip {
-      position: absolute; top: 16px; right: 16px;
-      background: none; border: none; color: rgba(255,255,255,0.25);
-      font-size: 0.75rem; cursor: pointer; padding: 4px 8px;
+      display: block; text-align: center; margin-top: 8px;
+      color: rgba(255,255,255,0.2); font-size: 0.7rem;
+      cursor: pointer; background: none; border: none; width: 100%; padding: 4px;
     }
-    .ob-skip:hover { color: rgba(255,255,255,0.5); }
+    .ob-skip:hover { color: rgba(255,255,255,0.4); }
+
+    .ob-back {
+      position: absolute; top: 16px; left: 16px;
+      color: rgba(255,255,255,0.3); font-size: 0.72rem;
+      cursor: pointer; background: none; border: none; padding: 4px 8px;
+    }
+    .ob-back:hover { color: rgba(255,255,255,0.5); }
 
     @media (max-width: 520px) {
-      #sbOnboardCard { padding: 28px 20px; }
-      .ob-options { grid-template-columns: 1fr; }
+      #sbOnboardCard { padding: 24px 20px; }
+      .ob-agents-grid { grid-template-columns: 1fr; }
     }
   `;
 
-  // ── State ────────────────────────────────────────────────────────────────────
-  var state = { step: 1, choice: null }; // choice: 'byok' | 'managed'
+  /* ── Agent Card Definitions ── */
+  var AGENT_CARDS = [
+    { id: 'claude', name: 'Claude Code', icon: 'A', provider: 'Anthropic' },
+    { id: 'codex', name: 'OpenAI Codex', icon: 'O', provider: 'OpenAI' },
+    { id: 'gemini', name: 'Gemini CLI', icon: 'G', provider: 'Google' },
+    { id: 'copilot', name: 'GitHub Copilot', icon: 'C', provider: 'GitHub' },
+    { id: 'antigravity', name: 'Antigravity', icon: 'AG', provider: 'Antigravity' },
+    { id: 'cursor', name: 'Cursor', icon: 'Cu', provider: 'Cursor' },
+    { id: 'aider', name: 'Aider', icon: 'Ai', provider: 'Multiple' },
+  ];
 
-  // ── Render ───────────────────────────────────────────────────────────────────
-  function render() {
-    var overlay = document.getElementById('sbOnboard');
-    if (!overlay) return;
-    var card = document.getElementById('sbOnboardCard');
-    card.innerHTML = _buildCard();
-    _bindEvents();
-  }
+  /* ── Render: Path selection screen ── */
+  function renderPaths() {
+    var name = (localStorage.getItem('solace_user_email') || '').split('@')[0];
+    var greeting = name ? "Hi " + name + "! One quick thing." : "One quick thing before we start.";
 
-  function _dots() {
-    return '<div class="ob-dots">' +
-      [1,2,3].map(function(i) {
-        var cls = 'ob-dot' + (i === state.step ? ' is-active' : (i < state.step ? ' is-done' : ''));
-        return '<div class="' + cls + '"></div>';
-      }).join('') +
-      '</div>';
-  }
+    return '<div class="ob-yy"><img src="/images/yinyang/yinyang-rotating_70pct_256px.gif" alt="YinYang"></div>' +
+      '<h2 class="ob-title">' + greeting + '</h2>' +
+      '<p class="ob-sub">How do you want to power Solace Browser?</p>' +
+      '<div class="ob-paths">' +
 
-  function _buildCard() {
-    if (state.step === 1) return _step1();
-    if (state.step === 2) return _step2();
-    return _step3();
-  }
-
-  function _step1() {
-    var user = getUser();
-    var greeting = user.name ? 'Welcome, ' + user.name + '.' : 'Welcome to Solace Browser.';
-    return '<button class="ob-skip" id="obSkip">Skip setup</button>' +
-      '<img class="ob-logo" src="/images/yinyang/yinyang-loading-128.gif" alt="Yinyang">' +
-      _dots() +
-      '<h2>' + greeting + '</h2>' +
-      '<p class="ob-sub">Your AI agent can browse the web, access your machine, and run cloud tasks — but only with your explicit approval, every time.</p>' +
-      '<div class="ob-actions">' +
-        '<button class="ob-btn ob-btn--primary" id="obNext">Choose your power source →</button>' +
-      '</div>';
-  }
-
-  function _step2() {
-    var byokHidden = state.choice === 'byok' ? '' : 'display:none';
-    return '<button class="ob-skip" id="obSkip">Skip setup</button>' +
-      _dots() +
-      '<h2>Choose your power source</h2>' +
-      '<p class="ob-sub">Solace routes every AI call through OpenRouter. Bring your own key, or let us handle it.</p>' +
-      '<div class="ob-options">' +
-        '<div class="ob-option' + (state.choice === 'byok' ? ' is-selected' : '') + '" id="obChoiceBYOK">' +
-          '<div class="ob-opt-icon">🔑</div>' +
-          '<h3>Bring your own key</h3>' +
-          '<p>Paste your OpenRouter, Claude, or OpenAI API key. Zero markup. Full control.</p>' +
-          '<span class="ob-opt-badge">Free forever</span>' +
+        '<div class="ob-path" id="obAutoDetect">' +
+          '<div class="ob-path__icon"><img src="/images/ai-brain.png" alt="" style="width:28px;height:28px;border-radius:6px"></div>' +
+          '<div class="ob-path__info">' +
+            '<h4>Auto-Detect My AI Agents</h4>' +
+            '<p>Scans for Claude Code, Codex, Gemini, Copilot, Cursor, Aider &amp; more</p>' +
+          '</div>' +
+          '<span class="ob-path__price">Free</span>' +
         '</div>' +
-        '<div class="ob-option' + (state.choice === 'managed' ? ' is-selected' : '') + '" id="obChoiceManaged">' +
-          '<div class="ob-opt-icon">⚡</div>' +
-          '<h3>Let Solace handle it</h3>' +
-          '<p>We route to Llama 3.3 70B via OpenRouter. No API key needed. Cancel anytime.</p>' +
-          '<span class="ob-opt-badge">$8/mo · Dragon plan</span>' +
+
+        '<div class="ob-path" id="obBYOK">' +
+          '<div class="ob-path__icon">&#x1f511;</div>' +
+          '<div class="ob-path__info">' +
+            '<h4>Bring Your Own Key</h4>' +
+            '<p>Paste your OpenRouter, Claude, or OpenAI API key</p>' +
+          '</div>' +
+          '<span class="ob-path__price">Free</span>' +
         '</div>' +
+
+        '<div class="ob-path" id="obManaged">' +
+          '<div class="ob-path__icon">&#x26a1;</div>' +
+          '<div class="ob-path__info">' +
+            '<h4>Solace Managed</h4>' +
+            '<p>We handle LLM, team sync, eSign, FDA compliance</p>' +
+          '</div>' +
+          '<span class="ob-path__price">From $8/mo</span>' +
+        '</div>' +
+
       '</div>' +
-      '<div class="ob-byok" id="obByokFields" style="' + byokHidden + '">' +
+
+      '<div class="ob-byok" id="obByokFields">' +
         '<label>Provider</label>' +
         '<select id="obProvider">' +
-          '<option value="openrouter">OpenRouter (recommended — access to all models)</option>' +
+          '<option value="openrouter">OpenRouter (recommended — all models)</option>' +
           '<option value="anthropic">Anthropic (Claude)</option>' +
           '<option value="openai">OpenAI (GPT-4o)</option>' +
         '</select>' +
         '<label>API Key</label>' +
-        '<input type="password" id="obApiKey" placeholder="sk-or-v1-... or sk-ant-... or sk-..." autocomplete="off">' +
+        '<input type="password" id="obApiKey" placeholder="sk-or-v1-..." autocomplete="off">' +
+        '<button class="ob-byok-save" id="obSave">Save & Continue</button>' +
       '</div>' +
-      '<div class="ob-actions">' +
-        '<button class="ob-btn ob-btn--secondary" id="obBack">← Back</button>' +
-        '<button class="ob-btn ob-btn--primary" id="obNext" ' + (!state.choice ? 'disabled style="opacity:0.4;cursor:not-allowed"' : '') + '>' +
-          (state.choice === 'managed' ? 'Continue to checkout →' : 'Save and continue →') +
-        '</button>' +
+
+      '<button class="ob-skip" id="obSkip">I\'ll set this up later</button>';
+  }
+
+  /* ── Render: Auto-detect screen ── */
+  function renderDetect() {
+    var cards = '';
+    for (var i = 0; i < AGENT_CARDS.length; i++) {
+      var a = AGENT_CARDS[i];
+      cards += '<div class="ob-agent-card" id="obCard_' + a.id + '">' +
+        '<div class="ob-agent-card__head">' +
+          '<div class="ob-agent-card__icon">' + a.icon + '</div>' +
+          '<span class="ob-agent-card__name">' + a.name + '</span>' +
+        '</div>' +
+        '<p class="ob-agent-card__status">Waiting...</p>' +
       '</div>';
-  }
-
-  function _step3() {
-    return _dots() +
-      '<div class="ob-success-check">✓</div>' +
-      '<h2>You\'re all set!</h2>' +
-      '<p class="ob-sub">Yinyang is powered up and ready. Every action requires your approval — you\'re always in control.</p>' +
-      '<div class="ob-actions" style="justify-content:center">' +
-        '<button class="ob-btn ob-btn--primary" id="obDone">Open App Store →</button>' +
-        '<button class="ob-btn ob-btn--ghost" id="obDoneHome">Go to dashboard</button>' +
-      '</div>';
-  }
-
-  // ── Events ───────────────────────────────────────────────────────────────────
-  function _bindEvents() {
-    var next = document.getElementById('obNext');
-    var back = document.getElementById('obBack');
-    var skip = document.getElementById('obSkip');
-    var done = document.getElementById('obDone');
-    var doneHome = document.getElementById('obDoneHome');
-
-    if (skip) skip.addEventListener('click', dismiss);
-    if (back) back.addEventListener('click', function() { state.step = 1; render(); });
-
-    var byok = document.getElementById('obChoiceBYOK');
-    var managed = document.getElementById('obChoiceManaged');
-    if (byok) byok.addEventListener('click', function() {
-      state.choice = 'byok'; render();
-    });
-    if (managed) managed.addEventListener('click', function() {
-      state.choice = 'managed'; render();
-    });
-
-    if (next) next.addEventListener('click', function() {
-      if (state.step === 1) { state.step = 2; render(); return; }
-      if (state.step === 2) _handleStep2Next();
-    });
-
-    if (done) done.addEventListener('click', function() {
-      dismiss(); window.location.href = '/app-store';
-    });
-    if (doneHome) doneHome.addEventListener('click', dismiss);
-  }
-
-  function _handleStep2Next() {
-    if (state.choice === 'managed') {
-      // Send user to Solace pricing page
-      window.open(CLOUD + '/pricing?plan=dragon', '_blank');
-      // Mark as configured optimistically — they'll complete payment there
-      localStorage.setItem(STORAGE_KEY, '1');
-      state.step = 3; render();
-      return;
     }
-    if (state.choice === 'byok') {
-      var provider = (document.getElementById('obProvider') || {}).value || 'openrouter';
-      var apiKey = ((document.getElementById('obApiKey') || {}).value || '').trim();
+
+    return '<button class="ob-back" id="obBack">&larr; Back</button>' +
+      '<div class="ob-detect is-active" id="obDetectPanel">' +
+        '<div class="ob-detect__splash"><img src="/images/ai-brain.png" alt="AI Detection"></div>' +
+        '<p class="ob-detect__status" id="obDetectStatus">Detecting your AI agents...</p>' +
+        '<p class="ob-detect__sub" id="obDetectSub">Scanning for installed CLI tools. This only takes a moment.</p>' +
+        '<div class="ob-agents-grid" id="obAgentsGrid">' + cards + '</div>' +
+        '<p class="ob-detect__done" id="obDetectDone" style="display:none"></p>' +
+        '<button class="ob-detect__continue" id="obDetectContinue" style="display:none">Continue with detected agents</button>' +
+        '<button class="ob-detect__rescan" id="obRescan" style="display:none">&#x1f504; Rescan</button>' +
+      '</div>';
+  }
+
+  /* ── Detection logic ── */
+  function runDetection(rescan) {
+    var url = '/api/cli-agents' + (rescan ? '?rescan=1' : '');
+    var statusEl = document.getElementById('obDetectStatus');
+    var subEl = document.getElementById('obDetectSub');
+    var doneEl = document.getElementById('obDetectDone');
+    var continueBtn = document.getElementById('obDetectContinue');
+    var rescanBtn = document.getElementById('obRescan');
+
+    // Reset all cards to scanning
+    for (var i = 0; i < AGENT_CARDS.length; i++) {
+      var card = document.getElementById('obCard_' + AGENT_CARDS[i].id);
+      if (card) {
+        card.className = 'ob-agent-card is-scanning';
+        card.querySelector('.ob-agent-card__status').textContent = 'Scanning...';
+      }
+    }
+
+    statusEl.textContent = 'Detecting your AI agents...';
+    subEl.textContent = 'Scanning for installed CLI tools. This only takes a moment.';
+    doneEl.style.display = 'none';
+    continueBtn.style.display = 'none';
+    rescanBtn.style.display = 'none';
+
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var agents = data.agents || [];
+        var found = 0;
+        var delay = 0;
+
+        // Animate cards one by one
+        agents.forEach(function(agent) {
+          delay += 200;
+          setTimeout(function() {
+            var card = document.getElementById('obCard_' + agent.id);
+            if (!card) return;
+            var statusP = card.querySelector('.ob-agent-card__status');
+            if (agent.installed) {
+              found++;
+              card.className = 'ob-agent-card is-found';
+              statusP.textContent = '✓ Active — ' + agent.path.split('/').pop();
+            } else {
+              card.className = 'ob-agent-card is-missing';
+              statusP.textContent = 'Not installed';
+            }
+          }, delay);
+        });
+
+        // Show results after all cards animate
+        setTimeout(function() {
+          var installed = data.installed_count || 0;
+          if (installed > 0) {
+            statusEl.textContent = 'Ready to go!';
+            subEl.textContent = installed + ' AI agent' + (installed > 1 ? 's' : '') + ' detected and integrated.';
+            doneEl.textContent = installed + '/' + agents.length + ' agents activated — each app can pick its own AI backend';
+            doneEl.style.display = 'block';
+            continueBtn.style.display = 'block';
+            continueBtn.textContent = 'Continue with ' + installed + ' agent' + (installed > 1 ? 's' : '');
+          } else {
+            statusEl.textContent = 'No AI agents found';
+            subEl.textContent = 'Install Claude Code, Codex, or Gemini CLI to use agent mode.';
+            continueBtn.style.display = 'block';
+            continueBtn.textContent = 'Continue without agents';
+          }
+          rescanBtn.style.display = 'inline-block';
+
+          // Cache to localStorage
+          localStorage.setItem(AGENTS_KEY, JSON.stringify(data));
+        }, delay + 300);
+      })
+      .catch(function() {
+        statusEl.textContent = 'Detection failed';
+        subEl.textContent = 'Could not reach the server. Make sure Solace Browser is running.';
+        rescanBtn.style.display = 'inline-block';
+      });
+  }
+
+  /* ── Screen switching ── */
+  function showDetectScreen() {
+    var card = document.getElementById('sbOnboardCard');
+    card.innerHTML = renderDetect();
+    bindDetectEvents();
+    runDetection(false);
+  }
+
+  function showPathScreen() {
+    var card = document.getElementById('sbOnboardCard');
+    card.innerHTML = renderPaths();
+    bindPathEvents();
+  }
+
+  function bindDetectEvents() {
+    document.getElementById('obBack').addEventListener('click', showPathScreen);
+    document.getElementById('obDetectContinue').addEventListener('click', function() {
+      localStorage.setItem('solace_onboard_path', 'agent');
+      finish();
+    });
+    document.getElementById('obRescan').addEventListener('click', function() {
+      runDetection(true);
+    });
+  }
+
+  function bindPathEvents() {
+    document.getElementById('obAutoDetect').addEventListener('click', showDetectScreen);
+
+    document.getElementById('obBYOK').addEventListener('click', function() {
+      document.getElementById('obByokFields').classList.toggle('is-active');
+    });
+
+    document.getElementById('obManaged').addEventListener('click', function() {
+      window.open(CLOUD + '/pricing', '_blank');
+      finish();
+    });
+
+    document.getElementById('obSave').addEventListener('click', function() {
+      var apiKey = (document.getElementById('obApiKey').value || '').trim();
       if (!apiKey) {
-        var inp = document.getElementById('obApiKey');
-        if (inp) { inp.style.borderColor = '#ff6b6b'; inp.focus(); }
+        document.getElementById('obApiKey').style.borderColor = '#ff6b6b';
+        document.getElementById('obApiKey').focus();
         return;
       }
-      // Save to settings via web server settings endpoint
-      _saveBYOK(provider, apiKey);
-    }
+      var provider = document.getElementById('obProvider').value;
+      saveBYOK(provider, apiKey);
+    });
+
+    document.getElementById('obSkip').addEventListener('click', finish);
   }
 
-  function _saveBYOK(provider, apiKey) {
-    var solaceKey = localStorage.getItem('solace_api_key') || '';
-    var headers = { 'Content-Type': 'application/json' };
-    if (solaceKey) headers['Authorization'] = 'Bearer ' + solaceKey;
-
+  function saveBYOK(provider, apiKey) {
     fetch('/api/settings', {
       method: 'POST',
-      headers: headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         llm: {
           backend: provider,
@@ -313,42 +479,32 @@
             : (provider === 'anthropic' ? 'claude-haiku-4-5-20251001' : 'gpt-4o-mini'),
         }
       })
-    })
-    .then(function(r) {
-      localStorage.setItem(STORAGE_KEY, '1');
-      state.step = 3; render();
-    })
-    .catch(function() {
-      // Fail silently — proceed to success anyway (user can configure in Settings)
-      localStorage.setItem(STORAGE_KEY, '1');
-      state.step = 3; render();
-    });
+    }).then(function() { finish(); }).catch(function() { finish(); });
   }
 
-  function dismiss() {
+  function finish() {
     localStorage.setItem(STORAGE_KEY, '1');
+    localStorage.setItem('sb_tutorial_v1', 'done');
     var overlay = document.getElementById('sbOnboard');
     if (overlay) {
-      overlay.style.animation = 'none';
-      overlay.style.opacity = '0';
-      overlay.style.transition = 'opacity 0.2s';
-      setTimeout(function() { overlay.parentNode && overlay.parentNode.removeChild(overlay); }, 200);
+      overlay.classList.add('is-exit');
+      setTimeout(function() { overlay.parentNode && overlay.parentNode.removeChild(overlay); }, 300);
     }
   }
 
-  // ── Boot ─────────────────────────────────────────────────────────────────────
   function init() {
     if (!shouldShow()) return;
-    // Inject CSS
     var style = document.createElement('style');
     style.textContent = CSS;
     document.head.appendChild(style);
-    // Inject overlay
     var overlay = document.createElement('div');
     overlay.id = 'sbOnboard';
-    overlay.innerHTML = '<div id="sbOnboardCard"></div>';
+    overlay.innerHTML = '<div id="sbOnboardCard">' + renderPaths() + '</div>';
     document.body.appendChild(overlay);
-    render();
+    bindPathEvents();
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() { overlay.classList.add('is-visible'); });
+    });
   }
 
   if (document.readyState === 'loading') {
@@ -356,5 +512,4 @@
   } else {
     init();
   }
-
 })();
