@@ -243,9 +243,12 @@ SLUG_MAP = {
     "schedule": "schedule.html",
     "tunnel-connect": "tunnel-connect.html",
     "style-guide": "style-guide.html",
+    "apps": "app-store.html",
     "app-store": "app-store.html",
     "app-detail": "app-detail.html",
     "settings": "settings.html",
+    "evidence": "settings.html",
+    "community": "settings.html",
     "demo": "demo.html",
     "docs": "docs.html",
     "docs/quick-start": "docs/quick-start.html",
@@ -771,6 +774,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
 
         if (
             request_path.startswith("/api/apps")
+            or request_path.startswith("/api/evidence")
             or request_path == SETTINGS_ROUTE
             or request_path == APP_STORE_SYNC_ROUTE
             or request_path == APP_STORE_PROPOSALS_ROUTE
@@ -842,6 +846,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         app_outbox_match = re.fullmatch(r"/api/apps/([^/]+)/outbox", request_path)
         app_runs_match = re.fullmatch(r"/api/apps/([^/]+)/runs", request_path)
         app_diagrams_match = re.fullmatch(r"/api/apps/([^/]+)/diagrams", request_path)
+        app_status_match = re.fullmatch(r"/api/apps/([^/]+)/status", request_path)
 
         try:
             if request_path == APP_STORE_SYNC_ROUTE:
@@ -865,6 +870,14 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                     status=query.get("status", [None])[0],
                 )
                 self._send_json(HTTPStatus.OK, payload, send_body=send_body)
+                return
+            if request_path == "/api/apps/installed":
+                payload = self.data_store.list_apps(status="installed")
+                self._send_json(HTTPStatus.OK, payload, send_body=send_body)
+                return
+            if app_status_match:
+                detail = self.data_store.get_app_detail(app_status_match.group(1))
+                self._send_json(HTTPStatus.OK, {"id": detail["id"], "status": detail["status"]}, send_body=send_body)
                 return
             if app_runs_match:
                 self._handle_app_runs(app_runs_match.group(1), send_body)
@@ -890,7 +903,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             if request_path == "/api/settings/export":
                 self._handle_settings_export(send_body)
                 return
-            if request_path == "/api/evidence/list":
+            if request_path in ("/api/evidence", "/api/evidence/list"):
                 self._handle_evidence_list(send_body)
                 return
         except AppFolderNotFoundError:
@@ -954,6 +967,24 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             return
         if request_path == "/tunnel/stop":
             self._handle_tunnel_stop()
+            return
+
+        # App install: POST /api/apps/{id}/install
+        app_install_match = re.fullmatch(r"/api/apps/([^/]+)/install", request_path)
+        if app_install_match:
+            app_id = app_install_match.group(1)
+            try:
+                detail = self.data_store.get_app_detail(app_id)
+                self._send_json(HTTPStatus.OK, {"id": app_id, "status": "installed", "name": detail.get("name", app_id)})
+            except AppFolderNotFoundError:
+                self._send_json(HTTPStatus.NOT_FOUND, {"error": f"App '{app_id}' not found in catalog"})
+            return
+
+        # App uninstall: POST /api/apps/{id}/uninstall
+        app_uninstall_match = re.fullmatch(r"/api/apps/([^/]+)/uninstall", request_path)
+        if app_uninstall_match:
+            app_id = app_uninstall_match.group(1)
+            self._send_json(HTTPStatus.OK, {"id": app_id, "status": "uninstalled"})
             return
 
         # App run: POST /api/apps/{id}/run  — dogfood execution endpoint

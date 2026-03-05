@@ -165,12 +165,19 @@
     }).catch(err => console.warn("[Solace] profile refresh failed (cached name shown):", err));
   }
 
+  function _escapeHtml(str) {
+    var d = document.createElement("div");
+    d.appendChild(document.createTextNode(str));
+    return d.innerHTML;
+  }
+
   function _buildAuthBadge(name, tier) {
-    // Keep the original "Signed in" style — just add the user's name after it
-    const tierStr = (tier && tier !== "free") ? ` · ${tier}` : "";
-    return `<a class="sb-auth-indicator sb-auth-indicator--signed-in" href="/settings" data-i18n="auth_signed_in">` +
-      `Signed in, ${name}${tierStr}` +
-      `</a>`;
+    var safeName = _escapeHtml(String(name || "Account"));
+    var safeTier = tier ? _escapeHtml(String(tier)) : "";
+    var tierStr = (safeTier && safeTier !== "free") ? " &middot; " + safeTier : "";
+    return '<a class="sb-auth-indicator sb-auth-indicator--signed-in" href="/settings" data-i18n="auth_signed_in">' +
+      'Signed in, ' + safeName + tierStr +
+      '</a>';
   }
 
   // Expose globally so yinyang-tutorial.js can call it when locale changes
@@ -996,7 +1003,7 @@
 
   const SETTINGS_VALUE_TRANSFORMS = {
     "account.status": v => ({ logged_out: "Not signed in", logged_in: "Signed in", "": "Not signed in" }[v] || v),
-    "account.tier": v => ({ free: "Free (BYOK)", dragon: "Dragon Warrior ($8/mo)", enterprise: "Enterprise ($99/mo)" }[v] || v),
+    "account.tier": v => ({ free: "Free (BYOK)", starter: "Starter ($8/mo)", dragon: "Dragon Warrior ($28/mo)", enterprise: "Enterprise ($188/mo)" }[v] || v),
     "account.user": v => v || "(not signed in)",
     "account.api_key_hint": v => v || "(none)",
   };

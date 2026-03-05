@@ -5,6 +5,7 @@
   <title>Settings | Solace Browser</title>
   <meta name="description" content="Configure Solace Browser: account, history, LLM, tunnel, Part 11, privacy, Yinyang, and about.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://127.0.0.1:* https://www.solaceagi.com https://*.solaceagi.com; font-src 'self'; frame-ancestors 'none'">
   <meta name="theme-color" content="#081019">
   <link rel="icon" type="image/png" href="/images/yinyang/yinyang-logo-32.png">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -15,6 +16,7 @@
   <script src="/js/yinyang-oauth3-confirm.js" defer></script>
   <script src="/js/layout.js" defer></script>
 
+  <script src="/js/theme.js" defer></script>
   <script src="/js/solace.js" defer></script>
   <script src="/vendor/jquery/jquery-3.7.1.min.js" defer></script>
   <script src="/vendor/amcharts/index.js" defer></script>
@@ -32,16 +34,101 @@
         <section class="hero reveal">
           <div>
             <div class="eyebrow">Persisted to ~/.solace/settings.json | Hot-reloaded on change</div>
-            <h1 class="display">Settings</h1>
+            <h1 class="display" data-i18n="nav_settings">Settings</h1>
             <p class="lead">All configuration stored locally. No cloud dependency. Changes take effect immediately.</p>
           </div>
+        </section>
+
+        <!-- Appearance -->
+        <section class="page-section reveal" id="appearance">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title" data-i18n="settings_appearance">Appearance</h2>
+              <p class="section-copy">Choose your theme. Dark is the default. Paid users can create and submit custom themes to the App Store.</p>
+            </div>
+          </div>
+          <article class="data-panel">
+            <div class="kpi-grid" id="theme-grid">
+              <button class="kpi-card theme-card" data-theme-choice="dark" type="button" style="cursor:pointer;text-align:left;border:2px solid transparent;transition:border-color 0.2s">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                  <span style="font-size:1.3rem">&#127769;</span>
+                  <strong>Dark</strong>
+                </div>
+                <span style="font-size:0.82rem;color:var(--sb-text-muted)">Deep navy with warm orange accents. The default Solace experience.</span>
+                <div class="theme-preview" style="display:flex;gap:4px;margin-top:12px">
+                  <span style="width:24px;height:24px;border-radius:6px;background:#081019;border:1px solid rgba(163,185,214,0.18)"></span>
+                  <span style="width:24px;height:24px;border-radius:6px;background:#ff6b35"></span>
+                  <span style="width:24px;height:24px;border-radius:6px;background:#64c4ff"></span>
+                  <span style="width:24px;height:24px;border-radius:6px;background:#AE67FA"></span>
+                </div>
+              </button>
+              <button class="kpi-card theme-card" data-theme-choice="light" type="button" style="cursor:pointer;text-align:left;border:2px solid transparent;transition:border-color 0.2s">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                  <span style="font-size:1.3rem">&#9728;&#65039;</span>
+                  <strong>Light</strong>
+                </div>
+                <span style="font-size:0.82rem;color:var(--sb-text-muted)">Clean warm white with deep orange energy. Elder-friendly, high contrast.</span>
+                <div class="theme-preview" style="display:flex;gap:4px;margin-top:12px">
+                  <span style="width:24px;height:24px;border-radius:6px;background:#faf8f5;border:1px solid rgba(120,100,80,0.15)"></span>
+                  <span style="width:24px;height:24px;border-radius:6px;background:#e55a2b"></span>
+                  <span style="width:24px;height:24px;border-radius:6px;background:#1a7fb8"></span>
+                  <span style="width:24px;height:24px;border-radius:6px;background:#7c3aad"></span>
+                </div>
+              </button>
+              <button class="kpi-card theme-card" data-theme-choice="midnight" type="button" style="cursor:pointer;text-align:left;border:2px solid transparent;transition:border-color 0.2s">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                  <span style="font-size:1.3rem">&#10024;</span>
+                  <strong>Midnight</strong>
+                </div>
+                <span style="font-size:0.82rem;color:var(--sb-text-muted)">True black OLED with electric blue. Zero distraction. For developers and night owls.</span>
+                <div class="theme-preview" style="display:flex;gap:4px;margin-top:12px">
+                  <span style="width:24px;height:24px;border-radius:6px;background:#000000;border:1px solid rgba(100,160,255,0.12)"></span>
+                  <span style="width:24px;height:24px;border-radius:6px;background:#4da6ff"></span>
+                  <span style="width:24px;height:24px;border-radius:6px;background:#80ffb0"></span>
+                  <span style="width:24px;height:24px;border-radius:6px;background:#b880ff"></span>
+                </div>
+              </button>
+            </div>
+
+            <!-- Custom Theme Editor (paid users) -->
+            <details style="margin-top:24px" id="custom-theme-details">
+              <summary style="cursor:pointer;color:var(--sb-signal);font-weight:600;font-size:0.9rem">Custom Theme Editor (Pro users)</summary>
+              <div style="margin-top:16px">
+                <p style="font-size:0.82rem;color:var(--sb-text-muted);margin-bottom:12px">Override any CSS custom property. Your theme wraps in <code>[data-theme="custom-{id}"]</code> automatically.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+                  <div>
+                    <label style="font-size:0.78rem;color:var(--sb-text-muted);display:block;margin-bottom:4px">Theme Name</label>
+                    <input type="text" id="custom-theme-name" placeholder="my-theme" maxlength="32" style="width:100%;background:var(--sb-surface-strong);border:1px solid var(--sb-border);border-radius:8px;color:var(--sb-text);padding:8px 12px;font-size:0.85rem">
+                  </div>
+                  <div>
+                    <label style="font-size:0.78rem;color:var(--sb-text-muted);display:block;margin-bottom:4px">Background Color</label>
+                    <input type="color" id="custom-theme-bg" value="#081019" style="width:100%;height:36px;border:1px solid var(--sb-border);border-radius:8px;cursor:pointer">
+                  </div>
+                  <div>
+                    <label style="font-size:0.78rem;color:var(--sb-text-muted);display:block;margin-bottom:4px">Accent Color</label>
+                    <input type="color" id="custom-theme-accent" value="#ff6b35" style="width:100%;height:36px;border:1px solid var(--sb-border);border-radius:8px;cursor:pointer">
+                  </div>
+                  <div>
+                    <label style="font-size:0.78rem;color:var(--sb-text-muted);display:block;margin-bottom:4px">Text Color</label>
+                    <input type="color" id="custom-theme-text" value="#f4f7fb" style="width:100%;height:36px;border:1px solid var(--sb-border);border-radius:8px;cursor:pointer">
+                  </div>
+                </div>
+                <label style="font-size:0.78rem;color:var(--sb-text-muted);display:block;margin-bottom:4px">Advanced CSS (optional)</label>
+                <textarea id="custom-theme-css" rows="4" placeholder="--sb-surface: #1a1a2e;&#10;--sb-signal: #e94560;&#10;--sb-success: #0f3460;" style="width:100%;background:var(--sb-surface-strong);border:1px solid var(--sb-border);border-radius:8px;color:var(--sb-text);padding:10px 12px;font-family:monospace;font-size:0.82rem;resize:vertical"></textarea>
+                <div class="button-row" style="margin-top:12px;gap:10px">
+                  <button class="btn btn-primary" id="btn-apply-custom-theme" type="button">Apply Custom Theme</button>
+                  <button class="btn btn-secondary" id="btn-submit-theme-store" type="button">Submit to App Store</button>
+                </div>
+              </div>
+            </details>
+          </article>
         </section>
 
         <!-- Account -->
         <section class="page-section reveal" id="account">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">Account</h2>
+              <h2 class="section-title" data-i18n="settings_account">Account</h2>
               <p class="section-copy">Authentication status and API key management.</p>
             </div>
           </div>
@@ -54,7 +141,7 @@
                     <tr><td><strong>Status</strong></td><td><span class="status-tag status-tag--success">Logged in</span></td></tr>
                     <tr><td><strong>User</strong></td><td>phuc@solaceagi.com</td></tr>
                     <tr><td><strong>API Key</strong></td><td><code>sw_sk_****...****7f3a</code> <span class="status-tag status-tag--success">valid</span></td></tr>
-                    <tr><td><strong>Tier</strong></td><td>Pro ($8/mo)</td></tr>
+                    <tr><td><strong>Tier</strong></td><td>Free ($0) · Starter ($8/mo) · Pro ($28/mo)</td></tr>
                     <tr><td><strong>Key stored</strong></td><td><code>~/.solace/vault.enc</code> (AES-256-GCM)</td></tr>
                   </tbody>
                 </table>
@@ -62,7 +149,7 @@
               <div>
                 <div class="button-row" style="flex-direction:column;gap:12px">
                   <button class="btn btn-secondary" style="width:100%">Rotate API key</button>
-                  <button class="btn btn-secondary" style="width:100%;color:var(--sb-danger)">Log out</button>
+                  <button class="btn btn-secondary" style="width:100%;color:var(--sb-danger)" data-i18n="settings_log_out">Log out</button>
                 </div>
               </div>
             </div>
@@ -77,7 +164,7 @@
         <section class="page-section reveal" id="history">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">History &amp; Capture</h2>
+              <h2 class="section-title" data-i18n="settings_history">History &amp; Capture</h2>
               <p class="section-copy">Browsing history capture with PZip Stillwater compression.</p>
             </div>
           </div>
@@ -135,7 +222,7 @@
         <section class="page-section reveal" id="llm">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">LLM Backend</h2>
+              <h2 class="section-title" data-i18n="settings_llm_backend">LLM Backend</h2>
               <p class="section-copy">Choose how the browser calls LLMs. BYOK = bring your own key, zero markup.</p>
             </div>
           </div>
@@ -177,7 +264,7 @@
         <section class="page-section reveal" id="tunnel">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">Tunnel</h2>
+              <h2 class="section-title" data-i18n="settings_tunnel">Tunnel</h2>
               <p class="section-copy">Expose local browser to cloud via Cloudflare tunnel. Approval required.</p>
             </div>
           </div>
@@ -202,7 +289,7 @@
         <section class="page-section reveal" id="part11">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">Part 11 Compliance</h2>
+              <h2 class="section-title" data-i18n="settings_part11">Part 11 Compliance</h2>
               <p class="section-copy">FDA 21 CFR Part 11 evidence mode. ALCOA+ compliant hash-chained audit trail.</p>
             </div>
           </div>
@@ -249,7 +336,7 @@
         <section class="page-section reveal" id="privacy">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">Privacy</h2>
+              <h2 class="section-title" data-i18n="settings_privacy">Privacy</h2>
               <p class="section-copy">Local-first. All data stays on your machine unless you opt into cloud sync.</p>
             </div>
           </div>
@@ -286,7 +373,7 @@
         <section class="page-section reveal" id="yinyang">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">Yinyang Chat Rail</h2>
+              <h2 class="section-title" data-i18n="settings_yinyang">Yinyang Chat Rail</h2>
               <p class="section-copy">Dual rail: top (32px status) + bottom (36-300px chat). Never interrupts unless approval needed.</p>
             </div>
           </div>
@@ -313,7 +400,7 @@
         <section class="page-section reveal" id="ask-yinyang">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">Ask YinYang</h2>
+              <h2 class="section-title" data-i18n="settings_ask_yinyang">Ask YinYang</h2>
               <p class="section-copy">Get help with any setting, generate a report, or ask about browser state. Powered by OpenRouter.</p>
             </div>
           </div>
@@ -343,7 +430,7 @@
         <section class="page-section reveal" id="about">
           <div class="section-heading">
             <div>
-              <h2 class="section-title">About</h2>
+              <h2 class="section-title" data-i18n="settings_about">About</h2>
             </div>
           </div>
           <article class="data-panel">
@@ -473,6 +560,100 @@
         alert('To delete all data:\nrm -rf ~/.solace/\n\nThis will remove sessions, evidence, history, and settings.');
       }
     });
+
+    /* ── Theme selector wiring ─────────────────────────────────────────── */
+    (function wireThemeSelector() {
+      function highlightActive() {
+        var current = (typeof SolaceTheme !== 'undefined') ? SolaceTheme.get() : (localStorage.getItem('solace-theme') || 'dark');
+        document.querySelectorAll('.theme-card').forEach(function(card) {
+          var choice = card.getAttribute('data-theme-choice');
+          if (choice === current) {
+            card.style.borderColor = 'var(--sb-accent)';
+            card.style.boxShadow = '0 0 16px var(--sb-shadow-accent-alpha-28, rgba(255,107,53,0.28))';
+          } else {
+            card.style.borderColor = 'transparent';
+            card.style.boxShadow = 'none';
+          }
+        });
+      }
+
+      document.querySelectorAll('.theme-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+          var theme = card.getAttribute('data-theme-choice');
+          if (typeof SolaceTheme !== 'undefined') {
+            SolaceTheme.set(theme);
+          } else {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('solace-theme', theme);
+            var link = document.getElementById('theme-css');
+            if (link) link.href = '/css/themes/' + theme + '.css';
+          }
+          // Update meta theme-color
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) {
+            var colors = { dark: '#081019', light: '#faf8f5', midnight: '#000000' };
+            meta.setAttribute('content', colors[theme] || '#081019');
+          }
+          highlightActive();
+        });
+      });
+
+      // Custom theme apply
+      var btnApply = document.getElementById('btn-apply-custom-theme');
+      if (btnApply) {
+        btnApply.addEventListener('click', function() {
+          var name = document.getElementById('custom-theme-name').value.trim().replace(/[^a-z0-9-]/gi, '-').toLowerCase() || 'my-theme';
+          var bg = document.getElementById('custom-theme-bg').value;
+          var accent = document.getElementById('custom-theme-accent').value;
+          var text = document.getElementById('custom-theme-text').value;
+          var extra = document.getElementById('custom-theme-css').value;
+          var css = '--sb-bg: ' + bg + '; --sb-accent: ' + accent + '; --sb-text: ' + text + ';';
+          if (extra) css += ' ' + extra;
+          if (typeof SolaceTheme !== 'undefined') {
+            SolaceTheme.loadCustom(css, name);
+          }
+          highlightActive();
+        });
+      }
+
+      // Submit to App Store
+      var btnSubmit = document.getElementById('btn-submit-theme-store');
+      if (btnSubmit) {
+        btnSubmit.addEventListener('click', function() {
+          var apiKey = localStorage.getItem('solace_api_key');
+          if (!apiKey) {
+            alert('Sign in to submit themes to the App Store.');
+            return;
+          }
+          var name = document.getElementById('custom-theme-name').value.trim();
+          if (!name) { alert('Give your theme a name first.'); return; }
+          var bg = document.getElementById('custom-theme-bg').value;
+          var accent = document.getElementById('custom-theme-accent').value;
+          var text = document.getElementById('custom-theme-text').value;
+          var extra = document.getElementById('custom-theme-css').value;
+          btnSubmit.textContent = 'Submitting...';
+          fetch('https://www.solaceagi.com/api/v1/store/themes', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, bg: bg, accent: accent, text: text, css: extra })
+          }).then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+          }).then(function() {
+            btnSubmit.textContent = 'Submitted!';
+            setTimeout(function() { btnSubmit.textContent = 'Submit to App Store'; }, 3000);
+          }).catch(function(e) {
+            btnSubmit.textContent = 'Failed: ' + e.message;
+            setTimeout(function() { btnSubmit.textContent = 'Submit to App Store'; }, 3000);
+          });
+        });
+      }
+
+      highlightActive();
+      if (typeof SolaceTheme !== 'undefined') {
+        SolaceTheme.onchange(highlightActive);
+      }
+    })();
   </script>
 </body>
 </html>

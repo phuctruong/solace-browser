@@ -291,7 +291,7 @@
             '<h4>Solace Managed</h4>' +
             '<p>We handle LLM, team sync, eSign, FDA compliance</p>' +
           '</div>' +
-          '<span class="ob-path__price">From $8/mo</span>' +
+          '<span class="ob-path__price">From $8/mo (Starter)</span>' +
         '</div>' +
 
       '</div>' +

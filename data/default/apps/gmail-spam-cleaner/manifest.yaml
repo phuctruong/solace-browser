@@ -1,0 +1,18 @@
+id: gmail-spam-cleaner
+name: Gmail Spam Cleaner
+description: "Automatically scan Gmail spam folder and permanently delete confirmed spam. Reviews suspicious messages before deletion so you never lose important emails caught by the filter."
+category: email
+safety: B
+site: mail.google.com
+type: standard
+scopes:
+  - google.read.email
+  - google.write.email.delete
+partners:
+  google:
+    service: Gmail
+    auth_type: oauth2
+    required: true
+keep_alive:
+  url: https://mail.google.com/mail/u/0/#spam
+  check_interval_minutes: 60

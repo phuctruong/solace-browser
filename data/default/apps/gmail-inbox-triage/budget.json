@@ -1,7 +1,17 @@
 {
+  "daily_max_pages": 20,
+  "daily_max_llm_calls": 3,
+  "daily_max_screenshots": 10,
+  "max_cost_per_run_usd": 0.10,
   "cooldown_seconds": 5,
   "drafts_per_run": 5,
   "reads_per_run": 50,
   "remaining_runs": 120,
-  "writes_per_run": 0
+  "writes_per_run": 0,
+  "current_usage": {
+    "pages_today": 0,
+    "llm_calls_today": 0,
+    "screenshots_today": 0,
+    "cost_today_usd": 0.0
+  }
 }
