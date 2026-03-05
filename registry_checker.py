@@ -53,7 +53,7 @@ class RegistryChecker:
     # Registry file locations (check multiple paths for flexibility)
     REGISTRY_PATHS = [
         Path("RECIPE_REGISTRY.json"),
-        Path("artifacts/recipe_registry.json"),
+        Path.home() / ".solace" / "artifacts" / "recipe_registry.json",
         Path(".solace/recipe_registry.json"),
     ]
 

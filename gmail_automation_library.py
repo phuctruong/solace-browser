@@ -366,7 +366,7 @@ async def example_usage():
     playwright = await async_playwright().start()
     browser = await playwright.chromium.launch(headless=False)
     context = await browser.new_context(
-        storage_state="artifacts/gmail_working_session.json"
+        storage_state=str(Path.home() / ".solace" / "artifacts" / "gmail_working_session.json")
     )
     page = await context.new_page()
 
