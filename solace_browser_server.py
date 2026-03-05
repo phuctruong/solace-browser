@@ -1736,7 +1736,12 @@ async def security_headers_middleware(request, handler):
     response = await handler(request)
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
-    response.headers['Access-Control-Allow-Origin'] = '*'
+    # Restrict CORS to localhost and solaceagi.com (no wildcard)
+    origin = request.headers.get('Origin', '')
+    allowed = ('http://127.0.0.1', 'http://localhost', 'https://www.solaceagi.com', 'https://solaceagi.com')
+    if any(origin.startswith(a) for a in allowed):
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Vary'] = 'Origin'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
     response.headers['Content-Language'] = locale
@@ -3609,38 +3614,53 @@ class SolaceBrowserServer:
 
 
 def _start_web_ui_server(port: int = 8791) -> None:
-    """Start the web UI server (web/server.py) as a daemon thread.
+    """Start a minimal static file server for the web UI as a daemon thread.
 
-    This serves the dashboard HTML/CSS/JS and local API on the given port.
+    Serves HTML/CSS/JS from the web/ directory on the given port.
     Must be called BEFORE browser.start() so the home page can load.
+
+    Uses stdlib only — no import of web.server (not available in PyInstaller
+    bundles where web/ is packed as data, not as a Python package).
     """
     import threading
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
-    try:
-        from web.server import create_server
-    except ImportError:
-        logger.warning("[WebUI] web.server not importable — web UI will not be available")
+    # Find web/ directory: PyInstaller extracts data to sys._MEIPASS
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        web_root = str(Path(sys._MEIPASS) / "web")
+    else:
+        web_root = str(Path(__file__).resolve().parent / "web")
+
+    if not Path(web_root).is_dir():
+        logger.warning(f"[WebUI] web directory not found at {web_root}")
         return
 
-    web_root = Path(__file__).resolve().parent / "web"
-    original_cwd = os.getcwd()
+    class _SolaceUIHandler(SimpleHTTPRequestHandler):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            super().__init__(*args, directory=web_root, **kwargs)
+
+        def do_GET(self) -> None:
+            # Serve start.html for root URL
+            if self.path in ("/", "/index.html"):
+                self.path = "/start.html"
+            super().do_GET()
+
+        def log_message(self, format: str, *args: Any) -> None:
+            pass  # suppress per-request access logs
 
     def _serve() -> None:
-        os.chdir(str(web_root))
         try:
-            srv = create_server("127.0.0.1", port)
-            logger.info(f"[WebUI] Dashboard server started on http://127.0.0.1:{port}")
+            srv = ThreadingHTTPServer(("127.0.0.1", port), _SolaceUIHandler)
+            logger.info(f"[WebUI] Static server started on http://127.0.0.1:{port}")
             srv.serve_forever()
         except OSError as exc:
-            logger.warning(f"[WebUI] Could not start dashboard server on port {port}: {exc}")
-        finally:
-            os.chdir(original_cwd)
+            logger.warning(f"[WebUI] Could not bind port {port}: {exc}")
 
     t = threading.Thread(target=_serve, daemon=True, name="solace-web-ui")
     t.start()
-    # Give the server a moment to bind
+    # Brief pause to let the server bind before browser navigates to it
     import time
-    time.sleep(0.5)
+    time.sleep(0.3)
 
 
 async def main():
