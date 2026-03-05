@@ -63,7 +63,7 @@ jobs:
             artifact_ext: ""
           - os: windows-latest
             target_os: windows
-            object_name: solace-browser-windows-x86_64.exe
+            object_name: solace-browser-windows-x86_64.msi
             artifact_ext: ""
 
     steps:
@@ -80,6 +80,21 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt pyinstaller
+
+      - name: Install WiX toolset (Windows only)
+        if: matrix.target_os == 'windows'
+        shell: bash
+        run: dotnet tool install --global wix
+
+      - name: Install UPX (Linux/macOS)
+        if: matrix.target_os != 'windows'
+        shell: bash
+        run: |
+          if [ "${{ matrix.target_os }}" = "linux" ]; then
+            sudo apt-get install -y upx-ucl || true
+          elif [ "${{ matrix.target_os }}" = "macos" ]; then
+            brew install upx || true
+          fi
 
       - name: Build binary
         shell: bash
@@ -147,7 +162,7 @@ jobs:
             |----------|--------|--------|
             | Linux x86_64 | `solace-browser-linux-x86_64` | see `.sha256` |
             | macOS Universal | `solace-browser-macos-universal` | see `.sha256` |
-            | Windows x86_64 | `solace-browser-windows-x86_64.exe` | see `.sha256` |
+            | Windows x86_64 | `solace-browser-windows-x86_64.msi` | see `.sha256` |
 
             ### Install
 
@@ -156,12 +171,15 @@ jobs:
             chmod +x solace-browser-*
             ./solace-browser-linux-x86_64   # or macos-universal
 
-            # Windows
-            # Run installer (interactive)
-            .\solace-browser-windows-x86_64.exe
+            # Windows — MSI installer
+            # Interactive install (double-click or run):
+            msiexec /i solace-browser-windows-x86_64.msi
 
-            # Silent install
-            .\solace-browser-windows-x86_64.exe /VERYSILENT
+            # Silent install (for enterprise GPO/SCCM/Intune):
+            msiexec /i solace-browser-windows-x86_64.msi /qn
+
+            # Uninstall:
+            msiexec /x solace-browser-windows-x86_64.msi /qn
             ```
 
             ### Verify (SHA256)

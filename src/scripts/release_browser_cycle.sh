@@ -24,6 +24,7 @@ COMPILE_TIMEOUT="${COMPILE_TIMEOUT:-1800}"
 VERSIONED_CACHE_CONTROL="${VERSIONED_CACHE_CONTROL:-public,max-age=31536000,immutable}"
 LATEST_CACHE_CONTROL="${LATEST_CACHE_CONTROL:-no-store,max-age=0,must-revalidate}"
 WINDOWS_PACKAGE_MODE="${WINDOWS_PACKAGE_MODE:-auto}"
+UPX_ENABLED="${UPX_ENABLED:-auto}"
 
 log() { printf "[release-cycle] %s\n" "$*"; }
 
@@ -140,7 +141,15 @@ if target_os == "linux":
 elif target_os == "windows":
     if not is_pe(data, binary_path):
         fail(f"expected Windows PE artifact but got non-PE file: {binary_path}")
-    if windows_package_mode == "installer":
+    if windows_package_mode == "msi":
+        full = binary_path.read_bytes()
+        ole2_header = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+        if not full.startswith(ole2_header):
+            fail(
+                "expected Windows MSI artifact with OLE2 header "
+                f"but header missing: {binary_path}"
+            )
+    elif windows_package_mode == "installer":
         full = binary_path.read_bytes()
         if b"Inno Setup Setup Data" not in full:
             fail(
@@ -183,9 +192,17 @@ TARGET_ARCH="${TARGET_ARCH:-$(detect_arch)}"
 HOST_OS="$(detect_os)"
 
 if [[ "$TARGET_OS" == "windows" && "$WINDOWS_PACKAGE_MODE" == "auto" ]]; then
-  WINDOWS_PACKAGE_MODE="installer"
+  WINDOWS_PACKAGE_MODE="msi"
 elif [[ "$WINDOWS_PACKAGE_MODE" == "auto" ]]; then
   WINDOWS_PACKAGE_MODE="binary"
+fi
+
+if [[ "$UPX_ENABLED" == "auto" ]]; then
+  if command -v upx >/dev/null 2>&1; then
+    UPX_ENABLED="1"
+  else
+    UPX_ENABLED="0"
+  fi
 fi
 
 case "$TARGET_OS" in
@@ -202,7 +219,11 @@ case "$TARGET_OS" in
   windows)
     DEFAULT_SPEC_FILE="solace-browser.spec"
     DEFAULT_BUILD_BIN_PATH="$PROJECT_ROOT/dist/solace-browser.exe"
-    DEFAULT_OBJECT_NAME="solace-browser-windows-$TARGET_ARCH.exe"
+    if [[ "$WINDOWS_PACKAGE_MODE" == "msi" ]]; then
+      DEFAULT_OBJECT_NAME="solace-browser-windows-$TARGET_ARCH.msi"
+    else
+      DEFAULT_OBJECT_NAME="solace-browser-windows-$TARGET_ARCH.exe"
+    fi
     ;;
   *)
     log "ERROR: unsupported TARGET_OS=$TARGET_OS (expected linux|macos|windows)"
@@ -268,8 +289,55 @@ if [[ ! -f "$BUILD_BIN_PATH" ]]; then
 fi
 
 FINAL_BUILD_PATH="$BUILD_BIN_PATH"
-if [[ "$TARGET_OS" == "windows" && "$BUILD_ENABLED" == "1" && "$WINDOWS_PACKAGE_MODE" == "installer" ]]; then
-  log "Step 1.1/6: package Windows installer with Inno Setup."
+
+# ── UPX compression for Linux/macOS ──────────────────────────────────────────
+if [[ "$UPX_ENABLED" == "1" && "$BUILD_ENABLED" == "1" && "$TARGET_OS" != "windows" ]]; then
+  ORIGINAL_SIZE="$(stat --printf='%s' "$BUILD_BIN_PATH" 2>/dev/null || stat -f '%z' "$BUILD_BIN_PATH" 2>/dev/null || echo 0)"
+  log "Step 1.1/6: compress binary with UPX (original: ${ORIGINAL_SIZE} bytes)."
+  set +e
+  upx --best --lzma "$BUILD_BIN_PATH" >"$OUT_DIR/upx.log" 2>&1
+  UPX_RC=$?
+  set -e
+  if [[ "$UPX_RC" -ne 0 ]]; then
+    log "WARNING: UPX compression failed (rc=$UPX_RC). Continuing with uncompressed binary."
+    cat "$OUT_DIR/upx.log" >&2 || true
+  else
+    COMPRESSED_SIZE="$(stat --printf='%s' "$BUILD_BIN_PATH" 2>/dev/null || stat -f '%z' "$BUILD_BIN_PATH" 2>/dev/null || echo 0)"
+    log "UPX: ${ORIGINAL_SIZE} → ${COMPRESSED_SIZE} bytes ($(( 100 - COMPRESSED_SIZE * 100 / ORIGINAL_SIZE ))% reduction)"
+  fi
+fi
+
+# ── Windows MSI packaging ────────────────────────────────────────────────────
+if [[ "$TARGET_OS" == "windows" && "$BUILD_ENABLED" == "1" && "$WINDOWS_PACKAGE_MODE" == "msi" ]]; then
+  log "Step 1.1/6: package Windows MSI with WiX toolset."
+  WINDOWS_MSI_PATH="$PROJECT_ROOT/dist/solace-browser-windows-${TARGET_ARCH}.msi"
+  POWERSHELL_BIN=""
+  if command -v pwsh >/dev/null 2>&1; then
+    POWERSHELL_BIN="pwsh"
+  elif command -v powershell.exe >/dev/null 2>&1; then
+    POWERSHELL_BIN="powershell.exe"
+  elif command -v powershell >/dev/null 2>&1; then
+    POWERSHELL_BIN="powershell"
+  else
+    log "ERROR: no PowerShell runtime available to build Windows MSI."
+    exit 1
+  fi
+  set +e
+  "$POWERSHELL_BIN" -NoProfile -ExecutionPolicy Bypass \
+    -File "$PROJECT_ROOT/scripts/package-windows-msi.ps1" \
+    -InputBinary "$BUILD_BIN_PATH" \
+    -OutputMsi "$WINDOWS_MSI_PATH" \
+    -AppVersion "$VERSION" >"$OUT_DIR/windows-msi.log" 2>&1
+  MSI_RC=$?
+  set -e
+  if [[ "$MSI_RC" -ne 0 ]]; then
+    log "ERROR: Windows MSI packaging failed (rc=$MSI_RC). See $OUT_DIR/windows-msi.log"
+    tail -n 120 "$OUT_DIR/windows-msi.log" >&2 || true
+    exit 1
+  fi
+  FINAL_BUILD_PATH="$WINDOWS_MSI_PATH"
+elif [[ "$TARGET_OS" == "windows" && "$BUILD_ENABLED" == "1" && "$WINDOWS_PACKAGE_MODE" == "installer" ]]; then
+  log "Step 1.1/6: package Windows installer with Inno Setup (legacy)."
   WINDOWS_INSTALLER_PATH="$PROJECT_ROOT/dist/solace-browser-windows-installer.exe"
   POWERSHELL_BIN=""
   if command -v pwsh >/dev/null 2>&1; then

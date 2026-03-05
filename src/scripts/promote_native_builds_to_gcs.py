@@ -48,7 +48,7 @@ class PlatformSpec:
 PLATFORMS: tuple[PlatformSpec, ...] = (
     PlatformSpec("native-linux", "solace-browser-linux-x86_64", "linux"),
     PlatformSpec("native-macos", "solace-browser-macos-universal", "macos"),
-    PlatformSpec("native-windows", "solace-browser-windows-x86_64.exe", "windows"),
+    PlatformSpec("native-windows", "solace-browser-windows-x86_64.msi", "windows"),
 )
 
 
@@ -184,11 +184,20 @@ def _verify_binary(target_os: str, binary_path: Path) -> None:
     if target_os == "macos" and not _is_macho(head):
         raise RuntimeError(f"{binary_path} is not a Mach-O binary.")
     if target_os == "windows":
-        if not _is_pe(binary_path):
-            raise RuntimeError(f"{binary_path} is not a PE binary.")
-        if b"Inno Setup Setup Data" not in data:
+        data_full = binary_path.read_bytes()
+        ole2_header = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+        if data_full.startswith(ole2_header):
+            # MSI format (OLE2 Compound Document)
+            pass
+        elif _is_pe(binary_path):
+            # Legacy Inno Setup installer (PE format)
+            if b"Inno Setup Setup Data" not in data_full:
+                raise RuntimeError(
+                    f"{binary_path} is PE but not an Inno Setup installer (marker missing)."
+                )
+        else:
             raise RuntimeError(
-                f"{binary_path} is not an Inno Setup installer (marker missing)."
+                f"{binary_path} is not a valid Windows installer (neither MSI nor PE)."
             )
 
 
