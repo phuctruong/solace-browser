@@ -5,7 +5,7 @@ Promote native build artifacts from a GitHub Actions run into GCS.
 Flow:
 1) Read private GitHub credentials from `git credential fill`.
 2) Download `native-linux`, `native-macos`, `native-windows` artifact bundles.
-3) Verify binary headers (ELF/Mach-O/PE).
+3) Verify binary headers (ELF/Mach-O/PE) and Windows installer marker.
 4) Upload binaries + sha256 files to versioned and latest GCS paths.
 """
 
@@ -177,13 +177,19 @@ def _is_pe(file_path: Path) -> bool:
 
 
 def _verify_binary(target_os: str, binary_path: Path) -> None:
-    head = binary_path.read_bytes()[:64]
+    data = binary_path.read_bytes()
+    head = data[:64]
     if target_os == "linux" and not _is_elf(head):
         raise RuntimeError(f"{binary_path} is not an ELF binary.")
     if target_os == "macos" and not _is_macho(head):
         raise RuntimeError(f"{binary_path} is not a Mach-O binary.")
-    if target_os == "windows" and not _is_pe(binary_path):
-        raise RuntimeError(f"{binary_path} is not a PE binary.")
+    if target_os == "windows":
+        if not _is_pe(binary_path):
+            raise RuntimeError(f"{binary_path} is not a PE binary.")
+        if b"Inno Setup Setup Data" not in data:
+            raise RuntimeError(
+                f"{binary_path} is not an Inno Setup installer (marker missing)."
+            )
 
 
 def _gcloud_cp(source: Path, destination: str, cache_control: str | None = None) -> None:
@@ -253,6 +259,9 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory(prefix="solace-native-artifacts-") as temp_dir_str:
         temp_dir = Path(temp_dir_str)
+        validated: list[tuple[PlatformSpec, Path, Path]] = []
+
+        # Fail-closed gate: verify all artifacts before uploading any object to GCS.
         for spec in PLATFORMS:
             artifact = artifacts_by_name.get(spec.artifact_name)
             if artifact is None:
@@ -267,7 +276,9 @@ def main() -> int:
             binary = _find_file(extract_dir, spec.object_name)
             checksum = _find_file(extract_dir, f"{spec.object_name}.sha256")
             _verify_binary(spec.target_os, binary)
+            validated.append((spec, binary, checksum))
 
+        for spec, binary, checksum in validated:
             versioned_binary = (
                 f"gs://{args.bucket}/{args.object_prefix}/v{version}/{spec.object_name}"
             )

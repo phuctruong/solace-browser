@@ -63,8 +63,8 @@ jobs:
             artifact_ext: ""
           - os: windows-latest
             target_os: windows
-            object_name: solace-browser-windows-x86_64
-            artifact_ext: ".exe"
+            object_name: solace-browser-windows-x86_64.exe
+            artifact_ext: ""
 
     steps:
       - uses: actions/checkout@v4
@@ -157,7 +157,11 @@ jobs:
             ./solace-browser-linux-x86_64   # or macos-universal
 
             # Windows
-            solace-browser-windows-x86_64.exe
+            # Run installer (interactive)
+            .\solace-browser-windows-x86_64.exe
+
+            # Silent install
+            .\solace-browser-windows-x86_64.exe /VERYSILENT
             ```
 
             ### Verify (SHA256)

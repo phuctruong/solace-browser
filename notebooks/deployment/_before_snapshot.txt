@@ -1,0 +1,5 @@
+timestamp=2026-03-05T16:52:18Z
+git_status_count=13
+latest_release_cycle_before=20260303-093550
+linux_artifact_before=dist/solace-browser-linux-x86_64|305491696|1772545208
+linux_sha_before=610ecdb73d3d368aebff3cd4c6b5b9dbdbb8798d044bfbdb0ebbc3349644a907  /home/phuc/projects/solace-browser/dist/solace-browser-linux-x86_64

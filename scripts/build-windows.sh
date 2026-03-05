@@ -28,16 +28,29 @@ if [ ! -f "${ARTIFACT}" ]; then
   exit 1
 fi
 
+INSTALLER_ARTIFACT="${DIST_DIR}/solace-browser-windows-x86_64.exe"
+echo "Packaging Windows installer with Inno Setup"
+powershell.exe -NoProfile -ExecutionPolicy Bypass \
+  -File "${ROOT_DIR}/scripts/package-windows-installer.ps1" \
+  -InputBinary "${ARTIFACT}" \
+  -OutputInstaller "${INSTALLER_ARTIFACT}" \
+  -AppVersion "${VERSION}"
+
+if [ ! -f "${INSTALLER_ARTIFACT}" ]; then
+  echo "ERROR: expected Windows installer missing at ${INSTALLER_ARTIFACT}" >&2
+  exit 1
+fi
+
 python3 - <<'PY'
 from pathlib import Path
 import hashlib
 
 root = Path.cwd()
 version = (root / "VERSION").read_text(encoding="utf-8").strip()
-artifact = root / "dist" / "solace-browser.exe"
+artifact = root / "dist" / "solace-browser-windows-x86_64.exe"
 digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
 (root / "dist" / f"solace-browser-{version}-windows-x86_64.sha256").write_text(
-    digest + "  solace-browser.exe\n",
+    digest + "  solace-browser-windows-x86_64.exe\n",
     encoding="utf-8",
 )
 PY

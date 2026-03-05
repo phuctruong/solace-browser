@@ -23,6 +23,7 @@ SMOKE_PORT="${SMOKE_PORT:-9232}"
 COMPILE_TIMEOUT="${COMPILE_TIMEOUT:-1800}"
 VERSIONED_CACHE_CONTROL="${VERSIONED_CACHE_CONTROL:-public,max-age=31536000,immutable}"
 LATEST_CACHE_CONTROL="${LATEST_CACHE_CONTROL:-no-store,max-age=0,must-revalidate}"
+WINDOWS_PACKAGE_MODE="${WINDOWS_PACKAGE_MODE:-auto}"
 
 log() { printf "[release-cycle] %s\n" "$*"; }
 
@@ -87,7 +88,8 @@ PY
 verify_binary_format() {
   local target_os="$1"
   local binary_path="$2"
-  TARGET_OS="$target_os" BINARY_PATH="$binary_path" python3 - <<'PY'
+  local windows_package_mode="${3:-binary}"
+  TARGET_OS="$target_os" BINARY_PATH="$binary_path" WINDOWS_PACKAGE_MODE="$windows_package_mode" python3 - <<'PY'
 from pathlib import Path
 import os
 import struct
@@ -96,6 +98,7 @@ import sys
 target_os = os.environ["TARGET_OS"]
 binary_path = Path(os.environ["BINARY_PATH"])
 data = binary_path.read_bytes()[:64]
+windows_package_mode = os.environ.get("WINDOWS_PACKAGE_MODE", "binary")
 
 def fail(msg: str) -> None:
     print(f"[release-cycle] ERROR: {msg}", file=sys.stderr)
@@ -137,6 +140,13 @@ if target_os == "linux":
 elif target_os == "windows":
     if not is_pe(data, binary_path):
         fail(f"expected Windows PE artifact but got non-PE file: {binary_path}")
+    if windows_package_mode == "installer":
+        full = binary_path.read_bytes()
+        if b"Inno Setup Setup Data" not in full:
+            fail(
+                "expected Windows installer artifact with Inno Setup marker "
+                f"but marker missing: {binary_path}"
+            )
 elif target_os == "macos":
     if not is_macho(data):
         fail(f"expected macOS Mach-O artifact but got non-Mach-O file: {binary_path}")
@@ -171,6 +181,12 @@ detect_arch() {
 TARGET_OS="${TARGET_OS:-$(detect_os)}"
 TARGET_ARCH="${TARGET_ARCH:-$(detect_arch)}"
 HOST_OS="$(detect_os)"
+
+if [[ "$TARGET_OS" == "windows" && "$WINDOWS_PACKAGE_MODE" == "auto" ]]; then
+  WINDOWS_PACKAGE_MODE="installer"
+elif [[ "$WINDOWS_PACKAGE_MODE" == "auto" ]]; then
+  WINDOWS_PACKAGE_MODE="binary"
+fi
 
 case "$TARGET_OS" in
   linux)
@@ -251,19 +267,55 @@ if [[ ! -f "$BUILD_BIN_PATH" ]]; then
   exit 1
 fi
 
+FINAL_BUILD_PATH="$BUILD_BIN_PATH"
+if [[ "$TARGET_OS" == "windows" && "$BUILD_ENABLED" == "1" && "$WINDOWS_PACKAGE_MODE" == "installer" ]]; then
+  log "Step 1.1/6: package Windows installer with Inno Setup."
+  WINDOWS_INSTALLER_PATH="$PROJECT_ROOT/dist/solace-browser-windows-installer.exe"
+  POWERSHELL_BIN=""
+  if command -v pwsh >/dev/null 2>&1; then
+    POWERSHELL_BIN="pwsh"
+  elif command -v powershell.exe >/dev/null 2>&1; then
+    POWERSHELL_BIN="powershell.exe"
+  elif command -v powershell >/dev/null 2>&1; then
+    POWERSHELL_BIN="powershell"
+  else
+    log "ERROR: no PowerShell runtime available to build Windows installer."
+    exit 1
+  fi
+  set +e
+  "$POWERSHELL_BIN" -NoProfile -ExecutionPolicy Bypass \
+    -File "$PROJECT_ROOT/scripts/package-windows-installer.ps1" \
+    -InputBinary "$BUILD_BIN_PATH" \
+    -OutputInstaller "$WINDOWS_INSTALLER_PATH" \
+    -AppVersion "$VERSION" >"$OUT_DIR/windows-installer.log" 2>&1
+  INSTALLER_RC=$?
+  set -e
+  if [[ "$INSTALLER_RC" -ne 0 ]]; then
+    log "ERROR: Windows installer packaging failed (rc=$INSTALLER_RC). See $OUT_DIR/windows-installer.log"
+    tail -n 120 "$OUT_DIR/windows-installer.log" >&2 || true
+    exit 1
+  fi
+  FINAL_BUILD_PATH="$WINDOWS_INSTALLER_PATH"
+fi
+
+if [[ ! -f "$FINAL_BUILD_PATH" ]]; then
+  log "ERROR: final packaged artifact not found at $FINAL_BUILD_PATH"
+  exit 1
+fi
+
 DIST_OBJECT_PATH="$PROJECT_ROOT/dist/$OBJECT_NAME"
 DIST_SHA_PATH="$PROJECT_ROOT/dist/$OBJECT_NAME.sha256"
 SAME_PATH="$(python3 - <<PY
 from pathlib import Path
-src = Path(r"$BUILD_BIN_PATH").resolve()
+src = Path(r"$FINAL_BUILD_PATH").resolve()
 dst = Path(r"$DIST_OBJECT_PATH").resolve()
 print("1" if src == dst else "0")
 PY
 )"
 if [[ "$SAME_PATH" != "1" ]]; then
-  cp "$BUILD_BIN_PATH" "$DIST_OBJECT_PATH"
+  cp "$FINAL_BUILD_PATH" "$DIST_OBJECT_PATH"
 fi
-verify_binary_format "$TARGET_OS" "$DIST_OBJECT_PATH"
+verify_binary_format "$TARGET_OS" "$DIST_OBJECT_PATH" "$WINDOWS_PACKAGE_MODE"
 write_sha256 "$DIST_OBJECT_PATH" "$DIST_SHA_PATH"
 cp "$DIST_OBJECT_PATH" "$OUT_DIR/$OBJECT_NAME"
 cp "$DIST_SHA_PATH" "$OUT_DIR/$OBJECT_NAME.sha256"
@@ -368,6 +420,7 @@ UPLOAD_ENABLED="$UPLOAD_ENABLED" \
 DOWNLOAD_ENABLED="$DOWNLOAD_ENABLED" \
 RUN_SMOKE="$RUN_SMOKE" \
 HEAD_MODE="$HEAD_MODE" \
+WINDOWS_PACKAGE_MODE="$WINDOWS_PACKAGE_MODE" \
 SMOKE_STATUS="$SMOKE_STATUS" \
 python3 - <<'PY'
 import json
@@ -415,6 +468,7 @@ report = {
         "download_enabled": os.environ["DOWNLOAD_ENABLED"] == "1",
         "run_smoke": os.environ["RUN_SMOKE"] == "1",
         "head_mode": os.environ["HEAD_MODE"],
+        "windows_package_mode": os.environ["WINDOWS_PACKAGE_MODE"],
     },
     "smoke_status": os.environ["SMOKE_STATUS"],
 }

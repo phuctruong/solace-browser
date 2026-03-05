@@ -1,0 +1,7 @@
+timestamp=2026-03-05T18:44:28Z
+latest_release_cycle_after=20260305-133354
+linux_artifact_after=dist/solace-browser-linux-x86_64|320822760|1772735756
+linux_sha_after=6a188f2609dc50f220ad070e49521462bde890a240044679188a27147a77064b  solace-browser-linux-x86_64
+metrics_path=scratch/release-cycle/20260305-133354/metrics.json
+report_path=scratch/release-cycle/20260305-133354/report.md
+windows_latest_content_length=89005981
