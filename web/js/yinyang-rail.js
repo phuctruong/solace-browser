@@ -1,12 +1,17 @@
 /**
  * YinYang Dual Rail — Solace Browser
- * v1.0.0 | Auth: 65537
+ * v2.0.0 | Auth: 65537
  *
  * Implements Paper 04: Yinyang Dual Rail — Browser Integration
+ * v2.0: Top suggestion bar + enhanced chat + quick actions + history
+ *
+ * TOP SUGGEST BAR: always-visible context-aware suggestion chips
+ *   Shows smart prompts based on current page/app
+ *   Dismissible, remembers state per session
  *
  * Bottom rail: always-visible 36px companion bar
  *   Collapsed: ☯ Yinyang | $X.XX | Belt | N actions ── [▲]
- *   Expanded:  chat history + input field (300px)
+ *   Expanded:  chat history + quick actions + input field (340px)
  *   Shortcut:  Ctrl+Y toggle, Ctrl+Shift+Y focus, Escape collapse
  *
  * Top rail: shown only during automation execution
@@ -26,12 +31,80 @@ const YinyangRail = (() => {
   const STORAGE_KEY_CREDITS = 'yy_credits';
   const STORAGE_KEY_ACTIONS = 'yy_actions';
   const STORAGE_KEY_PALETTE = 'yy_palette';
+  const STORAGE_KEY_HISTORY = 'yy_chat_history';
+  const STORAGE_KEY_SUGGEST_HIDDEN = 'yy_suggest_hidden';
   const YY_PALETTE_COUNT = 6;
   const YY_PALETTE_NAMES = ['Cyan', 'Ocean', 'Sunset', 'Aurora', 'Fire', 'Lunar'];
+  const MAX_HISTORY = 50;
 
   let _rail = null;
+  let _suggestBar = null;
   let _expanded = localStorage.getItem(STORAGE_KEY_EXPANDED) === 'true';
   let _sending = false;
+
+  // ─── Context-aware suggestions per page ────────────────────
+  const PAGE_SUGGESTIONS = {
+    '/': [
+      { icon: '📬', text: 'Run Gmail Triage', action: 'Run my Gmail Inbox Triage app' },
+      { icon: '📊', text: 'Check schedule', action: 'What tasks are scheduled for today?' },
+      { icon: '🔍', text: 'Search apps', action: 'What apps are available for email management?' },
+      { icon: '💡', text: 'Getting started', action: 'How do I get started with Solace Browser?' },
+    ],
+    '/home': [
+      { icon: '📬', text: 'Run Gmail Triage', action: 'Run my Gmail Inbox Triage app' },
+      { icon: '📊', text: 'Check schedule', action: 'What tasks are scheduled for today?' },
+      { icon: '🧹', text: 'Clean spam', action: 'Run Gmail Spam Cleaner to delete spam' },
+      { icon: '💡', text: 'Quick tips', action: 'Give me a productivity tip' },
+    ],
+    '/start': [
+      { icon: '🚀', text: 'Quick setup', action: 'Help me set up my first app' },
+      { icon: '🔗', text: 'Link Gmail', action: 'How do I connect my Google account?' },
+      { icon: '📱', text: 'Link LinkedIn', action: 'How do I link my LinkedIn account?' },
+      { icon: '❓', text: 'What can you do?', action: 'What can Solace Browser do for me?' },
+    ],
+    '/app-store': [
+      { icon: '📧', text: 'Best for email', action: 'Which apps help with email management?' },
+      { icon: '📈', text: 'Marketing apps', action: 'Show me apps for marketing and social media' },
+      { icon: '🔒', text: 'Privacy & safety', action: 'How does Solace keep my data safe?' },
+      { icon: '💰', text: 'Cost per app', action: 'How much does it cost to run each app?' },
+    ],
+    '/apps': [
+      { icon: '📧', text: 'Best for email', action: 'Which apps help with email management?' },
+      { icon: '📈', text: 'Marketing apps', action: 'Show me apps for marketing and social media' },
+      { icon: '🔒', text: 'Privacy & safety', action: 'How does Solace keep my data safe?' },
+      { icon: '💰', text: 'Cost per app', action: 'How much does it cost to run each app?' },
+    ],
+    '/app-detail': [
+      { icon: '▶️', text: 'Run this app', action: 'Run the currently selected app' },
+      { icon: '📋', text: 'View recipe', action: 'Show me the recipe steps for this app' },
+      { icon: '💰', text: 'Cost estimate', action: 'How much will it cost to run this app?' },
+      { icon: '📊', text: 'Past runs', action: 'Show my recent run history for this app' },
+    ],
+    '/schedule': [
+      { icon: '➕', text: 'Add schedule', action: 'How do I schedule an app to run automatically?' },
+      { icon: '📅', text: 'Today\'s tasks', action: 'What is scheduled for today?' },
+      { icon: '⏸️', text: 'Pause all', action: 'How do I pause all scheduled tasks?' },
+    ],
+    '/settings': [
+      { icon: '🔑', text: 'API keys', action: 'How do I configure my API key?' },
+      { icon: '🌍', text: 'Change language', action: 'How do I change the language?' },
+      { icon: '🔒', text: 'Privacy settings', action: 'What privacy settings are available?' },
+      { icon: '💾', text: 'Export data', action: 'How do I export my data and evidence?' },
+    ],
+    '/guide': [
+      { icon: '1️⃣', text: 'First steps', action: 'Walk me through setting up Solace step by step' },
+      { icon: '📧', text: 'Gmail setup', action: 'How do I connect Gmail and run my first triage?' },
+      { icon: '🔗', text: 'LinkedIn setup', action: 'How do I connect LinkedIn?' },
+    ],
+  };
+
+  const QUICK_ACTIONS = [
+    { icon: '📬', label: 'Gmail Triage', msg: 'Run my Gmail Inbox Triage app now' },
+    { icon: '🧹', label: 'Clean Spam', msg: 'Run Gmail Spam Cleaner' },
+    { icon: '📊', label: 'My Schedule', msg: 'Show my scheduled tasks' },
+    { icon: '💡', label: 'Tip', msg: 'Give me a productivity tip for today' },
+    { icon: '😄', label: 'Joke', msg: 'Tell me a tech joke' },
+  ];
 
   // ─── Bottom rail ──────────────────────────────────────────────
   function _getStats() {
@@ -40,6 +113,96 @@ const YinyangRail = (() => {
       belt: localStorage.getItem(STORAGE_KEY_BELT) || 'White Belt',
       actions: parseInt(localStorage.getItem(STORAGE_KEY_ACTIONS) || '0', 10),
     };
+  }
+
+  // ─── Chat history persistence ────────────────────────────
+  function _saveHistory() {
+    if (!_rail) return;
+    const msgs = _rail.querySelectorAll('.yy-msg');
+    const history = [];
+    msgs.forEach(m => {
+      if (m.classList.contains('yy-msg--typing')) return;
+      history.push({
+        role: m.classList.contains('yy-msg--user') ? 'user' : 'assistant',
+        text: m.textContent,
+        time: m.querySelector('.yy-msg__time') ? m.querySelector('.yy-msg__time').textContent : '',
+      });
+    });
+    // Keep last MAX_HISTORY messages
+    const trimmed = history.slice(-MAX_HISTORY);
+    try { localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(trimmed)); } catch(e) { /* quota */ }
+  }
+
+  function _loadHistory(body) {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_HISTORY);
+      if (!raw) return;
+      const history = JSON.parse(raw);
+      history.forEach(h => {
+        const msg = document.createElement('div');
+        msg.className = `yy-msg yy-msg--${h.role}`;
+        msg.innerHTML = _formatMessage(h.text);
+        if (h.time && h.role === 'assistant') {
+          const timeEl = document.createElement('span');
+          timeEl.className = 'yy-msg__time';
+          timeEl.textContent = h.time;
+          msg.appendChild(timeEl);
+        }
+        body.appendChild(msg);
+      });
+      body.scrollTop = body.scrollHeight;
+    } catch(e) { /* corrupt */ }
+  }
+
+  // ─── Simple markdown rendering ─────────────────────────────
+  function _formatMessage(text) {
+    return text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`(.+?)`/g, '<code>$1</code>')
+      .replace(/\n/g, '<br>');
+  }
+
+  // ─── Top suggestion bar ────────────────────────────────────
+  function _buildSuggestBar() {
+    if (sessionStorage.getItem(STORAGE_KEY_SUGGEST_HIDDEN) === '1') return null;
+
+    const path = window.location.pathname.replace(/\/$/, '') || '/';
+    const suggestions = PAGE_SUGGESTIONS[path] || PAGE_SUGGESTIONS['/'];
+
+    const bar = document.createElement('div');
+    bar.id = 'yySuggestBar';
+    bar.className = 'yy-suggest-bar';
+    bar.innerHTML = `
+      <img class="yy-suggest-bar__logo" src="/images/yinyang/yinyang-logo-32.png" alt="" width="22" height="22">
+      <span class="yy-suggest-bar__label">YinYang</span>
+      <div class="yy-suggest-bar__chips" id="yySuggestChips"></div>
+      <button class="yy-suggest-bar__dismiss" id="yySuggestDismiss" title="Hide suggestions" aria-label="Hide suggestions">&times;</button>
+    `;
+
+    const chips = bar.querySelector('#yySuggestChips');
+    suggestions.forEach(s => {
+      const chip = document.createElement('button');
+      chip.className = 'yy-chip';
+      chip.innerHTML = `<span class="yy-chip__icon">${s.icon}</span> ${s.text}`;
+      chip.addEventListener('click', () => {
+        // Open chat and send the suggestion
+        if (!_expanded) _toggle();
+        setTimeout(() => {
+          const input = _rail.querySelector('#yyInput');
+          if (input) { input.value = s.action; _sendMessage(); }
+        }, 100);
+      });
+      chips.appendChild(chip);
+    });
+
+    bar.querySelector('#yySuggestDismiss').addEventListener('click', () => {
+      bar.classList.add('is-hidden');
+      document.body.classList.remove('yy-suggest-active');
+      sessionStorage.setItem(STORAGE_KEY_SUGGEST_HIDDEN, '1');
+    });
+
+    return bar;
   }
 
   function _buildRail() {
@@ -65,6 +228,7 @@ const YinyangRail = (() => {
         <span id="yyToggleIcon" aria-hidden="true">${_expanded ? '&#9660;' : '&#9650;'}</span>
       </div>
       <div class="yy-bottom-rail__body" id="yyRailBody" aria-live="polite"></div>
+      <div class="yy-quick-actions" id="yyQuickActions"></div>
       <div class="yy-bottom-rail__input" id="yyRailInput">
         <img class="yy-input-logo" src="/images/yinyang/yinyang-logo-32.png" alt="" width="22" height="22" aria-hidden="true">
         <input type="text" id="yyInput" placeholder="Ask Yinyang anything&#8230;" autocomplete="off" spellcheck="false"
@@ -72,6 +236,23 @@ const YinyangRail = (() => {
         <button id="yySend" aria-label="Send message">Ask</button>
       </div>
     `;
+
+    // Build quick action buttons
+    const qContainer = el.querySelector('#yyQuickActions');
+    QUICK_ACTIONS.forEach(qa => {
+      const btn = document.createElement('button');
+      btn.className = 'yy-quick-btn';
+      btn.innerHTML = `${qa.icon} ${qa.label}`;
+      btn.addEventListener('click', () => {
+        const input = el.querySelector('#yyInput');
+        if (input) { input.value = qa.msg; _sendMessage(); }
+      });
+      qContainer.appendChild(btn);
+    });
+
+    // Load chat history into body
+    const body = el.querySelector('#yyRailBody');
+    _loadHistory(body);
 
     // Show/hide body + input based on initial state
     _applyExpandState(el);
@@ -82,18 +263,21 @@ const YinyangRail = (() => {
   function _applyExpandState(el) {
     const body = el.querySelector('#yyRailBody');
     const input = el.querySelector('#yyRailInput');
+    const quick = el.querySelector('#yyQuickActions');
     const icon = el.querySelector('#yyToggleIcon');
     const header = el.querySelector('#yyRailHeader');
     if (_expanded) {
       el.classList.add('is-expanded');
       body.style.display = '';
       input.style.display = '';
+      if (quick) quick.style.display = '';
       if (icon) icon.innerHTML = '&#9660;';
       if (header) header.setAttribute('aria-expanded', 'true');
     } else {
       el.classList.remove('is-expanded');
       body.style.display = 'none';
       input.style.display = 'none';
+      if (quick) quick.style.display = 'none';
       if (icon) icon.innerHTML = '&#9650;';
       if (header) header.setAttribute('aria-expanded', 'false');
     }
@@ -163,9 +347,35 @@ const YinyangRail = (() => {
     if (!body) return;
     const msg = document.createElement('div');
     msg.className = `yy-msg yy-msg--${role}`;
-    msg.textContent = text;
+    if (role === 'assistant') {
+      msg.innerHTML = _formatMessage(text);
+      const ts = document.createElement('span');
+      ts.className = 'yy-msg__time';
+      ts.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      msg.appendChild(ts);
+    } else {
+      msg.textContent = text;
+    }
     body.appendChild(msg);
     body.scrollTop = body.scrollHeight;
+    _saveHistory();
+  }
+
+  function _showTyping() {
+    const body = _rail.querySelector('#yyRailBody');
+    if (!body) return;
+    const dot = document.createElement('div');
+    dot.className = 'yy-msg yy-msg--assistant yy-msg--typing';
+    dot.innerHTML = '<div class="yy-typing-dots"><span></span><span></span><span></span></div>';
+    body.appendChild(dot);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function _removeTyping() {
+    const body = _rail.querySelector('#yyRailBody');
+    if (!body) return;
+    const dot = body.querySelector('.yy-msg--typing');
+    if (dot) dot.remove();
   }
 
   async function _sendMessage() {
@@ -180,6 +390,7 @@ const YinyangRail = (() => {
     btn.textContent = '...';
 
     _appendMsg(text, 'user');
+    _showTyping();
 
     try {
       const res = await fetch('/api/yinyang/chat', {
@@ -189,12 +400,18 @@ const YinyangRail = (() => {
           message: text,
           context: {
             page: window.location.pathname,
+            page_title: document.title,
+            current_app: document.querySelector('[data-app-id]')?.dataset?.appId || '',
+            url: window.location.href,
             credits: localStorage.getItem(STORAGE_KEY_CREDITS) || '0',
             belt: localStorage.getItem(STORAGE_KEY_BELT) || 'White',
             locale: localStorage.getItem('sb_locale') || 'en',
+            installed_apps: parseInt(localStorage.getItem('sb_installed_count') || '0', 10),
           },
         }),
       });
+
+      _removeTyping();
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -214,6 +431,7 @@ const YinyangRail = (() => {
         }
       }
     } catch (err) {
+      _removeTyping();
       _appendMsg(`⚠️ ${err.message || 'Network error'}`, 'assistant');
     } finally {
       _sending = false;
@@ -266,6 +484,14 @@ const YinyangRail = (() => {
   // ─── Public API ───────────────────────────────────────────────
   function init() {
     if (document.getElementById('yyRail')) return; // already injected
+
+    // Build and inject top suggestion bar
+    _suggestBar = _buildSuggestBar();
+    if (_suggestBar) {
+      document.body.prepend(_suggestBar);
+      document.body.classList.add('yy-suggest-active');
+    }
+
     _rail = _buildRail();
     document.body.appendChild(_rail);
 
