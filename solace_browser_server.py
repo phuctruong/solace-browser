@@ -697,7 +697,7 @@ class SolaceBrowser:
             logger.warning(f"Web server not ready ({home_url}): {exc} — falling back to local file")
             start_page = Path(__file__).parent / "web" / "start.html"
             if start_page.exists():
-                await page.goto(f"file://{start_page.resolve()}", wait_until="domcontentloaded")
+                await page.goto(start_page.resolve().as_uri(), wait_until="domcontentloaded")
                 logger.info("Fallback: start page loaded from file")
             else:
                 logger.error("Neither web server nor local start.html available — browser started on blank page")
@@ -3608,10 +3608,49 @@ class SolaceBrowserServer:
             await runner.cleanup()
 
 
+def _start_web_ui_server(port: int = 8791) -> None:
+    """Start the web UI server (web/server.py) as a daemon thread.
+
+    This serves the dashboard HTML/CSS/JS and local API on the given port.
+    Must be called BEFORE browser.start() so the home page can load.
+    """
+    import threading
+
+    try:
+        from web.server import create_server
+    except ImportError:
+        logger.warning("[WebUI] web.server not importable — web UI will not be available")
+        return
+
+    web_root = Path(__file__).resolve().parent / "web"
+    original_cwd = os.getcwd()
+
+    def _serve() -> None:
+        os.chdir(str(web_root))
+        try:
+            srv = create_server("127.0.0.1", port)
+            logger.info(f"[WebUI] Dashboard server started on http://127.0.0.1:{port}")
+            srv.serve_forever()
+        except OSError as exc:
+            logger.warning(f"[WebUI] Could not start dashboard server on port {port}: {exc}")
+        finally:
+            os.chdir(original_cwd)
+
+    t = threading.Thread(target=_serve, daemon=True, name="solace-web-ui")
+    t.start()
+    # Give the server a moment to bind
+    import time
+    time.sleep(0.5)
+
+
 async def main():
     """Main entry point"""
     parser = build_arg_parser()
     args = parser.parse_args()
+
+    # Start the web UI dashboard server BEFORE the browser so the home page loads
+    web_ui_port = int(os.getenv("SOLACE_WEB_UI_PORT", "8791"))
+    _start_web_ui_server(port=web_ui_port)
 
     # Create and start browser
     headless = not args.head

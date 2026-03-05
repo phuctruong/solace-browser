@@ -4,7 +4,10 @@ from __future__ import annotations
 import collections
 import copy
 import datetime
-import fcntl
+try:
+    import fcntl
+except ImportError:
+    fcntl = None  # type: ignore[assignment]  # Windows — file locking handled below
 import hmac
 import json
 import logging
@@ -1586,7 +1589,8 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         """Append a JSON record to an audit JSONL file with file locking."""
         filepath.parent.mkdir(parents=True, exist_ok=True)
         with open(filepath, "a") as f:
-            fcntl.flock(f, fcntl.LOCK_EX)
+            if fcntl is not None:
+                fcntl.flock(f, fcntl.LOCK_EX)
             f.write(json.dumps(record) + "\n")
             f.flush()
             os.fsync(f.fileno())
