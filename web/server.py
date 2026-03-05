@@ -3014,16 +3014,21 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                 if proc.poll() is not None:
                     break
                 # Read stderr line by line for the URL
-                ready, _, _ = select.select([proc.stderr], [], [], 1.0)
-                if ready:
+                # select.select on pipes only works on Unix; use polling on Windows
+                if sys.platform == "win32":
                     line = proc.stderr.readline()
-                    if line:
-                        logger.info("cloudflared: %s", line.strip())
-                        # cloudflared prints: "... https://xxx.trycloudflare.com ..."
-                        url_match = re.search(r"(https://[a-z0-9\-]+\.trycloudflare\.com)", line)
-                        if url_match:
-                            public_url = url_match.group(1)
-                            break
+                else:
+                    ready, _, _ = select.select([proc.stderr], [], [], 1.0)
+                    if not ready:
+                        continue
+                    line = proc.stderr.readline()
+                if line:
+                    logger.info("cloudflared: %s", line.strip())
+                    # cloudflared prints: "... https://xxx.trycloudflare.com ..."
+                    url_match = re.search(r"(https://[a-z0-9\-]+\.trycloudflare\.com)", line)
+                    if url_match:
+                        public_url = url_match.group(1)
+                        break
 
             cls._tunnel_url = public_url
 

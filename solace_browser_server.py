@@ -3614,51 +3614,84 @@ class SolaceBrowserServer:
 
 
 def _start_web_ui_server(port: int = 8791) -> None:
-    """Start a minimal static file server for the web UI as a daemon thread.
+    """Start the web UI dashboard server as a daemon thread.
 
-    Serves HTML/CSS/JS from the web/ directory on the given port.
-    Must be called BEFORE browser.start() so the home page can load.
+    Serves the full dashboard (HTML/CSS/JS + REST API for apps, settings,
+    recipes, etc.) on the given port.  Must be called BEFORE browser.start()
+    so the home page can load.
 
-    Uses stdlib only — no import of web.server (not available in PyInstaller
-    bundles where web/ is packed as data, not as a Python package).
+    In PyInstaller frozen builds the web/ package is included via
+    hiddenimports and the data files are extracted under sys._MEIPASS.
     """
     import threading
-    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
-    # Find web/ directory: PyInstaller extracts data to sys._MEIPASS
+    # Resolve web root: PyInstaller extracts data to sys._MEIPASS
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-        web_root = str(Path(sys._MEIPASS) / "web")
+        web_root = Path(sys._MEIPASS) / "web"
     else:
-        web_root = str(Path(__file__).resolve().parent / "web")
+        web_root = Path(__file__).resolve().parent / "web"
 
-    if not Path(web_root).is_dir():
+    if not web_root.is_dir():
         logger.warning(f"[WebUI] web directory not found at {web_root}")
         return
 
-    class _SolaceUIHandler(SimpleHTTPRequestHandler):
+    # Ensure web/ (and src/) are importable in frozen builds
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass and meipass not in sys.path:
+        sys.path.insert(0, meipass)
+
+    try:
+        from web.server import create_server
+    except ImportError:
+        logger.warning("[WebUI] web.server not importable — falling back to static-only server")
+        _start_static_fallback(port, str(web_root))
+        return
+
+    def _serve() -> None:
+        saved_cwd = os.getcwd()
+        os.chdir(str(web_root))
+        try:
+            srv = create_server("127.0.0.1", port)
+            logger.info(f"[WebUI] Dashboard server started on http://127.0.0.1:{port}")
+            srv.serve_forever()
+        except OSError as exc:
+            logger.warning(f"[WebUI] Could not bind port {port}: {exc}")
+        finally:
+            os.chdir(saved_cwd)
+
+    t = threading.Thread(target=_serve, daemon=True, name="solace-web-ui")
+    t.start()
+    import time
+    time.sleep(0.5)
+
+
+def _start_static_fallback(port: int, web_root: str) -> None:
+    """Fallback: serve static files only (no API) if web.server import fails."""
+    import threading
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+
+    class _Handler(SimpleHTTPRequestHandler):
         def __init__(self, *args: Any, **kwargs: Any) -> None:
             super().__init__(*args, directory=web_root, **kwargs)
 
         def do_GET(self) -> None:
-            # Serve start.html for root URL
             if self.path in ("/", "/index.html"):
                 self.path = "/start.html"
             super().do_GET()
 
-        def log_message(self, format: str, *args: Any) -> None:
-            pass  # suppress per-request access logs
+        def log_message(self, fmt: str, *a: Any) -> None:
+            pass
 
     def _serve() -> None:
         try:
-            srv = ThreadingHTTPServer(("127.0.0.1", port), _SolaceUIHandler)
-            logger.info(f"[WebUI] Static server started on http://127.0.0.1:{port}")
+            srv = ThreadingHTTPServer(("127.0.0.1", port), _Handler)
+            logger.info(f"[WebUI] Static-only fallback on http://127.0.0.1:{port}")
             srv.serve_forever()
         except OSError as exc:
             logger.warning(f"[WebUI] Could not bind port {port}: {exc}")
 
-    t = threading.Thread(target=_serve, daemon=True, name="solace-web-ui")
+    t = threading.Thread(target=_serve, daemon=True, name="solace-web-ui-static")
     t.start()
-    # Brief pause to let the server bind before browser navigates to it
     import time
     time.sleep(0.3)
 
