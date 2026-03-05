@@ -9,6 +9,8 @@
   <meta name="theme-color" content="#081019">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/layout.js" defer></script>
+
   <script src="/js/solace.js" defer></script>
   <style>
     /* Style-guide-only utilities (not in site.css) */
@@ -64,47 +66,18 @@
       margin: 32px 0;
     }
   </style>
+  <script src="/vendor/jquery/jquery-3.7.1.min.js" defer></script>
+  <script src="/vendor/amcharts/index.js" defer></script>
+  <script src="/vendor/amcharts/xy.js" defer></script>
+  <script src="/vendor/amcharts/Animated.js" defer></script>
 </head>
 <body data-page="style-guide">
   <div class="site-shell">
     <canvas data-particles-canvas aria-hidden="true"></canvas>
     <div class="page-frame">
-      <header class="site-header">
-        <div class="site-header__inner">
-          <a class="site-brand" href="/">
-            <span class="site-brand__icon">SB</span>
-            <span class="site-brand__text">
-              <span class="site-brand__name">Solace Browser</span>
-              <span class="site-brand__tag"><a href="https://www.solaceagi.com/software5" target="_blank" rel="noopener" class="site-brand__tag-link">Software 5.0</a> · <a href="https://www.solaceagi.com/persistent-intelligence" target="_blank" rel="noopener" class="site-brand__tag-link">Persistent Intelligence</a></span>
-            </span>
-          </a>
-          <nav class="site-nav" aria-label="Primary">
-            <a class="nav-link" data-nav-path="/" href="/">Home</a>
-            <a class="nav-link" data-nav-path="/download" href="/download">Download</a>
-            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
-            <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect">Tunnel</a>
-            <a class="nav-link" data-nav-path="/style-guide" href="/style-guide">Style Guide</a>
-          </nav>
-          <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
-        </div>
-      </header>
-      <div class="mobile-menu" id="mobile-menu">
-        <div class="mobile-menu__section">
-          <h3>Surfaces</h3>
-          <a data-nav-path="/" href="/">Home</a>
-          <a data-nav-path="/download" href="/download">Download</a>
-          <a data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine Dashboard</a>
-          <a data-nav-path="/tunnel-connect" href="/tunnel-connect">Tunnel Connect</a>
-        </div>
-        <div class="mobile-menu__section">
-          <h3>Reference</h3>
-          <a data-nav-path="/style-guide" href="/style-guide">Style Guide</a>
-        </div>
-        <div class="mobile-menu__section">
-          <h3>Platform</h3>
-          <a href="https://www.solaceagi.com/app-store" target="_blank" rel="noopener">App Store</a>
-        </div>
-      </div>
+      <!-- Shared header injected by layout.js -->
+      <div id="header-slot"></div>
+
 
       <main>
         <!-- Hero -->
@@ -1148,19 +1121,9 @@ solace_browser_server.py    # Main aiohttp + CDP server</pre>
         </section>
 
       </main>
+      <!-- Shared footer injected by layout.js -->
+      <div id="footer-slot"></div>
 
-      <footer class="site-footer">
-        <div class="site-footer__inner">
-          <div>&copy; <span data-current-year></span> Solace Browser. Design system reference.</div>
-          <div class="site-footer__links">
-            <a href="/">Home</a>
-            <a href="/download">Download</a>
-            <a href="/machine-dashboard">Machine</a>
-            <a href="/tunnel-connect">Tunnel</a>
-            <a href="https://www.solaceagi.com/style-guide" target="_blank" rel="noopener">AGI Style Guide</a>
-          </div>
-        </div>
-      </footer>
     </div>
   </div>
 </body>

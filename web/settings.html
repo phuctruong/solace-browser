@@ -13,58 +13,20 @@
   <script src="/js/yinyang-rail.js" defer></script>
   <script src="/js/yinyang-tutorial.js" defer></script>
   <script src="/js/yinyang-oauth3-confirm.js" defer></script>
+  <script src="/js/layout.js" defer></script>
+
   <script src="/js/solace.js" defer></script>
+  <script src="/vendor/jquery/jquery-3.7.1.min.js" defer></script>
+  <script src="/vendor/amcharts/index.js" defer></script>
+  <script src="/vendor/amcharts/xy.js" defer></script>
+  <script src="/vendor/amcharts/Animated.js" defer></script>
 </head>
 <body data-page="settings">
   <div class="site-shell">
     <div class="page-frame">
-      <header class="site-header">
-        <div class="site-header__inner">
-          <a class="site-brand" href="/">
-            <span class="site-brand__icon site-brand__icon--image">
-              <img class="site-brand__logo-image" src="/images/yinyang/yinyang-logo-48.png" alt="Solace Browser">
-            </span>
-            <span class="site-brand__text">
-              <span class="site-brand__name">Solace Browser</span>
-              <span class="site-brand__tag"><a href="https://www.solaceagi.com/software5" target="_blank" rel="noopener" class="site-brand__tag-link">Software 5.0</a> · <a href="https://www.solaceagi.com/persistent-intelligence" target="_blank" rel="noopener" class="site-brand__tag-link">Persistent Intelligence</a></span>
-            </span>
-          </a>
-          <nav class="site-nav" aria-label="Primary">
-            <a class="nav-link" data-nav-path="/" href="/" data-i18n="nav_home">Home</a>
-            <a class="nav-link" data-nav-path="/app-store" href="/app-store" data-i18n="nav_apps">Apps</a>
-            <a class="nav-link" data-nav-path="/schedule" href="/schedule">Schedule</a>
-            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard" data-i18n="nav_machine">Machine</a>
-            <a class="nav-link" data-nav-path="/tunnel-connect" href="/tunnel-connect" data-i18n="nav_tunnel">Tunnel</a>
-            <a class="nav-link" data-nav-path="/settings" href="/settings" data-i18n="nav_settings">Settings</a>
-          </nav>
-          <div class="sb-lang-switch" id="sb-lang-switch">
-            <button class="sb-lang-btn" id="sb-lang-btn" aria-label="Select language" aria-expanded="false" aria-controls="sb-lang-menu">
-              <img class="sb-lang-icon sb-lang-icon--default" src="/images/icons/internationalization/160.png" alt="Language" width="22" height="22">
-              <img class="sb-lang-icon sb-lang-icon--hover" src="/images/icons/internationalization-2/160.png" alt="" width="22" height="22">
-            </button>
-            <div class="sb-lang-menu" id="sb-lang-menu">
-              <a role="button" tabindex="0" data-locale="en">English</a><a role="button" tabindex="0" data-locale="es">Español</a><a role="button" tabindex="0" data-locale="vi">Tiếng Việt</a><a role="button" tabindex="0" data-locale="zh">中文</a><a role="button" tabindex="0" data-locale="pt">Português</a><a role="button" tabindex="0" data-locale="fr">Français</a><a role="button" tabindex="0" data-locale="ja">日本語</a><a role="button" tabindex="0" data-locale="de">Deutsch</a><a role="button" tabindex="0" data-locale="ar">العربية</a><a role="button" tabindex="0" data-locale="hi">हिंदी</a><a role="button" tabindex="0" data-locale="ko">한국어</a><a role="button" tabindex="0" data-locale="id">Bahasa Indonesia</a><a role="button" tabindex="0" data-locale="ru">Русский</a>
-            </div>
-          </div>
-          <div class="sb-auth-status" id="sb-auth-status"></div>
-          <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
-        </div>
-      </header>
-      <div class="mobile-menu" id="mobile-menu">
-        <div class="mobile-menu__section">
-          <h3 data-i18n="menu_surfaces">Surfaces</h3>
-          <a data-nav-path="/" href="/" data-i18n="nav_home">Home</a>
-          <a data-nav-path="/app-store" href="/app-store" data-i18n="menu_app_store">App Store</a>
-          <a data-nav-path="/settings" href="/settings" data-i18n="nav_settings">Settings</a>
-        </div>
-        <div class="mobile-menu__section">
-          <h3 data-i18n="menu_documentation">Documentation</h3>
-          <a href="/docs" data-i18n="menu_docs_hub">Docs Hub</a>
-          <a href="/docs/quick-start" data-i18n="nav_quick_start">Quick Start</a>
-          <a href="/docs/mcp" data-i18n="menu_mcp_agents_guide">MCP / Agents Guide</a>
-          <a href="/docs/oauth3" data-i18n="menu_oauth3_safety">OAuth3 Safety</a>
-        </div>
-      </div>
+      <!-- Shared header injected by layout.js -->
+      <div id="header-slot"></div>
+
 
       <main>
         <section class="hero reveal">
@@ -409,17 +371,9 @@
           </article>
         </section>
       </main>
+      <!-- Shared footer injected by layout.js -->
+      <div id="footer-slot"></div>
 
-      <footer class="site-footer">
-        <div class="site-footer__inner">
-          <div>© <span data-current-year></span> Solace Browser. Local-first. Your data, your machine.</div>
-          <div class="site-footer__links">
-            <a href="/app-store" data-i18n="nav_apps">Apps</a>
-            <a href="/" data-i18n="nav_home">Home</a>
-            <a href="https://github.com/solaceagi/solace-browser" target="_blank" rel="noopener">GitHub</a>
-          </div>
-        </div>
-      </footer>
     </div>
   </div>
 

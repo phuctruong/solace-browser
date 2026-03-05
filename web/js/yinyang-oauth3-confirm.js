@@ -9,7 +9,7 @@
  *   - 3 benefits of OAuth3 (time-bounded, revocable, audited)
  *   - Budget adjustment inline
  *   - Proceed / Cancel / Adjust Budget buttons
- *   - 15-second countdown then auto-cancels (fail-closed)
+ *   - 120-second countdown then auto-cancels (fail-closed, WCAG 2.2.1 compliant)
  *
  * Standard: Paper 09 — YinYang Tutorial + Fun Pack + MCP (Auth: 65537)
  */
@@ -18,7 +18,7 @@ const YinyangOAuth3Confirm = (() => {
   'use strict';
 
   const YY_GIF = '/images/yinyang/yinyang-loading-128.gif';
-  const COUNTDOWN_SECONDS = 15;
+  const COUNTDOWN_SECONDS = 120;
 
   // Patterns that trigger the confirmation dialog
   const TRIGGER_PATTERNS = [
@@ -141,7 +141,7 @@ const YinyangOAuth3Confirm = (() => {
   }
 
   // ---------------------------------------------------------------------------
-  // Start countdown (15s → auto-cancel)
+  // Start countdown (120s → auto-cancel, WCAG 2.2.1 Timing Adjustable)
   // ---------------------------------------------------------------------------
   function _startCountdown() {
     _countdownLeft = COUNTDOWN_SECONDS;

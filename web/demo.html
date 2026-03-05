@@ -563,25 +563,22 @@
     }
   </style>
   <link rel="icon" type="image/png" href="/images/yinyang/yinyang-logo-32.png">
+  <script src="/js/layout.js" defer></script>
   <script src="/js/solace.js" defer></script>
   <script src="/js/yinyang-delight.js" defer></script>
   <script src="/js/yinyang-rail.js" defer></script>
   <script src="/js/yinyang-tutorial.js" defer></script>
   <script src="/js/yinyang-oauth3-confirm.js" defer></script>
+  <script src="/vendor/jquery/jquery-3.7.1.min.js" defer></script>
+  <script src="/vendor/amcharts/index.js" defer></script>
+  <script src="/vendor/amcharts/xy.js" defer></script>
+  <script src="/vendor/amcharts/Animated.js" defer></script>
 </head>
 <body>
   <div class="demo-page">
 
-    <!-- Nav -->
-    <nav class="demo-nav">
-      <a href="/" class="demo-nav-brand">Solace Browser</a>
-      <div class="demo-nav-links">
-        <a href="/">Home</a>
-        <a href="/app-store">Apps</a>
-        <a href="/settings">Settings</a>
-        <a href="/demo" style="color: var(--sb-signal); font-weight: 600;">Demo</a>
-      </div>
-    </nav>
+    <!-- Shared header injected by layout.js -->
+    <div id="header-slot"></div>
 
     <!-- Hero -->
     <section class="demo-hero">
@@ -750,12 +747,8 @@
       </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="demo-footer">
-      <p>Solace Browser v0.5.0-dev &middot; Family Demo Day<br>
-        <a href="/">Back to Home</a> &middot; <a href="/app-store">App Store</a> &middot; <a href="/settings">Settings</a>
-      </p>
-    </footer>
+    <!-- Shared footer injected by layout.js -->
+    <div id="footer-slot"></div>
 
   </div>
 

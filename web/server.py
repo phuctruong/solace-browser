@@ -535,7 +535,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                 send_body=send_body,
             )
             return
-        if request_path.endswith(".html"):
+        if request_path.endswith(".html") and "/partials-" not in request_path:
             target = "/" if request_path in ("/home.html", "/index.html") else request_path[:-5]
             self.send_response(HTTPStatus.MOVED_PERMANENTLY)
             self.send_header("Location", target)

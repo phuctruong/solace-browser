@@ -178,6 +178,13 @@
 
   async function initPageI18n(locale) {
     const loc = locale || localStorage.getItem("sb_locale") || "en";
+
+    // Set text direction based on locale (RTL for Arabic, Hebrew, Farsi, Urdu)
+    const rtlLocales = ['ar', 'he', 'fa', 'ur'];
+    const dir = rtlLocales.includes(loc) ? 'rtl' : 'ltr';
+    document.documentElement.dir = dir;
+    document.documentElement.lang = loc;
+
     // English is already in HTML; still run to update after locale switch
     try {
       const resp = await fetch(`/api/locale?key=ui&locale=${encodeURIComponent(loc)}`);

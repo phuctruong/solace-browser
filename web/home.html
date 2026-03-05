@@ -2,610 +2,271 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Home | Solace Browser</title>
-  <meta name="description" content="Solace Browser — AI browser automation with evidence trails, OAuth3, and $0.001 recipe replay.">
+  <title>Solace Browser — Your AI Morning Assistant</title>
+  <meta name="description" content="AI browser automation with evidence trails, OAuth3, and $0.001 recipe replay. Your accounts. Your machine. Your approval.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#081019">
   <link rel="icon" type="image/png" href="/images/yinyang/yinyang-logo-32.png">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/layout.js" defer></script>
   <script src="/js/solace.js" defer></script>
   <script src="/js/yinyang-delight.js" defer></script>
   <script src="/js/yinyang-rail.js" defer></script>
   <script src="/js/yinyang-tutorial.js" defer></script>
   <script src="/js/yinyang-oauth3-confirm.js" defer></script>
+  <script src="/vendor/jquery/jquery-3.7.1.min.js" defer></script>
+  <script src="/vendor/amcharts/index.js" defer></script>
+  <script src="/vendor/amcharts/xy.js" defer></script>
+  <script src="/vendor/amcharts/Animated.js" defer></script>
 </head>
 <body data-page="home">
   <div class="site-shell">
     <div class="page-frame">
-      <header class="site-header">
-        <div class="site-header__inner">
-          <a class="site-brand" href="/">
-            <span class="site-brand__icon">☯</span>
-            <span class="site-brand__text">
-              <span class="site-brand__name">Solace Browser</span>
-              <span class="site-brand__tag">AI browser with evidence</span>
+
+      <!-- Shared header injected by layout.js -->
+      <div id="header-slot"></div>
+
+      <main>
+
+        <!-- ═══ SECTION 1: CINEMATIC HERO ═══
+             Jony Ive: "One idea. One image. One action."
+             MrBeast: "Would I screenshot this?" YES.
+             Russell Brunson: "Hook — the transformation, not the product." -->
+        <section class="home-hero-new">
+          <!-- Particle canvas background -->
+          <canvas data-particles-canvas aria-hidden="true" style="position:absolute;inset:0;z-index:0;pointer-events:none;"></canvas>
+
+          <div class="home-hero__logo-wrap">
+            <img class="home-hero__logo"
+                 src="/images/yinyang/yinyang-rotating_70pct_256px.gif"
+                 alt="Solace Browser — YinYang AI"
+                 width="256" height="256"
+                 loading="eager" decoding="async" fetchpriority="high">
+          </div>
+
+          <h1 class="home-hero__title" data-i18n="home_hero_title">
+            Your AI <em>Morning Assistant</em>
+          </h1>
+
+          <p class="home-hero__sub" data-i18n="home_hero_sub">
+            Automate Gmail, Slack, LinkedIn, and 15 more services — using your existing accounts.
+            No new logins. No extensions. Every action waits for your approval.
+          </p>
+
+          <div class="home-hero__actions">
+            <a class="home-hero__cta" href="/app-store" data-i18n="home_hero_cta">
+              Browse Apps
+            </a>
+            <a class="home-hero__cta-secondary" href="/docs/quick-start" data-i18n="home_hero_cta2">
+              Quick Start Guide
+            </a>
+          </div>
+
+          <div class="home-hero__trust">
+            <span class="home-hero__trust-item">
+              <img src="/images/icon-security.png" alt="" width="20" height="20" class="home-hero__trust-icon" loading="lazy">
+              <span data-i18n="home_trust_local">Runs on your machine</span>
             </span>
-          </a>
-          <nav class="site-nav" aria-label="Primary">
-            <a class="nav-link is-current" data-nav-path="/" href="/">Home</a>
-            <a class="nav-link" data-nav-path="/app-store" href="/app-store">Apps</a>
-            <a class="nav-link" data-nav-path="/schedule" href="/schedule">Schedule</a>
-            <a class="nav-link" data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine</a>
-            <a class="nav-link" data-nav-path="/settings" href="/settings">Settings</a>
-          </nav>
-          <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
-        </div>
-      </header>
-      <div class="mobile-menu" id="mobile-menu">
-        <div class="mobile-menu__section">
-          <h3>Surfaces</h3>
-          <a data-nav-path="/" href="/">Home</a>
-          <a data-nav-path="/download" href="/download">Download</a>
-          <a data-nav-path="/machine-dashboard" href="/machine-dashboard">Machine Dashboard</a>
-          <a data-nav-path="/tunnel-connect" href="/tunnel-connect">Tunnel Connect</a>
-        </div>
-        <div class="mobile-menu__section">
-          <h3>Platform</h3>
-          <a data-nav-path="/app-store" href="/app-store">App Store</a>
-          <a data-nav-path="/schedule" href="/schedule">Schedule</a>
-          <a data-nav-path="/settings" href="/settings">Settings</a>
-        </div>
-      </div>
-
-      <main class="home-shell">
-
-        <!-- Hero Section -->
-        <section class="hero home-hero">
-          <h1 class="display">Solace Browser</h1>
-          <p>AI browser automation with evidence trails, OAuth3, and $0.001 recipe replay.</p>
+            <span class="home-hero__trust-item">
+              <img src="/images/icon-evidence.png" alt="" width="20" height="20" class="home-hero__trust-icon" loading="lazy">
+              <span data-i18n="home_trust_evidence">Every action evidence-sealed</span>
+            </span>
+            <span class="home-hero__trust-item">
+              <img src="/images/icon-approve.png" alt="" width="20" height="20" class="home-hero__trust-icon" loading="lazy">
+              <span data-i18n="home_trust_approve">You approve everything</span>
+            </span>
+          </div>
         </section>
 
-        <!-- Cloud Account Card -->
-        <div class="home-card home-cloud-account mb-24" id="home-cloud-account-card">
-          <div class="home-cloud-account__row">
-            <div class="home-cloud-account__left">
-              <span class="home-cloud-account__icon">☯</span>
-              <div>
-                <p class="home-cloud-account__title">Solace Cloud</p>
-                <p class="home-cloud-account__sub" id="cloud-account-email">Checking…</p>
-              </div>
+        <!-- ═══ STATUS BAR — Compact live status ═══ -->
+        <div class="home-status-bar" id="home-status-bar" role="status" aria-live="polite">
+          <span class="home-status-bar__item">
+            <span class="home-status-bar__dot" id="status-dot"></span>
+            <span id="status-text" data-i18n="home_status_checking">Checking browser...</span>
+          </span>
+          <span class="home-status-bar__item" id="status-mode-item" style="display:none">
+            <span data-i18n="home_status_mode">Mode:</span>
+            <span id="status-mode">—</span>
+          </span>
+          <span class="home-status-bar__item" id="status-apps-item" style="display:none">
+            <span id="status-apps-count">0</span>
+            <span data-i18n="home_status_apps">apps installed</span>
+          </span>
+        </div>
+
+        <!-- ═══ SECTION 2: APP SPOTLIGHT ═══
+             Jony Ive: "Show 3 things beautifully, not 20 things in a list."
+             Rory Sutherland: "Price next to the name — perceived value anchor." -->
+        <section class="home-spotlight reveal">
+          <div class="home-spotlight__header">
+            <h2 class="home-spotlight__title" data-i18n="home_spotlight_title">Featured Apps</h2>
+            <p class="home-spotlight__sub" data-i18n="home_spotlight_sub">Install an app. YinYang handles the rest.</p>
+          </div>
+          <div class="home-spotlight__grid" id="app-spotlight-grid">
+
+            <a class="app-card reveal" href="/app-store#gmail-inbox-triage">
+              <img class="app-card__icon-img" src="/images/apps/gmail.jpg" alt="Gmail" width="64" height="64" loading="lazy">
+              <h3 class="app-card__name" data-i18n="app_gmail_name">Gmail Inbox Triage</h3>
+              <p class="app-card__desc" data-i18n="app_gmail_desc">Reads your inbox, drafts replies, archives noise. You approve before anything sends.</p>
+              <span class="app-card__cta" data-i18n="app_card_install">Install — $0.003/run</span>
+            </a>
+
+            <a class="app-card reveal" href="/app-store#slack-standup">
+              <img class="app-card__icon-img" src="/images/apps/slack.jpg" alt="Slack" width="64" height="64" loading="lazy">
+              <h3 class="app-card__name" data-i18n="app_slack_name">Slack Standup</h3>
+              <p class="app-card__desc" data-i18n="app_slack_desc">Summarizes channels overnight, posts your standup. 2 minutes instead of 30.</p>
+              <span class="app-card__cta" data-i18n="app_card_install2">Install — $0.002/run</span>
+            </a>
+
+            <a class="app-card reveal" href="/app-store#linkedin-outreach">
+              <img class="app-card__icon-img" src="/images/apps/linkedin.png" alt="LinkedIn" width="64" height="64" loading="lazy">
+              <h3 class="app-card__name" data-i18n="app_linkedin_name">LinkedIn Outreach</h3>
+              <p class="app-card__desc" data-i18n="app_linkedin_desc">Personalized connection requests and follow-ups. No API needed — uses your browser session.</p>
+              <span class="app-card__cta app-card__cta--coming" data-i18n="app_card_coming">Coming Soon</span>
+            </a>
+
+          </div>
+          <div style="text-align:center;margin-top:32px;">
+            <a class="home-hero__cta-secondary" href="/app-store" data-i18n="home_spotlight_all">View All Apps</a>
+          </div>
+        </section>
+
+        <!-- ═══ SECTION 3: HOW IT WORKS ═══
+             Vanessa Van Edwards: "Warm, not bureaucratic. Empowering, not technical."
+             Russell Brunson: "Story → micro-commitment → offer." -->
+        <section class="home-how reveal">
+          <div class="home-how__header">
+            <h2 class="home-how__title" data-i18n="home_how_title">See It. Approve It. Watch It Work.</h2>
+            <p class="home-how__sub" data-i18n="home_how_sub">Three steps. No API keys. No extensions. No new accounts.</p>
+          </div>
+          <div class="home-how__steps">
+            <div class="home-how__step reveal">
+              <div class="home-how__num">1</div>
+              <img class="home-how__step-icon" src="/images/icon-record.png" alt="" width="48" height="48" loading="lazy">
+              <h3 class="home-how__step-title" data-i18n="home_how_step1_title">Install an App</h3>
+              <p class="home-how__step-desc" data-i18n="home_how_step1_desc">Browse the App Store. Pick Gmail Triage, Slack Standup, or any of 18 automations. One click to install.</p>
             </div>
-            <div class="home-cloud-account__stats">
-              <div class="home-cloud-stat">
-                <span class="home-cloud-stat__val" id="cloud-stat-balance">—</span>
-                <span class="home-cloud-stat__label">Balance</span>
-              </div>
-              <div class="home-cloud-stat">
-                <span class="home-cloud-stat__val" id="cloud-stat-plan">—</span>
-                <span class="home-cloud-stat__label">Plan</span>
-              </div>
-              <div class="home-cloud-stat">
-                <span class="home-cloud-stat__val" id="cloud-stat-sync">—</span>
-                <span class="home-cloud-stat__label">Last sync</span>
-              </div>
+            <div class="home-how__step reveal">
+              <div class="home-how__num">2</div>
+              <img class="home-how__step-icon" src="/images/icon-approve.png" alt="" width="48" height="48" loading="lazy">
+              <h3 class="home-how__step-title" data-i18n="home_how_step2_title">Preview &amp; Approve</h3>
+              <p class="home-how__step-desc" data-i18n="home_how_step2_desc">YinYang shows you exactly what it will do. Edit, approve, or reject. Nothing happens without your say.</p>
             </div>
-            <a class="home-cloud-account__cta" href="https://www.solaceagi.com/dashboard" target="_blank">Dashboard →</a>
-          </div>
-        </div>
-
-        <!-- KPI Grid -->
-        <div class="kpi-grid home-kpi-grid" id="kpi-grid">
-          <div class="stat-card">
-            <span class="stat-card__num" id="stat-runs">—</span>
-            <span class="stat-card__label">Total runs</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-card__num" id="stat-apps">—</span>
-            <span class="stat-card__label">Apps installed</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-card__num" id="stat-esigns">—</span>
-            <span class="stat-card__label">E-signs today</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-card__num" id="stat-evidence">—</span>
-            <span class="stat-card__label">Evidence records</span>
-          </div>
-        </div>
-
-        <!-- Surface Grid -->
-        <div class="surface-grid home-surface-grid">
-          <a class="home-surface-card" href="/machine-dashboard">
-            <p class="surface-card__kicker home-surface-card__kicker">Machine</p>
-            <p class="home-surface-card__title">Machine Dashboard</p>
-          </a>
-          <a class="home-surface-card" href="/tunnel-connect">
-            <p class="surface-card__kicker home-surface-card__kicker">Network</p>
-            <p class="home-surface-card__title">Tunnel Connect</p>
-          </a>
-          <a class="home-surface-card" href="/download">
-            <p class="surface-card__kicker home-surface-card__kicker">Install</p>
-            <p class="home-surface-card__title">Download &amp; Setup</p>
-          </a>
-        </div>
-
-        <!-- OAuth3 Token Vault -->
-        <div class="home-card mb-24">
-          <p class="home-card__title">OAuth3 Token Vault</p>
-          <table class="token-table">
-            <thead><tr><th>App</th><th>Scope</th><th>Expires</th></tr></thead>
-            <tbody id="token-table-body">
-              <tr><td colspan="3" class="home-card__empty">No tokens. Run an app to create scoped tokens.</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Activity + Scopes -->
-        <div class="home-cols">
-          <div class="home-card">
-            <p class="home-card__title">Activity</p>
-            <ul id="activity-list" class="home-recipe-list">
-              <li class="home-card__empty">No activity yet.</li>
-            </ul>
-          </div>
-          <div class="home-card">
-            <p class="home-card__title">Active Scopes</p>
-            <ul id="scope-list" class="home-recipe-list">
-              <li class="home-card__empty">No active scopes.</li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Recipe Launchpad -->
-        <div class="home-card mb-24">
-          <p class="home-card__title">Recipe Launchpad</p>
-          <div class="home-recipe-bar">
-            <input class="home-recipe-input" id="recipe-search" type="text" placeholder="Search recipes…" aria-label="Search recipes">
-          </div>
-          <ul class="recipe-list home-recipe-list">
-            <li class="home-recipe-item" data-recipe-name="gmail-inbox-triage">
-              <span>Gmail Inbox Triage</span>
-              <span class="home-card__empty">$0.003 / run</span>
-            </li>
-            <li class="home-recipe-item" data-recipe-name="slack-standup">
-              <span>Slack Standup</span>
-              <span class="home-card__empty">$0.002 / run</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Headless Mode Banner -->
-        <div class="headless-banner" id="headless-banner" role="alert" aria-live="polite">
-          <div class="headless-banner__icon">👻</div>
-          <div class="headless-banner__text">
-            <p class="headless-banner__title">Running in Headless Mode</p>
-            <p class="headless-banner__sub">No browser window is visible. You're controlling the browser through this web UI. All apps and automation are fully functional.</p>
-          </div>
-          <button class="headless-banner__btn" id="show-headed-btn" title="Restart Solace Browser in headed mode (shows Chromium window)">
-            Show Browser Window
-          </button>
-        </div>
-
-        <!-- Page Title -->
-        <p class="home-eyebrow">Control Panel</p>
-        <h1 class="home-title">Solace Browser <span id="status-text">● Loading…</span></h1>
-
-        <!-- Status Row -->
-        <div class="status-row" id="status-row">
-          <div class="status-pill status-pill--running" id="pill-running">
-            <span class="status-pill__dot"></span>
-            <span id="pill-running-text">Browser running</span>
-          </div>
-          <div class="status-pill" id="pill-headless">
-            <span class="status-pill__dot"></span>
-            <span id="pill-headless-text">Mode: checking…</span>
-          </div>
-          <div class="status-pill" id="pill-session">
-            <span class="status-pill__dot"></span>
-            <span id="pill-session-text">Session: loading…</span>
-          </div>
-          <div class="status-pill is-hidden" id="pill-url">
-            <span class="status-pill__dot status-pill__dot--url"></span>
-            <span id="pill-url-text">Current URL</span>
-          </div>
-        </div>
-
-        <!-- Quick Stats moved to kpi-grid above -->
-
-        <!-- First-run welcome banner (hidden after first run) -->
-        <div class="first-run-banner is-hidden" id="first-run-banner">
-          <div class="first-run-banner__inner">
-            <span class="first-run-banner__icon">☯</span>
-            <div>
-              <strong>Your AI morning assistant is ready.</strong>
-              <span>Pick an app and YinYang handles the rest — you approve everything before it acts.</span>
-            </div>
-            <a href="/app-store" class="first-run-banner__cta">Browse Apps →</a>
-          </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="quick-actions">
-          <a class="quick-action" href="/app-store">
-            <span class="quick-action__icon">📦</span>
-            <span class="quick-action__label">App Store</span>
-          </a>
-          <a class="quick-action" href="/schedule">
-            <span class="quick-action__icon">📅</span>
-            <span class="quick-action__label">Schedule</span>
-          </a>
-          <a class="quick-action" href="/machine-dashboard">
-            <span class="quick-action__icon">🖥️</span>
-            <span class="quick-action__label">Machine</span>
-          </a>
-          <a class="quick-action" href="/settings">
-            <span class="quick-action__icon">⚙️</span>
-            <span class="quick-action__label">Settings</span>
-          </a>
-          <a class="quick-action" href="/docs">
-            <span class="quick-action__icon">📖</span>
-            <span class="quick-action__label">Docs</span>
-          </a>
-          <button class="quick-action" id="screenshot-btn" type="button" title="Take a screenshot of the current page">
-            <span class="quick-action__icon">📷</span>
-            <span class="quick-action__label">Screenshot</span>
-          </button>
-        </div>
-
-        <!-- Two-column: Sign-off Queue + Schedule -->
-        <div class="home-cols">
-
-          <!-- Sign-off queue -->
-          <div class="home-card">
-            <p class="home-card__title">✍️ Sign-Off Queue</p>
-            <div id="signoff-list">
-              <p class="home-card__empty" id="signoff-empty">All clear. YinYang is ready when you are.</p>
+            <div class="home-how__step reveal">
+              <div class="home-how__num">3</div>
+              <img class="home-how__step-icon" src="/images/icon-evidence.png" alt="" width="48" height="48" loading="lazy">
+              <h3 class="home-how__step-title" data-i18n="home_how_step3_title">Evidence-Sealed Execution</h3>
+              <p class="home-how__step-desc" data-i18n="home_how_step3_desc">Every action is SHA-256 sealed. Screenshots captured. Full audit trail. FDA Part 11 ready out of the box.</p>
             </div>
           </div>
+        </section>
 
-          <!-- Upcoming schedule -->
-          <div class="home-card">
-            <p class="home-card__title">⏰ Upcoming Runs</p>
-            <div id="schedule-list">
-              <p class="home-card__empty" id="schedule-empty">Nothing scheduled yet. Set up an app in the <a href="/app-store" class="link--signal">App Store</a>.</p>
+        <!-- ═══ SECTION 4: WHY DIFFERENT ═══
+             Rory Sutherland: "Perceived value ≠ functional value. Reframe everything." -->
+        <section class="home-spotlight reveal" style="border-top:1px solid var(--sb-border-white-alpha-06);">
+          <div class="home-spotlight__header">
+            <h2 class="home-spotlight__title" data-i18n="home_why_title">Why Solace Browser?</h2>
+            <p class="home-spotlight__sub" data-i18n="home_why_sub">The only AI browser where your credentials never leave your machine.</p>
+          </div>
+          <div class="home-spotlight__grid">
+
+            <div class="app-card reveal" style="cursor:default;">
+              <div class="app-card__icon">&#128274;</div>
+              <h3 class="app-card__name" data-i18n="home_why_local_title">Local-First</h3>
+              <p class="app-card__desc" data-i18n="home_why_local_desc">Your passwords, cookies, and sessions stay on your machine. We never see them. Ever.</p>
             </div>
-          </div>
 
-        </div>
-
-        <!-- Screenshots Gallery (Part 11 visual evidence) -->
-        <div class="home-card mb-24">
-          <p class="home-card__title">📸 Recent Screenshots</p>
-          <div id="screenshot-gallery">
-            <p class="home-card__empty" id="screenshot-empty">No screenshots yet. Run an app to see your work here.</p>
-            <div class="screenshot-grid is-hidden" id="screenshot-grid"></div>
-          </div>
-        </div>
-
-        <!-- Two-column: Recent Evidence + Current Page -->
-        <div class="home-cols">
-
-          <!-- Recent evidence -->
-          <div class="home-card">
-            <p class="home-card__title">🔐 Activity Log</p>
-            <div id="evidence-list">
-              <p class="home-card__empty" id="evidence-empty">No activity yet. Your first run will appear here.</p>
+            <div class="app-card reveal" style="cursor:default;">
+              <div class="app-card__icon">&#128176;</div>
+              <h3 class="app-card__name" data-i18n="home_why_cost_title">$0.001 Per Replay</h3>
+              <p class="app-card__desc" data-i18n="home_why_cost_desc">LLM called once at preview. After that, CPU replays deterministically. 99% cheaper than competitors.</p>
             </div>
-          </div>
 
-          <!-- Current browser state -->
-          <div class="home-card">
-            <p class="home-card__title">🌐 Browser State</p>
-            <div id="browser-state">
-              <p class="home-card__empty">Loading browser state…</p>
+            <div class="app-card reveal" style="cursor:default;">
+              <div class="app-card__icon">&#127760;</div>
+              <h3 class="app-card__name" data-i18n="home_why_noapi_title">No API Required</h3>
+              <p class="app-card__desc" data-i18n="home_why_noapi_desc">WhatsApp, Instagram, Amazon — services with no API. Solace Browser is the only way to automate them.</p>
             </div>
+
           </div>
+        </section>
 
-        </div>
-
-        <!-- Screenshot lightbox (full-size view) -->
-        <div class="screenshot-lightbox" id="screenshot-lightbox" role="dialog" aria-modal="true">
-          <img id="lightbox-img" src="" alt="Screenshot evidence">
-          <button class="screenshot-lightbox__close" id="lightbox-close">✕ Close</button>
-        </div>
+        <!-- Final CTA removed — browser is already installed, no need for download CTA -->
 
       </main>
+
+      <!-- Shared footer injected by layout.js -->
+      <div id="footer-slot"></div>
+
     </div>
   </div>
 
   <script>
-    /* ── Home Page Controller ─────────────────────────────────────────── */
-    const API = 'http://127.0.0.1:9222';
+    /* ── Home Page Status Bar (lightweight, Linus-approved: no leaks) ── */
+    (function() {
+      'use strict';
+      var API = 'http://127.0.0.1:9222';
+      var controller = new AbortController();
 
-    async function apiFetch(path, opts = {}) {
-      try {
-        const r = await fetch(API + path, opts);
-        return await r.json();
-      } catch (_) { return null; }
-    }
-
-    async function loadStatus() {
-      const s = await apiFetch('/api/status');
-      if (!s) {
-        document.getElementById('status-text').textContent = '● Offline';
-        document.getElementById('pill-running').className = 'status-pill status-pill--stopped';
-        document.getElementById('pill-running-text').textContent = 'Browser offline';
-        return;
+      async function loadStatus() {
+        try {
+          var r = await fetch(API + '/api/status', { signal: controller.signal });
+          var s = await r.json();
+          var dot = document.getElementById('status-dot');
+          var text = document.getElementById('status-text');
+          if (s.running) {
+            dot.className = 'home-status-bar__dot';
+            text.textContent = 'Browser running';
+          } else {
+            dot.className = 'home-status-bar__dot home-status-bar__dot--offline';
+            text.textContent = 'Browser offline';
+          }
+          var modeItem = document.getElementById('status-mode-item');
+          var modeText = document.getElementById('status-mode');
+          if (modeItem) {
+            modeItem.style.display = 'flex';
+            modeText.textContent = s.headless !== false ? 'Headless' : 'Headed';
+          }
+        } catch (_) {
+          var dot2 = document.getElementById('status-dot');
+          var text2 = document.getElementById('status-text');
+          if (dot2) dot2.className = 'home-status-bar__dot home-status-bar__dot--offline';
+          if (text2) text2.textContent = 'Browser offline';
+        }
       }
 
-      // Running pill
-      document.getElementById('status-text').textContent = s.running ? '● Running' : '● Stopped';
-      document.getElementById('pill-running').className = s.running ? 'status-pill status-pill--running' : 'status-pill status-pill--stopped';
-      document.getElementById('pill-running-text').textContent = s.running ? 'Browser running' : 'Browser stopped';
-
-      // Headless pill
-      const headless = s.headless !== false; // default true if field absent
-      const headlessPill = document.getElementById('pill-headless');
-      headlessPill.className = headless ? 'status-pill status-pill--headless' : 'status-pill status-pill--running';
-      document.getElementById('pill-headless-text').textContent = headless ? 'Headless mode' : 'Headed mode (window visible)';
-
-      // Show headless banner if headless
-      if (headless) {
-        document.getElementById('headless-banner').classList.add('is-visible');
+      async function loadAppCount() {
+        try {
+          var r = await fetch(API + '/api/apps', { signal: controller.signal });
+          var d = await r.json();
+          var count = Array.isArray(d.apps) ? d.apps.length : 0;
+          var item = document.getElementById('status-apps-item');
+          var el = document.getElementById('status-apps-count');
+          if (item && count > 0) {
+            item.style.display = 'flex';
+            el.textContent = count;
+          }
+        } catch (_) { /* offline — status bar already shows offline */ }
       }
 
-      // Session pill
-      const sessionPill = document.getElementById('pill-session');
-      const sessObj = s.session;
-      const hasSess = sessObj && (sessObj.exists === true || (typeof sessObj === 'string' && sessObj !== 'none'));
-      sessionPill.className = hasSess ? 'status-pill status-pill--running' : 'status-pill';
-      document.getElementById('pill-session-text').textContent = hasSess ? 'Session: saved' : 'No session';
-
-      // URL pill
-      if (s.current_url) {
-        document.getElementById('pill-url').style.display = 'flex';
-        document.getElementById('pill-url-text').textContent = s.current_url.replace(/^https?:\/\//, '').slice(0, 40);
-      }
-
-      // Browser state panel
-      const bsEl = document.getElementById('browser-state');
-      bsEl.innerHTML = `
-        <div class="evidence-item">
-          <span class="evidence-item__hash">${headless ? 'HEADLESS' : 'HEADED'}</span>
-          <span class="evidence-item__desc">Browser mode</span>
-        </div>
-        <div class="evidence-item">
-          <span class="evidence-item__hash">${s.running ? 'RUNNING' : 'STOPPED'}</span>
-          <span class="evidence-item__desc">Process status</span>
-        </div>
-        ${s.current_url ? `<div class="evidence-item">
-          <span class="evidence-item__desc word-break--all link--signal">${s.current_url}</span>
-        </div>` : ''}
-        ${s.version ? `<div class="evidence-item">
-          <span class="evidence-item__hash">v${s.version}</span>
-          <span class="evidence-item__desc">Server version</span>
-        </div>` : ''}
-      `;
-    }
-
-    async function loadSchedule() {
-      const d = await apiFetch('/api/schedule/upcoming');
-      const el = document.getElementById('schedule-list');
-      const empty = document.getElementById('schedule-empty');
-      if (!d || !d.upcoming || d.upcoming.length === 0) return;
-      empty.style.display = 'none';
-      d.upcoming.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'schedule-item';
-        const nextRun = item.next_run ? new Date(item.next_run).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
-        div.innerHTML = `<span class="schedule-item__app">📱 ${item.app_id || item.app}</span><span class="schedule-item__time">${nextRun}</span>`;
-        el.insertBefore(div, empty);
-      });
-    }
-
-    async function loadQueue() {
-      const d = await apiFetch('/api/schedule/queue');
-      const el = document.getElementById('signoff-list');
-      const empty = document.getElementById('signoff-empty');
-      if (!d || !d.queue || d.queue.length === 0) return;
-      empty.style.display = 'none';
-      d.queue.slice(0, 5).forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'signoff-item';
-        div.innerHTML = `
-          <span class="signoff-item__icon">📬</span>
-          <div class="signoff-item__text">
-            <div class="signoff-item__app">${item.app_id || item.app}</div>
-            <div class="signoff-item__desc">${item.description || item.run_id || 'Pending approval'}</div>
-          </div>
-          <div class="signoff-item__actions">
-            <button class="btn-approve" data-run="${item.run_id}">✓ Approve</button>
-            <button class="btn-reject" data-run="${item.run_id}">✗</button>
-          </div>
-        `;
-        el.insertBefore(div, empty);
-      });
-      // Wire approve/reject buttons
-      el.querySelectorAll('.btn-approve').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const run_id = btn.dataset.run;
-          await fetch('http://127.0.0.1:8791/api/schedule/approve/' + run_id, {method:'POST', body:'{}', headers:{'Content-Type':'application/json'}});
-          btn.closest('.signoff-item').style.opacity = '0.4';
-          btn.textContent = '✓ Approved';
-          btn.disabled = true;
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+          loadStatus();
+          loadAppCount();
         });
-      });
-      el.querySelectorAll('.btn-reject').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const run_id = btn.dataset.run;
-          await fetch('http://127.0.0.1:8791/api/schedule/cancel/' + run_id, {method:'POST', body:'{"reason":"user_rejected"}', headers:{'Content-Type':'application/json'}});
-          btn.closest('.signoff-item').style.opacity = '0.4';
-        });
-      });
-    }
-
-    async function loadScreenshots() {
-      const grid = document.getElementById('screenshot-grid');
-      const empty = document.getElementById('screenshot-empty');
-      const d = await apiFetch('/api/screenshots');
-      if (!d || !d.screenshots || d.screenshots.length === 0) return;
-
-      empty.style.display = 'none';
-      grid.style.display = '';
-      d.screenshots.slice(0, 12).forEach(s => {
-        const div = document.createElement('div');
-        div.className = 'screenshot-thumb';
-        div.title = `${s.filename} — ${new Date(s.modified).toLocaleString()}`;
-        const img = document.createElement('img');
-        img.src = `${API}/api/artifacts/${s.filename}`;
-        img.alt = s.filename;
-        img.onerror = () => { div.style.display = 'none'; };
-        const name = document.createElement('div');
-        name.className = 'screenshot-thumb__name';
-        name.textContent = s.filename;
-        div.appendChild(img);
-        div.appendChild(name);
-        div.addEventListener('click', () => openLightbox(`${API}/api/artifacts/${s.filename}`));
-        grid.appendChild(div);
-      });
-    }
-
-    function openLightbox(src) {
-      document.getElementById('lightbox-img').src = src;
-      document.getElementById('screenshot-lightbox').classList.add('open');
-    }
-    document.getElementById('lightbox-close').addEventListener('click', () => {
-      document.getElementById('screenshot-lightbox').classList.remove('open');
-    });
-    document.getElementById('screenshot-lightbox').addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) document.getElementById('screenshot-lightbox').classList.remove('open');
-    });
-
-    async function loadEvidence() {
-      const el = document.getElementById('evidence-list');
-      const empty = document.getElementById('evidence-empty');
-      // Search evidence dir for recent esign records
-      const d = await apiFetch('/api/evidence/search', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({query: 'ESIGN', limit: 5})
-      });
-      if (!d || !d.results || d.results.length === 0) {
-        // Also try searching for any audit records
-        const d2 = await apiFetch('/api/evidence/search', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({query: 'approved', limit: 5})
-        });
-        if (!d2 || !d2.results || d2.results.length === 0) return;
-        d2.results.forEach(r => renderEvidenceItem(el, empty, r));
-        return;
-      }
-      d.results.forEach(r => renderEvidenceItem(el, empty, r));
-    }
-
-    function renderEvidenceItem(el, empty, r) {
-      empty.style.display = 'none';
-      const div = document.createElement('div');
-      div.className = 'evidence-item';
-      const preview = (r.preview || '').slice(0, 60).replace(/[{}"]/g, ' ').trim();
-      const ts = r.modified ? new Date(r.modified).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
-      div.innerHTML = `
-        <span class="evidence-item__hash" title="${r.path}">SHA256</span>
-        <div>
-          <div class="evidence-item__desc">${r.file}</div>
-          <div class="evidence-item__time">${ts} — ${preview}</div>
-        </div>
-      `;
-      el.insertBefore(div, empty);
-    }
-
-    async function loadStats() {
-      // Count apps in app store via API
-      const apps = await apiFetch('/api/apps') || {};
-      const appCount = Array.isArray(apps.apps) ? apps.apps.length : (apps.total || '—');
-      document.getElementById('stat-apps').textContent = appCount;
-
-      // Count history runs
-      const hist = await apiFetch('/history') || {};
-      const runs = Array.isArray(hist.sessions) ? hist.sessions.length : (hist.count || 0);
-      document.getElementById('stat-runs').textContent = runs || '—';
-      // Show first-run banner when no runs yet
-      if (!runs) document.getElementById('first-run-banner').style.display = 'block';
-
-      // Count esign records from evidence search
-      const esigns = await apiFetch('/api/evidence/search', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({query: 'ESIGN', limit: 100})
-      });
-      const esignCount = (esigns && esigns.count) ? esigns.count : 0;
-      document.getElementById('stat-esigns').textContent = esignCount || '—';
-
-      // Count all evidence files
-      const allEvidence = await apiFetch('/api/evidence/search', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({query: 'event', limit: 100})
-      });
-      document.getElementById('stat-evidence').textContent = (allEvidence && allEvidence.count) ? allEvidence.count : '—';
-    }
-
-    // Screenshot button
-    document.getElementById('screenshot-btn').addEventListener('click', async () => {
-      const btn = document.getElementById('screenshot-btn');
-      btn.querySelector('.quick-action__icon').textContent = '⏳';
-      const result = await apiFetch('/api/screenshot', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
-      btn.querySelector('.quick-action__icon').textContent = '📷';
-      if (result && result.filepath) {
-        alert('Screenshot saved: ' + result.filepath);
       } else {
-        alert('Screenshot failed — is the browser running?');
+        loadStatus();
+        loadAppCount();
       }
-    });
 
-    // Show headed mode button
-    document.getElementById('show-headed-btn').addEventListener('click', () => {
-      if (confirm('Restart Solace Browser in headed mode? This will show the Chromium window. The browser will restart.')) {
-        apiFetch('/api/navigate', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{"url":"about:blank"}'});
-        alert('To switch to headed mode, restart with: python3 solace_browser_server.py --head\n\nOr update your desktop launcher to add the --head flag.');
-      }
-    });
-
-    async function loadCloudAccount() {
-      var card = document.getElementById('home-cloud-account-card');
-      var key = typeof localStorage !== 'undefined' && localStorage.getItem('solace_api_key');
-      var CLOUD = 'https://www.solaceagi.com';
-      if (!key) {
-        document.getElementById('cloud-account-email').textContent = 'Not signed in';
-        document.getElementById('cloud-stat-balance').textContent = '—';
-        document.getElementById('cloud-stat-plan').textContent = '—';
-        document.getElementById('cloud-stat-sync').textContent = '—';
-        if (card) card.style.borderColor = 'rgba(163,185,214,0.10)';
-        return;
-      }
-      var headers = { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' };
-      try {
-        var [meResp, panelResp, syncResp] = await Promise.all([
-          fetch(CLOUD + '/api/v1/auth/me', { headers: headers }),
-          fetch(CLOUD + '/api/v1/billing/credits/panel', { headers: headers }),
-          fetch(CLOUD + '/api/v1/browser/evidence', { headers: headers })
-        ]);
-        var me = meResp.ok ? await meResp.json() : null;
-        var panel = panelResp.ok ? await panelResp.json() : null;
-        var sync = syncResp.ok ? await syncResp.json() : null;
-        if (me) document.getElementById('cloud-account-email').textContent = me.email || 'Signed in';
-        if (panel) {
-          document.getElementById('cloud-stat-balance').textContent = '$' + (panel.balance || 0).toFixed(2);
-          var plan = panel.plan || 'free';
-          document.getElementById('cloud-stat-plan').textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
-          if (card && panel.low_balance) card.style.borderColor = 'rgba(255,100,50,0.4)';
-        }
-        if (sync && sync.last_sync) {
-          document.getElementById('cloud-stat-sync').textContent = new Date(sync.last_sync).toLocaleDateString();
-        } else {
-          document.getElementById('cloud-stat-sync').textContent = 'Never';
-        }
-      } catch (_) {
-        document.getElementById('cloud-account-email').textContent = 'Cloud offline';
-      }
-    }
-
-    // Boot sequence
-    Promise.all([loadStatus(), loadSchedule(), loadQueue(), loadEvidence(), loadStats(), loadScreenshots(), loadCloudAccount()]);
-    // Auto-refresh status every 30s
-    setInterval(loadStatus, 30000);
+      // Refresh status every 30s (Linus: use AbortController for cleanup)
+      var interval = setInterval(loadStatus, 30000);
+      window.addEventListener('beforeunload', function() {
+        clearInterval(interval);
+        controller.abort();
+      });
+    })();
   </script>
 </body>
 </html>

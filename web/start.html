@@ -8,10 +8,16 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/images/yinyang/yinyang-logo-32.png">
   <link rel="icon" type="image/png" sizes="256x256" href="/images/yinyang/yinyang-logo-256.png">
   <link rel="stylesheet" href="/css/site.css?v=102">
+  <script src="/js/layout.js" defer></script>
+  <script src="/js/solace.js" defer></script>
   <script src="/js/yinyang-delight.js?v=102" defer></script>
   <script src="/js/yinyang-rail.js?v=102" defer></script>
   <script src="/js/yinyang-tutorial-v2.js" defer></script>
   <script src="/js/yinyang-oauth3-confirm.js?v=102" defer></script>
+  <script src="/vendor/jquery/jquery-3.7.1.min.js" defer></script>
+  <script src="/vendor/amcharts/index.js" defer></script>
+  <script src="/vendor/amcharts/xy.js" defer></script>
+  <script src="/vendor/amcharts/Animated.js" defer></script>
   <style>
     :root {
       --sb-bg: #081019;
@@ -320,6 +326,9 @@
   </style>
 </head>
 <body>
+  <!-- Shared header injected by layout.js -->
+  <div id="header-slot"></div>
+
   <div class="start-page">
 
     <div class="login-card" id="login-card">
@@ -473,5 +482,8 @@
       window.location.href = SOLACE_AUTH_URL + '/auth/login?provider=email&redirect=' + encodeURIComponent(window.location.origin + window.location.pathname);
     });
   </script>
+
+  <!-- Shared footer injected by layout.js -->
+  <div id="footer-slot"></div>
 </body>
 </html>
