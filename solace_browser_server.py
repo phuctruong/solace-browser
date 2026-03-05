@@ -196,6 +196,13 @@ def _solace_data_dir() -> Path:
     return p
 
 
+def _artifact_path(filename: str) -> str:
+    """Return full path for a screenshot/artifact file inside ~/.solace/artifacts/."""
+    d = _solace_data_dir() / "artifacts"
+    d.mkdir(parents=True, exist_ok=True)
+    return str(d / filename)
+
+
 def _ensure_playwright_browsers_path() -> Path:
     configured = os.environ.get("PLAYWRIGHT_BROWSERS_PATH", "").strip()
     path = Path(configured).expanduser() if configured else _default_playwright_browsers_path()
@@ -1016,7 +1023,7 @@ class SolaceBrowser:
                     logger.info("✓ Email entered")
                 else:
                     logger.error("Email input not found")
-                    await popup_page.screenshot(path="artifacts/google-oauth-email-form.png")
+                    await popup_page.screenshot(path=_artifact_path("google-oauth-email-form.png"))
                     return {"error": "Could not find email input field"}
 
             except Exception as e:
@@ -1066,7 +1073,7 @@ class SolaceBrowser:
                         if show_checkbox:
                             logger.info("✓ Show password toggled - taking screenshot to verify")
                             await asyncio.sleep(0.5)
-                            await popup_page.screenshot(path="artifacts/google-oauth-password-visible.png")
+                            await popup_page.screenshot(path=_artifact_path("google-oauth-password-visible.png"))
                             logger.info("✓ Screenshot saved after password entry")
                         else:
                             logger.warning("Could not find show password toggle")
@@ -1079,12 +1086,12 @@ class SolaceBrowser:
                     await password_input.press("Enter")
                     await asyncio.sleep(1)
                     # Take screenshot to see if login succeeded or if error appeared
-                    await popup_page.screenshot(path="artifacts/google-oauth-after-password.png")
+                    await popup_page.screenshot(path=_artifact_path("google-oauth-after-password.png"))
                     logger.info("✓ Password submitted")
                     await asyncio.sleep(2)
                 else:
                     logger.error("Password input not found")
-                    await popup_page.screenshot(path="artifacts/google-oauth-password-form.png")
+                    await popup_page.screenshot(path=_artifact_path("google-oauth-password-form.png"))
                     return {"error": "Could not find password input field"}
 
             except Exception as e:
@@ -1199,7 +1206,7 @@ class SolaceBrowser:
             logger.info("Step 1: Navigating to LinkedIn login page...")
             await self.current_page.goto("https://www.linkedin.com/login", wait_until='networkidle')
             await asyncio.sleep(3)
-            await self.current_page.screenshot(path="artifacts/linkedin-01-login.png")
+            await self.current_page.screenshot(path=_artifact_path("linkedin-01-login.png"))
             logger.info("✓ LinkedIn login page loaded")
 
             # Step 2: Find and click the "Continue with Google" button
@@ -1254,7 +1261,7 @@ class SolaceBrowser:
 
             if not google_container:
                 logger.warning("Could not find Google button")
-                await self.current_page.screenshot(path="artifacts/linkedin-error-button-not-found.png")
+                await self.current_page.screenshot(path=_artifact_path("linkedin-error-button-not-found.png"))
                 return {"error": "Could not find 'Continue with Google' button"}
 
             # Step 3: Click the Google button
@@ -1322,11 +1329,11 @@ class SolaceBrowser:
                 clicked = True
 
             if not clicked:
-                await self.current_page.screenshot(path="artifacts/linkedin-error-click-failed.png")
+                await self.current_page.screenshot(path=_artifact_path("linkedin-error-click-failed.png"))
                 return {"error": "Failed to click Google button"}
 
             await asyncio.sleep(3)
-            await self.current_page.screenshot(path="artifacts/linkedin-02-google-redirect.png")
+            await self.current_page.screenshot(path=_artifact_path("linkedin-02-google-redirect.png"))
 
             # Step 4: Wait for Google OAuth popup
             logger.info("Step 4: Looking for Google OAuth popup...")
@@ -1417,7 +1424,7 @@ class SolaceBrowser:
 
         except Exception as e:
             logger.error(f"LinkedIn Google OAuth login failed: {e}")
-            await self.current_page.screenshot(path="artifacts/linkedin-error.png")
+            await self.current_page.screenshot(path=_artifact_path("linkedin-error.png"))
             return {"error": str(e)}
 
     def _on_console(self, msg):
@@ -1474,7 +1481,7 @@ class SolaceBrowser:
                 logger.info(f"✓ Headline updated: {new_headline}")
             else:
                 logger.warning("Could not find headline input field")
-                await self.current_page.screenshot(path="artifacts/linkedin-profile-headline-form.png")
+                await self.current_page.screenshot(path=_artifact_path("linkedin-profile-headline-form.png"))
 
             # Step 3: Update About section
             logger.info("\nStep 3: Updating About section...")
@@ -1514,7 +1521,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                 logger.info("✓ About section updated (2600+ characters)")
             else:
                 logger.warning("Could not find about textarea")
-                await self.current_page.screenshot(path="artifacts/linkedin-profile-about-form.png")
+                await self.current_page.screenshot(path=_artifact_path("linkedin-profile-about-form.png"))
 
             # Step 4: Look for save button and click it
             logger.info("\nStep 4: Saving changes...")
@@ -1531,7 +1538,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                         logger.warning(f"Error clicking save: {e}")
 
             logger.info("✓ Profile update complete!")
-            await self.current_page.screenshot(path="artifacts/linkedin-profile-updated.png")
+            await self.current_page.screenshot(path=_artifact_path("linkedin-profile-updated.png"))
 
             return {
                 "success": True,
