@@ -242,7 +242,8 @@ main { display: block; }
   color: var(--sb-text);
   border-color: var(--sb-border);
   background: var(--sb-bg-white-alpha-04);
-  outline: none;
+  outline: 2px solid var(--sb-signal, #64c4ff);
+  outline-offset: 2px;
 }
 .nav-link--accent {
   background: var(--sb-accent-soft);
@@ -296,7 +297,7 @@ main { display: block; }
   transition: 160ms ease;
 }
 .btn:hover,
-.btn:focus-visible { transform: translateY(-1px); outline: none; }
+.btn:focus-visible { transform: translateY(-1px); outline: 2px solid var(--sb-signal, #64c4ff); outline-offset: 2px; }
 .btn-primary {
   background: linear-gradient(135deg, var(--sb-accent), var(--sb-accent-warm));
   color: var(--sb-on-accent);
@@ -1843,9 +1844,8 @@ body.yy-suggest-active .yy-top-rail { top: 40px; }
   font-size: var(--font-base);
   padding: 8px 12px;
   width: 100px;
-  outline: none;
 }
-.yyO3-input:focus { border-color: var(--sb-accent); }
+.yyO3-input:focus { border-color: var(--sb-accent); outline: 2px solid var(--sb-signal, #64c4ff); outline-offset: 2px; }
 
 .yyO3-btns {
   display: flex;
@@ -2400,7 +2400,7 @@ body.yy-suggest-active .yy-top-rail { top: 40px; }
 .home-surface-card__kicker { font-size: var(--font-xs); text-transform: uppercase; letter-spacing: 0.1em; color: var(--sb-text-muted, #8bafc4); margin: 0 0 6px; }
 .home-surface-card__title { font-size: var(--font-md); font-weight: 700; color: var(--sb-text, #c5daea); }
 .home-recipe-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.home-recipe-input { flex: 1; background: rgba(129,175,221,0.06); border: 1px solid rgba(129,175,221,0.2); border-radius: 8px; padding: 8px 14px; color: var(--sb-text, #c5daea); font-size: var(--font-base); outline: none; }
+.home-recipe-input { flex: 1; background: rgba(129,175,221,0.06); border: 1px solid rgba(129,175,221,0.2); border-radius: 8px; padding: 8px 14px; color: var(--sb-text, #c5daea); font-size: var(--font-base); }
 .home-recipe-input:focus { border-color: var(--sb-signal, #64c4ff); }
 .home-recipe-list { list-style: none; margin: 0; padding: 0; }
 .home-recipe-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(129,175,221,0.1); }
@@ -3140,7 +3140,6 @@ body.yy-suggest-active .yy-top-rail { top: 40px; }
   width: 100%;
   background: transparent;
   border: none;
-  outline: none;
   color: var(--sb-text);
   font: inherit;
   padding: 0;
