@@ -13,6 +13,7 @@ const PRECACHE_URLS = [
   '/app-store.html',
   '/css/solace.css',
   '/js/solace-core.js',
+  '/favicon.ico',
   '/favicon.svg',
   '/manifest.json',
 ];
