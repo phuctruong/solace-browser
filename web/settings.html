@@ -124,6 +124,37 @@
           </article>
         </section>
 
+        <!-- Text Size (Accessibility / Elder-friendly) -->
+        <section class="page-section reveal" id="text-size">
+          <div class="section-heading">
+            <div>
+              <h2 class="section-title">Text Size</h2>
+              <p class="section-copy">Adjust the text size across the entire browser. Your choice is saved automatically.</p>
+            </div>
+          </div>
+          <article class="data-panel">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+              <button class="kpi-card text-size-btn" data-text-size="small" type="button" style="cursor:pointer;text-align:center;border:2px solid transparent;transition:border-color 0.2s;flex:1;min-width:100px;">
+                <div style="font-size:0.85rem;font-weight:700;margin-bottom:4px;">Small</div>
+                <div style="font-size:0.78rem;color:var(--sb-text-muted);">14px base</div>
+              </button>
+              <button class="kpi-card text-size-btn" data-text-size="medium" type="button" style="cursor:pointer;text-align:center;border:2px solid transparent;transition:border-color 0.2s;flex:1;min-width:100px;">
+                <div style="font-size:1rem;font-weight:700;margin-bottom:4px;">Medium</div>
+                <div style="font-size:0.78rem;color:var(--sb-text-muted);">16px base (default)</div>
+              </button>
+              <button class="kpi-card text-size-btn" data-text-size="large" type="button" style="cursor:pointer;text-align:center;border:2px solid transparent;transition:border-color 0.2s;flex:1;min-width:100px;">
+                <div style="font-size:1.15rem;font-weight:700;margin-bottom:4px;">Large</div>
+                <div style="font-size:0.78rem;color:var(--sb-text-muted);">18px base</div>
+              </button>
+              <button class="kpi-card text-size-btn" data-text-size="extra-large" type="button" style="cursor:pointer;text-align:center;border:2px solid transparent;transition:border-color 0.2s;flex:1;min-width:100px;">
+                <div style="font-size:1.35rem;font-weight:700;margin-bottom:4px;">Extra Large</div>
+                <div style="font-size:0.78rem;color:var(--sb-text-muted);">20px base</div>
+              </button>
+            </div>
+            <p style="font-size:0.78rem;color:var(--sb-text-muted);margin-top:12px;">Tip: You can also use your browser's built-in zoom (Ctrl/Cmd + Plus/Minus) for even more control.</p>
+          </article>
+        </section>
+
         <!-- Account -->
         <section class="page-section reveal" id="account">
           <div class="section-heading">
@@ -653,6 +684,53 @@
       if (typeof SolaceTheme !== 'undefined') {
         SolaceTheme.onchange(highlightActive);
       }
+    })();
+
+    /* ── Text Size selector wiring ─────────────────────────────────────── */
+    (function wireTextSizeSelector() {
+      var sizeMap = {
+        'small': '14px',
+        'medium': '16px',
+        'large': '18px',
+        'extra-large': '20px'
+      };
+
+      function applyTextSize(size) {
+        var px = sizeMap[size];
+        if (!px) return;
+        document.documentElement.style.setProperty('--sb-font-size-base', px);
+        document.body.style.fontSize = px;
+        localStorage.setItem('solace_text_size', size);
+      }
+
+      function highlightActiveSize() {
+        var current = localStorage.getItem('solace_text_size') || 'medium';
+        document.querySelectorAll('.text-size-btn').forEach(function(btn) {
+          var choice = btn.getAttribute('data-text-size');
+          if (choice === current) {
+            btn.style.borderColor = 'var(--sb-accent)';
+            btn.style.boxShadow = '0 0 16px var(--sb-shadow-accent-alpha-28, rgba(255,107,53,0.28))';
+          } else {
+            btn.style.borderColor = 'transparent';
+            btn.style.boxShadow = 'none';
+          }
+        });
+      }
+
+      document.querySelectorAll('.text-size-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var size = btn.getAttribute('data-text-size');
+          applyTextSize(size);
+          highlightActiveSize();
+        });
+      });
+
+      // Apply saved preference on page load
+      var saved = localStorage.getItem('solace_text_size');
+      if (saved && sizeMap[saved]) {
+        applyTextSize(saved);
+      }
+      highlightActiveSize();
     })();
   </script>
 </body>

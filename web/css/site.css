@@ -11,6 +11,9 @@
   --font-4xl: 2.25rem;   /* 36px */
   --font-5xl: 3rem;      /* 48px */
 
+  /* ── Text Size Preference (set via Settings > Text Size) ── */
+  --sb-font-size-base: 16px;
+
   --sb-bg: #081019;
   --sb-surface: #0f1825;
   --sb-surface-strong: #172335;
@@ -3808,6 +3811,12 @@ body.yy-suggest-active .yy-top-rail { top: 40px; }
   display: flex;
   gap: 10px;
   flex-shrink: 0;
+}
+
+/* ── Text Size Preference (T8 Elder accessibility) ── */
+/* Applied via localStorage solace_text_size and --sb-font-size-base */
+body[style*="--sb-font-size-base"] {
+  font-size: var(--sb-font-size-base, 16px);
 }
 
 /* ── Simple mode (accessibility / elder-friendly) ── */
