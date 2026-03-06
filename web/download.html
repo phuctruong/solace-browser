@@ -5,10 +5,12 @@
   <title>Download Solace Browser</title>
   <meta name="description" content="Download Solace Browser for macOS, Linux, or Windows. Source-available, local-first, OAuth3-ready.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://127.0.0.1:* https://www.solaceagi.com https://*.solaceagi.com; font-src 'self'; frame-ancestors 'none'">
   <link rel="canonical" href="https://browser.solaceagi.com/download">
   <meta name="theme-color" content="#081019">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/theme.js" defer></script>
   <script src="/js/layout.js" defer></script>
 
   <script src="/js/solace.js" defer></script>
@@ -32,12 +34,12 @@
         <!-- ── HERO ── -->
         <section class="hero hero--single reveal">
           <div>
-            <div class="eyebrow">v1.0.0 — Source-Available Release</div>
+            <div class="eyebrow">v1.1.8 — Source-Available Release</div>
             <h1 class="display">The browser that keeps <span>approvals visible</span>.</h1>
             <p class="lead">Local-first browsing with OAuth3 authorization, evidence capture, and AI automation. Download the desktop build or build from source.</p>
             <div class="button-row">
-              <a class="btn btn-primary" id="primary-download" href="https://github.com/solaceagi/solace-browser/releases/latest"><span>&#8595;</span><span id="primary-download-label">Download for your platform</span></a>
-              <a class="btn btn-secondary" href="https://github.com/solaceagi/solace-browser/releases" target="_blank" rel="noopener">All releases</a>
+              <a class="btn btn-primary" id="primary-download" href="https://storage.googleapis.com/solace-downloads/latest/solace-browser-windows-x86_64.msi"><span>&#8595;</span><span id="primary-download-label">Download for your platform</span></a>
+              <a class="btn btn-secondary" href="https://github.com/phuctruong/solace-browser/releases" target="_blank" rel="noopener">All releases</a>
             </div>
             <div class="release-strip">
               <span id="detected-platform">Detecting platform...</span>
@@ -60,7 +62,7 @@
               </div>
               <p>Universal binary for Apple Silicon and Intel Macs.</p>
               <div class="platform-links">
-                <a class="platform-link" href="https://github.com/solaceagi/solace-browser/releases/latest"><span>Apple Silicon + Intel</span><span class="dl-badge">Universal</span></a>
+                <a class="platform-link" href="https://storage.googleapis.com/solace-downloads/latest/solace-browser-macos-universal"><span>Apple Silicon + Intel</span><span class="dl-badge">Universal</span></a>
               </div>
               <div class="dl-steps">
                 <div class="dl-step"><span class="dl-step-num">1</span><span>Download <code>.dmg</code> from GitHub Releases</span></div>
@@ -77,8 +79,8 @@
               </div>
               <p>AppImage for any distro, DEB for Debian/Ubuntu fleet installs.</p>
               <div class="platform-links">
-                <a class="platform-link" href="https://github.com/solaceagi/solace-browser/releases/latest"><span>Universal</span><span class="dl-badge">AppImage</span></a>
-                <a class="platform-link" href="https://github.com/solaceagi/solace-browser/releases/latest"><span>Debian / Ubuntu</span><span class="dl-badge">DEB</span></a>
+                <a class="platform-link" href="https://storage.googleapis.com/solace-downloads/latest/solace-browser-linux-x86_64"><span>x86_64 Binary</span><span class="dl-badge">124MB</span></a>
+                <a class="platform-link" href="#" onclick="alert('Coming soon: sudo snap install solace-browser');return false;"><span>Ubuntu Store</span><span class="dl-badge">Snap</span></a>
               </div>
               <div class="dl-steps">
                 <div class="dl-step"><span class="dl-step-num">1</span><span>Download from GitHub Releases</span></div>
@@ -95,7 +97,7 @@
               </div>
               <p>MSI installer with profile persistence and signed metadata.</p>
               <div class="platform-links">
-                <a class="platform-link" href="https://github.com/solaceagi/solace-browser/releases/latest"><span>Windows 10+</span><span class="dl-badge">MSI</span></a>
+                <a class="platform-link" href="https://storage.googleapis.com/solace-downloads/latest/solace-browser-windows-x86_64.msi"><span>Windows 10+</span><span class="dl-badge">MSI 98MB</span></a>
               </div>
               <div class="dl-steps">
                 <div class="dl-step"><span class="dl-step-num">1</span><span>Download <code>.msi</code> from GitHub Releases</span></div>
