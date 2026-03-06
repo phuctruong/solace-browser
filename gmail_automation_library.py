@@ -165,7 +165,7 @@ class GmailAutomation:
                     "subject": subject.strip(),
                     "unread": is_unread
                 })
-            except Exception as e:
+            except (AttributeError, ValueError, TypeError, TimeoutError) as e:
                 logger.debug(f"Email row parse skipped: {e}")
 
         return emails

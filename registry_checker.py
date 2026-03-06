@@ -100,7 +100,7 @@ class RegistryChecker:
                 self.domain_index[domain].append(recipe.recipe_id)
 
             logger.info(f"✅ Loaded {len(self.recipes)} recipes from registry")
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, KeyError, ValueError, TypeError) as e:
             logger.error(f"❌ Failed to load registry: {e}")
             self.recipes = {}
             self.domain_index = {}
@@ -259,7 +259,7 @@ class RegistryChecker:
                 json.dump(data, f, indent=2)
 
             logger.info(f"✅ Registry saved: {path}")
-        except Exception as e:
+        except (OSError, ValueError, TypeError) as e:
             logger.error(f"❌ Failed to save registry: {e}")
 
 

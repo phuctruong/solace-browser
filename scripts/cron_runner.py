@@ -29,7 +29,7 @@ def log(msg: str) -> None:
 def read_settings() -> dict:
     try:
         return json.loads(SETTINGS_PATH.read_text(encoding="utf-8"))
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError):
         return {}
 
 def write_settings(settings: dict) -> None:
@@ -40,7 +40,7 @@ def api_get(url: str, timeout: int = 5) -> dict | None:
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r:
             return json.loads(r.read())
-    except Exception:
+    except (urllib.error.URLError, OSError, json.JSONDecodeError, ValueError, TimeoutError):
         return None
 
 def api_post(url: str, payload: dict, timeout: int = 30) -> dict | None:
@@ -50,7 +50,7 @@ def api_post(url: str, payload: dict, timeout: int = 30) -> dict | None:
                                      headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read())
-    except Exception as e:
+    except (urllib.error.URLError, OSError, json.JSONDecodeError, ValueError, TimeoutError) as e:
         log(f"POST {url} failed: {e}")
         return None
 
@@ -119,7 +119,7 @@ def get_active_token_sites() -> set:
     for fp in token_dir.glob("*.json"):
         try:
             d = json.loads(fp.read_text(encoding="utf-8"))
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):
             continue
         if d.get("revoked"):
             continue
@@ -129,7 +129,7 @@ def get_active_token_sites() -> set:
             exp_str = expires_raw.replace("+00:00", "").replace("Z", "")
             if datetime.fromisoformat(exp_str) < now:
                 continue
-        except Exception:
+        except (ValueError, TypeError):
             pass  # unparseable → treat as valid (fail-open)
         for scope in d.get("scopes", []):
             if "." in scope:
@@ -170,7 +170,7 @@ def run_keep_alive(settings: dict) -> bool:
                 last_ping = datetime.fromisoformat(last_ping_str)
                 if (now - last_ping).total_seconds() < interval_min * 60:
                     continue
-            except Exception:
+            except (ValueError, TypeError):
                 pass
 
         ping_url = spec["url"]
@@ -219,7 +219,7 @@ def is_due(cfg: dict) -> bool:
 
     try:
         target_h, target_m = map(int, time_str.split(":"))
-    except Exception:
+    except (ValueError, TypeError):
         return False
 
     # Respect next_run — if set and in the future, not due
@@ -228,7 +228,7 @@ def is_due(cfg: dict) -> bool:
         try:
             if now < datetime.fromisoformat(next_run_str):
                 return False
-        except Exception:
+        except (ValueError, TypeError):
             pass
 
     if freq == "daily":
@@ -243,7 +243,7 @@ def update_next_run(settings: dict, app_id: str, pattern: str) -> None:
     freq, time_str = parse_pattern(pattern)
     try:
         h, m = map(int, time_str.split(":"))
-    except Exception:
+    except (ValueError, TypeError):
         return
     now = datetime.now()
     if freq == "daily":
@@ -362,7 +362,7 @@ def main() -> None:
                         changed = True
                     else:
                         log(f"  ✗ {app_id} failed: {result}")
-                except Exception as e:
+                except (OSError, ValueError, KeyError, RuntimeError) as e:
                     log(f"  ✗ {app_id} exception: {e}")
             else:
                 log(f"  (no runner for {app_id} yet)")

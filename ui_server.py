@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import requests
-from fastapi import FastAPI, HTTPException, WebSocket
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -68,7 +68,7 @@ def _session_status() -> str:
         if session.get("exists"):
             return "active"
         return "none"
-    except Exception:
+    except (requests.RequestException, ValueError, KeyError, OSError):
         return "none"
 
 
@@ -120,7 +120,7 @@ async def replay(recipe_id: str) -> dict[str, Any]:
     for p in _all_recipe_files():
         try:
             data = json.loads(p.read_text(encoding="utf-8"))
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):
             continue
         if data.get("id") == recipe_id:
             target = data
@@ -163,11 +163,11 @@ async def ws_live_view(ws: WebSocket) -> None:
         while True:
             try:
                 frame = await live_view_frame()
-            except Exception as exc:
+            except (OSError, ValueError, KeyError, requests.RequestException) as exc:
                 frame = {"ok": False, "error": str(exc)}
             await ws.send_json(frame)
             await asyncio.sleep(2)
-    except Exception:
+    except (WebSocketDisconnect, ConnectionError, asyncio.CancelledError):
         return
 
 

@@ -188,7 +188,7 @@ def _browser_post(path: str, payload: dict[str, Any]) -> dict[str, Any]:
         raw = exc.read().decode("utf-8")
         try:
             detail = json.loads(raw)
-        except Exception:
+        except (json.JSONDecodeError, ValueError):
             detail = {"raw": raw}
         raise RuntimeError(f"Browser API error {exc.code}: {detail}") from exc
     except urllib.error.URLError as exc:
@@ -208,7 +208,7 @@ def _browser_get(path: str) -> dict[str, Any]:
         raw = exc.read().decode("utf-8")
         try:
             detail = json.loads(raw)
-        except Exception:
+        except (json.JSONDecodeError, ValueError):
             detail = {"raw": raw}
         raise RuntimeError(f"Browser API error {exc.code}: {detail}") from exc
     except urllib.error.URLError as exc:
@@ -280,7 +280,7 @@ def _tool_screenshot(args: dict[str, Any]) -> list[dict]:
                 "data": base64.b64encode(raw).decode("ascii"),
                 "mimeType": mime,
             })
-        except Exception as exc:
+        except (OSError, KeyError, ValueError) as exc:
             content.append({"type": "text", "text": f"Screenshot saved to: {result['path']}"})
 
     if not content:
@@ -396,7 +396,7 @@ def _handle_request(req: dict[str, Any]) -> dict[str, Any] | None:
         try:
             content = handler(tool_args)
             return ok({"content": content, "isError": False})
-        except Exception as exc:
+        except (RuntimeError, OSError, ValueError, KeyError, TypeError) as exc:
             return ok({
                 "content": [{"type": "text", "text": f"Error: {exc}"}],
                 "isError": True,
@@ -446,7 +446,7 @@ def main() -> None:
 
         try:
             resp = _handle_request(req)
-        except Exception as exc:
+        except (RuntimeError, OSError, ValueError, KeyError, TypeError) as exc:
             resp = {
                 "jsonrpc": "2.0",
                 "id": req.get("id"),

@@ -15,6 +15,7 @@ import json
 import logging
 from typing import Dict, List, Optional, Any, Literal
 from dataclasses import dataclass, asdict
+from playwright.async_api import Error as PlaywrightError
 
 logger = logging.getLogger('solace-browser')
 
@@ -213,7 +214,7 @@ async def format_aria_tree(page, limit: int = 500) -> List[AriaNode]:
         logger.info(f"Extracted {len(nodes)} ARIA nodes via CDP")
         return nodes
 
-    except Exception as e:
+    except (PlaywrightError, ConnectionError, OSError, TimeoutError, KeyError, AttributeError) as e:
         logger.error(f"Error extracting ARIA tree: {e}")
         return []
 
@@ -291,7 +292,7 @@ async def get_dom_snapshot(page, limit: int = 800) -> List[Dict[str, Any]]:
         """)
 
         return dom_tree.get("nodes", [])
-    except Exception as e:
+    except (PlaywrightError, ConnectionError, OSError, TimeoutError, KeyError) as e:
         logger.error(f"Error extracting DOM tree: {e}")
         return []
 
@@ -314,7 +315,7 @@ async def get_page_state(page) -> Dict[str, Any]:
             "dom": dom_tree,
             "timestamp": asyncio.get_event_loop().time()
         }
-    except Exception as e:
+    except (PlaywrightError, ConnectionError, OSError, TimeoutError, KeyError, AttributeError) as e:
         logger.error(f"Error getting page state: {e}")
         return {"error": str(e)}
 
@@ -341,7 +342,7 @@ async def execute_action(page, action: BrowserAction) -> Dict[str, Any]:
             return await execute_fill(page, action)
         else:
             return {"error": f"Unknown action kind: {action.kind}"}
-    except Exception as e:
+    except (PlaywrightError, ConnectionError, OSError, TimeoutError, KeyError, AttributeError) as e:
         logger.error(f"Error executing action: {e}")
         return {"error": str(e)}
 
@@ -383,7 +384,7 @@ async def execute_click(page, action: ClickAction) -> Dict[str, Any]:
             "ref": action.ref,
             "url": page.url
         }
-    except Exception as e:
+    except (PlaywrightError, ConnectionError, OSError, TimeoutError) as e:
         logger.error(f"Click action failed: {e}")
         return {"error": str(e)}
 
@@ -421,7 +422,7 @@ async def execute_type(page, action: TypeAction) -> Dict[str, Any]:
             "slowly": action.slowly,
             "url": page.url
         }
-    except Exception as e:
+    except (PlaywrightError, ConnectionError, OSError, TimeoutError) as e:
         logger.error(f"Type action failed: {e}")
         return {"error": str(e)}
 
@@ -441,7 +442,7 @@ async def execute_press(page, action: PressAction) -> Dict[str, Any]:
             "key": action.key,
             "url": page.url
         }
-    except Exception as e:
+    except (PlaywrightError, ConnectionError, OSError, TimeoutError) as e:
         logger.error(f"Press action failed: {e}")
         return {"error": str(e)}
 
@@ -462,7 +463,7 @@ async def execute_hover(page, action: HoverAction) -> Dict[str, Any]:
             "ref": action.ref,
             "url": page.url
         }
-    except Exception as e:
+    except (PlaywrightError, ConnectionError, OSError, TimeoutError) as e:
         logger.error(f"Hover action failed: {e}")
         return {"error": str(e)}
 
@@ -490,7 +491,7 @@ async def execute_scroll_into_view(page, action: ScrollIntoViewAction) -> Dict[s
             "ref": action.ref,
             "url": page.url
         }
-    except Exception as e:
+    except (PlaywrightError, ConnectionError, OSError, TimeoutError) as e:
         logger.error(f"Scroll into view action failed: {e}")
         return {"error": str(e)}
 
@@ -532,7 +533,7 @@ async def execute_wait(page, action: WaitAction) -> Dict[str, Any]:
 
         return {"error": "No wait condition specified"}
 
-    except Exception as e:
+    except (PlaywrightError, ConnectionError, OSError, TimeoutError) as e:
         logger.error(f"Wait action failed: {e}")
         return {"error": str(e)}
 
@@ -561,6 +562,6 @@ async def execute_fill(page, action: FillAction) -> Dict[str, Any]:
             "fields_filled": len(action.fields),
             "url": page.url
         }
-    except Exception as e:
+    except (PlaywrightError, ConnectionError, OSError, TimeoutError, KeyError) as e:
         logger.error(f"Fill action failed: {e}")
         return {"error": str(e)}

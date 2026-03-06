@@ -80,7 +80,7 @@ def setup_logging():
             cloud_handler.setLevel(log_level)
             logger.addHandler(cloud_handler)
             logger.info('Cloud Logging initialized for project: %s', GCP_PROJECT_ID)
-        except Exception as e:
+        except (ImportError, OSError, ValueError) as e:
             logger.warning('Failed to initialize Cloud Logging: %s', str(e))
 
     return logger
@@ -175,7 +175,7 @@ class SolaceBrowserBridge:
         try:
             response = await self.client.get('/health')
             return response.status_code == 200
-        except Exception as e:
+        except (httpx.HTTPError, OSError, ConnectionError) as e:
             logger.error('Health check failed: %s', str(e))
             return False
 
@@ -375,7 +375,7 @@ class CLIExecutor:
                 'error': f'Command timed out after {MAX_EXECUTION_TIME} seconds',
                 'execution_time': time.time() - start_time
             }
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError) as e:
             logger.error('Command failed: %s - %s', command, str(e))
             return {
                 'status': ExecutionStatus.FAILURE,
@@ -417,7 +417,7 @@ def parse_cli_output(output: str) -> Dict[str, Any]:
         return {'raw_output': output}
     except json.JSONDecodeError:
         return {'raw_output': output, 'parse_error': 'Could not parse JSON'}
-    except Exception as e:
+    except (ValueError, AttributeError) as e:
         return {'raw_output': output, 'error': str(e)}
 
 
@@ -451,7 +451,7 @@ async def main():
             # result = await bridge.start_episode('test-episode', 'https://example.com')
             # print(f'Episode started: {json.dumps(result, indent=2)}')
 
-    except Exception as e:
+    except (httpx.HTTPError, OSError, ConnectionError, ValueError) as e:
         logger.error('Error: %s', str(e))
     finally:
         await bridge.close()

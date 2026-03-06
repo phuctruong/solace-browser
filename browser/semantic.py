@@ -14,6 +14,7 @@ This layer provides deep semantic understanding of web pages:
 import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime
+from playwright.async_api import Error as PlaywrightError
 
 logger = logging.getLogger('solace-browser')
 
@@ -56,7 +57,7 @@ class SemanticAnalyzer:
 
             return result
 
-        except Exception as e:
+        except (PlaywrightError, ConnectionError, OSError, TimeoutError, KeyError, AttributeError) as e:
             logger.error(f"Error in semantic analysis: {e}")
             return {"error": str(e), "timestamp": datetime.now().isoformat()}
 
@@ -74,7 +75,7 @@ class SemanticAnalyzer:
                 })
             """)
             return result
-        except Exception as e:
+        except (PlaywrightError, ConnectionError, OSError, TimeoutError) as e:
             logger.warning(f"Visual analysis failed: {e}")
             return {"error": str(e)}
 
@@ -98,7 +99,7 @@ class SemanticAnalyzer:
                 }
             """)
             return state
-        except Exception as e:
+        except (PlaywrightError, ConnectionError, OSError, TimeoutError) as e:
             logger.warning(f"Data analysis failed: {e}")
             return {"error": str(e)}
 
@@ -121,7 +122,7 @@ class SemanticAnalyzer:
                 "apis": api_calls[:10],
                 "total_requests": len(self.network_monitor.requests) if self.network_monitor else 0
             }
-        except Exception as e:
+        except (AttributeError, KeyError, TypeError) as e:
             logger.warning(f"API analysis failed: {e}")
             return {"error": str(e)}
 
@@ -162,7 +163,7 @@ class SemanticAnalyzer:
                 }
             """)
             return meta
-        except Exception as e:
+        except (PlaywrightError, ConnectionError, OSError, TimeoutError) as e:
             logger.warning(f"Metadata analysis failed: {e}")
             return {"error": str(e)}
 
@@ -175,7 +176,7 @@ class SemanticAnalyzer:
                 "etag_enabled": "Check ETag presence",
                 "note": "Full headers available via network monitor"
             }
-        except Exception as e:
+        except (AttributeError, OSError) as e:
             logger.warning(f"Network analysis failed: {e}")
             return {"error": str(e)}
 
@@ -225,7 +226,7 @@ async def get_meta_tags(page) -> Dict[str, Any]:
         """)
 
         return {"success": True, "metadata": meta_data}
-    except Exception as e:
+    except (PlaywrightError, ConnectionError, OSError, TimeoutError) as e:
         logger.error(f"Meta extraction failed: {e}")
         return {"error": str(e)}
 
@@ -257,7 +258,7 @@ async def get_js_state(page) -> Dict[str, Any]:
         """)
 
         return {"success": True, "js_state": js_state}
-    except Exception as e:
+    except (PlaywrightError, ConnectionError, OSError, TimeoutError) as e:
         logger.error(f"JS state extraction failed: {e}")
         return {"error": str(e)}
 
@@ -283,7 +284,7 @@ async def get_api_calls(page, network_monitor=None) -> Dict[str, Any]:
             "api_calls_found": len(api_calls),
             "apis": api_calls[:10]
         }
-    except Exception as e:
+    except (AttributeError, KeyError, TypeError) as e:
         logger.error(f"API call extraction failed: {e}")
         return {"error": str(e)}
 
@@ -307,6 +308,6 @@ async def get_rate_limit_info(page) -> Dict[str, Any]:
             "rate_limits": rate_info,
             "note": "Use network monitor for full header data"
         }
-    except Exception as e:
+    except (AttributeError, OSError) as e:
         logger.error(f"Rate limit extraction failed: {e}")
         return {"error": str(e)}

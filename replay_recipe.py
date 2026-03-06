@@ -89,7 +89,7 @@ def collect_evidence():
         print(f"  📊 Evidence: {evidence['url']}")
         return evidence
 
-    except Exception as e:
+    except (requests.RequestException, OSError, KeyError, ValueError) as e:
         print(f"  ⚠️  Evidence collection failed: {e}")
         return {}
 
@@ -129,7 +129,7 @@ def replay_recipe(recipe_path):
             return False
         print("✓ Browser server ready")
         print()
-    except Exception as e:
+    except (requests.RequestException, OSError, ConnectionError) as e:
         print(f"❌ Browser server not running: {e}")
         print("   Start with: python persistent_browser_server.py")
         return False

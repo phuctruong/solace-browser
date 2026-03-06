@@ -430,7 +430,7 @@ class SolaceBrowser:
             await inject_push_alerts(page, img_base_url="/images/yinyang")
             logger.info("[Yinyang] Push alerts registered for page")
             return True
-        except Exception as exc:
+        except (OSError, ValueError, AttributeError, ConnectionError) as exc:
             logger.warning(f"[Yinyang] Push alert registration failed: {exc}")
             return False
 
@@ -547,7 +547,7 @@ class SolaceBrowser:
             cdp_session = await self.context.new_cdp_session(self.current_page)
             try:
                 archive_resp = await cdp_session.send("Page.captureSnapshot", {"format": "mhtml"})
-            except Exception as exc:
+            except (ConnectionError, TimeoutError, OSError) as exc:
                 raise RuntimeError(f"Page.captureSnapshot failed: {exc}") from exc
             mhtml = archive_resp.get("data", "")
             if not mhtml:
@@ -632,11 +632,11 @@ class SolaceBrowser:
                     upload_result = await self._part11_upload_hook(evidence)
                     if upload_result is not None:
                         payload["part11_upload"] = upload_result
-                except Exception as exc:
+                except (OSError, ConnectionError, TimeoutError, ValueError) as exc:
                     self.part11["last_error"] = str(exc)
                     payload["part11_upload_error"] = str(exc)
             return payload
-        except Exception as exc:
+        except (OSError, RuntimeError, ConnectionError, TimeoutError, ValueError, KeyError) as exc:
             self.part11["last_error"] = str(exc)
             if payload.get("error"):
                 payload["part11_error"] = str(exc)
@@ -677,7 +677,7 @@ class SolaceBrowser:
                 headless=self.headless,
                 args=launch_args,
             )
-        except Exception as exc:
+        except (OSError, RuntimeError, ConnectionError) as exc:
             if not _is_missing_playwright_executable_error(exc):
                 raise
             logger.warning(
@@ -717,7 +717,7 @@ class SolaceBrowser:
         try:
             await page.goto(home_url, wait_until="domcontentloaded", timeout=5000)
             logger.info(f"Home page loaded: {home_url}")
-        except Exception as exc:
+        except (OSError, TimeoutError, ConnectionError) as exc:
             logger.warning(f"Web server not ready ({home_url}): {exc} — falling back to local file")
             start_page = Path(__file__).parent / "web" / "start.html"
             if start_page.exists():
@@ -748,7 +748,7 @@ class SolaceBrowser:
                 "session_file": self.session_file,
                 "message": "Browser session saved (cookies, localStorage, etc.)"
             }
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError) as e:
             logger.error(f"Error saving session: {e}")
             return {"error": str(e)}
 
@@ -776,7 +776,7 @@ class SolaceBrowser:
                 "timestamp": datetime.now().isoformat()
             }
             return await self._finalize_part11_result("navigate", url, result)
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError) as e:
             logger.error(f"Navigation failed: {e}")
             return await self._finalize_part11_result("navigate", url, {"error": str(e)})
 
@@ -796,7 +796,7 @@ class SolaceBrowser:
                 "timestamp": datetime.now().isoformat()
             }
             return await self._finalize_part11_result("click", selector, result)
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError) as e:
             logger.error(f"Click failed: {e}")
             return await self._finalize_part11_result("click", selector, {"error": str(e)})
 
@@ -817,7 +817,7 @@ class SolaceBrowser:
                 "timestamp": datetime.now().isoformat()
             }
             return await self._finalize_part11_result("fill", selector, result)
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError) as e:
             logger.error(f"Fill failed: {e}")
             return await self._finalize_part11_result("fill", selector, {"error": str(e)})
 
@@ -845,7 +845,7 @@ class SolaceBrowser:
                 "timestamp": datetime.now().isoformat()
             }
             return await self._finalize_part11_result("take_screenshot", str(filepath), result)
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError) as e:
             logger.error(f"Screenshot failed: {e}")
             target = filename or "screenshot"
             return await self._finalize_part11_result("take_screenshot", target, {"error": str(e)})
@@ -861,7 +861,7 @@ class SolaceBrowser:
             finally:
                 await bg_page.close()
             return {"success": True, "url": url, "mode": "background"}
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError) as e:
             return {"success": False, "error": str(e)}
 
     async def screenshot_bg(self, url: str, filename: Optional[str] = None) -> Dict[str, Any]:
@@ -892,7 +892,7 @@ class SolaceBrowser:
                 "url": url,
                 "timestamp": datetime.now().isoformat()
             }
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError) as e:
             logger.error(f"Background screenshot failed: {e}")
             return {"error": str(e)}
 
@@ -914,7 +914,7 @@ class SolaceBrowser:
                 "timestamp": datetime.now().isoformat()
             }
             return await self._finalize_part11_result("get_snapshot", self.current_page.url, result)
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError) as e:
             logger.error(f"Snapshot failed: {e}")
             return await self._finalize_part11_result("get_snapshot", "current_page", {"error": str(e)})
 
@@ -934,7 +934,7 @@ class SolaceBrowser:
             }
             target = expression[:80]
             return await self._finalize_part11_result("evaluate", target, payload)
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError) as e:
             logger.error(f"Evaluate failed: {e}")
             target = expression[:80]
             return await self._finalize_part11_result("evaluate", target, {"error": str(e)})
@@ -979,7 +979,7 @@ class SolaceBrowser:
                 try:
                     popup_page = await self.current_page.context.wait_for_event("page", timeout=10000)
                     logger.info(f"✓ Popup appeared: {popup_page.url}")
-                except Exception as e:
+                except (TimeoutError, asyncio.TimeoutError, OSError, ConnectionError) as e:
                     logger.error(f"Popup timeout: {e}")
 
             popup_task = asyncio.create_task(catch_popup())
@@ -989,7 +989,7 @@ class SolaceBrowser:
             try:
                 await google_container.click()
                 logger.info("✓ Clicked")
-            except Exception as e:
+            except (OSError, TimeoutError, ConnectionError) as e:
                 logger.warning(f"Click error: {e}")
 
             # Wait for popup
@@ -1026,7 +1026,7 @@ class SolaceBrowser:
                     await popup_page.screenshot(path=_artifact_path("google-oauth-email-form.png"))
                     return {"error": "Could not find email input field"}
 
-            except Exception as e:
+            except (OSError, TimeoutError, ConnectionError, ValueError) as e:
                 logger.error(f"Email entry error: {e}")
                 return {"error": f"Email entry failed: {e}"}
 
@@ -1078,7 +1078,7 @@ class SolaceBrowser:
                         else:
                             logger.warning("Could not find show password toggle")
 
-                    except Exception as e:
+                    except (OSError, TimeoutError, ConnectionError) as e:
                         logger.warning(f"Error with show password: {e}")
 
                     # Now press Enter to submit
@@ -1094,7 +1094,7 @@ class SolaceBrowser:
                     await popup_page.screenshot(path=_artifact_path("google-oauth-password-form.png"))
                     return {"error": "Could not find password input field"}
 
-            except Exception as e:
+            except (OSError, TimeoutError, ConnectionError, ValueError) as e:
                 logger.error(f"Password entry error: {e}")
                 return {"error": f"Password entry failed: {e}"}
 
@@ -1130,7 +1130,7 @@ class SolaceBrowser:
                                     recovery_skipped = True
                                     await asyncio.sleep(2)
                                     break
-                                except Exception as e:
+                                except (OSError, TimeoutError, ConnectionError) as e:
                                     logger.debug(f"Skip button click failed: {e}")
 
                     # Check for permission/consent button
@@ -1144,7 +1144,7 @@ class SolaceBrowser:
                                 logger.info("✓ Clicked permission button")
                                 await asyncio.sleep(2)
                                 break
-                            except Exception as e:
+                            except (OSError, TimeoutError, ConnectionError) as e:
                                 logger.debug(f"Permission button click failed: {e}")
 
                     # Check if 2FA was completed by looking for success indicators
@@ -1153,7 +1153,7 @@ class SolaceBrowser:
                         logger.warning(f"\n❌ 2FA Failed or Error detected:\n{page_content[:200]}")
                         break
 
-                except Exception as e:
+                except (OSError, TimeoutError, ConnectionError, AttributeError) as e:
                     logger.debug(f"Checking popup: {e}")
 
             logger.info("\n✓ 2FA/Permission step complete")
@@ -1188,7 +1188,7 @@ class SolaceBrowser:
                     "timestamp": datetime.now().isoformat()
                 }
 
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError, AttributeError) as e:
             logger.error(f"Auto-login error: {e}")
             import traceback
             traceback.print_exc()
@@ -1313,7 +1313,7 @@ class SolaceBrowser:
                     logger.info(f"JavaScript result: {result}")
                     clicked = True
 
-                except Exception as e:
+                except (OSError, TimeoutError, ConnectionError, ValueError) as e:
                     logger.warning(f"Error dispatching events: {e}")
 
                 if not clicked:
@@ -1323,7 +1323,7 @@ class SolaceBrowser:
                     logger.info("✓ Clicked container")
                     clicked = True
 
-            except Exception as e:
+            except (OSError, TimeoutError, ConnectionError) as e:
                 logger.error(f"Error clicking Google button: {e}")
                 # Still try to continue as the click may have worked despite the error
                 clicked = True
@@ -1361,7 +1361,7 @@ class SolaceBrowser:
                     logger.warning("No popup detected within timeout")
                     google_popup = None
 
-            except Exception as e:
+            except (OSError, TimeoutError, ConnectionError, asyncio.TimeoutError) as e:
                 logger.warning(f"Error waiting for popup: {e}")
 
             if google_popup:
@@ -1371,7 +1371,7 @@ class SolaceBrowser:
                 # Wait for the popup to load the OAuth page
                 try:
                     await google_popup.wait_for_load_state('domcontentloaded', timeout=5000)
-                except Exception as e:
+                except (OSError, TimeoutError, ConnectionError) as e:
                     logger.warning(f"Popup didn't fully load: {e}")
 
                 # Check if we're on Google
@@ -1422,7 +1422,7 @@ class SolaceBrowser:
                         "timestamp": datetime.now().isoformat()
                     }
 
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError, AttributeError) as e:
             logger.error(f"LinkedIn Google OAuth login failed: {e}")
             await self.current_page.screenshot(path=_artifact_path("linkedin-error.png"))
             return {"error": str(e)}
@@ -1534,7 +1534,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                         await btn.click()
                         await asyncio.sleep(2)
                         break
-                    except Exception as e:
+                    except (OSError, TimeoutError, ConnectionError) as e:
                         logger.warning(f"Error clicking save: {e}")
 
             logger.info("✓ Profile update complete!")
@@ -1548,7 +1548,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                 "timestamp": datetime.now().isoformat()
             }
 
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError, AttributeError) as e:
             logger.error(f"Profile update error: {e}")
             import traceback
             traceback.print_exc()
@@ -1575,7 +1575,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                 "url": self.current_page.url,
                 "timestamp": datetime.now().isoformat()
             }
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError, AttributeError) as e:
             logger.error(f"ARIA snapshot error: {e}")
             return {"error": str(e)}
 
@@ -1600,7 +1600,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                 "url": self.current_page.url,
                 "timestamp": datetime.now().isoformat()
             }
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError, AttributeError) as e:
             logger.error(f"DOM snapshot error: {e}")
             return {"error": str(e)}
 
@@ -1624,7 +1624,7 @@ Support the journey: https://ko-fi.com/phucnet"""
                 "success": True,
                 **page_state
             }
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError, AttributeError) as e:
             logger.error(f"Page snapshot error: {e}")
             return {"error": str(e)}
 
@@ -1743,7 +1743,7 @@ Support the journey: https://ko-fi.com/phucnet"""
             else:
                 return await self._finalize_part11_result("act.unknown", str(kind), {"error": f"Unknown action kind: {kind}"})
 
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError, KeyError, AttributeError, TypeError) as e:
             logger.error(f"Action execution error: {e}")
             import traceback
             traceback.print_exc()
@@ -1925,7 +1925,7 @@ class SolaceBrowserServer:
             result["trigger_event_id"] = evidence.get("event_id")
             self._last_evidence_upload = result
             return result
-        except Exception as exc:
+        except (OSError, ConnectionError, TimeoutError, ValueError, KeyError) as exc:
             result = {
                 "status": "error",
                 "error": str(exc),
@@ -1992,7 +1992,7 @@ class SolaceBrowserServer:
         if OAUTH3_AVAILABLE:
             try:
                 register_consent_routes(self.app)
-            except Exception as _consent_ui_error:
+            except (ImportError, AttributeError, ValueError) as _consent_ui_error:
                 import logging as _logging
                 _logging.getLogger("solace-browser").warning(
                     f"Consent UI routes could not be registered: {_consent_ui_error}"
@@ -2116,7 +2116,7 @@ class SolaceBrowserServer:
         try:
             result = await self.browser.login_linkedin_google()
             return web.json_response(result)
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError) as e:
             logger.error(f"LinkedIn login handler error: {e}")
             return web.json_response({"error": str(e)}, status=500)
 
@@ -2134,7 +2134,7 @@ class SolaceBrowserServer:
 
             result = await self.browser.login_linkedin_google_auto(gmail_email, gmail_password)
             return web.json_response(result)
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError, json.JSONDecodeError) as e:
             logger.error(f"Auto-login handler error: {e}")
             return web.json_response({"error": str(e)}, status=500)
 
@@ -2143,7 +2143,7 @@ class SolaceBrowserServer:
         try:
             result = await self.browser.update_linkedin_profile()
             return web.json_response(result)
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError) as e:
             logger.error(f"Profile update handler error: {e}")
             return web.json_response({"error": str(e)}, status=500)
 
@@ -2152,7 +2152,7 @@ class SolaceBrowserServer:
         try:
             result = await self.browser.save_session()
             return web.json_response(result)
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError) as e:
             logger.error(f"Session save handler error: {e}")
             return web.json_response({"error": str(e)}, status=500)
 
@@ -2177,7 +2177,7 @@ class SolaceBrowserServer:
         """
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             return web.json_response({"error": "invalid_json"}, status=400)
 
         try:
@@ -2198,7 +2198,7 @@ class SolaceBrowserServer:
                 return web.json_response({"error": "ARIA module not available", "code": "MODULE_UNAVAILABLE", "retryable": False}, status=503)
             result = await self.browser.get_aria_snapshot(limit=limit)
             return web.json_response(result)
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError, AttributeError) as e:
             logger.error(f"ARIA snapshot handler error: {e}")
             return web.json_response({"error": str(e)}, status=500)
 
@@ -2284,7 +2284,7 @@ class SolaceBrowserServer:
         import datetime
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             data = {}
         reason = data.get("reason", "Agent requested human intervention")
         screenshot = data.get("screenshot")
@@ -2317,7 +2317,7 @@ class SolaceBrowserServer:
         import datetime
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             data = {}
         task = data.get("task", "")
         steps = data.get("steps", [])
@@ -2348,7 +2348,7 @@ class SolaceBrowserServer:
         import datetime
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             data = {}
         task = data.get("task", "")
         recipes_dir = Path(__file__).parent / "data" / "default" / "recipes"
@@ -2376,7 +2376,7 @@ class SolaceBrowserServer:
         import datetime, json as _json
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             data = {}
         query = data.get("query", "").lower()
         limit = int(data.get("limit", 10))
@@ -2396,7 +2396,7 @@ class SolaceBrowserServer:
                         })
                         if len(results) >= limit:
                             break
-                except Exception:
+                except (OSError, json.JSONDecodeError, UnicodeDecodeError):
                     continue
         return web.json_response({
             "query": query,
@@ -2411,7 +2411,7 @@ class SolaceBrowserServer:
             limit = int(request.query.get('limit', 800))
             result = await self.browser.get_dom_snapshot(limit=limit)
             return web.json_response(result)
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError, AttributeError) as e:
             logger.error(f"DOM snapshot handler error: {e}")
             return web.json_response({"error": str(e)}, status=500)
 
@@ -2420,7 +2420,7 @@ class SolaceBrowserServer:
         try:
             result = await self.browser.get_page_snapshot()
             return web.json_response(result)
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError, AttributeError) as e:
             logger.error(f"Page snapshot handler error: {e}")
             return web.json_response({"error": str(e)}, status=500)
 
@@ -2430,7 +2430,7 @@ class SolaceBrowserServer:
             data = await request.json()
             result = await self.browser.act(data)
             return web.json_response(result)
-        except Exception as e:
+        except (OSError, TimeoutError, ConnectionError, ValueError, KeyError, json.JSONDecodeError) as e:
             logger.error(f"Act handler error: {e}")
             return web.json_response({"error": str(e)}, status=500)
 
@@ -2440,7 +2440,7 @@ class SolaceBrowserServer:
         if OAUTH3_AVAILABLE:
             try:
                 token_count = len(list_all_tokens(token_dir=DEFAULT_TOKEN_DIR))
-            except Exception:
+            except (OSError, json.JSONDecodeError, ValueError):
                 token_count = 0
         part11_status: Dict[str, Any]
         if hasattr(self.browser, "get_part11_status"):
@@ -2518,7 +2518,7 @@ class SolaceBrowserServer:
         """Set the active locale.  POST /api/v1/locale  {"locale": "es"}"""
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             return web.json_response({"error": "invalid JSON"}, status=400)
         locale = data.get("locale", "en")
         set_locale(locale)
@@ -2533,7 +2533,7 @@ class SolaceBrowserServer:
         """
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             return web.json_response({"ok": False, "error": "invalid_json"}, status=400)
 
         url = str(data.get("url", "")).strip()
@@ -2618,7 +2618,7 @@ class SolaceBrowserServer:
         """Solve CAPTCHA via configured provider (mock provider supported for tests)."""
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             return web.json_response({"ok": False, "error": "invalid_json"}, status=400)
         if solve_captcha is None:
             return web.json_response(
@@ -2639,7 +2639,7 @@ class SolaceBrowserServer:
         """Load proxy config from data/custom/proxy-config.yaml (or custom path)."""
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             data = {}
         if load_proxy_config is None:
             return web.json_response(
@@ -2675,7 +2675,7 @@ class SolaceBrowserServer:
         """Compute benchmark score from case results."""
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             return web.json_response({"ok": False, "error": "invalid_json"}, status=400)
         cases = data.get("cases", [])
         if not isinstance(cases, list):
@@ -2718,7 +2718,7 @@ class SolaceBrowserServer:
 
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             return web.json_response({"error": "invalid_json"}, status=400)
 
         requested_scopes = data.get("scopes", [])
@@ -2781,7 +2781,7 @@ class SolaceBrowserServer:
                 {"error": "token_not_found", "token_id": token_id},
                 status=404,
             )
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, ValueError, KeyError) as e:
             return web.json_response({"error": str(e)}, status=500)
 
         return web.json_response(token.to_dict(), status=200)
@@ -2877,7 +2877,7 @@ class SolaceBrowserServer:
 
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             return web.json_response({"error": "invalid_json"}, status=400)
 
         recipe_id = data.get("recipe_id")
@@ -2899,7 +2899,7 @@ class SolaceBrowserServer:
 
         try:
             recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError) as e:
             return web.json_response(
                 {"error": "recipe_load_error", "detail": str(e)},
                 status=500,
@@ -3098,7 +3098,7 @@ class SolaceBrowserServer:
         try:
             sessions = list_sessions()
             return web.json_response({"sessions": sessions}, status=200)
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, ValueError) as e:
             logger.error(f"History list error: {e}")
             return web.json_response({"error": str(e)}, status=500)
 
@@ -3128,7 +3128,7 @@ class SolaceBrowserServer:
                 {"error": "session_not_found", "session_id": session_id},
                 status=404,
             )
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, ValueError) as e:
             logger.error(f"History session detail error: {e}")
             return web.json_response({"error": str(e)}, status=500)
 
@@ -3160,7 +3160,7 @@ class SolaceBrowserServer:
                 },
                 status=404,
             )
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, ValueError) as e:
             logger.error(f"History snapshot detail error: {e}")
             return web.json_response({"error": str(e)}, status=500)
 
@@ -3199,7 +3199,7 @@ class SolaceBrowserServer:
                 },
                 status=404,
             )
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, ValueError) as e:
             logger.error(f"History render error: {e}")
             return web.json_response({"error": str(e)}, status=500)
 
@@ -3390,7 +3390,7 @@ class SolaceBrowserServer:
             return web.json_response(
                 {"error": f"sync push failed: {exc}"}, status=502
             )
-        except Exception as exc:
+        except (OSError, ConnectionError, TimeoutError, ValueError, KeyError) as exc:
             logger.error("Sync push unexpected error: %s", exc)
             return web.json_response(
                 {"error": f"sync push error: {exc}"}, status=500
@@ -3440,7 +3440,7 @@ class SolaceBrowserServer:
             return web.json_response(
                 {"error": f"sync pull failed: {exc}"}, status=502
             )
-        except Exception as exc:
+        except (OSError, ConnectionError, TimeoutError, ValueError, KeyError) as exc:
             logger.error("Sync pull unexpected error: %s", exc)
             return web.json_response(
                 {"error": f"sync pull error: {exc}"}, status=500
@@ -3523,7 +3523,7 @@ class SolaceBrowserServer:
 
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             return web.json_response({"error": "invalid_json", "code": "BAD_REQUEST", "retryable": False}, status=400)
 
         user_id = data.get("user_id", "").strip()
@@ -3601,7 +3601,7 @@ class SolaceBrowserServer:
 
         try:
             data = await request.json()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
             return web.json_response({"error": "invalid_json", "code": "BAD_REQUEST", "retryable": False}, status=400)
 
         user_id = data.get("user_id", "")

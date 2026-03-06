@@ -74,7 +74,7 @@ class AriaRefMapper:
                     self.ref_to_locator[ref] = locator
                     logger.debug(f"Mapped {ref} via role={role} name={name}")
                     continue
-                except Exception as e:
+                except (ValueError, AttributeError, TypeError) as e:
                     logger.debug(f"Role+name mapping failed for {ref}: {e}")
 
             # Strategy 2: Use aria-label
@@ -86,7 +86,7 @@ class AriaRefMapper:
                     self.ref_to_selector[ref] = f"[aria-label='{aria_label}']"
                     logger.debug(f"Mapped {ref} via aria-label={aria_label}")
                     continue
-                except Exception as e:
+                except (ValueError, AttributeError, TypeError) as e:
                     logger.debug(f"Aria-label mapping failed for {ref}: {e}")
 
             # Strategy 3: Use text content (for links/buttons)
@@ -97,7 +97,7 @@ class AriaRefMapper:
                     self.ref_to_locator[ref] = locator
                     logger.debug(f"Mapped {ref} via role={role} text={text}")
                     continue
-                except Exception as e:
+                except (ValueError, AttributeError, TypeError) as e:
                     logger.debug(f"Text mapping failed for {ref}: {e}")
 
         logger.info(f"Mapped {len(self.ref_to_locator)} element references")
@@ -325,7 +325,7 @@ class NetworkMonitor:
                 logger.debug(f"Request failed: {request.url} {err}".rstrip())
             else:
                 logger.warning(f"Request failed: {request.url} {err}".rstrip())
-        except Exception:
+        except (AttributeError, TypeError, KeyError):
             logger.warning(f"Request failed: {request.url}")
 
     def get_recent_requests(self, count: int = 10):
@@ -342,7 +342,7 @@ class NetworkMonitor:
         for r in self.responses:
             try:
                 status = int(r.get("status", 0))
-            except Exception:
+            except (ValueError, TypeError):
                 status = 0
             url = r.get("url", "")
             if status >= 400 and not self._is_ignorable_http_response(status, url):
@@ -384,7 +384,7 @@ async def get_llm_snapshot(
         try:
             local_storage = await page.evaluate("() => Object.entries(localStorage)")
             session_storage = await page.evaluate("() => Object.entries(sessionStorage)")
-        except Exception as e:
+        except (OSError, ValueError, TimeoutError) as e:
             logger.warning(f"Could not get storage: {e}")
             local_storage = []
             session_storage = []
@@ -435,7 +435,7 @@ async def get_llm_snapshot(
 
         return snapshot
 
-    except Exception as e:
+    except (OSError, ValueError, KeyError, AttributeError, TimeoutError) as e:
         logger.error(f"Error creating LLM snapshot: {e}")
         return {
             "error": str(e),
@@ -503,7 +503,7 @@ async def execute_click_via_ref(
             "url": page.url
         }
 
-    except Exception as e:
+    except (TimeoutError, OSError, ValueError, AttributeError) as e:
         logger.error(f"Click failed for {ref}: {e}")
         return {
             "success": False,
@@ -570,7 +570,7 @@ async def execute_type_via_ref(
             "url": page.url
         }
 
-    except Exception as e:
+    except (TimeoutError, OSError, ValueError, AttributeError) as e:
         logger.error(f"Type failed for {ref}: {e}")
         return {
             "success": False,
