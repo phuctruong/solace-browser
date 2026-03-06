@@ -241,12 +241,26 @@ def load_and_compile_recipe(app_root: Path, recipe_path: Path) -> RecipeIR:
     """Load a recipe file and compile it to IR.
 
     Handles both Mermaid FSM recipes and linear JSON steps recipes.
+    When a recipe has both a mermaid_fsm and steps, Mermaid compilation
+    is attempted first.  If it fails (e.g. state names that cannot be
+    mapped to actions), the step-based path is used as a fallback.
     """
     raw = json.loads(recipe_path.read_text(encoding="utf-8"))
     mermaid_fsm = raw.get("mermaid_fsm")
+    has_steps = bool(raw.get("steps"))
+
     if mermaid_fsm:
-        recipe_id = str(raw.get("id") or raw.get("recipe_id") or recipe_path.stem)
-        return compile_mermaid(mermaid_fsm, recipe_id=recipe_id)
+        try:
+            recipe_id = str(raw.get("id") or raw.get("recipe_id") or recipe_path.stem)
+            return compile_mermaid(mermaid_fsm, recipe_id=recipe_id)
+        except Exception:
+            if not has_steps:
+                raise
+            # Fall through to step-based compilation when steps are available
+            logger.debug(
+                "Mermaid compilation failed for '%s', falling back to steps",
+                recipe_path.name,
+            )
 
     dag, _dag_hash = parse_deterministic(recipe_path)
     return compile_from_steps(

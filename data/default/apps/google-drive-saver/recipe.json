@@ -1,12 +1,166 @@
 {
   "id": "google-drive-saver",
+  "platform": "google-drive",
+  "version": "1.0.0",
+  "description": "Save approved artifacts (scripts, reports, documents) from the outbox into a designated Google Drive folder via the web UI.",
+  "oauth3_scopes": ["drive.read.files", "drive.write.files", "local.evidence"],
+  "evidence_type": "lane_b",
+  "input_params": {
+    "target_folder": {
+      "type": "string",
+      "description": "Google Drive folder name to save into. Default 'Solace Exports'.",
+      "required": false,
+      "default": "Solace Exports"
+    },
+    "source_file": {
+      "type": "string",
+      "description": "Path to the local outbox file to upload.",
+      "required": true
+    },
+    "file_title": {
+      "type": "string",
+      "description": "Title for the uploaded document in Drive.",
+      "required": true
+    }
+  },
   "steps": [
     {
-      "action": "noop",
-      "description": "Preview Google Drive Saver",
-      "id": "preview"
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/google_working_session.json",
+      "description": "Load saved Google session cookies",
+      "timeout_ms": 5000,
+      "on_error": "fail"
+    },
+    {
+      "step": 2,
+      "action": "load_local_file",
+      "path": "{params.source_file}",
+      "description": "Load the approved artifact from local outbox",
+      "timeout_ms": 5000,
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "input_hash",
+        "label": "source-file-hash"
+      }
+    },
+    {
+      "step": 3,
+      "action": "navigate",
+      "target": "https://drive.google.com/drive/u/0/my-drive",
+      "wait_for": "[data-target='doc'],.a-s-tb-sc-Jab, [role='main']",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to Google Drive",
+      "on_error": "fail"
+    },
+    {
+      "step": 4,
+      "action": "check_auth",
+      "selector": "[role='main']",
+      "fallback_url_pattern": "accounts.google.com",
+      "description": "Verify Google authentication is active",
+      "timeout_ms": 5000,
+      "on_error": "fail"
+    },
+    {
+      "step": 5,
+      "action": "navigate_to_folder",
+      "folder_name": "{params.target_folder}",
+      "create_if_missing": true,
+      "description": "Navigate to target folder, creating it if it does not exist",
+      "timeout_ms": 10000,
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "screenshot",
+        "label": "target-folder-open"
+      }
+    },
+    {
+      "step": 6,
+      "action": "upload_file",
+      "selector": "[data-tooltip='New'], button[aria-label='New']",
+      "menu_item": "File upload",
+      "file_path": "{params.source_file}",
+      "description": "Click New > File Upload and select the artifact file",
+      "timeout_ms": 30000,
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "screenshot",
+        "label": "upload-initiated"
+      }
+    },
+    {
+      "step": 7,
+      "action": "wait_for_selector",
+      "selector": "[data-tooltip='Upload complete'], .aXgaGb",
+      "timeout_ms": 60000,
+      "description": "Wait for upload completion confirmation",
+      "on_error": "fail"
+    },
+    {
+      "step": 8,
+      "action": "extract",
+      "selector": "[data-tooltip='Upload complete'] a, .aXgaGb a",
+      "fields": {
+        "file_name": {"type": "textContent"},
+        "file_url": {"type": "attribute", "attribute": "href"}
+      },
+      "description": "Extract the uploaded file URL for evidence",
+      "screenshot": true,
+      "on_error": "continue",
+      "evidence_capture": {
+        "type": "data_snapshot",
+        "label": "upload-confirmed"
+      }
+    },
+    {
+      "step": 9,
+      "action": "save_to_outbox",
+      "filename": "drive-save-receipt-{date}.json",
+      "description": "Save upload receipt to outbox with file URL and hash",
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "output_hash",
+        "label": "receipt-saved"
+      }
+    },
+    {
+      "step": 10,
+      "action": "return_result",
+      "description": "Return upload confirmation with Drive file URL"
     }
   ],
-  "type": "standard",
-  "version": "1.0.0"
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "uploaded": {"type": "boolean"},
+      "file_title": {"type": "string"},
+      "file_url": {"type": "string"},
+      "target_folder": {"type": "string"},
+      "source_file_hash": {"type": "string"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["uploaded", "file_title", "timestamp"]
+  },
+  "budgets": {
+    "max_reads": 10,
+    "max_sends": 1,
+    "max_deletes": 0,
+    "max_llm_calls": 0,
+    "max_cost_per_run_usd": 0.01
+  },
+  "error_handling": {
+    "on_auth_failure": "prompt_login",
+    "on_upload_failure": "retry_once",
+    "on_timeout": "fail_with_evidence",
+    "max_retries": 1
+  },
+  "metadata": {
+    "tags": ["google-drive", "upload", "save", "artifact", "write"],
+    "difficulty": "medium",
+    "estimated_duration_s": 30,
+    "idempotent": false,
+    "destructive": false
+  }
 }

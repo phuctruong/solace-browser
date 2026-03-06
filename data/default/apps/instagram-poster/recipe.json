@@ -1,12 +1,199 @@
 {
   "id": "instagram-poster",
+  "platform": "instagram",
+  "version": "1.0.0",
+  "description": "Draft an Instagram post with caption from approved content, navigate to Instagram Web, fill in the post form, and await explicit human approval before publishing.",
+  "oauth3_scopes": ["instagram.read.feed", "instagram.write.posts", "local.evidence"],
+  "evidence_type": "lane_c",
+  "input_params": {
+    "image_path": {
+      "type": "string",
+      "description": "Local path to the image file to post.",
+      "required": true
+    },
+    "caption": {
+      "type": "string",
+      "description": "Caption text for the Instagram post.",
+      "required": true
+    },
+    "hashtags": {
+      "type": "array",
+      "description": "List of hashtags to append to caption.",
+      "required": false,
+      "default": []
+    }
+  },
   "steps": [
     {
-      "action": "noop",
-      "description": "Preview Instagram Poster",
-      "id": "preview"
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/instagram_working_session.json",
+      "description": "Load saved Instagram session cookies",
+      "timeout_ms": 5000,
+      "on_error": "fail"
+    },
+    {
+      "step": 2,
+      "action": "validate_input",
+      "checks": [
+        {
+          "field": "params.image_path",
+          "type": "file_exists",
+          "allowed_types": ["image/jpeg", "image/png", "image/webp"]
+        },
+        {
+          "field": "params.caption",
+          "type": "max_length",
+          "max": 2200
+        }
+      ],
+      "description": "Validate image file exists and caption is within Instagram limits",
+      "timeout_ms": 3000,
+      "on_error": "fail"
+    },
+    {
+      "step": 3,
+      "action": "navigate",
+      "target": "https://www.instagram.com/",
+      "wait_for": "nav, [role='main']",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to Instagram home",
+      "on_error": "fail"
+    },
+    {
+      "step": 4,
+      "action": "check_auth",
+      "selector": "nav a[href*='/direct/'], svg[aria-label='Home']",
+      "fallback_url_pattern": "accounts/login",
+      "description": "Verify Instagram authentication is active",
+      "timeout_ms": 5000,
+      "on_error": "fail"
+    },
+    {
+      "step": 5,
+      "action": "click",
+      "selector": "svg[aria-label='New post'], [aria-label='New post']",
+      "wait_for": "input[type='file'], [role='dialog']",
+      "timeout_ms": 8000,
+      "description": "Open the new post creation dialog",
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "screenshot",
+        "label": "create-dialog-open"
+      }
+    },
+    {
+      "step": 6,
+      "action": "upload_file",
+      "selector": "input[type='file']",
+      "file_path": "{params.image_path}",
+      "description": "Upload the image to the post creation form",
+      "timeout_ms": 30000,
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "screenshot",
+        "label": "image-uploaded"
+      }
+    },
+    {
+      "step": 7,
+      "action": "click",
+      "selector": "button:has-text('Next'), [aria-label='Next']",
+      "wait_for": "textarea, [aria-label='Write a caption']",
+      "timeout_ms": 8000,
+      "description": "Advance to the caption editing step",
+      "on_error": "fail"
+    },
+    {
+      "step": 8,
+      "action": "type",
+      "selector": "textarea, [aria-label='Write a caption']",
+      "value": "{params.caption}\n\n{params.hashtags|join(' ')}",
+      "description": "Enter the caption and hashtags",
+      "timeout_ms": 5000,
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "screenshot",
+        "label": "caption-entered"
+      }
+    },
+    {
+      "step": 9,
+      "action": "require_approval",
+      "message": "Instagram post is ready to publish. Image: {params.image_path}. Caption preview shown in screenshot. Approve to publish or reject to discard.",
+      "screenshot": true,
+      "description": "HALT and require explicit human approval before publishing",
+      "timeout_ms": null,
+      "on_reject": "discard_draft",
+      "evidence_capture": {
+        "type": "approval_record",
+        "label": "publish-approval"
+      }
+    },
+    {
+      "step": 10,
+      "action": "click",
+      "selector": "button:has-text('Share'), [aria-label='Share']",
+      "wait_for": "[role='dialog']:has-text('shared'), .coreSpriteCheck",
+      "timeout_ms": 15000,
+      "description": "Click Share to publish the post (only after approval)",
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "screenshot",
+        "label": "post-published"
+      }
+    },
+    {
+      "step": 11,
+      "action": "save_to_outbox",
+      "filename": "instagram-post-{date}-{timestamp}.json",
+      "description": "Save post receipt with caption, image hash, and publish confirmation",
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "output_hash",
+        "label": "post-receipt-saved"
+      }
+    },
+    {
+      "step": 12,
+      "action": "return_result",
+      "description": "Return post confirmation with published status"
     }
   ],
-  "type": "standard",
-  "version": "1.0.0"
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "published": {"type": "boolean"},
+      "caption": {"type": "string"},
+      "hashtags": {"type": "array", "items": {"type": "string"}},
+      "image_hash": {"type": "string"},
+      "approved_by": {"type": "string"},
+      "approved_at": {"type": "string", "format": "date-time"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["published", "caption", "timestamp"]
+  },
+  "budgets": {
+    "max_reads": 5,
+    "max_sends": 1,
+    "max_deletes": 0,
+    "max_llm_calls": 0,
+    "max_cost_per_run_usd": 0.01
+  },
+  "error_handling": {
+    "on_auth_failure": "prompt_login",
+    "on_upload_failure": "fail_with_evidence",
+    "on_approval_rejected": "discard_and_save_evidence",
+    "on_timeout": "fail_with_evidence",
+    "max_retries": 0
+  },
+  "metadata": {
+    "tags": ["instagram", "social", "posting", "write", "approval-required"],
+    "difficulty": "medium",
+    "estimated_duration_s": 60,
+    "idempotent": false,
+    "destructive": false,
+    "requires_approval": true
+  }
 }

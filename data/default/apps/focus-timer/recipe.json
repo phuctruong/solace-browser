@@ -1,12 +1,161 @@
 {
   "id": "focus-timer",
+  "platform": "local",
+  "version": "1.0.0",
+  "description": "Run a local Pomodoro-style focus session: set a timer, track the active window/tab context, and produce a focus report when the session ends.",
+  "oauth3_scopes": ["machine.read.clock", "local.evidence"],
+  "evidence_type": "lane_a",
+  "input_params": {
+    "duration_minutes": {
+      "type": "integer",
+      "description": "Focus session duration in minutes. Default 25 (standard Pomodoro).",
+      "required": false,
+      "default": 25
+    },
+    "task_label": {
+      "type": "string",
+      "description": "Label for the focus session (e.g., 'Write blog post').",
+      "required": false,
+      "default": "Focus session"
+    },
+    "break_minutes": {
+      "type": "integer",
+      "description": "Break duration after session in minutes. Default 5.",
+      "required": false,
+      "default": 5
+    }
+  },
   "steps": [
     {
-      "action": "noop",
-      "description": "Preview Focus Timer",
-      "id": "preview"
+      "step": 1,
+      "action": "record_timestamp",
+      "field": "session_start",
+      "description": "Record the focus session start time",
+      "timeout_ms": 1000,
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "timestamp",
+        "label": "focus-session-start"
+      }
+    },
+    {
+      "step": 2,
+      "action": "capture_context",
+      "fields": {
+        "active_url": "current_tab_url",
+        "active_title": "current_tab_title",
+        "task_label": "{params.task_label}",
+        "planned_duration": "{params.duration_minutes}"
+      },
+      "description": "Capture the current browser context at session start",
+      "timeout_ms": 3000,
+      "on_error": "continue"
+    },
+    {
+      "step": 3,
+      "action": "start_timer",
+      "duration_minutes": "{params.duration_minutes}",
+      "notification": {
+        "on_start": "Focus session started: {params.task_label} ({params.duration_minutes} min)",
+        "on_halfway": "Halfway through: {params.duration_minutes / 2} minutes remaining",
+        "on_complete": "Focus session complete! Time for a {params.break_minutes}-minute break."
+      },
+      "description": "Start the countdown timer with notifications",
+      "timeout_ms": null,
+      "on_error": "fail"
+    },
+    {
+      "step": 4,
+      "action": "record_timestamp",
+      "field": "session_end",
+      "description": "Record the focus session end time",
+      "timeout_ms": 1000,
+      "on_error": "fail"
+    },
+    {
+      "step": 5,
+      "action": "transform",
+      "operations": [
+        {
+          "type": "compute_duration",
+          "start_field": "session_start",
+          "end_field": "session_end",
+          "output_field": "actual_duration_minutes"
+        },
+        {
+          "type": "add_field",
+          "field": "completed",
+          "value": true
+        },
+        {
+          "type": "add_field",
+          "field": "task_label",
+          "value": "{params.task_label}"
+        }
+      ],
+      "description": "Compute actual duration and build focus report",
+      "on_error": "continue"
+    },
+    {
+      "step": 6,
+      "action": "load_previous",
+      "path": "outbox/focus-sessions-log.json",
+      "description": "Load historical focus session log for streak tracking",
+      "timeout_ms": 3000,
+      "on_error": "continue"
+    },
+    {
+      "step": 7,
+      "action": "save_to_outbox",
+      "filename": "focus-session-{date}-{timestamp}.json",
+      "append_to": "focus-sessions-log.json",
+      "description": "Save focus session report and append to running log",
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "output_hash",
+        "label": "focus-report-saved"
+      }
+    },
+    {
+      "step": 8,
+      "action": "return_result",
+      "description": "Return focus session report with duration, context, and streak info"
     }
   ],
-  "type": "standard",
-  "version": "1.0.0"
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "task_label": {"type": "string"},
+      "session_start": {"type": "string", "format": "date-time"},
+      "session_end": {"type": "string", "format": "date-time"},
+      "planned_duration_minutes": {"type": "integer"},
+      "actual_duration_minutes": {"type": "number"},
+      "completed": {"type": "boolean"},
+      "active_url": {"type": "string"},
+      "sessions_today": {"type": "integer"},
+      "total_focus_minutes_today": {"type": "number"},
+      "streak_days": {"type": "integer"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["task_label", "session_start", "actual_duration_minutes", "completed", "timestamp"]
+  },
+  "budgets": {
+    "max_reads": 5,
+    "max_sends": 0,
+    "max_deletes": 0,
+    "max_llm_calls": 0,
+    "max_cost_per_run_usd": 0.00
+  },
+  "error_handling": {
+    "on_timer_interrupted": "save_partial_session",
+    "on_timeout": "mark_incomplete",
+    "max_retries": 0
+  },
+  "metadata": {
+    "tags": ["focus", "timer", "pomodoro", "local", "productivity"],
+    "difficulty": "easy",
+    "estimated_duration_s": 1500,
+    "idempotent": false,
+    "destructive": false
+  }
 }

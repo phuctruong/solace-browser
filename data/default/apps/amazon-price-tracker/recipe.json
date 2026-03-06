@@ -1,12 +1,175 @@
 {
   "id": "amazon-price-tracker",
+  "platform": "amazon",
+  "version": "1.0.0",
+  "description": "Navigate to Amazon wishlist, extract product prices, compare against saved thresholds, and report price drops.",
+  "oauth3_scopes": ["amazon.read.product", "local.evidence"],
+  "evidence_type": "lane_a",
+  "input_params": {
+    "wishlist_url": {
+      "type": "string",
+      "description": "Full URL to your Amazon wishlist. Default uses primary wishlist.",
+      "required": false,
+      "default": "https://www.amazon.com/hz/wishlist/ls/default"
+    },
+    "price_drop_threshold_pct": {
+      "type": "number",
+      "description": "Minimum percentage drop to flag as a deal. Default 10.",
+      "required": false,
+      "default": 10
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Maximum number of wishlist items to check. Default 25.",
+      "required": false,
+      "default": 25
+    }
+  },
   "steps": [
     {
-      "action": "noop",
-      "description": "Preview Amazon Price Tracker",
-      "id": "preview"
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/amazon_working_session.json",
+      "description": "Load saved Amazon session cookies",
+      "timeout_ms": 5000,
+      "on_error": "fail"
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "{params.wishlist_url}",
+      "wait_for": "#g-items, [id='item-page-wrapper']",
+      "timeout_ms": 12000,
+      "screenshot": true,
+      "description": "Navigate to Amazon wishlist page",
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "screenshot",
+        "label": "wishlist-loaded"
+      }
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "#nav-link-accountList-nav-line-1",
+      "fallback_url_pattern": "ap/signin",
+      "description": "Verify Amazon authentication is active",
+      "timeout_ms": 5000,
+      "on_error": "fail"
+    },
+    {
+      "step": 4,
+      "action": "extract_all",
+      "selector": "[data-id], li[data-itemid]",
+      "limit": "{params.limit}",
+      "fields": {
+        "product_name": {"selector": "[id^='itemName_'] a, h2 a", "type": "textContent"},
+        "product_url": {"selector": "[id^='itemName_'] a, h2 a", "type": "attribute", "attribute": "href"},
+        "current_price": {"selector": "[id^='itemPrice_'], .a-price .a-offscreen", "type": "textContent"},
+        "original_price": {"selector": ".a-text-strike, .a-price[data-a-strike]", "type": "textContent"},
+        "availability": {"selector": "[id^='itemAvailability_'], .a-color-success", "type": "textContent"},
+        "image_url": {"selector": "img[src*='images-amazon']", "type": "attribute", "attribute": "src"}
+      },
+      "description": "Extract product details from wishlist items",
+      "screenshot": true,
+      "on_error": "continue",
+      "evidence_capture": {
+        "type": "data_snapshot",
+        "label": "wishlist-extraction"
+      }
+    },
+    {
+      "step": 5,
+      "action": "load_previous",
+      "path": "outbox/amazon-prices-latest.json",
+      "description": "Load previous price snapshot for comparison",
+      "timeout_ms": 3000,
+      "on_error": "continue"
+    },
+    {
+      "step": 6,
+      "action": "transform",
+      "operations": [
+        {
+          "type": "compare_prices",
+          "current_field": "current_price",
+          "previous_field": "previous_price",
+          "threshold_pct": "{params.price_drop_threshold_pct}"
+        },
+        {
+          "type": "add_field",
+          "field": "checked_at",
+          "value": "{timestamp_iso}"
+        },
+        {
+          "type": "filter",
+          "condition": "price_change_pct != 0"
+        }
+      ],
+      "description": "Compare current prices against previous snapshot and flag drops",
+      "on_error": "continue"
+    },
+    {
+      "step": 7,
+      "action": "save_to_outbox",
+      "filename": "amazon-prices-{date}.json",
+      "also_save_as": "amazon-prices-latest.json",
+      "description": "Save price snapshot and deals report to outbox",
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "output_hash",
+        "label": "price-report-saved"
+      }
+    },
+    {
+      "step": 8,
+      "action": "return_result",
+      "description": "Return price tracking results with any detected deals"
     }
   ],
-  "type": "standard",
-  "version": "1.0.0"
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "products": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "product_name": {"type": "string"},
+            "current_price": {"type": "string"},
+            "previous_price": {"type": "string"},
+            "price_change_pct": {"type": "number"},
+            "is_deal": {"type": "boolean"},
+            "availability": {"type": "string"},
+            "product_url": {"type": "string"}
+          },
+          "required": ["product_name", "current_price"]
+        }
+      },
+      "deals_count": {"type": "integer"},
+      "total_checked": {"type": "integer"},
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["products", "deals_count", "total_checked", "timestamp"]
+  },
+  "budgets": {
+    "max_reads": 50,
+    "max_sends": 0,
+    "max_deletes": 0,
+    "max_llm_calls": 0,
+    "max_cost_per_run_usd": 0.01
+  },
+  "error_handling": {
+    "on_auth_failure": "prompt_login",
+    "on_timeout": "retry_once",
+    "on_extraction_empty": "save_empty_report",
+    "max_retries": 1
+  },
+  "metadata": {
+    "tags": ["amazon", "price-tracking", "wishlist", "read-only", "extraction"],
+    "difficulty": "easy",
+    "estimated_duration_s": 15,
+    "idempotent": true,
+    "destructive": false
+  }
 }

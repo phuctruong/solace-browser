@@ -1,12 +1,232 @@
 {
   "id": "whatsapp-responder",
+  "platform": "whatsapp-web",
+  "version": "1.0.0",
+  "description": "Scan WhatsApp Web for unread messages, draft contextual responses using LLM, and stage them for explicit human approval before sending.",
+  "oauth3_scopes": ["whatsapp.read.messages", "whatsapp.write.drafts", "local.evidence"],
+  "evidence_type": "lane_c",
+  "input_params": {
+    "max_chats": {
+      "type": "integer",
+      "description": "Maximum number of unread chats to process. Default 10.",
+      "required": false,
+      "default": 10
+    },
+    "response_style": {
+      "type": "string",
+      "description": "Tone for drafted responses: casual, professional, brief. Default 'casual'.",
+      "required": false,
+      "default": "casual"
+    },
+    "auto_skip_groups": {
+      "type": "boolean",
+      "description": "Whether to skip group chats and only process direct messages. Default false.",
+      "required": false,
+      "default": false
+    }
+  },
   "steps": [
     {
-      "action": "noop",
-      "description": "Preview WhatsApp Responder",
-      "id": "preview"
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/whatsapp_working_session.json",
+      "description": "Load saved WhatsApp Web session cookies",
+      "timeout_ms": 5000,
+      "on_error": "fail"
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://web.whatsapp.com/",
+      "wait_for": "#app, [data-testid='chat-list']",
+      "timeout_ms": 20000,
+      "screenshot": true,
+      "description": "Navigate to WhatsApp Web",
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "screenshot",
+        "label": "whatsapp-loaded"
+      }
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "[data-testid='chat-list'], #pane-side",
+      "fallback_url_pattern": "web.whatsapp.com",
+      "fallback_selector": "[data-testid='qrcode']",
+      "description": "Verify WhatsApp Web is authenticated (not showing QR code)",
+      "timeout_ms": 10000,
+      "on_error": "fail"
+    },
+    {
+      "step": 4,
+      "action": "extract_all",
+      "selector": "[data-testid='cell-frame-container']:has([data-testid='icon-unread'])",
+      "limit": "{params.max_chats}",
+      "fields": {
+        "contact_name": {"selector": "[data-testid='cell-frame-title'] span", "type": "textContent"},
+        "last_message_preview": {"selector": "[data-testid='last-msg-status'] span", "type": "textContent"},
+        "unread_count": {"selector": "[data-testid='icon-unread'] span", "type": "textContent"},
+        "timestamp": {"selector": "[data-testid='cell-frame-primary-detail']", "type": "textContent"},
+        "is_group": {"check": "has_selector", "selector": "[data-testid='default-group']"}
+      },
+      "description": "Extract unread chat metadata from the chat list",
+      "screenshot": true,
+      "on_error": "continue",
+      "evidence_capture": {
+        "type": "data_snapshot",
+        "label": "unread-chats-extracted"
+      }
+    },
+    {
+      "step": 5,
+      "action": "loop",
+      "over": "extracted_chats",
+      "as": "chat",
+      "filter": "{params.auto_skip_groups} ? !chat.is_group : true",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "[title='{chat.contact_name}']",
+          "wait_for": "[data-testid='conversation-panel-messages']",
+          "timeout_ms": 5000,
+          "description": "Open chat with {chat.contact_name}"
+        },
+        {
+          "action": "extract_all",
+          "selector": "[data-testid='msg-container']",
+          "limit": 10,
+          "fields": {
+            "text": {"selector": "[data-testid='balloon-message'] span", "type": "textContent"},
+            "is_incoming": {"check": "has_class", "class": "message-in"},
+            "time": {"selector": "[data-testid='msg-meta'] span", "type": "textContent"}
+          },
+          "description": "Extract recent messages for context"
+        },
+        {
+          "action": "llm_analyze",
+          "prompt": "You are drafting a WhatsApp reply in a {params.response_style} tone. Given the recent messages below, draft a natural, helpful response. Keep it concise (1-3 sentences for casual, up to 5 for professional). Do not include greetings if the conversation is mid-flow.",
+          "input_field": "recent_messages",
+          "description": "Draft a contextual response"
+        },
+        {
+          "action": "stage_draft",
+          "field": "drafted_response",
+          "description": "Stage the drafted response (NOT sent yet — requires approval)"
+        }
+      ],
+      "description": "Process each unread chat: read context, draft response, stage for approval",
+      "on_error": "continue"
+    },
+    {
+      "step": 6,
+      "action": "require_approval",
+      "message": "WhatsApp response drafts are ready for review. {draft_count} drafts staged across {chat_count} conversations. Review each draft and approve/reject individually.",
+      "screenshot": true,
+      "approval_type": "per_item",
+      "description": "HALT and require explicit human approval for each drafted response",
+      "timeout_ms": null,
+      "on_reject": "discard_draft",
+      "evidence_capture": {
+        "type": "approval_record",
+        "label": "response-approvals"
+      }
+    },
+    {
+      "step": 7,
+      "action": "loop",
+      "over": "approved_drafts",
+      "as": "draft",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "[title='{draft.contact_name}']",
+          "wait_for": "[data-testid='conversation-compose-box-input']",
+          "timeout_ms": 5000,
+          "description": "Open approved chat"
+        },
+        {
+          "action": "type",
+          "selector": "[data-testid='conversation-compose-box-input']",
+          "value": "{draft.response_text}",
+          "description": "Type the approved response"
+        },
+        {
+          "action": "press",
+          "key": "Enter",
+          "timeout_ms": 3000,
+          "description": "Send the approved message"
+        }
+      ],
+      "description": "Send each approved response",
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "screenshot",
+        "label": "messages-sent"
+      }
+    },
+    {
+      "step": 8,
+      "action": "save_to_outbox",
+      "filename": "whatsapp-responses-{date}-{timestamp}.json",
+      "description": "Save response log with drafts, approvals, and send confirmations",
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "output_hash",
+        "label": "response-log-saved"
+      }
+    },
+    {
+      "step": 9,
+      "action": "return_result",
+      "description": "Return response summary with sent/rejected counts"
     }
   ],
-  "type": "standard",
-  "version": "1.0.0"
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "chats_processed": {"type": "integer"},
+      "drafts_created": {"type": "integer"},
+      "drafts_approved": {"type": "integer"},
+      "drafts_rejected": {"type": "integer"},
+      "messages_sent": {"type": "integer"},
+      "responses": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "contact_name": {"type": "string"},
+            "response_text": {"type": "string"},
+            "status": {"type": "string", "enum": ["sent", "rejected", "failed"]},
+            "approved_by": {"type": "string"}
+          },
+          "required": ["contact_name", "status"]
+        }
+      },
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["chats_processed", "messages_sent", "timestamp"]
+  },
+  "budgets": {
+    "max_reads": 30,
+    "max_sends": 10,
+    "max_deletes": 0,
+    "max_llm_calls": 10,
+    "max_cost_per_run_usd": 0.20
+  },
+  "error_handling": {
+    "on_auth_failure": "prompt_qr_scan",
+    "on_approval_rejected": "discard_and_log",
+    "on_send_failure": "retry_once",
+    "on_timeout": "save_drafts_only",
+    "max_retries": 1
+  },
+  "metadata": {
+    "tags": ["whatsapp", "messaging", "responses", "write", "approval-required", "llm"],
+    "difficulty": "hard",
+    "estimated_duration_s": 120,
+    "idempotent": false,
+    "destructive": false,
+    "requires_approval": true
+  }
 }

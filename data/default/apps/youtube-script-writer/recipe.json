@@ -1,12 +1,198 @@
 {
   "id": "youtube-script-writer",
+  "platform": "youtube-studio",
+  "version": "1.0.0",
+  "description": "Navigate to YouTube Studio, analyze channel performance data, draft a video script from source notes using LLM, and save the draft for review before handing off to downstream apps.",
+  "oauth3_scopes": ["youtube.read.channel", "youtube.write.drafts", "local.evidence"],
+  "evidence_type": "lane_b",
+  "input_params": {
+    "topic": {
+      "type": "string",
+      "description": "Video topic or title for the script.",
+      "required": true
+    },
+    "source_notes": {
+      "type": "string",
+      "description": "Raw notes, bullet points, or outline to base the script on.",
+      "required": true
+    },
+    "target_duration_minutes": {
+      "type": "integer",
+      "description": "Target video length in minutes. Default 10.",
+      "required": false,
+      "default": 10
+    },
+    "style": {
+      "type": "string",
+      "description": "Script style: tutorial, vlog, review, explainer. Default 'explainer'.",
+      "required": false,
+      "default": "explainer"
+    }
+  },
   "steps": [
     {
-      "action": "noop",
-      "description": "Preview YouTube Script Writer",
-      "id": "preview"
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/google_working_session.json",
+      "description": "Load saved Google/YouTube session cookies",
+      "timeout_ms": 5000,
+      "on_error": "fail"
+    },
+    {
+      "step": 2,
+      "action": "navigate",
+      "target": "https://studio.youtube.com/channel/UC/analytics/tab-overview",
+      "wait_for": "[role='main'], .analytics-period",
+      "timeout_ms": 15000,
+      "screenshot": true,
+      "description": "Navigate to YouTube Studio analytics for performance context",
+      "on_error": "continue",
+      "evidence_capture": {
+        "type": "screenshot",
+        "label": "studio-analytics"
+      }
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "[role='main']",
+      "fallback_url_pattern": "accounts.google.com",
+      "description": "Verify YouTube/Google authentication is active",
+      "timeout_ms": 5000,
+      "on_error": "fail"
+    },
+    {
+      "step": 4,
+      "action": "extract",
+      "fields": {
+        "views_28d": {"selector": ".metric-value:nth-child(1)", "type": "textContent"},
+        "watch_time_28d": {"selector": ".metric-value:nth-child(2)", "type": "textContent"},
+        "subscribers_28d": {"selector": ".metric-value:nth-child(3)", "type": "textContent"},
+        "top_videos": {"selector": ".video-title", "type": "textContent", "limit": 5}
+      },
+      "description": "Extract channel performance metrics for script context",
+      "timeout_ms": 8000,
+      "on_error": "continue"
+    },
+    {
+      "step": 5,
+      "action": "llm_analyze",
+      "prompt": "You are a YouTube script writer specializing in {params.style} videos. Write a complete video script based on the source notes below.\n\nTopic: {params.topic}\nTarget duration: {params.target_duration_minutes} minutes (~{params.target_duration_minutes * 150} words)\nStyle: {params.style}\n\nScript structure:\n1. HOOK (first 15 seconds): Grab attention with a question or bold statement\n2. INTRO (30 seconds): What this video covers and why it matters\n3. MAIN CONTENT: Key points from source notes, expanded with examples\n4. CALL TO ACTION: Subscribe, comment, related video\n5. OUTRO (15 seconds): Quick recap\n\nInclude [B-ROLL] markers where visual cutaways would work.\nInclude [SCREEN RECORDING] markers where demos would help.\nWrite in conversational tone — this is spoken, not written.\n\nChannel context (for tone matching):\n- Recent top videos: {analytics.top_videos}\n- 28-day views: {analytics.views_28d}",
+      "input_field": "params.source_notes",
+      "description": "Generate a complete video script from source notes and channel context",
+      "timeout_ms": 60000,
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "llm_output",
+        "label": "script-draft"
+      }
+    },
+    {
+      "step": 6,
+      "action": "transform",
+      "operations": [
+        {
+          "type": "add_field",
+          "field": "topic",
+          "value": "{params.topic}"
+        },
+        {
+          "type": "add_field",
+          "field": "style",
+          "value": "{params.style}"
+        },
+        {
+          "type": "add_field",
+          "field": "target_duration_minutes",
+          "value": "{params.target_duration_minutes}"
+        },
+        {
+          "type": "estimate_word_count",
+          "field": "script_text",
+          "output_field": "word_count"
+        },
+        {
+          "type": "estimate_duration",
+          "word_count_field": "word_count",
+          "words_per_minute": 150,
+          "output_field": "estimated_duration_minutes"
+        }
+      ],
+      "description": "Add metadata and estimate actual script duration from word count",
+      "on_error": "continue"
+    },
+    {
+      "step": 7,
+      "action": "require_approval",
+      "message": "YouTube script draft is ready for review.\nTopic: {params.topic}\nEstimated duration: {estimated_duration_minutes} minutes ({word_count} words)\nStyle: {params.style}\n\nReview the script and approve to save, or reject with feedback for revision.",
+      "screenshot": false,
+      "description": "HALT and require human approval of the script draft",
+      "timeout_ms": null,
+      "on_reject": "save_as_rejected_draft",
+      "evidence_capture": {
+        "type": "approval_record",
+        "label": "script-approval"
+      }
+    },
+    {
+      "step": 8,
+      "action": "save_to_outbox",
+      "filename": "youtube-script-{date}-{sanitized_topic}.json",
+      "description": "Save approved script to outbox for google-drive-saver and twitter-monitor consumption",
+      "on_error": "fail",
+      "evidence_capture": {
+        "type": "output_hash",
+        "label": "script-saved"
+      }
+    },
+    {
+      "step": 9,
+      "action": "return_result",
+      "description": "Return the script draft with metadata and approval status"
     }
   ],
-  "type": "standard",
-  "version": "1.0.0"
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "topic": {"type": "string"},
+      "style": {"type": "string"},
+      "script_text": {"type": "string"},
+      "word_count": {"type": "integer"},
+      "estimated_duration_minutes": {"type": "number"},
+      "target_duration_minutes": {"type": "integer"},
+      "approved": {"type": "boolean"},
+      "approved_by": {"type": "string"},
+      "channel_context": {
+        "type": "object",
+        "properties": {
+          "views_28d": {"type": "string"},
+          "subscribers_28d": {"type": "string"}
+        }
+      },
+      "timestamp": {"type": "string", "format": "date-time"}
+    },
+    "required": ["topic", "script_text", "approved", "timestamp"]
+  },
+  "budgets": {
+    "max_reads": 10,
+    "max_sends": 0,
+    "max_deletes": 0,
+    "max_llm_calls": 1,
+    "max_cost_per_run_usd": 0.15
+  },
+  "error_handling": {
+    "on_auth_failure": "prompt_login",
+    "on_llm_failure": "fail_with_evidence",
+    "on_approval_rejected": "save_rejected_draft",
+    "on_timeout": "save_partial_draft",
+    "max_retries": 0
+  },
+  "metadata": {
+    "tags": ["youtube", "script", "writing", "content", "llm", "approval-required"],
+    "difficulty": "medium",
+    "estimated_duration_s": 90,
+    "idempotent": false,
+    "destructive": false,
+    "requires_approval": true
+  }
 }
