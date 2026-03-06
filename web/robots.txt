@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /settings
+Disallow: /tunnel-connect
+
+Sitemap: https://www.solacebrowser.com/sitemap.xml

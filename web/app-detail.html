@@ -5,6 +5,12 @@
   <title>App Dashboard | Solace Browser</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://127.0.0.1:* https://www.solaceagi.com https://*.solaceagi.com; font-src 'self'; frame-ancestors 'none'">
+  <link rel="canonical" href="https://browser.solaceagi.com/app-detail">
+  <meta property="og:title" content="App Dashboard | Solace Browser">
+  <meta property="og:description" content="View app details, run history, and configuration for your Solace Browser automation.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.solacebrowser.com/app-detail">
+  <meta property="og:image" content="https://www.solacebrowser.com/images/yinyang/yinyang-logo-512.png">
   <meta name="theme-color" content="#081019">
   <link rel="icon" type="image/png" href="/images/yinyang/yinyang-logo-32.png">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -115,39 +121,39 @@
             <div class="sb-state-card__title" id="stResultTitle"></div>
             <div class="sb-state-card__body" id="stResultBody"></div>
             <div class="ad-result-evidence" id="stResultEvidence"></div>
-            <div class="ad-esign-badge" id="stEsign" style="display:none"></div>
+            <div class="ad-esign-badge d-none" id="stEsign"></div>
           </div>
 
           <!-- ═══ App Header (from styleguide: sb-app-header) ═══ -->
           <div class="sb-app-header">
-            <div id="adIconWrap"><div style="width:64px;height:64px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--sb-bg-white-alpha-04)">&#9889;</div></div>
+            <div id="adIconWrap"><div class="ad-icon-placeholder">&#9889;</div></div>
             <div class="sb-app-header__info">
               <h1 class="sb-app-header__name" id="adName">Loading...</h1>
               <p class="sb-app-header__desc" id="adDesc"></p>
               <div class="sb-app-header__meta" id="adMeta"></div>
             </div>
             <div class="sb-app-header__ctas">
-              <button class="sb-run-btn sb-run-btn--activate" id="btnActivate" style="display:none;background:var(--sb-signal,#64c4ff)"><span>&#10003;</span> <span>Save &amp; Activate</span></button>
+              <button class="sb-run-btn sb-run-btn--activate d-none sb-run-btn--signal" id="btnActivate"><span>&#10003;</span> <span>Save &amp; Activate</span></button>
               <button class="sb-run-btn" id="btnRun"><span>&#9654;</span> <span id="btnRunLabel">Run Now</span></button>
               <a class="ad-schedule-btn" href="/schedule">Schedule</a>
             </div>
           </div>
 
           <!-- ═══ Tabs — Jony Ive: 5 essential views, nothing more ═══ -->
-          <div class="sb-tabs" id="adTabs" style="flex-wrap:wrap">
+          <div class="sb-tabs flex-wrap" id="adTabs">
             <button class="sb-tab is-active" data-tab="tab-setup" data-i18n="tab_setup">Setup</button>
             <button class="sb-tab" data-tab="tab-runs" data-i18n="tab_runs">Runs</button>
             <button class="sb-tab" data-tab="tab-benchmarks" data-i18n="tab_benchmarks">Benchmarks</button>
-            <button class="sb-tab" data-tab="tab-savings" style="color:var(--sb-success)" data-i18n="tab_money_saved">Money Saved</button>
-            <button class="sb-tab" data-tab="tab-agent-docs" style="color:var(--sb-signal)" data-i18n="tab_agent_docs">Agent Docs</button>
+            <button class="sb-tab text-success" data-tab="tab-savings" data-i18n="tab_money_saved">Money Saved</button>
+            <button class="sb-tab text-signal" data-tab="tab-agent-docs" data-i18n="tab_agent_docs">Agent Docs</button>
             <button class="sb-tab" data-tab="tab-compliance">Compliance</button>
             <button class="sb-tab" data-tab="tab-files" data-i18n="tab_files">Files</button>
           </div>
 
           <!-- ═══ Setup Tab — display-only editable fields ═══ -->
           <div class="sb-tab-panel is-active" id="tab-setup">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-              <span style="font-size:0.75rem;color:var(--sb-text-muted)">Hover any value to edit &middot; changes save automatically</span>
+            <div class="flex-between-mb14">
+              <span class="text-075 text-muted">Hover any value to edit &middot; changes save automatically</span>
               <button class="ad-yy-help" id="btnYYHelp">
                 <img src="/images/yinyang/yinyang-rotating_70pct_256px.gif" alt="YY"> Ask YinYang
               </button>
@@ -167,7 +173,7 @@
           <div class="sb-tab-panel" id="tab-runs">
             <div class="ad-files-label">Recent Runs</div>
             <div class="ad-runs-chart" id="runsChart"></div>
-            <table id="runsTable" class="display" style="width:100%" aria-label="Recent app runs">
+            <table id="runsTable" class="display w-full" aria-label="Recent app runs">
               <thead>
                 <tr><th scope="col">Date</th><th scope="col">Status</th><th scope="col">Items</th><th scope="col">Screenshot</th><th scope="col">Evidence</th></tr>
               </thead>
@@ -177,26 +183,26 @@
 
           <!-- ═══ Benchmarks Tab — ABCD test results ═══ -->
           <div class="sb-tab-panel" id="tab-benchmarks">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-              <span style="font-size:0.82rem;font-weight:700">ABCD Model Benchmarks</span>
+            <div class="flex-between-mb14">
+              <span class="ad-section-title">ABCD Model Benchmarks</span>
               <button class="ad-schedule-btn" id="btnRunABCD">&#9654; Run ABCD Test</button>
             </div>
-            <p style="font-size:0.75rem;color:var(--sb-text-muted);margin:0 0 14px">Same prompt tested against multiple AI backends. Cheapest model that passes quality threshold wins.</p>
+            <p class="ad-section-desc">Same prompt tested against multiple AI backends. Cheapest model that passes quality threshold wins.</p>
             <div id="benchResults">
-              <div class="sb-empty"><div class="sb-empty__icon">&#128200;</div>No benchmark results yet.<br><span style="font-size:0.72rem;color:var(--sb-text-muted)">Click "Run ABCD Test" to compare your installed AI agents.</span></div>
+              <div class="sb-empty"><div class="sb-empty__icon">&#128200;</div>No benchmark results yet.<br><span class="text-072 text-muted">Click "Run ABCD Test" to compare your installed AI agents.</span></div>
             </div>
-            <div id="benchRunning" style="display:none;text-align:center;padding:32px">
-              <img src="/images/yinyang/yinyang-rotating_70pct_256px.gif" alt="" style="width:40px;height:40px;border-radius:50%">
-              <div style="margin-top:10px;font-size:0.82rem" id="benchStatus">Testing models...</div>
-              <div style="font-size:0.72rem;color:var(--sb-text-muted);margin-top:4px" id="benchProgress"></div>
+            <div id="benchRunning" class="ad-bench-running">
+              <img src="/images/yinyang/yinyang-rotating_70pct_256px.gif" alt="" class="ad-yy-spinner--md">
+              <div class="ad-bench-status" id="benchStatus">Testing models...</div>
+              <div class="ad-bench-progress" id="benchProgress"></div>
             </div>
           </div>
 
           <!-- ═══ Agent Docs Tab — per-app documentation for humans + AI agents ═══ -->
           <div class="sb-tab-panel" id="tab-agent-docs">
-            <div style="margin-bottom:14px">
-              <span style="font-size:0.82rem;font-weight:700">Agent Instructions</span>
-              <span style="font-size:0.72rem;color:var(--sb-text-muted);margin-left:8px">Copy into your AI agent's context for best results</span>
+            <div class="ad-section-heading">
+              <span class="ad-section-title">Agent Instructions</span>
+              <span class="ad-section-subtitle">Copy into your AI agent's context for best results</span>
             </div>
             <div id="agentDocsContainer">
               <div class="sb-empty"><div class="sb-empty__icon">&#128218;</div>Loading agent documentation...</div>
@@ -205,9 +211,9 @@
 
           <!-- ═══ Money Saved Tab — ROI tracker ═══ -->
           <div class="sb-tab-panel" id="tab-savings">
-            <div style="margin-bottom:14px">
-              <span style="font-size:0.82rem;font-weight:700">Money Saved</span>
-              <span style="font-size:0.72rem;color:var(--sb-text-muted);margin-left:8px">Your personal ROI from automation</span>
+            <div class="ad-section-heading">
+              <span class="ad-section-title">Money Saved</span>
+              <span class="ad-section-subtitle">Your personal ROI from automation</span>
             </div>
             <div id="savingsContainer"></div>
           </div>
@@ -228,10 +234,10 @@
               <div class="ad-files-label">Outbox</div>
               <div class="ad-file-grid" id="filesOutbox"></div>
             </div>
-            <div class="ad-files-section" style="margin-top:16px">
+            <div class="ad-files-section mt-16">
               <div class="ad-files-label">Diagrams</div>
               <div id="diagramList">
-                <p style="color:var(--sb-text-muted);font-size:0.82rem">Click to load diagrams</p>
+                <p class="text-muted text-082">Click to load diagrams</p>
               </div>
             </div>
           </div>
@@ -435,7 +441,7 @@
           var trending = d.trending || false;
           var starHtml = '';
           for (var si = 0; si < 5; si++) starHtml += si < Math.round(stars) ? '&#9733;' : '&#9734;';
-          pills.push('<span class="sb-pill" style="color:#f5a623">' + starHtml + ' ' + stars + '</span>');
+          pills.push('<span class="sb-pill sb-pill--stars">' + starHtml + ' ' + stars + '</span>');
           pills.push('<span class="sb-pill">' + installs + ' installs</span>');
           if (trending) pills.push('<span class="sb-pill sb-pill--signal">&#128293; Trending</span>');
           meta.innerHTML = pills.join('');
@@ -497,13 +503,9 @@
 
           var agentCards = agents.map(function(a) {
             var isActive = a.id === selectedAgent;
-            return '<div class="sb-ai-agent-card' + (isActive ? ' is-active' : '') + '" data-agent-id="' + a.id + '" style="' +
-              'display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;' +
-              'border:1px solid ' + (isActive ? 'var(--sb-success)' : 'var(--sb-border-white-alpha-08)') + ';' +
-              'background:' + (isActive ? 'rgba(0,200,150,0.08)' : 'var(--sb-bg-white-alpha-03)') + ';' +
-              'cursor:pointer;transition:all 0.15s;font-size:0.78rem;color:' + (isActive ? '#00c896' : 'var(--sb-text-muted)') + '">' +
-              '<span style="font-weight:800;font-size:0.7rem;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:5px;background:' + (isActive ? 'rgba(0,200,150,0.15)' : 'rgba(255,255,255,0.06)') + '">' + a.icon + '</span>' +
-              '<span style="font-weight:600">' + a.name + '</span>' +
+            return '<div class="sb-ai-agent-card' + (isActive ? ' is-active' : '') + '" data-agent-id="' + a.id + '">' +
+              '<span class="ad-agent-icon ' + (isActive ? 'ad-agent-icon--active' : 'ad-agent-icon--default') + '">' + a.icon + '</span>' +
+              '<span class="font-600">' + a.name + '</span>' +
             '</div>';
           }).join('');
 
@@ -516,17 +518,17 @@
           }).join('');
 
           var html = '<div class="sb-field-group" id="aiBackendGroup">' +
-            '<h3 class="sb-field-group__title" style="display:flex;align-items:center;gap:8px">' +
-              '<img src="/images/ai-brain.png" alt="" style="width:20px;height:20px;border-radius:4px"> AI Backend' +
+            '<h3 class="sb-field-group__title flex-center-gap-8">' +
+              '<img class="ad-ai-brain-icon" src="/images/ai-brain.png" alt=""> AI Backend' +
             '</h3>' +
             '<div class="sb-field"><span class="sb-field__label">Agent</span>' +
-              '<div style="display:flex;flex-wrap:wrap;gap:6px" id="aiAgentCards">' + agentCards + '</div>' +
+              '<div class="d-flex flex-wrap gap-6" id="aiAgentCards">' + agentCards + '</div>' +
             '</div>' +
             '<div class="sb-field"><span class="sb-field__label">Model</span>' +
-              '<select id="aiModelSelect" style="background:var(--sb-bg-input);border:1px solid var(--sb-border-white-alpha-08);border-radius:6px;color:var(--sb-text);padding:6px 10px;font-size:0.78rem;min-width:200px">' + modelOptions + '</select>' +
+              '<select id="aiModelSelect" class="ad-model-select">' + modelOptions + '</select>' +
             '</div>' +
             '<div class="sb-field"><span class="sb-field__label">Cost</span>' +
-              '<span style="font-size:0.78rem;color:var(--sb-text-muted)" id="aiCostInfo">' + activeAgent.cost + '</span>' +
+              '<span class="ad-cost-info" id="aiCostInfo">' + activeAgent.cost + '</span>' +
             '</div>' +
           '</div>';
 
@@ -694,8 +696,8 @@
               '<td>' + (run.timestamp || '').replace('T',' ').slice(0,19) + '</td>' +
               '<td><span class="sb-pill ' + statusCls + '">' + (run.status || '') + '</span></td>' +
               '<td>' + (run.total || 0) + '</td>' +
-              '<td>' + (run.screenshot ? '<a href="/screenshots/' + run.screenshot.split('/').pop() + '" target="_blank" style="color:var(--sb-signal)">View</a>' : '—') + '</td>' +
-              '<td style="font-family:var(--sb-font-mono);font-size:0.68rem">' + (run.run_id || '').slice(0,12) + '</td>' +
+              '<td>' + (run.screenshot ? '<a href="/screenshots/' + run.screenshot.split('/').pop() + '" target="_blank" class="text-signal">View</a>' : '—') + '</td>' +
+              '<td class="ad-evidence-cell">' + (run.run_id || '').slice(0,12) + '</td>' +
             '</tr>';
           }).join('');
           if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {
@@ -882,8 +884,8 @@
     }
 
     function renderBenchResults(results, timestamp) {
-      var html = '<div style="font-size:0.68rem;color:var(--sb-text-muted);margin-bottom:12px">Last run: ' + (timestamp || 'unknown').replace('T',' ').slice(0,19) + '</div>';
-      html += '<div style="display:grid;gap:10px">';
+      var html = '<div class="ad-savings-timestamp">Last run: ' + (timestamp || 'unknown').replace('T',' ').slice(0,19) + '</div>';
+      html += '<div class="ad-bench-grid">';
       results.forEach(function(r, i) {
         var isWinner = r.winner;
         var border = isWinner ? 'var(--sb-success)' : r.error ? 'var(--sb-danger)' : 'var(--sb-border-white-alpha-08)';
@@ -892,21 +894,21 @@
         var stars = '';
         for (var s = 0; s < 3; s++) stars += s < r.score ? '<span style="color:' + scoreColor + '">&#9733;</span>' : '<span style="color:var(--sb-border-white-alpha-08)">&#9733;</span>';
 
-        html += '<div style="padding:14px 16px;border-radius:10px;border:1px solid ' + border + ';background:' + bg + '">';
-        html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">';
-        html += '<div style="display:flex;align-items:center;gap:10px">';
-        if (isWinner) html += '<span style="font-size:1.1rem">&#127942;</span>';
-        html += '<span style="font-weight:800;font-size:0.82rem">' + r.icon + ' ' + r.name + '</span>';
-        html += '<span style="font-size:0.72rem;color:var(--sb-text-muted);font-family:var(--sb-font-mono)">' + r.model + '</span>';
+        html += '<div class="ad-bench-card" style="border:1px solid ' + border + ';background:' + bg + '">';
+        html += '<div class="ad-bench-card-row">';
+        html += '<div class="flex-center-gap-10">';
+        if (isWinner) html += '<span class="text-130">&#127942;</span>';
+        html += '<span class="font-800 text-082">' + r.icon + ' ' + r.name + '</span>';
+        html += '<span class="text-072 text-muted font-mono">' + r.model + '</span>';
         html += '</div>';
-        html += '<div style="display:flex;align-items:center;gap:16px;font-size:0.78rem">';
+        html += '<div class="ad-bench-metrics">';
         html += '<span>' + stars + ' ' + r.score + '/3</span>';
-        html += '<span style="color:var(--sb-text-muted)">' + r.elapsed + 's</span>';
-        html += '<span style="font-weight:700">' + r.costLabel + '</span>';
-        if (isWinner) html += '<span class="sb-pill sb-pill--success" style="font-size:0.68rem">BEST DEAL</span>';
-        if (r.error) html += '<span class="sb-pill sb-pill--danger" style="font-size:0.68rem">ERROR</span>';
+        html += '<span class="text-muted">' + r.elapsed + 's</span>';
+        html += '<span class="font-bold">' + r.costLabel + '</span>';
+        if (isWinner) html += '<span class="sb-pill sb-pill--success text-068">BEST DEAL</span>';
+        if (r.error) html += '<span class="sb-pill sb-pill--danger text-068">ERROR</span>';
         html += '</div></div>';
-        if (r.error) html += '<div style="margin-top:8px;font-size:0.72rem;color:var(--sb-danger)">' + escHtml(r.error) + '</div>';
+        if (r.error) html += '<div class="ad-bench-error">' + escHtml(r.error) + '</div>';
         html += '</div>';
       });
       html += '</div>';
@@ -938,11 +940,11 @@
             '## API: POST /api/cli-agents/generate { agent, prompt, model }\\n' +
             '## MCP: navigate, click, fill, screenshot, snapshot, evaluate, aria_snapshot\\n';
 
-          sections.push('<div style="margin-bottom:16px">' +
-            '<div style="font-size:0.75rem;font-weight:700;margin-bottom:8px">Quick Copy — Paste into your AI agent</div>' +
-            '<div style="position:relative">' +
-              '<pre style="background:var(--sb-bg-input);padding:14px;border-radius:8px;font-size:0.72rem;line-height:1.5;color:var(--sb-text-muted);overflow-x:auto;white-space:pre-wrap;border:1px solid var(--sb-border-white-alpha-06)" id="agentQuickCopy">' + escHtml(quickCopy.replace(/\\n/g, '\n')) + '</pre>' +
-              '<button onclick="navigator.clipboard.writeText(document.getElementById(\'agentQuickCopy\').textContent).then(function(){var b=event.target;b.textContent=\'Copied!\';setTimeout(function(){b.textContent=\'Copy\'},1500)})" style="position:absolute;top:8px;right:8px;padding:4px 10px;background:var(--sb-bg-white-alpha-05);border:1px solid var(--sb-border-white-alpha-08);border-radius:5px;color:var(--sb-text-muted);font-size:0.68rem;cursor:pointer">Copy</button>' +
+          sections.push('<div class="ad-docs-section">' +
+            '<div class="ad-docs-quickcopy-title">Quick Copy — Paste into your AI agent</div>' +
+            '<div class="pos-relative">' +
+              '<pre class="ad-docs-pre" id="agentQuickCopy">' + escHtml(quickCopy.replace(/\\n/g, '\n')) + '</pre>' +
+              '<button onclick="navigator.clipboard.writeText(document.getElementById(\'agentQuickCopy\').textContent).then(function(){var b=event.target;b.textContent=\'Copied!\';setTimeout(function(){b.textContent=\'Copy\'},1500)})" class="ad-docs-copy-btn">Copy</button>' +
             '</div></div>');
 
           /* Show available docs from inbox */
@@ -955,34 +957,34 @@
 
             var items = fileList.map(function(f) {
               var name = typeof f === 'string' ? f : (f.name || f);
-              return '<div class="ad-file-item" style="cursor:pointer" onclick="this.querySelector(\'.ad-doc-preview\').style.display=this.querySelector(\'.ad-doc-preview\').style.display===\'block\'?\'none\':\'block\'">' +
+              return '<div class="ad-file-item cursor-pointer" onclick="this.querySelector(\'.ad-doc-preview\').style.display=this.querySelector(\'.ad-doc-preview\').style.display===\'block\'?\'none\':\'block\'">' +
                 '<div class="ad-file-item__name">' + escHtml(name) + '</div>' +
                 '<div class="ad-file-item__meta">' + folder + '</div>' +
-                '<div class="ad-doc-preview" style="display:none;margin-top:8px;padding:8px;background:var(--sb-bg-input);border-radius:6px;font-size:0.72rem;color:var(--sb-text-muted);font-family:var(--sb-font-mono)">Loading...</div>' +
+                '<div class="ad-doc-preview">Loading...</div>' +
               '</div>';
             }).join('');
 
-            sections.push('<div style="margin-bottom:16px">' +
-              '<div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--sb-text-muted);margin-bottom:8px;font-weight:700">' + folder + '</div>' +
+            sections.push('<div class="ad-docs-section">' +
+              '<div class="ad-docs-label">' + folder + '</div>' +
               '<div class="ad-file-grid">' + items + '</div>' +
             '</div>');
           });
 
           /* Best practices section */
-          sections.push('<div style="margin-bottom:16px">' +
-            '<div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--sb-text-muted);margin-bottom:8px;font-weight:700">Best Practices</div>' +
-            '<div style="display:grid;gap:8px">' +
-              '<div style="padding:10px 14px;background:var(--sb-bg-white-alpha-03);border-radius:8px;border:1px solid var(--sb-border-white-alpha-06)">' +
-                '<div style="font-size:0.78rem;font-weight:600">Use uplift-enriched prompts</div>' +
-                '<div style="font-size:0.72rem;color:var(--sb-text-muted);margin-top:2px">Include P-skills context (P13 Constraints, P14 Chain-of-Thought, P15 Few-Shot) for 3x accuracy improvement.</div>' +
+          sections.push('<div class="ad-docs-section">' +
+            '<div class="ad-docs-label">Best Practices</div>' +
+            '<div class="d-grid gap-8">' +
+              '<div class="ad-docs-tip-card">' +
+                '<div class="ad-docs-tip-title">Use uplift-enriched prompts</div>' +
+                '<div class="ad-docs-tip-body">Include P-skills context (P13 Constraints, P14 Chain-of-Thought, P15 Few-Shot) for 3x accuracy improvement.</div>' +
               '</div>' +
-              '<div style="padding:10px 14px;background:var(--sb-bg-white-alpha-03);border-radius:8px;border:1px solid var(--sb-border-white-alpha-06)">' +
-                '<div style="font-size:0.78rem;font-weight:600">Run ABCD tests before choosing a model</div>' +
-                '<div style="font-size:0.72rem;color:var(--sb-text-muted);margin-top:2px">The cheapest model often wins. Gemini Flash at $0.15/1M beats Sonnet at $3.00/1M for classification tasks.</div>' +
+              '<div class="ad-docs-tip-card">' +
+                '<div class="ad-docs-tip-title">Run ABCD tests before choosing a model</div>' +
+                '<div class="ad-docs-tip-body">The cheapest model often wins. Gemini Flash at $0.15/1M beats Sonnet at $3.00/1M for classification tasks.</div>' +
               '</div>' +
-              '<div style="padding:10px 14px;background:var(--sb-bg-white-alpha-03);border-radius:8px;border:1px solid var(--sb-border-white-alpha-06)">' +
-                '<div style="font-size:0.78rem;font-weight:600">Evidence-seal every run</div>' +
-                '<div style="font-size:0.72rem;color:var(--sb-text-muted);margin-top:2px">Every run produces SHA-256 sealed evidence. Use POST /api/apps/{app}/approve to seal and log results.</div>' +
+              '<div class="ad-docs-tip-card">' +
+                '<div class="ad-docs-tip-title">Evidence-seal every run</div>' +
+                '<div class="ad-docs-tip-body">Every run produces SHA-256 sealed evidence. Use POST /api/apps/{app}/approve to seal and log results.</div>' +
               '</div>' +
             '</div></div>');
 
@@ -1030,15 +1032,15 @@
       var html = '';
 
       /* ── Hero savings number ── */
-      html += '<div style="text-align:center;padding:28px 20px;background:linear-gradient(135deg,rgba(0,200,150,0.08),rgba(100,196,255,0.04));border-radius:14px;border:1px solid rgba(0,200,150,0.15);margin-bottom:20px">';
-      html += '<div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--sb-text-muted);margin-bottom:6px">Total Time Saved</div>';
-      html += '<div style="font-size:2.4rem;font-weight:900;color:var(--sb-success);line-height:1">' + formatMoney(totalSaved) + '</div>';
-      html += '<div style="font-size:0.78rem;color:var(--sb-text-muted);margin-top:6px">' + runsEstimate + ' runs × ' + manualMinutes + ' min saved each × $' + hourlyRate + '/hr founder time</div>';
-      html += '<div style="font-size:0.72rem;color:var(--sb-signal);margin-top:8px">That\'s ' + (runsEstimate * manualMinutes) + ' minutes you spent on what matters instead.</div>';
+      html += '<div class="ad-savings-hero">';
+      html += '<div class="ad-savings-label">Total Time Saved</div>';
+      html += '<div class="ad-savings-total">' + formatMoney(totalSaved) + '</div>';
+      html += '<div class="ad-savings-detail">' + runsEstimate + ' runs × ' + manualMinutes + ' min saved each × $' + hourlyRate + '/hr founder time</div>';
+      html += '<div class="ad-savings-highlight">That\'s ' + (runsEstimate * manualMinutes) + ' minutes you spent on what matters instead.</div>';
       html += '</div>';
 
       /* ── Economics breakdown ── */
-      html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px">';
+      html += '<div class="ad-kpi-grid">';
 
       html += renderStatCard('Per Run: You', formatMoney(costPerManualRun), manualMinutes + ' min of your time', 'var(--sb-danger)');
       html += renderStatCard('Per Run: AI', '$' + costPerAIRun.toFixed(3), winnerName, 'var(--sb-success)');
@@ -1048,8 +1050,8 @@
       html += '</div>';
 
       /* ── Projection cards (Rory Sutherland: frame the value) ── */
-      html += '<div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--sb-text-muted);margin-bottom:8px;font-weight:700">If you keep going...</div>';
-      html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:20px">';
+      html += '<div class="ad-docs-label">If you keep going...</div>';
+      html += '<div class="ad-projection-grid">';
 
       var daily = savingsPerRun * 1;
       var monthly = savingsPerRun * 30;
@@ -1061,9 +1063,9 @@
       html += '</div>';
 
       /* ── Emotional framing (Vanessa Van Edwards: human connection) ── */
-      html += '<div style="padding:16px;background:var(--sb-bg-white-alpha-03);border-radius:10px;border:1px solid var(--sb-border-white-alpha-06);margin-bottom:16px">';
-      html += '<div style="font-size:0.82rem;font-weight:700;margin-bottom:6px">What ' + Math.round((manualMinutes * 30) / 60) + ' hours/month buys you</div>';
-      html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;font-size:0.75rem;color:var(--sb-text-muted)">';
+      html += '<div class="ad-timebuy-card">';
+      html += '<div class="ad-timebuy-title">What ' + Math.round((manualMinutes * 30) / 60) + ' hours/month buys you</div>';
+      html += '<div class="ad-timebuy-grid">';
       html += '<div>&#128171; ' + Math.round(monthly / hourlyRate) + ' hours of deep focus work</div>';
       html += '<div>&#127968; ' + Math.round((manualMinutes * 30) / 60) + ' more hours with family</div>';
       html += '<div>&#128640; ' + Math.round(yearly / 19) + ' months of Solace Pro paid for</div>';
@@ -1071,29 +1073,29 @@
       html += '</div></div>';
 
       /* ── Log run button (Seth Godin: make it easy to start) ── */
-      html += '<div style="display:flex;gap:8px;align-items:center">';
-      html += '<button onclick="var n=parseInt(localStorage.getItem(\'solace_runs_' + appId + '\')||\'0\',10)+1;localStorage.setItem(\'solace_runs_' + appId + '\',n);savingsLoaded=false;loadSavings()" class="ad-schedule-btn" style="border-color:var(--sb-success);color:var(--sb-success)">+ Log a Run</button>';
-      html += '<span style="font-size:0.72rem;color:var(--sb-text-muted)">Each logged run updates your savings tracker. Runs auto-log when you use Run Now.</span>';
+      html += '<div class="ad-log-run-row">';
+      html += '<button onclick="var n=parseInt(localStorage.getItem(\'solace_runs_' + appId + '\')||\'0\',10)+1;localStorage.setItem(\'solace_runs_' + appId + '\',n);savingsLoaded=false;loadSavings()" class="ad-schedule-btn ad-schedule-btn--success">+ Log a Run</button>';
+      html += '<span class="ad-log-run-hint">Each logged run updates your savings tracker. Runs auto-log when you use Run Now.</span>';
       html += '</div>';
 
       container.innerHTML = html;
     }
 
     function renderStatCard(label, value, sub, color) {
-      return '<div style="padding:14px;background:var(--sb-bg-white-alpha-03);border-radius:10px;border:1px solid var(--sb-border-white-alpha-06);text-align:center">' +
-        '<div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--sb-text-muted)">' + label + '</div>' +
-        '<div style="font-size:1.2rem;font-weight:900;color:' + color + ';margin:4px 0">' + value + '</div>' +
-        '<div style="font-size:0.68rem;color:var(--sb-text-muted)">' + sub + '</div>' +
+      return '<div class="ad-kpi-card">' +
+        '<div class="ad-kpi-label">' + label + '</div>' +
+        '<div class="ad-kpi-value" style="color:' + color + '">' + value + '</div>' +
+        '<div class="ad-kpi-sub">' + sub + '</div>' +
       '</div>';
     }
 
     function renderProjectionCard(period, amount, runs, timeSaved) {
-      return '<div style="padding:14px;background:var(--sb-bg-white-alpha-03);border-radius:10px;border:1px solid var(--sb-border-white-alpha-06)">' +
-        '<div style="display:flex;justify-content:space-between;align-items:baseline">' +
-          '<span style="font-size:0.72rem;font-weight:700">' + period + '</span>' +
-          '<span style="font-size:1rem;font-weight:900;color:var(--sb-success)">' + amount + '</span>' +
+      return '<div class="ad-projection-card">' +
+        '<div class="ad-projection-header">' +
+          '<span class="ad-projection-period">' + period + '</span>' +
+          '<span class="ad-projection-amount">' + amount + '</span>' +
         '</div>' +
-        '<div style="font-size:0.68rem;color:var(--sb-text-muted);margin-top:4px">' + runs + ' &middot; ' + timeSaved + '</div>' +
+        '<div class="ad-projection-detail">' + runs + ' &middot; ' + timeSaved + '</div>' +
       '</div>';
     }
 
@@ -1110,15 +1112,15 @@
       var html = '';
 
       /* ── Part 11 compliance summary ── */
-      html += '<div style="margin-bottom:20px">';
-      html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">';
-      html += '<span style="font-size:1.4rem">&#128274;</span>';
+      html += '<div class="ad-compliance-section">';
+      html += '<div class="ad-compliance-header">';
+      html += '<span class="ad-compliance-icon">&#128274;</span>';
       html += '<div>';
-      html += '<div style="font-size:0.82rem;font-weight:700">FDA 21 CFR Part 11 Compliance</div>';
-      html += '<div style="font-size:0.72rem;color:var(--sb-text-muted)">Every run produces court-admissible evidence</div>';
+      html += '<div class="ad-compliance-title">FDA 21 CFR Part 11 Compliance</div>';
+      html += '<div class="ad-compliance-subtitle">Every run produces court-admissible evidence</div>';
       html += '</div></div>';
 
-      html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">';
+      html += '<div class="ad-compliance-grid">';
 
       var checks = [
         { icon: '&#9989;', title: 'Electronic Signatures', desc: 'SHA-256 sealed attestation on every approval', status: 'Active' },
@@ -1130,40 +1132,40 @@
       ];
 
       checks.forEach(function(c) {
-        html += '<div style="padding:12px 14px;background:var(--sb-bg-white-alpha-03);border-radius:10px;border:1px solid var(--sb-border-white-alpha-06)">';
-        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">';
+        html += '<div class="ad-compliance-card">';
+        html += '<div class="ad-compliance-card-header">';
         html += '<span>' + c.icon + '</span>';
-        html += '<span style="font-size:0.78rem;font-weight:700">' + c.title + '</span>';
-        html += '<span class="sb-pill sb-pill--success" style="font-size:0.62rem;margin-left:auto">' + c.status + '</span>';
+        html += '<span class="ad-compliance-card-title">' + c.title + '</span>';
+        html += '<span class="sb-pill sb-pill--success ad-compliance-card-badge">' + c.status + '</span>';
         html += '</div>';
-        html += '<div style="font-size:0.72rem;color:var(--sb-text-muted)">' + c.desc + '</div>';
+        html += '<div class="ad-compliance-card-desc">' + c.desc + '</div>';
         html += '</div>';
       });
       html += '</div></div>';
 
       /* ── eSign attestation log ── */
-      html += '<div style="margin-bottom:20px">';
-      html += '<div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--sb-text-muted);margin-bottom:8px;font-weight:700">eSign Attestation Log</div>';
-      html += '<div id="esignLog" style="font-family:var(--sb-font-mono);font-size:0.72rem;color:var(--sb-text-muted);background:var(--sb-bg-input);padding:14px;border-radius:8px;max-height:200px;overflow-y:auto">';
+      html += '<div class="ad-compliance-section">';
+      html += '<div class="ad-docs-label">eSign Attestation Log</div>';
+      html += '<div id="esignLog" class="ad-esign-log">';
       html += 'Loading evidence chain...</div></div>';
 
       /* ── Evidence chain viewer ── */
-      html += '<div style="margin-bottom:20px">';
-      html += '<div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--sb-text-muted);margin-bottom:8px;font-weight:700">Evidence Chain</div>';
-      html += '<p style="font-size:0.75rem;color:var(--sb-text-muted);margin:0 0 8px">Every action is sealed with SHA-256. The chain is append-only and tamper-evident.</p>';
-      html += '<div id="evidenceChain" style="display:grid;gap:6px"></div></div>';
+      html += '<div class="ad-compliance-section">';
+      html += '<div class="ad-docs-label">Evidence Chain</div>';
+      html += '<p class="ad-section-desc">Every action is sealed with SHA-256. The chain is append-only and tamper-evident.</p>';
+      html += '<div id="evidenceChain" class="ad-evidence-grid"></div></div>';
 
       /* ── Remote sync status ── */
       html += '<div>';
-      html += '<div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--sb-text-muted);margin-bottom:8px;font-weight:700">Sync &amp; Tunnel</div>';
-      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
-      html += '<div style="padding:12px 14px;background:var(--sb-bg-white-alpha-03);border-radius:10px;border:1px solid var(--sb-border-white-alpha-06)">';
-      html += '<div style="font-size:0.78rem;font-weight:700">Local Server</div>';
-      html += '<div style="font-size:0.72rem;color:var(--sb-success);margin-top:4px">&#9679; Running on :8791</div>';
+      html += '<div class="ad-docs-label">Sync &amp; Tunnel</div>';
+      html += '<div class="ad-sync-grid">';
+      html += '<div class="ad-sync-card">';
+      html += '<div class="ad-sync-title">Local Server</div>';
+      html += '<div class="ad-sync-status text-success">&#9679; Running on :8791</div>';
       html += '</div>';
-      html += '<div style="padding:12px 14px;background:var(--sb-bg-white-alpha-03);border-radius:10px;border:1px solid var(--sb-border-white-alpha-06)">';
-      html += '<div style="font-size:0.78rem;font-weight:700">Remote Access</div>';
-      html += '<div style="font-size:0.72rem;color:var(--sb-text-muted);margin-top:4px" id="tunnelStatus">Checking tunnel...</div>';
+      html += '<div class="ad-sync-card">';
+      html += '<div class="ad-sync-title">Remote Access</div>';
+      html += '<div class="ad-sync-status text-muted" id="tunnelStatus">Checking tunnel...</div>';
       html += '</div></div></div>';
 
       container.innerHTML = html;
@@ -1177,14 +1179,14 @@
           var chainHtml = '';
           if (!runs.length) {
             esignHtml = 'No attestations yet. Run the app to generate evidence.';
-            chainHtml = '<div style="font-size:0.75rem;color:var(--sb-text-muted)">No evidence chain yet.</div>';
+            chainHtml = '<div class="text-075 text-muted">No evidence chain yet.</div>';
           } else {
             runs.slice(0, 10).forEach(function(r) {
               esignHtml += r.timestamp + ' | ' + r.run_id + ' | ' + (r.status || 'unknown') + '\n';
               var color = r.status === 'completed' ? 'var(--sb-success)' : 'var(--sb-signal)';
-              chainHtml += '<div style="padding:8px 12px;background:var(--sb-bg-white-alpha-03);border-radius:6px;border-left:3px solid ' + color + ';font-size:0.72rem">';
-              chainHtml += '<div style="display:flex;justify-content:space-between"><span style="font-weight:600">' + r.run_id + '</span><span style="color:var(--sb-text-muted)">' + (r.timestamp || '').slice(0, 19) + '</span></div>';
-              chainHtml += '<div style="color:var(--sb-text-muted);margin-top:2px">' + (r.total || 0) + ' items &middot; ' + (r.status || 'unknown') + '</div>';
+              chainHtml += '<div class="ad-evidence-entry" style="border-left:3px solid ' + color + '">';
+              chainHtml += '<div class="ad-evidence-row"><span class="font-600">' + r.run_id + '</span><span class="text-muted">' + (r.timestamp || '').slice(0, 19) + '</span></div>';
+              chainHtml += '<div class="text-muted mt-4">' + (r.total || 0) + ' items &middot; ' + (r.status || 'unknown') + '</div>';
               chainHtml += '</div>';
             });
           }
@@ -1199,16 +1201,16 @@
         .then(function(data) {
           var el = document.getElementById('tunnelStatus');
           if (data.running && data.public_url) {
-            el.innerHTML = '<span style="color:var(--sb-success)">&#9679;</span> Tunnel active — <a href="' + data.public_url + '" target="_blank" style="color:var(--sb-accent)">' + data.public_url + '</a>' +
-              '<br><span style="font-size:0.7rem;color:var(--sb-text-muted)">Uptime: ' + Math.floor(data.uptime_seconds / 60) + 'm | Port: ' + data.local_port + '</span>';
+            el.innerHTML = '<span class="text-success">&#9679;</span> Tunnel active — <a href="' + data.public_url + '" target="_blank" class="text-link">' + data.public_url + '</a>' +
+              '<br><span class="text-068 text-muted">Uptime: ' + Math.floor(data.uptime_seconds / 60) + 'm | Port: ' + data.local_port + '</span>';
           } else if (data.cloudflared_installed) {
-            el.innerHTML = '<span style="color:var(--sb-text-muted)">&#9675;</span> cloudflared ready — tunnel not started';
+            el.innerHTML = '<span class="text-muted">&#9675;</span> cloudflared ready — tunnel not started';
           } else {
-            el.innerHTML = '<span style="color:var(--sb-text-muted)">&#9675;</span> cloudflared not installed — <span style="font-size:0.7rem">apt install cloudflared</span>';
+            el.innerHTML = '<span class="text-muted">&#9675;</span> cloudflared not installed — <span class="text-068">apt install cloudflared</span>';
           }
         })
         .catch(function() {
-          document.getElementById('tunnelStatus').innerHTML = '<span style="color:var(--sb-text-muted)">&#9675;</span> Status unavailable';
+          document.getElementById('tunnelStatus').innerHTML = '<span class="text-muted">&#9675;</span> Status unavailable';
         });
     }
 

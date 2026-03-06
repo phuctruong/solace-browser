@@ -255,6 +255,7 @@ SLUG_MAP = {
     "docs/mcp": "docs/mcp.html",
     "docs/oauth3": "docs/oauth3.html",
     "guide": "guide.html",
+    "create-app": "create-app.html",
 }
 
 DEFAULT_SETTINGS: dict[str, Any] = {
@@ -657,7 +658,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             return str(ROOT / request_path.lstrip("/"))
         if request_path.startswith("/data/"):
             return str(REPO_ROOT / request_path.lstrip("/"))
-        if request_path in ("/favicon.ico", "/favicon.svg", "/robots.txt"):
+        if request_path in ("/favicon.ico", "/favicon.svg", "/robots.txt", "/sitemap.xml"):
             return str(ROOT / request_path.lstrip("/"))
         if request_path == "/":
             return str(ROOT / "home.html")

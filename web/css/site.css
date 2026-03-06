@@ -5232,3 +5232,277 @@ body.simple-mode .dl-feature {
 .settings-save-row {
   margin-top: 18px;
 }
+
+/* ── App Detail: Star pill color ── */
+.sb-pill--stars {
+  color: #f5a623;
+}
+
+/* ── App Detail: AI brain icon ── */
+.ad-ai-brain-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+/* ── App Detail: AI agent card (rendered via JS) ── */
+.sb-ai-agent-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--sb-border-white-alpha-08);
+  background: var(--sb-bg-white-alpha-03);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.78rem;
+  color: var(--sb-text-muted);
+}
+.sb-ai-agent-card.is-active {
+  border-color: var(--sb-success);
+  background: rgba(0, 200, 150, 0.08);
+  color: #00c896;
+}
+
+/* ── App Detail: Savings hero card ── */
+.ad-savings-hero {
+  text-align: center;
+  padding: 28px 20px;
+  background: linear-gradient(135deg, rgba(0, 200, 150, 0.08), rgba(100, 196, 255, 0.04));
+  border-radius: 14px;
+  border: 1px solid rgba(0, 200, 150, 0.15);
+  margin-bottom: 20px;
+}
+.ad-savings-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--sb-text-muted);
+  margin-bottom: 6px;
+}
+.ad-savings-total {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: var(--sb-success);
+  line-height: 1;
+}
+.ad-savings-detail {
+  font-size: 0.78rem;
+  color: var(--sb-text-muted);
+  margin-top: 6px;
+}
+.ad-savings-highlight {
+  font-size: 0.72rem;
+  color: var(--sb-signal);
+  margin-top: 8px;
+}
+
+/* ── App Detail: KPI / metric grid ── */
+.ad-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.ad-kpi-card {
+  padding: 14px;
+  background: var(--sb-bg-white-alpha-03);
+  border-radius: 10px;
+  border: 1px solid var(--sb-border-white-alpha-06);
+  text-align: center;
+}
+.ad-kpi-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sb-text-muted);
+}
+.ad-kpi-value {
+  font-size: 1.2rem;
+  font-weight: 900;
+  margin: 4px 0;
+}
+.ad-kpi-sub {
+  font-size: 0.68rem;
+  color: var(--sb-text-muted);
+}
+
+/* ── App Detail: Projection grid ── */
+.ad-projection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.ad-projection-card {
+  padding: 14px;
+  background: var(--sb-bg-white-alpha-03);
+  border-radius: 10px;
+  border: 1px solid var(--sb-border-white-alpha-06);
+}
+.ad-projection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.ad-projection-period {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.ad-projection-amount {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--sb-success);
+}
+.ad-projection-detail {
+  font-size: 0.68rem;
+  color: var(--sb-text-muted);
+  margin-top: 4px;
+}
+
+/* ── App Detail: Time-buy card ── */
+.ad-timebuy-card {
+  padding: 16px;
+  background: var(--sb-bg-white-alpha-03);
+  border-radius: 10px;
+  border: 1px solid var(--sb-border-white-alpha-06);
+  margin-bottom: 16px;
+}
+.ad-timebuy-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.ad-timebuy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--sb-text-muted);
+}
+
+/* ── App Detail: Log run row ── */
+.ad-log-run-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.ad-log-run-hint {
+  font-size: 0.72rem;
+  color: var(--sb-text-muted);
+}
+
+/* ── App Detail: Compliance section ── */
+.ad-compliance-section {
+  margin-bottom: 20px;
+}
+.ad-compliance-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.ad-compliance-icon {
+  font-size: 1.4rem;
+}
+.ad-compliance-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.ad-compliance-subtitle {
+  font-size: 0.72rem;
+  color: var(--sb-text-muted);
+}
+.ad-compliance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+.ad-compliance-card {
+  padding: 12px 14px;
+  background: var(--sb-bg-white-alpha-03);
+  border-radius: 10px;
+  border: 1px solid var(--sb-border-white-alpha-06);
+}
+.ad-compliance-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.ad-compliance-card-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.ad-compliance-card-badge {
+  font-size: 0.62rem;
+  margin-left: auto;
+}
+.ad-compliance-card-desc {
+  font-size: 0.72rem;
+  color: var(--sb-text-muted);
+}
+
+/* ── App Detail: eSign log ── */
+.ad-esign-log {
+  font-family: var(--sb-font-mono);
+  font-size: 0.72rem;
+  color: var(--sb-text-muted);
+  background: var(--sb-bg-input);
+  padding: 14px;
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* ── App Detail: Evidence chain ── */
+.ad-evidence-grid {
+  display: grid;
+  gap: 6px;
+}
+.ad-evidence-entry {
+  padding: 8px 12px;
+  background: var(--sb-bg-white-alpha-03);
+  border-radius: 6px;
+  font-size: 0.72rem;
+}
+.ad-evidence-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ── App Detail: Sync/tunnel grid ── */
+.ad-sync-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.ad-sync-card {
+  padding: 12px 14px;
+  background: var(--sb-bg-white-alpha-03);
+  border-radius: 10px;
+  border: 1px solid var(--sb-border-white-alpha-06);
+}
+.ad-sync-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.ad-sync-status {
+  font-size: 0.72rem;
+  margin-top: 4px;
+}
+
+/* ── Generic utility: gap-8 grid ── */
+.d-grid.gap-8 { display: grid; gap: 8px; }
+
+/* ── App Detail: Activate button signal color ── */
+.sb-run-btn--signal {
+  background: var(--sb-signal, #64c4ff);
+}
+
+/* ── App Detail: Schedule button success variant ── */
+.ad-schedule-btn--success {
+  border-color: var(--sb-success);
+  color: var(--sb-success);
+}

@@ -292,7 +292,7 @@
 
   // ── View Switching ─────────────────────────────────────────────────────────
   function setupViewTabs() {
-    var tabs = [].slice.call(document.querySelectorAll('.view-tab'));
+    const tabs = [].slice.call(document.querySelectorAll('.view-tab'));
     tabs.forEach(function (btn, idx) {
       btn.addEventListener('click', function () {
         state.currentView = btn.dataset.view;
@@ -306,14 +306,14 @@
       });
       // Arrow key navigation (WCAG keyboard support)
       btn.addEventListener('keydown', function (e) {
-        var next;
+        let next;
         if (e.key === 'ArrowRight') next = tabs[(idx + 1) % tabs.length];
         else if (e.key === 'ArrowLeft') next = tabs[(idx - 1 + tabs.length) % tabs.length];
         if (next) { e.preventDefault(); next.focus(); next.click(); }
       });
     });
     // Activate saved view
-    var activeTab = document.querySelector('.view-tab[data-view="' + state.currentView + '"]');
+    const activeTab = document.querySelector('.view-tab[data-view="' + state.currentView + '"]');
     if (activeTab) {
       activeTab.classList.add('view-tab--active');
       activeTab.setAttribute('aria-selected', 'true');
@@ -324,17 +324,17 @@
   }
 
   function renderGreeting() {
-    var greetEl = document.getElementById('scheduleGreeting');
+    let greetEl = document.getElementById('scheduleGreeting');
     if (!greetEl) {
       greetEl = document.createElement('div');
       greetEl.id = 'scheduleGreeting';
       greetEl.className = 'sched-greeting';
-      var shell = document.querySelector('.schedule-shell');
+      const shell = document.querySelector('.schedule-shell');
       if (shell) shell.insertBefore(greetEl, shell.firstChild);
     }
-    var name = localStorage.getItem('sb_user_name') || localStorage.getItem('sb_user_email') || '';
-    var hour = new Date().getHours();
-    var timeGreet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    const name = localStorage.getItem('sb_user_name') || localStorage.getItem('sb_user_email') || '';
+    const hour = new Date().getHours();
+    const timeGreet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
     greetEl.textContent = name ? timeGreet + ', ' + name : timeGreet;
   }
 
@@ -342,15 +342,15 @@
     // Warm greeting (Van Edwards: warmth before competence)
     renderGreeting();
     document.querySelectorAll('.schedule-view').forEach(function (v) { v.style.display = 'none'; });
-    var viewMap = {
+    const viewMap = {
       upcoming:  'viewUpcoming',
       approvals: 'viewApprovals',
       history:   'viewHistory',
       esign:     'viewEsign',
     };
-    var id = viewMap[state.currentView];
+    const id = viewMap[state.currentView];
     if (id) {
-      var el = document.getElementById(id);
+      const el = document.getElementById(id);
       if (el) el.style.display = '';
     }
     if (state.currentView === 'upcoming'  && fn.renderUpcoming)  fn.renderUpcoming();
@@ -364,24 +364,24 @@
   // ── Period Toggle (7d / 30d / All-time) ────────────────────────────────────
   function setupPeriodToggle() {
     // Restore saved period
-    var savedPeriod = localStorage.getItem('sb_schedule_period') || 'week';
-    var savedBtn = document.querySelector('.period-btn[data-period="' + savedPeriod + '"]');
+    const savedPeriod = localStorage.getItem('sb_schedule_period') || 'week';
+    const savedBtn = document.querySelector('.period-btn[data-period="' + savedPeriod + '"]');
     if (savedBtn) {
       document.querySelectorAll('.period-btn').forEach(function (b) { b.classList.remove('period-btn--active'); });
       savedBtn.classList.add('period-btn--active');
     }
-    var periodBtns = [].slice.call(document.querySelectorAll('.period-btn'));
+    const periodBtns = [].slice.call(document.querySelectorAll('.period-btn'));
     periodBtns.forEach(function (btn, idx) {
       btn.addEventListener('click', function () {
         periodBtns.forEach(function (b) { b.classList.remove('period-btn--active'); });
         btn.classList.add('period-btn--active');
-        var period = btn.dataset.period;
+        const period = btn.dataset.period;
         try { localStorage.setItem('sb_schedule_period', period); } catch (_) { /* Safari private browsing may throw */ }
         if (fn.updateROIPanel) fn.updateROIPanel(constants.PERIOD_DAYS[period] || 7);
       });
       // Arrow key navigation for radio group (WCAG)
       btn.addEventListener('keydown', function (e) {
-        var next;
+        let next;
         if (e.key === 'ArrowRight') next = periodBtns[(idx + 1) % periodBtns.length];
         else if (e.key === 'ArrowLeft') next = periodBtns[(idx - 1 + periodBtns.length) % periodBtns.length];
         if (next) { e.preventDefault(); next.focus(); next.click(); }
@@ -391,9 +391,9 @@
 
   // ── Pause All Agents (Kill Switch) ──────────────────────────────────────
   function setupPauseAllButton() {
-    var toolbar = document.querySelector('.schedule-toolbar') || document.querySelector('.schedule-shell');
+    const toolbar = document.querySelector('.schedule-toolbar') || document.querySelector('.schedule-shell');
     if (!toolbar) return;
-    var btn = document.createElement('button');
+    const btn = document.createElement('button');
     btn.id = 'pauseAllBtn';
     btn.className = 'pause-all-btn';
     btn.textContent = '\u23F8 Pause All Agents';
@@ -408,13 +408,13 @@
   }
 
   function renderPauseBanner() {
-    var banner = document.getElementById('pauseBanner');
+    let banner = document.getElementById('pauseBanner');
     if (state.allAgentsPaused) {
       if (!banner) {
         banner = document.createElement('div');
         banner.id = 'pauseBanner';
         banner.className = 'pause-banner';
-        var shell = document.querySelector('.schedule-shell');
+        const shell = document.querySelector('.schedule-shell');
         if (shell) shell.insertBefore(banner, shell.firstChild);
       }
       banner.textContent = '\u23F8 All agents paused \u2014 no actions will be auto-approved. Click "Resume Agents" to continue.';
@@ -427,7 +427,7 @@
   function schedulePoll() {
     if (state.pollIntervalId) clearTimeout(state.pollIntervalId);
     // Exponential backoff: 30s, 60s, 300s (5min) after consecutive failures
-    var backoffMs = state.consecutivePollFailures >= constants.MAX_POLL_FAILURES
+    const backoffMs = state.consecutivePollFailures >= constants.MAX_POLL_FAILURES
       ? 300000  // 5 min backoff when circuit is open
       : constants.POLL_INTERVAL_MS * Math.pow(2, Math.min(state.consecutivePollFailures, 2));
     state.pollIntervalId = setTimeout(function () {
@@ -456,14 +456,14 @@
       fetch('/api/cloud/sync/status'),
       fetch('/api/cloud/user/tier'),
     ]).then(function (results) {
-      var syncRes = results[0];
-      var tierRes = results[1];
-      var syncPromise = syncRes.ok ? syncRes.json() : Promise.resolve(null);
-      var tierPromise = tierRes.ok ? tierRes.json() : Promise.resolve(null);
+      const syncRes = results[0];
+      const tierRes = results[1];
+      const syncPromise = syncRes.ok ? syncRes.json() : Promise.resolve(null);
+      const tierPromise = tierRes.ok ? tierRes.json() : Promise.resolve(null);
       return Promise.all([syncPromise, tierPromise]);
     }).then(function (data) {
-      var syncData = data[0];
-      var tierData = data[1];
+      const syncData = data[0];
+      const tierData = data[1];
       if (syncData) {
         state.cloudStatus.connected = syncData.connected;
         state.cloudStatus.offline_queue_count = syncData.offline_queue_count || 0;
@@ -501,7 +501,7 @@
   // ── Data Loading ───────────────────────────────────────────────────────────
   function loadActivities() {
     // Load past activities (audit log)
-    var activitiesPromise = fetch('/api/schedule').then(function (res) {
+    const activitiesPromise = fetch('/api/schedule').then(function (res) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
     }).then(function (data) {
@@ -512,14 +512,14 @@
     }).catch(function (e) {
       state.consecutivePollFailures++;
       state.activities = [];
-      var msg = state.consecutivePollFailures >= constants.MAX_POLL_FAILURES
+      const msg = state.consecutivePollFailures >= constants.MAX_POLL_FAILURES
         ? 'Server unreachable \u2014 polling slowed to every 5 minutes. Will resume when connected.'
         : 'Failed to load schedule data. ' + (navigator.onLine ? 'Server may be restarting.' : 'You are offline.');
       showErrorBanner(msg);
     });
 
     // Load upcoming schedules (app crons + keep-alive + Part 11 + eSign)
-    var upcomingPromise = fetch('/api/schedule/upcoming').then(function (res) {
+    const upcomingPromise = fetch('/api/schedule/upcoming').then(function (res) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
     }).then(function (data) {
@@ -532,8 +532,8 @@
 
     return Promise.all([activitiesPromise, upcomingPromise]).then(function () {
       // Convert upcoming schedules into calendar-visible entries
-      var getNextRunTime = fn.getNextRunTime || function () { return new Date().toISOString(); };
-      var scheduleActivities = state.upcoming
+      const getNextRunTime = fn.getNextRunTime || function () { return new Date().toISOString(); };
+      const scheduleActivities = state.upcoming
         .filter(function (u) { return u.type === 'app_schedule'; })
         .map(function (u) {
           return {

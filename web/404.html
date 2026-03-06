@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Page Not Found | Solace Browser</title>
+  <meta name="description" content="The page you requested could not be found.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://127.0.0.1:* https://www.solaceagi.com https://*.solaceagi.com; font-src 'self'; frame-ancestors 'none'">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/yinyang/yinyang-logo-32.png">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/theme.js" defer></script>
+  <script src="/js/layout.js" defer></script>
+  <script src="/js/solace.js" defer></script>
+  <style>
+    .error-shell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      text-align: center;
+      padding: 40px 24px;
+    }
+    .error-code {
+      font-family: var(--sb-font-display);
+      font-size: 6rem;
+      font-weight: 800;
+      background: var(--sb-grad-header);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .error-title {
+      font-family: var(--sb-font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--sb-text);
+      margin-bottom: 12px;
+    }
+    .error-message {
+      color: var(--sb-text-muted);
+      font-size: 1rem;
+      line-height: 1.6;
+      max-width: 480px;
+      margin-bottom: 32px;
+    }
+    .error-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .error-yinyang {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 24px;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body data-page="404">
+  <div class="site-shell">
+    <div class="page-frame">
+      <div id="header-slot"></div>
+
+      <main>
+        <div class="error-shell">
+          <img src="/images/yinyang/yinyang-logo-128.png" alt="Solace Browser" class="error-yinyang">
+          <div class="error-code">404</div>
+          <h1 class="error-title">Page not found</h1>
+          <p class="error-message">
+            The page you are looking for does not exist or has been moved.
+            Try navigating from the home page or use the links below.
+          </p>
+          <div class="error-actions">
+            <a class="btn btn-primary" href="/">Go Home</a>
+            <a class="btn btn-secondary" href="/app-store">App Store</a>
+            <a class="btn btn-secondary" href="/docs">Documentation</a>
+          </div>
+        </div>
+      </main>
+
+      <div id="footer-slot"></div>
+    </div>
+  </div>
+</body>
+</html>
