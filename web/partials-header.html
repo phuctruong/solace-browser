@@ -76,13 +76,13 @@
         <span class="sb-theme-icon" id="sb-theme-icon">&#127769;</span>
       </button>
       <div class="sb-auth-status" id="sb-auth-status"></div>
-      <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false">
+      <button class="hamburger-btn" id="hamburger-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
         <span></span><span></span><span></span>
       </button>
     </div>
   </div>
 </header>
-<div class="mobile-menu" id="mobile-menu">
+<nav class="mobile-menu" id="mobile-menu" aria-label="Mobile navigation">
   <div class="mobile-menu__section">
     <h3 data-i18n="menu_surfaces">Surfaces</h3>
     <a data-nav-path="/" href="/" data-i18n="nav_home">Home</a>
@@ -103,4 +103,4 @@
     <a href="/download">Download &amp; Setup</a>
     <a href="https://github.com/solaceagi/solace-browser" target="_blank" rel="noopener">GitHub</a>
   </div>
-</div>
+</nav>

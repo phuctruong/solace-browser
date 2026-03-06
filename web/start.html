@@ -507,10 +507,13 @@
         var me = results[0], panel = results[1];
         if (me) {
           var tier = (me.tier || 'free');
+          var emailText = (me.email || 'unknown').replace(/[&<>"']/g, function(c) {
+            return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+          });
           document.getElementById('signed-in-desc').innerHTML =
-            'Signed in as <strong>' + (me.email || 'unknown') + '</strong>'
-            + '<br><small style="color:var(--sb-text-muted);font-size:0.78rem;margin-top:6px;display:block;">'
-            + '<a href="#" onclick="signOut();return false;" style="color:var(--sb-signal)">Sign out</a></small>';
+            'Signed in as <strong>' + emailText + '</strong>'
+            + '<br><small class="si-signout-hint">'
+            + '<a href="#" onclick="signOut();return false;" class="si-signout-link">Sign out</a></small>';
         }
         if (panel) {
           var plan = panel.plan || 'free';
