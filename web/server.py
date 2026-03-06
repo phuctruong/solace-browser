@@ -658,6 +658,8 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             return str(ROOT / request_path.lstrip("/"))
         if request_path.startswith("/data/"):
             return str(REPO_ROOT / request_path.lstrip("/"))
+        if request_path.startswith("/.well-known/"):
+            return str(ROOT / request_path.lstrip("/"))
         if request_path in ("/favicon.ico", "/favicon.svg", "/robots.txt", "/sitemap.xml"):
             return str(ROOT / request_path.lstrip("/"))
         if request_path == "/":
