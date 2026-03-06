@@ -2,7 +2,7 @@
   "_meta": {
     "locale": "ru",
     "version": "1.0.0",
-    "description": "Canonical English strings for all Yinyang user-facing text."
+    "description": "Russian strings for all Yinyang user-facing text."
   },
   "ui": {
     "chat_placeholder": "Задайте Yinyang...",
@@ -208,7 +208,27 @@
     "dash_onboarding_dismiss": "Я буду настраивать позже",
     "dash_needs_setup": "Требуется настройка",
     "dash_app_setup": "Настроить",
-    "dash_agent_setup": "Или позвольте вашему AI-агенту настроить все приложения"
+    "dash_agent_setup": "Или позвольте вашему AI-агенту настроить все приложения",
+    "settings_account": "Учётная запись",
+    "settings_log_out": "Выйти",
+    "settings_about": "О программе",
+    "settings_appearance": "Оформление",
+    "settings_history": "История и захват",
+    "settings_llm_backend": "Бэкенд LLM",
+    "settings_tunnel": "Туннель",
+    "settings_part11": "Соответствие Part 11",
+    "settings_privacy": "Конфиденциальность",
+    "settings_yinyang": "Чат-рейка Yinyang",
+    "settings_ask_yinyang": "Спросить YinYang",
+    "appstore_loading_categories": "Загрузка категорий...",
+    "appstore_loading_sync": "Загрузка статуса синхронизации...",
+    "appstore_loading_packs": "Загрузка пакетов…",
+    "appstore_noapi_copy": "У этих сервисов нет официального API. Solace Browser — единственный способ их автоматизировать.",
+    "schedule_loading": "Загрузка…",
+    "schedule_status_success": "Успех",
+    "schedule_tab_upcoming": "Предстоящие",
+    "schedule_tab_approvals": "Одобрения",
+    "schedule_tab_history": "История"
   },
   "personality": {
     "professional": {
@@ -447,7 +467,8 @@
       "step4_guarantee2_body": "Каждый черновик, каждое действие показано вам до того, как это произойдёт. Без сюрпризов.",
       "step4_guarantee3_title": "SHA-256 запечатан навсегда.",
       "step4_guarantee3_body": "Каждый запуск создаёт неизменную цепочку доказательств. Готов к аудиту. Всегда.",
-      "step5_cta_wow": "Войти с помощью Google — бесплатно ☯"
+      "step5_cta_wow": "Войти с помощью Google — бесплатно ☯",
+      "step3_code": ""
     },
     "notifications": {
       "type_info": "ℹ",
@@ -455,6 +476,24 @@
       "type_warning": "⚠",
       "type_error": "✕",
       "from_agent": "от {agent_id}"
+    },
+    "oauth3_confirm": {
+      "title": "Авторизация OAuth3 🔒",
+      "subtitle": "Вы собираетесь авторизовать приложение через Solace AGI.",
+      "scope_label": "Запрашиваемые области:",
+      "budget_label": "Текущий бюджет:",
+      "benefits_title": "Почему OAuth3 безопасен:",
+      "benefits": [
+        "⏱ Ограничено по времени — токен истекает автоматически",
+        "🚫 Отзывается — отмените в любое время в Настройках",
+        "📋 Запечатано доказательствами — каждое действие записано"
+      ],
+      "btn_proceed": "Продолжить",
+      "btn_cancel": "Отмена",
+      "btn_adjust": "Изменить бюджет",
+      "countdown": "Автоматическая отмена через {seconds}с",
+      "budget_adjust_label": "Новый бюджет ($):",
+      "budget_save": "Сохранить и продолжить"
     }
   }
 }

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://127.0.0.1:* https://www.solaceagi.com https://*.solaceagi.com; font-src 'self'; frame-ancestors 'none'">
   <title>Family Demo Day | Solace Browser</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <style>
@@ -563,6 +564,7 @@
     }
   </style>
   <link rel="icon" type="image/png" href="/images/yinyang/yinyang-logo-32.png">
+  <script src="/js/theme.js" defer></script>
   <script src="/js/layout.js" defer></script>
   <script src="/js/solace.js" defer></script>
   <script src="/js/yinyang-delight.js" defer></script>
@@ -642,7 +644,7 @@
         </a>
         <a class="try-btn" href="/settings">
           <span class="try-icon">&#9881;</span>
-          <span class="try-label">Settings</span>
+          <span class="try-label" data-i18n="nav_settings">Settings</span>
           <span class="try-desc">See the configuration page</span>
         </a>
       </div>

@@ -2,7 +2,7 @@
   "_meta": {
     "locale": "ko",
     "version": "1.0.0",
-    "description": "Korean (ko) strings for all Yinyang user-facing text."
+    "description": "Korean strings for all Yinyang user-facing text."
   },
   "ui": {
     "chat_placeholder": "Yinyang에게 물어보세요...",
@@ -208,7 +208,27 @@
     "dash_onboarding_dismiss": "나중에 설정하겠습니다",
     "dash_needs_setup": "설정이 필요합니다",
     "dash_app_setup": "설정",
-    "dash_agent_setup": "또는 AI 에이전트가 모든 앱을 설정하도록 하세요"
+    "dash_agent_setup": "또는 AI 에이전트가 모든 앱을 설정하도록 하세요",
+    "settings_account": "계정",
+    "settings_log_out": "로그아웃",
+    "settings_about": "정보",
+    "settings_appearance": "외관",
+    "settings_history": "기록 및 캡처",
+    "settings_llm_backend": "LLM 백엔드",
+    "settings_tunnel": "터널",
+    "settings_part11": "Part 11 준수",
+    "settings_privacy": "개인정보",
+    "settings_yinyang": "Yinyang 채팅 레일",
+    "settings_ask_yinyang": "YinYang에게 물어보기",
+    "appstore_loading_categories": "카테고리 로딩 중...",
+    "appstore_loading_sync": "동기화 상태 로딩 중...",
+    "appstore_loading_packs": "팩 로딩 중…",
+    "appstore_noapi_copy": "이 서비스들은 공식 API가 없습니다. Solace Browser가 유일한 자동화 방법입니다.",
+    "schedule_loading": "로딩 중…",
+    "schedule_status_success": "성공",
+    "schedule_tab_upcoming": "예정",
+    "schedule_tab_approvals": "승인",
+    "schedule_tab_history": "기록"
   },
   "personality": {
     "professional": {
@@ -447,7 +467,8 @@
       "step4_guarantee2_body": "모든 초안, 모든 동작이 발생하기 전에 당신에게 보여집니다. 깜짝 놀랄 일 없습니다.",
       "step4_guarantee3_title": "SHA-256 영원히 봉인합니다.",
       "step4_guarantee3_body": "모든 실행이 불변의 증거 체인을 생성합니다. 감사 준비 완료. 항상.",
-      "step5_cta_wow": "Google로 로그인 — 무료"
+      "step5_cta_wow": "Google로 로그인 — 무료",
+      "step3_code": ""
     },
     "oauth3_confirm": {
       "title": "OAuth3 인증",

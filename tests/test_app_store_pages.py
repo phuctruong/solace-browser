@@ -48,8 +48,19 @@ ALL_PAGES = list((_WEB_DIR).glob("*.html"))
 # Helpers
 # ---------------------------------------------------------------------------
 
+_PARTIALS_HEADER_PATH = _WEB_DIR / "partials-header.html"
+
+
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def _read_with_nav(path: Path) -> str:
+    """Read page HTML + partials-header (injected at runtime by layout.js)."""
+    html = path.read_text(encoding="utf-8")
+    if _PARTIALS_HEADER_PATH.exists():
+        html += _PARTIALS_HEADER_PATH.read_text(encoding="utf-8")
+    return html
 
 
 def _has_class(html: str, cls: str) -> bool:
@@ -208,43 +219,44 @@ class TestSettingsPageStructure:
 # ===========================================================================
 
 class TestNavigationConsistency:
+    """Nav links live in partials-header.html, injected by layout.js at runtime."""
 
     def test_all_new_pages_have_app_store_nav(self):
         for page in ALL_NEW_PAGES:
-            html = _read(page)
+            html = _read_with_nav(page)
             assert 'href="/app-store"' in html, f"{page.name} missing app-store nav link"
 
     def test_all_new_pages_have_settings_nav(self):
         for page in ALL_NEW_PAGES:
-            html = _read(page)
+            html = _read_with_nav(page)
             assert 'href="/settings"' in html, f"{page.name} missing settings nav link"
 
     def test_all_new_pages_have_home_nav(self):
         for page in ALL_NEW_PAGES:
-            html = _read(page)
+            html = _read_with_nav(page)
             assert 'href="/"' in html, f"{page.name} missing home nav link"
 
     def test_all_new_pages_have_hamburger(self):
         for page in ALL_NEW_PAGES:
-            html = _read(page)
+            html = _read_with_nav(page)
             assert 'id="hamburger-toggle"' in html, f"{page.name} missing hamburger button"
 
     def test_all_new_pages_have_mobile_menu(self):
         for page in ALL_NEW_PAGES:
-            html = _read(page)
+            html = _read_with_nav(page)
             assert 'id="mobile-menu"' in html, f"{page.name} missing mobile menu"
 
     def test_all_new_pages_have_footer(self):
         for page in ALL_NEW_PAGES:
-            html = _read(page)
-            assert "site-footer" in html, f"{page.name} missing footer"
+            html = _read_with_nav(page)
+            assert "site-footer" in html or 'id="footer-slot"' in html, f"{page.name} missing footer"
 
     def test_existing_pages_updated_nav(self):
         """Existing pages should link to app-store and settings."""
         for page_name in ["home.html", "download.html", "machine-dashboard.html", "tunnel-connect.html"]:
             path = _WEB_DIR / page_name
             if path.exists():
-                html = _read(path)
+                html = _read_with_nav(path)
                 assert 'href="/app-store"' in html or 'href="/settings"' in html, \
                     f"{page_name} not updated with new nav links"
 

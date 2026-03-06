@@ -2,7 +2,7 @@
   "_meta": {
     "locale": "fr",
     "version": "1.0.0",
-    "description": "Canonical English strings for all Yinyang user-facing text."
+    "description": "French strings for all Yinyang user-facing text."
   },
   "ui": {
     "chat_placeholder": "Demande à Yinyang...",
@@ -182,7 +182,53 @@
     "dash_onboarding_dismiss": "Je vais configurer plus tard",
     "dash_needs_setup": "Nécessite une configuration",
     "dash_app_setup": "Configurer",
-    "dash_agent_setup": "Ou laissez votre agent IA configurer toutes les apps"
+    "dash_agent_setup": "Ou laissez votre agent IA configurer toutes les apps",
+    "nav_home": "Accueil",
+    "nav_apps": "Applications",
+    "nav_machine": "Machine",
+    "nav_tunnel": "Tunnel",
+    "nav_settings": "Paramètres",
+    "nav_full_product": "Produit complet",
+    "nav_docs_back": "← Documentation",
+    "nav_quick_start": "Démarrage rapide",
+    "nav_mcp_guide": "Guide MCP",
+    "nav_oauth3": "OAuth3",
+    "menu_surfaces": "Interfaces",
+    "menu_documentation": "Documentation",
+    "menu_platform": "Plateforme",
+    "menu_home": "Accueil",
+    "menu_app_store": "App Store",
+    "menu_machine": "Machine",
+    "menu_tunnel": "Tunnel",
+    "menu_settings": "Paramètres",
+    "menu_docs_hub": "Centre de documentation",
+    "menu_quick_start": "Démarrage rapide",
+    "menu_mcp_agents_guide": "Guide MCP / Agents",
+    "menu_oauth3_safety": "Sécurité OAuth3",
+    "menu_full_product": "Page produit complète",
+    "menu_download": "Téléchargement",
+    "auth_signed_in": "Connecté",
+    "auth_sign_in": "Se connecter",
+    "settings_account": "Compte",
+    "settings_log_out": "Déconnexion",
+    "settings_about": "À propos",
+    "settings_appearance": "Apparence",
+    "settings_history": "Historique et capture",
+    "settings_llm_backend": "Moteur LLM",
+    "settings_tunnel": "Tunnel",
+    "settings_part11": "Conformité Part 11",
+    "settings_privacy": "Confidentialité",
+    "settings_yinyang": "Barre de chat Yinyang",
+    "settings_ask_yinyang": "Demander à YinYang",
+    "appstore_loading_categories": "Chargement des catégories...",
+    "appstore_loading_sync": "Chargement de l'état de synchronisation...",
+    "appstore_loading_packs": "Chargement des packs…",
+    "appstore_noapi_copy": "Ces services n'ont pas d'API officielle. Solace Browser est le seul moyen de les automatiser.",
+    "schedule_loading": "Chargement…",
+    "schedule_status_success": "Succès",
+    "schedule_tab_upcoming": "À venir",
+    "schedule_tab_approvals": "Approbations",
+    "schedule_tab_history": "Historique"
   },
   "personality": {
     "professional": {
@@ -421,7 +467,8 @@
       "step4_guarantee2_body": "Tout brouillon, toute action vous est montré avant qu'il se produise. Pas de surprises.",
       "step4_guarantee3_title": "SHA-256 scellé à jamais.",
       "step4_guarantee3_body": "Chaque exécution crée une chaîne de preuve immuable. Prêt pour l'audit. Toujours.",
-      "step5_cta_wow": "Se connecter avec Google — gratuit ☯"
+      "step5_cta_wow": "Se connecter avec Google — gratuit ☯",
+      "step3_code": ""
     },
     "oauth3_confirm": {
       "title": "Autorisation OAuth3 🔒",

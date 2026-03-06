@@ -208,7 +208,27 @@
     "dash_onboarding_dismiss": "I'll set up later",
     "dash_needs_setup": "Needs setup",
     "dash_app_setup": "Set Up",
-    "dash_agent_setup": "Or let your AI agent set up all apps"
+    "dash_agent_setup": "Or let your AI agent set up all apps",
+    "settings_account": "Account",
+    "settings_log_out": "Log out",
+    "settings_about": "About",
+    "settings_appearance": "Appearance",
+    "settings_history": "History & Capture",
+    "settings_llm_backend": "LLM Backend",
+    "settings_tunnel": "Tunnel",
+    "settings_part11": "Part 11 Compliance",
+    "settings_privacy": "Privacy",
+    "settings_yinyang": "Yinyang Chat Rail",
+    "settings_ask_yinyang": "Ask YinYang",
+    "appstore_loading_categories": "Loading categories...",
+    "appstore_loading_sync": "Loading sync status...",
+    "appstore_loading_packs": "Loading packs…",
+    "appstore_noapi_copy": "These services have no official API. Solace Browser is the only way to automate them.",
+    "schedule_loading": "Loading…",
+    "schedule_status_success": "Success",
+    "schedule_tab_upcoming": "Upcoming",
+    "schedule_tab_approvals": "Approvals",
+    "schedule_tab_history": "History"
   },
   "personality": {
     "professional": {

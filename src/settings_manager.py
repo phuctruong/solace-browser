@@ -37,6 +37,22 @@ _DEFAULT_SETTINGS_PATH = Path("~/.solace/settings.json").expanduser()
 # Default poll interval in seconds
 _DEFAULT_POLL_INTERVAL = 5.0
 
+# Default settings values — merged under user settings so get() always returns
+# a sensible value even when the key is absent from settings.json.
+_DEFAULT_SETTINGS: dict[str, Any] = {
+    "font_size": "medium",
+    "theme": "dark",
+    "reduced_motion": False,
+    "high_contrast": False,
+}
+
+# Schema for constrained settings keys.  Maps key → list of allowed values.
+# Boolean keys are not listed here (any bool is valid).
+_SETTINGS_SCHEMA: dict[str, list[str]] = {
+    "font_size": ["small", "medium", "large", "xlarge"],
+    "theme": ["dark", "light", "midnight"],
+}
+
 
 class SettingsLoadError(ValueError):
     """Raised when settings.json cannot be parsed as a valid JSON object."""
@@ -79,8 +95,8 @@ class SettingsManager:
         # Thread-safety lock for _settings, _callbacks, and _last_mtime
         self._lock = threading.Lock()
 
-        # Current settings snapshot
-        self._settings: dict[str, Any] = {}
+        # Current settings snapshot (seeded with defaults)
+        self._settings: dict[str, Any] = dict(_DEFAULT_SETTINGS)
 
         # Registered callbacks
         self._callbacks: list[Callable[[dict[str, Any]], None]] = []
@@ -205,6 +221,57 @@ class SettingsManager:
         """
         with self._lock:
             return dict(self._settings)
+
+    def set(self, key: str, value: Any) -> None:
+        """Set a settings value by key, persist to disk, and notify callbacks.
+
+        Validates constrained keys (font_size, theme) against ``_SETTINGS_SCHEMA``.
+        Boolean keys (reduced_motion, high_contrast) must receive a bool value.
+
+        Thread-safe: updates the in-memory snapshot under lock, then writes to disk.
+
+        Args:
+            key: The settings key to update.
+            value: The new value.
+
+        Raises:
+            ValueError: If the value is not allowed for a constrained key.
+            TypeError: If a boolean key receives a non-bool value.
+        """
+        # Validate constrained string keys
+        if key in _SETTINGS_SCHEMA:
+            allowed = _SETTINGS_SCHEMA[key]
+            if value not in allowed:
+                raise ValueError(
+                    f"Invalid value {value!r} for {key!r}. "
+                    f"Allowed: {allowed}"
+                )
+
+        # Validate boolean keys from defaults
+        if key in _DEFAULT_SETTINGS and isinstance(_DEFAULT_SETTINGS[key], bool):
+            if not isinstance(value, bool):
+                raise TypeError(
+                    f"{key!r} must be a bool, got {type(value).__name__}"
+                )
+
+        with self._lock:
+            self._settings[key] = value
+            snapshot = dict(self._settings)
+            callbacks = list(self._callbacks)
+
+        # Persist to disk
+        self._settings_path.parent.mkdir(parents=True, exist_ok=True)
+        self._settings_path.write_text(
+            json.dumps(snapshot, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+
+        # Update mtime tracker so the polling thread does not double-fire
+        mtime = self._get_mtime()
+        with self._lock:
+            self._last_mtime = mtime
+
+        self._fire_callbacks(callbacks, snapshot)
 
     def reload(self) -> dict[str, Any]:
         """Force reload settings from disk and notify callbacks.
@@ -332,7 +399,10 @@ class SettingsManager:
             raise SettingsLoadError(
                 f"settings.json must be a JSON object, got {type(parsed).__name__}"
             )
-        return parsed
+        # Merge defaults under user-supplied values so every default key is present.
+        merged = dict(_DEFAULT_SETTINGS)
+        merged.update(parsed)
+        return merged
 
     def _get_mtime(self) -> float | None:
         """Get the modification time of the settings file.

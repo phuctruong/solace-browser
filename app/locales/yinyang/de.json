@@ -2,7 +2,7 @@
   "_meta": {
     "locale": "de",
     "version": "1.0.0",
-    "description": "Canonical English strings for all Yinyang user-facing text."
+    "description": "German strings for all Yinyang user-facing text."
   },
   "ui": {
     "chat_placeholder": "Frage Yinyang...",
@@ -208,7 +208,27 @@
     "dash_onboarding_dismiss": "Ich richte es später ein",
     "dash_needs_setup": "Benötigt Einrichtung",
     "dash_app_setup": "Einrichten",
-    "dash_agent_setup": "Oder lassen Sie Ihren KI-Agenten alle Apps einrichten"
+    "dash_agent_setup": "Oder lassen Sie Ihren KI-Agenten alle Apps einrichten",
+    "settings_account": "Konto",
+    "settings_log_out": "Abmelden",
+    "settings_about": "Über",
+    "settings_appearance": "Darstellung",
+    "settings_history": "Verlauf & Aufnahme",
+    "settings_llm_backend": "LLM-Backend",
+    "settings_tunnel": "Tunnel",
+    "settings_part11": "Part 11-Konformität",
+    "settings_privacy": "Datenschutz",
+    "settings_yinyang": "Yinyang-Chat-Leiste",
+    "settings_ask_yinyang": "YinYang fragen",
+    "appstore_loading_categories": "Kategorien werden geladen...",
+    "appstore_loading_sync": "Synchronisierungsstatus wird geladen...",
+    "appstore_loading_packs": "Pakete werden geladen…",
+    "appstore_noapi_copy": "Diese Dienste haben keine offizielle API. Solace Browser ist die einzige Möglichkeit, sie zu automatisieren.",
+    "schedule_loading": "Wird geladen…",
+    "schedule_status_success": "Erfolgreich",
+    "schedule_tab_upcoming": "Bevorstehend",
+    "schedule_tab_approvals": "Genehmigungen",
+    "schedule_tab_history": "Verlauf"
   },
   "personality": {
     "professional": {
@@ -447,7 +467,8 @@
       "step4_guarantee2_body": "Jeder Entwurf, jede Aktion wird dir vorher gezeigt. Keine Überraschungen.",
       "step4_guarantee3_title": "SHA-256 für immer versiegelt.",
       "step4_guarantee3_body": "Jeder Lauf erstellt eine unveränderliche Beweiskette. Prüfungsbereit. Immer.",
-      "step5_cta_wow": "Anmelden mit Google — kostenlos ☯"
+      "step5_cta_wow": "Anmelden mit Google — kostenlos ☯",
+      "step3_code": ""
     },
     "oauth3_confirm": {
       "title": "OAuth3-Autorisierung 🔒",

@@ -2,7 +2,7 @@
   "_meta": {
     "locale": "he",
     "version": "1.0.0",
-    "description": "Canonical English strings for all Yinyang user-facing text."
+    "description": "Hebrew strings for all Yinyang user-facing text."
   },
   "ui": {
     "chat_placeholder": "שאל Yinyang...",
@@ -140,7 +140,7 @@
     "appstore_propose_by": "נשלח על ידי",
     "appstore_propose_submit": "הגיש הצעה",
     "appstore_proposals_h3": "הצעות אחרונות",
-    "appstore_noapi_h2": "за trợ Exclusives",
+    "appstore_noapi_h2": "בלעדיים ללא API",
     "appstore_funpacks_h2": "חבילות כיף ואישיות",
     "appstore_funpacks_copy": "חבילות תוכן להורדה שנותנות ל-Yinyang עוד בדיחות, עובדות וטעמי אישיות. תומכות בכל 13 שפות.",
     "appstore_funpacks_settings": "הגדרות Yinyang",
@@ -208,7 +208,27 @@
     "dash_onboarding_dismiss": "אני אציג מאוחר יותר",
     "dash_needs_setup": "זקוק להגדרה",
     "dash_app_setup": "הגדר",
-    "dash_agent_setup": "או תן לסוכן AI שלך להגדר את כל האפליקציות"
+    "dash_agent_setup": "או תן לסוכן AI שלך להגדר את כל האפליקציות",
+    "settings_account": "חשבון",
+    "settings_log_out": "התנתקות",
+    "settings_about": "אודות",
+    "settings_appearance": "מראה",
+    "settings_history": "היסטוריה ולכידה",
+    "settings_llm_backend": "מנוע LLM",
+    "settings_tunnel": "מנהרה",
+    "settings_part11": "תאימות Part 11",
+    "settings_privacy": "פרטיות",
+    "settings_yinyang": "פס צ׳אט Yinyang",
+    "settings_ask_yinyang": "שאל את YinYang",
+    "appstore_loading_categories": "טוען קטגוריות...",
+    "appstore_loading_sync": "טוען מצב סנכרון...",
+    "appstore_loading_packs": "טוען חבילות…",
+    "appstore_noapi_copy": "לשירותים אלה אין API רשמי. דפדפן Solace הוא הדרך היחידה לאוטמט אותם.",
+    "schedule_loading": "טוען…",
+    "schedule_status_success": "הצלחה",
+    "schedule_tab_upcoming": "קרובים",
+    "schedule_tab_approvals": "אישורים",
+    "schedule_tab_history": "היסטוריה"
   },
   "personality": {
     "professional": {

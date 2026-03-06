@@ -5,6 +5,7 @@
   <title>App Store | Solace Browser</title>
   <meta name="description" content="Browse, install, and configure web-native AI automation apps. No vendor API keys required.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://127.0.0.1:* https://www.solaceagi.com https://*.solaceagi.com; font-src 'self'; frame-ancestors 'none'">
   <link rel="canonical" href="https://browser.solaceagi.com/app-store">
   <meta name="theme-color" content="#081019">
   <link rel="icon" type="image/png" href="/images/yinyang/yinyang-logo-32.png">
@@ -14,6 +15,7 @@
   <script src="/js/yinyang-rail.js" defer></script>
   <script src="/js/yinyang-tutorial.js" defer></script>
   <script src="/js/yinyang-oauth3-confirm.js" defer></script>
+  <script src="/js/theme.js" defer></script>
   <script src="/js/layout.js" defer></script>
 
   <script src="/js/solace.js" defer></script>
@@ -49,7 +51,7 @@
           </div>
           <div id="app-store-categories">
             <article class="data-panel">
-              <p class="section-copy">Loading categories from <code>/api/apps</code>...</p>
+              <p class="section-copy" data-i18n="appstore_loading_categories">Loading categories from <code>/api/apps</code>...</p>
             </article>
           </div>
         </section>
@@ -63,7 +65,7 @@
           </div>
           <article class="data-panel">
             <h3 data-i18n="appstore_sync_h3">Community queue</h3>
-            <p class="section-copy" id="app-store-sync-panel">Loading <code>/api/app-store/sync</code>...</p>
+            <p class="section-copy" id="app-store-sync-panel" data-i18n="appstore_loading_sync">Loading <code>/api/app-store/sync</code>...</p>
           </article>
           <div class="kpi-grid">
             <article class="kpi-card">
@@ -92,7 +94,7 @@
           <div class="section-heading">
             <div>
               <h2 class="section-title" data-i18n="appstore_noapi_h2">No-API Exclusives</h2>
-              <p class="section-copy">These services have no official API. Solace Browser is the <strong>only way to automate</strong> them.</p>
+              <p class="section-copy" data-i18n="appstore_noapi_copy">These services have no official API. Solace Browser is the <strong>only way to automate</strong> them.</p>
             </div>
           </div>
           <article class="data-panel">
@@ -117,7 +119,7 @@
           </div>
           <div id="fun-pack-grid" class="kpi-grid">
             <div class="kpi-card">
-              <strong>Loading packs…</strong>
+              <strong data-i18n="appstore_loading_packs">Loading packs…</strong>
               <span>Fetching from <code>/api/fun-packs</code></span>
             </div>
           </div>

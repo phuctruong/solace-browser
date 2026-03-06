@@ -2,7 +2,7 @@
   "_meta": {
     "locale": "ja",
     "version": "1.0.0",
-    "description": "Canonical English strings for all Yinyang user-facing text."
+    "description": "Japanese strings for all Yinyang user-facing text."
   },
   "ui": {
     "chat_placeholder": "Yinyangに問い合わせ...",
@@ -208,7 +208,27 @@
     "dash_onboarding_dismiss": "後で設定します",
     "dash_needs_setup": "セットアップが必要です",
     "dash_app_setup": "セットアップ",
-    "dash_agent_setup": "またはあなたのAIエージェントにすべてのアプリをセットアップさせる"
+    "dash_agent_setup": "またはあなたのAIエージェントにすべてのアプリをセットアップさせる",
+    "settings_account": "アカウント",
+    "settings_log_out": "ログアウト",
+    "settings_about": "情報",
+    "settings_appearance": "外観",
+    "settings_history": "履歴とキャプチャ",
+    "settings_llm_backend": "LLMバックエンド",
+    "settings_tunnel": "トンネル",
+    "settings_part11": "Part 11準拠",
+    "settings_privacy": "プライバシー",
+    "settings_yinyang": "Yinyangチャットレール",
+    "settings_ask_yinyang": "YinYangに聞く",
+    "appstore_loading_categories": "カテゴリを読み込み中...",
+    "appstore_loading_sync": "同期ステータスを読み込み中...",
+    "appstore_loading_packs": "パックを読み込み中…",
+    "appstore_noapi_copy": "これらのサービスには公式APIがありません。Solace Browserが唯一の自動化手段です。",
+    "schedule_loading": "読み込み中…",
+    "schedule_status_success": "成功",
+    "schedule_tab_upcoming": "今後の予定",
+    "schedule_tab_approvals": "承認",
+    "schedule_tab_history": "履歴"
   },
   "personality": {
     "professional": {
@@ -227,7 +247,7 @@
       "greeting": "こんにちはー!何か素晴らしいものを作る準備はできていますか?",
       "farewell": "あとで、超スター!",
       "encouragement": "がんばっています！この勢いを続けてください！",
-      "error": "おっと！つまづいた。不安を感じないで、我々は대처するから！"
+      "error": "おっと！つまずいた。心配しないで、対処するから！"
     },
     "minimal": {
       "greeting": "準備完了.",
@@ -267,7 +287,7 @@
       "c010": "新しいアプリがストアに公開されました！",
       "c011": "レシピのリプレイで${amount}を節約しました。効率が勝ちです。",
       "c012": "最初のアプリ間ワークフローを完了しました！アプリが一緒に動作します。",
-      "c013": "朝のブリーフがैयーです。コーヒー + ブリーフ = 素晴らしいスタートです。",
+      "c013": "朝のブリーフが準備できました。コーヒー + ブリーフ = 素晴らしいスタートです。",
       "c014": "証拠の連鎖が検証されました。完全な監査ログが保持されています。",
       "c015": "すべてのアプリは正常です。すべてがスムーズに動作しています。",
       "c016": "アプリの要求が提出されました！私たちがそれをビルドします。",
@@ -291,7 +311,7 @@
       "s014": "ようこそ戻ってきた。 WiFiもあなたを恋しがっていたよ。ただの使者だからね.",
       "s015": "あなたが帰ってきた。技術的には私がものを恋しがることはない。でも、できたらそうするだろう.",
       "s020": "まだここにいる。まだ準備万端。ただコーヒーは作れない，不过.",
-      "s021": " происходит idle thought: AIは電気羊の夢を見るかな？友達のために聞いているの.",
+      "s021": "暇な時の思考：AIは電気羊の夢を見るのかな？友達のために聞いています。",
       "s022": "ただ座ってビットを数えている。聞こえ通りまである.",
       "s023": "寝ているわけじゃない。低電力モードに入っただけ。全然違うんだ.",
       "s024": "我慢強く待っている。私の仕事だ.",
@@ -311,7 +331,7 @@
       "s051": "面倒なことを自動化する必要がありますか？それが私の目的です。",
       "s052": "あなたのタスクリストで最も鬱陶しいことは何ですか？ 私に任せてください。",
       "s053": "私は読み取り、クリック、フォームに情報を入力し、スクリーンショットを撮ることができます。任務は何ですか？",
-      "s054": "問題をुझしてください。私は穏やかな圧力の下で最も効果的に作業します。",
+      "s054": "問題を示してください。穏やかな圧力の下で最も効果的に作業します。",
       "s055": "毎朝のブリーフィングが必要ですか？私はあなたのGmail、カレンダー、Slackを30秒で要約できます。",
       "s060": "おはようございます。今日を昨日よりも少し混沌を少なくしましょう。",
       "s061": "おはよう。コーヒーから始めて、世界征服に取り組みましょう？",
@@ -389,7 +409,7 @@
       "h010_name": "感謝祭",
       "h010_greetings": [
         "ハッピーサンクスギビング!",
-        "ゼロのエラーをrumblrる всяko cada'",
+        "すべての実行に感謝します。",
         "エラーなしで感謝する"
       ],
       "h011_name": "クリスマス",
@@ -447,7 +467,8 @@
       "step4_guarantee2_body": "すべての下書き、すべてのアクションが起こる前にあなたに見せる。驚きなし。",
       "step4_guarantee3_title": "SHA-256 を永遠に封印します。",
       "step4_guarantee3_body": "毎回実行すると不変の証拠チェーンを作成します。監査可能。常に。",
-      "step5_cta_wow": "Google でサインイン — 無料 ☯"
+      "step5_cta_wow": "Google でサインイン — 無料 ☯",
+      "step3_code": ""
     },
     "oauth3_confirm": {
       "title": "OAuth3 認証 🔒",

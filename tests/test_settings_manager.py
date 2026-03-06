@@ -408,12 +408,21 @@ class TestErrorPaths:
             mgr.reload()
 
     def test_missing_file_at_start_continues(self, settings_dir: Path) -> None:
-        """start() succeeds even when the settings file does not exist yet."""
+        """start() succeeds even when the settings file does not exist yet.
+
+        Default settings (font_size, theme, reduced_motion, high_contrast)
+        are still available because the manager seeds from _DEFAULT_SETTINGS.
+        """
         missing_path = settings_dir / "nonexistent.json"
         mgr = SettingsManager(settings_path=missing_path, poll_interval=0.1)
         mgr.start()  # Should not raise
         assert mgr.is_running
-        assert mgr.get_all() == {}
+        # Defaults are present even without a file
+        all_settings = mgr.get_all()
+        assert all_settings["font_size"] == "medium"
+        assert all_settings["theme"] == "dark"
+        assert all_settings["reduced_motion"] is False
+        assert all_settings["high_contrast"] is False
         mgr.stop()
 
     def test_callback_exception_does_not_crash(

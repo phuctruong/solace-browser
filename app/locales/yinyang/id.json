@@ -2,7 +2,7 @@
   "_meta": {
     "locale": "id",
     "version": "1.0.0",
-    "description": "Canonical English strings for all Yinyang user-facing text."
+    "description": "Indonesian strings for all Yinyang user-facing text."
   },
   "ui": {
     "chat_placeholder": "Tanya Yinyang...",
@@ -208,7 +208,27 @@
     "dash_onboarding_dismiss": "Saya akan mengatur nanti",
     "dash_needs_setup": "Perlu pengaturan",
     "dash_app_setup": "Atur",
-    "dash_agent_setup": "Atau biarkan agen AI Anda mengatur semua aplikasi"
+    "dash_agent_setup": "Atau biarkan agen AI Anda mengatur semua aplikasi",
+    "settings_account": "Akun",
+    "settings_log_out": "Keluar",
+    "settings_about": "Tentang",
+    "settings_appearance": "Tampilan",
+    "settings_history": "Riwayat & Tangkapan",
+    "settings_llm_backend": "Backend LLM",
+    "settings_tunnel": "Tunnel",
+    "settings_part11": "Kepatuhan Part 11",
+    "settings_privacy": "Privasi",
+    "settings_yinyang": "Bilah Chat Yinyang",
+    "settings_ask_yinyang": "Tanya YinYang",
+    "appstore_loading_categories": "Memuat kategori...",
+    "appstore_loading_sync": "Memuat status sinkronisasi...",
+    "appstore_loading_packs": "Memuat paket…",
+    "appstore_noapi_copy": "Layanan ini tidak memiliki API resmi. Solace Browser adalah satu-satunya cara untuk mengotomatiskannya.",
+    "schedule_loading": "Memuat…",
+    "schedule_status_success": "Berhasil",
+    "schedule_tab_upcoming": "Mendatang",
+    "schedule_tab_approvals": "Persetujuan",
+    "schedule_tab_history": "Riwayat"
   },
   "personality": {
     "professional": {
@@ -447,7 +467,8 @@
       "step4_guarantee2_body": "Setiap draf, setiap tindakan ditampilkan kepada Anda sebelum terjadi. Tidak ada kejutan.",
       "step4_guarantee3_title": "SHA-256 disegel selamanya.",
       "step4_guarantee3_body": "Setiap jalankan membuat rantai bukti yang tidak dapat diubah. Siap audit. Selalu.",
-      "step5_cta_wow": "Masuk dengan Google — gratis ☯"
+      "step5_cta_wow": "Masuk dengan Google — gratis ☯",
+      "step3_code": ""
     },
     "oauth3_confirm": {
       "title": "Otorisasi OAuth3 🔒",

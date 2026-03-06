@@ -2,7 +2,7 @@
   "_meta": {
     "locale": "hi",
     "version": "1.0.0",
-    "description": "Canonical English strings for all Yinyang user-facing text."
+    "description": "Hindi strings for all Yinyang user-facing text."
   },
   "ui": {
     "chat_placeholder": "Yinyang से पूछें...",
@@ -96,7 +96,7 @@
     "home_setup_h3": "अपने पावर सोर्स को जोड़कर सभी ऐप्स अनलॉक करें",
     "home_setup_p": "अपनी API कुंजी (नि:शुल्क) लाएं या Solace Managed LLM ($8/mo) का उपयोग करें।",
     "home_setup_cta": "अब सेट अप करें",
-    "home_hero_h1": "वेब के लिए आपका एआई एजेंट。",
+    "home_hero_h1": "वेब के लिए आपका एआई एजेंट।",
     "home_hero_p": "आपकी हर क्रिया को आपकी मंजूरी से। रेसिपीज़ में क्या काम किया, इसका रिकॉर्ड रखें। प्रमाण हर रन को सील और ऑडिट के लिए तैयार रखता है।",
     "home_hero_browse": "ऐप्स ब्राउज़ करें",
     "home_hero_status": "● एजेंट तैयार",
@@ -208,7 +208,27 @@
     "dash_onboarding_dismiss": "मैं बाद में सेटअप करूंगा",
     "dash_needs_setup": "सेटअप की जरूरत है",
     "dash_app_setup": "सेटअप करें",
-    "dash_agent_setup": "या अपने AI एजेंट को सभी ऐप्स सेटअप करने दें"
+    "dash_agent_setup": "या अपने AI एजेंट को सभी ऐप्स सेटअप करने दें",
+    "settings_account": "खाता",
+    "settings_log_out": "लॉग आउट",
+    "settings_about": "के बारे में",
+    "settings_appearance": "दिखावट",
+    "settings_history": "इतिहास और कैप्चर",
+    "settings_llm_backend": "LLM बैकेंड",
+    "settings_tunnel": "टनल",
+    "settings_part11": "Part 11 अनुपालन",
+    "settings_privacy": "गोपनीयता",
+    "settings_yinyang": "Yinyang चैट रेल",
+    "settings_ask_yinyang": "YinYang से पूछें",
+    "appstore_loading_categories": "श्रेणियाँ लोड हो रही हैं...",
+    "appstore_loading_sync": "सिंक स्थिति लोड हो रही है...",
+    "appstore_loading_packs": "पैक लोड हो रहे हैं…",
+    "appstore_noapi_copy": "इन सेवाओं के पास कोई आधिकारिक API नहीं है। Solace Browser उन्हें स्वचालित करने का एकमात्र तरीका है।",
+    "schedule_loading": "लोड हो रहा है…",
+    "schedule_status_success": "सफल",
+    "schedule_tab_upcoming": "आगामी",
+    "schedule_tab_approvals": "अनुमोदन",
+    "schedule_tab_history": "इतिहास"
   },
   "personality": {
     "professional": {
@@ -286,7 +306,7 @@
       "s007": "Solace में आपका स्वागत है। मैं जो कुछ भी करता हूँ, आपकी पहले मंजूरी लेता हूँ।",
       "s010": "स्वागत है वापस। मैंने आपकी सीट को डिजिटली गरम रखा।",
       "s011": "आप फिर से! (यह एक अच्छी बात है।)",
-      "s012": "आपको देखकर अच्छा लगता है। मैं刚 अपने न्यूरल वजन को फिर से व्यवस्थित कर रहा था।",
+      "s012": "आपको देखकर अच्छा लगा। मैं अभी अपने न्यूरल वेट को पुनर्व्यवस्थित कर रहा था।",
       "s013": "फिर से वापस? मैं प्रतिबद्धता का सम्मान करता हूँ.",
       "s014": "स्वागत है. वाईफाई आपको याद कर रहा था. मैं सिर्फ एक संदेशवाहक हूँ.",
       "s015": "तुम्हारी याद आई. खैर, मैं तकनीकी रूप से चीजों को याद नहीं रखता. लेकिन अगर मैं कर सकता, तो मैं करूँगा.",
@@ -359,7 +379,7 @@
       "h005_name": "ईस्टर",
       "h005_greetings": [
         "हैप्पी ईस्टर!",
-        "春 का मौसम आ गया है।",
+        "वसंत का मौसम आ गया है।",
         "उम्मीद है यह आपको खुशी दिलाएगा।"
       ],
       "h006_name": "मातृ दिवस",
@@ -447,7 +467,8 @@
       "step4_guarantee2_body": "प्रत्येक ड्राफ्ट, प्रत्येक क्रिया आपको होने से पहले दिखाई जाती है। कोई आश्चर्य नहीं।",
       "step4_guarantee3_title": "SHA-256 हमेशा के लिए सील किया गया।",
       "step4_guarantee3_body": "प्रत्येक रन एक अपरिवर्तनीय साक्ष्य श्रृंखला बनाता है। ऑडिट तैयार। हमेशा।",
-      "step5_cta_wow": "गूगल के साथ साइन इन करें — नि:शुल्क ☯"
+      "step5_cta_wow": "गूगल के साथ साइन इन करें — नि:शुल्क ☯",
+      "step3_code": ""
     },
     "oauth3_confirm": {
       "title": "OAuth3 अधिकृत 🔒",

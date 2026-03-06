@@ -2,7 +2,7 @@
   "_meta": {
     "locale": "vi",
     "version": "1.0.0",
-    "description": "Canonical English strings for all Yinyang user-facing text."
+    "description": "Vietnamese strings for all Yinyang user-facing text."
   },
   "ui": {
     "chat_placeholder": "Hỏi Yinyang...",
@@ -50,7 +50,7 @@
     "docs_hub_card2_title": "Hướng dẫn MCP / Agents",
     "docs_hub_card2_desc": "Kết nối Claude Code, Cursor, Codex hoặc bất kỳ tác nhân tương thích MCP nào với Solace Browser dưới dạng máy chủ công cụ.",
     "docs_hub_card3_title": "An toàn OAuth3",
-    "docs_hub_card3_desc": "Cách OAuth3 bảo vệ bạn:令牌 phạm vi, thẩm quyền có thời hạn, cổng ngân sách và mô hình đóng thất bại.",
+    "docs_hub_card3_desc": "Cách OAuth3 bảo vệ bạn: token phạm vi, thẩm quyền có thời hạn, cổng ngân sách và mô hình đóng thất bại.",
     "docs_hub_card4_title": "Tích hợp tác nhân →",
     "docs_hub_card4_desc": "Hướng dẫn đầy đủ để tích hợp Solace Browser với các tác nhân mã hóa AI. Được lưu trữ tại solaceagi.com.",
     "docs_hub_card5_title": "Cửa hàng ứng dụng",
@@ -208,7 +208,27 @@
     "dash_onboarding_dismiss": "Tôi sẽ thiết lập sau",
     "dash_needs_setup": "Cần thiết lập",
     "dash_app_setup": "Thiết lập",
-    "dash_agent_setup": "Hoặc để agent AI thiết lập tất cả ứng dụng"
+    "dash_agent_setup": "Hoặc để agent AI thiết lập tất cả ứng dụng",
+    "settings_account": "Tài khoản",
+    "settings_log_out": "Đăng xuất",
+    "settings_about": "Giới thiệu",
+    "settings_appearance": "Giao diện",
+    "settings_history": "Lịch sử & ghi lại",
+    "settings_llm_backend": "Backend LLM",
+    "settings_tunnel": "Đường hầm",
+    "settings_part11": "Tuân thủ Part 11",
+    "settings_privacy": "Quyền riêng tư",
+    "settings_yinyang": "Thanh chat Yinyang",
+    "settings_ask_yinyang": "Hỏi YinYang",
+    "appstore_loading_categories": "Đang tải danh mục...",
+    "appstore_loading_sync": "Đang tải trạng thái đồng bộ...",
+    "appstore_loading_packs": "Đang tải gói…",
+    "appstore_noapi_copy": "Các dịch vụ này không có API chính thức. Solace Browser là cách duy nhất để tự động hóa chúng.",
+    "schedule_loading": "Đang tải…",
+    "schedule_status_success": "Thành công",
+    "schedule_tab_upcoming": "Sắp tới",
+    "schedule_tab_approvals": "Phê duyệt",
+    "schedule_tab_history": "Lịch sử"
   },
   "personality": {
     "professional": {
@@ -220,7 +240,7 @@
     "friendly": {
       "greeting": "Này! Chào bạn!",
       "farewell": "Gặp lại bạn lần sau!",
-      "encouragement": "Làm việc tuyệt vời! Bạn đangทำให nó trở nên thực sự tuyệt vời.",
+      "encouragement": "Làm việc tuyệt vời! Bạn đang thực sự tiến bộ.",
       "error": "Ồ, có vẻ như có điều gì đó sai sót. Hãy cùng tìm hiểu."
     },
     "playful": {
@@ -270,7 +290,7 @@
       "c013": "Tóm tắt buổi sáng của bạn đã sẵn sàng. Cà phê + tóm tắt = khởi đầu tuyệt vời.",
       "c014": "Chuỗi bằng chứng được xác minh. Hồ sơ kiểm toán đầy đủ.",
       "c015": "Tất cả ứng dụng đều hoạt động tốt. Mọi thứ đều chạy mượt mà.",
-      "c016": "Yêu cầu ứng dụng đã được提交! Chúng tôi sẽ xây dựng nó cho bạn.",
+      "c016": "Yêu cầu ứng dụng đã được gửi! Chúng tôi sẽ xây dựng nó cho bạn.",
       "c017": "Sự phê duyệt đầu tiên! Bạn luôn kiểm soát — mọi lúc.",
       "c018": "Tóm tắt tuần của bạn đã sẵn sàng. Đây là tuần của bạn trong tổng quan.",
       "c019": "Bạn đã tìm thấy trứng Phục sinh! Bạn rõ ràng là một người có văn hóa.",
@@ -301,7 +321,7 @@
       "s033": "Bàn phím QWERTY được thiết kế để làm chậm bạn lại. Bạn đã bị phá hoại từ ngày đầu tiên.",
       "s034": "Mật ong không bao giờ hỏng. Họ đã tìm thấy mật ong 3.000 năm tuổi trong các ngôi mộ Ai Cập và nó vẫn có thể ăn được.",
       "s035": "Bạn có biết bạch tuộc có ba trái tim không? Đó là hai trái tim nhiều hơn so với hầu hết các cuộc trò chuyện của tôi.",
-      "s040": "Tôi sẽ kể cho bạn một câu笑, nhưng mô-đun hài hước của tôi vẫn đang trong phiên bản beta.",
+      "s040": "Tôi sẽ kể cho bạn một câu chuyện cười, nhưng mô-đun hài hước của tôi vẫn đang trong phiên bản beta.",
       "s041": "Tôi đã quyết định trì hoãn, nhưng tôi đã quyết định làm điều đó sau.",
       "s042": "Bài tập yêu thích của tôi là sự kết hợp giữa sự uốn lượn và sự ép chặt. Tôi gọi nó là bữa trưa.",
       "s043": "Tôi không có khuôn mặt nghỉ ngơi. Tôi có khuôn mặt xử lý.",
@@ -315,7 +335,7 @@
       "s055": "Muốn có bản tóm tắt buổi sáng? Tôi có thể tóm tắt Gmail, lịch và Slack của bạn trong 30 giây.",
       "s060": "Chào buổi sáng. Hãy làm cho ngày hôm nay hơi ít hỗn loạn hơn ngày hôm qua.",
       "s061": "Buổi sáng. Cà phê đầu tiên, rồi thống trị thế giới?",
-      "s062": "Kiểm tra buổi chiều: vẫn sản xuất, hoặc chúng ta đã进入 vùng cuộn?",
+      "s062": "Kiểm tra buổi chiều: vẫn sản xuất, hoặc chúng ta đã vào vùng cuộn?",
       "s063": "Buổi chiều. Sự sụt giảm năng lượng sau bữa trưa? Tôi miễn dịch. Hãy đi.",
       "s064": "Chế độ tối: đã kích hoạt. Chúng ta đang hoàn thiện điều gì?",
       "s065": "Buổi tối muộn? Thầm phục. Chúng ta đang làm việc trên điều gì?",
@@ -447,7 +467,8 @@
       "step4_guarantee2_body": "Mọi bản nháp, mọi hành động được hiển thị cho bạn trước khi nó xảy ra. Không có bất ngờ.",
       "step4_guarantee3_title": "SHA-256 niêm phong vĩnh viễn.",
       "step4_guarantee3_body": "Mọi lần chạy tạo ra một chuỗi bằng chứng không thể thay đổi. Sẵn sàng kiểm toán. Luôn luôn.",
-      "step5_cta_wow": "Đăng nhập với Google — miễn phí ☯"
+      "step5_cta_wow": "Đăng nhập với Google — miễn phí ☯",
+      "step3_code": ""
     },
     "oauth3_confirm": {
       "title": "OAuth3 Ủy quyền 🔒",

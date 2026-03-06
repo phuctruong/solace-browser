@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>App Dashboard | Solace Browser</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://127.0.0.1:* https://www.solaceagi.com https://*.solaceagi.com; font-src 'self'; frame-ancestors 'none'">
   <meta name="theme-color" content="#081019">
   <link rel="icon" type="image/png" href="/images/yinyang/yinyang-logo-32.png">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -66,6 +67,7 @@
   <script src="/js/yinyang-delight.js" defer></script>
   <script src="/js/yinyang-rail.js" defer></script>
   <script src="/js/yinyang-oauth3-confirm.js" defer></script>
+  <script src="/js/theme.js" defer></script>
   <script src="/js/layout.js" defer></script>
   <script src="/js/solace.js" defer></script>
   <script src="/vendor/jquery/jquery-3.7.1.min.js" defer></script>
@@ -151,10 +153,19 @@
               </button>
             </div>
             <div id="setupContainer"></div>
+            <div class="ad-files-section">
+              <div class="ad-files-label">OAuth3 Scopes</div>
+              <div id="scopesContainer"></div>
+            </div>
+            <div class="ad-files-section">
+              <div class="ad-files-label">Execution Model</div>
+              <div id="executionModelContainer"></div>
+            </div>
           </div>
 
           <!-- ═══ Runs Tab ═══ -->
           <div class="sb-tab-panel" id="tab-runs">
+            <div class="ad-files-label">Recent Runs</div>
             <div class="ad-runs-chart" id="runsChart"></div>
             <table id="runsTable" class="display" style="width:100%">
               <thead>
@@ -210,6 +221,7 @@
           <div class="sb-tab-panel" id="tab-files">
             <div class="ad-files-section">
               <div class="ad-files-label">Inbox</div>
+              <!-- Inbox folders: prompts/ templates/ policies/ previews/ -->
               <div class="ad-file-grid" id="filesInbox"></div>
             </div>
             <div class="ad-files-section">

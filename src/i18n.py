@@ -212,9 +212,10 @@ def detect_locale(accept_language: str | None) -> str:
     # Map common language tags to supported locales
     _MAP = {
         "es": "es", "vi": "vi", "zh": "zh", "zh-hans": "zh", "zh-cn": "zh",
-        "pt": "pt", "pt-br": "pt", "fr": "fr", "ja": "ja", "de": "de",
+        "pt": "pt", "pt-br": "pt", "pt-pt": "pt", "fr": "fr", "ja": "ja", "de": "de",
         "ar": "ar", "hi": "hi", "ko": "ko", "id": "id", "ru": "ru",
-        "zh-hant": "zh-hant", "zh-tw": "zh-hant",
+        "zh-hant": "zh-hant", "zh-tw": "zh-hant", "zh-hk": "zh-hant",
+        "ms": "id",
         "tr": "tr", "pl": "pl", "th": "th", "nl": "nl", "it": "it",
         "uk": "uk", "sv": "sv", "he": "he", "fa": "fa",
         "en": "en",

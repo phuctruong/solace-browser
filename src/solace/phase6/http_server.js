@@ -26,6 +26,25 @@ const { URL } = require("url");
 // Configuration
 const HTTP_PORT = parseInt(process.env.SOLACE_HTTP_PORT || "9999", 10);
 const WS_URL = process.env.SOLACE_WS_URL || "ws://localhost:9222";
+
+// CORS — allowed origins (no wildcard)
+const ALLOWED_ORIGINS = [
+  "http://127.0.0.1:8791",
+  "http://localhost:8791",
+  "https://www.solaceagi.com",
+];
+
+/**
+ * Return the origin for CORS headers if the request origin is allowed,
+ * otherwise return null (no CORS header will be set).
+ */
+function getAllowedOrigin(req) {
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    return origin;
+  }
+  return null;
+}
 const EPISODE_DIR = process.env.SOLACE_EPISODE_DIR ||
   path.join(require("os").homedir(), ".solace", "browser");
 const REQUEST_TIMEOUT_MS = 30000;
@@ -204,16 +223,18 @@ function parseBody(req) {
 }
 
 /**
- * Send JSON response
+ * Send JSON response.
+ * CORS headers are set via res._corsOrigin (populated in handleRequest).
  */
 function sendJson(res, statusCode, data) {
   const json = JSON.stringify(data, null, 2);
-  res.writeHead(statusCode, {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  });
+  const headers = { "Content-Type": "application/json", "Vary": "Origin" };
+  if (res._corsOrigin) {
+    headers["Access-Control-Allow-Origin"] = res._corsOrigin;
+    headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS";
+    headers["Access-Control-Allow-Headers"] = "Content-Type";
+  }
+  res.writeHead(statusCode, headers);
   res.end(json);
 }
 
@@ -624,14 +645,22 @@ function parseRoute(reqUrl) {
 async function handleRequest(req, res) {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    res.writeHead(204, {
-      "Access-Control-Allow-Origin": "*",
+    const origin = getAllowedOrigin(req);
+    const headers = {
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
-    });
+      "Vary": "Origin",
+    };
+    if (origin) {
+      headers["Access-Control-Allow-Origin"] = origin;
+    }
+    res.writeHead(204, headers);
     res.end();
     return;
   }
+
+  // Set CORS origin for all non-preflight responses
+  res._corsOrigin = getAllowedOrigin(req);
 
   const { route, episodeId } = parseRoute(req.url);
   const method = req.method;

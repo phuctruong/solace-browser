@@ -208,7 +208,27 @@
     "dash_onboarding_dismiss": "Jag kommer att konfigurera senare",
     "dash_needs_setup": "Kräver konfiguration",
     "dash_app_setup": "Konfigurera",
-    "dash_agent_setup": "Eller låt din AI-agent konfigurera alla appar"
+    "dash_agent_setup": "Eller låt din AI-agent konfigurera alla appar",
+    "settings_account": "Konto",
+    "settings_log_out": "Logga ut",
+    "settings_about": "Om",
+    "settings_appearance": "Utseende",
+    "settings_history": "Historik & inspelning",
+    "settings_llm_backend": "LLM-backend",
+    "settings_tunnel": "Tunnel",
+    "settings_part11": "Part 11-efterlevnad",
+    "settings_privacy": "Integritet",
+    "settings_yinyang": "Yinyang-chattfält",
+    "settings_ask_yinyang": "Fråga YinYang",
+    "appstore_loading_categories": "Laddar kategorier...",
+    "appstore_loading_sync": "Laddar synkroniseringsstatus...",
+    "appstore_loading_packs": "Laddar paket…",
+    "appstore_noapi_copy": "Dessa tjänster har inget officiellt API. Solace Browser är det enda sättet att automatisera dem.",
+    "schedule_loading": "Laddar…",
+    "schedule_status_success": "Lyckades",
+    "schedule_tab_upcoming": "Kommande",
+    "schedule_tab_approvals": "Godkännanden",
+    "schedule_tab_history": "Historik"
   },
   "personality": {
     "professional": {

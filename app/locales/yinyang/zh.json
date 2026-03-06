@@ -2,7 +2,7 @@
   "_meta": {
     "locale": "zh",
     "version": "1.0.0",
-    "description": "Canonical English strings for all Yinyang user-facing text."
+    "description": "Chinese Simplified strings for all Yinyang user-facing text."
   },
   "ui": {
     "chat_placeholder": "询问 Yinyang...",
@@ -208,7 +208,27 @@
     "dash_onboarding_dismiss": "稍后再设置",
     "dash_needs_setup": "需要设置",
     "dash_app_setup": "设置",
-    "dash_agent_setup": "或让你的 AI 智能体设置所有应用"
+    "dash_agent_setup": "或让你的 AI 智能体设置所有应用",
+    "settings_account": "账户",
+    "settings_log_out": "退出登录",
+    "settings_about": "关于",
+    "settings_appearance": "外观",
+    "settings_history": "历史记录与捕获",
+    "settings_llm_backend": "LLM 后端",
+    "settings_tunnel": "隧道",
+    "settings_part11": "Part 11 合规",
+    "settings_privacy": "隐私",
+    "settings_yinyang": "Yinyang 聊天栏",
+    "settings_ask_yinyang": "询问 YinYang",
+    "appstore_loading_categories": "正在加载分类...",
+    "appstore_loading_sync": "正在加载同步状态...",
+    "appstore_loading_packs": "正在加载包…",
+    "appstore_noapi_copy": "这些服务没有官方 API。Solace Browser 是自动化它们的唯一方式。",
+    "schedule_loading": "加载中…",
+    "schedule_status_success": "成功",
+    "schedule_tab_upcoming": "即将到来",
+    "schedule_tab_approvals": "审批",
+    "schedule_tab_history": "历史"
   },
   "personality": {
     "professional": {
@@ -297,7 +317,7 @@
       "s024": "耐心等待。这有点是我的事。",
       "s030": "你知道吗，第一个网络摄像头的发明只是为了检查咖啡壶是否空了？",
       "s031": "随机想法：可能的国际象棋游戏比可观测宇宙中的原子更多。",
-      "s032": "这里有一件事：海獭在睡觉时会牵手，这样他们就不会漂走。您클Bienvenue。",
+      "s032": "这里有一件事：海獭在睡觉时会牵手，这样他们就不会漂走。不用谢。",
       "s033": "QWERTY 键盘的设计初衷是让你打字变慢。从第一天开始，你就被破坏了。",
       "s034": "蜂蜜不会变质。在埃及墓葬中，他们发现了 3,000 年前的蜂蜜，仍然可以食用。",
       "s035": "你知道吗，章鱼有三个心脏？这比我大多数对话中拥有的心脏多两个。",
@@ -447,7 +467,8 @@
       "step4_guarantee2_body": "每个草稿，每个操作在发生之前都会显示给您。无惊喜。",
       "step4_guarantee3_title": "SHA-256 封存永远。",
       "step4_guarantee3_body": "每次运行都会创建一个不可变的证据链。随时可审计。",
-      "step5_cta_wow": "使用 Google 登录 — 免费 ☯"
+      "step5_cta_wow": "使用 Google 登录 — 免费 ☯",
+      "step3_code": ""
     },
     "oauth3_confirm": {
       "title": "OAuth3 授权 🔒",

@@ -208,7 +208,27 @@
     "dash_onboarding_dismiss": "Ustawienie później",
     "dash_needs_setup": "Wymaga ustalenia",
     "dash_app_setup": "Konfiguracja",
-    "dash_agent_setup": "Albo pozwól Twojemu agentowi AI zainstalować wszystkie aplikacje"
+    "dash_agent_setup": "Albo pozwól Twojemu agentowi AI zainstalować wszystkie aplikacje",
+    "settings_account": "Konto",
+    "settings_log_out": "Wyloguj się",
+    "settings_about": "O programie",
+    "settings_appearance": "Wygląd",
+    "settings_history": "Historia i przechwytywanie",
+    "settings_llm_backend": "Backend LLM",
+    "settings_tunnel": "Tunel",
+    "settings_part11": "Zgodność z Part 11",
+    "settings_privacy": "Prywatność",
+    "settings_yinyang": "Pasek czatu Yinyang",
+    "settings_ask_yinyang": "Zapytaj YinYang",
+    "appstore_loading_categories": "Ładowanie kategorii...",
+    "appstore_loading_sync": "Ładowanie stanu synchronizacji...",
+    "appstore_loading_packs": "Ładowanie paczek…",
+    "appstore_noapi_copy": "Te usługi nie mają oficjalnego API. Solace Browser to jedyny sposób na ich automatyzację.",
+    "schedule_loading": "Ładowanie…",
+    "schedule_status_success": "Sukces",
+    "schedule_tab_upcoming": "Nadchodzące",
+    "schedule_tab_approvals": "Zatwierdzenia",
+    "schedule_tab_history": "Historia"
   },
   "personality": {
     "professional": {
