@@ -90,7 +90,7 @@ class EvidencePipeline:
     def _capture(self, html: bytes, *, before: bool) -> BeforeCapture:
         try:
             compressed = self.pzip.compress(html)
-        except Exception as exc:  # noqa: BLE001
+        except (zlib.error, TypeError, AttributeError, RuntimeError, OSError) as exc:
             raise PipelineInvariantError("pzip_missing") from exc
 
         if isinstance(compressed, str):

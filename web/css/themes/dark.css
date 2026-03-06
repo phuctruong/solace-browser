@@ -1,0 +1,61 @@
+/* Theme: Dark (Default)
+   DNA: dark(trust) = deep_navy(foundation) x warm_orange(energy) x cool_blue(clarity)
+   Author: Solace Browser | Rung: 65537
+   This is the default theme — same values as :root in site.css.
+   Loading this file has no visual effect (it re-declares defaults).
+   It exists so the theme system has a canonical "dark" reference. */
+
+[data-theme="dark"] {
+  --sb-bg: #081019;
+  --sb-surface: #0f1825;
+  --sb-surface-strong: #172335;
+  --sb-surface-soft: #101b2c;
+  --sb-border: rgba(163, 185, 214, 0.18);
+  --sb-border-strong: rgba(255, 126, 61, 0.36);
+  --sb-text: #f4f7fb;
+  --sb-text-muted: #9cb1ca;
+  --sb-accent: #ff6b35;
+  --sb-accent-soft: rgba(255, 107, 53, 0.14);
+  --sb-accent-hover: #ff8d63;
+  --sb-signal: #64c4ff;
+  --sb-success: #46d9a7;
+  --sb-warning: #ffc75a;
+  --sb-danger: #ff7c7c;
+  --sb-shadow: 0 18px 50px rgba(3, 9, 19, 0.45);
+  --sb-on-accent: #081019;
+  --sb-accent-warm: #ffbf69;
+  --sb-terminal-text: #95ffcf;
+  --sb-purple: #AE67FA;
+  --sb-grad-header: linear-gradient(135deg, #81AFDD, #AE67FA);
+  --sb-grad-hero-bg: linear-gradient(135deg, #081019 0%, #1a1f3a 100%);
+  --sb-shadow-glow: 0 0 30px rgba(100, 196, 255, 0.4);
+  --sb-shadow-glow-lg: 0 0 60px rgba(100, 196, 255, 0.8);
+  --sb-bg-deep: #070d16;
+  --sb-bg-splash: #0d1624;
+  --sb-bg-white-alpha-03: rgba(255, 255, 255, 0.03);
+  --sb-bg-white-alpha-04: rgba(255, 255, 255, 0.04);
+  --sb-bg-white-alpha-05: rgba(255, 255, 255, 0.05);
+  --sb-border-white-alpha-06: rgba(255, 255, 255, 0.06);
+  --sb-border-white-alpha-08: rgba(255, 255, 255, 0.08);
+  --sb-bg-alpha-84: rgba(8, 16, 25, 0.84);
+  --sb-bg-alpha-90: rgba(8, 16, 25, 0.9);
+  --sb-bg-alpha-92: rgba(8, 16, 25, 0.92);
+  --sb-bg-alpha-96: rgba(8, 16, 25, 0.96);
+  --sb-bg-input: rgba(3, 8, 14, 0.65);
+  --sb-bg-terminal: rgba(3, 8, 14, 0.82);
+  --sb-mask-alpha-40: rgba(0, 0, 0, 0.4);
+  --sb-shadow-accent-alpha-28: rgba(255, 107, 53, 0.28);
+  --sb-bg-accent-alpha-16: rgba(255, 107, 53, 0.16);
+  --sb-bg-accent-alpha-18: rgba(255, 107, 53, 0.18);
+  --sb-border-accent-alpha-12: rgba(255, 107, 53, 0.12);
+  --sb-bg-signal-alpha-08: rgba(100, 196, 255, 0.08);
+  --sb-bg-signal-alpha-12: rgba(100, 196, 255, 0.12);
+  --sb-border-signal-alpha-14: rgba(100, 196, 255, 0.14);
+  --sb-shadow-signal-alpha-16: rgba(100, 196, 255, 0.16);
+  --sb-bg-signal-alpha-22: rgba(100, 196, 255, 0.22);
+  --sb-border-signal-alpha-18: rgba(100, 196, 255, 0.18);
+  --sb-bg-success-alpha-14: rgba(70, 217, 167, 0.14);
+  --sb-border-success-alpha-18: rgba(70, 217, 167, 0.18);
+  --sb-bg-warning-alpha-14: rgba(255, 199, 90, 0.14);
+  --sb-shadow-warning-alpha-18: rgba(255, 199, 90, 0.18);
+}

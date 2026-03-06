@@ -33,8 +33,8 @@
       <main class="dashboard-shell">
         <section class="dashboard-toolbar reveal">
           <div>
-            <p class="eyebrow">Machine surface</p>
-            <h1 class="dashboard-title">Inspect the local boundary before the agent touches it.</h1>
+            <p class="eyebrow" data-i18n="machine_eyebrow">Machine surface</p>
+            <h1 class="dashboard-title" data-i18n="machine_h1">Inspect the local boundary before the agent touches it.</h1>
           </div>
           <div class="status-strip">
             <div class="status-pill status-pill--success"><span class="status-pill__dot"></span>Vault present</div>
@@ -44,11 +44,11 @@
         </section>
 
         <section class="dashboard-columns reveal">
-          <h2 class="sr-only">Machine Surface Details</h2>
+          <h2 class="sr-only" data-i18n="machine_details_h2">Machine Surface Details</h2>
           <aside class="dashboard-stack">
             <article class="list-panel">
-              <div class="panel-kicker">Files</div>
-              <h3>Allowed roots</h3>
+              <div class="panel-kicker" data-i18n="machine_files_kicker">Files</div>
+              <h3 data-i18n="machine_files_h3">Allowed roots</h3>
               <label class="sr-only" for="file-search">Filter visible files</label>
               <input class="search-input" id="file-search" type="search" aria-label="Filter visible files" placeholder="Filter visible files and folders">
               <ul class="file-list" id="file-list">
@@ -56,8 +56,8 @@
               </ul>
             </article>
             <article class="dashboard-card">
-              <div class="panel-kicker">State summary</div>
-              <h3>System posture</h3>
+              <div class="panel-kicker" data-i18n="machine_state_kicker">State summary</div>
+              <h3 data-i18n="machine_state_h3">System posture</h3>
               <div class="table-wrap">
                 <table class="data-table" aria-label="System posture summary">
                   <tbody id="system-table-body">
@@ -70,20 +70,20 @@
 
           <div class="dashboard-stack">
             <article class="terminal-panel">
-              <div class="panel-kicker">Terminal</div>
-              <h3>Command preview</h3>
+              <div class="panel-kicker" data-i18n="machine_terminal_kicker">Terminal</div>
+              <h3 data-i18n="machine_terminal_h3">Command preview</h3>
               <pre class="terminal-output" id="terminal-output">$ pwd
 /home/phuc
 shell execution is blocked until machine.execute is approved</pre>
               <form class="terminal-form" id="terminal-form">
                 <label class="sr-only" for="terminal-command">Terminal command preview</label>
                 <input class="command-input" id="terminal-command" type="text" aria-label="Terminal command preview" placeholder="Try a command preview, e.g. ls Downloads">
-                <button class="btn btn-primary" type="submit">Preview command</button>
+                <button class="btn btn-primary" type="submit" data-i18n="machine_btn_preview">Preview command</button>
               </form>
             </article>
             <article class="dashboard-card">
-              <div class="panel-kicker">Execution model</div>
-              <h3>Why this page exists</h3>
+              <div class="panel-kicker" data-i18n="machine_exec_kicker">Execution model</div>
+              <h3 data-i18n="machine_exec_h3">Why this page exists</h3>
               <ul class="audit-list">
                 <li><span><strong>Visible scope split</strong><br>Read access can be granted without shell execution.</span><span class="status-tag status-tag--success">good</span></li>
                 <li><span><strong>Recipe graduation</strong><br>Only workflows worth replaying should cross into machine automation.</span><span class="status-tag status-tag--warning">review</span></li>

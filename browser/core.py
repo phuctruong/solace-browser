@@ -359,7 +359,7 @@ async def execute_click(page, action: ClickAction) -> Dict[str, Any]:
 
         try:
             await page.wait_for_selector(selector, timeout=timeout_ms)
-        except:
+        except (PlaywrightError, TimeoutError, ValueError):
             # Fallback to using the ref as is
             selector = action.ref
 

@@ -429,7 +429,7 @@ class SettingsManager:
         for callback in callbacks:
             try:
                 callback(settings)
-            except Exception as exc:  # noqa: BLE001 — callback isolation: one bad callback must not block others
+            except (TypeError, ValueError, KeyError, AttributeError, OSError) as exc:
                 logger.error(
                     "Callback %s raised %s: %s",
                     getattr(callback, '__name__', callback),

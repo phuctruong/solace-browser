@@ -37,12 +37,12 @@
             <span class="status-ring__icon">◎</span>
           </div>
           <div>
-            <p class="eyebrow">Tunnel surface</p>
-            <h1 class="dashboard-title" id="status-label">Disconnected</h1>
-            <p class="lead" id="status-description">Grant tunnel.connect before the browser exposes a public URL.</p>
+            <p class="eyebrow" data-i18n="tunnel_eyebrow">Tunnel surface</p>
+            <h1 class="dashboard-title" id="status-label" data-i18n="tunnel_status_disconnected">Disconnected</h1>
+            <p class="lead" id="status-description" data-i18n="tunnel_desc">Grant tunnel.connect before the browser exposes a public URL.</p>
             <div class="button-row">
-              <button class="btn btn-primary" id="connect-button" type="button">Request tunnel</button>
-              <button class="btn btn-secondary" id="disconnect-button" type="button">Close tunnel</button>
+              <button class="btn btn-primary" id="connect-button" type="button" data-i18n="tunnel_btn_connect">Request tunnel</button>
+              <button class="btn btn-secondary" id="disconnect-button" type="button" data-i18n="tunnel_btn_disconnect">Close tunnel</button>
             </div>
           </div>
         </section>
@@ -57,26 +57,26 @@
             >
           </div>
           <div class="tunnel-splash-copy">
-            <p class="panel-kicker">Visible relay posture</p>
-            <h2 class="tunnel-splash-title" id="tunnel-splash-title">Solace Browser</h2>
-            <p class="tunnel-splash-subtitle">A tunnel should feel deliberate: bright enough to notice, quiet enough to trust, and easy to close the second the job is done.</p>
+            <p class="panel-kicker" data-i18n="tunnel_splash_kicker">Visible relay posture</p>
+            <h2 class="tunnel-splash-title" id="tunnel-splash-title" data-i18n="tunnel_splash_h2">Solace Browser</h2>
+            <p class="tunnel-splash-subtitle" data-i18n="tunnel_splash_subtitle">A tunnel should feel deliberate: bright enough to notice, quiet enough to trust, and easy to close the second the job is done.</p>
           </div>
         </section>
 
         <section class="tunnel-grid reveal">
           <article class="endpoint-card">
-            <div class="panel-kicker">Public relay</div>
-            <h3>Endpoint status</h3>
-            <p class="endpoint-value" id="endpoint-value">Not connected</p>
+            <div class="panel-kicker" data-i18n="tunnel_relay_kicker">Public relay</div>
+            <h3 data-i18n="tunnel_relay_h3">Endpoint status</h3>
+            <p class="endpoint-value" id="endpoint-value" data-i18n="tunnel_relay_not_connected">Not connected</p>
             <div class="button-row">
-              <button class="btn btn-secondary" id="copy-endpoint" type="button">Copy URL</button>
-              <button class="btn btn-secondary" id="open-endpoint" type="button">Open URL</button>
+              <button class="btn btn-secondary" id="copy-endpoint" type="button" data-i18n="tunnel_btn_copy_url">Copy URL</button>
+              <button class="btn btn-secondary" id="open-endpoint" type="button" data-i18n="tunnel_btn_open_url">Open URL</button>
             </div>
           </article>
           <article class="consent-card">
-            <div class="panel-kicker">Approval posture</div>
-            <h3>Why the tunnel stays explicit</h3>
-            <p>Remote access is powerful enough that the browser should never imply it is live unless the approval, URL, and rollback control are all visible at once.</p>
+            <div class="panel-kicker" data-i18n="tunnel_consent_kicker">Approval posture</div>
+            <h3 data-i18n="tunnel_consent_h3">Why the tunnel stays explicit</h3>
+            <p data-i18n="tunnel_consent_p">Remote access is powerful enough that the browser should never imply it is live unless the approval, URL, and rollback control are all visible at once.</p>
             <p><span class="status-tag" id="approval-badge">Fail-closed</span></p>
           </article>
         </section>
@@ -84,19 +84,19 @@
         <section class="page-section reveal">
           <div class="surface-grid">
             <article class="timeline-card">
-              <div class="panel-kicker">Step 1</div>
-              <h3>Grant the narrow scope</h3>
-              <p>Authorize only `tunnel.connect` for the specific runtime that needs a cloud relay.</p>
+              <div class="panel-kicker" data-i18n="tunnel_step1_kicker">Step 1</div>
+              <h3 data-i18n="tunnel_step1_h3">Grant the narrow scope</h3>
+              <p data-i18n="tunnel_step1_p">Authorize only `tunnel.connect` for the specific runtime that needs a cloud relay.</p>
             </article>
             <article class="timeline-card">
-              <div class="panel-kicker">Step 2</div>
-              <h3>Expose one endpoint</h3>
-              <p>The browser surfaces the exact public URL instead of burying it in logs or agent text.</p>
+              <div class="panel-kicker" data-i18n="tunnel_step2_kicker">Step 2</div>
+              <h3 data-i18n="tunnel_step2_h3">Expose one endpoint</h3>
+              <p data-i18n="tunnel_step2_p">The browser surfaces the exact public URL instead of burying it in logs or agent text.</p>
             </article>
             <article class="timeline-card">
-              <div class="panel-kicker">Step 3</div>
-              <h3>Close it when the job is done</h3>
-              <p>The same page provides the stop control and a visible disconnected state for verification.</p>
+              <div class="panel-kicker" data-i18n="tunnel_step3_kicker">Step 3</div>
+              <h3 data-i18n="tunnel_step3_h3">Close it when the job is done</h3>
+              <p data-i18n="tunnel_step3_p">The same page provides the stop control and a visible disconnected state for verification.</p>
             </article>
           </div>
         </section>

@@ -49,73 +49,73 @@
           </div>
           <article class="data-panel">
             <div class="kpi-grid" id="theme-grid">
-              <button class="kpi-card theme-card" data-theme-choice="dark" type="button" style="cursor:pointer;text-align:left;border:2px solid transparent;transition:border-color 0.2s">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-                  <span style="font-size:1.3rem">&#127769;</span>
+              <button class="kpi-card theme-card settings-selectable-card" data-theme-choice="dark" type="button">
+                <div class="settings-card-header">
+                  <span class="text-130">&#127769;</span>
                   <strong>Dark</strong>
                 </div>
-                <span style="font-size:0.82rem;color:var(--sb-text-muted)">Deep navy with warm orange accents. The default Solace experience.</span>
-                <div class="theme-preview" style="display:flex;gap:4px;margin-top:12px">
-                  <span style="width:24px;height:24px;border-radius:6px;background:#081019;border:1px solid rgba(163,185,214,0.18)"></span>
-                  <span style="width:24px;height:24px;border-radius:6px;background:#ff6b35"></span>
-                  <span style="width:24px;height:24px;border-radius:6px;background:#64c4ff"></span>
-                  <span style="width:24px;height:24px;border-radius:6px;background:#AE67FA"></span>
+                <span class="text-082 text-muted">Deep navy with warm orange accents. The default Solace experience.</span>
+                <div class="theme-preview settings-theme-preview">
+                  <span class="settings-swatch" style="background:#081019;border:1px solid rgba(163,185,214,0.18)"></span>
+                  <span class="settings-swatch" style="background:#ff6b35"></span>
+                  <span class="settings-swatch" style="background:#64c4ff"></span>
+                  <span class="settings-swatch" style="background:#AE67FA"></span>
                 </div>
               </button>
-              <button class="kpi-card theme-card" data-theme-choice="light" type="button" style="cursor:pointer;text-align:left;border:2px solid transparent;transition:border-color 0.2s">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-                  <span style="font-size:1.3rem">&#9728;&#65039;</span>
+              <button class="kpi-card theme-card settings-selectable-card" data-theme-choice="light" type="button">
+                <div class="settings-card-header">
+                  <span class="text-130">&#9728;&#65039;</span>
                   <strong>Light</strong>
                 </div>
-                <span style="font-size:0.82rem;color:var(--sb-text-muted)">Clean warm white with deep orange energy. Elder-friendly, high contrast.</span>
-                <div class="theme-preview" style="display:flex;gap:4px;margin-top:12px">
-                  <span style="width:24px;height:24px;border-radius:6px;background:#faf8f5;border:1px solid rgba(120,100,80,0.15)"></span>
-                  <span style="width:24px;height:24px;border-radius:6px;background:#e55a2b"></span>
-                  <span style="width:24px;height:24px;border-radius:6px;background:#1a7fb8"></span>
-                  <span style="width:24px;height:24px;border-radius:6px;background:#7c3aad"></span>
+                <span class="text-082 text-muted">Clean warm white with deep orange energy. Elder-friendly, high contrast.</span>
+                <div class="theme-preview settings-theme-preview">
+                  <span class="settings-swatch" style="background:#faf8f5;border:1px solid rgba(120,100,80,0.15)"></span>
+                  <span class="settings-swatch" style="background:#e55a2b"></span>
+                  <span class="settings-swatch" style="background:#1a7fb8"></span>
+                  <span class="settings-swatch" style="background:#7c3aad"></span>
                 </div>
               </button>
-              <button class="kpi-card theme-card" data-theme-choice="midnight" type="button" style="cursor:pointer;text-align:left;border:2px solid transparent;transition:border-color 0.2s">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-                  <span style="font-size:1.3rem">&#10024;</span>
+              <button class="kpi-card theme-card settings-selectable-card" data-theme-choice="midnight" type="button">
+                <div class="settings-card-header">
+                  <span class="text-130">&#10024;</span>
                   <strong>Midnight</strong>
                 </div>
-                <span style="font-size:0.82rem;color:var(--sb-text-muted)">True black OLED with electric blue. Zero distraction. For developers and night owls.</span>
-                <div class="theme-preview" style="display:flex;gap:4px;margin-top:12px">
-                  <span style="width:24px;height:24px;border-radius:6px;background:#000000;border:1px solid rgba(100,160,255,0.12)"></span>
-                  <span style="width:24px;height:24px;border-radius:6px;background:#4da6ff"></span>
-                  <span style="width:24px;height:24px;border-radius:6px;background:#80ffb0"></span>
-                  <span style="width:24px;height:24px;border-radius:6px;background:#b880ff"></span>
+                <span class="text-082 text-muted">True black OLED with electric blue. Zero distraction. For developers and night owls.</span>
+                <div class="theme-preview settings-theme-preview">
+                  <span class="settings-swatch" style="background:#000000;border:1px solid rgba(100,160,255,0.12)"></span>
+                  <span class="settings-swatch" style="background:#4da6ff"></span>
+                  <span class="settings-swatch" style="background:#80ffb0"></span>
+                  <span class="settings-swatch" style="background:#b880ff"></span>
                 </div>
               </button>
             </div>
 
             <!-- Custom Theme Editor (paid users) -->
-            <details style="margin-top:24px" id="custom-theme-details">
-              <summary style="cursor:pointer;color:var(--sb-signal);font-weight:600;font-size:0.9rem">Custom Theme Editor (Pro users)</summary>
-              <div style="margin-top:16px">
-                <p style="font-size:0.82rem;color:var(--sb-text-muted);margin-bottom:12px">Override any CSS custom property. Your theme wraps in <code>[data-theme="custom-{id}"]</code> automatically.</p>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <details class="settings-custom-details" id="custom-theme-details">
+              <summary class="settings-custom-summary">Custom Theme Editor (Pro users)</summary>
+              <div class="settings-custom-body">
+                <p class="settings-custom-desc">Override any CSS custom property. Your theme wraps in <code>[data-theme="custom-{id}"]</code> automatically.</p>
+                <div class="settings-custom-grid">
                   <div>
-                    <label for="custom-theme-name" style="font-size:0.78rem;color:var(--sb-text-muted);display:block;margin-bottom:4px">Theme Name</label>
-                    <input type="text" id="custom-theme-name" placeholder="my-theme" maxlength="32" style="width:100%;background:var(--sb-surface-strong);border:1px solid var(--sb-border);border-radius:8px;color:var(--sb-text);padding:8px 12px;font-size:0.85rem">
+                    <label for="custom-theme-name" class="settings-field-label">Theme Name</label>
+                    <input type="text" id="custom-theme-name" placeholder="my-theme" maxlength="32" class="settings-text-input">
                   </div>
                   <div>
-                    <label for="custom-theme-bg" style="font-size:0.78rem;color:var(--sb-text-muted);display:block;margin-bottom:4px">Background Color</label>
-                    <input type="color" id="custom-theme-bg" value="#081019" style="width:100%;height:36px;border:1px solid var(--sb-border);border-radius:8px;cursor:pointer">
+                    <label for="custom-theme-bg" class="settings-field-label">Background Color</label>
+                    <input type="color" id="custom-theme-bg" value="#081019" class="settings-color-input">
                   </div>
                   <div>
-                    <label for="custom-theme-accent" style="font-size:0.78rem;color:var(--sb-text-muted);display:block;margin-bottom:4px">Accent Color</label>
-                    <input type="color" id="custom-theme-accent" value="#ff6b35" style="width:100%;height:36px;border:1px solid var(--sb-border);border-radius:8px;cursor:pointer">
+                    <label for="custom-theme-accent" class="settings-field-label">Accent Color</label>
+                    <input type="color" id="custom-theme-accent" value="#ff6b35" class="settings-color-input">
                   </div>
                   <div>
-                    <label for="custom-theme-text" style="font-size:0.78rem;color:var(--sb-text-muted);display:block;margin-bottom:4px">Text Color</label>
-                    <input type="color" id="custom-theme-text" value="#f4f7fb" style="width:100%;height:36px;border:1px solid var(--sb-border);border-radius:8px;cursor:pointer">
+                    <label for="custom-theme-text" class="settings-field-label">Text Color</label>
+                    <input type="color" id="custom-theme-text" value="#f4f7fb" class="settings-color-input">
                   </div>
                 </div>
-                <label for="custom-theme-css" style="font-size:0.78rem;color:var(--sb-text-muted);display:block;margin-bottom:4px">Advanced CSS (optional)</label>
-                <textarea id="custom-theme-css" rows="4" placeholder="--sb-surface: #1a1a2e;&#10;--sb-signal: #e94560;&#10;--sb-success: #0f3460;" style="width:100%;background:var(--sb-surface-strong);border:1px solid var(--sb-border);border-radius:8px;color:var(--sb-text);padding:10px 12px;font-family:monospace;font-size:0.82rem;resize:vertical"></textarea>
-                <div class="button-row" style="margin-top:12px;gap:10px">
+                <label for="custom-theme-css" class="settings-field-label">Advanced CSS (optional)</label>
+                <textarea id="custom-theme-css" rows="4" placeholder="--sb-surface: #1a1a2e;&#10;--sb-signal: #e94560;&#10;--sb-success: #0f3460;" class="settings-css-textarea"></textarea>
+                <div class="button-row mt-12 gap-10">
                   <button class="btn btn-primary" id="btn-apply-custom-theme" type="button">Apply Custom Theme</button>
                   <button class="btn btn-secondary" id="btn-submit-theme-store" type="button">Submit to App Store</button>
                 </div>
@@ -133,25 +133,25 @@
             </div>
           </div>
           <article class="data-panel">
-            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-              <button class="kpi-card text-size-btn" data-text-size="small" type="button" style="cursor:pointer;text-align:center;border:2px solid transparent;transition:border-color 0.2s;flex:1;min-width:100px;">
-                <div style="font-size:0.85rem;font-weight:700;margin-bottom:4px;">Small</div>
-                <div style="font-size:0.78rem;color:var(--sb-text-muted);">14px base</div>
+            <div class="d-flex gap-12 flex-wrap flex-center">
+              <button class="kpi-card text-size-btn settings-text-size-card" data-text-size="small" type="button">
+                <div class="text-085 font-bold mb-4">Small</div>
+                <div class="text-078 text-muted">14px base</div>
               </button>
-              <button class="kpi-card text-size-btn" data-text-size="medium" type="button" style="cursor:pointer;text-align:center;border:2px solid transparent;transition:border-color 0.2s;flex:1;min-width:100px;">
-                <div style="font-size:1rem;font-weight:700;margin-bottom:4px;">Medium</div>
-                <div style="font-size:0.78rem;color:var(--sb-text-muted);">16px base (default)</div>
+              <button class="kpi-card text-size-btn settings-text-size-card" data-text-size="medium" type="button">
+                <div class="text-md font-bold mb-4">Medium</div>
+                <div class="text-078 text-muted">16px base (default)</div>
               </button>
-              <button class="kpi-card text-size-btn" data-text-size="large" type="button" style="cursor:pointer;text-align:center;border:2px solid transparent;transition:border-color 0.2s;flex:1;min-width:100px;">
-                <div style="font-size:1.15rem;font-weight:700;margin-bottom:4px;">Large</div>
-                <div style="font-size:0.78rem;color:var(--sb-text-muted);">18px base</div>
+              <button class="kpi-card text-size-btn settings-text-size-card" data-text-size="large" type="button">
+                <div class="text-lg font-bold mb-4">Large</div>
+                <div class="text-078 text-muted">18px base</div>
               </button>
-              <button class="kpi-card text-size-btn" data-text-size="extra-large" type="button" style="cursor:pointer;text-align:center;border:2px solid transparent;transition:border-color 0.2s;flex:1;min-width:100px;">
-                <div style="font-size:1.35rem;font-weight:700;margin-bottom:4px;">Extra Large</div>
-                <div style="font-size:0.78rem;color:var(--sb-text-muted);">20px base</div>
+              <button class="kpi-card text-size-btn settings-text-size-card" data-text-size="extra-large" type="button">
+                <div class="text-xl font-bold mb-4">Extra Large</div>
+                <div class="text-078 text-muted">20px base</div>
               </button>
             </div>
-            <p style="font-size:0.78rem;color:var(--sb-text-muted);margin-top:12px;">Tip: You can also use your browser's built-in zoom (Ctrl/Cmd + Plus/Minus) for even more control.</p>
+            <p class="text-078 text-muted mt-12">Tip: You can also use your browser's built-in zoom (Ctrl/Cmd + Plus/Minus) for even more control.</p>
           </article>
         </section>
 
@@ -178,14 +178,14 @@
                 </table>
               </div>
               <div>
-                <div class="button-row" style="flex-direction:column;gap:12px">
-                  <button class="btn btn-secondary" style="width:100%">Rotate API key</button>
-                  <button class="btn btn-secondary" style="width:100%;color:var(--sb-danger)" data-i18n="settings_log_out">Log out</button>
+                <div class="button-row flex-col-gap-12">
+                  <button class="btn btn-secondary w-full">Rotate API key</button>
+                  <button class="btn btn-secondary w-full text-danger" data-i18n="settings_log_out">Log out</button>
                 </div>
               </div>
             </div>
             </div>
-            <div class="button-row" style="margin-top:18px">
+            <div class="button-row settings-save-row">
               <button class="btn btn-secondary" data-settings-save="account" type="button">Save account</button>
             </div>
           </article>
@@ -301,7 +301,7 @@
               </tbody>
             </table>
             </div>
-            <div class="button-row" style="margin-top:18px">
+            <div class="button-row settings-save-row">
               <button class="btn btn-secondary" data-settings-save="history" type="button">Save history</button>
             </div>
           </article>
@@ -318,23 +318,23 @@
           <article class="data-panel">
             <div data-settings-section="llm">
             <div class="kpi-grid">
-              <div class="kpi-card" style="border:2px solid var(--sb-accent)">
+              <div class="kpi-card settings-llm-active">
                 <strong>Claude Code (dev)</strong>
                 <span>localhost:8080 wrapper. Best for local development.</span>
-                <span class="status-tag status-tag--success" style="margin-top:8px">active</span>
+                <span class="status-tag status-tag--success mt-8">active</span>
               </div>
               <div class="kpi-card">
                 <strong>Together.ai (prod)</strong>
                 <span>Llama 3.3 70B at $0.59/M tokens. Managed, no key needed.</span>
-                <span class="status-tag status-tag--neutral" style="margin-top:8px">available</span>
+                <span class="status-tag status-tag--neutral mt-8">available</span>
               </div>
               <div class="kpi-card">
                 <strong>None (offline)</strong>
                 <span>Recipes replay from sealed outbox only. Zero LLM cost.</span>
-                <span class="status-tag status-tag--neutral" style="margin-top:8px">available</span>
+                <span class="status-tag status-tag--neutral mt-8">available</span>
               </div>
             </div>
-            <table class="data-table" style="margin-top:18px" aria-label="LLM backend configuration">
+            <table class="data-table mt-18" aria-label="LLM backend configuration">
               <tbody>
                 <tr><td><strong>Backend</strong></td><td><code>claude_code</code></td></tr>
                 <tr><td><strong>Model</strong></td><td>claude-sonnet-4-6</td></tr>
@@ -343,7 +343,7 @@
               </tbody>
             </table>
             </div>
-            <div class="button-row" style="margin-top:18px">
+            <div class="button-row settings-save-row">
               <button class="btn btn-secondary" data-settings-save="llm" type="button">Save LLM</button>
             </div>
           </article>
@@ -368,7 +368,7 @@
               </tbody>
             </table>
             </div>
-            <div class="button-row" style="margin-top:18px">
+            <div class="button-row settings-save-row">
               <button class="btn btn-secondary" data-settings-save="tunnel" type="button">Save tunnel</button>
             </div>
           </article>
@@ -400,7 +400,7 @@
                 <tr><td><strong>Chain status</strong></td><td><span class="status-tag status-tag--success">valid</span> — 247 entries, no breaks</td></tr>
               </tbody>
             </table>
-            <div class="kpi-grid" style="margin-top:18px">
+            <div class="kpi-grid mt-18">
               <div class="kpi-card">
                 <strong>ALCOA+ Properties</strong>
                 <span>Attributable, Legible, Contemporaneous, Original, Accurate + Complete, Consistent, Enduring, Available</span>
@@ -415,7 +415,7 @@
               </div>
             </div>
             </div>
-            <div class="button-row" style="margin-top:18px">
+            <div class="button-row settings-save-row">
               <button class="btn btn-secondary" data-settings-save="part11" type="button">Save Part 11</button>
             </div>
           </article>
@@ -441,18 +441,18 @@
                 </ul>
               </div>
               <div>
-                <div class="button-row" style="flex-direction:column;gap:12px">
-                  <button class="btn btn-secondary" id="btn-clear-history" style="width:100%">Clear history</button>
-                  <button class="btn btn-secondary" id="btn-export-settings" style="width:100%">Export settings (download)</button>
-                  <button class="btn btn-primary" id="btn-sync-settings-cloud" style="width:100%">&#9729; Sync settings to cloud</button>
-                  <button class="btn btn-secondary" id="btn-export-evidence" style="width:100%">Export evidence log (download)</button>
-                  <button class="btn btn-primary" id="btn-sync-evidence-cloud" style="width:100%">&#9729; Sync evidence to cloud</button>
-                  <button class="btn btn-secondary" id="btn-delete-data" style="width:100%;color:var(--sb-danger)">Delete all data</button>
+                <div class="button-row flex-col-gap-12">
+                  <button class="btn btn-secondary w-full" id="btn-clear-history">Clear history</button>
+                  <button class="btn btn-secondary w-full" id="btn-export-settings">Export settings (download)</button>
+                  <button class="btn btn-primary w-full" id="btn-sync-settings-cloud">&#9729; Sync settings to cloud</button>
+                  <button class="btn btn-secondary w-full" id="btn-export-evidence">Export evidence log (download)</button>
+                  <button class="btn btn-primary w-full" id="btn-sync-evidence-cloud">&#9729; Sync evidence to cloud</button>
+                  <button class="btn btn-secondary w-full text-danger" id="btn-delete-data">Delete all data</button>
                 </div>
               </div>
             </div>
             </div>
-            <div class="button-row" style="margin-top:18px">
+            <div class="button-row settings-save-row">
               <button class="btn btn-secondary" data-settings-save="privacy" type="button">Save privacy</button>
             </div>
           </article>
@@ -479,7 +479,7 @@
               </tbody>
             </table>
             </div>
-            <div class="button-row" style="margin-top:18px">
+            <div class="button-row settings-save-row">
               <button class="btn btn-secondary" data-settings-save="yinyang" type="button">Save Yinyang</button>
             </div>
           </article>
@@ -494,18 +494,18 @@
             </div>
           </div>
           <article class="data-panel" id="yinyang-chat-panel">
-            <ul class="data-list" id="yinyang-chat-history" style="min-height:120px;margin-bottom:16px"></ul>
-            <div style="display:flex;gap:10px;align-items:flex-end">
+            <ul class="data-list settings-yy-chat-history" id="yinyang-chat-history"></ul>
+            <div class="settings-yy-input-row">
               <label class="sr-only" for="yinyang-chat-input">Ask YinYang</label>
               <textarea
                 id="yinyang-chat-input"
                 rows="2"
                 placeholder="Ask YinYang anything… What is my current budget? Explain my LLM settings. Generate a privacy report."
-                style="flex:1;background:var(--sb-surface-strong);border:1px solid var(--sb-border);border-radius:10px;color:var(--sb-text);padding:10px 14px;font-family:var(--sb-font-body);font-size:0.9rem;resize:vertical"
+                class="settings-yy-textarea"
               ></textarea>
-              <button class="btn btn-primary" id="yinyang-chat-send" style="white-space:nowrap">Ask ☯</button>
+              <button class="btn btn-primary settings-nowrap" id="yinyang-chat-send">Ask ☯</button>
             </div>
-            <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+            <div class="settings-yy-prefill-row">
               <button class="btn btn-secondary" data-yy-prefill="What is my current API budget remaining?">Budget?</button>
               <button class="btn btn-secondary" data-yy-prefill="Explain my current LLM backend configuration.">LLM config</button>
               <button class="btn btn-secondary" data-yy-prefill="Generate a privacy report for my local data storage.">Privacy report</button>
@@ -536,12 +536,12 @@
                 <tr><td><strong>License</strong></td><td>MIT (OSS)</td></tr>
               </tbody>
             </table>
-            <div class="button-row" style="margin-top:18px">
+            <div class="button-row settings-save-row">
               <a class="btn btn-secondary" href="https://github.com/solaceagi/solace-browser" target="_blank" rel="noopener">GitHub</a>
               <a class="btn btn-secondary" href="https://www.solaceagi.com/browser" target="_blank" rel="noopener">Product page</a>
             </div>
             </div>
-            <div class="button-row" style="margin-top:18px">
+            <div class="button-row settings-save-row">
               <button class="btn btn-secondary" data-settings-save="about" type="button">Save about</button>
             </div>
           </article>

@@ -34,12 +34,12 @@
         <!-- ── HERO ── -->
         <section class="hero hero--single reveal">
           <div>
-            <div class="eyebrow">v1.1.8 — Source-Available Release</div>
-            <h1 class="display">The browser that keeps <span>approvals visible</span>.</h1>
-            <p class="lead">Local-first browsing with OAuth3 authorization, evidence capture, and AI automation. Download the desktop build or build from source.</p>
+            <div class="eyebrow" data-i18n="dl_eyebrow">v1.1.8 — Source-Available Release</div>
+            <h1 class="display" data-i18n="dl_hero_h1">The browser that keeps <span>approvals visible</span>.</h1>
+            <p class="lead" data-i18n="dl_hero_p">Local-first browsing with OAuth3 authorization, evidence capture, and AI automation. Download the desktop build or build from source.</p>
             <div class="button-row">
-              <a class="btn btn-primary" id="primary-download" href="https://storage.googleapis.com/solace-downloads/latest/solace-browser-windows-x86_64.msi"><span>&#8595;</span><span id="primary-download-label">Download for your platform</span></a>
-              <a class="btn btn-secondary" href="https://github.com/phuctruong/solace-browser/releases" target="_blank" rel="noopener">All releases</a>
+              <a class="btn btn-primary" id="primary-download" href="https://storage.googleapis.com/solace-downloads/latest/solace-browser-windows-x86_64.msi"><span>&#8595;</span><span id="primary-download-label" data-i18n="dl_btn_download">Download for your platform</span></a>
+              <a class="btn btn-secondary" href="https://github.com/phuctruong/solace-browser/releases" target="_blank" rel="noopener" data-i18n="dl_btn_all_releases">All releases</a>
             </div>
             <div class="release-strip">
               <span id="detected-platform">Detecting platform...</span>
@@ -52,7 +52,7 @@
 
         <!-- ── PLATFORM CARDS ── -->
         <section class="page-section reveal">
-          <h2 class="sr-only">Platform Downloads</h2>
+          <h2 class="sr-only" data-i18n="dl_platform_downloads">Platform Downloads</h2>
           <div class="download-grid">
 
             <!-- macOS -->
@@ -116,9 +116,9 @@
           <div class="dl-two-col">
 
             <div class="dl-verify-card">
-              <div class="panel-kicker">Verify your download</div>
-              <h3>SHA-256 Checksum</h3>
-              <p>Every release includes SHA-256 checksums on the <a href="https://github.com/solaceagi/solace-browser/releases/latest" target="_blank" rel="noopener">GitHub Releases page</a>. Verify your download matches before running.</p>
+              <div class="panel-kicker" data-i18n="dl_verify_kicker">Verify your download</div>
+              <h3 data-i18n="dl_verify_h3">SHA-256 Checksum</h3>
+              <p data-i18n="dl_verify_p">Every release includes SHA-256 checksums on the <a href="https://github.com/solaceagi/solace-browser/releases/latest" target="_blank" rel="noopener">GitHub Releases page</a>. Verify your download matches before running.</p>
               <div class="dl-terminal">
                 <div class="dl-terminal-header">
                   <span class="dl-terminal-dot dl-terminal-dot--red"></span>
@@ -136,8 +136,8 @@ Get-FileHash SolaceBrowser-*.msi -Algorithm SHA256</code></pre>
             </div>
 
             <div class="dl-quickstart-card">
-              <div class="panel-kicker">Quick start</div>
-              <h3>Up and running in 60 seconds</h3>
+              <div class="panel-kicker" data-i18n="dl_quickstart_kicker">Quick start</div>
+              <h3 data-i18n="dl_quickstart_h3">Up and running in 60 seconds</h3>
               <div class="dl-terminal">
                 <div class="dl-terminal-header">
                   <span class="dl-terminal-dot dl-terminal-dot--red"></span>
@@ -164,8 +164,8 @@ solace --headless --port 9222</code></pre>
           <h2 class="sr-only">Build from Source</h2>
           <div class="build-source">
             <div class="panel-kicker">Alternative</div>
-            <h3>Build from Source</h3>
-            <p class="dl-build-desc">Solace Browser is source-available under the <a href="https://github.com/solaceagi/solace-browser/blob/main/LICENSE" target="_blank" rel="noopener">Functional Source License (FSL-1.1-Apache-2.0)</a>. Audit the code, build locally, contribute improvements.</p>
+            <h3 data-i18n="dl_build_h3">Build from Source</h3>
+            <p class="dl-build-desc" data-i18n="dl_build_p">Solace Browser is source-available under the <a href="https://github.com/solaceagi/solace-browser/blob/main/LICENSE" target="_blank" rel="noopener">Functional Source License (FSL-1.1-Apache-2.0)</a>. Audit the code, build locally, contribute improvements.</p>
             <div class="dl-terminal">
               <div class="dl-terminal-header">
                 <span class="dl-terminal-dot dl-terminal-dot--red"></span>
@@ -185,7 +185,7 @@ python solace_browser_server.py</code></pre>
         <!-- ── WHAT SHIPS ── -->
         <section class="page-section reveal">
           <div class="section-heading">
-            <h2 class="section-title">What ships in every build</h2>
+            <h2 class="section-title" data-i18n="dl_features_h2">What ships in every build</h2>
           </div>
           <div class="dl-features-grid">
             <div class="dl-feature">
@@ -224,7 +224,7 @@ python solace_browser_server.py</code></pre>
         <!-- ── SYSTEM REQUIREMENTS ── -->
         <section class="page-section reveal">
           <div class="section-heading">
-            <h2 class="section-title">System requirements</h2>
+            <h2 class="section-title" data-i18n="dl_sysreq_h2">System requirements</h2>
           </div>
           <div class="dl-req-grid">
             <div class="dl-req">

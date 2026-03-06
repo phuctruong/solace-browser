@@ -1,0 +1,112 @@
+/* Theme: Midnight
+   DNA: midnight(depth) = true_black(OLED) x electric_blue(focus) x minimal_chrome(immersion)
+   Author: Solace Browser | Rung: 65537
+   Pure black background for OLED displays. Maximum contrast.
+   Electric blue accent replaces warm orange for a cooler, focused aesthetic.
+   Designed for developers and night owls who want zero distraction. */
+
+[data-theme="midnight"] {
+  /* Core backgrounds — true black for OLED power saving */
+  --sb-bg: #000000;
+  --sb-surface: #0a0a0a;
+  --sb-surface-strong: #141414;
+  --sb-surface-soft: #0d0d0d;
+  --sb-border: rgba(100, 160, 255, 0.12);
+  --sb-border-strong: rgba(100, 196, 255, 0.30);
+
+  /* Text — pure white for maximum contrast on black */
+  --sb-text: #e8ecf0;
+  --sb-text-muted: #6a7a8a;
+
+  /* Accent — electric blue (cool, focused, techy) */
+  --sb-accent: #4da6ff;
+  --sb-accent-soft: rgba(77, 166, 255, 0.10);
+  --sb-accent-hover: #70b8ff;
+  --sb-on-accent: #000000;
+  --sb-accent-warm: #80c4ff;
+
+  /* Signals — vivid on pure black */
+  --sb-signal: #64c4ff;
+  --sb-success: #50e3b0;
+  --sb-warning: #ffd060;
+  --sb-danger: #ff6b6b;
+
+  /* Shadows — very subtle on black */
+  --sb-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --sb-shadow-glow: 0 0 24px rgba(77, 166, 255, 0.3);
+  --sb-shadow-glow-lg: 0 0 48px rgba(77, 166, 255, 0.5);
+
+  /* Terminal — matrix green */
+  --sb-terminal-text: #80ffb0;
+
+  /* Purple — bright on black */
+  --sb-purple: #b880ff;
+
+  /* Gradients — minimal, mostly flat black */
+  --sb-grad-header: linear-gradient(135deg, #4da6ff, #b880ff);
+  --sb-grad-hero-bg: linear-gradient(135deg, #000000 0%, #0a0a14 100%);
+
+  /* Backgrounds */
+  --sb-bg-deep: #000000;
+  --sb-bg-splash: #050508;
+
+  /* Alpha overlays — very subtle on true black */
+  --sb-bg-white-alpha-03: rgba(255, 255, 255, 0.02);
+  --sb-bg-white-alpha-04: rgba(255, 255, 255, 0.03);
+  --sb-bg-white-alpha-05: rgba(255, 255, 255, 0.04);
+  --sb-border-white-alpha-06: rgba(255, 255, 255, 0.05);
+  --sb-border-white-alpha-08: rgba(255, 255, 255, 0.07);
+  --sb-shadow-white-alpha-02: rgba(255, 255, 255, 0.015);
+  --sb-shadow-white-alpha-015: rgba(255, 255, 255, 0.01);
+
+  /* Background alphas */
+  --sb-bg-alpha-84: rgba(0, 0, 0, 0.84);
+  --sb-bg-alpha-90: rgba(0, 0, 0, 0.90);
+  --sb-bg-alpha-92: rgba(0, 0, 0, 0.92);
+  --sb-bg-alpha-96: rgba(0, 0, 0, 0.96);
+
+  /* Input/terminal — near-black */
+  --sb-bg-input: rgba(10, 10, 10, 0.8);
+  --sb-bg-terminal: rgba(5, 5, 5, 0.9);
+
+  /* Mask */
+  --sb-mask-alpha-40: rgba(0, 0, 0, 0.6);
+
+  /* Accent glow — blue instead of orange */
+  --sb-shadow-accent-alpha-28: rgba(77, 166, 255, 0.2);
+  --sb-bg-accent-alpha-16: rgba(77, 166, 255, 0.10);
+  --sb-bg-accent-alpha-18: rgba(77, 166, 255, 0.12);
+  --sb-border-accent-alpha-12: rgba(77, 166, 255, 0.08);
+
+  /* Signal glow */
+  --sb-bg-signal-alpha-08: rgba(100, 196, 255, 0.06);
+  --sb-bg-signal-alpha-12: rgba(100, 196, 255, 0.09);
+  --sb-border-signal-alpha-14: rgba(100, 196, 255, 0.11);
+  --sb-shadow-signal-alpha-16: rgba(100, 196, 255, 0.13);
+  --sb-bg-signal-alpha-22: rgba(100, 196, 255, 0.16);
+  --sb-border-signal-alpha-18: rgba(100, 196, 255, 0.13);
+
+  /* Success */
+  --sb-bg-success-alpha-14: rgba(80, 227, 176, 0.10);
+  --sb-border-success-alpha-18: rgba(80, 227, 176, 0.14);
+
+  /* Warning */
+  --sb-bg-warning-alpha-14: rgba(255, 208, 96, 0.10);
+  --sb-shadow-warning-alpha-18: rgba(255, 208, 96, 0.14);
+
+  /* Danger */
+  --sb-bg-danger-alpha-14: rgba(255, 107, 107, 0.10);
+  --sb-shadow-danger-alpha-18: rgba(255, 107, 107, 0.14);
+}
+
+/* High contrast override for midnight theme */
+@media (prefers-contrast: more) {
+  [data-theme="midnight"] {
+    --sb-text: #ffffff;
+    --sb-text-muted: #b0c8e0;
+    --sb-border: rgba(120, 180, 255, 0.25);
+    --sb-border-strong: rgba(100, 196, 255, 0.50);
+    --sb-surface: #0f0f0f;
+    --sb-surface-strong: #1a1a1a;
+  }
+}

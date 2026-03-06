@@ -82,36 +82,36 @@
     <div class="page-frame">
       <div id="header-slot"></div>
       <main>
-        <div class="page-section" style="padding-top:16px">
+        <div class="page-section pt-16">
           <a class="ad-back" href="/app-store">&larr; App Store</a>
 
           <!-- ═══ State cards (running / approval / result) ═══ -->
-          <div class="sb-state-card sb-state-card--signal" id="stRunning" style="display:none">
-            <div style="display:flex;align-items:center;gap:12px">
-              <img src="/images/yinyang/yinyang-rotating_70pct_256px.gif" alt="YY" style="width:30px;height:30px;border-radius:50%;object-fit:cover">
+          <div class="sb-state-card sb-state-card--signal d-none" id="stRunning">
+            <div class="ad-state-row">
+              <img src="/images/yinyang/yinyang-rotating_70pct_256px.gif" alt="YY" class="ad-yy-spinner">
               <div>
                 <div class="sb-state-card__title" id="stRunningTitle">YinYang is working...</div>
                 <div class="sb-state-card__body" id="stRunningMsg">Nothing will happen without your approval.</div>
               </div>
             </div>
           </div>
-          <div class="sb-state-card sb-state-card--signal" id="stApproval" style="display:none">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-              <span style="font-size:1.3rem">&#128065;</span>
+          <div class="sb-state-card sb-state-card--signal d-none" id="stApproval">
+            <div class="ad-state-row--tight">
+              <span class="text-130">&#128065;</span>
               <div>
-                <div class="sb-state-card__title" style="margin:0">Preview ready — review before YinYang acts</div>
-                <div style="font-size:0.72rem;color:var(--sb-text-muted)">Nothing happens until you approve. Every action is SHA-256 sealed.</div>
+                <div class="sb-state-card__title m-0">Preview ready — review before YinYang acts</div>
+                <div class="text-072 text-muted">Nothing happens until you approve. Every action is SHA-256 sealed.</div>
               </div>
             </div>
             <div class="ad-preview-text" id="stPreviewText"></div>
-            <img class="ad-preview-screenshot" id="stPreviewScreenshot" style="display:none" alt="Screenshot">
-            <div class="ad-approval-btns" style="margin-top:12px">
+            <img class="ad-preview-screenshot d-none" id="stPreviewScreenshot" alt="Screenshot">
+            <div class="ad-approval-btns mt-12">
               <button class="ad-btn-approve" id="btnApprove">&#10003; Approve &amp; Run</button>
               <button class="ad-btn-reject" id="btnDecline">&#10007; Decline</button>
             </div>
-            <div style="font-size:0.68rem;color:var(--sb-text-muted);margin-top:8px">&#128274; Part 11 compliant &middot; eSign attestation will be recorded on approval</div>
+            <div class="ad-compliance-note">&#128274; Part 11 compliant &middot; eSign attestation will be recorded on approval</div>
           </div>
-          <div class="sb-state-card sb-state-card--success" id="stResult" style="display:none">
+          <div class="sb-state-card sb-state-card--success d-none" id="stResult">
             <div class="sb-state-card__title" id="stResultTitle"></div>
             <div class="sb-state-card__body" id="stResultBody"></div>
             <div class="ad-result-evidence" id="stResultEvidence"></div>

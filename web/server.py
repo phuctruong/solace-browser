@@ -667,11 +667,8 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         return str(ROOT / request_path.lstrip("/"))
 
     def do_OPTIONS(self) -> None:  # noqa: N802
-        """CORS preflight — allow cross-origin requests from solaceagi.com and dev tools."""
+        """CORS preflight — allow cross-origin requests from localhost dev tools."""
         self.send_response(HTTPStatus.NO_CONTENT)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Remote-Token")
         self.send_header("Access-Control-Max-Age", "86400")
         self.end_headers()
 
@@ -1267,7 +1264,6 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Connection", "keep-alive")
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
 
         import queue as _queue
@@ -3227,7 +3223,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             self.wfile.write(body)
 
     def log_message(self, format: str, *args: Any) -> None:
-        print("[web]", format % args)
+        logger.info("[web] %s", format % args)
 
 
 def build_handler_class(data_store: SolaceDataStore) -> type[SlugRequestHandler]:
@@ -3259,16 +3255,18 @@ if __name__ == "__main__":
     os.chdir(ROOT)
 
     # Auto-detect CLI agents on startup (cached to ~/.solace/cli-agents-cache.json)
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+
     cli_result = _detect_cli_agents(force=True)
     installed = cli_result["installed_ids"]
     if installed:
-        print(f"  AI Agents detected: {', '.join(installed)} ({len(installed)}/{len(CLI_AGENT_DEFS)})")
-        print(f"  POST /api/cli-agents/generate — Ollama-compatible inference via any detected CLI")
+        logger.info("  AI Agents detected: %s (%d/%d)", ", ".join(installed), len(installed), len(CLI_AGENT_DEFS))
+        logger.info("  POST /api/cli-agents/generate — Ollama-compatible inference via any detected CLI")
     else:
-        print("  No AI coding CLIs detected. Install claude, codex, gemini, etc. to enable AI agent mode.")
+        logger.info("  No AI coding CLIs detected. Install claude, codex, gemini, etc. to enable AI agent mode.")
 
     server = create_server(args.host, args.port)
-    print(f"Serving Solace Browser web at http://{args.host}:{args.port}")
+    logger.info("Serving Solace Browser web at http://%s:%s", args.host, args.port)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

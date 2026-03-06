@@ -162,7 +162,7 @@ class ActionLifecycle:
                 if step.get("action") == "click" and hasattr(self.browser, "click"):
                     self.browser.click(step.get("selector"))
                 steps_executed += 1
-            except Exception:  # noqa: BLE001
+            except (AttributeError, OSError, RuntimeError, TimeoutError, ValueError):
                 if step.get("checkpoint"):
                     trace = {
                         "trace_id": str(uuid.uuid4()),

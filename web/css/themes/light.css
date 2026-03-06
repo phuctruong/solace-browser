@@ -1,0 +1,111 @@
+/* Theme: Light
+   DNA: light(clarity) = warm_white(openness) x deep_orange(energy) x slate_text(readability)
+   Author: Solace Browser | Rung: 65537
+   Clean, professional light theme. High contrast, warm accents.
+   Designed for elder accessibility (T8) and daytime use. */
+
+[data-theme="light"] {
+  /* Core backgrounds — warm white, not clinical */
+  --sb-bg: #faf8f5;
+  --sb-surface: #ffffff;
+  --sb-surface-strong: #f0ece6;
+  --sb-surface-soft: #f7f4ef;
+  --sb-border: rgba(120, 100, 80, 0.15);
+  --sb-border-strong: rgba(229, 90, 43, 0.35);
+
+  /* Text — dark slate, not pure black (easier on eyes) */
+  --sb-text: #2c2420;
+  --sb-text-muted: #7a6e62;
+
+  /* Accent — warmer orange for light backgrounds */
+  --sb-accent: #e55a2b;
+  --sb-accent-soft: rgba(229, 90, 43, 0.08);
+  --sb-accent-hover: #ff6b35;
+  --sb-on-accent: #ffffff;
+  --sb-accent-warm: #d98a4a;
+
+  /* Signals — deeper for light background contrast */
+  --sb-signal: #1a7fb8;
+  --sb-success: #1e8c64;
+  --sb-warning: #b8860b;
+  --sb-danger: #c0392b;
+
+  /* Shadows — subtle, warm */
+  --sb-shadow: 0 8px 32px rgba(80, 60, 40, 0.08);
+  --sb-shadow-glow: 0 0 20px rgba(26, 127, 184, 0.15);
+  --sb-shadow-glow-lg: 0 0 40px rgba(26, 127, 184, 0.2);
+
+  /* Terminal */
+  --sb-terminal-text: #1a6b45;
+
+  /* Purple — deeper for readability on light */
+  --sb-purple: #7c3aad;
+
+  /* Gradients */
+  --sb-grad-header: linear-gradient(135deg, #4a8bb8, #7c3aad);
+  --sb-grad-hero-bg: linear-gradient(135deg, #faf8f5 0%, #f0ece6 100%);
+
+  /* Backgrounds */
+  --sb-bg-deep: #f0ece6;
+  --sb-bg-splash: #f5f2ec;
+
+  /* Alpha overlays — dark on light */
+  --sb-bg-white-alpha-03: rgba(0, 0, 0, 0.02);
+  --sb-bg-white-alpha-04: rgba(0, 0, 0, 0.025);
+  --sb-bg-white-alpha-05: rgba(0, 0, 0, 0.035);
+  --sb-border-white-alpha-06: rgba(0, 0, 0, 0.06);
+  --sb-border-white-alpha-08: rgba(0, 0, 0, 0.08);
+  --sb-shadow-white-alpha-02: rgba(0, 0, 0, 0.015);
+  --sb-shadow-white-alpha-015: rgba(0, 0, 0, 0.01);
+
+  /* Background alphas */
+  --sb-bg-alpha-84: rgba(250, 248, 245, 0.84);
+  --sb-bg-alpha-90: rgba(250, 248, 245, 0.90);
+  --sb-bg-alpha-92: rgba(250, 248, 245, 0.92);
+  --sb-bg-alpha-96: rgba(250, 248, 245, 0.96);
+
+  /* Input/terminal — soft gray */
+  --sb-bg-input: rgba(240, 236, 230, 0.65);
+  --sb-bg-terminal: rgba(245, 242, 236, 0.90);
+
+  /* Mask */
+  --sb-mask-alpha-40: rgba(255, 255, 255, 0.5);
+
+  /* Accent glow */
+  --sb-shadow-accent-alpha-28: rgba(229, 90, 43, 0.15);
+  --sb-bg-accent-alpha-16: rgba(229, 90, 43, 0.06);
+  --sb-bg-accent-alpha-18: rgba(229, 90, 43, 0.08);
+  --sb-border-accent-alpha-12: rgba(229, 90, 43, 0.08);
+
+  /* Signal glow */
+  --sb-bg-signal-alpha-08: rgba(26, 127, 184, 0.05);
+  --sb-bg-signal-alpha-12: rgba(26, 127, 184, 0.07);
+  --sb-border-signal-alpha-14: rgba(26, 127, 184, 0.09);
+  --sb-shadow-signal-alpha-16: rgba(26, 127, 184, 0.1);
+  --sb-bg-signal-alpha-22: rgba(26, 127, 184, 0.12);
+  --sb-border-signal-alpha-18: rgba(26, 127, 184, 0.1);
+
+  /* Success */
+  --sb-bg-success-alpha-14: rgba(30, 140, 100, 0.08);
+  --sb-border-success-alpha-18: rgba(30, 140, 100, 0.12);
+
+  /* Warning */
+  --sb-bg-warning-alpha-14: rgba(184, 134, 11, 0.08);
+  --sb-shadow-warning-alpha-18: rgba(184, 134, 11, 0.12);
+
+  /* Danger */
+  --sb-bg-danger-alpha-14: rgba(192, 57, 43, 0.08);
+  --sb-shadow-danger-alpha-18: rgba(192, 57, 43, 0.12);
+}
+
+/* High contrast override for light theme */
+@media (prefers-contrast: more) {
+  [data-theme="light"] {
+    --sb-text: #0a0800;
+    --sb-text-muted: #3a3028;
+    --sb-border: rgba(60, 40, 20, 0.40);
+    --sb-border-strong: rgba(180, 50, 15, 0.65);
+    --sb-surface: #ffffff;
+    --sb-surface-strong: #e8e4dc;
+  }
+}

@@ -355,17 +355,17 @@
   <div id="header-slot"></div>
 
   <!-- Age Gate Modal (COPPA compliance — service is for 13+) -->
-  <div id="age-gate-modal" role="dialog" aria-modal="true" aria-label="Age verification" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(2,8,18,0.95);backdrop-filter:blur(8px);align-items:center;justify-content:center;">
-    <div style="background:var(--sb-surface);border:1px solid var(--sb-border);border-radius:20px;padding:40px 36px 32px;width:440px;max-width:calc(100% - 48px);box-shadow:0 24px 80px rgba(2,8,18,0.6);text-align:center;">
-      <div style="font-size:2rem;margin-bottom:16px;">&#128274;</div>
-      <h2 style="font-family:var(--sb-font-display);font-size:1.3rem;font-weight:700;margin-bottom:8px;color:var(--sb-text);">Age Verification</h2>
-      <p style="color:var(--sb-text-muted);font-size:0.9rem;margin-bottom:24px;line-height:1.5;">Solace Browser is designed for users aged 13 and older.<br>Are you 13 or older?</p>
-      <div style="display:flex;gap:12px;justify-content:center;">
-        <button id="age-gate-yes" style="background:var(--sb-signal);color:#000;border:none;padding:12px 32px;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;transition:opacity 0.15s;">Yes, I am 13 or older</button>
-        <button id="age-gate-no" style="background:var(--sb-surface-strong);color:var(--sb-text-muted);border:1px solid var(--sb-border);padding:12px 32px;border-radius:10px;font-size:0.95rem;font-weight:600;cursor:pointer;transition:border-color 0.15s;">No</button>
+  <div id="age-gate-modal" class="age-gate-overlay" role="dialog" aria-modal="true" aria-label="Age verification">
+    <div class="age-gate-card">
+      <div class="age-gate-icon">&#128274;</div>
+      <h2 class="age-gate-title">Age Verification</h2>
+      <p class="age-gate-desc">Solace Browser is designed for users aged 13 and older.<br>Are you 13 or older?</p>
+      <div class="age-gate-actions">
+        <button id="age-gate-yes" class="age-gate-btn-yes">Yes, I am 13 or older</button>
+        <button id="age-gate-no" class="age-gate-btn-no">No</button>
       </div>
-      <div id="age-gate-blocked" style="display:none;margin-top:20px;padding:16px;background:rgba(255,124,124,0.08);border:1px solid rgba(255,124,124,0.18);border-radius:10px;">
-        <p style="color:var(--sb-danger);font-size:0.88rem;margin:0;line-height:1.5;">Please ask a parent or guardian to set up an account for you. Solace Browser requires users to be at least 13 years old.</p>
+      <div id="age-gate-blocked" class="age-gate-blocked">
+        <p>Please ask a parent or guardian to set up an account for you. Solace Browser requires users to be at least 13 years old.</p>
       </div>
     </div>
   </div>
@@ -408,7 +408,7 @@
 
       <div class="offer-notice">
         <p><strong>Free forever</strong> with your own API key. <span class="offer-or">|</span> <strong>Starter $8/mo</strong> managed LLM <span class="offer-or">|</span> <strong>Pro $28/mo</strong> cloud twin + evidence</p>
-        <p style="margin-top:6px;font-size:0.82em;color:var(--sb-text-muted)">No credit card. Revoke access anytime from Settings. Nothing leaves your machine without your approval.</p>
+        <p class="offer-notice-sub">No credit card. Revoke access anytime from Settings. Nothing leaves your machine without your approval.</p>
       </div>
     </div>
 
@@ -419,18 +419,18 @@
       <p id="signed-in-desc">Your Solace Browser is linked. AI worker ready.</p>
 
       <!-- Account summary row -->
-      <div style="display:flex;gap:20px;justify-content:center;margin:20px 0 4px;flex-wrap:wrap;">
-        <div style="text-align:center;">
-          <div style="font-size:1.2rem;font-weight:700;color:var(--sb-success);" id="si-balance">—</div>
-          <div style="font-size:0.72rem;color:var(--sb-text-muted);margin-top:3px;">Credits</div>
+      <div class="si-summary-row">
+        <div class="si-stat">
+          <div class="si-stat-value text-success" id="si-balance">—</div>
+          <div class="si-stat-label">Credits</div>
         </div>
-        <div style="text-align:center;">
-          <div style="font-size:1.2rem;font-weight:700;color:var(--sb-signal);" id="si-plan">—</div>
-          <div style="font-size:0.72rem;color:var(--sb-text-muted);margin-top:3px;">Plan</div>
+        <div class="si-stat">
+          <div class="si-stat-value text-signal" id="si-plan">—</div>
+          <div class="si-stat-label">Plan</div>
         </div>
-        <div style="text-align:center;">
-          <div style="font-size:1.2rem;font-weight:700;color:var(--sb-text);" id="si-llm-calls">—</div>
-          <div style="font-size:0.72rem;color:var(--sb-text-muted);margin-top:3px;">LLM calls</div>
+        <div class="si-stat">
+          <div class="si-stat-value" id="si-llm-calls">—</div>
+          <div class="si-stat-label">LLM calls</div>
         </div>
       </div>
 
@@ -452,8 +452,8 @@
           Getting Started Guide
         </a>
       </div>
-      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--sb-border);">
-        <button onclick="openFeedback()" style="background:none;border:1px solid var(--sb-border);color:var(--sb-text-muted);padding:10px 20px;border-radius:10px;cursor:pointer;font-size:0.85rem;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;">
+      <div class="si-footer-section">
+        <button onclick="openFeedback()" class="si-feedback-btn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Send Feedback
         </button>
@@ -461,24 +461,24 @@
     </div>
 
     <!-- Feedback Modal -->
-    <div id="feedback-modal" role="dialog" aria-modal="true" aria-label="Send feedback" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(2,8,18,0.85);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
-      <div style="background:var(--sb-surface);border:1px solid var(--sb-border);border-radius:20px;padding:36px 32px 28px;width:480px;max-width:calc(100% - 48px);box-shadow:0 24px 80px rgba(2,8,18,0.6);position:relative;">
-        <button onclick="closeFeedback()" aria-label="Close feedback form" style="position:absolute;top:14px;right:18px;background:none;border:none;color:var(--sb-text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
-        <h3 style="margin:0 0 6px;color:var(--sb-text);font-size:1.15rem;">Send Feedback</h3>
-        <p style="margin:0 0 20px;color:var(--sb-text-muted);font-size:0.82rem;">Help us improve Solace Browser. Your feedback goes directly to our team.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+    <div id="feedback-modal" class="fb-modal-overlay" role="dialog" aria-modal="true" aria-label="Send feedback">
+      <div class="fb-modal-card">
+        <button onclick="closeFeedback()" aria-label="Close feedback form" class="fb-close-btn">&times;</button>
+        <h3 class="fb-title">Send Feedback</h3>
+        <p class="fb-desc">Help us improve Solace Browser. Your feedback goes directly to our team.</p>
+        <div class="fb-type-row">
           <button class="fb-type-btn" data-type="bug" onclick="selectFbType(this)">Bug</button>
           <button class="fb-type-btn" data-type="confusion" onclick="selectFbType(this)">Confusing</button>
           <button class="fb-type-btn" data-type="feature" onclick="selectFbType(this)">Feature Request</button>
           <button class="fb-type-btn" data-type="praise" onclick="selectFbType(this)">Love It</button>
         </div>
         <label class="sr-only" for="fb-text">Tell us what happened</label>
-        <textarea id="fb-text" placeholder="Tell us what happened..." style="width:100%;min-height:100px;background:var(--sb-bg);border:1px solid var(--sb-border);border-radius:10px;color:var(--sb-text);padding:12px;font-size:0.9rem;resize:vertical;font-family:inherit;box-sizing:border-box;"></textarea>
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
-          <button onclick="closeFeedback()" aria-label="Cancel feedback" style="background:none;border:1px solid var(--sb-border);color:var(--sb-text-muted);padding:10px 20px;border-radius:10px;cursor:pointer;font-size:0.85rem;">Cancel</button>
-          <button id="fb-submit" onclick="submitFeedback()" style="background:linear-gradient(135deg,var(--sb-accent),var(--sb-accent-warm,#e85d2c));color:#fff;border:none;padding:10px 24px;border-radius:10px;cursor:pointer;font-size:0.85rem;font-weight:600;">Send</button>
+        <textarea id="fb-text" class="fb-textarea" placeholder="Tell us what happened..."></textarea>
+        <div class="fb-actions">
+          <button onclick="closeFeedback()" aria-label="Cancel feedback" class="fb-cancel-btn">Cancel</button>
+          <button id="fb-submit" onclick="submitFeedback()" class="fb-send-btn">Send</button>
         </div>
-        <div id="fb-status" style="margin-top:12px;text-align:center;font-size:0.82rem;display:none;"></div>
+        <div id="fb-status" class="fb-status"></div>
       </div>
     </div>
 
