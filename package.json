@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node http_server.js",
     "dev": "node http_server.js --debug",
-    "test": "echo \"Testing not yet implemented\"",
+    "test": "python -m pytest tests/ -x -q --tb=short -m 'not integration' --timeout=60",
     "lint": "echo \"Linting not yet implemented\""
   },
   "keywords": [
