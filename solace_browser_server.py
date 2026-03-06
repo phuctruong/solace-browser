@@ -1760,6 +1760,18 @@ async def security_headers_middleware(request, handler):
     response = await handler(request)
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
+    response.headers['Strict-Transport-Security'] = 'max-age=63072000; includeSubDomains; preload'
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self' https://www.solaceagi.com https://solaceagi.com wss://localhost:* ws://localhost:*; "
+        "frame-src https://accounts.google.com; "
+        "font-src 'self'"
+    )
     # Restrict CORS to localhost and solaceagi.com (no wildcard)
     origin = request.headers.get('Origin', '')
     allowed = ('http://127.0.0.1', 'http://localhost', 'https://www.solaceagi.com', 'https://solaceagi.com')

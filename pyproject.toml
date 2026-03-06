@@ -57,6 +57,23 @@ include = ["browser*", "src*"]
 exclude = ["tests*", "artifacts*", "episodes*"]
 namespaces = true
 
+[tool.ruff]
+target-version = "py310"
+line-length = 200
+exclude = [
+    ".venv",
+    "build",
+    "__pycache__",
+    ".pytest_cache",
+    "node_modules",
+    "artifacts",
+    "episodes",
+]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4", "UP"]
+ignore = ["E501"]
+
 [tool.pytest.ini_options]
 markers = [
     "server_required: marks tests that require an external Stillwater server",
