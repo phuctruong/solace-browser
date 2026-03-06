@@ -26,6 +26,9 @@ _LOCALES_DIR = Path(__file__).resolve().parent.parent / "app" / "locales" / "yin
 _SUPPORTED = {
     "en", "es", "vi", "zh", "pt", "fr", "ja", "de", "ar", "hi", "ko", "id", "ru",
     "zh-hant", "tr", "pl", "th", "nl", "it", "uk", "sv", "he", "fa",
+    "bn", "ms", "fil", "sw", "am", "ha", "yo", "zu",
+    "cs", "ro", "hu", "el", "bg", "hr", "sk", "sr",
+    "lt", "lv", "et", "sl", "fi", "da", "no", "ca",
 }
 
 # Locales that use right-to-left text direction
@@ -215,9 +218,13 @@ def detect_locale(accept_language: str | None) -> str:
         "pt": "pt", "pt-br": "pt", "pt-pt": "pt", "fr": "fr", "ja": "ja", "de": "de",
         "ar": "ar", "hi": "hi", "ko": "ko", "id": "id", "ru": "ru",
         "zh-hant": "zh-hant", "zh-tw": "zh-hant", "zh-hk": "zh-hant",
-        "ms": "id",
+        "ms": "ms", "tl": "fil", "fil": "fil",
         "tr": "tr", "pl": "pl", "th": "th", "nl": "nl", "it": "it",
         "uk": "uk", "sv": "sv", "he": "he", "fa": "fa",
+        "bn": "bn", "sw": "sw", "am": "am", "ha": "ha", "yo": "yo", "zu": "zu",
+        "cs": "cs", "ro": "ro", "hu": "hu", "el": "el", "bg": "bg", "hr": "hr",
+        "sk": "sk", "sr": "sr", "lt": "lt", "lv": "lv", "et": "et", "sl": "sl",
+        "fi": "fi", "da": "da", "no": "no", "nb": "no", "nn": "no", "ca": "ca",
         "en": "en",
     }
 

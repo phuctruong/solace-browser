@@ -2011,14 +2011,14 @@ body.yy-suggest-active .yy-top-rail { top: 40px; }
   border-radius: var(--sb-radius, 12px);
   padding: 6px;
   min-width: 160px;
-  max-height: 320px;
+  max-height: 420px;
   overflow-y: auto;
   z-index: 500;
   display: none;
   box-shadow: 0 12px 40px rgba(2,8,18,0.5);
   animation: sb-slide-down 0.2s ease;
 }
-.sb-lang-menu.is-active { display: block; }
+.sb-lang-menu.is-active, .sb-lang-menu.is-open { display: block; }
 .sb-lang-menu a {
   display: block;
   padding: 8px 12px;
@@ -2031,6 +2031,7 @@ body.yy-suggest-active .yy-top-rail { top: 40px; }
 }
 .sb-lang-menu a:hover { background: rgba(100,196,255,0.08); color: var(--sb-signal); }
 .sb-lang-menu a[aria-current="true"] { color: var(--sb-signal); font-weight: 700; }
+.sb-lang-menu { scrollbar-width: thin; scrollbar-color: var(--sb-border) transparent; }
 
 /* Tutorial overlay language switcher */
 .yyT-lang-wrap {
