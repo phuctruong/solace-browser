@@ -355,7 +355,7 @@
   <div id="header-slot"></div>
 
   <!-- Age Gate Modal (COPPA compliance — service is for 13+) -->
-  <div id="age-gate-modal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(2,8,18,0.95);backdrop-filter:blur(8px);align-items:center;justify-content:center;">
+  <div id="age-gate-modal" role="dialog" aria-modal="true" aria-label="Age verification" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(2,8,18,0.95);backdrop-filter:blur(8px);align-items:center;justify-content:center;">
     <div style="background:var(--sb-surface);border:1px solid var(--sb-border);border-radius:20px;padding:40px 36px 32px;width:440px;max-width:calc(100% - 48px);box-shadow:0 24px 80px rgba(2,8,18,0.6);text-align:center;">
       <div style="font-size:2rem;margin-bottom:16px;">&#128274;</div>
       <h2 style="font-family:var(--sb-font-display);font-size:1.3rem;font-weight:700;margin-bottom:8px;color:var(--sb-text);">Age Verification</h2>
@@ -461,7 +461,7 @@
     </div>
 
     <!-- Feedback Modal -->
-    <div id="feedback-modal" role="dialog" aria-label="Send feedback" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(2,8,18,0.85);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+    <div id="feedback-modal" role="dialog" aria-modal="true" aria-label="Send feedback" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(2,8,18,0.85);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
       <div style="background:var(--sb-surface);border:1px solid var(--sb-border);border-radius:20px;padding:36px 32px 28px;width:480px;max-width:calc(100% - 48px);box-shadow:0 24px 80px rgba(2,8,18,0.6);position:relative;">
         <button onclick="closeFeedback()" aria-label="Close feedback form" style="position:absolute;top:14px;right:18px;background:none;border:none;color:var(--sb-text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
         <h3 style="margin:0 0 6px;color:var(--sb-text);font-size:1.15rem;">Send Feedback</h3>
@@ -472,6 +472,7 @@
           <button class="fb-type-btn" data-type="feature" onclick="selectFbType(this)">Feature Request</button>
           <button class="fb-type-btn" data-type="praise" onclick="selectFbType(this)">Love It</button>
         </div>
+        <label class="sr-only" for="fb-text">Tell us what happened</label>
         <textarea id="fb-text" placeholder="Tell us what happened..." style="width:100%;min-height:100px;background:var(--sb-bg);border:1px solid var(--sb-border);border-radius:10px;color:var(--sb-text);padding:12px;font-size:0.9rem;resize:vertical;font-family:inherit;box-sizing:border-box;"></textarea>
         <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
           <button onclick="closeFeedback()" aria-label="Cancel feedback" style="background:none;border:1px solid var(--sb-border);color:var(--sb-text-muted);padding:10px 20px;border-radius:10px;cursor:pointer;font-size:0.85rem;">Cancel</button>

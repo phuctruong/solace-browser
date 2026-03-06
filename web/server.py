@@ -833,9 +833,17 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Remote-Token')
         # Security headers (Hashimoto/Hightower: defense-in-depth)
+        self.send_header('Content-Security-Policy',
+                         "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+                         "style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; "
+                         "font-src 'self'; connect-src 'self' "
+                         "https://solaceagi-mfjzxmegpq-uc.a.run.app "
+                         "https://solaceagi-qa-mfjzxmegpq-uc.a.run.app;")
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('X-Frame-Options', 'DENY')
-        self.send_header('Referrer-Policy', 'no-referrer')
+        self.send_header('X-XSS-Protection', '1; mode=block')
+        self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
+        self.send_header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
         super().end_headers()
 
     def _handle_api_get(self, *, send_body: bool) -> None:
