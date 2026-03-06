@@ -292,8 +292,36 @@ def build_manifest(app: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _resolve_recipe_ref(app_id: str) -> str | None:
+    """Find a matching platform recipe for a given app ID.
+
+    Checks data/default/recipes/{platform}/ subdirectories and top-level
+    recipe files for a match. Returns the recipe_ref path relative to the
+    recipes root, or None if no match is found.
+    """
+    recipes_root = REPO_ROOT / "data" / "default" / "recipes"
+    if not recipes_root.is_dir():
+        return None
+
+    # Import resolve logic from the runner to stay consistent
+    # We do a simple direct check here to avoid circular imports.
+    from apps.runner import APP_RECIPE_MAP
+
+    mapped = APP_RECIPE_MAP.get(app_id)
+    if mapped:
+        platform_dir, recipe_file = mapped
+        candidate = recipes_root / platform_dir / recipe_file
+        if candidate.is_file():
+            return f"{platform_dir}/{recipe_file}"
+        candidate = recipes_root / recipe_file
+        if candidate.is_file():
+            return recipe_file
+
+    return None
+
+
 def build_recipe(app: dict[str, Any]) -> dict[str, Any]:
-    return {
+    recipe: dict[str, Any] = {
         "id": app["id"],
         "version": "1.0.0",
         "type": app["type"],
@@ -305,6 +333,10 @@ def build_recipe(app: dict[str, Any]) -> dict[str, Any]:
             }
         ],
     }
+    ref = _resolve_recipe_ref(app["id"])
+    if ref:
+        recipe["recipe_ref"] = ref
+    return recipe
 
 
 def build_budget(app: dict[str, Any]) -> dict[str, Any]:

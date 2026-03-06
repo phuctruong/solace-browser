@@ -1,5 +1,7 @@
 {
   "id": "twitter-poster",
+  "platform": "twitter",
+  "recipe_ref": "twitter/twitter-post-tweet.json",
   "steps": [
     {
       "action": "noop",

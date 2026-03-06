@@ -1,0 +1,1753 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Solace Browser API",
+    "version": "1.1.8",
+    "description": "Local HTTP API for Solace Browser. All endpoints are served on localhost and require no authentication by default. The API powers the browser UI and is available for local integrations.",
+    "license": {
+      "name": "FSL-1.1-Apache-2.0",
+      "url": "https://github.com/solaceagi/solace-browser/blob/main/LICENSE"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8791",
+      "description": "Local Solace Browser server"
+    }
+  ],
+  "paths": {
+    "/api/openapi.json": {
+      "get": {
+        "summary": "OpenAPI specification",
+        "description": "Returns this OpenAPI specification document.",
+        "operationId": "getOpenApiSpec",
+        "tags": ["Meta"],
+        "responses": {
+          "200": {
+            "description": "OpenAPI JSON document",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/locale": {
+      "get": {
+        "summary": "Get locale strings",
+        "description": "Returns i18n strings for the given locale. Optionally filter by key.",
+        "operationId": "getLocale",
+        "tags": ["Locale"],
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "query",
+            "schema": { "type": "string", "default": "en" },
+            "description": "Locale code (e.g. en, es, vi, zh, fr, ja, de, ar, hi, ko)"
+          },
+          {
+            "name": "key",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Optional key to retrieve a single section"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Locale strings",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "summary": "Get settings",
+        "description": "Returns the current user settings object.",
+        "operationId": "getSettings",
+        "tags": ["Settings"],
+        "responses": {
+          "200": {
+            "description": "Current settings",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Settings" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update settings",
+        "description": "Replaces the settings object with the provided payload.",
+        "operationId": "putSettings",
+        "tags": ["Settings"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Settings" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated settings",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Settings" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/settings/export": {
+      "get": {
+        "summary": "Export settings",
+        "description": "Returns settings in a format suitable for cloud sync or backup.",
+        "operationId": "exportSettings",
+        "tags": ["Settings"],
+        "responses": {
+          "200": {
+            "description": "Exported settings payload",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings/import": {
+      "post": {
+        "summary": "Import settings",
+        "description": "Imports settings from a cloud sync or backup payload.",
+        "operationId": "importSettings",
+        "tags": ["Settings"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Import result",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/apps": {
+      "get": {
+        "summary": "List apps",
+        "description": "Returns the app catalog. Optionally filter by category or status.",
+        "operationId": "listApps",
+        "tags": ["Apps"],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by app category"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by status (e.g. installed)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of apps",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "apps": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AppSummary" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/apps/installed": {
+      "get": {
+        "summary": "List installed apps",
+        "description": "Returns only apps with status 'installed'.",
+        "operationId": "listInstalledApps",
+        "tags": ["Apps"],
+        "responses": {
+          "200": {
+            "description": "Installed apps",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/apps/{appId}": {
+      "get": {
+        "summary": "Get app detail",
+        "description": "Returns full detail for a single app.",
+        "operationId": "getAppDetail",
+        "tags": ["Apps"],
+        "parameters": [
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "App identifier (slug)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "App detail",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AppDetail" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/apps/{appId}/inbox": {
+      "get": {
+        "summary": "Get app inbox",
+        "description": "Returns pending inbox items for the app.",
+        "operationId": "getAppInbox",
+        "tags": ["Apps"],
+        "parameters": [
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inbox listing",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/apps/{appId}/outbox": {
+      "get": {
+        "summary": "Get app outbox",
+        "description": "Returns completed outbox items for the app.",
+        "operationId": "getAppOutbox",
+        "tags": ["Apps"],
+        "parameters": [
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Outbox listing",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/apps/{appId}/runs": {
+      "get": {
+        "summary": "Get app run history",
+        "description": "Returns the execution history for the app.",
+        "operationId": "getAppRuns",
+        "tags": ["Apps"],
+        "parameters": [
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Run history",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/apps/{appId}/diagrams": {
+      "get": {
+        "summary": "Get app diagrams",
+        "description": "Returns Mermaid diagrams associated with the app.",
+        "operationId": "getAppDiagrams",
+        "tags": ["Apps"],
+        "parameters": [
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Diagrams",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/apps/{appId}/status": {
+      "get": {
+        "summary": "Get app status",
+        "description": "Returns the current status of the app (installed, available, etc.).",
+        "operationId": "getAppStatus",
+        "tags": ["Apps"],
+        "parameters": [
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "App status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "status": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/apps/{appId}/install": {
+      "post": {
+        "summary": "Install an app",
+        "description": "Installs the specified app from the catalog.",
+        "operationId": "installApp",
+        "tags": ["Apps"],
+        "parameters": [
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Install confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "status": { "type": "string" },
+                    "name": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/apps/{appId}/uninstall": {
+      "post": {
+        "summary": "Uninstall an app",
+        "description": "Uninstalls the specified app.",
+        "operationId": "uninstallApp",
+        "tags": ["Apps"],
+        "parameters": [
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Uninstall confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "status": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/apps/{appId}/run": {
+      "post": {
+        "summary": "Run an app",
+        "description": "Triggers execution of the specified app. Returns a run ID and preview.",
+        "operationId": "runApp",
+        "tags": ["Apps"],
+        "parameters": [
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Run started",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/apps/{appId}/approve": {
+      "post": {
+        "summary": "Approve an app action",
+        "description": "Approves a pending action previewed by the app.",
+        "operationId": "approveApp",
+        "tags": ["Apps"],
+        "parameters": [
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Approval result",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/app-store/sync": {
+      "get": {
+        "summary": "Get app store sync status",
+        "description": "Returns the catalog sync state from the remote app store.",
+        "operationId": "getAppStoreSync",
+        "tags": ["App Store"],
+        "responses": {
+          "200": {
+            "description": "Sync status",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/app-store/proposals": {
+      "get": {
+        "summary": "List app proposals",
+        "description": "Returns submitted app proposals. Optionally filter by status.",
+        "operationId": "listAppProposals",
+        "tags": ["App Store"],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by proposal status"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 100 },
+            "description": "Maximum number of proposals to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proposals list",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Submit app proposal",
+        "description": "Submits a new app proposal to the store.",
+        "operationId": "submitAppProposal",
+        "tags": ["App Store"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Proposal created",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/budget": {
+      "get": {
+        "summary": "Get budget",
+        "description": "Returns the remaining LLM budget in USD.",
+        "operationId": "getBudget",
+        "tags": ["Budget"],
+        "responses": {
+          "200": {
+            "description": "Budget status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "remaining_usd": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Update budget",
+        "description": "Sets the LLM budget in USD.",
+        "operationId": "updateBudget",
+        "tags": ["Budget"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "budget_usd": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated budget",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "remaining_usd": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schedule": {
+      "get": {
+        "summary": "List scheduled tasks",
+        "description": "Returns all scheduled automation tasks.",
+        "operationId": "listSchedule",
+        "tags": ["Schedule"],
+        "responses": {
+          "200": {
+            "description": "Scheduled tasks",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/schedule/queue": {
+      "get": {
+        "summary": "Get schedule queue",
+        "description": "Returns tasks currently queued for execution.",
+        "operationId": "getScheduleQueue",
+        "tags": ["Schedule"],
+        "responses": {
+          "200": {
+            "description": "Queue contents",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/schedule/upcoming": {
+      "get": {
+        "summary": "Get upcoming schedule",
+        "description": "Returns tasks scheduled to run next.",
+        "operationId": "getScheduleUpcoming",
+        "tags": ["Schedule"],
+        "responses": {
+          "200": {
+            "description": "Upcoming tasks",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/schedule/plan": {
+      "post": {
+        "summary": "Create schedule plan",
+        "description": "Creates or updates a scheduled automation plan.",
+        "operationId": "createSchedulePlan",
+        "tags": ["Schedule"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Plan created",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/schedule/approve/{runId}": {
+      "post": {
+        "summary": "Approve scheduled run",
+        "description": "Approves a scheduled run. Requires a valid CSRF token.",
+        "operationId": "approveScheduledRun",
+        "tags": ["Schedule"],
+        "parameters": [
+          {
+            "name": "runId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "csrf_token": { "type": "string" }
+                },
+                "required": ["csrf_token"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Approved",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          },
+          "403": {
+            "description": "Invalid CSRF token"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/api/schedule/cancel/{runId}": {
+      "post": {
+        "summary": "Cancel scheduled run",
+        "description": "Cancels a scheduled run. Requires a valid CSRF token.",
+        "operationId": "cancelScheduledRun",
+        "tags": ["Schedule"],
+        "parameters": [
+          {
+            "name": "runId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "csrf_token": { "type": "string" }
+                },
+                "required": ["csrf_token"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cancelled",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          },
+          "403": {
+            "description": "Invalid CSRF token"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/api/yinyang/status": {
+      "get": {
+        "summary": "Get YinYang notification status",
+        "description": "Returns the notification queue and unread count for the YinYang assistant.",
+        "operationId": "getYinYangStatus",
+        "tags": ["YinYang"],
+        "responses": {
+          "200": {
+            "description": "Notification status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "queue_size": { "type": "integer" },
+                    "unread": { "type": "integer" },
+                    "notifications": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/yinyang/events": {
+      "get": {
+        "summary": "YinYang SSE event stream",
+        "description": "Server-Sent Events stream for real-time YinYang notifications.",
+        "operationId": "getYinYangEvents",
+        "tags": ["YinYang"],
+        "responses": {
+          "200": {
+            "description": "SSE stream",
+            "content": {
+              "text/event-stream": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/yinyang/chat": {
+      "post": {
+        "summary": "Chat with YinYang",
+        "description": "Sends a message to the YinYang AI assistant and returns a response. Requires an OpenRouter API key.",
+        "operationId": "chatYinYang",
+        "tags": ["YinYang"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": { "type": "string" }
+                },
+                "required": ["message"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Chat response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reply": { "type": "string" },
+                    "model": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "503": {
+            "description": "OpenRouter API key not configured"
+          }
+        }
+      }
+    },
+    "/api/yinyang/notify": {
+      "post": {
+        "summary": "Push a YinYang notification",
+        "description": "Pushes a notification to the YinYang notification queue.",
+        "operationId": "notifyYinYang",
+        "tags": ["YinYang"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notification queued",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cli-agents": {
+      "get": {
+        "summary": "List CLI agents",
+        "description": "Returns detected CLI agents (Claude, Codex, Gemini, etc.) and their install status.",
+        "operationId": "listCliAgents",
+        "tags": ["CLI Agents"],
+        "responses": {
+          "200": {
+            "description": "CLI agents list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": { "type": "integer" },
+                    "agents": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    },
+                    "installed_count": { "type": "integer" },
+                    "installed_ids": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cli-agents/generate": {
+      "post": {
+        "summary": "Generate with CLI agent",
+        "description": "Calls a CLI agent with a prompt and returns the response.",
+        "operationId": "cliAgentGenerate",
+        "tags": ["CLI Agents"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "agent": { "type": "string", "description": "Agent ID (e.g. claude, codex, gemini)" },
+                  "prompt": { "type": "string" },
+                  "model": { "type": "string", "description": "Optional model override" }
+                },
+                "required": ["agent", "prompt"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agent response",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/evidence": {
+      "get": {
+        "summary": "List evidence",
+        "description": "Returns evidence chain entries.",
+        "operationId": "listEvidence",
+        "tags": ["Evidence"],
+        "responses": {
+          "200": {
+            "description": "Evidence entries",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/fun-packs": {
+      "get": {
+        "summary": "List fun packs",
+        "description": "Returns available fun pack themes.",
+        "operationId": "listFunPacks",
+        "tags": ["Fun Packs"],
+        "responses": {
+          "200": {
+            "description": "Fun packs",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/fun-packs/download": {
+      "post": {
+        "summary": "Download a fun pack",
+        "description": "Downloads and installs a fun pack theme.",
+        "operationId": "downloadFunPack",
+        "tags": ["Fun Packs"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Download result",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/tokens/active": {
+      "get": {
+        "summary": "List active tokens",
+        "description": "Returns OAuth3 tokens currently active.",
+        "operationId": "listActiveTokens",
+        "tags": ["Tokens"],
+        "responses": {
+          "200": {
+            "description": "Active tokens",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/tokens/scopes": {
+      "get": {
+        "summary": "List token scopes",
+        "description": "Returns the available OAuth3 scopes.",
+        "operationId": "listTokenScopes",
+        "tags": ["Tokens"],
+        "responses": {
+          "200": {
+            "description": "Token scopes",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/activity/recent": {
+      "get": {
+        "summary": "Get recent activity",
+        "description": "Returns recent activity items.",
+        "operationId": "getRecentActivity",
+        "tags": ["Activity"],
+        "responses": {
+          "200": {
+            "description": "Recent activity",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/tunnel/status": {
+      "get": {
+        "summary": "Get tunnel status",
+        "description": "Returns the current cloud tunnel connection status.",
+        "operationId": "getTunnelStatus",
+        "tags": ["Tunnel"],
+        "responses": {
+          "200": {
+            "description": "Tunnel status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "public_url": { "type": "string" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tunnel/start": {
+      "post": {
+        "summary": "Start tunnel",
+        "description": "Starts the cloud tunnel connection.",
+        "operationId": "startTunnel",
+        "tags": ["Tunnel"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tunnel started",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/tunnel/stop": {
+      "post": {
+        "summary": "Stop tunnel",
+        "description": "Stops the cloud tunnel connection.",
+        "operationId": "stopTunnel",
+        "tags": ["Tunnel"],
+        "responses": {
+          "200": {
+            "description": "Tunnel stopped",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/machine/system": {
+      "get": {
+        "summary": "Get machine system info",
+        "description": "Returns system metrics for the local machine.",
+        "operationId": "getMachineSystem",
+        "tags": ["Machine"],
+        "responses": {
+          "200": {
+            "description": "System metrics",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/machine/files": {
+      "get": {
+        "summary": "List machine files",
+        "description": "Lists files in the given scoped path.",
+        "operationId": "listMachineFiles",
+        "tags": ["Machine"],
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "schema": { "type": "string", "default": "/" },
+            "description": "Directory path to list"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File listing",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/machine/terminal/execute": {
+      "post": {
+        "summary": "Execute terminal command (preview only)",
+        "description": "Previews a terminal command. Actual execution is blocked until approved.",
+        "operationId": "executeTerminal",
+        "tags": ["Machine"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "command": { "type": "string" }
+                },
+                "required": ["command"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preview output",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "output": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/remote/status": {
+      "get": {
+        "summary": "Get remote control status",
+        "description": "Returns the remote control configuration and connection status.",
+        "operationId": "getRemoteStatus",
+        "tags": ["Remote"],
+        "responses": {
+          "200": {
+            "description": "Remote status",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/remote/token": {
+      "get": {
+        "summary": "Get remote token",
+        "description": "Returns the current remote access token.",
+        "operationId": "getRemoteToken",
+        "tags": ["Remote"],
+        "responses": {
+          "200": {
+            "description": "Remote token",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/remote/run": {
+      "post": {
+        "summary": "Remote run",
+        "description": "Triggers an app run via remote control.",
+        "operationId": "remoteRun",
+        "tags": ["Remote"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Run result",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/remote/approve": {
+      "post": {
+        "summary": "Remote approve",
+        "description": "Approves a pending action via remote control.",
+        "operationId": "remoteApprove",
+        "tags": ["Remote"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Approval result",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/remote/config": {
+      "post": {
+        "summary": "Update remote config",
+        "description": "Updates the remote control configuration.",
+        "operationId": "updateRemoteConfig",
+        "tags": ["Remote"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated config",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/push": {
+      "post": {
+        "summary": "Push sync data",
+        "description": "Pushes local data to cloud sync.",
+        "operationId": "syncPush",
+        "tags": ["Sync"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync result",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/pull": {
+      "post": {
+        "summary": "Pull sync data",
+        "description": "Pulls cloud data to local.",
+        "operationId": "syncPull",
+        "tags": ["Sync"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync result",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cloud/esign/chain-status": {
+      "get": {
+        "summary": "Get eSign chain status",
+        "description": "Returns the electronic signature chain status from solaceagi.com.",
+        "operationId": "getEsignChainStatus",
+        "tags": ["Cloud"],
+        "responses": {
+          "200": {
+            "description": "Chain status",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cloud/esign/attestations": {
+      "get": {
+        "summary": "Get eSign attestations",
+        "description": "Returns attestation records from solaceagi.com.",
+        "operationId": "getEsignAttestations",
+        "tags": ["Cloud"],
+        "responses": {
+          "200": {
+            "description": "Attestations",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cloud/esign/token": {
+      "post": {
+        "summary": "Get eSign token",
+        "description": "Requests an electronic signature token from solaceagi.com.",
+        "operationId": "getEsignToken",
+        "tags": ["Cloud"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cloud/esign/sign": {
+      "post": {
+        "summary": "Sign document",
+        "description": "Signs a document or evidence bundle via solaceagi.com.",
+        "operationId": "esignSign",
+        "tags": ["Cloud"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signature result",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cloud/esign/verify": {
+      "post": {
+        "summary": "Verify signature",
+        "description": "Verifies an electronic signature via solaceagi.com.",
+        "operationId": "esignVerify",
+        "tags": ["Cloud"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification result",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cloud/sync/status": {
+      "get": {
+        "summary": "Get cloud sync status",
+        "description": "Returns the cloud sync status from solaceagi.com.",
+        "operationId": "getCloudSyncStatus",
+        "tags": ["Cloud"],
+        "responses": {
+          "200": {
+            "description": "Sync status",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cloud/sync/push": {
+      "post": {
+        "summary": "Push to cloud sync",
+        "description": "Pushes data to solaceagi.com cloud sync.",
+        "operationId": "cloudSyncPush",
+        "tags": ["Cloud"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Push result",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cloud/sync/pull": {
+      "post": {
+        "summary": "Pull from cloud sync",
+        "description": "Pulls data from solaceagi.com cloud sync.",
+        "operationId": "cloudSyncPull",
+        "tags": ["Cloud"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pull result",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cloud/billing/status": {
+      "get": {
+        "summary": "Get billing status",
+        "description": "Returns the billing status from solaceagi.com.",
+        "operationId": "getBillingStatus",
+        "tags": ["Cloud"],
+        "responses": {
+          "200": {
+            "description": "Billing status",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cloud/user/tier": {
+      "get": {
+        "summary": "Get user tier",
+        "description": "Returns the user's subscription tier from solaceagi.com.",
+        "operationId": "getUserTier",
+        "tags": ["Cloud"],
+        "responses": {
+          "200": {
+            "description": "User tier",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cloud/evidence": {
+      "post": {
+        "summary": "Push evidence to cloud",
+        "description": "Pushes evidence bundles to solaceagi.com for cloud storage.",
+        "operationId": "pushCloudEvidence",
+        "tags": ["Cloud"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Push result",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cloud/account/delete": {
+      "post": {
+        "summary": "Delete account (GDPR)",
+        "description": "Requests account deletion from solaceagi.com. GDPR right to erasure.",
+        "operationId": "deleteAccount",
+        "tags": ["Cloud"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deletion confirmed",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/cloud/account/export": {
+      "post": {
+        "summary": "Export account data (GDPR)",
+        "description": "Requests a full data export from solaceagi.com. GDPR right to data portability.",
+        "operationId": "exportAccount",
+        "tags": ["Cloud"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Export result",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/offline/queue": {
+      "get": {
+        "summary": "List offline queue",
+        "description": "Returns items queued for execution while offline.",
+        "operationId": "listOfflineQueue",
+        "tags": ["Offline"],
+        "responses": {
+          "200": {
+            "description": "Queue items",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/offline/flush": {
+      "post": {
+        "summary": "Flush offline queue",
+        "description": "Flushes all pending offline queue items.",
+        "operationId": "flushOfflineQueue",
+        "tags": ["Offline"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Flush result",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Settings": {
+        "type": "object",
+        "description": "User settings object with account, LLM, history, and privacy configuration."
+      },
+      "AppSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "category": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      },
+      "AppDetail": {
+        "type": "object",
+        "description": "Full app detail including permissions, steps, and run history.",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "category": { "type": "string" },
+          "status": { "type": "string" },
+          "permissions": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        },
+        "required": ["error"]
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid request",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "Meta", "description": "API metadata and documentation" },
+    { "name": "Apps", "description": "App lifecycle: list, install, run, approve" },
+    { "name": "App Store", "description": "App store catalog and proposals" },
+    { "name": "Settings", "description": "User settings management" },
+    { "name": "Budget", "description": "LLM budget management" },
+    { "name": "Schedule", "description": "Task scheduling and approval" },
+    { "name": "YinYang", "description": "AI assistant chat, notifications, and events" },
+    { "name": "CLI Agents", "description": "CLI agent detection and invocation" },
+    { "name": "Evidence", "description": "Evidence chain and audit trail" },
+    { "name": "Tunnel", "description": "Cloud tunnel management" },
+    { "name": "Machine", "description": "Local machine system info and file access" },
+    { "name": "Remote", "description": "Remote control API" },
+    { "name": "Sync", "description": "Local sync operations" },
+    { "name": "Cloud", "description": "solaceagi.com cloud proxy (eSign, sync, billing, GDPR)" },
+    { "name": "Offline", "description": "Offline queue management" },
+    { "name": "Tokens", "description": "OAuth3 token management" },
+    { "name": "Activity", "description": "Recent activity feed" },
+    { "name": "Fun Packs", "description": "Theme fun packs" },
+    { "name": "Locale", "description": "Internationalization strings" }
+  ]
+}

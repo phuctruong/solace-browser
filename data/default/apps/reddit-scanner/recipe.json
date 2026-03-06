@@ -1,5 +1,6 @@
 {
   "id": "reddit-scanner",
+  "recipe_ref": "reddit/reddit-browse-subreddit.json",
   "steps": [
     {
       "action": "noop",

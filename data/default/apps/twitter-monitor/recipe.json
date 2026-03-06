@@ -1,5 +1,7 @@
 {
   "id": "twitter-monitor",
+  "platform": "twitter",
+  "recipe_ref": "twitter/twitter-read-timeline.json",
   "steps": [
     {
       "action": "noop",

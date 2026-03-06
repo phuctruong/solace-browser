@@ -1,5 +1,6 @@
 {
   "id": "github-issue-triage",
+  "recipe_ref": "github/github-issue-triage.json",
   "steps": [
     {
       "action": "noop",

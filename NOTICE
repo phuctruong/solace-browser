@@ -1,0 +1,81 @@
+Solace Browser — Third-Party Software Notices
+===============================================
+Generated: 2026-03-06
+Project: solace-browser (https://browser.solaceagi.com)
+License: Functional Source License (FSL) — converts to OSS after 4 years
+
+This file lists all third-party dependencies used by Solace Browser,
+their licenses, and upstream project URLs.
+
+================================================================================
+Production Dependencies
+================================================================================
+
+Name:    @capacitor/android
+Version: ^8.1.0
+License: MIT
+URL:     https://github.com/ionic-team/capacitor
+
+Name:    @capacitor/cli
+Version: ^8.1.0
+License: MIT
+URL:     https://github.com/ionic-team/capacitor
+
+Name:    @capacitor/core
+Version: ^8.1.0
+License: MIT
+URL:     https://github.com/ionic-team/capacitor
+
+Name:    @capacitor/ios
+Version: ^8.1.0
+License: MIT
+URL:     https://github.com/ionic-team/capacitor
+
+Name:    body-parser
+Version: ^1.20.2
+License: MIT
+URL:     https://github.com/expressjs/body-parser
+
+Name:    dotenv
+Version: ^16.3.1
+License: BSD-2-Clause
+URL:     https://github.com/motdotla/dotenv
+
+Name:    Express
+Version: ^4.18.2
+License: MIT
+URL:     https://github.com/expressjs/express
+
+Name:    Joi
+Version: ^17.9.2
+License: BSD-3-Clause
+URL:     https://github.com/hapijs/joi
+
+Name:    Pino
+Version: ^8.14.1
+License: MIT
+URL:     https://github.com/pinojs/pino
+
+Name:    pino-http
+Version: ^8.3.3
+License: MIT
+URL:     https://github.com/pinojs/pino-http
+
+Name:    uuid
+Version: ^9.0.0
+License: MIT
+URL:     https://github.com/uuidjs/uuid
+
+================================================================================
+Development Dependencies
+================================================================================
+
+Name:    ESLint
+Version: ^8.45.0
+License: MIT
+URL:     https://github.com/eslint/eslint
+
+Name:    Prettier
+Version: ^3.0.0
+License: MIT
+URL:     https://github.com/prettier/prettier

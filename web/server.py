@@ -256,6 +256,7 @@ SLUG_MAP = {
     "docs/oauth3": "docs/oauth3.html",
     "guide": "guide.html",
     "create-app": "create-app.html",
+    "glossary": "glossary.html",
 }
 
 DEFAULT_SETTINGS: dict[str, Any] = {
@@ -689,6 +690,11 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
 
     def _handle_request(self, send_body: bool) -> None:
         request_path = urlsplit(self.path).path
+
+        # OpenAPI spec: /api/openapi.json
+        if request_path == "/api/openapi.json":
+            self._handle_openapi_spec(send_body=send_body)
+            return
 
         # Locale endpoint: /api/locale?key=tutorial&locale=es
         if request_path == "/api/locale":
@@ -1141,6 +1147,22 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             return
 
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "Not found"})
+
+    # ── OpenAPI Spec ───────────────────────────────────────────────────────────
+
+    _openapi_cache: str | None = None
+
+    def _handle_openapi_spec(self, *, send_body: bool) -> None:
+        """Serve the OpenAPI 3.1.0 specification from web/openapi.json."""
+        spec_path = ROOT / "openapi.json"
+        if not spec_path.exists():
+            self._send_json(HTTPStatus.NOT_FOUND, {"error": "OpenAPI spec not found"}, send_body=send_body)
+            return
+        try:
+            data = json.loads(spec_path.read_text(encoding="utf-8"))
+            self._send_json(HTTPStatus.OK, data, send_body=send_body)
+        except (OSError, json.JSONDecodeError) as exc:
+            self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": str(exc)}, send_body=send_body)
 
     # ── Locale ──────────────────────────────────────────────────────────────────
 

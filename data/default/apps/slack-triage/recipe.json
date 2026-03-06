@@ -1,5 +1,7 @@
 {
   "id": "slack-triage",
+  "platform": "slack",
+  "recipe_ref": "slack/slack-channel-summary.json",
   "steps": [
     {
       "action": "noop",

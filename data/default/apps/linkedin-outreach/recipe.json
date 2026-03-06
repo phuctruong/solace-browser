@@ -1,5 +1,6 @@
 {
   "id": "linkedin-outreach",
+  "recipe_ref": "linkedin-discover-posts.recipe.json",
   "steps": [
     {
       "action": "noop",

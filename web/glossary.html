@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Glossary | Solace Browser</title>
+  <meta name="description" content="Plain-language glossary of Solace Browser terms. Recipe, OAuth3, Evidence Chain, Twin, and more explained simply.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://127.0.0.1:* https://www.solaceagi.com https://*.solaceagi.com; font-src 'self'; frame-ancestors 'none'">
+  <link rel="canonical" href="https://browser.solaceagi.com/glossary">
+  <meta property="og:title" content="Glossary | Solace Browser">
+  <meta property="og:description" content="Plain-language glossary of Solace Browser terms explained simply.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.solacebrowser.com/glossary">
+  <meta property="og:image" content="https://www.solacebrowser.com/images/yinyang/yinyang-logo-512.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Glossary | Solace Browser">
+  <meta name="twitter:description" content="Plain-language glossary of Solace Browser terms explained simply.">
+  <meta name="theme-color" content="#081019">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/yinyang/yinyang-logo-32.png">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="apple-touch-icon" href="/images/yinyang/yinyang-logo-256.png">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/theme.js" defer></script>
+  <script src="/js/layout.js" defer></script>
+  <script src="/js/solace.js" defer></script>
+  <style>
+    .glossary-shell { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+    .glossary-shell h1 { font-size: 2rem; margin-bottom: 8px; }
+    .glossary-lead { color: var(--sb-text-muted); font-size: 1rem; margin-bottom: 36px; line-height: 1.6; }
+    .glossary-list { margin: 0; padding: 0; }
+    .glossary-list > div { margin-bottom: 20px; padding: 16px 20px; background: var(--sb-bg); border: 1px solid var(--sb-border); border-radius: 12px; }
+    .glossary-list dt { font-weight: 700; font-size: 1.05rem; color: var(--sb-signal, #64c4ff); margin-bottom: 6px; }
+    .glossary-list dd { margin: 0; font-size: 0.92rem; line-height: 1.6; color: var(--sb-text-muted); }
+    .glossary-back { display: inline-flex; align-items: center; gap: 6px; color: var(--sb-signal); text-decoration: none; font-size: 0.9rem; margin-bottom: 24px; }
+    .glossary-back:hover { text-decoration: underline; }
+  </style>
+</head>
+<body data-page="glossary">
+  <div class="site-shell">
+    <div class="page-frame">
+      <div id="header-slot"></div>
+
+      <main>
+        <div class="glossary-shell">
+          <a href="/" class="glossary-back">&larr; Back to Home</a>
+
+          <h1 data-i18n="glossary_h1">Glossary</h1>
+          <p class="glossary-lead" data-i18n="glossary_lead">Plain-language definitions for every term in Solace Browser. No jargon left behind.</p>
+
+          <dl class="glossary-list">
+            <div>
+              <dt data-i18n="glossary_recipe_term">Recipe</dt>
+              <dd data-i18n="glossary_recipe_def">A saved automation you can replay. Recipes record what the AI did so it can repeat the same task without calling an LLM again. This makes repeated tasks nearly free.</dd>
+            </div>
+            <div>
+              <dt data-i18n="glossary_oauth3_term">OAuth3</dt>
+              <dd data-i18n="glossary_oauth3_def">How you give permission to apps. OAuth3 lets you control exactly what an AI agent can do on your behalf, for how long, and revoke access at any time.</dd>
+            </div>
+            <div>
+              <dt data-i18n="glossary_evidence_chain_term">Evidence Chain</dt>
+              <dd data-i18n="glossary_evidence_chain_def">A tamper-evident log of every action the AI takes. Each entry is hash-linked to the previous one, so you can always verify what happened, when, and in what order.</dd>
+            </div>
+            <div>
+              <dt data-i18n="glossary_twin_term">Twin</dt>
+              <dd data-i18n="glossary_twin_def">A browser session running in the cloud on your behalf. Your cloud twin can execute recipes even when your computer is off, using the permissions you delegated via OAuth3.</dd>
+            </div>
+            <div>
+              <dt data-i18n="glossary_app_store_term">App Store</dt>
+              <dd data-i18n="glossary_app_store_def">A curated catalog of automations you can install and run. Each app shows what it does, what permissions it needs, and requires your approval before executing any action.</dd>
+            </div>
+            <div>
+              <dt data-i18n="glossary_vault_term">Vault</dt>
+              <dd data-i18n="glossary_vault_def">A local, encrypted store for your API keys and session tokens. Your credentials stay on your device, protected with AES-256-GCM encryption. Solace never sees your passwords.</dd>
+            </div>
+            <div>
+              <dt data-i18n="glossary_approval_gate_term">Approval Gate</dt>
+              <dd data-i18n="glossary_approval_gate_def">A checkpoint where the AI pauses and asks for your permission before doing something. Nothing runs without your explicit yes. If you walk away, pending actions are cancelled.</dd>
+            </div>
+            <div>
+              <dt data-i18n="glossary_budget_gate_term">Budget Gate</dt>
+              <dd data-i18n="glossary_budget_gate_def">A spending limit you set for AI operations. If a task would exceed your budget, the system stops and asks for approval. This prevents runaway costs.</dd>
+            </div>
+            <div>
+              <dt data-i18n="glossary_yinyang_term">YinYang</dt>
+              <dd data-i18n="glossary_yinyang_def">The AI assistant inside Solace Browser. YinYang helps you navigate, answers questions, and coordinates automations. It always asks before acting.</dd>
+            </div>
+            <div>
+              <dt data-i18n="glossary_byok_term">BYOK (Bring Your Own Key)</dt>
+              <dd data-i18n="glossary_byok_def">Use your own AI API key from Anthropic, OpenAI, or other providers. We never mark up the cost and your key stays on your device.</dd>
+            </div>
+            <div>
+              <dt data-i18n="glossary_capsule_term">Capsule</dt>
+              <dd data-i18n="glossary_capsule_def">A self-contained app package that bundles code, data, and permissions into one portable unit. Capsules can be shared, versioned, and replayed deterministically.</dd>
+            </div>
+            <div>
+              <dt data-i18n="glossary_northstar_term">Northstar</dt>
+              <dd data-i18n="glossary_northstar_def">The guiding direction for the entire platform. The Northstar ensures every feature, every decision, and every automation serves one purpose: keeping you in control of your AI.</dd>
+            </div>
+          </dl>
+        </div>
+      </main>
+
+      <div id="footer-slot"></div>
+    </div>
+  </div>
+</body>
+</html>

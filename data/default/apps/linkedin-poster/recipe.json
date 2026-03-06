@@ -1,5 +1,6 @@
 {
   "id": "linkedin-poster",
+  "recipe_ref": "linkedin-create-post.recipe.json",
   "steps": [
     {
       "action": "noop",
