@@ -79,13 +79,14 @@
               </div>
               <p>AppImage for any distro, DEB for Debian/Ubuntu fleet installs.</p>
               <div class="platform-links">
-                <a class="platform-link" href="https://storage.googleapis.com/solace-downloads/latest/solace-browser-linux-x86_64"><span>x86_64 Binary</span><span class="dl-badge">124MB</span></a>
+                <a class="platform-link" href="https://storage.googleapis.com/solace-downloads/latest/solace-browser-linux-x86_64.AppImage"><span>x86_64 AppImage</span><span class="dl-badge">124MB</span></a>
+                <a class="platform-link" href="https://storage.googleapis.com/solace-downloads/latest/solace-browser-linux-x86_64.deb"><span>Debian/Ubuntu .deb</span><span class="dl-badge">DEB</span></a>
                 <a class="platform-link" href="#" onclick="alert('Coming soon: sudo snap install solace-browser');return false;"><span>Ubuntu Store</span><span class="dl-badge">Snap</span></a>
               </div>
               <div class="dl-steps">
-                <div class="dl-step"><span class="dl-step-num">1</span><span>Download from GitHub Releases</span></div>
-                <div class="dl-step"><span class="dl-step-num">2</span><span>Make executable: <code>chmod +x SolaceBrowser*.AppImage</code></span></div>
-                <div class="dl-step"><span class="dl-step-num">3</span><span>Run: <code>./SolaceBrowser*.AppImage</code></span></div>
+                <div class="dl-step"><span class="dl-step-num">1</span><span>Download .AppImage or .deb from GitHub Releases</span></div>
+                <div class="dl-step"><span class="dl-step-num">2</span><span>AppImage: <code>chmod +x SolaceBrowser*.AppImage && ./SolaceBrowser*.AppImage</code></span></div>
+                <div class="dl-step"><span class="dl-step-num">3</span><span>DEB: <code>sudo dpkg -i solace-browser*.deb</code></span></div>
               </div>
             </article>
 

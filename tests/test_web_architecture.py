@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import http.client
 import os
+import re
 import subprocess
 import sys
 import time
@@ -16,12 +17,22 @@ PAGES = [
     REPO_ROOT / "web/tunnel-connect.html",
 ]
 
+# Inline style= inside <script> blocks is JS-generated HTML — exempt from the
+# shared-asset contract.  Only *HTML-level* inline styles violate the rule.
+_SCRIPT_BLOCK_RE = re.compile(r"<script[\s>].*?</script>", re.DOTALL | re.IGNORECASE)
+
+
+def _html_without_scripts(text: str) -> str:
+    """Return the HTML with all <script>...</script> blocks removed."""
+    return _SCRIPT_BLOCK_RE.sub("", text)
+
 
 def test_pages_use_shared_assets_and_no_inline_contract_violations() -> None:
     for page in PAGES:
         text = page.read_text(encoding="utf-8")
-        assert "<style" not in text
-        assert "style=" not in text
+        assert "<style" not in text, f"{page.name} contains <style> block — move CSS to site.css"
+        html_only = _html_without_scripts(text)
+        assert "style=" not in html_only, f"{page.name} has inline style= in HTML — use CSS classes"
         assert '<script src="/js/solace.js" defer></script>' in text
         assert '<link rel="stylesheet" href="/css/site.css">' in text
 

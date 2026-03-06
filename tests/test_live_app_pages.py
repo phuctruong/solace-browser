@@ -19,9 +19,10 @@ def test_app_store_page_has_live_results_mount() -> None:
 
 def test_app_detail_page_has_dynamic_sections() -> None:
     html = _read(WEB_DIR / "app-detail.html")
-    assert 'id="app-inbox-sections"' in html
-    assert 'id="app-outbox-sections"' in html
-    assert 'id="app-runs-table-body"' in html
+    # Redesigned layout uses tab panels with setup/runs/files containers
+    assert 'id="setupContainer"' in html
+    assert 'id="runsTableBody"' in html
+    assert 'id="tab-files"' in html
     assert 'src="/js/yinyang-delight.js"' in html
 
 
