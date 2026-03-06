@@ -546,6 +546,12 @@
 .drawer-field__label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--sched-text-dim); margin-bottom: 4px; }
 .drawer-field__val   { color: var(--sched-text); word-break: break-all; }
 
+.drawer-screenshot {
+  max-width: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--sched-border, #334155);
+  margin-top: 4px;
+}
 .drawer-hash {
   font-family: monospace;
   font-size: 0.7rem;

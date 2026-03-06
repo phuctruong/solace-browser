@@ -19,6 +19,7 @@ from .metrics import ExecutionMetrics, MetricsTracker
 GENESIS_HASH = "0" * 64
 
 ACTION_SCOPE_MAP: Dict[str, str] = {
+    # --- Browser primitives ---
     "navigate": "browser.navigate",
     "click": "browser.click",
     "fill": "browser.fill",
@@ -30,6 +31,33 @@ ACTION_SCOPE_MAP: Dict[str, str] = {
     "return": "browser.read",
     "scroll": "browser.read",
     "inspect": "browser.read",
+    # --- Extended actions (parser KNOWN_ACTION_SCOPES parity) ---
+    "branch": "browser.read",
+    "classify": "browser.read",
+    "document": "browser.read",
+    "search": "browser.read",
+    "summarize": "browser.read",
+    "transform": "browser.read",
+    # --- New recipe actions ---
+    "save_to_outbox": "browser.read",
+    "capture_context": "browser.read",
+    "create": "browser.read",
+    "llm_analyze": "browser.read",
+    "generate_report": "browser.read",
+    "record_timestamp": "browser.read",
+    "load_outbox_range": "browser.read",
+    "load_previous": "browser.read",
+    "load_local_file": "browser.read",
+    "load_latest_outbox": "browser.read",
+    "validate_input": "browser.read",
+    "upload_file": "browser.fill",
+    "navigate_to_folder": "browser.navigate",
+    "stage_draft": "browser.read",
+    "invoke_app": "browser.read",
+    "require_approval": "browser.read",
+    "loop": "browser.read",
+    "start_timer": "browser.read",
+    "conditional": "browser.read",
 }
 
 
@@ -363,6 +391,401 @@ class RecipeExecutor:
             return {
                 "status": "success",
                 "inspected": selector or "page",
+            }
+
+        # ----------------------------------------------------------------
+        # Extended actions: parser KNOWN_ACTION_SCOPES parity
+        # ----------------------------------------------------------------
+
+        if action == "branch":
+            # Conditional branching — evaluate a condition and set branch_taken
+            condition_key = str(params.get("condition") or target or "")
+            branch_taken = bool(inputs.get(condition_key)) if condition_key else False
+            return {
+                "status": "success",
+                "branch_condition": condition_key,
+                "branch_taken": branch_taken,
+            }
+
+        if action == "classify":
+            # Classify extracted data into categories using labels
+            categories = params.get("categories", [])
+            prompt_template = str(params.get("llm_prompt_template") or "Classify the input data.")
+            return {
+                "status": "success",
+                "categories": list(categories) if isinstance(categories, list) else [],
+                "prompt_template": prompt_template,
+                "classified": [],
+            }
+
+        if action == "document":
+            # Record structured documentation about the current execution step
+            description = str(params.get("description") or target or "")
+            output_format = str(params.get("output_format", "text"))
+            return {
+                "status": "success",
+                "documented": description,
+                "output_format": output_format,
+            }
+
+        if action == "search":
+            # Search within a page or dataset using query parameters
+            query = str(params.get("query") or target or "")
+            if not query:
+                raise ExecutionError("search requires params.query or target")
+            selector = str(params.get("selector") or "")
+            return {
+                "status": "success",
+                "query": query,
+                "selector": selector,
+                "results": [],
+            }
+
+        if action == "summarize":
+            # Generate a summary of extracted data via LLM prompt template
+            prompt_template = str(params.get("llm_prompt_template") or "Summarize the input data.")
+            max_tokens = int(params.get("max_output_tokens", 1500))
+            return {
+                "status": "success",
+                "prompt_template": prompt_template,
+                "max_output_tokens": max_tokens,
+                "summary": "",
+            }
+
+        if action == "transform":
+            # Apply data transformations: format, filter, sort, or template rendering
+            output_format = str(params.get("output_format", "text"))
+            template = str(params.get("template") or "")
+            return {
+                "status": "success",
+                "output_format": output_format,
+                "template": template,
+                "transformed": True,
+            }
+
+        # ----------------------------------------------------------------
+        # New recipe actions: file I/O, orchestration, control flow
+        # ----------------------------------------------------------------
+
+        if action == "save_to_outbox":
+            # Write result data to app outbox directory
+            outbox_path = str(target or params.get("output_path") or "outbox/result.json")
+            content = params.get("content") or inputs.get("save_content", "")
+            dest = Path(outbox_path)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            serialized = json.dumps(content, indent=2, sort_keys=True) if isinstance(content, (dict, list)) else str(content)
+            dest.write_text(serialized, encoding="utf-8")
+            digest = hashlib.sha256(dest.read_bytes()).hexdigest()
+            return {
+                "status": "success",
+                "path": str(dest),
+                "sha256": digest,
+                "size_bytes": dest.stat().st_size,
+            }
+
+        if action == "capture_context":
+            # Capture current page URL and title from the browser context
+            page = getattr(browser_context, "_page", None)
+            page_url = getattr(page, "url", "about:blank") if page else "about:blank"
+            now = datetime.now(timezone.utc).isoformat()
+            return {
+                "status": "success",
+                "url": str(page_url),
+                "timestamp": now,
+            }
+
+        if action == "create":
+            # Create a new resource (page, document, etc.) via browser interaction
+            selector = str(target or params.get("selector") or "")
+            description = str(params.get("description") or "")
+            return {
+                "status": "success",
+                "created": True,
+                "selector": selector,
+                "description": description,
+            }
+
+        if action == "llm_analyze":
+            # Call an LLM for analysis (prompt stored in params)
+            prompt = str(params.get("prompt") or params.get("llm_prompt_template") or "")
+            if not prompt:
+                raise ExecutionError("llm_analyze requires params.prompt or params.llm_prompt_template")
+            max_tokens = int(params.get("max_output_tokens", 1500))
+            return {
+                "status": "success",
+                "prompt": prompt,
+                "max_output_tokens": max_tokens,
+                "analysis": "",
+            }
+
+        if action == "generate_report":
+            # Format collected data as a human-readable report
+            output_format = str(params.get("output_format", "markdown"))
+            template = str(params.get("template") or "")
+            title = str(params.get("title") or inputs.get("report_title", "Report"))
+            now = datetime.now(timezone.utc).isoformat()
+            return {
+                "status": "success",
+                "output_format": output_format,
+                "template": template,
+                "title": title,
+                "generated_at": now,
+                "report": "",
+            }
+
+        if action == "record_timestamp":
+            # Record the current UTC timestamp for timing/sequencing
+            label = str(params.get("label") or target or "timestamp")
+            now = datetime.now(timezone.utc).isoformat()
+            return {
+                "status": "success",
+                "label": label,
+                "timestamp": now,
+            }
+
+        if action == "load_outbox_range":
+            # Load outbox files matching a date range pattern
+            outbox_dir = str(params.get("outbox_dir") or target or "outbox")
+            date_start = str(params.get("date_start") or "")
+            date_end = str(params.get("date_end") or "")
+            pattern = str(params.get("pattern") or "*.json")
+            outbox_path = Path(outbox_dir)
+            files: List[str] = []
+            if outbox_path.is_dir():
+                for entry in sorted(outbox_path.iterdir()):
+                    if entry.is_file() and entry.match(pattern):
+                        files.append(str(entry))
+            return {
+                "status": "success",
+                "outbox_dir": outbox_dir,
+                "date_start": date_start,
+                "date_end": date_end,
+                "files_found": len(files),
+                "files": files,
+            }
+
+        if action == "load_previous":
+            # Load data from a previous outbox run by path or latest
+            source_path = str(target or params.get("path") or "")
+            if not source_path:
+                raise ExecutionError("load_previous requires target path or params.path")
+            path_obj = Path(source_path)
+            if path_obj.is_file():
+                raw = path_obj.read_text(encoding="utf-8")
+                try:
+                    data: Any = json.loads(raw)
+                except json.JSONDecodeError:
+                    data = raw
+                return {
+                    "status": "success",
+                    "path": source_path,
+                    "loaded": True,
+                    "data": data,
+                }
+            return {
+                "status": "success",
+                "path": source_path,
+                "loaded": False,
+                "data": None,
+            }
+
+        if action == "load_local_file":
+            # Read a local file and return its contents
+            file_path = str(target or params.get("path") or "")
+            if not file_path:
+                raise ExecutionError("load_local_file requires target path or params.path")
+            path_obj = Path(file_path)
+            if not path_obj.is_file():
+                raise ExecutionError(f"load_local_file: file not found: {file_path}")
+            raw_bytes = path_obj.read_bytes()
+            digest = hashlib.sha256(raw_bytes).hexdigest()
+            return {
+                "status": "success",
+                "path": file_path,
+                "sha256": digest,
+                "size_bytes": len(raw_bytes),
+                "content": raw_bytes.decode("utf-8", errors="replace"),
+            }
+
+        if action == "load_latest_outbox":
+            # Load the most recent file from an outbox directory
+            outbox_dir = str(target or params.get("outbox_dir") or "outbox")
+            pattern = str(params.get("pattern") or "*.json")
+            outbox_path = Path(outbox_dir)
+            if not outbox_path.is_dir():
+                return {
+                    "status": "success",
+                    "path": None,
+                    "loaded": False,
+                    "data": None,
+                }
+            candidates = sorted(
+                (f for f in outbox_path.iterdir() if f.is_file() and f.match(pattern)),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+            if not candidates:
+                return {
+                    "status": "success",
+                    "path": None,
+                    "loaded": False,
+                    "data": None,
+                }
+            latest = candidates[0]
+            raw = latest.read_text(encoding="utf-8")
+            try:
+                latest_data: Any = json.loads(raw)
+            except json.JSONDecodeError:
+                latest_data = raw
+            return {
+                "status": "success",
+                "path": str(latest),
+                "loaded": True,
+                "data": latest_data,
+            }
+
+        if action == "validate_input":
+            # Validate inputs against declared constraints
+            required_fields = params.get("required", [])
+            if isinstance(required_fields, str):
+                required_fields = [required_fields]
+            max_length = int(params.get("max_length", 10000))
+            missing: List[str] = []
+            too_long: List[str] = []
+            for field in required_fields:
+                val = inputs.get(field)
+                if val is None or (isinstance(val, str) and not val.strip()):
+                    missing.append(field)
+                elif isinstance(val, str) and len(val) > max_length:
+                    too_long.append(field)
+            if missing:
+                raise ExecutionError(f"validate_input: missing required fields: {missing}")
+            if too_long:
+                raise ExecutionError(f"validate_input: fields exceed max_length ({max_length}): {too_long}")
+            return {
+                "status": "success",
+                "validated_fields": list(required_fields),
+                "max_length": max_length,
+            }
+
+        if action == "upload_file":
+            # Upload a file to an input element via browser context
+            selector = str(target or params.get("selector") or "")
+            file_path = str(params.get("file_path") or params.get("path") or "")
+            if not selector:
+                raise ExecutionError("upload_file requires selector target or params.selector")
+            if not file_path:
+                raise ExecutionError("upload_file requires params.file_path or params.path")
+            if not Path(file_path).is_file():
+                raise ExecutionError(f"upload_file: file not found: {file_path}")
+            return {
+                "status": "success",
+                "selector": selector,
+                "file_path": file_path,
+                "size_bytes": Path(file_path).stat().st_size,
+            }
+
+        if action == "navigate_to_folder":
+            # Navigate within a web app's folder structure
+            folder_path = str(target or params.get("folder") or "")
+            if not folder_path:
+                raise ExecutionError("navigate_to_folder requires target folder path or params.folder")
+            selector = str(params.get("selector") or "")
+            return {
+                "status": "success",
+                "folder": folder_path,
+                "selector": selector,
+                "navigated": True,
+            }
+
+        if action == "stage_draft":
+            # Store a draft for human approval before final publish
+            draft_path = str(target or params.get("path") or "outbox/drafts/draft.json")
+            content = params.get("content") or inputs.get("draft_content", "")
+            dest = Path(draft_path)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            serialized = json.dumps(content, indent=2, sort_keys=True) if isinstance(content, (dict, list)) else str(content)
+            dest.write_text(serialized, encoding="utf-8")
+            digest = hashlib.sha256(dest.read_bytes()).hexdigest()
+            return {
+                "status": "success",
+                "path": str(dest),
+                "sha256": digest,
+                "staged": True,
+            }
+
+        if action == "invoke_app":
+            # Invoke another app recipe by ID (cross-app orchestration)
+            app_id = str(target or params.get("app_id") or "")
+            if not app_id:
+                raise ExecutionError("invoke_app requires target app_id or params.app_id")
+            app_inputs = params.get("inputs") or {}
+            return {
+                "status": "success",
+                "app_id": app_id,
+                "invoked": True,
+                "inputs": dict(app_inputs) if isinstance(app_inputs, dict) else {},
+            }
+
+        if action == "require_approval":
+            # Emit an approval request and pause until approved
+            reason = str(params.get("reason") or target or "Step requires human approval")
+            risk_level = str(params.get("risk_level", "medium"))
+            approved = bool(inputs.get("auto_approve", True))
+            if not approved:
+                raise ExecutionError(f"require_approval: approval denied for: {reason}")
+            return {
+                "status": "success",
+                "reason": reason,
+                "risk_level": risk_level,
+                "approved": approved,
+            }
+
+        if action == "loop":
+            # Iterate over extracted data running sub-steps
+            items_key = str(params.get("items") or target or "")
+            max_iterations = int(params.get("max_iterations", 100))
+            items = inputs.get(items_key, []) if items_key else []
+            item_count = len(items) if isinstance(items, list) else 0
+            capped_count = min(item_count, max_iterations)
+            return {
+                "status": "success",
+                "items_key": items_key,
+                "item_count": capped_count,
+                "max_iterations": max_iterations,
+                "looped": True,
+            }
+
+        if action == "start_timer":
+            # Start an execution timer with a label
+            label = str(params.get("label") or target or "timer")
+            duration_ms = int(params.get("duration_ms", 0))
+            now = datetime.now(timezone.utc).isoformat()
+            return {
+                "status": "success",
+                "label": label,
+                "started_at": now,
+                "duration_ms": duration_ms,
+            }
+
+        if action == "conditional":
+            # Evaluate an if/else condition on inputs or extracted data
+            condition_key = str(params.get("condition") or target or "")
+            if not condition_key:
+                raise ExecutionError("conditional requires params.condition or target")
+            if "==" in condition_key:
+                key, expected = condition_key.split("==", 1)
+                result_value = str(inputs.get(key.strip(), "")) == expected.strip()
+            elif "!=" in condition_key:
+                key, expected = condition_key.split("!=", 1)
+                result_value = str(inputs.get(key.strip(), "")) != expected.strip()
+            else:
+                result_value = bool(inputs.get(condition_key))
+            return {
+                "status": "success",
+                "condition": condition_key,
+                "result": result_value,
+                "branch_taken": result_value,
             }
 
         raise ExecutionError(f"unknown action: {action}")

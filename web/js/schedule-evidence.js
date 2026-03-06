@@ -326,6 +326,10 @@
     if ((a.cross_app_triggers || []).length) {
       fields.push({ label: 'Triggers', val: utils.escapeHtml(a.cross_app_triggers.join(' \u2192 ')) });
     }
+    if (a.screenshot_url || a.screenshot_path) {
+      var imgSrc = a.screenshot_url || a.screenshot_path;
+      fields.push({ label: 'Screenshot', val: '<img src="' + utils.escapeHtml(imgSrc) + '" alt="Evidence screenshot" class="drawer-screenshot" loading="lazy">' });
+    }
     if (a._demo) {
       fields.push({ label: 'Note', val: '\u2728 Preview \u2014 your real evidence will appear here after your first run' });
     }
