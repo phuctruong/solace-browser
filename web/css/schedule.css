@@ -703,6 +703,8 @@
   .view-tabs { font-size: 0.8rem; }
   .view-tab { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
   .roi-inner { flex-direction: column; }
+  .cloud-twin-indicator { font-size: 0.7rem; padding: 3px 8px; }
+  .cloud-twin-indicator__sync { display: none; }
 }
 
 /* ── Sync Banner ─────────────────────────────────────────────────────────── */
@@ -1029,6 +1031,7 @@
   .yinyang-rail,
   .sa-yinyang-panel,
   .sync-banner,
+  .cloud-twin-indicator,
   .kill-switch-container,
   .signoff-sheet,
   .signoff-overlay,
@@ -1049,6 +1052,58 @@
   .roi-stat--highlight .roi-num { color: #065f46 !important; }
 
   a { color: black !important; text-decoration: underline !important; }
+}
+
+/* ── Cloud Twin Indicator ────────────────────────────────────────────────────── */
+.cloud-twin-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  margin-right: auto;
+}
+.cloud-twin-indicator--connected {
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.3);
+  color: #10b981;
+}
+.cloud-twin-indicator--error {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #ef4444;
+}
+.cloud-twin-indicator--disabled {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--sched-border);
+  color: var(--sched-text-dim);
+}
+.cloud-twin-indicator__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cloud-twin-indicator__dot--connected {
+  background: #10b981;
+  box-shadow: 0 0 4px #10b981;
+}
+.cloud-twin-indicator__dot--error {
+  background: #ef4444;
+}
+.cloud-twin-indicator__dot--disabled {
+  background: var(--sched-text-dim);
+}
+.cloud-twin-indicator__label {
+  font-weight: 600;
+}
+.cloud-twin-indicator__sync {
+  color: var(--sched-text-dim);
+  font-size: 0.7rem;
+  margin-left: 4px;
 }
 
 /* ── RTL (Right-to-Left) Support — Arabic locale ────────────────────────────── */
@@ -1078,4 +1133,12 @@
 }
 [dir="rtl"] .signoff-alert {
   flex-direction: row-reverse;
+}
+[dir="rtl"] .cloud-twin-indicator {
+  margin-right: 0;
+  margin-left: auto;
+}
+[dir="rtl"] .cloud-twin-indicator__sync {
+  margin-left: 0;
+  margin-right: 4px;
 }
