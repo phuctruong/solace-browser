@@ -143,7 +143,7 @@ def _detect_cli_agents(force: bool = False) -> dict[str, Any]:
                 if cached.get("version") == 1:
                     _cli_agents_cache = cached
                     return cached
-            except Exception:
+            except (OSError, json.JSONDecodeError, KeyError, ValueError):
                 pass
 
         # Fresh scan
@@ -1168,7 +1168,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                     self._send_json(HTTPStatus.OK, {}, send_body=send_body)
             else:
                 self._send_json(HTTPStatus.OK, data, send_body=send_body)
-        except Exception as exc:
+        except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
             self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": str(exc)}, send_body=send_body)
 
     # ── YinYang Chat ─────────────────────────────────────────────────────────────
@@ -1223,7 +1223,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         except urllib.error.HTTPError as exc:
             body = exc.read().decode("utf-8", errors="replace")
             self._send_json(HTTPStatus.BAD_GATEWAY, {"error": f"OpenRouter {exc.code}: {body[:200]}"})
-        except Exception as exc:
+        except (urllib.error.URLError, OSError, json.JSONDecodeError, ValueError, TimeoutError) as exc:
             self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": str(exc)})
 
     def _get_openrouter_key(self) -> str:
@@ -1235,7 +1235,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         try:
             settings = self.data_store.read_settings()
             return settings.get("llm", {}).get("openrouter_api_key", "")
-        except Exception:
+        except (OSError, json.JSONDecodeError, KeyError, ValueError):
             return ""
 
     # ── YinYang Notifications ────────────────────────────────────────────────────
@@ -1257,7 +1257,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             for sub in list(_notif_subscribers):
                 try:
                     sub.put(notif)
-                except Exception:
+                except (AttributeError, OSError):
                     _notif_subscribers.discard(sub)
         self._send_json(HTTPStatus.OK, {"ok": True, "id": notif["id"]})
 
@@ -1851,7 +1851,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                 data = json.loads(index_path.read_text(encoding="utf-8"))
                 self._send_json(HTTPStatus.OK, data, send_body=send_body)
                 return
-            except Exception:
+            except (OSError, json.JSONDecodeError, ValueError):
                 pass
         # Auto-discover pack files
         packs = []
@@ -1872,7 +1872,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                     "license": meta.get("license", "MIT"),
                     "tags": meta.get("tags", []),
                 })
-            except Exception:
+            except (OSError, json.JSONDecodeError, KeyError):
                 pass
         self._send_json(HTTPStatus.OK, {"packs": packs}, send_body=send_body)
 
@@ -1891,7 +1891,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             dest = FUN_PACKS_DIR / f"{safe_id}.json"
             dest.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
             self._send_json(HTTPStatus.OK, {"ok": True, "saved": dest.name, "id": safe_id})
-        except Exception as exc:
+        except (urllib.error.URLError, OSError, json.JSONDecodeError, ValueError, TimeoutError) as exc:
             self._send_json(HTTPStatus.BAD_GATEWAY, {"error": str(exc)})
 
     # ── App Execution Endpoints ──────────────────────────────────────────────
@@ -1925,7 +1925,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                 manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
                 keep_alive = manifest.get("keep_alive", {})
                 target_url = keep_alive.get("url")
-            except Exception:
+            except (OSError, ValueError, AttributeError):
                 pass
 
         # App-specific URL fallbacks
@@ -1949,7 +1949,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                 timeout=15,
             )
             nav_data = json.loads(nav_resp.read().decode("utf-8"))
-        except Exception as exc:
+        except (urllib.error.URLError, OSError, json.JSONDecodeError, ValueError, TimeoutError) as exc:
             self._send_json(HTTPStatus.BAD_GATEWAY, {
                 "error": "browser_offline",
                 "detail": f"Could not navigate: {exc}",
@@ -1975,7 +1975,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             )
             ext_data = json.loads(ext_resp.read().decode("utf-8"))
             items = ext_data.get("result", []) if ext_data.get("success") else []
-        except Exception:
+        except (urllib.error.URLError, OSError, json.JSONDecodeError, ValueError, TimeoutError):
             pass
 
         # Phase 3: Screenshot
@@ -1992,7 +1992,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             )
             ss_data = json.loads(ss_resp.read().decode("utf-8"))
             screenshot_path = ss_data.get("filepath", "")
-        except Exception:
+        except (urllib.error.URLError, OSError, json.JSONDecodeError, ValueError, TimeoutError):
             pass
 
         # Phase 4: Save run to inbox
@@ -2090,7 +2090,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             )
             ss_data = json.loads(ss_resp.read().decode("utf-8"))
             screenshot_path = ss_data.get("filepath", "")
-        except Exception:
+        except (urllib.error.URLError, OSError, json.JSONDecodeError, ValueError, TimeoutError):
             pass
 
         self._send_json(HTTPStatus.OK, {
@@ -2140,7 +2140,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                 try:
                     data = json.loads(f.read_text(encoding="utf-8"))
                     runs.append(data)
-                except Exception:
+                except (OSError, json.JSONDecodeError, ValueError):
                     pass
         self._send_json(HTTPStatus.OK, {"runs": runs}, send_body=send_body)
 
@@ -2156,7 +2156,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                 try:
                     content = f.read_text(encoding="utf-8")
                     diagrams.append({"name": f.stem, "source": "app", "content": content})
-                except Exception:
+                except (OSError, UnicodeDecodeError):
                     pass
 
         # Prime Wiki mermaid files
@@ -2172,7 +2172,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                 try:
                     content = f.read_text(encoding="utf-8")
                     diagrams.append({"name": f.stem, "source": "primewiki", "content": content})
-                except Exception:
+                except (OSError, UnicodeDecodeError):
                     pass
 
         self._send_json(HTTPStatus.OK, {"diagrams": diagrams}, send_body=send_body)
@@ -2431,7 +2431,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         try:
             apps_data = self.data_store.list_apps()
             apps = apps_data.get("apps", [])
-        except Exception:
+        except (OSError, json.JSONDecodeError, KeyError, ValueError):
             apps = []
 
         # Recent runs from audit + outbox
@@ -2450,7 +2450,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                             "status": obj.get("status", ""),
                             "timestamp": obj.get("timestamp") or obj.get("started_at", ""),
                         })
-                except Exception:
+                except (OSError, json.JSONDecodeError, KeyError, ValueError):
                     pass
         recent_runs = recent_runs[:20]
 
@@ -2461,7 +2461,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                 {"id": a["id"], "name": a["name"], "installed": a["installed"]}
                 for a in cli_data.get("agents", [])
             ]
-        except Exception:
+        except (OSError, json.JSONDecodeError, KeyError, ValueError):
             cli_agents = []
 
         # Savings estimate
@@ -2546,7 +2546,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                 existing = json.loads(config_path.read_text(encoding="utf-8"))
                 if not isinstance(existing, dict):
                     existing = {}
-            except Exception:
+            except (OSError, json.JSONDecodeError, ValueError):
                 existing = {}
 
         merged = {**existing, **config}
@@ -2593,7 +2593,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         except urllib.error.HTTPError as exc:
             try:
                 body = json.loads(exc.read().decode("utf-8"))
-            except Exception:
+            except (json.JSONDecodeError, ValueError):
                 body = {"error": str(exc)}
             return exc.code, body
         except (urllib.error.URLError, OSError) as exc:
