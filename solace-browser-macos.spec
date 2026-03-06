@@ -111,6 +111,7 @@ exe = EXE(
     # Unsigned binary for direct download distribution.
     codesign_identity=None,
     entitlements_file=None,
+    icon='web/images/yinyang/yinyang-logo-512.png',
     info_plist={
         'CFBundleName': 'Solace Browser',
         'CFBundleDisplayName': 'Solace Browser',

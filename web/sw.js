@@ -6,7 +6,7 @@
 const CACHE_NAME = 'solace-v1';
 const OFFLINE_URL = '/offline.html';
 
-// Assets to cache on install
+// Assets to cache on install — yinyang branding icons MUST be precached
 const PRECACHE_URLS = [
   '/',
   '/home.html',
@@ -16,6 +16,13 @@ const PRECACHE_URLS = [
   '/favicon.ico',
   '/favicon.svg',
   '/manifest.json',
+  '/images/yinyang/yinyang-logo-32.png',
+  '/images/yinyang/yinyang-logo-48.png',
+  '/images/yinyang/yinyang-logo-128.png',
+  '/images/yinyang/yinyang-logo-256.png',
+  '/images/yinyang/yinyang-logo-512.png',
+  '/images/pwa/icon-192.png',
+  '/images/pwa/icon-512.png',
 ];
 
 // Install: cache shell assets

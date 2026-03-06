@@ -56,6 +56,8 @@ $tempDir = Join-Path $env:TEMP ("solace-installer-" + [guid]::NewGuid().ToString
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 $issPath = Join-Path $tempDir "solace-browser-installer.iss"
 
+$icoPath = Join-Path $repoRoot "resources\windows\solace-browser.ico"
+
 $issContent = @'
 #define AppName "Solace Browser"
 #define AppPublisher "Solace AGI"
@@ -75,6 +77,7 @@ SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64
 WizardStyle=modern
 PrivilegesRequired=admin
+SetupIconFile={#SetupIcon}
 UninstallDisplayIcon={app}\{#AppExeName}
 
 [Languages]
@@ -85,6 +88,7 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 
 [Files]
 Source: "{#InputBinary}"; DestDir: "{app}"; DestName: "{#AppExeName}"; Flags: ignoreversion
+Source: "{#SetupIcon}"; DestDir: "{app}"; DestName: "solace-browser.ico"; Flags: ignoreversion
 Source: "{#LicenseFile}"; DestDir: "{app}"; DestName: "LICENSE"; Flags: ignoreversion skipifsourcedoesntexist
 
 [Icons]
@@ -105,6 +109,7 @@ $compileArgs = @(
     "/DOutputBaseFilename=$outputBaseName",
     "/DInputBinary=$inputPath",
     "/DLicenseFile=$licensePath",
+    "/DSetupIcon=$icoPath",
     $issPath
 )
 

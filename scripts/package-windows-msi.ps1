@@ -24,6 +24,7 @@ New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
 
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $licensePath = Join-Path $repoRoot "LICENSE"
+$icoPath = Join-Path $repoRoot "resources\windows\solace-browser.ico"
 
 # ── Resolve WiX toolset ──────────────────────────────────────────────────────
 
@@ -91,6 +92,13 @@ $wxsContent = @"
                 KeyPath="yes" />
         </Component>
 
+        <Component Id="IconFile" Guid="*">
+          <File Id="SolaceBrowserIco"
+                Source="$icoPath"
+                Name="solace-browser.ico"
+                KeyPath="yes" />
+        </Component>
+
         <Component Id="LicenseFile" Guid="*">
           <File Id="LicenseFile"
                 Source="$licensePath"
@@ -108,6 +116,7 @@ $wxsContent = @"
           <Shortcut Id="StartMenuLink"
                     Name="Solace Browser"
                     Target="[INSTALLFOLDER]solace-browser.exe"
+                    Icon="SolaceIcon"
                     WorkingDirectory="INSTALLFOLDER" />
           <RemoveFolder Id="RemoveMenuFolder" On="uninstall" />
           <RegistryValue Root="HKCU"
@@ -126,6 +135,7 @@ $wxsContent = @"
         <Shortcut Id="DesktopLink"
                   Name="Solace Browser"
                   Target="[INSTALLFOLDER]solace-browser.exe"
+                  Icon="SolaceIcon"
                   WorkingDirectory="INSTALLFOLDER" />
         <RegistryValue Root="HKCU"
                        Key="Software\SolaceAGI\SolaceBrowser"
@@ -136,8 +146,11 @@ $wxsContent = @"
       </Component>
     </StandardDirectory>
 
+    <Icon Id="SolaceIcon" SourceFile="$icoPath" />
+
     <Feature Id="MainFeature" Title="Solace Browser" Level="1">
       <ComponentRef Id="MainExecutable" />
+      <ComponentRef Id="IconFile" />
       <ComponentRef Id="LicenseFile" />
       <ComponentRef Id="StartMenuShortcut" />
     </Feature>
