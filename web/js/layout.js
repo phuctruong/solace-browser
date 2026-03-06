@@ -7,14 +7,14 @@
 
   // ── Early theme application (runs before DOMContentLoaded to prevent FOUC) ──
   (function applyThemeEarly() {
-    var saved = localStorage.getItem('solace-theme');
-    var theme = saved || 'dark';
+    const saved = localStorage.getItem('solace-theme');
+    const theme = saved || 'dark';
     document.documentElement.setAttribute('data-theme', theme);
     // Inject theme CSS link if not already present
     if (!document.getElementById('theme-css')) {
-      var builtIn = ['dark', 'light', 'midnight'];
+      const builtIn = ['dark', 'light', 'midnight'];
       if (builtIn.indexOf(theme) !== -1) {
-        var link = document.createElement('link');
+        const link = document.createElement('link');
         link.id = 'theme-css';
         link.rel = 'stylesheet';
         link.href = '/css/themes/' + theme + '.css';
@@ -22,22 +22,22 @@
       }
     }
     // Update meta theme-color for mobile browsers
-    var meta = document.querySelector('meta[name="theme-color"]');
+    const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      var colors = { dark: '#081019', light: '#faf8f5', midnight: '#000000' };
+      const colors = { dark: '#081019', light: '#faf8f5', midnight: '#000000' };
       meta.setAttribute('content', colors[theme] || '#081019');
     }
   })();
 
   // ── Early text size application (T8 Elder accessibility) ──
   (function applyTextSizeEarly() {
-    var sizeMap = {
+    const sizeMap = {
       'small': '14px',
       'medium': '16px',
       'large': '18px',
       'extra-large': '20px'
     };
-    var saved = localStorage.getItem('solace_text_size');
+    const saved = localStorage.getItem('solace_text_size');
     if (saved && sizeMap[saved]) {
       document.documentElement.style.setProperty('--sb-font-size-base', sizeMap[saved]);
       document.body.style.fontSize = sizeMap[saved];
@@ -58,7 +58,7 @@
 
     // Inject skip-nav link for accessibility (WCAG 2.4.1)
     if (!document.querySelector('.skip-nav')) {
-      var skipLink = document.createElement('a');
+      const skipLink = document.createElement('a');
       skipLink.href = '#main-content';
       skipLink.className = 'skip-nav';
       skipLink.textContent = 'Skip to main content';
@@ -66,7 +66,7 @@
     }
 
     // Add id="main-content" to the first <main> element for skip-nav target
-    var mainEl = document.querySelector('main');
+    const mainEl = document.querySelector('main');
     if (mainEl && !mainEl.id) {
       mainEl.id = 'main-content';
     }
@@ -130,12 +130,12 @@
   }
 
   function wireLangSwitcher() {
-    var langBtn = document.getElementById('sb-lang-btn');
-    var langMenu = document.getElementById('sb-lang-menu');
+    const langBtn = document.getElementById('sb-lang-btn');
+    const langMenu = document.getElementById('sb-lang-menu');
     if (!langBtn || !langMenu) return;
 
     langBtn.addEventListener('click', function () {
-      var open = langMenu.classList.toggle('is-open');
+      const open = langMenu.classList.toggle('is-open');
       langBtn.setAttribute('aria-expanded', String(open));
     });
 
@@ -150,7 +150,7 @@
     // Handle locale selection (delegate to solace.js i18n if available)
     langMenu.querySelectorAll('[data-locale]').forEach(function (el) {
       el.addEventListener('click', function () {
-        var locale = el.getAttribute('data-locale');
+        const locale = el.getAttribute('data-locale');
         if (typeof window.setLocale === 'function') {
           window.setLocale(locale);
         } else {
@@ -165,7 +165,7 @@
     // Also wire footer language links
     document.querySelectorAll('.footer-section [data-locale]').forEach(function (el) {
       el.addEventListener('click', function () {
-        var locale = el.getAttribute('data-locale');
+        const locale = el.getAttribute('data-locale');
         if (typeof window.setLocale === 'function') {
           window.setLocale(locale);
         } else {
@@ -183,43 +183,43 @@
   }
 
   function wireAuthStatus() {
-    var el = document.getElementById('sb-auth-status');
+    const el = document.getElementById('sb-auth-status');
     if (!el) return;
-    var key = typeof localStorage !== 'undefined' && localStorage.getItem('solace_api_key');
+    const key = typeof localStorage !== 'undefined' && localStorage.getItem('solace_api_key');
     if (key) {
       el.innerHTML = '<span class="sb-auth-pill sb-auth-pill--signed-in">Signed in</span>';
     }
   }
 
   function wireThemeToggle() {
-    var btn = document.getElementById('sb-theme-toggle');
-    var icon = document.getElementById('sb-theme-icon');
+    const btn = document.getElementById('sb-theme-toggle');
+    const icon = document.getElementById('sb-theme-icon');
     if (!btn || !icon) return;
 
-    var themes = ['dark', 'light', 'midnight'];
-    var icons = { dark: '\uD83C\uDF19', light: '\u2600\uFE0F', midnight: '\u2728' };
+    const themes = ['dark', 'light', 'midnight'];
+    const icons = { dark: '\uD83C\uDF19', light: '\u2600\uFE0F', midnight: '\u2728' };
 
     function updateIcon() {
-      var current = (typeof SolaceTheme !== 'undefined') ? SolaceTheme.get() : (localStorage.getItem('solace-theme') || 'dark');
+      const current = (typeof SolaceTheme !== 'undefined') ? SolaceTheme.get() : (localStorage.getItem('solace-theme') || 'dark');
       icon.textContent = icons[current] || '\uD83C\uDFA8';
     }
 
     btn.addEventListener('click', function () {
-      var current = (typeof SolaceTheme !== 'undefined') ? SolaceTheme.get() : (localStorage.getItem('solace-theme') || 'dark');
-      var idx = themes.indexOf(current);
-      var next = themes[(idx + 1) % themes.length];
+      const current = (typeof SolaceTheme !== 'undefined') ? SolaceTheme.get() : (localStorage.getItem('solace-theme') || 'dark');
+      const idx = themes.indexOf(current);
+      const next = themes[(idx + 1) % themes.length];
       if (typeof SolaceTheme !== 'undefined') {
         SolaceTheme.set(next);
       } else {
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('solace-theme', next);
-        var link = document.getElementById('theme-css');
+        const link = document.getElementById('theme-css');
         if (link) link.href = '/css/themes/' + next + '.css';
       }
       // Update meta theme-color
-      var meta = document.querySelector('meta[name="theme-color"]');
+      const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) {
-        var colors = { dark: '#081019', light: '#faf8f5', midnight: '#000000' };
+        const colors = { dark: '#081019', light: '#faf8f5', midnight: '#000000' };
         meta.setAttribute('content', colors[next] || '#081019');
       }
       updateIcon();

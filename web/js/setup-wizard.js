@@ -15,8 +15,8 @@
 (function () {
   'use strict';
 
-  var WIZARD_KEY = 'solace_setup_complete';
-  var CLOUD = 'https://www.solaceagi.com';
+  const WIZARD_KEY = 'solace_setup_complete';
+  const CLOUD = 'https://www.solaceagi.com';
 
   function shouldShow() {
     // Only show after fresh login (token in URL) and wizard not completed
@@ -24,10 +24,10 @@
     // Must be signed in
     if (!localStorage.getItem('solace_api_key')) return false;
     // Only on start/home pages
-    var path = window.location.pathname.replace(/\/$/, '') || '/';
+    const path = window.location.pathname.replace(/\/$/, '') || '/';
     if (path !== '/' && path !== '/start' && path !== '/home') return false;
     // Show on fresh login or if explicitly requested
-    var params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(window.location.search);
     if (params.get('setup') === '1') return true;
     if (params.get('token')) return true;
     // Show if user hasn't completed setup
@@ -35,7 +35,7 @@
     return true;
   }
 
-  var STEPS = [
+  const STEPS = [
     {
       id: 'plan',
       title: 'Choose Your Plan',
@@ -68,9 +68,9 @@
     },
   ];
 
-  var currentStep = 0;
+  let currentStep = 0;
 
-  var CSS = '\
+  const CSS = '\
     #sbWizard { position:fixed; inset:0; z-index:10000; background:rgba(8,16,25,0.95); backdrop-filter:blur(16px); display:flex; align-items:center; justify-content:center; padding:24px; opacity:0; transition:opacity 0.3s; }\
     #sbWizard.is-visible { opacity:1; }\
     #sbWizardCard { background:linear-gradient(160deg,#0d1a26 0%,#081019 100%); border:1px solid rgba(255,255,255,0.08); border-radius:24px; padding:40px 36px 32px; max-width:560px; width:100%; box-shadow:0 32px 80px rgba(0,0,0,0.7); transform:translateY(20px); opacity:0; transition:all 0.4s; }\
@@ -125,24 +125,24 @@
     @media (max-width:520px) { #sbWizardCard { padding:28px 20px 24px; } .wiz-apps-grid { grid-template-columns:1fr; } }\
   ';
 
-  var selectedPlan = 'free';
-  var connectedGoogle = false;
-  var connectedLinkedin = false;
-  var selectedApps = ['gmail-inbox-triage', 'gmail-spam-cleaner'];
+  let selectedPlan = 'free';
+  let connectedGoogle = false;
+  let connectedLinkedin = false;
+  const selectedApps = ['gmail-inbox-triage', 'gmail-spam-cleaner'];
 
   function renderProgress() {
-    var dots = '';
-    for (var i = 0; i < STEPS.length; i++) {
-      var cls = i < currentStep ? 'wiz-dot is-done' : (i === currentStep ? 'wiz-dot is-current' : 'wiz-dot');
+    let dots = '';
+    for (let i = 0; i < STEPS.length; i++) {
+      const cls = i < currentStep ? 'wiz-dot is-done' : (i === currentStep ? 'wiz-dot is-current' : 'wiz-dot');
       dots += '<div class="' + cls + '"></div>';
     }
     return '<div class="wiz-progress">' + dots + '</div>';
   }
 
   function renderStep() {
-    var step = STEPS[currentStep];
-    var body = '';
-    var actions = '';
+    const step = STEPS[currentStep];
+    let body = '';
+    let actions = '';
 
     if (step.id === 'plan') {
       body = '<div class="wiz-plan">' +
@@ -193,7 +193,7 @@
         '<button class="wiz-btn wiz-btn--primary" id="wizNext">Continue</button>' +
       '</div>';
     } else if (step.id === 'apps') {
-      var defaultApps = [
+      const defaultApps = [
         { id: 'gmail-inbox-triage', name: 'Gmail Inbox Triage', icon: '📧', cat: 'Email' },
         { id: 'gmail-spam-cleaner', name: 'Spam Cleaner', icon: '🧹', cat: 'Email' },
         { id: 'google-search-trends', name: 'Search Trends', icon: '📊', cat: 'Research' },
@@ -201,10 +201,10 @@
         { id: 'competitor-watch', name: 'Competitor Watch', icon: '🔍', cat: 'Marketing' },
         { id: 'substack-engagement', name: 'Substack Manager', icon: '📝', cat: 'Content' },
       ];
-      var cards = '';
-      for (var i = 0; i < defaultApps.length; i++) {
-        var app = defaultApps[i];
-        var sel = selectedApps.indexOf(app.id) >= 0;
+      let cards = '';
+      for (let i = 0; i < defaultApps.length; i++) {
+        const app = defaultApps[i];
+        const sel = selectedApps.indexOf(app.id) >= 0;
         cards += '<div class="wiz-app-card' + (sel ? ' is-selected' : '') + '" data-app="' + app.id + '">' +
           '<span style="font-size:1.3rem;">' + app.icon + '</span>' +
           '<div><div class="wiz-app-name">' + app.name + '</div><div class="wiz-app-cat">' + app.cat + '</div></div>' +
@@ -217,8 +217,8 @@
         '<button class="wiz-btn wiz-btn--primary" id="wizNext">Install ' + selectedApps.length + ' Apps & Continue</button>' +
       '</div>';
     } else if (step.id === 'done') {
-      var appsInstalled = selectedApps.length;
-      var connections = (connectedGoogle ? 1 : 0) + (connectedLinkedin ? 1 : 0);
+      const appsInstalled = selectedApps.length;
+      const connections = (connectedGoogle ? 1 : 0) + (connectedLinkedin ? 1 : 0);
       body = '<div class="wiz-done-stats">' +
         '<div class="wiz-stat"><div class="wiz-stat-val">' + appsInstalled + '</div><div class="wiz-stat-label">Apps Installed</div></div>' +
         '<div class="wiz-stat"><div class="wiz-stat-val">' + connections + '</div><div class="wiz-stat-label">Accounts Connected</div></div>' +
@@ -241,14 +241,14 @@
   }
 
   function render() {
-    var card = document.getElementById('sbWizardCard');
+    const card = document.getElementById('sbWizardCard');
     if (!card) return;
     card.innerHTML = renderStep();
     bindEvents();
   }
 
   function bindEvents() {
-    var step = STEPS[currentStep];
+    const step = STEPS[currentStep];
 
     // Plan selection
     if (step.id === 'plan') {
@@ -263,7 +263,7 @@
 
     // Google connect
     if (step.id === 'gmail') {
-      var gBtn = document.getElementById('wizConnectGoogle');
+      const gBtn = document.getElementById('wizConnectGoogle');
       if (gBtn) {
         gBtn.addEventListener('click', function() {
           // For now, mark as connected (real implementation uses OAuth flow)
@@ -277,7 +277,7 @@
 
     // LinkedIn connect
     if (step.id === 'linkedin') {
-      var lBtn = document.getElementById('wizConnectLinkedin');
+      const lBtn = document.getElementById('wizConnectLinkedin');
       if (lBtn) {
         lBtn.addEventListener('click', function() {
           connectedLinkedin = true;
@@ -291,8 +291,8 @@
     if (step.id === 'apps') {
       document.querySelectorAll('.wiz-app-card').forEach(function(el) {
         el.addEventListener('click', function() {
-          var appId = this.dataset.app;
-          var idx = selectedApps.indexOf(appId);
+          const appId = this.dataset.app;
+          const idx = selectedApps.indexOf(appId);
           if (idx >= 0) {
             selectedApps.splice(idx, 1);
             this.classList.remove('is-selected');
@@ -300,26 +300,26 @@
             selectedApps.push(appId);
             this.classList.add('is-selected');
           }
-          var nextBtn = document.getElementById('wizNext');
+          const nextBtn = document.getElementById('wizNext');
           if (nextBtn) nextBtn.textContent = 'Install ' + selectedApps.length + ' Apps & Continue';
         });
       });
     }
 
     // Next button
-    var nextBtn = document.getElementById('wizNext');
+    const nextBtn = document.getElementById('wizNext');
     if (nextBtn) {
       nextBtn.addEventListener('click', function() {
         if (STEPS[currentStep].id === 'plan' && selectedPlan !== 'free') {
           // Open Stripe checkout in same window, will redirect back
-          var checkoutUrl = CLOUD + '/billing/checkout?plan=' + selectedPlan +
+          const checkoutUrl = CLOUD + '/billing/checkout?plan=' + selectedPlan +
             '&redirect=' + encodeURIComponent(window.location.origin + '/start?setup=1&step=' + (currentStep + 1));
           window.location.href = checkoutUrl;
           return;
         }
         if (STEPS[currentStep].id === 'gmail' && !connectedGoogle) {
           // Trigger Google OAuth
-          var redirectUrl = window.location.origin + '/start?setup=1&step=' + (currentStep + 1) + '&google=1';
+          const redirectUrl = window.location.origin + '/start?setup=1&step=' + (currentStep + 1) + '&google=1';
           window.location.href = CLOUD + '/auth/login?provider=google&redirect=' + encodeURIComponent(redirectUrl);
           return;
         }
@@ -331,13 +331,13 @@
     }
 
     // Skip button
-    var skipBtn = document.getElementById('wizSkip');
+    const skipBtn = document.getElementById('wizSkip');
     if (skipBtn) {
       skipBtn.addEventListener('click', goNext);
     }
 
     // Done button
-    var doneBtn = document.getElementById('wizDone');
+    const doneBtn = document.getElementById('wizDone');
     if (doneBtn) {
       doneBtn.addEventListener('click', function() {
         localStorage.setItem(WIZARD_KEY, '1');
@@ -367,7 +367,7 @@
   }
 
   function close() {
-    var overlay = document.getElementById('sbWizard');
+    const overlay = document.getElementById('sbWizard');
     if (overlay) {
       overlay.style.opacity = '0';
       setTimeout(function() { overlay.remove(); }, 300);
@@ -378,8 +378,8 @@
     if (!shouldShow()) return;
 
     // Check if returning from OAuth/checkout with step param
-    var params = new URLSearchParams(window.location.search);
-    var stepParam = parseInt(params.get('step') || '0', 10);
+    const params = new URLSearchParams(window.location.search);
+    const stepParam = parseInt(params.get('step') || '0', 10);
     if (stepParam > 0 && stepParam < STEPS.length) {
       currentStep = stepParam;
     }
@@ -388,12 +388,12 @@
     }
 
     // Inject CSS
-    var style = document.createElement('style');
+    const style = document.createElement('style');
     style.textContent = CSS;
     document.head.appendChild(style);
 
     // Build overlay
-    var overlay = document.createElement('div');
+    const overlay = document.createElement('div');
     overlay.id = 'sbWizard';
     overlay.innerHTML = '<div id="sbWizardCard"></div>';
     document.body.appendChild(overlay);

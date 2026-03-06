@@ -166,15 +166,15 @@
   }
 
   function _escapeHtml(str) {
-    var d = document.createElement("div");
+    const d = document.createElement("div");
     d.appendChild(document.createTextNode(str));
     return d.innerHTML;
   }
 
   function _buildAuthBadge(name, tier) {
-    var safeName = _escapeHtml(String(name || "Account"));
-    var safeTier = tier ? _escapeHtml(String(tier)) : "";
-    var tierStr = (safeTier && safeTier !== "free") ? " &middot; " + safeTier : "";
+    const safeName = _escapeHtml(String(name || "Account"));
+    const safeTier = tier ? _escapeHtml(String(tier)) : "";
+    const tierStr = (safeTier && safeTier !== "free") ? " &middot; " + safeTier : "";
     return '<a class="sb-auth-indicator sb-auth-indicator--signed-in" href="/settings" data-i18n="auth_signed_in">' +
       'Signed in, ' + safeName + tierStr +
       '</a>';
@@ -615,7 +615,7 @@
     observeNewRevealNodes(mount);
   }
 
-  var ICON_IMG_MAP = {
+  const ICON_IMG_MAP = {
     'gmail': '/images/apps/gmail.jpg',
     'gmail-inbox-triage': '/images/apps/gmail.jpg',
     'slack': '/images/apps/slack.png',
@@ -667,14 +667,14 @@
     if (app.icon_url) {
       return app.icon_url;
     }
-    var id = (app.id || '').toLowerCase();
+    const id = (app.id || '').toLowerCase();
     // 2. Exact match in ICON_IMG_MAP
     if (ICON_IMG_MAP[id]) {
       return ICON_IMG_MAP[id];
     }
     // 3. Partial match — first key that is a substring of app.id
-    var keys = Object.keys(ICON_IMG_MAP);
-    for (var i = 0; i < keys.length; i++) {
+    const keys = Object.keys(ICON_IMG_MAP);
+    for (let i = 0; i < keys.length; i++) {
       if (id.indexOf(keys[i]) !== -1) {
         return ICON_IMG_MAP[keys[i]];
       }
@@ -684,8 +684,8 @@
   }
 
   function renderAppCard(app) {
-    var iconUrl = resolveAppIconUrl(app);
-    var iconHtml = iconUrl
+    const iconUrl = resolveAppIconUrl(app);
+    const iconHtml = iconUrl
       ? '<img src="' + escapeHtml(iconUrl) + '" alt="' + escapeHtml(app.name || app.id) + ' icon" class="surface-card__icon-img" loading="lazy">'
       : escapeHtml((app.name || app.id).slice(0, 2).toUpperCase());
     return `

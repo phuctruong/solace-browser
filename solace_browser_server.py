@@ -96,15 +96,15 @@ except ImportError as _sync_import_error:
 try:
     from playwright.async_api import async_playwright, Browser, Page
 except ImportError:
-    print("ERROR: Playwright not installed")
-    print("Install with: pip install playwright")
+    _startup_logger = logging.getLogger("solace-browser")
+    _startup_logger.error("Playwright not installed. Install with: pip install playwright")
     sys.exit(1)
 
 try:
     from aiohttp import web
 except ImportError:
-    print("ERROR: aiohttp not installed")
-    print("Install with: pip install aiohttp")
+    _startup_logger = logging.getLogger("solace-browser")
+    _startup_logger.error("aiohttp not installed. Install with: pip install aiohttp")
     sys.exit(1)
 
 try:

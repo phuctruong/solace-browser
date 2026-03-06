@@ -5,10 +5,13 @@ Executes saved recipes automatically - zero manual clicking needed
 """
 
 import json
+import logging
 import sys
 import time
 import requests
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # Browser server endpoint
 BROWSER_API = "http://localhost:9222"
@@ -26,10 +29,10 @@ def execute_action(action):
     # Handle comment/note actions (no execution needed)
     if action_type == 'comment' or action_type == 'note':
         note = action.get('note', action.get('value', ''))
-        print(f"  📝 Note: {note}")
+        logger.info("Note: %s", note)
         return True
 
-    print(f"  ⚡ {action_type.upper()}: {target[:50] if target else 'N/A'}...")
+    logger.info("%s: %s", action_type.upper(), target[:50] if target else 'N/A')
 
     try:
         if action_type == 'navigate':
@@ -45,27 +48,27 @@ def execute_action(action):
                 json={"selector": target, "text": value}, timeout=REQUEST_TIMEOUT)
 
         else:
-            print(f"  ❌ Unknown action type: {action_type}")
+            logger.error("Unknown action type: %s", action_type)
             return False
 
     except requests.Timeout:
-        print(f"  ❌ Timeout after {REQUEST_TIMEOUT}s - server may be hung")
+        logger.error("Timeout after %ds - server may be hung", REQUEST_TIMEOUT)
         return False
     except requests.RequestException as e:
-        print(f"  ❌ Request failed: {e}")
+        logger.error("Request failed: %s", e)
         return False
 
     # Check success
     if response.status_code == 200:
         result = response.json()
         if result.get('success'):
-            print(f"  ✓ Success")
+            logger.info("Action succeeded")
             return True
         else:
-            print(f"  ❌ Failed: {result.get('error', 'Unknown error')}")
+            logger.error("Action failed: %s", result.get('error', 'Unknown error'))
             return False
     else:
-        print(f"  ❌ HTTP {response.status_code}")
+        logger.error("HTTP %d", response.status_code)
         return False
 
 def collect_evidence():
@@ -86,11 +89,11 @@ def collect_evidence():
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
         }
 
-        print(f"  📊 Evidence: {evidence['url']}")
+        logger.info("Evidence collected: %s", evidence['url'])
         return evidence
 
     except (requests.RequestException, OSError, KeyError, ValueError) as e:
-        print(f"  ⚠️  Evidence collection failed: {e}")
+        logger.warning("Evidence collection failed: %s", e)
         return {}
 
 def replay_recipe(recipe_path):
@@ -103,35 +106,33 @@ def replay_recipe(recipe_path):
     Returns:
         success: Boolean indicating if all actions succeeded
     """
-    print("=" * 80)
-    print("🎬 PRIME RECIPE REPLAY ENGINE")
-    print("=" * 80)
+    logger.info("=" * 80)
+    logger.info("PRIME RECIPE REPLAY ENGINE")
+    logger.info("=" * 80)
 
     # Load recipe
     recipe_file = Path(recipe_path)
     if not recipe_file.exists():
-        print(f"❌ Recipe not found: {recipe_path}")
+        logger.error("Recipe not found: %s", recipe_path)
         return False
 
     with open(recipe_file, 'r') as f:
         recipe = json.load(f)
 
-    print(f"📖 Recipe: {recipe.get('recipe_id')}")
-    print(f"📝 Description: {recipe.get('metadata', {}).get('title', 'N/A')}")
-    print(f"🎯 Actions: {len(recipe.get('execution_trace', []))}")
-    print()
+    logger.info("Recipe: %s", recipe.get('recipe_id'))
+    logger.info("Description: %s", recipe.get('metadata', {}).get('title', 'N/A'))
+    logger.info("Actions: %d", len(recipe.get('execution_trace', [])))
 
     # Check browser server
     try:
         health = requests.get(f"{BROWSER_API}/health", timeout=REQUEST_TIMEOUT).json()
         if health.get('status') != 'ok':
-            print("❌ Browser server not healthy")
+            logger.error("Browser server not healthy")
             return False
-        print("✓ Browser server ready")
-        print()
+        logger.info("Browser server ready")
     except (requests.RequestException, OSError, ConnectionError) as e:
-        print(f"❌ Browser server not running: {e}")
-        print("   Start with: python persistent_browser_server.py")
+        logger.error("Browser server not running: %s", e)
+        logger.error("Start with: python persistent_browser_server.py")
         return False
 
     # Execute actions with global timeout
@@ -143,16 +144,18 @@ def replay_recipe(recipe_path):
         # Safety check - prevent runaway execution
         elapsed = time.time() - start_time
         if elapsed > MAX_EXECUTION_TIME:
-            print(f"\n❌ Recipe exceeded max execution time ({MAX_EXECUTION_TIME}s)")
-            print(f"   Completed {i-1}/{len(execution_trace)} steps")
+            logger.error(
+                "Recipe exceeded max execution time (%ds). Completed %d/%d steps",
+                MAX_EXECUTION_TIME, i - 1, len(execution_trace),
+            )
             return False
 
         step = action.get('step', i)
-        print(f"[{i}/{len(execution_trace)}] Step {step}")
+        logger.info("[%d/%d] Step %s", i, len(execution_trace), step)
 
         # Show reasoning if present
         if 'reasoning' in action:
-            print(f"  💭 {action['reasoning']}")
+            logger.debug("Reasoning: %s", action['reasoning'])
 
         # Execute action
         success = execute_action(action)
@@ -166,32 +169,30 @@ def replay_recipe(recipe_path):
         else:
             # Action failed - check if we should continue
             if not recipe.get('continue_on_error', False):
-                print(f"\n❌ Recipe failed at step {step}")
+                logger.error("Recipe failed at step %s", step)
                 return False
 
         # Small delay between actions (smart waiting)
         time.sleep(0.2)
-        print()
 
     # Final evidence collection
-    print("=" * 80)
-    print("📊 FINAL VERIFICATION")
-    print("=" * 80)
+    logger.info("=" * 80)
+    logger.info("FINAL VERIFICATION")
+    logger.info("=" * 80)
     final_evidence = collect_evidence()
 
     # Summary
-    print()
-    print("=" * 80)
-    print("📈 EXECUTION SUMMARY")
-    print("=" * 80)
-    print(f"✓ Actions executed: {success_count}/{len(execution_trace)}")
-    print(f"✓ Success rate: {success_count/len(execution_trace)*100:.1f}%")
+    logger.info("=" * 80)
+    logger.info("EXECUTION SUMMARY")
+    logger.info("=" * 80)
+    logger.info("Actions executed: %d/%d", success_count, len(execution_trace))
+    logger.info("Success rate: %.1f%%", success_count / len(execution_trace) * 100)
 
     if success_count == len(execution_trace):
-        print(f"✅ RECIPE REPLAY COMPLETE")
+        logger.info("RECIPE REPLAY COMPLETE")
         return True
     else:
-        print(f"⚠️  Some actions failed")
+        logger.warning("Some actions failed")
         return False
 
 if __name__ == "__main__":

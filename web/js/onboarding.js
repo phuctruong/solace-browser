@@ -17,21 +17,21 @@
 (function () {
   'use strict';
 
-  var STORAGE_KEY = 'solace_llm_configured';
-  var AGENTS_KEY = 'solace_cli_agents';
-  var CLOUD = 'https://www.solaceagi.com';
+  const STORAGE_KEY = 'solace_llm_configured';
+  const AGENTS_KEY = 'solace_cli_agents';
+  const CLOUD = 'https://www.solaceagi.com';
 
   function shouldShow() {
-    var params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(window.location.search);
     if (params.get('onboard') === '1') return true;
     if (localStorage.getItem(STORAGE_KEY) === '1') return false;
     if (localStorage.getItem('sb_tutorial_v1') === 'done') return false;
-    var path = window.location.pathname.replace(/\/$/, '') || '/';
+    const path = window.location.pathname.replace(/\/$/, '') || '/';
     if (path !== '/' && path !== '/home') return false;
     return true;
   }
 
-  var CSS = `
+  const CSS = `
     #sbOnboard {
       position: fixed; inset: 0; z-index: 9999;
       background: rgba(2,8,18,0.92);
@@ -247,7 +247,7 @@
   `;
 
   /* ── Agent Card Definitions ── */
-  var AGENT_CARDS = [
+  const AGENT_CARDS = [
     { id: 'claude', name: 'Claude Code', icon: 'A', provider: 'Anthropic' },
     { id: 'codex', name: 'OpenAI Codex', icon: 'O', provider: 'OpenAI' },
     { id: 'gemini', name: 'Gemini CLI', icon: 'G', provider: 'Google' },
@@ -259,8 +259,8 @@
 
   /* ── Render: Path selection screen ── */
   function renderPaths() {
-    var name = (localStorage.getItem('solace_user_email') || '').split('@')[0];
-    var greeting = name ? "Hi " + name + "! One quick thing." : "One quick thing before we start.";
+    const name = (localStorage.getItem('solace_user_email') || '').split('@')[0];
+    const greeting = name ? "Hi " + name + "! One quick thing." : "One quick thing before we start.";
 
     return '<div class="ob-yy"><img src="/images/yinyang/yinyang-rotating_70pct_256px.gif" alt="YinYang"></div>' +
       '<h2 class="ob-title">' + greeting + '</h2>' +
@@ -313,9 +313,9 @@
 
   /* ── Render: Auto-detect screen ── */
   function renderDetect() {
-    var cards = '';
-    for (var i = 0; i < AGENT_CARDS.length; i++) {
-      var a = AGENT_CARDS[i];
+    let cards = '';
+    for (let i = 0; i < AGENT_CARDS.length; i++) {
+      const a = AGENT_CARDS[i];
       cards += '<div class="ob-agent-card" id="obCard_' + a.id + '">' +
         '<div class="ob-agent-card__head">' +
           '<div class="ob-agent-card__icon">' + a.icon + '</div>' +
@@ -339,16 +339,16 @@
 
   /* ── Detection logic ── */
   function runDetection(rescan) {
-    var url = '/api/cli-agents' + (rescan ? '?rescan=1' : '');
-    var statusEl = document.getElementById('obDetectStatus');
-    var subEl = document.getElementById('obDetectSub');
-    var doneEl = document.getElementById('obDetectDone');
-    var continueBtn = document.getElementById('obDetectContinue');
-    var rescanBtn = document.getElementById('obRescan');
+    const url = '/api/cli-agents' + (rescan ? '?rescan=1' : '');
+    const statusEl = document.getElementById('obDetectStatus');
+    const subEl = document.getElementById('obDetectSub');
+    const doneEl = document.getElementById('obDetectDone');
+    const continueBtn = document.getElementById('obDetectContinue');
+    const rescanBtn = document.getElementById('obRescan');
 
     // Reset all cards to scanning
-    for (var i = 0; i < AGENT_CARDS.length; i++) {
-      var card = document.getElementById('obCard_' + AGENT_CARDS[i].id);
+    for (let i = 0; i < AGENT_CARDS.length; i++) {
+      const card = document.getElementById('obCard_' + AGENT_CARDS[i].id);
       if (card) {
         card.className = 'ob-agent-card is-scanning';
         card.querySelector('.ob-agent-card__status').textContent = 'Scanning...';
@@ -364,17 +364,17 @@
     fetch(url)
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        var agents = data.agents || [];
-        var found = 0;
-        var delay = 0;
+        const agents = data.agents || [];
+        let found = 0;
+        let delay = 0;
 
         // Animate cards one by one
         agents.forEach(function(agent) {
           delay += 200;
           setTimeout(function() {
-            var card = document.getElementById('obCard_' + agent.id);
+            const card = document.getElementById('obCard_' + agent.id);
             if (!card) return;
-            var statusP = card.querySelector('.ob-agent-card__status');
+            const statusP = card.querySelector('.ob-agent-card__status');
             if (agent.installed) {
               found++;
               card.className = 'ob-agent-card is-found';
@@ -388,7 +388,7 @@
 
         // Show results after all cards animate
         setTimeout(function() {
-          var installed = data.installed_count || 0;
+          const installed = data.installed_count || 0;
           if (installed > 0) {
             statusEl.textContent = 'Ready to go!';
             subEl.textContent = installed + ' AI agent' + (installed > 1 ? 's' : '') + ' detected and integrated.';
@@ -417,14 +417,14 @@
 
   /* ── Screen switching ── */
   function showDetectScreen() {
-    var card = document.getElementById('sbOnboardCard');
+    const card = document.getElementById('sbOnboardCard');
     card.innerHTML = renderDetect();
     bindDetectEvents();
     runDetection(false);
   }
 
   function showPathScreen() {
-    var card = document.getElementById('sbOnboardCard');
+    const card = document.getElementById('sbOnboardCard');
     card.innerHTML = renderPaths();
     bindPathEvents();
   }
@@ -454,13 +454,13 @@
     });
 
     document.getElementById('obSave').addEventListener('click', function() {
-      var apiKey = (document.getElementById('obApiKey').value || '').trim();
+      const apiKey = (document.getElementById('obApiKey').value || '').trim();
       if (!apiKey) {
         document.getElementById('obApiKey').style.borderColor = '#ff6b6b';
         document.getElementById('obApiKey').focus();
         return;
       }
-      var provider = document.getElementById('obProvider').value;
+      const provider = document.getElementById('obProvider').value;
       saveBYOK(provider, apiKey);
     });
 
@@ -486,7 +486,7 @@
   function finish() {
     localStorage.setItem(STORAGE_KEY, '1');
     localStorage.setItem('sb_tutorial_v1', 'done');
-    var overlay = document.getElementById('sbOnboard');
+    const overlay = document.getElementById('sbOnboard');
     if (overlay) {
       overlay.classList.add('is-exit');
       setTimeout(function() { overlay.parentNode && overlay.parentNode.removeChild(overlay); }, 300);
@@ -495,10 +495,10 @@
 
   function init() {
     if (!shouldShow()) return;
-    var style = document.createElement('style');
+    const style = document.createElement('style');
     style.textContent = CSS;
     document.head.appendChild(style);
-    var overlay = document.createElement('div');
+    const overlay = document.createElement('div');
     overlay.id = 'sbOnboard';
     overlay.innerHTML = '<div id="sbOnboardCard">' + renderPaths() + '</div>';
     document.body.appendChild(overlay);

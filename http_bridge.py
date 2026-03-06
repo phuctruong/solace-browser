@@ -28,8 +28,10 @@ try:
     import httpx
     from pydantic import BaseModel, Field
 except ImportError:
-    print("Error: Required packages not installed. Install with:")
-    print("  pip install httpx pydantic google-cloud-logging")
+    _startup_logger = logging.getLogger("solace-http-bridge")
+    _startup_logger.error(
+        "Required packages not installed. Install with: pip install httpx pydantic google-cloud-logging"
+    )
     sys.exit(1)
 
 try:
