@@ -1,0 +1,74 @@
+{
+  "name": "Solace Browser",
+  "short_name": "Solace",
+  "description": "Privacy-first AI browser with 22 apps, evidence trails, and human approval gates.",
+  "start_url": "/home.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#030311",
+  "theme_color": "#81AFDD",
+  "scope": "/",
+  "categories": ["productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/pwa/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/pwa/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/pwa/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Solace Browser Dashboard"
+    },
+    {
+      "src": "/images/pwa/screenshot-narrow.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Solace Browser on Mobile"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Gmail Triage",
+      "short_name": "Gmail",
+      "description": "Run Gmail Inbox Triage",
+      "url": "/home.html?app=gmail-inbox-triage",
+      "icons": [{"src": "/favicon.svg", "sizes": "any"}]
+    },
+    {
+      "name": "App Store",
+      "short_name": "Apps",
+      "description": "Browse 22 automation apps",
+      "url": "/app-store.html",
+      "icons": [{"src": "/favicon.svg", "sizes": "any"}]
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.solaceagi.browser",
+      "id": "com.solaceagi.browser"
+    }
+  ],
+  "prefer_related_applications": false
+}
