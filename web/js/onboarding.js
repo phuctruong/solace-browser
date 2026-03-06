@@ -448,7 +448,8 @@
     });
 
     document.getElementById('obManaged').addEventListener('click', function() {
-      window.open(CLOUD + '/pricing', '_blank');
+      // Mark as managed preference, the setup wizard handles plan selection
+      localStorage.setItem('solace_onboard_path', 'managed');
       finish();
     });
 

@@ -17,6 +17,7 @@
   <!-- tutorial removed from start page — sign-in IS the onboarding -->
   <!-- <script src="/js/yinyang-tutorial-v2.js" defer></script> -->
   <script src="/js/yinyang-oauth3-confirm.js?v=102" defer></script>
+  <script src="/js/setup-wizard.js?v=103" defer></script>
   <script src="/vendor/jquery/jquery-3.7.1.min.js" defer></script>
   <script src="/vendor/amcharts/index.js" defer></script>
   <script src="/vendor/amcharts/xy.js" defer></script>
@@ -458,7 +459,7 @@
     </div>
 
     <div class="footer-info">
-      <span>v1.1.6</span>
+      <span>v1.1.9</span>
       <a href="https://www.solaceagi.com/privacy" target="_blank">Privacy</a>
       <a href="https://www.solaceagi.com/terms" target="_blank">Terms</a>
     </div>
@@ -471,6 +472,8 @@
     function showSignedIn(freshToken) {
       document.getElementById('login-card').style.display = 'none';
       document.getElementById('signed-in-card').style.display = 'block';
+      // Fire event for setup wizard
+      window.dispatchEvent(new CustomEvent('solace:signed-in', { detail: { fresh: freshToken } }));
       var key = localStorage.getItem('solace_api_key');
       if (!key) return;
       var headers = { 'Authorization': 'Bearer ' + key };

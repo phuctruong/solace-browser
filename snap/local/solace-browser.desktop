@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Solace Browser
+GenericName=AI Browser
+Comment=AI browser that works while you don't — Gmail, LinkedIn, 25+ apps
+Exec=solace-browser
+Icon=${SNAP}/share/icons/hicolor/256x256/apps/solace-browser.png
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;Utility;
+Keywords=AI;browser;email;gmail;automation;assistant;
+StartupWMClass=solace-browser
+MimeType=x-scheme-handler/solace;

@@ -1,0 +1,53 @@
+name: solace-browser
+base: core22
+version: '1.1.8'
+summary: AI browser that works while you don't — Gmail, LinkedIn, 25+ apps
+description: |
+  Solace Browser is an AI-powered browser that automates your email,
+  scheduling, and social media. Triage Gmail, clean spam, optimize
+  LinkedIn, and more — all with human approval at every step.
+
+  Features:
+  - 25+ AI apps for Gmail, Slack, LinkedIn, Substack
+  - YinYang AI assistant with context-aware suggestions
+  - OAuth3 scoped consent — nothing happens without your approval
+  - Evidence trail — every action SHA-256 sealed
+  - Bring Your Own Key (free) or Managed LLM ($8/mo)
+  - Works on Linux, macOS, Windows
+
+  Privacy-first: everything runs locally. Your data never leaves
+  your machine unless you explicitly approve it.
+
+grade: stable
+confinement: strict
+
+architectures:
+  - build-on: amd64
+
+apps:
+  solace-browser:
+    command: bin/solace-browser
+    desktop: share/applications/solace-browser.desktop
+    plugs:
+      - network
+      - network-bind
+      - home
+      - desktop
+      - desktop-legacy
+      - x11
+      - wayland
+      - browser-support
+
+parts:
+  solace-browser:
+    plugin: dump
+    source: .
+    organize:
+      dist/solace-browser-linux-x86_64: bin/solace-browser
+      snap/local/solace-browser.desktop: share/applications/solace-browser.desktop
+      snap/local/solace-browser.png: share/icons/hicolor/256x256/apps/solace-browser.png
+    stage-packages:
+      - libgtk-3-0
+      - libnss3
+      - libxss1
+      - libasound2
