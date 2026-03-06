@@ -1124,6 +1124,14 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             self._handle_offline_flush(payload)
             return
 
+        # GDPR: Account deletion + data export (proxy to solaceagi.com)
+        if request_path == "/api/cloud/account/delete":
+            self._handle_cloud_account_delete(payload)
+            return
+        if request_path == "/api/cloud/account/export":
+            self._handle_cloud_account_export(payload)
+            return
+
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "Not found"})
 
     # ── Locale ──────────────────────────────────────────────────────────────────
@@ -2886,6 +2894,48 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             self._OFFLINE_QUEUE.unlink()
 
         self._send_json(HTTPStatus.OK, {"flushed": flushed, "errors": errors, "remaining": len(remaining)})
+
+    # ─────────────────────────────────────────────────────────────────────
+    # GDPR — Account Deletion + Data Export (proxy to solaceagi.com)
+    # ─────────────────────────────────────────────────────────────────────
+
+    def _handle_cloud_account_delete(self, payload: dict) -> None:
+        """POST /api/cloud/account/delete — Delete user account on solaceagi.com (GDPR Art. 17)."""
+        confirm_value = payload.get("confirm", "")
+        if confirm_value != "DELETE":
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "Confirmation required: set confirm='DELETE'"})
+            return
+        token = self._cloud_auth_token()
+        if not token:
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "Not logged in. Connect to solaceagi.com first."})
+            return
+        status, body = self._cloud_request("DELETE", "/api/v1/account", token=token)
+        self._audit_cloud_call("/api/v1/account", "DELETE", status)
+        if status == 0:
+            self._send_json(HTTPStatus.SERVICE_UNAVAILABLE, {
+                "error": "Cannot reach solaceagi.com. Try again later.",
+                "offline": True,
+            })
+            return
+        http_status = HTTPStatus(status) if 100 <= status <= 599 else HTTPStatus.BAD_GATEWAY
+        self._send_json(http_status, body)
+
+    def _handle_cloud_account_export(self, payload: dict) -> None:
+        """POST /api/cloud/account/export — Export user data from solaceagi.com (GDPR Art. 20)."""
+        token = self._cloud_auth_token()
+        if not token:
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "Not logged in. Connect to solaceagi.com first."})
+            return
+        status, body = self._cloud_request("GET", "/api/v1/account/export", token=token)
+        self._audit_cloud_call("/api/v1/account/export", "GET", status)
+        if status == 0:
+            self._send_json(HTTPStatus.SERVICE_UNAVAILABLE, {
+                "error": "Cannot reach solaceagi.com. Try again later.",
+                "offline": True,
+            })
+            return
+        http_status = HTTPStatus(status) if 100 <= status <= 599 else HTTPStatus.BAD_GATEWAY
+        self._send_json(http_status, body)
 
     # ─────────────────────────────────────────────────────────────────────
     # Sync — push/pull app state to/from solaceagi.com (or local file)
