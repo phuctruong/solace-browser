@@ -4430,3 +4430,123 @@ body.simple-mode .dl-feature {
     font-size: 1.9rem;
   }
 }
+
+/* ── Danger Zone (account deletion, destructive actions) ── */
+.danger-zone {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--sb-bg-danger-alpha-14);
+}
+.danger-zone__heading {
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--sb-danger);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.danger-zone__copy {
+  font-size: var(--font-sm);
+  color: var(--sb-text-muted);
+  margin-bottom: 16px;
+}
+.btn-danger {
+  background: transparent;
+  color: var(--sb-danger);
+  border: 1px solid var(--sb-bg-danger-alpha-14);
+  border-radius: var(--sb-radius-sm);
+  padding: 10px 20px;
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+  transition: background 0.2s, border-color 0.2s;
+}
+.btn-danger:hover {
+  background: var(--sb-bg-danger-alpha-14);
+  border-color: var(--sb-danger);
+}
+.btn-danger:focus-visible {
+  outline: 2px solid var(--sb-danger);
+  outline-offset: 2px;
+}
+
+/* ── Delete Account Confirmation Modal ── */
+.delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--sb-mask-alpha-40);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.delete-modal-overlay.hidden {
+  display: none;
+}
+.delete-modal {
+  background: var(--sb-surface);
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius-md);
+  padding: 32px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: var(--sb-shadow);
+}
+.delete-modal__title {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--sb-danger);
+  margin-bottom: 12px;
+}
+.delete-modal__body {
+  font-size: var(--font-base);
+  color: var(--sb-text-muted);
+  margin-bottom: 8px;
+}
+.delete-modal__confirm-label {
+  display: block;
+  font-size: var(--font-sm);
+  color: var(--sb-text-muted);
+  margin-top: 16px;
+  margin-bottom: 6px;
+}
+.delete-modal__confirm-input {
+  width: 100%;
+  background: var(--sb-surface-strong);
+  border: 1px solid var(--sb-border);
+  border-radius: 8px;
+  color: var(--sb-text);
+  padding: 8px 12px;
+  font-size: var(--font-base);
+  font-family: var(--sb-font-body);
+}
+.delete-modal__confirm-input:focus {
+  outline: 2px solid var(--sb-danger);
+  outline-offset: 1px;
+}
+.delete-modal__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+.delete-modal__status {
+  margin-top: 12px;
+  font-size: var(--font-sm);
+  min-height: 1.2em;
+}
+.delete-modal__status--error {
+  color: var(--sb-danger);
+}
+.delete-modal__status--success {
+  color: var(--sb-success);
+}
+.danger-zone__buttons {
+  flex-direction: column;
+  gap: 12px;
+}
+.danger-zone__btn-full {
+  width: 100%;
+}

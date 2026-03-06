@@ -189,7 +189,65 @@
               <button class="btn btn-secondary" data-settings-save="account" type="button">Save account</button>
             </div>
           </article>
+
+          <!-- GDPR: Account Deletion + Data Export -->
+          <article class="data-panel" id="gdpr-section">
+            <div class="section-heading">
+              <div>
+                <h3 class="section-title">Data &amp; Privacy</h3>
+                <p class="section-copy">GDPR Article 17 (Right to Erasure) and Article 20 (Data Portability).</p>
+              </div>
+            </div>
+            <div class="data-grid">
+              <div>
+                <table class="data-table">
+                  <tbody>
+                    <tr><td><strong>Export my data</strong></td><td>Download all your data as JSON (Article 20).</td></tr>
+                    <tr><td><strong>Delete my account</strong></td><td>Permanently remove all data from our servers (Article 17). This cannot be undone.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div>
+                <div class="button-row danger-zone__buttons">
+                  <button class="btn btn-secondary danger-zone__btn-full" id="btn-gdpr-export">Export my data</button>
+                  <button class="btn-danger danger-zone__btn-full" id="btn-gdpr-delete" data-i18n="settings_delete_account">Delete my account</button>
+                </div>
+              </div>
+            </div>
+            <div id="gdpr-status" class="delete-modal__status hidden"></div>
+          </article>
         </section>
+
+        <!-- Delete Account Confirmation Modal -->
+        <div class="delete-modal-overlay hidden" id="delete-account-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+          <div class="delete-modal">
+            <h3 class="delete-modal__title" id="delete-modal-title">Delete Your Account</h3>
+            <p class="delete-modal__body">
+              This will permanently delete your Solace account, including all cloud-synced evidence,
+              browser sessions, API keys, and billing data. This action is irreversible.
+            </p>
+            <p class="delete-modal__body">
+              Your local data in <code>~/.solace/</code> will not be deleted.
+              You can export your data first using the "Export my data" button.
+            </p>
+            <label class="delete-modal__confirm-label" for="delete-confirm-input">
+              Type <strong>DELETE</strong> to confirm:
+            </label>
+            <input
+              type="text"
+              id="delete-confirm-input"
+              class="delete-modal__confirm-input"
+              placeholder="DELETE"
+              autocomplete="off"
+              spellcheck="false"
+            >
+            <div class="delete-modal__status hidden" id="delete-modal-status" aria-live="polite"></div>
+            <div class="delete-modal__actions">
+              <button class="btn btn-secondary" id="btn-delete-cancel" type="button">Cancel</button>
+              <button class="btn-danger" id="btn-delete-confirm" type="button" disabled>Permanently Delete</button>
+            </div>
+          </div>
+        </div>
 
         <!-- History / Capture -->
         <section class="page-section reveal" id="history">
@@ -731,6 +789,142 @@
         applyTextSize(saved);
       }
       highlightActiveSize();
+    })();
+
+    // ── GDPR: Export + Delete Account ──
+    (function wireGdpr() {
+      var statusEl = document.getElementById('gdpr-status');
+      var modalOverlay = document.getElementById('delete-account-modal');
+      var modalStatus = document.getElementById('delete-modal-status');
+      var confirmInput = document.getElementById('delete-confirm-input');
+      var confirmBtn = document.getElementById('btn-delete-confirm');
+      var cancelBtn = document.getElementById('btn-delete-cancel');
+
+      function showStatus(el, msg, isError) {
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.remove('hidden', 'delete-modal__status--error', 'delete-modal__status--success');
+        if (isError) { el.classList.add('delete-modal__status--error'); }
+        else { el.classList.add('delete-modal__status--success'); }
+      }
+
+      function getAuthToken() {
+        return localStorage.getItem('solace_auth_token') || localStorage.getItem('solace_api_key') || '';
+      }
+
+      /* ── Data Export (GDPR Article 20) ── */
+      var exportBtn = document.getElementById('btn-gdpr-export');
+      if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+          var token = getAuthToken();
+          if (!token) { showStatus(statusEl, 'You must be logged in to export data.', true); return; }
+          exportBtn.textContent = 'Exporting...';
+          showStatus(statusEl, 'Requesting data export...', false);
+          fetch(WEB + '/api/cloud/account/export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.error) { throw new Error(data.error); }
+            var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'solace-data-export-' + new Date().toISOString().slice(0,10) + '.json';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showStatus(statusEl, 'Data exported successfully.', false);
+            exportBtn.textContent = 'Export my data';
+          })
+          .catch(function(e) {
+            showStatus(statusEl, 'Export failed: ' + e.message, true);
+            exportBtn.textContent = 'Export my data';
+          });
+        });
+      }
+
+      /* ── Delete Account Modal (GDPR Article 17) ── */
+      var deleteBtn = document.getElementById('btn-gdpr-delete');
+      if (deleteBtn && modalOverlay) {
+        // Open modal
+        deleteBtn.addEventListener('click', function() {
+          var token = getAuthToken();
+          if (!token) { showStatus(statusEl, 'You must be logged in to delete your account.', true); return; }
+          confirmInput.value = '';
+          confirmBtn.disabled = true;
+          modalStatus.classList.add('hidden');
+          modalOverlay.classList.remove('hidden');
+          confirmInput.focus();
+        });
+
+        // Enable confirm button only when user types DELETE
+        confirmInput.addEventListener('input', function() {
+          confirmBtn.disabled = (confirmInput.value.trim() !== 'DELETE');
+        });
+
+        // Cancel
+        cancelBtn.addEventListener('click', function() {
+          modalOverlay.classList.add('hidden');
+          confirmInput.value = '';
+          confirmBtn.disabled = true;
+        });
+
+        // Close on overlay click (not modal body)
+        modalOverlay.addEventListener('click', function(e) {
+          if (e.target === modalOverlay) {
+            modalOverlay.classList.add('hidden');
+            confirmInput.value = '';
+            confirmBtn.disabled = true;
+          }
+        });
+
+        // Close on Escape
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && !modalOverlay.classList.contains('hidden')) {
+            modalOverlay.classList.add('hidden');
+            confirmInput.value = '';
+            confirmBtn.disabled = true;
+          }
+        });
+
+        // Confirm delete
+        confirmBtn.addEventListener('click', function() {
+          if (confirmInput.value.trim() !== 'DELETE') return;
+          var token = getAuthToken();
+          if (!token) { showStatus(modalStatus, 'Not logged in.', true); return; }
+          confirmBtn.disabled = true;
+          confirmBtn.textContent = 'Deleting...';
+          showStatus(modalStatus, 'Requesting account deletion...', false);
+
+          fetch(WEB + '/api/cloud/account/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ confirm: 'DELETE' })
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.error) { throw new Error(data.error); }
+            if (data.status === 'deleted') {
+              localStorage.removeItem('solace_auth_token');
+              localStorage.removeItem('solace_api_key');
+              showStatus(modalStatus, 'Account deleted. ' + (data.documents_deleted || 0) + ' documents removed.', false);
+              showStatus(statusEl, 'Account deleted successfully. You have been logged out.', false);
+              // Keep modal open briefly to show confirmation, then close
+              setTimeout(function() {
+                modalOverlay.classList.add('hidden');
+              }, 3000);
+            } else {
+              throw new Error(data.message || 'Unexpected response from server.');
+            }
+          })
+          .catch(function(e) {
+            showStatus(modalStatus, 'Deletion failed: ' + e.message, true);
+            confirmBtn.textContent = 'Permanently Delete';
+            confirmBtn.disabled = false;
+          });
+        });
+      }
     })();
   </script>
 </body>
