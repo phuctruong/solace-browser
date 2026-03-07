@@ -721,6 +721,7 @@ class SolaceBrowser:
                 '--start-maximized',
                 '--disable-features=UseSkiaRenderer',
                 '--class=SolaceBrowser',
+                '--app-user-model-id=SolaceAGI.SolaceBrowser',
             ])
 
         try:

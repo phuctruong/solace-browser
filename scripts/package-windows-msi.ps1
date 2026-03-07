@@ -169,7 +169,7 @@ $wxsContent = @"
       <ComponentRef Id="StartMenuShortcut" />
     </Feature>
 
-    <Feature Id="DesktopFeature" Title="Desktop Shortcut" Level="2">
+    <Feature Id="DesktopFeature" Title="Desktop Shortcut" Level="1">
       <ComponentRef Id="DesktopShortcut" />
     </Feature>
 
