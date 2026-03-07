@@ -14,6 +14,8 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import os
+import shutil
 import struct
 import subprocess
 import sys
@@ -36,6 +38,20 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 REPO_OWNER = "phuctruong"
 REPO_NAME = "solace-browser"
 WORKFLOW_NAME = "build-binaries"
+
+
+def _resolve_gcloud_cli() -> str:
+    candidates = ["gcloud"]
+    if os.name == "nt":
+        candidates = ["gcloud.cmd", "gcloud.exe", "gcloud"]
+    for candidate in candidates:
+        resolved = shutil.which(candidate)
+        if resolved:
+            return resolved
+    raise RuntimeError("gcloud CLI not found on PATH.")
+
+
+GCLOUD_CLI = _resolve_gcloud_cli()
 
 
 @dataclass(frozen=True)
@@ -202,7 +218,7 @@ def _verify_binary(target_os: str, binary_path: Path) -> None:
 
 
 def _gcloud_cp(source: Path, destination: str, cache_control: str | None = None) -> None:
-    cmd = ["gcloud", "storage", "cp"]
+    cmd = [GCLOUD_CLI, "storage", "cp"]
     if cache_control:
         cmd.append(f"--cache-control={cache_control}")
     cmd.extend([str(source), destination])

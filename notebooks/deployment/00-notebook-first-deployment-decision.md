@@ -1,6 +1,6 @@
 # Notebook-First Deployment Decision
 
-Date: 2026-03-05
+Date: 2026-03-07
 Project: solace-browser
 
 ## Question
@@ -28,8 +28,27 @@ Adopt notebook-first deployment for release operations with these boundaries:
 2. Use notebooks for preflight checks, controlled command execution, and before/after evidence reports.
 3. Seal output reports and link them to release tags.
 
+## Windows Packaging Best-Practice Addendum (Applied)
+Based on Microsoft + WiX guidance, Windows deployment notebooks now enforce:
+1. Signed + timestamped MSI for release tags (fail-closed if signing material missing).
+2. MSI validation by OLE2 header, checksum name check, and published artifact consistency.
+3. x64 install targeting (`ProgramFiles64Folder`) for 64-bit release artifacts.
+4. Installer UX behavior:
+   - Auto-launch app after successful interactive install, explicitly with `--head`.
+   - Never auto-launch in silent installs (`/qn`) or uninstall paths.
+   - Start Menu and Desktop shortcuts explicitly pass `--head` to enforce headed default.
+5. Icon consistency:
+   - Single canonical YinYang `.ico` generated with full Windows size set (16/32/48/64/128/256).
+   - Same icon used for EXE, MSI shortcuts, and Add/Remove Programs product icon.
+
 ## Scope of this implementation
 This directory includes practical notebooks to:
 1. Trigger/observe GitHub native matrix builds.
 2. Promote native artifacts to GCS.
 3. Run a local Linux dry-run and capture before/after evidence.
+
+## External reference anchors
+1. Microsoft `ProgramFiles64Folder`: https://learn.microsoft.com/en-us/windows/win32/msi/programfiles64folder
+2. Microsoft `UILevel`: https://learn.microsoft.com/en-us/windows/win32/msi/uilevel
+3. Microsoft `ARPPRODUCTICON`: https://learn.microsoft.com/en-us/windows/win32/msi/arpproducticon
+4. Microsoft `signtool`: https://learn.microsoft.com/en-us/dotnet/framework/tools/signtool-exe

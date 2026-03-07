@@ -1,51 +1,35 @@
 # Deployment Notebook Report
 
-Date: 2026-03-05
+Date: 2026-03-07
 Project: solace-browser
 
 ## What was updated
-1. Notebook 01 now treats Windows artifact as a full installer (`.exe`) and records installer size evidence.
-2. Notebook 02 now assumes `gcloud` is already authenticated, fail-checks active account/project/bucket, and validates installer marker + checksum naming.
-3. `src/scripts/release_browser_cycle.sh` now enforces installer marker when `TARGET_OS=windows` and `WINDOWS_PACKAGE_MODE=installer`.
-4. `src/scripts/promote_native_builds_to_gcs.py` now enforces installer marker and is atomic (verifies all platform artifacts before any GCS upload).
+1. Windows deployment flow is standardized on MSI (`solace-browser-windows-x86_64.msi`), not legacy `.exe`.
+2. Notebook deployment checks now validate MSI format via OLE2 header bytes and `.msi` checksum naming.
+3. `src/scripts/release_browser_cycle.sh` now runs MSI code-signing and supports fail-closed signing gate (`WINDOWS_SIGNING_REQUIRED=1`).
+4. New script `scripts/sign-windows-msi.ps1` signs MSI with Authenticode + timestamp and verifies signature status.
+5. MSI authoring now launches app automatically after successful interactive install (`UILevel >= 5`) with `--head`, never in silent installs.
+6. Windows shortcuts (Start Menu + Desktop) are authored with `--head` to enforce headed default.
+6. Windows icon pipeline now uses a canonical multi-size YinYang icon (16/32/48/64/128/256) for shortcuts and ARP icon.
+7. GitHub workflows now pass signing secrets and enforce signing on tag releases.
 
-## Validation executed
-1. Notebook JSON validation:
-   - `01-github-native-matrix-deploy.ipynb` OK
-   - `02-promote-native-artifacts.ipynb` OK
-2. Script validation:
-   - `bash -n src/scripts/release_browser_cycle.sh` OK
-   - `python3 -m py_compile src/scripts/promote_native_builds_to_gcs.py` OK
-3. Local release-cycle dry run (Linux):
-   - Command: `TARGET_OS=linux UPLOAD_ENABLED=0 DOWNLOAD_ENABLED=0 RUN_SMOKE=0 src/scripts/release_browser_cycle.sh`
-   - Output dir: `scratch/release-cycle/20260305-133354`
-   - Metrics: build `121722ms`, artifact `320822760` bytes, smoke skipped
-4. Live GCS verification (Notebook 02 check cell):
-   - Linux/macOS/Windows + sha URLs all returned `200`
-   - Windows latest failed installer gate: `Inno Setup Setup Data` marker missing
-5. Promotion behavior checks:
-   - Initial run against existing run id `22675190613` failed on Windows installer gate.
-   - After atomic fix, same run fails before any upload with:
-     `... is not an Inno Setup installer (marker missing).`
+## Signing gate behavior
+- Local/manual builds: signing is optional by default.
+- Tag releases: signing is required (fail-closed).
+- Supported signing inputs:
+  - `WINDOWS_CODESIGN_PFX_BASE64` + `WINDOWS_CODESIGN_PFX_PASSWORD`, or
+  - `WINDOWS_CODESIGN_CERT_THUMBPRINT`
 
-## Current production state (important)
-- `latest` Windows object exists at:
-  - `https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-windows-x86_64.exe`
-- Current size (HTTP `content-length`): `89005981` bytes (~84.88 MB)
-- It is currently a plain PE executable, not an Inno Setup installer.
+## Why this fixes SmartScreen pain
+- Unsigned MSI surfaces as `Unknown publisher` and triggers high-friction SmartScreen warnings.
+- Signed + timestamped MSI provides trusted publisher identity and builds SmartScreen reputation over time.
 
-## Before vs After
-Before:
-- Notebook checks accepted Windows PE but did not require installer-level guarantee end-to-end.
-- Promotion script could upload Linux/macOS before failing on Windows mismatch.
+## Remaining external requirement
+1. Provide a valid code-signing certificate in CI secrets (OV/EV recommended; EV best for fastest SmartScreen trust).
 
-After:
-- Notebook checks require installer marker and report installer size.
-- Release and promotion scripts enforce installer marker.
-- Promotion path is atomic fail-closed across all three platforms.
-
-## What is still needed to fully switch production to installer-first
-1. Push these changes to GitHub (workflow + scripts + notebook updates).
-2. Trigger a new native matrix build on tag (`build-binaries`) so Windows artifact is installer-based.
-3. Run Notebook 02 promotion with the new successful run id.
-4. Re-run Notebook 02 verification cell; expected result is installer marker present and checksum matches for all platforms.
+## Internet references used (best practices)
+1. Microsoft: `ProgramFiles64Folder` (64-bit install location guidance): https://learn.microsoft.com/en-us/windows/win32/msi/programfiles64folder
+2. Microsoft: `UILevel` property (interactive vs silent installer UI behavior): https://learn.microsoft.com/en-us/windows/win32/msi/uilevel
+3. Microsoft: `ARPPRODUCTICON` property (Add/Remove Programs icon): https://learn.microsoft.com/en-us/windows/win32/msi/arpproducticon
+4. Microsoft: `signtool` options for modern digest + RFC3161 timestamp (`/fd`, `/td`, `/tr`): https://learn.microsoft.com/en-us/dotnet/framework/tools/signtool-exe
+5. FireGiant/WiX: ARP and installer metadata best-practice surface: https://docs.firegiant.com/wix3/howtos/ui_and_localization/configure_arp_appearance/

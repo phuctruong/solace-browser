@@ -9,7 +9,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-if (-not $IsWindows) {
+$runningOnWindows = $false
+if (Get-Variable -Name IsWindows -ErrorAction SilentlyContinue) {
+    $runningOnWindows = [bool]$IsWindows
+}
+elseif ($env:OS -eq "Windows_NT") {
+    $runningOnWindows = $true
+}
+
+if (-not $runningOnWindows) {
     throw "scripts/package-windows-msi.ps1 must run on Windows."
 }
 
@@ -75,27 +83,25 @@ $wxsContent = @"
     Manufacturer="Solace AGI"
     Version="$AppVersion"
     UpgradeCode="$upgradeGuid"
+    Scope="perMachine"
+    InstallerVersion="500"
+    Platform="x64"
     Compressed="yes">
 
     <MajorUpgrade
       DowngradeErrorMessage="A newer version of Solace Browser is already installed." />
 
+    <Property Id="ARPPRODUCTICON" Value="SolaceIcon" />
+
     <MediaTemplate EmbedCab="yes" />
 
-    <StandardDirectory Id="ProgramFiles6432Folder">
+    <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="Solace Browser">
 
         <Component Id="MainExecutable" Guid="*">
           <File Id="SolaceBrowserExe"
                 Source="$inputPath"
                 Name="solace-browser.exe"
-                KeyPath="yes" />
-        </Component>
-
-        <Component Id="IconFile" Guid="*">
-          <File Id="SolaceBrowserIco"
-                Source="$icoPath"
-                Name="solace-browser.ico"
                 KeyPath="yes" />
         </Component>
 
@@ -116,10 +122,12 @@ $wxsContent = @"
           <Shortcut Id="StartMenuLink"
                     Name="Solace Browser"
                     Target="[INSTALLFOLDER]solace-browser.exe"
+                    Arguments="--head"
                     Icon="SolaceIcon"
+                    IconIndex="0"
                     WorkingDirectory="INSTALLFOLDER" />
           <RemoveFolder Id="RemoveMenuFolder" On="uninstall" />
-          <RegistryValue Root="HKCU"
+          <RegistryValue Root="HKLM"
                          Key="Software\SolaceAGI\SolaceBrowser"
                          Name="StartMenuInstalled"
                          Type="integer"
@@ -135,9 +143,11 @@ $wxsContent = @"
         <Shortcut Id="DesktopLink"
                   Name="Solace Browser"
                   Target="[INSTALLFOLDER]solace-browser.exe"
+                  Arguments="--head"
                   Icon="SolaceIcon"
+                  IconIndex="0"
                   WorkingDirectory="INSTALLFOLDER" />
-        <RegistryValue Root="HKCU"
+        <RegistryValue Root="HKLM"
                        Key="Software\SolaceAGI\SolaceBrowser"
                        Name="DesktopInstalled"
                        Type="integer"
@@ -148,9 +158,14 @@ $wxsContent = @"
 
     <Icon Id="SolaceIcon" SourceFile="$icoPath" />
 
+    <CustomAction Id="LaunchAfterInstall"
+                  FileRef="SolaceBrowserExe"
+                  ExeCommand="--head"
+                  Return="asyncNoWait"
+                  Impersonate="yes" />
+
     <Feature Id="MainFeature" Title="Solace Browser" Level="1">
       <ComponentRef Id="MainExecutable" />
-      <ComponentRef Id="IconFile" />
       <ComponentRef Id="LicenseFile" />
       <ComponentRef Id="StartMenuShortcut" />
     </Feature>
@@ -158,6 +173,13 @@ $wxsContent = @"
     <Feature Id="DesktopFeature" Title="Desktop Shortcut" Level="2">
       <ComponentRef Id="DesktopShortcut" />
     </Feature>
+
+    <InstallExecuteSequence>
+      <!-- Launch app after successful interactive install only (never in silent mode). -->
+      <Custom Action="LaunchAfterInstall"
+              After="InstallFinalize"
+              Condition="NOT Installed AND UILevel &gt;= 5 AND NOT REMOVE" />
+    </InstallExecuteSequence>
 
   </Package>
 </Wix>

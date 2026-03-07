@@ -9,7 +9,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-if (-not $IsWindows) {
+$runningOnWindows = $false
+if (Get-Variable -Name IsWindows -ErrorAction SilentlyContinue) {
+    $runningOnWindows = [bool]$IsWindows
+}
+elseif ($env:OS -eq "Windows_NT") {
+    $runningOnWindows = $true
+}
+
+if (-not $runningOnWindows) {
     throw "scripts/package-windows-installer.ps1 must run on Windows."
 }
 
@@ -92,12 +100,12 @@ Source: "{#SetupIcon}"; DestDir: "{app}"; DestName: "solace-browser.ico"; Flags:
 Source: "{#LicenseFile}"; DestDir: "{app}"; DestName: "LICENSE"; Flags: ignoreversion skipifsourcedoesntexist
 
 [Icons]
-Name: "{group}\Solace Browser"; Filename: "{app}\{#AppExeName}"
+Name: "{group}\Solace Browser"; Filename: "{app}\{#AppExeName}"; Parameters: "--head"
 Name: "{group}\Uninstall Solace Browser"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\Solace Browser"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
+Name: "{autodesktop}\Solace Browser"; Filename: "{app}\{#AppExeName}"; Parameters: "--head"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Description: "Launch Solace Browser"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExeName}"; Parameters: "--head"; Description: "Launch Solace Browser"; Flags: nowait postinstall skipifsilent
 '@
 
 Set-Content -Path $issPath -Value $issContent -Encoding UTF8
