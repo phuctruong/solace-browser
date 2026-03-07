@@ -80,7 +80,7 @@
     "docs_mcp_h1": "Panduan MCP / Ejen",
     "docs_mcp_what_h2": "Apa itu MCP?",
     "docs_mcp_setup_h2": "Persediaan (30 saat)",
-    "docs_mcp_claude_h2": "Claude Code",
+    "docs_mcp_claude_h2": "Kod Claude",
     "docs_mcp_cursor_h2": "Cursor / Codex",
     "docs_mcp_tools_h2": "7 alat pelayar",
     "docs_mcp_examples_h2": "Contoh penggunaan",
@@ -202,7 +202,7 @@
     "agent_docs_best_practices": "Amalan Terbaik",
     "app_stars": "bintang",
     "app_installs": "pemasangan",
-    "app_trending": "Trending",
+    "app_trending": "Tren",
     "dash_onboarding_title": "Selamat datang! Jom sediakan aplikasi anda.",
     "dash_onboarding_sub": "Aplikasi telah dipasang tetapi perlu persediaan sebelum boleh berjalan. Lengkapkan langkah ini atau biar ejen AI melakukannya untuk anda.",
     "dash_onboarding_dismiss": "Saya akan sediakan kemudian",
@@ -228,14 +228,118 @@
     "schedule_status_success": "Berjaya",
     "schedule_tab_upcoming": "Akan Datang",
     "schedule_tab_approvals": "Kelulusan",
-    "schedule_tab_history": "Sejarah"
+    "schedule_tab_history": "Sejarah",
+    "dl_eyebrow": "v1.1.8  Sumber-Media Release",
+    "dl_hero_h1": "Penyemak imbas yang mengekalkan <span>kenyuhan kelihatan</span>.",
+    "dl_hero_p": "Perut pertama tempatan dengan kebenaran OAuth3, pengambilan bukti, dan automasi AI. Muat turun pembinaan desktop atau membina dari sumber.",
+    "dl_btn_download": "Muat turun untuk platform anda",
+    "dl_btn_all_releases": "Semua rilis",
+    "dl_platform_downloads": "Muat turun Platform",
+    "dl_verify_kicker": "Semak download anda",
+    "dl_verify_h3": "SHA-256 Jumlah cek",
+    "dl_verify_p": "Setiap rilis termasuk SHA-256 checksum di halaman GitHub Releases. Semak pertandingan muat turun anda sebelum berjalan.",
+    "dl_quickstart_kicker": "Permulaan cepat",
+    "dl_quickstart_h3": "Berjalan dan berjalan dalam 60 saat",
+    "dl_build_h3": "Membina dari Sumber",
+    "dl_build_p": "Solace Browser adalah sumber yang tersedia di bawah Lesen Sumber Fungsi (FSL-1.1-Apache-2.0). Audit kod, membina secara tempatan, menyumbang kepada peningkatan.",
+    "dl_features_h2": "Kapal apa yang ada dalam setiap bangunan",
+    "dl_sysreq_h2": "Keperluan sistem",
+    "tunnel_eyebrow": "permukaan terowongan",
+    "tunnel_status_disconnected": "Terputus sambungan",
+    "tunnel_desc": "Grant tunnel.connect sebelum penyemak imbas mendedahkan URL awam.",
+    "tunnel_btn_connect": "Terusan terowong",
+    "tunnel_btn_disconnect": "Terusan terusan",
+    "tunnel_splash_kicker": "Posisi rel yang kelihatan",
+    "tunnel_splash_h2": "Penyemak imbas Solace",
+    "tunnel_splash_subtitle": "Terowong harus terasa sengaja: cukup terang untuk melihat, cukup tenang untuk mempercayai, dan mudah untuk menutup saat kerja selesai.",
+    "tunnel_relay_kicker": "Relay awam",
+    "tunnel_relay_h3": "Status titik akhir",
+    "tunnel_relay_not_connected": "Tidak disambungkan",
+    "tunnel_btn_copy_url": "Salin URL",
+    "tunnel_btn_open_url": "Buka URL",
+    "tunnel_consent_kicker": "Posisi pengiktirafan",
+    "tunnel_consent_h3": "Kenapa terowong tetap jelas",
+    "tunnel_consent_p": "Akses jauh cukup kuat sehingga pelayar tidak boleh menyiratkan ia hidup kecuali persetujuan, URL, dan kawalan rollback semua kelihatan sekaligus.",
+    "tunnel_step1_kicker": "Langkah 1",
+    "tunnel_step1_h3": "Beri ruang lingkup yang sempit",
+    "tunnel_step1_p": "Mengizinkan hanya tunnel.connect untuk masa berjalan tertentu yang memerlukan rel awan.",
+    "tunnel_step2_kicker": "Langkah 2",
+    "tunnel_step2_h3": "Mengesahkan satu titik akhir",
+    "tunnel_step2_p": "Penyemak imbas akan muncul URL awam yang tepat daripada menguburkannya dalam log atau teks ejen.",
+    "tunnel_step3_kicker": "Langkah 3",
+    "tunnel_step3_h3": "Tutup apabila kerja selesai.",
+    "tunnel_step3_p": "Halaman yang sama menyediakan kawalan berhenti dan keadaan terputus yang kelihatan untuk pengesahan.",
+    "machine_eyebrow": "permukaan mesin",
+    "machine_h1": "Periksa sempadan tempatan sebelum ejen menyentuhnya.",
+    "machine_details_h2": "Perincian permukaan mesin",
+    "machine_files_kicker": "Fail",
+    "machine_files_h3": "Akar yang dibenarkan",
+    "machine_state_kicker": "Ringkasan Negara",
+    "machine_state_h3": "Posisi sistem",
+    "machine_terminal_kicker": "Terminal",
+    "machine_terminal_h3": "Peranti perintah",
+    "machine_btn_preview": "Perintah Preview",
+    "machine_exec_kicker": "Model pelaksanaan",
+    "machine_exec_h3": "Mengapa halaman ini wujud",
+    "guide_h1": "Memulakan panduan",
+    "guide_lead": "Selamat datang di Solace Browser! panduan ini akan memandu anda melalui menyambung akaun anda dan menjalankan automatik pertama anda. Semua berlaku dengan kelulusan anda  tiada apa berjalan tanpa anda mengatakan ya.",
+    "guide_s1_h2": "Berdaftar di Soalce",
+    "guide_s2_h2": "Menjelajah App Store",
+    "guide_s3_h2": "Menghubungkan Akaun (misalnya LinkedIn)",
+    "guide_s4_h2": "Jalankan Aplikasi Pertama Anda",
+    "guide_s5_h2": "Tren Teknologi harian dengan LinkedIn",
+    "guide_s6_h2": "Kirimlah Ulasan",
+    "guide_cta_btn": "Buka App Store",
+    "guide_cta_p": "Siap untuk automatik? Mulakan dengan Gmail Inbox Triage.",
+    "ca_eyebrow": "Membina dengan Yinyang",
+    "ca_hero_h1": "Buat aplikasi anda sendiri<br><span>.</span>",
+    "ca_hero_sub": "Anda tidak perlu mengkod. Jelaskan apa yang anda mahu automatikkan dalam bahasa Inggeris biasa. Yinyang mengubah kata-kata anda menjadi resipi yang berfungsi, menjalankan secara langsung, dan menghantarnya ke App Store untuk digunakan oleh semua orang.",
+    "ca_step1_kicker": "Langkah 1  Jelaskan",
+    "ca_step1_h2": "Apa yang anda mahu automatik?",
+    "ca_step1_desc": "Tulis dalam bahasa Inggeris yang mudah. Tiada jargon diperlukan. Yinyang membaca perkataan anda dan menghasilkan langkah. Aplikasi terbaik adalah yang anda berharap sudah wujud.",
+    "ca_step2_kicker": "Langkah 2  Pratinjau",
+    "ca_step2_h2": "Berikut resipi anda",
+    "ca_step2_desc": "Yinyang membaca keterangan anda dan membahagikan ia menjadi langkah. Lihatlah mereka di bawah. Anda boleh kembali dan menyempurnakan keterangan anda, atau menamakan semula aplikasi sebelum menguji.",
+    "ca_step3_kicker": "Langkah 3  Ujian",
+    "ca_step3_h2": "Berjalankan secara langsung",
+    "ca_step3_desc": "Yinyang akan melaksanakan langkah pertama resipi anda di penyemak imbas tempatan anda. Tiada yang disimpan atau dihantar ke mana-mana. Setiap tindakan memerlukan kelulusan anda  itu adalah janji Solace.",
+    "ca_step4_kicker": "Langkah 4  Sediakan",
+    "ca_step4_h2": "Kirim ke App Store",
+    "ca_step4_desc": "Anda hanya satu langkah dari berkongsi aplikasi anda dengan dunia. Pasukan kami mengkaji setiap kiriman. Jika diluluskan, ia akan langsung di GitHub dan ke Solace App Store  percuma untuk semua orang.",
+    "ca_success_h2": "Yinyang menerima aplikasi anda!",
+    "ca_success_p": "Pasukan kami akan meninjau pengajuan anda. Jika diluluskan, ia akan langsung di GitHub dan ke Solace App Store  percuma untuk semua yang memerlukannya. Anda akan mendengar semula di e-mel yang anda berikan."
   },
   "personality": {
-    "professional": { "greeting": "Salam.", "farewell": "Selamat tinggal.", "encouragement": "Tugas berjaya diselesaikan.", "error": "Ralat berlaku. Butiran di bawah." },
-    "friendly": { "greeting": "Hai!", "farewell": "Jumpa lagi!", "encouragement": "Kerja bagus! Anda membuat kemajuan sebenar.", "error": "Oops, ada yang tak kena. Jom kita selesaikan." },
-    "playful": { "greeting": "Hei! Sedia bina sesuatu yang hebat?", "farewell": "Jumpa nanti, superstar!", "encouragement": "Anda memang hebat! Teruskan momentum!", "error": "Alamak! Terkandas sikit. Tak apa, kita boleh!" },
-    "minimal": { "greeting": "Sedia.", "farewell": "Selesai.", "encouragement": "Selesai.", "error": "Ralat." },
-    "custom": { "greeting": "Hai!", "farewell": "Jumpa lagi!", "encouragement": "Kerja bagus!", "error": "Ada yang tak kena." }
+    "professional": {
+      "greeting": "Salam.",
+      "farewell": "Selamat tinggal.",
+      "encouragement": "Tugas berjaya diselesaikan.",
+      "error": "Ralat berlaku. Butiran di bawah."
+    },
+    "friendly": {
+      "greeting": "Hai!",
+      "farewell": "Jumpa lagi!",
+      "encouragement": "Kerja bagus! Anda membuat kemajuan sebenar.",
+      "error": "Oops, ada yang tak kena. Jom kita selesaikan."
+    },
+    "playful": {
+      "greeting": "Hei! Sedia bina sesuatu yang hebat?",
+      "farewell": "Jumpa nanti, superstar!",
+      "encouragement": "Anda memang hebat! Teruskan momentum!",
+      "error": "Alamak! Terkandas sikit. Tak apa, kita boleh!"
+    },
+    "minimal": {
+      "greeting": "Sedia.",
+      "farewell": "Selesai.",
+      "encouragement": "Selesai.",
+      "error": "Ralat."
+    },
+    "custom": {
+      "greeting": "Hai!",
+      "farewell": "Jumpa lagi!",
+      "encouragement": "Kerja bagus!",
+      "error": "Ada yang tak kena."
+    }
   },
   "delight": {
     "milestones": {
@@ -328,29 +432,77 @@
     },
     "holidays": {
       "h001_name": "Tahun Baru",
-      "h001_greetings": ["Selamat Tahun Baru!", "Tahun baru, automasi baru.", "Untuk permulaan yang segar."],
+      "h001_greetings": [
+        "Selamat Tahun Baru!",
+        "Tahun baru, automasi baru.",
+        "Untuk permulaan yang segar."
+      ],
       "h002_name": "Tahun Baru Cina",
-      "h002_greetings": ["Gong Xi Fa Cai!", "Chuc Mung Nam Moi!", "Semoga kemakmuran bersama anda."],
+      "h002_greetings": [
+        "Gong Xi Fa Cai!",
+        "Chuc Mung Nam Moi!",
+        "Semoga kemakmuran bersama anda."
+      ],
       "h003_name": "Hari Valentine",
-      "h003_greetings": ["Selamat Hari Valentine!", "Menghantar kasih digital.", "Status hati: penuh."],
+      "h003_greetings": [
+        "Selamat Hari Valentine!",
+        "Menghantar kasih digital.",
+        "Status hati: penuh."
+      ],
       "h004_name": "Hari St. Patrick",
-      "h004_greetings": ["Selamat Hari St. Patrick!", "Nasib Irlandia untuk anda.", "Semoga tugas anda berjalan lancar."],
+      "h004_greetings": [
+        "Selamat Hari St. Patrick!",
+        "Nasib Irlandia untuk anda.",
+        "Semoga tugas anda berjalan lancar."
+      ],
       "h005_name": "Paskah",
-      "h005_greetings": ["Selamat Paskah!", "Musim bunga tiba.", "Semoga ini bawa kegembiraan."],
+      "h005_greetings": [
+        "Selamat Paskah!",
+        "Musim bunga tiba.",
+        "Semoga ini bawa kegembiraan."
+      ],
       "h006_name": "Hari Ibu",
-      "h006_greetings": ["Selamat Hari Ibu!", "Untuk mereka yang menyatukan segalanya.", "Tahniah untuk MVP."],
+      "h006_greetings": [
+        "Selamat Hari Ibu!",
+        "Untuk mereka yang menyatukan segalanya.",
+        "Tahniah untuk MVP."
+      ],
       "h007_name": "Hari Bapa",
-      "h007_greetings": ["Selamat Hari Bapa!", "Untuk yang sabar.", "Tahniah untuk pembina."],
+      "h007_greetings": [
+        "Selamat Hari Bapa!",
+        "Untuk yang sabar.",
+        "Tahniah untuk pembina."
+      ],
       "h008_name": "Hari Kemerdekaan",
-      "h008_greetings": ["Selamat 4 Julai!", "Kebebasan dan automasi.", "Bintang, jalur dan automasi."],
+      "h008_greetings": [
+        "Selamat 4 Julai!",
+        "Kebebasan dan automasi.",
+        "Bintang, jalur dan automasi."
+      ],
       "h009_name": "Halloween",
-      "h009_greetings": ["Selamat Halloween! 👻", "Boo! Gurau saja. Kebanyakannya.", "Jaga keselamatan."],
+      "h009_greetings": [
+        "Selamat Halloween! 👻",
+        "Boo! Gurau saja. Kebanyakannya.",
+        "Jaga keselamatan."
+      ],
       "h010_name": "Kesyukuran",
-      "h010_greetings": ["Selamat Hari Kesyukuran!", "Bersyukur untuk setiap larian.", "Bersyukur untuk sifar ralat."],
+      "h010_greetings": [
+        "Selamat Hari Kesyukuran!",
+        "Bersyukur untuk setiap larian.",
+        "Bersyukur untuk sifar ralat."
+      ],
       "h011_name": "Krismas",
-      "h011_greetings": ["Selamat Krismas! 🎄", "Selamat Hari Raya!", "Keamanan, kegembiraan dan sifar pepijat."],
+      "h011_greetings": [
+        "Selamat Krismas! 🎄",
+        "Selamat Hari Raya!",
+        "Keamanan, kegembiraan dan sifar pepijat."
+      ],
       "h012_name": "Deepavali",
-      "h012_greetings": ["Selamat Deepavali! 🪔", "Cahaya menang.", "Semoga cahaya dan kegembiraan bersama anda."]
+      "h012_greetings": [
+        "Selamat Deepavali! 🪔",
+        "Cahaya menang.",
+        "Semoga cahaya dan kegembiraan bersama anda."
+      ]
     },
     "tutorial": {
       "step1_title": "847 emel. 3 jam hidup anda. Atau 47 saat.",
