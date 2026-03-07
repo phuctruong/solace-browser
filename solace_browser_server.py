@@ -25,7 +25,7 @@ import argparse
 import os
 import subprocess
 from pathlib import Path
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 import uuid
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
@@ -871,6 +871,41 @@ class SolaceBrowser:
         except (OSError, TimeoutError, ConnectionError, ValueError) as e:
             logger.error(f"Fill failed: {e}")
             return await self._finalize_part11_result("fill", selector, {"error": str(e)})
+
+    async def upload(self, selector: str, file_paths: List[str]) -> Dict[str, Any]:
+        """Upload one or more local files into an <input type=file> element."""
+        if not self.current_page:
+            return {"error": "No active page"}
+
+        try:
+            if not selector:
+                raise ValueError("selector required")
+            if not file_paths:
+                raise ValueError("at least one file path required")
+
+            normalized_paths: List[str] = []
+            for raw_path in file_paths:
+                candidate = Path(str(raw_path)).expanduser()
+                if not candidate.exists():
+                    raise ValueError(f"File not found: {candidate}")
+                if not candidate.is_file():
+                    raise ValueError(f"Not a file: {candidate}")
+                normalized_paths.append(str(candidate))
+
+            logger.info("Uploading %s file(s) into selector: %s", len(normalized_paths), selector)
+            await self.current_page.set_input_files(selector, normalized_paths)
+            await asyncio.sleep(0.3)
+
+            result = {
+                "success": True,
+                "selector": selector,
+                "files": normalized_paths,
+                "timestamp": datetime.now().isoformat(),
+            }
+            return await self._finalize_part11_result("upload", selector, result)
+        except (OSError, TimeoutError, ConnectionError, ValueError, TypeError) as e:
+            logger.error(f"Upload failed: {e}")
+            return await self._finalize_part11_result("upload", selector, {"error": str(e)})
 
     async def take_screenshot(self, filename: Optional[str] = None) -> Dict[str, Any]:
         """Take a screenshot"""
@@ -2092,6 +2127,7 @@ class SolaceBrowserServer:
         self.app.router.add_post('/api/navigate/background', self._handle_navigate_background)
         self.app.router.add_post('/api/click', self._handle_click)
         self.app.router.add_post('/api/fill', self._handle_fill)
+        self.app.router.add_post('/api/upload', self._handle_upload)
         self.app.router.add_post('/api/screenshot', self._handle_screenshot)
         self.app.router.add_post('/api/screenshot-bg', self._handle_screenshot_bg)
         self.app.router.add_post('/api/snapshot', self._handle_snapshot)
@@ -2238,6 +2274,27 @@ class SolaceBrowserServer:
         )
         return web.json_response(result, status=self._result_status(result))
 
+    async def _handle_upload(self, request):
+        """Upload one or more files into a file input element."""
+        data = await request.json()
+        selector = data.get('selector', '')
+        files_raw = data.get('files')
+        file_single = data.get('file')
+
+        if files_raw is None and file_single is None:
+            return web.json_response({"error": "file or files required"}, status=400)
+
+        if files_raw is not None and not isinstance(files_raw, list):
+            return web.json_response({"error": "files must be a list of file paths"}, status=400)
+
+        files = files_raw if files_raw is not None else [file_single]
+        cleaned_files = [str(path).strip() for path in files if isinstance(path, str) and str(path).strip()]
+        if not cleaned_files:
+            return web.json_response({"error": "at least one valid file path is required"}, status=400)
+
+        result = await self.browser.upload(selector, cleaned_files)
+        return web.json_response(result, status=self._result_status(result))
+
     async def _handle_screenshot(self, request):
         """Take screenshot"""
         data = await request.json()
@@ -2365,6 +2422,7 @@ class SolaceBrowserServer:
             "navigate": "POST",
             "click": "POST",
             "fill": "POST",
+            "upload": "POST",
             "screenshot": "POST",
             "snapshot": "POST",
             "aria_snapshot": "GET",
@@ -2391,7 +2449,7 @@ class SolaceBrowserServer:
             "capabilities": [
                 "web_navigation", "form_filling", "screenshot", "dom_snapshot",
                 "aria_snapshot", "javascript_evaluation", "evidence_capture",
-                "recipe_execution", "oauth3_delegation", "session_persistence",
+                "recipe_execution", "oauth3_delegation", "session_persistence", "file_upload",
                 "parallel_tabs", "part11_compliance"
             ],
             "api_methods": endpoint_methods,
@@ -2399,6 +2457,7 @@ class SolaceBrowserServer:
                 "navigate": "POST /api/navigate",
                 "click": "POST /api/click",
                 "fill": "POST /api/fill",
+                "upload": "POST /api/upload",
                 "screenshot": "POST /api/screenshot",
                 "snapshot": "POST /api/snapshot",
                 "aria_snapshot": "GET /api/aria-snapshot",

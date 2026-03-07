@@ -103,8 +103,31 @@ jobs:
             brew install upx || true
           fi
 
+      - name: Validate Windows signing secrets (tag releases)
+        if: matrix.target_os == 'windows'
+        shell: bash
+        env:
+          WINDOWS_CODESIGN_PFX_BASE64: ${{ secrets.WINDOWS_CODESIGN_PFX_BASE64 }}
+          WINDOWS_CODESIGN_PFX_PASSWORD: ${{ secrets.WINDOWS_CODESIGN_PFX_PASSWORD }}
+          WINDOWS_CODESIGN_CERT_THUMBPRINT: ${{ secrets.WINDOWS_CODESIGN_CERT_THUMBPRINT }}
+        run: |
+          if [ -z "${WINDOWS_CODESIGN_CERT_THUMBPRINT}" ] && [ -z "${WINDOWS_CODESIGN_PFX_BASE64}" ]; then
+            echo "Missing signing material. Set WINDOWS_CODESIGN_CERT_THUMBPRINT or WINDOWS_CODESIGN_PFX_BASE64."
+            exit 1
+          fi
+          if [ -n "${WINDOWS_CODESIGN_PFX_BASE64}" ] && [ -z "${WINDOWS_CODESIGN_PFX_PASSWORD}" ]; then
+            echo "WINDOWS_CODESIGN_PFX_PASSWORD is required with WINDOWS_CODESIGN_PFX_BASE64."
+            exit 1
+          fi
+
       - name: Build binary
         shell: bash
+        env:
+          WINDOWS_SIGNING_REQUIRED: "1"
+          WINDOWS_CODESIGN_PFX_BASE64: ${{ secrets.WINDOWS_CODESIGN_PFX_BASE64 }}
+          WINDOWS_CODESIGN_PFX_PASSWORD: ${{ secrets.WINDOWS_CODESIGN_PFX_PASSWORD }}
+          WINDOWS_CODESIGN_CERT_THUMBPRINT: ${{ secrets.WINDOWS_CODESIGN_CERT_THUMBPRINT }}
+          WINDOWS_CODESIGN_TIMESTAMP_URL: ${{ vars.WINDOWS_CODESIGN_TIMESTAMP_URL }}
         run: |
           chmod +x src/scripts/release_browser_cycle.sh
           TARGET_OS="${{ matrix.target_os }}" \

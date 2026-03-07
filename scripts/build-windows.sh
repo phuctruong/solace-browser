@@ -28,17 +28,30 @@ if [ ! -f "${ARTIFACT}" ]; then
   exit 1
 fi
 
-INSTALLER_ARTIFACT="${DIST_DIR}/solace-browser-windows-x86_64.exe"
-echo "Packaging Windows installer with Inno Setup"
+INSTALLER_ARTIFACT="${DIST_DIR}/solace-browser-windows-x86_64.msi"
+echo "Packaging Windows installer (MSI)"
 powershell.exe -NoProfile -ExecutionPolicy Bypass \
-  -File "${ROOT_DIR}/scripts/package-windows-installer.ps1" \
+  -File "${ROOT_DIR}/scripts/package-windows-msi.ps1" \
   -InputBinary "${ARTIFACT}" \
-  -OutputInstaller "${INSTALLER_ARTIFACT}" \
+  -OutputMsi "${INSTALLER_ARTIFACT}" \
   -AppVersion "${VERSION}"
 
 if [ ! -f "${INSTALLER_ARTIFACT}" ]; then
   echo "ERROR: expected Windows installer missing at ${INSTALLER_ARTIFACT}" >&2
   exit 1
+fi
+
+if [ "${WINDOWS_SIGNING_REQUIRED:-0}" = "1" ]; then
+  echo "Signing Windows MSI (required)"
+  powershell.exe -NoProfile -ExecutionPolicy Bypass \
+    -File "${ROOT_DIR}/scripts/sign-windows-msi.ps1" \
+    -InputMsi "${INSTALLER_ARTIFACT}" \
+    -RequireSigning
+else
+  echo "Signing Windows MSI (best-effort)"
+  powershell.exe -NoProfile -ExecutionPolicy Bypass \
+    -File "${ROOT_DIR}/scripts/sign-windows-msi.ps1" \
+    -InputMsi "${INSTALLER_ARTIFACT}"
 fi
 
 python3 - <<'PY'
@@ -47,10 +60,10 @@ import hashlib
 
 root = Path.cwd()
 version = (root / "VERSION").read_text(encoding="utf-8").strip()
-artifact = root / "dist" / "solace-browser-windows-x86_64.exe"
+artifact = root / "dist" / "solace-browser-windows-x86_64.msi"
 digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
 (root / "dist" / f"solace-browser-{version}-windows-x86_64.sha256").write_text(
-    digest + "  solace-browser-windows-x86_64.exe\n",
+    digest + "  solace-browser-windows-x86_64.msi\n",
     encoding="utf-8",
 )
 PY
