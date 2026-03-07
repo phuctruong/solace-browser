@@ -21,9 +21,10 @@ class _DummyPage:
 
 
 class _DummyBrowser:
-    def __init__(self, *, headless: bool) -> None:
+    def __init__(self, *, headless: bool, head_hidden: bool = False) -> None:
         self.browser = object()
         self.headless = headless
+        self.head_hidden = head_hidden
         self.debug_ui = False
         self.current_page = _DummyPage()
         self.pages = {"p1": _DummyPage()}

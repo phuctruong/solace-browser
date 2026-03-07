@@ -287,6 +287,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
         action='store_true',
         help='Run in headed mode (default — show browser window)',
     )
+    mode_group.add_argument(
+        '--head-hidden',
+        action='store_true',
+        help='Run headed but invisible (window off-screen — bypasses bot detection)',
+    )
     parser.add_argument(
         '--show-ui',
         action='store_true',
@@ -387,8 +392,10 @@ class SolaceBrowser:
         part11_enabled: bool = False,
         part11_mode: str = "screenshot",
         part11_audit_dir: Optional[str] = None,
+        head_hidden: bool = False,
     ):
         self.headless = headless
+        self.head_hidden = head_hidden
         self.debug_ui = debug_ui
         _data = _solace_data_dir()
         self.session_file = session_file or os.getenv("SOLACE_SESSION_FILE") or str(_data / "artifacts" / "solace_session.json")
@@ -702,7 +709,8 @@ class SolaceBrowser:
 
     async def start(self):
         """Start the Solace Browser"""
-        logger.info(f"Starting Solace Browser (headless={self.headless})")
+        mode_label = "head-hidden" if self.head_hidden else ("headless" if self.headless else "headed")
+        logger.info(f"Starting Solace Browser (mode={mode_label})")
         _ensure_playwright_browsers_path()
 
         playwright = await async_playwright().start()
@@ -718,11 +726,14 @@ class SolaceBrowser:
         ]
         if not self.headless:
             launch_args.extend([
-                '--start-maximized',
                 '--disable-features=UseSkiaRenderer',
                 '--class=SolaceBrowser',
                 '--app-user-model-id=SolaceAGI.SolaceBrowser',
             ])
+            if self.head_hidden:
+                launch_args.append('--window-position=-32000,-32000')
+            else:
+                launch_args.append('--start-maximized')
 
         try:
             self.browser = await playwright.chromium.launch(
@@ -803,6 +814,58 @@ class SolaceBrowser:
         except (OSError, ValueError, RuntimeError) as e:
             logger.error(f"Error saving session: {e}")
             return {"error": str(e)}
+
+    async def create_page(self) -> Dict[str, Any]:
+        """Create a new browser tab and return its page_id."""
+        if not self.context:
+            return {"error": "No browser context"}
+        page = await self.context.new_page()
+        page_id = str(uuid.uuid4())
+        self.pages[page_id] = page
+        page.on('console', self._on_console)
+        logger.info(f"Created new page (page_id={page_id})")
+        return {"success": True, "page_id": page_id}
+
+    async def navigate_page(self, page_id: str, url: str) -> Dict[str, Any]:
+        """Navigate a specific page by page_id."""
+        page = self.pages.get(page_id)
+        if not page:
+            return {"error": f"Page {page_id} not found"}
+        try:
+            await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+            return {"success": True, "page_id": page_id, "url": page.url}
+        except (OSError, TimeoutError, ConnectionError) as e:
+            return {"error": str(e), "page_id": page_id}
+
+    async def evaluate_page(self, page_id: str, expression: str) -> Dict[str, Any]:
+        """Evaluate JavaScript on a specific page by page_id."""
+        page = self.pages.get(page_id)
+        if not page:
+            return {"error": f"Page {page_id} not found"}
+        try:
+            result = await page.evaluate(expression)
+            return {"success": True, "result": result, "page_id": page_id}
+        except (OSError, TimeoutError, ConnectionError, ValueError) as e:
+            return {"error": str(e), "page_id": page_id}
+
+    def list_pages(self) -> list:
+        """List all open pages with their IDs and URLs."""
+        return [
+            {"page_id": pid, "url": p.url, "is_current": p == self.current_page}
+            for pid, p in self.pages.items()
+            if not p.is_closed()
+        ]
+
+    async def close_page(self, page_id: str) -> Dict[str, Any]:
+        """Close a specific page by page_id."""
+        page = self.pages.get(page_id)
+        if not page:
+            return {"error": f"Page {page_id} not found"}
+        if page == self.current_page:
+            return {"error": "Cannot close the current page"}
+        await page.close()
+        del self.pages[page_id]
+        return {"success": True, "page_id": page_id}
 
     async def stop(self):
         """Stop the Solace Browser"""
@@ -2126,6 +2189,11 @@ class SolaceBrowserServer:
         self.app.router.add_get('/json/list', self._handle_list)
         self.app.router.add_post('/api/navigate', self._handle_navigate)
         self.app.router.add_post('/api/navigate/background', self._handle_navigate_background)
+        self.app.router.add_post('/api/pages/new', self._handle_page_new)
+        self.app.router.add_get('/api/pages', self._handle_page_list)
+        self.app.router.add_post('/api/pages/{page_id}/navigate', self._handle_page_navigate)
+        self.app.router.add_post('/api/pages/{page_id}/evaluate', self._handle_page_evaluate)
+        self.app.router.add_delete('/api/pages/{page_id}', self._handle_page_close)
         self.app.router.add_post('/api/click', self._handle_click)
         self.app.router.add_post('/api/fill', self._handle_fill)
         self.app.router.add_post('/api/upload', self._handle_upload)
@@ -2244,6 +2312,35 @@ class SolaceBrowserServer:
     def _result_status(result: Dict[str, Any]) -> int:
         """Return 500 when the result dict contains an error key, 200 otherwise."""
         return 500 if "error" in result else 200
+
+    async def _handle_page_new(self, request):
+        """Create a new browser tab."""
+        result = await self.browser.create_page()
+        return web.json_response(result, status=self._result_status(result))
+
+    async def _handle_page_list(self, request):
+        """List all open browser tabs."""
+        return web.json_response(self.browser.list_pages())
+
+    async def _handle_page_navigate(self, request):
+        """Navigate a specific tab by page_id."""
+        page_id = request.match_info['page_id']
+        data = await request.json()
+        result = await self.browser.navigate_page(page_id, data.get('url', ''))
+        return web.json_response(result, status=self._result_status(result))
+
+    async def _handle_page_evaluate(self, request):
+        """Evaluate JS on a specific tab by page_id."""
+        page_id = request.match_info['page_id']
+        data = await request.json()
+        result = await self.browser.evaluate_page(page_id, data.get('expression', ''))
+        return web.json_response(result, status=self._result_status(result))
+
+    async def _handle_page_close(self, request):
+        """Close a specific tab by page_id."""
+        page_id = request.match_info['page_id']
+        result = await self.browser.close_page(page_id)
+        return web.json_response(result, status=self._result_status(result))
 
     async def _handle_navigate(self, request):
         """Navigate to URL"""
@@ -2695,8 +2792,9 @@ class SolaceBrowserServer:
         }
         return web.json_response({
             "running": self.browser.browser is not None,
-            "mode": "headless" if self.browser.headless else "headed",
+            "mode": "head-hidden" if self.browser.head_hidden else ("headless" if self.browser.headless else "headed"),
             "headless": self.browser.headless,
+            "head_hidden": self.browser.head_hidden,
             "current_url": self.browser.current_page.url if self.browser.current_page else None,
             "pages": len(self.browser.pages),
             "events": len(self.browser.event_history),
@@ -2715,7 +2813,7 @@ class SolaceBrowserServer:
         return web.json_response(
             {
                 "ok": True,
-                "mode": "headless" if self.browser.headless else "headed",
+                "mode": "head-hidden" if self.browser.head_hidden else ("headless" if self.browser.headless else "headed"),
                 "running": self.browser.browser is not None,
             }
         )
@@ -4056,7 +4154,8 @@ async def main():
     _start_web_ui_server(port=web_ui_port)
 
     # Create and start browser — headed by default, headless only with --headless
-    headless = args.headless
+    head_hidden = args.head_hidden
+    headless = args.headless and not head_hidden
     env_part11 = os.getenv("SOLACE_PART11", "").strip().lower() in {"1", "true", "yes", "on"}
     browser = SolaceBrowser(
         headless=headless,
@@ -4064,6 +4163,7 @@ async def main():
         part11_enabled=(args.part11 or env_part11),
         part11_mode=args.part11_mode,
         part11_audit_dir=args.part11_audit_dir,
+        head_hidden=head_hidden,
     )
     await browser.start()
 
