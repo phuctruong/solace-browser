@@ -335,10 +335,10 @@ Paid users can monitor their cloud twin browser from the local sidebar.
 
 ### Sync for Paid Users
 
+- **Free ($0) + Starter ($8/mo):** All data stays local, full functionality, no cloud sync
 - **Pro ($28/mo):** Evidence + chat history + settings synced to solaceagi.com
 - **Team ($88/mo):** + shared workspace, team evidence, shared schedules
 - **Enterprise ($188/mo):** + SSO, unlimited retention, SOC2 audit export
-- **Free ($0):** All data stays local, no cloud sync
 
 ### Sync Mechanism
 
@@ -351,8 +351,8 @@ Evidence bundles encrypted with AES-256-GCM (user's OAuth3-derived key)
 
 ### What Syncs
 
-| Data | Free | Pro+ |
-|------|------|------|
+| Data | Free + Starter | Pro+ |
+|------|----------------|------|
 | Evidence chains | Local only | Cloud + local |
 | Chat history | Local only | Cloud + local |
 | Settings/theme | Local only | Cloud + local |
@@ -623,6 +623,8 @@ Community: Network effects compound — more users → more recipes → more kno
 
 **Customer profile:** Enterprise VP of IT running SAP S/4HANA migration ($2M-50M project, 6-18 months, 100+ stakeholders). The migration involves extracting data from legacy ECC, transforming it, loading into S/4HANA, and getting business sign-off that everything works.
 
+**Market context (2026):** SAP migrations are a **$50B+ industry event**. ECC end-of-support hits 2027. 73% of projects exceed budget (avg 23% overrun). 68% take longer than planned. Testing alone is 25-30% of total project cost. Consulting fees rising 30-50% as deadline approaches. Current tools (SAP LTMC, Tricentis Tosca at $100K+/yr, Panaya, manual Excel) handle either migration OR testing OR compliance — **none handle all three**.
+
 **The pain (what keeps them up at night):**
 
 | Pain Point | Current Reality | Cost |
@@ -663,22 +665,25 @@ Community: Network effects compound — more users → more recipes → more kno
 **Pricing for SAP customers:**
 - Enterprise tier ($188/mo per seat) × 20 validation team seats = $3,760/mo
 - vs. $200-400/hr consultant × 160 hours/month = $32,000-64,000/mo
+- vs. Tricentis Tosca: $100K+/year for test automation alone
 - **ROI: 10-17x cost reduction** — this sells itself
 
 ### 21b. Sales Team — Crushing Microsoft Copilot for Sales
 
 **Customer profile:** Gatan VP of Sales, mid-market company ($50M-500M revenue), 20-100 sales reps, currently using Salesforce/HubSpot CRM + considering Microsoft Copilot for Sales ($50/user/mo).
 
+**Market context (2026):** Mid-market AI tool spend grew 58% YoY. Average sales team pays $6,400-16,700/user/year across 5+ tools (data + engagement + intelligence + forecasting + CRM). Microsoft slashed internal Copilot sales targets by up to 50% due to underwhelming adoption. 87% of enterprises using AI sales tools still missed 2025 revenue targets. The U.S. House of Representatives banned Copilot for congressional staff over security concerns.
+
 **The competition:**
 
 | Product | Price | Strengths | Fatal Weakness |
 |---------|-------|-----------|---------------|
-| Microsoft Copilot for Sales | $50/user/mo | Deep Outlook/Teams integration, CRM sync, meeting summaries | Can't control the browser. Can't automate LinkedIn. Can't do multi-site workflows. |
-| Gong | $100-150/user/mo | Call intelligence, deal warnings | Only works on calls. Blind to email/LinkedIn/web activity. |
-| Outreach | $100-130/user/mo | Sequence automation, A/B testing | Email-centric. No browser automation. No LinkedIn. |
-| Apollo | $49-119/user/mo | Lead database, prospecting | Data quality issues. No execution — just data. |
-| Salesloft | $75-125/user/mo | Cadences, dialer | No AI-driven actions. Manual sequence design. |
-| 6sense | $100K+/year | Intent data, ABM | Expensive. No execution. Just signals. |
+| Microsoft Copilot for Sales | $50/user/mo ($20 add-on) | Outlook/Teams integration, CRM sync, meeting summaries | Adoption failing (targets slashed 50%). Can't control browser. Can't automate LinkedIn. "Clippy 2.0" perception. Locked in Microsoft ecosystem. |
+| Gong | $250-400/user/mo + $50K platform | Best-in-class call intelligence, AI coaching, deal forecasting | Passive intelligence only (tells you what happened, doesn't act). No outbound. No LinkedIn. Extremely expensive. |
+| Outreach | $100/user/mo | Multi-step email/call sequences, conversation intelligence (Kaia), AI Agents (Amplify) | No native contact database. No browser automation. Sequences are template-driven. Complex setup. |
+| Apollo | $49-119/user/mo | 265M+ contact database, generous free tier, Chrome extension | LinkedIn tasks are MANUAL (no true automation). Confusing credit system ($0.20/overage). Phone accuracy issues. |
+| Salesloft/Clari | $100-150/user/mo (merged Dec 2025) | Revenue forecasting (RevDB), pipeline inspection, cadences | Quote-based pricing creates friction. Intelligence-heavy but action-light. No prospecting database. |
+| 6sense | $60K-300K/year | Best intent data, ABM, identifies anonymous visitors | Pipeline creation only (not execution). Extremely expensive. No CRM auto-fill. No email. No execution. |
 
 **Why they all lose to Solace Browser:**
 
@@ -710,11 +715,13 @@ Solace Browser:    "I researched the prospect, drafted the email, scheduled the 
 
 **Copilot is a copilot. Solace is the pilot (with your permission).**
 
-**Pricing for Sales teams:**
-- Pro tier ($28/mo per seat) × 50 reps = $1,400/mo
+**Pricing for Sales teams (the drug dealer ladder):**
+- Free ($0/mo BYOK) — reps get full sidebar, unlimited recipes, unlimited LinkedIn. They bring own API key.
+- Pro ($28/mo per seat) × 50 reps = $1,400/mo — the real conversion, unlimited recipes
 - vs. Microsoft Copilot ($50/user/mo) × 50 reps = $2,500/mo
-- vs. Gong ($100/user/mo) × 50 reps = $5,000/mo
-- **44% cheaper than Copilot, 72% cheaper than Gong — AND it does more**
+- vs. Gong ($250/user/mo) × 50 reps = $12,500/mo + $50K platform fee
+- vs. Average sales stack: $6,400-16,700/user/year across 5+ tools
+- **Starter is 84% cheaper than Copilot. Pro is 44% cheaper. AND it does 10x more.**
 
 ### 21c. Business Acceptance eSign-Off Framework (E1)
 
@@ -822,7 +829,7 @@ SOLACE BROWSER = AI-Agent Browser that replaces:
   └── Browser AI:   Operator ($20) + Mariner ($250) + Cowork ($20)
 
 TOTAL ADDRESSABLE TOOL SPEND per user: $200-500/mo across 3-5 separate tools
-SOLACE BROWSER PRICE: $28/mo (Pro) or $88/mo (Team)
+SOLACE BROWSER PRICE: $8/mo (Starter) or $28/mo (Pro) or $88/mo (Team)
 
 The arbitrage: one AI-agent browser replaces 5+ point solutions.
 Each tool only sees one channel. Solace sees ALL channels because it IS the browser.
@@ -830,4 +837,130 @@ Each tool only sees one channel. Solace sees ALL channels because it IS the brow
 
 ---
 
-*Paper 47 v5 | Auth: 65537 | Supersedes Paper 04 | LLM Consensus R1-R8 | AI-Agent Browser + Enterprise + Verticals*
+## 22. The Free Tier Drug Ring: GTM Strategy
+
+> "The first hit is free. The second hit is free. By the third hit, they can't imagine life without it." — Rory Sutherland (applied to value perception)
+
+> "Build a value ladder. Free is the bottom rung. By the time they reach the top, they're not buying a tool — they're buying their transformed identity." — Russell Brunson
+
+### The Addiction Model: What's Free, What's Paid
+
+The free tier must be so good that users feel PAIN when they hit the wall. Not fake pain (arbitrary limits). Real pain (they've automated 5 things and now they need the 6th that requires cloud/team/evidence).
+
+| Feature | Free ($0, local BYOK) | Starter ($8/mo) | Pro ($28/mo) | Team ($88/mo) | Enterprise ($188/mo) |
+|---------|----------------------|----------------|-------------|---------------|---------------------|
+| **Sidebar** | Full sidebar, all 4 tabs | Same | Same | Same | Same |
+| **Apps** | All 18 apps, unlimited | Same | Same | Same | Same |
+| **Recipes** | Unlimited (local, BYOK) | Same + managed LLM | Same | Shared team recipes | Custom enterprise recipes |
+| **LLM** | BYOK only (bring your own key) | Managed LLM (no API key needed) | Managed LLM included | Same | Same + dedicated capacity |
+| **Replay** | Unlimited (local, $0 with BYOK) | Same | Same | Same | Same |
+| **LinkedIn** | Unlimited (local) | Same | Same | Team coordination | Multi-profile |
+| **Email** | Unlimited (local) | Same | Same | Team templates | Compliance workflows |
+| **CRM auto-fill** | Full (local) | Same | Same | Team sync | API integration |
+| **Evidence** | Full local, unlimited retention | Same | Cloud sync, 90-day | 1-year + team sharing | Unlimited + SOC2 export |
+| **Cloud Twin** | Not available | Not available | 10 hours/mo | 40 hours/mo | Unlimited |
+| **eSign** | Local-only signatures | Same | Cloud-synced signatures | Team signatures + matrix | Full Part 11 compliance |
+| **Anti-detect** | Unlimited profiles (local) | Same | Same | Same | Same |
+| **Content publishing** | Full (local) | Same | Same | Calendar + team | Brand voice library |
+| **Prime Wiki** | Read + contribute | Same | Same | Team knowledge base | Private wiki |
+| **SAP/Enterprise** | Full local validation | Same | Same | Team validation | BAT + GxP + runbook + audit export |
+| **What you're paying for** | Nothing — it's your machine, your key | No API key hassle | Cloud: twin + sync + backup | Collaboration: team + sharing | Compliance: SOC2 + Part 11 + audit |
+
+**The philosophy:** Free is FULLY FUNCTIONAL on your local machine with your own API key. We never cripple local features. You pay for three things:
+1. **Starter ($8):** Convenience — managed LLM so you don't need to get/manage an API key
+2. **Pro ($28):** Cloud — twin browser runs while you sleep, evidence syncs, backup
+3. **Team ($88):** Collaboration — shared recipes, team evidence, coordinated workflows
+4. **Enterprise ($188):** Compliance — SOC2 export, Part 11 audit packages, GxP protocols
+
+### The 5-Step Addiction Ladder (Russell Brunson Value Ladder)
+
+```
+Step 1: FREE — "Try the sidebar" (the first taste)
+  Hook: Install Solace Browser. Sidebar appears. Navigate to LinkedIn.
+  Yinyang says: "I see 3 automations for LinkedIn. Want to try one?"
+  User runs "discover posts" recipe. FREE. Takes 30 seconds.
+  Dopamine hit: "Holy shit, it just did in 30 seconds what takes me 15 minutes."
+
+Step 2: FREE — "Do it again" (building the habit)
+  User comes back next day. Runs "LinkedIn react to posts" recipe. FREE.
+  Then "Gmail send follow-up" recipe. FREE.
+  Then "Google search competitor" recipe. FREE.
+  By day 3, they've used 4 recipes and saved 2 hours. They're hooked.
+
+Step 3: FRICTION WALL — "I hate managing API keys" (the convenience pain)
+  Free does EVERYTHING locally. No limits. But user needs an Anthropic/OpenAI key.
+  Getting a key = sign up, add billing, copy key, paste into settings.
+  Some users love BYOK (power users, devs). Most users HATE it.
+  "Why can't it just work?" → That's the Starter hook.
+
+Step 4: STARTER ($8/mo) — "Just $8, no more API key BS" (the micro-commitment)
+  Same unlimited local features. But now: managed LLM — zero key management.
+  $8 is under the "ask my manager" threshold. Expense it on a personal card.
+  This is the CRACK STEP — remove friction, not features. Now they're paying.
+  User thinks: "I was paying $20/mo for my own Anthropic key anyway."
+
+Step 5: PRO ($28/mo) — "Run it while I sleep" (the cloud conversion)
+  Everything from Starter PLUS: Cloud Twin (10 hrs/mo), evidence cloud sync, backup.
+  "I set up a LinkedIn cadence last night. Woke up to 12 new connections."
+  The cloud twin is the killer — it turns a tool into an employee.
+  ROI: $28/mo for a 24/7 assistant. They'll never cancel.
+
+Step 6: TEAM/ENTERPRISE — "My whole team needs this" (the expansion)
+  VP sees one rep's 10x productivity. Asks: "Can the whole team use this?"
+  Team tier: shared recipes, team evidence, coordinated cadences.
+  Enterprise: SAP validation, Part 11 compliance, BAT automation.
+  $188/mo × 50 seats = $9,400/mo replacing $50,000+/mo of tools.
+```
+
+### The Rory Sutherland Perception Hacks
+
+> "The problem with logic is that it kills magic. And magic is what makes people buy."
+
+| Hack | Implementation | Psychological Effect |
+|------|---------------|---------------------|
+| **Show time saved** | Sidebar footer: "You saved 47 minutes today" | Loss aversion — they can't go back to manual |
+| **Show money saved** | "This recipe costs $0.001. Copilot would charge $0.08." | Anchoring against expensive competitors |
+| **Celebrate streaks** | "7-day streak! 🔥 You've saved 5.2 hours this week" | Commitment escalation — breaking streak feels like loss |
+| **Show the cloud upgrade** | "Cloud Twin available — run this recipe while you sleep ($28/mo)" | FOMO — they did it manually, the cloud could do it for them |
+| **Social proof counter** | "1,247 users ran this recipe today" | Bandwagon + validation |
+| **Persona flattery** | "You're in the top 10% of LinkedIn power users" (based on recipe usage) | Identity reinforcement — they become "a Solace user" |
+| **Value framing** | "Your Solace Browser is worth $347/mo in tool replacement" | Reframe $28 as 92% discount on equivalent tools |
+
+### The 7 Free Apps That Create Addiction
+
+These must be genuinely useful on free tier — no sandbagging:
+
+| # | App | Why It's Addictive (fully free, BYOK) | What Cloud Adds (Pro $28) |
+|---|-----|--------------------------------------|--------------------------|
+| 1 | **LinkedIn Discover** | See trending posts in your niche, auto-react, unlimited | Cloud Twin runs overnight, finds prospects while you sleep |
+| 2 | **Gmail Smart Reply** | Context-aware replies using your contacts' LinkedIn data | Cloud sync: reply evidence accessible from any device |
+| 3 | **Google Search Deep** | Agent searches, summarizes top 10 results, extracts insights | Cloud Twin: scheduled daily competitive research |
+| 4 | **HackerNews Scanner** | Find trending tech discussions, auto-upvote your interests | Cloud Twin: morning digest of overnight trending posts |
+| 5 | **Reddit Monitor** | Track subreddits, get summaries, draft comments | Cloud Twin: 24/7 subreddit monitoring |
+| 6 | **Competitor Watch** | Monitor competitor websites for changes, unlimited | Cloud Twin: hourly checks, alert on pricing/feature changes |
+| 7 | **Meeting Prep** | Agent builds 1-page brief from public sources | Team: shared meeting briefs, CRM data integrated |
+
+### Why Enterprises Will Think This Is the Next Internet
+
+> "The internet made information free. Solace Browser makes ACTION free."
+
+| Era | What Changed | Who Won |
+|-----|-------------|---------|
+| 1995: Web browser | Information became accessible | Netscape, then Google |
+| 2007: Smartphone | Information became mobile | Apple, Google |
+| 2023: ChatGPT | Information became conversational | OpenAI |
+| **2026: AI-Agent Browser** | **Action became automated** | **Solace Browser** |
+
+The enterprise pitch is not "buy our tool." It's: **"Your employees spend 60% of their time doing things a browser agent could do. That's not a productivity problem — it's a structural problem. And it has a structural solution."**
+
+SAP VP of IT hears: "Your $50M migration project has $15M of manual testing that an agent browser can do for $45K/year."
+
+Gatan VP of Sales hears: "Your 50 reps spend 75% of their time NOT selling. Give them a browser agent and watch close rates double."
+
+CMO hears: "Your content team publishes on 5 platforms manually. One recipe publishes everywhere simultaneously."
+
+**The hook is the same every time: "Let me show you 30 seconds of magic." After that, they sell themselves.**
+
+---
+
+*Paper 47 v6 | Auth: 65537 | Supersedes Paper 04 | AI-Agent Browser + Enterprise + Verticals + GTM*
