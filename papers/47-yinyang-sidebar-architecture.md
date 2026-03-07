@@ -1148,6 +1148,64 @@ Cost to us:
 
 **The psychology:** When you show transparent pricing and let users choose, they trust you MORE and buy your managed service ANYWAY — because the data shows it's better value. This is the opposite of every SaaS company that hides pricing. Transparency is our competitive moat.
 
+### 22c. Why Flat Pricing Beats Value-Based Pricing (Persona Panel: 5/5 Unanimous)
+
+> "The moment you tie savings to price, the relationship becomes transactional instead of partnership." — Vanessa Van Edwards
+
+**Question asked:** Should we charge based on what we save the customer (value-based) or flat 20% markup on LLM tokens?
+
+**Persona panel result (5/5 FLAT):**
+
+| Persona | Verdict | Key Argument |
+|---------|---------|-------------|
+| **Rory Sutherland** | FLAT | "Math kills magic. Variable pricing triggers loss aversion every time." |
+| **Russell Brunson** | FLAT | "Flat pricing at all tiers, value-based REPORTING at Enterprise." |
+| **Seth Godin** | FLAT | "Variable pricing erodes trust. 'How do I know you're calculating savings correctly?'" |
+| **Vanessa Van Edwards** | FLAT | "Variable triggers uncertainty, suspicion, cognitive load. Flat triggers control." |
+| **Jony Ive** | FLAT | "The most elegant pricing is invisible pricing. One number. Zero decisions." |
+
+**The winning formula:**
+
+```
+PRICING:  Flat tiers ($0 / $8 / $28 / $88 / $188) — never changes based on usage
+MARKUP:   Flat 20% on managed LLM tokens — predictable, invisible, builds trust
+DISPLAY:  Show savings in sidebar footer: "You saved $347 this month"
+ENTERPRISE: ROI dashboard for CFO justification: "Team ROI: $47K/quarter"
+RENEWAL:  Savings counter sells the renewal — CFO sees $47K savings, $188/mo cost, obviously renews
+```
+
+**Why NOT value-based:**
+1. **Trust erosion** — "How do you calculate my savings?" creates suspicion
+2. **Cognitive load** — user must understand the formula before buying
+3. **Unpredictable bills** — variable pricing triggers loss aversion every invoice
+4. **Comparison shopping** — flat prices are easy to compare with competitors
+5. **Self-serve friction** — value-based requires sales conversations
+
+**The Rory Sutherland insight:** Show savings as MARKETING, not as BILLING. "You saved $47 this month" is a dopamine notification. "$47 × 20% = $9.40 charge" is an anxiety trigger. Same data, opposite emotional response.
+
+**Implementation in sidebar:**
+
+```
+┌─────────────────────────────────────────┐
+│ ☯ Yinyang                          [●]  │
+│ ─────────────────────────────────────── │
+│ [Now] [Runs] [Chat] [More]              │
+│                                          │
+│ ┌─────────────────────────────────────┐ │
+│ │ Today's Savings                     │ │
+│ │ ⏱ 47 min saved  |  💰 $12.30 saved │ │
+│ │ 🔥 7-day streak                     │ │
+│ └─────────────────────────────────────┘ │
+│                                          │
+│ Your plan: Starter ($8/mo)              │
+│ This month's LLM usage: $2.40           │
+│ vs. equivalent raw API: $14.70          │
+│ You're saving 84% with recipes + uplift │
+└─────────────────────────────────────────┘
+```
+
+The savings counter is the most addictive feature we build. It's free. It costs us nothing. And it makes every renewal a no-brainer.
+
 ---
 
 ## 23. Regulated Industry Scenarios — The Compliance Moat
