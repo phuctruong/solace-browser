@@ -1,4 +1,5 @@
 # Paper 02: App Inbox/Outbox Standard — Universal Convention
+# DNA: `app = manifest + inbox(user→AI) + outbox(AI→user) + budget + evidence`
 **Date:** 2026-03-01 | **Auth:** 65537 | **Status:** CANONICAL
 **Applies to:** solace-browser, solace-cli, solaceagi
 **Cross-ref:** solaceagi/papers/13-agent-inbox-outbox.md (original spec)
@@ -179,6 +180,14 @@ evidence_mode: "SCREENSHOT"
 | E-commerce | Amazon Price Monitor | No | amazon.com |
 | Finance | Expense Scanner | No | bank portals |
 | Social | WhatsApp Organizer | No | web.whatsapp.com |
+
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| AI writing to inbox/ | Inbox is user-controlled space; AI writing there violates the trust boundary |
+| Overwriting outbox files without a new run_id | Destroys audit trail and breaks Part 11 evidence chain |
+| Storing app config in a database instead of files | Breaks hot-reload, offline access, and VS Code editability |
 
 ## 9. Invariants
 

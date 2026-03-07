@@ -1,6 +1,7 @@
 # Paper 41 — Central Apps Architecture
+# DNA: `global_apps = YAML(git, $0, offline); user_apps = Firestore; sync = one API`
 # Global Apps in Code. User/Team Apps in Firestore.
-# 2026-03-03 | DNA: global=code, user/team=firestore, all=one_api
+# 2026-03-03
 
 ---
 
@@ -175,6 +176,14 @@ Best for scale: Option B (one API, both use it, Firestore adds user/team layer)
 5. Never: Don't put global app catalog in Firestore (costs money, adds latency, no offline)
 
 ---
+
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Reading global apps from Firestore at runtime | Adds cost, latency, and cloud dependency when YAML files serve at $0 with zero latency |
+| Allowing user apps to overwrite official catalog entries | User/team scope must overlay, never mutate, the git-backed global catalog |
+| Deploying app catalog changes without git commit | Loses version history, audit trail, and the ability to rollback |
 
 ## DNA
 `apps = global(yaml) + user(firestore) + team(firestore); cost = $0 for global; git = source_of_truth`

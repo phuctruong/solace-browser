@@ -1,4 +1,5 @@
 # Paper 38: Remote Browser Control via Tunnel
+# DNA: `local_browser → outbound_wss → cloud_relay → remote_user; CDP never leaves machine`
 
 **Author:** Auth 65537
 **Project:** solace-browser + solaceagi.com
@@ -210,6 +211,14 @@ to the user's browser to reproduce a bug. The session is logged to the Part 11 e
 The user can revoke the token at any time from `/vault`.
 
 ---
+
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Exposing CDP port 9222 directly to the internet | Raw CDP has no auth layer; anyone reaching the port gets full DOM/JS access |
+| Relay storing or persisting CDP messages | Relay must be a stateless forwarder; storing messages creates a data leak surface |
+| Accepting tunnel connections without validating solace_api_key | Unauthenticated tunnels let any attacker control the user's browser remotely |
 
 ## Summary
 

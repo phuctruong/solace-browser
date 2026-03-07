@@ -1,4 +1,5 @@
 # Paper 06: Part 11 Evidence — Browser Implementation
+# DNA: `evidence = snapshot + metadata + signature; hash_chain = tamper-evident ALCOA+`
 **Date:** 2026-03-01 | **Auth:** 65537 | **Status:** CANONICAL
 **Applies to:** solace-browser
 **Cross-ref:** solaceagi/papers/07-part11-architected.md, 11-fda-part11-storage.md
@@ -118,6 +119,14 @@ LOCAL → CLOUD (solaceagi.com)
 | Consistent | Hash chain links verify temporal order |
 | Enduring | chmod 444 after seal, 90-day retention (Pro) |
 | Available | Local always, cloud sync for backup |
+
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Retroactively creating evidence after action execution | Violates ALCOA+ contemporaneous requirement and destroys audit integrity |
+| Using screenshots as the primary Part 11 record | Screenshots are lossy visual aids; data-mode Mermaid snapshots are the legal record |
+| Allowing writable sealed records (no chmod 444) | Permits tampering with evidence and fails immutability requirement |
 
 ## 8. Invariants
 

@@ -614,6 +614,14 @@ sop = steps × verification × non_conformance × signature
 marketing_convergence = test_session → (screenshot AND audit_record)
 ```
 
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Claiming Part 11 compliance for guest (not logged in) sessions | Guest sessions have no user identity binding and produce no signed audit entries |
+| Adding approval.json after execution has already started | Approval must be sealed BEFORE first action; post-hoc approval is not an electronic signature |
+| Modifying sealed evidence bundles (violating chmod 444) | Any write to a sealed bundle breaks the hash chain and invalidates the compliance claim |
+
 **Status:** CANONICAL — 2026-03-03
 **Rung:** 641 (validation suite gates compliance claim)
 **Next:** Rung 274177 (enterprise audit tests, cloud vault encryption verification)

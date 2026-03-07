@@ -1,6 +1,7 @@
 # Paper 11 — App Store Sync Governance
-**Date:** 2026-03-03  
-**Auth:** 65537  
+# DNA: `catalog = git-backed YAML; proposals = Firestore queue; promote = review → merge`
+**Date:** 2026-03-03
+**Auth:** 65537
 **Status:** CANONICAL
 
 ## Purpose
@@ -51,6 +52,14 @@ Unify Solace website app store and Solace Browser app store around one official 
 3. Accepted proposal becomes a real app manifest + diagrams + recipe.
 4. Catalog re-sync script runs.
 5. Git commit + deploy publishes to both website and browser surfaces.
+
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Putting global app catalog in Firestore | Costs money per read, adds latency, breaks offline, and loses git versioning |
+| Proposal submissions directly mutating the official catalog | Bypasses the review-then-merge promotion workflow and breaks trust |
+| Running without a local development fallback for proposals | Cloud dependency for dev makes offline development impossible |
 
 ## Deployment Ownership Note
 This governance model defines data contracts. Actual public `www.solaceagi.com` deployment ownership is validated separately in Paper 12 (domain mapping + trigger source). If the website surface is deployed from another repository, this paper's catalog/API changes must be ported there before claiming production parity.

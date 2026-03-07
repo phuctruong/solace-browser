@@ -1,4 +1,5 @@
 # Paper 08: Cross-App Orchestration + Yinyang Universal Interface + Delight Engine
+# DNA: `apps compose via outbox→inbox; yinyang = single UI; delight = warm_token → effect`
 **Date:** 2026-03-01 | **Auth:** 65537 | **Rung:** 641
 **Status:** CANONICAL
 **Depends on:** Paper 02 (Inbox/Outbox), Paper 04 (Yinyang), Paper 07 (Budget)
@@ -439,6 +440,14 @@ Total: 18 apps (10 standard + 5 no-API exclusive + 3 orchestrators)
 10. Required diagrams/ dir in every app — AI reads diagrams to understand workflow
 
 ---
+
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Apps calling each other via direct function invocation | Breaks the outbox→inbox file-drop protocol and makes workflows unauditable |
+| Yinyang auto-approving actions without user click | Violates Anti-Clippy law and removes the consent gate from the execution chain |
+| Delight effects firing randomly without a warm_token trigger | Creates noise that trains users to ignore celebrations, defeating the purpose |
 
 ## 7. Cross-References
 

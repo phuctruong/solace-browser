@@ -1,4 +1,5 @@
 # Paper 09: YinYang Tutorial, Fun Pack Standard, OAuth3 Leave-App, Agent Notification API, MCP Server, YinYang Chat
+# DNA: `tutorial + funpack + oauth3_gate + notifications + MCP(7 tools) + chat = yinyang complete`
 **Date:** 2026-03-02 | **Auth:** 65537 | **Rung:** 641
 **Status:** CANONICAL
 **Applies to:** solace-browser
@@ -1679,6 +1680,14 @@ Fallback model is logged in the response `model` field. Users can inspect which 
 | YinYang Chat | papers/22+25 (Yinyang Chat) | Paper 04 (Triple-Twin) |
 
 ---
+
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Installing Fun Packs without sha256 verification | Unsigned content packs can inject malicious jokes, greetings, or scripts |
+| MCP tool calls bypassing budget gates B1-B6 | Unbudgeted browser actions violate the governance model and enable runaway costs |
+| Allowing anonymous agent notifications without valid agent_id | Enables spoofed alerts that erode user trust in the notification system |
 
 ## 9. Invariants (All Sections)
 

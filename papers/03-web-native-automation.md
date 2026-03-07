@@ -1,4 +1,5 @@
 # Paper 03: Web-Native Automation — No API Keys Ever
+# DNA: `AI IS the browser; no API keys, no extensions, full web access via session`
 **Date:** 2026-03-01 | **Auth:** 65537 | **Status:** CANONICAL
 **Applies to:** solace-browser
 
@@ -74,6 +75,14 @@ These services have no public API or severely restricted APIs. We are the ONLY a
 | WhatsApp | Chat list, messages, media references | WhatsApp Web CSS | Message text, media metadata |
 | GitHub | Issues, PRs, repo overview | GitHub CSS, markdown renderer | Issue data, PR diffs |
 | Reddit | Posts, comments, subreddit structure | Reddit CSS | Post content, vote counts |
+
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Storing or proxying user credentials for target services | Violates zero-credential-knowledge principle and creates liability |
+| Using vendor API keys instead of web sessions | Introduces rate limits, costs, and vendor lock-in that web-native avoids |
+| Evading rate limits by operating faster than human speed | Risks account bans and violates the ethical web-native contract |
 
 ## 8. Invariants
 

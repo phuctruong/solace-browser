@@ -1,4 +1,5 @@
 # Paper 05: PZip Stillwater Capture Architecture
+# DNA: `ripple(prime_mermaid) + stillwater(assets) = full_page; 100% RTC verified`
 **Date:** 2026-03-01 | **Auth:** 65537 | **Status:** CANONICAL
 **Applies to:** solace-browser
 **Cross-ref:** solaceagi/papers/14-pzip-memory-compression.md, 20-primewiki-rtc-pzip-validation.md
@@ -116,6 +117,14 @@ ALL PZip work runs in the browser. Zero cloud compute. solaceagi.com only receiv
 | Stillwater assets | Better cross-site compression | "Improving compression" |
 
 Free users = volunteer crawlers. They browse, we learn. They get free browser. Fair trade.
+
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Running PZip compression on the cloud instead of client-side | Violates local-first principle and introduces cloud compute costs |
+| Deleting old Stillwater asset versions | Breaks Part 11 compliance which requires all historical versions be retained |
+| Accepting a capture without 100% RTC sha256 verification | Allows corrupted or incomplete snapshots into the evidence chain |
 
 ## 8. Invariants
 

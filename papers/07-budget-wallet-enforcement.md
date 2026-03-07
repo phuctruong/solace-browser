@@ -1,4 +1,5 @@
 # Paper 07: Budget & Wallet Enforcement — Per-App Governance
+# DNA: `budget = action_limits + spend_caps; gates(B1-B5) fail-closed; MIN-cap delegation`
 **Date:** 2026-03-01 | **Auth:** 65537 | **Status:** CANONICAL
 **Applies to:** solace-browser
 **Cross-ref:** solaceagi/papers/04-wallet-budgets.md, 19-preview-mode-cooldown-signoff.md
@@ -118,6 +119,14 @@ When Agent A delegates to Agent B:
 | DELEGATION_ESCALATION | Child cap > parent remaining |
 | REVOKED_TOKEN_SPEND | Spending on revoked OAuth3 token |
 | MISSING_EVIDENCE | Irreversible action without evidence capture |
+
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Using floating-point for monetary values | Rounding errors cause budget drift; integer cents are the only safe representation |
+| Child agent budget exceeding parent remaining budget | Violates MIN-cap delegation and enables privilege escalation via spawning |
+| Fail-open budget gates that default to allow on error | Any gate failure must BLOCK; fail-open is an autonomy safety breach |
 
 ## 9. Invariants
 

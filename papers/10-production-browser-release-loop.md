@@ -1,6 +1,7 @@
 # Paper 10 — Production Browser Release Loop
-**Date:** 2026-03-03  
-**Auth:** 65537  
+# DNA: `compile → checksum → upload → download → smoke → matrix; per-platform, fail-closed`
+**Date:** 2026-03-03
+**Auth:** 65537
 **Status:** CANONICAL
 
 ## Purpose
@@ -132,6 +133,14 @@ Track every release:
 Success threshold (initial):
 - total release loop (build+upload+download+smoke) < 15 minutes on dev host.
 
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Cross-compiling macOS/Windows binaries on Linux | Produces mislabeled artifacts with wrong binary headers; native hosts required |
+| Uploading binaries without SHA-256 checksum verification | Users cannot verify download integrity; breaks the trust chain |
+| Skipping smoke test before promoting to latest channel | Ships potentially broken builds to all users on the download page |
+
 ## Real Account Testing Note
-Authenticated endpoint coverage requires runtime credentials (`SOLACE_BEARER_TOKEN` and/or `SOLACE_API_KEY`) or live login token exchange.  
+Authenticated endpoint coverage requires runtime credentials (`SOLACE_BEARER_TOKEN` and/or `SOLACE_API_KEY`) or live login token exchange.
 Without credentials, matrix still validates transport, routing, and auth gates (4xx expected, 5xx forbidden).

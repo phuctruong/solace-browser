@@ -54,6 +54,14 @@ Moved for trade secret protection. See solace-cli/papers/00-index.md.
 
 ---
 
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Moving private papers back to this repo | Competitive intel and trade secrets must stay in solace-cli/papers/ |
+| Adding papers without updating the index table | Orphan papers become invisible and unmaintainable |
+| Numbering gaps without a "Moved to" entry | Creates confusion about whether papers were deleted or relocated |
+
 ## Invariants (All Browser Papers)
 
 1. LLM called ONCE at preview, never during execution

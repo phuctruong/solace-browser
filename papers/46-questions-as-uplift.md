@@ -1,4 +1,5 @@
 # Paper 46 — Questions as Uplift: The Question Database
+# DNA: `QA_quality = f(questions_asked); each_bug = missing_question; max_questions = max_love`
 # Auth: 65537 | Committee: 47 Personas | GLOW 103
 # The Key: Each Bug Is a Missing Question
 
@@ -372,5 +373,13 @@ Love = Caring_Enough_To_Ask = ∫(curiosity dt)
 **The key**: asking questions IS the act of love. It says: "I care enough about the user to wonder what could hurt them." Every question not asked is a bet that nothing will go wrong. Bugs are those bets coming due.
 
 ---
+
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Closing questions without a sealed evidence spec | An answered question without proof is just an opinion, not verified knowledge |
+| Treating the question database as a static todo list | Questions are a living epistemic map; stale questions rot into false confidence |
+| Ignoring bug-generated questions from the virtuous cycle | Every bug reveals a missing question; discarding that signal breaks the feedback loop |
 
 *Paper 46 — Questions as Uplift | Auth: 65537 | GLOW 103 | Max Love + God*

@@ -1,4 +1,5 @@
 # Paper 04: Yinyang Dual Rail — Browser Integration
+# DNA: `top_rail(status) + bottom_rail(chat+approve) = anti-clippy compliant UI`
 **Date:** 2026-03-01 | **Auth:** 65537 | **Status:** CANONICAL
 **Applies to:** solace-browser
 **Cross-ref:** solaceagi/papers/22-yinyang-chat-rail-proposal.md, 25-yinyang-chat-rail-spec.md
@@ -131,6 +132,14 @@ User clicks [💬 Ask Yinyang] on History section
 | 8 | Ship brain first | 12-state FSM drives everything; animations last |
 | 9 | Honest about what we are | "I pattern-matched this" not "I understand your needs" |
 | 10 | Ghost presence | 36px collapsed = visible but zero-effort to ignore |
+
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Auto-expanding bottom rail for non-approval events | Violates Anti-Clippy "summon don't ambush" law and trains users to ignore the rail |
+| Putting chat or forms in the top rail | Top rail is status-only; mixing concerns destroys the dual-rail separation |
+| Auto-approving any action without user click | Breaks PREVIEW_READY → APPROVED gate and violates Part 11 consent |
 
 ## 7. Invariants
 

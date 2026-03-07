@@ -509,6 +509,14 @@ Love says: "I will not let you ship something broken. Not because I distrust you
 
 ---
 
+## Forbidden Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Modifying specs to hide regressions instead of fixing the code | The spec is the truth; weakening assertions masks real failures |
+| Using INSPECTOR_SKIP=1 without logging the bypass | Silent bypasses create untracked compliance debt and hide pressure deploys |
+| Shipping UNCERTIFIED northstars to main branch | Declaring intent without proof violates the evidence-first covenant |
+
 *Paper 44 — Part of the Solace Inspector knowledge network*
 *Cross-references: Paper 42 (Inspector), Paper 43 (Webservices-First Northstar ABCD), Paper 16 (SW5.0), Paper 06 (Part 11)*
 *Implementation: src/hooks/pre-push-inspector.sh*
