@@ -85,7 +85,6 @@ $wxsContent = @"
     UpgradeCode="$upgradeGuid"
     Scope="perMachine"
     InstallerVersion="500"
-    Platform="x64"
     Compressed="yes">
 
     <MajorUpgrade
