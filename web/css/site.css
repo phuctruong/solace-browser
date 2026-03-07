@@ -1116,7 +1116,7 @@ main { display: block; }
 .yy-msg a { color: var(--sb-signal); text-decoration: underline; }
 .yy-msg--assistant .yy-msg__time {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--sb-text-muted);
   margin-top: 4px;
 }
@@ -4385,7 +4385,7 @@ body.simple-mode .dl-feature {
 }
 .dash-recent-item__status {
   flex-shrink: 0;
-  font-size: 0.68rem;
+  font-size: 0.70rem;
   font-weight: 700;
   text-transform: uppercase;
   padding: 3px 8px;
@@ -4629,7 +4629,7 @@ body.simple-mode .dl-feature {
 .text-md   { font-size: var(--font-md); }   /* 1rem */
 .text-lg   { font-size: var(--font-lg); }   /* 1.125rem */
 .text-xl   { font-size: var(--font-xl); }   /* 1.25rem */
-.text-068  { font-size: 0.68rem; }
+.text-068  { font-size: 0.70rem; }
 .text-072  { font-size: 0.72rem; }
 .text-075  { font-size: 0.75rem; }
 .text-078  { font-size: 0.78rem; }
@@ -4697,7 +4697,7 @@ body.simple-mode .dl-feature {
 
 /* ── App Detail: Compliance note ── */
 .ad-compliance-note {
-  font-size: 0.68rem;
+  font-size: 0.70rem;
   color: var(--sb-text-muted);
   margin-top: 8px;
 }
@@ -4790,7 +4790,7 @@ body.simple-mode .dl-feature {
 /* ── App Detail: Runs table cells ── */
 .ad-evidence-cell {
   font-family: var(--sb-font-mono);
-  font-size: 0.68rem;
+  font-size: 0.70rem;
 }
 
 /* ── App Detail: Agent docs sections ── */
@@ -4830,7 +4830,7 @@ body.simple-mode .dl-feature {
   border: 1px solid var(--sb-border-white-alpha-08);
   border-radius: 5px;
   color: var(--sb-text-muted);
-  font-size: 0.68rem;
+  font-size: 0.70rem;
   cursor: pointer;
 }
 .ad-docs-tip-card {
@@ -4859,7 +4859,7 @@ body.simple-mode .dl-feature {
   font-family: var(--sb-font-mono);
 }
 .ad-savings-timestamp {
-  font-size: 0.68rem;
+  font-size: 0.70rem;
   color: var(--sb-text-muted);
   margin-bottom: 12px;
 }
@@ -5313,7 +5313,7 @@ body.simple-mode .dl-feature {
   text-align: center;
 }
 .ad-kpi-label {
-  font-size: 0.68rem;
+  font-size: 0.70rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--sb-text-muted);
@@ -5324,7 +5324,7 @@ body.simple-mode .dl-feature {
   margin: 4px 0;
 }
 .ad-kpi-sub {
-  font-size: 0.68rem;
+  font-size: 0.70rem;
   color: var(--sb-text-muted);
 }
 
@@ -5356,7 +5356,7 @@ body.simple-mode .dl-feature {
   color: var(--sb-success);
 }
 .ad-projection-detail {
-  font-size: 0.68rem;
+  font-size: 0.70rem;
   color: var(--sb-text-muted);
   margin-top: 4px;
 }
@@ -5436,7 +5436,7 @@ body.simple-mode .dl-feature {
   font-weight: 700;
 }
 .ad-compliance-card-badge {
-  font-size: 0.62rem;
+  font-size: 0.70rem;
   margin-left: auto;
 }
 .ad-compliance-card-desc {

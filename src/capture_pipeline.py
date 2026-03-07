@@ -7,7 +7,7 @@ Two modes based on auth status:
 - Guest: HTML only (local, no sync, no screenshots)
 - Logged-in: HTML + assets + screenshot metadata + Mermaid snapshot
 
-Storage: ~/.solace/history/{domain}/{timestamp}_{url_slug}.ripple.json + .ripple.zlib
+Storage: ~/.solace/history/{domain}/{timestamp}_{url_slug}.ripple.json + .ripple.pz
 
 RTC (Round-Trip Check): compress -> decompress -> compare SHA-256 hashes.
 If sha256(reconstructed) != sha256(original), the ripple is NOT stored.
@@ -19,7 +19,7 @@ Invariants:
   1. ALL computation is client-side (zero cloud compute)
   2. 100% RTC must pass before ripple is stored
   3. Domain exclusions enforced before capture (no localhost, no chrome://)
-  4. Fallback Ban: no silent degradation, no broad except, no fake data
+  4. Fallback Ban: PZip ONLY, no zlib fallback, no silent degradation
 
 Rung: 641
 """
@@ -29,13 +29,71 @@ from __future__ import annotations
 import hashlib
 import ipaddress
 import json
+import logging
 import re
+import sys
 import uuid
 import zlib
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import urlparse
+
+logger = logging.getLogger("solace-browser.capture")
+
+# ---------------------------------------------------------------------------
+# PZip integration (REQUIRED — Fallback Ban: no zlib fallback)
+# C++ bridge must be compiled for capture to work.
+# ---------------------------------------------------------------------------
+
+PZIP_AVAILABLE = False
+pzip_compress = None  # Set by _try_pzip_import() or mocked in tests
+pzip_decompress = None  # Set by _try_pzip_import() or mocked in tests
+
+
+def _try_pzip_import() -> bool:
+    """Try importing PZip and verify the C++ bridge works with a smoke test."""
+    global pzip_compress, pzip_decompress  # noqa: PLW0603
+    try:
+        from pzip.pipeline import pzip_compress as _pc, pzip_decompress as _pd
+        # Smoke test: compress a tiny payload to verify C++ bridge is compiled
+        _test_data = b"<html>smoke</html>"
+        _compressed = _pc(_test_data, filename="smoke.html")
+        _restored = _pd(_compressed)
+        if _restored != _test_data:
+            return False
+        pzip_compress = _pc
+        pzip_decompress = _pd
+        return True
+    except (ImportError, ModuleNotFoundError, OSError, RuntimeError, TypeError, ValueError):
+        return False
+
+# Try installed pzip first
+PZIP_AVAILABLE = _try_pzip_import()
+
+# Try project path as fallback
+if not PZIP_AVAILABLE:
+    _pzip_project = Path("/home/phuc/projects/pzip")
+    if _pzip_project.exists() and str(_pzip_project) not in sys.path:
+        sys.path.insert(0, str(_pzip_project))
+    PZIP_AVAILABLE = _try_pzip_import()
+
+if not PZIP_AVAILABLE:
+    logger.warning(
+        "PZip C++ bridge NOT compiled — capture pipeline DISABLED. "
+        "Compile: cd /home/phuc/projects/pzip && make"
+    )
+
+# ---------------------------------------------------------------------------
+# Structural extractor (optional — extracts page skeleton as sidecar)
+# ---------------------------------------------------------------------------
+
+STRUCTURE_AVAILABLE = False
+try:
+    from structural_extractor import strip_to_structure
+    STRUCTURE_AVAILABLE = True
+except ImportError:
+    pass
 
 
 # ---------------------------------------------------------------------------
@@ -52,6 +110,14 @@ class DomainExcludedError(CaptureError):
 
 class RTCVerificationError(CaptureError):
     """Raised when round-trip check fails (compressed != original)."""
+
+
+class PZipUnavailableError(CaptureError):
+    """Raised when PZip C++ bridge is not compiled.
+
+    Fallback Ban: no silent degradation to zlib.
+    Alert user to compile the C++ bridge.
+    """
 
 
 class CaptureNotFoundError(CaptureError):
@@ -141,13 +207,15 @@ class CapturePipeline:
     - Logged-in: HTML + assets + screenshot metadata + Mermaid snapshot
 
     Storage: ~/.solace/history/{domain}/{timestamp}_{url_slug}.ripple.json
-             ~/.solace/history/{domain}/{timestamp}_{url_slug}.ripple.zlib
+             ~/.solace/history/{domain}/{timestamp}_{url_slug}.ripple.pz
 
     Design rules (Fallback Ban):
+    - PZip is the ONLY compression engine. No zlib fallback.
     - RTC must pass before storage (no storing invalid ripples)
     - Domain exclusion checked before any I/O
     - No broad except blocks
     - No silent fallback on compression failure
+    - If PZip C++ bridge not compiled: raise PZipUnavailableError
     """
 
     def __init__(
@@ -180,11 +248,17 @@ class CapturePipeline:
         assets: list[dict[str, Any]] | None = None,
         screenshot_path: Path | None = None,
         session_id: str | None = None,
+        skip_if_unchanged: bool = True,
     ) -> dict[str, Any]:
         """Capture a page load event.
 
-        Compresses HTML with zlib, verifies RTC, writes manifest + compressed
-        data to disk under ~/.solace/history/{domain}/.
+        Produces up to three artifacts per page visit:
+        1. .ripple.pz — PZip-compressed HTML (Prime Mermaid ripple)
+        2. .ripple.json — manifest metadata
+        3. .structure.json — structural extraction (Prime Wiki sitemap)
+
+        Compression: PZip ONLY (C++ accelerated). No zlib fallback (Fallback Ban).
+        Dedup: skips capture if HTML unchanged since last visit.
 
         Args:
             url: The page URL.
@@ -193,22 +267,20 @@ class CapturePipeline:
             assets: List of {url, type, size} for page assets (logged-in only).
             screenshot_path: Path to screenshot file (logged-in only).
             session_id: Browser session ID for evidence linking.
+            skip_if_unchanged: If True, skip capture when HTML hash matches
+                              the most recent capture for this URL.
 
         Returns:
             {
-                capture_id: str,
-                domain: str,
-                path: str,  # storage path to manifest
-                size_bytes: int,  # original HTML size
-                html_hash: str,  # SHA-256 of HTML
-                compressed: bool,
-                compression_ratio: float | None,
-                mode: "guest" | "authenticated",
-                rtc_verified: bool,  # round-trip check passed
+                capture_id, domain, path, size_bytes, html_hash,
+                compressed, compression_ratio, compression_engine,
+                mode, rtc_verified, structure_extracted,
+                skipped (optional), skip_reason (optional),
             }
 
         Raises:
             DomainExcludedError: If the URL's domain is excluded.
+            PZipUnavailableError: If PZip C++ bridge is not compiled.
             RTCVerificationError: If RTC fails after compression.
         """
         if self.check_domain_exclusion(url):
@@ -231,8 +303,34 @@ class CapturePipeline:
         html_hash = hashlib.sha256(html_bytes).hexdigest()
         html_size = len(html_bytes)
 
-        # Compress
-        compressed_data = self.compress(html_content)
+        # Dedup check: skip if HTML is unchanged since last capture
+        if skip_if_unchanged:
+            latest = self.find_latest_capture(url)
+            if latest is not None and latest.get("html_hash") == html_hash:
+                return {
+                    "capture_id": latest["capture_id"],
+                    "domain": domain,
+                    "path": latest.get("manifest_path", ""),
+                    "size_bytes": latest.get("html_size", html_size),
+                    "html_hash": html_hash,
+                    "compressed": True,
+                    "compression_ratio": latest.get("compression_ratio", 0.0),
+                    "compression_engine": latest.get("compression_engine", "pzip"),
+                    "mode": mode,
+                    "rtc_verified": True,
+                    "structure_extracted": latest.get("structure_path") is not None,
+                    "skipped": True,
+                    "skip_reason": "unchanged",
+                }
+
+        # PZip compression — REQUIRED. No zlib fallback (Fallback Ban).
+        if not PZIP_AVAILABLE:
+            raise PZipUnavailableError(
+                "PZip C++ bridge not compiled. Cannot capture without PZip. "
+                "Compile the C++ bridge: cd /home/phuc/projects/pzip && make"
+            )
+        compression_engine = "pzip"
+        compressed_data = self.compress_pzip(html_content)
         compressed_size = len(compressed_data)
 
         # RTC verification (mandatory — Invariant #2)
@@ -254,7 +352,22 @@ class CapturePipeline:
         domain_dir = self._history_root / domain
         domain_dir.mkdir(parents=True, exist_ok=True)
         manifest_path = domain_dir / f"{file_base}.ripple.json"
-        data_path = domain_dir / f"{file_base}.ripple.zlib"
+        data_path = domain_dir / f"{file_base}.ripple.pz"
+
+        # Extract page structure (Prime Wiki sitemap)
+        structure_data: dict[str, Any] | None = None
+        structure_path_str: str | None = None
+        if STRUCTURE_AVAILABLE:
+            try:
+                structure_data = strip_to_structure(html_content)
+                structure_path = domain_dir / f"{file_base}.structure.json"
+                structure_path.write_text(
+                    json.dumps(structure_data, indent=2, sort_keys=True) + "\n",
+                    encoding="utf-8",
+                )
+                structure_path_str = str(structure_path)
+            except (ValueError, TypeError, OSError) as exc:
+                logger.warning("Structure extraction failed for %s: %s", url, exc)
 
         # Build manifest
         manifest: dict[str, Any] = {
@@ -267,7 +380,9 @@ class CapturePipeline:
             "html_size": html_size,
             "compressed_size": compressed_size,
             "compression_ratio": compression_ratio,
+            "compression_engine": compression_engine,
             "rtc_verified": True,
+            "structure_path": structure_path_str,
             "assets": assets if (logged_in and assets is not None) else [],
             "screenshot_path": str(screenshot_path) if (logged_in and screenshot_path is not None) else None,
             "session_id": session_id,
@@ -290,53 +405,68 @@ class CapturePipeline:
             "html_hash": html_hash,
             "compressed": True,
             "compression_ratio": compression_ratio,
+            "compression_engine": compression_engine,
             "mode": mode,
             "rtc_verified": True,
+            "structure_extracted": structure_data is not None,
         }
 
-    def compress(self, html_content: str, *, level: int = 6) -> bytes:
-        """Compress HTML content using zlib.
+    def compress_pzip(self, html_content: str) -> bytes:
+        """Compress HTML content using PZip (C++ accelerated).
 
-        Args:
-            html_content: The HTML string to compress.
-            level: Compression level (0-9). Default: 6 (zlib default).
+        Returns PZ01 container bytes with SHA-256 seal.
+        PZip is the ONLY compression engine. No zlib fallback.
 
-        Returns:
-            Compressed bytes.
+        Raises:
+            PZipUnavailableError: If PZip C++ bridge is not compiled.
         """
-        return zlib.compress(html_content.encode("utf-8"), level)
+        if not PZIP_AVAILABLE:
+            raise PZipUnavailableError(
+                "PZip C++ bridge not compiled. "
+                "Compile: cd /home/phuc/projects/pzip && make"
+            )
+        return pzip_compress(html_content.encode("utf-8"), filename="page.html")
 
-    def decompress(self, data: bytes) -> str:
-        """Decompress zlib data back to HTML string.
+    def decompress_auto(self, data: bytes) -> str:
+        """Decompress data, auto-detecting PZip vs zlib format.
 
-        Used for RTC verification and capture retrieval.
-
-        Args:
-            data: zlib-compressed bytes.
+        PZ01 container starts with b"PZ" magic bytes.
+        Legacy zlib data is supported for reading old captures only.
 
         Returns:
             Decompressed HTML string.
 
         Raises:
-            zlib.error: If data is not valid zlib-compressed content.
+            PZipUnavailableError: If PZip data detected but C++ bridge not compiled.
+            zlib.error: If legacy zlib data is corrupted.
         """
+        if len(data) >= 2 and data[:2] == b"PZ":
+            if not PZIP_AVAILABLE:
+                raise PZipUnavailableError(
+                    "PZip data detected but C++ bridge not compiled. "
+                    "Compile: cd /home/phuc/projects/pzip && make"
+                )
+            return pzip_decompress(data).decode("utf-8")
+        # Legacy zlib — read-only support for old captures
+        logger.info("Reading legacy zlib capture — new captures require PZip")
         return zlib.decompress(data).decode("utf-8")
 
     def verify_rtc(self, original: str, compressed: bytes) -> bool:
         """Round-trip check: compress -> decompress -> compare.
 
         Compares SHA-256 hashes of original and decompressed content.
+        Auto-detects PZip vs zlib format for decompression.
 
         Args:
             original: The original HTML string.
-            compressed: The zlib-compressed bytes.
+            compressed: The zlib or PZip compressed bytes.
 
         Returns:
             True if sha256(original) == sha256(decompressed).
         """
         try:
-            decompressed = self.decompress(compressed)
-        except zlib.error:
+            decompressed = self.decompress_auto(compressed)
+        except (zlib.error, RuntimeError, ValueError, OSError):
             return False
 
         original_hash = hashlib.sha256(original.encode("utf-8")).hexdigest()
@@ -390,6 +520,41 @@ class CapturePipeline:
         captures.sort(key=lambda c: c["timestamp"], reverse=True)
         return captures[:limit]
 
+    def find_latest_capture(self, url: str) -> dict[str, Any] | None:
+        """Find the most recent capture for a given URL.
+
+        Searches the domain directory for manifests matching the URL.
+        Used for second-visit deduplication.
+
+        Args:
+            url: The page URL to search for.
+
+        Returns:
+            Most recent manifest dict with added "manifest_path" key,
+            or None if no captures exist for this URL.
+        """
+        parsed = urlparse(url)
+        domain = parsed.hostname or "unknown"
+        domain_dir = self._history_root / domain
+
+        if not domain_dir.exists():
+            return None
+
+        best: dict[str, Any] | None = None
+        best_ts = ""
+
+        for manifest_file in domain_dir.glob("*.ripple.json"):
+            manifest_text = manifest_file.read_text(encoding="utf-8")
+            manifest = json.loads(manifest_text)
+            if manifest.get("url") == url:
+                ts = manifest.get("timestamp", "")
+                if ts > best_ts:
+                    best_ts = ts
+                    best = manifest
+                    best["manifest_path"] = str(manifest_file)
+
+        return best
+
     def get_capture(self, capture_id: str) -> dict[str, Any] | None:
         """Get a specific capture's metadata and content path.
 
@@ -412,8 +577,13 @@ class CapturePipeline:
                 manifest_text = manifest_file.read_text(encoding="utf-8")
                 manifest = json.loads(manifest_text)
                 if manifest.get("capture_id") == capture_id:
-                    # Add paths for retrieval
-                    data_path = manifest_file.with_suffix("").with_suffix(".ripple.zlib")
+                    # New captures always use .ripple.pz
+                    # Legacy captures may use .ripple.zlib (read-only compat)
+                    engine = manifest.get("compression_engine", "pzip")
+                    data_ext = ".ripple.zlib" if engine == "zlib" else ".ripple.pz"
+                    data_path = manifest_file.parent / manifest_file.name.replace(
+                        ".ripple.json", data_ext
+                    )
                     manifest["manifest_path"] = str(manifest_file)
                     manifest["data_path"] = str(data_path)
                     return manifest

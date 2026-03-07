@@ -64,7 +64,7 @@ const YinyangOAuth3Confirm = (() => {
         const data = await resp.json();
         return data.remaining_usd !== undefined ? `$${data.remaining_usd.toFixed(2)}` : 'Unlimited';
       }
-    } catch (_) {}
+    } catch (_) { console.debug('Budget check failed, defaulting to Not set'); }
     return 'Not set';
   }
 
@@ -229,7 +229,7 @@ const YinyangOAuth3Confirm = (() => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ budget_usd: newBudget }),
           });
-        } catch (_) {}
+        } catch (_) { console.debug('Budget update failed, proceeding anyway'); }
       }
       _proceed();
     });

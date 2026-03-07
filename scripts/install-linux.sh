@@ -61,12 +61,12 @@ Name=Solace Browser
 GenericName=AI Browser
 Comment=AI browser that works while you don't — Gmail, LinkedIn, 25+ apps
 Exec=$INSTALL_DIR/$APP_NAME
-Icon=$ICON_DIR/$APP_NAME.png
+Icon=solace-browser
 Terminal=false
 Type=Application
 Categories=Network;WebBrowser;Utility;
 Keywords=AI;browser;email;gmail;automation;assistant;
-StartupWMClass=solace-browser
+StartupWMClass=SolaceBrowser
 EOF
 
 # Update desktop database

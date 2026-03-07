@@ -327,7 +327,7 @@
       fields.push({ label: 'Triggers', val: utils.escapeHtml(a.cross_app_triggers.join(' \u2192 ')) });
     }
     if (a.screenshot_url || a.screenshot_path) {
-      var imgSrc = a.screenshot_url || a.screenshot_path;
+      const imgSrc = a.screenshot_url || a.screenshot_path;
       fields.push({ label: 'Screenshot', val: '<img src="' + utils.escapeHtml(imgSrc) + '" alt="Evidence screenshot" class="drawer-screenshot" loading="lazy">' });
     }
     if (a._demo) {

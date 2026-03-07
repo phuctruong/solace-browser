@@ -58,4 +58,8 @@
   --sb-border-success-alpha-18: rgba(70, 217, 167, 0.18);
   --sb-bg-warning-alpha-14: rgba(255, 199, 90, 0.14);
   --sb-shadow-warning-alpha-18: rgba(255, 199, 90, 0.18);
+  --sb-shadow-white-alpha-02: rgba(255, 255, 255, 0.02);
+  --sb-shadow-white-alpha-015: rgba(255, 255, 255, 0.015);
+  --sb-shadow-danger-alpha-18: rgba(239, 68, 68, 0.18);
+  --sb-bg-danger-alpha-14: rgba(239, 68, 68, 0.14);
 }

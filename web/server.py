@@ -359,6 +359,9 @@ APP_STORE_SYNC_ROUTE = "/api/app-store/sync"
 APP_STORE_PROPOSALS_ROUTE = "/api/app-store/proposals"
 SETTINGS_ROUTE = "/api/settings"
 LOCALES_DIR = REPO_ROOT / "app" / "locales" / "yinyang"
+SUPPORTED_LOCALES = frozenset(
+    p.stem for p in LOCALES_DIR.glob("*.json") if p.is_file()
+)
 FUN_PACKS_DIR = REPO_ROOT / "data" / "fun-packs"
 
 # In-memory notification queue (max 50 items) + SSE subscribers
@@ -1170,7 +1173,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         query = parse_qs(urlsplit(self.path).query)
         locale = query.get("locale", ["en"])[0]
         key = query.get("key", [None])[0]
-        if locale not in {"en","es","vi","zh","pt","fr","ja","de","ar","hi","ko","id","ru"}:
+        if locale not in SUPPORTED_LOCALES:
             locale = "en"
         locale_path = LOCALES_DIR / f"{locale}.json"
         if not locale_path.exists():
@@ -1184,6 +1187,8 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                 delight = data.get("delight", {})
                 if key in delight:
                     self._send_json(HTTPStatus.OK, {key: delight[key]}, send_body=send_body)
+                elif key in data.get("ui", {}):
+                    self._send_json(HTTPStatus.OK, {key: data["ui"][key]}, send_body=send_body)
                 elif key in data:
                     self._send_json(HTTPStatus.OK, {key: data[key]}, send_body=send_body)
                 else:

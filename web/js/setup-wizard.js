@@ -362,7 +362,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ source: 'setup-wizard' })
-      }).catch(function() {}); // silent — will show in app store
+      }).catch(function(e) { console.debug('App install queued, will show in app store:', e.message || e); });
     });
   }
 

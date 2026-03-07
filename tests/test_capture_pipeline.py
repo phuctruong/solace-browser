@@ -46,15 +46,40 @@ SRC_ROOT = REPO_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+import capture_pipeline as capture_pipeline_mod
 from capture_pipeline import (
     CapturePipeline,
     CaptureError,
     DomainExcludedError,
     RTCVerificationError,
     CaptureNotFoundError,
+    PZipUnavailableError,
+    PZIP_AVAILABLE,
+    STRUCTURE_AVAILABLE,
     _url_to_slug,
     _is_private_ip,
 )
+
+
+@pytest.fixture(autouse=True)
+def _mock_pzip(monkeypatch):
+    """Mock PZip as available using zlib internally.
+
+    Capture pipeline requires PZip (Fallback Ban — no zlib fallback).
+    For tests, we simulate PZip availability so pipeline logic can be tested
+    without the compiled C++ bridge.
+    """
+    monkeypatch.setattr(capture_pipeline_mod, "PZIP_AVAILABLE", True)
+    monkeypatch.setattr(
+        capture_pipeline_mod,
+        "pzip_compress",
+        lambda data, **kw: zlib.compress(data),
+    )
+    monkeypatch.setattr(
+        capture_pipeline_mod,
+        "pzip_decompress",
+        lambda data: zlib.decompress(data),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -223,38 +248,31 @@ class TestDomainExclusion:
 # ===========================================================================
 
 class TestCompression:
-    """Test zlib compression and decompression."""
+    """Test PZip compression (mocked) and decompression."""
 
-    def test_compress_produces_smaller_output(self, tmp_path: Path) -> None:
+    def test_compress_pzip_produces_bytes(self, tmp_path: Path) -> None:
         pipeline = _make_pipeline(tmp_path)
-        compressed = pipeline.compress(SIMPLE_HTML)
+        compressed = pipeline.compress_pzip(SIMPLE_HTML)
+        assert isinstance(compressed, bytes)
         assert len(compressed) < len(SIMPLE_HTML.encode("utf-8"))
 
-    def test_compress_returns_bytes(self, tmp_path: Path) -> None:
+    def test_compress_pzip_round_trips(self, tmp_path: Path) -> None:
         pipeline = _make_pipeline(tmp_path)
-        compressed = pipeline.compress(SIMPLE_HTML)
-        assert isinstance(compressed, bytes)
-
-    def test_decompress_returns_original(self, tmp_path: Path) -> None:
-        pipeline = _make_pipeline(tmp_path)
-        compressed = pipeline.compress(SIMPLE_HTML)
-        decompressed = pipeline.decompress(compressed)
+        compressed = pipeline.compress_pzip(SIMPLE_HTML)
+        decompressed = pipeline.decompress_auto(compressed)
         assert decompressed == SIMPLE_HTML
 
-    def test_compress_with_custom_level(self, tmp_path: Path) -> None:
+    def test_compress_pzip_raises_when_unavailable(self, tmp_path: Path, monkeypatch) -> None:
+        monkeypatch.setattr(capture_pipeline_mod, "PZIP_AVAILABLE", False)
         pipeline = _make_pipeline(tmp_path)
-        compressed_fast = pipeline.compress(SIMPLE_HTML, level=1)
-        compressed_best = pipeline.compress(SIMPLE_HTML, level=9)
-        # Both should decompress to the same content
-        assert pipeline.decompress(compressed_fast) == SIMPLE_HTML
-        assert pipeline.decompress(compressed_best) == SIMPLE_HTML
-        # Best compression should be equal or smaller
-        assert len(compressed_best) <= len(compressed_fast)
+        with pytest.raises(PZipUnavailableError, match="PZip C\\+\\+ bridge not compiled"):
+            pipeline.compress_pzip(SIMPLE_HTML)
 
-    def test_decompress_invalid_data_raises(self, tmp_path: Path) -> None:
-        pipeline = _make_pipeline(tmp_path)
-        with pytest.raises(zlib.error):
-            pipeline.decompress(b"this is not zlib data")
+    def test_capture_raises_when_pzip_unavailable(self, tmp_path: Path, monkeypatch) -> None:
+        monkeypatch.setattr(capture_pipeline_mod, "PZIP_AVAILABLE", False)
+        pipeline = _make_pipeline(tmp_path, now_fn=_fixed_now)
+        with pytest.raises(PZipUnavailableError, match="PZip C\\+\\+ bridge not compiled"):
+            pipeline.capture("https://example.com/page", SIMPLE_HTML)
 
 
 # ===========================================================================
@@ -266,12 +284,12 @@ class TestRTCVerification:
 
     def test_rtc_passes_for_valid_data(self, tmp_path: Path) -> None:
         pipeline = _make_pipeline(tmp_path)
-        compressed = pipeline.compress(SIMPLE_HTML)
+        compressed = pipeline.compress_pzip(SIMPLE_HTML)
         assert pipeline.verify_rtc(SIMPLE_HTML, compressed) is True
 
     def test_rtc_fails_for_corrupted_data(self, tmp_path: Path) -> None:
         pipeline = _make_pipeline(tmp_path)
-        compressed = pipeline.compress(SIMPLE_HTML)
+        compressed = pipeline.compress_pzip(SIMPLE_HTML)
         # Corrupt the compressed data by flipping bytes
         corrupted = bytearray(compressed)
         if len(corrupted) > 4:
@@ -282,20 +300,20 @@ class TestRTCVerification:
 
     def test_rtc_fails_for_wrong_original(self, tmp_path: Path) -> None:
         pipeline = _make_pipeline(tmp_path)
-        compressed = pipeline.compress(SIMPLE_HTML)
+        compressed = pipeline.compress_pzip(SIMPLE_HTML)
         # Compare with different original
         different_html = "<html><body>Different content</body></html>"
         assert pipeline.verify_rtc(different_html, compressed) is False
 
     def test_rtc_passes_for_empty_content(self, tmp_path: Path) -> None:
         pipeline = _make_pipeline(tmp_path)
-        compressed = pipeline.compress("")
+        compressed = pipeline.compress_pzip("")
         assert pipeline.verify_rtc("", compressed) is True
 
     def test_rtc_passes_for_large_content(self, tmp_path: Path) -> None:
         pipeline = _make_pipeline(tmp_path)
         large_html = _make_large_html(150_000)
-        compressed = pipeline.compress(large_html)
+        compressed = pipeline.compress_pzip(large_html)
         assert pipeline.verify_rtc(large_html, compressed) is True
 
 
@@ -343,15 +361,15 @@ class TestGuestCapture:
         result = pipeline.capture("https://example.com/page", SIMPLE_HTML)
 
         manifest_path = Path(result["path"])
-        # Data file should be alongside manifest with .zlib extension
+        assert result["compression_engine"] == "pzip"
         data_path = manifest_path.parent / manifest_path.name.replace(
-            ".ripple.json", ".ripple.zlib"
+            ".ripple.json", ".ripple.pz"
         )
         assert data_path.exists()
 
         # Decompress and verify content matches
         compressed_data = data_path.read_bytes()
-        decompressed = pipeline.decompress(compressed_data)
+        decompressed = pipeline.decompress_auto(compressed_data)
         assert decompressed == SIMPLE_HTML
 
     def test_guest_ignores_assets(self, tmp_path: Path) -> None:
@@ -457,7 +475,7 @@ class TestStorageStructure:
 
         manifest_path = Path(result["path"])
         data_path = manifest_path.parent / manifest_path.name.replace(
-            ".ripple.json", ".ripple.zlib"
+            ".ripple.json", ".ripple.pz"
         )
         assert manifest_path.parent == data_path.parent
         assert manifest_path.exists()
@@ -608,14 +626,15 @@ class TestGetCapture:
         pipeline = _make_pipeline(tmp_path)
         assert pipeline.get_capture("cap-nonexistent") is None
 
-    def test_get_capture_data_path_points_to_zlib(self, tmp_path: Path) -> None:
+    def test_get_capture_data_path_has_correct_extension(self, tmp_path: Path) -> None:
         pipeline = _make_pipeline(tmp_path, now_fn=_fixed_now)
         result = pipeline.capture("https://example.com/page", SIMPLE_HTML)
 
         fetched = pipeline.get_capture(result["capture_id"])
         assert fetched is not None
         data_path = Path(fetched["data_path"])
-        assert data_path.name.endswith(".ripple.zlib")
+        # PZip only — always .ripple.pz
+        assert data_path.name.endswith(".ripple.pz")
 
 
 # ===========================================================================
@@ -681,7 +700,7 @@ class TestLargeCapture:
     def test_large_html_compresses_well(self, tmp_path: Path) -> None:
         pipeline = _make_pipeline(tmp_path)
         large_html = _make_large_html(120_000)
-        compressed = pipeline.compress(large_html)
+        compressed = pipeline.compress_pzip(large_html)
         original_size = len(large_html.encode("utf-8"))
         # Repetitive HTML should compress very well (10x+)
         assert len(compressed) < original_size / 5
@@ -689,7 +708,7 @@ class TestLargeCapture:
     def test_large_html_rtc_passes(self, tmp_path: Path) -> None:
         pipeline = _make_pipeline(tmp_path)
         large_html = _make_large_html(150_000)
-        compressed = pipeline.compress(large_html)
+        compressed = pipeline.compress_pzip(large_html)
         assert pipeline.verify_rtc(large_html, compressed) is True
 
 
@@ -713,12 +732,13 @@ class TestEmptyCapture:
         result = pipeline.capture("https://example.com/empty", "")
 
         manifest_path = Path(result["path"])
+        assert result["compression_engine"] == "pzip"
         data_path = manifest_path.parent / manifest_path.name.replace(
-            ".ripple.json", ".ripple.zlib"
+            ".ripple.json", ".ripple.pz"
         )
         assert data_path.exists()
         # Decompress should return empty string
-        decompressed = pipeline.decompress(data_path.read_bytes())
+        decompressed = pipeline.decompress_auto(data_path.read_bytes())
         assert decompressed == ""
 
 
@@ -868,3 +888,211 @@ class TestManifestContent:
         # Should not raise
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         assert isinstance(manifest, dict)
+
+
+# ===========================================================================
+# Test: PZip Integration
+# ===========================================================================
+
+class TestPZipIntegration:
+    """Test PZip requirement and Fallback Ban enforcement."""
+
+    def test_pzip_available_flag_is_bool(self) -> None:
+        assert isinstance(PZIP_AVAILABLE, bool)
+
+    def test_compress_pzip_raises_when_unavailable(self, tmp_path: Path, monkeypatch) -> None:
+        monkeypatch.setattr(capture_pipeline_mod, "PZIP_AVAILABLE", False)
+        pipeline = _make_pipeline(tmp_path)
+        with pytest.raises(PZipUnavailableError, match="PZip C\\+\\+ bridge not compiled"):
+            pipeline.compress_pzip(SIMPLE_HTML)
+
+    def test_capture_raises_when_pzip_unavailable(self, tmp_path: Path, monkeypatch) -> None:
+        """Fallback Ban: capture must fail loudly when PZip unavailable."""
+        monkeypatch.setattr(capture_pipeline_mod, "PZIP_AVAILABLE", False)
+        pipeline = _make_pipeline(tmp_path, now_fn=_fixed_now)
+        with pytest.raises(PZipUnavailableError):
+            pipeline.capture("https://example.com/page", SIMPLE_HTML)
+
+    def test_capture_engine_always_pzip(self, tmp_path: Path) -> None:
+        pipeline = _make_pipeline(tmp_path, now_fn=_fixed_now)
+        result = pipeline.capture("https://example.com/page", SIMPLE_HTML)
+        assert result["compression_engine"] == "pzip"
+
+    def test_decompress_auto_reads_legacy_zlib(self, tmp_path: Path) -> None:
+        """Legacy zlib captures can still be read (backward compat)."""
+        pipeline = _make_pipeline(tmp_path)
+        compressed = zlib.compress(SIMPLE_HTML.encode("utf-8"))
+        decompressed = pipeline.decompress_auto(compressed)
+        assert decompressed == SIMPLE_HTML
+
+    def test_decompress_auto_rejects_pzip_when_unavailable(self, tmp_path: Path, monkeypatch) -> None:
+        monkeypatch.setattr(capture_pipeline_mod, "PZIP_AVAILABLE", False)
+        pipeline = _make_pipeline(tmp_path)
+        with pytest.raises(PZipUnavailableError, match="PZip data detected"):
+            pipeline.decompress_auto(b"PZ01fake_data")
+
+    def test_data_file_always_ripple_pz(self, tmp_path: Path) -> None:
+        pipeline = _make_pipeline(tmp_path, now_fn=_fixed_now)
+        result = pipeline.capture("https://example.com/page", SIMPLE_HTML)
+        manifest_path = Path(result["path"])
+        data_path = manifest_path.parent / manifest_path.name.replace(
+            ".ripple.json", ".ripple.pz"
+        )
+        assert data_path.exists()
+
+
+# ===========================================================================
+# Test: Structure Extraction Sidecar
+# ===========================================================================
+
+class TestStructureExtraction:
+    """Test that capture produces .structure.json sidecar."""
+
+    def test_structure_available_flag_is_bool(self) -> None:
+        assert isinstance(STRUCTURE_AVAILABLE, bool)
+
+    def test_capture_creates_structure_file(self, tmp_path: Path) -> None:
+        if not STRUCTURE_AVAILABLE:
+            pytest.skip("structural_extractor not importable")
+        pipeline = _make_pipeline(tmp_path, now_fn=_fixed_now)
+        result = pipeline.capture("https://example.com/page", SIMPLE_HTML)
+        assert result.get("structure_extracted") is True
+        domain_dir = pipeline.history_root / "example.com"
+        structures = list(domain_dir.glob("*.structure.json"))
+        assert len(structures) == 1
+
+    def test_structure_contains_title(self, tmp_path: Path) -> None:
+        if not STRUCTURE_AVAILABLE:
+            pytest.skip("structural_extractor not importable")
+        pipeline = _make_pipeline(tmp_path, now_fn=_fixed_now)
+        pipeline.capture("https://example.com/page", SIMPLE_HTML)
+        domain_dir = pipeline.history_root / "example.com"
+        structures = list(domain_dir.glob("*.structure.json"))
+        data = json.loads(structures[0].read_text(encoding="utf-8"))
+        assert data["title"] == "Test Page"
+
+    def test_structure_has_page_type(self, tmp_path: Path) -> None:
+        if not STRUCTURE_AVAILABLE:
+            pytest.skip("structural_extractor not importable")
+        pipeline = _make_pipeline(tmp_path, now_fn=_fixed_now)
+        pipeline.capture("https://example.com/page", SIMPLE_HTML)
+        domain_dir = pipeline.history_root / "example.com"
+        structures = list(domain_dir.glob("*.structure.json"))
+        data = json.loads(structures[0].read_text(encoding="utf-8"))
+        assert "page_type" in data
+
+    def test_manifest_records_structure_path(self, tmp_path: Path) -> None:
+        if not STRUCTURE_AVAILABLE:
+            pytest.skip("structural_extractor not importable")
+        pipeline = _make_pipeline(tmp_path, now_fn=_fixed_now)
+        pipeline.capture("https://example.com/page", SIMPLE_HTML)
+        domain_dir = pipeline.history_root / "example.com"
+        manifests = list(domain_dir.glob("*.ripple.json"))
+        manifest = json.loads(manifests[0].read_text(encoding="utf-8"))
+        assert manifest.get("structure_path") is not None
+        assert Path(manifest["structure_path"]).exists()
+
+    def test_manifest_has_compression_engine(self, tmp_path: Path) -> None:
+        pipeline = _make_pipeline(tmp_path, now_fn=_fixed_now)
+        pipeline.capture("https://example.com/page", SIMPLE_HTML)
+        domain_dir = pipeline.history_root / "example.com"
+        manifests = list(domain_dir.glob("*.ripple.json"))
+        manifest = json.loads(manifests[0].read_text(encoding="utf-8"))
+        assert "compression_engine" in manifest
+        assert manifest["compression_engine"] == "pzip"
+
+
+# ===========================================================================
+# Test: Deduplication (Second Visit)
+# ===========================================================================
+
+class TestDeduplication:
+    """Test second-visit deduplication via html_hash comparison."""
+
+    @staticmethod
+    def _make_incrementing_now():
+        counter = [0]
+        def fn() -> datetime:
+            counter[0] += 1
+            return datetime(2026, 3, 7, 12, 0, counter[0], tzinfo=timezone.utc)
+        return fn
+
+    def test_second_capture_same_html_skipped(self, tmp_path: Path) -> None:
+        pipeline = _make_pipeline(tmp_path, now_fn=self._make_incrementing_now())
+        r1 = pipeline.capture("https://example.com/page", SIMPLE_HTML)
+        r2 = pipeline.capture("https://example.com/page", SIMPLE_HTML)
+        assert r2.get("skipped") is True
+        assert r2.get("skip_reason") == "unchanged"
+        assert r2["capture_id"] == r1["capture_id"]
+
+    def test_second_capture_different_html_not_skipped(self, tmp_path: Path) -> None:
+        different_html = "<html><body><h1>Changed</h1></body></html>"
+        pipeline = _make_pipeline(tmp_path, now_fn=self._make_incrementing_now())
+        pipeline.capture("https://example.com/page", SIMPLE_HTML)
+        r2 = pipeline.capture("https://example.com/page", different_html)
+        assert r2.get("skipped") is not True
+
+    def test_skip_if_unchanged_false_always_captures(self, tmp_path: Path) -> None:
+        pipeline = _make_pipeline(tmp_path, now_fn=self._make_incrementing_now())
+        pipeline.capture("https://example.com/page", SIMPLE_HTML)
+        r2 = pipeline.capture(
+            "https://example.com/page", SIMPLE_HTML, skip_if_unchanged=False
+        )
+        assert r2.get("skipped") is not True
+
+    def test_skipped_result_has_all_required_keys(self, tmp_path: Path) -> None:
+        pipeline = _make_pipeline(tmp_path, now_fn=self._make_incrementing_now())
+        pipeline.capture("https://example.com/page", SIMPLE_HTML)
+        r2 = pipeline.capture("https://example.com/page", SIMPLE_HTML)
+        for key in ("capture_id", "domain", "html_hash", "compression_engine",
+                     "rtc_verified", "structure_extracted"):
+            assert key in r2, f"Missing key in skipped result: {key}"
+
+
+# ===========================================================================
+# Test: find_latest_capture
+# ===========================================================================
+
+class TestFindLatestCapture:
+    """Test finding the most recent capture for a URL."""
+
+    def test_returns_none_when_empty(self, tmp_path: Path) -> None:
+        pipeline = _make_pipeline(tmp_path)
+        assert pipeline.find_latest_capture("https://example.com/page") is None
+
+    def test_returns_most_recent(self, tmp_path: Path) -> None:
+        counter = [0]
+        def inc_now() -> datetime:
+            counter[0] += 1
+            return datetime(2026, 3, 7, 12, 0, counter[0], tzinfo=timezone.utc)
+
+        pipeline = _make_pipeline(tmp_path, now_fn=inc_now)
+        pipeline.capture("https://example.com/page", SIMPLE_HTML, skip_if_unchanged=False)
+        different_html = "<html><body>v2</body></html>"
+        r2 = pipeline.capture("https://example.com/page", different_html, skip_if_unchanged=False)
+
+        latest = pipeline.find_latest_capture("https://example.com/page")
+        assert latest is not None
+        assert latest["capture_id"] == r2["capture_id"]
+
+    def test_different_urls_not_confused(self, tmp_path: Path) -> None:
+        counter = [0]
+        def inc_now() -> datetime:
+            counter[0] += 1
+            return datetime(2026, 3, 7, 12, 0, counter[0], tzinfo=timezone.utc)
+
+        pipeline = _make_pipeline(tmp_path, now_fn=inc_now)
+        pipeline.capture("https://example.com/a", SIMPLE_HTML)
+        different_html = "<html><body>page b</body></html>"
+        pipeline.capture("https://example.com/b", different_html)
+
+        latest_a = pipeline.find_latest_capture("https://example.com/a")
+        latest_b = pipeline.find_latest_capture("https://example.com/b")
+        assert latest_a is not None
+        assert latest_b is not None
+        assert latest_a["capture_id"] != latest_b["capture_id"]
+
+    def test_returns_none_for_unknown_url(self, tmp_path: Path) -> None:
+        pipeline = _make_pipeline(tmp_path, now_fn=_fixed_now)
+        pipeline.capture("https://example.com/known", SIMPLE_HTML)
+        assert pipeline.find_latest_capture("https://example.com/unknown") is None

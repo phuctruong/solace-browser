@@ -29,6 +29,8 @@ class _DummyBrowser:
         self.pages = {"p1": _DummyPage()}
         self.event_history = [{"type": "x"}]
         self.session_file = "artifacts/solace_session.json"
+        self._capture_pipeline = None
+        self._capture_count = 0
 
 
 class _Req:

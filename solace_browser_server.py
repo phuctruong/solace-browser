@@ -94,6 +94,22 @@ except ImportError as _sync_import_error:
     SYNC_AVAILABLE = False
 
 try:
+    import capture_pipeline as capture_pipeline_module
+    from capture_pipeline import CapturePipeline, DomainExcludedError, PZipUnavailableError
+    CAPTURE_AVAILABLE = True
+except ImportError as _capture_import_error:
+    capture_pipeline_module = None
+    logger_temp = logging.getLogger("solace-browser")
+    logger_temp.warning(f"Capture pipeline not available: {_capture_import_error}")
+    CAPTURE_AVAILABLE = False
+
+try:
+    from primewiki_client import PrimeWikiClient
+    PRIMEWIKI_AVAILABLE = True
+except ImportError:
+    PRIMEWIKI_AVAILABLE = False
+
+try:
     from playwright.async_api import async_playwright, Browser, Page
 except ImportError:
     _startup_logger = logging.getLogger("solace-browser")
@@ -401,6 +417,41 @@ class SolaceBrowser:
             audit_dir=part11_audit_dir,
             reset_session=True,
         )
+        # Auto-capture pipeline (captures page snapshots on load)
+        self._capture_pipeline: Optional[Any] = None
+        self._capture_count: int = 0
+        self._last_capture_url: Optional[str] = None
+        if CAPTURE_AVAILABLE:
+            self._capture_pipeline = CapturePipeline()
+        # Cloud sync client (only used if paid + sync enabled)
+        self._primewiki_client: Optional[Any] = None
+        if PRIMEWIKI_AVAILABLE:
+            self._primewiki_client = PrimeWikiClient()
+
+    def _read_capture_settings(self) -> dict[str, Any]:
+        """Read capture-related settings from ~/.solace/settings.json.
+
+        Returns dict with history, privacy, and account sections.
+        Falls back to safe defaults if file missing or malformed.
+        """
+        settings_path = Path.home() / ".solace" / "settings.json"
+        defaults: dict[str, Any] = {
+            "history": {"enabled": True, "prime_wiki": True, "prime_mermaid": True},
+            "privacy": {"history_local_only": True},
+            "account": {"tier": "free"},
+        }
+        try:
+            if settings_path.exists():
+                data = json.loads(settings_path.read_text(encoding="utf-8"))
+                if isinstance(data, dict):
+                    for section, section_defaults in defaults.items():
+                        if section in data and isinstance(data[section], dict):
+                            merged = dict(section_defaults)
+                            merged.update(data[section])
+                            defaults[section] = merged
+        except (json.JSONDecodeError, OSError, ValueError):
+            pass
+        return defaults
 
     def set_part11_upload_hook(self, hook: Optional[Any]) -> None:
         """Register an async callback for post-seal Part 11 uploads."""
@@ -1450,6 +1501,104 @@ class SolaceBrowser:
             asyncio.create_task(self.save_session())
         except RuntimeError:
             logger.warning("Could not schedule session autosave (event loop unavailable)")
+        # Auto-capture page snapshot (non-blocking)
+        if CAPTURE_AVAILABLE and self._capture_pipeline is not None:
+            try:
+                asyncio.create_task(self._auto_capture_snapshot())
+            except RuntimeError:
+                logger.debug("Could not schedule auto-capture (event loop unavailable)")
+
+    async def _auto_capture_snapshot(self) -> None:
+        """Auto-capture page snapshot on load event.
+
+        Produces up to three artifacts per page visit:
+        1. .ripple.pz / .ripple.zlib — compressed HTML (Prime Mermaid ripple)
+        2. .ripple.json — manifest metadata
+        3. .structure.json — structural extraction (Prime Wiki sitemap)
+
+        Optionally syncs structure to cloud (paid tiers only, opt-in).
+        Respects domain exclusions and settings toggles.
+        Non-blocking: called via asyncio.create_task from _on_page_load.
+        """
+        if not self.current_page or self._capture_pipeline is None:
+            return
+
+        url = self.current_page.url
+
+        # Read settings (non-blocking file read)
+        settings = self._read_capture_settings()
+        history_settings = settings.get("history", {})
+
+        if not history_settings.get("enabled", True):
+            return
+
+        try:
+            html = await self.current_page.content()
+
+            result = self._capture_pipeline.capture(
+                url=url,
+                html_content=html,
+                skip_if_unchanged=True,
+            )
+            self._capture_count += 1
+            self._last_capture_url = url
+
+            skipped = result.get("skipped", False)
+            logger.info(
+                f"Auto-capture #{self._capture_count}: {url} -> "
+                f"{result['capture_id']} ({result['size_bytes']}B, "
+                f"engine={result.get('compression_engine', 'zlib')}, "
+                f"ratio={result.get('compression_ratio', 0)}"
+                f"{', SKIPPED(unchanged)' if skipped else ''})"
+            )
+
+            # Cloud sync: push structure to Firestore (async, non-blocking)
+            # Gated by: PZip available + not skipped + structure extracted
+            #           + paid tier + sync enabled
+            pzip_ok = getattr(capture_pipeline_module, "PZIP_AVAILABLE", False)
+            if (
+                pzip_ok
+                and not skipped
+                and result.get("structure_extracted")
+                and self._primewiki_client is not None
+                and history_settings.get("prime_wiki", True)
+                and not settings.get("privacy", {}).get("history_local_only", True)
+                and settings.get("account", {}).get("tier", "free") != "free"
+            ):
+                asyncio.create_task(self._cloud_push_structure(url, html))
+
+        except DomainExcludedError:
+            logger.debug(f"Auto-capture skipped (excluded domain): {url}")
+        except capture_pipeline_module.PZipUnavailableError:
+            logger.warning(
+                "AUTO-CAPTURE DISABLED: PZip C++ bridge not compiled. "
+                "Compile: cd /home/phuc/projects/pzip && make — "
+                "No zlib fallback (Fallback Ban)."
+            )
+        except (OSError, TimeoutError, ConnectionError, ValueError) as e:
+            logger.warning(f"Auto-capture failed for {url}: {e}")
+
+    async def _cloud_push_structure(self, url: str, html: str) -> None:
+        """Push page structure to Prime Wiki cloud API (non-blocking).
+
+        Only called when: paid tier + sync enabled + structure available.
+        Errors are logged but never crash the capture pipeline.
+        """
+        if self._primewiki_client is None:
+            return
+
+        try:
+            from structural_extractor import strip_to_structure
+            structure = strip_to_structure(html)
+            result = await self._primewiki_client.push(url, structure)
+            if result.get("skipped"):
+                logger.debug(f"Cloud push skipped (dedup window): {url}")
+            elif result.get("ok"):
+                logger.info(f"Cloud push OK: {url} ({result.get('compressed_size', 0)}B)")
+            else:
+                logger.warning(f"Cloud push failed: {url} status={result.get('status')}")
+        except (OSError, TimeoutError, ConnectionError, ValueError, ImportError) as e:
+            logger.warning(f"Cloud push error for {url}: {e}")
 
     async def update_linkedin_profile(self) -> Dict[str, Any]:
         """Update LinkedIn profile with suggested improvements from linkedin-suggestions.md"""
@@ -2007,6 +2156,11 @@ class SolaceBrowserServer:
         self.app.router.add_get('/history/{session_id}/{snapshot_id}', self._handle_history_snapshot)
         self.app.router.add_get('/history/{session_id}/{snapshot_id}/render', self._handle_history_render)
 
+        # Capture API (auto-capture + Prime Wiki)
+        self.app.router.add_post('/api/capture', self._handle_capture_now)
+        self.app.router.add_get('/api/capture/status', self._handle_capture_status)
+        self.app.router.add_get('/api/primewiki/local', self._handle_primewiki_local)
+
         # Sync routes (browser <-> cloud evidence + config bridge)
         if SYNC_AVAILABLE:
             self.app.router.add_post('/api/sync/push', self._handle_sync_push)
@@ -2474,8 +2628,9 @@ class SolaceBrowserServer:
             "oauth3": bool(OAUTH3_AVAILABLE),
             "yinyang": bool(YINYANG_AVAILABLE),
             "sync": bool(SYNC_AVAILABLE),
-            "prime_wiki_local": False,
+            "prime_wiki_local": bool(CAPTURE_AVAILABLE and self.browser._capture_pipeline is not None),
             "prime_mermaid_local": False,
+            "auto_capture_count": getattr(self.browser, '_capture_count', 0),
             "snapshot_modes": ["aria", "dom", "page", "screenshot", "snapshot"],
         }
         return web.json_response({
@@ -3202,6 +3357,105 @@ class SolaceBrowserServer:
         except (OSError, json.JSONDecodeError, ValueError) as e:
             logger.error(f"History render error: {e}")
             return web.json_response({"error": str(e)}, status=500)
+
+    async def _handle_capture_now(self, request):
+        """POST /api/capture — trigger manual snapshot of current page."""
+        if not CAPTURE_AVAILABLE or self.browser._capture_pipeline is None:
+            return web.json_response(
+                {"error": "capture_pipeline_unavailable"},
+                status=503,
+            )
+        if not self.browser.current_page:
+            return web.json_response(
+                {"error": "no_active_page"},
+                status=400,
+            )
+        url = self.browser.current_page.url
+        try:
+            html = await self.browser.current_page.content()
+            result = self.browser._capture_pipeline.capture(
+                url=url, html_content=html, skip_if_unchanged=False
+            )
+            self.browser._capture_count += 1
+            self.browser._last_capture_url = url
+            return web.json_response({
+                "ok": True,
+                "url": url,
+                "capture_id": result.get("capture_id", ""),
+                "size_bytes": result.get("size_bytes", 0),
+                "compression_ratio": result.get("compression_ratio", 0),
+                "compression_engine": result.get("compression_engine", "zlib"),
+                "structure_extracted": result.get("structure_extracted", False),
+            })
+        except DomainExcludedError:
+            return web.json_response(
+                {"error": "domain_excluded", "url": url},
+                status=422,
+            )
+        except capture_pipeline_module.PZipUnavailableError as e:
+            return web.json_response(
+                {
+                    "error": "pzip_unavailable",
+                    "detail": str(e),
+                    "action": "Compile PZip C++ bridge: cd /home/phuc/projects/pzip && make",
+                },
+                status=503,
+            )
+        except (OSError, TimeoutError, ValueError) as e:
+            logger.error(f"Manual capture failed: {e}")
+            return web.json_response(
+                {"error": "capture_failed", "detail": str(e)},
+                status=500,
+            )
+
+    async def _handle_capture_status(self, request):
+        """GET /api/capture/status — pipeline state."""
+        pzip_avail = False
+        structure_avail = False
+        if CAPTURE_AVAILABLE and capture_pipeline_module is not None:
+            pzip_avail = getattr(capture_pipeline_module, "PZIP_AVAILABLE", False)
+            structure_avail = getattr(capture_pipeline_module, "STRUCTURE_AVAILABLE", False)
+        return web.json_response({
+            "available": bool(
+                CAPTURE_AVAILABLE
+                and self.browser._capture_pipeline is not None
+            ),
+            "capture_count": getattr(self.browser, "_capture_count", 0),
+            "last_capture_url": getattr(
+                self.browser, "_last_capture_url", None
+            ),
+            "pzip_available": pzip_avail,
+            "structure_available": structure_avail,
+            "cloud_sync_available": bool(
+                getattr(self.browser, "_primewiki_client", None)
+            ),
+        })
+
+    async def _handle_primewiki_local(self, request):
+        """GET /api/primewiki/local — list local captures by domain."""
+        history_root = Path.home() / ".solace" / "history"
+        if not history_root.exists():
+            return web.json_response({"domains": [], "total_captures": 0})
+        domains = []
+        total = 0
+        try:
+            for domain_dir in sorted(history_root.iterdir()):
+                if not domain_dir.is_dir():
+                    continue
+                ripples = list(domain_dir.glob("*.ripple.json"))
+                count = len(ripples)
+                if count > 0:
+                    domains.append({
+                        "domain": domain_dir.name,
+                        "captures": count,
+                    })
+                    total += count
+        except OSError as e:
+            logger.warning(f"Error reading history dir: {e}")
+        return web.json_response({
+            "domains": domains,
+            "total_captures": total,
+        })
 
     async def _handle_ui(self, request):
         """Serve debugging UI"""

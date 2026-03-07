@@ -23,6 +23,10 @@
   --sched-text-dim: #94a3b8;
   --sched-bg: #0f1e33;
   --sched-card-bg: #0f1e33;
+  --sched-amber-light: #fbbf24;
+  --sched-green: #10b981;
+  --sched-focus: #60a5fa;
+  --sched-white: #fff;
   --sched-border: rgba(255,255,255,0.08);
 }
 
@@ -71,7 +75,7 @@
 }
 
 .roi-stat--highlight .roi-num {
-  color: #10b981;  /* green — savings positive signal */
+  color: var(--sched-green);  /* green — savings positive signal */
 }
 
 /* ── Sign-Off Alert ─────────────────────────────────────────────────────────── */
@@ -80,7 +84,7 @@
   align-items: center;
   gap: 0.75rem;
   background: var(--sched-pending);
-  border: 1px solid #fbbf24;
+  border: 1px solid var(--sched-amber-light);
   border-radius: 8px;
   padding: 0.875rem 1rem;
   margin-bottom: 1.5rem;
@@ -88,15 +92,15 @@
 }
 
 @keyframes pulse-amber {
-  0%, 100% { border-color: #f59e0b; }
-  50% { border-color: #fbbf24; box-shadow: 0 0 12px rgba(245,158,11,0.3); }
+  0%, 100% { border-color: var(--sched-amber); }
+  50% { border-color: var(--sched-amber-light); box-shadow: 0 0 12px rgba(245,158,11,0.3); }
 }
 
 .signoff-alert__icon { font-size: 1.25rem; }
-.signoff-alert__msg  { flex: 1; color: #fbbf24; font-size: 0.9rem; }
+.signoff-alert__msg  { flex: 1; color: var(--sched-amber-light); font-size: 0.9rem; }
 .signoff-alert__btn  {
-  background: #f59e0b;
-  color: #0f1e33;
+  background: var(--sched-amber);
+  color: var(--sched-bg);
   border: none;
   border-radius: 6px;
   padding: 0.5rem 1rem;
@@ -107,7 +111,7 @@
   min-height: 44px;
   min-width: 44px;
 }
-.signoff-alert__btn:hover { background: #fbbf24; }
+.signoff-alert__btn:hover { background: var(--sched-amber-light); }
 
 /* ── Toolbar ─────────────────────────────────────────────────────────────────── */
 .schedule-toolbar {
@@ -144,14 +148,14 @@
 
 .view-tab--active {
   background: var(--sched-future);
-  color: #fff;
+  color: var(--sched-white);
 }
 
 .view-tab:hover:not(.view-tab--active) {
   background: rgba(255,255,255,0.06);
   color: var(--sched-text);
 }
-.view-tab:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+.view-tab:focus-visible { outline: 2px solid var(--sched-focus); outline-offset: 2px; }
 
 .schedule-filters {
   display: flex;
@@ -192,7 +196,7 @@
 }
 
 .cal-nav:hover { background: rgba(255,255,255,0.08); }
-.cal-nav:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+.cal-nav:focus-visible { outline: 2px solid var(--sched-focus); outline-offset: 2px; }
 
 .cal-month {
   font-size: 1.25rem;
@@ -246,7 +250,7 @@
 }
 
 .cal-cell--today .cal-date {
-  color: #60a5fa;
+  color: var(--sched-focus);
 }
 
 .app-pill {
@@ -264,14 +268,14 @@
   cursor: pointer;
 }
 
-.app-pill--success  { background: var(--sched-pill-success); color: #065f46; }
-.app-pill--failed   { background: var(--sched-pill-failed);  color: #7f1d1d; }
-.app-pill--pending  { background: var(--sched-pill-pending); color: #78350f; animation: pulse-amber 2s 3; }
-.app-pill--future   { background: var(--sched-pill-future);  color: #1e3a8a; }
-.app-pill--cancelled { background: var(--sched-pill-cancel); color: #374151; }
+.app-pill--success  { background: var(--sched-pill-success); color: var(--sched-success); }
+.app-pill--failed   { background: var(--sched-pill-failed);  color: var(--sched-failed); }
+.app-pill--pending  { background: var(--sched-pill-pending); color: var(--sched-pending); animation: pulse-amber 2s 3; }
+.app-pill--future   { background: var(--sched-pill-future);  color: var(--sched-future); }
+.app-pill--cancelled { background: var(--sched-pill-cancel); color: var(--sched-past); }
 
 .cal-overflow {
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   color: var(--sched-text-dim);
   padding: 1px 4px;
 }
@@ -307,7 +311,7 @@
   border-bottom: 1px solid var(--sched-border);
 }
 
-.kanban-col--amber .kanban-col__title { color: #fbbf24; }
+.kanban-col--amber .kanban-col__title { color: var(--sched-amber-light); }
 
 .kanban-cards { display: flex; flex-direction: column; gap: 0.5rem; }
 
@@ -345,14 +349,14 @@
   font-weight: 700;
 }
 
-.badge--A { background: #d1fae5; color: #065f46; }
-.badge--B { background: #fef3c7; color: #78350f; }
-.badge--C { background: #fee2e2; color: #7f1d1d; }
+.badge--A { background: var(--sched-pill-success); color: var(--sched-success); }
+.badge--B { background: var(--sched-pill-pending); color: var(--sched-pending); }
+.badge--C { background: var(--sched-pill-failed); color: var(--sched-failed); }
 
 /* Countdown timer in pending cards — calm, reassuring (Vanessa Van Edwards) */
 .countdown {
   font-size: 0.7rem;
-  color: #94a3b8;
+  color: var(--sched-text-dim);
   font-weight: 500;
 }
 
@@ -370,13 +374,13 @@
   min-width: 44px;
 }
 
-.approve-btn { background: #10b981; color: #fff; }
+.approve-btn { background: var(--sched-green); color: var(--sched-white); }
 .approve-btn:hover { background: #059669; }
 .approve-btn--esign { background: var(--sched-future); }
 .approve-btn--esign:hover { background: #1e40af; }
-.reject-btn  { background: rgba(239, 68, 68, 0.15); color: #e2e8f0; border: 1.5px solid var(--sched-red); }
+.reject-btn  { background: rgba(239, 68, 68, 0.15); color: var(--sched-text); border: 1.5px solid var(--sched-red); }
 .reject-btn:hover { background: rgba(239, 68, 68, 0.25); }
-.approve-btn:focus-visible, .reject-btn:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+.approve-btn:focus-visible, .reject-btn:focus-visible { outline: 2px solid var(--sched-focus); outline-offset: 2px; }
 
 .timeline-empty { color: var(--sched-text-dim); text-align: center; padding: 2rem; }
 
@@ -419,11 +423,11 @@
   white-space: nowrap;
 }
 
-.status-badge--success   { background: #d1fae5; color: #065f46; }
-.status-badge--failed    { background: #fee2e2; color: #7f1d1d; }
-.status-badge--pending   { background: #fef3c7; color: #78350f; }
-.status-badge--cancelled { background: #f3f4f6; color: #374151; }
-.status-badge--scheduled { background: #dbeafe; color: #1e3a8a; }
+.status-badge--success   { background: var(--sched-pill-success); color: var(--sched-success); }
+.status-badge--failed    { background: var(--sched-pill-failed); color: var(--sched-failed); }
+.status-badge--pending   { background: var(--sched-pill-pending); color: var(--sched-pending); }
+.status-badge--cancelled { background: var(--sched-pill-cancel); color: var(--sched-past); }
+.status-badge--scheduled { background: var(--sched-pill-future); color: var(--sched-future); }
 
 /* ── Sign-Off Bottom Sheet ──────────────────────────────────────────────────── */
 .signoff-overlay {
@@ -438,8 +442,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: #0f1e33;
-  border-top: 2px solid #f59e0b;
+  background: var(--sched-bg);
+  border-top: 2px solid var(--sched-amber);
   border-radius: 16px 16px 0 0;
   z-index: 901;
   max-height: 70vh;
@@ -457,7 +461,7 @@
 .signoff-sheet__header h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: #fbbf24;
+  color: var(--sched-amber-light);
 }
 
 .signoff-sheet__sub {
@@ -486,7 +490,7 @@
 }
 
 .signoff-item__app    { font-size: 1rem; font-weight: 600; color: var(--sched-text); }
-.signoff-item__scope  { font-size: 0.8rem; color: #fbbf24; margin: 6px 0; }
+.signoff-item__scope  { font-size: 0.8rem; color: var(--sched-amber-light); margin: 6px 0; }
 .signoff-item__desc   { font-size: 0.8rem; color: var(--sched-text-dim); margin-bottom: 10px; background: var(--sched-card-bg); border: 1px solid var(--sched-border); border-radius: 6px; padding: 8px 10px; margin: 6px 0 10px; }
 .signoff-item__footer { display: flex; gap: 0.5rem; align-items: center; }
 
@@ -505,7 +509,7 @@
   bottom: 0;
   width: 400px;
   max-width: 90vw;
-  background: #0f1e33;
+  background: var(--sched-bg);
   border-left: 1px solid var(--sched-border);
   z-index: 801;
   overflow-y: auto;
@@ -555,7 +559,7 @@
 .drawer-hash {
   font-family: monospace;
   font-size: 0.7rem;
-  color: #60a5fa;
+  color: var(--sched-focus);
   word-break: break-all;
 }
 
@@ -600,7 +604,7 @@
 .upcoming-item__status {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #10b981;
+  color: var(--sched-green);
   flex-shrink: 0;
 }
 
@@ -641,7 +645,7 @@
   padding: 0 6px;
   border-radius: 10px;
   background: var(--sched-pending);
-  color: #fbbf24;
+  color: var(--sched-amber-light);
   font-size: 0.7rem;
   font-weight: 700;
   margin-left: 4px;
@@ -665,13 +669,13 @@
 .pause-all-btn:hover { opacity: 0.85; }
 .pause-all-btn--active {
   background: var(--sched-red);
-  color: #fff;
+  color: var(--sched-white);
 }
 
 /* ── Pause Banner ──────────────────────────────────────────────────────────── */
 .pause-banner {
   background: var(--sched-red);
-  color: #fff;
+  color: var(--sched-white);
   padding: 10px 16px;
   border-radius: 8px;
   margin: 8px 0;
@@ -700,9 +704,9 @@
   .esign-stats { gap: 1rem; }
   .esign-stat__num { font-size: 1.25rem; }
 
-  .cal-grid { grid-template-columns: repeat(7, 1fr); font-size: 0.6rem; }
+  .cal-grid { grid-template-columns: repeat(7, 1fr); font-size: 0.7rem; }
   .cal-cell { min-height: 60px; padding: 3px; }
-  .cal-date { font-size: 0.6rem; }
+  .cal-date { font-size: 0.7rem; }
 
   .run-drawer { width: min(400px, 85vw); top: auto; bottom: 0; border-left: none; border-top: 1px solid var(--sched-border); max-height: 70vh; border-radius: 16px 16px 0 0; }
   .schedule-filters { display: none; }
@@ -725,25 +729,25 @@
 }
 .sync-banner--offline {
   background: var(--sched-pending);
-  border: 1px solid #fbbf24;
-  color: #fbbf24;
+  border: 1px solid var(--sched-amber-light);
+  color: var(--sched-amber-light);
 }
 .sync-banner--connected {
   background: rgba(16,185,129,0.1);
   border: 1px solid rgba(16,185,129,0.3);
-  color: #10b981;
+  color: var(--sched-green);
 }
 .sync-banner--local {
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--sched-border);
   color: var(--sched-text-dim);
 }
-.sync-banner a { color: #64c4ff; }
+.sync-banner a { color: var(--sched-accent); }
 
 /* ── Savings Dashboard Header ─────────────────────────────────────────────── */
 .savings-dashboard {
   background: linear-gradient(135deg, #0f1e33 0%, #2d1a00 100%);
-  border: 1px solid #f59e0b;
+  border: 1px solid var(--sched-amber);
   border-radius: 12px;
   padding: 1rem 1.5rem;
   margin-bottom: 0.75rem;
@@ -756,15 +760,15 @@
 .savings-dashboard__title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #fbbf24;
+  color: var(--sched-amber-light);
   margin: 0;
   flex: 1;
 }
 .savings-dashboard__badge {
   font-size: 0.75rem;
   background: rgba(245,158,11,0.2);
-  border: 1px solid #f59e0b;
-  color: #fbbf24;
+  border: 1px solid var(--sched-amber);
+  color: var(--sched-amber-light);
   border-radius: 20px;
   padding: 2px 10px;
 }
@@ -775,7 +779,7 @@
 .period-btn {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.12);
-  color: #e2e8f0;
+  color: var(--sched-text);
   border-radius: 6px;
   padding: 4px 10px;
   font-size: 0.8rem;
@@ -783,13 +787,13 @@
   transition: background 0.15s;
 }
 .period-btn--active {
-  background: #f59e0b;
-  border-color: #f59e0b;
-  color: #0f1e33;
+  background: var(--sched-amber);
+  border-color: var(--sched-amber);
+  color: var(--sched-bg);
   font-weight: 700;
 }
 .period-btn:hover:not(.period-btn--active) { background: rgba(255,255,255,0.1); }
-.period-btn:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+.period-btn:focus-visible { outline: 2px solid var(--sched-focus); outline-offset: 2px; }
 
 /* ── ROI Hit Rate Bar ─────────────────────────────────────────────────────── */
 .roi-savings-bar {
@@ -803,7 +807,7 @@
 }
 .roi-savings-bar__label {
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: var(--sched-text-dim);
   min-width: 100px;
 }
 .roi-savings-bar__track {
@@ -823,12 +827,12 @@
 .roi-savings-bar__pct {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #10b981;
+  color: var(--sched-green);
   min-width: 36px;
 }
 .roi-savings-bar__note {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--sched-text-dim);
   width: 100%;
 }
 
@@ -871,7 +875,7 @@
   padding: 6px 8px;
   margin: 4px 0;
   font-size: 0.82rem;
-  color: #94a3b8;
+  color: var(--sched-text-dim);
 }
 .kanban-card__actions {
   margin-top: 8px;
@@ -936,12 +940,12 @@
   font-size: 0.75rem;
 }
 .error-banner__btn--retry {
-  border: 1px solid #60a5fa;
-  color: #60a5fa;
+  border: 1px solid var(--sched-focus);
+  color: var(--sched-focus);
 }
 .error-banner__btn--dismiss {
-  border: 1px solid #94a3b8;
-  color: #94a3b8;
+  border: 1px solid var(--sched-text-dim);
+  color: var(--sched-text-dim);
 }
 
 /* Rams/Norman: respect vestibular disorders + motion sensitivity */
@@ -1007,7 +1011,7 @@
 
 /* ── 375px Mobile (small phones) ───────────────────────────────────────────── */
 @media (max-width: 480px) {
-  .cal-day-header { font-size: 0.55rem; }
+  .cal-day-header { font-size: 0.7rem; }
   .cal-cell { min-height: 60px; }
 
   .view-tabs { flex-wrap: wrap; }
@@ -1074,7 +1078,7 @@
 .cloud-twin-indicator--connected {
   background: rgba(16,185,129,0.1);
   border: 1px solid rgba(16,185,129,0.3);
-  color: #10b981;
+  color: var(--sched-green);
 }
 .cloud-twin-indicator--error {
   background: rgba(239,68,68,0.1);

@@ -72,33 +72,8 @@ const YinyangTutorial = (() => {
 
   let _locale = localStorage.getItem(LOCALE_KEY) || 'en';
 
-  // ---------------------------------------------------------------------------
-  // Embedded English fallback (used if /api/locale unreachable)
-  // ---------------------------------------------------------------------------
-  const STRINGS_EN = {
-    step1_title: '847 emails → 47 seconds → $0.12',
-    step1_body: "I'm Yinyang ☯ — your AI browser. I triage your inbox, draft replies, post to LinkedIn, and seal every action as evidence. You approve everything. Let's go.",
-    step2_title: 'Already using Claude Code, Cursor, or Codex?',
-    step2_body: 'Solace Browser works alongside any AI coding agent. Add it as an MCP server and your agent can navigate, click, screenshot, and seal evidence — all with your approval. <a href="https://www.solaceagi.com/agents" target="_blank" rel="noopener" style="color:var(--sb-signal)">See the full agents guide →</a>',
-    step2_code: 'npx solace-browser --mcp',
-    step3_title: 'OAuth3 Safety &#128274;',
-    step3_body: 'I never act without your explicit approval. Sensitive actions go through a scoped OAuth3 gate — time-bounded, revocable, and audited. You stay in control. Always.',
-    step4_title: '18 Apps Ready &#127981;',
-    step4_body: 'Browse the App Store. 18 automations ready to run — Gmail triage, LinkedIn outreach, Slack summaries, and more. One click to start. Recipe replay costs $0.001.',
-    step5_title: "Let's Begin! &#127881;",
-    step5_body: "You're all set. I'll be here in the bottom rail whenever you need me. Just ask — or point me at a task.",
-    step5_joke: '',
-    lang_pick: 'Choose your language',
-    btn_next: 'Next \u2192',
-    btn_prev: '\u2190 Back',
-    btn_skip: 'Skip Tutorial',
-    btn_done: "Let's Go! \u262F",
-    progress: 'Step {current} of {total}',
-    welcome_title: 'Welcome to Solace Browser',
-    welcome_body: 'Your AI-powered browser with OAuth3 approvals and evidence trails.',
-    welcome_tour: 'Take the 2-minute tour',
-    welcome_skip: 'Skip, I know what I\'m doing',
-  };
+  // Runtime locale source of truth is /api/locale?key=tutorial.
+  const STRINGS_EN = {};
 
   const STEP_ICONS = ['☯', '&#128248;', '&#128274;', '&#127981;', '&#127881;'];
 
@@ -110,18 +85,23 @@ const YinyangTutorial = (() => {
   // ---------------------------------------------------------------------------
   // Locale loading
   // ---------------------------------------------------------------------------
+  async function _fetchTutorialStrings(locale) {
+    const resp = await fetch(`/api/locale?key=tutorial&locale=${locale}`, { signal: AbortSignal.timeout(3000) });
+    if (!resp.ok) return {};
+    const data = await resp.json();
+    return (data && data.tutorial) ? data.tutorial : {};
+  }
+
   async function _loadLocale(locale) {
     if (locale) _locale = locale;
+    _strings = {};
     try {
-      const resp = await fetch(`/api/locale?key=tutorial&locale=${_locale}`, { signal: AbortSignal.timeout(3000) });
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data && data.tutorial) {
-          _strings = Object.assign({}, STRINGS_EN, data.tutorial);
-        }
-      }
+      // Always seed from English locale payload, then overlay selected locale.
+      const enStrings = await _fetchTutorialStrings('en');
+      const currentStrings = await _fetchTutorialStrings(_locale);
+      _strings = Object.assign({}, STRINGS_EN, enStrings, currentStrings);
     } catch (_) {
-      // fallback to English — already loaded
+      // leave _strings as-is if locale API is unreachable
     }
   }
 
@@ -129,7 +109,7 @@ const YinyangTutorial = (() => {
   // Build step HTML
   // ---------------------------------------------------------------------------
   function _langPickerHTML() {
-    const label = _strings.lang_pick || 'Choose your language:';
+    const label = _strings.lang_pick || '';
     const items = LOCALES.map(l =>
       `<button class="yyT-lang-pill${l.code === _locale ? ' yyT-lang-pill--active' : ''}" data-locale-pill="${l.code}">${l.name}</button>`
     ).join('');
@@ -151,7 +131,7 @@ const YinyangTutorial = (() => {
     let extra = '';
     if (step === 0) {
       // Language on step 1: one subtle link only — don't bury the hook
-      extra = `<p class="yyT-lang-hint">&#127760; <a href="#" class="yyT-lang-hint-link" onclick="document.querySelector('.yyT-lang-btn').click();return false;">${_locale.toUpperCase()} · Change language</a></p>`;
+      extra = `<p class="yyT-lang-hint">&#127760; <a href="#" class="yyT-lang-hint-link" onclick="document.querySelector('.yyT-lang-btn').click();return false;">${_locale.toUpperCase()}</a></p>`;
     }
     if (code) {
       extra += `<pre class="yyT-code">${code}</pre>`;
@@ -181,7 +161,7 @@ const YinyangTutorial = (() => {
   // Progress label
   // ---------------------------------------------------------------------------
   function _progressLabel(step) {
-    return (_strings.progress || 'Step {current} of {total}')
+    return (_strings.progress || '{current}/{total}')
       .replace('{current}', step + 1)
       .replace('{total}', TOTAL_STEPS);
   }
@@ -210,7 +190,7 @@ const YinyangTutorial = (() => {
     // Hide Skip on step 1 — make them see the hook first
     btnSkip.style.display = (isLast || isFirst) ? 'none' : 'inline-block';
     // Step 1 CTA is punchier
-    btnNext.textContent = isFirst ? 'Show me →' : (_strings.btn_next || 'Next →');
+    btnNext.textContent = _strings.btn_next || '';
     // Step 1: hero mode — bigger YinYang
     _overlay.querySelector('.yyT-gif').classList.toggle('yyT-gif--hero', isFirst);
   }
@@ -224,7 +204,7 @@ const YinyangTutorial = (() => {
     div.className = 'yyT-overlay';
     div.setAttribute('role', 'dialog');
     div.setAttribute('aria-modal', 'true');
-    div.setAttribute('aria-label', 'Yinyang Tutorial');
+    div.setAttribute('aria-label', _strings.welcome_title || '');
 
     const langMenuItems = LOCALES.map(l =>
       `<a role="button" tabindex="0" data-locale="${l.code}" aria-current="${l.code === _locale ? 'true' : 'false'}">${l.name}</a>`
@@ -236,7 +216,7 @@ const YinyangTutorial = (() => {
           <img class="yyT-gif" src="${YY_GIF}" alt="Yinyang">
           <span class="yyT-progress"></span>
           <div class="yyT-lang-wrap">
-            <button class="yyT-lang-btn" aria-label="Select language" aria-expanded="false" aria-controls="yyT-lang-menu">
+            <button class="yyT-lang-btn" aria-label="${_strings.lang_pick || ''}" aria-expanded="false" aria-controls="yyT-lang-menu">
               <img src="/images/icons/internationalization/160.png" alt="Language" width="20" height="20" style="width:20px;height:20px;object-fit:contain;display:block;">
             </button>
             <div class="yyT-lang-menu" id="yyT-lang-menu">${langMenuItems}</div>
@@ -245,7 +225,7 @@ const YinyangTutorial = (() => {
         <div class="yyT-step-content"></div>
         <div class="yyT-dots"></div>
         <div class="yyT-btns">
-          <button class="yyT-btn yyT-btn-prev" aria-label="Previous step">${_strings.btn_prev}</button>
+          <button class="yyT-btn yyT-btn-prev" aria-label="${_strings.btn_prev || ''}">${_strings.btn_prev}</button>
           <button class="yyT-btn yyT-btn-skip">${_strings.btn_skip}</button>
           <button class="yyT-btn yyT-btn-next yyT-btn--primary">${_strings.btn_next}</button>
           <button class="yyT-btn yyT-btn-done yyT-btn--primary" style="display:none">${_strings.btn_done}</button>
