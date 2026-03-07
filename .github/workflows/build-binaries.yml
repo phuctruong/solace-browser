@@ -56,8 +56,20 @@ jobs:
             brew install upx || true
           fi
 
+      - name: Regenerate Windows icon from YinYang assets
+        if: matrix.target_os == 'windows'
+        shell: bash
+        run: |
+          python scripts/generate-windows-icon.py
+
       - name: Build native artifact via release loop
         shell: bash
+        env:
+          WINDOWS_SIGNING_REQUIRED: ${{ startsWith(github.ref, 'refs/tags/v') && '1' || '0' }}
+          WINDOWS_CODESIGN_PFX_BASE64: ${{ secrets.WINDOWS_CODESIGN_PFX_BASE64 }}
+          WINDOWS_CODESIGN_PFX_PASSWORD: ${{ secrets.WINDOWS_CODESIGN_PFX_PASSWORD }}
+          WINDOWS_CODESIGN_CERT_THUMBPRINT: ${{ secrets.WINDOWS_CODESIGN_CERT_THUMBPRINT }}
+          WINDOWS_CODESIGN_TIMESTAMP_URL: ${{ vars.WINDOWS_CODESIGN_TIMESTAMP_URL }}
         run: |
           chmod +x src/scripts/release_browser_cycle.sh
           TARGET_OS="${{ matrix.target_os }}" \

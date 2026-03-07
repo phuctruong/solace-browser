@@ -25,6 +25,7 @@ VERSIONED_CACHE_CONTROL="${VERSIONED_CACHE_CONTROL:-public,max-age=31536000,immu
 LATEST_CACHE_CONTROL="${LATEST_CACHE_CONTROL:-no-store,max-age=0,must-revalidate}"
 WINDOWS_PACKAGE_MODE="${WINDOWS_PACKAGE_MODE:-auto}"
 UPX_ENABLED="${UPX_ENABLED:-auto}"
+WINDOWS_SIGNING_REQUIRED="${WINDOWS_SIGNING_REQUIRED:-0}"
 
 log() { printf "[release-cycle] %s\n" "$*"; }
 
@@ -268,8 +269,13 @@ log "Platform: os=$TARGET_OS arch=$TARGET_ARCH object=$OBJECT_NAME spec=$SPEC_FI
 BUILD_START="$(t_ms)"
 if [[ "$BUILD_ENABLED" == "1" ]]; then
   log "Step 1/6: compile browser binary with PyInstaller."
+  PYINSTALLER_ARGS=(--noconfirm)
+  # Windows icon resources can be cached by PyInstaller build state; force clean build.
+  if [[ "$TARGET_OS" == "windows" ]]; then
+    PYINSTALLER_ARGS+=(--clean)
+  fi
   set +e
-  run_with_timeout "$COMPILE_TIMEOUT" pyinstaller --noconfirm "$SPEC_FILE" >"$OUT_DIR/pyinstaller.log" 2>&1
+  run_with_timeout "$COMPILE_TIMEOUT" pyinstaller "${PYINSTALLER_ARGS[@]}" "$SPEC_FILE" >"$OUT_DIR/pyinstaller.log" 2>&1
   BUILD_RC=$?
   set -e
   if [[ "$BUILD_RC" -ne 0 ]]; then
@@ -335,6 +341,25 @@ if [[ "$TARGET_OS" == "windows" && "$BUILD_ENABLED" == "1" && "$WINDOWS_PACKAGE_
   if [[ "$MSI_RC" -ne 0 ]]; then
     log "ERROR: Windows MSI packaging failed (rc=$MSI_RC). See $OUT_DIR/windows-msi.log"
     tail -n 120 "$OUT_DIR/windows-msi.log" >&2 || true
+    exit 1
+  fi
+  log "Step 1.2/6: sign Windows MSI (Authenticode)."
+  SIGN_ARGS=(
+    -NoProfile
+    -ExecutionPolicy Bypass
+    -File "$PROJECT_ROOT/scripts/sign-windows-msi.ps1"
+    -InputMsi "$WINDOWS_MSI_PATH"
+  )
+  if [[ "$WINDOWS_SIGNING_REQUIRED" == "1" ]]; then
+    SIGN_ARGS+=(-RequireSigning)
+  fi
+  set +e
+  "$POWERSHELL_BIN" "${SIGN_ARGS[@]}" >"$OUT_DIR/windows-sign.log" 2>&1
+  SIGN_RC=$?
+  set -e
+  if [[ "$SIGN_RC" -ne 0 ]]; then
+    log "ERROR: Windows MSI signing failed (rc=$SIGN_RC). See $OUT_DIR/windows-sign.log"
+    tail -n 120 "$OUT_DIR/windows-sign.log" >&2 || true
     exit 1
   fi
   FINAL_BUILD_PATH="$WINDOWS_MSI_PATH"
@@ -491,6 +516,7 @@ DOWNLOAD_ENABLED="$DOWNLOAD_ENABLED" \
 RUN_SMOKE="$RUN_SMOKE" \
 HEAD_MODE="$HEAD_MODE" \
 WINDOWS_PACKAGE_MODE="$WINDOWS_PACKAGE_MODE" \
+WINDOWS_SIGNING_REQUIRED="$WINDOWS_SIGNING_REQUIRED" \
 SMOKE_STATUS="$SMOKE_STATUS" \
 python3 - <<'PY'
 import json
@@ -539,6 +565,7 @@ report = {
         "run_smoke": os.environ["RUN_SMOKE"] == "1",
         "head_mode": os.environ["HEAD_MODE"],
         "windows_package_mode": os.environ["WINDOWS_PACKAGE_MODE"],
+        "windows_signing_required": os.environ["WINDOWS_SIGNING_REQUIRED"] == "1",
     },
     "smoke_status": os.environ["SMOKE_STATUS"],
 }

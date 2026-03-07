@@ -40,6 +40,7 @@ Based on Microsoft + WiX guidance, Windows deployment notebooks now enforce:
 5. Icon consistency:
    - Single canonical YinYang `.ico` generated with full Windows size set (16/32/48/64/128/256).
    - Same icon used for EXE, MSI shortcuts, and Add/Remove Programs product icon.
+   - CI regenerates the `.ico` from source YinYang PNGs before Windows packaging and uses clean PyInstaller builds.
 
 ## Scope of this implementation
 This directory includes practical notebooks to:

@@ -11,6 +11,8 @@ Project: solace-browser
 5. MSI authoring now launches app automatically after successful interactive install (`UILevel >= 5`) with `--head`, never in silent installs.
 6. Windows shortcuts (Start Menu + Desktop) are authored with `--head` to enforce headed default.
 6. Windows icon pipeline now uses a canonical multi-size YinYang icon (16/32/48/64/128/256) for shortcuts and ARP icon.
+7. Windows CI build now regenerates `resources/windows/solace-browser.ico` from YinYang assets before packaging.
+8. Windows PyInstaller build runs with `--clean` in release cycle to prevent stale icon resources.
 7. GitHub workflows now pass signing secrets and enforce signing on tag releases.
 
 ## Signing gate behavior
