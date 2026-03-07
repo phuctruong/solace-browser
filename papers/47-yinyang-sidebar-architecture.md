@@ -963,4 +963,186 @@ CMO hears: "Your content team publishes on 5 platforms manually. One recipe publ
 
 ---
 
-*Paper 47 v6 | Auth: 65537 | Supersedes Paper 04 | AI-Agent Browser + Enterprise + Verticals + GTM*
+## 23. Regulated Industry Scenarios — The Compliance Moat
+
+Every regulated industry has the same core problem: **humans do repetitive browser-based work, but regulators demand evidence that the work was done correctly, by the right person, at the right time.** Solace Browser is the only tool that solves BOTH problems simultaneously: automate the work AND generate the compliance evidence.
+
+### 23a. CEO / C-Suite Perspective
+
+**What the CEO cares about:** Risk, liability, audit readiness, cost reduction, competitive advantage.
+
+| CEO Question | Solace Browser Answer |
+|-------------|----------------------|
+| "Can this get us in trouble with regulators?" | Every action has SHA-256 hash-chained evidence. Part 11 compliant e-signatures. Tamper-evident. The tool GENERATES compliance, not risk. |
+| "What happens if the AI makes a mistake?" | Nothing happens without human approval. Inbox/outbox model: preview → approve → execute. Budget gates prevent overspend. Timeout = deny. |
+| "How do I explain this to the board?" | "We deployed an AI browser that reduced manual testing by 90% while improving audit readiness. ROI: 10-17x. Evidence trail exceeds what we had before." |
+| "What's our liability exposure?" | Lower than status quo. Manual processes have human error, lost evidence, missed sign-offs. Solace Browser eliminates all three. |
+| "Is our data safe?" | Local-first: data never leaves your machine unless you explicitly sync to cloud. BYOK: your LLM keys, your data. No telemetry. |
+
+### 23b. Clinical Research / Pharma (FDA 21 CFR Part 11)
+
+**The regulatory reality:** Every clinical trial generates thousands of electronic records. FDA requires:
+- Audit trails independent of operators (§11.10(e))
+- Electronic signatures legally equivalent to handwritten (§11.100)
+- System validation with IQ/OQ/PQ documentation
+- Data integrity: ALCOA+ (Attributable, Legible, Contemporaneous, Original, Accurate + Complete, Consistent, Enduring, Available)
+
+| # | Feature | Clinical Research Use Case |
+|---|---------|--------------------------|
+| R1 | **EDC Validation Recipes** | Record validation of electronic data capture systems (Medidata Rave, Veeva Vault). Replay across 200 CRF pages. |
+| R2 | **ALCOA+ Evidence Chain** | Every browser action generates ALCOA+ compliant evidence: who (user_id), what (action), when (UTC timestamp), how (recipe), why (approval meaning) |
+| R3 | **CSV/CSA Validation Packages** | Auto-generate Computer System Validation or Computer Software Assurance documentation from evidence chains |
+| R4 | **21 CFR Part 11 Audit Export** | One-click export: all evidence + signatures + chain verification. Hand to FDA inspector. |
+| R5 | **Multi-Sig Approval Matrix** | Clinical: Investigator → Monitor → Sponsor → QA. Each signs with Part 11 compliant e-signature. |
+| R6 | **Deviation Auto-Creation** | When validation finds unexpected data: auto-create CAPA-linked deviation record with evidence |
+| R7 | **Audit Trail Viewer** | Sidebar shows full audit trail per record: every view, edit, approval, with timestamps and user IDs |
+
+**Pharma pitch:** "Your CRAs spend 40% of their time on documentation. Solace Browser does the documentation automatically while they do the science."
+
+### 23c. Finance / Banking (SOX, SEC, FINRA)
+
+**The regulatory reality:** Sarbanes-Oxley (SOX) Section 404 requires internal controls documentation. SEC/FINRA require trade surveillance and communications monitoring. Banks need evidence of every process that touches financial data.
+
+| # | Feature | Finance Use Case |
+|---|---------|-----------------|
+| F1 | **SOX Control Testing** | Record testing of internal controls (access reviews, segregation of duties, reconciliation). Replay quarterly. Evidence-chained. |
+| F2 | **Trade Surveillance Recipes** | Agent monitors trading platforms for suspicious patterns. Screenshots evidence. Flags for compliance review. |
+| F3 | **Communications Monitoring** | Agent reviews email/LinkedIn for compliance violations (promissory language, unapproved claims). Evidence-chained findings. |
+| F4 | **Reconciliation Automation** | Agent opens two financial systems, compares balances field-by-field, generates variance report with screenshots. |
+| F5 | **Regulatory Filing Automation** | Agent navigates SEC EDGAR / FINRA Gateway, fills required fields from internal data, captures submission evidence. |
+| F6 | **Audit Committee Package** | Auto-compile: control test results + exception reports + remediation evidence + sign-offs → board-ready package. |
+
+**Finance pitch:** "Your SOX testing costs $2M/year in external audit fees. Automate 60% of control tests and cut that to $800K — with better evidence."
+
+### 23d. Healthcare (HIPAA, HITECH)
+
+**The regulatory reality:** HIPAA requires access controls, audit trails, and breach notification for any system touching PHI (Protected Health Information). HITECH adds breach penalties up to $1.5M per violation category.
+
+| # | Feature | Healthcare Use Case |
+|---|---------|--------------------|
+| H1 | **EHR Workflow Automation** | Agent navigates Epic/Cerner, completes repetitive data entry (patient intake, lab orders, referrals). Evidence-chained. |
+| H2 | **Access Audit Recipes** | Quarterly access review: agent checks user accounts across 10+ systems, flags orphaned accounts, captures evidence. |
+| H3 | **PHI-Safe Local Execution** | All processing on local machine. PHI never leaves the browser. No cloud sync for healthcare data. HIPAA-safe by architecture. |
+| H4 | **Breach Investigation Evidence** | If breach occurs: agent generates complete access log, screenshots of affected systems, timeline of events. |
+| H5 | **Prior Authorization Automation** | Agent navigates payer portals, submits prior auth requests, captures confirmation. Saves 45 min per auth (avg). |
+
+**Healthcare pitch:** "Your nurses spend 2 hours/day on EHR data entry. Give them a browser agent that does it in 10 minutes — with HIPAA-compliant evidence that it was done correctly."
+
+### 23e. Government / Military (FedRAMP, ITAR, CMMC)
+
+**The regulatory reality:** Government agencies require FedRAMP authorization for cloud services. Military requires ITAR compliance for defense data. CMMC (Cybersecurity Maturity Model Certification) is mandatory for DoD contractors.
+
+| # | Feature | Government Use Case |
+|---|---------|--------------------|
+| G1 | **Air-Gapped Local Mode** | Solace Browser runs 100% locally. No internet required. No telemetry. No cloud. Perfect for classified networks. |
+| G2 | **CMMC Evidence Generation** | Agent tests security controls per CMMC Level 2/3 requirements. Generates assessment evidence automatically. |
+| G3 | **FOIA Response Automation** | Agent searches internal systems for responsive documents. Captures evidence of search methodology. Redacts PII. |
+| G4 | **Procurement Automation** | Agent navigates SAM.gov, GSA Advantage, agency portals. Compares bids. Evidence-chained procurement decisions. |
+| G5 | **Continuous Monitoring** | Agent runs security checks on schedules: verify patches, check configurations, test access controls. Nightly via cloud twin. |
+| G6 | **Supply Chain Risk Assessment** | Agent researches vendors: check OFAC lists, beneficial ownership, cybersecurity posture. Evidence-chained due diligence. |
+
+**Government pitch:** "Your analysts spend 60% of their time on compliance documentation. The browser agent does the documentation while they do the analysis. And it runs air-gapped — no data ever leaves your network."
+
+### 23f. Manager / Department Head Perspective
+
+**What middle management cares about:** Headcount efficiency, team productivity, proving ROI to leadership, reducing overtime.
+
+| Manager Pain | Solace Browser Solution |
+|-------------|----------------------|
+| "My team is drowning in manual work" | Recipes automate 60-80% of repetitive browser tasks |
+| "I can't justify another headcount" | One browser agent = 0.5 FTE of automated work at $28/mo |
+| "How do I prove my team's output?" | Evidence dashboard: tasks completed, time saved, cost avoided |
+| "What if someone on my team messes up?" | Approval workflow: every action previewed and approved before execution |
+| "IT won't approve another tool" | Free tier: runs locally, no IT approval needed. BYOK, no data leaves network |
+| "My team uses 8 different tools" | Solace Browser replaces 5+ point solutions from one sidebar |
+
+### 23g. The Compliance Moat — Why Regulated Industries Lock In
+
+```
+COMPLIANCE MOAT = Evidence(hash-chain, Part 11) × Approval(matrix, eSign) × Audit(export, verify) × Local(HIPAA, ITAR, air-gap)
+
+Once a regulated company adopts Solace Browser:
+1. Their compliance evidence is IN Solace Browser's hash chains
+2. Their audit packages REFERENCE Solace Browser's exports
+3. Their SOPs are WRITTEN around Solace Browser's approval workflows
+4. Their auditors EXPECT the Solace Browser evidence format
+
+Switching cost = re-creating years of compliance evidence in a new format.
+This is the deepest moat in enterprise software: compliance lock-in.
+Not vendor lock-in (we're source-available). Compliance lock-in (their evidence depends on our format).
+```
+
+### Industry Feature Summary
+
+| Feature ID | Industry | Description |
+|-----------|----------|-------------|
+| R1-R7 | Pharma/Clinical | EDC validation, ALCOA+, CSV/CSA, Part 11, multi-sig, CAPA, audit trail |
+| F1-F6 | Finance | SOX testing, trade surveillance, comms monitoring, reconciliation, regulatory filing |
+| H1-H5 | Healthcare | EHR automation, access audits, PHI-safe local, breach investigation, prior auth |
+| G1-G6 | Government | Air-gapped, CMMC, FOIA, procurement, continuous monitoring, supply chain |
+| E1-E6 | SAP/Enterprise | BAT, data comparison, cutover, GxP, deviation tracking, regulatory reports |
+| S1-S10 | Sales | LinkedIn, CRM, meeting prep, cadence, competitive intel, territory, persona |
+| M1-M6 | Email | Context reply, multi-channel, evidence-chained, inbox zero, templates, attachments |
+| C1-C7 | Content/PR | Publish pipeline, SEO, PR outreach, calendar, competitive monitor, analytics, brand voice |
+
+**Total enterprise features: 57** (R7 + F6 + H5 + G6 + E6 + S10 + M6 + C7 + K15 = 68 including killer features)
+
+### 23h. The Global User Who Doesn't Speak English
+
+**The reality:** 75% of the world doesn't speak English as a first language. Most enterprise software is English-first with bolted-on translations. Solace Browser is different: 47 languages from day one (STORY-47 prime), with the sidebar, recipes, personas, and evidence all localized.
+
+| # | Feature | Global User Impact |
+|---|---------|-------------------|
+| I1 | **47-Language Sidebar** | Every UI element, tab label, button, and error message in the user's language. Not Google Translate — hand-curated locale files. |
+| I2 | **Localized Recipes** | Recipe descriptions, step labels, and confirmation messages in the user's language. A Japanese user sees Japanese throughout. |
+| I3 | **Persona Language Matching** | Yinyang chat responds in the user's language. The 47 expert personas adapt tone and vocabulary per locale. |
+| I4 | **RTL Support** | Arabic, Hebrew, Farsi: full right-to-left layout in sidebar. Not mirrored — properly designed. |
+| I5 | **Local-First for Data Sovereignty** | Data stays on the user's machine in their country. No forced cloud sync to US servers. GDPR/LGPD/PIPL compliant by architecture. |
+| I6 | **Multi-Language Evidence** | Evidence exports include locale metadata. Auditors in Germany see German labels. Auditors in Japan see Japanese. |
+| I7 | **Zero CDN Translation** | All 47 locale files bundled locally. No runtime fetch. Works offline. No dependency on translation API availability. |
+
+**The global pitch:** "Solace Browser speaks your language — literally. 47 languages, fully localized, data stays in your country."
+
+### 23i. European Regulators (GDPR, EU AI Act, eIDAS, NIS2)
+
+**The regulatory reality:** Europe has the world's strictest digital regulations. Any AI tool used by EU companies must comply with GDPR (data protection), the EU AI Act (AI transparency), eIDAS (electronic signatures), and NIS2 (cybersecurity).
+
+| Regulation | Requirement | Solace Browser Compliance |
+|-----------|-------------|--------------------------|
+| **GDPR** | Data minimization, right to erasure, DPA, cross-border transfer restrictions | Local-first: data never leaves user's machine. No telemetry. Right to erasure = delete local evidence files. No cross-border transfer needed. |
+| **EU AI Act (2026)** | AI systems must be transparent, explainable, human-in-the-loop for high-risk | Human-in-the-loop by design (inbox/outbox, preview→approve→execute). Full evidence trail = explainability. Recipe source code = transparency. |
+| **eIDAS 2.0** | Electronic signatures must meet EU standards (Simple/Advanced/Qualified) | SHA-256 e-signatures meet Advanced Electronic Signature (AES) requirements. Qualified signatures via integration with EU trust services (future). |
+| **NIS2** | Cybersecurity obligations for essential/important entities | Air-gapped local mode. No forced cloud. Security-by-design: CSP, origin validation, no eval(). Evidence of security controls. |
+| **Schrems II** | EU personal data cannot be transferred to US without adequate safeguards | Local-first solves this entirely. Free/Starter tier: zero data leaves EU. Pro+ cloud sync: EU-hosted option planned. |
+| **DORA** | Digital Operational Resilience Act (financial sector, Jan 2025) | Evidence-chained testing of digital systems. Automated ICT risk management documentation. |
+
+**European enterprise features:**
+
+| # | Feature | EU Compliance Impact |
+|---|---------|---------------------|
+| EU1 | **GDPR Data Map** | Agent crawls internal systems, maps where personal data lives, generates Article 30 Record of Processing Activities |
+| EU2 | **DPIA Automation** | Data Protection Impact Assessment: agent runs through DPIA template, captures evidence per processing activity |
+| EU3 | **Cookie Consent Audit** | Agent visits your websites, checks cookie banners for GDPR compliance, screenshots non-compliant pages |
+| EU4 | **Right to Erasure Verification** | When a user requests data deletion: agent verifies deletion across all systems, captures evidence of erasure |
+| EU5 | **AI Act Transparency Report** | Auto-generate EU AI Act transparency documentation: system purpose, training data summary, human oversight mechanisms |
+| EU6 | **eIDAS Signature Integration** | E-signatures compatible with EU trust services. Evidence exports include eIDAS-compliant signature metadata. |
+| EU7 | **NIS2 Incident Response** | Agent automates incident response documentation: timeline, impact assessment, notification evidence (72-hour GDPR breach notification) |
+
+**European pitch:** "American AI tools send your data to US clouds and pray for adequacy decisions. Solace Browser runs on your machine, in your country, under your control. GDPR-compliant by architecture, not by policy."
+
+### 23j. The Compliance Feature Matrix Across All Regions
+
+| Capability | US (FDA/SOX/HIPAA) | EU (GDPR/AI Act/eIDAS) | APAC (PIPL/PDPA) | Global |
+|-----------|-------------------|----------------------|------------------|--------|
+| Local-first execution | Part 11, HIPAA | GDPR Art. 44-49 | PIPL cross-border | Data sovereignty |
+| Hash-chained evidence | Part 11 §11.10(e) | eIDAS AES | — | Tamper-evident |
+| e-Signatures | Part 11 §11.50/11.70 | eIDAS Art. 25-34 | — | Legally binding |
+| Human-in-the-loop | Part 11 (human review) | AI Act Art. 14 | — | Consent-first |
+| Audit export | SOX 404, FDA | GDPR Art. 30 | PDPA audit | One-click |
+| Air-gapped mode | ITAR, FedRAMP | NIS2 | Government | Classified networks |
+| 47 languages | — | EU multilingual | APAC languages | Global workforce |
+| Right to erasure | — | GDPR Art. 17 | PIPL Art. 47 | Delete local files |
+
+---
+
+*Paper 47 v8 | Auth: 65537 | Supersedes Paper 04 | AI-Agent Browser — Full Vertical + Global + Compliance Architecture*
