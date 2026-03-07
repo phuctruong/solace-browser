@@ -29,7 +29,7 @@ def test_repo_default_app_templates_exist() -> None:
     default_root = REPO_ROOT / "data" / "default" / "apps"
     assert default_root.exists()
     directories = sorted(path.name for path in default_root.iterdir() if path.is_dir())
-    assert len(directories) == 22
+    assert len(directories) == 25
     assert "morning-brief" in directories
     assert "linkedin-poster" in directories
 
