@@ -1,6 +1,6 @@
 # Paper 47: Yinyang Sidebar Architecture — Bundled MV3 Side Panel
 # DNA: `sidebar(detect, suggest, run, chat) > webapp(pages, routes, dashboards)`
-# Forbidden: `INLINE_INJECTION | WEBAPP_DASHBOARD | KEEP_ALIVE_HACK | RAW_CDP_PROXY | RUNTIME_EVALUATE | UNSIGNED_APPROVAL | UNVERIFIED_RIPPLE | SILENT_EVIDENCE_LOSS | UNSEAL_BEFORE_SYNC | FREE_TIER_SYNC | AUTO_APPROVE`
+# Forbidden: `INLINE_INJECTION | WEBAPP_DASHBOARD | KEEP_ALIVE_HACK | RAW_CDP_PROXY | RUNTIME_EVALUATE | UNSIGNED_APPROVAL | UNVERIFIED_RIPPLE | SILENT_EVIDENCE_LOSS | UNSEAL_BEFORE_SYNC | FREE_TIER_SYNC | AUTO_APPROVE | POINT_SOLUTION_THINKING`
 **Date:** 2026-03-07 | **Auth:** 65537 | **Status:** CANONICAL
 **Applies to:** solace-browser
 **Supersedes:** Paper 04 (yinyang-dual-rail-browser)
@@ -617,4 +617,217 @@ Community: Network effects compound — more users → more recipes → more kno
 
 ---
 
-*Paper 47 v3 | Auth: 65537 | Supersedes Paper 04 | LLM Consensus R1-R8 | Browser-Native Architecture*
+## 21. Enterprise Customer Scenarios: Why They Must Buy
+
+### 21a. SAP Data Migration — The VP of IT's Nightmare
+
+**Customer profile:** Enterprise VP of IT running SAP S/4HANA migration ($2M-50M project, 6-18 months, 100+ stakeholders). The migration involves extracting data from legacy ECC, transforming it, loading into S/4HANA, and getting business sign-off that everything works.
+
+**The pain (what keeps them up at night):**
+
+| Pain Point | Current Reality | Cost |
+|-----------|----------------|------|
+| Manual data validation | Consultants click through 500+ SAP transactions to verify migrated data matches source | $200-400/hr × weeks |
+| Business Acceptance Testing (BAT) | Business users manually run test scripts, screenshot results, paste into Word docs | 2-4 weeks per cycle |
+| Sign-off chaos | Approval chain: Data Owner → Business Process Owner → IT → Compliance → Project Manager → Steering Committee. Tracked in email. | Missed approvals delay go-live by weeks |
+| Regulatory evidence | Pharma/medical: FDA 21 CFR Part 11 requires every validation step to have signed, timestamped, tamper-evident evidence | $500K+ for GxP validation consultant |
+| Regression testing | After each data load, re-run ALL validation scripts. Any change means re-test everything | 3-5 test cycles per migration |
+| Cutover window | 48-72 hours to migrate, validate, and go-live. Every minute of delay costs the business | $100K+/hour of downtime for large enterprises |
+| Audit trail gaps | Auditors ask "who validated this data, when, and what did they see?" — teams scramble to reconstruct evidence | Audit findings → delayed go-live |
+
+**What Solace Browser does for them (the "shut up and take my money" features):**
+
+| Feature | Solace Capability | SAP Migration Impact |
+|---------|------------------|---------------------|
+| **BAT Automation** | Record a validation script once (navigate SAP Fiori, check field values, compare to source). Replay deterministically across 500 transactions. | 2-4 weeks → 2-4 hours |
+| **Business eSign-Off** | When business user approves a validation result, generate Part 11 compliant e-signature: `sha256(user + timestamp + "approved" + evidence_hash)`. Non-repudiable. | Kill the Word doc/email chain. Auditor-ready instantly. |
+| **Hash-Chained Evidence** | Every validation step: screenshot + DOM snapshot + network trace + timestamp → SHA-256 hash chain. Tamper-evident. Append-only. | FDA/GxP compliance built-in. No $500K consultant. |
+| **Migration Validation Recipes** | Recipe library for common SAP checks: "Verify vendor master data migrated correctly" → recipe checks 50 fields across 1000 vendors | Community recipes reduce consultant dependency |
+| **Multi-Tab Comparison** | Open legacy SAP in tab 1, S/4HANA in tab 2. Agent compares field-by-field, screenshots differences, generates deviation report. | Automated data comparison with evidence |
+| **Cutover Dashboard** | Sidebar shows: "472/500 transactions validated, 28 remaining, ETA: 45 min, 3 deviations found" | Real-time cutover visibility |
+| **Approval Workflow** | Sidebar: "Data Owner: Approved ✓ | Process Owner: Pending | IT: Waiting | Compliance: —" | Kill the email chain. Everyone sees status. |
+| **Regression Replay** | Data changed? Re-run ALL 500 validation recipes. Same evidence, same sign-offs, $0.001/replay. | 3 days of regression → 3 hours |
+| **Audit Export** | One-click ZIP: all evidence + hash chains + e-signatures + verification script. Hand to auditor. | Audit prep: days → minutes |
+
+**SAP-Specific Killer Features (not in K1-K15):**
+
+| # | Feature | Description |
+|---|---------|-------------|
+| E1 | **BAT Acceptance Matrix** | Configurable approval matrix: which roles must sign off on which data objects. Maps to SAP org structure. |
+| E2 | **Data Comparison Engine** | Multi-tab CDP: read fields from legacy (tab 1) and target (tab 2), flag mismatches automatically |
+| E3 | **Cutover Runbook Automation** | Sequential recipe execution with gates: "Don't proceed to step 5 until step 4 is signed off" |
+| E4 | **GxP Validation Protocol** | IQ/OQ/PQ templates as recipes: Installation Qualification, Operational Qualification, Performance Qualification |
+| E5 | **Deviation Tracking** | When validation finds a mismatch: auto-create deviation record, assign to data steward, track to resolution |
+| E6 | **Regulatory Report Generator** | Auto-generate FDA 21 CFR Part 11 compliance report from evidence chains |
+
+**Pricing for SAP customers:**
+- Enterprise tier ($188/mo per seat) × 20 validation team seats = $3,760/mo
+- vs. $200-400/hr consultant × 160 hours/month = $32,000-64,000/mo
+- **ROI: 10-17x cost reduction** — this sells itself
+
+### 21b. Sales Team — Crushing Microsoft Copilot for Sales
+
+**Customer profile:** Gatan VP of Sales, mid-market company ($50M-500M revenue), 20-100 sales reps, currently using Salesforce/HubSpot CRM + considering Microsoft Copilot for Sales ($50/user/mo).
+
+**The competition:**
+
+| Product | Price | Strengths | Fatal Weakness |
+|---------|-------|-----------|---------------|
+| Microsoft Copilot for Sales | $50/user/mo | Deep Outlook/Teams integration, CRM sync, meeting summaries | Can't control the browser. Can't automate LinkedIn. Can't do multi-site workflows. |
+| Gong | $100-150/user/mo | Call intelligence, deal warnings | Only works on calls. Blind to email/LinkedIn/web activity. |
+| Outreach | $100-130/user/mo | Sequence automation, A/B testing | Email-centric. No browser automation. No LinkedIn. |
+| Apollo | $49-119/user/mo | Lead database, prospecting | Data quality issues. No execution — just data. |
+| Salesloft | $75-125/user/mo | Cadences, dialer | No AI-driven actions. Manual sequence design. |
+| 6sense | $100K+/year | Intent data, ABM | Expensive. No execution. Just signals. |
+
+**Why they all lose to Solace Browser:**
+
+Every sales tool above operates in ONE channel (email OR calls OR data). None of them can actually DO things across channels. A VP of Sales doesn't want a tool that tells them what to do — they want a tool that DOES it with their approval.
+
+**Solace Browser Sales Agent — What Gatan Would Kill For:**
+
+| # | Feature | What It Does | Why Copilot Can't |
+|---|---------|-------------|-------------------|
+| S1 | **LinkedIn Prospecting Autopilot** | Browse LinkedIn, identify ICP matches, send personalized connection requests (20/day, budget-gated). Evidence trail of every action. | Copilot can't control LinkedIn. Period. |
+| S2 | **CRM Auto-Fill from Browser** | Rep visits prospect's website → agent extracts: company size, tech stack, recent news, key contacts → pushes to CRM opportunity. Zero typing. | Copilot needs manual CRM entry or basic web scraping |
+| S3 | **Meeting Prep Package** | Before a call: agent visits prospect's LinkedIn, website, news, competitors. Builds a 1-page briefing in sidebar. Takes 30 seconds, not 30 minutes. | Copilot summarizes past interactions but doesn't research prospects |
+| S4 | **Follow-Up Sequence Engine** | After a meeting: agent drafts follow-up email (context-aware from meeting notes + prospect research), schedules send, tracks opens. Deterministic replay for similar deals. | Copilot drafts emails but can't execute multi-step sequences across LinkedIn + email + CRM |
+| S5 | **Competitive Intel Crawler** | Agent monitors competitor websites, pricing pages, job postings. Alerts: "Competitor X just raised prices 15%" or "Competitor Y is hiring 20 SDRs — they're scaling outbound." | Copilot has zero competitive intelligence |
+| S6 | **Pipeline Reality Check** | Agent visits each deal's contact on LinkedIn weekly. Flags: "Champion changed jobs" / "Company announced layoffs" / "New decision-maker appeared." Updates CRM automatically. | Copilot relies on stale CRM data |
+| S7 | **Multi-Channel Cadence** | Day 1: LinkedIn view profile → Day 2: Connection request → Day 3: InMail → Day 5: Email → Day 8: Follow-up. All automated, all budget-gated, all with evidence. | No tool does cross-channel cadences with browser automation |
+| S8 | **Deal Room Evidence** | Every prospect interaction captured: emails sent, LinkedIn messages, meeting recordings, CRM updates. Hash-chained. Shareable with VP for deal review. | Copilot has conversation history but no tamper-evident evidence chain |
+| S9 | **Territory Intelligence** | Agent maps your territory: visits 500 company websites, extracts tech stack, employee count, recent funding. Builds scored prospect list overnight via cloud twin. | No sales tool does automated territory research at scale |
+| S10 | **Persona-Aware Communication** | Agent uses "Marketing" persona for CMOs, "Technical" persona for CTOs, "Executive" persona for CEOs. Tone, vocabulary, and pitch automatically adjusted. | Copilot has one voice. One size fits all. |
+
+**The knockout punch vs. Microsoft Copilot for Sales:**
+
+```
+Microsoft Copilot: "Here's a suggested email draft based on your meeting notes."
+Solace Browser:    "I researched the prospect, drafted the email, scheduled the follow-up
+                    sequence, updated the CRM, and found 3 similar companies in the territory.
+                    Approve all 5 actions? [Approve] [Review Each]"
+```
+
+**Copilot is a copilot. Solace is the pilot (with your permission).**
+
+**Pricing for Sales teams:**
+- Pro tier ($28/mo per seat) × 50 reps = $1,400/mo
+- vs. Microsoft Copilot ($50/user/mo) × 50 reps = $2,500/mo
+- vs. Gong ($100/user/mo) × 50 reps = $5,000/mo
+- **44% cheaper than Copilot, 72% cheaper than Gong — AND it does more**
+
+### 21c. Business Acceptance eSign-Off Framework (E1)
+
+Both SAP and Sales customers need the same core capability: **structured business sign-offs with evidence.**
+
+```
+Business Acceptance eSign-Off = {
+  acceptance_matrix: {
+    data_object: "Vendor Master",           # What's being validated
+    approvers: [
+      { role: "Data Owner",     required: true,  order: 1 },
+      { role: "Process Owner",  required: true,  order: 2 },
+      { role: "IT Lead",        required: true,  order: 3 },
+      { role: "Compliance",     required: true,  order: 4, condition: "if_regulated" },
+      { role: "Project Sponsor", required: true, order: 5 }
+    ],
+    evidence_required: ["screenshots", "field_comparison", "deviation_report"],
+    expiry: "72h"  # Re-approval needed if evidence changes
+  },
+
+  esign: {
+    signature: sha256(user_id + role + timestamp_utc + meaning + evidence_bundle_hash),
+    meaning: "business_accepted" | "conditionally_accepted" | "rejected",
+    binding: "Part 11 §11.50 compliant — non-transferable, timestamped, meaning-attached",
+    condition: "vendor_count < 50 exceptions documented in deviation_log"
+  },
+
+  evidence_bundle: {
+    hash_chain: "append-only, SHA-256 linked",
+    screenshots: "per-step, timestamped",
+    field_comparisons: "source vs target, deviations highlighted",
+    network_traces: "HAR capture for API calls",
+    verification_script: "standalone Python script, no Solace install needed"
+  }
+}
+```
+
+**Why this is a game-changer:**
+- SAP migration: Replace weeks of Word docs and email chains with tamper-evident digital sign-offs
+- Sales: VP can approve/reject AI-generated outreach sequences with evidence of what was sent
+- Compliance: Auditor opens evidence bundle → everything they need in one ZIP
+- Legal: e-signatures are Part 11 compliant — legally binding in regulated industries
+
+### 21d. AI Email — Crushing Shortwave, Superhuman, and Spark
+
+**The competition:**
+
+| Product | Price | Strengths | Fatal Weakness |
+|---------|-------|-----------|---------------|
+| Shortwave | $25/user/mo | AI triage, auto-labels, smart replies, "ask AI about emails" | Locked inside email. Can't check LinkedIn. Can't update CRM. Can't browse. |
+| Superhuman | $30/user/mo | Speed, split inbox, follow-up reminders, AI drafts | No automation. Beautiful but manual. $30 for what amounts to a fast email client. |
+| Spark AI | $8/user/mo | AI writing, smart inbox, team collaboration | No evidence trail. No approval flow. Basic AI writing. |
+| Gmail Gemini | $20/user/mo | Google integration, "help me write", smart compose | Can't leave Gmail. No multi-site workflows. No recipes. |
+
+**Why Solace Browser destroys email AI tools:**
+
+Email AI tools are trapped inside the inbox. They can draft a reply, but they can't:
+- Check the sender's LinkedIn to see if they changed jobs
+- Look up the sender's company on Crunchbase before replying
+- Pull data from Salesforce to personalize the response
+- Schedule a follow-up across email + LinkedIn + CRM
+- Generate evidence of what was sent and why
+
+| # | Feature | What It Does | Why Email Tools Can't |
+|---|---------|-------------|----------------------|
+| M1 | **Context-Aware Reply** | Before drafting, agent checks sender's LinkedIn, company website, CRM record, past interactions. Reply is informed by full context, not just email thread. | Email tools only see the inbox |
+| M2 | **Multi-Channel Follow-Up** | Reply to email → schedule LinkedIn message 3 days later → update CRM note → calendar reminder. One approval, four actions. | Email tools can only send email |
+| M3 | **Evidence-Chained Responses** | Every email sent has SHA-256 evidence: who approved, what context was used, which recipe generated it. Audit-ready. | Email tools have no evidence chain |
+| M4 | **Inbox Zero Autopilot** | Agent triages inbox using recipes: auto-categorize, auto-reply to routine, flag urgent, summarize newsletters. All with approval gates. | Shortwave has AI triage but no automation execution |
+| M5 | **Template Recipe Library** | Community recipes: "respond to sales outreach" / "follow up on invoice" / "decline meeting politely." Replay at $0.001. | Email tools regenerate from LLM every time ($0.08) |
+| M6 | **Attachment Intelligence** | Agent opens attached PDF/spreadsheet, extracts key data, summarizes in sidebar, suggests action. | Email tools can't parse attachments with agent intelligence |
+
+### 21e. AI Marketing / Content / PR — The Content Factory
+
+**The competition:**
+
+| Product | Price | Strengths | Fatal Weakness |
+|---------|-------|-----------|---------------|
+| Jasper AI | $49-125/mo | Brand voice, campaigns, templates | Generates content but can't publish, distribute, or measure |
+| Copy.ai | $36-186/mo | Workflows, content generation at scale | No browser — can't post to LinkedIn, Medium, Substack, Twitter |
+| Surfer SEO | $89-219/mo | SEO optimization, SERP analysis | Only content optimization. Can't write, publish, or promote |
+| HubSpot Content | $800+/mo | Full marketing stack, workflows | Insanely expensive. Locked into HubSpot ecosystem |
+| Buffer/Hootsuite | $6-120/mo | Social scheduling, analytics | No content creation. No AI. Just scheduling. |
+
+**Solace Browser Content & PR Agent:**
+
+| # | Feature | What It Does | Why Content Tools Can't |
+|---|---------|-------------|------------------------|
+| C1 | **Write → Publish → Promote Pipeline** | Generate blog post → publish to Substack → share on LinkedIn → tweet thread → cross-post to Medium. One recipe, one approval, five platforms. | Content tools generate. They don't publish or promote. |
+| C2 | **SEO Research + Content** | Agent crawls top 10 SERP results for target keyword, extracts structure/word count/headings, generates optimized content that beats them. | SEO tools analyze but don't create. Content tools create but don't analyze. |
+| C3 | **PR Outreach Autopilot** | Agent finds relevant journalists on Twitter/LinkedIn, personalizes pitch based on their recent articles, sends via email. Budget-gated: max 20 pitches/day. | No PR tool combines journalist research + personalized outreach + budget control |
+| C4 | **Content Calendar Automation** | Schedule content across platforms: Monday blog, Tuesday LinkedIn, Wednesday newsletter, Thursday Twitter thread. Recipes replay weekly. | Buffer schedules but doesn't create. Jasper creates but doesn't schedule. |
+| C5 | **Competitive Content Monitor** | Agent crawls competitor blogs weekly. Alerts: "Competitor published article on topic X — here's a counter-angle." Suggests response content. | No content tool monitors competitors AND generates counter-content |
+| C6 | **Multi-Platform Analytics** | Agent visits Google Analytics, LinkedIn Analytics, Substack dashboard, Twitter Analytics. Builds unified dashboard in sidebar. One view, all platforms. | Analytics tools are siloed per platform |
+| C7 | **Brand Voice Recipes** | Record how you write on each platform. Agent replays your voice. LinkedIn: professional. Twitter: casual. Blog: technical. Each is a recipe. | Content tools have "brand voice" but can't replay deterministically |
+
+### 21f. Market Category Summary — One Browser, Every AI Vertical
+
+```
+SOLACE BROWSER = AI-Agent Browser that replaces:
+  ├── Email AI:     Shortwave ($25) + Superhuman ($30) + Spark ($8)
+  ├── Sales AI:     Copilot for Sales ($50) + Gong ($100) + Outreach ($100)
+  ├── Content AI:   Jasper ($49) + Copy.ai ($36) + Buffer ($6)
+  ├── Enterprise:   SAP validation consultants ($200-400/hr)
+  └── Browser AI:   Operator ($20) + Mariner ($250) + Cowork ($20)
+
+TOTAL ADDRESSABLE TOOL SPEND per user: $200-500/mo across 3-5 separate tools
+SOLACE BROWSER PRICE: $28/mo (Pro) or $88/mo (Team)
+
+The arbitrage: one AI-agent browser replaces 5+ point solutions.
+Each tool only sees one channel. Solace sees ALL channels because it IS the browser.
+```
+
+---
+
+*Paper 47 v5 | Auth: 65537 | Supersedes Paper 04 | LLM Consensus R1-R8 | AI-Agent Browser + Enterprise + Verticals*
