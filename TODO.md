@@ -1,7 +1,7 @@
 # TODO — Solace Browser
-# Updated: 2026-03-02 | Auth: 65537 | Belt: Yellow
+# Updated: 2026-03-07 | Auth: 65537 | Belt: Yellow
 # Source: Virtual Focus Group (49 Personas × 5 Phases) + Competitive Analysis
-# Tests: 4,814 | Modules: 22+ | Rung Target: 65537
+# Tests: 5,307+ | Modules: 22+ | Rung Target: 65537
 # Pipeline: papers → diagrams → styleguides → webservices → tests → code → seal
 
 ---
@@ -95,6 +95,84 @@
 **Acceptance:** Chrome Web Store extension, shows recipes for current tab, delegates to CLI/cloud
 **Files:** extension/ (new directory)
 **Tests:** ~20
+
+---
+
+## P2.5 — MCP Server: AI Agent Interface (Paper 47 §24)
+
+### T15: MCP server core — stdio transport + tool registry
+**Paper:** 47 §24 | **Priority:** P0
+**Acceptance:** `solace-browser mcp` starts stdio MCP server, `tools/list` returns core browser tools
+**Files:** src/mcp/__init__.py, src/mcp/server.py, src/mcp/transport.py
+**Tests:** ~20
+**Details:**
+- MCP server runs in companion app process (same as webservice)
+- stdio transport for local agents (Claude Code, Codex)
+- Tool registry with versioned schema
+- Health check tool always present
+
+### T16: Core browser tools — navigate, screenshot, click, type, scroll, snapshot
+**Paper:** 47 §24 | **Priority:** P0
+**Acceptance:** AI agent can navigate, take screenshots, interact with page elements via MCP tools
+**Files:** src/mcp/tools_core.py
+**Tests:** ~25
+**Details:**
+- 1:1 mapping to existing webservice endpoints
+- Shared handler code (MCP calls same functions as HTTP API)
+- `solace_navigate`, `solace_screenshot`, `solace_page_snapshot`, `solace_click`, `solace_type`, `solace_scroll`
+- `solace_health`, `solace_status`
+
+### T17: Dynamic app tools — generate MCP tools from app manifests
+**Paper:** 47 §24 | **Priority:** P0
+**Acceptance:** Install a new app manifest → `tools/list` shows new tools automatically. No code changes needed.
+**Files:** src/mcp/tools_apps.py
+**Tests:** ~20
+**Details:**
+- Read all manifest.yaml from data/default/apps/
+- Each app generates: `solace_app_{id}_run`, `solace_app_{id}_benchmarks`, `solace_app_{id}_status`
+- Cache invalidation when manifest files change (mtime check)
+- Tool descriptions from manifest `description` field
+
+### T18: Model + evidence tools
+**Paper:** 47 §24 | **Priority:** P1
+**Acceptance:** AI agent can list models, get benchmarks, search/verify evidence via MCP
+**Files:** src/mcp/tools_evidence.py
+**Tests:** ~15
+**Details:**
+- `solace_list_models`, `solace_list_apps`, `solace_app_benchmarks`
+- `solace_search_evidence`, `solace_verify_evidence`, `solace_list_screenshots`
+- `solace_discovery_map` (site structure mapping)
+- Trade secret boundary enforced (no uplift internals in responses)
+
+### T19: OAuth3 scope gating for MCP calls
+**Paper:** 47 §24 | **Priority:** P1
+**Acceptance:** MCP tool calls check OAuth3 scopes. Unauthorized calls return clear error.
+**Files:** src/mcp/oauth3_gate.py
+**Tests:** ~15
+**Details:**
+- Same scope model as webservice: navigate=LOW, click=MEDIUM, run_app=per-app-scope
+- Step-up required for destructive actions (same as webservice)
+- Evidence bundle emitted for every MCP tool call
+
+### T20: SSE transport for remote/tunnel MCP access
+**Paper:** 47 §24 | **Priority:** P2
+**Acceptance:** MCP clients can connect via SSE over tunnel for cloud twin scenarios
+**Files:** src/mcp/transport.py (extend)
+**Tests:** ~10
+**Details:**
+- SSE endpoint at /mcp/sse on webservice port
+- Tunnel-compatible (goes through existing tunnel.solaceagi.com)
+- OAuth3 token required for remote access
+
+### T21: Claude Code .mcp.json + Codex integration docs
+**Paper:** 47 §24 | **Priority:** P1
+**Acceptance:** Drop `.mcp.json` in project root → Claude Code auto-discovers Solace Browser tools
+**Files:** templates/mcp.json, docs/mcp-integration.md
+**Tests:** ~5 (validation)
+**Details:**
+- Template .mcp.json for Claude Code projects
+- Codex compatible configuration
+- Getting started guide for AI agent users
 
 ---
 

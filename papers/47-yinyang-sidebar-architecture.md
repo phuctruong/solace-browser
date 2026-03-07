@@ -1390,4 +1390,232 @@ Not vendor lock-in (we're source-available). Compliance lock-in (their evidence 
 
 ---
 
-*Paper 47 v8 | Auth: 65537 | Supersedes Paper 04 | AI-Agent Browser — Full Vertical + Global + Compliance Architecture*
+## 24. MCP Server: Dynamic App-to-Tool Mapping for AI Agents
+
+### The Problem
+
+AI coding agents (Claude Code, Codex, Gemini CLI) interact with browsers through fragile HTTP calls — they must know URLs, parse JSON, handle errors, and construct payloads manually. This creates drift: the agent's understanding of the API diverges from the actual implementation over time.
+
+### The Solution: MCP Server with Dynamic Tool Generation
+
+The companion app (which already runs the webservice + tunnel) also runs an MCP server that **dynamically generates MCP tools from installed apps**. Every app manifest becomes a set of typed tools. Every webservice endpoint has a matching MCP tool. AI agents get a clean, typed interface — no URL construction, no drift.
+
+```
+[AI Agent]                     [MCP Server]                    [Solace Browser]
+(Claude Code,                  (runs in companion app,         (Chromium + Playwright)
+ Codex, Gemini)                 alongside webservice)
+
+  tools/list ───────────>  Dynamic tool registry  ─────>  Read app manifests
+  tools/call ───────────>  Route to handler       ─────>  Execute via webservice API
+                              │
+                              ├── Browser core tools (navigate, screenshot, click, type, ...)
+                              ├── App tools (gmail_inbox_triage_run, linkedin_post, ...)
+                              ├── Model tools (list_models, set_model, get_benchmarks)
+                              └── Evidence tools (search_evidence, verify_chain)
+```
+
+### Architecture: Two Interfaces, One Brain
+
+The MCP server and the webservice API are **two interfaces to the same backend**. They share the same handler code. When a new app is installed, both get the new capability automatically.
+
+| Interface | Consumer | Protocol | Discovery |
+|-----------|----------|----------|-----------|
+| Webservice API | Sidebar extension, Companion App UI | HTTP/WS on port 9222 | OpenAPI spec |
+| MCP Server | Claude Code, Codex, Gemini CLI, any MCP client | stdio or SSE | `tools/list` (dynamic) |
+
+**Rule:** Every webservice endpoint MUST have a matching MCP tool. No orphan APIs. No orphan tools.
+
+### Dynamic Tool Generation from App Manifests
+
+Each installed app manifest generates MCP tools automatically:
+
+```yaml
+# data/default/apps/gmail-inbox-triage/manifest.yaml
+id: gmail-inbox-triage
+name: Gmail Inbox Triage
+scopes: [gmail.read.inbox, gmail.draft.create, local.evidence]
+site: mail.google.com
+```
+
+Generates these MCP tools:
+
+```json
+[
+  {
+    "name": "solace_app_gmail_inbox_triage_run",
+    "description": "Run Gmail Inbox Triage: Scan Gmail, prioritize messages, and draft safe replies.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "model": { "type": "string", "description": "Model to use (e.g. claude_4_sonnet, solace_managed)" },
+        "dry_run": { "type": "boolean", "description": "Preview without executing" }
+      }
+    }
+  },
+  {
+    "name": "solace_app_gmail_inbox_triage_benchmarks",
+    "description": "Get benchmark data for Gmail Inbox Triage across all available models.",
+    "inputSchema": { "type": "object", "properties": {} }
+  },
+  {
+    "name": "solace_app_gmail_inbox_triage_status",
+    "description": "Check the status of the last Gmail Inbox Triage run.",
+    "inputSchema": { "type": "object", "properties": {} }
+  }
+]
+```
+
+### Core Browser Tools (Always Available)
+
+These map 1:1 to existing webservice endpoints:
+
+| MCP Tool | Webservice Endpoint | Purpose |
+|----------|-------------------|---------|
+| `solace_navigate` | `POST /api/navigate` | Navigate to URL |
+| `solace_screenshot` | `GET /api/screenshot` | Take screenshot |
+| `solace_page_snapshot` | `GET /api/page-snapshot` | DOM + accessibility snapshot |
+| `solace_click` | `POST /api/act` (type=click) | Click element by ref |
+| `solace_type` | `POST /api/act` (type=type) | Type text into element |
+| `solace_scroll` | `POST /api/act` (type=scroll) | Scroll page |
+| `solace_list_apps` | `GET /api/apps` | List all installed apps |
+| `solace_list_models` | `GET /api/models` | List available LLM models |
+| `solace_run_app` | `POST /api/apps/{id}/run` | Run an app |
+| `solace_app_benchmarks` | `GET /api/apps/{id}/benchmarks` | Get app benchmarks |
+| `solace_health` | `GET /api/health` | Server health check |
+| `solace_status` | `GET /api/status` | Browser status |
+| `solace_search_evidence` | `POST /api/evidence/search` | Search evidence bundles |
+| `solace_verify_evidence` | `POST /api/v1/evidence/verify` | Verify evidence chain |
+| `solace_list_screenshots` | `GET /api/screenshots` | List captured screenshots |
+| `solace_discovery_map` | `POST /api/discovery/map-site` | Map site structure |
+
+### MCP Server Implementation
+
+The MCP server runs inside the companion app process (same process as the webservice). It uses `stdio` transport for local agents and `SSE` transport for remote/tunnel access.
+
+```python
+# src/mcp/server.py — MCP server with dynamic app tools
+
+class SolaceMCPServer:
+    """MCP server that dynamically generates tools from app manifests + webservice endpoints."""
+
+    def __init__(self, browser_server):
+        self.browser = browser_server  # Same instance serving webservice
+        self._tools_cache = None
+        self._manifest_mtime = {}      # Track manifest changes for cache invalidation
+
+    async def handle_tools_list(self):
+        """Generate tool list from: core browser tools + dynamic app tools."""
+        tools = self._core_browser_tools()
+        for app in self._load_app_manifests():
+            tools.extend(self._app_to_tools(app))
+        return tools
+
+    async def handle_tools_call(self, name, arguments):
+        """Route MCP tool call to the matching webservice handler."""
+        # Core tools route directly to browser_server methods
+        # App tools route to /api/apps/{id}/run, /api/apps/{id}/benchmarks, etc.
+        ...
+```
+
+### Companion App Integration
+
+The companion app (Tauri, ~20MB) already runs:
+1. **Webservice** on port 9222 (HTTP + WebSocket)
+2. **Tunnel** to tunnel.solaceagi.com (WebSocket, paid tier)
+
+Now it also runs:
+3. **MCP Server** on stdio (for local agents) or SSE (for remote/tunnel)
+
+```
+┌─────────────────────────────────────────┐
+│           Companion App (Tauri)          │
+│                                         │
+│  ┌──────────┐  ┌──────────┐  ┌───────┐ │
+│  │Webservice│  │MCP Server│  │Tunnel │ │
+│  │:9222     │  │stdio/SSE │  │WSS    │ │
+│  └────┬─────┘  └────┬─────┘  └───┬───┘ │
+│       │              │            │     │
+│       └──────┬───────┘            │     │
+│              v                    │     │
+│     ┌────────────────┐           │     │
+│     │ Shared Handlers │<──────────┘     │
+│     │ (browser_server)│                 │
+│     └────────────────┘                  │
+└─────────────────────────────────────────┘
+```
+
+### Claude Code Integration (Example)
+
+```json
+// ~/.claude/mcp_servers.json (or .mcp.json in project root)
+{
+  "solace-browser": {
+    "command": "solace-browser",
+    "args": ["mcp"],
+    "description": "Solace Browser — AI-native browser with 25 apps, evidence chain, OAuth3"
+  }
+}
+```
+
+Then in Claude Code:
+```
+> Use solace to triage my Gmail inbox
+
+Claude Code calls: solace_app_gmail_inbox_triage_run({ model: "solace_managed", dry_run: false })
+→ Returns: { status: "preview_ready", recipe: {...}, estimated_cost: "$0.003" }
+
+Claude Code calls: solace_screenshot({})
+→ Returns: screenshot of Gmail with highlighted triaged messages
+```
+
+### OAuth3 Scoping for MCP
+
+MCP tool calls are OAuth3-scoped just like webservice calls. The MCP server checks scopes before executing:
+
+```
+solace_navigate         → browser.navigate (LOW RISK)
+solace_click            → browser.interact (MEDIUM — step-up on forms)
+solace_run_app          → companion.app.run (MEDIUM — per-app scope required)
+solace_search_evidence  → evidence.read (LOW RISK)
+```
+
+### Trade Secret Protection in MCP
+
+The same Trade Secret Boundary from Section 22b applies to MCP responses:
+
+| MCP Tool Response | Revealed | Protected |
+|-------------------|----------|-----------|
+| `solace_list_models` | Model names, providers, availability | Uplift weights, prompt templates |
+| `solace_app_benchmarks` | Scores, costs, latency | Which principles contributed |
+| `solace_run_app` | Recipe steps, estimated cost | Injection content, principle ordering |
+
+### File Structure
+
+```
+src/mcp/
+  __init__.py
+  server.py          # SolaceMCPServer — main server class
+  tools_core.py      # Core browser tools (navigate, screenshot, click, ...)
+  tools_apps.py      # Dynamic app tool generator (reads manifests)
+  tools_evidence.py  # Evidence + verification tools
+  transport.py       # stdio + SSE transport handlers
+  oauth3_gate.py     # OAuth3 scope checking for MCP calls
+
+tests/
+  test_mcp_server.py
+  test_mcp_tools_dynamic.py
+  test_mcp_oauth3.py
+```
+
+### Why This Wins
+
+1. **Zero drift** — Tools generated from manifests, not hardcoded. Add an app, get a tool.
+2. **Works with every MCP client** — Claude Code, Codex, Gemini, Cursor, Windsurf, any future agent.
+3. **Same handlers** — MCP and webservice share code. Fix once, fixed everywhere.
+4. **OAuth3 everywhere** — Same scoping model for humans (sidebar), apps (companion), and AI agents (MCP).
+5. **Trade secret safe** — Same boundary enforced regardless of interface.
+6. **Evidence chain** — MCP tool calls produce evidence bundles just like webservice calls.
+
+---
+
+*Paper 47 v11 | Auth: 65537 | Supersedes Paper 04 | AI-Agent Browser — Full Vertical + Global + Compliance + MCP Architecture*

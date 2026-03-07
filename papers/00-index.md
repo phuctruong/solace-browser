@@ -42,6 +42,8 @@
 | 23 | [three-surface-architecture](../src/diagrams/23-three-surface-architecture.md) | Companion + Sidebar + API: 3 surfaces, port map, before/after |
 | 24 | [sidebar-tab-flow](../src/diagrams/24-sidebar-tab-flow.md) | Tab state machine, app detection sequence, run flow |
 | 25 | [ipc-native-messaging](../src/diagrams/25-ipc-native-messaging.md) | Token bootstrap, security boundaries, process lifecycle |
+| 29 | [sidebar-implementation-phases](../src/diagrams/29-sidebar-implementation-phases.md) | Gantt: Phase 0-4, spike → shell → core → enterprise → kill webapp |
+| 30 | [mcp-server-architecture](../src/diagrams/30-mcp-server-architecture.md) | MCP dynamic tool registry, transport modes, tool generation flow |
 
 ---
 
