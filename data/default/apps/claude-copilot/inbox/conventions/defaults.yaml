@@ -1,0 +1,34 @@
+# Claude AI Copilot — Default Configuration
+# Send prompts to Claude.ai and capture responses for cross-LLM QA.
+# Last updated: 2026-03-07 | Auth: 65537
+
+enabled: true
+
+# Account
+site_url: https://claude.ai
+model_preference: claude-sonnet  # claude-haiku | claude-sonnet | claude-opus
+
+# Prompt behavior
+max_prompt_length: 8000
+wait_for_response_timeout_s: 120
+max_response_extract_length: 16000
+
+# Schedule
+schedule: "on_demand"
+cooldown_seconds: 5
+
+# Evidence
+evidence_level: full
+hash_algorithm: sha256
+retain_screenshots: true
+retain_days: 90
+
+# Safety
+safety_rating: B
+require_approval: true
+
+# OAuth3 scopes
+scopes:
+  - claude.read.conversation
+  - claude.draft.message
+  - local.evidence

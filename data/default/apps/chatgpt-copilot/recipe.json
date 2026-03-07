@@ -1,0 +1,7 @@
+{
+  "id": "chatgpt-copilot",
+  "recipe_ref": "chatgpt/chatgpt-send-prompt.recipe.json",
+  "steps": [{"action": "noop", "description": "Send prompt to ChatGPT", "id": "preview"}],
+  "type": "standard",
+  "version": "1.0.0"
+}

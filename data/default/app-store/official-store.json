@@ -33,6 +33,53 @@
       "source": "official_git"
     },
     {
+      "id": "chatgpt-copilot",
+      "name": "ChatGPT Copilot",
+      "description": "Send prompts to ChatGPT web interface, capture responses for cross-LLM QA.",
+      "category": "productivity",
+      "status": "installed",
+      "safety": "B",
+      "site": "chatgpt.com",
+      "type": "standard",
+      "scopes": [
+        "chatgpt.read.conversation",
+        "chatgpt.draft.message",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "claude-copilot",
+      "name": "Claude AI Copilot",
+      "description": "Send prompts to Claude.ai web interface, capture responses for cross-LLM QA.",
+      "category": "productivity",
+      "status": "installed",
+      "safety": "B",
+      "site": "claude.ai",
+      "type": "standard",
+      "scopes": [
+        "claude.read.conversation",
+        "claude.draft.message",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "competitor-watch",
+      "name": "Competitor Watch",
+      "description": "Monitor competitor activity — track product launches, pricing changes, hiring signals, and social media mentions.",
+      "category": "research",
+      "status": "installed",
+      "safety": "A",
+      "site": "google.com",
+      "type": "standard",
+      "scopes": [
+        "google.read.search",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
       "id": "focus-timer",
       "name": "Focus Timer",
       "description": "Run local focus sessions and produce lightweight reports.",
@@ -43,6 +90,22 @@
       "type": "standard",
       "scopes": [
         "machine.read.clock",
+        "local.evidence"
+      ],
+      "source": "official_git"
+    },
+    {
+      "id": "gemini-copilot",
+      "name": "Gemini Copilot",
+      "description": "Send prompts to Gemini web interface, capture responses for cross-LLM QA.",
+      "category": "productivity",
+      "status": "installed",
+      "safety": "B",
+      "site": "gemini.google.com",
+      "type": "standard",
+      "scopes": [
+        "gemini.read.conversation",
+        "gemini.draft.message",
         "local.evidence"
       ],
       "source": "official_git"

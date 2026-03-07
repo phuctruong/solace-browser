@@ -1,0 +1,7 @@
+{
+  "id": "gemini-copilot",
+  "recipe_ref": "gemini/gemini-send-prompt.recipe.json",
+  "steps": [{"action": "noop", "description": "Send prompt to Gemini", "id": "preview"}],
+  "type": "standard",
+  "version": "1.0.0"
+}

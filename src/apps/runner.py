@@ -43,6 +43,9 @@ class AppRunnerError(RuntimeError):
 # data/default/recipes/{platform_dir}/{recipe_filename}.
 # ---------------------------------------------------------------------------
 APP_RECIPE_MAP: dict[str, tuple[str, str]] = {
+    "chatgpt-copilot": ("chatgpt", "chatgpt-send-prompt.recipe.json"),
+    "claude-copilot": ("claude", "claude-send-prompt.recipe.json"),
+    "gemini-copilot": ("gemini", "gemini-send-prompt.recipe.json"),
     "github-issue-triage": ("github", "github-issue-triage.json"),
     "linkedin-outreach": ("linkedin", "linkedin-discover-posts.recipe.json"),
     "linkedin-poster": ("linkedin", "linkedin-create-post.recipe.json"),
@@ -54,6 +57,9 @@ APP_RECIPE_MAP: dict[str, tuple[str, str]] = {
 
 # Site domain → platform directory name for dynamic resolution
 SITE_TO_PLATFORM: dict[str, str] = {
+    "chatgpt.com": "chatgpt",
+    "claude.ai": "claude",
+    "gemini.google.com": "gemini",
     "github.com": "github",
     "mail.google.com": "gmail",
     "linkedin.com": "linkedin",

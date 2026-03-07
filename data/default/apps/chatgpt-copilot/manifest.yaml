@@ -1,0 +1,29 @@
+id: chatgpt-copilot
+name: ChatGPT Copilot
+description: Send prompts to ChatGPT web interface, capture responses for cross-LLM QA.
+category: productivity
+status: installed
+safety: B
+site: chatgpt.com
+type: standard
+orchestrates: []
+scopes:
+- chatgpt.read.conversation
+- chatgpt.draft.message
+- local.evidence
+partners:
+  produces_for: []
+  consumes_from: []
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml
+keep_alive:
+  url: https://chatgpt.com
+  interval_min: 30
