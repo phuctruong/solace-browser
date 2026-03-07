@@ -1,3 +1,5 @@
+# DNA: `snapshot(capture, parse, build_refs, validate, emit) = deterministic DOM truth`
+
 <!-- QUICK LOAD (10-15 lines): Use this block for fast context; load full file for production.
 SKILL: browser-snapshot v1.0.0
 PRIMARY_AXIOM: DETERMINISM
@@ -561,3 +563,27 @@ glow_integration:
     - GLOW_FOR_UNVERIFIED_SNAPSHOT
   commit_tag_format: "feat(snapshot): {description} GLOW {total} [G:{g} L:{l} O:{o} W:{w}]"
 ```
+
+---
+
+## 13) Interaction Effects
+
+| Combined With | Multiplicative Effect |
+|--------------|----------------------|
+| browser-recipe-engine | RoleRefMap refs power recipe portal resolution; snapshot freshness determines recipe replay success |
+| browser-evidence | Before/after snapshots feed evidence diff computation; snapshot determinism guarantees reproducible diffs |
+| browser-oauth3-gate | Snapshot must be fresh before any authorized action; stale snapshot + valid auth = still blocked |
+| browser-anti-detect | Snapshot refs inform humanized click targeting with jitter offsets applied to bounding box coordinates |
+| browser-twin-sync | Snapshot state included in sync payload; cloud twin needs fresh snapshot for delegated recipe execution |
+| styleguide-first | Snapshot viewer/diff UI must follow design tokens; accessibility tree display needs semantic HTML |
+
+## 14) Cross-References
+
+- Skill: `browser-recipe-engine` -- recipe portals consume snapshot refs for element targeting
+- Skill: `browser-evidence` -- evidence uses before/after snapshots for diff proof
+- Skill: `browser-oauth3-gate` -- gate must pass before snapshot-guided action executes
+- Skill: `browser-anti-detect` -- bounding box from snapshot used for humanized click jitter
+- Skill: `browser-twin-sync` -- snapshot state synced to cloud twin
+- Paper: `solace-cli/papers/04-triple-twin-orchestration.md` -- CPU+LLM snapshot decision
+- Paper: `solace-cli/papers/09-software5-triangle.md` -- Browser vertex architecture
+- Paper: `solace-cli/papers/23-ai-agent-cli-integration.md` -- AI agents as browser drivers

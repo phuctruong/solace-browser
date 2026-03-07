@@ -1,3 +1,5 @@
+# DNA: `recipe(intent_classify, cache_lookup, verify_or_generate, execute, evidence, store) = bounded replay`
+
 <!-- QUICK LOAD (10-15 lines): Use this block for fast context; load full file for production.
 SKILL: browser-recipe-engine v1.0.0
 PRIMARY_AXIOM: CLOSURE
@@ -631,3 +633,27 @@ glow_integration:
     - GLOW_CLAIMED_WITHOUT_NEVER_WORSE_GATE_RUN
   commit_tag_format: "feat(recipe): {description} GLOW {total} [G:{g} L:{l} O:{o} W:{w}]"
 ```
+
+---
+
+## 14) Interaction Effects
+
+| Combined With | Multiplicative Effect |
+|--------------|----------------------|
+| browser-snapshot | RoleRefMap refs power recipe portal resolution; healing chain recovers from DOM drift between recipe versions |
+| browser-oauth3-gate | Recipe declares required_oauth3_scopes; gate G3 enforces scope subset before recipe execution begins |
+| browser-evidence | Execution trace becomes evidence input; evidence bundles enable infinite replay at $0.001/task |
+| browser-anti-detect | Humanized timing applied to recipe step execution; platform-specific patterns embedded per recipe |
+| browser-twin-sync | Cached recipes propagate to cloud twin via sync; cloud hit rate approaches local as recipes sync |
+| styleguide-first | Recipe preview UI must follow design token system; recipe editor needs accessible form controls |
+
+## 15) Cross-References
+
+- Skill: `browser-snapshot` -- RoleRefMap feeds recipe portal resolution and healing chain
+- Skill: `browser-oauth3-gate` -- scope enforcement before recipe execution
+- Skill: `browser-evidence` -- recipe execution produces evidence bundles
+- Skill: `browser-anti-detect` -- humanization timing per recipe step
+- Skill: `browser-twin-sync` -- recipe cache synced to cloud for delegation
+- Paper: `solace-cli/papers/04-triple-twin-orchestration.md` -- CPU+LLM decision at preview
+- Paper: `solace-cli/papers/09-software5-triangle.md` -- Browser vertex architecture
+- Paper: `solace-cli/papers/07-three-realms-architecture.md` -- Local + Browser + Cloud realms

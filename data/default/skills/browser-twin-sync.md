@@ -1,3 +1,5 @@
+# DNA: `twin(auth, capture, encrypt, transmit, verify, delegate) = zero-knowledge cloud sovereignty`
+
 <!-- QUICK LOAD (10-15 lines): Use this block for fast context; load full file for production.
 SKILL: browser-twin-sync v1.0.0
 PRIMARY_AXIOM: NORTHSTAR
@@ -662,3 +664,28 @@ glow_integration:
     - GLOW_FROM_TUNNEL_DOWNGRADE_ACCEPTED
   commit_tag_format: "feat(twin): {description} GLOW {total} [G:{g} L:{l} O:{o} W:{w}]"
 ```
+
+---
+
+## 15) Interaction Effects
+
+| Combined With | Multiplicative Effect |
+|--------------|----------------------|
+| browser-evidence | Evidence hash manifest enables sync verification without full bundle transfer; LOCAL evidence chain is authoritative |
+| browser-oauth3-gate | Delegation requires valid OAuth3 token; sync blocked without fresh authorization; token revocation stops cloud tasks |
+| browser-recipe-engine | Cached recipes propagate to cloud twin; cloud hit rate approaches local as recipe cache syncs |
+| browser-anti-detect | Anti-detect fingerprint profile synced to cloud; cloud execution uses identical behavioral fingerprint |
+| browser-snapshot | Snapshot state included in sync payload; cloud twin needs fresh snapshot context for delegated tasks |
+| styleguide-first | Twin sync status UI must follow design tokens; delegation dashboard needs accessible progress indicators |
+
+## 16) Cross-References
+
+- Skill: `browser-evidence` -- evidence hash manifest drives sync verification
+- Skill: `browser-oauth3-gate` -- OAuth3 authorization required for all sync and delegation
+- Skill: `browser-recipe-engine` -- recipe cache is primary sync payload content
+- Skill: `browser-anti-detect` -- fingerprint profile synced for cloud identity consistency
+- Skill: `browser-snapshot` -- snapshot state synced for cloud recipe execution context
+- Paper: `solace-cli/papers/56-twin-browser-security-hardening.md` -- twin browser security model
+- Paper: `solace-cli/papers/57-multi-platform-twin-interface.md` -- multi-platform twin architecture
+- Paper: `solace-cli/papers/07-three-realms-architecture.md` -- Local + Browser + Cloud realms
+- Paper: `solace-cli/papers/09-software5-triangle.md` -- Browser vertex architecture

@@ -1,0 +1,1 @@
+../../../stillwater/data/default/skills/prime-safety.md

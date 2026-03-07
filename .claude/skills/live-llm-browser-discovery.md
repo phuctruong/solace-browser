@@ -1,0 +1,1 @@
+../../../stillwater/data/default/skills/live-llm-browser-discovery.md

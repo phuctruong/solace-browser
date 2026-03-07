@@ -1,3 +1,5 @@
+# DNA: `gate(G1_exists, G2_not_expired, G3_scope_present, G4_step_up) = fail-closed authorization`
+
 <!-- QUICK LOAD (10-15 lines): Use this block for fast context; load full file for production.
 SKILL: browser-oauth3-gate v1.0.0
 PRIMARY_AXIOM: HIERARCHY
@@ -602,3 +604,27 @@ glow_integration:
     - GLOW_CLAIMED_WITHOUT_STEP_UP_TEST
   commit_tag_format: "feat(oauth3): {description} GLOW {total} [G:{g} L:{l} O:{o} W:{w}]"
 ```
+
+---
+
+## 14) Interaction Effects
+
+| Combined With | Multiplicative Effect |
+|--------------|----------------------|
+| browser-evidence | authorization_id anchors evidence bundles to gate enforcement; dual audit trail (OAuth3 + evidence) |
+| browser-recipe-engine | Recipe declares required_oauth3_scopes; gate enforces scope subset check before execution starts |
+| browser-snapshot | Gate must pass before any snapshot-guided action; snapshot refs are useless without authorization |
+| browser-anti-detect | Gate runs BEFORE humanization; only authorized actions get bezier paths and timing applied |
+| browser-twin-sync | Delegation requires valid OAuth3 token; cloud sync blocked without fresh authorization |
+| styleguide-first | Step-up authorization dialog must follow design tokens and accessibility requirements |
+
+## 15) Cross-References
+
+- Skill: `browser-evidence` -- evidence bundle includes oauth3_token_id and gate enforcement result
+- Skill: `browser-recipe-engine` -- recipes declare required scopes consumed by gate G3
+- Skill: `browser-snapshot` -- snapshot-guided actions gated by OAuth3 before execution
+- Skill: `browser-twin-sync` -- delegation contracts require valid OAuth3 authorization
+- Skill: `browser-anti-detect` -- gate runs before anti-detect humanization layer
+- Paper: `solace-cli/papers/19-esign-architecture.md` -- OAuth3-backed electronic signatures
+- Paper: `solace-cli/papers/09-software5-triangle.md` -- Browser vertex architecture
+- Paper: `solace-cli/papers/18-yinyang-competitive-moat.md` -- OAuth3 as competitive moat

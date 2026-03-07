@@ -1,3 +1,5 @@
+# DNA: `stealth(profile_seed, fingerprint, bezier, timing_jitter, keyboard_first) = human-indistinguishable agent`
+
 <!-- QUICK LOAD (10-15 lines): Use this block for fast context; load full file for production.
 SKILL: browser-anti-detect v1.0.0
 PRIMARY_AXIOM: DETERMINISM
@@ -711,3 +713,27 @@ glow_integration:
     - GLOW_CLAIMED_WITHOUT_BEZIER_PATH_TEST
   commit_tag_format: "feat(anti-detect): {description} GLOW {total} [G:{g} L:{l} O:{o} W:{w}]"
 ```
+
+---
+
+## 16) Interaction Effects
+
+| Combined With | Multiplicative Effect |
+|--------------|----------------------|
+| browser-recipe-engine | Humanized timing applied per recipe step; platform-specific patterns (Gmail C-key, LinkedIn scroll) embedded in recipes |
+| browser-snapshot | Snapshot bounding boxes feed humanized click targeting; jitter offsets relative to ref coordinates |
+| browser-oauth3-gate | Gate runs BEFORE anti-detect; only authorized actions receive humanization treatment |
+| browser-evidence | Stealth verification result and timing metadata captured in evidence bundle |
+| browser-twin-sync | Anti-detect profile synced to cloud twin; cloud execution uses same fingerprint as local |
+| styleguide-first | Fingerprint management UI must follow design tokens; profile editor needs accessible controls |
+
+## 17) Cross-References
+
+- Skill: `browser-recipe-engine` -- recipe execution delegates to anti-detect for humanized step timing
+- Skill: `browser-snapshot` -- snapshot bounding boxes used for bezier click targeting
+- Skill: `browser-evidence` -- stealth verification result included in evidence metadata
+- Skill: `browser-twin-sync` -- fingerprint profile synced to cloud for consistent identity
+- Skill: `browser-oauth3-gate` -- authorization required before humanization applied
+- Paper: `solace-cli/papers/18-yinyang-competitive-moat.md` -- custom browser ownership enables anti-detect
+- Paper: `solace-cli/papers/37-competitive-landscape.md` -- competitive landscape for browser agents
+- Paper: `solace-cli/papers/09-software5-triangle.md` -- Browser vertex architecture

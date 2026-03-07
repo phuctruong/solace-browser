@@ -1,3 +1,5 @@
+# DNA: `evidence(capture_before, execute, capture_after, diff, compress, sign, chain) = tamper-evident truth`
+
 <!-- QUICK LOAD (10-15 lines): Use this block for fast context; load full file for production.
 SKILL: browser-evidence v1.0.0
 PRIMARY_AXIOM: INTEGRITY
@@ -645,3 +647,28 @@ glow_integration:
     - GLOW_CLAIMED_WITHOUT_PZIP_VERIFICATION
   commit_tag_format: "feat(evidence): {description} GLOW {total} [G:{g} L:{l} O:{o} W:{w}]"
 ```
+
+---
+
+## 14) Interaction Effects
+
+| Combined With | Multiplicative Effect |
+|--------------|----------------------|
+| browser-oauth3-gate | OAuth3 authorization_id embedded in every evidence bundle; gate audit + evidence audit form dual audit trail |
+| browser-snapshot | Before/after DOM snapshots feed evidence diff computation; snapshot determinism guarantees reproducible diffs |
+| browser-recipe-engine | Recipe execution_trace becomes evidence input; evidence bundles enable $0.001 replay by proving identical outcomes |
+| browser-anti-detect | Anti-detect humanization timestamps captured in evidence; stealth verification result included in bundle metadata |
+| browser-twin-sync | pzip_hash enables zero-knowledge evidence verification between local and cloud without full bundle transfer |
+| styleguide-first | Evidence viewer UI must follow design token system; evidence diff display requires accessible contrast ratios |
+
+## 15) Cross-References
+
+- Skill: `browser-oauth3-gate` -- authorization record feeds evidence bundle (oauth3_token_id, scopes_used)
+- Skill: `browser-snapshot` -- DOM capture provides before/after states for diff
+- Skill: `browser-recipe-engine` -- recipe execution trace is primary evidence input
+- Skill: `browser-twin-sync` -- evidence hash manifest enables sync verification
+- Skill: `browser-anti-detect` -- stealth verification result stored in evidence metadata
+- Paper: `solace-cli/papers/09-software5-triangle.md` -- Browser vertex architecture
+- Paper: `solace-cli/papers/56-twin-browser-security-hardening.md` -- evidence security model
+- Paper: `solace-cli/sop-01-evidence-audit.md` -- evidence capture SOP
+- Paper: `solace-cli/papers/47-notebook-evidence-ledger.md` -- evidence artifact spec
