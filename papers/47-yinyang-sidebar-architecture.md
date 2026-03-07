@@ -1,10 +1,10 @@
 # Paper 47: Yinyang Sidebar Architecture — MV3 Side Panel
 # DNA: `sidebar(detect, suggest, run, chat) > webapp(pages, routes, dashboards)`
-# Forbidden: `INLINE_INJECTION | WEBAPP_DASHBOARD | KEEP_ALIVE_HACK | RAW_CDP_PROXY | RUNTIME_EVALUATE`
+# Forbidden: `INLINE_INJECTION | WEBAPP_DASHBOARD | KEEP_ALIVE_HACK | RAW_CDP_PROXY | RUNTIME_EVALUATE | UNSIGNED_APPROVAL | UNVERIFIED_RIPPLE | SILENT_EVIDENCE_LOSS | UNSEAL_BEFORE_SYNC | FREE_TIER_SYNC | AUTO_APPROVE`
 **Date:** 2026-03-07 | **Auth:** 65537 | **Status:** CANONICAL
 **Applies to:** solace-browser
 **Supersedes:** Paper 04 (yinyang-dual-rail-browser)
-**Cross-ref:** Paper 48 (companion-app), Paper 49 (cloud-tunnel-security), Paper 50 (uplift-tier-system)
+**Cross-ref:** Paper 48 (companion-app), Paper 49 (cloud-tunnel-security), Paper 50 (uplift-tier-system), Paper 05 (pzip-capture), Paper 06 (part11-evidence), Paper 07 (budget-enforcement), Paper 08 (cross-app-delight), Paper 40 (part11-selfcert)
 **LLM Consensus:** R1-R8 across ChatGPT + Gemini + Claude (8 rounds, 72 -> 86 -> 90+)
 
 ---
@@ -147,6 +147,12 @@ Single multiplexed WebSocket at `ws://localhost:8888/ws/yinyang`:
 | S->C | chat_reply | Yinyang response |
 | C->S | schedule | Create/update schedule |
 | S->C | credits | Balance update |
+| S->C | evidence_sealed | Evidence chain sealed for run |
+| S->C | evidence_synced | Evidence synced to cloud (paid) |
+| S->C | esign_created | eSignature generated on approval |
+| S->C | ripple_verified | PZip capture verified (100% RTC) |
+| S->C | budget_warning | Budget gate triggered (B1-B5) |
+| S->C | twin_status | Cloud twin state change |
 
 ## 7. Security Hardening (3/3 LLM Consensus)
 
@@ -187,7 +193,218 @@ MV3 service workers sleep after ~30s inactivity. Mitigation:
 | localhost:8791 | localhost:8888 | Web UI + REST API |
 | localhost:9222 | localhost:9222 (unchanged) | CDP (Playwright) |
 
-## 10. Migration Path
+## 10. Sidebar Intelligence: Prime Wiki + PZip Capture
+
+The sidebar's "Now" tab doubles as a capture interface for the community knowledge system.
+
+### Page Extraction Pipeline (Paper 05)
+
+```
+User navigates to docs.python.org
+  -> Service worker fires tabs.onUpdated
+  -> Side panel triggers PZip capture (if enabled)
+  -> Capture: DOM snapshot -> headings + body + meta + code blocks
+  -> Compress: PZip (target 66:1 GAR) or gzip fallback (2.7:1)
+  -> Verify: sha256(decompress(compressed)) == sha256(original)  [100% RTC]
+  -> Store: .ripple.pz (compressed) + .ripple.json (manifest) + .structure.json (sitemap)
+```
+
+### What Sidebar Shows
+
+| Element | Location | Content |
+|---------|----------|---------|
+| Capture status | "Now" tab header | "Capturing..." / "Verified" / "Error" |
+| Compression ratio | "Now" tab | "2.7:1 (1.2 KB from 3.3 KB)" |
+| Extract button | "Now" tab | "Extract to Community" -> POST /api/v1/prime-wiki/push |
+| Mermaid diagrams | "Now" tab | Rendered Mermaid from captured pages |
+| Community search | "More" tab | Search Prime Wiki snapshots |
+
+### Community Browsing
+
+- **Free tier:** Extract pages, contribute to community DB, pull others' snapshots
+- **Paid tier:** All free features + cloud sync of local ripple database
+- **Push:** Sidebar -> PZip compress -> POST to Firestore (doc_id = sha256(url))
+- **Pull:** Search -> GET /api/v1/prime-wiki/pull?url_hash=X -> decompress -> render
+- **Offline codebooks:** Bundle snapshots for offline study (Tower 29, Floor 7)
+
+### Forbidden States
+
+- `UNVERIFIED_RIPPLE` — Never display a snapshot without 100% RTC verification
+- `ZLIB_FALLBACK` — PZip is the only compression method (Fallback Ban)
+- `ANONYMOUS_PUSH` — Community contributions require authenticated user
+
+## 11. Evidence Chain Display (FDA Part 11)
+
+The sidebar is the primary witness for Part 11 compliance (Paper 06, Paper 40).
+
+### Evidence in Sidebar
+
+| Tab | Evidence Feature |
+|-----|-----------------|
+| Runs | Seal status per run: "pending" / "preview_ready" / "approved" / "sealed" |
+| Runs | Click "View Evidence" -> hash chain viewer (entry N -> N-1 -> root) |
+| Runs | Screenshot timeline (before/after each action) |
+| Chat | Approval decisions are Part 11 logged with timestamp |
+| More | Evidence export button (ZIP with verification script) |
+
+### Hash Chain in Sidebar
+
+```
+Each evidence entry = {
+  hash: sha256(payload + prev_hash + timestamp),
+  prev_hash: link to previous entry,
+  timestamp: UTC ISO-8601,
+  action_type: "screenshot" | "approval" | "execution" | "seal",
+  payload: action-specific data
+}
+```
+
+- Chain is append-only, written per-step (not at end of run)
+- Two streams share one run_id: evidence_chain.jsonl + oauth3_audit.jsonl
+- Sidebar validates chain integrity on evidence viewer open
+- Tamper detected -> red alert in sidebar header
+
+### eSign from Sidebar (Paper 40)
+
+When a logged-in user clicks "Approve" in the sidebar:
+
+```
+eSignature = sha256(user_id + timestamp_utc + meaning + record_hash)
+  meaning: "reviewed" | "approved" | "authored" | "responsible" (Part 11 §11.50)
+  Non-transferable: signature bound to user identity (Part 11 §11.70)
+```
+
+- **Logged-in users:** All approvals generate Part 11 compliant e-signatures
+- **Guest users:** Actions logged but unsigned (audit trail only)
+- Signature visible in evidence viewer with signer name, time, meaning
+- Export package includes verification script (Python/sha256sum, no Solace install needed)
+
+### Forbidden States
+
+- `UNSIGNED_APPROVAL` — Logged-in users MUST generate e-signature on approve
+- `RETROACTIVE_EVIDENCE` — Evidence captured at event time, never after
+- `SEAL_BEFORE_COMPLETE` — Evidence seal is the final step per run
+- `SILENT_EVIDENCE_LOSS` — Sync failure -> show error, retry (never drop)
+
+## 12. Budget Enforcement in Sidebar (Paper 07)
+
+Budget gates are fail-closed. The sidebar makes budget state visible.
+
+### Budget Indicators
+
+| Indicator | Location | Trigger |
+|-----------|----------|---------|
+| Credit balance | Header bar | Always visible ($0.42 remaining) |
+| Action budget | "Now" tab per app | "3/10 sends used today" progress bar |
+| Cost estimate | Run confirmation | "This will cost ~$0.08" before approval |
+| Budget warning | Modal overlay | "Budget exceeded — blocked" (B1-B5 gate fail) |
+| Daily spending | "Runs" tab footer | "$0.31 today | $56.25 value saved" |
+
+### Gate Sequence (Paper 07)
+
+```
+B1: Is user authenticated?  -> BLOCKED if no
+B2: Is app within scope?    -> BLOCKED if no
+B3: Is action budget OK?    -> BLOCKED if exceeded
+B4: Is financial budget OK? -> BLOCKED if exceeded
+B5: Is step-up needed?      -> STEP_UP prompt if high-risk
+```
+
+All gates fail-closed. Sidebar shows which gate blocked and why.
+
+## 13. Cloud Twin Status in Sidebar (Paper 49)
+
+Paid users can monitor their cloud twin browser from the local sidebar.
+
+### Twin Status Display
+
+| Element | Location | Content |
+|---------|----------|---------|
+| Twin indicator | Header | Cloud icon: "Twin active" / "Twin idle" / "No twin" |
+| Twin runs | "Runs" tab | Cloud-executed runs marked with cloud icon |
+| Evidence sync | "Runs" tab | "Synced" / "Syncing..." / "Local only" per run |
+| Start twin | "More" tab | "Start Cloud Twin" button (Pro+ users) |
+
+### Sync for Paid Users
+
+- **Pro ($28/mo):** Evidence + chat history + settings synced to solaceagi.com
+- **Team ($88/mo):** + shared workspace, team evidence, shared schedules
+- **Enterprise ($188/mo):** + SSO, unlimited retention, SOC2 audit export
+- **Free ($0):** All data stays local, no cloud sync
+
+### Sync Mechanism
+
+```
+Evidence bundles encrypted with AES-256-GCM (user's OAuth3-derived key)
+  -> POST /api/v1/browser/evidence/sync (callback from Cloud Run Job)
+  -> Sidebar shows sync status: "local" | "syncing" | "synced" | "error"
+  -> Error: retry on next session (never silently drop data)
+```
+
+### What Syncs
+
+| Data | Free | Pro+ |
+|------|------|------|
+| Evidence chains | Local only | Cloud + local |
+| Chat history | Local only | Cloud + local |
+| Settings/theme | Local only | Cloud + local |
+| Schedule configs | Local only | Cloud + local |
+| Prime Wiki ripples | Community push only | + personal backup |
+| Recipes | Local only | Cloud catalog |
+
+### Forbidden States
+
+- `UNSEAL_BEFORE_SYNC` — Local seal must complete before cloud sync starts
+- `UNENCRYPTED_SYNC` — All evidence encrypted before transmission
+- `FREE_TIER_SYNC` — Free users never sync to cloud (explicit design choice)
+
+## 14. Cross-App Orchestration (Paper 08)
+
+The sidebar enables multi-app workflow visibility.
+
+| Feature | Sidebar Tab | Description |
+|---------|------------|-------------|
+| Partner apps | "Now" tab | Suggested chain workflows for current app |
+| Cross-app queue | "Runs" tab | Approval requests from partner apps |
+| Delight engine | All tabs | Celebrations on milestones (Paper 08) |
+
+### Anti-Clippy (Absolute Rule)
+
+The sidebar NEVER auto-runs anything. Detect, suggest, wait for explicit approval.
+- No auto-approve path (timeout = deny, Paper 07)
+- No auto-run on page navigation
+- No auto-schedule without user action
+
+## 15. Competitive Position (Cross-Checked March 2026)
+
+| Feature | Solace Sidebar | OpenAI Operator | Google Mariner | Anthropic Cowork | Browser-Use | Bardeen |
+|---------|---------------|-----------------|----------------|-----------------|-------------|---------|
+| Execution | Local-first | Cloud-only | Cloud-only | Local VM | SDK/headless | Extension |
+| Sidebar | MV3 Side Panel | No sidebar | No sidebar | No sidebar | No sidebar | Injected overlay |
+| OAuth delegation | OAuth3 (scoped, TTL, revocable) | None | UI-level consent | Folder sandbox | None | None |
+| Evidence trail | SHA-256 hash chain (Part 11) | Org audit logs only | Timestamps + DOM | None | None | None |
+| Deterministic replay | Yes (recipe system) | No (re-runs LLM) | Partial (Teach & Repeat) | No | No | Partial |
+| Cost per replay | $0.001 (80x cheaper) | ~$0.08 (full LLM) | Unknown | ~$0.08 | ~$0.08 | Credit-based |
+| eSign | SHA-256 Part 11 compliant | No | No | No | No | No |
+| Community browsing | Prime Wiki (free) | No | No | No | No | No |
+| Pricing | $0-188/mo | $20-200/mo | $250/mo | $20-200/mo | Free/paid | $0-50/mo |
+| Browser compat | Chrome, Edge (Arc: no sidePanel) | Cloud browser | Cloud browser | macOS/Windows VM | Chromium | Chrome, Edge, Brave |
+
+### Key Differentiators (No Competitor Has)
+
+1. **Hash-chained evidence** — tamper-evident, FDA Part 11 ready
+2. **Deterministic recipe replay** — LLM called once at preview, $0.001 on replay
+3. **OAuth3 scoped delegation** — TTL, revocation, step-up auth
+4. **Community browsing** — Prime Wiki + PZip compression
+5. **eSign from sidebar** — Part 11 §11.50/§11.70 compliant signatures
+
+### Known Limitation
+
+- **Arc browser** does not support `chrome.sidePanel` — extension fails silently
+- **Brave** has rough sidePanel integration (panel may disappear)
+- Panel width not programmatically controllable (~320px min, ~400px default)
+
+## 16. Migration Path
 
 | Phase | Scope | Duration |
 |-------|-------|----------|
@@ -197,7 +414,7 @@ MV3 service workers sleep after ~30s inactivity. Mitigation:
 | 3: Kill Webapp | Delete 15+ HTML pages, migrate features | Weeks 9-10 |
 | 4: Hardening | a11y, i18n, error recovery, auto-update | Weeks 11-12 |
 
-## 11. What Dies
+## 17. What Dies
 
 | Page | Replacement |
 |------|-------------|
@@ -209,7 +426,7 @@ MV3 service workers sleep after ~30s inactivity. Mitigation:
 
 **Survives:** `/agents` docs page, `/api/*` endpoints, error pages (404, 500)
 
-## 12. Spike Checklist (Phase 0)
+## 18. Spike Checklist (Phase 0)
 
 - [ ] chrome.sidePanel.open() works via Playwright
 - [ ] Side panel remains open across tab navigations
