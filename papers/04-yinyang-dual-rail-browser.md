@@ -1,6 +1,7 @@
-# Paper 04: Yinyang Dual Rail — Browser Integration
+# Paper 04: Yinyang Dual Rail — Browser Integration [SUPERSEDED]
 # DNA: `top_rail(status) + bottom_rail(chat+approve) = anti-clippy compliant UI`
-**Date:** 2026-03-01 | **Auth:** 65537 | **Status:** CANONICAL
+# SUPERSEDED BY: Paper 47 (yinyang-sidebar-architecture) — MV3 Side Panel replaces DOM injection
+**Date:** 2026-03-01 | **Auth:** 65537 | **Status:** SUPERSEDED
 **Applies to:** solace-browser
 **Cross-ref:** solaceagi/papers/22-yinyang-chat-rail-proposal.md, 25-yinyang-chat-rail-spec.md
 

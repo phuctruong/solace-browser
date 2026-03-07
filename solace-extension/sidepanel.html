@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yinyang</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <header class="yy-header">
+    <div class="yy-logo">
+      <span class="yy-symbol">☯</span>
+      <span class="yy-title">Yinyang</span>
+    </div>
+    <div class="yy-status" id="connection-status" title="API connection">
+      <span class="yy-dot"></span>
+    </div>
+  </header>
+
+  <nav class="yy-tabs" role="tablist">
+    <button class="yy-tab active" role="tab" aria-selected="true" data-tab="now">Now</button>
+    <button class="yy-tab" role="tab" aria-selected="false" data-tab="runs">Runs</button>
+    <button class="yy-tab" role="tab" aria-selected="false" data-tab="chat">Chat</button>
+    <button class="yy-tab" role="tab" aria-selected="false" data-tab="more">More</button>
+  </nav>
+
+  <main class="yy-content">
+    <!-- NOW TAB -->
+    <section class="yy-panel active" id="panel-now" role="tabpanel">
+      <div class="yy-current-page" id="current-page">
+        <span class="yy-page-label">Current page</span>
+        <span class="yy-page-url" id="page-url">—</span>
+      </div>
+      <div class="yy-matched-apps" id="matched-apps">
+        <div class="yy-empty-state">
+          <p>No apps match this page</p>
+          <p class="yy-hint">Navigate to a supported site to see available automations</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- RUNS TAB -->
+    <section class="yy-panel" id="panel-runs" role="tabpanel">
+      <div class="yy-section">
+        <h3 class="yy-section-title">Approval Queue</h3>
+        <div id="approval-queue" class="yy-list">
+          <div class="yy-empty-state">No pending approvals</div>
+        </div>
+      </div>
+      <div class="yy-section">
+        <h3 class="yy-section-title">Recent Runs</h3>
+        <div id="recent-runs" class="yy-list">
+          <div class="yy-empty-state">No recent runs</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAT TAB -->
+    <section class="yy-panel" id="panel-chat" role="tabpanel">
+      <div class="yy-chat-messages" id="chat-messages">
+        <div class="yy-chat-bubble yy-assistant">
+          <p>Hi! I'm Yinyang, your AI browsing companion. How can I help?</p>
+        </div>
+      </div>
+      <div class="yy-chat-input">
+        <input type="text" id="chat-input" placeholder="Ask Yinyang..." aria-label="Chat message">
+        <button id="chat-send" aria-label="Send message">→</button>
+      </div>
+    </section>
+
+    <!-- MORE TAB -->
+    <section class="yy-panel" id="panel-more" role="tabpanel">
+      <div class="yy-section">
+        <h3 class="yy-section-title">Quick Links</h3>
+        <a href="#" class="yy-link" id="link-settings">Settings</a>
+        <a href="#" class="yy-link" id="link-evidence">Evidence Viewer</a>
+        <a href="#" class="yy-link" id="link-apps">App Store</a>
+        <a href="#" class="yy-link" id="link-docs">Documentation</a>
+      </div>
+      <div class="yy-section">
+        <h3 class="yy-section-title">Status</h3>
+        <div class="yy-status-grid" id="status-grid">
+          <div class="yy-stat">
+            <span class="yy-stat-label">API</span>
+            <span class="yy-stat-value" id="stat-api">—</span>
+          </div>
+          <div class="yy-stat">
+            <span class="yy-stat-label">Apps</span>
+            <span class="yy-stat-value" id="stat-apps">—</span>
+          </div>
+          <div class="yy-stat">
+            <span class="yy-stat-label">Version</span>
+            <span class="yy-stat-value">0.1.0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

@@ -20,10 +20,13 @@
 | `09-oauth3-auth-proxy.md` | 3-layer defense: port 9222 auth proxy → hidden Chrome port 9225 |
 | `10-capture-pipeline.md` | page.on('load') → DOM snapshot → Prime Mermaid → PZip 100% RTC |
 | `11-app-inbox-outbox.md` | Universal folder contract: inbox (user teaches) → outbox (AI shows work) |
-| `12-yinyang-dual-rail.md` | Top rail (32px status) + bottom rail (36-300px chat) integration with apps |
+| `12-yinyang-dual-rail.md` | Top rail (32px status) + bottom rail (36-300px chat) [SUPERSEDED by D23] |
 | `13-budget-gates.md` | B1-B5 fail-closed budget gate sequence with MIN-cap resolution |
 | `14-preview-approve-execute.md` | Full app lifecycle: intent → budget → preview → approve → seal → execute → evidence |
 | `15-competitive-position.md` | 8 structural advantages vs 19 competitors, feature matrix |
+| `23-three-surface-architecture.md` | Companion + Sidebar + API: 3 surfaces, port map, before/after (Paper 47) |
+| `24-sidebar-tab-flow.md` | Tab state machine, app detection sequence, run flow (Paper 47) |
+| `25-ipc-native-messaging.md` | Token bootstrap, security boundaries, process lifecycle (Paper 47, 48) |
 
 ---
 
