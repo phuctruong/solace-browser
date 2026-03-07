@@ -1,5 +1,6 @@
 (function() {
     if (document.getElementById('solace-top-rail')) return;
+    if (document.getElementById('solace-app-bookmark')) return;
 
     /* ── Top Rail: Value Dashboard + Delight Engine ─────────────────────
        Shows: [logo] [dot] [STATE] [app] | [rotating stats + delight]
@@ -10,6 +11,69 @@
     var rail = document.createElement('div');
     rail.id = 'solace-top-rail';
     rail.style.cssText = 'position:fixed;top:0;left:0;right:0;height:32px;background:linear-gradient(90deg,#081019 0%,#0d1b2a 50%,#081019 100%);color:#fff;display:flex;align-items:center;padding:0 12px;font-family:system-ui;font-size:12px;z-index:99999;box-shadow:0 2px 8px rgba(0,0,0,0.4);';
+    var SOLACE_APP_URL = 'https://www.solaceagi.com/home';
+
+    function createAppBookmarkButton() {
+        var btn = document.createElement('button');
+        btn.id = 'solace-app-bookmark';
+        btn.type = 'button';
+        btn.title = 'Open Solace App';
+        btn.setAttribute('aria-label', 'Open Solace App');
+        btn.style.cssText = 'background:none;border:none;cursor:pointer;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;color:#64c4ff;font-size:16px;line-height:1;opacity:0.95;transition:opacity 0.2s, transform 0.2s;';
+        btn.textContent = '\u262F';
+        btn.addEventListener('mouseenter', function() {
+            btn.style.opacity = '1';
+            btn.style.transform = 'scale(1.06)';
+        });
+        btn.addEventListener('mouseleave', function() {
+            btn.style.opacity = '0.95';
+            btn.style.transform = 'scale(1)';
+        });
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(SOLACE_APP_URL, '_blank', 'noopener,noreferrer');
+        });
+        return btn;
+    }
+
+    function findFirst(selectors) {
+        for (var i = 0; i < selectors.length; i++) {
+            var el = document.querySelector(selectors[i]);
+            if (el) return el;
+        }
+        return null;
+    }
+
+    function tryInsertBookmarkBetweenReloadAndAddress() {
+        if (document.getElementById('solace-app-bookmark')) return true;
+        var reload = findFirst([
+            'button[aria-label*="Reload" i]',
+            'button[title*="Reload" i]',
+            'button[data-testid*="reload" i]',
+            '[role="button"][aria-label*="Reload" i]'
+        ]);
+        var address = findFirst([
+            'input[aria-label*="address" i]',
+            'input[placeholder*="address" i]',
+            'input[aria-label*="url" i]',
+            'input[type="url"]',
+            'input[name*="url" i]',
+            'input[id*="url" i]'
+        ]);
+        if (!reload || !address || !reload.parentElement || !address.parentElement) return false;
+
+        var parent = reload.parentElement;
+        if (address.parentElement === parent) {
+            parent.insertBefore(createAppBookmarkButton(), address);
+            return true;
+        }
+        if (address.parentElement.parentElement === parent) {
+            parent.insertBefore(createAppBookmarkButton(), address.parentElement);
+            return true;
+        }
+        return false;
+    }
 
     /* Left: Home button + State */
     var leftGroup = document.createElement('div');
@@ -38,6 +102,13 @@
         window.location.href = homeUrl;
     });
     leftGroup.appendChild(homeBtn);
+
+    /* Preferred placement: browser toolbar between Reload and address field. */
+    var insertedInBrowserNav = tryInsertBookmarkBetweenReloadAndAddress();
+    if (!insertedInBrowserNav) {
+        /* Fallback placement: keep bookmark visible in the Solace top rail. */
+        leftGroup.appendChild(createAppBookmarkButton());
+    }
 
     /* Separator */
     var sep = document.createElement('span');
