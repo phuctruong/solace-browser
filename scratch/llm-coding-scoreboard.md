@@ -13,12 +13,13 @@ LEVEL 3 ████████████████████████
 LEVEL 4 ████████████████████████████████████░░░░░  R4: 90/100  PLATINUM
 LEVEL 5 ████████████████████████████████████████░  R5: 92/100  DIAMOND
 LEVEL 6 ████████████████████████████████████████░  R6: 89/100  DIAMOND (skills loaded!)
-LEVEL 7 ████████████████████████████████████████░  R7: 86/100  GOLD (PATH TO 100) <<<
+LEVEL 7 ████████████████████████████████████████░  R7: 86/100  GOLD (PATH TO 100)
+LEVEL 8 ████████████████████████████████████████░  R8: 85/100  GOLD (IPC + errors + first-run) <<<
 ```
 
-### Current Rank: GOLD (86/100 — PATH TO 100 methodology exposed hidden gaps)
-### Next Milestone: PLATINUM (90/100 all 3 LLMs) — apply R7 consensus fixes
-### R7: ChatGPT 90 | Gemini 91 | Claude 77 (honest scoring)
+### Current Rank: GOLD (85/100 consensus — deeper gaps exposed each round)
+### Next Milestone: PLATINUM (90/100 consensus)
+### R8: ChatGPT 92 | Gemini 93 | Claude 71 (honest gap scoring)
 
 ---
 
@@ -172,22 +173,41 @@ honest 77 — revealing 13 points of hidden issues in operational security and e
 **Disputed findings:** 6 (Lamport clock, side-effect replay, semver, operational stack, PII redaction, HMAC chain)
 **All 11 findings applied** to architecture doc as new sections
 
+### Round 8 — "IPC + Error Codes + First-Run" (Score: 85, -1)
+
+Applied all R7 consensus fixes. R8 added 7 new architecture sections (IPC schema,
+error codes, first-run ceremony, MVP monitoring, LLM repair re-seal, Merkle tree,
+per-step timeout). Claude scored even lower (71) as PATH TO 100 exposes deeper gaps.
+
+| Category | ChatGPT | Gemini | Claude | Consensus |
+|----------|---------|--------|--------|-----------|
+| Architecture | 94 | 96 | 78 | 89 |
+| Security | 95 | 98 | 74 | 89 |
+| Data Integrity | 96 | 94 | 82 | 91 |
+| Recipe Engine | 92 | 92 | 76 | 87 |
+| Implementation | 89 | 95 | 65 | 83 |
+| UX | 90 | 92 | 60 | 81 |
+| Operational | 88 | 90 | 63 | 80 |
+| **OVERALL** | **92** | **93** | **71** | **85** |
+
+**ChatGPT ceiling: 97** — "remaining gap is formalization, not ideas"
+**Gemini ceiling: 98** — "2% is the Distributed Systems Tax (nondeterministic DOM)"
+**Claude ceiling: 88** — "requires protobuf impl, working first-run, validated thresholds"
+**9 consensus findings** applied, 7 new architecture sections added
+
 ---
 
-## CATEGORY LEADERBOARD (Final R7)
+## CATEGORY LEADERBOARD (Final R8)
 
-| Category | R1 | R2 | R3 | R4 | R5 | R6 | R7 | Journey | Status |
-|----------|----|----|-----|-----|-----|-----|-----|---------|--------|
-| Architecture | 77 | 85 | 90 | 92 | 95 | 90 | 90 | +13 | PLATINUM |
-| Security | 63 | 81 | 87 | 92 | 95 | 89 | 89 | +26 | GOLD |
-| UX | 69 | 79 | 85 | 89 | 92 | 87 | 91 | +22 | PLATINUM |
-| Business | 76 | 83 | 86 | 90 | 92 | 88 | 91 | +15 | PLATINUM |
-| Competitive | 79 | 82 | 87 | 90 | 91 | 89 | 92 | +13 | PLATINUM |
-| Scalability | 78 | 81 | 86 | 89 | 92 | 88 | 89 | +11 | GOLD |
-| Implementation | 65 | 75 | 82 | 88 | 91 | 87 | 84 | +19 | GOLD |
-| Evidence Chain | — | — | — | — | — | — | 84 | NEW | GOLD |
-| Recipe Engine | — | — | — | — | — | — | 82 | NEW | GOLD |
-| Operational Sec | — | — | — | — | — | — | 61 | NEW | BRONZE |
+| Category | R1 | R5 | R7 | R8 | Journey | Status |
+|----------|----|----|-----|-----|---------|--------|
+| Architecture | 77 | 95 | 90 | 89 | +12 | GOLD |
+| Security | 63 | 95 | 89 | 89 | +26 | GOLD |
+| Data Integrity | — | — | 84 | 91 | NEW+7 | PLATINUM |
+| Recipe Engine | — | — | 82 | 87 | NEW+5 | GOLD |
+| UX | 69 | 92 | 91 | 81 | +12 | GOLD |
+| Implementation | 65 | 91 | 84 | 83 | +18 | GOLD |
+| Operational | — | — | 61 | 80 | NEW+19 | GOLD |
 
 ---
 
@@ -370,4 +390,4 @@ The apps can review THEMSELVES:
 
 ---
 
-*Updated: 2026-03-07 | Round 7 + PATH TO 100 | Apps → solace-cli (private) | Next: Apply R7 fixes → R8 push to 95+*
+*Updated: 2026-03-07 | Round 8 complete | ChatGPT 92, Gemini 93, Claude 71 | Next: R9 push to close Claude gap*
