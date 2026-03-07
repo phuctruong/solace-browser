@@ -724,6 +724,17 @@ class SolaceBrowser:
             '--disable-features=ChromeWhatsNewUI,PrivacySandboxSettings4,NtpModules',
             '--disable-background-networking',
         ]
+
+        # Yinyang sidebar extension (bundled, not a store extension)
+        extension_path = Path(__file__).parent / 'solace-extension'
+        use_extension = extension_path.exists() and not self.headless
+        if use_extension:
+            launch_args.extend([
+                f'--load-extension={extension_path.resolve()}',
+                f'--disable-extensions-except={extension_path.resolve()}',
+            ])
+            logger.info("Yinyang sidebar extension loaded from: %s", extension_path)
+
         if not self.headless:
             launch_args.extend([
                 '--disable-features=UseSkiaRenderer',
@@ -735,38 +746,73 @@ class SolaceBrowser:
             else:
                 launch_args.append('--start-maximized')
 
-        try:
-            self.browser = await playwright.chromium.launch(
-                headless=self.headless,
-                args=launch_args,
-            )
-        except (OSError, RuntimeError, ConnectionError) as exc:
-            if not _is_missing_playwright_executable_error(exc):
-                raise
-            logger.warning(
-                "Playwright Chromium executable missing. Attempting one-time install: %s",
-                exc,
-            )
-            _install_playwright_browser("chromium")
-            self.browser = await playwright.chromium.launch(
-                headless=self.headless,
-                args=launch_args,
-            )
+        # Extensions require persistent context (launch() doesn't support --load-extension)
+        if use_extension:
+            user_data_dir = Path.home() / '.solace' / 'browser-profile'
+            user_data_dir.mkdir(parents=True, exist_ok=True)
 
-        # Create initial page with optional session state
-        context_options = {}
-        if not self.headless:
-            context_options['no_viewport'] = True
+            context_options = {}
+            if not self.headless:
+                context_options['no_viewport'] = True
+            async with self._session_lock:
+                session_path = Path(self.session_file)
+                if session_path.exists():
+                    logger.info("Loading saved session from: %s", self.session_file)
+                    context_options['storage_state'] = self.session_file
 
-        # Load saved session if it exists (lock prevents race with concurrent save)
-        async with self._session_lock:
-            session_path = Path(self.session_file)
-            if session_path.exists():
-                logger.info(f"Loading saved session from: {self.session_file}")
-                context_options['storage_state'] = self.session_file
+            try:
+                self.context = await playwright.chromium.launch_persistent_context(
+                    str(user_data_dir),
+                    headless=False,
+                    args=launch_args,
+                    **context_options,
+                )
+            except (OSError, RuntimeError, ConnectionError) as exc:
+                if not _is_missing_playwright_executable_error(exc):
+                    raise
+                logger.warning("Playwright Chromium missing. Installing: %s", exc)
+                _install_playwright_browser("chromium")
+                self.context = await playwright.chromium.launch_persistent_context(
+                    str(user_data_dir),
+                    headless=False,
+                    args=launch_args,
+                    **context_options,
+                )
+            self.browser = self.context.browser
+            page = self.context.pages[0] if self.context.pages else await self.context.new_page()
+        else:
+            try:
+                self.browser = await playwright.chromium.launch(
+                    headless=self.headless,
+                    args=launch_args,
+                )
+            except (OSError, RuntimeError, ConnectionError) as exc:
+                if not _is_missing_playwright_executable_error(exc):
+                    raise
+                logger.warning(
+                    "Playwright Chromium executable missing. Attempting one-time install: %s",
+                    exc,
+                )
+                _install_playwright_browser("chromium")
+                self.browser = await playwright.chromium.launch(
+                    headless=self.headless,
+                    args=launch_args,
+                )
 
-        self.context = await self.browser.new_context(**context_options)
-        page = await self.context.new_page()
+            # Create initial page with optional session state
+            context_options = {}
+            if not self.headless:
+                context_options['no_viewport'] = True
+
+            # Load saved session if it exists (lock prevents race with concurrent save)
+            async with self._session_lock:
+                session_path = Path(self.session_file)
+                if session_path.exists():
+                    logger.info(f"Loading saved session from: {self.session_file}")
+                    context_options['storage_state'] = self.session_file
+
+            self.context = await self.browser.new_context(**context_options)
+            page = await self.context.new_page()
         page_id = str(uuid.uuid4())
         self.pages[page_id] = page
         self.current_page = page
