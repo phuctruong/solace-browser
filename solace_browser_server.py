@@ -2264,6 +2264,11 @@ class SolaceBrowserServer:
         self.app.router.add_get('/agents.json', self._handle_agents_json)
         self.app.router.add_post('/api/escalate', self._handle_escalate)
         self.app.router.add_post('/api/estimate', self._handle_estimate)
+        # Yinyang sidebar — app listing + run trigger
+        self.app.router.add_get('/api/apps', self._handle_apps_list)
+        self.app.router.add_post('/api/apps/{app_id}/run', self._handle_apps_run)
+        self.app.router.add_get('/api/models', self._handle_models_list)
+        self.app.router.add_get('/api/apps/{app_id}/benchmarks', self._handle_app_benchmarks)
         self.app.router.add_post('/api/recipes/match', self._handle_recipes_match)
         self.app.router.add_post('/api/evidence/search', self._handle_evidence_search)
         # E-sign + evidence verify (FDA Part 11 §11.100)
@@ -2852,6 +2857,177 @@ class SolaceBrowserServer:
             },
             "api_methods": api_methods,
             "capabilities": capabilities,
+        })
+
+    async def _handle_apps_list(self, request):
+        """GET /api/apps — list installed apps for sidebar."""
+        apps_dir = Path(__file__).parent / "data" / "default" / "apps"
+        apps = []
+        if apps_dir.is_dir():
+            for app_dir in sorted(apps_dir.iterdir()):
+                manifest_path = app_dir / "manifest.yaml"
+                if not manifest_path.exists():
+                    continue
+                try:
+                    import yaml
+                    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+                except Exception:
+                    # Fall back to basic parsing if PyYAML not available
+                    manifest = self._parse_yaml_basic(manifest_path)
+                if manifest and isinstance(manifest, dict):
+                    apps.append({
+                        "id": manifest.get("id", app_dir.name),
+                        "name": manifest.get("name", app_dir.name),
+                        "description": manifest.get("description", ""),
+                        "category": manifest.get("category", ""),
+                        "site": manifest.get("site", ""),
+                        "status": manifest.get("status", "available"),
+                        "tier": manifest.get("tier", "free"),
+                        "safety": manifest.get("safety", ""),
+                    })
+        return web.json_response(apps)
+
+    @staticmethod
+    def _parse_yaml_basic(path: Path) -> dict:
+        """Minimal YAML parser for flat key-value manifests (no PyYAML dependency)."""
+        result = {}
+        try:
+            for line in path.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or line.startswith("-"):
+                    continue
+                if ":" in line:
+                    key, _, value = line.partition(":")
+                    key = key.strip()
+                    value = value.strip().strip('"').strip("'")
+                    if key and not key.startswith(" "):
+                        result[key] = value
+        except (OSError, UnicodeDecodeError):
+            pass
+        return result
+
+    async def _handle_apps_run(self, request):
+        """POST /api/apps/{app_id}/run — trigger app execution from sidebar."""
+        app_id = request.match_info["app_id"]
+        apps_dir = Path(__file__).parent / "data" / "default" / "apps"
+        app_dir = apps_dir / app_id
+
+        if not app_dir.is_dir():
+            return web.json_response(
+                {"error": "app_not_found", "app_id": app_id}, status=404
+            )
+
+        # Check for recipe.json in the app directory
+        recipe_path = app_dir / "recipe.json"
+        if not recipe_path.exists():
+            return web.json_response(
+                {"error": "no_recipe", "app_id": app_id,
+                 "detail": "App has no recipe.json — cannot auto-run"},
+                status=400,
+            )
+
+        try:
+            recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError) as e:
+            return web.json_response(
+                {"error": "recipe_load_error", "detail": str(e)}, status=500
+            )
+
+        # Return the recipe for the sidebar to display/confirm
+        # Actual execution requires OAuth3 approval flow via /run-recipe
+        return web.json_response({
+            "status": "preview_ready",
+            "app_id": app_id,
+            "recipe": recipe,
+            "message": f"Recipe loaded for {app_id}. Approve to execute.",
+        })
+
+    async def _handle_models_list(self, request):
+        """GET /api/models — detect available LLM backends."""
+        import shutil
+        models = []
+
+        # Check BYOK API keys
+        byok_keys = {
+            "anthropic": "ANTHROPIC_API_KEY",
+            "openai": "OPENAI_API_KEY",
+            "google": "GOOGLE_API_KEY",
+        }
+        for provider, env_var in byok_keys.items():
+            if os.environ.get(env_var):
+                models.append({
+                    "id": f"byok-{provider}",
+                    "provider": provider,
+                    "source": "byok",
+                    "name": f"{provider.title()} API (BYOK)",
+                    "available": True,
+                    "tier_required": "free",
+                })
+
+        # Check local CLI tools
+        cli_tools = {
+            "claude": "Claude Code CLI",
+            "gemini": "Gemini CLI",
+            "codex": "Codex CLI",
+            "antigravity": "Antigravity",
+            "ollama": "Ollama (local)",
+        }
+        for cmd, name in cli_tools.items():
+            if shutil.which(cmd):
+                models.append({
+                    "id": f"cli-{cmd}",
+                    "provider": cmd,
+                    "source": "cli",
+                    "name": name,
+                    "available": True,
+                    "tier_required": "free",
+                })
+
+        # Solace Managed (always listed, availability depends on tier)
+        models.append({
+            "id": "solace-managed",
+            "provider": "solace",
+            "source": "managed",
+            "name": "Solace Managed (auto-uplifted)",
+            "available": True,
+            "tier_required": "starter",
+            "uplift": True,
+            "description": "Same base models + automatic inbox injection for +3-6% quality",
+        })
+
+        return web.json_response({"models": models, "count": len(models)})
+
+    async def _handle_app_benchmarks(self, request):
+        """GET /api/apps/{app_id}/benchmarks — get benchmark data for an app."""
+        app_id = request.match_info["app_id"]
+        apps_dir = Path(__file__).parent / "data" / "default" / "apps"
+        benchmark_path = apps_dir / app_id / "benchmarks.yaml"
+
+        if not (apps_dir / app_id).is_dir():
+            return web.json_response(
+                {"error": "app_not_found", "app_id": app_id}, status=404
+            )
+
+        if not benchmark_path.exists():
+            return web.json_response({
+                "app_id": app_id,
+                "benchmarks": {},
+                "message": "No benchmark data yet — run the app to generate benchmarks",
+            })
+
+        try:
+            import yaml
+            benchmarks = yaml.safe_load(benchmark_path.read_text(encoding="utf-8"))
+        except ImportError:
+            benchmarks = self._parse_yaml_basic(benchmark_path)
+        except (OSError, UnicodeDecodeError) as e:
+            return web.json_response(
+                {"error": "benchmark_load_error", "detail": str(e)}, status=500
+            )
+
+        return web.json_response({
+            "app_id": app_id,
+            "benchmarks": benchmarks if isinstance(benchmarks, dict) else {},
         })
 
     async def _handle_health(self, request):

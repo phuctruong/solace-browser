@@ -6,10 +6,29 @@
  * Design for resurrection, not prevention.
  */
 
-const SOLACE_API = 'http://localhost:8888';
+const SOLACE_API = 'http://localhost:9222';
 
 // Open side panel on action click
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+
+// Auto-open side panel when browser starts (bundled browser — always show sidebar)
+chrome.runtime.onInstalled.addListener(() => {
+  // Open side panel on all tabs by default
+  chrome.sidePanel.setOptions({
+    enabled: true,
+  });
+});
+
+// When a new tab is created, open the side panel
+chrome.tabs.onCreated.addListener(async (tab) => {
+  try {
+    if (tab.windowId) {
+      await chrome.sidePanel.open({ windowId: tab.windowId });
+    }
+  } catch {
+    // Side panel may already be open — that's fine
+  }
+});
 
 // Track current tab URL for app detection
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {

@@ -3,7 +3,9 @@
  * Handles tabs, WebSocket connection, app display, and chat.
  */
 
-const SOLACE_API = 'http://localhost:8888';
+const SOLACE_API = 'http://localhost:9222';
+let availableModels = [];
+let selectedModels = {}; // app_id -> model_id
 let ws = null;
 let reconnectTimer = null;
 
@@ -83,7 +85,12 @@ function setConnectionStatus(state) {
 }
 
 function handleWsMessage(msg) {
-  if (msg.type === 'run_update') {
+  if (msg.type === 'chat') {
+    const content = msg.payload && msg.payload.content ? msg.payload.content : '';
+    if (content) {
+      addChatBubble(content, msg.payload.role || 'assistant');
+    }
+  } else if (msg.type === 'run_update') {
     updateRunsList(msg.data);
   } else if (msg.type === 'approval_request') {
     addApprovalRequest(msg.data);
@@ -161,9 +168,16 @@ function renderAppCards(apps) {
     <div class="yy-app-card" data-app-id="${app.id}">
       <div class="yy-app-name">${escapeHtml(app.name)}</div>
       <div class="yy-app-desc">${escapeHtml(app.description || '')}</div>
+      <div class="yy-model-picker">
+        <label class="yy-picker-label">Model:</label>
+        <select class="yy-model-select" data-app="${app.id}" aria-label="Select model for ${escapeHtml(app.name)}">
+          ${availableModels.map(m => `<option value="${m.id}" ${m.uplift ? 'class="yy-uplift"' : ''}>${escapeHtml(m.name)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="yy-benchmark-row" id="bench-${app.id}"></div>
       <div class="yy-app-actions">
         <button class="yy-btn yy-btn-primary" data-action="run" data-app="${app.id}">Run Now</button>
-        <button class="yy-btn yy-btn-secondary" data-action="schedule" data-app="${app.id}">Schedule</button>
+        <button class="yy-btn yy-btn-secondary" data-action="benchmark" data-app="${app.id}">Benchmarks</button>
       </div>
     </div>
   `).join('');
@@ -172,8 +186,13 @@ function renderAppCards(apps) {
   container.querySelectorAll('[data-action="run"]').forEach(btn => {
     btn.addEventListener('click', () => runApp(btn.dataset.app));
   });
-  container.querySelectorAll('[data-action="schedule"]').forEach(btn => {
-    btn.addEventListener('click', () => scheduleApp(btn.dataset.app));
+  container.querySelectorAll('[data-action="benchmark"]').forEach(btn => {
+    btn.addEventListener('click', () => loadBenchmarks(btn.dataset.app));
+  });
+  container.querySelectorAll('.yy-model-select').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      selectedModels[e.target.dataset.app] = e.target.value;
+    });
   });
 }
 
@@ -255,7 +274,7 @@ function sendChatMessage() {
 
   // Send via WebSocket if connected
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'chat', text }));
+    ws.send(JSON.stringify({ type: 'chat', payload: { content: text } }));
   } else {
     addChatBubble('I\'m not connected to the Solace API. Check that the browser server is running.', 'assistant');
   }
@@ -297,9 +316,56 @@ async function loadStats() {
   }
 }
 
+async function loadModels() {
+  try {
+    const resp = await fetch(`${SOLACE_API}/api/models`);
+    if (resp.ok) {
+      const data = await resp.json();
+      availableModels = data.models || [];
+    }
+  } catch {
+    availableModels = [{ id: 'default', name: 'Default (BYOK)', source: 'byok' }];
+  }
+}
+
+async function loadBenchmarks(appId) {
+  const container = document.getElementById(`bench-${appId}`);
+  if (!container) return;
+
+  try {
+    const resp = await fetch(`${SOLACE_API}/api/apps/${appId}/benchmarks`);
+    if (!resp.ok) {
+      container.textContent = 'No benchmarks available';
+      return;
+    }
+    const data = await resp.json();
+    const benchmarks = data.benchmarks?.benchmarks || {};
+
+    if (Object.keys(benchmarks).length === 0) {
+      container.innerHTML = '<span class="yy-hint">No benchmark data yet</span>';
+      return;
+    }
+
+    const rows = Object.entries(benchmarks).map(([model, stats]) =>
+      `<div class="yy-bench-row">
+        <span class="yy-bench-model">${escapeHtml(model.replace(/_/g, ' '))}</span>
+        <span class="yy-bench-cost">$${stats.avg_cost || '?'}</span>
+        <span class="yy-bench-quality">${stats.quality_score || '?'}%</span>
+      </div>`
+    ).join('');
+
+    container.innerHTML = `<div class="yy-bench-header">
+      <span>Model</span><span>Cost/run</span><span>Quality</span>
+    </div>${rows}`;
+  } catch {
+    container.innerHTML = '<span class="yy-hint">Could not load benchmarks</span>';
+  }
+}
+
 // --- Init ---
 
 async function init() {
+  await loadModels();
   await checkApiHealth();
   connectWebSocket();
   updateCurrentPage();
