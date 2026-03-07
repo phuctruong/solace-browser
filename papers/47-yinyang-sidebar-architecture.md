@@ -1,4 +1,4 @@
-# Paper 47: Yinyang Sidebar Architecture — MV3 Side Panel
+# Paper 47: Yinyang Sidebar Architecture — Bundled MV3 Side Panel
 # DNA: `sidebar(detect, suggest, run, chat) > webapp(pages, routes, dashboards)`
 # Forbidden: `INLINE_INJECTION | WEBAPP_DASHBOARD | KEEP_ALIVE_HACK | RAW_CDP_PROXY | RUNTIME_EVALUATE | UNSIGNED_APPROVAL | UNVERIFIED_RIPPLE | SILENT_EVIDENCE_LOSS | UNSEAL_BEFORE_SYNC | FREE_TIER_SYNC | AUTO_APPROVE`
 **Date:** 2026-03-07 | **Auth:** 65537 | **Status:** CANONICAL
@@ -21,13 +21,15 @@ Yinyang only appears on Solace Browser's localhost pages. When the user navigate
 
 ## 2. The Solution: Kill the Webapp, Long Live the Sidebar
 
-Replace the 20-page webapp with a single persistent sidebar using Chromium's Side Panel API (`chrome.sidePanel`). The sidebar lives OUTSIDE the page DOM — no CSP conflict, no layout breakage, survives navigation.
+Replace the 20-page webapp with a single persistent sidebar using Chromium's Side Panel API (`chrome.sidePanel`). The sidebar is a **bundled component** of Solace Browser — not a standalone Chrome Web Store extension. When Solace Browser launches Chromium via Playwright, it automatically loads the sidebar via `--load-extension`. The user never installs anything; they launch Solace Browser and the sidebar is just there.
+
+The sidebar lives OUTSIDE the page DOM — no CSP conflict, no layout breakage, survives navigation.
 
 ### Key Decisions
 
 | Decision | Choice | Why |
 |----------|--------|-----|
-| Implementation | Chromium Side Panel API (MV3) | Outside page DOM, no CSP conflict, survives navigation |
+| Implementation | Bundled MV3 Side Panel (loaded via --load-extension) | Part of Solace Browser, not a store extension. Outside page DOM, no CSP conflict |
 | Default position | Right side (Chromium standard) | Users expect it, customizable |
 | Default state | Collapsed (toolbar icon) | Click to open |
 | Port | `localhost:8888` | Unprivileged (>1024), memorable quad-8, replaces 8791 |
@@ -73,17 +75,19 @@ System tray.             Follows you everywhere.     WebSocket for real-time.
 
 **Rule:** If it could go in either, it goes in the Companion App.
 
-## 4. Extension Architecture
+## 4. Bundled Sidebar Component
+
+The sidebar is implemented as an MV3 extension bundle inside the Solace Browser repo. It is NOT a standalone extension — Solace Browser loads it automatically on launch via `--load-extension` and `--disable-extensions-except`.
 
 ```
-solace-extension/
-  manifest.json           # Manifest V3 with sidePanel permission
-  service-worker.js       # URL detection, app matching, tab events
-  sidepanel.html          # 4-tab sidebar shell
-  sidepanel.js            # Tab switching, WS, app rendering, chat
-  sidepanel.css           # Design tokens (--yy-* variables)
+solace-extension/            # Bundled sidebar (loaded automatically by Solace Browser)
+  manifest.json              # Manifest V3 with sidePanel permission
+  service-worker.js          # URL detection, app matching, tab events
+  sidepanel.html             # 4-tab sidebar shell
+  sidepanel.js               # Tab switching, WS, app rendering, chat
+  sidepanel.css              # Design tokens (--yy-* variables)
   icons/
-    icon-16.png           # Real yinyang logos (from web/images/yinyang/)
+    icon-16.png              # Real yinyang logos (from web/images/yinyang/)
     icon-48.png
     icon-128.png
 ```
@@ -105,11 +109,15 @@ solace-extension/
 }
 ```
 
-### Loading in Playwright
+### Loading in Solace Browser
+
+Solace Browser's Playwright launcher automatically includes the sidebar:
 
 ```python
+# In solace_browser_server.py launch args:
 # --load-extension=/path/to/solace-extension
 # --disable-extensions-except=/path/to/solace-extension
+# User never sees this — sidebar appears automatically when browser starts.
 ```
 
 ## 5. App Detection Flow
@@ -388,7 +396,7 @@ The sidebar NEVER auto-runs anything. Detect, suggest, wait for explicit approva
 | eSign | SHA-256 Part 11 compliant | No | No | No | No | No |
 | Community browsing | Prime Wiki (free) | No | No | No | No | No |
 | Pricing | $0-188/mo | $20-200/mo | $250/mo | $20-200/mo | Free/paid | $0-50/mo |
-| Browser compat | Chrome, Edge (Arc: no sidePanel) | Cloud browser | Cloud browser | macOS/Windows VM | Chromium | Chrome, Edge, Brave |
+| Distribution | Bundled in Solace Browser | Cloud-only | Cloud-only | Desktop app | SDK | Chrome Web Store |
 
 ### Key Differentiators (No Competitor Has)
 
@@ -398,13 +406,119 @@ The sidebar NEVER auto-runs anything. Detect, suggest, wait for explicit approva
 4. **Community browsing** — Prime Wiki + PZip compression
 5. **eSign from sidebar** — Part 11 §11.50/§11.70 compliant signatures
 
+### Unfair Advantages of Owning the Browser
+
+Building our own browser (Playwright + Chromium) instead of distributing a Chrome Web Store extension gives us capabilities no extension-only product can match:
+
+| Advantage | What It Enables | Extension Can't |
+|-----------|----------------|-----------------|
+| **CDP 4-Plane Control** | Full DOM, Network, Input, Runtime access via CDP | Extensions limited to content scripts + messaging |
+| **Bundled sidebar** | Sidebar loads automatically, no install friction | Users must find/install/trust from Web Store |
+| **Anti-detect profiles** | Canvas, WebGL, timezone, font fingerprint spoofing | Extensions can't override browser fingerprints |
+| **Session persistence** | Full browser profile (cookies, localStorage, sessions) across restarts | Extension can't control browser profile |
+| **Headless/cloud twin** | Same browser runs headless in Cloud Run Jobs | Extensions can't run headless |
+| **Controlled Chromium version** | Pin exact version, test against it, avoid breakage | At mercy of Chrome auto-updates |
+| **Evidence capture** | Full page screenshots, network HAR, DOM snapshots via CDP | Extensions have limited capture APIs |
+| **Recipe execution** | Playwright drives browser deterministically (click, type, navigate) | Content scripts can't reliably drive other origins |
+| **Native Messaging bridge** | Direct IPC to local Solace CLI (OAuth3 vault, evidence store) | Requires separate native messaging host install |
+| **OAuth3 consent flow** | Sidebar approval UI + CDP execution = atomic consent-then-act | Extension popup closes on navigation |
+| **Multi-tab orchestration** | Playwright opens/controls multiple tabs programmatically | Extensions can only observe tabs, not drive them |
+| **Network interception** | CDP Network domain: intercept, modify, block requests | Extensions use webRequest (being deprecated in MV3) |
+| **PZip capture pipeline** | Full DOM extraction via CDP + PZip compression + hash verification | Extensions limited to content script DOM access |
+| **Update channel** | Self-managed updates (git pull, Tauri auto-update) | Chrome Web Store review (3-7 days) |
+
+**Bottom line:** A Chrome Web Store extension is a guest in someone else's house. Solace Browser owns the house — the sidebar, the automation engine, the evidence system, the profiles, and the update schedule are all ours.
+
 ### Known Limitation
 
-- **Arc browser** does not support `chrome.sidePanel` — extension fails silently
-- **Brave** has rough sidePanel integration (panel may disappear)
 - Panel width not programmatically controllable (~320px min, ~400px default)
+- Sidebar requires Chromium-based engine (Solace Browser uses Playwright + Chromium, so this is always satisfied)
+- If users try to load the extension in other browsers (Arc, Brave), sidePanel support varies — but Solace Browser controls the exact Chromium version
 
-## 16. Migration Path
+## 16. Browser-Native Features (Only Possible Because We Own the Browser)
+
+These features leverage Solace Browser's full CDP + Playwright control — impossible in a Chrome Web Store extension.
+
+### 16a. Inbox/Outbox Workflow Bus
+
+Every automation follows: detect → preview → approve → execute → seal. The sidebar makes this visible.
+
+| Element | Tab | Description |
+|---------|-----|-------------|
+| Inbox queue | Runs | Pending approvals, suggested actions, partner app requests |
+| Outbox status | Runs | Approved actions being executed, with live progress |
+| Preview pane | Now | LLM-generated preview of what will happen (shown once, sealed) |
+| Outbox history | Runs | Completed actions with evidence links |
+
+**Why browser-native:** Inbox/outbox requires CDP to intercept network responses, capture screenshots mid-flow, and drive execution deterministically. Extensions can't do this.
+
+### 16b. OAuth3 Vault Dashboard
+
+The sidebar's "More" tab shows OAuth3 token status.
+
+| Element | Description |
+|---------|-------------|
+| Active scopes | Which apps have active OAuth3 tokens (e.g., "Gmail: send, read — expires 2h") |
+| Revoke button | One-click revocation per app/scope |
+| Step-up indicator | "High-risk action requires re-authentication" |
+| Token health | Green/yellow/red per token (valid/expiring/expired) |
+| Consent log | Recent consent decisions with timestamps |
+
+**Why browser-native:** The OAuth3 vault lives in Solace CLI's local encrypted store. Native Messaging bridge gives direct IPC — no cloud round-trip.
+
+### 16c. Recipe Library + Replay Status
+
+| Element | Tab | Description |
+|---------|-----|-------------|
+| Available recipes | Now | Recipes matching current page (from `data/default/recipes/`) |
+| Recipe preview | Now | "This recipe will: 1. Open compose 2. Fill subject 3. ..." |
+| Replay indicator | Runs | "Replay: $0.001" vs "New: ~$0.08" cost badge |
+| Recipe editor | More | Edit recipe steps (power users) |
+
+**Why browser-native:** Recipe replay uses Playwright to drive actions deterministically — click coordinates, type text, wait for selectors. Extensions can't do this cross-origin.
+
+### 16d. Schedule Management
+
+| Element | Tab | Description |
+|---------|-----|-------------|
+| Active schedules | More | List of cron schedules with next-run time |
+| Quick schedule | Now | "Run this daily at 9am" button per matched app |
+| Schedule history | Runs | Past scheduled runs with evidence |
+| Cloud schedule | More | "Run in cloud twin" toggle (Pro+ only) |
+
+**Why browser-native:** Cloud schedules use the same Playwright automation in a Cloud Run Job. Extension-based scheduling would require a separate server anyway.
+
+### 16e. Anti-Detect Profile Selector
+
+| Element | Tab | Description |
+|---------|-----|-------------|
+| Profile badge | Header | Current anti-detect profile name |
+| Profile switcher | More | Switch fingerprint profile (canvas, WebGL, timezone, fonts) |
+| Profile per app | Now | "Use 'Marketing' profile for LinkedIn" |
+
+**Why browser-native:** Anti-detect requires overriding browser-level APIs (canvas.toDataURL, navigator.webdriver, WebGL renderer). Only possible with CDP or Playwright launch args.
+
+### 16f. Network Monitor + HAR Capture
+
+| Element | Tab | Description |
+|---------|-----|-------------|
+| Request count | Now tab footer | "47 requests, 2.1 MB transferred" |
+| Failed requests | Now | Red badge on network errors |
+| HAR export | More | Export full network trace for debugging |
+| API call log | Runs | Which API calls the recipe made during execution |
+
+**Why browser-native:** CDP Network domain provides full request/response interception. Extensions' webRequest API is being gutted in MV3 (declarativeNetRequest is the replacement, far less capable).
+
+### 16g. Tutorial + Fun Pack
+
+| Element | Tab | Description |
+|---------|-----|-------------|
+| Getting started | Chat | Interactive tutorial (Yinyang walks through first automation) |
+| Fun pack | More | Mini-games, achievements, celebration animations (Paper 08 delight) |
+| Tip of the day | Chat | Contextual tips based on current page |
+| Belt progress | More | Gamification progress bar (White → Black belt) |
+
+## 17. Migration Path
 
 | Phase | Scope | Duration |
 |-------|-------|----------|
@@ -414,7 +528,7 @@ The sidebar NEVER auto-runs anything. Detect, suggest, wait for explicit approva
 | 3: Kill Webapp | Delete 15+ HTML pages, migrate features | Weeks 9-10 |
 | 4: Hardening | a11y, i18n, error recovery, auto-update | Weeks 11-12 |
 
-## 17. What Dies
+## 18. What Dies
 
 | Page | Replacement |
 |------|-------------|
@@ -426,14 +540,15 @@ The sidebar NEVER auto-runs anything. Detect, suggest, wait for explicit approva
 
 **Survives:** `/agents` docs page, `/api/*` endpoints, error pages (404, 500)
 
-## 18. Spike Checklist (Phase 0)
+## 19. Spike Checklist (Phase 0)
 
+- [ ] Sidebar appears automatically when Solace Browser starts (--load-extension)
 - [ ] chrome.sidePanel.open() works via Playwright
 - [ ] Side panel remains open across tab navigations
 - [ ] Service worker survives page navigation
 - [ ] chrome.storage.session works for auth tokens
-- [ ] Extension loads in --headless=new mode
-- [ ] Extension loads in head-hidden mode
+- [ ] Sidebar works in --headless=new mode
+- [ ] Sidebar works in head-hidden mode
 - [ ] WebSocket from panel to localhost:8888 stays connected
 - [ ] Extension ID stable across relaunches (key field in manifest)
 - [ ] chrome.tabs.onUpdated fires reliably
@@ -453,4 +568,53 @@ The sidebar NEVER auto-runs anything. Detect, suggest, wait for explicit approva
 
 ---
 
-*Paper 47 | Auth: 65537 | Supersedes Paper 04 | LLM Consensus R1-R8*
+## 20. The AI-Agent Browser: Killer Features That Define a New Category
+
+Solace Browser isn't a browser with AI bolted on. It's a browser **built for AI agents from day one**. Every architectural decision — CDP control, sidebar, evidence, recipes — exists because AI agents need capabilities that no general-purpose browser provides.
+
+### The 15 Killer Features
+
+| # | Feature | What It Does | Why No Other Browser Has It |
+|---|---------|-------------|---------------------------|
+| K1 | **Deterministic Replay** | Record once, replay forever at $0.001/run (vs $0.08 with LLM). Playwright drives exact clicks/types/waits. | General browsers don't record action sequences. Extensions can't drive cross-origin. |
+| K2 | **Evidence-First Execution** | Every agent action generates SHA-256 hash-chained proof: screenshots, DOM snapshots, network traces. FDA Part 11 ready. | No browser treats evidence as a first-class concern. Audit logs are afterthoughts. |
+| K3 | **Consent Before Action** | OAuth3 scoped delegation: "Gmail: send emails to contacts, max 10/day, expires in 2 hours." Agent can't exceed scope. | Other browsers give AI all-or-nothing access. No granular delegation protocol. |
+| K4 | **Sidebar Copilot** | Yinyang lives in the sidebar (MV3 Side Panel), sees what you see, suggests actions, never auto-runs. | Cloud browsers have no local UI. Extension browsers can't drive automation. |
+| K5 | **Anti-Detect Profiles** | AI agents need multiple identities (marketing profile, research profile). Canvas, WebGL, timezone, font fingerprinting — all spoofable per session. | General browsers fight fingerprint spoofing. AI-agent browsers need it. |
+| K6 | **Cloud Twin** | Same browser, same recipes, running headless in Cloud Run Jobs. $0.032 per 10-min recipe. Runs while you sleep. | No competitor offers local + cloud parity with the same automation engine. |
+| K7 | **Recipe Marketplace** | Community-contributed automation recipes. Install "LinkedIn connection request" recipe, customize, run. Hit rate improves over time. | No browser has a recipe ecosystem. Bardeen has workflows but no replay economics. |
+| K8 | **Budget Gates** | 5-level fail-closed budget enforcement (auth → scope → action → financial → step-up). Agent literally cannot overspend. | No browser has budget enforcement. Operator/Mariner have no spending controls. |
+| K9 | **eSign on Approval** | When you approve an agent action, a Part 11 compliant e-signature is generated. Non-repudiable. Legally binding in regulated industries. | No browser generates legally compliant e-signatures on agent approvals. |
+| K10 | **PZip Page Intelligence** | Every page you visit gets structurally extracted (headings, links, code blocks, meta) and compressed 66:1. Your agent learns from your browsing. | No browser extracts structured knowledge from browsing. History is just URLs. |
+| K11 | **Community Knowledge** | Prime Wiki: community-contributed page extractions. "What does this API doc say?" → instant answer from someone who already visited. | No browser has a community knowledge graph built from browsing. |
+| K12 | **Multi-Tab Orchestration** | Agent opens 5 tabs, fills a form in tab 1 using data from tab 3, approves in tab 5. Playwright coordinates all tabs programmatically. | Extensions can observe tabs but can't drive them. Cloud browsers drive one tab. |
+| K13 | **Network-Aware Agents** | CDP Network domain: agent sees all HTTP requests/responses, can intercept, modify, or block. Full HAR capture for debugging. | MV3 killed webRequest. Cloud browsers don't expose network layer to agents. |
+| K14 | **Inbox/Outbox Workflow** | Every automation follows: detect → preview → approve → execute → seal. Visible in sidebar. Nothing happens without explicit human consent. | Other agent browsers auto-execute. Solace makes the human the final authority. |
+| K15 | **47 Expert Personas** | Agent adapts communication style: marketing persona for LinkedIn, technical persona for GitHub, empathetic persona for support. STORY-47 prime. | No browser integrates persona switching into the agent framework. |
+
+### The Moat: Why This Can't Be Copied Easily
+
+```
+MOAT = Evidence(hash-chain) × Consent(OAuth3) × Economics(recipe-replay) × Community(Prime Wiki)
+
+Evidence: Requires architectural commitment from day 1 (can't bolt on later)
+Consent:  Token-revenue vendors (OpenAI, Anthropic) can't implement OAuth3
+          — it reduces token usage, cannibalizing their revenue
+Replay:   LLM vendors want you to call the LLM every time ($0.08)
+          — recipe replay at $0.001 is against their business model
+Community: Network effects compound — more users → more recipes → more knowledge
+```
+
+### Feature Implementation Priority
+
+| Phase | Features | Status |
+|-------|----------|--------|
+| Phase 0 (Spike) | K4 (Sidebar), K14 (Inbox/Outbox) | Scaffold done |
+| Phase 1 | K1 (Replay), K2 (Evidence), K3 (Consent), K8 (Budget) | Architected |
+| Phase 2 | K5 (Anti-Detect), K6 (Cloud Twin), K12 (Multi-Tab), K13 (Network) | Infra ready |
+| Phase 3 | K7 (Marketplace), K10 (PZip), K11 (Community), K15 (Personas) | Papers done |
+| Phase 4 | K9 (eSign) | Part 11 framework ready |
+
+---
+
+*Paper 47 v3 | Auth: 65537 | Supersedes Paper 04 | LLM Consensus R1-R8 | Browser-Native Architecture*
