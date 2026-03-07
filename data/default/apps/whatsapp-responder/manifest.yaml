@@ -4,6 +4,8 @@ description: Prepare responses in WhatsApp Web with explicit approval.
 category: communications
 status: installed
 safety: C
+tier: enterprise
+tier_reason: "Messaging automation requires SSO + SOC2 audit trail"
 site: web.whatsapp.com
 type: standard
 orchestrates: []
@@ -25,6 +27,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://web.whatsapp.com/
-  interval_min: 15

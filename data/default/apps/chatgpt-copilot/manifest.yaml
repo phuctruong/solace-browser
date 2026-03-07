@@ -4,6 +4,8 @@ description: Send prompts to ChatGPT web interface, capture responses for cross-
 category: productivity
 status: installed
 safety: B
+tier: free
+tier_reason: "Basic send/receive with ChatGPT web UI, BYOK"
 site: chatgpt.com
 type: standard
 orchestrates: []
@@ -24,6 +26,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://chatgpt.com
-  interval_min: 30

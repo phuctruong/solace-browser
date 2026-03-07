@@ -4,6 +4,8 @@ description: Send prompts to Gemini web interface, capture responses for cross-L
 category: productivity
 status: installed
 safety: B
+tier: free
+tier_reason: "Basic send/receive with Gemini web UI, BYOK"
 site: gemini.google.com
 type: standard
 orchestrates: []
@@ -24,6 +26,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://gemini.google.com
-  interval_min: 30

@@ -4,6 +4,8 @@ description: Orchestrate the daily cross-app brief.
 category: productivity
 status: installed
 safety: A
+tier: free
+tier_reason: "Read-only daily briefing aggregation"
 site: multi-site
 type: orchestrator
 orchestrates:

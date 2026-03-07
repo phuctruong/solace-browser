@@ -4,6 +4,8 @@ description: Analyze your LinkedIn profile against thought leadership best pract
 category: marketing
 status: installed
 safety: B
+tier: pro
+tier_reason: "LinkedIn write.drafts + profile analysis requires cloud sync + evidence"
 site: linkedin.com
 type: standard
 orchestrates: []
@@ -27,6 +29,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://www.linkedin.com/in/me/
-  interval_min: 1440

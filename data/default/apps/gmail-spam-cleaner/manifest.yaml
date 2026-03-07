@@ -3,6 +3,8 @@ name: Gmail Spam Cleaner
 description: "Automatically scan Gmail spam folder and permanently delete confirmed spam. Reviews suspicious messages before deletion so you never lose important emails caught by the filter."
 category: email
 safety: B
+tier: starter
+tier_reason: "Write action (delete spam), requires managed LLM for classification"
 site: mail.google.com
 type: standard
 scopes:
@@ -13,6 +15,3 @@ partners:
     service: Gmail
     auth_type: oauth2
     required: true
-keep_alive:
-  url: https://mail.google.com/mail/u/0/#spam
-  check_interval_minutes: 60

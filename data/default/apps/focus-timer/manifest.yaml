@@ -4,6 +4,8 @@ description: Run local focus sessions and produce lightweight reports.
 category: productivity
 status: installed
 safety: A
+tier: free
+tier_reason: "Local-only timer, no cloud or LLM dependency"
 site: local-machine
 type: standard
 orchestrates: []

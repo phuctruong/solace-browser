@@ -4,6 +4,8 @@ description: Collect five days of reports and synthesize one weekly view.
 category: productivity
 status: installed
 safety: A
+tier: free
+tier_reason: "Read-only weekly summary aggregation"
 site: multi-site
 type: orchestrator
 orchestrates:

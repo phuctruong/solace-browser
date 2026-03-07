@@ -4,6 +4,8 @@ description: Scan communities and surface relevant discussions.
 category: engineering
 status: installed
 safety: A
+tier: starter
+tier_reason: "Read-only but requires managed LLM for relevance scoring"
 site: reddit.com
 type: standard
 orchestrates: []
@@ -24,6 +26,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://www.reddit.com/
-  interval_min: 60

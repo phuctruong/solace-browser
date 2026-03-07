@@ -4,6 +4,8 @@ description: Draft and publish LinkedIn posts through the native web UI.
 category: social
 status: installed
 safety: C
+tier: pro
+tier_reason: "Write to LinkedIn requires cloud sync + evidence chain"
 site: linkedin.com
 type: standard
 orchestrates: []
@@ -26,6 +28,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://www.linkedin.com/feed/
-  interval_min: 30

@@ -4,6 +4,8 @@ description: Save approved artifacts into Drive using the web UI.
 category: productivity
 status: installed
 safety: A
+tier: pro
+tier_reason: "Write to Google Drive requires cloud sync + evidence chain"
 site: drive.google.com
 type: standard
 orchestrates: []
@@ -26,6 +28,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://drive.google.com/
-  interval_min: 30

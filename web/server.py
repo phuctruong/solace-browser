@@ -1462,21 +1462,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
                     "status": "scheduled",
                 })
 
-        # 2. Keep-alive sessions
-        keep_alive = settings.get("keep_alive", {})
-        for domain, ka_cfg in keep_alive.items():
-            if ka_cfg.get("enabled"):
-                upcoming.append({
-                    "type": "keep_alive",
-                    "app_id": f"keep-alive-{domain}",
-                    "domain": domain,
-                    "last_ping": ka_cfg.get("last_ping"),
-                    "pattern": "every_30min",
-                    "pattern_label": "Every 30 min",
-                    "status": "active",
-                })
-
-        # 3. Part 11 evidence status
+        # 2. Part 11 evidence status
         part11 = settings.get("part11", {})
         if part11.get("enabled"):
             audit_dir = Path.home() / ".solace" / "audit"
@@ -1513,7 +1499,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             "count": len(upcoming),
             "summary": {
                 "app_schedules": len(schedule_config),
-                "keep_alive_sessions": sum(1 for k in keep_alive.values() if k.get("enabled")),
+                "keep_alive_sessions": 0,  # Keep-alive removed (GLOW 204) — will be in companion app
                 "part11_enabled": part11.get("enabled", False),
                 "esign_enabled": part11.get("esigning", False),
             }
@@ -1542,7 +1528,7 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
     # Fix 6: Whitelist of allowed top-level keys for settings import
     # Only these keys can be imported from cloud sync — prevents injection of arbitrary config
     ALLOWED_SETTINGS_KEYS = frozenset({
-        "schedule", "keep_alive", "theme", "notifications",
+        "schedule", "theme", "notifications",
         "locale", "budget", "evidence", "privacy", "accessibility",
         "display", "apps", "oauth3", "sync", "esign", "compliance", "roi",
     })
@@ -1949,8 +1935,9 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
         if manifest_path.exists():
             try:
                 manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
-                keep_alive = manifest.get("keep_alive", {})
-                target_url = keep_alive.get("url")
+                target_url = manifest.get("site_url") or manifest.get("site")
+                if target_url and not target_url.startswith("http"):
+                    target_url = f"https://{target_url}"
             except (OSError, ValueError, AttributeError):
                 pass
 
@@ -2739,7 +2726,6 @@ class SlugRequestHandler(SimpleHTTPRequestHandler):
             "manifest": {
                 "apps": payload.get("apps", []),
                 "schedule": settings.get("schedule", {}),
-                "keep_alive": settings.get("keep_alive", {}),
                 "part11": settings.get("part11", {}),
             },
             "evidence": payload.get("evidence", []),

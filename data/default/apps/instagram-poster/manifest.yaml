@@ -4,6 +4,8 @@ description: Draft and publish Instagram posts after approval.
 category: social
 status: installed
 safety: C
+tier: enterprise
+tier_reason: "Social media automation at scale requires SSO + SOC2 audit trail"
 site: instagram.com
 type: standard
 orchestrates: []
@@ -25,6 +27,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://www.instagram.com/
-  interval_min: 25

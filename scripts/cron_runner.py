@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-Solace Browser — Schedule + Keep-Alive Cron Runner
-Runs every minute via OS crontab. Two jobs:
-  1. Keep-alive: ping each app's site on its interval to keep session cookies fresh.
-  2. Scheduled runs: trigger apps at their configured time (daily@08:00, etc.).
+Solace Browser — Schedule Cron Runner
+Runs every minute via OS crontab.
+  Scheduled runs: trigger apps at their configured time (daily@08:00, etc.).
+
+Note: Keep-alive was removed (GLOW 204). Session persistence will be handled
+by the companion app (Tauri) which has proper multi-tab awareness.
 
 Install (crontab -e):
   * * * * * python3 /home/phuc/projects/solace-browser/scripts/cron_runner.py >> ~/.solace/cron.log 2>&1
@@ -18,7 +20,6 @@ from pathlib import Path
 SETTINGS_PATH = Path.home() / ".solace" / "settings.json"
 BROWSER_API   = "http://127.0.0.1:9222"
 WEB_API       = "http://127.0.0.1:8791"
-APPS_DIR      = Path(__file__).parent.parent / "data" / "default" / "apps"
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -61,141 +62,6 @@ def is_browser_running() -> bool:
 def get_current_url() -> str:
     s = api_get(f"{BROWSER_API}/api/status")
     return (s or {}).get("current_url", "")
-
-
-# ── Keep-Alive ────────────────────────────────────────────────────────────────
-
-def load_keep_alive_specs() -> dict:
-    """
-    Read keep_alive specs from app manifests.
-    Returns {site: {url, interval_min}} sourced from manifest.yaml keep_alive blocks.
-    """
-    specs: dict = {}
-    if not APPS_DIR.exists():
-        return specs
-    for app_dir in APPS_DIR.iterdir():
-        manifest = app_dir / "manifest.yaml"
-        if not manifest.exists():
-            continue
-        txt = manifest.read_text(encoding="utf-8")
-        # Minimal YAML parse — extract site, keep_alive.url, keep_alive.interval_min
-        site = None
-        ka_url = None
-        ka_interval = None
-        in_ka = False
-        for line in txt.splitlines():
-            stripped = line.strip()
-            if stripped.startswith("site:"):
-                site = stripped.split(":", 1)[1].strip()
-            if stripped == "keep_alive:":
-                in_ka = True
-                continue
-            if in_ka:
-                if stripped.startswith("url:"):
-                    ka_url = stripped.split(":", 1)[1].strip()
-                elif stripped.startswith("interval_min:"):
-                    try:
-                        ka_interval = int(stripped.split(":", 1)[1].strip())
-                    except ValueError:
-                        pass
-                elif not stripped.startswith("#") and ":" in stripped and not stripped.startswith(" "):
-                    in_ka = False  # left keep_alive block
-        if site and ka_url and ka_interval and site not in specs:
-            specs[site] = {"url": ka_url, "interval_min": ka_interval}
-    return specs
-
-
-def get_active_token_sites() -> set:
-    """
-    Return the set of site names that have at least one active (non-revoked,
-    non-expired) OAuth3 token.  Token scopes are prefixed with the site name
-    (e.g. "linkedin.read.feed" → site "linkedin").
-    """
-    token_dir = Path.home() / ".solace" / "tokens"
-    if not token_dir.exists():
-        return set()
-    now = datetime.now()
-    sites: set = set()
-    for fp in token_dir.glob("*.json"):
-        try:
-            d = json.loads(fp.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError, ValueError):
-            continue
-        if d.get("revoked"):
-            continue
-        expires_raw = d.get("expires_at", "")
-        try:
-            # Handle timezone-aware ISO strings
-            exp_str = expires_raw.replace("+00:00", "").replace("Z", "")
-            if datetime.fromisoformat(exp_str) < now:
-                continue
-        except (ValueError, TypeError):
-            pass  # unparseable → treat as valid (fail-open)
-        for scope in d.get("scopes", []):
-            if "." in scope:
-                sites.add(scope.split(".")[0])
-    return sites
-
-
-def run_keep_alive(settings: dict) -> bool:
-    """
-    Ping each site that has a due keep-alive AND an active OAuth3 token.
-    Intervals/URLs come from app manifests; enabled/last_ping from settings.
-    Returns True if any ping was done (settings needs saving).
-    """
-    specs = load_keep_alive_specs()
-    if not specs:
-        return False
-
-    active_sites = get_active_token_sites()
-    user_state = settings.get("keep_alive", {})
-    now = datetime.now()
-    any_pinged = False
-
-    for site, spec in specs.items():
-        cfg = user_state.get(site, {})
-        if not cfg.get("enabled", True):
-            continue
-
-        # Only keep-alive if the user has an active OAuth3 token for this site
-        if site not in active_sites:
-            log(f"keep-alive skip: {site} — no active OAuth3 token")
-            continue
-
-        interval_min  = spec["interval_min"]   # from manifest
-        last_ping_str = cfg.get("last_ping")
-
-        if last_ping_str:
-            try:
-                last_ping = datetime.fromisoformat(last_ping_str)
-                if (now - last_ping).total_seconds() < interval_min * 60:
-                    continue
-            except (ValueError, TypeError):
-                pass
-
-        ping_url = spec["url"]
-        log(f"keep-alive ping: {site} ({interval_min}m) → {ping_url} [background]")
-
-        # Use background tab — invisible to user, main visible page untouched
-        result = api_post(f"{BROWSER_API}/api/navigate/background", {
-            "url": ping_url,
-        }, timeout=20)
-
-        if result and result.get("success"):
-            user_state.setdefault(site, {})["last_ping"] = now.isoformat()
-            user_state.setdefault(site, {})["enabled"]   = True
-            any_pinged = True
-            log(f"  ✓ {site} session refreshed")
-        else:
-            log(f"  ✗ {site} ping failed")
-
-        time.sleep(1)  # brief pause between pings
-        # Note: background navigation — no need to navigate back, main page was never changed
-
-    if any_pinged:
-        settings["keep_alive"] = user_state
-
-    return any_pinged
 
 
 # ── Scheduled Runs ────────────────────────────────────────────────────────────
@@ -343,11 +209,7 @@ def main() -> None:
 
     changed = False
 
-    # 1. Keep-alive pings
-    if run_keep_alive(settings):
-        changed = True
-
-    # 2. Scheduled runs
+    # Scheduled runs
     for app_id, cfg in settings.get("schedule", {}).items():
         if is_due(cfg):
             log(f"Scheduled run due: {app_id} ({cfg.get('pattern')})")

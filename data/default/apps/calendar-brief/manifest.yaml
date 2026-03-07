@@ -4,6 +4,8 @@ description: Summarize the day and surface upcoming constraints.
 category: productivity
 status: installed
 safety: A
+tier: starter
+tier_reason: "Managed LLM needed for calendar summarization"
 site: calendar.google.com
 type: standard
 orchestrates: []
@@ -26,6 +28,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://calendar.google.com/
-  interval_min: 30

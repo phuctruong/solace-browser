@@ -4,6 +4,8 @@ description: Send prompts to Claude.ai web interface, capture responses for cros
 category: productivity
 status: installed
 safety: B
+tier: free
+tier_reason: "Basic send/receive with Claude web UI, BYOK"
 site: claude.ai
 type: standard
 orchestrates: []
@@ -24,6 +26,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://claude.ai
-  interval_min: 30

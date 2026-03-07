@@ -4,6 +4,8 @@ description: Coordinate outreach, email follow-up, and schedule matching.
 category: sales
 status: installed
 safety: A
+tier: team
+tier_reason: "Multi-seat team workflow orchestrating outreach + email + calendar"
 site: multi-site
 type: orchestrator
 orchestrates:

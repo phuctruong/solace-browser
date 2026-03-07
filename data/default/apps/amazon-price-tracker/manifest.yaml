@@ -4,6 +4,8 @@ description: Monitor wishlist prices through the consumer web UI.
 category: shopping
 status: installed
 safety: A
+tier: starter
+tier_reason: "Managed LLM needed for price alert intelligence"
 site: amazon.com
 type: standard
 orchestrates: []
@@ -24,6 +26,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://www.amazon.com/
-  interval_min: 60

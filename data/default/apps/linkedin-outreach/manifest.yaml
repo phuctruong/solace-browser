@@ -4,6 +4,8 @@ description: Draft outreach sequences and manage lead handoff safely.
 category: sales
 status: installed
 safety: C
+tier: pro
+tier_reason: "Write + outreach actions on LinkedIn require cloud sync + evidence"
 site: linkedin.com
 type: standard
 orchestrates: []
@@ -27,6 +29,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://www.linkedin.com/feed/
-  interval_min: 30

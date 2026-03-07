@@ -4,6 +4,8 @@ description: Watch timelines and produce read-only summaries.
 category: social
 status: installed
 safety: A
+tier: starter
+tier_reason: "Read-only but requires managed LLM for timeline summarization"
 site: x.com
 type: standard
 orchestrates: []
@@ -24,6 +26,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://x.com/home
-  interval_min: 25

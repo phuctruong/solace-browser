@@ -203,6 +203,7 @@
       var RUNS_PREFIX     = 'solace_runs_';
       var LS_ACTIVATED    = 'solace_activated_';
       var LS_ONBOARD_DONE = 'solace_onboard_done';
+      var UI_STRINGS      = {};
 
       /* ── Known apps manifest (used for cards + run lookup) ── */
       var APPS_MANIFEST = [
@@ -213,6 +214,33 @@
         { id: 'github-pr-review',      name: 'GitHub PR Review',      icon: null,                        emoji: '🔍', href: '/app-store#github-pr-review' },
         { id: 'substack-digest',       name: 'Substack Digest',       icon: null,                        emoji: '📰', href: '/app-store#substack-digest' }
       ];
+
+      function applyVars(template, vars) {
+        var out = String(template || '');
+        if (!vars) return out;
+        Object.keys(vars).forEach(function(k) {
+          out = out.replace(new RegExp('\\{' + k + '\\}', 'g'), String(vars[k]));
+        });
+        return out;
+      }
+
+      function t(key, fallback, vars) {
+        var hasKey = Object.prototype.hasOwnProperty.call(UI_STRINGS, key);
+        var base = hasKey ? UI_STRINGS[key] : fallback;
+        return applyVars(typeof base === 'string' ? base : fallback, vars);
+      }
+
+      async function loadUiStrings() {
+        var locale = localStorage.getItem('sb_locale') || 'en';
+        try {
+          var resp = await fetch('/api/locale?key=ui&locale=' + encodeURIComponent(locale), { signal: controller.signal });
+          if (!resp.ok) return;
+          var data = await resp.json();
+          UI_STRINGS = data.ui || {};
+        } catch (_) {
+          UI_STRINGS = {};
+        }
+      }
 
       /* ─────────────────────────────────────────────
          LOCAL STORAGE HELPERS
@@ -254,12 +282,12 @@
         btn.textContent = '★';
         if (starred) {
           btn.classList.add('starred');
-          btn.setAttribute('aria-label', 'Remove from favorites');
-          btn.setAttribute('title', 'Remove from favorites');
+          btn.setAttribute('aria-label', t('dash_remove_favorite', 'Remove from favorites'));
+          btn.setAttribute('title', t('dash_remove_favorite', 'Remove from favorites'));
         } else {
           btn.classList.remove('starred');
-          btn.setAttribute('aria-label', 'Add to favorites');
-          btn.setAttribute('title', 'Add to favorites');
+          btn.setAttribute('aria-label', t('dash_add_favorite', 'Add to favorites'));
+          btn.setAttribute('title', t('dash_add_favorite', 'Add to favorites'));
         }
       }
 
@@ -268,7 +296,7 @@
         if (!strip) return;
         var favs  = getFavorites();
         if (favs.length === 0) {
-          strip.innerHTML = '<p class="dash-favorites__empty" data-i18n="dash_favorites_empty">Star an app below to pin it here.</p>';
+          strip.innerHTML = '<p class="dash-favorites__empty">' + escHtml(t('dash_favorites_empty', 'Star an app below to pin it here.')) + '</p>';
           return;
         }
         strip.innerHTML = favs.map(function(id) {
@@ -358,7 +386,8 @@
             var cls = v === 0 ? 'dash-sparkline__bar dash-sparkline__bar--zero'
                     : i === 6 ? 'dash-sparkline__bar dash-sparkline__bar--today'
                     : 'dash-sparkline__bar';
-            return '<div class="' + cls + '" style="height:' + Math.max(h, 8) + '%" title="' + v + ' runs"></div>';
+            var title = t('dash_runs_tooltip', '{count} runs', { count: v });
+            return '<div class="' + cls + '" style="height:' + Math.max(h, 8) + '%" title="' + escAttr(title) + '"></div>';
           }).join('') +
         '</div>';
       }
@@ -375,12 +404,13 @@
         if (!list) return;
         var runs = getRecentRuns().slice(0, 5);
         if (runs.length === 0) {
-          list.innerHTML = '<p class="dash-recent-empty" data-i18n="dash_recent_empty">No runs yet. Run an app to see activity here.</p>';
+          list.innerHTML = '<p class="dash-recent-empty">' + escHtml(t('dash_recent_empty', 'No runs yet. Run an app to see activity here.')) + '</p>';
           return;
         }
         list.innerHTML = runs.map(function(run) {
-          var app     = findApp(run.app_id) || { name: run.app_name || run.app_id || 'Unknown', icon: null, emoji: '🤖' };
-          var status  = run.status || 'completed';
+          var app     = findApp(run.app_id) || { name: run.app_name || run.app_id || t('dash_unknown', 'Unknown'), icon: null, emoji: '🤖' };
+          var status  = run.status || t('dash_status_completed', 'completed');
+          var statusDisplay = status === 'completed' ? t('dash_status_completed', 'completed') : status;
           var ts      = run.ts || run.timestamp || run.started_at || 0;
           var timeStr = ts ? relativeTime(ts) : '';
           var iconHtml = app.icon
@@ -393,7 +423,7 @@
               '<div class="dash-recent-item__time">' + escHtml(timeStr) + '</div>' +
             '</div>' +
             '<span class="dash-recent-item__status dash-recent-item__status--' + escHtml(status) + '">' +
-              escHtml(status) +
+              escHtml(statusDisplay) +
             '</span>' +
           '</div>';
         }).join('');
@@ -410,7 +440,7 @@
               app_id:   app.id,
               app_name: app.name,
               ts:       entry.ts || entry.timestamp || 0,
-              status:   entry.status || 'completed'
+              status:   entry.status || t('dash_status_completed', 'completed')
             });
           });
         });
@@ -460,20 +490,24 @@
             : '<div class="dash-app-card__icon dash-app-card__icon--text" aria-hidden="true">' + app.emoji + '</div>';
 
           var actionHtml = active
-            ? '<a class="dash-app-card__run" href="/app-detail?app=' + encodeURIComponent(app.id) + '" data-i18n="dash_action_run">Run</a>'
-            : '<a class="dash-app-card__setup-btn" href="/app-detail?app=' + encodeURIComponent(app.id) + '">Set Up</a>';
+            ? '<a class="dash-app-card__run" href="/app-detail?app=' + encodeURIComponent(app.id) + '">' + escHtml(t('dash_action_run', 'Run')) + '</a>'
+            : '<a class="dash-app-card__setup-btn" href="/app-detail?app=' + encodeURIComponent(app.id) + '">' + escHtml(t('dash_app_setup', 'Set Up')) + '</a>';
+
+          var runsLabel = active
+            ? t(totalRuns === 1 ? 'dash_run_single' : 'dash_run_plural', totalRuns === 1 ? '{count} run' : '{count} runs', { count: totalRuns })
+            : t('dash_needs_setup', 'Needs setup');
 
           card.innerHTML =
             iconHtml +
             '<div class="dash-app-card__body">' +
               '<p class="dash-app-card__name">' + escHtml(app.name) + '</p>' +
-              '<p class="dash-app-card__runs">' + (active ? totalRuns + ' run' + (totalRuns !== 1 ? 's' : '') : 'Needs setup') + '</p>' +
+              '<p class="dash-app-card__runs">' + escHtml(runsLabel) + '</p>' +
               (active ? buildSparkline(app.id) : '') +
             '</div>' +
             '<button class="dash-app-card__star' + (starred ? ' starred' : '') + '"' +
               ' data-app-id="' + escAttr(app.id) + '"' +
-              ' aria-label="' + (starred ? 'Remove from favorites' : 'Add to favorites') + '"' +
-              ' title="' + (starred ? 'Remove from favorites' : 'Add to favorites') + '"' +
+              ' aria-label="' + escAttr(starred ? t('dash_remove_favorite', 'Remove from favorites') : t('dash_add_favorite', 'Add to favorites')) + '"' +
+              ' title="' + escAttr(starred ? t('dash_remove_favorite', 'Remove from favorites') : t('dash_add_favorite', 'Add to favorites')) + '"' +
             '>★</button>' +
             actionHtml;
 
@@ -585,10 +619,10 @@
 
       function relativeTime(ts) {
         var diff = Date.now() - ts;
-        if (diff < 60000)    return 'just now';
-        if (diff < 3600000)  return Math.floor(diff / 60000)   + 'm ago';
-        if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
-        return Math.floor(diff / 86400000) + 'd ago';
+        if (diff < 60000)    return t('dash_relative_just_now', 'just now');
+        if (diff < 3600000)  return t('dash_relative_m_ago', '{value}m ago', { value: Math.floor(diff / 60000) });
+        if (diff < 86400000) return t('dash_relative_h_ago', '{value}h ago', { value: Math.floor(diff / 3600000) });
+        return t('dash_relative_d_ago', '{value}d ago', { value: Math.floor(diff / 86400000) });
       }
 
       /* ─────────────────────────────────────────────
@@ -600,9 +634,9 @@
         var el     = document.getElementById('dash-hello');
         var name   = (localStorage.getItem('solace_user_email') || '').split('@')[0];
         if (name) {
-          el.textContent = 'Good ' + period + ', ' + name + '!';
+          el.textContent = t('dash_greeting_' + period + '_name', 'Good ' + period + ', {name}!', { name: name });
         } else {
-          el.textContent = 'Good ' + period + '!';
+          el.textContent = t('dash_greeting_' + period, 'Good ' + period + '!');
         }
       }
 
@@ -617,22 +651,22 @@
           var text = document.getElementById('status-text');
           if (s.running) {
             dot.className  = 'home-status-bar__dot';
-            text.textContent = 'Browser running';
+            text.textContent = t('dash_status_running', 'Browser running');
           } else {
             dot.className  = 'home-status-bar__dot home-status-bar__dot--offline';
-            text.textContent = 'Browser offline';
+            text.textContent = t('dash_status_offline', 'Browser offline');
           }
           var modeItem = document.getElementById('status-mode-item');
           var modeText = document.getElementById('status-mode');
           if (modeItem) {
             modeItem.classList.remove('is-hidden');
-            modeText.textContent   = s.headless !== false ? 'Headless' : 'Headed';
+            modeText.textContent   = s.headless !== false ? t('dash_mode_headless', 'Headless') : t('dash_mode_headed', 'Headed');
           }
         } catch (_) {
           var dot2  = document.getElementById('status-dot');
           var text2 = document.getElementById('status-text');
           if (dot2)  dot2.className    = 'home-status-bar__dot home-status-bar__dot--offline';
-          if (text2) text2.textContent = 'Browser offline';
+          if (text2) text2.textContent = t('dash_status_offline', 'Browser offline');
         }
       }
 
@@ -683,7 +717,7 @@
             el.innerHTML = items.slice(0, 3).map(function(s) {
               return '<div class="dash-signoff-item">' +
                 '<span class="dash-signoff-item__name">' + escHtml(s.app_name || s.title || '') + '</span>' +
-                '<a href="/schedule#approve" class="dash-signoff-item__btn">Review</a>' +
+                '<a href="/schedule#approve" class="dash-signoff-item__btn">' + escHtml(t('dash_review', 'Review')) + '</a>' +
               '</div>';
             }).join('');
           }
@@ -720,9 +754,13 @@
         // YinYang conversational messages based on progress
         var yyMsg = '';
         if (activated === 0) {
-          yyMsg = 'Pick any app below to set it up. Each one takes about 30 seconds — I\'ll walk you through it.';
+          yyMsg = t('dash_onboarding_msg_start', 'Pick any app below to set it up. Each one takes about 30 seconds — I\'ll walk you through it.');
         } else if (activated < total) {
-          yyMsg = 'Nice! ' + activated + ' of ' + total + ' apps ready. ' + (total - activated) + ' more to go — or I can set up the rest for you.';
+          yyMsg = t('dash_onboarding_msg_progress', 'Nice! {activated} of {total} apps ready. {remaining} more to go — or I can set up the rest for you.', {
+            activated: activated,
+            total: total,
+            remaining: (total - activated)
+          });
         }
 
         var stepsHtml = '';
@@ -731,7 +769,7 @@
         var pct = Math.round((activated / total) * 100);
         stepsHtml += '<div style="margin-bottom:10px">' +
           '<div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--sb-text-muted);margin-bottom:4px">' +
-            '<span>' + activated + ' of ' + total + ' apps activated</span>' +
+            '<span>' + escHtml(t('dash_onboarding_progress', '{activated} of {total} apps activated', { activated: activated, total: total })) + '</span>' +
             '<span>' + pct + '%</span>' +
           '</div>' +
           '<div style="height:6px;background:var(--sb-surface-strong,#172335);border-radius:3px;overflow:hidden">' +
@@ -750,7 +788,7 @@
               ' onmouseover="this.style.borderColor=\'var(--sb-signal,#64c4ff)\'" onmouseout="this.style.borderColor=\'var(--sb-border,rgba(163,185,214,0.18))\'">' +
               '<span>' + app.emoji + '</span>' +
               '<span style="font-weight:600;color:var(--sb-text)">' + escHtml(app.name) + '</span>' +
-              '<span style="color:var(--sb-signal,#64c4ff);font-weight:700;font-size:0.72rem">Set Up</span>' +
+              '<span style="color:var(--sb-signal,#64c4ff);font-weight:700;font-size:0.72rem">' + escHtml(t('dash_onboarding_set_up_short', 'Set Up')) + '</span>' +
             '</a>';
           });
           stepsHtml += '</div>';
@@ -758,8 +796,8 @@
 
         // AI agent auto-setup option
         stepsHtml += '<div class="dash-onboarding__step">' +
-          '<span class="dash-onboarding__check" style="background:var(--sb-signal,#64c4ff);border-color:var(--sb-signal,#64c4ff);color:#0a0f1a;font-size:0.65rem">AI</span>' +
-          '<span>Or let your AI agent do it all: <code style="font-size:0.75rem;background:var(--sb-surface-strong);padding:2px 6px;border-radius:4px">solace apps setup --all</code></span></div>';
+          '<span class="dash-onboarding__check" style="background:var(--sb-signal,#64c4ff);border-color:var(--sb-signal,#64c4ff);color:#0a0f1a;font-size:0.65rem">' + escHtml(t('dash_onboarding_ai_badge', 'AI')) + '</span>' +
+          '<span>' + escHtml(t('dash_onboarding_agent_setup_all', 'Or let your AI agent do it all:')) + ' <code style="font-size:0.75rem;background:var(--sb-surface-strong);padding:2px 6px;border-radius:4px">solace apps setup --all</code></span></div>';
 
         // Update YinYang message
         var subEl = el.querySelector('.dash-onboarding__sub');
@@ -782,7 +820,8 @@
       /* ─────────────────────────────────────────────
          BOOT
          ───────────────────────────────────────────── */
-      function boot() {
+      async function boot() {
+        await loadUiStrings();
         setGreeting();
         renderOnboarding();
         renderMoneySaved();
@@ -796,9 +835,9 @@
       }
 
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', boot);
+        document.addEventListener('DOMContentLoaded', function() { void boot(); });
       } else {
-        boot();
+        void boot();
       }
 
       var interval = setInterval(loadStatus, 30000);

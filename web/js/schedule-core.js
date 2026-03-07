@@ -518,7 +518,7 @@
       showErrorBanner(msg);
     });
 
-    // Load upcoming schedules (app crons + keep-alive + Part 11 + eSign)
+    // Load upcoming schedules (app crons + Part 11 + eSign)
     const upcomingPromise = fetch('/api/schedule/upcoming').then(function (res) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();

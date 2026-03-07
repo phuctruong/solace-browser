@@ -153,28 +153,12 @@
       }
     }
 
-    // Render keep-alive sessions
+    // Keep-alive removed (GLOW 204) — will be in companion app
     const kaEl = document.getElementById('upcomingKeepAlive');
-    const keepAlives = state.upcoming.filter(function (u) { return u.type === 'keep_alive'; });
     const kaCount = document.getElementById('keepAliveCount');
-    if (kaCount) kaCount.textContent = keepAlives.length > 0 ? '(' + keepAlives.length + ')' : '';
+    if (kaCount) kaCount.textContent = '';
     if (kaEl) {
-      if (keepAlives.length === 0) {
-        kaEl.innerHTML = '<p class="timeline-empty">No keep-alive sessions active.</p>';
-      } else {
-        kaEl.innerHTML = keepAlives.map(function (k) {
-          // Presence in keep_alive list implies enabled; explicit enabled:false means paused
-          const isEnabled = k.enabled !== false;
-          return '<div class="upcoming-item">' +
-            '<span class="upcoming-item__emoji">\uD83D\uDD04</span>' +
-            '<div class="upcoming-item__info">' +
-              '<div class="upcoming-item__name">' + utils.escapeHtml(k.domain) + '</div>' +
-              '<div class="upcoming-item__detail">Cookie refresh \u00B7 Every ' + utils.escapeHtml(k.interval || '4h') + '</div>' +
-            '</div>' +
-            '<span class="upcoming-item__status">' + (isEnabled ? '\u2705 Active' : '\u25CB Paused') + '</span>' +
-          '</div>';
-        }).join('');
-      }
+      kaEl.innerHTML = '<p class="timeline-empty">Session persistence moved to companion app.</p>';
     }
 
     // Render calendar
@@ -196,7 +180,6 @@
     }
 
     const appScheds = state.upcoming.filter(function (u) { return u.type === 'app_schedule'; });
-    const keepAlives = state.upcoming.filter(function (u) { return u.type === 'keep_alive'; });
     const part11 = state.upcoming.find(function (u) { return u.type === 'part11'; });
     const esign = state.upcoming.find(function (u) { return u.type === 'esign'; });
 
@@ -205,12 +188,6 @@
         '<div class="ops-card__num">' + appScheds.length + '</div>' +
         '<div class="ops-card__label">App Schedules</div>' +
         appScheds.map(function (s) { return '<div class="ops-card__detail">' + (constants.APP_EMOJI[s.app_id] || '\uD83D\uDCC5') + ' ' + utils.escapeHtml(s.pattern_label) + '</div>'; }).join('') +
-      '</div>' +
-      '<div class="ops-card">' +
-        '<div class="ops-card__num">' + keepAlives.length + '</div>' +
-        '<div class="ops-card__label">Keep-Alive Sessions</div>' +
-        keepAlives.slice(0, constants.MAX_KEEPALIVE_SHOWN).map(function (k) { return '<div class="ops-card__detail">\uD83D\uDD04 ' + utils.escapeHtml(k.domain) + '</div>'; }).join('') +
-        (keepAlives.length > constants.MAX_KEEPALIVE_SHOWN ? '<div class="ops-card__detail" style="opacity:0.5">+' + (keepAlives.length - constants.MAX_KEEPALIVE_SHOWN) + ' more</div>' : '') +
       '</div>' +
       '<div class="ops-card">' +
         '<div class="ops-card__num">' + (part11 ? (part11.chain_entries || 0) : 0) + '</div>' +

@@ -68,6 +68,14 @@ ACTION_ALIASES: Dict[str, str] = {
     "verify_deletion": "verify",
     "wait_for_element": "wait",
     "wait_for_selector": "wait",
+    "wait_for_stable": "wait",
+    "type_text": "fill",
+    "inject_text": "fill",
+    "compose_uplift": "transform",
+    "save_to_outbox": "return",
+    "hash_evidence": "verify",
+    "activate_tab": "navigate",
+    "ensure_model": "verify",
 }
 
 

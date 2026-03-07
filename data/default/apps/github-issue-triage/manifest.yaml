@@ -4,6 +4,8 @@ description: Review issues, classify urgency, and prepare follow-up drafts.
 category: engineering
 status: installed
 safety: B
+tier: pro
+tier_reason: "Write actions on GitHub issues require cloud sync + evidence"
 site: github.com
 type: standard
 orchestrates: []
@@ -27,6 +29,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://github.com/
-  interval_min: 60

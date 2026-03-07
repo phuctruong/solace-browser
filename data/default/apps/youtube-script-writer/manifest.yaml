@@ -4,6 +4,8 @@ description: Draft scripts from source notes and hand them to downstream apps.
 category: sales
 status: installed
 safety: B
+tier: team
+tier_reason: "Content creation workflow requiring shared workspace"
 site: studio.youtube.com
 type: standard
 orchestrates: []
@@ -27,6 +29,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://studio.youtube.com/
-  interval_min: 60

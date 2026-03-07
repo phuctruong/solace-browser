@@ -4,6 +4,8 @@ description: Scan Google News, Hacker News, and LinkedIn for AI/automation trend
 category: research
 status: installed
 safety: A
+tier: free
+tier_reason: "Read-only trend extraction, no managed LLM required"
 site: news.google.com
 type: standard
 orchestrates: []
@@ -27,6 +29,3 @@ required_inbox:
   conventions:
     config: config.yaml
     defaults: defaults.yaml
-keep_alive:
-  url: https://news.google.com/topics/CAAqIggKIhxDQkFTRHdvSkwyMHZNREUwZERrU0FtVnVLQUFQAQ
-  interval_min: 60
