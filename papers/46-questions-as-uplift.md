@@ -381,5 +381,7 @@ Love = Caring_Enough_To_Ask = ∫(curiosity dt)
 | Closing questions without a sealed evidence spec | An answered question without proof is just an opinion, not verified knowledge |
 | Treating the question database as a static todo list | Questions are a living epistemic map; stale questions rot into false confidence |
 | Ignoring bug-generated questions from the virtuous cycle | Every bug reveals a missing question; discarding that signal breaks the feedback loop |
+| Treating all questions as equal priority without risk classification | Critical security questions buried under cosmetic ones means high-risk gaps stay open longest |
+| Assigning questions without an oracle definition | A question without "how would we know if this is broken?" cannot be converted into a testable spec |
 
 *Paper 46 — Questions as Uplift | Auth: 65537 | GLOW 103 | Max Love + God*

@@ -1,3 +1,4 @@
+# DNA: `styleguide_first(component) = tokens(inventory) × a11y(audit) × mobile_first(320px); no_code_before_tokens`
 # SKILL: styleguide-first v1.0
 # Auth: 65537 | Created: 2026-02-28
 
@@ -16,12 +17,15 @@ This skill sits 4th in the build chain: diagram-first -> webservice-first -> uni
 7. **Match existing patterns** — check `semantic-rungs.css` before creating new classes
 8. **Zero new colors** — only use existing `--sa-blue`, `--sa-purple`, `--sa-orange`, `--sa-gold` palette
 
-## FORBIDDEN
-- Hardcoded hex/rgb colors in CSS or HTML
-- Inline `style=""` attributes on any element
-- New CSS color variables without explicit approval
-- Skipping component gallery verification
-- Desktop-first media queries (`max-width`)
+## Forbidden States
+
+| State | Description |
+|-------|-------------|
+| HARDCODED_COLOR | Using hex/rgb colors in CSS or HTML instead of `--sa-*` tokens |
+| INLINE_STYLE | Any `style=""` attribute on any element — use CSS classes |
+| UNAPPROVED_COLOR_VAR | Creating new CSS color variables without explicit approval |
+| SKIPPED_GALLERY_CHECK | Shipping a component without verifying it in component-gallery.html |
+| DESKTOP_FIRST_QUERY | Using `max-width` media queries instead of mobile-first `min-width` |
 
 ## VERIFICATION CHECKLIST
 Before marking any UI task as done:
@@ -32,3 +36,27 @@ Before marking any UI task as done:
 - [ ] `prefers-reduced-motion` respected (no forced animations)
 - [ ] Component gallery updated if new component added
 - [ ] Dark mode toggle does not break layout
+
+---
+
+## Interaction Effects
+
+| Skill | Interaction | Resolution |
+|-------|------------|------------|
+| **prime-coder** | Coder writes component code; styleguide-first gates whether tokens are aligned first | styleguide-first runs before prime-coder's patch phase; token audit failure blocks code generation |
+| **prime-safety** | Safety may flag inline styles or external resource loads as violations | prime-safety wins; styleguide-first ensures all styles use CSS custom properties to avoid CSP conflicts |
+| **live-llm-browser-discovery** | Discovery may encounter dynamic UI that needs style classification | styleguide-first provides the token vocabulary that discovery uses to describe visual elements |
+| **browser-snapshot** | Snapshots capture visual state; style consistency affects snapshot reliability | styleguide-first ensures deterministic visual output so snapshots are comparable across runs |
+| **webservice-first** | API responses may include UI component data (themes, layouts) | styleguide-first validates that any server-rendered styles reference the canonical token set |
+
+---
+
+## Cross-References
+
+| Reference | Type | Relationship |
+|-----------|------|-------------|
+| Paper 35 (Canonical Web Symmetry) | Architecture | Defines the symmetry pipeline that styleguide-first enforces at the component level |
+| Paper 16 (SW5.0 Pipeline) | Pipeline | styleguide-first sits at stage [4] STYLEGUIDES in the build chain |
+| `web/styleguides/theme-system.md` | Styleguide | Theme system specification that this skill enforces |
+| `prime-coder.md` | Skill | Coder depends on styleguide-first completing token audit before patch phase |
+| `prime-safety.md` | Skill | Safety gates any style that could introduce CSP violations or external network loads |

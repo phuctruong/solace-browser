@@ -516,6 +516,8 @@ Love says: "I will not let you ship something broken. Not because I distrust you
 | Modifying specs to hide regressions instead of fixing the code | The spec is the truth; weakening assertions masks real failures |
 | Using INSPECTOR_SKIP=1 without logging the bypass | Silent bypasses create untracked compliance debt and hide pressure deploys |
 | Shipping UNCERTIFIED northstars to main branch | Declaring intent without proof violates the evidence-first covenant |
+| Disabling the pre-push hook instead of fixing the failing spec | Removing the gate trades permanent enforcement for temporary convenience; broken code reaches remote |
+| Reducing assertion thresholds to turn Orange into Green | Lowering the bar is not the same as raising the code; the regression still exists under a weaker lens |
 
 *Paper 44 — Part of the Solace Inspector knowledge network*
 *Cross-references: Paper 42 (Inspector), Paper 43 (Webservices-First Northstar ABCD), Paper 16 (SW5.0), Paper 06 (Part 11)*
