@@ -2923,17 +2923,316 @@ def redact_for_cloud(evidence: dict) -> dict:
 
 ---
 
-## R7→R8 Predicted Scores
+## R8 Actual Scores
 
-| Category | R3 | R7 | R8 (predicted) |
+| Category | ChatGPT | Gemini | Claude | Consensus |
+|----------|---------|--------|--------|-----------|
+| Architecture | 94 | 96 | 78 | 89 |
+| Security | 95 | 98 | 74 | 89 |
+| Data Integrity | 96 | 94 | 82 | 91 |
+| Recipe Engine | 92 | 92 | 76 | 87 |
+| Implementation | 89 | 95 | 65 | 83 |
+| UX | 90 | 92 | 60 | 81 |
+| Operational | 88 | 90 | 63 | 80 |
+| **OVERALL** | **92** | **93** | **71** | **85** |
+| Ceiling | 97 | 98 | 88 | 94 |
+
+**Key insight:** Claude measures "production-shipped security product" gaps.
+ChatGPT/Gemini measure "well-designed architecture document" completeness.
+Both valid — different evaluation frames.
+
+### R8 Consensus Findings (2+ LLMs agree) — APPLYING FOR R9
+
+| # | Finding | Source | Fix |
+|---|---------|--------|-----|
+| 1 | No typed message schemas / wire format | ChatGPT + Claude | Protobuf or JSON Schema for every IPC message type |
+| 2 | No error code catalog | ChatGPT + Claude | E1001-E9999 catalog, no free-text-only failures |
+| 3 | First-run flow completely absent | ChatGPT + Claude | NM host install, extension detection, key ceremony |
+| 4 | Core monitoring deferred to post-MVP | ChatGPT + Claude | Promote 3 metrics to MVP: chain_break, auth_fail, quota_pct |
+| 5 | LLM repair inherits original seal | Gemini + Claude | Repaired recipe = NEW unsigned recipe, must re-seal |
+| 6 | Evidence pruning breaks hash chain | Gemini + Claude | Merkle tree structure; pruned leaves keep hash |
+| 7 | Per-step timeout missing | ChatGPT + Claude | step_timeout_ms in capability manifest |
+| 8 | Failure-first UX undefined | ChatGPT + Claude | Canonical screen per hard-stop condition |
+| 9 | Idempotency for external_write | Gemini | client_request_id + COMMITTED flag per step |
+
+---
+
+## IPC Wire Format Schema (R8 fix — ChatGPT + Claude consensus)
+
+Every message crossing the Tauri↔MV3 Native Messaging boundary MUST conform
+to a typed schema. Two engineers implementing from this spec MUST produce
+compatible wire formats.
+
+```protobuf
+// solace_ipc.proto — IPC Wire Protocol v1.0
+
+message IpcFrame {
+  bytes   msg_id         = 1;  // UUIDv7 (16 bytes)
+  uint64  lamport        = 2;  // Lamport clock value
+  bytes   session_key_id = 3;  // Ed25519 public key fingerprint (32 bytes)
+  bytes   signature      = 4;  // Ed25519 signature of payload (64 bytes)
+  uint64  monotonic_seq  = 5;  // Monotonic counter (anti-replay)
+  bytes   nonce          = 6;  // Random nonce (12 bytes, anti-replay)
+  uint64  sent_at_ms     = 7;  // Monotonic clock milliseconds
+
+  oneof payload {
+    HelloRequest      hello_req      = 10;
+    HelloResponse     hello_resp     = 11;
+    HeartbeatPing     heartbeat_ping = 12;
+    HeartbeatPong     heartbeat_pong = 13;
+    RecipeExecuteReq  recipe_exec    = 20;
+    StepResultMsg     step_result    = 21;
+    ApprovalRequest   approval_req   = 30;
+    ApprovalResponse  approval_resp  = 31;
+    TokenRenewalReq   token_renew    = 40;
+    TokenRenewalResp  token_renewed  = 41;
+    ErrorMsg          error          = 50;
+  }
+}
+
+message ErrorMsg {
+  uint32 code    = 1;  // E1001-E9999
+  string message = 2;  // Human-readable
+  string context = 3;  // Machine-readable JSON
+}
+```
+
+**Anti-replay enforcement:**
+- Reject messages with `monotonic_seq <= last_seen_seq` for same session
+- Reject messages with duplicate `nonce` within sliding 60s window
+- Reject messages with `sent_at_ms` older than 30s from local monotonic clock
+
+---
+
+## Error Code Catalog (R8 fix — ChatGPT + Claude consensus)
+
+```
+ERROR CODE RANGES:
+  E1xxx — IPC errors (signature, replay, timeout, disconnect)
+    E1001: IPC_SIGNATURE_INVALID
+    E1002: IPC_REPLAY_DETECTED (duplicate nonce or sequence regression)
+    E1003: IPC_SESSION_EXPIRED
+    E1004: IPC_HEARTBEAT_TIMEOUT (3 missed = DEAD)
+    E1005: IPC_VERSION_MISMATCH
+
+  E2xxx — Auth/Token errors
+    E2001: TOKEN_EXPIRED
+    E2002: TOKEN_REVOKED
+    E2003: TOKEN_SCOPE_INSUFFICIENT
+    E2004: STEP_UP_AUTH_REQUIRED
+    E2005: STEP_UP_AUTH_DENIED
+    E2006: TOKEN_RENEWAL_FAILED
+
+  E3xxx — Evidence chain errors
+    E3001: CHAIN_HASH_MISMATCH (tamper detected)
+    E3002: CHAIN_KEY_UNAVAILABLE (HMAC key missing from keychain)
+    E3003: CHAIN_FORK_DETECTED (parallel writer collision)
+    E3004: CHAIN_VERIFICATION_TIMEOUT
+
+  E4xxx — CDP/Browser errors
+    E4001: CDP_BANNED_METHOD (Runtime.evaluate, Debugger.*, etc.)
+    E4002: CDP_DOMAIN_NOT_ALLOWED (URL not in network_domains)
+    E4003: CDP_PARAM_VALIDATION_FAILED
+    E4004: CDP_SESSION_LOST
+
+  E5xxx — Recipe/Replay errors
+    E5001: EVIDENCE_WRITER_CONTENTION (single-writer lock held)
+    E5002: RECIPE_CAPABILITY_EXCEEDED (unlisted scope requested)
+    E5003: RECIPE_SEAL_TAMPERED
+    E5004: DRIFT_UNKNOWN_PAGE
+    E5005: DRIFT_MAJOR (NEEDS_LLM_REPAIR)
+    E5006: STEP_TIMEOUT
+    E5007: REPLAY_POSTCONDITION_FAILED
+
+  E6xxx — Storage/Quota errors
+    E6001: QUOTA_HARD_STOP (95% disk)
+    E6002: QUOTA_THROTTLE (90% disk)
+    E6003: PRUNING_BLOCKED (hash chain reference)
+
+  E9xxx — Migration errors
+    E9001: MIGRATION_INVARIANT_FAILED
+    E9002: SCHEMA_VERSION_MISMATCH
+    E9003: DOWNGRADE_REJECTED
+```
+
+**Rules:** Every HARD FAIL must emit exactly one error code. No free-text-only
+error messages. Error codes are stable across versions (never reuse a code).
+
+---
+
+## First-Run Ceremony (R8 fix — ChatGPT + Claude consensus)
+
+The product cannot onboard a single user without this flow defined.
+
+```
+FIRST-RUN SEQUENCE:
+
+Screen 1: "Welcome to Solace Browser"
+  - Detect OS (macOS / Windows / Linux)
+  - Check if Tauri companion app is installed
+  - If not: show download button + auto-detect on install
+  - If yes: proceed to Screen 2
+
+Screen 2: "Connecting to Companion App"
+  - Tauri installs Native Messaging host manifest:
+    macOS:   ~/Library/Application Support/Google/Chrome/NativeMessagingHosts/
+    Windows: HKCU\Software\Google\Chrome\NativeMessagingHosts\
+    Linux:   ~/.config/google-chrome/NativeMessagingHosts/
+  - Extension polls for host availability (5s timeout × 3 retries)
+  - On success: show green checkmark + proceed
+  - On failure: show troubleshooting steps + retry button
+
+Screen 3: "Security Setup"
+  - Generate Ed25519 keypair (device identity)
+  - Show key fingerprint for out-of-band verification
+  - Generate HMAC key for evidence chain, store in OS keychain
+  - Optional: Shamir 2-of-3 key backup ceremony
+  - Analytics/telemetry unchecked by default
+  - User consents to local evidence collection
+
+Screen 4: "Ready"
+  - Show first tutorial (Gmail inbox triage or similar)
+  - Explain sidebar toggle
+  - Explain approval flow (preview → approve → evidence)
+```
+
+---
+
+## MVP Monitoring (R8 fix — ChatGPT + Claude + Gemini consensus)
+
+Three metrics MUST be in MVP (not post-MVP). Without chain-break detection,
+the evidence chain is tamper-invisible, not tamper-evident.
+
+```yaml
+mvp_metrics:
+  evidence_chain_break_count:
+    type: counter
+    alert: "> 0 → CRITICAL (possible tampering)"
+    check: on_startup, before_sync, before_export, after_unclean_shutdown
+
+  auth_failure_rate:
+    type: rate
+    alert: "> 5 failures/min → WARNING (possible credential attack)"
+    check: on_every_token_use
+
+  disk_quota_pct:
+    type: gauge
+    alert: "> 90% → WARNING, > 95% → CRITICAL (hard stop)"
+    check: every_60s
+
+health_endpoint:
+  path: "GET localhost:{port}/health"
+  response:
+    status: "ok" | "degraded" | "critical"
+    chain_integrity: bool
+    quota_pct: float
+    token_states: {active: N, expiring: N, expired: N}
+    last_chain_verify: ISO8601
+```
+
+---
+
+## LLM Repair Re-Seal (R8 fix — Gemini + Claude consensus)
+
+When NEEDS_LLM_REPAIR triggers, the repaired step sequence is a DERIVATIVE
+WORK — it cannot inherit the original seal or capability manifest.
+
+```
+LLM REPAIR WORKFLOW:
+1. MAJOR_DRIFT detected → recipe paused
+2. System generates repair context:
+   - Original step definition (from sealed recipe)
+   - Current DOM snapshot (structural fingerprint)
+   - Drift delta (what changed)
+3. LLM generates candidate repair:
+   - Model: configurable (default: local if available, remote with user consent)
+   - Timeout: 30s
+   - Output: typed step schema (same format as recipe steps)
+   - On LLM failure: treat as unresolvable MAJOR_DRIFT, offer manual retry
+4. User reviews repair diff:
+   - Show original step vs proposed repair (side-by-side)
+   - Show capability delta (any new scopes needed?)
+   - User approves or rejects
+5. On approval:
+   - Create NEW sealed recipe with new hash
+   - New capability manifest (may differ from original)
+   - New HMAC chain anchor
+   - Original recipe archived (not overwritten)
+6. On rejection:
+   - Recipe remains paused
+   - User can retry, skip step, or abort
+```
+
+---
+
+## Merkle Evidence Tree (R8 fix — Gemini + Claude consensus)
+
+Linear hash chain breaks when entries are pruned. Merkle tree allows pruning
+leaves while maintaining root integrity.
+
+```
+EVIDENCE TREE STRUCTURE:
+
+Level 0 (leaves): Individual evidence entries (step results, screenshots)
+Level 1: Hash pairs of adjacent leaves
+Level 2: Hash pairs of level 1 nodes
+...
+Root: Single hash representing entire evidence state
+
+PRUNING:
+  - When a leaf (screenshot) is pruned, keep only its hash
+  - Merkle proof from any remaining leaf to root remains valid
+  - Pruned leaf marked as TOMBSTONE: {hash, size, capture_time, reason: "PRUNED_QUOTA"}
+  - verify_tree() validates root hash with available leaves + tombstones
+
+BENEFITS vs LINEAR CHAIN:
+  - Pruning doesn't break integrity verification
+  - Parallel writes possible (merge Merkle branches)
+  - Incremental verification: verify subtree, not entire chain
+  - Verified-through checkpoint at Merkle level (not entry level)
+```
+
+---
+
+## Per-Step Timeout (R8 fix — ChatGPT + Claude consensus)
+
+Each recipe step must declare timeout constraints. A hanging step cannot
+block the replay engine indefinitely.
+
+```yaml
+# In capability manifest:
+step_defaults:
+  timeout_ms: 30000          # Default step timeout (30s)
+  max_timeout_ms: 120000     # Maximum allowed (2 min)
+  dom_settle_ms: 2000        # Wait for DOM to stop changing
+  network_idle_ms: 5000      # Wait for network quiet
+
+# Per-step override in recipe:
+steps:
+  - action: navigate
+    url: "https://mail.google.com"
+    timeout_ms: 60000        # Gmail loads slow, allow 60s
+  - action: click
+    selector: "#compose"
+    timeout_ms: 10000        # Simple click, 10s max
+```
+
+**On timeout:** Step status = FAILED with E5006. Replay status = PAUSED.
+User notified with options: Retry / Skip / Abort. Never silently retry.
+
+---
+
+## R8→R9 Predicted Scores
+
+| Category | R7 | R8 (actual) | R9 (predicted) |
 |----------|----|----|----------------|
-| Architecture | 90 | 90 | 95+ |
-| Security | 87 | 89 | 95+ |
-| Implementation | 82 | 84 | 92+ |
-| UX | 85 | 91 | 95+ |
-| Recipe Engine | — | 82 | 92+ |
-| Evidence Chain | — | 72 | 90+ |
-| Operational Sec | — | 61 | 75+ |
-| **OVERALL** | **86** | **86** | **92+** |
+| Architecture | 90 | 89 | 93+ |
+| Security | 89 | 89 | 93+ |
+| Data Integrity | — | 91 | 95+ |
+| Recipe Engine | 82 | 87 | 92+ |
+| Implementation | 84 | 83 | 90+ |
+| UX | 91 | 81 | 88+ |
+| Operational | 61 | 80 | 88+ |
+| **OVERALL** | **86** | **85** | **92+** |
 
-**Structural ceiling (Claude):** 97/100 — requires independent OAuth3 audit + operational maturity
+**Structural ceiling (Claude):** 88/100 — requires protobuf implementation, working first-run installer, empirically-validated drift thresholds
