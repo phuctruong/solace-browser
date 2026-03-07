@@ -1,1 +1,0 @@
-../../../stillwater/data/default/skills/oauth3-enforcer.md

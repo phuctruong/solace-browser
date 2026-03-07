@@ -1,1 +1,0 @@
-../../../stillwater/data/default/skills/phuc-swarms.md
