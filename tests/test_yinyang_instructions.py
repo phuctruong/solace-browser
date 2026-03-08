@@ -2539,3 +2539,18 @@ class TestAppTags:
         assert "tags" in data
         assert "total" in data
         assert isinstance(data["tags"], list)
+
+
+# ── Task 043: Multi-Window Sync / Broadcast ───────────────────────────────────
+
+class TestBroadcast:
+    def test_broadcast_post(self, auth_server):
+        status, data = _post_with_auth("/api/v1/broadcast", {"type": "theme_change", "data": {"theme": "dark"}})
+        assert status == 200
+        assert data["status"] == "broadcast"
+        assert data["event"]["type"] == "theme_change"
+
+    def test_broadcast_get(self, auth_server):
+        status, data = _get_json_auth("/api/v1/broadcast")
+        assert status == 200
+        assert "events" in data

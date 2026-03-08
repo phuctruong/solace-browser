@@ -2707,6 +2707,17 @@
     refreshWatchdog();
     setInterval(refreshWatchdog, 30_000);
 
+    // Multi-window storage broadcast sync (Task 043)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'solace-theme') { applyTheme(e.newValue || 'light'); }
+      else if (e.key === 'solace-pinned') {
+        try { _pinnedSections = new Set(JSON.parse(e.newValue || '[]')); applyPinnedStyles(); } catch (_) {}
+      }
+    });
+    // Write theme changes to localStorage for cross-tab sync
+    const _origApplyTheme = applyTheme;
+    const _applyTheme = (theme) => { _origApplyTheme(theme); try { localStorage.setItem('solace-theme', theme); } catch (_) {} };
+
     // App tag filter (Task 042)
     let _activeAppTag = 'all';
     async function loadAppTags() {

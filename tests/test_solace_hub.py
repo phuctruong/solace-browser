@@ -860,3 +860,17 @@ class TestAppTagsUI:
         """index.html must contain tag filter UI."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "tag" in html.lower() or "filter" in html.lower()
+
+
+# ── Task 043: Multi-Window Sync / Broadcast ───────────────────────────────────
+
+class TestBroadcastUI:
+    def test_broadcast_in_server(self):
+        """yinyang_server.py must implement /api/v1/broadcast."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/broadcast" in server
+
+    def test_storage_sync_in_html(self):
+        """index.html must reference storage or broadcast."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "storage" in html.lower() or "broadcast" in html.lower()

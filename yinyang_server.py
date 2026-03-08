@@ -146,6 +146,10 @@ _TUNNEL_LOCK = threading.Lock()
 _TUNNEL_URL: str = ""
 
 # ---------------------------------------------------------------------------
+# Broadcast log — Task 043
+_BROADCAST_LOG: list = []
+_BROADCAST_LOCK = threading.Lock()
+
 # Metrics globals — Task 018
 # ---------------------------------------------------------------------------
 _SERVER_START_TIME: float = time.time()
@@ -592,6 +596,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_ping()
         elif path == "/api/v1/apps/tags":
             self._handle_apps_tags()
+        elif path == "/api/v1/broadcast":
+            self._handle_broadcast_get()
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -683,6 +689,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_theme_set()
         elif path == "/api/v1/settings/import":
             self._handle_settings_import()
+        elif path == "/api/v1/broadcast":
+            self._handle_broadcast_post()
         elif path == "/api/v1/pinned":
             self._handle_pinned_set()
         elif path == "/api/v1/byok/set":
@@ -1933,6 +1941,30 @@ function choose(mode) {
                 CLI_CONFIG_PATH.write_text(json.dumps(body["cli_config"], indent=2))
             imported.append("cli_config")
         self._send_json({"status": "imported", "imported": imported})
+
+    # --- Task 043: Broadcast handlers ---
+
+    def _handle_broadcast_get(self) -> None:
+        """GET /api/v1/broadcast — return recent broadcast events. Task 043."""
+        with _BROADCAST_LOCK:
+            events = list(_BROADCAST_LOG)
+        self._send_json({"events": events, "total": len(events)})
+
+    def _handle_broadcast_post(self) -> None:
+        """POST /api/v1/broadcast — record a broadcast event. Task 043."""
+        body = self._read_json_body()
+        if body is None:
+            return
+        event = {
+            "timestamp": int(time.time()),
+            "type": str(body.get("type", "unknown"))[:64],
+            "data": body.get("data"),
+        }
+        with _BROADCAST_LOCK:
+            _BROADCAST_LOG.append(event)
+            if len(_BROADCAST_LOG) > 10:
+                _BROADCAST_LOG.pop(0)
+        self._send_json({"status": "broadcast", "event": event})
 
     # --- Task 042: App tags handler ---
 
