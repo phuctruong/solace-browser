@@ -2696,3 +2696,14 @@ class TestThemePresets:
         assert "presets" in data
         assert len(data["presets"]) >= 2
         assert all("id" in p and "name" in p for p in data["presets"])
+
+
+# ── Task 055: Budget Spending Breakdown ───────────────────────────────────────
+
+class TestBudgetBreakdown:
+    def test_budget_breakdown(self, auth_server):
+        status, data = _get_json_auth("/api/v1/budget/breakdown")
+        assert status == 200
+        assert "by_provider" in data
+        assert "by_recipe" in data
+        assert "total_spent" in data

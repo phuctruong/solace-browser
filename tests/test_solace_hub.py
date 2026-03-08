@@ -1022,3 +1022,15 @@ class TestThemePresetsUI:
     def test_theme_in_html(self):
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "theme" in html.lower() or "dark" in html.lower()
+
+
+# ── Task 055: Budget Spending Breakdown ───────────────────────────────────────
+
+class TestBudgetBreakdownUI:
+    def test_breakdown_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/budget/breakdown" in server
+
+    def test_budget_in_html(self):
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "budget" in html.lower() or "spend" in html.lower()

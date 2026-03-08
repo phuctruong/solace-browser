@@ -588,6 +588,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_budget_history(query)
         elif path == "/api/v1/budget/alerts":
             self._handle_budget_alerts()
+        elif path == "/api/v1/budget/breakdown":
+            self._handle_budget_breakdown()
         elif path == "/api/v1/watchdog/status":
             self._handle_watchdog_status()
         elif path == "/api/v1/theme":
@@ -1099,6 +1101,30 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                     self._send_json({"status": "disabled", "schedule_id": schedule_id})
                     return
         self._send_json({"error": "schedule not found"}, 404)
+
+    def _handle_budget_breakdown(self) -> None:
+        """GET /api/v1/budget/breakdown — spending by provider + recipe. Task 055."""
+        total = 0.0
+        by_provider: dict = {}
+        by_recipe: dict = {}
+        if SPEND_HISTORY_PATH.exists():
+            try:
+                entries = json.loads(SPEND_HISTORY_PATH.read_text())
+                if isinstance(entries, list):
+                    for e in entries:
+                        amount = float(e.get("amount", 0))
+                        total += amount
+                        prov = str(e.get("provider", "unknown"))
+                        by_provider[prov] = round(by_provider.get(prov, 0.0) + amount, 6)
+                        rid = str(e.get("recipe_id", "manual"))
+                        by_recipe[rid] = round(by_recipe.get(rid, 0.0) + amount, 6)
+            except (json.JSONDecodeError, OSError, ValueError):
+                pass
+        self._send_json({
+            "total_spent": round(total, 6),
+            "by_provider": by_provider,
+            "by_recipe": by_recipe,
+        })
 
     def _handle_theme_presets(self) -> None:
         """GET /api/v1/theme/presets — available theme presets. Task 054."""
