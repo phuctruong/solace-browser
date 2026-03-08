@@ -2718,3 +2718,48 @@ class TestEvidenceExportSummary:
         assert "total" in data
         assert "by_type" in data
         assert "chain_valid" in data
+
+
+# ── Task 057: Schedule Summary ────────────────────────────────────────────────
+
+class TestScheduleSummary:
+    def test_schedule_summary(self, auth_server):
+        status, data = _get_json_auth("/api/v1/schedules/summary")
+        assert status == 200
+        assert "total" in data
+        assert "active" in data
+        assert "paused" in data
+
+
+# ── Task 058: App Install ──────────────────────────────────────────────────────
+
+class TestAppInstall:
+    def test_app_install(self, auth_server):
+        status, data = _post_with_auth("/api/v1/apps/install", {"app_id": "gmail-automation"})
+        assert status == 200
+        assert data["status"] in ("installed", "already_installed")
+
+    def test_app_uninstall(self, auth_server):
+        status, data = _post_with_auth("/api/v1/apps/uninstall", {"app_id": "gmail-automation"})
+        assert status == 200
+        assert data["status"] in ("uninstalled", "not_installed")
+
+
+# ── Task 059: Notification Clear All ──────────────────────────────────────────
+
+class TestNotificationClearAll:
+    def test_notification_clear_all(self, auth_server):
+        status, data = _post_with_auth("/api/v1/notifications/clear-all", {})
+        assert status == 200
+        assert "status" in data
+
+
+# ── Task 060: System Info ──────────────────────────────────────────────────────
+
+class TestSystemInfo:
+    def test_system_info(self, auth_server):
+        status, data = _get_json_auth("/api/v1/system/info")
+        assert status == 200
+        assert "platform" in data
+        assert "python_version" in data
+        assert "hostname" in data

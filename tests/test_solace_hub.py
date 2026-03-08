@@ -1046,3 +1046,51 @@ class TestEvidenceExportSummaryUI:
     def test_evidence_in_html(self):
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "evidence" in html.lower() or "chain" in html.lower()
+
+
+# ── Task 057: Schedule Summary ────────────────────────────────────────────────
+
+class TestScheduleSummaryUI:
+    def test_schedule_summary_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/schedules/summary" in server
+
+    def test_schedule_in_html(self):
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "schedule" in html.lower()
+
+
+# ── Task 058: App Install ──────────────────────────────────────────────────────
+
+class TestAppInstallUI:
+    def test_app_install_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/apps/install" in server
+
+    def test_install_in_html(self):
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "launch" in html.lower() or "install" in html.lower()
+
+
+# ── Task 059: Notification Clear All ──────────────────────────────────────────
+
+class TestNotificationClearAllUI:
+    def test_clear_all_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "clear-all" in server
+
+    def test_notification_in_html(self):
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "notif" in html.lower() or "toast" in html.lower()
+
+
+# ── Task 060: System Info ──────────────────────────────────────────────────────
+
+class TestSystemInfoUI:
+    def test_system_info_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/system/info" in server
+
+    def test_system_in_html(self):
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "system" in html.lower() or "version" in html.lower()

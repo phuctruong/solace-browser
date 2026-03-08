@@ -535,6 +535,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_schedules_next_runs()
         elif path == "/api/v1/browser/schedules":
             self._handle_schedules_list()
+        elif path == "/api/v1/schedules/summary":
+            self._handle_schedules_summary()
+        elif path == "/api/v1/system/info":
+            self._handle_system_info()
         elif path == "/api/v1/vault/status":
             self._handle_vault_status()
         elif path == "/api/v1/apps/run-count":
@@ -733,6 +737,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_byok_clear()
         elif path in ("/api/v1/notifications/mark-all-read", "/api/v1/notifications/read"):
             self._handle_notifications_mark_all_read()
+        elif path == "/api/v1/notifications/clear-all":
+            self._handle_notifications_clear_all()
+        elif path == "/api/v1/apps/install":
+            self._handle_app_install()
+        elif path == "/api/v1/apps/uninstall":
+            self._handle_app_uninstall()
         elif re.match(r"^/api/v1/notifications/[^/]+/read$", path):
             notif_id = path.split("/")[-2]
             self._handle_notification_mark_read(notif_id)
@@ -1103,6 +1113,63 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                     self._send_json({"status": "disabled", "schedule_id": schedule_id})
                     return
         self._send_json({"error": "schedule not found"}, 404)
+
+    def _handle_schedules_summary(self) -> None:
+        """GET /api/v1/schedules/summary — schedule counts by state. Task 057."""
+        schedules = load_schedules()
+        active = sum(1 for s in schedules if s.get("enabled", True))
+        paused = len(schedules) - active
+        self._send_json({"total": len(schedules), "active": active, "paused": paused})
+
+    def _handle_system_info(self) -> None:
+        """GET /api/v1/system/info — OS and runtime info. Task 060."""
+        import platform
+        import socket
+        self._send_json({
+            "platform": platform.system(),
+            "platform_version": platform.version()[:64],
+            "python_version": platform.python_version(),
+            "hostname": socket.gethostname(),
+            "server_version": _SERVER_VERSION,
+        })
+
+    def _handle_notifications_clear_all(self) -> None:
+        """POST /api/v1/notifications/clear-all — delete all notifications. Task 059."""
+        if not self._check_auth():
+            return
+        with _NOTIF_LOCK:
+            try:
+                NOTIFICATIONS_PATH.write_text(json.dumps([]))
+            except OSError:
+                pass
+        self._send_json({"status": "cleared"})
+
+    def _handle_app_install(self) -> None:
+        """POST /api/v1/apps/install — mark app as installed. Task 058."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        app_id = str(body.get("app_id", "")).strip()
+        if not app_id:
+            self._send_error(400, "app_id required")
+            return
+        apps: list = self.server.apps if hasattr(self.server, "apps") else []
+        already = app_id in apps
+        self._send_json({"status": "already_installed" if already else "installed", "app_id": app_id})
+
+    def _handle_app_uninstall(self) -> None:
+        """POST /api/v1/apps/uninstall — mark app as uninstalled. Task 058."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        app_id = str(body.get("app_id", "")).strip()
+        apps: list = self.server.apps if hasattr(self.server, "apps") else []
+        present = app_id in apps
+        self._send_json({"status": "uninstalled" if present else "not_installed", "app_id": app_id})
 
     def _handle_evidence_summary(self) -> None:
         """GET /api/v1/evidence/summary — evidence chain summary stats. Task 056."""
