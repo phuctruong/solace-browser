@@ -1034,6 +1034,19 @@
       </div>
     </div>
 
+    <!-- ── Task 026: AI Chat Panel ── -->
+    <div class="card" id="chat-panel">
+      <h2>AI Chat</h2>
+      <div id="chat-messages" style="height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:8px;margin-bottom:8px;font-size:13px;"></div>
+      <div style="display:flex;gap:8px;">
+        <input id="chat-input" type="text" placeholder="Ask anything…"
+               style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);"
+               onkeydown="if(event.key==='Enter')sendChatMessage()"/>
+        <button class="hub-btn" onclick="sendChatMessage()">Send</button>
+      </div>
+      <div id="chat-model-label" style="font-size:11px;color:var(--text-muted);margin-top:4px;">Connecting to ws/chat…</div>
+    </div>
+
     <!-- ── Task 025: CLI Tool Integration ── -->
     <div class="card" id="cli-panel">
       <h2>Local CLI Integration</h2>
@@ -2420,6 +2433,49 @@
     }
     refreshCLIConfig();
     setInterval(refreshCLIConfig, 30_000);
+
+    // ── Task 026: AI Chat WebSocket ───────────────────────────────────────
+    let _chatWs = null;
+    function connectChatWs() {
+      if (_chatWs && _chatWs.readyState === WebSocket.OPEN) return;
+      _chatWs = new WebSocket('ws://localhost:8888/ws/chat');
+      _chatWs.onopen = () => {};
+      _chatWs.onmessage = (evt) => {
+        try {
+          const msg = JSON.parse(evt.data);
+          if (msg.type === 'ready') {
+            const label = document.getElementById('chat-model-label');
+            if (label) label.textContent = `Model: ${msg.model}`;
+          } else if (msg.type === 'response') {
+            appendChatMsg('ai', msg.text);
+          } else if (msg.type === 'pong') {
+            // heartbeat ok
+          }
+        } catch (_) {}
+      };
+      _chatWs.onclose = () => { setTimeout(connectChatWs, 5000); };
+      _chatWs.onerror = () => { _chatWs.close(); };
+    }
+    function appendChatMsg(role, text) {
+      const container = document.getElementById('chat-messages');
+      if (!container) return;
+      const div = document.createElement('div');
+      div.style.cssText = `margin:4px 0;padding:4px 8px;border-radius:4px;background:${role==='user'?'var(--border)':'var(--surface)'};`;
+      div.textContent = (role === 'user' ? 'You: ' : 'AI: ') + text;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+    function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input ? input.value.trim() : '';
+      if (!text) return;
+      appendChatMsg('user', text);
+      if (input) input.value = '';
+      if (_chatWs && _chatWs.readyState === WebSocket.OPEN) {
+        _chatWs.send(JSON.stringify({ type: 'chat', message: text }));
+      }
+    }
+    connectChatWs();
   </script>
 
 </body>

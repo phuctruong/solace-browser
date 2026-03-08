@@ -2137,3 +2137,25 @@ class TestCLIIntegration:
         # Fresh server has no CLI configured → 404
         status, data = _post_with_auth("/api/v1/cli/test", {})
         assert status in (200, 404)
+
+
+# ── Task 026: Chat WebSocket ──────────────────────────────────────────────────
+
+class TestChatWebSocket:
+    def test_ws_chat_endpoint_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/ws/chat" in server
+
+    def test_ws_chat_ready_message_structure(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "ready" in server
+        assert "active_model" in server or '"model"' in server
+
+    def test_ws_chat_ping_pong(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "pong" in server
+
+    def test_chat_ws_in_html(self):
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "chat" in html.lower()
+        assert "ws/chat" in html or "ws://localhost" in html

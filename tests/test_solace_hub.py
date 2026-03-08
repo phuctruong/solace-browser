@@ -615,3 +615,17 @@ class TestCLIPanel:
         server = (REPO_ROOT / "yinyang_server.py").read_text()
         assert "/api/v1/cli/config" in server
         assert "SUPPORTED_CLI_TOOLS" in server
+
+
+# ── Task 026: Chat Panel ──────────────────────────────────────────────────────
+
+class TestChatPanel:
+    def test_index_html_chat_panel(self):
+        """index.html must contain a chat panel."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "chat" in html.lower()
+
+    def test_ws_chat_in_server(self):
+        """yinyang_server.py must implement /ws/chat endpoint."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/ws/chat" in server

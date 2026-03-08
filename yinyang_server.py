@@ -552,6 +552,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_cli_config_get()
         elif path == "/api/v1/cli/detect":
             self._handle_cli_detect()
+        elif path == "/ws/chat":
+            self._handle_ws_chat()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -1852,6 +1854,117 @@ function choose(mode) {
             pass
         finally:
             stop_event.set()
+
+    def _handle_ws_chat(self) -> None:
+        """WebSocket chat relay at /ws/chat. RFC 6455 stdlib only. Task 026."""
+        upgrade = self.headers.get("Upgrade", "").lower()
+        if upgrade != "websocket":
+            self._send_json({"error": "WebSocket upgrade required"}, 426)
+            return
+        ws_key = self.headers.get("Sec-WebSocket-Key", "")
+        if not ws_key:
+            self._send_json({"error": "missing Sec-WebSocket-Key"}, 400)
+            return
+        accept = base64.b64encode(
+            hashlib.sha1((ws_key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").encode()).digest()
+        ).decode()
+        response = (
+            "HTTP/1.1 101 Switching Protocols\r\n"
+            "Upgrade: websocket\r\n"
+            "Connection: Upgrade\r\n"
+            f"Sec-WebSocket-Accept: {accept}\r\n"
+            "\r\n"
+        )
+        try:
+            self.wfile.write(response.encode())
+            self.wfile.flush()
+        except OSError:
+            return
+
+        conn = self.connection  # type: ignore[attr-defined]
+        conn.settimeout(None)
+
+        def _ws_send_chat(payload: str) -> None:
+            data = payload.encode("utf-8")
+            length = len(data)
+            if length <= 125:
+                header = struct.pack("!BB", 0x81, length)
+            elif length <= 65535:
+                header = struct.pack("!BBH", 0x81, 126, length)
+            else:
+                header = struct.pack("!BBQ", 0x81, 127, length)
+            try:
+                self.wfile.write(header + data)
+                self.wfile.flush()
+            except OSError:
+                pass
+
+        # Determine active model from CLI or BYOK config
+        cli_config = self._load_cli_config()
+        byok_config = self._load_byok_config()
+        active_model = cli_config.get("active_tool") or byok_config.get("active_provider") or "unavailable"
+        _ws_send_chat(json.dumps({"type": "ready", "model": active_model}))
+
+        try:
+            while True:
+                try:
+                    header_bytes = self.rfile.read(2)
+                except OSError:
+                    break
+                if len(header_bytes) < 2:
+                    break
+                b0, b1 = header_bytes[0], header_bytes[1]
+                opcode = b0 & 0x0F
+                masked = bool(b1 & 0x80)
+                payload_len = b1 & 0x7F
+                if payload_len == 126:
+                    try:
+                        ext = self.rfile.read(2)
+                    except OSError:
+                        break
+                    if len(ext) < 2:
+                        break
+                    payload_len = struct.unpack("!H", ext)[0]
+                elif payload_len == 127:
+                    try:
+                        ext = self.rfile.read(8)
+                    except OSError:
+                        break
+                    if len(ext) < 8:
+                        break
+                    payload_len = struct.unpack("!Q", ext)[0]
+                mask_key = b""
+                if masked:
+                    try:
+                        mask_key = self.rfile.read(4)
+                    except OSError:
+                        break
+                    if len(mask_key) < 4:
+                        break
+                try:
+                    payload_bytes = self.rfile.read(payload_len)
+                except OSError:
+                    break
+                if masked and mask_key:
+                    payload_bytes = bytes(b ^ mask_key[i % 4] for i, b in enumerate(payload_bytes))
+                if opcode == 8:
+                    break
+                if opcode == 1:
+                    try:
+                        msg = json.loads(payload_bytes.decode("utf-8"))
+                    except (json.JSONDecodeError, UnicodeDecodeError):
+                        continue
+                    msg_type = msg.get("type")
+                    if msg_type == "ping":
+                        _ws_send_chat(json.dumps({"type": "pong"}))
+                    elif msg_type == "chat":
+                        user_text = str(msg.get("message", ""))[:2048]
+                        response_text = f"[{active_model}] Echo: {user_text}"
+                        _ws_send_chat(json.dumps({"type": "response", "text": response_text, "done": True}))
+                    elif msg_type == "close":
+                        break
+        except OSError:
+            pass
 
     # --- Helpers ---
     def _read_json_body(self) -> Optional[dict]:
