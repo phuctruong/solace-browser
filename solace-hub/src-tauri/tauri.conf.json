@@ -50,11 +50,6 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "linux": {
-        "deb": {
-          "depends": []
-        }
-      },
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
