@@ -871,6 +871,21 @@
           <div id="budget-update-status" style="font-size:11px;color:var(--text-muted);"></div>
         </form>
       </details>
+      <!-- Task 029: Alert thresholds -->
+      <details style="margin-top:8px;">
+        <summary style="cursor:pointer;font-size:12px;color:var(--accent);user-select:none;">Alert Thresholds</summary>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+          <label style="font-size:12px;display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="alert-50" checked onchange="updateAlerts()"/> Alert at 50%
+          </label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="alert-80" checked onchange="updateAlerts()"/> Alert at 80%
+          </label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="alert-100" checked onchange="updateAlerts()"/> Alert at 100% (auto-pause)
+          </label>
+        </div>
+      </details>
     </div>
 
     <!-- Remote Tunnel -->
@@ -2391,6 +2406,32 @@
     }
     refreshStore();
     setInterval(refreshStore, 60_000);
+
+    // ── Task 029: Budget Alerts ───────────────────────────────────────────
+    async function updateAlerts() {
+      const t50 = (document.getElementById('alert-50') || {}).checked;
+      const t80 = (document.getElementById('alert-80') || {}).checked;
+      const t100 = (document.getElementById('alert-100') || {}).checked;
+      try {
+        await fetch('http://localhost:8888/api/v1/budget/alerts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${HUB_TOKEN}` },
+          body: JSON.stringify({ threshold_50: !!t50, threshold_80: !!t80, threshold_100: !!t100 }),
+        });
+      } catch (_) {}
+    }
+    async function loadAlerts() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/budget/alerts');
+        const data = await r.json();
+        const a = data.alerts || {};
+        ['50','80','100'].forEach(n => {
+          const el = document.getElementById(`alert-${n}`);
+          if (el) el.checked = a[`threshold_${n}`] !== false;
+        });
+      } catch (_) {}
+    }
+    loadAlerts();
 
     // ── Task 025: CLI Tool Integration ────────────────────────────────────
     async function refreshCLIConfig() {

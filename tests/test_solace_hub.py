@@ -657,3 +657,18 @@ class TestEvidenceExportUI:
         """yinyang_server.py must implement /api/v1/evidence/export."""
         server = (REPO_ROOT / "yinyang_server.py").read_text()
         assert "/api/v1/evidence/export" in server
+
+
+# ── Task 029: Budget Alerts ───────────────────────────────────────────────────
+
+class TestBudgetAlertsUI:
+    def test_budget_history_in_server(self):
+        """yinyang_server.py must implement budget history and alerts endpoints."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/budget/history" in server
+        assert "SPEND_HISTORY_PATH" in server
+
+    def test_budget_alerts_in_html(self):
+        """index.html must contain alert threshold controls."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "alert" in html.lower() or "threshold" in html.lower()

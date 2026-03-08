@@ -120,6 +120,8 @@ MAX_PROFILES = 10
 INSTALLED_RECIPES_PATH: Path = Path.home() / ".solace" / "installed_recipes.json"
 _STORE_LOCK = threading.Lock()
 CLI_CONFIG_PATH: Path = Path.home() / ".solace" / "cli_config.json"
+SPEND_HISTORY_PATH: Path = Path.home() / ".solace" / "spend_history.json"
+_SPEND_HISTORY_LOCK = threading.Lock()
 SUPPORTED_CLI_TOOLS: frozenset = frozenset(["claude", "openai", "ollama", "aider", "continue"])
 _CLI_LOCK = threading.Lock()
 _COMMUNITY_RECIPES: list = [
@@ -318,6 +320,38 @@ def _append_notification(category: str, title: str, body: str, level: str = "inf
             notifs = notifs[-MAX_NOTIFICATIONS:]
         NOTIFICATIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
         NOTIFICATIONS_PATH.write_text(json.dumps(notifs, indent=2))
+
+
+# ---------------------------------------------------------------------------
+# Spend History (Task 029)
+# ---------------------------------------------------------------------------
+
+def _load_spend_history() -> list:
+    if not SPEND_HISTORY_PATH.exists():
+        return []
+    try:
+        data = json.loads(SPEND_HISTORY_PATH.read_text())
+        return data if isinstance(data, list) else []
+    except json.JSONDecodeError:
+        return []
+
+
+def _record_spend_entry(amount_usd: float, provider: str, model: str) -> None:
+    """Record a spend event to history. Thread-safe."""
+    entry = {
+        "timestamp": int(time.time()),
+        "amount_usd": round(amount_usd, 6),
+        "provider": provider,
+        "model": model,
+        "date": time.strftime("%Y-%m-%d"),
+    }
+    with _SPEND_HISTORY_LOCK:
+        history = _load_spend_history()
+        history.append(entry)
+        if len(history) > 365:
+            history = history[-365:]
+        SPEND_HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        SPEND_HISTORY_PATH.write_text(json.dumps(history, indent=2))
 
 
 # ---------------------------------------------------------------------------
@@ -524,6 +558,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_budget_get()
         elif path == "/api/v1/budget/status":
             self._handle_budget_status()
+        elif path == "/api/v1/budget/history":
+            self._handle_budget_history(query)
+        elif path == "/api/v1/budget/alerts":
+            self._handle_budget_alerts()
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -607,6 +645,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_budget_update()
         elif path == "/api/v1/budget/reset":
             self._handle_budget_reset()
+        elif path == "/api/v1/budget/alerts":
+            self._handle_budget_alerts_set()
         elif path == "/api/v1/byok/set":
             self._handle_byok_set()
         elif path == "/api/v1/byok/test":
@@ -1690,6 +1730,56 @@ function choose(mode) {
         BUDGET_PATH.parent.mkdir(parents=True, exist_ok=True)
         BUDGET_PATH.write_text(json.dumps(DEFAULT_BUDGET, indent=2))
         self._send_json({"status": "reset", "budget": DEFAULT_BUDGET})
+
+    def _load_budget_config(self) -> dict:
+        """Alias for _load_budget — used by alert handlers."""
+        return self._load_budget()
+
+    def _handle_budget_history(self, query: str) -> None:
+        """GET /api/v1/budget/history — spend history. Task 029."""
+        from urllib.parse import parse_qs
+        params = parse_qs(query.lstrip("?"))
+        try:
+            days = min(int(params.get("days", [30])[0]), 365)
+        except ValueError:
+            days = 30
+        with _SPEND_HISTORY_LOCK:
+            history = _load_spend_history()
+        cutoff = int(time.time()) - days * 86400
+        history = [e for e in history if e.get("timestamp", 0) >= cutoff]
+        total = sum(e.get("amount_usd", 0) for e in history)
+        self._send_json({"history": history, "total_usd": round(total, 6), "days": days})
+
+    def _handle_budget_alerts(self) -> None:
+        """GET /api/v1/budget/alerts — alert thresholds config. Task 029."""
+        budget = self._load_budget_config()
+        alerts = budget.get("alerts", {
+            "threshold_50": True,
+            "threshold_80": True,
+            "threshold_100": True,
+        })
+        self._send_json({"alerts": alerts})
+
+    def _handle_budget_alerts_set(self) -> None:
+        """POST /api/v1/budget/alerts — update alert thresholds. Task 029."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        budget = self._load_budget_config()
+        alerts = budget.get("alerts", {
+            "threshold_50": True,
+            "threshold_80": True,
+            "threshold_100": True,
+        })
+        for key in ("threshold_50", "threshold_80", "threshold_100"):
+            if key in body:
+                alerts[key] = bool(body[key])
+        budget["alerts"] = alerts
+        BUDGET_PATH.parent.mkdir(parents=True, exist_ok=True)
+        BUDGET_PATH.write_text(json.dumps(budget, indent=2))
+        self._send_json({"status": "updated", "alerts": alerts})
 
     # --- Task 018: Metrics handlers ---
 

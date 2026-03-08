@@ -520,6 +520,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     active_profile_path = tmp / "active_profile.json"
     installed_recipes_path = tmp / "installed_recipes.json"
     cli_config_path = tmp / "cli_config.json"
+    spend_history_path = tmp / "spend_history.json"
 
     original_lock = ys.PORT_LOCK_PATH
     original_evidence = ys.EVIDENCE_PATH
@@ -533,6 +534,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     original_active_profile = ys.ACTIVE_PROFILE_PATH
     original_installed_recipes = ys.INSTALLED_RECIPES_PATH
     original_cli_config = ys.CLI_CONFIG_PATH
+    original_spend_history = ys.SPEND_HISTORY_PATH
 
     ys.PORT_LOCK_PATH = lock_path
     ys.EVIDENCE_PATH = evidence_path
@@ -546,6 +548,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.ACTIVE_PROFILE_PATH = active_profile_path
     ys.INSTALLED_RECIPES_PATH = installed_recipes_path
     ys.CLI_CONFIG_PATH = cli_config_path
+    ys.SPEND_HISTORY_PATH = spend_history_path
 
     httpd = ys.build_server(AUTH_TEST_PORT, str(REPO_ROOT), session_token_sha256=VALID_TOKEN)
 
@@ -573,6 +576,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.ACTIVE_PROFILE_PATH = original_active_profile
     ys.INSTALLED_RECIPES_PATH = original_installed_recipes
     ys.CLI_CONFIG_PATH = original_cli_config
+    ys.SPEND_HISTORY_PATH = original_spend_history
 
 
 def _post_with_auth(path: str, payload: dict, token: str = VALID_TOKEN) -> tuple[int, dict]:
@@ -2219,3 +2223,44 @@ class TestEvidenceExport:
         status, data = _get_json_auth("/api/v1/evidence/export")
         assert status == 200
         assert "evidence" in data
+
+
+# ── Task 029: Budget Alerts ───────────────────────────────────────────────────
+
+class TestBudgetAlerts:
+    def test_budget_history_empty(self, auth_server):
+        status, data = _get_json_auth("/api/v1/budget/history")
+        assert status == 200
+        assert "history" in data
+        assert "total_usd" in data
+        assert "days" in data
+
+    def test_budget_history_days_param(self, auth_server):
+        status, data = _get_json_auth("/api/v1/budget/history?days=7")
+        assert status == 200
+        assert data["days"] == 7
+
+    def test_budget_alerts_get(self, auth_server):
+        status, data = _get_json_auth("/api/v1/budget/alerts")
+        assert status == 200
+        assert "alerts" in data
+        assert "threshold_80" in data["alerts"]
+
+    def test_budget_alerts_set_requires_auth(self, auth_server):
+        body = json.dumps({"threshold_50": False}).encode()
+        req = urllib.request.Request(
+            f"{AUTH_BASE}/api/v1/budget/alerts",
+            data=body, method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req):
+                pass
+            assert False, "expected 401"
+        except urllib.error.HTTPError as e:
+            assert e.code == 401
+
+    def test_budget_alerts_set(self, auth_server):
+        status, data = _post_with_auth("/api/v1/budget/alerts", {"threshold_80": False})
+        assert status == 200
+        assert data["status"] == "updated"
