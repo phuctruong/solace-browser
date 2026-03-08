@@ -589,6 +589,20 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_diagnostics()
         elif path == "/api/v1/system/metrics":
             self._handle_system_metrics()
+        elif path == "/api/v1/apps/status":
+            self._handle_apps_status()
+        elif path == "/api/v1/budget/currency":
+            self._handle_budget_currency()
+        elif path == "/api/v1/recipes/search":
+            self._handle_recipes_search(query)
+        elif path == "/api/v1/oauth3/scopes":
+            self._handle_oauth3_scopes()
+        elif path == "/api/v1/schedules/next":
+            self._handle_schedules_next()
+        elif path == "/api/v1/capabilities":
+            self._handle_capabilities()
+        elif path == "/api/v1/hub/summary":
+            self._handle_hub_summary()
         elif re.match(r"^/api/v1/apps/[^/]+/versions$", path):
             app_id = path.split("/")[-2]
             self._handle_app_versions(app_id)
@@ -773,6 +787,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_notif_preferences_set()
         elif path == "/api/v1/schedules/pause-all":
             self._handle_schedules_pause_all()
+        elif path == "/api/v1/recipes/import":
+            self._handle_recipe_import()
         elif re.match(r"^/api/v1/recipes/[^/]+/rate$", path):
             recipe_id = path.split("/")[-2]
             self._handle_recipe_rate(recipe_id)
@@ -854,6 +870,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_profiles_delete(profile_id)
         elif path == "/api/v1/apps/favorites":
             self._handle_apps_favorites_delete()
+        elif re.match(r"^/api/v1/labels/[^/]+$", path):
+            label_id = path.split("/")[-1]
+            self._handle_label_delete(label_id)
+        elif re.match(r"^/api/v1/memory/[^/]+$", path):
+            key = path.split("/")[-1]
+            self._handle_memory_delete(key)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -1190,6 +1212,102 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
 
     _NOTIF_PREFS: dict = {"budget_alerts": True, "recipe_complete": True, "schedule_run": True}
     _LAUNCH_HISTORY: list = []  # track app launches
+    _IMPORTED_RECIPES: list = []  # imported recipes store
+
+    def _handle_apps_status(self) -> None:
+        """GET /api/v1/apps/status — all apps running status summary. Task 091."""
+        apps: list = self.server.apps if hasattr(self.server, "apps") else []
+        self._send_json({"running": 0, "total": len(apps), "status": "idle"})
+
+    def _handle_recipe_import(self) -> None:
+        """POST /api/v1/recipes/import — import a recipe definition. Task 092."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        recipe_id = f"imported-{int(time.time())}"
+        YinyangHandler._IMPORTED_RECIPES.append({**body, "id": recipe_id})
+        self._send_json({"status": "imported", "id": recipe_id})
+
+    def _handle_budget_currency(self) -> None:
+        """GET /api/v1/budget/currency — current budget currency. Task 093."""
+        self._send_json({"currency": "USD", "symbol": "$", "locale": "en-US"})
+
+    def _handle_recipes_search(self, query: str) -> None:
+        """GET /api/v1/recipes/search?q=X — search recipes by name. Task 094."""
+        from urllib.parse import parse_qs
+        params = parse_qs(query.lstrip("?"))
+        term = params.get("q", [""])[0].lower()
+        results = [r for r in YinyangHandler._IMPORTED_RECIPES if term in str(r.get("name", "")).lower()]
+        self._send_json({"results": results, "total": len(results), "query": term})
+
+    def _handle_oauth3_scopes(self) -> None:
+        """GET /api/v1/oauth3/scopes — available OAuth3 scopes. Task 095."""
+        scopes = [
+            {"id": "browse", "description": "Navigate web pages"},
+            {"id": "run_recipe", "description": "Execute automation recipes"},
+            {"id": "read_evidence", "description": "Read evidence chain"},
+            {"id": "write_evidence", "description": "Record evidence events"},
+            {"id": "manage_schedules", "description": "Create/delete schedules"},
+        ]
+        self._send_json({"scopes": scopes, "total": len(scopes)})
+
+    def _handle_schedules_next(self) -> None:
+        """GET /api/v1/schedules/next — next scheduled run. Task 096."""
+        schedules = load_schedules()
+        active = [s for s in schedules if s.get("enabled", True)]
+        if active:
+            next_sched = active[0]
+            self._send_json({"schedule": next_sched, "next_run": next_sched.get("next_run_at", "unknown")})
+        else:
+            self._send_json({"schedules": [], "next_run": None})
+
+    def _handle_capabilities(self) -> None:
+        """GET /api/v1/capabilities — server capability list. Task 097."""
+        caps = [
+            "websocket_chat", "recipe_engine", "oauth3_vault", "evidence_chain",
+            "browser_control", "schedule_management", "notification_system",
+            "byok_llm", "profile_management", "community_store",
+        ]
+        self._send_json({"capabilities": caps, "version": _SERVER_VERSION})
+
+    def _handle_label_delete(self, label_id: str) -> None:
+        """DELETE /api/v1/labels/{id} — delete a custom label. Task 098."""
+        if not self._check_auth():
+            return
+        before = len(YinyangHandler._CUSTOM_LABELS)
+        YinyangHandler._CUSTOM_LABELS = [l for l in YinyangHandler._CUSTOM_LABELS if l.get("id") != label_id]
+        deleted = before > len(YinyangHandler._CUSTOM_LABELS)
+        if deleted:
+            self._send_json({"status": "deleted", "id": label_id})
+        else:
+            self._send_json({"error": "label not found"}, 404)
+
+    def _handle_memory_delete(self, key: str) -> None:
+        """DELETE /api/v1/memory/{key} — delete agent memory key. Task 099."""
+        if not self._check_auth():
+            return
+        if key in YinyangHandler._AGENT_MEMORY:
+            del YinyangHandler._AGENT_MEMORY[key]
+            self._send_json({"status": "deleted", "key": key})
+        else:
+            self._send_json({"error": "key not found"}, 404)
+
+    def _handle_hub_summary(self) -> None:
+        """GET /api/v1/hub/summary — complete hub state summary. Task 100."""
+        apps: list = self.server.apps if hasattr(self.server, "apps") else []
+        schedules = load_schedules()
+        total_evidence = count_evidence()
+        uptime = int(time.time() - _SERVER_START_TIME)
+        self._send_json({
+            "apps": len(apps),
+            "schedules": len(schedules),
+            "evidence": total_evidence,
+            "uptime_seconds": uptime,
+            "version": _SERVER_VERSION,
+            "status": "ok",
+        })
 
     def _handle_app_launch_history(self) -> None:
         """GET /api/v1/apps/launch-history — recent app launch events. Task 081."""

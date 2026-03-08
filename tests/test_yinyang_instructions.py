@@ -3052,3 +3052,73 @@ class TestSystemMetrics:
         status, data = _get_json_auth("/api/v1/system/metrics")
         assert status == 200
         assert "memory_mb" in data or "cpu_percent" in data or "requests_per_second" in data
+
+
+# ── Tasks 091-100: Sprint to 100 ─────────────────────────────────────────────
+
+class TestAppStatus2:
+    def test_app_status(self, auth_server):
+        status, data = _get_json_auth("/api/v1/apps/status")
+        assert status == 200
+        assert "running" in data or "status" in data
+
+class TestRecipeImport:
+    def test_recipe_import(self, auth_server):
+        payload = {"name": "test", "steps": [], "version": "1.0"}
+        status, data = _post_with_auth("/api/v1/recipes/import", payload)
+        assert status == 200
+        assert data["status"] in ("imported", "ok")
+        assert "id" in data
+
+class TestBudgetCurrency:
+    def test_budget_currency(self, auth_server):
+        status, data = _get_json_auth("/api/v1/budget/currency")
+        assert status == 200
+        assert "currency" in data
+        assert "symbol" in data
+
+class TestRecipeList2:
+    def test_recipe_search(self, auth_server):
+        status, data = _get_json_auth("/api/v1/recipes/search?q=email")
+        assert status == 200
+        assert "results" in data
+
+class TestTokenScopes:
+    def test_token_scopes(self, auth_server):
+        status, data = _get_json_auth("/api/v1/oauth3/scopes")
+        assert status == 200
+        assert "scopes" in data
+        assert isinstance(data["scopes"], list)
+
+class TestScheduleNextRun:
+    def test_schedule_next_run(self, auth_server):
+        status, data = _get_json_auth("/api/v1/schedules/next")
+        assert status == 200
+        assert "next_run" in data or "schedule" in data or "schedules" in data
+
+class TestServerCapabilities:
+    def test_capabilities(self, auth_server):
+        status, data = _get_json_auth("/api/v1/capabilities")
+        assert status == 200
+        assert "capabilities" in data
+        assert isinstance(data["capabilities"], list)
+
+class TestLabelDelete:
+    def test_label_delete(self, auth_server):
+        status, data = _delete_with_auth("/api/v1/labels/lbl-nonexistent")
+        assert status in (200, 404)
+
+class TestMemoryDelete:
+    def test_memory_delete(self, auth_server):
+        status, data = _delete_with_auth("/api/v1/memory/test_key")
+        assert status in (200, 404)
+        if status == 200:
+            assert "status" in data
+
+class TestHubSummary:
+    def test_hub_summary(self, auth_server):
+        status, data = _get_json_auth("/api/v1/hub/summary")
+        assert status == 200
+        assert "apps" in data
+        assert "schedules" in data
+        assert "evidence" in data
