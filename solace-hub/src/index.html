@@ -524,6 +524,23 @@
     }
 
     /* Tray Status Bar (Task 022) */
+    /* Toast notifications (Task 037) */
+    .toast {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      font-size: 12px;
+      max-width: 280px;
+      pointer-events: auto;
+      animation: toast-in 0.2s ease;
+    }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: none; }
+    }
+
     .tray-status-bar {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
@@ -661,6 +678,9 @@
   </div>
 
   <!-- ── Tray Status Bar (Task 022) ── -->
+  <!-- Toast notifications container (Task 037) -->
+  <div id="toast-container" style="position:fixed;top:60px;right:16px;z-index:10000;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
+
   <div id="tray-status-bar" class="tray-status-bar">
     <span id="tray-server-dot" class="status-dot status-unknown"></span>
     <span id="tray-summary">Connecting...</span>
@@ -2662,6 +2682,33 @@
     }
     refreshWatchdog();
     setInterval(refreshWatchdog, 30_000);
+
+    // Toast notification system (Task 037)
+    const _seenNotifIds = new Set();
+    function showToast(message, type) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.style.borderLeft = `3px solid ${type === 'error' ? 'var(--red)' : type === 'success' ? 'var(--green)' : 'var(--accent)'}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 5000);
+    }
+    async function pollNotifications() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/notifications?limit=10', { signal: AbortSignal.timeout(2000) });
+        if (!r.ok) return;
+        const d = await r.json();
+        for (const n of (d.notifications || [])) {
+          if (!n.id || _seenNotifIds.has(n.id) || n.read) continue;
+          _seenNotifIds.add(n.id);
+          showToast(n.message || n.title || 'New notification', n.level || 'info');
+        }
+      } catch (_) {}
+    }
+    pollNotifications();
+    setInterval(pollNotifications, 5000);
 
     // System status (Task 036)
     async function refreshSystemStatus() {

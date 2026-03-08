@@ -2435,3 +2435,12 @@ class TestSystemStatus:
         assert status == 200
         assert "oauth3" in data["features"]
         assert "evidence" in data["features"]
+
+
+# ── Task 037: Notification Toast System ──────────────────────────────────────
+
+class TestNotificationToast:
+    def test_notifications_mark_read(self, auth_server):
+        status, data = _post_with_auth("/api/v1/notifications/read", {})
+        assert status == 200
+        assert "status" in data

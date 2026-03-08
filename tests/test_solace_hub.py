@@ -775,3 +775,17 @@ class TestSystemStatusUI:
         """index.html must reference version or system."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "version" in html.lower() or "system" in html.lower()
+
+
+# ── Task 037: Notification Toast System ──────────────────────────────────────
+
+class TestToastUI:
+    def test_notifications_read_in_server(self):
+        """yinyang_server.py must handle /api/v1/notifications/read."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/notifications/read" in server
+
+    def test_toast_in_html(self):
+        """index.html must contain toast container."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "toast" in html.lower()

@@ -677,7 +677,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_byok_test()
         elif path == "/api/v1/byok/clear":
             self._handle_byok_clear()
-        elif path == "/api/v1/notifications/mark-all-read":
+        elif path in ("/api/v1/notifications/mark-all-read", "/api/v1/notifications/read"):
             self._handle_notifications_mark_all_read()
         elif re.match(r"^/api/v1/notifications/[^/]+/read$", path):
             notif_id = path.split("/")[-2]
