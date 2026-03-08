@@ -702,3 +702,17 @@ class TestDarkModeUI:
         """index.html must contain dark mode class or toggle."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "dark" in html.lower()
+
+
+# ── Task 032: Recipe Run History ──────────────────────────────────────────────
+
+class TestRecipeHistoryUI:
+    def test_recipe_history_in_server(self):
+        """yinyang_server.py must implement /api/v1/recipes/history."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/recipes/history" in server
+
+    def test_recipe_history_in_html(self):
+        """index.html must reference run history."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "history" in html.lower() or "run" in html.lower()

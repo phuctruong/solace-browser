@@ -2319,3 +2319,24 @@ class TestDarkMode:
         status, data = _get_json_auth("/api/v1/theme")
         assert status == 200
         assert data["theme"] == "dark"
+
+
+# ── Task 032: Recipe Run History ──────────────────────────────────────────────
+
+class TestRecipeHistory:
+    def test_recipe_history_empty(self, auth_server):
+        status, data = _get_json_auth("/api/v1/recipes/history")
+        assert status == 200
+        assert "runs" in data
+        assert "total" in data
+        assert data["total"] == 0
+
+    def test_recipe_history_limit_param(self, auth_server):
+        status, data = _get_json_auth("/api/v1/recipes/history?limit=10")
+        assert status == 200
+        assert isinstance(data["runs"], list)
+
+    def test_recipe_history_default_empty(self, auth_server):
+        status, data = _get_json_auth("/api/v1/recipes/history")
+        assert status == 200
+        assert isinstance(data["runs"], list)

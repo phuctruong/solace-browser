@@ -549,6 +549,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_sync_status()
         elif path == "/api/v1/recipes":
             self._handle_recipes_list()
+        elif path == "/api/v1/recipes/history":
+            self._handle_recipe_history(query)
         elif re.match(r"^/api/v1/recipes/[^/]+/preview$", path):
             recipe_id = path.split("/")[-2]
             self._handle_recipe_preview(recipe_id)
@@ -1846,6 +1848,24 @@ function choose(mode) {
             THEME_PATH.parent.mkdir(parents=True, exist_ok=True)
             THEME_PATH.write_text(json.dumps({"theme": theme}))
         self._send_json({"status": "ok", "theme": theme})
+
+    # --- Task 032: Recipe history handler ---
+
+    def _handle_recipe_history(self, query: str) -> None:
+        """GET /api/v1/recipes/history — list past recipe runs. Task 032."""
+        from urllib.parse import parse_qs
+        params = parse_qs(query.lstrip("?"))
+        limit = min(int(params.get("limit", [50])[0]), 200)
+        if not RECIPE_RUNS_PATH.exists():
+            self._send_json({"runs": [], "total": 0})
+            return
+        try:
+            data = json.loads(RECIPE_RUNS_PATH.read_text())
+            runs = data if isinstance(data, list) else []
+        except (json.JSONDecodeError, OSError):
+            runs = []
+        runs = runs[-limit:]
+        self._send_json({"runs": runs, "total": len(runs)})
 
     # --- Task 018: Metrics handlers ---
 

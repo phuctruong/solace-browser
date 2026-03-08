@@ -845,6 +845,13 @@
       <div class="btn-row" style="margin-top:10px;">
         <button class="btn-secondary" onclick="refreshRecipeList()">Refresh</button>
       </div>
+      <!-- Run History (Task 032) -->
+      <details style="margin-top:12px;">
+        <summary style="cursor:pointer;font-size:12px;font-weight:600;">Run History</summary>
+        <div id="recipe-run-history" style="margin-top:8px;max-height:200px;overflow-y:auto;font-size:11px;">
+          <p style="color:var(--text-muted);">Loading run history…</p>
+        </div>
+      </details>
     </div>
 
     <!-- Budget &amp; Spending (Task 016) -->
@@ -2613,6 +2620,33 @@
     }
     refreshWatchdog();
     setInterval(refreshWatchdog, 30_000);
+
+    // Recipe run history (Task 032)
+    async function refreshRecipeHistory() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/recipes/history?limit=20', { signal: AbortSignal.timeout(3000) });
+        if (!r.ok) throw new Error('bad status');
+        const d = await r.json();
+        const el = document.getElementById('recipe-run-history');
+        if (!el) return;
+        if (!d.runs || d.runs.length === 0) {
+          el.innerHTML = '<p style="color:var(--text-muted);">No runs yet.</p>';
+          return;
+        }
+        el.innerHTML = d.runs.slice().reverse().map(run => {
+          const ts = run.timestamp ? new Date(run.timestamp * 1000).toLocaleString() : '—';
+          const status = run.status || 'unknown';
+          const color = status === 'success' ? 'var(--green)' : status === 'error' ? 'var(--red)' : 'var(--text-muted)';
+          return `<div style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;">
+            <span style="color:${color};font-weight:600;">${status}</span>
+            <span>${run.recipe_id || run.id || '?'}</span>
+            <span style="color:var(--text-muted);margin-left:auto;">${ts}</span>
+          </div>`;
+        }).join('');
+      } catch (_) {}
+    }
+    refreshRecipeHistory();
+    setInterval(refreshRecipeHistory, 30_000);
 
     // Dark mode (Task 031)
     function applyTheme(theme) {
