@@ -2763,3 +2763,61 @@ class TestSystemInfo:
         assert "platform" in data
         assert "python_version" in data
         assert "hostname" in data
+
+
+# ── Task 061: Webhook Subscriptions ──────────────────────────────────────────
+
+class TestWebhookSubscriptions:
+    def test_webhooks_list(self, auth_server):
+        status, data = _get_json_auth("/api/v1/webhooks")
+        assert status == 200
+        assert "webhooks" in data
+
+    def test_webhook_register(self, auth_server):
+        status, data = _post_with_auth("/api/v1/webhooks", {
+            "url": "https://example.com/hook",
+            "events": ["recipe_run", "budget_alert"]
+        })
+        assert status == 200
+        assert data["status"] in ("registered", "ok")
+        assert "id" in data
+
+
+# ── Task 062: Server Stats Summary ────────────────────────────────────────────
+
+class TestServerStats:
+    def test_server_stats(self, auth_server):
+        status, data = _get_json_auth("/api/v1/stats")
+        assert status == 200
+        assert "requests_total" in data
+        assert "errors_total" in data
+        assert "uptime_seconds" in data
+
+
+# ── Task 063: Evidence Hashes ─────────────────────────────────────────────────
+
+class TestEvidenceHashes:
+    def test_evidence_hashes(self, auth_server):
+        status, data = _get_json_auth("/api/v1/evidence/hashes")
+        assert status == 200
+        assert "hashes" in data
+        assert isinstance(data["hashes"], list)
+
+
+# ── Task 064: App Metadata ────────────────────────────────────────────────────
+
+class TestAppMetadata:
+    def test_app_metadata(self, auth_server):
+        status, data = _get_json_auth("/api/v1/apps/metadata")
+        assert status == 200
+        assert "apps" in data
+
+
+# ── Task 065: Schedule Stats ──────────────────────────────────────────────────
+
+class TestScheduleStats:
+    def test_schedule_stats(self, auth_server):
+        status, data = _get_json_auth("/api/v1/schedules/stats")
+        assert status == 200
+        assert "total_runs" in data
+        assert "success_rate" in data

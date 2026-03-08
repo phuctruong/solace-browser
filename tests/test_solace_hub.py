@@ -1094,3 +1094,31 @@ class TestSystemInfoUI:
     def test_system_in_html(self):
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "system" in html.lower() or "version" in html.lower()
+
+
+# ── Task 061-065: Bulk UI Tests ───────────────────────────────────────────────
+
+class TestWebhookUI:
+    def test_webhook_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/webhooks" in server
+
+class TestServerStatsUI:
+    def test_stats_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/stats" in server
+
+class TestEvidenceHashesUI:
+    def test_hashes_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/evidence/hashes" in server
+
+class TestAppMetadataUI:
+    def test_metadata_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/apps/metadata" in server
+
+class TestScheduleStatsUI:
+    def test_schedule_stats_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/schedules/stats" in server

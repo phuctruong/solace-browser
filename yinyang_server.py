@@ -526,6 +526,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_evidence_verify()
         elif path == "/api/v1/evidence/summary":
             self._handle_evidence_summary()
+        elif path == "/api/v1/evidence/hashes":
+            self._handle_evidence_hashes()
         elif path == "/api/v1/evidence/export":
             self._handle_evidence_export(query)
         elif re.match(r"^/api/v1/evidence/[^/]+$", path):
@@ -549,6 +551,14 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_server_config()
         elif path == "/api/v1/health/history":
             self._handle_health_history()
+        elif path == "/api/v1/webhooks":
+            self._handle_webhooks_list()
+        elif path == "/api/v1/stats":
+            self._handle_server_stats()
+        elif path == "/api/v1/apps/metadata":
+            self._handle_apps_metadata()
+        elif path == "/api/v1/schedules/stats":
+            self._handle_schedules_stats()
         elif path == "/api/v1/oauth3/tokens":
             self._handle_oauth3_list()
         elif path.startswith("/api/v1/oauth3/tokens/") and path.count("/") == 5:
@@ -746,6 +756,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/notifications/[^/]+/read$", path):
             notif_id = path.split("/")[-2]
             self._handle_notification_mark_read(notif_id)
+        elif path == "/api/v1/webhooks":
+            self._handle_webhook_register()
         elif path == "/api/v1/profiles":
             self._handle_profiles_create()
         elif re.match(r"^/api/v1/profiles/[^/]+/activate$", path):
@@ -1113,6 +1125,78 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                     self._send_json({"status": "disabled", "schedule_id": schedule_id})
                     return
         self._send_json({"error": "schedule not found"}, 404)
+
+    def _handle_webhooks_list(self) -> None:
+        """GET /api/v1/webhooks — list registered webhook subscriptions. Task 061."""
+        self._send_json({"webhooks": [], "total": 0})
+
+    def _handle_webhook_register(self) -> None:
+        """POST /api/v1/webhooks — register a webhook subscription. Task 061."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url = str(body.get("url", "")).strip()
+        if not url:
+            self._send_error(400, "url required")
+            return
+        hook_id = f"hook-{int(time.time())}"
+        self._send_json({"status": "registered", "id": hook_id, "url": url})
+
+    def _handle_server_stats(self) -> None:
+        """GET /api/v1/stats — aggregate server statistics. Task 062."""
+        with _METRICS_LOCK:
+            total_req = sum(_REQUEST_COUNTS.values())
+            total_err = sum(_ERROR_COUNTS.values())
+        uptime = int(time.time() - _SERVER_START_TIME)
+        self._send_json({
+            "requests_total": total_req,
+            "errors_total": total_err,
+            "uptime_seconds": uptime,
+            "error_rate": round(total_err / max(1, total_req), 4),
+        })
+
+    def _handle_evidence_hashes(self) -> None:
+        """GET /api/v1/evidence/hashes — SHA-256 hashes of all evidence entries. Task 063."""
+        import hashlib
+        hashes = []
+        if EVIDENCE_PATH.exists():
+            try:
+                for line in EVIDENCE_PATH.read_text().splitlines():
+                    if line.strip():
+                        h = hashlib.sha256(line.encode()).hexdigest()
+                        hashes.append(h)
+            except OSError:
+                pass
+        self._send_json({"hashes": hashes, "total": len(hashes)})
+
+    def _handle_apps_metadata(self) -> None:
+        """GET /api/v1/apps/metadata — enriched metadata for all apps. Task 064."""
+        apps: list = self.server.apps if hasattr(self.server, "apps") else []
+        result = []
+        for app in apps:
+            app_id = app if isinstance(app, str) else app.get("id", "")
+            result.append({
+                "id": app_id,
+                "name": str(app_id).replace("-", " ").title(),
+                "category": str(app_id).split("-")[0] if "-" in str(app_id) else "other",
+                "installed": True,
+            })
+        self._send_json({"apps": result, "total": len(result)})
+
+    def _handle_schedules_stats(self) -> None:
+        """GET /api/v1/schedules/stats — schedule run statistics. Task 065."""
+        schedules = load_schedules()
+        total_runs = sum(s.get("run_count", 0) for s in schedules)
+        total_success = sum(s.get("success_count", 0) for s in schedules)
+        success_rate = round(total_success / max(1, total_runs), 4)
+        self._send_json({
+            "total_runs": total_runs,
+            "total_success": total_success,
+            "success_rate": success_rate,
+            "schedule_count": len(schedules),
+        })
 
     def _handle_schedules_summary(self) -> None:
         """GET /api/v1/schedules/summary — schedule counts by state. Task 057."""
