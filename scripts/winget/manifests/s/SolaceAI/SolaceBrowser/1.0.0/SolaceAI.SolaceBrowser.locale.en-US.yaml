@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+PackageIdentifier: SolaceAI.SolaceBrowser
+PackageVersion: 1.0.0
+PackageLocale: en-US
+Publisher: Solace AI
+PublisherUrl: https://solaceagi.com
+PublisherSupportUrl: https://github.com/phuctruong/solace-browser/issues
+PrivacyUrl: https://solaceagi.com/privacy
+PackageName: Solace Browser
+PackageUrl: https://solaceagi.com
+License: FSL-1.1
+LicenseUrl: https://github.com/phuctruong/solace-browser/blob/main/LICENSE
+Copyright: Copyright (c) 2026 Solace AI
+ShortDescription: AI automation backend for Solace Browser
+Description: |-
+  Solace Browser is an AI-powered browser built for autonomous task execution.
+  The Yinyang Server is the local backend that powers the sidebar, runs recipes,
+  manages evidence chains, and connects to Solace Hub.
+
+  Features:
+  - 34+ AI automation apps (Gmail, LinkedIn, Calendar, and more)
+  - OAuth3-scoped task delegation with step-up auth
+  - Hash-chained tamper-evident evidence vault
+  - Local-first: your data stays on your machine
+Tags:
+  - browser
+  - ai
+  - automation
+  - productivity
+  - solace
+ReleaseNotesUrl: https://github.com/phuctruong/solace-browser/releases/tag/v1.0.0
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

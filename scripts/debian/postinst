@@ -1,0 +1,27 @@
+#!/bin/bash
+# postinst — post-installation script for solace-browser deb package
+set -e
+
+case "$1" in
+  configure)
+    # Create ~/.solace directory for the installing user if running interactively
+    if [ -n "${SUDO_USER}" ]; then
+      USER_HOME=$(getent passwd "${SUDO_USER}" | cut -d: -f6)
+      if [ -n "${USER_HOME}" ]; then
+        install -d -m 700 -o "${SUDO_USER}" "${USER_HOME}/.solace" || true
+      fi
+    fi
+
+    # Reload systemd if present (for future service unit support)
+    if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
+      systemctl daemon-reload || true
+    fi
+    ;;
+  abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+  *)
+    echo "postinst: unsupported argument: $1" >&2
+    ;;
+esac
+
+exit 0

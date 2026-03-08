@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.6.0.schema.json
+# Winget installer manifest — SolaceAI.SolaceBrowser
+# BLOCKED ON: Windows code signing certificate (eSign application in progress)
+#
+# TODO when eSign lands:
+#   1. Replace PLACEHOLDER_SHA256 with actual sha256 of signed MSI
+#   2. Verify SignatureSha256 matches the Authenticode signature hash
+#   3. Update InstallerUrl to point to the GCS public URL of the signed MSI
+
+PackageIdentifier: SolaceAI.SolaceBrowser
+PackageVersion: 1.0.0
+MinimumOSVersion: '10.0.17763.0'   # Windows 10 1809+
+InstallModes:
+  - interactive
+  - silent
+InstallerSwitches:
+  Silent: /qn
+  SilentWithProgress: /qn /norestart
+  Log: /log "$TEMP\\solace-browser-install.log"
+UpgradeBehavior: install
+Installers:
+  - Architecture: x64
+    InstallerType: msi
+    Scope: machine
+    # TODO: replace with GCS URL after signing + promotion
+    InstallerUrl: https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-windows-x86_64.msi
+    # TODO: replace with sha256 of signed MSI (certutil -hashfile <file> SHA256)
+    InstallerSha256: PLACEHOLDER_SHA256_REPLACE_AFTER_SIGNING
+    ProductCode: '{A5C2F4D7-3B8E-4A91-B6C0-2D7F1E9A4B83}'
+ManifestType: installer
+ManifestVersion: 1.6.0

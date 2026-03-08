@@ -1,0 +1,46 @@
+name: solace-browser
+base: core22
+version: '1.0.0'
+summary: Yinyang Server — AI automation backend for Solace Browser
+description: |
+  Solace Browser is an AI-powered browser built for autonomous task execution.
+  The Yinyang Server (this snap) is the local backend that powers the sidebar,
+  runs recipes, manages evidence chains, and connects to the Solace Hub.
+
+  Features:
+  - 34+ AI automation apps (Gmail, LinkedIn, Calendar, and more)
+  - OAuth3-scoped task delegation with step-up auth
+  - Hash-chained tamper-evident evidence vault
+  - Local-first: your data stays on your machine
+  - Port 8888 — works with Solace Hub desktop app
+
+grade: stable
+confinement: strict
+
+apps:
+  solace-browser:
+    command: bin/solace-browser
+    plugs:
+      - network
+      - network-bind   # listen on port 8888
+      - home           # ~/.solace/ port.lock + evidence vault
+      - dot-local-share  # ~/.local/share/solace-browser/
+
+parts:
+  yinyang-server:
+    plugin: nil
+    source: .
+    override-build: |
+      # Expect the PyInstaller binary to be pre-built and placed at
+      # dist/solace-browser-linux-x86_64 before snap build runs.
+      # In CI: scripts/release_browser_cycle.sh runs first, then snapcraft.
+      BINARY="dist/solace-browser-linux-x86_64"
+      if [ ! -f "${BINARY}" ]; then
+        echo "ERROR: Binary not found at ${BINARY}" >&2
+        echo "Run: TARGET_OS=linux bash scripts/release_browser_cycle.sh" >&2
+        exit 1
+      fi
+      install -Dm755 "${BINARY}" "${SNAPCRAFT_PART_INSTALL}/bin/solace-browser"
+    stage-packages:
+      - libffi7
+      - libssl3

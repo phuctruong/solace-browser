@@ -1,0 +1,19 @@
+Package: solace-browser
+Version: 1.0.0
+Section: net
+Priority: optional
+Architecture: amd64
+Depends: libssl3 (>= 3.0), libffi8
+Maintainer: Solace AI <hello@solaceagi.com>
+Homepage: https://solaceagi.com
+Description: AI automation backend for Solace Browser
+ Solace Browser is an AI-powered browser built for autonomous task execution.
+ The Yinyang Server is the local backend that powers the sidebar,
+ runs recipes, manages evidence chains, and connects to Solace Hub.
+ .
+ Features:
+  - 34+ AI automation apps (Gmail, LinkedIn, Calendar, and more)
+  - OAuth3-scoped task delegation with step-up auth
+  - Hash-chained tamper-evident evidence vault
+  - Local-first: your data stays on your machine
+  - Listens on port 8888

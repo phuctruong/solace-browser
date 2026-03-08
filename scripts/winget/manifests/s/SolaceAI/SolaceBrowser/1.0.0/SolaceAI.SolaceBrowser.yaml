@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.version.1.6.0.schema.json
+# Winget version manifest — SolaceAI.SolaceBrowser
+# Submit to: https://github.com/microsoft/winget-pkgs
+# BLOCKED ON: Windows code signing certificate (eSign application in progress)
+#
+# After eSign:
+#   1. Sign the MSI: signtool sign /fd sha256 /td sha256 /tr http://timestamp.digicert.com ...
+#   2. Update InstallerSha256 below with: certutil -hashfile solace-browser-windows-x86_64.msi SHA256
+#   3. Submit PR to microsoft/winget-pkgs
+
+PackageIdentifier: SolaceAI.SolaceBrowser
+PackageVersion: 1.0.0
+DefaultLocale: en-US
+ManifestType: version
+ManifestVersion: 1.6.0
