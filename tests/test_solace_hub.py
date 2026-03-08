@@ -1163,3 +1163,21 @@ class TestCustomLabelsUI:
     def test_labels_in_server(self):
         server = (REPO_ROOT / "yinyang_server.py").read_text()
         assert "/api/v1/labels" in server
+
+
+# ── Tasks 076-080: Bulk UI Tests ──────────────────────────────────────────────
+
+class TestBudgetExportUI:
+    def test_budget_export_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/budget/export" in server
+
+class TestNotifPrefsUI:
+    def test_notif_prefs_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/notifications/preferences" in server
+
+class TestEvidenceSearchUI:
+    def test_evidence_search_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/evidence/search" in server

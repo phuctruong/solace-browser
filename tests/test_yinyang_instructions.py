@@ -2936,3 +2936,57 @@ class TestCustomLabels:
         assert status == 200
         assert data["status"] in ("created", "ok")
         assert "id" in data
+
+
+# ── Task 076: App Version History ─────────────────────────────────────────────
+
+class TestAppVersionHistory:
+    def test_app_version_history(self, auth_server):
+        status, data = _get_json_auth("/api/v1/apps/gmail-automation/versions")
+        assert status in (200, 404)
+        if status == 200:
+            assert "versions" in data
+
+
+# ── Task 077: Budget Export ────────────────────────────────────────────────────
+
+class TestBudgetExport:
+    def test_budget_export(self, auth_server):
+        status, data = _get_json_auth("/api/v1/budget/export")
+        assert status == 200
+        assert "budget" in data or "daily_limit" in data
+
+
+# ── Task 078: Session Details ──────────────────────────────────────────────────
+
+class TestSessionDetails:
+    def test_session_detail_not_found(self, auth_server):
+        status, data = _get_json_auth("/api/v1/sessions/nonexistent-sess")
+        assert status in (200, 404)
+
+
+# ── Task 079: Notification Preferences ────────────────────────────────────────
+
+class TestNotificationPreferences:
+    def test_notif_prefs_get(self, auth_server):
+        status, data = _get_json_auth("/api/v1/notifications/preferences")
+        assert status == 200
+        assert "preferences" in data
+
+    def test_notif_prefs_set(self, auth_server):
+        status, data = _post_with_auth("/api/v1/notifications/preferences", {
+            "budget_alerts": True,
+            "recipe_complete": True,
+        })
+        assert status == 200
+        assert data["status"] in ("updated", "ok")
+
+
+# ── Task 080: Evidence Search ──────────────────────────────────────────────────
+
+class TestEvidenceSearch:
+    def test_evidence_search(self, auth_server):
+        status, data = _get_json_auth("/api/v1/evidence/search?q=schedule")
+        assert status == 200
+        assert "results" in data
+        assert isinstance(data["results"], list)

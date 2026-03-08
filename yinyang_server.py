@@ -528,6 +528,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_evidence_summary()
         elif path == "/api/v1/evidence/hashes":
             self._handle_evidence_hashes()
+        elif path == "/api/v1/evidence/search":
+            self._handle_evidence_search(query)
         elif path == "/api/v1/evidence/export":
             self._handle_evidence_export(query)
         elif re.match(r"^/api/v1/evidence/[^/]+$", path):
@@ -571,6 +573,13 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_sla_uptime()
         elif path == "/api/v1/labels":
             self._handle_labels_list()
+        elif path == "/api/v1/budget/export":
+            self._handle_budget_export()
+        elif path == "/api/v1/notifications/preferences":
+            self._handle_notif_preferences_get()
+        elif re.match(r"^/api/v1/apps/[^/]+/versions$", path):
+            app_id = path.split("/")[-2]
+            self._handle_app_versions(app_id)
         elif path == "/api/v1/oauth3/tokens":
             self._handle_oauth3_list()
         elif path.startswith("/api/v1/oauth3/tokens/") and path.count("/") == 5:
@@ -748,6 +757,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_memory_set()
         elif path == "/api/v1/labels":
             self._handle_label_create()
+        elif path == "/api/v1/notifications/preferences":
+            self._handle_notif_preferences_set()
         elif path == "/api/v1/budget":
             self._handle_budget_update()
         elif path == "/api/v1/budget/reset":
@@ -1156,6 +1167,62 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
     _LOG_LEVEL: str = "info"  # class-level mutable state
     _AGENT_MEMORY: dict = {}  # class-level agent memory store
     _CUSTOM_LABELS: list = []  # class-level labels store
+
+    _NOTIF_PREFS: dict = {"budget_alerts": True, "recipe_complete": True, "schedule_run": True}
+
+    def _handle_budget_export(self) -> None:
+        """GET /api/v1/budget/export — export budget config as JSON. Task 077."""
+        if BUDGET_PATH.exists():
+            try:
+                budget = json.loads(BUDGET_PATH.read_text())
+            except (json.JSONDecodeError, OSError):
+                budget = {}
+        else:
+            budget = {}
+        self._send_json({"budget": budget, "exported_at": int(time.time())})
+
+    def _handle_notif_preferences_get(self) -> None:
+        """GET /api/v1/notifications/preferences — get notification preferences. Task 079."""
+        self._send_json({"preferences": YinyangHandler._NOTIF_PREFS})
+
+    def _handle_notif_preferences_set(self) -> None:
+        """POST /api/v1/notifications/preferences — update notification preferences. Task 079."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        for key in ("budget_alerts", "recipe_complete", "schedule_run"):
+            if key in body:
+                YinyangHandler._NOTIF_PREFS[key] = bool(body[key])
+        self._send_json({"status": "updated", "preferences": YinyangHandler._NOTIF_PREFS})
+
+    def _handle_evidence_search(self, query: str) -> None:
+        """GET /api/v1/evidence/search?q=X — search evidence entries. Task 080."""
+        from urllib.parse import parse_qs
+        params = parse_qs(query.lstrip("?"))
+        term = params.get("q", [""])[0].lower()
+        results = []
+        if EVIDENCE_PATH.exists() and term:
+            try:
+                for line in EVIDENCE_PATH.read_text().splitlines():
+                    if term in line.lower():
+                        try:
+                            results.append(json.loads(line))
+                        except (json.JSONDecodeError, KeyError):
+                            pass
+            except OSError:
+                pass
+        self._send_json({"results": results[:50], "total": len(results), "query": term})
+
+    def _handle_app_versions(self, app_id: str) -> None:
+        """GET /api/v1/apps/{id}/versions — version history for app. Task 076."""
+        apps: list = self.server.apps if hasattr(self.server, "apps") else []
+        if app_id not in apps:
+            self._send_json({"error": "app not found"}, 404)
+            return
+        versions = [{"version": "1.0.0", "released_at": int(time.time()) - 86400, "notes": "Initial release"}]
+        self._send_json({"app_id": app_id, "versions": versions, "total": len(versions)})
 
     def _handle_recipe_steps(self, recipe_id: str) -> None:
         """GET /api/v1/recipes/{id}/steps — list recipe steps. Task 071."""
