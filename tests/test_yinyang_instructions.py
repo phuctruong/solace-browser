@@ -2624,3 +2624,14 @@ class TestAppRunCount:
         assert status == 200
         assert "counts" in data
         assert isinstance(data["counts"], dict)
+
+
+# ── Task 049: Server Config ────────────────────────────────────────────────────
+
+class TestServerConfig:
+    def test_server_config(self, auth_server):
+        status, data = _get_json_auth("/api/v1/server/config")
+        assert status == 200
+        assert "port" in data
+        assert "version" in data
+        assert "features" in data

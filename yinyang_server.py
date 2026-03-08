@@ -537,6 +537,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_vault_status()
         elif path == "/api/v1/apps/run-count":
             self._handle_apps_run_count()
+        elif path == "/api/v1/server/config":
+            self._handle_server_config()
         elif path == "/api/v1/oauth3/tokens":
             self._handle_oauth3_list()
         elif path.startswith("/api/v1/oauth3/tokens/") and path.count("/") == 5:
@@ -1085,6 +1087,28 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                     self._send_json({"status": "disabled", "schedule_id": schedule_id})
                     return
         self._send_json({"error": "schedule not found"}, 404)
+
+    def _handle_server_config(self) -> None:
+        """GET /api/v1/server/config — server configuration + feature flags. Task 049."""
+        self._send_json({
+            "port": YINYANG_PORT,
+            "version": _SERVER_VERSION,
+            "features": {
+                "websocket_chat": True,
+                "websocket_dashboard": True,
+                "recipe_engine": True,
+                "oauth3_vault": True,
+                "evidence_chain": True,
+                "twin_browser": False,
+                "cloud_sync": False,
+            },
+            "limits": {
+                "max_apps": 100,
+                "max_schedules": 50,
+                "max_notifications": 200,
+                "max_profiles": 10,
+            },
+        })
 
     def _handle_apps_run_count(self) -> None:
         """GET /api/v1/apps/run-count — how many times each app was launched. Task 048."""

@@ -944,3 +944,17 @@ class TestAppRunCountUI:
         """index.html must show run count or usage somewhere."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "run" in html.lower() or "count" in html.lower() or "usage" in html.lower()
+
+
+# ── Task 049: Server Config ────────────────────────────────────────────────────
+
+class TestServerConfigUI:
+    def test_config_in_server(self):
+        """yinyang_server.py must implement /api/v1/server/config."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/server/config" in server
+
+    def test_config_in_html(self):
+        """index.html must show server config or features."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "feature" in html.lower() or "config" in html.lower() or "version" in html.lower()
