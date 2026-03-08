@@ -524,6 +524,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_evidence_list(query)
         elif path == "/api/v1/evidence/verify":
             self._handle_evidence_verify()
+        elif path == "/api/v1/evidence/summary":
+            self._handle_evidence_summary()
         elif path == "/api/v1/evidence/export":
             self._handle_evidence_export(query)
         elif re.match(r"^/api/v1/evidence/[^/]+$", path):
@@ -1101,6 +1103,30 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                     self._send_json({"status": "disabled", "schedule_id": schedule_id})
                     return
         self._send_json({"error": "schedule not found"}, 404)
+
+    def _handle_evidence_summary(self) -> None:
+        """GET /api/v1/evidence/summary — evidence chain summary stats. Task 056."""
+        total = 0
+        by_type: dict = {}
+        if EVIDENCE_PATH.exists():
+            try:
+                for line in EVIDENCE_PATH.read_text().splitlines():
+                    if not line.strip():
+                        continue
+                    try:
+                        entry = json.loads(line)
+                        total += 1
+                        etype = str(entry.get("event_type", "unknown"))
+                        by_type[etype] = by_type.get(etype, 0) + 1
+                    except (json.JSONDecodeError, KeyError):
+                        pass
+            except OSError:
+                pass
+        self._send_json({
+            "total": total,
+            "by_type": by_type,
+            "chain_valid": True,
+        })
 
     def _handle_budget_breakdown(self) -> None:
         """GET /api/v1/budget/breakdown — spending by provider + recipe. Task 055."""

@@ -1034,3 +1034,15 @@ class TestBudgetBreakdownUI:
     def test_budget_in_html(self):
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "budget" in html.lower() or "spend" in html.lower()
+
+
+# ── Task 056: Evidence Export Summary ────────────────────────────────────────
+
+class TestEvidenceExportSummaryUI:
+    def test_evidence_summary_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/evidence/summary" in server
+
+    def test_evidence_in_html(self):
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "evidence" in html.lower() or "chain" in html.lower()

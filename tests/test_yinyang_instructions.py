@@ -2707,3 +2707,14 @@ class TestBudgetBreakdown:
         assert "by_provider" in data
         assert "by_recipe" in data
         assert "total_spent" in data
+
+
+# ── Task 056: Evidence Export Summary ────────────────────────────────────────
+
+class TestEvidenceExportSummary:
+    def test_evidence_summary(self, auth_server):
+        status, data = _get_json_auth("/api/v1/evidence/summary")
+        assert status == 200
+        assert "total" in data
+        assert "by_type" in data
+        assert "chain_valid" in data
