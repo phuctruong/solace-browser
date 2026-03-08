@@ -2083,6 +2083,12 @@ class TestBYOKManagement:
         assert full_key not in response_text
         assert "never-show" not in response_text
 
+    def test_byok_active_provider(self, auth_server):
+        """GET /api/v1/byok/active → returns active_provider field."""
+        status, data = _get_json_auth("/api/v1/byok/active")
+        assert status == 200
+        assert "active_provider" in data
+
 
 # ---------------------------------------------------------------------------
 # Task 020: Notification System + Event Log
