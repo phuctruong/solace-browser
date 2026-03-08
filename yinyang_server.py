@@ -535,6 +535,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_schedules_list()
         elif path == "/api/v1/vault/status":
             self._handle_vault_status()
+        elif path == "/api/v1/apps/run-count":
+            self._handle_apps_run_count()
         elif path == "/api/v1/oauth3/tokens":
             self._handle_oauth3_list()
         elif path.startswith("/api/v1/oauth3/tokens/") and path.count("/") == 5:
@@ -1083,6 +1085,13 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                     self._send_json({"status": "disabled", "schedule_id": schedule_id})
                     return
         self._send_json({"error": "schedule not found"}, 404)
+
+    def _handle_apps_run_count(self) -> None:
+        """GET /api/v1/apps/run-count — how many times each app was launched. Task 048."""
+        with _METRICS_LOCK:
+            counts = {k: v for k, v in _REQUEST_COUNTS.items() if k.startswith("app_launch:")}
+        cleaned = {k[len("app_launch:"):]: v for k, v in counts.items()}
+        self._send_json({"counts": cleaned, "total_launches": sum(cleaned.values())})
 
     def _handle_vault_status(self) -> None:
         """GET /api/v1/vault/status — vault health summary. Task 047."""
@@ -3280,6 +3289,8 @@ function choose(mode) {
             self._send_json({"error": "app not found"}, 404)
             return
         _append_notification("info", "App Launched", f"{app_id} launched from Hub", "info")
+        with _METRICS_LOCK:
+            _REQUEST_COUNTS[f"app_launch:{app_id}"] = _REQUEST_COUNTS.get(f"app_launch:{app_id}", 0) + 1
         self._send_json({"status": "launched", "app_id": app_id, "timestamp": int(time.time())})
 
     def _parse_query(self, query: str) -> dict[str, str]:

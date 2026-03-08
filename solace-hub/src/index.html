@@ -1192,8 +1192,8 @@
       <div id="app-tag-filter" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
         <button class="tag-pill active" data-tag="all" onclick="filterAppsByTag('all',this)" style="padding:2px 8px;border-radius:12px;border:1px solid var(--border);background:var(--accent);color:#fff;font-size:11px;cursor:pointer;">All</button>
       </div>
-      <!-- Favorites star filter (Task 045) -->
-      <div style="margin-bottom:8px;font-size:11px;color:var(--text-muted);">★ = favorited app — click star to toggle</div>
+      <!-- Favorites star filter (Task 045) + Run count (Task 048) -->
+      <div style="margin-bottom:8px;font-size:11px;color:var(--text-muted);">★ = favorited · <span id="total-launches-label">Loading usage…</span></div>
       <div id="app-launcher-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;"></div>
     </div>
 
@@ -2745,6 +2745,16 @@
     }
     loadAppFavorites().then(refreshAppLauncher);
     setInterval(refreshAppLauncher, 60_000);
+    // App run count (Task 048)
+    (async () => {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/apps/run-count', { signal: AbortSignal.timeout(3000) });
+        if (!r.ok) return;
+        const d = await r.json();
+        const el = document.getElementById('total-launches-label');
+        if (el) el.textContent = `${d.total_launches || 0} launches this session`;
+      } catch (_) { const el = document.getElementById('total-launches-label'); if (el) el.textContent = ''; }
+    })();
 
     // Watchdog status refresh (Task 030)
     async function refreshWatchdog() {

@@ -2614,3 +2614,13 @@ class TestVaultStatus:
         assert data["status"] == "ok"
         assert "token_count" in data
         assert "healthy" in data
+
+
+# ── Task 048: App Run Count ────────────────────────────────────────────────────
+
+class TestAppRunCount:
+    def test_app_run_count(self, auth_server):
+        status, data = _get_json_auth("/api/v1/apps/run-count")
+        assert status == 200
+        assert "counts" in data
+        assert isinstance(data["counts"], dict)

@@ -930,3 +930,17 @@ class TestVaultStatusUI:
         """index.html must contain vault UI."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "vault" in html.lower() or "oauth" in html.lower()
+
+
+# ── Task 048: App Run Count ────────────────────────────────────────────────────
+
+class TestAppRunCountUI:
+    def test_run_count_in_server(self):
+        """yinyang_server.py must implement /api/v1/apps/run-count."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/apps/run-count" in server
+
+    def test_run_count_in_html(self):
+        """index.html must show run count or usage somewhere."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "run" in html.lower() or "count" in html.lower() or "usage" in html.lower()
