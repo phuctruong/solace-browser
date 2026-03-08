@@ -71,7 +71,85 @@ fn get_version() -> String {
 /// Returns whether the Python server is reachable.
 #[tauri::command]
 async fn server_health() -> bool {
-    is_server_ready("http://localhost:8888/ping", 1).await
+    is_server_ready("http://localhost:8888/api/health", 1).await
+}
+
+/// Returns full server status including mode, running state, and version.
+#[tauri::command]
+async fn server_status() -> Result<serde_json::Value, String> {
+    match reqwest::get("http://localhost:8888/api/health").await {
+        Ok(resp) => {
+            if resp.status().is_success() {
+                match resp.json::<serde_json::Value>().await {
+                    Ok(data) => Ok(data),
+                    Err(e) => Err(format!("Failed to parse response: {}", e)),
+                }
+            } else {
+                Err(format!("Server returned status {}", resp.status()))
+            }
+        }
+        Err(e) => Err(format!("Server unreachable: {}", e)),
+    }
+}
+
+/// Returns the list of active browser sessions from the Python server.
+#[tauri::command]
+async fn list_sessions() -> Result<serde_json::Value, String> {
+    match reqwest::get("http://localhost:8888/api/sessions").await {
+        Ok(resp) => {
+            if resp.status().is_success() {
+                resp.json::<serde_json::Value>()
+                    .await
+                    .map_err(|e| format!("Parse error: {}", e))
+            } else {
+                Ok(serde_json::json!({ "sessions": [], "error": format!("HTTP {}", resp.status()) }))
+            }
+        }
+        Err(_) => Ok(serde_json::json!({ "sessions": [], "error": "Server offline" })),
+    }
+}
+
+/// Returns the server process PID (for status display).
+#[tauri::command]
+fn server_pid(state: State<'_, ServerProcess>) -> Option<u32> {
+    if let Ok(lock) = state.0.lock() {
+        if let Some(ref child) = *lock {
+            return Some(child.id());
+        }
+    }
+    None
+}
+
+/// Restarts the Python server by killing and re-spawning it.
+#[tauri::command]
+async fn restart_server(app: AppHandle, state: State<'_, ServerProcess>) -> Result<String, String> {
+    // Kill existing server
+    {
+        let mut lock = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+        if let Some(ref mut child) = *lock {
+            log::info!("Killing Python server (PID {}) for restart", child.id());
+            let _ = child.kill();
+        }
+        *lock = None;
+    }
+
+    // Wait a moment for port to be released
+    thread::sleep(Duration::from_millis(500));
+
+    // Re-spawn
+    let child = spawn_python_server(&app);
+    {
+        let mut lock = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+        *lock = child;
+    }
+
+    // Wait for server to come back
+    let ready = is_server_ready("http://localhost:8888/api/health", 10).await;
+    if ready {
+        Ok("Server restarted successfully".to_string())
+    } else {
+        Err("Server failed to restart within 10 seconds".to_string())
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -161,7 +239,7 @@ async fn is_server_ready(url: &str, timeout_secs: u64) -> bool {
 
 /// Wait for the Python server to become ready (up to 15 seconds).
 async fn wait_for_server(app: &AppHandle) {
-    let url = "http://localhost:8888/ping";
+    let url = "http://localhost:8888/api/health";
     let timeout = 15u64;
 
     log::info!("Waiting for Python server at {}", url);
@@ -214,6 +292,10 @@ fn main() {
             setup_complete,
             get_version,
             server_health,
+            server_status,
+            list_sessions,
+            server_pid,
+            restart_server,
         ])
         .setup(|app| {
             let handle = app.handle();

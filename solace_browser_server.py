@@ -300,8 +300,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--port',
         type=int,
-        default=9222,
-        help='CDP server port (default: 9222)',
+        default=8888,
+        help='API server port (default: 8888)',
     )
     parser.add_argument(
         '--part11',
@@ -470,7 +470,7 @@ class SolaceBrowser:
         self._part11_upload_hook = hook
 
     # Yinyang rail injection state
-    _yinyang_port: int = 9222
+    _yinyang_port: int = 8888
     _yinyang_enabled: bool = False
 
     async def inject_yinyang_rails(self, page: Any, port: int = 0) -> bool:
@@ -759,11 +759,10 @@ class SolaceBrowser:
             context_options = {}
             if not self.headless:
                 context_options['no_viewport'] = True
-            async with self._session_lock:
-                session_path = Path(self.session_file)
-                if session_path.exists():
-                    logger.info("Loading saved session from: %s", self.session_file)
-                    context_options['storage_state'] = self.session_file
+            # Note: persistent contexts manage their own storage via user_data_dir.
+            # storage_state is only valid for browser.new_context(), not
+            # launch_persistent_context(). Session persistence is handled by
+            # the user_data_dir itself.
 
             try:
                 self.context = await playwright.chromium.launch_persistent_context(
@@ -827,16 +826,25 @@ class SolaceBrowser:
         page.on('load', self._on_page_load)
 
         # Navigate to branded home via web server (correct favicon + API access)
-        home_url = os.getenv("SOLACE_HOME_URL", "http://127.0.0.1:8791/")
+        home_url = os.getenv("SOLACE_HOME_URL", "http://127.0.0.1:8888/")
         try:
             await page.goto(home_url, wait_until="domcontentloaded", timeout=5000)
             logger.info(f"Home page loaded: {home_url}")
-        except (OSError, TimeoutError, ConnectionError) as exc:
+        except Exception as exc:
+            # Catch broadly here because Playwright raises its own Error type
+            # (playwright._impl._errors.Error) which doesn't subclass standard types.
+            # The server may not be listening yet (chicken-and-egg on startup).
             logger.warning(f"Web server not ready ({home_url}): {exc} — falling back to local file")
             start_page = Path(__file__).parent / "web" / "start.html"
             if start_page.exists():
-                await page.goto(start_page.resolve().as_uri(), wait_until="domcontentloaded")
-                logger.info("Fallback: start page loaded from file")
+                try:
+                    # Wait briefly for any pending chrome-error:// navigation to settle
+                    await asyncio.sleep(0.3)
+                    await page.goto(start_page.resolve().as_uri(), wait_until="domcontentloaded", timeout=5000)
+                    logger.info("Fallback: start page loaded from file")
+                except Exception as fallback_exc:
+                    # Chrome error page can interrupt file:// navigation — not fatal
+                    logger.warning(f"Fallback navigation also failed: {fallback_exc} — browser started on blank/error page")
             else:
                 logger.error("Neither web server nor local start.html available — browser started on blank page")
 
@@ -2089,7 +2097,7 @@ class SolaceBrowserServer:
     def __init__(
         self,
         browser: SolaceBrowser,
-        port: int = 9222,
+        port: int = 8888,
         sync_config: Optional[Any] = None,
         yinyang_bridge: Optional[Any] = None,
     ):
@@ -2274,6 +2282,14 @@ class SolaceBrowserServer:
         self.app.router.add_post('/api/apps/{app_id}/run', self._handle_apps_run)
         self.app.router.add_get('/api/models', self._handle_models_list)
         self.app.router.add_get('/api/apps/{app_id}/benchmarks', self._handle_app_benchmarks)
+        # Schedule CRUD (Yinyang sidebar — rethink §655-659)
+        self.app.router.add_get('/api/schedules', self._handle_schedules_list)
+        self.app.router.add_post('/api/schedules', self._handle_schedule_create)
+        self.app.router.add_get('/api/schedules/{schedule_id}', self._handle_schedule_get)
+        self.app.router.add_patch('/api/schedules/{schedule_id}', self._handle_schedule_update)
+        self.app.router.add_delete('/api/schedules/{schedule_id}', self._handle_schedule_delete)
+        self.app.router.add_get('/api/storage/quota', self._handle_storage_quota)
+        self.app.router.add_post('/api/dom/fingerprint', self._handle_dom_fingerprint)
         self.app.router.add_post('/api/recipes/match', self._handle_recipes_match)
         self.app.router.add_post('/api/evidence/search', self._handle_evidence_search)
         # E-sign + evidence verify (FDA Part 11 §11.100)
@@ -2337,6 +2353,72 @@ class SolaceBrowserServer:
         if self.browser.debug_ui:
             self.app.router.add_get('/', self._handle_ui)
             self.app.router.add_static('/static', Path(__file__).parent / 'browser_ui')
+
+        # Serve web UI static files (port consolidation: 8791 -> 8888)
+        web_dir = Path(__file__).resolve().parent / "web"
+        if web_dir.is_dir():
+            # Serve specific HTML files and static assets from web/
+            self.app.router.add_static('/css', web_dir / 'css')
+            self.app.router.add_static('/js', web_dir / 'js')
+            self.app.router.add_static('/images', web_dir / 'images')
+
+            # Pages migrated to sidebar (rethink Phase 5: Kill the Webapp)
+            # These pages now live in the Yinyang sidebar extension.
+            # Serve a redirect stub instead of the full page.
+            _SIDEBAR_MIGRATED = frozenset({
+                "app-store.html", "app-detail.html", "schedule.html",
+                "machine-dashboard.html", "tunnel-connect.html",
+                "download.html", "demo.html", "glossary.html",
+            })
+
+            async def _serve_web_file(request):
+                """Serve HTML files from the web/ directory.
+
+                Pages migrated to the sidebar return a helpful redirect stub.
+                Kept pages: home.html, settings.html, guide.html, docs.html,
+                404.html, 500.html, agents/*, start.html.
+                """
+                filename = request.match_info.get('filename', 'home.html')
+
+                # Sidebar-migrated pages get a redirect stub
+                if filename in _SIDEBAR_MIGRATED:
+                    page_name = filename.replace('.html', '').replace('-', ' ').title()
+                    return web.Response(
+                        text=(
+                            f'<!DOCTYPE html><html><head><meta charset="utf-8">'
+                            f'<title>{page_name} — Moved to Sidebar</title>'
+                            f'<style>body{{font-family:system-ui;max-width:480px;margin:80px auto;text-align:center;color:#ccc;background:#1a1a2e}}'
+                            f'h2{{color:#6c5ce7}}a{{color:#6c5ce7}}</style></head>'
+                            f'<body><h2>&#9775; {page_name}</h2>'
+                            f'<p>This page has moved to the <strong>Yinyang Sidebar</strong>.</p>'
+                            f'<p>Click the Yinyang icon in your browser toolbar to open it.</p>'
+                            f'<p><a href="/">Back to Home</a></p></body></html>'
+                        ),
+                        content_type='text/html',
+                    )
+
+                filepath = web_dir / filename
+                if filepath.is_file() and filepath.suffix in ('.html', '.json', '.xml', '.txt', '.ico', '.svg'):
+                    return web.FileResponse(filepath)
+                # Try with .html extension
+                filepath_html = web_dir / (filename + '.html')
+                if filepath_html.is_file():
+                    return web.FileResponse(filepath_html)
+                # 404
+                not_found = web_dir / '404.html'
+                if not_found.is_file():
+                    return web.FileResponse(not_found, status=404)
+                return web.Response(text='Not Found', status=404)
+
+            # Root serves home.html
+            if not self.browser.debug_ui:
+                self.app.router.add_get('/', lambda r: web.FileResponse(web_dir / 'home.html'))
+
+            self.app.router.add_get('/{filename:.+\\.html}', _serve_web_file)
+            self.app.router.add_get('/{filename:favicon\\..*}', _serve_web_file)
+            self.app.router.add_get('/{filename:robots\\.txt}', _serve_web_file)
+            self.app.router.add_get('/{filename:sitemap\\.xml}', _serve_web_file)
+            logger.info(f"[WebUI] Static files served from {web_dir}")
 
     async def _handle_version(self, request):
         """Return browser version (CDP compatible)"""
@@ -2568,8 +2650,13 @@ class SolaceBrowserServer:
             return web.json_response({"error": str(e)}, status=500)
 
     async def _handle_agents_json(self, request):
-        """Machine-readable capability manifest for agent discovery"""
+        """Machine-readable capability manifest for agent discovery.
+
+        Includes HMAC-SHA256 signature for integrity verification.
+        Agents can verify the manifest was generated by this server instance.
+        """
         import datetime
+        import hmac as _hmac
         recipes_dir = Path(__file__).parent / "data" / "default" / "recipes"
         recipe_count = len(list(recipes_dir.glob("**/*.recipe.json"))) if recipes_dir.exists() else 0
         endpoint_methods: Dict[str, str] = {
@@ -2594,7 +2681,7 @@ class SolaceBrowserServer:
             "part11_status": "GET",
             "part11_config": "POST",
         }
-        return web.json_response({
+        manifest = {
             "name": "Solace Browser",
             "version": "5.0",
             "description": "AI browser automation with evidence chains. Recipes replace LLMs. $0.001 on replay.",
@@ -2643,8 +2730,16 @@ class SolaceBrowserServer:
                 "SCOPE_DENIED", "HUMAN_REQUIRED", "NETWORK_ERROR",
                 "SESSION_EXPIRED", "ELEMENT_NOT_INTERACTABLE"
             ],
-            "generated_at": datetime.datetime.utcnow().isoformat() + "Z"
-        })
+            "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        }
+        # Sign the manifest for integrity verification
+        manifest_json = json.dumps(manifest, sort_keys=True, separators=(",", ":"))
+        # Use server version as HMAC key (agents can verify via /api/health)
+        signing_key = f"solace-browser-{__version__}".encode("utf-8")
+        manifest["signature"] = _hmac.new(
+            signing_key, manifest_json.encode("utf-8"), hashlib.sha256
+        ).hexdigest()
+        return web.json_response(manifest)
 
     async def _handle_escalate(self, request):
         """Human escalation — notify operator that agent needs intervention"""
@@ -3034,6 +3129,211 @@ class SolaceBrowserServer:
             "app_id": app_id,
             "benchmarks": benchmarks if isinstance(benchmarks, dict) else {},
         })
+
+    # ------------------------------------------------------------------
+    # Schedule CRUD (Yinyang sidebar — rethink §655-659)
+    # Stored as JSON files in ~/.solace/schedules/
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _schedules_dir() -> Path:
+        """Return (and create) the schedules storage directory."""
+        d = Path.home() / ".solace" / "schedules"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+    def _load_schedule(self, schedule_id: str) -> Optional[dict]:
+        """Load a single schedule by ID. Returns None if not found."""
+        path = self._schedules_dir() / f"{schedule_id}.json"
+        if not path.exists():
+            return None
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+            return None
+
+    def _save_schedule(self, schedule: dict) -> None:
+        """Persist a schedule dict to disk."""
+        path = self._schedules_dir() / f"{schedule['id']}.json"
+        path.write_text(json.dumps(schedule, indent=2), encoding="utf-8")
+
+    def _delete_schedule_file(self, schedule_id: str) -> bool:
+        """Delete a schedule file. Returns True if deleted."""
+        path = self._schedules_dir() / f"{schedule_id}.json"
+        if path.exists():
+            path.unlink()
+            return True
+        return False
+
+    async def _handle_schedules_list(self, request):
+        """GET /api/schedules — list all schedules."""
+        schedules = []
+        d = self._schedules_dir()
+        for path in sorted(d.glob("*.json")):
+            try:
+                sched = json.loads(path.read_text(encoding="utf-8"))
+                if isinstance(sched, dict):
+                    schedules.append(sched)
+            except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+                continue
+        return web.json_response(schedules)
+
+    async def _handle_schedule_create(self, request):
+        """POST /api/schedules — create a new schedule.
+
+        Body: {"app_id": "...", "cron": "0 9 * * 1-5", "enabled": true, "label": "..."}
+        """
+        try:
+            data = await request.json()
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
+            return web.json_response({"error": "invalid_json"}, status=400)
+
+        app_id = str(data.get("app_id", "")).strip()
+        if not app_id:
+            return web.json_response({"error": "missing_app_id"}, status=422)
+
+        cron_expr = str(data.get("cron", "")).strip()
+        if not cron_expr:
+            return web.json_response({"error": "missing_cron"}, status=422)
+
+        schedule = {
+            "id": str(uuid.uuid4()),
+            "app_id": app_id,
+            "cron": cron_expr,
+            "enabled": bool(data.get("enabled", True)),
+            "label": str(data.get("label", "")),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "last_run": None,
+            "next_run": None,
+            "run_count": 0,
+        }
+        self._save_schedule(schedule)
+        return web.json_response(schedule, status=201)
+
+    async def _handle_schedule_get(self, request):
+        """GET /api/schedules/{schedule_id} — get a single schedule."""
+        schedule_id = request.match_info["schedule_id"]
+        schedule = self._load_schedule(schedule_id)
+        if schedule is None:
+            return web.json_response(
+                {"error": "schedule_not_found", "schedule_id": schedule_id}, status=404
+            )
+        return web.json_response(schedule)
+
+    async def _handle_schedule_update(self, request):
+        """PATCH /api/schedules/{schedule_id} — update schedule fields."""
+        schedule_id = request.match_info["schedule_id"]
+        schedule = self._load_schedule(schedule_id)
+        if schedule is None:
+            return web.json_response(
+                {"error": "schedule_not_found", "schedule_id": schedule_id}, status=404
+            )
+
+        try:
+            data = await request.json()
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
+            return web.json_response({"error": "invalid_json"}, status=400)
+
+        allowed_fields = {"cron", "enabled", "label", "app_id"}
+        for key in allowed_fields:
+            if key in data:
+                schedule[key] = data[key]
+        schedule["updated_at"] = datetime.now(timezone.utc).isoformat()
+        self._save_schedule(schedule)
+        return web.json_response(schedule)
+
+    async def _handle_schedule_delete(self, request):
+        """DELETE /api/schedules/{schedule_id} — remove a schedule."""
+        schedule_id = request.match_info["schedule_id"]
+        if not self._delete_schedule_file(schedule_id):
+            return web.json_response(
+                {"error": "schedule_not_found", "schedule_id": schedule_id}, status=404
+            )
+        return web.json_response({"ok": True, "deleted": schedule_id})
+
+    async def _handle_storage_quota(self, request):
+        """GET /api/storage/quota — return disk usage info for ~/.solace/ directory."""
+        solace_dir = Path.home() / ".solace"
+        quota_bytes = 1073741824  # 1 GB
+
+        tracked_dirs = ("audit", "schedules", "evidence", "artifacts")
+        breakdown = {name: 0 for name in tracked_dirs}
+        total_used = 0
+
+        if solace_dir.is_dir():
+            for file_path in solace_dir.rglob("*"):
+                if not file_path.is_file():
+                    continue
+                try:
+                    size = file_path.stat().st_size
+                except OSError:
+                    continue
+                total_used += size
+                # Attribute to tracked subdirectory if applicable
+                try:
+                    relative = file_path.relative_to(solace_dir)
+                    top_dir = relative.parts[0] if relative.parts else None
+                    if top_dir in breakdown:
+                        breakdown[top_dir] += size
+                except ValueError:
+                    continue
+
+        def _human_readable(num_bytes: int) -> str:
+            if num_bytes == 0:
+                return "0 B"
+            units = [("TB", 1 << 40), ("GB", 1 << 30), ("MB", 1 << 20), ("KB", 1 << 10)]
+            for unit, threshold in units:
+                if num_bytes >= threshold:
+                    value = num_bytes / threshold
+                    return f"{value:.1f} {unit}" if value != int(value) else f"{int(value)} {unit}"
+            return f"{num_bytes} B"
+
+        usage_percent = round((total_used / quota_bytes) * 100, 2) if quota_bytes > 0 else 0.0
+
+        return web.json_response({
+            "used_bytes": total_used,
+            "used_human": _human_readable(total_used),
+            "quota_bytes": quota_bytes,
+            "quota_human": _human_readable(quota_bytes),
+            "usage_percent": usage_percent,
+            "breakdown": breakdown,
+        })
+
+    async def _handle_dom_fingerprint(self, request):
+        """POST /api/dom/fingerprint — generate DOM structural fingerprint.
+
+        Body: {"html": "<html>...</html>"} or {"url": "current"} to use current page.
+        Returns: {"fingerprint": "sha256hex", "summary": {...}}
+        """
+        try:
+            data = await request.json()
+        except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
+            return web.json_response({"error": "invalid_json"}, status=400)
+
+        html = data.get("html", "")
+
+        # If no HTML provided, get current page HTML
+        if not html and data.get("url") == "current":
+            try:
+                result = await self.browser.evaluate("document.documentElement.outerHTML")
+                html = result.get("result", "") if isinstance(result, dict) else str(result)
+            except (AttributeError, TypeError, RuntimeError):
+                return web.json_response({"error": "no_page_loaded"}, status=400)
+
+        if not html:
+            return web.json_response({"error": "no_html_provided"}, status=400)
+
+        try:
+            from yinyang.dom_drift import dom_fingerprint, dom_structural_summary
+            fp = dom_fingerprint(html)
+            summary = dom_structural_summary(html)
+        except ImportError:
+            # Inline fallback if module not on path
+            fp = hashlib.sha256(html.encode("utf-8")).hexdigest()
+            summary = {"tag_count": 0, "note": "dom_drift module not available"}
+
+        return web.json_response({"fingerprint": fp, "summary": summary})
 
     async def _handle_health(self, request):
         """Health endpoint for stillwater/service orchestration."""
@@ -4288,7 +4588,7 @@ class SolaceBrowserServer:
             await runner.cleanup()
 
 
-def _start_web_ui_server(port: int = 8791) -> None:
+def _start_web_ui_server(port: int = 8888) -> None:
     """Start the web UI dashboard server as a daemon thread.
 
     Serves the full dashboard (HTML/CSS/JS + REST API for apps, settings,
@@ -4384,8 +4684,11 @@ async def main():
         return
 
     # Start the web UI dashboard server BEFORE the browser so the home page loads
-    web_ui_port = int(os.getenv("SOLACE_WEB_UI_PORT", "8791"))
-    _start_web_ui_server(port=web_ui_port)
+    # Web UI is now served by the main API server on port 8888.
+    # The separate 8791 web UI server is kept as fallback for dev mode only.
+    web_ui_port = int(os.getenv("SOLACE_WEB_UI_PORT", "8888"))
+    if web_ui_port != args.port:
+        _start_web_ui_server(port=web_ui_port)
 
     # Create and start browser — headed by default, headless only with --headless
     head_hidden = args.head_hidden

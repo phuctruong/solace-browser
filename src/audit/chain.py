@@ -74,6 +74,7 @@ class AuditEntry:
     step_up_performed: bool # Whether re-confirmation (step-up) was required
     prev_hash: str          # SHA-256 of previous entry's full hash (chain link)
     entry_hash: str = ""    # SHA-256 of this entry (computed at creation, excluded from own hash)
+    lamport_clock: int = 0  # Lamport logical clock (monotonically increasing, excluded from hash for backward compat)
 
     def compute_hash(self) -> str:
         """
@@ -87,6 +88,7 @@ class AuditEntry:
         """
         d = asdict(self)
         d.pop("entry_hash", None)
+        d.pop("lamport_clock", None)
         canonical = json.dumps(d, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
@@ -134,6 +136,7 @@ class AuditChain:
         self._base = Path(base_dir or "~/.solace/audit").expanduser()
         self._entries: List[AuditEntry] = []
         self._entry_count = 0
+        self._lamport_clock = 0
 
     # ------------------------------------------------------------------
     # Public interface
@@ -182,6 +185,8 @@ class AuditChain:
             self._entries[-1].entry_hash if self._entries else self.GENESIS_HASH
         )
 
+        self._lamport_clock += 1
+
         entry = AuditEntry(
             entry_id=str(self._entry_count),
             timestamp=self._now_iso(),
@@ -198,6 +203,7 @@ class AuditChain:
             scope_used=scope_used,
             step_up_performed=step_up_performed,
             prev_hash=prev_hash,
+            lamport_clock=self._lamport_clock,
         )
         entry.entry_hash = entry.compute_hash()
 
@@ -206,6 +212,21 @@ class AuditChain:
         self._persist_entry(entry)
 
         return entry
+
+    def sync_clock(self, remote_clock: int) -> int:
+        """Synchronize the Lamport clock with a remote clock value.
+
+        Sets the local clock to max(local, remote) + 1, ensuring
+        causal ordering across distributed audit chains.
+
+        Args:
+            remote_clock: The Lamport clock value received from a remote chain.
+
+        Returns:
+            The updated local Lamport clock value.
+        """
+        self._lamport_clock = max(self._lamport_clock, remote_clock) + 1
+        return self._lamport_clock
 
     def verify_integrity(self) -> dict:
         """
@@ -301,6 +322,10 @@ class AuditChain:
 
         self._entries = loaded
         self._entry_count = len(loaded)
+        # Restore Lamport clock to the maximum value seen in loaded entries
+        self._lamport_clock = max(
+            (e.lamport_clock for e in loaded), default=0
+        )
 
     # ------------------------------------------------------------------
     # Properties
@@ -320,6 +345,11 @@ class AuditChain:
         if not self._entries:
             return self.GENESIS_HASH
         return self._entries[-1].entry_hash
+
+    @property
+    def lamport_clock(self) -> int:
+        """Current value of the Lamport logical clock."""
+        return self._lamport_clock
 
     @property
     def count(self) -> int:

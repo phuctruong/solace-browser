@@ -730,7 +730,7 @@
     (function () {
       'use strict';
 
-      var BROWSER_API = 'http://127.0.0.1:9222';
+      var BROWSER_API = 'http://127.0.0.1:8888';
       var CLOUD_API   = 'https://www.solaceagi.com';
 
       /* ── State ─────────────────────────────────────────────────────────── */
@@ -1052,7 +1052,7 @@
             })
             .catch(function (err) {
               // Browser API offline — still allow submit (test is optional)
-              var msg = 'Could not reach the local browser agent (http://127.0.0.1:9222).\n\n' +
+              var msg = 'Could not reach the local browser agent (http://127.0.0.1:8888).\n\n' +
                 'Make sure Solace Browser server is running:\n' +
                 '  python3 ~/projects/solace-browser/solace_browser_server.py --port 9222 --head\n\n' +
                 'You can still submit your app without a live test run.';

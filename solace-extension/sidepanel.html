@@ -7,96 +7,202 @@
   <link rel="stylesheet" href="sidepanel.css">
 </head>
 <body>
-  <header class="yy-header">
-    <div class="yy-logo">
-      <span class="yy-symbol">☯</span>
-      <span class="yy-title">Yinyang</span>
+  <!-- Server Not Running State (hidden by default) -->
+  <div class="yy-server-offline" id="server-offline" style="display: none;">
+    <div class="yy-offline-logo">
+      <span class="yy-symbol-lg">&#9775;</span>
+      <h2>Yinyang</h2>
     </div>
-    <div class="yy-status" id="connection-status" title="API connection">
-      <span class="yy-dot"></span>
+    <p class="yy-offline-msg">Solace Browser server not detected.</p>
+    <div class="yy-offline-options">
+      <div class="yy-offline-option">
+        <strong>Option A — CLI:</strong>
+        <code>python solace_browser_server.py</code>
+      </div>
+      <div class="yy-offline-option">
+        <strong>Option B — AI Agent (MCP):</strong>
+        <code>python solace_browser_server.py --mcp</code>
+        <span class="yy-hint">Your agent controls the browser</span>
+      </div>
+      <div class="yy-offline-option">
+        <strong>Option C — Agent Instructions:</strong>
+        <span class="yy-hint">Full API docs for coding agents</span>
+      </div>
     </div>
-  </header>
+    <div class="yy-offline-byok">
+      <strong>BYOK Setup:</strong>
+      <p class="yy-hint">Add your LLM key in Settings. Supports: Anthropic, OpenAI, Together. Your key stays on your machine.</p>
+    </div>
+    <button class="yy-btn yy-btn-primary yy-btn-full" id="retry-connection">Retry Connection</button>
+  </div>
 
-  <nav class="yy-tabs" role="tablist">
-    <button class="yy-tab active" role="tab" aria-selected="true" data-tab="now">Now</button>
-    <button class="yy-tab" role="tab" aria-selected="false" data-tab="runs">Runs</button>
-    <button class="yy-tab" role="tab" aria-selected="false" data-tab="chat">Chat</button>
-    <button class="yy-tab" role="tab" aria-selected="false" data-tab="more">More</button>
-  </nav>
-
-  <main class="yy-content">
-    <!-- NOW TAB -->
-    <section class="yy-panel active" id="panel-now" role="tabpanel">
-      <div class="yy-current-page" id="current-page">
-        <span class="yy-page-label">Current page</span>
-        <span class="yy-page-url" id="page-url">—</span>
+  <!-- Main UI (shown when server is connected) -->
+  <div id="main-ui">
+    <header class="yy-header">
+      <div class="yy-logo">
+        <span class="yy-symbol">&#9775;</span>
+        <span class="yy-title">Yinyang</span>
       </div>
-      <div class="yy-matched-apps" id="matched-apps">
-        <div class="yy-empty-state">
-          <p>No apps match this page</p>
-          <p class="yy-hint">Navigate to a supported site to see available automations</p>
+      <div class="yy-header-right">
+        <span class="yy-tier-badge" id="tier-badge" title="Current tier">BYOK</span>
+        <div class="yy-status" id="connection-status" title="API connection">
+          <span class="yy-dot"></span>
         </div>
       </div>
-    </section>
+    </header>
 
-    <!-- RUNS TAB -->
-    <section class="yy-panel" id="panel-runs" role="tabpanel">
-      <div class="yy-section">
-        <h3 class="yy-section-title">Approval Queue</h3>
-        <div id="approval-queue" class="yy-list">
-          <div class="yy-empty-state">No pending approvals</div>
-        </div>
-      </div>
-      <div class="yy-section">
-        <h3 class="yy-section-title">Recent Runs</h3>
-        <div id="recent-runs" class="yy-list">
-          <div class="yy-empty-state">No recent runs</div>
-        </div>
-      </div>
-    </section>
+    <nav class="yy-tabs" role="tablist">
+      <button class="yy-tab active" role="tab" aria-selected="true" data-tab="now">Now</button>
+      <button class="yy-tab" role="tab" aria-selected="false" data-tab="runs">Runs</button>
+      <button class="yy-tab" role="tab" aria-selected="false" data-tab="chat">Chat</button>
+      <button class="yy-tab" role="tab" aria-selected="false" data-tab="more">More</button>
+    </nav>
 
-    <!-- CHAT TAB -->
-    <section class="yy-panel" id="panel-chat" role="tabpanel">
-      <div class="yy-chat-messages" id="chat-messages">
-        <div class="yy-chat-bubble yy-assistant">
-          <p>Hi! I'm Yinyang, your AI browsing companion. How can I help?</p>
+    <main class="yy-content">
+      <!-- NOW TAB -->
+      <section class="yy-panel active" id="panel-now" role="tabpanel">
+        <div class="yy-current-page" id="current-page">
+          <span class="yy-page-label">Current page</span>
+          <span class="yy-page-url" id="page-url">--</span>
         </div>
-      </div>
-      <div class="yy-chat-input">
-        <input type="text" id="chat-input" placeholder="Ask Yinyang..." aria-label="Chat message">
-        <button id="chat-send" aria-label="Send message">→</button>
-      </div>
-    </section>
-
-    <!-- MORE TAB -->
-    <section class="yy-panel" id="panel-more" role="tabpanel">
-      <div class="yy-section">
-        <h3 class="yy-section-title">Quick Links</h3>
-        <a href="#" class="yy-link" id="link-settings">Settings</a>
-        <a href="#" class="yy-link" id="link-evidence">Evidence Viewer</a>
-        <a href="#" class="yy-link" id="link-apps">App Store</a>
-        <a href="#" class="yy-link" id="link-docs">Documentation</a>
-      </div>
-      <div class="yy-section">
-        <h3 class="yy-section-title">Status</h3>
-        <div class="yy-status-grid" id="status-grid">
-          <div class="yy-stat">
-            <span class="yy-stat-label">API</span>
-            <span class="yy-stat-value" id="stat-api">—</span>
-          </div>
-          <div class="yy-stat">
-            <span class="yy-stat-label">Apps</span>
-            <span class="yy-stat-value" id="stat-apps">—</span>
-          </div>
-          <div class="yy-stat">
-            <span class="yy-stat-label">Version</span>
-            <span class="yy-stat-value">0.1.0</span>
+        <div class="yy-matched-apps" id="matched-apps">
+          <div class="yy-empty-state" id="no-apps-state">
+            <p class="yy-pioneer-title" id="pioneer-site">No apps match this page</p>
+            <p class="yy-hint">Navigate to a supported site to see available automations</p>
+            <div class="yy-pioneer-create" id="pioneer-create" style="display: none;">
+              <p class="yy-pioneer-prompt">Want to be the first?</p>
+              <p class="yy-hint">Tell me what you'd like to automate:</p>
+              <div class="yy-pioneer-input">
+                <input type="text" id="pioneer-description" placeholder="e.g., Triage my inbox" aria-label="Describe automation">
+                <button class="yy-btn yy-btn-primary" id="pioneer-submit">Create App</button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
-  </main>
+        <!-- Scheduled section -->
+        <div class="yy-section" id="scheduled-section" style="display: none;">
+          <h3 class="yy-section-title">Scheduled</h3>
+          <div id="scheduled-list" class="yy-list"></div>
+        </div>
+        <!-- Last run summary -->
+        <div class="yy-section" id="last-run-section" style="display: none;">
+          <h3 class="yy-section-title">Last Run</h3>
+          <div id="last-run-summary" class="yy-last-run"></div>
+        </div>
+      </section>
 
+      <!-- RUNS TAB -->
+      <section class="yy-panel" id="panel-runs" role="tabpanel">
+        <!-- OAuth3 Consent Queue -->
+        <div class="yy-section" id="consent-section" style="display: none;">
+          <h3 class="yy-section-title">OAuth3 Consent Required</h3>
+          <div id="consent-queue" class="yy-list"></div>
+        </div>
+        <div class="yy-section">
+          <h3 class="yy-section-title">Approval Queue</h3>
+          <div id="approval-queue" class="yy-list">
+            <div class="yy-empty-state">No pending approvals</div>
+          </div>
+        </div>
+        <div class="yy-section">
+          <h3 class="yy-section-title">Recent Runs</h3>
+          <div id="recent-runs" class="yy-list">
+            <div class="yy-empty-state">No recent runs</div>
+          </div>
+        </div>
+        <div class="yy-section" id="runs-summary" style="display: none;">
+          <div class="yy-runs-stats">
+            <span id="runs-total-count">0 runs</span>
+            <span id="runs-total-cost">$0.00</span>
+            <span id="runs-time-saved">0m saved</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHAT TAB -->
+      <section class="yy-panel" id="panel-chat" role="tabpanel">
+        <div class="yy-chat-messages" id="chat-messages">
+          <div class="yy-chat-bubble yy-assistant">
+            <p>Hi! I'm Yinyang, your AI browsing companion. Navigate to any site and I'll detect what you can automate.</p>
+          </div>
+        </div>
+        <div class="yy-chat-input">
+          <input type="text" id="chat-input" placeholder="Ask Yinyang..." aria-label="Chat message">
+          <button id="chat-send" aria-label="Send message">&#8594;</button>
+        </div>
+      </section>
+
+      <!-- MORE TAB -->
+      <section class="yy-panel" id="panel-more" role="tabpanel">
+        <div class="yy-section">
+          <h3 class="yy-section-title">Account</h3>
+          <div class="yy-account-info">
+            <div class="yy-account-row">
+              <span class="yy-account-label">Tier</span>
+              <span class="yy-account-value" id="account-tier">Free (BYOK)</span>
+            </div>
+            <div class="yy-account-row">
+              <span class="yy-account-label">LLM</span>
+              <span class="yy-account-value" id="account-llm">Not configured</span>
+            </div>
+          </div>
+        </div>
+        <div class="yy-section">
+          <h3 class="yy-section-title">Appearance</h3>
+          <div class="yy-setting-row">
+            <label class="yy-setting-label" for="theme-select">Theme</label>
+            <select id="theme-select" class="yy-select" aria-label="Select theme">
+              <option value="dark" selected>Dark</option>
+              <option value="light">Light</option>
+              <option value="midnight">Midnight</option>
+            </select>
+          </div>
+        </div>
+        <div class="yy-section">
+          <h3 class="yy-section-title">Quick Links</h3>
+          <a href="http://localhost:8888/app-store.html" target="_blank" class="yy-link">App Store</a>
+          <a href="http://localhost:8888/settings.html" target="_blank" class="yy-link">Full Settings</a>
+          <a href="http://localhost:8888/guide.html" target="_blank" class="yy-link">Getting Started Guide</a>
+          <a href="http://localhost:8888/docs.html" target="_blank" class="yy-link">Documentation</a>
+        </div>
+        <div class="yy-section">
+          <h3 class="yy-section-title">Agent Mode</h3>
+          <div class="yy-agent-info">
+            <p class="yy-hint">AI agents (Claude Code, Codex) can control this browser via MCP or REST API.</p>
+            <code class="yy-code-block">python solace_browser_server.py --mcp</code>
+          </div>
+        </div>
+        <div class="yy-section">
+          <h3 class="yy-section-title">Status</h3>
+          <div class="yy-status-grid" id="status-grid">
+            <div class="yy-stat">
+              <span class="yy-stat-label">API</span>
+              <span class="yy-stat-value" id="stat-api">--</span>
+            </div>
+            <div class="yy-stat">
+              <span class="yy-stat-label">Apps</span>
+              <span class="yy-stat-value" id="stat-apps">--</span>
+            </div>
+            <div class="yy-stat">
+              <span class="yy-stat-label">Version</span>
+              <span class="yy-stat-value">0.1.0</span>
+            </div>
+          </div>
+        </div>
+        <div class="yy-section yy-about">
+          <p class="yy-hint">Solace Browser v1.0.0 | Software 5.0 | FSL-1.1-Apache-2.0</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" class="yy-toast-container"></div>
+
+  <script src="constants.js"></script>
   <script src="sidepanel.js"></script>
+  <!-- ARIA live regions for screen reader announcements -->
+  <div id="yy-status-live" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+  <div id="yy-alert-live" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
 </body>
 </html>
