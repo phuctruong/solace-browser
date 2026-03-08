@@ -581,6 +581,11 @@
       font-size: 12px;
     }
 
+    /* ── Task 021: Request Log status colors ── */
+    .log-status-2xx { color: var(--green); font-weight: 600; }
+    .log-status-4xx { color: #d97706; font-weight: 600; }
+    .log-status-5xx { color: var(--red); font-weight: 600; }
+
     /* ── Footer ── */
     footer {
       padding: 10px 20px;
@@ -973,6 +978,33 @@
         </form>
         <div id="byok-status-openrouter" style="font-size:11px;color:var(--text-muted);margin-top:4px;"></div>
       </details>
+    </div>
+
+    <!-- ── Task 021: Request Log ── -->
+    <div class="card" id="log-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <h2 style="font-size:15px;font-weight:600;">Request Log</h2>
+        <div style="display:flex;gap:8px;">
+          <button id="log-errors-toggle" class="btn-secondary" onclick="toggleLogFilter()">Errors only</button>
+          <button class="btn-secondary" onclick="clearLogDisplay()">Clear display</button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Last 50 server requests · auto-refreshes every 5s</p>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);color:var(--text-muted);">
+              <th style="text-align:left;padding:4px 8px;">Method</th>
+              <th style="text-align:left;padding:4px 8px;">Path</th>
+              <th style="text-align:left;padding:4px 8px;">Status</th>
+              <th style="text-align:left;padding:4px 8px;">Time</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody">
+            <tr><td colspan="4" style="color:var(--text-muted);padding:8px;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </main>
@@ -2065,6 +2097,61 @@
 
     refreshNotifCount();
     setInterval(refreshNotifCount, 15_000);
+
+    // ── Task 021: Server Log Viewer ──────────────────────────────────────────
+
+    let _logErrorsOnly = false;
+
+    function statusClass(code) {
+      if (code >= 500) return 'log-status-5xx';
+      if (code >= 400) return 'log-status-4xx';
+      return 'log-status-2xx';
+    }
+
+    async function refreshRequestLog() {
+      const tbody = document.getElementById('log-tbody');
+      if (!tbody) return;
+      const url = _logErrorsOnly
+        ? '/api/v1/logs/errors'
+        : '/api/v1/logs/requests?limit=50';
+      try {
+        const r = await fetch(url);
+        if (!r.ok) { tbody.innerHTML = '<tr><td colspan="4">Error loading log.</td></tr>'; return; }
+        const data = await r.json();
+        const rows = _logErrorsOnly ? (data.errors || []) : (data.requests || []);
+        if (rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="color:var(--text-muted)">No requests recorded yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = rows.slice().reverse().map(req => {
+          const ts = req.timestamp ? new Date(req.timestamp * 1000).toLocaleTimeString() : '';
+          const cls = statusClass(req.status || 0);
+          return `<tr>
+            <td>${req.method || ''}</td>
+            <td style="font-family:monospace;font-size:12px">${req.path || ''}</td>
+            <td class="${cls}">${req.status || ''}</td>
+            <td style="color:var(--text-muted)">${ts}</td>
+          </tr>`;
+        }).join('');
+      } catch (_e) {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="4">Network error.</td></tr>';
+      }
+    }
+
+    function toggleLogFilter() {
+      _logErrorsOnly = !_logErrorsOnly;
+      const btn = document.getElementById('log-errors-toggle');
+      if (btn) btn.textContent = _logErrorsOnly ? 'Show All' : 'Errors only';
+      refreshRequestLog();
+    }
+
+    function clearLogDisplay() {
+      const tbody = document.getElementById('log-tbody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="color:var(--text-muted)">Display cleared.</td></tr>';
+    }
+
+    refreshRequestLog();
+    setInterval(refreshRequestLog, 5_000);
   </script>
 
 </body>

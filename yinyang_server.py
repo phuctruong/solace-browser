@@ -58,6 +58,8 @@ Route table:
   POST /api/v1/byok/set                → {"provider": str, "api_key": str} → store encrypted (requires auth)
   POST /api/v1/byok/test               → {"provider": str} → verify key is configured (requires auth)
   POST /api/v1/byok/clear              → {"provider": str} → remove key (requires auth)
+  GET  /api/v1/logs/requests           → rolling request history (limit/method/status params)
+  GET  /api/v1/logs/errors             → only 4xx/5xx entries from request history
 """
 import argparse
 import atexit
@@ -126,6 +128,13 @@ _SERVER_START_TIME: float = time.time()
 _REQUEST_COUNTS: dict = {}
 _ERROR_COUNTS: dict = {}
 _METRICS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Request history globals — Task 021
+# ---------------------------------------------------------------------------
+_REQUEST_HISTORY: list = []
+_HISTORY_LOCK = threading.Lock()
+MAX_HISTORY = 100
 
 
 def _record_request(path: str, status_code: int) -> None:
@@ -511,6 +520,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_notifications_unread_count()
         elif path == "/api/v1/notifications":
             self._handle_notifications_list(query)
+        elif path == "/api/v1/logs/errors":
+            self._handle_log_errors()
+        elif path == "/api/v1/logs/requests":
+            self._handle_log_requests(query)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -2206,6 +2219,34 @@ function choose(mode) {
                     return
         self._send_json({"error": "notification not found"}, 404)
 
+    def _handle_log_requests(self, query: str) -> None:
+        """Return rolling request history with optional limit/method/status filters. Task 021."""
+        from urllib.parse import parse_qs
+        params = parse_qs(query.lstrip("?"))
+        limit = min(int(params.get("limit", ["50"])[0]), 100)
+        method_filter = params.get("method", [None])[0]
+        status_filter = params.get("status", [None])[0]
+
+        with _HISTORY_LOCK:
+            history = list(_REQUEST_HISTORY)
+        if method_filter:
+            history = [h for h in history if h.get("method") == method_filter.upper()]
+        if status_filter:
+            try:
+                sc = int(status_filter)
+                history = [h for h in history if h.get("status") == sc]
+            except ValueError:
+                pass
+        history = history[-limit:]
+        self._send_json({"requests": history, "total": len(history)})
+
+    def _handle_log_errors(self) -> None:
+        """Return only 4xx/5xx requests from history. Task 021."""
+        with _HISTORY_LOCK:
+            history = list(_REQUEST_HISTORY)
+        errors = [h for h in history if h.get("status", 0) >= 400]
+        self._send_json({"errors": errors, "total": len(errors)})
+
     def _parse_query(self, query: str) -> dict[str, str]:
         """Parse ?key=value&key2=value2 into dict."""
         if not query or query == "?":
@@ -2217,8 +2258,24 @@ function choose(mode) {
                 result[k] = v
         return result
 
+    def _record_history_entry(self, status_code: int) -> None:
+        """Record request to rolling history. Thread-safe. Task 021."""
+        path = self.path.split("?")[0] if "?" in self.path else self.path
+        entry = {
+            "method": self.command,
+            "path": path,
+            "status": status_code,
+            "timestamp": int(time.time()),
+            "ip": self.client_address[0] if self.client_address else "unknown",
+        }
+        with _HISTORY_LOCK:
+            _REQUEST_HISTORY.append(entry)
+            if len(_REQUEST_HISTORY) > MAX_HISTORY:
+                _REQUEST_HISTORY.pop(0)
+
     def _send_json(self, data: dict, status: int = 200) -> None:
         _record_request(self.path.split("?")[0], status)
+        self._record_history_entry(status)
         body = json.dumps(data).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")

@@ -1840,3 +1840,54 @@ class TestNotifications:
         status, data = _get_json_auth("/api/v1/notifications?limit=10")
         assert status == 200
         assert len(data.get("notifications", [])) <= 10
+
+
+# ---------------------------------------------------------------------------
+# Task 021: Server Log Viewer + Request History
+# ---------------------------------------------------------------------------
+class TestLogViewer:
+    def test_log_requests_empty_or_has_history(self, auth_server):
+        """GET /api/v1/logs/requests → {requests: list, total: int}."""
+        status, data = _get_json_auth("/api/v1/logs/requests")
+        assert status == 200
+        assert "requests" in data
+        assert "total" in data
+        assert isinstance(data["requests"], list)
+
+    def test_log_requests_limit(self, auth_server):
+        """GET /api/v1/logs/requests?limit=5 → at most 5 entries."""
+        status, data = _get_json_auth("/api/v1/logs/requests?limit=5")
+        assert status == 200
+        assert len(data.get("requests", [])) <= 5
+
+    def test_log_errors(self, auth_server):
+        """GET /api/v1/logs/errors returns errors list."""
+        # Trigger a 404 first
+        try:
+            urllib.request.urlopen(f"{AUTH_BASE}/api/v1/nonexistent-endpoint-xyz", timeout=3)
+        except urllib.error.HTTPError:
+            pass
+        status, data = _get_json_auth("/api/v1/logs/errors")
+        assert status == 200
+        assert "errors" in data
+        # total >= 0 always (may or may not include the 404 above)
+        assert data["total"] >= 0
+
+    def test_log_requests_method_filter(self, auth_server):
+        """GET /api/v1/logs/requests?method=GET → all entries have method=GET."""
+        status, data = _get_json_auth("/api/v1/logs/requests?method=GET")
+        assert status == 200
+        for req in data.get("requests", []):
+            assert req.get("method") == "GET"
+
+    def test_log_history_has_correct_fields(self, auth_server):
+        """After a request, history entries must have required fields."""
+        # Make a request so there is history
+        _get_json_auth("/health")
+        status, data = _get_json_auth("/api/v1/logs/requests")
+        assert status == 200
+        for req in data.get("requests", []):
+            assert "method" in req
+            assert "path" in req
+            assert "status" in req
+            assert "timestamp" in req

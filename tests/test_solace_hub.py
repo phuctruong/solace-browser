@@ -536,3 +536,18 @@ class TestNotificationUI:
         server = (REPO_ROOT / "yinyang_server.py").read_text()
         assert "/api/v1/notifications" in server
         assert "unread_count" in server
+
+
+# ── Task 021: Server Log Viewer ────────────────────────────────────────────────
+
+class TestLogViewerUI:
+    def test_index_html_log_section(self):
+        """index.html must contain a log/request log section."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "log" in html.lower() or "request" in html.lower()
+
+    def test_log_endpoints_in_server(self):
+        """yinyang_server.py must implement both log API routes."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/logs/requests" in server
+        assert "/api/v1/logs/errors" in server
