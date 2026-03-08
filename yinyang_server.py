@@ -592,6 +592,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_watchdog_status()
         elif path == "/api/v1/theme":
             self._handle_theme_get()
+        elif path == "/api/v1/theme/presets":
+            self._handle_theme_presets()
         elif path == "/api/v1/settings/export":
             self._handle_settings_export()
         elif path == "/api/v1/usage/stats":
@@ -1097,6 +1099,16 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                     self._send_json({"status": "disabled", "schedule_id": schedule_id})
                     return
         self._send_json({"error": "schedule not found"}, 404)
+
+    def _handle_theme_presets(self) -> None:
+        """GET /api/v1/theme/presets — available theme presets. Task 054."""
+        presets = [
+            {"id": "dark", "name": "Dark", "description": "Dark mode — easy on the eyes"},
+            {"id": "light", "name": "Light", "description": "Light mode — clean and bright"},
+            {"id": "auto", "name": "Auto", "description": "Follow system preference"},
+            {"id": "high-contrast", "name": "High Contrast", "description": "Maximum readability"},
+        ]
+        self._send_json({"presets": presets, "total": len(presets)})
 
     def _handle_recipe_toggle(self, recipe_id: str, enabled: bool) -> None:
         """POST /api/v1/recipes/{id}/enable|disable — toggle recipe. Task 053."""

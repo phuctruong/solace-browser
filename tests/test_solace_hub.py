@@ -1010,3 +1010,15 @@ class TestRecipeEnableDisableUI:
     def test_recipe_toggle_in_html(self):
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "enable" in html.lower() or "disable" in html.lower() or "recipe" in html.lower()
+
+
+# ── Task 054: Theme Presets ───────────────────────────────────────────────────
+
+class TestThemePresetsUI:
+    def test_theme_presets_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/theme/presets" in server
+
+    def test_theme_in_html(self):
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "theme" in html.lower() or "dark" in html.lower()

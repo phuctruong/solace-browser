@@ -2685,3 +2685,14 @@ class TestRecipeEnableDisable:
         status, data = _post_with_auth("/api/v1/recipes/tpl-email-sort/enable", {})
         assert status == 200
         assert data["status"] in ("enabled", "ok")
+
+
+# ── Task 054: Theme Presets ───────────────────────────────────────────────────
+
+class TestThemePresets:
+    def test_theme_presets(self, auth_server):
+        status, data = _get_json_auth("/api/v1/theme/presets")
+        assert status == 200
+        assert "presets" in data
+        assert len(data["presets"]) >= 2
+        assert all("id" in p and "name" in p for p in data["presets"])
