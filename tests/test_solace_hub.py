@@ -1145,3 +1145,21 @@ class TestRecipeCloneUI:
     def test_recipe_clone_in_server(self):
         server = (REPO_ROOT / "yinyang_server.py").read_text()
         assert "/clone" in server
+
+
+# ── Tasks 071-075: Bulk UI Tests ──────────────────────────────────────────────
+
+class TestMemoryKeysUI:
+    def test_memory_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/memory" in server
+
+class TestUptimeSLAUI:
+    def test_sla_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/sla/uptime" in server
+
+class TestCustomLabelsUI:
+    def test_labels_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/labels" in server

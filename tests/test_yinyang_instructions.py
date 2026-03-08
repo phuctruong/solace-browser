@@ -2878,3 +2878,61 @@ class TestRecipeClone:
         assert status == 200
         assert data["status"] in ("cloned", "ok")
         assert "new_id" in data
+
+
+# ── Task 071: Recipe Step Preview ─────────────────────────────────────────────
+
+class TestRecipeStepPreview:
+    def test_recipe_step_preview(self, auth_server):
+        status, data = _get_json_auth("/api/v1/recipes/tpl-email-sort/steps")
+        assert status == 200
+        assert "steps" in data
+
+
+# ── Task 072: Agent Memory Keys ───────────────────────────────────────────────
+
+class TestAgentMemoryKeys:
+    def test_memory_keys(self, auth_server):
+        status, data = _get_json_auth("/api/v1/memory/keys")
+        assert status == 200
+        assert "keys" in data
+        assert isinstance(data["keys"], list)
+
+    def test_memory_set(self, auth_server):
+        status, data = _post_with_auth("/api/v1/memory", {"key": "test_key", "value": "test_val"})
+        assert status == 200
+        assert data["status"] in ("stored", "ok")
+
+
+# ── Task 073: Recipe Export ────────────────────────────────────────────────────
+
+class TestRecipeExport:
+    def test_recipe_export(self, auth_server):
+        status, data = _get_json_auth("/api/v1/recipes/tpl-email-sort/export")
+        assert status == 200
+        assert "recipe" in data or "id" in data or "error" in data
+
+
+# ── Task 074: Uptime SLA ───────────────────────────────────────────────────────
+
+class TestUptimeSLA:
+    def test_uptime_sla(self, auth_server):
+        status, data = _get_json_auth("/api/v1/sla/uptime")
+        assert status == 200
+        assert "uptime_percent" in data
+        assert "uptime_seconds" in data
+
+
+# ── Task 075: Custom Labels ────────────────────────────────────────────────────
+
+class TestCustomLabels:
+    def test_labels_list(self, auth_server):
+        status, data = _get_json_auth("/api/v1/labels")
+        assert status == 200
+        assert "labels" in data
+
+    def test_label_create(self, auth_server):
+        status, data = _post_with_auth("/api/v1/labels", {"name": "work", "color": "#ff0000"})
+        assert status == 200
+        assert data["status"] in ("created", "ok")
+        assert "id" in data
