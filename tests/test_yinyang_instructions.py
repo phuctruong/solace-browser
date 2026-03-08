@@ -2444,3 +2444,21 @@ class TestNotificationToast:
         status, data = _post_with_auth("/api/v1/notifications/read", {})
         assert status == 200
         assert "status" in data
+
+
+# ── Task 038: Global Search ───────────────────────────────────────────────────
+
+class TestSearch:
+    def test_search_empty_query(self, auth_server):
+        status, data = _get_json_auth("/api/v1/search?q=")
+        assert status == 200
+        assert "results" in data
+        assert data["total"] == 0
+
+    def test_search_returns_structure(self, auth_server):
+        status, data = _get_json_auth("/api/v1/search?q=gmail")
+        assert status == 200
+        assert "results" in data
+        assert "total" in data
+        assert "query" in data
+        assert data["query"] == "gmail"

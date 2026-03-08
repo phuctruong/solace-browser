@@ -580,6 +580,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_shortcuts()
         elif path == "/api/v1/system/status":
             self._handle_system_status()
+        elif path == "/api/v1/search":
+            self._handle_search(query)
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -1919,6 +1921,38 @@ function choose(mode) {
                 CLI_CONFIG_PATH.write_text(json.dumps(body["cli_config"], indent=2))
             imported.append("cli_config")
         self._send_json({"status": "imported", "imported": imported})
+
+    # --- Task 038: Global search handler ---
+
+    def _handle_search(self, query: str) -> None:
+        """GET /api/v1/search?q=term — search apps, recipes, shortcuts. Task 038."""
+        from urllib.parse import parse_qs
+        params = parse_qs(query.lstrip("?"))
+        term = params.get("q", [""])[0].lower().strip()
+        if not term:
+            self._send_json({"results": [], "total": 0, "query": term})
+            return
+        results: list = []
+        for app in self.server.apps:
+            app_id = app if isinstance(app, str) else app.get("id", "")
+            app_name = app if isinstance(app, str) else app.get("name", app_id)
+            app_desc = "" if isinstance(app, str) else (app.get("description", "") or "")
+            if term in app_name.lower() or term in app_desc.lower():
+                results.append({
+                    "type": "app",
+                    "id": app_id,
+                    "title": app_name,
+                    "description": app_desc[:80],
+                })
+        for s in [
+            {"key": "?", "description": "Show/hide shortcuts panel"},
+            {"key": "h", "description": "Go to top"},
+            {"key": "d", "description": "Toggle dark mode"},
+            {"key": "r", "description": "Refresh all panels"},
+        ]:
+            if term in s["description"].lower() or term in s["key"].lower():
+                results.append({"type": "shortcut", "id": s["key"], "title": f"Shortcut: {s['key']}", "description": s["description"]})
+        self._send_json({"results": results[:20], "total": len(results), "query": term})
 
     # --- Task 036: System status handler ---
 

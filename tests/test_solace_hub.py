@@ -789,3 +789,17 @@ class TestToastUI:
         """index.html must contain toast container."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "toast" in html.lower()
+
+
+# ── Task 038: Global Search ───────────────────────────────────────────────────
+
+class TestSearchUI:
+    def test_search_in_server(self):
+        """yinyang_server.py must implement /api/v1/search."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/search" in server
+
+    def test_search_in_html(self):
+        """index.html must contain search input."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "search" in html.lower()

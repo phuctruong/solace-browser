@@ -686,6 +686,12 @@
     <span id="tray-summary">Connecting...</span>
     <button id="dark-mode-toggle" onclick="toggleDarkMode()" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;color:var(--text-primary);">🌙 Dark</button>
     <button onclick="toggleShortcuts()" style="background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;color:var(--text-primary);margin-left:4px;" title="Keyboard shortcuts">?</button>
+    <!-- Global search (Task 038) -->
+    <div style="position:relative;margin-left:4px;" id="search-wrapper">
+      <input id="global-search" type="search" placeholder="Search… (Ctrl+K)" oninput="debounceSearch(this.value)" onfocus="showSearchResults()" onblur="setTimeout(hideSearchResults,200)"
+        style="width:160px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text-primary);font-size:12px;font-family:var(--font);" />
+      <div id="search-results" style="display:none;position:absolute;top:100%;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,0.15);min-width:260px;max-height:300px;overflow-y:auto;z-index:9998;font-size:12px;"></div>
+    </div>
   </div>
   <!-- Keyboard shortcuts overlay (Task 035) -->
   <div id="shortcuts-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
@@ -2682,6 +2688,57 @@
     }
     refreshWatchdog();
     setInterval(refreshWatchdog, 30_000);
+
+    // Global search (Task 038)
+    let _searchTimer = null;
+    function debounceSearch(val) {
+      clearTimeout(_searchTimer);
+      _searchTimer = setTimeout(() => runSearch(val), 300);
+    }
+    async function runSearch(term) {
+      if (!term || term.length < 2) { hideSearchResults(); return; }
+      try {
+        const r = await fetch(`http://localhost:8888/api/v1/search?q=${encodeURIComponent(term)}`, { signal: AbortSignal.timeout(2000) });
+        if (!r.ok) return;
+        const d = await r.json();
+        const el = document.getElementById('search-results');
+        if (!el) return;
+        if (!d.results || d.results.length === 0) {
+          el.innerHTML = '<div style="padding:8px 12px;color:var(--text-muted);">No results</div>';
+        } else {
+          el.innerHTML = d.results.map(res =>
+            `<div style="padding:6px 12px;cursor:pointer;border-bottom:1px solid var(--border);" onmousedown="handleSearchResult('${res.type}','${res.id}')">
+              <div style="font-weight:600;">${res.title}</div>
+              <div style="color:var(--text-muted);font-size:11px;">${res.description}</div>
+            </div>`
+          ).join('');
+        }
+        showSearchResults();
+      } catch (_) {}
+    }
+    function showSearchResults() {
+      const el = document.getElementById('search-results');
+      if (el && el.innerHTML) el.style.display = 'block';
+    }
+    function hideSearchResults() {
+      const el = document.getElementById('search-results');
+      if (el) el.style.display = 'none';
+    }
+    function handleSearchResult(type, id) {
+      hideSearchResults();
+      document.getElementById('global-search').value = '';
+      if (type === 'app') {
+        const appPanel = document.getElementById('app-launcher-panel');
+        if (appPanel) appPanel.scrollIntoView({behavior:'smooth'});
+      }
+    }
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const inp = document.getElementById('global-search');
+        if (inp) { inp.focus(); inp.select(); }
+      }
+    });
 
     // Toast notification system (Task 037)
     const _seenNotifIds = new Set();
