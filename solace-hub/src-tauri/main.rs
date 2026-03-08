@@ -258,6 +258,22 @@ fn wait_for_port_lock(timeout_secs: u64) -> bool {
     false
 }
 
+/// Check whether the user has completed onboarding by reading ~/.solace/onboarding.json.
+/// Returns true only if the file exists and contains "completed": true.
+/// Falls back to false on any read or parse error (fail-closed).
+fn check_onboarding_complete() -> bool {
+    let home = dirs_next::home_dir().unwrap_or_default();
+    let onboarding_path = home.join(".solace").join("onboarding.json");
+    if !onboarding_path.exists() {
+        return false;
+    }
+    let content = match std::fs::read_to_string(&onboarding_path) {
+        Ok(c) => c,
+        Err(_) => return false,
+    };
+    content.contains("\"completed\": true") || content.contains("\"completed\":true")
+}
+
 /// Launch the Solace Browser binary with the authenticated start URL.
 /// url should be "http://localhost:8888/start"
 fn launch_solace_browser(browser_path: &str, url: &str) -> Result<Child, io::Error> {
@@ -360,7 +376,13 @@ fn cmd_open_browser(state: State<HubState>, app: tauri::AppHandle) -> Result<Str
     };
 
     let path_str = browser_binary.to_string_lossy().to_string();
-    let start_url = format!("http://localhost:{}/start", YINYANG_PORT);
+
+    // Enforce onboarding gate: route to /onboarding until setup is complete
+    let start_url = if check_onboarding_complete() {
+        format!("http://localhost:{}/start", YINYANG_PORT)
+    } else {
+        format!("http://localhost:{}/onboarding", YINYANG_PORT)
+    };
 
     // Enforce startup order: port.lock must exist before browser launches
     if !wait_for_port_lock(SERVER_HEALTH_TIMEOUT_SECS) {
@@ -497,7 +519,12 @@ fn main() {
                             }
                         };
                         let path_str = browser_binary.to_string_lossy().to_string();
-                        let start_url = format!("http://localhost:{}/start", YINYANG_PORT);
+                        // Enforce onboarding gate: route to /onboarding until setup is complete
+                        let start_url = if check_onboarding_complete() {
+                            format!("http://localhost:{}/start", YINYANG_PORT)
+                        } else {
+                            format!("http://localhost:{}/onboarding", YINYANG_PORT)
+                        };
                         if !wait_for_port_lock(SERVER_HEALTH_TIMEOUT_SECS) {
                             eprintln!("ERROR: Yinyang Server not ready (port.lock missing)");
                             return;

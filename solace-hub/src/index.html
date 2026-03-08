@@ -264,6 +264,21 @@
       </div>
     </div>
 
+    <!-- Onboarding status -->
+    <div class="card" id="onboarding-card">
+      <h2>Setup</h2>
+      <div class="status-row">
+        <div class="dot grey" id="onboarding-dot"></div>
+        <span class="status-label" id="onboarding-status">Checking…</span>
+      </div>
+      <div style="margin-top:10px;">
+        <a id="onboarding-link" href="http://localhost:8888/onboarding" target="_blank"
+           style="font-size:12px;color:var(--accent);text-decoration:none;display:none;">
+          Open Setup / Onboarding →
+        </a>
+      </div>
+    </div>
+
     <!-- Stats -->
     <div class="card">
       <h2>Overview</h2>
@@ -296,10 +311,13 @@
       <h2>Actions</h2>
       <div class="btn-row">
         <button class="btn-primary" id="btn-open-browser" onclick="openBrowser()">
-          Open Browser
+          Launch Browser
         </button>
         <button class="btn-secondary" onclick="refreshStatus()">
           Refresh
+        </button>
+        <button class="btn-secondary" id="btn-setup" onclick="openSetup()" style="display:none;">
+          Setup / Onboarding
         </button>
       </div>
     </div>
@@ -440,6 +458,42 @@
       }
     }
 
+    // ── Onboarding status ─────────────────────────────────────────────────────
+    async function refreshOnboarding() {
+      const dot    = document.getElementById("onboarding-dot");
+      const label  = document.getElementById("onboarding-status");
+      const link   = document.getElementById("onboarding-link");
+      const btnSetup = document.getElementById("btn-setup");
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/onboarding/status", { signal: AbortSignal.timeout(3000) });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.completed === true) {
+            dot.className = "dot green";
+            label.textContent = "Setup complete";
+            link.style.display = "none";
+            btnSetup.style.display = "none";
+          } else {
+            dot.className = "dot red";
+            label.textContent = "Setup required — complete onboarding to launch browser";
+            link.style.display = "inline";
+            btnSetup.style.display = "inline-flex";
+          }
+        } else {
+          dot.className = "dot grey";
+          label.textContent = "Onboarding status unavailable (HTTP " + resp.status + ")";
+        }
+      } catch (err) {
+        dot.className = "dot grey";
+        label.textContent = "Onboarding status unavailable — " + err.message;
+      }
+    }
+
+    // ── Open Setup ────────────────────────────────────────────────────────────
+    function openSetup() {
+      window.open("http://localhost:8888/onboarding", "_blank");
+    }
+
     // ── Open Browser ──────────────────────────────────────────────────────────
     async function openBrowser() {
       const btn = document.getElementById("btn-open-browser");
@@ -473,8 +527,10 @@
 
     // ── Boot ──────────────────────────────────────────────────────────────────
     refreshStatus();
+    refreshOnboarding();
     // Poll every 10 seconds
     setInterval(refreshStatus, 10_000);
+    setInterval(refreshOnboarding, 10_000);
   </script>
 
 </body>

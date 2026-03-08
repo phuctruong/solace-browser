@@ -158,3 +158,61 @@ def test_hub_generates_token_before_server():
     assert "generate_session_token" in source, "Hub must call generate_session_token()"
     assert "--token-sha256" in source, "spawn_yinyang_server must pass --token-sha256 arg"
     assert "cmd_token_is_present" in source, "cmd_token_is_present must replace cmd_get_token_hash"
+
+
+# ── Task 009: Onboarding Gate ──────────────────────────────────────────────────
+
+class TestOnboardingGate:
+    def test_onboarding_gate_function_exists(self):
+        """main.rs must have check_onboarding_complete function"""
+        source = main_rs_source()
+        assert "check_onboarding_complete" in source
+
+    def test_browser_launch_checks_onboarding(self):
+        """cmd_open_browser must use check_onboarding_complete"""
+        source = main_rs_source()
+        # The function must be called within cmd_open_browser context
+        assert "check_onboarding_complete" in source
+        assert "/onboarding" in source
+        assert "/start" in source
+
+    def test_onboarding_url_in_source(self):
+        """main.rs must reference /onboarding URL"""
+        source = main_rs_source()
+        assert "/onboarding" in source
+
+    def test_start_url_in_source(self):
+        """main.rs must reference /start URL"""
+        source = main_rs_source()
+        assert "/start" in source
+
+    def test_dirs_next_in_cargo(self):
+        """Cargo.toml must have dirs-next dependency"""
+        cargo = (REPO_ROOT / "solace-hub" / "src-tauri" / "Cargo.toml").read_text()
+        assert "dirs-next" in cargo
+
+    def test_index_html_onboarding_section(self):
+        """index.html must have onboarding status section"""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "onboarding" in html.lower() or "setup" in html.lower()
+
+    def test_index_html_launch_browser_button(self):
+        """index.html must have browser launch button"""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "launch" in html.lower() or "open" in html.lower()
+
+    def test_tray_open_browser_checks_onboarding(self):
+        """Tray open_browser handler must also check onboarding before launch"""
+        source = main_rs_source()
+        # Both call sites of check_onboarding_complete must exist
+        assert source.count("check_onboarding_complete") >= 2
+
+    def test_onboarding_url_when_incomplete(self):
+        """Source must route to /onboarding when onboarding not complete"""
+        source = main_rs_source()
+        assert "/onboarding" in source
+
+    def test_start_url_when_complete(self):
+        """Source must route to /start when onboarding is complete"""
+        source = main_rs_source()
+        assert "/start" in source
