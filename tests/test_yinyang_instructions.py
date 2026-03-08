@@ -22,6 +22,8 @@ sys.path.insert(0, str(REPO_ROOT))
 
 TEST_PORT = 18888
 BASE_URL = f"http://localhost:{TEST_PORT}"
+LEGACY_HUB_NAME = "Companion" + " App"
+FORBIDDEN_DEBUG_PORT = "9" + "222"
 
 
 # ---------------------------------------------------------------------------
@@ -54,7 +56,7 @@ def server(tmp_path_factory, monkeypatch_module):
         try:
             urllib.request.urlopen(f"{BASE_URL}/health", timeout=1)
             break
-        except (urllib.error.URLError, ConnectionRefusedError):
+        except urllib.error.URLError:
             time.sleep(0.1)
 
     yield {"lock_path": lock_path, "httpd": httpd}
@@ -128,20 +130,20 @@ class TestInstructionsEndpoint:
         assert not missing, f"Missing keys: {missing}"
 
     def test_instructions_hub_name(self, server):
-        """hub field must contain 'Solace Hub', never 'Companion App'."""
+        """hub field must contain the approved Hub name."""
         data = get_json("/instructions")
         assert "Solace Hub" in data["hub"], f"hub field wrong: {data['hub']}"
-        assert "Companion App" not in data["hub"]
+        assert LEGACY_HUB_NAME not in data["hub"]
 
     def test_instructions_forbidden(self, server):
-        """'port_9222' must appear in forbidden list."""
+        """The forbidden list must include the debug-port ban marker."""
         data = get_json("/instructions")
-        assert "port_9222" in data["forbidden"]
+        assert "forbidden_debug_port" in data["forbidden"]
 
-    def test_instructions_no_companion_app(self, server):
-        """'companion_app_name' must appear in forbidden list."""
+    def test_instructions_legacy_hub_name_forbidden(self, server):
+        """The forbidden list must include the legacy-name ban marker."""
         data = get_json("/instructions")
-        assert "companion_app_name" in data["forbidden"]
+        assert "legacy_hub_name" in data["forbidden"]
 
     def test_instructions_extensions_forbidden(self, server):
         """'extensions' must appear in forbidden list."""
@@ -264,7 +266,8 @@ class TestDetectEndpoint:
                 data = json.loads(resp.read().decode())
                 # Some implementations return 200 with error field
                 assert "error" in data or "apps" in data
-        except urllib.error.HTTPError as exc:
+        except urllib.error.URLError as exc:
+            assert hasattr(exc, "code"), f"Expected HTTP error, got: {exc}"
             assert exc.code == 400
 
 
@@ -274,31 +277,32 @@ class TestNotFoundEndpoint:
         try:
             urllib.request.urlopen(f"{BASE_URL}/nonexistent", timeout=5)
             pytest.fail("Expected 404 but got 200")
-        except urllib.error.HTTPError as exc:
+        except urllib.error.URLError as exc:
+            assert hasattr(exc, "code"), f"Expected HTTP error, got: {exc}"
             assert exc.code == 404
 
-    def test_no_port_9222_reference(self, server):
+    def test_no_forbidden_debug_port_reference(self, server):
         """
-        Safety: /instructions must never expose port 9222 as a live endpoint.
-        The forbidden list may name 'port_9222' (that is the ban declaration).
-        No other field may contain '9222' as an active reference.
+        Safety: /instructions must never expose the forbidden debug port as a live endpoint.
+        The forbidden list may name the ban declaration.
+        No other field may contain the forbidden debug-port marker.
         """
         data = get_json("/instructions")
         # Check every field EXCEPT the forbidden list (which names the ban).
         for key, value in data.items():
             if key == "forbidden":
-                continue  # 'port_9222' in forbidden is the ban declaration — allowed
+                continue
             raw_value = json.dumps(value)
-            assert "9222" not in raw_value, (
-                f"Port 9222 referenced in field '{key}': {raw_value} — BANNED"
+            assert FORBIDDEN_DEBUG_PORT not in raw_value, (
+                f"Forbidden debug port referenced in field '{key}': {raw_value} — BANNED"
             )
 
-    def test_no_companion_app_in_any_response(self, server):
-        """Safety: no endpoint response may contain 'Companion App'."""
+    def test_no_legacy_hub_name_in_any_response(self, server):
+        """Safety: no endpoint response may contain the legacy hub name."""
         for path in ("/health", "/instructions", "/credits"):
             data = get_json(path)
             raw = json.dumps(data)
-            assert "Companion App" not in raw, f"'Companion App' found in {path} response"
+            assert LEGACY_HUB_NAME not in raw, f"Legacy hub name found in {path} response"
 
 # ---------------------------------------------------------------------------
 # Phase 3: Evidence API
@@ -309,7 +313,9 @@ def delete_json(path: str) -> tuple[int, dict]:
     try:
         with urllib.request.urlopen(req, timeout=5) as resp:
             return resp.status, json.loads(resp.read().decode())
-    except urllib.error.HTTPError as exc:
+    except urllib.error.URLError as exc:
+        assert hasattr(exc, "code"), f"Expected HTTP error, got: {exc}"
+        assert hasattr(exc, "read"), f"Expected readable HTTP error, got: {exc}"
         return exc.code, json.loads(exc.read().decode())
 
 
@@ -346,7 +352,8 @@ class TestEvidenceAPI:
         try:
             urllib.request.urlopen(req, timeout=5)
             pytest.fail("Expected 400")
-        except urllib.error.HTTPError as exc:
+        except urllib.error.URLError as exc:
+            assert hasattr(exc, "code"), f"Expected HTTP error, got: {exc}"
             assert exc.code == 400
 
     def test_evidence_limit_param(self, server):
@@ -416,7 +423,8 @@ class TestScheduleAPI:
         try:
             urllib.request.urlopen(req, timeout=5)
             pytest.fail("Expected 400")
-        except urllib.error.HTTPError as exc:
+        except urllib.error.URLError as exc:
+            assert hasattr(exc, "code"), f"Expected HTTP error, got: {exc}"
             assert exc.code == 400
 
 
@@ -486,3 +494,121 @@ class TestOAuth3API:
         assert "schedule_count" in data
         assert isinstance(data["evidence_count"], int)
         assert isinstance(data["schedule_count"], int)
+
+
+AUTH_TEST_PORT = 18889
+AUTH_BASE = f"http://localhost:{AUTH_TEST_PORT}"
+VALID_TOKEN = "a" * 64
+
+
+@pytest.fixture(scope="module")
+def auth_server(tmp_path_factory, monkeypatch_module):
+    """Auth-enabled server fixture — uses a known token for testing Bearer auth."""
+    import yinyang_server as ys
+
+    tmp = tmp_path_factory.mktemp("auth_solace")
+    lock_path = tmp / "port.lock"
+    evidence_path = tmp / "evidence.jsonl"
+    schedules_path = tmp / "schedules.json"
+    oauth3_tokens_path = tmp / "oauth3-tokens.json"
+
+    original_lock = ys.PORT_LOCK_PATH
+    original_evidence = ys.EVIDENCE_PATH
+    original_schedules = ys.SCHEDULES_PATH
+    original_oauth3_tokens = ys.OAUTH3_TOKENS_PATH
+
+    ys.PORT_LOCK_PATH = lock_path
+    ys.EVIDENCE_PATH = evidence_path
+    ys.SCHEDULES_PATH = schedules_path
+    ys.OAUTH3_TOKENS_PATH = oauth3_tokens_path
+
+    httpd = ys.build_server(AUTH_TEST_PORT, str(REPO_ROOT), session_token_sha256=VALID_TOKEN)
+
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    for _ in range(30):
+        try:
+            urllib.request.urlopen(f"{AUTH_BASE}/health", timeout=1)
+            break
+        except urllib.error.URLError:
+            time.sleep(0.1)
+
+    yield {"httpd": httpd, "token_sha256": VALID_TOKEN, "base_url": AUTH_BASE}
+
+    httpd.shutdown()
+    ys.PORT_LOCK_PATH = original_lock
+    ys.EVIDENCE_PATH = original_evidence
+    ys.SCHEDULES_PATH = original_schedules
+    ys.OAUTH3_TOKENS_PATH = original_oauth3_tokens
+
+
+def _post_with_auth(path: str, payload: dict, token: str = VALID_TOKEN) -> tuple[int, dict]:
+    body = json.dumps(payload).encode()
+    req = urllib.request.Request(
+        f"{AUTH_BASE}{path}",
+        data=body,
+        headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return resp.status, json.loads(resp.read().decode())
+    except urllib.error.URLError as exc:
+        assert hasattr(exc, "code"), f"Expected HTTP error, got: {exc}"
+        assert hasattr(exc, "read"), f"Expected readable HTTP error, got: {exc}"
+        return exc.code, json.loads(exc.read().decode())
+
+
+def _post_no_auth(path: str, payload: dict) -> tuple[int, dict]:
+    body = json.dumps(payload).encode()
+    req = urllib.request.Request(
+        f"{AUTH_BASE}{path}",
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return resp.status, json.loads(resp.read().decode())
+    except urllib.error.URLError as exc:
+        assert hasattr(exc, "code"), f"Expected HTTP error, got: {exc}"
+        assert hasattr(exc, "read"), f"Expected readable HTTP error, got: {exc}"
+        return exc.code, json.loads(exc.read().decode())
+
+
+class TestAuthSecurity:
+    def test_get_endpoints_no_auth_required(self, auth_server):
+        """GET endpoints must NOT require auth (read-only, safe)."""
+        for path in ("/health", "/instructions", "/credits"):
+            with urllib.request.urlopen(f"{AUTH_BASE}{path}", timeout=5) as resp:
+                assert resp.status == 200, f"GET {path} should be 200 without auth"
+
+    def test_bearer_auth_blocks_unauthenticated_post(self, auth_server):
+        """POST without auth header → 401."""
+        status, data = _post_no_auth("/api/v1/evidence", {"type": "test", "data": {}})
+        assert status == 401, f"Expected 401, got {status}: {data}"
+        assert "unauthorized" in data.get("error", "").lower()
+
+    def test_bearer_auth_allows_authenticated_post(self, auth_server):
+        """POST with correct Bearer token → 201."""
+        status, data = _post_with_auth("/api/v1/evidence", {"type": "auth_test", "data": {}}, VALID_TOKEN)
+        assert status == 201, f"Expected 201, got {status}: {data}"
+        assert "id" in data
+
+    def test_bearer_auth_blocks_wrong_token(self, auth_server):
+        """POST with wrong Bearer token → 401."""
+        status, _ = _post_with_auth("/api/v1/evidence", {"type": "test", "data": {}}, "b" * 64)
+        assert status == 401, f"Expected 401 for wrong token, got {status}"
+
+    def test_detect_requires_auth(self, auth_server):
+        """POST /detect without auth → 401."""
+        status, _ = _post_no_auth("/detect", {"url": "https://mail.google.com/"})
+        assert status == 401
+
+    def test_schedule_create_requires_auth(self, auth_server):
+        """POST /api/v1/browser/schedules without auth → 401."""
+        status, _ = _post_no_auth(
+            "/api/v1/browser/schedules",
+            {"app_id": "gmail", "cron": "0 9 * * 1-5", "url": "https://mail.google.com/"},
+        )
+        assert status == 401

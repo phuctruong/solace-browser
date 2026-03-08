@@ -1,10 +1,10 @@
 //! Solace Hub — Tauri desktop app for Solace Browser orchestration
 //!
 //! Lifecycle (enforced, non-negotiable):
-//!   1. spawn_yinyang_server()   — Python backend on port 8888
-//!   2. wait_for_server()        — polls /health until ready (max 10s)
-//!   3. read_port_lock()         — parse ~/.solace/port.lock
-//!   4. store_token_keychain()   — OS keychain; NEVER plaintext in files
+//!   1. generate_session_token() — Hub-owned session secret
+//!   2. store_token_keychain()   — OS keychain; NEVER plaintext in files
+//!   3. spawn_yinyang_server()   — Python backend on port 8888
+//!   4. wait_for_server()        — polls /health until ready (max 10s)
 //!   5. build system tray
 //!   6. "Open Solace Browser" → launch_solace_browser()
 //!   7. "Quit" → graceful server stop → delete_port_lock() → clear keychain → exit
@@ -97,28 +97,6 @@ fn read_port_lock() -> Result<PortLock, Box<dyn std::error::Error>> {
     Ok(lock)
 }
 
-fn write_port_lock(port: u16, token_sha256: &str) -> Result<(), io::Error> {
-    let lock = PortLock {
-        port,
-        token_sha256: token_sha256.to_owned(),
-        pid: std::process::id(),
-    };
-    let path = port_lock_path();
-
-    // Ensure parent directory exists
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)?;
-    }
-
-    let json =
-        serde_json::to_string_pretty(&lock).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-
-    let mut file = fs::File::create(&path)?;
-    file.write_all(json.as_bytes())?;
-    file.flush()?;
-    Ok(())
-}
-
 fn delete_port_lock() -> Result<(), io::Error> {
     let path = port_lock_path();
     if path.exists() {
@@ -136,6 +114,29 @@ fn sha256_hex(input: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(input.as_bytes());
     hex::encode(hasher.finalize())
+}
+
+fn generate_session_token() -> String {
+    #[cfg(target_family = "unix")]
+    {
+        use std::io::Read;
+
+        let mut bytes = [0u8; 32];
+        let mut file = std::fs::File::open("/dev/urandom")
+            .expect("FATAL: Cannot open /dev/urandom");
+        file.read_exact(&mut bytes)
+            .expect("FATAL: Cannot read random bytes");
+        hex::encode(bytes)
+    }
+    #[cfg(not(target_family = "unix"))]
+    {
+        let ts = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let pid = std::process::id();
+        sha256_hex(&format!("hub-{pid}-{ts}"))
+    }
 }
 
 /// Store token in OS keychain (Keychain on macOS, libsecret on Linux, DPAPI on Windows).
@@ -163,10 +164,15 @@ fn clear_token_keychain() -> Result<(), keyring::Error> {
 
 /// Spawn yinyang-server.py. server_path is absolute path to the script.
 /// Returns the Child process; caller must retain it to prevent premature termination.
-fn spawn_yinyang_server(server_path: &str) -> Result<Child, io::Error> {
+fn spawn_yinyang_server(server_path: &str, token_sha256: &str) -> Result<Child, io::Error> {
     // Locate python3 on PATH
     let python = python_executable();
-    Command::new(&python).arg(server_path).spawn()
+    Command::new(&python)
+        .arg(server_path)
+        .arg(".")
+        .arg("--token-sha256")
+        .arg(token_sha256)
+        .spawn()
 }
 
 /// Returns "python3" on Unix, "python" on Windows.
@@ -377,11 +383,8 @@ fn cmd_get_server_status() -> Result<bool, String> {
 }
 
 #[tauri::command]
-fn cmd_get_token_hash() -> Result<String, String> {
-    match retrieve_token_keychain() {
-        Ok(token) => Ok(sha256_hex(&token)),
-        Err(e) => Err(format!("Keychain error: {e}")),
-    }
+fn cmd_token_is_present() -> bool {
+    retrieve_token_keychain().is_ok()
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -399,12 +402,18 @@ fn main() {
     let server_script = exe_dir.join("yinyang-server.py");
     let server_path = server_script.to_string_lossy().to_string();
 
-    // ── Step 2: Spawn Yinyang Server ─────────────────────────────────────────
-    let server_child = spawn_yinyang_server(&server_path).expect(
+    // ── Step 2: Generate session token ───────────────────────────────────────
+    let session_token = generate_session_token();
+    let session_sha256 = sha256_hex(&session_token);
+    store_token_keychain(&session_token)
+        .unwrap_or_else(|e| eprintln!("WARN: Could not store token in keychain: {e}"));
+
+    // ── Step 3: Spawn Yinyang Server ─────────────────────────────────────────
+    let server_child = spawn_yinyang_server(&server_path, &session_sha256).expect(
         "FATAL: Cannot spawn yinyang-server.py — check that python3 is on PATH and script exists",
     );
 
-    // ── Step 3: Wait for server to be healthy ────────────────────────────────
+    // ── Step 4: Wait for server to be healthy ────────────────────────────────
     let health_url = format!("http://localhost:{}/health", YINYANG_PORT);
     let ready = wait_for_server(&health_url, SERVER_HEALTH_TIMEOUT_SECS);
     if !ready {
@@ -416,7 +425,7 @@ fn main() {
     }
     eprintln!("INFO: Yinyang Server healthy at {}", health_url);
 
-    // ── Step 4: Read port.lock ────────────────────────────────────────────────
+    // ── Step 5: Read port.lock ────────────────────────────────────────────────
     let lock = read_port_lock().unwrap_or_else(|e| {
         eprintln!("WARN: Cannot read port.lock ({e}); using defaults");
         PortLock {
@@ -433,27 +442,6 @@ fn main() {
             lock.port, YINYANG_PORT
         );
         std::process::exit(1);
-    }
-
-    // ── Step 5: Store token in OS keychain ────────────────────────────────────
-    // token_sha256 in port.lock is SHA-256 of the real token.
-    // The yinyang-server writes the plaintext token to keychain before we read it.
-    // We verify round-trip integrity: retrieve from keychain, re-hash, compare.
-    if !lock.token_sha256.is_empty() {
-        match retrieve_token_keychain() {
-            Ok(stored_token) => {
-                let computed_hash = sha256_hex(&stored_token);
-                if computed_hash != lock.token_sha256 {
-                    eprintln!("FATAL: Keychain token hash mismatch — possible tampering");
-                    std::process::exit(1);
-                }
-            }
-            Err(e) => {
-                eprintln!(
-                    "WARN: No token in keychain yet ({e}); server will populate on first auth"
-                );
-            }
-        }
     }
 
     // ── Step 6: Build system tray ─────────────────────────────────────────────
@@ -484,7 +472,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             cmd_open_browser,
             cmd_get_server_status,
-            cmd_get_token_hash,
+            cmd_token_is_present,
         ])
         .on_system_tray_event(|app, event| match event {
             SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {

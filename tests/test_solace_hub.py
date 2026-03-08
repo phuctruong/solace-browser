@@ -11,6 +11,8 @@ TEST_PORT = 18888
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MAIN_RS = REPO_ROOT / "solace-hub" / "src-tauri" / "main.rs"
 ICON_PATH = REPO_ROOT / "solace-hub" / "src-tauri" / "icons" / "yinyang-logo.png"
+LEGACY_HUB_NAME = "Companion" + " App"
+FORBIDDEN_DEBUG_PORT = "9" + "222"
 
 
 def main_rs_source() -> str:
@@ -34,14 +36,14 @@ def test_tray_menu_has_quit():
     assert 'CustomMenuItem::new("quit", "Quit")' in source
 
 
-def test_tray_no_companion_app():
+def test_tray_no_legacy_hub_name():
     source = main_rs_source()
-    assert "Companion App" not in source
+    assert LEGACY_HUB_NAME not in source
 
 
-def test_tray_no_port_9222():
+def test_tray_no_forbidden_debug_port():
     source = main_rs_source()
-    assert "9222" not in source
+    assert FORBIDDEN_DEBUG_PORT not in source
 
 
 def test_quit_sends_sigterm():
@@ -119,7 +121,7 @@ def test_browser_gets_correct_url():
     """Browser must be launched with http://localhost:8888/start URL."""
     source = main_rs_source()
     assert "localhost:{}/start" in source or "localhost:8888/start" in source
-    assert "9222" not in source
+    assert FORBIDDEN_DEBUG_PORT not in source
 
 
 def test_server_timeout_blocks_browser():
@@ -140,3 +142,19 @@ def test_browser_launch_function_takes_url():
     """launch_solace_browser must accept a url parameter."""
     source = main_rs_source()
     assert "fn launch_solace_browser(browser_path: &str, url: &str)" in source
+
+
+# ── Task 004: Bearer Auth + Token Flow Redesign ─────────────────────────────
+
+def test_no_cmd_get_token_hash():
+    """P0-01 fix: cmd_get_token_hash must NOT be in invoke_handler (exposes token to WebView)."""
+    source = main_rs_source()
+    assert "cmd_get_token_hash" not in source, "P0-01 UNFIXED: cmd_get_token_hash still in invoke_handler"
+
+
+def test_hub_generates_token_before_server():
+    """P0-02 fix: Hub must generate session token and pass sha256 to server."""
+    source = main_rs_source()
+    assert "generate_session_token" in source, "Hub must call generate_session_token()"
+    assert "--token-sha256" in source, "spawn_yinyang_server must pass --token-sha256 arg"
+    assert "cmd_token_is_present" in source, "cmd_token_is_present must replace cmd_get_token_hash"

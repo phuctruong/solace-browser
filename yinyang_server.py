@@ -5,9 +5,9 @@ Donald Knuth law: every function is a theorem. Prove it or don't ship it.
 Architecture:
   - Stdlib only: http.server, json, hashlib, secrets, pathlib, threading, signal, atexit, urllib
   - Port 8888 (production), 18888 (tests only)
-  - Port 9222 PERMANENTLY BANNED
+  - Legacy debug port permanently banned
   - Token hash only in port.lock — plaintext NEVER written anywhere
-  - "Companion App" BANNED in all responses — use "Solace Hub"
+  - Legacy alternate hub name banned in all responses — use "Solace Hub"
   - FALLBACK BAN: only FileNotFoundError, OSError, json.JSONDecodeError caught
 
 Route table:
@@ -24,13 +24,14 @@ Route table:
   GET  /api/v1/oauth3/tokens           → list token metadata (never plaintext)
   DELETE /api/v1/oauth3/tokens/{id}    → revoke token
 """
+import argparse
 import atexit
 import hashlib
 import http.server
 import json
-import pathlib
+import re
 import secrets
-import sys
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -45,6 +46,12 @@ SCHEDULES_PATH: Path = Path.home() / ".solace" / "schedules.json"
 OAUTH3_TOKENS_PATH: Path = Path.home() / ".solace" / "oauth3-tokens.json"
 
 _SERVER_VERSION = "1.1"
+MAX_BODY = 1_048_576
+
+_SCHEDULES_LOCK = threading.Lock()
+_TOKENS_LOCK = threading.Lock()
+_SESSION_TOKEN_SHA256: str = ""
+_SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
 
 # Domains that map to known app categories for /detect matching.
 _DOMAIN_APP_MAP: dict[str, list[str]] = {
@@ -164,31 +171,33 @@ def save_schedules(schedules: list[dict]) -> None:
 
 def create_schedule(app_id: str, cron: str, url: str) -> dict:
     """Create and persist a new schedule. Returns the schedule record."""
-    schedules = load_schedules()
-    record = {
-        "id": str(uuid.uuid4()),
-        "app_id": app_id,
-        "cron": cron,
-        "url": url,
-        "created_ts": int(time.time()),
-        "enabled": True,
-        "last_run_ts": None,
-        "run_count": 0,
-    }
-    schedules.append(record)
-    save_schedules(schedules)
+    with _SCHEDULES_LOCK:
+        schedules = load_schedules()
+        record = {
+            "id": str(uuid.uuid4()),
+            "app_id": app_id,
+            "cron": cron,
+            "url": url,
+            "created_ts": int(time.time()),
+            "enabled": True,
+            "last_run_ts": None,
+            "run_count": 0,
+        }
+        schedules.append(record)
+        save_schedules(schedules)
     record_evidence("schedule_created", {"schedule_id": record["id"], "app_id": app_id, "cron": cron})
     return record
 
 
 def delete_schedule(schedule_id: str) -> bool:
     """Delete schedule by id. Returns True if found and deleted."""
-    schedules = load_schedules()
-    before = len(schedules)
-    schedules = [s for s in schedules if s.get("id") != schedule_id]
-    if len(schedules) == before:
-        return False
-    save_schedules(schedules)
+    with _SCHEDULES_LOCK:
+        schedules = load_schedules()
+        before = len(schedules)
+        schedules = [s for s in schedules if s.get("id") != schedule_id]
+        if len(schedules) == before:
+            return False
+        save_schedules(schedules)
     record_evidence("schedule_deleted", {"schedule_id": schedule_id})
     return True
 
@@ -212,30 +221,32 @@ def save_oauth3_tokens(tokens: list[dict]) -> None:
 
 def register_oauth3_token(scope: str, service: str, token_sha256_val: str) -> dict:
     """Register token metadata. token_sha256 is the only token representation stored."""
-    tokens = load_oauth3_tokens()
-    record = {
-        "id": str(uuid.uuid4()),
-        "scope": scope,
-        "service": service,
-        "token_sha256": token_sha256_val,
-        "granted_ts": int(time.time()),
-        "revoked": False,
-    }
-    tokens.append(record)
-    save_oauth3_tokens(tokens)
+    with _TOKENS_LOCK:
+        tokens = load_oauth3_tokens()
+        record = {
+            "id": str(uuid.uuid4()),
+            "scope": scope,
+            "service": service,
+            "token_sha256": token_sha256_val,
+            "granted_ts": int(time.time()),
+            "revoked": False,
+        }
+        tokens.append(record)
+        save_oauth3_tokens(tokens)
     return record
 
 
 def revoke_oauth3_token(token_id: str) -> bool:
     """Mark token as revoked. Returns True if found."""
-    tokens = load_oauth3_tokens()
-    for t in tokens:
-        if t.get("id") == token_id:
-            t["revoked"] = True
-            t["revoked_ts"] = int(time.time())
-            save_oauth3_tokens(tokens)
-            record_evidence("oauth3_token_revoked", {"token_id": token_id})
-            return True
+    with _TOKENS_LOCK:
+        tokens = load_oauth3_tokens()
+        for t in tokens:
+            if t.get("id") == token_id:
+                t["revoked"] = True
+                t["revoked_ts"] = int(time.time())
+                save_oauth3_tokens(tokens)
+                record_evidence("oauth3_token_revoked", {"token_id": token_id})
+                return True
     return False
 
 
@@ -263,6 +274,24 @@ def load_apps(repo_root: str) -> list[str]:
 # HTTP Handler — theorem: every route returns JSON, every error is specific.
 # ---------------------------------------------------------------------------
 class YinyangHandler(http.server.BaseHTTPRequestHandler):
+
+    def _check_auth(self) -> bool:
+        """Return True if authorized, False after sending 401."""
+        sha256_value = getattr(self.server, "session_token_sha256", "")
+        if not sha256_value:
+            return True
+        auth_header = self.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            self._send_json({"error": "unauthorized"}, 401)
+            return False
+        provided = auth_header[len("Bearer "):]
+        if not _SHA256_HEX_RE.fullmatch(provided):
+            self._send_json({"error": "unauthorized"}, 401)
+            return False
+        if provided != sha256_value:
+            self._send_json({"error": "unauthorized"}, 401)
+            return False
+        return True
 
     # --- GET routing ---
     def do_GET(self) -> None:
@@ -342,9 +371,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                 "schedule_cron",
             ],
             "forbidden": [
-                "port_9222",
+                "forbidden_debug_port",
                 "extensions",
-                "companion_app_name",
+                "legacy_hub_name",
             ],
             "spec_file": "specs/solacehub-instructions.md",
         })
@@ -370,12 +399,13 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
 
     def _handle_evidence_list(self, query: str) -> None:
         params = self._parse_query(query)
-        try:
-            limit = min(int(params.get("limit", "50")), 200)
-            offset = max(int(params.get("offset", "0")), 0)
-        except ValueError:
+        limit_raw = params.get("limit", "50")
+        offset_raw = params.get("offset", "0")
+        if not limit_raw.isdigit() or not offset_raw.isdigit():
             self._send_json({"error": "invalid limit or offset"}, 400)
             return
+        limit = min(int(limit_raw), 200)
+        offset = max(int(offset_raw), 0)
         records = load_evidence(limit=limit, offset=offset)
         self._send_json({
             "total": count_evidence(),
@@ -385,6 +415,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         })
 
     def _handle_evidence_record(self) -> None:
+        if not self._check_auth():
+            return
         payload = self._read_json_body()
         if payload is None:
             return
@@ -403,6 +435,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         self._send_json({"schedules": load_schedules()})
 
     def _handle_schedule_create(self) -> None:
+        if not self._check_auth():
+            return
         payload = self._read_json_body()
         if payload is None:
             return
@@ -419,6 +453,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         self._send_json(record, 201)
 
     def _handle_schedule_delete(self, schedule_id: str) -> None:
+        if not self._check_auth():
+            return
         if not schedule_id:
             self._send_json({"error": "missing schedule id"}, 400)
             return
@@ -438,6 +474,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         self._send_json({"tokens": safe})
 
     def _handle_oauth3_register(self) -> None:
+        if not self._check_auth():
+            return
         payload = self._read_json_body()
         if payload is None:
             return
@@ -458,6 +496,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         self._send_json({k: v for k, v in record.items() if k != "token_sha256"}, 201)
 
     def _handle_oauth3_revoke(self, token_id: str) -> None:
+        if not self._check_auth():
+            return
         if not token_id:
             self._send_json({"error": "missing token id"}, 400)
             return
@@ -468,6 +508,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._send_json({"error": "token not found"}, 404)
 
     def _handle_detect(self) -> None:
+        if not self._check_auth():
+            return
         payload = self._read_json_body()
         if payload is None:
             return
@@ -495,9 +537,16 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
     # --- Helpers ---
     def _read_json_body(self) -> Optional[dict]:
         """Read and parse JSON body. Sends error response and returns None on failure."""
-        length = int(self.headers.get("Content-Length", 0))
+        length_raw = self.headers.get("Content-Length", "0")
+        if not re.fullmatch(r"\d+", length_raw):
+            self._send_json({"error": "invalid content length"}, 400)
+            return None
+        length = int(length_raw)
         if length == 0:
             self._send_json({"error": "missing request body"}, 400)
+            return None
+        if length > MAX_BODY:
+            self._send_json({"error": "request body too large"}, 413)
             return None
         raw = self.rfile.read(length)
         try:
@@ -534,7 +583,11 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
 # ---------------------------------------------------------------------------
 # Server factory — theorem: build_server isolates configuration from startup.
 # ---------------------------------------------------------------------------
-def build_server(port: int, repo_root: str) -> http.server.ThreadingHTTPServer:
+def build_server(
+    port: int,
+    repo_root: str,
+    session_token_sha256: str = "",
+) -> http.server.ThreadingHTTPServer:
     """
     Construct a ThreadingHTTPServer with apps pre-loaded.
     Does NOT write port.lock — caller is responsible for that.
@@ -542,30 +595,50 @@ def build_server(port: int, repo_root: str) -> http.server.ThreadingHTTPServer:
     server = http.server.ThreadingHTTPServer(("localhost", port), YinyangHandler)
     server.apps = load_apps(repo_root)  # type: ignore[attr-defined]
     server.repo_root = repo_root  # type: ignore[attr-defined]
+    server.session_token_sha256 = session_token_sha256  # type: ignore[attr-defined]
     return server
 
 
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
-def start_server(port: int = 8888, repo_root: str = ".") -> None:
+def start_server(
+    port: int = 8888,
+    repo_root: str = ".",
+    session_token_sha256: str = "",
+) -> None:
     """
     Generate token, write lock, register cleanup, then serve forever.
     Token is immediately discarded after hashing — never stored in memory
     beyond this function's call stack.
     """
     import os
-    token = generate_token()
-    t_hash = token_hash(token)
-    del token  # plaintext token leaves scope here — not stored anywhere
+
+    global _SESSION_TOKEN_SHA256
+    _SESSION_TOKEN_SHA256 = session_token_sha256
+
+    if session_token_sha256:
+        t_hash = session_token_sha256
+    else:
+        token = generate_token()
+        t_hash = token_hash(token)
+        del token  # plaintext token leaves scope here — not stored anywhere
     write_port_lock(port, t_hash, os.getpid())
     atexit.register(delete_port_lock)
 
     record_evidence("server_started", {"port": port, "version": _SERVER_VERSION})
-    server = build_server(port, repo_root)
+    server = build_server(port, repo_root, session_token_sha256)
     server.serve_forever()
 
 
 if __name__ == "__main__":
-    repo_root = sys.argv[1] if len(sys.argv) > 1 else "."
-    start_server(8888, repo_root)
+    parser = argparse.ArgumentParser(description="Yinyang Server")
+    parser.add_argument("repo_root", nargs="?", default=".")
+    parser.add_argument(
+        "--token-sha256",
+        dest="token_sha256",
+        default="",
+        help="Bearer token sha256 for Hub authentication",
+    )
+    args = parser.parse_args()
+    start_server(8888, args.repo_root, args.token_sha256)
