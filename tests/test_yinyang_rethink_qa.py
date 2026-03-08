@@ -1226,25 +1226,40 @@ class TestWSRateLimiter:
             assert limiter.is_allowed()
         assert not limiter.is_allowed()
 
-    def test_rate_limit_per_connection_isolation(self):
-        """Each WS connection gets an independent rate limiter.
+    def test_rate_limit_per_ip_persistence(self):
+        """Per-IP rate limiting: same IP's limiter persists across reconnections.
 
-        v1.0 scope: rate limiting is per-connection, not per-IP.
-        Per-IP rate limiting is deferred to v1.1 (requires request.remote tracking).
-        This test verifies that connection isolation works correctly — a reconnected
-        client gets a fresh limiter and is not penalized by the previous connection's usage.
+        Verifies that disconnecting and reconnecting from the same IP does NOT
+        reset the rate limiter — the _ip_rate_limiters dict keeps the limiter
+        keyed by IP, so a reconnecting client inherits the previous exhaustion state.
+        This closes Claude's P1 finding from Round 5.
         """
-        from yinyang.ws_bridge import _RateLimiter
-        # Simulate connection 1 — exhaust the limit
-        limiter1 = _RateLimiter(max_calls=3, period=60.0)
+        from yinyang.ws_bridge import YinyangWSBridge, _RateLimiter
+        bridge = YinyangWSBridge()
+        # Simulate first connection from IP 10.0.0.1
+        ip = "10.0.0.1"
+        bridge._ip_rate_limiters[ip] = _RateLimiter(max_calls=3, period=60.0)
+        limiter1 = bridge._ip_rate_limiters[ip]
         for _ in range(3):
             assert limiter1.is_allowed()
-        assert not limiter1.is_allowed()
-        # Simulate connection 2 (reconnect) — fresh limiter, fresh state
-        limiter2 = _RateLimiter(max_calls=3, period=60.0)
-        assert limiter2.is_allowed(), "New connection must get fresh rate limiter (per-connection isolation)"
-        # Verify limiter1 is still exhausted (no cross-contamination)
-        assert not limiter1.is_allowed(), "Previous connection's limiter must remain exhausted"
+        assert not limiter1.is_allowed(), "Limiter should be exhausted after 3 calls"
+        # Simulate reconnection from SAME IP — must get the SAME exhausted limiter
+        limiter_after_reconnect = bridge._ip_rate_limiters.get(ip)
+        assert limiter_after_reconnect is limiter1, "Same IP must reuse the same limiter object"
+        assert not limiter_after_reconnect.is_allowed(), "Reconnection from same IP must NOT reset rate limit"
+
+    def test_rate_limit_different_ips_isolated(self):
+        """Different IPs get independent rate limiters."""
+        from yinyang.ws_bridge import YinyangWSBridge, _RateLimiter
+        bridge = YinyangWSBridge()
+        bridge._ip_rate_limiters["10.0.0.1"] = _RateLimiter(max_calls=3, period=60.0)
+        bridge._ip_rate_limiters["10.0.0.2"] = _RateLimiter(max_calls=3, period=60.0)
+        # Exhaust IP 1
+        for _ in range(3):
+            bridge._ip_rate_limiters["10.0.0.1"].is_allowed()
+        assert not bridge._ip_rate_limiters["10.0.0.1"].is_allowed()
+        # IP 2 must still have capacity
+        assert bridge._ip_rate_limiters["10.0.0.2"].is_allowed(), "Different IP must have independent rate limiter"
 
     def test_rate_limiter_window_slides(self):
         """After the window period passes, calls should be allowed again."""

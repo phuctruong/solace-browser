@@ -50,7 +50,7 @@
     "Focus trap → full dialog semantics (aria-modal, aria-labelledby)",
     "Protocol version negotiation for Tauri IPC",
     "Per-message-type rate limits",
-    "Per-IP rate limiting (request.remote tracking)",
+    "Per-IP rate limiting — DONE in GLOW 212 (request.remote → _ip_rate_limiters dict)",
     "Incognito mode handling",
     "Vector clocks for multi-agent",
     "Structured error taxonomy → client-side error-code UX mapping",

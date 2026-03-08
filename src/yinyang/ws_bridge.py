@@ -113,6 +113,9 @@ class YinyangWSBridge:
         self.llm_client = llm_client
         self.sessions: dict[str, dict[str, Any]] = {}
         self._pending_runs: dict[str, dict[str, Any]] = {}  # run_id → run state
+        # Per-IP rate limiters — persists across reconnections from the same IP.
+        # Prevents rate limit bypass by disconnect/reconnect.
+        self._ip_rate_limiters: dict[str, _RateLimiter] = {}
 
     # Allowed WebSocket origins — extension + localhost server + Tauri
     _ALLOWED_WS_ORIGINS = frozenset({
@@ -136,7 +139,13 @@ class YinyangWSBridge:
 
         session_id = request.match_info.get("session_id", "default")
         self.sessions[session_id] = {"ws": ws, "messages": []}
-        rate_limiter = _RateLimiter(max_calls=60, period=60.0)
+
+        # Per-IP rate limiting: same IP gets same limiter across reconnections.
+        # Prevents bypass by disconnect/reconnect from exhausting the limit.
+        peer_ip = request.remote or "unknown"
+        if peer_ip not in self._ip_rate_limiters:
+            self._ip_rate_limiters[peer_ip] = _RateLimiter(max_calls=60, period=60.0)
+        rate_limiter = self._ip_rate_limiters[peer_ip]
 
         logger.info(f"[YY] WebSocket connected: {session_id}")
 
