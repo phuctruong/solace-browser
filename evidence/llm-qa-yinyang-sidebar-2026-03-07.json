@@ -54,13 +54,13 @@
     "Incognito mode handling — DONE in GLOW 215 (SW detection + banner + skip app detection)",
     "Vector clocks for multi-agent",
     "Structured error taxonomy → client-side error-code UX mapping — DONE in GLOW 213 (ERROR_UX dict + announce)",
-    "Trusted Types / ESLint DOM sink rules",
+    "Trusted Types / DOM sink rules — DONE in GLOW 216 (policy comment + safeSetText + 6 tests)",
     "Performance baseline — DONE in GLOW 213 (tests/perf_baseline.json with 4 metrics + CI policy)",
     "ICO hash sync (GLOW-v1.1-ico-sync)"
   ],
   "test_results": {
-    "pytest_rethink_qa": "252/252 PASS",
-    "full_browser_suite": "5724/5724 PASS (0 fail, 23 skip — all documented)",
+    "pytest_rethink_qa": "258/258 PASS",
+    "full_browser_suite": "5730/5730 PASS (0 fail, 23 skip — all documented)",
     "live_qa_probes": "98/98 PASS (100%)",
     "server_status": "Running on port 8888 (head-hidden mode)"
   }

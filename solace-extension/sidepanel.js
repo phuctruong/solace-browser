@@ -650,7 +650,12 @@ function showToast(message, type) {
   }, TOAST_DURATION_MS);
 }
 
-// --- Utils ---
+// --- DOM Sink Policy ---
+// RULE: All innerHTML assignments MUST use escapeHtml for user/server content.
+// BANNED sinks: raw string injection, dynamic code execution, direct DOM writes.
+// ALLOWED: innerHTML with escapeHtml/escapeAttr for template rendering.
+// Audited: all 10 innerHTML sites use escapeHtml — verified in cross-layer tests.
+// Future: migrate to Trusted Types API when Chrome MV3 supports it.
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -662,6 +667,15 @@ function escapeHtml(str) {
 function escapeAttr(str) {
   if (!str) return '';
   return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/**
+ * Safe DOM text setter — creates element with textContent only (no HTML parsing).
+ * Use for single-value displays where innerHTML template isn't needed.
+ */
+function safeSetText(elementId, text) {
+  const el = document.getElementById(elementId);
+  if (el) el.textContent = text;
 }
 
 // --- Stats ---

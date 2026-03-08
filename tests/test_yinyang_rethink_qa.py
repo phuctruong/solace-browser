@@ -1881,3 +1881,61 @@ class TestTauriProtocolVersion:
     def test_main_rs_version_includes_protocol(self):
         rs = Path(__file__).parent.parent.joinpath("src-tauri", "src", "main.rs").read_text()
         assert "supported_major_versions" in rs
+
+
+# ---------------------------------------------------------------------------
+# GLOW 216 — DOM Sink Policy (Trusted Types preparation)
+# ---------------------------------------------------------------------------
+
+
+class TestDOMSinkPolicy:
+    """All innerHTML uses must go through escapeHtml. No eval/document.write."""
+
+    def test_no_eval_in_extension_js(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.js").read_text()
+        # eval( should not appear outside comments
+        lines = [l for l in js.split('\n') if 'eval(' in l and not l.strip().startswith('//')]
+        assert len(lines) == 0, f"Found eval() in sidepanel.js: {lines}"
+
+    def test_no_document_write(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.js").read_text()
+        lines = [l for l in js.split('\n') if 'document.write' in l and not l.strip().startswith('//')]
+        assert len(lines) == 0, f"Found document.write in sidepanel.js: {lines}"
+
+    def test_no_new_function(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.js").read_text()
+        lines = [l for l in js.split('\n') if 'new Function(' in l and not l.strip().startswith('//')]
+        assert len(lines) == 0, f"Found new Function() in sidepanel.js: {lines}"
+
+    def test_dom_sink_policy_comment_exists(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.js").read_text()
+        assert "DOM Sink Policy" in js
+
+    def test_safe_set_text_helper_exists(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.js").read_text()
+        assert "function safeSetText" in js
+
+    def test_all_innerhtml_uses_escape(self):
+        """Every innerHTML assignment must use escapeHtml or escapeAttr for dynamic content."""
+        import re
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.js").read_text()
+        # Find lines with innerHTML = (assignment, not comparison)
+        inner_html_lines = [
+            (i+1, l.strip()) for i, l in enumerate(js.split('\n'))
+            if '.innerHTML' in l and '=' in l and not l.strip().startswith('//')
+        ]
+        for line_num, line in inner_html_lines:
+            # Lines that set innerHTML to a static string or empty state are safe
+            if "'<div class=\"yy-empty-state\">" in line or "'<span class=\"yy-hint\">" in line:
+                continue
+            # Lines using template literals with ${...} must use escapeHtml or escapeAttr
+            if '${' in line:
+                has_escape = 'escapeHtml' in line or 'escapeAttr' in line
+                # Some template lines span multiple lines — check the surrounding context
+                if not has_escape:
+                    # Check if escapeHtml appears within 5 lines
+                    start = max(0, line_num - 3)
+                    end = min(len(js.split('\n')), line_num + 5)
+                    context = '\n'.join(js.split('\n')[start:end])
+                    has_escape = 'escapeHtml' in context or 'escapeAttr' in context
+                assert has_escape, f"Line {line_num} uses innerHTML with template but no escapeHtml: {line[:80]}"
