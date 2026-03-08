@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solace Hub</title>
+  <style>
+    /* OS-native feel: system font stack, minimal chrome */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #f5f5f5;
+      --surface:      #ffffff;
+      --border:       #d9d9d9;
+      --text-primary: #1a1a1a;
+      --text-muted:   #6b6b6b;
+      --accent:       #2563eb;
+      --accent-hover: #1d4ed8;
+      --green:        #16a34a;
+      --red:          #dc2626;
+      --radius:       6px;
+      --shadow:       0 1px 3px rgba(0,0,0,0.10);
+      --font:         -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                      Helvetica, Arial, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:           #1c1c1e;
+        --surface:      #2c2c2e;
+        --border:       #3a3a3c;
+        --text-primary: #f0f0f0;
+        --text-muted:   #aeaeb2;
+      }
+    }
+
+    body {
+      font-family: var(--font);
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      user-select: none;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    header img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+    }
+
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    header .version {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ── Main layout ── */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    /* ── Status row ── */
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot.green  { background: var(--green); }
+    .dot.red    { background: var(--red); }
+    .dot.grey   { background: var(--text-muted); }
+
+    .status-label { font-size: 13px; }
+
+    /* ── Stats grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .stat .value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat .label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── Schedule list ── */
+    .schedule-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .schedule-list li {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 6px 8px;
+      background: var(--bg);
+      border-radius: calc(var(--radius) - 2px);
+    }
+
+    .schedule-list .when {
+      color: var(--text-muted);
+    }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--border);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      filter: brightness(0.92);
+    }
+
+    /* ── Evidence log ── */
+    .evidence-log {
+      font-family: "SF Mono", "Consolas", "Liberation Mono", monospace;
+      font-size: 11px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) - 2px);
+      padding: 10px;
+      max-height: 120px;
+      overflow-y: auto;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 10px 20px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header>
+    <img id="hub-logo" src="icons/yinyang-logo.png" alt="Solace Hub" />
+    <h1>Solace Hub</h1>
+    <span class="version">v0.1.0</span>
+  </header>
+
+  <!-- ── Main content ── -->
+  <main>
+
+    <!-- Server status -->
+    <div class="card">
+      <h2>Yinyang Server</h2>
+      <div class="status-row">
+        <div class="dot grey" id="server-dot"></div>
+        <span class="status-label" id="server-status">Checking…</span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+      <h2>Overview</h2>
+      <div class="stats-grid">
+        <div class="stat">
+          <span class="value" id="stat-sessions">—</span>
+          <span class="label">Active Sessions</span>
+        </div>
+        <div class="stat">
+          <span class="value" id="stat-schedules">—</span>
+          <span class="label">Scheduled Runs</span>
+        </div>
+        <div class="stat">
+          <span class="value" id="stat-evidence">—</span>
+          <span class="label">Evidence Events</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Next scheduled run -->
+    <div class="card">
+      <h2>Upcoming Schedules</h2>
+      <ul class="schedule-list" id="schedule-list">
+        <li><span>No schedules found</span><span class="when">—</span></li>
+      </ul>
+    </div>
+
+    <!-- Actions -->
+    <div class="card">
+      <h2>Actions</h2>
+      <div class="btn-row">
+        <button class="btn-primary" id="btn-open-browser" onclick="openBrowser()">
+          Open Browser
+        </button>
+        <button class="btn-secondary" onclick="refreshStatus()">
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Evidence log -->
+    <div class="card">
+      <h2>Evidence Log (last 10 events)</h2>
+      <div class="evidence-log" id="evidence-log">Loading…</div>
+    </div>
+
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <span>Solace Hub · port <strong>8888</strong></span>
+    <a href="https://solaceagi.com" target="_blank">solaceagi.com</a>
+  </footer>
+
+  <script>
+    // ── Tauri IPC bridge ──────────────────────────────────────────────────────
+    // Tauri injects window.__TAURI__ at runtime.
+    const tauri = window.__TAURI__;
+
+    async function invoke(cmd, args) {
+      if (!tauri) {
+        // Dev fallback: log and return a stub (NEVER used in production binary)
+        console.warn("Tauri not available; running outside binary");
+        return null;
+      }
+      return tauri.tauri.invoke(cmd, args || {});
+    }
+
+    // ── Server status ─────────────────────────────────────────────────────────
+    async function refreshStatus() {
+      const dot    = document.getElementById("server-dot");
+      const label  = document.getElementById("server-status");
+
+      try {
+        // Attempt direct fetch (CSP allows localhost:8888)
+        const resp = await fetch("http://localhost:8888/health", { signal: AbortSignal.timeout(3000) });
+        if (resp.ok) {
+          dot.className = "dot green";
+          label.textContent = "Running — localhost:8888";
+          await refreshStats();
+          await refreshSchedules();
+          await refreshEvidence();
+        } else {
+          dot.className = "dot red";
+          label.textContent = "Unhealthy (HTTP " + resp.status + ")";
+        }
+      } catch (err) {
+        dot.className = "dot red";
+        label.textContent = "Offline — " + err.message;
+      }
+    }
+
+    // ── Stats ─────────────────────────────────────────────────────────────────
+    async function refreshStats() {
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/browser/sessions");
+        if (resp.ok) {
+          const data = await resp.json();
+          const sessions = Array.isArray(data) ? data.length : (data.sessions ? data.sessions.length : "—");
+          document.getElementById("stat-sessions").textContent = sessions;
+        }
+      } catch (_) {
+        document.getElementById("stat-sessions").textContent = "—";
+      }
+
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/browser/schedules");
+        if (resp.ok) {
+          const data = await resp.json();
+          const count = Array.isArray(data) ? data.length : (data.schedules ? data.schedules.length : "—");
+          document.getElementById("stat-schedules").textContent = count;
+        }
+      } catch (_) {
+        document.getElementById("stat-schedules").textContent = "—";
+      }
+
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/evidence?limit=1");
+        if (resp.ok) {
+          const data = await resp.json();
+          const total = data.total ?? "—";
+          document.getElementById("stat-evidence").textContent = total;
+        }
+      } catch (_) {
+        document.getElementById("stat-evidence").textContent = "—";
+      }
+    }
+
+    // ── Schedules ─────────────────────────────────────────────────────────────
+    async function refreshSchedules() {
+      const list = document.getElementById("schedule-list");
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/browser/schedules");
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const schedules = Array.isArray(data) ? data : (data.schedules || []);
+        if (schedules.length === 0) {
+          list.innerHTML = "<li><span>No schedules</span><span class='when'>—</span></li>";
+          return;
+        }
+        list.innerHTML = schedules.slice(0, 5).map(s => {
+          const name = s.name || s.recipe_id || "Unknown";
+          const next = s.next_run ? new Date(s.next_run).toLocaleString() : "—";
+          return "<li><span>" + escapeHtml(name) + "</span><span class='when'>" + escapeHtml(next) + "</span></li>";
+        }).join("");
+      } catch (_) {
+        list.innerHTML = "<li><span>Could not load schedules</span><span class='when'>—</span></li>";
+      }
+    }
+
+    // ── Evidence log ──────────────────────────────────────────────────────────
+    async function refreshEvidence() {
+      const log = document.getElementById("evidence-log");
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/evidence?limit=10");
+        if (!resp.ok) {
+          log.textContent = "Could not load evidence log (HTTP " + resp.status + ")";
+          return;
+        }
+        const data = await resp.json();
+        const events = Array.isArray(data) ? data : (data.events || data.items || []);
+        if (events.length === 0) {
+          log.textContent = "No evidence events yet.";
+          return;
+        }
+        log.textContent = events.map(e => {
+          const ts = e.timestamp ? new Date(e.timestamp).toISOString() : "—";
+          const type = e.event_type || e.type || "event";
+          const hash = e.hash ? e.hash.slice(0, 12) : "";
+          return ts + "  " + type + (hash ? "  #" + hash : "");
+        }).join("\n");
+      } catch (err) {
+        log.textContent = "Error: " + err.message;
+      }
+    }
+
+    // ── Open Browser ──────────────────────────────────────────────────────────
+    async function openBrowser() {
+      const btn = document.getElementById("btn-open-browser");
+      btn.disabled = true;
+      btn.textContent = "Launching…";
+      try {
+        const result = await invoke("cmd_open_browser");
+        if (result) {
+          btn.textContent = "Browser Opened";
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = "Open Browser";
+          }, 3000);
+        } else {
+          btn.textContent = "Open Browser";
+          btn.disabled = false;
+        }
+      } catch (err) {
+        alert("Cannot launch browser: " + err);
+        btn.textContent = "Open Browser";
+        btn.disabled = false;
+      }
+    }
+
+    // ── Utility ───────────────────────────────────────────────────────────────
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.appendChild(document.createTextNode(String(str)));
+      return div.innerHTML;
+    }
+
+    // ── Boot ──────────────────────────────────────────────────────────────────
+    refreshStatus();
+    // Poll every 10 seconds
+    setInterval(refreshStatus, 10_000);
+  </script>
+
+</body>
+</html>

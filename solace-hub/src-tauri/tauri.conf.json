@@ -1,0 +1,92 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "devPath": "../src",
+    "distDir": "../src"
+  },
+  "package": {
+    "productName": "Solace Hub",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      },
+      "window": {
+        "all": false,
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": true,
+        "minimize": true,
+        "unmaximize": true,
+        "unminimize": true,
+        "startDragging": true,
+        "setTitle": true,
+        "setFocus": true,
+        "setSize": true,
+        "setMinSize": true,
+        "center": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.solaceagi.hub",
+      "icon": [
+        "icons/yinyang-logo.png"
+      ],
+      "shortDescription": "Solace Hub — AI Worker Platform Desktop Orchestrator",
+      "longDescription": "Solace Hub manages the Yinyang Server lifecycle, browser sessions, schedules, billing, and evidence chain for the Solace AI Worker Platform.",
+      "macOS": {
+        "entitlements": null,
+        "exceptionDomain": "",
+        "frameworks": [],
+        "providerShortName": null,
+        "signingIdentity": null
+      },
+      "linux": {
+        "deb": {
+          "depends": []
+        }
+      },
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' http://localhost:8888; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
+    },
+    "systemTray": {
+      "iconPath": "icons/yinyang-logo.png",
+      "iconAsTemplate": false,
+      "menuOnLeftClick": false
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "label": "main",
+        "title": "Solace Hub",
+        "width": 800,
+        "height": 600,
+        "minWidth": 600,
+        "minHeight": 400,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "visible": false,
+        "center": true,
+        "url": "index.html"
+      }
+    ]
+  }
+}

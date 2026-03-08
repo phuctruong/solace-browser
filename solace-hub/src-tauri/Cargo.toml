@@ -1,0 +1,32 @@
+[package]
+name = "solace-hub"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+description = "Solace Hub — Tauri desktop app for Solace Browser orchestration"
+authors = ["Solace AGI <noreply@solaceagi.com>"]
+
+# Prevent direct binary execution; use `cargo tauri build` or `cargo tauri dev`
+[[bin]]
+name = "solace-hub"
+path = "main.rs"
+
+[build-dependencies]
+tauri-build = { version = "1", features = [] }
+
+[dependencies]
+tauri = { version = "1", features = [
+  "system-tray",
+  "api-all",
+] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+keyring = "2"
+sha2 = "0.10"
+hex = "0.4"
+
+[features]
+# This feature is used for production builds or when `devPath` points to the filesystem.
+# DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]

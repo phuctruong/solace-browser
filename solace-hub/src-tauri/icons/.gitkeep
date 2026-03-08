@@ -1,0 +1,5 @@
+# Place yinyang-logo.png here before building.
+# See solace-hub/README.md → Icons section for instructions.
+# Tauri requires icons/ to exist and contain at least one PNG.
+#
+# Naming law: app is "Solace Hub", port is 8888.
