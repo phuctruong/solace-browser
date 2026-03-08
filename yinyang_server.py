@@ -23,6 +23,12 @@ Route table:
   DELETE /api/v1/browser/schedules/{id} → delete schedule
   GET  /api/v1/oauth3/tokens           → list token metadata (never plaintext)
   DELETE /api/v1/oauth3/tokens/{id}    → revoke token
+  GET  /api/v1/cli/available           → {"available": bool, "version": str|null}
+  POST /api/v1/cli/run                 → {"command": str} → {"exit_code": int, "stdout": str, "stderr": str}
+  GET  /onboarding                     → onboarding HTML page
+  POST /onboarding/complete            → {"mode": str} → 200
+  POST /onboarding/reset               → requires auth; delete onboarding.json
+  GET  /api/v1/onboarding/status       → {"completed": bool, "mode": str|null}
 """
 import argparse
 import atexit
@@ -31,8 +37,10 @@ import http.server
 import json
 import re
 import secrets
+import subprocess
 import threading
 import time
+import urllib.parse
 import uuid
 from pathlib import Path
 from typing import Optional
@@ -44,6 +52,7 @@ PORT_LOCK_PATH: Path = Path.home() / ".solace" / "port.lock"
 EVIDENCE_PATH: Path = Path.home() / ".solace" / "evidence.jsonl"
 SCHEDULES_PATH: Path = Path.home() / ".solace" / "schedules.json"
 OAUTH3_TOKENS_PATH: Path = Path.home() / ".solace" / "oauth3-tokens.json"
+ONBOARDING_PATH: Path = Path.home() / ".solace" / "onboarding.json"
 
 _SERVER_VERSION = "1.1"
 MAX_BODY = 1_048_576
@@ -52,6 +61,15 @@ _SCHEDULES_LOCK = threading.Lock()
 _TOKENS_LOCK = threading.Lock()
 _SESSION_TOKEN_SHA256: str = ""
 _SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
+_CRON_RE = re.compile(r"^\S+\s+\S+\s+\S+\s+\S+\s+\S+$")
+_ONBOARDING_MODES = frozenset(["agent", "byok", "paid", "cli"])
+_CLI_ALLOWLIST = frozenset([
+    "hub status",
+    "hub start",
+    "hub stop",
+    "hub version",
+    "auth status",
+])
 
 # Domains that map to known app categories for /detect matching.
 _DOMAIN_APP_MAP: dict[str, list[str]] = {
@@ -311,6 +329,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_schedules_list()
         elif path == "/api/v1/oauth3/tokens":
             self._handle_oauth3_list()
+        elif path == "/api/v1/cli/available":
+            self._handle_cli_available()
+        elif path == "/onboarding":
+            self._handle_onboarding_page()
+        elif path == "/api/v1/onboarding/status":
+            self._handle_onboarding_status()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -325,6 +349,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_schedule_create()
         elif path == "/api/v1/oauth3/tokens":
             self._handle_oauth3_register()
+        elif path == "/api/v1/cli/run":
+            self._handle_cli_run()
+        elif path == "/onboarding/complete":
+            self._handle_onboarding_complete()
+        elif path == "/onboarding/reset":
+            self._handle_onboarding_reset()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -424,6 +454,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         if not event_type or not isinstance(event_type, str):
             self._send_json({"error": "missing 'type' field"}, 400)
             return
+        if len(event_type) > 256:
+            self._send_json({"error": "'type' exceeds 256 chars"}, 400)
+            return
         data = payload.get("data", {})
         if not isinstance(data, dict):
             self._send_json({"error": "'data' must be an object"}, 400)
@@ -446,8 +479,17 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         if not app_id or not isinstance(app_id, str):
             self._send_json({"error": "missing 'app_id'"}, 400)
             return
+        if len(app_id) > 256:
+            self._send_json({"error": "'app_id' exceeds 256 chars"}, 400)
+            return
         if not cron or not isinstance(cron, str):
             self._send_json({"error": "missing 'cron'"}, 400)
+            return
+        if len(cron) > 64:
+            self._send_json({"error": "'cron' exceeds 64 chars"}, 400)
+            return
+        if not _CRON_RE.match(cron):
+            self._send_json({"error": "'cron' must be 5 whitespace-separated fields"}, 400)
             return
         record = create_schedule(app_id, cron, url)
         self._send_json(record, 201)
@@ -485,11 +527,20 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         if not scope or not isinstance(scope, str):
             self._send_json({"error": "missing 'scope'"}, 400)
             return
+        if len(scope) > 256:
+            self._send_json({"error": "'scope' exceeds 256 chars"}, 400)
+            return
         if not service or not isinstance(service, str):
             self._send_json({"error": "missing 'service'"}, 400)
             return
+        if len(service) > 256:
+            self._send_json({"error": "'service' exceeds 256 chars"}, 400)
+            return
         if not token_sha256_val or not isinstance(token_sha256_val, str):
             self._send_json({"error": "missing 'token_sha256'"}, 400)
+            return
+        if not _SHA256_HEX_RE.fullmatch(token_sha256_val):
+            self._send_json({"error": "'token_sha256' must be exactly 64 lowercase hex chars"}, 400)
             return
         record = register_oauth3_token(scope, service, token_sha256_val)
         # Return metadata only — never echo back token_sha256
@@ -524,15 +575,209 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         """
         Match URL against domain map and loaded app list.
         Theorem: result is intersection of domain-keyed candidates and loaded apps.
+        Uses urlparse().netloc for exact domain matching — not substring search.
         """
         available: set[str] = set(self.server.apps)  # type: ignore[attr-defined]
+        parsed = urllib.parse.urlparse(url)
+        netloc = parsed.netloc.lower()
+        # Strip port from netloc if present (e.g. "mail.google.com:443" → "mail.google.com")
+        netloc = netloc.split(":")[0]
         matched: list[str] = []
         for domain, candidates in _DOMAIN_APP_MAP.items():
-            if domain in url:
+            # Exact match: netloc equals domain, or netloc ends with ".domain"
+            if netloc == domain or netloc.endswith("." + domain):
                 for app_id in candidates:
                     if app_id in available and app_id not in matched:
                         matched.append(app_id)
         return matched
+
+    # --- CLI wrapper handlers ---
+    def _handle_cli_available(self) -> None:
+        """GET /api/v1/cli/available — check if `solace` CLI is installed."""
+        try:
+            result = subprocess.run(
+                ["solace", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            version = result.stdout.strip() or result.stderr.strip() or None
+            self._send_json({"available": True, "version": version})
+        except OSError:
+            self._send_json({"available": False, "version": None})
+
+    def _handle_cli_run(self) -> None:
+        """POST /api/v1/cli/run — run an allowlisted solace CLI command."""
+        if not self._check_auth():
+            return
+        payload = self._read_json_body()
+        if payload is None:
+            return
+        command = payload.get("command")
+        if not command or not isinstance(command, str):
+            self._send_json({"error": "missing 'command' field"}, 400)
+            return
+        if command not in _CLI_ALLOWLIST:
+            self._send_json({"error": f"command not in allowlist: {command!r}"}, 400)
+            return
+        args = ["solace"] + command.split()
+        try:
+            result = subprocess.run(
+                args,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                shell=False,
+            )
+        except OSError as exc:
+            self._send_json({"error": f"CLI not available: {exc}"}, 503)
+            return
+        _64KB = 65536
+        self._send_json({
+            "exit_code": result.returncode,
+            "stdout": result.stdout[:_64KB],
+            "stderr": result.stderr[:_64KB],
+        })
+
+    # --- Onboarding handlers ---
+    def _handle_onboarding_page(self) -> None:
+        """GET /onboarding — serve inline HTML onboarding page."""
+        html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solace Hub — Setup</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f0f13;
+    color: #e0e0e8;
+    font-family: system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .card {
+    background: #1a1a24;
+    border: 1px solid #2a2a38;
+    border-radius: 12px;
+    padding: 2.5rem;
+    max-width: 520px;
+    width: 100%;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 0.5rem; color: #c8b8ff; }
+  .subtitle { color: #888; margin-bottom: 2rem; font-size: 0.95rem; }
+  .modes { display: grid; gap: 1rem; }
+  .mode-btn {
+    background: #22223a;
+    border: 1px solid #3a3a58;
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+    cursor: pointer;
+    text-align: left;
+    color: #e0e0e8;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .mode-btn:hover { border-color: #7c66ff; background: #2a2a48; }
+  .mode-btn .label { font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; }
+  .mode-btn .desc { font-size: 0.85rem; color: #888; }
+  .status { margin-top: 1.5rem; font-size: 0.9rem; color: #7c66ff; min-height: 1.4em; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Solace Hub Setup</h1>
+  <p class="subtitle">Choose how you want to use Solace Hub:</p>
+  <div class="modes">
+    <button class="mode-btn" onclick="choose('agent')">
+      <div class="label">AI Agent (Managed LLM)</div>
+      <div class="desc">Solace manages the AI — no API keys needed. $8/mo Starter plan.</div>
+    </button>
+    <button class="mode-btn" onclick="choose('byok')">
+      <div class="label">BYOK (Bring Your Own Key)</div>
+      <div class="desc">Use your own Anthropic or OpenAI API key. Free tier.</div>
+    </button>
+    <button class="mode-btn" onclick="choose('paid')">
+      <div class="label">Pro / Team</div>
+      <div class="desc">Cloud twin + OAuth3 vault + 90-day evidence. $28/mo Pro.</div>
+    </button>
+    <button class="mode-btn" onclick="choose('cli')">
+      <div class="label">Auto CLI</div>
+      <div class="desc">Detected solace CLI — configure automatically from terminal.</div>
+    </button>
+  </div>
+  <p class="status" id="status"></p>
+</div>
+<script>
+function choose(mode) {
+  document.getElementById('status').textContent = 'Saving...';
+  fetch('/onboarding/complete', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({mode: mode})
+  }).then(r => {
+    if (r.ok) {
+      document.getElementById('status').textContent = 'Setup complete! Redirecting...';
+      setTimeout(() => { window.location.href = '/health'; }, 1000);
+    } else {
+      document.getElementById('status').textContent = 'Error saving. Please retry.';
+    }
+  });
+}
+</script>
+</body>
+</html>"""
+        body = html.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _handle_onboarding_complete(self) -> None:
+        """POST /onboarding/complete — write onboarding.json (no API keys)."""
+        payload = self._read_json_body()
+        if payload is None:
+            return
+        mode = payload.get("mode")
+        if not mode or not isinstance(mode, str):
+            self._send_json({"error": "missing 'mode' field"}, 400)
+            return
+        if mode not in _ONBOARDING_MODES:
+            self._send_json({"error": f"invalid mode; must be one of: {sorted(_ONBOARDING_MODES)}"}, 400)
+            return
+        onboarding_data = {
+            "completed": True,
+            "mode": mode,
+            "completed_ts": int(time.time()),
+        }
+        ONBOARDING_PATH.parent.mkdir(parents=True, exist_ok=True)
+        ONBOARDING_PATH.write_text(json.dumps(onboarding_data, indent=2))
+        self._send_json({"ok": True, "mode": mode})
+
+    def _handle_onboarding_reset(self) -> None:
+        """POST /onboarding/reset — requires auth; delete onboarding.json."""
+        if not self._check_auth():
+            return
+        try:
+            ONBOARDING_PATH.unlink()
+        except FileNotFoundError:
+            pass
+        self._send_json({"ok": True, "reset": True})
+
+    def _handle_onboarding_status(self) -> None:
+        """GET /api/v1/onboarding/status — return onboarding completion status."""
+        try:
+            data = json.loads(ONBOARDING_PATH.read_text())
+            completed = bool(data.get("completed"))
+            mode: Optional[str] = data.get("mode") if completed else None
+        except (FileNotFoundError, json.JSONDecodeError):
+            completed = False
+            mode = None
+        self._send_json({"completed": completed, "mode": mode})
 
     # --- Helpers ---
     def _read_json_body(self) -> Optional[dict]:

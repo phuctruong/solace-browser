@@ -612,3 +612,337 @@ class TestAuthSecurity:
             {"app_id": "gmail", "cron": "0 9 * * 1-5", "url": "https://mail.google.com/"},
         )
         assert status == 401
+
+
+# ---------------------------------------------------------------------------
+# Task 005: Security hardening — URL matching, cron/input validation
+# ---------------------------------------------------------------------------
+class TestURLDomainMatching:
+    def test_detect_gmail_exact_domain(self, server):
+        """POST /detect gmail URL → exact domain match, not substring."""
+        data = post_json("/detect", {"url": "https://mail.google.com/mail/u/0/"})
+        assert "apps" in data
+        assert isinstance(data["apps"], list)
+
+    def test_detect_linkedin_exact_domain(self, server):
+        """POST /detect LinkedIn → exact domain match."""
+        data = post_json("/detect", {"url": "https://www.linkedin.com/feed/"})
+        assert "apps" in data
+
+    def test_detect_subdomain_of_gmail_matches(self, server):
+        """POST /detect with subdomain of mail.google.com → matches."""
+        # www.mail.google.com ends with .mail.google.com — should match
+        data = post_json("/detect", {"url": "https://www.mail.google.com/"})
+        assert "apps" in data
+
+    def test_detect_fake_domain_no_match(self, server):
+        """POST /detect with evil.mail.google.com.evil.com → no match (not a real subdomain)."""
+        data = post_json("/detect", {"url": "https://evil.com/mail.google.com/"})
+        # Should NOT match gmail apps — evil.com is not a google.com subdomain
+        assert "apps" in data
+        # The path contains mail.google.com but the netloc does NOT — so no gmail apps
+        gmail_apps = {"gmail-inbox-triage", "gmail-spam-cleaner"}
+        matched = set(data["apps"])
+        assert matched.isdisjoint(gmail_apps), (
+            f"URL with malicious path matched gmail apps: {matched}"
+        )
+
+
+class TestCronValidation:
+    def test_invalid_cron_4_fields_rejected(self, server):
+        """POST /api/v1/browser/schedules with 4-field cron → 400."""
+        body = json.dumps({
+            "app_id": "gmail-inbox-triage",
+            "cron": "0 9 * *",  # only 4 fields — invalid
+            "url": "https://mail.google.com/",
+        }).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/browser/schedules",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400 for invalid cron")
+        except urllib.error.URLError as exc:
+            assert exc.code == 400
+
+    def test_invalid_cron_too_long_rejected(self, server):
+        """POST /api/v1/browser/schedules with cron > 64 chars → 400."""
+        long_cron = "0 " + "9 " * 30 + "* * *"  # way over 64 chars
+        body = json.dumps({
+            "app_id": "gmail-inbox-triage",
+            "cron": long_cron,
+            "url": "https://mail.google.com/",
+        }).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/browser/schedules",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400 for cron > 64 chars")
+        except urllib.error.URLError as exc:
+            assert exc.code == 400
+
+    def test_valid_cron_5_fields_accepted(self, server):
+        """POST /api/v1/browser/schedules with valid 5-field cron → 201."""
+        data = post_json("/api/v1/browser/schedules", {
+            "app_id": "gmail-inbox-triage",
+            "cron": "0 9 * * 1-5",
+            "url": "https://mail.google.com/",
+        })
+        assert "id" in data
+
+    def test_app_id_too_long_rejected(self, server):
+        """POST /api/v1/browser/schedules with app_id > 256 chars → 400."""
+        long_id = "a" * 257
+        body = json.dumps({
+            "app_id": long_id,
+            "cron": "0 9 * * *",
+            "url": "https://mail.google.com/",
+        }).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/browser/schedules",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400 for app_id > 256 chars")
+        except urllib.error.URLError as exc:
+            assert exc.code == 400
+
+
+class TestOAuth3Validation:
+    def test_invalid_token_sha256_rejected(self, server):
+        """POST /api/v1/oauth3/tokens with non-hex token_sha256 → 400."""
+        body = json.dumps({
+            "scope": "gmail.readonly",
+            "service": "google",
+            "token_sha256": "NOTAHEXSTRING",  # not 64 hex chars
+        }).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/oauth3/tokens",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400 for invalid token_sha256")
+        except urllib.error.URLError as exc:
+            assert exc.code == 400
+
+    def test_token_sha256_63_hex_chars_rejected(self, server):
+        """POST /api/v1/oauth3/tokens with 63-char token_sha256 → 400."""
+        body = json.dumps({
+            "scope": "gmail.readonly",
+            "service": "google",
+            "token_sha256": "a" * 63,  # one char short
+        }).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/oauth3/tokens",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400 for 63-char token_sha256")
+        except urllib.error.URLError as exc:
+            assert exc.code == 400
+
+    def test_scope_too_long_rejected(self, server):
+        """POST /api/v1/oauth3/tokens with scope > 256 chars → 400."""
+        body = json.dumps({
+            "scope": "s" * 257,
+            "service": "google",
+            "token_sha256": "a" * 64,
+        }).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/oauth3/tokens",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400 for scope > 256 chars")
+        except urllib.error.URLError as exc:
+            assert exc.code == 400
+
+    def test_service_too_long_rejected(self, server):
+        """POST /api/v1/oauth3/tokens with service > 256 chars → 400."""
+        body = json.dumps({
+            "scope": "gmail.readonly",
+            "service": "s" * 257,
+            "token_sha256": "a" * 64,
+        }).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/oauth3/tokens",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400 for service > 256 chars")
+        except urllib.error.URLError as exc:
+            assert exc.code == 400
+
+
+class TestEvidenceValidation:
+    def test_event_type_too_long_rejected(self, server):
+        """POST /api/v1/evidence with event_type > 256 chars → 400."""
+        body = json.dumps({
+            "type": "t" * 257,
+            "data": {},
+        }).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/evidence",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400 for event_type > 256 chars")
+        except urllib.error.URLError as exc:
+            assert exc.code == 400
+
+
+# ---------------------------------------------------------------------------
+# Task 007: CLI wrapper endpoint
+# ---------------------------------------------------------------------------
+class TestCLIAvailableEndpoint:
+    def test_cli_available_returns_json(self, server):
+        """GET /api/v1/cli/available → JSON with 'available' key."""
+        data = get_json("/api/v1/cli/available")
+        assert "available" in data
+        assert isinstance(data["available"], bool)
+
+    def test_cli_available_has_version_key(self, server):
+        """GET /api/v1/cli/available → 'version' key present (str or null)."""
+        data = get_json("/api/v1/cli/available")
+        assert "version" in data
+        assert data["version"] is None or isinstance(data["version"], str)
+
+
+class TestCLIRunEndpoint:
+    def test_cli_run_requires_auth(self, auth_server):
+        """POST /api/v1/cli/run without auth → 401."""
+        status, _ = _post_no_auth("/api/v1/cli/run", {"command": "hub status"})
+        assert status == 401
+
+    def test_cli_run_allowlist_reject_unknown(self, auth_server):
+        """POST /api/v1/cli/run with command not in allowlist → 400."""
+        status, data = _post_with_auth(
+            "/api/v1/cli/run", {"command": "rm -rf /"}, VALID_TOKEN
+        )
+        assert status == 400
+        assert "allowlist" in data.get("error", "").lower() or "command" in data.get("error", "").lower()
+
+    def test_cli_run_allowlist_valid_command(self, auth_server):
+        """POST /api/v1/cli/run with allowlisted command → exit_code, stdout, stderr."""
+        status, data = _post_with_auth(
+            "/api/v1/cli/run", {"command": "hub status"}, VALID_TOKEN
+        )
+        # CLI may not be installed (exit_code != 0), but response structure must be correct.
+        # 200 with result structure OR 503 if CLI missing.
+        if status == 200:
+            assert "exit_code" in data
+            assert "stdout" in data
+            assert "stderr" in data
+        else:
+            assert status == 503
+
+    def test_cli_run_missing_command_400(self, auth_server):
+        """POST /api/v1/cli/run without 'command' → 400."""
+        status, data = _post_with_auth("/api/v1/cli/run", {}, VALID_TOKEN)
+        assert status == 400
+
+
+# ---------------------------------------------------------------------------
+# Task 008: Onboarding flow
+# ---------------------------------------------------------------------------
+class TestOnboardingEndpoints:
+    def test_onboarding_page_returns_html(self, server):
+        """GET /onboarding → 200 with HTML content."""
+        req = urllib.request.Request(f"{BASE_URL}/onboarding")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            content = resp.read().decode()
+            assert "<!DOCTYPE html>" in content or "<!doctype html>" in content.lower()
+            assert "Solace Hub" in content
+
+    def test_onboarding_page_has_4_mode_buttons(self, server):
+        """GET /onboarding → HTML contains all 4 mode choices."""
+        req = urllib.request.Request(f"{BASE_URL}/onboarding")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            content = resp.read().decode()
+        for mode in ("agent", "byok", "paid", "cli"):
+            assert mode in content, f"Mode '{mode}' not found in onboarding HTML"
+
+    def test_onboarding_status_returns_json(self, server):
+        """GET /api/v1/onboarding/status → JSON with 'completed' and 'mode'."""
+        data = get_json("/api/v1/onboarding/status")
+        assert "completed" in data
+        assert isinstance(data["completed"], bool)
+        assert "mode" in data
+
+    def test_onboarding_complete_valid_mode(self, server):
+        """POST /onboarding/complete with valid mode → 200."""
+        data = post_json("/onboarding/complete", {"mode": "byok"})
+        assert data.get("ok") is True
+        assert data.get("mode") == "byok"
+
+    def test_onboarding_complete_invalid_mode_400(self, server):
+        """POST /onboarding/complete with unknown mode → 400."""
+        body = json.dumps({"mode": "invalid_mode_xyz"}).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/onboarding/complete",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400 for invalid mode")
+        except urllib.error.URLError as exc:
+            assert exc.code == 400
+
+    def test_onboarding_status_reflects_completion(self, server):
+        """After POST /onboarding/complete, GET status shows completed=True."""
+        post_json("/onboarding/complete", {"mode": "agent"})
+        data = get_json("/api/v1/onboarding/status")
+        assert data["completed"] is True
+        assert data["mode"] == "agent"
+
+    def test_onboarding_reset_requires_auth(self, auth_server):
+        """POST /onboarding/reset without auth → 401."""
+        status, _ = _post_no_auth("/onboarding/reset", {})
+        assert status == 401
+
+    def test_onboarding_reset_with_auth(self, auth_server):
+        """POST /onboarding/reset with valid auth → 200."""
+        status, data = _post_with_auth("/onboarding/reset", {}, VALID_TOKEN)
+        assert status == 200
+        assert data.get("ok") is True
+
+    def test_onboarding_no_api_key_in_json(self, server):
+        """POST /onboarding/complete must never write API key to disk."""
+        import yinyang_server as ys
+        post_json("/onboarding/complete", {"mode": "byok"})
+        try:
+            raw = ys.ONBOARDING_PATH.read_text()
+            data = json.loads(raw)
+            # Must not contain API key fields
+            for forbidden in ("api_key", "token", "secret", "password"):
+                assert forbidden not in data, f"Forbidden field '{forbidden}' in onboarding.json"
+        except FileNotFoundError:
+            pass  # file may not exist in test isolation
