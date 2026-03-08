@@ -734,6 +734,13 @@
       <div style="margin-top:8px;">
         <a href="http://localhost:8888/metrics" target="_blank" class="hub-link">Prometheus /metrics</a>
       </div>
+      <!-- Rate limit display (Task 044) -->
+      <div style="margin-top:8px;font-size:11px;">
+        <span>Avg RPM: <span id="rate-avg-rpm" style="font-weight:600;">—</span> / <span id="rate-rpm-limit">300</span></span>
+        <div style="background:var(--border);border-radius:2px;height:4px;margin-top:3px;overflow:hidden;">
+          <div id="rate-rpm-bar" style="background:var(--green);height:100%;width:0%;transition:width 0.3s;"></div>
+        </div>
+      </div>
       <!-- Watchdog indicator (Task 030) -->
       <div class="status-row" style="margin-top:10px;" id="watchdog-row">
         <span class="status-dot status-unknown" id="watchdog-dot"></span>
@@ -2706,6 +2713,27 @@
     }
     refreshWatchdog();
     setInterval(refreshWatchdog, 30_000);
+
+    // Rate limit status (Task 044)
+    async function refreshRateLimit() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/rate-limit/status', { signal: AbortSignal.timeout(3000) });
+        if (!r.ok) return;
+        const d = await r.json();
+        const rpmEl = document.getElementById('rate-avg-rpm');
+        const barEl = document.getElementById('rate-rpm-bar');
+        const limitEl = document.getElementById('rate-rpm-limit');
+        if (rpmEl) { rpmEl.textContent = d.avg_rpm; }
+        if (limitEl && d.limits) { limitEl.textContent = d.limits.requests_per_minute; }
+        if (barEl && d.limits) {
+          const pct = Math.min(100, (d.avg_rpm / d.limits.requests_per_minute) * 100);
+          barEl.style.width = pct + '%';
+          barEl.style.background = pct > 80 ? 'var(--red)' : pct > 50 ? '#f59e0b' : 'var(--green)';
+        }
+      } catch (_) {}
+    }
+    refreshRateLimit();
+    setInterval(refreshRateLimit, 30_000);
 
     // Multi-window storage broadcast sync (Task 043)
     window.addEventListener('storage', (e) => {

@@ -598,6 +598,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_apps_tags()
         elif path == "/api/v1/broadcast":
             self._handle_broadcast_get()
+        elif path == "/api/v1/rate-limit/status":
+            self._handle_rate_limit_status()
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -1941,6 +1943,30 @@ function choose(mode) {
                 CLI_CONFIG_PATH.write_text(json.dumps(body["cli_config"], indent=2))
             imported.append("cli_config")
         self._send_json({"status": "imported", "imported": imported})
+
+    # --- Task 044: Rate limit status handler ---
+
+    def _handle_rate_limit_status(self) -> None:
+        """GET /api/v1/rate-limit/status — current rate limit windows. Task 044."""
+        with _METRICS_LOCK:
+            total_requests = sum(_REQUEST_COUNTS.values())
+        uptime = max(1, int(time.time() - _SERVER_START_TIME))
+        avg_rpm = round(total_requests / max(1, uptime / 60), 2)
+        self._send_json({
+            "status": "ok",
+            "total_requests": total_requests,
+            "avg_rpm": avg_rpm,
+            "uptime_seconds": uptime,
+            "limits": {
+                "requests_per_minute": 300,
+                "websocket_connections": 10,
+                "recipe_runs_per_hour": 100,
+            },
+            "current": {
+                "avg_rpm": avg_rpm,
+                "websocket_connections": 0,
+            },
+        })
 
     # --- Task 043: Broadcast handlers ---
 

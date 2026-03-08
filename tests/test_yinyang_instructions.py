@@ -2554,3 +2554,15 @@ class TestBroadcast:
         status, data = _get_json_auth("/api/v1/broadcast")
         assert status == 200
         assert "events" in data
+
+
+# ── Task 044: Rate Limit Status ───────────────────────────────────────────────
+
+class TestRateLimit:
+    def test_rate_limit_status(self, auth_server):
+        status, data = _get_json_auth("/api/v1/rate-limit/status")
+        assert status == 200
+        assert data["status"] == "ok"
+        assert "limits" in data
+        assert "current" in data
+        assert "avg_rpm" in data

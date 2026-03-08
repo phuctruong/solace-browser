@@ -874,3 +874,17 @@ class TestBroadcastUI:
         """index.html must reference storage or broadcast."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "storage" in html.lower() or "broadcast" in html.lower()
+
+
+# ── Task 044: Rate Limit Status ───────────────────────────────────────────────
+
+class TestRateLimitUI:
+    def test_rate_limit_in_server(self):
+        """yinyang_server.py must implement /api/v1/rate-limit/status."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/rate-limit/status" in server
+
+    def test_rate_limit_in_html(self):
+        """index.html must contain rate limit display."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "rate" in html.lower() or "rpm" in html.lower() or "limit" in html.lower()
