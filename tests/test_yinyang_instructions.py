@@ -522,6 +522,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     cli_config_path = tmp / "cli_config.json"
     spend_history_path = tmp / "spend_history.json"
     watchdog_log_path = tmp / "watchdog.log"
+    theme_path = tmp / "theme.json"
 
     original_lock = ys.PORT_LOCK_PATH
     original_evidence = ys.EVIDENCE_PATH
@@ -537,6 +538,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     original_cli_config = ys.CLI_CONFIG_PATH
     original_spend_history = ys.SPEND_HISTORY_PATH
     original_watchdog_log = ys.WATCHDOG_LOG_PATH
+    original_theme = ys.THEME_PATH
 
     ys.PORT_LOCK_PATH = lock_path
     ys.EVIDENCE_PATH = evidence_path
@@ -552,6 +554,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.CLI_CONFIG_PATH = cli_config_path
     ys.SPEND_HISTORY_PATH = spend_history_path
     ys.WATCHDOG_LOG_PATH = watchdog_log_path
+    ys.THEME_PATH = theme_path
 
     httpd = ys.build_server(AUTH_TEST_PORT, str(REPO_ROOT), session_token_sha256=VALID_TOKEN)
 
@@ -581,6 +584,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.CLI_CONFIG_PATH = original_cli_config
     ys.SPEND_HISTORY_PATH = original_spend_history
     ys.WATCHDOG_LOG_PATH = original_watchdog_log
+    ys.THEME_PATH = original_theme
 
 
 def _post_with_auth(path: str, payload: dict, token: str = VALID_TOKEN) -> tuple[int, dict]:
@@ -2291,3 +2295,27 @@ class TestWatchdog:
         status, data = _get_json_auth("/api/v1/watchdog/status")
         assert status == 200
         assert data["uptime_seconds"] >= 0
+
+
+# ── Task 031: Dark Mode Toggle ────────────────────────────────────────────────
+
+class TestDarkMode:
+    def test_theme_get_default(self, auth_server):
+        status, data = _get_json_auth("/api/v1/theme")
+        assert status == 200
+        assert data["theme"] in ("light", "dark")
+
+    def test_theme_set_dark(self, auth_server):
+        status, data = _post_with_auth("/api/v1/theme", {"theme": "dark"})
+        assert status == 200
+        assert data["theme"] == "dark"
+
+    def test_theme_set_invalid(self, auth_server):
+        status, data = _post_with_auth("/api/v1/theme", {"theme": "blue"})
+        assert status == 400
+
+    def test_theme_persists(self, auth_server):
+        _post_with_auth("/api/v1/theme", {"theme": "dark"})
+        status, data = _get_json_auth("/api/v1/theme")
+        assert status == 200
+        assert data["theme"] == "dark"

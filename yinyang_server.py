@@ -124,6 +124,8 @@ SPEND_HISTORY_PATH: Path = Path.home() / ".solace" / "spend_history.json"
 _SPEND_HISTORY_LOCK = threading.Lock()
 WATCHDOG_LOG_PATH: Path = Path.home() / ".solace" / "watchdog.log"
 _WATCHDOG_LOCK = threading.Lock()
+THEME_PATH: Path = Path.home() / ".solace" / "theme.json"
+_THEME_LOCK = threading.Lock()
 SUPPORTED_CLI_TOOLS: frozenset = frozenset(["claude", "openai", "ollama", "aider", "continue"])
 _CLI_LOCK = threading.Lock()
 _COMMUNITY_RECIPES: list = [
@@ -566,6 +568,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_budget_alerts()
         elif path == "/api/v1/watchdog/status":
             self._handle_watchdog_status()
+        elif path == "/api/v1/theme":
+            self._handle_theme_get()
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -653,6 +657,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_budget_alerts_set()
         elif path == "/api/v1/watchdog/ping":
             self._handle_watchdog_ping()
+        elif path == "/api/v1/theme":
+            self._handle_theme_set()
         elif path == "/api/v1/byok/set":
             self._handle_byok_set()
         elif path == "/api/v1/byok/test":
@@ -1812,6 +1818,34 @@ function choose(mode) {
             WATCHDOG_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
             WATCHDOG_LOG_PATH.write_text(f"last_ping={int(time.time())} count=0\n")
         self._send_json({"status": "pong", "timestamp": int(time.time())})
+
+    # --- Task 031: Theme handlers ---
+
+    def _handle_theme_get(self) -> None:
+        """GET /api/v1/theme — return current theme preference. Task 031."""
+        with _THEME_LOCK:
+            theme = "light"
+            if THEME_PATH.exists():
+                try:
+                    data = json.loads(THEME_PATH.read_text())
+                    theme = data.get("theme", "light")
+                except (json.JSONDecodeError, OSError):
+                    theme = "light"
+        self._send_json({"theme": theme})
+
+    def _handle_theme_set(self) -> None:
+        """POST /api/v1/theme — persist theme preference. Task 031."""
+        body = self._read_json_body()
+        if body is None:
+            return
+        theme = body.get("theme", "light")
+        if theme not in ("light", "dark"):
+            self._send_json({"error": "theme must be light or dark"}, 400)
+            return
+        with _THEME_LOCK:
+            THEME_PATH.parent.mkdir(parents=True, exist_ok=True)
+            THEME_PATH.write_text(json.dumps({"theme": theme}))
+        self._send_json({"status": "ok", "theme": theme})
 
     # --- Task 018: Metrics handlers ---
 

@@ -687,3 +687,18 @@ class TestWatchdogUI:
         """index.html must reference watchdog or uptime."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "watchdog" in html.lower() or "restart" in html.lower() or "uptime" in html.lower()
+
+
+# ── Task 031: Dark Mode Toggle ────────────────────────────────────────────────
+
+class TestDarkModeUI:
+    def test_theme_endpoint_in_server(self):
+        """yinyang_server.py must implement /api/v1/theme and THEME_PATH."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/theme" in server
+        assert "THEME_PATH" in server
+
+    def test_dark_mode_in_html(self):
+        """index.html must contain dark mode class or toggle."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "dark" in html.lower()

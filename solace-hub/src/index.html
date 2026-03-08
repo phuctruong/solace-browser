@@ -34,6 +34,22 @@
       }
     }
 
+    /* Explicit dark mode class (Task 031) — overrides media query */
+    body.dark {
+      --bg:           #1c1c1e;
+      --surface:      #2c2c2e;
+      --border:       #3a3a3c;
+      --text-primary: #f0f0f0;
+      --text-muted:   #aeaeb2;
+    }
+    body.light {
+      --bg:           #f5f5f5;
+      --surface:      #ffffff;
+      --border:       #d9d9d9;
+      --text-primary: #1a1a1a;
+      --text-muted:   #6b6b6b;
+    }
+
     body {
       font-family: var(--font);
       font-size: 14px;
@@ -648,6 +664,7 @@
   <div id="tray-status-bar" class="tray-status-bar">
     <span id="tray-server-dot" class="status-dot status-unknown"></span>
     <span id="tray-summary">Connecting...</span>
+    <button id="dark-mode-toggle" onclick="toggleDarkMode()" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;color:var(--text-primary);">🌙 Dark</button>
   </div>
 
   <!-- ── Main content ── -->
@@ -2596,6 +2613,33 @@
     }
     refreshWatchdog();
     setInterval(refreshWatchdog, 30_000);
+
+    // Dark mode (Task 031)
+    function applyTheme(theme) {
+      document.body.classList.remove('dark', 'light');
+      document.body.classList.add(theme);
+      const btn = document.getElementById('dark-mode-toggle');
+      if (btn) { btn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark'; }
+    }
+    async function toggleDarkMode() {
+      const isDark = document.body.classList.contains('dark');
+      const next = isDark ? 'light' : 'dark';
+      applyTheme(next);
+      try {
+        await fetch('http://localhost:8888/api/v1/theme', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({theme: next}),
+        });
+      } catch (_) {}
+    }
+    // Load saved theme on start
+    (async () => {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/theme', { signal: AbortSignal.timeout(2000) });
+        if (r.ok) { const d = await r.json(); applyTheme(d.theme || 'light'); }
+      } catch (_) {}
+    })();
   </script>
 
 </body>
