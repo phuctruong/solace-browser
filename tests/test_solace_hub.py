@@ -731,3 +731,18 @@ class TestSettingsUI:
         """index.html must reference settings export."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "settings" in html.lower() and "export" in html.lower()
+
+
+# ── Task 034: API Usage Stats ─────────────────────────────────────────────────
+
+class TestUsageStatsUI:
+    def test_usage_stats_in_server(self):
+        """yinyang_server.py must implement /api/v1/usage/stats."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/usage/stats" in server
+        assert "by_provider" in server
+
+    def test_usage_in_html(self):
+        """index.html must reference usage or provider."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "usage" in html.lower() or "provider" in html.lower()

@@ -932,6 +932,13 @@
           </label>
         </div>
       </details>
+      <!-- Task 034: Usage stats by provider -->
+      <details style="margin-top:8px;">
+        <summary style="cursor:pointer;font-size:12px;color:var(--accent);user-select:none;">API Usage by Provider</summary>
+        <div id="usage-stats-container" style="margin-top:8px;font-size:11px;">
+          <p style="color:var(--text-muted);">Loading usage stats…</p>
+        </div>
+      </details>
     </div>
 
     <!-- Remote Tunnel -->
@@ -2636,6 +2643,31 @@
     }
     refreshWatchdog();
     setInterval(refreshWatchdog, 30_000);
+
+    // API usage stats by provider (Task 034)
+    async function refreshUsageStats() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/usage/stats?days=30', { signal: AbortSignal.timeout(3000) });
+        if (!r.ok) throw new Error('bad status');
+        const d = await r.json();
+        const el = document.getElementById('usage-stats-container');
+        if (!el) return;
+        const providers = Object.entries(d.by_provider || {});
+        if (providers.length === 0) {
+          el.innerHTML = `<p style="color:var(--text-muted);">No usage in last 30 days. Total: $${d.total_cost_usd.toFixed(4)}</p>`;
+          return;
+        }
+        el.innerHTML = `<table style="width:100%;border-collapse:collapse;">
+          <thead><tr><th style="text-align:left;padding:2px 4px;">Provider</th><th style="text-align:right;padding:2px 4px;">Calls</th><th style="text-align:right;padding:2px 4px;">Cost (USD)</th></tr></thead>
+          <tbody>${providers.map(([name, v]) =>
+            `<tr><td style="padding:2px 4px;">${name}</td><td style="text-align:right;padding:2px 4px;">${v.calls}</td><td style="text-align:right;padding:2px 4px;">$${v.cost_usd.toFixed(4)}</td></tr>`
+          ).join('')}</tbody>
+          <tfoot><tr><td colspan="2" style="padding:2px 4px;font-weight:600;">Total</td><td style="text-align:right;padding:2px 4px;font-weight:600;">$${d.total_cost_usd.toFixed(4)}</td></tr></tfoot>
+        </table>`;
+      } catch (_) {}
+    }
+    refreshUsageStats();
+    setInterval(refreshUsageStats, 60_000);
 
     // Settings import (Task 033)
     async function importSettings(input) {

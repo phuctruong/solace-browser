@@ -574,6 +574,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_theme_get()
         elif path == "/api/v1/settings/export":
             self._handle_settings_export()
+        elif path == "/api/v1/usage/stats":
+            self._handle_usage_stats(query)
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -1913,6 +1915,34 @@ function choose(mode) {
                 CLI_CONFIG_PATH.write_text(json.dumps(body["cli_config"], indent=2))
             imported.append("cli_config")
         self._send_json({"status": "imported", "imported": imported})
+
+    # --- Task 034: API usage stats handler ---
+
+    def _handle_usage_stats(self, query: str) -> None:
+        """GET /api/v1/usage/stats — per-provider token usage + cost. Task 034."""
+        from urllib.parse import parse_qs
+        params = parse_qs(query.lstrip("?"))
+        days = min(int(params.get("days", [30])[0]), 365)
+        with _SPEND_HISTORY_LOCK:
+            history = _load_spend_history()
+        cutoff = int(time.time()) - days * 86400
+        history = [e for e in history if e.get("timestamp", 0) >= cutoff]
+        by_provider: dict = {}
+        for entry in history:
+            provider = entry.get("provider", "unknown")
+            if provider not in by_provider:
+                by_provider[provider] = {"cost_usd": 0.0, "calls": 0}
+            by_provider[provider]["cost_usd"] += entry.get("amount_usd", 0.0)
+            by_provider[provider]["calls"] += 1
+        for v in by_provider.values():
+            v["cost_usd"] = round(v["cost_usd"], 6)
+        total_cost = round(sum(e.get("amount_usd", 0) for e in history), 6)
+        self._send_json({
+            "by_provider": by_provider,
+            "total_cost_usd": total_cost,
+            "total_calls": len(history),
+            "days": days,
+        })
 
     # --- Task 032: Recipe history handler ---
 

@@ -2376,3 +2376,26 @@ class TestSettingsExportImport:
         status, data = _get_json_auth("/api/v1/settings/export")
         assert status == 200
         assert "budget" in data
+
+
+# ── Task 034: API Usage Stats ─────────────────────────────────────────────────
+
+class TestUsageStats:
+    def test_usage_stats_empty(self, auth_server):
+        status, data = _get_json_auth("/api/v1/usage/stats")
+        assert status == 200
+        assert "by_provider" in data
+        assert "total_cost_usd" in data
+        assert "total_calls" in data
+        assert "days" in data
+
+    def test_usage_stats_days_param(self, auth_server):
+        status, data = _get_json_auth("/api/v1/usage/stats?days=7")
+        assert status == 200
+        assert data["days"] == 7
+
+    def test_usage_stats_zero_on_empty(self, auth_server):
+        status, data = _get_json_auth("/api/v1/usage/stats")
+        assert status == 200
+        assert data["total_calls"] == 0
+        assert data["total_cost_usd"] == 0.0
