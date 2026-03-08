@@ -670,6 +670,83 @@ class TestAuthSecurity:
 # ---------------------------------------------------------------------------
 # Task 005: Security hardening — URL matching, cron/input validation
 # ---------------------------------------------------------------------------
+class TestSecurityHardening:
+    def test_max_body_enforced(self, auth_server):
+        """POST with body > MAX_BODY (1MB) → 413."""
+        large_body = json.dumps({"type": "x", "data": "a" * (1_048_576 + 1)}).encode()
+        req = urllib.request.Request(
+            f"{AUTH_BASE}/api/v1/evidence",
+            data=large_body,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {VALID_TOKEN}",
+                "Content-Length": str(len(large_body)),
+            },
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 413 for body > MAX_BODY")
+        except urllib.error.URLError as exc:
+            assert exc.code == 413, f"Expected 413, got {exc.code}"
+
+    def test_url_domain_spoofing_blocked(self, server):
+        """detect with evil.com/mail.google.com/ path → no gmail apps (netloc check)."""
+        data = post_json("/detect", {"url": "https://evil.com/mail.google.com/"})
+        gmail_apps = {"gmail-inbox-triage", "gmail-spam-cleaner"}
+        matched = set(data.get("apps", []))
+        assert matched.isdisjoint(gmail_apps), f"Spoofed URL matched gmail: {matched}"
+
+    def test_cron_invalid_format_rejected(self, server):
+        """POST schedule with invalid cron (4 fields) → 400."""
+        body = json.dumps({"app_id": "gmail-inbox-triage", "cron": "0 9 * *", "url": "https://mail.google.com/"}).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/browser/schedules",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400 for invalid cron")
+        except urllib.error.URLError as exc:
+            assert exc.code == 400
+
+    def test_token_sha256_invalid_format_rejected(self, server):
+        """POST oauth3/tokens with non-hex token_sha256 (legacy schema) → 400."""
+        body = json.dumps({
+            "token_sha256": "not-hex-!!",
+            "scope": "browse",
+            "service": "test-agent",
+        }).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/oauth3/tokens",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400 for invalid token_sha256")
+        except urllib.error.URLError as exc:
+            assert exc.code == 400
+
+    def test_field_max_length_enforced(self, server):
+        """POST schedule with app_id > 256 chars → 400."""
+        body = json.dumps({"app_id": "a" * 300, "cron": "0 9 * * *", "url": "https://mail.google.com/"}).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/browser/schedules",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400 for app_id > 256 chars")
+        except urllib.error.URLError as exc:
+            assert exc.code == 400
+
+
 class TestURLDomainMatching:
     def test_detect_gmail_exact_domain(self, server):
         """POST /detect gmail URL → exact domain match, not substring."""
