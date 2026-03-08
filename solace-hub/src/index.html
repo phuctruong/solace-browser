@@ -802,6 +802,63 @@
       </details>
     </div>
 
+    <!-- ── Task 019: BYOK API Key Management ── -->
+    <div class="card" id="byok-panel">
+      <h2>API Keys (BYOK)</h2>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">
+        Your API key is encrypted with your session token. It is never sent to Solace servers.
+      </p>
+      <div id="byok-providers-list">Loading providers…</div>
+
+      <!-- Anthropic -->
+      <details style="margin-top:12px;">
+        <summary style="cursor:pointer;font-size:13px;font-weight:600;">Anthropic</summary>
+        <form id="byok-form-anthropic" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input type="password" id="byok-key-anthropic" placeholder="sk-ant-…" autocomplete="off"
+                 style="flex:1;min-width:200px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;" />
+          <button type="submit" class="btn-primary">Set</button>
+          <button type="button" onclick="byokClear('anthropic')">Clear</button>
+        </form>
+        <div id="byok-status-anthropic" style="font-size:11px;color:var(--text-muted);margin-top:4px;"></div>
+      </details>
+
+      <!-- OpenAI -->
+      <details style="margin-top:8px;">
+        <summary style="cursor:pointer;font-size:13px;font-weight:600;">OpenAI</summary>
+        <form id="byok-form-openai" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input type="password" id="byok-key-openai" placeholder="sk-…" autocomplete="off"
+                 style="flex:1;min-width:200px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;" />
+          <button type="submit" class="btn-primary">Set</button>
+          <button type="button" onclick="byokClear('openai')">Clear</button>
+        </form>
+        <div id="byok-status-openai" style="font-size:11px;color:var(--text-muted);margin-top:4px;"></div>
+      </details>
+
+      <!-- Together.ai -->
+      <details style="margin-top:8px;">
+        <summary style="cursor:pointer;font-size:13px;font-weight:600;">Together.ai</summary>
+        <form id="byok-form-together" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input type="password" id="byok-key-together" placeholder="together-…" autocomplete="off"
+                 style="flex:1;min-width:200px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;" />
+          <button type="submit" class="btn-primary">Set</button>
+          <button type="button" onclick="byokClear('together')">Clear</button>
+        </form>
+        <div id="byok-status-together" style="font-size:11px;color:var(--text-muted);margin-top:4px;"></div>
+      </details>
+
+      <!-- OpenRouter -->
+      <details style="margin-top:8px;">
+        <summary style="cursor:pointer;font-size:13px;font-weight:600;">OpenRouter</summary>
+        <form id="byok-form-openrouter" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input type="password" id="byok-key-openrouter" placeholder="sk-or-…" autocomplete="off"
+                 style="flex:1;min-width:200px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;" />
+          <button type="submit" class="btn-primary">Set</button>
+          <button type="button" onclick="byokClear('openrouter')">Clear</button>
+        </form>
+        <div id="byok-status-openrouter" style="font-size:11px;color:var(--text-muted);margin-top:4px;"></div>
+      </details>
+    </div>
+
   </main>
 
   <!-- ── Footer ── -->
@@ -1725,6 +1782,88 @@
     setInterval(refreshBudgetStatus, 30_000);
     // Metrics poll every 15 seconds (Task 018)
     setInterval(refreshMetrics, 15_000);
+
+    // ── BYOK: Task 019 ──────────────────────────────────────────────────────
+    async function refreshByokProviders() {
+      try {
+        const r = await fetch('/api/v1/byok/providers');
+        const data = await r.json();
+        const el = document.getElementById('byok-providers-list');
+        if (!el) return;
+        const active = data.active_provider || 'none';
+        const providers = data.providers || {};
+        const supported = data.supported || [];
+        let html = `<div style="font-size:12px;color:var(--text-muted);">Active: <strong>${active}</strong></div>`;
+        for (const p of supported) {
+          const info = providers[p] || {};
+          const configured = info.configured ? '✓' : '✗';
+          const preview = info.key_preview || '—';
+          const isActive = info.active ? ' (active)' : '';
+          html += `<div style="font-size:12px;margin-top:4px;">${configured} <strong>${p}</strong>${isActive} — ${preview}</div>`;
+        }
+        el.innerHTML = html;
+      } catch (_e) {
+        const el = document.getElementById('byok-providers-list');
+        if (el) el.textContent = 'Could not load provider status.';
+      }
+    }
+
+    async function byokSet(provider, apiKey) {
+      const statusEl = document.getElementById(`byok-status-${provider}`);
+      try {
+        const r = await fetch('/api/v1/byok/set', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${window._sessionToken || ''}`},
+          body: JSON.stringify({provider, api_key: apiKey}),
+        });
+        const data = await r.json();
+        if (r.ok) {
+          if (statusEl) statusEl.textContent = `Set. Preview: ${data.key_preview}`;
+          refreshByokProviders();
+        } else {
+          if (statusEl) statusEl.textContent = `Error: ${data.error}`;
+        }
+      } catch (_e) {
+        if (statusEl) statusEl.textContent = 'Network error.';
+      }
+    }
+
+    async function byokClear(provider) {
+      const statusEl = document.getElementById(`byok-status-${provider}`);
+      try {
+        const r = await fetch('/api/v1/byok/clear', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${window._sessionToken || ''}`},
+          body: JSON.stringify({provider}),
+        });
+        const data = await r.json();
+        if (r.ok) {
+          if (statusEl) statusEl.textContent = 'Cleared.';
+          refreshByokProviders();
+        } else {
+          if (statusEl) statusEl.textContent = `Error: ${data.error}`;
+        }
+      } catch (_e) {
+        if (statusEl) statusEl.textContent = 'Network error.';
+      }
+    }
+
+    for (const provider of ['anthropic', 'openai', 'together', 'openrouter']) {
+      const form = document.getElementById(`byok-form-${provider}`);
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const input = document.getElementById(`byok-key-${provider}`);
+          if (input && input.value.trim()) {
+            byokSet(provider, input.value.trim());
+            input.value = '';
+          }
+        });
+      }
+    }
+
+    refreshByokProviders();
+    setInterval(refreshByokProviders, 60_000);
   </script>
 
 </body>

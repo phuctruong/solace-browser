@@ -514,12 +514,15 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     budget_path = tmp / "budget.json"
     recipe_runs_path = tmp / "recipe_runs.json"
 
+    byok_path = tmp / "byok_keys.json"
+
     original_lock = ys.PORT_LOCK_PATH
     original_evidence = ys.EVIDENCE_PATH
     original_schedules = ys.SCHEDULES_PATH
     original_oauth3_tokens = ys.OAUTH3_TOKENS_PATH
     original_budget = ys.BUDGET_PATH
     original_recipe_runs = ys.RECIPE_RUNS_PATH
+    original_byok = ys.BYOK_PATH
 
     ys.PORT_LOCK_PATH = lock_path
     ys.EVIDENCE_PATH = evidence_path
@@ -527,6 +530,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.OAUTH3_TOKENS_PATH = oauth3_tokens_path
     ys.BUDGET_PATH = budget_path
     ys.RECIPE_RUNS_PATH = recipe_runs_path
+    ys.BYOK_PATH = byok_path
 
     httpd = ys.build_server(AUTH_TEST_PORT, str(REPO_ROOT), session_token_sha256=VALID_TOKEN)
 
@@ -548,6 +552,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.OAUTH3_TOKENS_PATH = original_oauth3_tokens
     ys.BUDGET_PATH = original_budget
     ys.RECIPE_RUNS_PATH = original_recipe_runs
+    ys.BYOK_PATH = original_byok
 
 
 def _post_with_auth(path: str, payload: dict, token: str = VALID_TOKEN) -> tuple[int, dict]:
@@ -1716,3 +1721,78 @@ class TestDashboardWebSocket:
         server = pathlib.Path("yinyang_server.py").read_text()
         connected = "/ws/dashboard" in server
         assert connected
+
+
+# ---------------------------------------------------------------------------
+# Task 019: BYOK API Key Management
+# ---------------------------------------------------------------------------
+class TestBYOKManagement:
+    def test_byok_providers_empty(self, auth_server):
+        """GET /api/v1/byok/providers → has providers + supported keys."""
+        status, data = _get_json_auth("/api/v1/byok/providers")
+        assert status == 200
+        assert "providers" in data
+        assert "supported" in data
+        assert "anthropic" in data["supported"]
+
+    def test_byok_set_valid_key(self, auth_server):
+        """POST /api/v1/byok/set with valid key → status=set, key_preview returned."""
+        status, data = _post_with_auth(
+            "/api/v1/byok/set",
+            {"provider": "anthropic", "api_key": "sk-ant-api03-testkey12345"},
+        )
+        assert status == 200
+        assert data["status"] == "set"
+        assert "key_preview" in data
+        # Full key substring must not appear in preview
+        assert "testkey12345" not in data["key_preview"]
+
+    def test_byok_set_invalid_provider(self, auth_server):
+        """POST /api/v1/byok/set with unknown provider → 400."""
+        status, data = _post_with_auth(
+            "/api/v1/byok/set",
+            {"provider": "evil-provider", "api_key": "sk-test-12345678901"},
+        )
+        assert status == 400
+
+    def test_byok_set_key_too_short(self, auth_server):
+        """POST /api/v1/byok/set with short key → 400."""
+        status, data = _post_with_auth(
+            "/api/v1/byok/set",
+            {"provider": "anthropic", "api_key": "short"},
+        )
+        assert status == 400
+
+    def test_byok_test_no_key(self, auth_server):
+        """POST /api/v1/byok/test for unconfigured provider → 404."""
+        status, data = _post_with_auth(
+            "/api/v1/byok/test",
+            {"provider": "openai"},
+        )
+        assert status == 404
+
+    def test_byok_clear_requires_auth(self, auth_server):
+        """POST /api/v1/byok/clear without auth → 401."""
+        status, data = _post_no_auth("/api/v1/byok/clear", {"provider": "anthropic"})
+        assert status == 401
+
+    def test_byok_set_requires_auth(self, auth_server):
+        """POST /api/v1/byok/set without auth → 401."""
+        status, data = _post_no_auth(
+            "/api/v1/byok/set",
+            {"provider": "anthropic", "api_key": "sk-test-123456"},
+        )
+        assert status == 401
+
+    def test_byok_key_not_in_response(self, auth_server):
+        """Full API key must never appear in response body."""
+        full_key = "sk-ant-api03-secret-key-never-show-1234567890"
+        status, data = _post_with_auth(
+            "/api/v1/byok/set",
+            {"provider": "anthropic", "api_key": full_key},
+        )
+        assert status == 200
+        # Reconstruct raw response text from the data dict
+        response_text = json.dumps(data)
+        assert full_key not in response_text
+        assert "never-show" not in response_text

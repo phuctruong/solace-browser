@@ -489,3 +489,33 @@ class TestDashboardWebSocket:
         """index.html must have polling fallback when WS not available."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "fallback" in html.lower() or "polling" in html.lower() or "setInterval" in html
+
+
+# ── Task 019: BYOK API Key Management ────────────────────────────────────────
+
+class TestBYOKPanel:
+    def test_index_html_byok_section(self):
+        """index.html must contain BYOK / API Keys section."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "byok" in html.lower() or "api key" in html.lower() or "BYOK" in html
+
+    def test_index_html_password_input(self):
+        """API key inputs must be type=password."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert 'type="password"' in html or "type='password'" in html
+
+    def test_byok_endpoints_in_server(self):
+        """yinyang_server.py must implement /api/v1/byok routes and SUPPORTED_PROVIDERS."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/byok" in server
+        assert "SUPPORTED_PROVIDERS" in server
+
+    def test_index_html_no_port_9222_byok(self):
+        """BYOK panel must not reference the forbidden debug port."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert FORBIDDEN_DEBUG_PORT not in html
+
+    def test_index_html_no_companion_app_byok(self):
+        """BYOK additions must not introduce legacy hub name."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert LEGACY_HUB_NAME not in html
