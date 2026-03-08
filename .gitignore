@@ -1,0 +1,19 @@
+# Chromium source (too large for git, managed by gclient)
+source/
+depot_tools/
+
+# Build output
+out/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
