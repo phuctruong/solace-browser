@@ -119,6 +119,9 @@ _PROFILES_LOCK = threading.Lock()
 MAX_PROFILES = 10
 INSTALLED_RECIPES_PATH: Path = Path.home() / ".solace" / "installed_recipes.json"
 _STORE_LOCK = threading.Lock()
+CLI_CONFIG_PATH: Path = Path.home() / ".solace" / "cli_config.json"
+SUPPORTED_CLI_TOOLS: frozenset = frozenset(["claude", "openai", "ollama", "aider", "continue"])
+_CLI_LOCK = threading.Lock()
 _COMMUNITY_RECIPES: list = [
     {"id": "r001", "name": "Gmail Unsubscribe", "tag": "email", "author": "solace", "version": "1.0", "rating": 4.8, "installs": 1240},
     {"id": "r002", "name": "LinkedIn Auto-Connect", "tag": "social", "author": "community", "version": "1.2", "rating": 4.5, "installs": 890},
@@ -545,6 +548,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_store_list(query)
         elif path == "/api/v1/store/installed":
             self._handle_store_installed()
+        elif path == "/api/v1/cli/config":
+            self._handle_cli_config_get()
+        elif path == "/api/v1/cli/detect":
+            self._handle_cli_detect()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -613,6 +620,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/store/recipes/[^/]+/uninstall$", path):
             recipe_id = path.split("/")[-2]
             self._handle_store_uninstall(recipe_id)
+        elif path == "/api/v1/cli/config":
+            self._handle_cli_config_set()
+        elif path == "/api/v1/cli/test":
+            self._handle_cli_test()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -2428,6 +2439,67 @@ function choose(mode) {
                 return
             INSTALLED_RECIPES_PATH.write_text(json.dumps(installed, indent=2))
         self._send_json({"status": "uninstalled", "id": recipe_id})
+
+    # ── CLI Tool Integration (Task 025) ───────────────────────────────────
+
+    def _load_cli_config(self) -> dict:
+        if not CLI_CONFIG_PATH.exists():
+            return {"active_tool": None, "tools": {}}
+        try:
+            return json.loads(CLI_CONFIG_PATH.read_text())
+        except json.JSONDecodeError:
+            return {"active_tool": None, "tools": {}}
+
+    def _handle_cli_config_get(self) -> None:
+        config = self._load_cli_config()
+        self._send_json({"config": config, "supported_tools": sorted(SUPPORTED_CLI_TOOLS)})
+
+    def _handle_cli_detect(self) -> None:
+        detected = {}
+        for tool in SUPPORTED_CLI_TOOLS:
+            path = shutil.which(tool)
+            detected[tool] = {"installed": path is not None, "path": path or ""}
+        self._send_json({"detected": detected})
+
+    def _handle_cli_config_set(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        tool = body.get("tool", "")
+        if tool not in SUPPORTED_CLI_TOOLS:
+            self._send_json({"error": f"tool must be one of: {sorted(SUPPORTED_CLI_TOOLS)}"}, 400)
+            return
+        cli_path = body.get("cli_path", "") or shutil.which(tool) or ""
+        config = self._load_cli_config()
+        config["active_tool"] = tool
+        config.setdefault("tools", {})[tool] = {
+            "cli_path": cli_path,
+            "configured_at": int(time.time()),
+        }
+        with _CLI_LOCK:
+            CLI_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+            CLI_CONFIG_PATH.write_text(json.dumps(config, indent=2))
+        self._send_json({"status": "configured", "tool": tool, "cli_path": cli_path})
+
+    def _handle_cli_test(self) -> None:
+        if not self._check_auth():
+            return
+        config = self._load_cli_config()
+        tool = config.get("active_tool")
+        if not tool:
+            self._send_json({"error": "no CLI tool configured. Use POST /api/v1/cli/config first"}, 404)
+            return
+        tool_config = config.get("tools", {}).get(tool, {})
+        cli_path = tool_config.get("cli_path") or shutil.which(tool) or ""
+        import os as _os_cli
+        installed = bool(cli_path and (_os_cli.path.isfile(cli_path) or shutil.which(tool)))
+        self._send_json({
+            "status": "reachable" if installed else "not_found",
+            "tool": tool,
+            "cli_path": cli_path,
+        })
 
     def _parse_query(self, query: str) -> dict[str, str]:
         """Parse ?key=value&key2=value2 into dict."""

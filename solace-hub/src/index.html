@@ -1034,6 +1034,26 @@
       </div>
     </div>
 
+    <!-- ── Task 025: CLI Tool Integration ── -->
+    <div class="card" id="cli-panel">
+      <h2>Local CLI Integration</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px;">Route LLM requests through your local CLI — zero cost, full privacy.</p>
+      <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
+        <select id="cli-tool-select" style="padding:6px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);">
+          <option value="claude">claude</option>
+          <option value="ollama">ollama</option>
+          <option value="openai">openai</option>
+          <option value="aider">aider</option>
+          <option value="continue">continue</option>
+        </select>
+        <input id="cli-path-input" type="text" placeholder="CLI path (auto-detected)"
+               style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);"/>
+        <button class="hub-btn" onclick="detectCLI()">Detect</button>
+        <button class="hub-btn" onclick="setCLIConfig()">Set Active</button>
+      </div>
+      <div id="cli-status" style="font-size:12px;color:var(--text-muted);">No CLI tool configured.</div>
+    </div>
+
     <!-- ── Task 024: Community Recipe Store ── -->
     <div class="card" id="store-panel">
       <h2>Community Store</h2>
@@ -2347,6 +2367,59 @@
     }
     refreshStore();
     setInterval(refreshStore, 60_000);
+
+    // ── Task 025: CLI Tool Integration ────────────────────────────────────
+    async function refreshCLIConfig() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/cli/config');
+        const data = await r.json();
+        const status = document.getElementById('cli-status');
+        if (!status) return;
+        const active = data.config && data.config.active_tool;
+        if (active) {
+          const toolConf = data.config.tools && data.config.tools[active];
+          status.textContent = `Active: ${active} (${toolConf ? toolConf.cli_path || 'auto' : 'auto'})`;
+          status.style.color = 'var(--green)';
+        } else {
+          status.textContent = 'No CLI tool configured.';
+          status.style.color = 'var(--text-muted)';
+        }
+      } catch (_) {}
+    }
+    async function detectCLI() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/cli/detect');
+        const data = await r.json();
+        const select = document.getElementById('cli-tool-select');
+        const input = document.getElementById('cli-path-input');
+        if (!select || !input) return;
+        const tool = select.value;
+        const detected = data.detected && data.detected[tool];
+        if (detected && detected.installed) {
+          input.value = detected.path || '';
+          document.getElementById('cli-status').textContent = `Detected: ${tool} at ${detected.path}`;
+          document.getElementById('cli-status').style.color = 'var(--green)';
+        } else {
+          document.getElementById('cli-status').textContent = `${tool} not found in PATH.`;
+          document.getElementById('cli-status').style.color = 'var(--red)';
+        }
+      } catch (_) {}
+    }
+    async function setCLIConfig() {
+      const tool = (document.getElementById('cli-tool-select') || {}).value;
+      const cliPath = (document.getElementById('cli-path-input') || {}).value || '';
+      if (!tool) return;
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/cli/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${HUB_TOKEN}` },
+          body: JSON.stringify({ tool, cli_path: cliPath }),
+        });
+        if (r.ok) refreshCLIConfig();
+      } catch (_) {}
+    }
+    refreshCLIConfig();
+    setInterval(refreshCLIConfig, 30_000);
   </script>
 
 </body>

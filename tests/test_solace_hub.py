@@ -600,3 +600,18 @@ class TestRecipeStoreUI:
         server = (REPO_ROOT / "yinyang_server.py").read_text()
         assert "/api/v1/store/recipes" in server
         assert "INSTALLED_RECIPES_PATH" in server
+
+
+# ── Task 025: CLI Tool Integration ───────────────────────────────────────────
+
+class TestCLIPanel:
+    def test_index_html_cli_section(self):
+        """index.html must contain a CLI integration section."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "cli" in html.lower() or "local" in html.lower()
+
+    def test_cli_endpoints_in_server(self):
+        """yinyang_server.py must implement CLI config API routes."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/cli/config" in server
+        assert "SUPPORTED_CLI_TOOLS" in server

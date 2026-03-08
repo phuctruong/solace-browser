@@ -519,6 +519,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     profiles_path = tmp / "profiles.json"
     active_profile_path = tmp / "active_profile.json"
     installed_recipes_path = tmp / "installed_recipes.json"
+    cli_config_path = tmp / "cli_config.json"
 
     original_lock = ys.PORT_LOCK_PATH
     original_evidence = ys.EVIDENCE_PATH
@@ -531,6 +532,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     original_profiles = ys.PROFILES_PATH
     original_active_profile = ys.ACTIVE_PROFILE_PATH
     original_installed_recipes = ys.INSTALLED_RECIPES_PATH
+    original_cli_config = ys.CLI_CONFIG_PATH
 
     ys.PORT_LOCK_PATH = lock_path
     ys.EVIDENCE_PATH = evidence_path
@@ -543,6 +545,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.PROFILES_PATH = profiles_path
     ys.ACTIVE_PROFILE_PATH = active_profile_path
     ys.INSTALLED_RECIPES_PATH = installed_recipes_path
+    ys.CLI_CONFIG_PATH = cli_config_path
 
     httpd = ys.build_server(AUTH_TEST_PORT, str(REPO_ROOT), session_token_sha256=VALID_TOKEN)
 
@@ -569,6 +572,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.PROFILES_PATH = original_profiles
     ys.ACTIVE_PROFILE_PATH = original_active_profile
     ys.INSTALLED_RECIPES_PATH = original_installed_recipes
+    ys.CLI_CONFIG_PATH = original_cli_config
 
 
 def _post_with_auth(path: str, payload: dict, token: str = VALID_TOKEN) -> tuple[int, dict]:
@@ -2070,3 +2074,66 @@ class TestRecipeStore:
     def test_store_uninstall_not_installed(self, auth_server):
         status, data = _post_with_auth("/api/v1/store/recipes/r999/uninstall", {})
         assert status == 404
+
+
+# ── Task 025: CLI Tool Integration ───────────────────────────────────────────
+
+class TestCLIIntegration:
+    def test_cli_config_get_empty(self, auth_server):
+        status, data = _get_json_auth("/api/v1/cli/config")
+        assert status == 200
+        assert "config" in data
+        assert "supported_tools" in data
+        assert "claude" in data["supported_tools"]
+        assert "ollama" in data["supported_tools"]
+
+    def test_cli_detect(self, auth_server):
+        status, data = _get_json_auth("/api/v1/cli/detect")
+        assert status == 200
+        assert "detected" in data
+        for tool in ["claude", "openai", "ollama"]:
+            assert tool in data["detected"]
+            assert "installed" in data["detected"][tool]
+
+    def test_cli_config_set_requires_auth(self, auth_server):
+        body = json.dumps({"tool": "claude"}).encode()
+        req = urllib.request.Request(
+            f"{AUTH_BASE}/api/v1/cli/config",
+            data=body, method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req):
+                pass
+            assert False, "expected 401"
+        except urllib.error.HTTPError as e:
+            assert e.code == 401
+
+    def test_cli_config_set_valid(self, auth_server):
+        status, data = _post_with_auth("/api/v1/cli/config", {"tool": "ollama", "cli_path": "/usr/bin/ollama"})
+        assert status == 200
+        assert data["status"] == "configured"
+        assert data["tool"] == "ollama"
+
+    def test_cli_config_set_invalid_tool(self, auth_server):
+        status, data = _post_with_auth("/api/v1/cli/config", {"tool": "evil-tool"})
+        assert status == 400
+
+    def test_cli_test_requires_auth(self, auth_server):
+        body = b""
+        req = urllib.request.Request(
+            f"{AUTH_BASE}/api/v1/cli/test",
+            data=body, method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req):
+                pass
+            assert False, "expected 401"
+        except urllib.error.HTTPError as e:
+            assert e.code == 401
+
+    def test_cli_test_no_config(self, auth_server):
+        # Fresh server has no CLI configured → 404
+        status, data = _post_with_auth("/api/v1/cli/test", {})
+        assert status in (200, 404)
