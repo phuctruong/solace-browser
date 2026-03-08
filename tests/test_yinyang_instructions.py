@@ -42,7 +42,7 @@ def server(tmp_path_factory, monkeypatch_module):
 
     token = ys.generate_token()
     t_hash = ys.token_hash(token)
-    ys.write_port_lock(TEST_PORT, t_hash)
+    ys.write_port_lock(TEST_PORT, t_hash, 99999)
 
     httpd = ys.build_server(TEST_PORT, str(REPO_ROOT))
 
@@ -188,15 +188,22 @@ class TestPortLock:
         lock_path = server["lock_path"]
         assert lock_path.exists(), "port.lock was not created"
 
-    def test_port_lock_has_token_hash(self, server):
-        """port.lock must contain token_hash (hex), never plaintext token."""
+    def test_port_lock_has_token_sha256(self, server):
+        """port.lock must contain token_sha256 (hex), never plaintext token."""
         lock_path = server["lock_path"]
         data = json.loads(lock_path.read_text())
-        assert "token_hash" in data
+        assert "token_sha256" in data
         # SHA-256 hex digest is exactly 64 characters
-        assert len(data["token_hash"]) == 64
+        assert len(data["token_sha256"]) == 64
         # Must be a valid hex string
-        int(data["token_hash"], 16)
+        int(data["token_sha256"], 16)
+
+    def test_port_lock_has_pid(self, server):
+        """port.lock must contain pid field."""
+        lock_path = server["lock_path"]
+        data = json.loads(lock_path.read_text())
+        assert "pid" in data
+        assert isinstance(data["pid"], int)
 
     def test_port_lock_no_plaintext_token(self, server):
         """port.lock must NOT contain a 'token' key (only hash)."""
@@ -292,3 +299,190 @@ class TestNotFoundEndpoint:
             data = get_json(path)
             raw = json.dumps(data)
             assert "Companion App" not in raw, f"'Companion App' found in {path} response"
+
+# ---------------------------------------------------------------------------
+# Phase 3: Evidence API
+# ---------------------------------------------------------------------------
+def delete_json(path: str) -> tuple[int, dict]:
+    """Make a DELETE request, return (status_code, body)."""
+    req = urllib.request.Request(f"{BASE_URL}{path}", method="DELETE")
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return resp.status, json.loads(resp.read().decode())
+    except urllib.error.HTTPError as exc:
+        return exc.code, json.loads(exc.read().decode())
+
+
+class TestEvidenceAPI:
+    def test_evidence_list_empty(self, server):
+        """GET /api/v1/evidence → returns records list and total."""
+        data = get_json("/api/v1/evidence")
+        assert "records" in data
+        assert "total" in data
+        assert isinstance(data["records"], list)
+
+    def test_evidence_record_event(self, server):
+        """POST /api/v1/evidence → creates record, returns id + type."""
+        data = post_json("/api/v1/evidence", {"type": "test_event", "data": {"x": 1}})
+        assert "id" in data
+        assert data["type"] == "test_event"
+        assert "ts" in data
+
+    def test_evidence_list_after_record(self, server):
+        """After recording, list should include the event."""
+        post_json("/api/v1/evidence", {"type": "probe_event", "data": {}})
+        data = get_json("/api/v1/evidence")
+        assert data["total"] >= 1
+
+    def test_evidence_missing_type_400(self, server):
+        """POST /api/v1/evidence without 'type' → 400."""
+        body = json.dumps({"data": {}}).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/evidence",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400")
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 400
+
+    def test_evidence_limit_param(self, server):
+        """GET /api/v1/evidence?limit=1 → returns at most 1 record."""
+        data = get_json("/api/v1/evidence?limit=1")
+        assert len(data["records"]) <= 1
+
+
+# ---------------------------------------------------------------------------
+# Phase 3: Schedule API
+# ---------------------------------------------------------------------------
+class TestScheduleAPI:
+    def test_schedule_list(self, server):
+        """GET /api/v1/browser/schedules → returns schedules list."""
+        data = get_json("/api/v1/browser/schedules")
+        assert "schedules" in data
+        assert isinstance(data["schedules"], list)
+
+    def test_schedule_create(self, server):
+        """POST /api/v1/browser/schedules → creates schedule, returns id."""
+        data = post_json("/api/v1/browser/schedules", {
+            "app_id": "gmail-inbox-triage",
+            "cron": "0 9 * * 1-5",
+            "url": "https://mail.google.com",
+        })
+        assert "id" in data
+        assert data["app_id"] == "gmail-inbox-triage"
+        assert data["cron"] == "0 9 * * 1-5"
+        assert data["enabled"] is True
+
+    def test_schedule_appears_in_list(self, server):
+        """Created schedule appears in GET /api/v1/browser/schedules."""
+        created = post_json("/api/v1/browser/schedules", {
+            "app_id": "linkedin-poster",
+            "cron": "0 10 * * 1",
+            "url": "https://linkedin.com",
+        })
+        data = get_json("/api/v1/browser/schedules")
+        ids = [s["id"] for s in data["schedules"]]
+        assert created["id"] in ids
+
+    def test_schedule_delete(self, server):
+        """DELETE /api/v1/browser/schedules/{id} → removes schedule."""
+        created = post_json("/api/v1/browser/schedules", {
+            "app_id": "twitter-poster",
+            "cron": "0 8 * * *",
+            "url": "https://twitter.com",
+        })
+        status, data = delete_json(f"/api/v1/browser/schedules/{created['id']}")
+        assert status == 200
+        assert data["deleted"] == created["id"]
+
+    def test_schedule_delete_not_found(self, server):
+        """DELETE non-existent schedule → 404."""
+        status, data = delete_json("/api/v1/browser/schedules/nonexistent-id")
+        assert status == 404
+
+    def test_schedule_missing_app_id_400(self, server):
+        """POST /api/v1/browser/schedules without app_id → 400."""
+        body = json.dumps({"cron": "0 9 * * *"}).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/browser/schedules",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            pytest.fail("Expected 400")
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 400
+
+
+# ---------------------------------------------------------------------------
+# Phase 3: OAuth3 Token API
+# ---------------------------------------------------------------------------
+class TestOAuth3API:
+    def test_oauth3_list(self, server):
+        """GET /api/v1/oauth3/tokens → returns tokens list."""
+        data = get_json("/api/v1/oauth3/tokens")
+        assert "tokens" in data
+        assert isinstance(data["tokens"], list)
+
+    def test_oauth3_register(self, server):
+        """POST /api/v1/oauth3/tokens → registers token metadata (no plaintext)."""
+        data = post_json("/api/v1/oauth3/tokens", {
+            "scope": "gmail.readonly",
+            "service": "google",
+            "token_sha256": "a" * 64,
+        })
+        assert "id" in data
+        assert data["scope"] == "gmail.readonly"
+        assert "token_sha256" not in data, "token_sha256 must not be echoed back"
+
+    def test_oauth3_register_appears_in_list(self, server):
+        """Registered token appears in GET list (without sha256)."""
+        created = post_json("/api/v1/oauth3/tokens", {
+            "scope": "linkedin.write",
+            "service": "linkedin",
+            "token_sha256": "b" * 64,
+        })
+        data = get_json("/api/v1/oauth3/tokens")
+        ids = [t["id"] for t in data["tokens"]]
+        assert created["id"] in ids
+        # Verify no token_sha256 in list response
+        for t in data["tokens"]:
+            assert "token_sha256" not in t
+
+    def test_oauth3_revoke(self, server):
+        """DELETE /api/v1/oauth3/tokens/{id} → revokes token."""
+        created = post_json("/api/v1/oauth3/tokens", {
+            "scope": "twitter.write",
+            "service": "twitter",
+            "token_sha256": "c" * 64,
+        })
+        status, data = delete_json(f"/api/v1/oauth3/tokens/{created['id']}")
+        assert status == 200
+        assert data["revoked"] == created["id"]
+
+    def test_oauth3_revoke_not_found(self, server):
+        """DELETE non-existent token → 404."""
+        status, data = delete_json("/api/v1/oauth3/tokens/nonexistent-id")
+        assert status == 404
+
+    def test_start_endpoint(self, server):
+        """GET /start → returns 200 with HTML."""
+        req = urllib.request.Request(f"{BASE_URL}/start")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            content = resp.read().decode()
+            assert "html" in content.lower()
+
+    def test_health_includes_evidence_count(self, server):
+        """GET /health → includes evidence_count and schedule_count."""
+        data = get_json("/health")
+        assert "evidence_count" in data
+        assert "schedule_count" in data
+        assert isinstance(data["evidence_count"], int)
+        assert isinstance(data["schedule_count"], int)
