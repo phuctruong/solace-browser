@@ -161,7 +161,29 @@ function setConnectionStatus(state) {
   if (state === 'connecting') dot.classList.add('connecting');
 }
 
+// --- Error Code UX Mapping ---
+// Maps server error codes to user-facing messages and actions.
+const ERROR_UX = {
+  INVALID_JSON:     { text: 'Message format error. Try again.',         icon: 'warning' },
+  INVALID_MESSAGE:  { text: 'Invalid request. Check your input.',       icon: 'warning' },
+  UNKNOWN_TYPE:     { text: 'Unknown command.',                         icon: 'warning' },
+  RATE_LIMITED:     { text: 'Too many requests. Please wait a moment.', icon: 'error'   },
+  ORIGIN_REJECTED:  { text: 'Connection rejected — unauthorized.',      icon: 'error'   },
+  VERSION_MISMATCH: { text: 'Extension update required. Please reload.', icon: 'error'  },
+  NOT_FOUND:        { text: 'Resource not found.',                      icon: 'warning' },
+  INVALID_STATE:    { text: 'Action not available right now.',          icon: 'warning' },
+  MISSING_FIELD:    { text: 'Missing required information.',            icon: 'warning' },
+  INTERNAL_ERROR:   { text: 'Server error. Retrying...',               icon: 'error'   },
+};
+
 function handleWsMessage(msg) {
+  // Handle structured error responses with UX-mapped messages
+  if (msg.type === 'error' && msg.code) {
+    const ux = ERROR_UX[msg.code] || { text: msg.payload?.message || 'Unknown error', icon: 'error' };
+    showToast(ux.text, ux.icon);
+    announce(ux.text, msg.code === 'RATE_LIMITED' ? 'assertive' : 'polite');
+    return;
+  }
   if (msg.type === 'chat' || msg.type === 'chat_reply') {
     const content = msg.payload && msg.payload.content ? msg.payload.content : (msg.message || '');
     if (content) {

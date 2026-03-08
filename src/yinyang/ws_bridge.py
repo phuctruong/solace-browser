@@ -502,7 +502,7 @@ class YinyangWSBridge:
 
     @staticmethod
     def _redact_pii(text: str) -> str:
-        """Redact common PII patterns from text. Uses regex only (no external deps).
+        """Redact PII patterns from text. Uses regex only (no external deps).
 
         Redacts:
           - Email addresses → [EMAIL]
@@ -510,7 +510,29 @@ class YinyangWSBridge:
           - Phone numbers (US/international) → [PHONE]
           - Credit card numbers (16 digits, optional separators) → [CARD]
           - IPv4 addresses → [IP]
+          - JWTs (3 base64url segments) → [JWT]
+          - API keys (sk-*, pk-*, key-*, api-* prefixed) → [API_KEY]
+          - Bearer tokens in Authorization-like contexts → [BEARER]
+          - Query-string secrets (?key=, ?token=, ?secret=, ?password=) → [QUERY_SECRET]
         """
+        # JWT (three base64url segments separated by dots, each ≥10 chars)
+        text = re.sub(
+            r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b",
+            "[JWT]",
+            text,
+        )
+        # API keys (common prefixes: sk-, pk-, key-, api-, AKIA for AWS)
+        text = re.sub(
+            r"\b(?:sk|pk|key|api|AKIA)[_\-][A-Za-z0-9_\-]{16,}\b",
+            "[API_KEY]",
+            text,
+        )
+        # Bearer tokens (Bearer <token> pattern)
+        text = re.sub(
+            r"(?i)\bBearer\s+[A-Za-z0-9_\-.~+/]{20,}\b",
+            "[BEARER]",
+            text,
+        )
         # Email
         text = re.sub(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}", "[EMAIL]", text)
         # SSN (must precede phone to avoid partial match)
@@ -528,6 +550,13 @@ class YinyangWSBridge:
             r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b",
             "[IP]",
             text,
+        )
+        # Query-string secrets (?key=value, &token=value, etc.)
+        text = re.sub(
+            r"(?<=[?&])(?:key|token|secret|password|api_key|access_token|auth)=[^&\s]{4,}",
+            lambda m: m.group(0).split("=")[0] + "=[QUERY_SECRET]",
+            text,
+            flags=re.IGNORECASE,
         )
         return text
 

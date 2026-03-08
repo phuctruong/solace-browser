@@ -213,11 +213,39 @@ class TestPIIRedaction:
     def test_pii_redaction_in_chat(self):
         """Chat handler should use PII-redacted content for LLM."""
         bridge = YinyangWSBridge()
-        # The _local_response is called with redacted content
         original = "email me at user@test.com"
         redacted = bridge._redact_pii(original)
         assert "[EMAIL]" in redacted
         assert "user@test.com" not in redacted
+
+    def test_jwt_redacted(self):
+        """JWT tokens (3 base64url segments) should be redacted."""
+        jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+        result = YinyangWSBridge._redact_pii(f"token: {jwt}")
+        assert "[JWT]" in result
+        assert "eyJhbG" not in result
+
+    def test_api_key_redacted(self):
+        """API keys with common prefixes (sk-, pk-, key-, api-) should be redacted."""
+        result = YinyangWSBridge._redact_pii("key: sk-1234567890abcdefghij")
+        assert "[API_KEY]" in result
+        assert "sk-1234" not in result
+
+    def test_bearer_token_redacted(self):
+        """Bearer tokens should be redacted."""
+        result = YinyangWSBridge._redact_pii("Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9abcdef")
+        assert "[BEARER]" in result
+
+    def test_query_string_secrets_redacted(self):
+        """Query string secrets (?key=, ?token=, ?secret=) should be redacted."""
+        result = YinyangWSBridge._redact_pii("https://api.example.com?api_key=sk123456789&token=abc123def456")
+        assert "[QUERY_SECRET]" in result
+        assert "sk123456789" not in result
+
+    def test_aws_key_redacted(self):
+        """AWS access keys (AKIA prefix) should be redacted."""
+        result = YinyangWSBridge._redact_pii("aws key: AKIA_IOSFODNN7EXAMPLE12345")
+        assert "[API_KEY]" in result
 
 
 # ---------------------------------------------------------------------------
@@ -1637,3 +1665,73 @@ class TestCrossLayerSelectorContracts:
         html, _, _ = self._load_extension_files()
         dangerous = re.findall(r'\bon(?:click|load|error|submit|change|focus|blur)\s*=', html, re.IGNORECASE)
         assert len(dangerous) == 0, f"Found inline event handlers in HTML: {dangerous}"
+
+
+# ---------------------------------------------------------------------------
+# GLOW 213 — Dialog Semantics, Error UX, PII Expansion, Perf Baseline
+# ---------------------------------------------------------------------------
+
+
+class TestConsentDialogSemantics:
+    """Consent section must have full dialog semantics (aria-modal, aria-labelledby)."""
+
+    def test_consent_has_dialog_role(self):
+        html = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.html").read_text()
+        assert 'role="dialog"' in html
+
+    def test_consent_has_aria_modal(self):
+        html = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.html").read_text()
+        assert 'aria-modal="true"' in html
+
+    def test_consent_has_aria_labelledby(self):
+        html = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.html").read_text()
+        assert 'aria-labelledby="consent-title"' in html
+
+    def test_consent_title_has_matching_id(self):
+        html = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.html").read_text()
+        assert 'id="consent-title"' in html
+
+
+class TestErrorCodeUXMapping:
+    """Client-side error-code → user-facing message mapping in sidepanel.js."""
+
+    def test_error_ux_dict_exists(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.js").read_text()
+        assert "ERROR_UX" in js
+
+    def test_all_error_codes_mapped(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.js").read_text()
+        for code in ["INVALID_JSON", "INVALID_MESSAGE", "UNKNOWN_TYPE", "RATE_LIMITED",
+                      "ORIGIN_REJECTED", "VERSION_MISMATCH", "NOT_FOUND", "INVALID_STATE",
+                      "MISSING_FIELD", "INTERNAL_ERROR"]:
+            assert code in js, f"Error code {code} not mapped in ERROR_UX"
+
+    def test_error_handler_uses_ux_mapping(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.js").read_text()
+        assert "ERROR_UX[msg.code]" in js or "ERROR_UX[" in js
+
+    def test_error_handler_announces_for_screen_readers(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.js").read_text()
+        # Error handler should call announce() for screen reader users
+        assert "announce(ux.text" in js or "announce(" in js
+
+
+class TestPerfBaseline:
+    """Performance baseline file must exist with threshold definitions."""
+
+    def test_perf_baseline_file_exists(self):
+        baseline = Path(__file__).parent / "perf_baseline.json"
+        assert baseline.exists(), "tests/perf_baseline.json must exist"
+
+    def test_perf_baseline_has_required_metrics(self):
+        import json
+        baseline = json.loads((Path(__file__).parent / "perf_baseline.json").read_text())
+        assert "baselines" in baseline
+        for metric in ["dom_fingerprint", "ws_round_trip", "pii_redaction"]:
+            assert metric in baseline["baselines"], f"Missing baseline metric: {metric}"
+            assert "threshold_ms" in baseline["baselines"][metric]
+
+    def test_perf_baseline_has_regression_policy(self):
+        import json
+        baseline = json.loads((Path(__file__).parent / "perf_baseline.json").read_text())
+        assert "regression_policy" in baseline

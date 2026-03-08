@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "created": "2026-03-08",
+  "description": "Performance regression baseline — CI should fail if p95 exceeds threshold",
+  "baselines": {
+    "dom_fingerprint": {
+      "description": "DOM fingerprint calculation on a 5000-node DOM",
+      "p50_ms": 15,
+      "p95_ms": 50,
+      "threshold_ms": 100,
+      "measurement": "time to compute SHA-256 of serialized DOM snapshot"
+    },
+    "ws_round_trip": {
+      "description": "WebSocket heartbeat round-trip (localhost)",
+      "p50_ms": 2,
+      "p95_ms": 10,
+      "threshold_ms": 50,
+      "measurement": "time from ws.send(heartbeat) to response received"
+    },
+    "pii_redaction": {
+      "description": "PII redaction on 10KB text with 20 PII instances",
+      "p50_ms": 1,
+      "p95_ms": 5,
+      "threshold_ms": 20,
+      "measurement": "time to run _redact_pii on mixed PII text"
+    },
+    "ipc_validation": {
+      "description": "IPC schema validation for all 9 message types",
+      "p50_ms": 0.1,
+      "p95_ms": 0.5,
+      "threshold_ms": 2,
+      "measurement": "time to validate a message against _MESSAGE_SCHEMAS"
+    }
+  },
+  "regression_policy": {
+    "fail_ci_on": "any p95 exceeds threshold_ms by 2x",
+    "alert_on": "any p95 exceeds threshold_ms",
+    "rebaseline_when": "hardware change or intentional algorithm change"
+  }
+}

@@ -46,21 +46,21 @@
   },
   "deferred_to_v1_1": [
     "Dynamic port discovery (8888-8899)",
-    "PII regex expansion (international formats, JWTs, API keys)",
-    "Focus trap → full dialog semantics (aria-modal, aria-labelledby)",
+    "PII regex expansion — DONE in GLOW 213 (JWT, API keys, bearer, query secrets)",
+    "Focus trap → full dialog semantics — DONE in GLOW 213 (aria-modal, aria-labelledby, aria-describedby)",
     "Protocol version negotiation for Tauri IPC",
     "Per-message-type rate limits",
     "Per-IP rate limiting — DONE in GLOW 212 (request.remote → _ip_rate_limiters dict)",
     "Incognito mode handling",
     "Vector clocks for multi-agent",
-    "Structured error taxonomy → client-side error-code UX mapping",
+    "Structured error taxonomy → client-side error-code UX mapping — DONE in GLOW 213 (ERROR_UX dict + announce)",
     "Trusted Types / ESLint DOM sink rules",
-    "Performance baseline (tests/perf_baseline.json)",
+    "Performance baseline — DONE in GLOW 213 (tests/perf_baseline.json with 4 metrics + CI policy)",
     "ICO hash sync (GLOW-v1.1-ico-sync)"
   ],
   "test_results": {
-    "pytest_rethink_qa": "214/214 PASS",
-    "full_browser_suite": "5686/5686 PASS (0 fail, 23 skip — all documented)",
+    "pytest_rethink_qa": "231/231 PASS",
+    "full_browser_suite": "5703/5703 PASS (0 fail, 23 skip — all documented)",
     "live_qa_probes": "98/98 PASS (100%)",
     "server_status": "Running on port 8888 (head-hidden mode)"
   }
