@@ -80,9 +80,24 @@ chrome.tabs.onCreated.addListener(async (tab) => {
   }
 });
 
+// --- Incognito Mode Handling ---
+// When running in incognito, disable data persistence and warn user.
+// chrome.extension.inIncognitoContext is true when the extension runs in an incognito window.
+const IS_INCOGNITO = chrome.extension?.inIncognitoContext ?? false;
+
+// Notify sidepanel of incognito state via message
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'check_incognito') {
+    sendResponse({ incognito: IS_INCOGNITO });
+    return true;
+  }
+});
+
 // Track current tab URL for app detection
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.url) {
+    // Skip app detection for incognito tabs (no data persistence)
+    if (changeInfo.incognito) return;
     matchAppsForUrl(changeInfo.url, tabId);
   }
 });

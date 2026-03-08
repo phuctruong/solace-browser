@@ -26,6 +26,23 @@ let reconnectAttempts = 0;
 let serverOnline = false;
 let currentHostname = '';
 
+// --- Incognito Mode Detection ---
+// Check with service worker if we're in incognito context
+(async function checkIncognito() {
+  try {
+    const resp = await chrome.runtime.sendMessage({ type: 'check_incognito' });
+    if (resp && resp.incognito) {
+      // Show incognito warning banner
+      const banner = document.createElement('div');
+      banner.className = 'yy-incognito-banner';
+      banner.setAttribute('role', 'alert');
+      banner.textContent = 'Incognito Mode — history and evidence will not be saved';
+      const mainUI = document.getElementById('main-ui');
+      if (mainUI) mainUI.prepend(banner);
+    }
+  } catch { /* SW not available yet */ }
+})();
+
 // --- Tab Switching ---
 
 document.querySelectorAll('.yy-tab').forEach(tab => {

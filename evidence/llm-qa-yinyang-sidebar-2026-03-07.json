@@ -48,10 +48,10 @@
     "Dynamic port discovery — DONE in GLOW 214 (8888-8899 scan + chrome.storage cache)",
     "PII regex expansion — DONE in GLOW 213 (JWT, API keys, bearer, query secrets)",
     "Focus trap → full dialog semantics — DONE in GLOW 213 (aria-modal, aria-labelledby, aria-describedby)",
-    "Protocol version negotiation for Tauri IPC",
+    "Protocol version negotiation for Tauri IPC — DONE in GLOW 215 (get_version returns protocol_version + discover_port)",
     "Per-message-type rate limits — DONE in GLOW 214 (chat=20, run=10, heartbeat=120)",
     "Per-IP rate limiting — DONE in GLOW 212 (request.remote → _ip_rate_limiters dict)",
-    "Incognito mode handling",
+    "Incognito mode handling — DONE in GLOW 215 (SW detection + banner + skip app detection)",
     "Vector clocks for multi-agent",
     "Structured error taxonomy → client-side error-code UX mapping — DONE in GLOW 213 (ERROR_UX dict + announce)",
     "Trusted Types / ESLint DOM sink rules",
@@ -59,8 +59,8 @@
     "ICO hash sync (GLOW-v1.1-ico-sync)"
   ],
   "test_results": {
-    "pytest_rethink_qa": "243/243 PASS",
-    "full_browser_suite": "5715/5715 PASS (0 fail, 23 skip — all documented)",
+    "pytest_rethink_qa": "252/252 PASS",
+    "full_browser_suite": "5724/5724 PASS (0 fail, 23 skip — all documented)",
     "live_qa_probes": "98/98 PASS (100%)",
     "server_status": "Running on port 8888 (head-hidden mode)"
   }

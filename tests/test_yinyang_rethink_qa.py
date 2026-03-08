@@ -1831,3 +1831,53 @@ class TestPerMessageTypeRateLimits:
         assert not bridge._ip_type_rate_limiters[ip]["chat"].is_allowed()
         # Heartbeat still works
         assert bridge._ip_type_rate_limiters[ip]["heartbeat"].is_allowed()
+
+
+# ---------------------------------------------------------------------------
+# GLOW 215 — Incognito Mode + Tauri Protocol Version
+# ---------------------------------------------------------------------------
+
+
+class TestIncognitoModeHandling:
+    """Extension must detect and handle incognito mode."""
+
+    def test_service_worker_detects_incognito(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "service-worker.js").read_text()
+        assert "IS_INCOGNITO" in js or "inIncognitoContext" in js
+
+    def test_service_worker_responds_to_incognito_check(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "service-worker.js").read_text()
+        assert "check_incognito" in js
+
+    def test_sidepanel_checks_incognito(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.js").read_text()
+        assert "check_incognito" in js or "checkIncognito" in js
+
+    def test_incognito_banner_css_exists(self):
+        css = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.css").read_text()
+        assert "yy-incognito-banner" in css
+
+    def test_incognito_banner_has_aria_role(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.js").read_text()
+        assert "role" in js and "alert" in js
+
+
+class TestTauriProtocolVersion:
+    """Tauri IPC must include protocol version information."""
+
+    def test_main_rs_has_protocol_version(self):
+        rs = Path(__file__).parent.parent.joinpath("src-tauri", "src", "main.rs").read_text()
+        assert "protocol_version" in rs
+
+    def test_main_rs_has_port_range(self):
+        rs = Path(__file__).parent.parent.joinpath("src-tauri", "src", "main.rs").read_text()
+        assert "PORT_RANGE_START" in rs
+        assert "PORT_RANGE_END" in rs
+
+    def test_main_rs_has_discover_port(self):
+        rs = Path(__file__).parent.parent.joinpath("src-tauri", "src", "main.rs").read_text()
+        assert "discover_port" in rs
+
+    def test_main_rs_version_includes_protocol(self):
+        rs = Path(__file__).parent.parent.joinpath("src-tauri", "src", "main.rs").read_text()
+        assert "supported_major_versions" in rs

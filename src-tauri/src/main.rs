@@ -62,26 +62,59 @@ fn setup_complete(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-/// Returns the current version string (from Cargo.toml / tauri.conf.json).
+/// Returns the current version string and protocol version.
+/// Protocol version negotiation: matches PROTOCOL_VERSION in ws_bridge.py.
 #[tauri::command]
-fn get_version() -> String {
-    env!("CARGO_PKG_VERSION").to_string()
+fn get_version() -> serde_json::Value {
+    serde_json::json!({
+        "app_version": env!("CARGO_PKG_VERSION"),
+        "protocol_version": "1.0",
+        "supported_major_versions": [1]
+    })
 }
 
-/// Returns whether the Python server is reachable.
+/// Port range for dynamic discovery (matches extension constants.js).
+const PORT_RANGE_START: u16 = 8888;
+const PORT_RANGE_END: u16 = 8899;
+
+/// Discover the active server port by scanning 8888-8899.
+async fn discover_port() -> Option<u16> {
+    for port in PORT_RANGE_START..=PORT_RANGE_END {
+        let url = format!("http://localhost:{}/api/health", port);
+        if let Ok(resp) = reqwest::Client::new()
+            .get(&url)
+            .timeout(Duration::from_secs(1))
+            .send()
+            .await
+        {
+            if resp.status().is_success() {
+                return Some(port);
+            }
+        }
+    }
+    None
+}
+
+/// Returns whether the Python server is reachable (with dynamic port discovery).
 #[tauri::command]
 async fn server_health() -> bool {
-    is_server_ready("http://localhost:8888/api/health", 1).await
+    discover_port().await.is_some()
 }
 
 /// Returns full server status including mode, running state, and version.
+/// Uses dynamic port discovery to find the active server.
 #[tauri::command]
 async fn server_status() -> Result<serde_json::Value, String> {
-    match reqwest::get("http://localhost:8888/api/health").await {
+    let port = discover_port().await.ok_or("Server unreachable on ports 8888-8899")?;
+    let url = format!("http://localhost:{}/api/health", port);
+    match reqwest::get(&url).await {
         Ok(resp) => {
             if resp.status().is_success() {
                 match resp.json::<serde_json::Value>().await {
-                    Ok(data) => Ok(data),
+                    Ok(mut data) => {
+                        data["port"] = serde_json::json!(port);
+                        Ok(data)
+                    }
                     Err(e) => Err(format!("Failed to parse response: {}", e)),
                 }
             } else {
@@ -95,7 +128,9 @@ async fn server_status() -> Result<serde_json::Value, String> {
 /// Returns the list of active browser sessions from the Python server.
 #[tauri::command]
 async fn list_sessions() -> Result<serde_json::Value, String> {
-    match reqwest::get("http://localhost:8888/api/sessions").await {
+    let port = discover_port().await.unwrap_or(PORT_RANGE_START);
+    let url = format!("http://localhost:{}/api/sessions", port);
+    match reqwest::get(&url).await {
         Ok(resp) => {
             if resp.status().is_success() {
                 resp.json::<serde_json::Value>()
@@ -143,8 +178,16 @@ async fn restart_server(app: AppHandle, state: State<'_, ServerProcess>) -> Resu
         *lock = child;
     }
 
-    // Wait for server to come back
-    let ready = is_server_ready("http://localhost:8888/api/health", 10).await;
+    // Wait for server to come back (scan port range)
+    let mut ready = false;
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while Instant::now() < deadline {
+        if discover_port().await.is_some() {
+            ready = true;
+            break;
+        }
+        thread::sleep(Duration::from_millis(200));
+    }
     if ready {
         Ok("Server restarted successfully".to_string())
     } else {
@@ -238,33 +281,26 @@ async fn is_server_ready(url: &str, timeout_secs: u64) -> bool {
 }
 
 /// Wait for the Python server to become ready (up to 15 seconds).
-async fn wait_for_server(app: &AppHandle) {
-    let url = "http://localhost:8888/api/health";
+/// Uses dynamic port discovery to scan 8888-8899.
+async fn wait_for_server(_app: &AppHandle) {
     let timeout = 15u64;
 
-    log::info!("Waiting for Python server at {}", url);
+    log::info!("Waiting for Python server on ports {}-{}", PORT_RANGE_START, PORT_RANGE_END);
 
     let deadline = Instant::now() + Duration::from_secs(timeout);
-    let mut ready = false;
 
     while Instant::now() < deadline {
-        if let Ok(resp) = reqwest::get(url).await {
-            if resp.status().is_success() {
-                ready = true;
-                break;
-            }
+        if let Some(port) = discover_port().await {
+            log::info!("Python server is ready on port {}", port);
+            return;
         }
         thread::sleep(Duration::from_millis(300));
     }
 
-    if !ready {
-        log::warn!(
-            "Python server did not respond within {}s — opening UI anyway",
-            timeout
-        );
-    } else {
-        log::info!("Python server is ready");
-    }
+    log::warn!(
+        "Python server did not respond within {}s — opening UI anyway",
+        timeout
+    );
 }
 
 // ---------------------------------------------------------------------------
