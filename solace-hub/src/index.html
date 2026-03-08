@@ -1034,6 +1034,12 @@
       </div>
     </div>
 
+    <!-- ── Task 027: App Launcher ── -->
+    <div class="card" id="app-launcher-panel">
+      <h2>App Launcher <span id="app-count-badge" style="font-size:12px;color:var(--text-muted);font-weight:400;"></span></h2>
+      <div id="app-launcher-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;"></div>
+    </div>
+
     <!-- ── Task 026: AI Chat Panel ── -->
     <div class="card" id="chat-panel">
       <h2>AI Chat</h2>
@@ -2476,6 +2482,46 @@
       }
     }
     connectChatWs();
+
+    // ── Task 027: App Launcher ────────────────────────────────────────────
+    async function refreshAppLauncher() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/apps');
+        const data = await r.json();
+        const grid = document.getElementById('app-launcher-grid');
+        const badge = document.getElementById('app-count-badge');
+        if (!grid) return;
+        if (badge) badge.textContent = `(${data.total || 0} apps)`;
+        if (!data.apps || data.apps.length === 0) {
+          grid.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No apps loaded.</div>';
+          return;
+        }
+        grid.innerHTML = data.apps.map(app => `
+          <div style="border:1px solid var(--border);border-radius:var(--radius);padding:10px;text-align:center;">
+            <div style="font-size:20px;margin-bottom:4px;">🤖</div>
+            <div style="font-size:11px;font-weight:600;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${app.name}">${app.name}</div>
+            <button class="hub-btn hub-btn-sm" onclick="launchApp('${app.id}')">Launch</button>
+          </div>`).join('');
+      } catch (_) {}
+    }
+    async function launchApp(appId) {
+      try {
+        const r = await fetch(`http://localhost:8888/api/v1/apps/${appId}/launch`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${HUB_TOKEN}` },
+        });
+        const data = await r.json();
+        if (data.status === 'launched') {
+          const label = document.createElement('div');
+          label.textContent = `✓ ${appId} launched`;
+          label.style.cssText = 'color:var(--green);font-size:12px;padding:4px;';
+          const grid = document.getElementById('app-launcher-grid');
+          if (grid) { grid.prepend(label); setTimeout(() => label.remove(), 3000); }
+        }
+      } catch (_) {}
+    }
+    refreshAppLauncher();
+    setInterval(refreshAppLauncher, 60_000);
   </script>
 
 </body>

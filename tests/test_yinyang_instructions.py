@@ -2159,3 +2159,36 @@ class TestChatWebSocket:
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "chat" in html.lower()
         assert "ws/chat" in html or "ws://localhost" in html
+
+
+# ── Task 027: App Launcher ────────────────────────────────────────────────────
+
+class TestAppLauncher:
+    def test_apps_list(self, auth_server):
+        status, data = _get_json_auth("/api/v1/apps")
+        assert status == 200
+        assert "apps" in data
+        assert isinstance(data["apps"], list)
+        assert "total" in data
+
+    def test_app_detail_not_found(self, auth_server):
+        status, data = _get_json_auth("/api/v1/apps/nonexistent-app-xyz-999")
+        assert status == 404
+
+    def test_app_launch_requires_auth(self, auth_server):
+        body = b""
+        req = urllib.request.Request(
+            f"{AUTH_BASE}/api/v1/apps/gmail/launch",
+            data=body, method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req):
+                pass
+            assert False, "expected 401"
+        except urllib.error.HTTPError as e:
+            assert e.code == 401
+
+    def test_app_launch_not_found(self, auth_server):
+        status, data = _post_with_auth("/api/v1/apps/nonexistent-app-xyz-999/launch", {})
+        assert status == 404

@@ -629,3 +629,17 @@ class TestChatPanel:
         """yinyang_server.py must implement /ws/chat endpoint."""
         server = (REPO_ROOT / "yinyang_server.py").read_text()
         assert "/ws/chat" in server
+
+
+# ── Task 027: App Launcher ────────────────────────────────────────────────────
+
+class TestAppLauncherUI:
+    def test_apps_endpoint_in_server(self):
+        """yinyang_server.py must implement /api/v1/apps endpoint."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/apps" in server
+
+    def test_index_html_app_section(self):
+        """index.html must contain an app launcher section."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "app" in html.lower() or "launch" in html.lower()

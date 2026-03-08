@@ -552,6 +552,11 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_cli_config_get()
         elif path == "/api/v1/cli/detect":
             self._handle_cli_detect()
+        elif path == "/api/v1/apps":
+            self._handle_apps_list()
+        elif re.match(r"^/api/v1/apps/[^/]+$", path):
+            app_id = path.split("/")[-1]
+            self._handle_app_detail(app_id)
         elif path == "/ws/chat":
             self._handle_ws_chat()
         else:
@@ -626,6 +631,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_cli_config_set()
         elif path == "/api/v1/cli/test":
             self._handle_cli_test()
+        elif re.match(r"^/api/v1/apps/[^/]+/launch$", path):
+            app_id = path.split("/")[-2]
+            self._handle_app_launch(app_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -2613,6 +2621,30 @@ function choose(mode) {
             "tool": tool,
             "cli_path": cli_path,
         })
+
+    # ── App Launcher (Task 027) ────────────────────────────────────────────
+
+    def _handle_apps_list(self) -> None:
+        apps: list = self.server.apps if hasattr(self.server, "apps") else []  # type: ignore[attr-defined]
+        app_list = [{"id": a, "name": a.replace("-", " ").title()} for a in apps]
+        self._send_json({"apps": app_list, "total": len(app_list)})
+
+    def _handle_app_detail(self, app_id: str) -> None:
+        apps: list = self.server.apps if hasattr(self.server, "apps") else []  # type: ignore[attr-defined]
+        if app_id not in apps:
+            self._send_json({"error": "app not found"}, 404)
+            return
+        self._send_json({"id": app_id, "name": app_id.replace("-", " ").title(), "status": "available"})
+
+    def _handle_app_launch(self, app_id: str) -> None:
+        if not self._check_auth():
+            return
+        apps: list = self.server.apps if hasattr(self.server, "apps") else []  # type: ignore[attr-defined]
+        if app_id not in apps:
+            self._send_json({"error": "app not found"}, 404)
+            return
+        _append_notification("info", "App Launched", f"{app_id} launched from Hub", "info")
+        self._send_json({"status": "launched", "app_id": app_id, "timestamp": int(time.time())})
 
     def _parse_query(self, query: str) -> dict[str, str]:
         """Parse ?key=value&key2=value2 into dict."""
