@@ -687,8 +687,13 @@ class TestSecurityHardening:
         try:
             urllib.request.urlopen(req, timeout=5)
             pytest.fail("Expected 413 for body > MAX_BODY")
-        except urllib.error.URLError as exc:
+        except urllib.error.HTTPError as exc:
             assert exc.code == 413, f"Expected 413, got {exc.code}"
+        except urllib.error.URLError as exc:
+            # Server closes connection mid-transfer (BrokenPipe) — also valid rejection
+            assert "Broken pipe" in str(exc.reason) or "reset" in str(exc.reason).lower(), (
+                f"Expected BrokenPipe or reset, got: {exc.reason}"
+            )
 
     def test_url_domain_spoofing_blocked(self, server):
         """detect with evil.com/mail.google.com/ path → no gmail apps (netloc check)."""
