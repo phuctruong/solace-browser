@@ -760,3 +760,18 @@ class TestShortcutsUI:
         """index.html must reference shortcuts or keyboard."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "shortcut" in html.lower() or "keyboard" in html.lower()
+
+
+# ── Task 036: System Status Banner ───────────────────────────────────────────
+
+class TestSystemStatusUI:
+    def test_system_status_in_server(self):
+        """yinyang_server.py must implement /api/v1/system/status."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/system/status" in server
+        assert "_SERVER_VERSION" in server
+
+    def test_version_in_html(self):
+        """index.html must reference version or system."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "version" in html.lower() or "system" in html.lower()

@@ -723,6 +723,11 @@
         <div class="dot grey" id="server-dot"></div>
         <span class="status-label" id="server-status">Checking…</span>
       </div>
+      <!-- System version + features (Task 036) -->
+      <div style="margin-top:8px;font-size:11px;color:var(--text-muted);">
+        Version: <span id="system-version">—</span> &nbsp;|&nbsp; Uptime: <span id="system-uptime">—</span>
+      </div>
+      <div id="system-features" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;font-size:10px;"></div>
     </div>
 
     <!-- Onboarding status -->
@@ -2657,6 +2662,27 @@
     }
     refreshWatchdog();
     setInterval(refreshWatchdog, 30_000);
+
+    // System status (Task 036)
+    async function refreshSystemStatus() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/system/status', { signal: AbortSignal.timeout(3000) });
+        if (!r.ok) return;
+        const d = await r.json();
+        const ver = document.getElementById('system-version');
+        const upt = document.getElementById('system-uptime');
+        const feat = document.getElementById('system-features');
+        if (ver) { ver.textContent = d.version || '—'; }
+        if (upt) { upt.textContent = formatUptime(d.uptime_seconds || 0); }
+        if (feat && d.features) {
+          feat.innerHTML = Object.entries(d.features)
+            .map(([k, v]) => `<span style="padding:1px 5px;border-radius:3px;background:${v ? 'var(--green)' : 'var(--border)'};color:${v ? '#fff' : 'var(--text-muted)'};">${k}</span>`)
+            .join('');
+        }
+      } catch (_) {}
+    }
+    refreshSystemStatus();
+    setInterval(refreshSystemStatus, 60_000);
 
     // Keyboard shortcuts (Task 035)
     function toggleShortcuts() {

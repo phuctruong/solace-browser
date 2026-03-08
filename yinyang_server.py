@@ -578,6 +578,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_usage_stats(query)
         elif path == "/api/v1/shortcuts":
             self._handle_shortcuts()
+        elif path == "/api/v1/system/status":
+            self._handle_system_status()
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -1917,6 +1919,24 @@ function choose(mode) {
                 CLI_CONFIG_PATH.write_text(json.dumps(body["cli_config"], indent=2))
             imported.append("cli_config")
         self._send_json({"status": "imported", "imported": imported})
+
+    # --- Task 036: System status handler ---
+
+    def _handle_system_status(self) -> None:
+        """GET /api/v1/system/status — server version + feature flags. Task 036."""
+        self._send_json({
+            "status": "ok",
+            "version": _SERVER_VERSION,
+            "uptime_seconds": int(time.time() - _SERVER_START_TIME),
+            "features": {
+                "oauth3": True,
+                "evidence": True,
+                "budget": True,
+                "byok": True,
+                "recipes": True,
+                "websocket": True,
+            },
+        })
 
     # --- Task 035: Keyboard shortcuts handler ---
 

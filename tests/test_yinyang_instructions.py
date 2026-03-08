@@ -2417,3 +2417,21 @@ class TestShortcuts:
         for s in data["shortcuts"]:
             assert "key" in s
             assert "description" in s
+
+
+# ── Task 036: System Status Banner ───────────────────────────────────────────
+
+class TestSystemStatus:
+    def test_system_status(self, auth_server):
+        status, data = _get_json_auth("/api/v1/system/status")
+        assert status == 200
+        assert data["status"] == "ok"
+        assert "version" in data
+        assert "uptime_seconds" in data
+        assert "features" in data
+
+    def test_system_features(self, auth_server):
+        status, data = _get_json_auth("/api/v1/system/status")
+        assert status == 200
+        assert "oauth3" in data["features"]
+        assert "evidence" in data["features"]
