@@ -516,6 +516,8 @@ def auth_server(tmp_path_factory, monkeypatch_module):
 
     byok_path = tmp / "byok_keys.json"
     notifications_path = tmp / "notifications.json"
+    profiles_path = tmp / "profiles.json"
+    active_profile_path = tmp / "active_profile.json"
 
     original_lock = ys.PORT_LOCK_PATH
     original_evidence = ys.EVIDENCE_PATH
@@ -525,6 +527,8 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     original_recipe_runs = ys.RECIPE_RUNS_PATH
     original_byok = ys.BYOK_PATH
     original_notifications = ys.NOTIFICATIONS_PATH
+    original_profiles = ys.PROFILES_PATH
+    original_active_profile = ys.ACTIVE_PROFILE_PATH
 
     ys.PORT_LOCK_PATH = lock_path
     ys.EVIDENCE_PATH = evidence_path
@@ -534,6 +538,8 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.RECIPE_RUNS_PATH = recipe_runs_path
     ys.BYOK_PATH = byok_path
     ys.NOTIFICATIONS_PATH = notifications_path
+    ys.PROFILES_PATH = profiles_path
+    ys.ACTIVE_PROFILE_PATH = active_profile_path
 
     httpd = ys.build_server(AUTH_TEST_PORT, str(REPO_ROOT), session_token_sha256=VALID_TOKEN)
 
@@ -557,6 +563,8 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.RECIPE_RUNS_PATH = original_recipe_runs
     ys.BYOK_PATH = original_byok
     ys.NOTIFICATIONS_PATH = original_notifications
+    ys.PROFILES_PATH = original_profiles
+    ys.ACTIVE_PROFILE_PATH = original_active_profile
 
 
 def _post_with_auth(path: str, payload: dict, token: str = VALID_TOKEN) -> tuple[int, dict]:
@@ -1921,3 +1929,80 @@ class TestTrayStatus:
         status, data = _get_json_auth("/health")
         assert status == 200
         assert data["status"] == "ok"
+
+
+# ── Task 023: Profile Manager ─────────────────────────────────────────────────
+
+def _delete_with_auth(path: str, token: str = VALID_TOKEN) -> tuple[int, dict]:
+    req = urllib.request.Request(
+        f"{AUTH_BASE}{path}",
+        method="DELETE",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    try:
+        with urllib.request.urlopen(req) as resp:
+            return resp.status, json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read())
+
+
+class TestProfileManager:
+    def test_profiles_list_empty(self, auth_server):
+        status, data = _get_json_auth("/api/v1/profiles")
+        assert status == 200
+        assert "profiles" in data
+        assert isinstance(data["profiles"], list)
+
+    def test_profiles_create(self, auth_server):
+        status, data = _post_with_auth("/api/v1/profiles", {"name": "Work Profile"})
+        assert status == 201
+        assert data["status"] == "created"
+        assert "id" in data["profile"]
+        assert data["profile"]["name"] == "Work Profile"
+
+    def test_profiles_create_requires_auth(self, auth_server):
+        body = json.dumps({"name": "Test"}).encode()
+        req = urllib.request.Request(f"{AUTH_BASE}/api/v1/profiles", data=body, method="POST",
+                                     headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req):
+                pass
+            assert False, "expected 401"
+        except urllib.error.HTTPError as e:
+            assert e.code == 401
+
+    def test_profiles_create_duplicate_name(self, auth_server):
+        _post_with_auth("/api/v1/profiles", {"name": "DupTest"})
+        status, data = _post_with_auth("/api/v1/profiles", {"name": "DupTest"})
+        assert status == 400
+
+    def test_profiles_create_empty_name(self, auth_server):
+        status, data = _post_with_auth("/api/v1/profiles", {"name": ""})
+        assert status == 400
+
+    def test_profiles_active_initially_none(self, auth_server):
+        status, data = _get_json_auth("/api/v1/profiles/active")
+        assert status == 200
+        assert "active_profile" in data
+
+    def test_profiles_activate(self, auth_server):
+        _, create_data = _post_with_auth("/api/v1/profiles", {"name": "ActivateTest"})
+        profile_id = create_data["profile"]["id"]
+        status, data = _post_with_auth(f"/api/v1/profiles/{profile_id}/activate", {})
+        assert status == 200
+        assert data["status"] == "activated"
+
+    def test_profiles_activate_not_found(self, auth_server):
+        status, data = _post_with_auth("/api/v1/profiles/nonexistent-id/activate", {})
+        assert status == 404
+
+    def test_profiles_delete(self, auth_server):
+        _, create_data = _post_with_auth("/api/v1/profiles", {"name": "DeleteTest"})
+        profile_id = create_data["profile"]["id"]
+        status, data = _delete_with_auth(f"/api/v1/profiles/{profile_id}")
+        assert status == 200
+        assert data["status"] == "deleted"
+
+    def test_profiles_delete_not_found(self, auth_server):
+        status, data = _delete_with_auth("/api/v1/profiles/nonexistent")
+        assert status == 404

@@ -570,3 +570,18 @@ class TestTrayMenu:
         """index.html must poll metrics and sessions for live tray data."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "metrics" in html and "sessions" in html
+
+
+# ── Task 023: Profile Manager ─────────────────────────────────────────────────
+
+class TestProfileUI:
+    def test_index_html_profiles_section(self):
+        """index.html must contain a profiles section."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "profile" in html.lower()
+
+    def test_profile_endpoints_in_server(self):
+        """yinyang_server.py must implement profile API routes."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/profiles" in server
+        assert "PROFILES_PATH" in server

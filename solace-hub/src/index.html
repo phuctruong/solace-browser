@@ -1034,6 +1034,17 @@
       </div>
     </div>
 
+    <!-- ── Task 023: Profile Manager ── -->
+    <div class="card" id="profiles-panel">
+      <h2>Browser Profiles</h2>
+      <div id="profiles-list" style="margin-bottom:12px;"></div>
+      <div class="hub-actions" style="gap:8px;align-items:flex-end;">
+        <input id="profile-name-input" type="text" placeholder="Profile name (e.g. Work, Personal)"
+               style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);flex:1;" maxlength="64"/>
+        <button class="hub-btn" onclick="createProfile()">+ New Profile</button>
+      </div>
+    </div>
+
   </main>
 
   <!-- ── Footer ── -->
@@ -2210,6 +2221,62 @@
     }
     refreshTrayStatus();
     setInterval(refreshTrayStatus, 15_000);
+
+    // ── Task 023: Profile Manager ─────────────────────────────────────────
+    async function refreshProfiles() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/profiles');
+        const data = await r.json();
+        const container = document.getElementById('profiles-list');
+        if (!container) return;
+        if (!data.profiles || data.profiles.length === 0) {
+          container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No profiles yet. Create one below.</div>';
+          return;
+        }
+        const activeR = await fetch('http://localhost:8888/api/v1/profiles/active');
+        const activeData = activeR.ok ? await activeR.json() : {};
+        const activeId = activeData.active_profile ? activeData.active_profile.id : null;
+        container.innerHTML = data.profiles.map(p => `
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+            <span style="flex:1;font-size:13px;">${p.name}${p.id === activeId ? ' <span style="color:var(--green);font-size:11px;">● Active</span>' : ''}</span>
+            <button class="hub-btn hub-btn-sm" onclick="activateProfile('${p.id}')">Activate</button>
+            <button class="hub-btn hub-btn-sm hub-btn-danger" onclick="deleteProfile('${p.id}')">Delete</button>
+          </div>`).join('');
+      } catch (_) {}
+    }
+    async function createProfile() {
+      const input = document.getElementById('profile-name-input');
+      const name = input ? input.value.trim() : '';
+      if (!name) return;
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/profiles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${HUB_TOKEN}` },
+          body: JSON.stringify({ name }),
+        });
+        if (r.ok) { input.value = ''; refreshProfiles(); }
+      } catch (_) {}
+    }
+    async function activateProfile(id) {
+      try {
+        await fetch(`http://localhost:8888/api/v1/profiles/${id}/activate`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${HUB_TOKEN}` },
+        });
+        refreshProfiles();
+      } catch (_) {}
+    }
+    async function deleteProfile(id) {
+      try {
+        await fetch(`http://localhost:8888/api/v1/profiles/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${HUB_TOKEN}` },
+        });
+        refreshProfiles();
+      } catch (_) {}
+    }
+    refreshProfiles();
+    setInterval(refreshProfiles, 30_000);
   </script>
 
 </body>

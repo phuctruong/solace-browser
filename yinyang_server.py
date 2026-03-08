@@ -113,6 +113,10 @@ _NOTIF_LOCK = threading.Lock()
 
 MAX_NOTIFICATIONS = 200  # keep last 200
 NOTIF_CATEGORIES: frozenset = frozenset(["budget", "session", "schedule", "error", "info", "recipe"])
+PROFILES_PATH: Path = Path.home() / ".solace" / "profiles.json"
+ACTIVE_PROFILE_PATH: Path = Path.home() / ".solace" / "active_profile.json"
+_PROFILES_LOCK = threading.Lock()
+MAX_PROFILES = 10
 _SESSIONS: dict[str, dict] = {}
 _SESSIONS_LOCK = threading.Lock()
 _SESSION_TOKEN_SHA256: str = ""
@@ -524,6 +528,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_log_errors()
         elif path == "/api/v1/logs/requests":
             self._handle_log_requests(query)
+        elif path == "/api/v1/profiles":
+            self._handle_profiles_list()
+        elif path == "/api/v1/profiles/active":
+            self._handle_profiles_active()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -581,6 +589,11 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/notifications/[^/]+/read$", path):
             notif_id = path.split("/")[-2]
             self._handle_notification_mark_read(notif_id)
+        elif path == "/api/v1/profiles":
+            self._handle_profiles_create()
+        elif re.match(r"^/api/v1/profiles/[^/]+/activate$", path):
+            profile_id = path.split("/")[-2]
+            self._handle_profiles_activate(profile_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -596,6 +609,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/sessions/[^/]+$", path):
             session_id = path.split("/")[-1]
             self._handle_session_delete(session_id)
+        elif re.match(r"^/api/v1/profiles/[^/]+$", path):
+            profile_id = path.split("/")[-1]
+            self._handle_profiles_delete(profile_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -2246,6 +2262,90 @@ function choose(mode) {
             history = list(_REQUEST_HISTORY)
         errors = [h for h in history if h.get("status", 0) >= 400]
         self._send_json({"errors": errors, "total": len(errors)})
+
+    # ── Profile Manager (Task 023) ─────────────────────────────────────────
+
+    def _load_profiles(self) -> list:
+        if not PROFILES_PATH.exists():
+            return []
+        try:
+            data = json.loads(PROFILES_PATH.read_text())
+            return data if isinstance(data, list) else []
+        except json.JSONDecodeError:
+            return []
+
+    def _save_profiles(self, profiles: list) -> None:
+        PROFILES_PATH.parent.mkdir(parents=True, exist_ok=True)
+        PROFILES_PATH.write_text(json.dumps(profiles, indent=2))
+
+    def _handle_profiles_list(self) -> None:
+        with _PROFILES_LOCK:
+            profiles = self._load_profiles()
+        self._send_json({"profiles": profiles, "total": len(profiles)})
+
+    def _handle_profiles_active(self) -> None:
+        if not ACTIVE_PROFILE_PATH.exists():
+            self._send_json({"active_profile": None})
+            return
+        try:
+            data = json.loads(ACTIVE_PROFILE_PATH.read_text())
+            self._send_json({"active_profile": data})
+        except json.JSONDecodeError:
+            self._send_json({"active_profile": None})
+
+    def _handle_profiles_create(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        name = body.get("name", "").strip()
+        if not name or len(name) > 64:
+            self._send_json({"error": "name must be 1-64 characters"}, 400)
+            return
+        with _PROFILES_LOCK:
+            profiles = self._load_profiles()
+            if len(profiles) >= MAX_PROFILES:
+                self._send_json({"error": f"max {MAX_PROFILES} profiles allowed"}, 400)
+                return
+            if any(p.get("name") == name for p in profiles):
+                self._send_json({"error": f"profile '{name}' already exists"}, 400)
+                return
+            profile = {
+                "id": str(uuid.uuid4()),
+                "name": name,
+                "created_at": int(time.time()),
+                "data_dir": str(Path.home() / ".solace" / "profiles" / name.lower().replace(" ", "-")),
+            }
+            profiles.append(profile)
+            self._save_profiles(profiles)
+        self._send_json({"profile": profile, "status": "created"}, 201)
+
+    def _handle_profiles_activate(self, profile_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _PROFILES_LOCK:
+            profiles = self._load_profiles()
+            profile = next((p for p in profiles if p.get("id") == profile_id), None)
+            if not profile:
+                self._send_json({"error": "profile not found"}, 404)
+                return
+            ACTIVE_PROFILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            ACTIVE_PROFILE_PATH.write_text(json.dumps(profile, indent=2))
+        self._send_json({"status": "activated", "profile": profile})
+
+    def _handle_profiles_delete(self, profile_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _PROFILES_LOCK:
+            profiles = self._load_profiles()
+            before = len(profiles)
+            profiles = [p for p in profiles if p.get("id") != profile_id]
+            if len(profiles) == before:
+                self._send_json({"error": "profile not found"}, 404)
+                return
+            self._save_profiles(profiles)
+        self._send_json({"status": "deleted", "id": profile_id})
 
     def _parse_query(self, query: str) -> dict[str, str]:
         """Parse ?key=value&key2=value2 into dict."""
