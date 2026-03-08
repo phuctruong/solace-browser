@@ -754,6 +754,12 @@
         Version: <span id="system-version">—</span> &nbsp;|&nbsp; Uptime: <span id="system-uptime">—</span>
       </div>
       <div id="system-features" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;font-size:10px;"></div>
+      <!-- Latency monitor (Task 041) -->
+      <div style="margin-top:8px;font-size:11px;display:flex;align-items:center;gap:8px;">
+        <span>Latency:</span>
+        <span id="latency-ms" style="font-weight:600;">—</span>
+        <span style="display:inline-flex;gap:2px;align-items:flex-end;height:20px;" id="latency-sparkline"></span>
+      </div>
     </div>
 
     <!-- Onboarding status -->
@@ -2696,6 +2702,37 @@
     }
     refreshWatchdog();
     setInterval(refreshWatchdog, 30_000);
+
+    // Connection health / latency monitor (Task 041)
+    const _latencyHistory = [];
+    async function measureLatency() {
+      const t0 = performance.now();
+      try {
+        await fetch('http://localhost:8888/api/v1/ping', { signal: AbortSignal.timeout(3000) });
+        const ms = Math.round(performance.now() - t0);
+        _latencyHistory.push(ms);
+        if (_latencyHistory.length > 10) _latencyHistory.shift();
+        const lbl = document.getElementById('latency-ms');
+        if (lbl) {
+          lbl.textContent = `${ms}ms`;
+          lbl.style.color = ms < 50 ? 'var(--green)' : ms < 200 ? '#f59e0b' : 'var(--red)';
+        }
+        const spark = document.getElementById('latency-sparkline');
+        if (spark) {
+          const max = Math.max(..._latencyHistory, 1);
+          spark.innerHTML = _latencyHistory.map(v => {
+            const h = Math.max(2, Math.round(v / max * 18));
+            const c = v < 50 ? 'var(--green)' : v < 200 ? '#f59e0b' : 'var(--red)';
+            return `<span style="display:inline-block;width:4px;height:${h}px;background:${c};border-radius:1px;"></span>`;
+          }).join('');
+        }
+      } catch (_) {
+        const lbl = document.getElementById('latency-ms');
+        if (lbl) { lbl.textContent = 'timeout'; lbl.style.color = 'var(--red)'; }
+      }
+    }
+    measureLatency();
+    setInterval(measureLatency, 10_000);
 
     // Accessibility report (Task 040)
     async function refreshA11y() {

@@ -2517,3 +2517,14 @@ class TestAccessibility:
             assert "id" in check
             assert "label" in check
             assert "status" in check
+
+
+# ── Task 041: Connection Health ───────────────────────────────────────────────
+
+class TestConnectionHealth:
+    def test_ping(self, auth_server):
+        status, data = _get_json_auth("/api/v1/ping")
+        assert status == 200
+        assert data["pong"] is True
+        assert "timestamp" in data
+        assert "version" in data

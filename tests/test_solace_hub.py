@@ -832,3 +832,17 @@ class TestAccessibilityUI:
         """index.html must contain accessibility panel."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "accessibility" in html.lower() or "a11y" in html.lower()
+
+
+# ── Task 041: Connection Health ───────────────────────────────────────────────
+
+class TestConnectionHealthUI:
+    def test_ping_in_server(self):
+        """yinyang_server.py must implement /api/v1/ping."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/ping" in server
+
+    def test_latency_in_html(self):
+        """index.html must reference latency or ping."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "latency" in html.lower() or "ping" in html.lower()

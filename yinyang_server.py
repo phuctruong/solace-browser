@@ -588,6 +588,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_pinned_get()
         elif path == "/api/v1/accessibility":
             self._handle_accessibility()
+        elif path == "/api/v1/ping":
+            self._handle_ping()
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -1929,6 +1931,12 @@ function choose(mode) {
                 CLI_CONFIG_PATH.write_text(json.dumps(body["cli_config"], indent=2))
             imported.append("cli_config")
         self._send_json({"status": "imported", "imported": imported})
+
+    # --- Task 041: Connection health ping handler ---
+
+    def _handle_ping(self) -> None:
+        """GET /api/v1/ping — ultra-fast health check with timestamp. Task 041."""
+        self._send_json({"pong": True, "timestamp": int(time.time()), "version": _SERVER_VERSION})
 
     # --- Task 040: Accessibility report handler ---
 
