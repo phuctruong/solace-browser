@@ -478,6 +478,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_evidence_list(query)
         elif path == "/api/v1/evidence/verify":
             self._handle_evidence_verify()
+        elif path == "/api/v1/evidence/export":
+            self._handle_evidence_export(query)
         elif re.match(r"^/api/v1/evidence/[^/]+$", path):
             entry_id = path.split("/")[-1]
             self._handle_evidence_detail(entry_id)
@@ -864,6 +866,46 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             "entries": len(entries),
             "broken_at": broken_at,
         })
+
+    def _handle_evidence_export(self, query: str) -> None:
+        """GET /api/v1/evidence/export?format=json|csv — export full chain. Task 028."""
+        from urllib.parse import parse_qs
+        params = parse_qs(query.lstrip("?"))
+        fmt = params.get("format", ["json"])[0].lower()
+        if fmt not in ("json", "csv"):
+            self._send_json({"error": "format must be json or csv"}, 400)
+            return
+        evidence = self._load_evidence()
+        if fmt == "json":
+            body = json.dumps(
+                {"evidence": evidence, "total": len(evidence), "exported_at": int(time.time())},
+                indent=2,
+            ).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Disposition", 'attachment; filename="solace-evidence.json"')
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        else:
+            lines = ["id,timestamp,action,app,status,sha256"]
+            for e in evidence:
+                row = ",".join([
+                    str(e.get("id", "")),
+                    str(e.get("ts", e.get("timestamp", ""))),
+                    str(e.get("type", e.get("action", ""))).replace(",", ";"),
+                    str(e.get("app", "")).replace(",", ";"),
+                    str(e.get("status", "")),
+                    str(e.get("sha256", "")),
+                ])
+                lines.append(row)
+            body = "\n".join(lines).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/csv")
+            self.send_header("Content-Disposition", 'attachment; filename="solace-evidence.csv"')
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
 
     # --- Task 014: Schedule enable/disable + next-runs ---
 

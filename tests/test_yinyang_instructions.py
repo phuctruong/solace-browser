@@ -2192,3 +2192,30 @@ class TestAppLauncher:
     def test_app_launch_not_found(self, auth_server):
         status, data = _post_with_auth("/api/v1/apps/nonexistent-app-xyz-999/launch", {})
         assert status == 404
+
+
+# ── Task 028: Evidence Export ─────────────────────────────────────────────────
+
+class TestEvidenceExport:
+    def test_evidence_export_json(self, auth_server):
+        status, data = _get_json_auth("/api/v1/evidence/export?format=json")
+        assert status == 200
+        assert "evidence" in data
+        assert "total" in data
+        assert "exported_at" in data
+
+    def test_evidence_export_csv(self, auth_server):
+        url = f"{AUTH_BASE}/api/v1/evidence/export?format=csv"
+        req = urllib.request.Request(url)
+        with urllib.request.urlopen(req) as resp:
+            text = resp.read().decode()
+        assert "id,timestamp" in text
+
+    def test_evidence_export_invalid_format(self, auth_server):
+        status, data = _get_json_auth("/api/v1/evidence/export?format=xml")
+        assert status == 400
+
+    def test_evidence_export_json_default(self, auth_server):
+        status, data = _get_json_auth("/api/v1/evidence/export")
+        assert status == 200
+        assert "evidence" in data

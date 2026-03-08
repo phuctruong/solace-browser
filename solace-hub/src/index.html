@@ -773,6 +773,11 @@
         <thead><tr><th>Time</th><th>Action</th><th>URL</th><th>Status</th><th>ID</th></tr></thead>
         <tbody id="evidence-chain-rows"><tr><td colspan="5" style="color:var(--text-muted);">Loading…</td></tr></tbody>
       </table>
+      <!-- Task 028: Evidence Export buttons -->
+      <div class="hub-actions" style="margin-top:8px;">
+        <a href="http://localhost:8888/api/v1/evidence/export?format=json" download="solace-evidence.json" class="hub-btn">Export JSON</a>
+        <a href="http://localhost:8888/api/v1/evidence/export?format=csv" download="solace-evidence.csv" class="hub-btn">Export CSV</a>
+      </div>
     </div>
 
     <!-- Automation Schedules (Task 014) -->

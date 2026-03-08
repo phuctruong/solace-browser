@@ -643,3 +643,17 @@ class TestAppLauncherUI:
         """index.html must contain an app launcher section."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "app" in html.lower() or "launch" in html.lower()
+
+
+# ── Task 028: Evidence Export ─────────────────────────────────────────────────
+
+class TestEvidenceExportUI:
+    def test_export_buttons_in_html(self):
+        """index.html must contain export buttons for evidence."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "export" in html.lower()
+
+    def test_export_endpoint_in_server(self):
+        """yinyang_server.py must implement /api/v1/evidence/export."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/evidence/export" in server
