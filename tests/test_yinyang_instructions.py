@@ -2990,3 +2990,65 @@ class TestEvidenceSearch:
         assert status == 200
         assert "results" in data
         assert isinstance(data["results"], list)
+
+
+# ── Tasks 081-090: Batch API Tests ────────────────────────────────────────────
+
+class TestAppLaunchHistory:
+    def test_launch_history(self, auth_server):
+        status, data = _get_json_auth("/api/v1/apps/launch-history")
+        assert status == 200
+        assert "history" in data
+
+class TestRecipeRating:
+    def test_recipe_rating(self, auth_server):
+        status, data = _post_with_auth("/api/v1/recipes/tpl-email-sort/rate", {"rating": 5})
+        assert status == 200
+        assert data["status"] in ("rated", "ok")
+
+class TestServerDiagnostics:
+    def test_diagnostics(self, auth_server):
+        status, data = _get_json_auth("/api/v1/diagnostics")
+        assert status == 200
+        assert "checks" in data
+
+class TestAppSearch2:
+    def test_search_by_name(self, auth_server):
+        status, data = _get_json_auth("/api/v1/apps/search?q=gmail")
+        assert status == 200
+        assert "results" in data
+
+class TestBudgetReset2:
+    def test_budget_reset(self, auth_server):
+        status, data = _post_with_auth("/api/v1/budget/reset", {})
+        assert status == 200
+        assert "status" in data
+
+class TestOAuth3TokenRefresh:
+    def test_token_refresh(self, auth_server):
+        status, data = _post_with_auth("/api/v1/oauth3/tokens/nonexistent/refresh", {})
+        assert status in (200, 404)
+
+class TestSchedulePause:
+    def test_schedule_pause(self, auth_server):
+        status, data = _post_with_auth("/api/v1/schedules/pause-all", {})
+        assert status == 200
+        assert "status" in data
+
+class TestNotificationCount:
+    def test_notification_count(self, auth_server):
+        status, data = _get_json_auth("/api/v1/notifications/count")
+        assert status == 200
+        assert "total" in data
+
+class TestEvidenceStats2:
+    def test_evidence_stats(self, auth_server):
+        status, data = _get_json_auth("/api/v1/evidence/stats")
+        assert status == 200
+        assert "total" in data
+
+class TestSystemMetrics:
+    def test_system_metrics(self, auth_server):
+        status, data = _get_json_auth("/api/v1/system/metrics")
+        assert status == 200
+        assert "memory_mb" in data or "cpu_percent" in data or "requests_per_second" in data
