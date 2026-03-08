@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # release_browser_cycle.sh — Build Solace Browser native binary for a single platform
-# Auth: 65537 | Port 9222: PERMANENTLY BANNED | "Companion App": BANNED
+# Auth: 65537 | Legacy debug port permanently banned | "Companion App": BANNED
 #
 # Environment:
 #   TARGET_OS        linux | macos | windows  (default: auto-detect)

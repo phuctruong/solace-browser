@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   solace-browser.wxs — WiX v4 MSI installer for Solace Browser (Windows)
-  Auth: 65537 | Port 9222: PERMANENTLY BANNED
+  Auth: 65537 | Legacy debug port permanently banned
 
   Build:
     wix build -src scripts/windows/solace-browser.wxs \

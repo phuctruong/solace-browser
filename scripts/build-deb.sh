@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # build-deb.sh — Build a .deb package for Solace Browser
-# Auth: 65537 | Port 9222: PERMANENTLY BANNED
+# Auth: 65537 | Legacy debug port permanently banned
 #
 # Prerequisites:
 #   - dist/solace-browser-linux-x86_64 must exist (run release_browser_cycle.sh first)
