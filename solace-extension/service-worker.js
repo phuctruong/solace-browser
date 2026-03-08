@@ -13,9 +13,39 @@
  */
 
 // --- Constants (duplicated from constants.js because SW can't import scripts) ---
-const SOLACE_API_PORT = 8888;
-const SOLACE_API = `http://localhost:${SOLACE_API_PORT}`;
+const SOLACE_PORT_RANGE_START = 8888;
+const SOLACE_PORT_RANGE_END = 8899;
+let SOLACE_API_PORT = 8888;
+let SOLACE_API = `http://localhost:${SOLACE_API_PORT}`;
 const APP_CACHE_TTL_MS = 60000;
+
+// Dynamic port discovery for service worker context
+async function swDiscoverPort() {
+  // Try cached port first
+  try {
+    const stored = await chrome.storage.local.get('solace_port');
+    if (stored.solace_port) {
+      const resp = await fetch(`http://localhost:${stored.solace_port}/api/health`, { signal: AbortSignal.timeout(1000) });
+      if (resp.ok) {
+        SOLACE_API_PORT = stored.solace_port;
+        SOLACE_API = `http://localhost:${stored.solace_port}`;
+        return stored.solace_port;
+      }
+    }
+  } catch { /* proceed with scan */ }
+  for (let port = SOLACE_PORT_RANGE_START; port <= SOLACE_PORT_RANGE_END; port++) {
+    try {
+      const resp = await fetch(`http://localhost:${port}/api/health`, { signal: AbortSignal.timeout(1000) });
+      if (resp.ok) {
+        SOLACE_API_PORT = port;
+        SOLACE_API = `http://localhost:${port}`;
+        try { await chrome.storage.local.set({ solace_port: port }); } catch { /* ok */ }
+        return port;
+      }
+    } catch { continue; }
+  }
+  return null;
+}
 
 // Storage schema version for migration guards
 const CURRENT_SCHEMA_VERSION = 1;

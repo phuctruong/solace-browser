@@ -53,7 +53,7 @@ ERROR_CODES = {
 
 
 class _RateLimiter:
-    """Simple sliding-window rate limiter per WS connection."""
+    """Simple sliding-window rate limiter."""
 
     def __init__(self, max_calls: int = 60, period: float = 60.0):
         self._calls: deque[float] = deque()
@@ -68,6 +68,22 @@ class _RateLimiter:
             return False
         self._calls.append(now)
         return True
+
+
+# Per-message-type rate limits (calls per 60s window).
+# High-cost types (chat, run) get tighter limits.
+# Low-cost types (heartbeat, state) get generous limits.
+_MESSAGE_TYPE_LIMITS: dict[str, int] = {
+    "chat": 20,        # LLM calls — expensive
+    "run": 10,         # App execution — expensive
+    "schedule": 15,    # CRUD operations
+    "approve": 30,     # Approval actions
+    "reject": 30,      # Rejection actions
+    "detect": 30,      # URL detection
+    "heartbeat": 120,  # Keep-alive — lightweight
+    "state": 60,       # State queries — lightweight
+    "credits": 30,     # Credit queries
+}
 
 
 def _check_content(text: str) -> str | None:
@@ -116,12 +132,16 @@ class YinyangWSBridge:
         # Per-IP rate limiters — persists across reconnections from the same IP.
         # Prevents rate limit bypass by disconnect/reconnect.
         self._ip_rate_limiters: dict[str, _RateLimiter] = {}
+        # Per-IP per-message-type rate limiters (e.g., chat=20/60s, heartbeat=120/60s)
+        self._ip_type_rate_limiters: dict[str, dict[str, _RateLimiter]] = {}
 
     # Allowed WebSocket origins — extension + localhost server + Tauri
-    _ALLOWED_WS_ORIGINS = frozenset({
-        "http://localhost:8888",
-        "http://127.0.0.1:8888",
-    })
+    # Covers dynamic port range 8888-8899 for port discovery.
+    _ALLOWED_WS_ORIGINS = frozenset(
+        f"http://localhost:{p}" for p in range(8888, 8900)
+    ) | frozenset(
+        f"http://127.0.0.1:{p}" for p in range(8888, 8900)
+    )
 
     async def handle_ws(self, request):
         """Handle WebSocket connection from browser JS."""
@@ -157,6 +177,18 @@ class YinyangWSBridge:
                         continue
                     try:
                         data = json.loads(msg.data)
+                        # Per-message-type rate limiting
+                        msg_type = data.get("type", "")
+                        type_limit = _MESSAGE_TYPE_LIMITS.get(msg_type)
+                        if type_limit is not None:
+                            if peer_ip not in self._ip_type_rate_limiters:
+                                self._ip_type_rate_limiters[peer_ip] = {}
+                            type_limiters = self._ip_type_rate_limiters[peer_ip]
+                            if msg_type not in type_limiters:
+                                type_limiters[msg_type] = _RateLimiter(max_calls=type_limit, period=60.0)
+                            if not type_limiters[msg_type].is_allowed():
+                                await ws.send_json({"type": "error", "code": "RATE_LIMITED", "payload": {"message": f"Rate limit exceeded for '{msg_type}' — max {type_limit}/60s"}})
+                                continue
                         response = await self._handle_message(session_id, data)
                         if response:
                             await ws.send_json(response)

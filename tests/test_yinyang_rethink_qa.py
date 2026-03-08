@@ -1735,3 +1735,99 @@ class TestPerfBaseline:
         import json
         baseline = json.loads((Path(__file__).parent / "perf_baseline.json").read_text())
         assert "regression_policy" in baseline
+
+
+# ---------------------------------------------------------------------------
+# GLOW 214 — Dynamic Port Discovery + Per-Message-Type Rate Limits
+# ---------------------------------------------------------------------------
+
+
+class TestDynamicPortDiscovery:
+    """Extension must support dynamic port discovery (8888-8899)."""
+
+    def test_constants_has_port_range(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "constants.js").read_text()
+        assert "SOLACE_PORT_RANGE_START" in js
+        assert "SOLACE_PORT_RANGE_END" in js
+        assert "8888" in js
+        assert "8899" in js
+
+    def test_constants_has_discover_port_function(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "constants.js").read_text()
+        assert "async function discoverPort" in js
+
+    def test_discover_port_caches_in_storage(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "constants.js").read_text()
+        assert "chrome.storage.local" in js
+        assert "solace_port" in js
+
+    def test_service_worker_has_port_discovery(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "service-worker.js").read_text()
+        assert "swDiscoverPort" in js
+        assert "SOLACE_PORT_RANGE_START" in js
+
+    def test_sidepanel_uses_discover_port(self):
+        js = Path(__file__).parent.parent.joinpath("solace-extension", "sidepanel.js").read_text()
+        assert "discoverPort" in js
+
+    def test_ws_bridge_allows_port_range(self):
+        """WS Origin allowlist must cover the full 8888-8899 range."""
+        from yinyang.ws_bridge import YinyangWSBridge
+        for port in range(8888, 8900):
+            assert f"http://localhost:{port}" in YinyangWSBridge._ALLOWED_WS_ORIGINS
+            assert f"http://127.0.0.1:{port}" in YinyangWSBridge._ALLOWED_WS_ORIGINS
+
+
+class TestPerMessageTypeRateLimits:
+    """Different message types should have different rate limits."""
+
+    def test_message_type_limits_dict_exists(self):
+        from yinyang.ws_bridge import _MESSAGE_TYPE_LIMITS
+        assert isinstance(_MESSAGE_TYPE_LIMITS, dict)
+        assert len(_MESSAGE_TYPE_LIMITS) >= 9
+
+    def test_chat_has_lower_limit_than_heartbeat(self):
+        from yinyang.ws_bridge import _MESSAGE_TYPE_LIMITS
+        assert _MESSAGE_TYPE_LIMITS["chat"] < _MESSAGE_TYPE_LIMITS["heartbeat"]
+
+    def test_run_has_lowest_limit(self):
+        from yinyang.ws_bridge import _MESSAGE_TYPE_LIMITS
+        assert _MESSAGE_TYPE_LIMITS["run"] <= min(
+            v for k, v in _MESSAGE_TYPE_LIMITS.items() if k != "run"
+        )
+
+    def test_bridge_has_type_rate_limiters_dict(self):
+        from yinyang.ws_bridge import YinyangWSBridge
+        bridge = YinyangWSBridge()
+        assert hasattr(bridge, "_ip_type_rate_limiters")
+        assert isinstance(bridge._ip_type_rate_limiters, dict)
+
+    @pytest.mark.asyncio
+    async def test_chat_rate_limit_enforced(self):
+        """Chat messages should be rate-limited at 20/60s, not the global 60/60s."""
+        from yinyang.ws_bridge import YinyangWSBridge, _RateLimiter, _MESSAGE_TYPE_LIMITS
+        bridge = YinyangWSBridge()
+        ip = "10.0.0.99"
+        bridge._ip_type_rate_limiters[ip] = {
+            "chat": _RateLimiter(max_calls=_MESSAGE_TYPE_LIMITS["chat"], period=60.0)
+        }
+        limiter = bridge._ip_type_rate_limiters[ip]["chat"]
+        for _ in range(_MESSAGE_TYPE_LIMITS["chat"]):
+            assert limiter.is_allowed()
+        assert not limiter.is_allowed(), "Chat should be exhausted at 20 calls"
+
+    def test_heartbeat_still_allowed_after_chat_exhausted(self):
+        """Heartbeat should work even when chat is exhausted (independent limiters)."""
+        from yinyang.ws_bridge import YinyangWSBridge, _RateLimiter, _MESSAGE_TYPE_LIMITS
+        bridge = YinyangWSBridge()
+        ip = "10.0.0.100"
+        bridge._ip_type_rate_limiters[ip] = {
+            "chat": _RateLimiter(max_calls=2, period=60.0),
+            "heartbeat": _RateLimiter(max_calls=120, period=60.0),
+        }
+        # Exhaust chat
+        bridge._ip_type_rate_limiters[ip]["chat"].is_allowed()
+        bridge._ip_type_rate_limiters[ip]["chat"].is_allowed()
+        assert not bridge._ip_type_rate_limiters[ip]["chat"].is_allowed()
+        # Heartbeat still works
+        assert bridge._ip_type_rate_limiters[ip]["heartbeat"].is_allowed()

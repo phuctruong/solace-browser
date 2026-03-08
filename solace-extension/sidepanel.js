@@ -46,18 +46,14 @@ document.querySelectorAll('.yy-tab').forEach(tab => {
 // --- Server Detection ---
 
 async function checkServerStatus() {
-  try {
-    const resp = await fetch(`${SOLACE_API}${ENDPOINTS.health}`, { signal: AbortSignal.timeout(HEALTH_CHECK_TIMEOUT_MS) });
-    if (resp.ok) {
-      const data = await resp.json();
-      showMainUI();
-      serverOnline = true;
-      document.getElementById('stat-api').textContent = 'Connected';
-      setConnectionStatus('connected');
-      return true;
-    }
-  } catch {
-    // Server not reachable
+  // Dynamic port discovery: try cached port, then scan 8888-8899
+  const port = await discoverPort();
+  if (port) {
+    showMainUI();
+    serverOnline = true;
+    document.getElementById('stat-api').textContent = `Connected (:${port})`;
+    setConnectionStatus('connected');
+    return true;
   }
   serverOnline = false;
   document.getElementById('stat-api').textContent = 'Offline';
