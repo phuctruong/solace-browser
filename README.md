@@ -1,22 +1,64 @@
 # Solace Browser
 
-Custom Chromium browser fork with native AI sidebar.
+Custom Chromium browser fork with native AI sidebar (Yinyang) + desktop app (Solace Hub).
 
-## Build
+## Architecture
+
+Three surfaces:
+1. **Yinyang** — native C++ sidebar (4 tabs: Now/Runs/Chat/More), follows user on every page
+2. **Solace Hub** — Tauri desktop app (~20MB), system tray, OAuth3 dashboard, scheduler
+3. **Yinyang Server** — Python backend at `localhost:8888`, serves both surfaces
+
+## Quick Start
 
 ```bash
-# Prerequisites
-cd source/src && ./build/install-build-deps.sh
+# Start Yinyang Server (port 8888)
+python yinyang-server.py
+
+# Start Solace Hub (Tauri desktop app)
+scripts/start-hub.sh
+
+# Run tests
+pytest tests/ -q
+```
+
+## Chromium Build
+
+```bash
+# Prerequisites (Ubuntu 22.04+)
+export PATH="depot_tools:$PATH"
+cd source/src
+sudo python3 build/install-build-deps.py --no-arm --no-prompt
 
 # Configure
-cd source/src && gn gen out/Solace --args='is_debug=false chrome_pgo_phase=0 is_component_build=true use_sysroot=true proprietary_codecs=false'
+gn gen out/Solace --args='is_debug=false chrome_pgo_phase=0 is_component_build=true use_sysroot=true proprietary_codecs=false'
 
-# Build
-cd source/src && autoninja -C out/Solace chrome
+# Build (takes several hours on first run)
+autoninja -C out/Solace chrome
 
 # Run
-./source/src/out/Solace/chrome
+./out/Solace/chrome
 ```
+
+Or use the script: `scripts/build-chromium.sh`
+
+## Key Rules
+
+- Port **8888 ONLY** — 9222 permanently banned
+- **Solace Hub** (never "Companion App")
+- No Chrome extensions / MV3 — sidebar is native C++ WebUI
+- Bearer auth required for mutating endpoints (POST/DELETE)
+
+## Apps
+
+36 apps in `data/default/apps/` — detected per-URL, executed via recipes.
+
+## Tests
+
+533 tests across 3 files:
+- `tests/test_yinyang_instructions.py` — 330 API tests (109 test classes)
+- `tests/test_solace_hub.py` — 181 structural tests
+- `tests/test_mcp_server.py` — 22 MCP protocol tests
 
 ## License
 
