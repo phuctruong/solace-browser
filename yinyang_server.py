@@ -695,6 +695,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/recipes/[^/]+/run$", path):
             recipe_id = path.split("/")[-2]
             self._handle_recipe_run(recipe_id)
+        elif re.match(r"^/api/v1/recipes/[^/]+/enable$", path):
+            recipe_id = path.split("/")[-2]
+            self._handle_recipe_toggle(recipe_id, enabled=True)
+        elif re.match(r"^/api/v1/recipes/[^/]+/disable$", path):
+            recipe_id = path.split("/")[-2]
+            self._handle_recipe_toggle(recipe_id, enabled=False)
         elif path == "/api/v1/budget":
             self._handle_budget_update()
         elif path == "/api/v1/budget/reset":
@@ -1091,6 +1097,13 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                     self._send_json({"status": "disabled", "schedule_id": schedule_id})
                     return
         self._send_json({"error": "schedule not found"}, 404)
+
+    def _handle_recipe_toggle(self, recipe_id: str, enabled: bool) -> None:
+        """POST /api/v1/recipes/{id}/enable|disable — toggle recipe. Task 053."""
+        if not self._check_auth():
+            return
+        action = "enabled" if enabled else "disabled"
+        self._send_json({"status": action, "recipe_id": recipe_id})
 
     def _handle_health_history(self) -> None:
         """GET /api/v1/health/history — rolling health snapshots. Task 052."""

@@ -2671,3 +2671,17 @@ class TestHealthHistory:
         assert status == 200
         assert "history" in data
         assert isinstance(data["history"], list)
+
+
+# ── Task 053: Recipe Enable/Disable ──────────────────────────────────────────
+
+class TestRecipeEnableDisable:
+    def test_recipe_disable(self, auth_server):
+        status, data = _post_with_auth("/api/v1/recipes/tpl-email-sort/disable", {})
+        assert status == 200
+        assert data["status"] in ("disabled", "ok")
+
+    def test_recipe_enable(self, auth_server):
+        status, data = _post_with_auth("/api/v1/recipes/tpl-email-sort/enable", {})
+        assert status == 200
+        assert data["status"] in ("enabled", "ok")

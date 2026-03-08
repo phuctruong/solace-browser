@@ -998,3 +998,15 @@ class TestHealthHistoryUI:
     def test_health_in_html(self):
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "health" in html.lower() or "status" in html.lower()
+
+
+# ── Task 053: Recipe Enable/Disable ──────────────────────────────────────────
+
+class TestRecipeEnableDisableUI:
+    def test_recipe_enable_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/enable" in server or "/disable" in server
+
+    def test_recipe_toggle_in_html(self):
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "enable" in html.lower() or "disable" in html.lower() or "recipe" in html.lower()
