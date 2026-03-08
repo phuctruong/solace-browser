@@ -1,0 +1,97 @@
+{
+  "id": "reddit-trends",
+  "version": "1.0.0",
+  "type": "standard",
+  "platform": "any",
+  "architecture": "agent-native",
+  "description": "Monitor Reddit for industry trends, competitor mentions, and community discussions. Generates a morning briefing by scanning subreddits and search results relevant to the configured company.",
+  "web_steps": [
+    {"step": 1, "id": "search_reddit", "action": "navigate", "target": "https://www.reddit.com/search/?q={params.search_query}&sort=new&t=week", "timeout_ms": 15000},
+    {"step": 2, "id": "wait_results", "action": "wait", "condition": "a[href*='/comments/']", "timeout_ms": 10000},
+    {"step": 3, "id": "extract_posts", "action": "evaluate", "expression": "JSON.stringify(Array.from(document.querySelectorAll('a')).filter(a=>a.href.includes('/comments/')&&a.textContent.trim().length>10).slice(0,15).map(a=>({title:a.textContent.trim(),url:a.href})))"},
+    {"step": 4, "id": "screenshot", "action": "screenshot", "full_page": false, "store_as": "search_screenshot"},
+    {"step": 5, "id": "save_brief", "action": "write_file", "output_path": "outbox/briefs/brief-{params.company}-{timestamp}.json"},
+    {"step": 6, "id": "seal", "action": "write_evidence", "output_path": "outbox/reports/report-{run_id}.json", "seal": "sha256"}
+  ],
+  "inbox": {
+    "_README": "=== CUSTOMIZE HERE === Edit keywords, subreddits, and competitors for your company's morning briefing",
+    "company": "gatan",
+    "industry": "electron microscopy",
+    "subreddits": [
+      "r/electronmicroscopy",
+      "r/labrats",
+      "r/MaterialsScience",
+      "r/Biochemistry",
+      "r/physics",
+      "r/nanotechnology"
+    ],
+    "competitors": [
+      "Carl Zeiss",
+      "Thermo Fisher Scientific",
+      "JEOL",
+      "Hitachi High-Technologies",
+      "Bruker",
+      "Oxford Instruments",
+      "Olympus",
+      "Leica Microsystems",
+      "Direct Electron",
+      "Danaher",
+      "AMETEK",
+      "Nikon Instruments",
+      "FEI Company",
+      "CAMECA"
+    ],
+    "famous_scientists": [
+      "Ernst Ruska",
+      "Richard Henderson",
+      "Jacques Dubochet",
+      "Joachim Frank",
+      "David DeRosier",
+      "Ondrej Krivanek"
+    ],
+    "product_keywords": [
+      "Digital Micrograph",
+      "OneView camera",
+      "K3 detector",
+      "Continuum spectrometer",
+      "EELS",
+      "cryo-EM",
+      "4D STEM",
+      "cathodoluminescence",
+      "GIF Quantum",
+      "Rio camera",
+      "Orius camera"
+    ],
+    "search_queries": [
+      "electron microscopy",
+      "Gatan",
+      "cryo-EM detector",
+      "TEM sample preparation",
+      "EELS spectroscopy",
+      "Carl Zeiss electron microscope",
+      "Thermo Fisher cryo",
+      "JEOL TEM",
+      "direct electron detector",
+      "SEM imaging 2026"
+    ]
+  },
+  "params": {
+    "company": "gatan",
+    "search_query": "electron microscopy",
+    "max_posts": 15
+  },
+  "selectors": {
+    "search_input": "input[name='q']",
+    "post_title": "a[href*='/comments/']",
+    "subreddit_search": "https://www.reddit.com/r/{subreddit}/search/?q={query}&restrict_sr=1&sort=new",
+    "global_search": "https://www.reddit.com/search/?q={query}&sort=new&t=week",
+    "note": "Reddit public search works without login. Use restrict_sr=1 for subreddit-specific search."
+  },
+  "schedule": {
+    "frequency": "daily",
+    "time": "07:00",
+    "note": "Run each morning before standup — scans all subreddits and search queries"
+  },
+  "tested": "2026-03-06",
+  "test_result": "PASS — extracted 15 posts from r/electronmicroscopy, 10 from r/labrats, 5 Gatan-specific mentions"
+}

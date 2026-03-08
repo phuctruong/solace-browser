@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 37,
+    "tower_name": "Tower of Competitor Intelligence",
+    "dna": "intel(system) = scan(sources) x extract(signals) x analyze(llm) x prioritize(urgency) x report(digest) x share(team) x track(trends)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions. Questions must be EXECUTABLE — answerable by checking if something actually works, not theoretical capability.",
+    "aggregate_prior": "NEW — no prior audit",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Competitor Intelligence",
+  "tower_number": 37,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Daniel Kim",
+      "persona_domain": "source_scanning",
+      "persona_context": "33, San Francisco, Competitive intelligence analyst at a B2B SaaS company. Expert tech level. Monitors 15 competitor websites, 8 industry blogs, Hacker News, Product Hunt, and GitHub repos daily. Needs a recipe that scans all sources and collects updates without manual browsing.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can a recipe scan 15 competitor websites daily and detect changes to their pricing pages, feature lists, and team/hiring pages?",
+        "Does the scanner detect new blog posts on competitor sites by checking their blog index or RSS feed automatically?",
+        "Can the recipe monitor Hacker News for posts mentioning my company, competitors, or industry keywords and capture the full thread?",
+        "Does the scanner check Product Hunt daily for new launches in my category and capture the product description, maker info, and vote count?",
+        "Can I add a new source (a competitor's newly launched blog) to the scan list without creating a new recipe from scratch?",
+        "Does the system handle sources that require JavaScript rendering (React/Next.js sites) rather than just static HTML?",
+        "Can the recipe monitor specific GitHub repos for new releases, issues, and commit activity to track competitor development velocity?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all source scanning scenarios. Daniel monitors 25+ sources daily — the scanner must handle diverse formats (HTML, RSS, JS-rendered pages, GitHub API). Missing a competitor pricing change is a strategic failure."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Maria Thornberg",
+      "persona_domain": "signal_extraction",
+      "persona_context": "41, Stockholm, Product strategy director at a fintech company. Expert tech level. Raw scan data is noise. Needs the system to extract actionable signals — pricing changes, new feature launches, executive hires, funding rounds — from the raw page content.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can the extraction recipe identify a competitor's pricing change by comparing today's pricing page content to yesterday's cached version?",
+        "Does the extractor detect new feature announcements by parsing changelog pages and blog posts for keywords like 'launch', 'new', 'introducing'?",
+        "Can the recipe extract executive hire signals from LinkedIn company pages or 'About Us' team pages?",
+        "Does the extractor identify funding round announcements from Crunchbase, TechCrunch, or competitor press releases?",
+        "Can the system distinguish between meaningful changes (new pricing tier added) and noise (copyright year updated) on scanned pages?",
+        "Does the extraction produce structured data (source URL, signal type, confidence level, extracted text) rather than raw page dumps?",
+        "Can I define custom extraction rules like 'if the competitor's API docs page adds a new endpoint, flag it as a feature signal'?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all signal extraction scenarios. Maria needs signal from noise — raw page content is useless. Extraction must produce structured, categorized, confidence-scored signals from diverse source formats."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Alex Nakamura",
+      "persona_domain": "llm_analysis",
+      "persona_context": "37, Tokyo, Head of strategy at a gaming company. Expert tech level. Extracted signals need LLM analysis to synthesize patterns: 'Competitor X lowered prices + hired 3 ML engineers + launched a free tier = they are pivoting to AI features at lower margins.'",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can the LLM analysis recipe take this week's extracted signals and synthesize a narrative explanation of what each competitor is likely doing strategically?",
+        "Does the analysis identify patterns across multiple signals — for example, connecting a price drop, a new hire, and a blog post into a coherent strategic move?",
+        "Can the LLM distinguish between confirmed facts (pricing page shows $10/mo) and speculation (they might be preparing for an enterprise launch)?",
+        "Does the analysis recipe cite specific source URLs for every claim so I can verify the LLM's reasoning?",
+        "Can I provide the LLM with my company's strategic context so its analysis is framed relative to our position — not generic industry commentary?",
+        "Does the system detect when the LLM is hallucinating a competitor action that was not in the extracted signals?",
+        "Can I compare this week's analysis to last week's and see what changed — new threats that appeared, old threats that resolved?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all LLM analysis scenarios. Alex needs synthesis, not summarization — connecting dots across signals into strategic narratives. Hallucination in competitive intelligence is dangerous — every claim must be traceable to a source."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Rebecca Adeyemi",
+      "persona_domain": "priority_ranking",
+      "persona_context": "44, London, VP Product at an enterprise software company. Expert tech level. Gets 50+ signals per week. Needs the system to rank them by urgency and impact — 'Competitor A just launched the feature our biggest customer requested' is P0, 'Competitor C updated their footer' is noise.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Does the priority ranking recipe classify signals into tiers — P0 (respond this week), P1 (respond this month), P2 (monitor), and noise (ignore)?",
+        "Can I see the ranking criteria the system used — why did it classify a competitor's new free tier as P0 instead of P1?",
+        "Does the ranking consider my product's specific vulnerabilities — for example, if a competitor launches a feature I do not have that my top customer requested?",
+        "Can I override a ranking (promote P2 to P0 or demote P1 to noise) and have the system learn from my corrections?",
+        "Does the priority view show me only P0 and P1 items by default, with noise hidden unless I explicitly expand it?",
+        "Can I filter ranked signals by competitor, signal type (pricing, feature, hiring), or time period?",
+        "Does the system alert me immediately for P0 signals via email or Slack notification instead of waiting for the daily digest?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all priority ranking scenarios. Rebecca gets 50+ signals weekly — without ranking she is drowning. Ranking must be context-aware (her product's gaps), learnable (corrects from feedback), and actionable (P0 triggers immediate alerts)."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "James Chen",
+      "persona_domain": "report_generation",
+      "persona_context": "48, Singapore, Chief strategy officer at a logistics tech company. Expert tech level. Needs a weekly competitive intelligence report that the executive team can read in 15 minutes — structured, visual, with clear 'so what' for each finding.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can the report recipe generate a formatted weekly intelligence brief with an executive summary, competitor-by-competitor breakdown, and recommended actions?",
+        "Does the report include comparison tables showing feature parity, pricing differences, and market positioning across competitors?",
+        "Can the report be generated as a Google Doc using my company's branded template with logo and section styling?",
+        "Does the executive summary distill the week's 50 signals into 3-5 bullet points that a CEO can read in 2 minutes?",
+        "Can I customize the report structure — for example, adding a section for 'market trends' or removing the 'hiring signals' section?",
+        "Does the report include source citations for every claim with clickable links to the original page?",
+        "Can I generate a monthly rollup report that synthesizes 4 weekly reports into strategic themes and quarter-over-quarter trends?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all competitive intelligence report generation scenarios. James's exec team reads the report in 15 minutes — it must be structured, visual, and actionable. Raw signal dumps or AI-sounding prose will be ignored."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Katarina Novak",
+      "persona_domain": "team_sharing",
+      "persona_context": "36, Zagreb, Product marketing manager at a SaaS company. Intermediate tech level. Competitive intelligence is only valuable if the whole team sees it. Needs to share reports, alerts, and signal feeds with product, sales, and engineering teams through their existing tools.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I share the weekly intelligence report to a specific Slack channel so the product team gets it automatically every Monday morning?",
+        "Does the sharing recipe allow different teams to get different views — product gets feature signals, sales gets pricing signals, engineering gets technical signals?",
+        "Can I share a P0 alert to multiple Slack channels simultaneously when an urgent competitive signal is detected?",
+        "Does the shared report include interactive elements — can a sales rep click on a pricing signal to see the full evidence?",
+        "Can I set up a shared competitive intelligence dashboard that team members can access without needing their own Solace account?",
+        "Does the system track which team members viewed the shared report and which ones have not opened it?",
+        "Can team members add comments or reactions to shared signals (like 'we already know this' or 'this affects my deal') visible to the whole team?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all team sharing scenarios. Katarina needs competitive intelligence to reach the right people in the right format. Intelligence that sits in one person's inbox is wasted. Sharing must be targeted, timely, and interactive."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Rodrigo Alvarez",
+      "persona_domain": "trend_tracking",
+      "persona_context": "52, Buenos Aires, Chief product officer at a fintech company. Expert tech level. Individual signals are snapshots. Needs to track trends over months — is Competitor B consistently lowering prices? Is Competitor D accelerating their release cadence? Are we falling behind?",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I see a timeline chart showing how Competitor B's pricing has changed over the last 6 months with each data point linked to the source evidence?",
+        "Does the trend tracker show competitor release frequency (releases per month) over time to identify acceleration or slowdown?",
+        "Can I compare my company's feature delivery rate against competitors' on a shared timeline view?",
+        "Does the system detect inflection points — for example, 'Competitor C's hiring rate doubled in March' — and flag them as trend breaks?",
+        "Can I create a custom trend metric — for example, track the number of negative reviews per month for a competitor's product?",
+        "Does the trend view show data going back to the first time I started tracking each competitor, with no gaps from missed scans?",
+        "Can I export trend data as a time-series CSV or chart image for inclusion in board presentations and strategy documents?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all trend tracking scenarios. Rodrigo thinks in quarters, not days — trends reveal strategy, snapshots reveal tactics. The system must maintain historical data reliably, detect inflections, and produce board-ready visualizations."
+    }
+  ]
+}

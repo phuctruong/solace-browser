@@ -1,0 +1,7 @@
+{
+  "persona_id": "kent-beck",
+  "last_updated_glow": 118,
+  "total_exchanges": 0,
+  "contacts": [],
+  "p37_note": "NETWORK.json is empty at birth. Updated when kent-beck and another persona review the same artifact within 3 GLOW sessions and their insights interact (agree, disagree, or build on each other). Each contact entry records: contact_persona, sessions, exchange_summary, current_stance, last_exchange_branch_id. Feed ally_network_summary in SOUL.json on each P23 Breathing cycle."
+}

@@ -1,0 +1,151 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 33,
+    "tower_name": "Tower of Evidence Chains",
+    "dna": "evidence(chain) = capture(screenshot) x hash(sha256) x chain(append) x retain(90d) x query(search) x export(bundle) x tamper(detect)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions. Questions must be EXECUTABLE — answerable by checking if something actually works, not theoretical capability.",
+    "aggregate_prior": "NEW — no prior audit",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-cli",
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-cli": "/home/phuc/projects/solace-cli",
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of Evidence Chains",
+  "tower_number": 33,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Rachel Kim",
+      "persona_domain": "screenshot_capture",
+      "persona_context": "33, San Francisco, Product liability lawyer at a tech company. Expert tech level. Needs automatic screenshots at every critical step of an AI agent's browser actions — for litigation defense if a customer claims the agent did something unauthorized.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Does the browser automatically capture a full-page screenshot before and after every click, form submission, and navigation action?",
+        "Can I see the screenshots in chronological order as a visual timeline of everything the agent did during a session?",
+        "Does each screenshot include metadata — the URL, timestamp, DOM state hash, and the recipe step number that triggered it?",
+        "Can I zoom into a specific screenshot to read small text like confirmation numbers or error messages?",
+        "Does the capture include the full page content (not just the visible viewport) so off-screen elements are documented?",
+        "Can I export all screenshots from a specific session as a timestamped ZIP for external legal review?",
+        "Does the system capture screenshots even when a step fails — so I can see what the page looked like at the moment of failure?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all screenshot capture scenarios. Rachel needs litigation-grade evidence — every agent action must have visual proof. Missing a screenshot at a critical moment is a legal liability gap."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Dmitri Volkov",
+      "persona_domain": "sha256_hashing",
+      "persona_context": "46, Moscow, Blockchain architect consulting for a European bank. Expert tech level. Needs every evidence artifact to be SHA-256 hashed so any tampering is mathematically detectable — the same standard used in blockchain immutability.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Does every screenshot, log entry, and recipe execution record have a SHA-256 hash computed and stored alongside the artifact?",
+        "Can I independently verify a hash by downloading the artifact and running sha256sum on my own machine?",
+        "Does the system use the artifact's raw bytes for hashing (not a re-encoded version that might differ from the original)?",
+        "Can I see the hash of every artifact in the evidence viewer UI without needing to use command-line tools?",
+        "Does the hash computation happen immediately at capture time (not in a background batch job that could be interrupted)?",
+        "If I request the hash of an artifact via the API, does the response include both the hash and the algorithm identifier (SHA-256)?",
+        "Does the system detect and flag if two different artifacts produce the same hash (collision detection for integrity assurance)?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all SHA-256 hashing scenarios. Dmitri needs cryptographic-grade integrity — every hash must be independently verifiable, computed at capture time, and stored immutably. Hash-after-the-fact is not trustworthy."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Sophie Laurent",
+      "persona_domain": "chain_append",
+      "persona_context": "38, Paris, Compliance engineer at a pharmaceutical manufacturer. Expert tech level. Needs an append-only evidence chain where each entry links to the previous one — any insertion, deletion, or reordering must be impossible and detectable.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Does each new evidence entry include the hash of the previous entry, creating a linked chain that breaks if any entry is modified?",
+        "Can I verify the entire chain integrity with a single command that walks from the first entry to the last checking every link?",
+        "Does the system prevent deletion of any entry in the chain — even by an admin account?",
+        "If I try to insert an entry between two existing entries, does the system reject the insertion and log the attempt?",
+        "Can I see the chain visualized as a linked sequence showing the hash linkage between consecutive entries?",
+        "Does the chain include a genesis entry (first link) with a known seed hash that serves as the trust anchor?",
+        "If the chain is corrupted (a link breaks), does the system identify exactly which entry was tampered with?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all chain append and integrity scenarios. Sophie works in pharma — FDA Part 11 requires append-only audit trails. Any ability to modify, delete, or reorder evidence entries is a regulatory violation."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "James Obi",
+      "persona_domain": "ninety_day_retention",
+      "persona_context": "41, London, Head of operations at an insurance brokerage. Intermediate tech level. Regulators require 90-day retention of all automated decision evidence. Needs to know exactly when evidence expires and whether it can be extended for open claims.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Does the system retain all evidence artifacts for exactly 90 days from creation, with a visible expiration date on each entry?",
+        "Can I extend the retention period for specific evidence bundles that are part of an open insurance claim?",
+        "Does the system send me an alert 7 days before evidence is about to expire so I can decide whether to extend it?",
+        "After 90 days, does the system actually delete the evidence (not just hide it) to comply with data minimization rules?",
+        "Can I see a dashboard showing all evidence approaching expiration in the next 30 days, sorted by expiry date?",
+        "Does the retention clock start from the evidence creation timestamp (not the recipe creation date)?",
+        "If I export an evidence bundle before it expires, does my local copy remain valid and verifiable after the server copy is deleted?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all 90-day retention scenarios. James needs regulatory retention with clear expiration. Evidence must not expire during an active claim, but must be deleted when retention ends (GDPR data minimization)."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Mei-Ling Zhao",
+      "persona_domain": "evidence_query",
+      "persona_context": "35, Shanghai, Digital forensics investigator at a consulting firm. Expert tech level. Needs to search across thousands of evidence entries by date, agent, recipe, action type, and keyword — finding the needle in the haystack during an incident investigation.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I search evidence entries by date range, agent ID, recipe name, and action type in a single compound query?",
+        "Does the search return results within 2 seconds even when scanning 10,000+ evidence entries?",
+        "Can I filter evidence by outcome — for example, show me only failed executions in the last 7 days?",
+        "Does the search support keyword matching against screenshot OCR text so I can find evidence containing a specific confirmation number?",
+        "Can I save a search query as a named filter that I can re-run daily during an ongoing investigation?",
+        "Does the search result include a preview thumbnail of each screenshot so I can visually scan without opening each one?",
+        "Can I export the search results as a structured JSON or CSV for ingestion into external forensic analysis tools?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all evidence query scenarios. Mei-Ling investigates incidents — she needs fast, precise, compound queries across massive evidence stores. Slow search or missing filter dimensions makes evidence collection impractical during a time-sensitive investigation."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Anders Eriksson",
+      "persona_domain": "bundle_export",
+      "persona_context": "55, Gothenburg, External auditor at a Big Four accounting firm. Expert tech level. Needs to export a self-contained evidence bundle that can be verified offline by regulators who do not have access to the Solace platform.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I export a complete evidence bundle as a single ZIP file containing all screenshots, logs, hashes, and the hash chain?",
+        "Does the exported bundle include a verification script that the auditor can run on their own machine without installing Solace?",
+        "Can the auditor verify the hash chain integrity using only standard tools (Python, OpenSSL, or sha256sum)?",
+        "Does the bundle include a human-readable summary (HTML or PDF) alongside the machine-verifiable artifacts?",
+        "Can I select a specific date range or set of recipe executions to include in the bundle, rather than exporting everything?",
+        "Does the export include the recipe version that was executed, so the auditor can confirm what logic produced the evidence?",
+        "Is the exported bundle digitally signed so the auditor can verify it came from the Solace platform and was not modified in transit?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all bundle export scenarios. Anders is an external auditor — he needs a self-contained, offline-verifiable evidence package. If the bundle requires Solace platform access to verify, it fails the independence requirement."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Ingrid Muller",
+      "persona_domain": "tamper_detection",
+      "persona_context": "49, Zurich, Chief Risk Officer at a private bank. Expert tech level. Needs mathematical proof that no evidence was altered after capture — if a rogue employee modifies an evidence entry, the system must detect and alert immediately.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "If a single byte of a screenshot file is modified after capture, does the system detect the hash mismatch on the next integrity check?",
+        "Does the system run automated integrity checks on the evidence chain periodically (not just when manually triggered)?",
+        "When tampering is detected, does the system generate an alert with the exact entry that was modified and the expected vs actual hash?",
+        "Can I configure tamper alerts to send to multiple recipients (CRO, CISO, external auditor) simultaneously?",
+        "Does the tamper detection work even if the attacker modifies both the artifact and its stored hash (because the chain link to the next entry will break)?",
+        "Can I run a full chain verification from genesis to latest entry and get a certificate confirming the chain is intact as of this moment?",
+        "Does the system log every integrity check — both passed and failed — so I have proof that verification was performed regularly?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all tamper detection scenarios. Ingrid is CRO at a Swiss bank — any undetected evidence modification is a regulatory catastrophe. Tamper detection must be automatic, multi-layered (hash + chain link), and alerting."
+    }
+  ]
+}

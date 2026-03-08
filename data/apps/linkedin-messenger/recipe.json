@@ -1,0 +1,33 @@
+{
+  "id": "linkedin-messenger",
+  "version": "1.0.0",
+  "type": "standard",
+  "platform": "any",
+  "architecture": "agent-native",
+  "description": "Compose and send LinkedIn messages via Solace Browser automation. Supports new conversations, replies, and bulk campaigns with draft-first safety.",
+  "web_steps": [
+    {"step": 1, "id": "navigate_linkedin", "action": "navigate", "target": "https://www.linkedin.com/messaging/", "timeout_ms": 15000},
+    {"step": 2, "id": "wait_inbox", "action": "wait", "condition": ".msg-conversations-container__conversations-list", "timeout_ms": 10000},
+    {"step": 3, "id": "compose_new", "action": "click", "selector": ".msg-overlay-bubble-header__control--new-convo, [aria-label='Compose message']", "note": "Opens new message compose overlay"},
+    {"step": 4, "id": "search_recipient", "action": "evaluate", "expression": "document.querySelector('input[placeholder*=\"Type a name\"]').focus(); document.execCommand('insertText', false, '{params.recipient}')"},
+    {"step": 5, "id": "select_recipient", "action": "click", "selector": ".msg-connections-typeahead__search-result:first-child", "timeout_ms": 5000},
+    {"step": 6, "id": "type_message", "action": "evaluate", "expression": "document.querySelector('.msg-form__contenteditable').focus(); document.execCommand('insertText', false, '{params.message}')"},
+    {"step": 7, "id": "screenshot_draft", "action": "screenshot", "full_page": false, "store_as": "draft_screenshot", "note": "Screenshot before sending for evidence"},
+    {"step": 8, "id": "send_message", "action": "click", "selector": ".msg-form__send-button, [aria-label='Send']", "requires_approval": true},
+    {"step": 9, "id": "seal", "action": "write_evidence", "output_path": "outbox/reports/report-{run_id}.json", "seal": "sha256"}
+  ],
+  "selectors": {
+    "compose_button": ".msg-overlay-bubble-header__control--new-convo",
+    "recipient_input": "input[placeholder*='Type a name']",
+    "message_editor": ".msg-form__contenteditable",
+    "send_button": ".msg-form__send-button",
+    "note": "LinkedIn uses contenteditable divs — use execCommand('insertText') like ChatGPT/Gemini"
+  },
+  "params": {
+    "recipient": "",
+    "message": "",
+    "campaign": "spring-2026"
+  },
+  "tested": "2026-03-06",
+  "test_result": "PASS — messaging page loaded, selectors verified"
+}

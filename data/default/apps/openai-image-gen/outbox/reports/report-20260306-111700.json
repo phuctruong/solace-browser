@@ -1,0 +1,66 @@
+{
+  "run_id": "run-20260306-111700",
+  "app_id": "openai-image-gen",
+  "timestamp": "2026-03-06T16:19:07.693552+00:00",
+  "prompt": "A photorealistic sunset over Boston harbor with sailboats, warm golden light reflecting on calm water",
+  "result": "SUCCESS",
+  "image_file": "outbox/images/boston-sunset-20260306.png",
+  "image_size_bytes": 3441337,
+  "platform": "chatgpt.com",
+  "model": "DALL-E (via ChatGPT 5.4)",
+  "steps_completed": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "target": "https://chatgpt.com",
+      "status": "PASS"
+    },
+    {
+      "step": 2,
+      "action": "verify_login",
+      "user": "Phuc Truong (Plus)",
+      "status": "PASS"
+    },
+    {
+      "step": 3,
+      "action": "click_images",
+      "selector": "text=Images",
+      "status": "PASS"
+    },
+    {
+      "step": 4,
+      "action": "type_prompt",
+      "method": "execCommand(insertText)",
+      "selector": "#prompt-textarea",
+      "status": "PASS"
+    },
+    {
+      "step": 5,
+      "action": "submit",
+      "selector": "button[data-testid=\"send-button\"]",
+      "status": "PASS"
+    },
+    {
+      "step": 6,
+      "action": "wait_generation",
+      "wait_ms": 15000,
+      "status": "PASS"
+    },
+    {
+      "step": 7,
+      "action": "download_image",
+      "method": "canvas.toDataURL",
+      "selector": "img[alt=\"Generated image\"]",
+      "status": "PASS"
+    }
+  ],
+  "selectors_discovered": {
+    "input_field": "#prompt-textarea (ProseMirror contenteditable)",
+    "input_method": "document.execCommand(\"insertText\", false, text)",
+    "send_button": "button[data-testid=\"send-button\"]",
+    "images_link": "text=Images",
+    "generated_image": "img[alt=\"Generated image\"]",
+    "download_method": "canvas.toDataURL(\"image/png\")"
+  },
+  "evidence_hash": "7bceda8d8fc713255ed906c8f7f273cb216fdc1331828f94adc1e664669ef63e"
+}

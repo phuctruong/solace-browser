@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 38,
+    "tower_name": "Tower of Gmail AI Competition",
+    "dna": "gmail_ai(crush) = summarize(threads) x draft(voice) x label(smart) x unsubscribe(bulk) x replay(free) x evidence(proof) x cost(443x)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Gmail AI Competition",
+  "tower_number": 38,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Quy Tran",
+      "persona_domain": "thread_summarization",
+      "persona_context": "39, Ho Chi Minh City, R&D Manager at a 200-person electronics company, Intermediate tech, Pro tier, receives 120+ emails/day across 8 active projects, previously used Superhuman for inbox speed",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I click 'Summarize Inbox' and see a one-paragraph summary of each of my 50 unread threads within 15 seconds?",
+        "Does the summary capture the key decision or action item from each thread rather than just repeating the subject line?",
+        "If a thread has 12 replies, does the summary show the latest state of the conversation and not just the first message?",
+        "Can I click on a thread summary to expand it and see the full email thread without navigating away from the summary view?",
+        "Does the summarization correctly handle threads with mixed languages (Vietnamese and English) without garbling either?",
+        "Is the estimated LLM cost for summarizing 50 threads displayed before I run it so I can decide if it is worth it?",
+        "Can I re-summarize a single thread after new replies arrive without re-processing all 50 threads?"
+      ],
+      "question_expansion_instruction": "Quy manages multiple R&D projects and drowns in email threads. Every question must verify that summarization produces real, actionable summaries — not generic one-liners. 'Summary available' without meaningful content is a FAIL."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Michelle Cartwright",
+      "persona_domain": "ai_draft_voice",
+      "persona_context": "44, Austin TX, VP of Marketing at a SaaS startup, Expert tech, Enterprise tier, writes in a distinct casual-but-professional voice, has used Gmail Smart Reply and hates how robotic it sounds",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "When I click 'Draft Reply' on a client email, does the generated draft match my writing style rather than sounding like generic AI?",
+        "Can I provide 5 sample emails as voice training data so the AI learns my tone, vocabulary, and sign-off preferences?",
+        "Does the draft reply reference specific details from the incoming email (names, dates, product features mentioned)?",
+        "If I edit a draft before sending, does the AI learn from my edits to improve future drafts?",
+        "Can I see a side-by-side comparison of 'AI draft' vs 'my last reply to this person' to verify voice match?",
+        "Does the draft avoid corporate cliches like 'hope this finds you well' and 'circle back' that I never use?",
+        "Can I set different voice profiles for different contexts (casual for team, formal for investors) and have the AI auto-select based on recipient?"
+      ],
+      "question_expansion_instruction": "Michelle cares deeply about brand voice. The AI draft must sound like HER, not a robot. Generic, safe-sounding AI prose is a FAIL. Every question verifies voice fidelity and personalization."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Derek Huang",
+      "persona_domain": "smart_auto_labels",
+      "persona_context": "36, Seattle, IT Administrator for a 50-person law firm, Expert tech, Pro tier, manages email policies for 30 attorneys, needs auto-categorization that works from day one without training",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After running inbox triage, are my emails automatically categorized into labels like urgent, client, newsletter, internal, and spam?",
+        "Does the auto-labeling work on the first run without me manually training it on 100+ example emails?",
+        "Can I see the confidence score for each label assignment so I know which ones the AI is uncertain about?",
+        "If the AI labels a client email as 'newsletter' incorrectly, can I correct it and does the correction improve future labeling?",
+        "Does the labeling system create Gmail labels that persist in my actual Gmail account, not just inside Solace?",
+        "Can I define custom label categories beyond the defaults (e.g., 'opposing counsel', 'court filings', 'billing') and have the AI use them?",
+        "Does the auto-labeling process run in under 30 seconds for 200 emails without timing out or requiring me to keep the browser open?"
+      ],
+      "question_expansion_instruction": "Derek manages email for a law firm where mislabeling has real consequences. Auto-labels must be accurate from day one, correctable, and sync to real Gmail labels. Labels that exist only in Solace are a FAIL."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Priya Narayanan",
+      "persona_domain": "evidence_chain_triage",
+      "persona_context": "47, Bangalore, Compliance Officer at a pharmaceutical company, Intermediate tech, Enterprise tier, needs FDA Part 11 compliant audit trails for every AI-assisted email decision",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After the AI recommends actions on 20 emails, can I export a SHA-256 evidence bundle proving exactly what was recommended and what I approved?",
+        "Does the evidence record include the original email content, the AI recommendation, my approval/rejection decision, and the timestamp for each?",
+        "Can I verify the hash chain integrity of the evidence bundle using a standalone tool without needing Solace installed?",
+        "If I approved a reply that was later questioned in an audit, can I retrieve the exact evidence record by email message ID?",
+        "Does the evidence bundle include which LLM model and version generated each recommendation for reproducibility?",
+        "Can I export the evidence chain in a format compatible with our existing GxP documentation system (JSON or PDF)?",
+        "If someone tampers with one evidence record in the chain, does the verification process detect and flag the specific corrupted record?"
+      ],
+      "question_expansion_instruction": "Priya works in pharma compliance where evidence trails are legally required. Every question verifies that evidence is real, hash-chained, exportable, and tamper-evident. Missing metadata or broken chains = regulatory violation."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Marcus Johansson",
+      "persona_domain": "recipe_replay_cost",
+      "persona_context": "31, Stockholm, Cost-conscious founder of a 3-person startup, Intermediate tech, Free tier with BYOK, monitors every dollar of API spend, ran Gmail triage yesterday and wants to repeat it today",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "If I ran Gmail triage with the same rules yesterday, does today's re-run use the cached recipe and cost $0 in LLM tokens?",
+        "Can I see a cost comparison showing 'First run: $0.03' vs 'Replay: $0.00' in the session summary?",
+        "Does the recipe replay produce identical label assignments and action suggestions for emails that match yesterday's patterns?",
+        "If new emails arrive that do not match any cached recipe pattern, does the app correctly call the LLM only for those new emails?",
+        "Can I see a running total of money saved by recipe replay vs fresh LLM calls in my usage dashboard?",
+        "Does the replay work even when I am offline, using locally cached recipes without any network call?",
+        "If I change my triage rules (add a new label), does the app invalidate only the affected recipe entries and not the entire cache?"
+      ],
+      "question_expansion_instruction": "Marcus counts every cent. Recipe replay must demonstrably cost $0 for repeated patterns. 'Estimated savings' without actual zero-cost proof is a FAIL. Cost transparency must be exact, not approximate."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Helene Dubois",
+      "persona_domain": "local_first_privacy",
+      "persona_context": "53, Geneva, Privacy advocate and GDPR consultant, Expert tech, Pro tier, advises EU companies on data protection, will not use any tool that transmits email content to third-party servers",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I verify in the network inspector that my email content is never sent to Solace's servers during triage — only to Gmail's API and my local LLM?",
+        "Does the app work with a locally-hosted LLM (Ollama/llama.cpp) so my email content never leaves my machine?",
+        "Is the OAuth token for Gmail stored in a local encrypted vault (AES-256-GCM) and not in Solace's cloud?",
+        "Can I see a data flow diagram in the app's privacy settings showing exactly where my email data goes during each operation?",
+        "If I use BYOK mode with an external API (OpenRouter), does the app warn me that email content will transit through a third-party?",
+        "Does the app provide a 'Privacy Audit' feature that logs every external network call made during a session?",
+        "Can I export a GDPR-compliant data processing record showing all personal data accessed, processed, and where it was stored?"
+      ],
+      "question_expansion_instruction": "Helene will reject any tool that is not transparent about data flows. Every question verifies that email content stays local by default, external transmissions are flagged, and GDPR compliance is demonstrable — not just claimed."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "William Park",
+      "persona_domain": "copilot_vs_solace",
+      "persona_context": "49, Chicago, Enterprise CIO at a 500-person financial services firm, Expert tech, Enterprise tier, currently pays $30/user/month for Microsoft 365 Copilot, evaluating whether Solace is a viable replacement",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I see a feature comparison matrix showing Solace Gmail Triage vs Microsoft Copilot vs Google Gemini vs Superhuman for email management?",
+        "Is Solace's total cost per user per month lower than Copilot's $30/user/month when I factor in LLM token costs for 500 users?",
+        "Does Solace provide evidence-grade audit trails that Copilot does not — SHA-256 hash chains, tamper detection, exportable bundles?",
+        "Can I demonstrate to my board that Solace's local-first architecture means our client financial data never reaches Microsoft or Google AI servers?",
+        "Does Solace support enterprise SSO (SAML/OIDC) for my 500 users, or is it consumer-only?",
+        "Can I run a 30-day pilot with 10 users and get a cost and accuracy comparison report vs our current Copilot deployment?",
+        "If I cancel Solace, can I export all configuration, recipes, and evidence data in an open format — no vendor lock-in?"
+      ],
+      "question_expansion_instruction": "William is evaluating a multi-hundred-thousand-dollar decision. Every question must verify that Solace is objectively cheaper, more transparent, and more secure than Copilot — with proof, not marketing claims. Vague competitive positioning is a FAIL."
+    }
+  ]
+}

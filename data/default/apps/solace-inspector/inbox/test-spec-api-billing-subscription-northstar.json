@@ -1,0 +1,21 @@
+{
+  "spec_id": "api-billing-subscription-northstar-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "curl -s https://www.solaceagi.com/api/v1/billing/subscription -w '\\n%{http_code}'",
+  "target_name": "SolaceAGI Billing Subscription — Auth Required (Northstar)",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": [
+      "401"
+    ],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "james_bach",
+  "priority": "critical",
+  "northstar": "northstar-api-billing-subscription.json",
+  "context": "Northstar contract: Stripe customer ID is PII — subscription endpoint must be auth-gated. Request sent without Bearer token must return 401. James Bach: what does a subscription status of 'past_due' actually mean for the user? First, verify the endpoint won't hand that data to unauthenticated callers.",
+  "created_at": "2026-03-04T00:00:00Z"
+}

@@ -1,0 +1,41 @@
+{
+  "spec_id": "bar-browser-paper-46-james-bach-GLOW117",
+  "mode": "business_acceptance",
+  "review_mode": "individual",
+  "scoring": "binary_not_average",
+  "persona": "james_bach",
+  "persona_full_name": "James Bach",
+  "persona_acting_as": "CEO",
+  "persona_domain": "exploratory_testing_sbtm",
+  "persona_bio": "Creator of Session-Based Test Management and co-founder of Rapid Software Testing — the definitive methodology for rigorous exploratory testing and oracle-driven verification.",
+  "paper_id": "browser:46",
+  "paper_title": "Questions as Uplift: The Question Database",
+  "paper_path": "/home/phuc/projects/solace-browser/papers/46-questions-as-uplift.md",
+  "project": "solace-browser",
+  "context_injection": {
+    "skills": ["prime-safety", "prime-coder"],
+    "papers_to_read": ["cli:17-ten-uplift-principles", "agi:38-individual-vs-committee-qa-doctrine"],
+    "diagrams": ["browser:07-questions-as-uplift"],
+    "note": "Persona needs full context of uplift system before reviewing this paper"
+  },
+  "target_cmd": "cat '/home/phuc/projects/solace-browser/papers/46-questions-as-uplift.md'",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": [],
+    "stderr_empty": false,
+    "llm_analysis": true,
+    "llm_verdict_required": "You are James Bach acting as CEO. Read the paper above carefully. Answer each domain question PASS/FAIL with one sentence of justification. Then render your CEO verdict: 'AS CEO, I SIGN OFF ON THIS PAPER' or 'AS CEO, I REFUSE TO SIGN — REASON: [specific blocker with suggested improvement]'. Remember: you are the final responsible party. Your signature matters."
+  },
+  "domain_questions": [
+    "The paper claims 'each bug is a missing question'. Is this always true? Can bugs exist that no question would have predicted? What would falsify this claim?",
+    "The Question Lifecycle (ASKED → EXPLORING → TESTABLE → ANSWERED → VERIFIED) — what happens when a question goes from ANSWERED back to OPEN after a regression? Is the lifecycle model complete?",
+    "Are the 110 questions in the paper organized by risk? High-risk questions should be asked first, not alphabetically by persona. Is the ordering defensible?",
+    "The 'oracle' field in the question spec format is essential to RST — how do we know the question is answered correctly? Does every question have a clear oracle, or are some unanswerable?",
+    "The paper attributes questions to famous personas. But are these questions the actual questions those people would ask, or are they approximations? Is there a risk of misrepresenting their methods?"
+  ],
+  "sign_off_required": true,
+  "sign_off_keywords": ["AS CEO, I SIGN OFF", "AS CEO, I REFUSE TO SIGN"],
+  "pass_threshold": "All domain questions PASS AND sign_off verdict is positive",
+  "created_at": "2026-03-04T00:00:00Z",
+  "glow": "GLOW117"
+}

@@ -1,0 +1,149 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 29,
+    "tower_name": "Tower of Prime Wiki + Community Browsing",
+    "dna": "wiki(community) = extract(page) x compress(pzip) x push(firestore) x pull(cache) x render(mermaid) x search(index) x codebook(offline)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solaceagi",
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solaceagi": "/home/phuc/projects/solaceagi",
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Prime Wiki + Community Browsing",
+  "tower_number": 29,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Maya Patel",
+      "persona_domain": "page_extraction",
+      "persona_context": "29, Bangalore, Technical writer, Expert tech, Pro tier, wants to extract documentation pages from MDN and DevDocs into Prime Wiki",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I navigate to a URL in Solace Browser and click 'Extract to Prime Wiki' to start the extraction process?",
+        "Does the extraction capture the page's headings, body text, code blocks, and metadata (title, description, author) correctly?",
+        "Can I see a preview of the extracted content before it is pushed to the community wiki?",
+        "Does the extractor use CPU-structural mode (regex-based) by default so it works without an LLM API key?",
+        "If the page has dynamic content loaded via JavaScript, does the extraction wait for the page to fully render before capturing?",
+        "Can I extract a multi-page documentation section (e.g., 5 pages of MDN CSS reference) in a single batch operation?",
+        "Does the extraction preserve code syntax highlighting information so code blocks render correctly in the wiki?"
+      ],
+      "question_expansion_instruction": "Maya extracts technical documentation. Extraction must handle real-world pages with JS rendering, code blocks, and multi-page flows. CPU-structural mode is the default path."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Viktor Sorensen",
+      "persona_domain": "pzip_compression",
+      "persona_context": "41, Copenhagen, Data engineer, Expert tech, Pro tier, interested in compression ratios and storage costs",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After extraction, does the app show the original page size and the compressed size with the compression ratio (e.g., 2.7:1 gzip)?",
+        "Can I see the compression method used (gzip currently, PZip when available) in the extraction result details?",
+        "Does the compressed snapshot include all extracted fields (headings, body, meta, CTAs) without losing any content?",
+        "Can I compare the decompressed snapshot against the original page to verify no data was lost during compression?",
+        "Does the app show the estimated storage cost per snapshot (e.g., $0.0001 per Firestore write) before pushing?",
+        "If the page is very large (>1MB), does the compression still complete within 5 seconds on a standard machine?",
+        "Can I see cumulative storage stats showing total snapshots stored, total compressed size, and average compression ratio?"
+      ],
+      "question_expansion_instruction": "Viktor cares about data integrity and efficiency. Compression must be lossless, measurable, and cost-transparent. Lossy compression of technical content is unacceptable."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Aisha Diallo",
+      "persona_domain": "push_to_community",
+      "persona_context": "35, Dakar, Open-source contributor, Intermediate tech, Starter tier, wants to share extracted knowledge with the community",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After extracting and compressing a page, can I click 'Push to Community' and see the snapshot uploaded to Firestore?",
+        "Does the push operation return a confirmation with the URL hash (SHA-256 of the original URL) as the document ID?",
+        "Can I see the pushed snapshot in the Prime Wiki stats endpoint (/api/v1/prime-wiki/stats) with my contribution counted?",
+        "If I try to push a duplicate URL that already exists in the wiki, does the system update the existing record or create a versioned entry?",
+        "Does the push operation require authentication so anonymous users cannot pollute the community wiki?",
+        "Can I see a list of all my contributions to the community wiki from my profile page?",
+        "If the Firestore write fails (quota, network), does the app show the specific error and offer to retry?"
+      ],
+      "question_expansion_instruction": "Aisha contributes to open knowledge. Push must be authenticated, deduplicated, and give her credit for contributions. Silent failures waste her time."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Lucas Moreau",
+      "persona_domain": "pull_from_community",
+      "persona_context": "24, Montreal, Computer science student, Beginner tech, Free tier, wants to pull community knowledge for offline study",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I search the Prime Wiki from the Solace Browser and pull a snapshot by URL hash to view it locally?",
+        "Does the pull response include the full decompressed snapshot with headings, body, and code blocks rendered correctly?",
+        "Can I pull a snapshot while offline if it was previously cached locally during an earlier session?",
+        "Does the pull operation show the snapshot's metadata (contributor, extraction date, source URL) alongside the content?",
+        "If I pull a snapshot that does not exist, does the API return a clear 'not found' message instead of an empty response?",
+        "Can I pull multiple snapshots in batch (e.g., all CSS-related snapshots) for offline study?",
+        "Does the pulled content render in a readable format with proper heading hierarchy and code block formatting?"
+      ],
+      "question_expansion_instruction": "Lucas is a student on Free tier. Pull must work offline (cached), handle missing records gracefully, and render content readably. Complex API workflows are a barrier."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Elena Kazakova",
+      "persona_domain": "mermaid_rendering",
+      "persona_context": "37, Moscow, Solutions architect, Expert tech, Pro tier, uses Mermaid diagrams extensively and wants them rendered in wiki snapshots",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "If the extracted page contains Mermaid diagram code blocks, does the wiki snapshot preserve the raw Mermaid syntax?",
+        "When viewing a pulled snapshot that contains Mermaid diagrams, does the viewer render them as visual diagrams (not raw text)?",
+        "Can I click on a rendered Mermaid diagram to see the source code and copy it for use in my own documentation?",
+        "Does the Mermaid renderer support flowcharts, sequence diagrams, class diagrams, and state diagrams?",
+        "If a Mermaid code block has a syntax error, does the renderer show an error message pointing to the broken line?",
+        "Can I export a wiki snapshot with rendered Mermaid diagrams as a PDF that includes the visual diagrams?",
+        "Does the Mermaid rendering work offline using a local renderer (not a cloud API call)?"
+      ],
+      "question_expansion_instruction": "Elena depends on Mermaid diagrams for architecture documentation. Rendering must be local, support major diagram types, and handle errors gracefully."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Trevor Chang",
+      "persona_domain": "community_search",
+      "persona_context": "42, Taipei, DevRel lead at API company, Expert tech, Pro tier, wants to search the community wiki for relevant content to share",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I search the Prime Wiki using the /api/v1/prime-wiki/search?q=react endpoint and get results matching my query?",
+        "Does the search return results with title, snippet, source URL, contributor, and relevance score?",
+        "Can I filter search results by content type (documentation, tutorial, reference, blog post)?",
+        "Does the search endpoint support partial matching so searching 'react hook' finds 'React Custom Hooks Tutorial'?",
+        "Can I search from the Solace Browser UI (not just the API) with a search bar on the Prime Wiki page?",
+        "Does the search return results within 2 seconds for a wiki with 1000+ snapshots?",
+        "If the search returns no results, does it suggest alternative queries or related topics?"
+      ],
+      "question_expansion_instruction": "Trevor searches on behalf of his developer community. Search must be fast, relevant, and support both API and UI access. Empty results without suggestions are dead ends."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Sarah Lindgren",
+      "persona_domain": "offline_codebooks",
+      "persona_context": "31, Helsinki, Software consultant who travels to client sites with limited internet, Expert tech, Pro tier, needs offline access to technical references",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I select multiple wiki snapshots and click 'Create Codebook' to bundle them into an offline-accessible collection?",
+        "Does the codebook include a table of contents generated from the snapshot titles and headings?",
+        "Can I open and search the codebook when my laptop is completely offline (airplane mode)?",
+        "Does the codebook include all code blocks, Mermaid diagrams, and formatting from the original snapshots?",
+        "Can I update a codebook by syncing new snapshots when I am back online without recreating the entire collection?",
+        "Does the codebook show the last sync date so I know if my offline reference is stale?",
+        "Can I export the codebook as a single HTML file that I can share with a colleague who does not have Solace installed?"
+      ],
+      "question_expansion_instruction": "Sarah works offline at client sites. Codebooks must be truly offline (not just cached), searchable, updatable, and shareable. 'Requires internet' is a FAIL for every question."
+    }
+  ]
+}

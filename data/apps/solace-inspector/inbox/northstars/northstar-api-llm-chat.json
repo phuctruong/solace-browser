@@ -1,0 +1,76 @@
+{
+  "spec_id": "northstar-api-llm-chat",
+  "type": "northstar",
+  "version": "1.0",
+  "authored": "2026-03-03",
+  "committee": ["kent_beck", "james_bach", "cem_kaner"],
+
+  "webservice": {
+    "method": "POST",
+    "endpoint": "/api/v1/llm/chat",
+    "base_url": "https://www.solaceagi.com",
+    "description": "Route LLM calls to cheapest model that meets quality bar for the task class",
+    "auth": "Bearer token required — returns 401 if missing or invalid",
+    "content_type": "application/json"
+  },
+
+  "contract": {
+    "inputs": {
+      "model": "string (optional) — model name; router picks cheapest if omitted",
+      "messages": "array (required) — [{role: user|assistant|system, content: string}]",
+      "stream": "boolean (optional, default false) — enable SSE streaming"
+    },
+    "outputs": {
+      "content": "string — LLM response text",
+      "model": "string — ACTUAL model used (may differ from requested if router overrides)",
+      "usage": "object — {input_tokens: int, output_tokens: int}",
+      "cost_usd": "float — actual cost charged to user's credits"
+    },
+    "guarantees": [
+      "Returns 401 if Authorization header missing or token invalid",
+      "Returns cost_usd in every non-streaming response (billing transparency)",
+      "model field reflects ACTUAL model used, not the requested model",
+      "Response time < 30s for prompts under 1000 tokens",
+      "Never returns 500 on valid authenticated requests with valid JSON"
+    ],
+    "owasp_guarantees": [
+      "Malformed JSON body → 401 (auth checked first, before parsing)",
+      "Oversized payload (>50KB) → 401 (auth checked first, before size check)",
+      "Invalid Bearer token → 401 (not 500, not 200)",
+      "SQL injection in message content → safe response (sanitized, not 500)",
+      "20 rapid requests → no crash (rate resilient)"
+    ]
+  },
+
+  "cost_class": "LLM_NODE",
+  "abcd_models": {
+    "A": {"label": "Llama-3.3-70B", "provider": "Together.ai", "cost_per_1m_usd": 0.59},
+    "B": {"label": "Mixtral-8x22B", "provider": "OpenRouter", "cost_per_1m_usd": 1.20},
+    "C": {"label": "Claude Sonnet 4.6", "provider": "OpenRouter", "cost_per_1m_usd": 3.00},
+    "D": {"label": "GPT-4o", "provider": "OpenRouter", "cost_per_1m_usd": 5.00}
+  },
+
+  "cpu_tests": [
+    "test-spec-api-llm-usage-unauth.json",
+    "test-spec-api-malformed-json.json",
+    "test-spec-api-invalid-token.json",
+    "test-spec-api-oversized-payload.json"
+  ],
+
+  "abcd_tests": [
+    "test-spec-api-abcd-llm-factual.json",
+    "test-spec-api-abcd-llm-reasoning.json",
+    "test-spec-api-abcd-llm-code.json"
+  ],
+
+  "frontend_dependencies": [
+    "web/settings.html → Ask YinYang section (proxied via /api/yinyang/chat)",
+    "web/home.html → YinYang greeting message on login",
+    "web/app-store.html → model cost display in app detail view"
+  ],
+
+  "certification_status": "ABCD_AUTH_CERTIFIED",
+  "certified_at": "2026-03-04",
+  "evidence_notes": "CPU tests sealed in GLOW 99. ABCD auth-layer certified in GLOW 101: all 4 model paths (Llama-70B, Mixtral, Claude Sonnet, GPT-4o) return 401 consistently without auth token. Live ABCD pending SOLACE_API_KEY env var.",
+  "evidence_hash": null
+}

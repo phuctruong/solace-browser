@@ -1,0 +1,712 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 20,
+    "tower_name": "Tower of Linux",
+    "dna": "linux(native) = appimage(portable) x wayland(modern) x x11(compatible) x distros(ubuntu+fedora+arch) x flatpak(sandboxed) x cli(first_class) x systemd(managed)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor lists 7 seed questions. Linux users are power users, developers, and enterprise server admins. They expect CLI-first workflows, proper packaging, and no Windows/Mac assumptions. Every question must probe real Linux compatibility.",
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Linux",
+  "tower_number": 20,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "AppImage Expert",
+      "persona_domain": "AppImage packaging and distribution",
+      "questions": [
+        "Is there an AppImage that runs on any Linux distribution without installation?",
+        "Does the AppImage include all dependencies (no system library requirements)?",
+        "Is the AppImage signed for verification?",
+        "Does the AppImage integrate with the desktop (icons, file associations)?",
+        "Can the AppImage auto-update via AppImageUpdate?",
+        "Is the AppImage size reasonable (not bloated)?",
+        "Does the AppImage handle FUSE mounting correctly?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Debian/Ubuntu Packager",
+      "persona_domain": ".deb package creation and APT repository",
+      "questions": [
+        "Is there a .deb package for Debian/Ubuntu users?",
+        "Does the .deb install dependencies correctly via apt?",
+        "Is there an APT repository for automatic updates?",
+        "Does the package follow Debian packaging guidelines?",
+        "Is the .deb tested on Ubuntu LTS (22.04, 24.04)?",
+        "Does the package create correct desktop entries and icons?",
+        "Does the uninstall (apt remove) clean up properly?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Flatpak Expert",
+      "persona_domain": "Flatpak packaging and Flathub",
+      "questions": [
+        "Is there a Flatpak available on Flathub?",
+        "Does the Flatpak sandbox allow necessary file system access?",
+        "Are Flatpak permissions appropriate (not over-permissive)?",
+        "Does the Flatpak integrate with the desktop portal system?",
+        "Can the Flatpak auto-update through the software center?",
+        "Does the Flatpak use shared runtime to minimize size?",
+        "Can the Flatpak access the OAuth3 vault through the Secret portal?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Wayland Compatibility Tester",
+      "persona_domain": "Wayland display server support",
+      "questions": [
+        "Does the app run correctly on Wayland (GNOME, KDE Plasma)?",
+        "Is the app using native Wayland or XWayland?",
+        "Does screen capture work on Wayland (xdg-desktop-portal)?",
+        "Does copy/paste work correctly on Wayland?",
+        "Does drag-and-drop work on Wayland?",
+        "Are window decorations correct on Wayland (CSD vs SSD)?",
+        "Does HiDPI scaling work correctly on Wayland?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "X11 Compatibility Tester",
+      "persona_domain": "X11 display server support",
+      "questions": [
+        "Does the app run correctly on X11?",
+        "Do keyboard shortcuts work correctly on X11?",
+        "Does multi-monitor work on X11 with different DPI?",
+        "Does the clipboard work correctly on X11 (CLIPBOARD vs PRIMARY)?",
+        "Does the app handle X11 window managers (i3, sway, bspwm)?",
+        "Are X11-specific accessibility features supported?",
+        "Does the app handle X11 display forwarding (SSH -X)?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Fedora/RHEL Tester",
+      "persona_domain": "RPM-based distribution support",
+      "questions": [
+        "Is there an .rpm package for Fedora/RHEL users?",
+        "Does the RPM follow Fedora packaging guidelines?",
+        "Is there a COPR or YUM/DNF repository?",
+        "Does the app work on RHEL 8+ and Fedora latest?",
+        "Are SELinux policies compatible with the app?",
+        "Does the RPM handle systemd service files?",
+        "Is the RPM tested on CentOS Stream?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Arch Linux Tester",
+      "persona_domain": "Arch and AUR support",
+      "questions": [
+        "Is there an AUR package (PKGBUILD) for Arch users?",
+        "Does the PKGBUILD build from source or use prebuilt binaries?",
+        "Is the package maintained and up to date in AUR?",
+        "Does the app work on Arch Linux with latest packages?",
+        "Are all dependencies available in the Arch repositories?",
+        "Does the app work on Arch derivatives (Manjaro, EndeavourOS)?",
+        "Is there documentation for Arch-specific setup?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "systemd Integration Expert",
+      "persona_domain": "systemd service management",
+      "questions": [
+        "Is there a systemd user service file for the daemon mode?",
+        "Can the service be managed via systemctl --user?",
+        "Does the service start on login (systemctl --user enable)?",
+        "Does the service handle restart-on-failure correctly?",
+        "Are service logs accessible via journalctl?",
+        "Does the service use appropriate resource limits (MemoryLimit, CPUQuota)?",
+        "Is the service socket-activated for efficiency?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "GNOME Integration Tester",
+      "persona_domain": "GNOME desktop environment",
+      "questions": [
+        "Does the app integrate with GNOME's notification system?",
+        "Does the app icon appear correctly in GNOME Activities?",
+        "Are GNOME keyboard shortcuts compatible?",
+        "Does the app work with GNOME's dark mode preference?",
+        "Does the app integrate with GNOME Online Accounts?",
+        "Does the app support GNOME's screen reader (Orca)?",
+        "Does the app follow GNOME Human Interface Guidelines?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "KDE Integration Tester",
+      "persona_domain": "KDE Plasma desktop environment",
+      "questions": [
+        "Does the app integrate with KDE's notification system?",
+        "Does the app pick up KDE color schemes and themes?",
+        "Are KDE keyboard shortcuts compatible?",
+        "Does the app work with KDE's system tray?",
+        "Does the app integrate with KDE Wallet for credential storage?",
+        "Does the app support KDE's file dialog (vs GTK)?",
+        "Does the app work on KDE Plasma 6?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "CLI-First Linux User",
+      "persona_domain": "terminal workflow integration",
+      "questions": [
+        "Can the entire Solace workflow be driven from the terminal?",
+        "Does the CLI work correctly in bash, zsh, fish, and dash?",
+        "Are man pages installed for all CLI commands?",
+        "Does tab completion work in the user's shell?",
+        "Can the CLI output be piped to standard Unix tools (grep, awk, jq)?",
+        "Does the CLI respect standard signals (SIGTERM, SIGINT, SIGHUP)?",
+        "Can the browser run headless for CI/automation on Linux?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "XDG Standards Expert",
+      "persona_domain": "freedesktop.org standards compliance",
+      "questions": [
+        "Does the app use XDG directories (XDG_CONFIG_HOME, XDG_DATA_HOME, XDG_CACHE_HOME)?",
+        "Is the .desktop file correct and complete?",
+        "Does the app register MIME types correctly?",
+        "Is the app icon installed in the correct XDG icon locations?",
+        "Does the app use xdg-open for opening URLs and files?",
+        "Does the app integrate with xdg-desktop-portal for sandboxed operations?",
+        "Does the app respect XDG_RUNTIME_DIR for temporary data?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Orca Screen Reader Tester",
+      "persona_domain": "Linux screen reader accessibility",
+      "questions": [
+        "Can Orca screen reader navigate all UI elements?",
+        "Are ARIA labels correctly announced by Orca?",
+        "Does the YinYang approval dialog work with Orca?",
+        "Can Orca users access settings and change themes?",
+        "Are focus indicators visible with AT-SPI2?",
+        "Does the app expose UI elements through AT-SPI?",
+        "Are dynamic content changes announced to Orca?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "HiDPI Tester (Linux)",
+      "persona_domain": "high-DPI display scaling on Linux",
+      "questions": [
+        "Does the app render correctly at 2x scaling on Linux?",
+        "Does fractional scaling (1.25x, 1.5x) work correctly?",
+        "Are icons sharp on HiDPI displays?",
+        "Does the app handle mixed-DPI multi-monitor setups?",
+        "Does the app respond to DPI changes without restart?",
+        "Does the app use correct DPI detection on both X11 and Wayland?",
+        "Are there blurry elements at non-integer scaling factors?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Font Rendering Expert (Linux)",
+      "persona_domain": "text rendering on Linux",
+      "questions": [
+        "Does the app respect fontconfig settings?",
+        "Are fonts rendered correctly with subpixel rendering enabled/disabled?",
+        "Does the app handle font substitution (fontconfig aliases)?",
+        "Are CJK fonts available and rendered correctly?",
+        "Does the app handle emoji rendering (color emoji fonts)?",
+        "Are monospace fonts rendered correctly in code/terminal areas?",
+        "Does the app respect system font size settings?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Network Manager Integration Expert",
+      "persona_domain": "Linux network stack",
+      "questions": [
+        "Does the app handle NetworkManager connection changes?",
+        "Does the app work through corporate proxies on Linux?",
+        "Can the cloudflared tunnel work on Linux?",
+        "Does the app detect captive portals?",
+        "Does the app handle VPN connections (OpenVPN, WireGuard)?",
+        "Is the app compatible with nftables/iptables firewall rules?",
+        "Does the app handle DNS resolution (systemd-resolved, dnsmasq)?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "Secret Service Expert",
+      "persona_domain": "credential storage on Linux",
+      "questions": [
+        "Does the OAuth3 vault integrate with the Secret Service API (GNOME Keyring, KDE Wallet)?",
+        "Can the vault use libsecret for cross-desktop credential storage?",
+        "Does the vault fallback to encrypted file storage if no secret service?",
+        "Are secrets locked when the screen locks?",
+        "Can users manage Solace credentials in Seahorse (GNOME) or KWalletManager?",
+        "Does the vault handle PAM-based unlocking?",
+        "Are credentials cleaned up on app uninstall?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Container Expert (Linux)",
+      "persona_domain": "Docker and container deployment",
+      "questions": [
+        "Can Solace Browser run in a Docker container?",
+        "Is there an official Docker image for headless/CI use?",
+        "Does the container handle X11/Wayland display forwarding?",
+        "Can the container access host resources (GPU, network)?",
+        "Is the container image size minimal (Alpine-based)?",
+        "Can the container run as non-root?",
+        "Does Docker Compose support multi-service setup (browser + daemon)?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "SELinux/AppArmor Expert",
+      "persona_domain": "mandatory access control compatibility",
+      "questions": [
+        "Does the app work with SELinux in enforcing mode?",
+        "Are there AppArmor profiles for the app?",
+        "Does the app handle MAC denials gracefully (not crash)?",
+        "Are the minimum required permissions documented?",
+        "Can IT admins create custom MAC policies for the app?",
+        "Does the Flatpak version handle MAC correctly?",
+        "Are there audit logs for MAC policy violations?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Snap Package Expert",
+      "persona_domain": "Snap packaging and Snapcraft",
+      "questions": [
+        "Is there a Snap package available in the Snap Store?",
+        "Does the Snap interface plug system provide necessary access?",
+        "Is the Snap auto-updated through the Snap daemon?",
+        "Does the Snap sandbox allow OAuth3 vault operations?",
+        "Can the Snap access the user's home directory?",
+        "Does the Snap work on all distributions that support Snapd?",
+        "Is the Snap build reproducible and verifiable?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "Tiling Window Manager Expert",
+      "persona_domain": "i3, sway, Hyprland compatibility",
+      "questions": [
+        "Does the app work correctly in tiling window managers?",
+        "Are floating dialogs (YinYang approval) handled correctly?",
+        "Does the app set appropriate window hints (WM_CLASS, window role)?",
+        "Can users resize the app window without UI breakage?",
+        "Does the app handle being tiled to very small sizes?",
+        "Are popups and dropdowns positioned correctly in tiled layouts?",
+        "Does the app support urgent/attention hints for notifications?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "NixOS Expert",
+      "persona_domain": "NixOS and Nix package manager",
+      "questions": [
+        "Is there a Nix package for Solace Browser?",
+        "Does the Nix derivation build correctly?",
+        "Can the app be configured declaratively in NixOS configuration.nix?",
+        "Does the app work with NixOS's immutable filesystem?",
+        "Are all dependencies available in nixpkgs?",
+        "Does the app handle Nix's non-standard filesystem layout?",
+        "Can the app be installed via nix profile or nix-env?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Raspberry Pi Tester",
+      "persona_domain": "ARM64 Linux on Raspberry Pi",
+      "questions": [
+        "Does the app run on Raspberry Pi 4/5 (ARM64)?",
+        "Is the performance acceptable on a Raspberry Pi?",
+        "Does the app work with Raspberry Pi OS (Debian-based)?",
+        "Can the app run in kiosk mode on a Raspberry Pi?",
+        "Does the app handle the Pi's limited RAM (4GB/8GB)?",
+        "Is the ARM64 build tested as part of CI?",
+        "Can the Raspberry Pi run as a Solace Browser server (headless)?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Printing Expert (Linux)",
+      "persona_domain": "CUPS printing integration",
+      "questions": [
+        "Does the app use the system print dialog (CUPS)?",
+        "Can users print evidence reports from the browser?",
+        "Does print preview work correctly on Linux?",
+        "Are print margins and page layout appropriate?",
+        "Does the app support PDF export via print?",
+        "Can users print to network printers via CUPS?",
+        "Does the app handle printer discovery correctly?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Audio Notification Expert",
+      "persona_domain": "sound and audio integration",
+      "questions": [
+        "Can the app play notification sounds through PulseAudio/PipeWire?",
+        "Does the app respect system volume settings?",
+        "Are sounds played through the correct audio sink?",
+        "Does the app handle audio server restarts (PipeWire restart)?",
+        "Can users disable app notification sounds?",
+        "Does the app handle Bluetooth audio output?",
+        "Are sound files embedded or loaded from disk?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Cron/Timer Expert",
+      "persona_domain": "scheduled task management on Linux",
+      "questions": [
+        "Does the daemon scheduler use systemd timers or cron?",
+        "Can scheduled tasks run when the user is not logged in?",
+        "Are timer logs accessible via journalctl?",
+        "Does the scheduler handle system sleep/resume correctly?",
+        "Can multiple schedules run concurrently without conflicts?",
+        "Are failed scheduled tasks retried with appropriate backoff?",
+        "Does the scheduler use efficient wake-up patterns (not polling)?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "GPU Acceleration Expert",
+      "persona_domain": "hardware acceleration on Linux",
+      "questions": [
+        "Does the app use GPU acceleration for rendering?",
+        "Is VA-API or VDPAU video decoding supported?",
+        "Does the app handle switching between Intel/AMD/NVIDIA GPUs?",
+        "Are Vulkan or OpenGL backends used efficiently?",
+        "Does the app work on systems without GPU (software rendering)?",
+        "Does the NVIDIA proprietary driver work correctly?",
+        "Is GPU memory usage bounded?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "File Manager Integration Expert",
+      "persona_domain": "Nautilus, Dolphin, Thunar integration",
+      "questions": [
+        "Does the app register file associations correctly?",
+        "Can files be opened with Solace Browser from the file manager?",
+        "Does the app appear in 'Open With' menus?",
+        "Are MIME type associations correct?",
+        "Does drag-and-drop from file managers work?",
+        "Does the app create thumbnails for associated file types?",
+        "Can the app open URLs from the file manager?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "DBus Integration Expert",
+      "persona_domain": "desktop bus communication",
+      "questions": [
+        "Does the app use DBus for inter-process communication?",
+        "Can other applications control Solace Browser via DBus?",
+        "Does the app expose status information on DBus?",
+        "Are notifications sent via org.freedesktop.Notifications?",
+        "Does the app register a DBus service name?",
+        "Can the daemon be controlled via DBus commands?",
+        "Does the app handle DBus session vs system bus correctly?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Power Management Expert (Linux)",
+      "persona_domain": "UPower and power management",
+      "questions": [
+        "Does the app detect battery status and reduce activity?",
+        "Does the app handle suspend/resume correctly?",
+        "Are idle inhibitors used when performing critical operations?",
+        "Does the app work with TLP power management?",
+        "Can the daemon scheduler adjust frequency based on power state?",
+        "Does the app handle lid close/open events?",
+        "Is the app's power consumption reasonable on laptops?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Locale Expert (Linux)",
+      "persona_domain": "Linux locale and input method",
+      "questions": [
+        "Does the app respect LANG and LC_* environment variables?",
+        "Are IBus and Fcitx input methods supported?",
+        "Does the app handle system locale changes?",
+        "Are date/time/number formats locale-aware?",
+        "Does the app support Compose key sequences?",
+        "Are dead keys (accented characters) handled correctly?",
+        "Does the app support RTL locales on Linux?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Backup Expert (Linux)",
+      "persona_domain": "backup and restore",
+      "questions": [
+        "Are app data files in standard XDG locations for backup tools?",
+        "Can users back up app data with standard tools (tar, rsync)?",
+        "Does the app handle restoring from backup gracefully?",
+        "Are the vault and evidence chain included in backups?",
+        "Can users export/import settings for manual backup?",
+        "Does the app handle Timeshift (btrfs snapshot) restores?",
+        "Are cache files excluded from typical backup patterns?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "SSH/Remote Expert",
+      "persona_domain": "headless and remote operation",
+      "questions": [
+        "Can the browser run headless over SSH?",
+        "Does X11 forwarding work for remote GUI access?",
+        "Can the CLI operate fully over SSH without display?",
+        "Does the app work via VNC or XRDP?",
+        "Can the daemon run on a remote server and be controlled locally?",
+        "Does the app handle high-latency SSH connections?",
+        "Can screen/tmux sessions maintain browser state?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Package Build Expert",
+      "persona_domain": "building from source on Linux",
+      "questions": [
+        "Can users build Solace Browser from source on Linux?",
+        "Are all build dependencies available in standard repositories?",
+        "Does the build system use standard tools (make, cmake, meson)?",
+        "Are build instructions clear and tested?",
+        "Does the build produce reproducible output?",
+        "Can the build be cross-compiled for different architectures?",
+        "Is the build time reasonable on typical developer hardware?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Immutable Distro Expert",
+      "persona_domain": "Fedora Silverblue, openSUSE MicroOS",
+      "questions": [
+        "Does the app work on immutable distributions (Silverblue, MicroOS)?",
+        "Can the Flatpak version work on immutable distros?",
+        "Does the app handle /usr being read-only?",
+        "Can the app store data in the user's writable home directory?",
+        "Does the app work with Toolbx/Distrobox containers?",
+        "Are system-level dependencies avoided on immutable distros?",
+        "Does the auto-update mechanism work on immutable distros?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "ChromeOS/Crostini Tester",
+      "persona_domain": "Linux on ChromeOS",
+      "questions": [
+        "Does the app work in Crostini (Linux on ChromeOS)?",
+        "Can the app handle Crostini's limited GPU acceleration?",
+        "Does the app work with Crostini's Wayland implementation?",
+        "Are file sharing between ChromeOS and Crostini handled?",
+        "Does the app handle Crostini's network configuration?",
+        "Can the app run in the limited Crostini container?",
+        "Is there documentation for ChromeOS setup?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Security Expert (Linux)",
+      "persona_domain": "Linux-specific security features",
+      "questions": [
+        "Does the app use namespaces for process isolation?",
+        "Are capabilities dropped to minimum required (no root)?",
+        "Does the app work with seccomp-bpf filtering?",
+        "Is the app compatible with Linux Security Modules (LSM)?",
+        "Does the app handle /proc and /sys access securely?",
+        "Are SUID/SGID bits avoided in the installation?",
+        "Does the app use hardened compilation flags (RELRO, PIE, stack canary)?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Swap/Memory Expert (Linux)",
+      "persona_domain": "memory management and swap",
+      "questions": [
+        "Does the app handle low-memory situations gracefully?",
+        "Is the app OOM-killer safe (appropriate oom_score_adj)?",
+        "Does the app work well with zram/zswap?",
+        "Are memory-mapped files used efficiently?",
+        "Does the app handle memory pressure notifications (cgroups v2)?",
+        "Is memory usage visible in standard tools (htop, smem)?",
+        "Does the app handle swap storms without becoming unresponsive?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Filesystem Expert (Linux)",
+      "persona_domain": "filesystem compatibility",
+      "questions": [
+        "Does the app work on ext4, btrfs, XFS, and ZFS?",
+        "Are file operations atomic where needed (fsync, rename)?",
+        "Does the app handle filesystem quotas?",
+        "Are symbolic links followed correctly?",
+        "Does the app handle case-sensitive filenames?",
+        "Are file permissions set correctly (umask, mode)?",
+        "Does the app handle filesystem-specific features (CoW on btrfs)?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Multi-Seat Expert",
+      "persona_domain": "multi-user and multi-seat Linux systems",
+      "questions": [
+        "Does the app support multiple user sessions on the same machine?",
+        "Is user data isolated between Linux users?",
+        "Can the daemon run per-user or system-wide?",
+        "Does the app handle fast user switching?",
+        "Are resources (memory, CPU) fair-shared between users?",
+        "Can the app run on multi-seat configurations?",
+        "Does the app handle polkit authorization correctly?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Performance Monitor (Linux)",
+      "persona_domain": "Linux performance measurement",
+      "questions": [
+        "Can the app be profiled with perf, strace, and ltrace?",
+        "Are performance metrics visible in /proc/[pid]/status?",
+        "Does the app support flamegraph generation?",
+        "Can the app be traced with eBPF tools?",
+        "Are cgroup resource limits respected?",
+        "Does the app handle CPU frequency scaling?",
+        "Is the app compatible with perf-tools and bcc-tools?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Snap vs Flatpak vs AppImage Evaluator",
+      "persona_domain": "choosing the best packaging format",
+      "questions": [
+        "Which packaging format provides the best user experience?",
+        "Which format has the smallest download size?",
+        "Which format integrates best with desktop environments?",
+        "Which format provides the best security sandbox?",
+        "Which format supports auto-updates most reliably?",
+        "Can all three formats be maintained from a single build pipeline?",
+        "Which format is preferred by the Linux community?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Embedded Linux Tester",
+      "persona_domain": "embedded and IoT Linux platforms",
+      "questions": [
+        "Can Solace Browser run on embedded Linux (Yocto, Buildroot)?",
+        "Does the app work on minimal Linux installations?",
+        "Can the app run on ARM-based SBCs (Pine64, Rock Pi)?",
+        "Is the memory footprint small enough for embedded devices?",
+        "Can the headless mode run on devices without displays?",
+        "Does the app work on read-only root filesystems?",
+        "Can the app be embedded in a custom Linux appliance?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Gaming/Proton Tester",
+      "persona_domain": "gaming Linux desktop compatibility",
+      "questions": [
+        "Does the app coexist with Steam and Proton without conflicts?",
+        "Can the app handle GPU driver switches (Mesa vs proprietary)?",
+        "Does the app work on SteamOS / Steam Deck?",
+        "Is the app compatible with MangoHud and Gamescope?",
+        "Does the app handle Vulkan vs OpenGL selection?",
+        "Can the app run alongside full-screen games?",
+        "Does the app handle display resolution changes from games?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Server Deployment Expert (Linux)",
+      "persona_domain": "Linux server and cloud deployment",
+      "questions": [
+        "Can the browser run headless on a Linux server?",
+        "Is there a Docker Compose for production deployment?",
+        "Can the app handle server-grade workloads (100+ concurrent sessions)?",
+        "Does the app work on major cloud providers (AWS, GCP, Azure Linux VMs)?",
+        "Can the daemon mode run as a systemd service on servers?",
+        "Are log files rotated with logrotate?",
+        "Can the app be monitored with Prometheus/Grafana?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Accessibility Expert (Linux)",
+      "persona_domain": "comprehensive Linux accessibility",
+      "questions": [
+        "Does the app support AT-SPI2 for assistive technology?",
+        "Can screen magnifiers (GNOME Zoom, KMag) work with the app?",
+        "Does the app support high contrast themes on Linux?",
+        "Can the app be operated entirely by keyboard?",
+        "Does the app support switch access devices?",
+        "Are color filters and inversion compatible?",
+        "Does the app support on-screen keyboards (Onboard, Maliit)?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Linux Developer Tester",
+      "persona_domain": "developer experience on Linux",
+      "questions": [
+        "Can developers build from source with standard Linux toolchains?",
+        "Does the development setup work with popular editors (VS Code, Neovim)?",
+        "Are development dependencies installable via system package manager?",
+        "Can developers run the test suite on Linux?",
+        "Is the CI/CD pipeline tested on Linux?",
+        "Are debugging tools (gdb, valgrind) compatible?",
+        "Are developer docs current for Linux-specific setup?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Dragon Rider (Phuc)",
+      "persona_domain": "Linux experience vision",
+      "questions": [
+        "Does Solace Browser feel at home on Linux — not a Windows/Mac port?",
+        "Would a Linux power user choose Solace Browser as their daily driver?",
+        "Does the Linux build respect the Linux philosophy (do one thing well, composability)?",
+        "Is the CLI experience on Linux the best across all platforms?",
+        "Does the app contribute to the Linux desktop ecosystem?",
+        "Would Phoronix or OMG!Ubuntu feature Solace Browser positively?",
+        "Is this the Linux app the Dragon Rider uses on his daily driver?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "Mum Test Judge",
+      "persona_domain": "non-technical Linux user experience",
+      "questions": [
+        "Can a non-technical Linux user install the app from their software center?",
+        "Does the app look and feel familiar in the user's desktop environment?",
+        "Can the user find settings and change preferences easily?",
+        "Does the app crash or behave oddly in normal use on Linux?",
+        "Would the user know how to get help if something goes wrong?",
+        "Does the app integrate with the desktop environment naturally?",
+        "Would a non-technical Linux user recommend this app to a friend?"
+      ]
+    }
+  ]
+}

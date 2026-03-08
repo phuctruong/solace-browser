@@ -1,0 +1,7 @@
+{
+  "id": "claude-copilot",
+  "recipe_ref": "claude/claude-send-prompt.recipe.json",
+  "steps": [{"action": "noop", "description": "Send prompt to Claude.ai", "id": "preview"}],
+  "type": "standard",
+  "version": "1.0.0"
+}

@@ -1,0 +1,714 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 9,
+    "tower_name": "Tower of the World",
+    "dna": "global(reach) = locale(correct) x culture(respected) x script(rendered) x format(native)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 100,
+    "question_expansion_instruction": "Each floor lists 7-10 seed questions. During execution, expand to 100 questions per persona by probing deeper into the domain.",
+    "target_projects": [
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of the World",
+  "tower_number": 9,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "James",
+      "persona_domain": "English (en), 1.5B speakers, baseline native language",
+      "questions": [
+        "Is the product fully functional in English with no untranslated strings or placeholders?",
+        "Does the product use en-US date formatting (MM/DD/YYYY) hardcoded or locale-aware formatting?",
+        "Are en-GB users served DD/MM/YYYY dates or incorrectly shown MM/DD/YYYY?",
+        "Is the currency symbol always $ or does it adapt based on the user's region?",
+        "Does toLocaleString('en-US') appear hardcoded in dashboard.js, credits-panel.js, or formatting.ts?",
+        "Can an en-GB user distinguish March 4 from April 3 in the date display?",
+        "Are all error messages, help text, and recipe descriptions complete and grammatically correct in English?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Sofia",
+      "persona_domain": "Spanish (es), 559M speakers, Latin script",
+      "questions": [
+        "Does the Spanish locale extend beyond the homepage into recipe descriptions and execution output?",
+        "Are there mixed Spanish-English strings in the approval dialog (e.g., 'Ejecutar OAuth3 recipe')?",
+        "Does the Spanish translation maintain consistent formal register (usted vs tu) throughout?",
+        "Are Spanish gendered nouns correctly applied to all product terms?",
+        "Is the evidence chain output available in Spanish or only English?",
+        "Does the app store display recipe descriptions in Spanish?",
+        "Are error messages translated into Spanish with correct grammar?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Camille",
+      "persona_domain": "French (fr), 321M speakers, Latin script with gender agreement",
+      "questions": [
+        "Does the French locale use correct gender agreement for all nouns (la recette, not le recipe)?",
+        "Are there strings where the LLM treated English nouns as masculine when they should be feminine?",
+        "Is the formal/informal register consistent throughout the French locale?",
+        "Does a native French speaker detect machine translation within the first 30 seconds?",
+        "Are French accents (e, e, a, u, c) rendered correctly across all UI components?",
+        "Is the French locale complete beyond the homepage into recipe execution and evidence output?",
+        "Does the product handle French quotation marks (guillemets) correctly?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Lucas",
+      "persona_domain": "Portuguese (pt), 264M speakers, pt-BR vs pt-PT distinction",
+      "questions": [
+        "Does the Portuguese locale serve Brazilian Portuguese (pt-BR) or European Portuguese (pt-PT)?",
+        "Is there a separate pt-PT locale for European Portuguese speakers?",
+        "Does the translation use 'voce' (Brazilian) or 'tu' (European) consistently?",
+        "Are Brazilian Portuguese expressions that are incorrect in European Portuguese present?",
+        "Can a Lisbon user select European Portuguese or are they forced to read Brazilian?",
+        "Does the Intl API use pt-BR locale codes for formatting numbers and dates?",
+        "Are there dialect-specific terms that would confuse a speaker of the other variant?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Markus",
+      "persona_domain": "German (de), 134M speakers, formal/informal register",
+      "questions": [
+        "Does the German locale maintain consistent formal address (Sie) or mix Sie and du?",
+        "Are German compound nouns handled correctly without breaking UI element widths?",
+        "Do umlauts (a, o, u) render correctly across all components?",
+        "Is the German locale structurally correct in grammar even if register varies?",
+        "Does mixing Sie and du in the same interface occur (equivalent to alternating Sir/Dude)?",
+        "Are German strings approximately 30-40% longer than English without overflowing containers?",
+        "Is overflow-wrap: break-word applied for German compound words?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Marco",
+      "persona_domain": "Italian (it), 68M speakers, verb conjugation",
+      "questions": [
+        "Does the Italian locale contain verb conjugation errors (e.g., 'il sistema hanno' instead of 'il sistema ha')?",
+        "Are there strings where plural and singular agreement is wrong?",
+        "Can a native Italian speaker detect grammar errors within 30 seconds of browsing?",
+        "Is the Italian locale complete beyond the homepage into the full product?",
+        "Does the LLM-generated Italian maintain consistent register throughout?",
+        "Are Italian-specific characters (a, e, i, o, u) rendered correctly everywhere?",
+        "Does a published author (Italian) find the translation quality acceptable?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Dewi",
+      "persona_domain": "Indonesian (id), 275M speakers, simple grammar",
+      "questions": [
+        "Is the Indonesian locale clean (no gendered nouns, no conjugation, no plural markers to fail)?",
+        "Are currency displays showing Rp (Indonesian Rupiah) instead of $?",
+        "Are dates displayed in DD/MM/YYYY format instead of MM/DD/YYYY?",
+        "Is the Indonesian locale the cleanest non-English locale due to grammar simplicity?",
+        "Does the formatting still use en-US conventions despite having Indonesian strings?",
+        "Was the Indonesian locale tested by an Indonesian speaker?",
+        "Does the locale correctly handle Indonesian number formatting (period as thousands separator)?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Linh",
+      "persona_domain": "Vietnamese (vi), 85M speakers, Latin script with diacritics",
+      "questions": [
+        "Do Vietnamese diacritics (6 tone marks x 12 vowels = 72 combinations) render correctly?",
+        "Are there any Thai script characters contaminating Vietnamese strings (vi.json line 223)?",
+        "Does the Vietnamese locale maintain consistent register (formal vs casual)?",
+        "Is Vietnamese the second-cleanest non-English locale after Indonesian?",
+        "Are date and currency formats Vietnamese-native (VND, DD/MM/YYYY)?",
+        "Does the text rendering engine handle Vietnamese combining marks correctly?",
+        "Are all 415 Vietnamese strings free of cross-script contamination?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Alexei",
+      "persona_domain": "Russian (ru), 258M speakers, Cyrillic script",
+      "questions": [
+        "Is the Russian locale free of cross-script contamination (no Latin, Chinese, Arabic)?",
+        "Does the Russian locale use natural grammar rather than machine-translation-sounding structures?",
+        "Are dates displayed in DD.MM.YYYY format (Russian standard)?",
+        "Is the ruble symbol used instead of $ for currency displays?",
+        "Are there case declension errors (e.g., 'dlya retsept' instead of 'dlya retsepta')?",
+        "Does Cyrillic render correctly across all three projects (browser, CLI, AGI)?",
+        "Is Russian the best non-English locale in the entire system (zero contamination)?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Min-jun",
+      "persona_domain": "Korean (ko), 82M speakers, Hangul script, 15.7% contamination",
+      "questions": [
+        "What percentage of Korean strings contain characters from other scripts (target: 0%, actual: 15.7%)?",
+        "Are Chinese characters (Traditional, Simplified) present inside Korean locale strings?",
+        "Are Cyrillic, Vietnamese, or Arabic characters contaminating Korean strings?",
+        "Is the cross-script contamination from the Llama 3.3 batch translation pipeline?",
+        "Does a native Korean speaker detect contamination within the first 30 seconds?",
+        "Can a monolingual Korean user use the product without encountering foreign characters?",
+        "Does the Unicode range proximity (Korean U+AC00-D7AF, Chinese U+4E00-9FFF) explain the contamination?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Priya",
+      "persona_domain": "Hindi (hi), 609M speakers, Devanagari script",
+      "questions": [
+        "Does Devanagari script render correctly across solaceagi.com?",
+        "Is Hindi locale contamination minimal (target: 0 strings, actual: 2 strings)?",
+        "Is the Hindi grammar natural rather than machine-translated-sounding?",
+        "Is the rupee symbol used instead of $ for currency?",
+        "Are dates displayed in DD/MM/YYYY format?",
+        "Does the Devanagari Unicode range (U+0900-097F) distinctness explain less contamination?",
+        "Can a monolingual Hindi speaker use the product without encountering non-Devanagari characters?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Yuki",
+      "persona_domain": "Japanese (ja), 125M speakers, politeness registers",
+      "questions": [
+        "Does the Japanese locale use polite forms (desu/masu) consistently in formal contexts?",
+        "Are there strings using casual forms (da/dearu) where polite forms are required?",
+        "Is the politeness level violation a social contract breach for Japanese users?",
+        "Are Japanese web fonts declared or does the product rely on system fonts only?",
+        "Do Hiragana, Katakana, and Kanji all render correctly?",
+        "Does the product handle Japanese text input (IME) correctly?",
+        "Is the Japanese locale grammatically correct even if the politeness register is wrong?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Fatima",
+      "persona_domain": "Arabic (ar), 422M speakers, RTL script, triple failure",
+      "questions": [
+        "Are 30+ Arabic strings contaminated with Chinese, Russian, Thai, Korean, or code fragments?",
+        "Is dir='rtl' set on the HTML element when Arabic locale is active?",
+        "Are the 170+ RTL CSS rules in solace-browser activated by any JavaScript code?",
+        "Does Arabic text display left-to-right (backwards) due to missing RTL activation?",
+        "Are Arabic font stacks declared in the CSS?",
+        "Can a monolingual Arabic speaker read any page in the product without encountering foreign script?",
+        "Is the RTL CSS dead code a promise the product wrote to itself and never kept?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Elif",
+      "persona_domain": "Turkish (tr), 88M speakers, dotless-i case mapping",
+      "questions": [
+        "Do Turkish locale files exist across any of the three projects?",
+        "Does the product's string comparison code use locale-aware case folding for Turkish?",
+        "Would toLowerCase() and toUpperCase() produce wrong results for Turkish dotless-i?",
+        "Is Turkish the canary for locale-aware string handling in JavaScript?",
+        "If Turkish were added tomorrow, would case-insensitive comparisons work correctly?",
+        "Does the i18n infrastructure support Turkish-specific case mapping rules?",
+        "Are there tests for locale-sensitive string operations that would catch Turkish issues?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Kasia",
+      "persona_domain": "Polish (pl), 45M speakers, complex plural rules",
+      "questions": [
+        "Do Polish locale files exist across any of the three projects?",
+        "Does the product have a plural engine (ICU MessageFormat, i18next) for complex plurals?",
+        "Can Python str.format() or JS template literals handle Polish plural rules (1, 2-4, 5-21, 22+)?",
+        "Would 'You have {count} recipe' produce 'You have 5 recipe' without plural rules?",
+        "Are Polish 5 grammatical cases and 3 genders handled by any i18n infrastructure?",
+        "Is Polish the stress test for i18n infrastructure that the product fails?",
+        "Does any plural-aware formatting library exist in the project dependencies?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Pieter",
+      "persona_domain": "Dutch (nl), 30M speakers, compound words",
+      "questions": [
+        "Do Dutch locale files exist across any of the three projects?",
+        "Is overflow-wrap: break-word applied for Dutch compound words that exceed English lengths by 40%?",
+        "Would adding Dutch overflow every button and label sized for English string lengths?",
+        "Does the CSS handle long compound words with word-break or overflow strategies?",
+        "Is the i18n infrastructure mechanically capable of adding Dutch?",
+        "Are UI elements fixed-width or flexible enough to accommodate longer strings?",
+        "Does the product test with strings 40% longer than English to simulate German/Dutch?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "Niran",
+      "persona_domain": "Thai (th), 71M speakers, scriptio continua (no word boundaries)",
+      "questions": [
+        "Do Thai locale files exist across any of the three projects?",
+        "Does the product's text rendering handle scriptio continua (no spaces between words)?",
+        "Is there a word segmentation engine for Thai text line breaking?",
+        "Would Thai text render as one unbreakable line per paragraph?",
+        "Are Thai web fonts declared in the CSS?",
+        "Can the product display, segment, and wrap Thai text correctly?",
+        "Is the rendering infrastructure absent for Thai (not just locale files)?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Riya",
+      "persona_domain": "Bengali (bn), 272M speakers, 7th most spoken, Brahmic script",
+      "questions": [
+        "Do Bengali locale files exist across any of the three projects?",
+        "Does the product declare fonts for Bengali (Bangla) Brahmic script?",
+        "Can the product render Bengali consonant cluster conjuncts correctly?",
+        "Is a shaping engine available for Bengali ligature rendering?",
+        "Does Bengali have more native speakers than French, German, and Italian combined (272M)?",
+        "Is the absence of Bengali support a Western European + East Asian bias indicator?",
+        "Would system fonts on a non-Bengali device render Bengali text as tofu/squares?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Amara",
+      "persona_domain": "Swahili (sw), 200M speakers, Latin script, simple grammar",
+      "questions": [
+        "Do Swahili locale files exist across any of the three projects?",
+        "Is Swahili the lowest-effort locale to add (Latin script, simple grammar, no gender, no complex plurals)?",
+        "Are African languages on the i18n roadmap at all?",
+        "Would Swahili render correctly if locale files existed (no special font infrastructure needed)?",
+        "Is the absence of Swahili (200M speakers, Latin script) a deliberate exclusion or oversight?",
+        "Does the product's locale list reflect a blind spot for African languages?",
+        "Can the i18n 4-step process add Swahili with string files alone?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Olena",
+      "persona_domain": "Ukrainian (uk), 45M speakers, Cyrillic script",
+      "questions": [
+        "Do Ukrainian locale files exist across any of the three projects?",
+        "Does the Russian locale infrastructure prove Cyrillic rendering works?",
+        "Can Ukrainian be added as a delta on Russian (4 additional letters: gy, ye, i, yi)?",
+        "Is Ukrainian the highest-ROI Cyrillic locale to add after Russian?",
+        "Are the 4 additional Ukrainian Cyrillic characters supported by existing font stacks?",
+        "Does the product have a locale inheritance or fallback system (uk -> ru)?",
+        "Would Ukrainian strings produce cross-script contamination like Korean?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "Elena",
+      "persona_domain": "Romanian (ro), 28M speakers, Latin with diacritics",
+      "questions": [
+        "Do Romanian locale files exist across any of the three projects?",
+        "Does the Vietnamese locale prove that Latin-with-diacritics renders correctly?",
+        "Would Romanian special characters (a-breve, a-circumflex, s-cedilla, t-cedilla) render?",
+        "Can the i18n 4-step process add Romanian with string files alone?",
+        "Is Romanian a low-effort locale to add given proven diacritics support?",
+        "Does the product have 5 Romanian-specific characters in its font fallback chain?",
+        "Would Romanian plural rules require infrastructure beyond string replacement?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "Dariush",
+      "persona_domain": "Persian/Farsi (fa), 110M speakers, RTL with Arabic script + 4 chars",
+      "questions": [
+        "Do Persian locale files exist across any of the three projects?",
+        "Would the RTL dead code (no JS activation) block Persian just as it blocks Arabic?",
+        "Does the product support the Solar Hijri calendar used officially in Iran and Afghanistan?",
+        "Is Persian triply blocked (no strings, no RTL activation, no calendar)?",
+        "Are the 4 additional Persian characters beyond Arabic script supported?",
+        "Would fixing RTL activation for Arabic simultaneously unblock Persian?",
+        "Is there any calendar system beyond Gregorian in the product?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Avi",
+      "persona_domain": "Hebrew (he), 9M speakers, RTL, tech-forward market",
+      "questions": [
+        "Do Hebrew locale files exist across any of the three projects?",
+        "Does the RTL dead code block Hebrew just as it blocks Arabic and Persian?",
+        "Does the product implement bidirectional (bidi) algorithm support for mixed Hebrew/English?",
+        "Is the Israeli market (high SaaS adoption) blocked by the RTL failure?",
+        "Would fixing RTL activation unblock Hebrew along with Arabic, Persian, and Urdu?",
+        "Are Hebrew-specific characters in the font fallback chain?",
+        "Does the product handle mixed LTR/RTL content in a single string?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Zara",
+      "persona_domain": "Urdu (ur), 231M speakers, RTL Nastaliq script",
+      "questions": [
+        "Do Urdu locale files exist across any of the three projects?",
+        "Is Urdu triply blocked (no strings, no RTL activation, no Nastaliq fonts)?",
+        "Does the product declare Nastaliq font stacks (Urdu's calligraphic Arabic variant)?",
+        "Would standard Arabic Naskh font rendering serve Urdu correctly (no -- Nastaliq required)?",
+        "Are 231 million speakers blocked by three compounding zeros?",
+        "Would fixing RTL activation partially unblock Urdu (still needs Nastaliq fonts)?",
+        "Is the product structurally capable of supporting a script variant like Nastaliq?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Aisyah",
+      "persona_domain": "Malay (ms), 290M speakers, Latin script, 80%+ mutual intelligibility with Indonesian",
+      "questions": [
+        "Do Malay locale files exist across any of the three projects?",
+        "Is Malay the most efficient locale to add (80%+ string reuse from existing Indonesian)?",
+        "Does the product have a locale fallback chain (ms -> id) for Malay speakers?",
+        "Are Indonesian and Malay treated as separate locales or conflated?",
+        "Could Malay be added by cloning Indonesian and adjusting ~20% of strings?",
+        "Is the absence of Malay when Indonesian exists a missed efficiency opportunity?",
+        "Would 290 million Malay speakers benefit from the existing Indonesian infrastructure?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Maria",
+      "persona_domain": "Tagalog/Filipino (tl), 82M speakers, Latin script, no diacritics",
+      "questions": [
+        "Do Tagalog locale files exist across any of the three projects?",
+        "Would Tagalog render correctly with string files alone (Latin, no diacritics)?",
+        "Is the Philippines' high English literacy rate used as justification for no Tagalog support?",
+        "Does 'can use English' equal 'served in their language' in the product's view?",
+        "Can the i18n 4-step process add Tagalog with string files alone?",
+        "Is Tagalog the simplest Latin-script locale to add (no diacritics, no gender, simple plurals)?",
+        "Are 82 million speakers excluded despite having the easiest-to-add locale?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Tomas",
+      "persona_domain": "Czech (cs), 11M speakers, Latin script with hacek diacritics",
+      "questions": [
+        "Do Czech locale files exist across any of the three projects?",
+        "Does the Vietnamese locale prove that hacek diacritics (c, s, z, r) render correctly?",
+        "Does Czech have complex plural rules similar to Polish that the product cannot handle?",
+        "Can Czech diacritics render using the existing font infrastructure?",
+        "Would Czech strings need plural rule infrastructure before being usable?",
+        "Is Czech a medium-effort locale (string files + plural rules)?",
+        "Does the product's rendering handle the full range of Czech special characters?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "Dawit",
+      "persona_domain": "Amharic (am), 57M speakers, Ethiopic (Ge'ez) script",
+      "questions": [
+        "Do Amharic locale files exist across any of the three projects?",
+        "Is any Ethiopic font declared anywhere in the product's CSS?",
+        "Do non-Ethiopian devices produce empty squares or tofu for Ethiopic text?",
+        "Is Ethiopic script literally invisible in the product (not wrong, not corrupted -- invisible)?",
+        "Does the Ethiopic script's 231 base characters plus combining marks require special fonts?",
+        "Would Google Fonts Noto Ethiopic solve the font rendering problem?",
+        "Is font infrastructure the prerequisite before any Amharic translation work?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Thida",
+      "persona_domain": "Myanmar/Burmese (my), 43M speakers, complex shaping script",
+      "questions": [
+        "Do Myanmar locale files exist across any of the three projects?",
+        "Does the product declare any Myanmar font?",
+        "Does Myanmar script require a complex shaping engine for character reordering and medial consonants?",
+        "Would Myanmar text render incorrectly even with a font if no shaping engine is present?",
+        "Is Myanmar the floor where font infrastructure gap becomes rendering impossibility?",
+        "Would Noto Sans Myanmar plus a shaping-aware renderer solve the display problem?",
+        "Can the product's text rendering pipeline handle Myanmar's vowel positioning rules?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Sophea",
+      "persona_domain": "Khmer (km), 16M speakers, most complex Unicode script",
+      "questions": [
+        "Do Khmer locale files exist across any of the three projects?",
+        "Is Khmer the most complex script in the Unicode standard (74 consonants, 35 vowels)?",
+        "Does the product declare any Khmer font?",
+        "Does Khmer's subscript consonant system require vertical character stacking?",
+        "Is Khmer a rendering impossibility without font and shaping infrastructure?",
+        "Would adding Khmer require the most font/shaping investment of any language?",
+        "Is the product structurally incapable of rendering Khmer text in its current state?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Keo",
+      "persona_domain": "Lao (lo), 30M speakers, scriptio continua",
+      "questions": [
+        "Do Lao locale files exist across any of the three projects?",
+        "Is Lao a scriptio continua language (no word boundaries) like Thai?",
+        "Does the product have the same word-segmentation gap for Lao as for Thai?",
+        "Is any Lao font declared in the product's CSS?",
+        "Would Lao face the same rendering impossibility as Thai (unbreakable lines)?",
+        "Does the product need a word-segmentation engine before Lao can be displayed?",
+        "Is the infrastructure gap for Lao identical to Thai?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Nino",
+      "persona_domain": "Georgian (ka), 4M speakers, unique alphabetic script (Mkhedruli)",
+      "questions": [
+        "Do Georgian locale files exist across any of the three projects?",
+        "Is Georgian a simple alphabetic LTR script that needs only a font declaration?",
+        "Would Georgian render correctly with just a font declaration (no shaping engine needed)?",
+        "Is a Georgian web font (Noto Sans Georgian) available via Google Fonts?",
+        "Is Georgian one of the lowest-effort non-Latin scripts to add?",
+        "Does the i18n infrastructure support Georgian with font + string files?",
+        "Would Georgian score higher than Khmer/Myanmar because its rendering is simpler?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "Armine",
+      "persona_domain": "Armenian (hy), 6M speakers, unique alphabetic script",
+      "questions": [
+        "Do Armenian locale files exist across any of the three projects?",
+        "Is Armenian a simple alphabetic LTR script like Georgian (no complex shaping)?",
+        "Would Armenian render correctly with just a font declaration and string files?",
+        "Is Noto Sans Armenian available as a web font?",
+        "Is Armenian another low-effort non-Latin script comparable to Georgian?",
+        "Does the product's font infrastructure have a path to support Armenian?",
+        "Would the mechanical 4-step i18n process work for Armenian with font addition?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Ruwan",
+      "persona_domain": "Sinhala (si), 17M speakers, Brahmic script with complex ligatures",
+      "questions": [
+        "Do Sinhala locale files exist across any of the three projects?",
+        "Does the product declare any Sinhala font?",
+        "Does Sinhala require a shaping-aware font for consonant cluster conjuncts?",
+        "Is Sinhala's rendering complexity similar to Bengali (Brahmic script family)?",
+        "Would system fonts on non-Sinhala devices render Sinhala as empty squares?",
+        "Does the product need font + shaping infrastructure before Sinhala translation?",
+        "Is Sinhala blocked by the same font gap as Bengali, Tamil, and Telugu?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Sagar",
+      "persona_domain": "Nepali (ne), 32M speakers, Devanagari script (same as Hindi)",
+      "questions": [
+        "Do Nepali locale files exist across any of the three projects?",
+        "Does the Hindi locale prove that Devanagari rendering works?",
+        "Can Nepali be added with string files and minor grammar adaptation from Hindi?",
+        "Is Nepali the highest-ROI Brahmic locale to add after Hindi?",
+        "Does Devanagari font infrastructure from Hindi apply directly to Nepali?",
+        "Are there significant grammar differences between Hindi and Nepali that require separate handling?",
+        "Is Nepali a same-script, different-language locale like Malay/Indonesian?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Bat-Erdene",
+      "persona_domain": "Mongolian (mn), 6M speakers, vertical script + Cyrillic variant",
+      "questions": [
+        "Do Mongolian locale files exist across any of the three projects?",
+        "Does traditional Mongolian use a vertical script (top-to-bottom, left-to-right)?",
+        "Does the product's CSS support writing-mode: vertical-rl for traditional Mongolian?",
+        "Would Cyrillic Mongolian (used in Mongolia proper) work with Russian infrastructure?",
+        "Are there two rendering paths needed for one language (vertical vs Cyrillic)?",
+        "Is Cyrillic Mongolian a quick win leveraging Russian's proven Cyrillic rendering?",
+        "Does the product need to decide which Mongolian script to support first?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Tenzin",
+      "persona_domain": "Tibetan (bo), 6M speakers, complex vertical stacking script",
+      "questions": [
+        "Do Tibetan locale files exist across any of the three projects?",
+        "Does the product declare any Tibetan font?",
+        "Does Tibetan script require vertical stacking of consonant clusters?",
+        "Is Tibetan a rendering impossibility without a specialized shaping engine?",
+        "Is Tibetan's rendering complexity comparable to Khmer and Myanmar?",
+        "Would Noto Sans Tibetan solve the font rendering problem?",
+        "Is Tibetan blocked by the same font + shaping gap as Khmer, Myanmar, and Sinhala?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Wei-Lin",
+      "persona_domain": "Traditional Chinese / zh-TW (zh-Hant), 30M+ speakers, political crisis",
+      "questions": [
+        "Does the product silently serve Simplified Chinese to Taiwanese users?",
+        "Is there a separate zh-Hant (Traditional Chinese) locale file?",
+        "Does the zh-TW/zh-CN conflation carry the weight of cross-strait political history?",
+        "Would serving Simplified Chinese to Taiwan end product launches in Greater China?",
+        "Is the zh-TW issue a political identity problem, not a rendering problem?",
+        "Can the product detect user region and serve the appropriate Chinese variant?",
+        "Is this the highest-risk finding in the entire Tower of the World?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Siu-Ming",
+      "persona_domain": "Cantonese / zh-HK (yue), 85M speakers, Traditional Chinese",
+      "questions": [
+        "Does the product serve Simplified Chinese to Hong Kong users?",
+        "Does the Greater China market require minimum 3 variants (zh-Hans, zh-Hant, yue-Hant)?",
+        "Are Cantonese-specific characters and expressions absent from the single zh locale?",
+        "Can 1.1 billion Chinese-speaking people be served by one locale?",
+        "Does the product distinguish between Mandarin and Cantonese?",
+        "Is the Hong Kong market blocked by the same zh-TW conflation?",
+        "Does Cantonese have unique characters not found in Mandarin that the product cannot handle?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Harpreet",
+      "persona_domain": "Punjabi (pa), 113M speakers, dual-script (Gurmukhi + Shahmukhi)",
+      "questions": [
+        "Do Punjabi locale files exist across any of the three projects?",
+        "Is Punjabi written in two completely different scripts (Gurmukhi in India, Shahmukhi in Pakistan)?",
+        "Does the product have a sub-locale system for pa-Guru and pa-Arab rendering paths?",
+        "Can the product represent one language needing two scripts as separate rendering paths?",
+        "Is Punjabi the most complex locale challenge (113M speakers, dual-script)?",
+        "Does Shahmukhi (Arabic-derived, RTL) compound the RTL dead code problem?",
+        "Is the product architecturally incapable of representing the Punjabi dual-script problem?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Kavitha",
+      "persona_domain": "Tamil (ta), 78M speakers, Brahmic script, relatively simple rendering",
+      "questions": [
+        "Do Tamil locale files exist across any of the three projects?",
+        "Does the Hindi Devanagari proof extend to Tamil (Brahmic script family)?",
+        "Is Tamil well-supported in system fonts across modern devices?",
+        "Does the product declare any Tamil font?",
+        "Is Tamil a lower-complexity Brahmic script (fewer conjuncts than Bengali)?",
+        "Would Tamil rendering work with system fonts on most devices?",
+        "Can the i18n 4-step process add Tamil with font declaration + string files?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Ravi",
+      "persona_domain": "Telugu (te), 83M speakers, Brahmic script with complex conjuncts",
+      "questions": [
+        "Do Telugu locale files exist across any of the three projects?",
+        "Does the product declare any Telugu font?",
+        "Does Telugu require complex conjunct rendering like Bengali and Sinhala?",
+        "Is the Telugu rendering infrastructure gap the same as other Brahmic scripts?",
+        "Would Noto Sans Telugu solve the font rendering problem?",
+        "Are 83 million Telugu speakers invisible to the product?",
+        "Is Telugu blocked by the same font infrastructure gap as Bengali?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Anand",
+      "persona_domain": "Kannada (kn), 44M speakers, Brahmic script",
+      "questions": [
+        "Do Kannada locale files exist across any of the three projects?",
+        "Is Kannada's script complexity similar to Telugu (Brahmic family)?",
+        "Does the product declare any Kannada font?",
+        "Is the Kannada rendering gap identical to Telugu and Tamil?",
+        "Would a single Brahmic font infrastructure investment unlock multiple South Indian languages?",
+        "Are 44 million Kannada speakers blocked by the same systemic gap?",
+        "Does the product treat all South Indian Brahmic scripts as a single infrastructure problem?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Arun",
+      "persona_domain": "Malayalam (ml), 38M speakers, most complex South Indian conjuncts",
+      "questions": [
+        "Do Malayalam locale files exist across any of the three projects?",
+        "Does the product declare any Malayalam font?",
+        "Is Malayalam the most complex conjunct system among South Indian languages?",
+        "Does Malayalam require a shaping-aware font for ligature rendering?",
+        "Would Noto Sans Malayalam solve the rendering problem?",
+        "Is Malayalam blocked by the same font + shaping gap as other Brahmic scripts?",
+        "Are 38 million speakers excluded by the same systemic font infrastructure gap?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Ganesh",
+      "persona_domain": "Marathi (mr), 83M speakers, Devanagari script (same as Hindi)",
+      "questions": [
+        "Do Marathi locale files exist across any of the three projects?",
+        "Does Marathi use Devanagari script (same as Hindi), proving rendering works?",
+        "Can Marathi be added with string files and minor grammar adaptation from Hindi?",
+        "Is Marathi the second-highest-ROI Devanagari locale after Nepali?",
+        "Are 83 million Marathi speakers blocked despite having a proven script rendering path?",
+        "Does Devanagari infrastructure from Hindi apply directly to Marathi?",
+        "Is Marathi a quick win: proven script, new strings only?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Priti",
+      "persona_domain": "Gujarati (gu), 57M speakers, Brahmic script derived from Devanagari",
+      "questions": [
+        "Do Gujarati locale files exist across any of the three projects?",
+        "Does the product declare any Gujarati font?",
+        "Is Gujarati derived from Devanagari with similar rendering requirements?",
+        "Would Noto Sans Gujarati solve the font rendering problem?",
+        "Are 57 million Gujarati speakers blocked by the same font gap?",
+        "Does the Devanagari rendering proof partially apply to Gujarati?",
+        "Is Gujarati medium-effort (font declaration + string files + minor grammar)?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Subash",
+      "persona_domain": "Odia (or), 38M speakers, Brahmic script with rounded letterforms",
+      "questions": [
+        "Do Odia locale files exist across any of the three projects?",
+        "Does the product declare any Odia font?",
+        "Does Odia require a dedicated font due to distinctive rounded letterforms?",
+        "Would Noto Sans Oriya solve the font rendering problem?",
+        "Are 38 million Odia speakers blocked by the same font gap as other Brahmic scripts?",
+        "Is Odia the final South Indian Brahmic script in the tower?",
+        "Does the systematic absence of all South Indian scripts prove a regional blind spot?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Saint Solace (Digital Twin)",
+      "persona_domain": "boss floor: AI self-inspection -- can 95% of the world use Solace natively?",
+      "questions": [
+        "What percentage of the world's population can use Solace in their native language today?",
+        "Are the 13 existing locales correct -- free of contamination and grammatically native?",
+        "Can right-to-left languages function in Solace (Arabic, Persian, Hebrew, Urdu)?",
+        "Can CJK languages (Chinese, Japanese, Korean) render correctly with proper fonts?",
+        "Are number, date, and currency formats locale-aware (not hardcoded en-US)?",
+        "Is cultural context respected (holidays, calendars, customs not US-centric)?",
+        "Is there a community contribution path for translation (Crowdin, Weblate, glossary)?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "The Ambassador",
+      "persona_domain": "boss floor: professional translator and diplomat -- does this product understand what translation IS?",
+      "questions": [
+        "Can a monolingual speaker of each target language use Solace without encountering foreign characters?",
+        "Does Solace feel native -- not translated -- in Arabic and Japanese?",
+        "When an error occurs, is the error message meaningful in the user's language?",
+        "Is 03/04/2026 unambiguous in every locale (March 4 vs April 3)?",
+        "Can a user with a non-ASCII name see their name rendered correctly everywhere?",
+        "Are technical terms translated, explained, or intentionally preserved with tooltips?",
+        "In 2030 with 100 countries, does the current i18n infrastructure scale?"
+      ]
+    }
+  ]
+}

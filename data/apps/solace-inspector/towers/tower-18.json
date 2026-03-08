@@ -1,0 +1,712 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 18,
+    "tower_name": "Tower of macOS",
+    "dna": "macos(native) = apple_silicon(optimized) x notarization(signed) x keychain(integrated) x universal_binary(arm+x86) x accessibility(voiceover) x design(human_interface) x sandboxed(secure)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor lists 7 seed questions. During execution, expand to ~100 questions per persona. macOS users expect native quality — smooth animations, Retina graphics, and system integration. Every question must probe whether Solace Browser feels like a first-class Mac citizen.",
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of macOS",
+  "tower_number": 18,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Apple Silicon Engineer",
+      "persona_domain": "ARM64 optimization and universal binary",
+      "questions": [
+        "Is the macOS build a universal binary (arm64 + x86_64) that runs natively on Apple Silicon?",
+        "Does the app use hardware acceleration on Apple Silicon (Metal, VideoToolbox)?",
+        "Is the binary notarized and signed with a valid Apple Developer certificate?",
+        "Does the app pass Gatekeeper checks without requiring 'Allow from anywhere'?",
+        "Are native node modules compiled for both architectures in the universal binary?",
+        "Does the app launch in under 3 seconds on Apple Silicon?",
+        "Is Rosetta 2 translation avoided (true native ARM64 execution)?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "macOS UX Designer",
+      "persona_domain": "Human Interface Guidelines compliance",
+      "questions": [
+        "Does the app follow Apple Human Interface Guidelines for window management?",
+        "Is there a proper macOS menu bar with standard menus (File, Edit, View, Window, Help)?",
+        "Do standard keyboard shortcuts work (Cmd+Q quit, Cmd+W close, Cmd+, preferences)?",
+        "Does the app support the macOS native dark/light mode via prefers-color-scheme?",
+        "Are window resize, minimize, and full-screen behaviors standard?",
+        "Does the traffic light (close/minimize/maximize) work correctly?",
+        "Does the app support macOS Spaces and Mission Control?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Retina Display Specialist",
+      "persona_domain": "high-DPI rendering",
+      "questions": [
+        "Are all images and icons sharp on Retina displays (2x and 3x assets)?",
+        "Do CSS pixel calculations account for devicePixelRatio on Retina?",
+        "Are SVG icons used instead of raster images for scalability?",
+        "Does the canvas (if any) render at the correct resolution on Retina?",
+        "Do screenshots captured by the evidence system use Retina resolution?",
+        "Are font rendering and anti-aliasing correct on Retina displays?",
+        "Does the app handle display scaling changes (plug/unplug external monitor)?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Keychain Integration Engineer",
+      "persona_domain": "secure credential storage",
+      "questions": [
+        "Does the OAuth3 vault integrate with macOS Keychain for secure token storage?",
+        "Are Keychain access controls set to 'this application only'?",
+        "Does the vault fallback to encrypted file storage if Keychain is unavailable?",
+        "Can users see Solace Browser entries in Keychain Access.app?",
+        "Are Keychain entries cleaned up on app uninstall?",
+        "Does Touch ID / Face ID unlock the vault on supported Macs?",
+        "Is the Keychain integration using the modern Security framework (not deprecated APIs)?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "App Sandbox Inspector",
+      "persona_domain": "macOS sandbox and entitlements",
+      "questions": [
+        "Is the app sandboxed with appropriate entitlements?",
+        "Are file system access requests scoped to user-selected directories?",
+        "Does the app use NSOpenPanel for file access (not direct path access)?",
+        "Are network entitlements appropriately restricted?",
+        "Does the sandbox allow the browser automation engine to function?",
+        "Are temporary files written to the app's sandbox container?",
+        "Does the app handle sandbox denial gracefully (not crash)?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "VoiceOver Tester",
+      "persona_domain": "macOS screen reader accessibility",
+      "questions": [
+        "Can a VoiceOver user navigate all browser UI elements?",
+        "Are ARIA labels correctly mapped to VoiceOver announcements?",
+        "Does the YinYang approval dialog work with VoiceOver?",
+        "Can VoiceOver users access the settings page and change themes?",
+        "Are keyboard navigation and VoiceOver focus synchronized?",
+        "Do VoiceOver rotor actions work for headings, links, and form fields?",
+        "Are dynamic content changes announced to VoiceOver (aria-live)?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Notarization Inspector",
+      "persona_domain": "code signing and distribution",
+      "questions": [
+        "Is the app signed with a valid Developer ID Application certificate?",
+        "Is the app notarized with Apple's notarization service?",
+        "Does the DMG/ZIP distribution include the notarization ticket (stapled)?",
+        "Does the app pass `spctl --assess` verification?",
+        "Are all embedded frameworks and dylibs also signed?",
+        "Is hardened runtime enabled with appropriate exceptions?",
+        "Does the entitlements file request only necessary capabilities?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Dock Integration Expert",
+      "persona_domain": "Dock, notifications, and system integration",
+      "questions": [
+        "Does the app icon in the Dock match Apple design guidelines (rounded square, no border)?",
+        "Does the Dock icon show a badge count for pending approvals?",
+        "Can the app be started from Dock and from Spotlight?",
+        "Does Cmd+Tab switching work correctly (proper app name and icon)?",
+        "Are notifications delivered through macOS Notification Center?",
+        "Can users manage notification preferences in System Preferences?",
+        "Does the app support Dock bounce for attention-requiring events?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Auto-Update Engineer",
+      "persona_domain": "macOS update mechanism",
+      "questions": [
+        "Does the auto-updater work on macOS (Sparkle or Electron autoUpdater)?",
+        "Are updates signed with the same Developer ID certificate?",
+        "Does the update process preserve user data and preferences?",
+        "Can users check for updates manually (Help → Check for Updates)?",
+        "Does the updater support delta updates (not full download)?",
+        "Is the update download verified with a checksum before installation?",
+        "Does the app restart cleanly after an update?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Drag-and-Drop Expert",
+      "persona_domain": "native drag-and-drop support",
+      "questions": [
+        "Can users drag files from Finder into Solace Browser?",
+        "Does drag-and-drop work for importing recipes, themes, and apps?",
+        "Can users drag text and URLs from Solace Browser to other apps?",
+        "Is the drag preview (ghost image) appropriate for the dragged content?",
+        "Does drop target highlighting follow macOS conventions?",
+        "Can users drag between Solace Browser windows?",
+        "Are drop operations undoable (Cmd+Z)?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Clipboard Integration Specialist",
+      "persona_domain": "copy, paste, and Universal Clipboard",
+      "questions": [
+        "Does copy/paste work correctly between Solace Browser and other apps?",
+        "Does Universal Clipboard (copy on iPhone, paste on Mac) work?",
+        "Are rich formats (HTML, images) preserved in clipboard operations?",
+        "Can users paste screenshots directly into file upload fields?",
+        "Does Cmd+Shift+V (paste as plain text) work?",
+        "Are clipboard operations evidence-captured for audit?",
+        "Does the clipboard handle sensitive data (passwords, tokens) securely?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Trackpad Gesture Expert",
+      "persona_domain": "multi-touch gesture support",
+      "questions": [
+        "Does pinch-to-zoom work for zooming page content?",
+        "Do two-finger swipe gestures work for back/forward navigation?",
+        "Does three-finger drag work for moving windows?",
+        "Is momentum scrolling smooth and natural?",
+        "Does force touch (if available) provide useful functionality?",
+        "Are gesture interactions accessible to users who can't perform multi-touch?",
+        "Does the app handle gesture conflicts with system gestures gracefully?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Touch Bar Engineer",
+      "persona_domain": "Touch Bar integration (older MacBooks)",
+      "questions": [
+        "Does the app provide Touch Bar controls on supported MacBooks?",
+        "Are common actions (approve, reject, navigate) available in the Touch Bar?",
+        "Does the Touch Bar update contextually based on the current page?",
+        "Is the Touch Bar layout accessible and logical?",
+        "Does the app handle Touch Bar absence gracefully (newer MacBooks)?",
+        "Are Touch Bar buttons large enough to press accurately?",
+        "Does the app clean up Touch Bar registrations on quit?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Handoff Expert",
+      "persona_domain": "Continuity and Handoff features",
+      "questions": [
+        "Does Handoff allow continuing browser sessions from iPhone to Mac?",
+        "Can users start an approval on iPhone and complete on Mac?",
+        "Does AirDrop work for sharing recipes and themes?",
+        "Is iCloud integration available for settings sync?",
+        "Does Siri integration provide useful shortcuts?",
+        "Can Spotlight index Solace Browser content?",
+        "Does the app support Share Sheet for sharing content?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Energy Efficiency Expert",
+      "persona_domain": "battery and thermal management",
+      "questions": [
+        "Does the app use App Nap when in the background?",
+        "Is the app energy-efficient per Activity Monitor's Energy tab?",
+        "Does the app avoid preventing system sleep unnecessarily?",
+        "Are background tasks (daemon scheduler) energy-efficient?",
+        "Does the app reduce activity when on battery power?",
+        "Is the app's CPU usage near zero when idle?",
+        "Does the app handle thermal throttling gracefully?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Privacy Controls Inspector",
+      "persona_domain": "macOS privacy permissions",
+      "questions": [
+        "Does the app request permissions correctly (camera, microphone, screen recording)?",
+        "Are privacy permission requests explained with usage description strings?",
+        "Can users revoke permissions in System Preferences → Privacy?",
+        "Does the app function correctly with some permissions denied?",
+        "Is Full Disk Access requested only when necessary?",
+        "Are Accessibility permissions requested with clear justification?",
+        "Does the app handle permission changes without requiring restart?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "External Display Expert",
+      "persona_domain": "multi-monitor support",
+      "questions": [
+        "Does the app handle multiple displays correctly?",
+        "Can windows be moved between displays with different resolutions?",
+        "Does the app remember window position per display configuration?",
+        "Does the app handle display connect/disconnect without crashing?",
+        "Are dialogs (YinYang approval) positioned on the correct display?",
+        "Does the app handle mixed-resolution displays (Retina + non-Retina)?",
+        "Does the app support Sidecar (iPad as second display)?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Startup Items Expert",
+      "persona_domain": "login items and launch agents",
+      "questions": [
+        "Can the app be configured to launch at login?",
+        "Is the login item registered using the modern SMLoginItemSetEnabled API?",
+        "Does the daemon mode install a proper LaunchAgent?",
+        "Is the LaunchAgent plist correctly formatted and signed?",
+        "Can users disable auto-launch from the app's settings?",
+        "Does the login item appear in System Preferences → Login Items?",
+        "Does the background agent use minimal resources?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Crash Reporter Expert",
+      "persona_domain": "crash handling and diagnostics",
+      "questions": [
+        "Does the app submit crash reports to Apple's crash reporting system?",
+        "Are crash logs symbolicated for debugging?",
+        "Does the app offer to send crash reports with user consent?",
+        "Can users find crash logs in ~/Library/Logs/DiagnosticReports/?",
+        "Does the app recover gracefully after a crash (restore session)?",
+        "Are out-of-memory kills handled differently from crashes?",
+        "Does the app log enough context to diagnose crashes from reports?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Quick Look Integration Expert",
+      "persona_domain": "system integration with Quick Look, Spotlight, Services",
+      "questions": [
+        "Does the app register file types for Quick Look preview?",
+        "Can Spotlight index app-specific documents (recipes, evidence)?",
+        "Does the app provide Services menu items?",
+        "Can users set Solace Browser as the default handler for specific protocols?",
+        "Does the app support macOS Share extensions?",
+        "Are app-specific file types registered with proper UTI declarations?",
+        "Does the app handle openFile: Apple Events correctly?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "macOS Ventura+ Feature Tester",
+      "persona_domain": "latest macOS version features",
+      "questions": [
+        "Does the app work correctly on the latest macOS version?",
+        "Are new system features (Stage Manager, etc.) supported?",
+        "Does the app handle macOS API deprecations gracefully?",
+        "Is the minimum supported macOS version clearly documented?",
+        "Does the app use modern AppKit/SwiftUI APIs where appropriate?",
+        "Are new privacy requirements (macOS 15+) handled?",
+        "Does the app support the latest macOS notification features?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "DMG Installer Designer",
+      "persona_domain": "distribution and installation experience",
+      "questions": [
+        "Is the DMG download clearly linked from the download page?",
+        "Does the DMG open to a clean install window (app icon → Applications)?",
+        "Is the DMG background image professional and branded?",
+        "Does the install process work without admin privileges (user Applications)?",
+        "Is the DMG size reasonable (not bloated with debug symbols)?",
+        "Does the app detect if it's running from the DMG (not installed) and offer to move?",
+        "Is there an uninstaller or clear uninstall instructions?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Time Machine Compatibility Tester",
+      "persona_domain": "backup and data persistence",
+      "questions": [
+        "Are app data files backed up by Time Machine?",
+        "Are large files (browser cache, temporary data) excluded from Time Machine?",
+        "Can users restore app state from a Time Machine backup?",
+        "Does the app handle restoring from backup gracefully (no stale locks)?",
+        "Are the vault and evidence chain backed up securely?",
+        "Does the app use correct filesystem locations (~/Library/Application Support)?",
+        "Are temporary files stored in the correct directory (not polluting backups)?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Network Framework Expert",
+      "persona_domain": "macOS network stack integration",
+      "questions": [
+        "Does the app handle network transitions (Wi-Fi → Ethernet → VPN) gracefully?",
+        "Is the app compatible with macOS firewall settings?",
+        "Does the app work through corporate proxies?",
+        "Can the app detect captive portals (hotel/airport Wi-Fi)?",
+        "Does the tunnel connection (cloudflared) work on macOS?",
+        "Is TLS certificate pinning implemented for sensitive connections?",
+        "Does the app handle DNS resolution correctly on macOS?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Accessibility API Expert",
+      "persona_domain": "macOS accessibility framework integration",
+      "questions": [
+        "Does the app expose UI elements through the Accessibility API?",
+        "Can automation tools (Automator, AppleScript) interact with the app?",
+        "Does Zoom (display zoom) work correctly with the app?",
+        "Can Switch Control users navigate the app?",
+        "Does Voice Control work for dictation and commands?",
+        "Are all controls labeled in the Accessibility Inspector?",
+        "Does the app support Dynamic Type (system font size changes)?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "macOS Security Tester",
+      "persona_domain": "platform-specific security features",
+      "questions": [
+        "Does the app use Secure Enclave for cryptographic operations where available?",
+        "Is the app compatible with FileVault (full disk encryption)?",
+        "Does the app clear sensitive data from memory after use?",
+        "Are IPC mechanisms (XPC, Mach ports) used securely?",
+        "Does the app prevent library injection attacks?",
+        "Is the app compiled with stack canaries and ASLR?",
+        "Does hardened runtime prevent unauthorized code execution?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Localization Tester (macOS)",
+      "persona_domain": "macOS-specific localization",
+      "questions": [
+        "Does the app pick up the macOS system language correctly?",
+        "Are date/time formats using macOS locale settings?",
+        "Does the app handle right-to-left system languages on macOS?",
+        "Are decimal separators and number formats locale-aware?",
+        "Does the app handle macOS input methods (Japanese, Chinese, Korean)?",
+        "Are system dialogs (file picker, print) localized?",
+        "Does spell-checking work in the correct language?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "Printing Expert (macOS)",
+      "persona_domain": "macOS print system integration",
+      "questions": [
+        "Does the app use the native macOS print dialog?",
+        "Can users print evidence reports and audit trails?",
+        "Does print preview render correctly?",
+        "Are print margins and page layout appropriate?",
+        "Does the app support PDF export via the print dialog?",
+        "Can users choose paper size and orientation?",
+        "Does printing work with AirPrint printers?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Terminal Integration Expert",
+      "persona_domain": "CLI and terminal integration on macOS",
+      "questions": [
+        "Can solace-cli be invoked from Terminal.app and iTerm2?",
+        "Is there a `solace` command available after installation?",
+        "Does the CLI handle macOS file paths correctly (spaces, accents)?",
+        "Can the CLI launch Solace Browser GUI from the terminal?",
+        "Are man pages installed for the CLI commands?",
+        "Does tab completion work in zsh (macOS default shell)?",
+        "Can the CLI open browser sessions in background (headless) on macOS?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Homebrew Installer Expert",
+      "persona_domain": "package manager distribution",
+      "questions": [
+        "Is there a Homebrew cask for installing Solace Browser?",
+        "Does `brew install --cask solace-browser` work correctly?",
+        "Is the cask formula maintained and up to date?",
+        "Does the Homebrew install handle dependencies correctly?",
+        "Can users upgrade via `brew upgrade solace-browser`?",
+        "Is the SHA256 checksum verified during installation?",
+        "Does the Homebrew installation path match the DMG installation?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Performance Monitor (macOS)",
+      "persona_domain": "macOS-specific performance metrics",
+      "questions": [
+        "What does Activity Monitor show for CPU and memory usage?",
+        "Does the app appear in the Energy tab with low energy impact?",
+        "Are there excessive disk reads/writes visible in Activity Monitor?",
+        "Does Instruments (Xcode) show any performance issues?",
+        "Is the app's GPU usage efficient?",
+        "Does the app handle memory pressure (yellow/red in Activity Monitor)?",
+        "Are there any runaway timers or background processes?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "macOS 14+ Compatibility Tester",
+      "persona_domain": "forward compatibility with upcoming macOS versions",
+      "questions": [
+        "Does the app work on macOS beta versions?",
+        "Are deprecated APIs flagged and replaced proactively?",
+        "Does the app handle new privacy requirements in future macOS?",
+        "Is there a compatibility testing matrix for macOS versions?",
+        "Are framework changes (WebKit, Electron) tracked for compatibility?",
+        "Does the app handle new hardware features (Neural Engine, etc.)?",
+        "Is there a plan for supporting Apple Vision Pro (visionOS)?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "File System Expert (macOS)",
+      "persona_domain": "APFS and file system behavior",
+      "questions": [
+        "Does the app handle APFS features (snapshots, clones) correctly?",
+        "Are file paths case-insensitive safe (APFS default)?",
+        "Does the app handle extended attributes (xattr) correctly?",
+        "Are quarantine flags handled for downloaded files?",
+        "Does the app work on encrypted APFS volumes?",
+        "Are symbolic links handled correctly in data directories?",
+        "Does the app handle file names with Unicode normalization differences?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "iCloud Drive Expert",
+      "persona_domain": "iCloud integration and sync",
+      "questions": [
+        "Can the app store data in iCloud Drive for cross-device sync?",
+        "Does the app handle iCloud file conflicts gracefully?",
+        "Are iCloud-stored files available offline?",
+        "Does the app handle iCloud account changes?",
+        "Is iCloud sync optional (not required for the app to function)?",
+        "Are large files stored in iCloud with appropriate optimization?",
+        "Does the app respect iCloud storage quotas?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Catalyst/SwiftUI Evaluator",
+      "persona_domain": "native framework possibilities",
+      "questions": [
+        "Would migrating to Mac Catalyst improve the macOS experience?",
+        "Are there SwiftUI components that could replace web UI for native feel?",
+        "Could native macOS notifications replace web-based ones?",
+        "Would a native menu bar app provide better system integration?",
+        "Could Shortcuts.app integration automate common Solace workflows?",
+        "Would a native share extension reach more users?",
+        "Could Widgets (macOS Sonoma) provide at-a-glance status?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Migration Assistant Expert",
+      "persona_domain": "data migration and device switching",
+      "questions": [
+        "Does Migration Assistant transfer Solace Browser data to a new Mac?",
+        "Is the app data in the correct location for Migration Assistant?",
+        "Does the app handle running after Migration Assistant (new hardware)?",
+        "Are Keychain items migrated correctly?",
+        "Does the app detect and handle first-run-after-migration?",
+        "Are file permissions correct after migration?",
+        "Can users manually export/import settings between Macs?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Enterprise Mac Admin",
+      "persona_domain": "MDM and enterprise deployment",
+      "questions": [
+        "Can the app be deployed via MDM (Jamf, Intune, Mosyle)?",
+        "Is there a .pkg installer for mass deployment?",
+        "Can IT admins pre-configure settings via managed preferences?",
+        "Does the app support managed App Store distribution?",
+        "Can IT admins restrict features via configuration profiles?",
+        "Is the app compatible with corporate VPN and proxy?",
+        "Does the app work in a managed Apple ID environment?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Benchmark Tester (macOS)",
+      "persona_domain": "macOS-specific performance benchmarks",
+      "questions": [
+        "How does Solace Browser compare to Chrome on macOS Speedometer?",
+        "What is the cold start time on M1 vs M2 vs Intel Macs?",
+        "Does the app maintain 60fps animations on all supported Macs?",
+        "What is the memory footprint on a base 8GB MacBook Air?",
+        "How does battery life compare when using Solace vs Chrome for browsing?",
+        "What is the file I/O performance for evidence chain operations?",
+        "Does the app handle 20+ tabs without significant memory growth?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Uninstall Cleanliness Tester",
+      "persona_domain": "clean uninstallation",
+      "questions": [
+        "Does the app leave residual files after uninstallation?",
+        "Are Keychain entries cleaned up on uninstall?",
+        "Are LaunchAgents removed on uninstall?",
+        "Does the app remove its Application Support directory?",
+        "Are login items deregistered on uninstall?",
+        "Does the app remove its Preferences plist?",
+        "Can third-party uninstallers (AppCleaner) find all app files?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Pro Workflow Expert",
+      "persona_domain": "professional Mac user workflows",
+      "questions": [
+        "Can power users create Automator workflows with Solace Browser?",
+        "Does AppleScript support allow scripting browser actions?",
+        "Can Solace Browser be controlled via osascript from Terminal?",
+        "Does the app integrate with Alfred or Raycast launchers?",
+        "Can users create keyboard shortcuts via System Preferences?",
+        "Does the app support Split View for side-by-side work?",
+        "Can professional users set up Solace Browser in their dock-based workflow?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Screen Recording Compatibility Tester",
+      "persona_domain": "screen capture and recording",
+      "questions": [
+        "Does the app appear correctly in macOS screen recordings?",
+        "Can users take screenshots of the app with Cmd+Shift+3/4?",
+        "Does the app handle screen recording permissions correctly?",
+        "Are sensitive areas (vault, tokens) excluded from screen capture?",
+        "Does the app work with screen recording tools (OBS, QuickTime)?",
+        "Are overlays and popups captured in screenshots?",
+        "Does the app support the macOS markup tools for screenshots?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Focus/Concentration Mode Expert",
+      "persona_domain": "macOS Focus and Do Not Disturb",
+      "questions": [
+        "Does the app respect macOS Focus/Do Not Disturb settings?",
+        "Can users configure Solace Browser's notification behavior per Focus mode?",
+        "Does the app support Focus filters?",
+        "Are time-sensitive notifications (approval requests) delivered during Focus?",
+        "Does the daemon scheduler respect Focus settings?",
+        "Can users set up a 'Work' Focus that allows Solace Browser notifications?",
+        "Does the app suppress non-critical notifications during scheduled Focus?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Continuity Camera Expert",
+      "persona_domain": "cross-device camera and document features",
+      "questions": [
+        "Can users scan documents via Continuity Camera into Solace Browser?",
+        "Does the app support inserting photos from iPhone?",
+        "Can users use iPhone as a webcam for video evidence?",
+        "Does Continuity Markup work for annotating screenshots?",
+        "Can users sketch on iPad and insert into Solace Browser?",
+        "Does the app handle Continuity connection failures gracefully?",
+        "Are Continuity features discovered and used when available?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Safari Technology Preview Tester",
+      "persona_domain": "WebKit compatibility",
+      "questions": [
+        "Does the web content render correctly if using WKWebView (macOS native)?",
+        "Are CSS features used compatible with the latest WebKit?",
+        "Does the app handle WebKit-specific quirks or vendor prefixes?",
+        "Are JavaScript APIs used supported by the macOS WebKit version?",
+        "Does the app handle WebKit security policies correctly?",
+        "Are there WebKit-specific performance optimizations?",
+        "Does the app test against multiple WebKit versions?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Privacy Report Tester",
+      "persona_domain": "macOS privacy reporting and Intelligent Tracking Prevention",
+      "questions": [
+        "Does the app comply with macOS privacy reporting?",
+        "Are tracking protections compatible with the app's functionality?",
+        "Does the app handle Intelligent Tracking Prevention correctly?",
+        "Are privacy nutrition labels accurate for the app?",
+        "Does the app's network activity match its privacy claims?",
+        "Can users view what data the app accesses in Privacy Report?",
+        "Does the app handle privacy changes in macOS updates?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "macOS Server Expert",
+      "persona_domain": "running Solace Browser on macOS Server",
+      "questions": [
+        "Can Solace Browser run in headless mode on macOS Server?",
+        "Does the daemon mode work correctly on macOS Server?",
+        "Can the cloud twin run on a Mac mini as a server?",
+        "Is there documentation for macOS Server deployment?",
+        "Does the app handle server-specific configurations (no display)?",
+        "Can multiple users run Solace Browser on a shared macOS Server?",
+        "Does the app handle process management on macOS Server?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Mac Developer Tool Integration Expert",
+      "persona_domain": "Xcode, Instruments, and developer tools",
+      "questions": [
+        "Can developers debug the app using Xcode Instruments?",
+        "Are dsym files available for symbolication?",
+        "Does the app provide useful logs via Console.app?",
+        "Can developers use Charles Proxy to inspect app network traffic?",
+        "Is the app compatible with Xcode's memory debugger?",
+        "Can developers build the app from source on macOS?",
+        "Are there developer-focused docs for contributing on macOS?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Dragon Rider (Phuc)",
+      "persona_domain": "macOS experience vision",
+      "questions": [
+        "Does Solace Browser feel like a native Mac app (not a web wrapper)?",
+        "Would a Mac power user choose Solace Browser as their daily driver?",
+        "Does the macOS build showcase the best of what the platform can offer?",
+        "Is the install-to-first-value time under 5 minutes on macOS?",
+        "Does the app make the Mac ecosystem stronger (not just live on it)?",
+        "Would Apple feature Solace Browser in the Mac App Store 'Top Picks'?",
+        "Is this the Mac app the Dragon Rider would use daily?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "Mum Test Judge",
+      "persona_domain": "non-technical Mac user experience",
+      "questions": [
+        "Can a non-technical Mac user install the app from a DMG without help?",
+        "Does the app look and feel familiar to a regular Mac user?",
+        "Can the user find and change settings without getting lost?",
+        "Does the app crash or behave oddly in normal use on a Mac?",
+        "Would the user know how to get help if something goes wrong?",
+        "Does the app integrate with the tools the user already knows (Finder, Spotlight)?",
+        "Would a non-technical Mac user recommend this app to a friend?"
+      ]
+    }
+  ]
+}

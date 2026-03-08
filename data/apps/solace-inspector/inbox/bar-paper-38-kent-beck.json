@@ -1,0 +1,41 @@
+{
+  "spec_id": "bar-paper-38-kent-beck-GLOW117",
+  "mode": "business_acceptance",
+  "review_mode": "individual",
+  "scoring": "binary_not_average",
+  "persona": "kent_beck",
+  "persona_full_name": "Kent Beck",
+  "persona_acting_as": "CEO",
+  "persona_domain": "quality_engineering",
+  "persona_bio": "Kent Beck invented TDD and XP, making him uniquely qualified to judge whether Paper 38's QA doctrine distinguishes honest verification from theater.",
+  "paper_id": "38",
+  "paper_title": "Individual vs Committee QA Doctrine",
+  "paper_path": "/home/phuc/projects/solaceagi/papers/38-individual-vs-committee-qa-doctrine.md",
+  "project": "solaceagi",
+  "context_injection": {
+    "skills": ["prime-safety", "prime-coder"],
+    "papers_to_read": ["17-ten-uplift-principles", "46-questions-as-uplift"],
+    "diagrams": ["23-individual-vs-committee-qa-flow"],
+    "note": "Load persona domain knowledge before review"
+  },
+  "target_cmd": "cat '/home/phuc/projects/solaceagi/papers/38-individual-vs-committee-qa-doctrine.md'",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": [],
+    "stderr_empty": false,
+    "llm_analysis": true,
+    "llm_verdict_required": "You are Kent Beck acting as CEO. Read the paper above. Answer each question PASS/FAIL with one sentence. Then render your final CEO verdict: 'AS CEO, I SIGN OFF ON THIS PAPER' or 'AS CEO, I REFUSE TO SIGN — REASON: [specific blocker]'"
+  },
+  "domain_questions": [
+    "Does Paper 38 distinguish between 'checking' (machines) and 'testing' (humans)? Does the individual audit mode respect this distinction?",
+    "Is the two-phase protocol (individual first, committee second) backed by evidence? What's the sample size for the 20-bug claim?",
+    "What test would tell us immediately if the committee mode is producing false positives (scores without actual verification)?",
+    "Is 'binary pass/fail' rigorous, or does it create false precision? A Linus 'FAIL' on a 9/10 system could block shipping.",
+    "Are the 'domain questions' in the individual audit mode themselves tested? Who audits the auditor?"
+  ],
+  "sign_off_required": true,
+  "sign_off_keywords": ["AS CEO, I SIGN OFF", "AS CEO, I REFUSE TO SIGN"],
+  "pass_threshold": "All domain questions PASS AND sign_off verdict is positive",
+  "created_at": "2026-03-04T00:00:00Z",
+  "glow": "GLOW117"
+}

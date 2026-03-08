@@ -1,0 +1,745 @@
+{
+  "_meta": {
+    "schema": "tower-fixes-tracker",
+    "version": "1.1",
+    "auth": "65537",
+    "doctrine": "Every tower fix is tracked with score, severity, reason, file, status, and verification. Never delete \u2014 only append.",
+    "created": "2026-03-05",
+    "total_fixes": 0,
+    "total_verified": 0,
+    "total_pending": 0,
+    "project_targeting_added": "2026-03-05"
+  },
+  "severity_levels": {
+    "P0_CRITICAL": "Security vulnerability, data loss, legal liability, production broken",
+    "P1_HIGH": "Incorrect behavior, Fallback Ban violation, wrong data shown to users",
+    "P2_MEDIUM": "Missing feature, inconsistent docs, suboptimal UX",
+    "P3_LOW": "Code style, minor UI, documentation polish"
+  },
+  "status_values": {
+    "FOUND": "Issue identified but not yet fixed",
+    "FIXED": "Code change applied",
+    "VERIFIED": "Fix confirmed working (re-scored >= 7)",
+    "WONTFIX": "Intentionally not fixing (with reason)",
+    "DEFERRED": "Fixing in a future phase (with target)"
+  },
+  "score_guide": {
+    "1-3": "CRITICAL \u2014 broken, missing, or dangerously wrong",
+    "4-5": "FAIL \u2014 exists but inadequate or partially implemented",
+    "6": "BORDERLINE \u2014 almost passing, minor gap",
+    "7-8": "PASS \u2014 working correctly with minor improvements possible",
+    "9-10": "EXCELLENT \u2014 exceeds expectations"
+  },
+  "towers": {
+    "tower_1_masters": {
+      "tower_name": "Tower of Masters",
+      "total_fixes": 2568,
+      "run_version": "v1.0",
+      "rerun_version": "v2.0",
+      "status": "COMPLETE",
+      "rerun_date": "2026-03-05",
+      "rerun_grade": "B+",
+      "rerun_pass_rate": "100% (49/49 floors >= 7, avg 7.4/10)",
+      "verdict": "All P0/P1 fixed in v1.0. Remaining gaps are P2/P3 only (main.py decomposition, circuit breaker, crypto keys).",
+      "fixes": [],
+      "target_project": "all"
+    },
+    "tower_2_customers": {
+      "tower_name": "Tower of Customers",
+      "total_fixes": 14,
+      "run_version": "v2.0",
+      "rerun_version": "v2.0",
+      "status": "COMPLETE",
+      "rerun_date": "2026-03-05",
+      "rerun_grade": "B+",
+      "rerun_pass_rate": "63.3% (31/49 floors >= 7)",
+      "systemic_fixes_holding": "9/10",
+      "new_fixes_applied": 4,
+      "fixes": [
+        {
+          "fix_id": "T2-V2-001",
+          "tower": 2,
+          "floor": "cross-floor",
+          "persona": "Hans Mueller (F17) + James Worthington (F11)",
+          "severity": "P1_HIGH",
+          "score_before": 5,
+          "score_after": 9,
+          "reason": "DPA stated PBKDF2 100,000 iterations in 2 locations; code uses 600,000 (NIST 2026 guidance). Legal doc inconsistent with implementation.",
+          "files_changed": [
+            "solaceagi/web/legal/dpa.html"
+          ],
+          "status": "VERIFIED",
+          "verified_by": "grep PBKDF2 dpa.html \u2014 both instances now say 600,000",
+          "target_project": "solaceagi"
+        },
+        {
+          "fix_id": "T2-V2-002",
+          "tower": 2,
+          "floor": "cross-floor",
+          "persona": "All customer personas (NVC compliance)",
+          "severity": "P2_MEDIUM",
+          "score_before": 5,
+          "score_after": 9,
+          "reason": "Reject button label in 4 files. NVC (Rosenberg floor 26 T1): Reject carries judgment, Decline preserves dignity.",
+          "files_changed": [
+            "solace-browser/web/app-detail.html",
+            "solace-browser/web/style-guide.html",
+            "solace-browser/web/docs/quick-start.html",
+            "solaceagi/templates/agents.html"
+          ],
+          "status": "VERIFIED",
+          "verified_by": "grep -r 'Reject' solace-browser/web/*.html \u2014 zero matches in user-facing buttons",
+          "target_project": "cross-project",
+          "projects_affected": [
+            "solace-browser",
+            "solaceagi"
+          ]
+        },
+        {
+          "fix_id": "T2-V2-003",
+          "tower": 2,
+          "floor": "cross-floor",
+          "persona": "David Okonkwo (F9) + all global personas",
+          "severity": "P2_MEDIUM",
+          "score_before": 4,
+          "score_after": 9,
+          "reason": "toLocaleString('en-US') hardcoded in dashboard.js and credits-panel.js. Forces US number formatting for all users globally.",
+          "files_changed": [
+            "solaceagi/web/js/dashboard.js",
+            "solaceagi/web/js/credits-panel.js"
+          ],
+          "status": "VERIFIED",
+          "verified_by": "grep 'en-US' dashboard.js credits-panel.js \u2014 zero matches",
+          "target_project": "solaceagi"
+        },
+        {
+          "fix_id": "T2-V2-004",
+          "tower": 2,
+          "floor": "cross-floor",
+          "persona": "Bob Miller (F6) + all scared personas",
+          "severity": "P2_MEDIUM",
+          "score_before": 5,
+          "score_after": 9,
+          "reason": "oauth3.html docs stated 15-second countdown; actual COUNTDOWN_SECONDS = 120 in yinyang-oauth3-confirm.js (WCAG 2.2.1 compliant).",
+          "files_changed": [
+            "solace-browser/web/docs/oauth3.html"
+          ],
+          "status": "VERIFIED",
+          "verified_by": "grep COUNTDOWN_SECONDS yinyang-oauth3-confirm.js = 120; docs say 120",
+          "target_project": "solace-browser"
+        }
+      ],
+      "target_project": "solaceagi"
+    },
+    "tower_3_competitors": {
+      "tower_name": "Tower of Competitors",
+      "total_fixes": 1,
+      "run_version": "v1.0 (audit only \u2014 zero fixes)",
+      "rerun_version": "v2.0",
+      "status": "FIXES_APPLIED",
+      "fix_date": "2026-03-06",
+      "fixes": [
+        {
+          "fix_id": "T3-F-001",
+          "severity": "P0_CRITICAL",
+          "description": "Fabricated social proof on pricing page removed. 'Most Popular' badge replaced with 'Recommended'. 'Trusted by developers' replaced with 'Launching March 2026'.",
+          "files_changed": ["solaceagi/web/stillwater/pricing.html"],
+          "status": "VERIFIED",
+          "target_project": "solaceagi"
+        }
+      ],
+      "target_project": "solaceagi"
+    },
+    "tower_4_fans": {
+      "tower_name": "Tower of Fans",
+      "total_fixes": 0,
+      "run_version": "v1.0 (audit only)",
+      "rerun_version": "v2.0",
+      "status": "AWAITING_RERUN",
+      "fixes": [],
+      "target_project": "solaceagi"
+    },
+    "tower_5_press": {
+      "tower_name": "Tower of Press",
+      "total_fixes": 0,
+      "run_version": "v1.0 (audit only)",
+      "rerun_version": "v2.0",
+      "status": "AWAITING_RERUN",
+      "fixes": [],
+      "target_project": "solaceagi"
+    },
+    "tower_6_hackers": {
+      "tower_name": "Tower of Hackers",
+      "total_fixes": 4,
+      "run_version": "v1.0 (audit only)",
+      "rerun_version": "v2.0",
+      "status": "FIXES_APPLIED",
+      "fix_date": "2026-03-06",
+      "fixes": [
+        {
+          "fix_id": "T6-F19-001",
+          "severity": "P0_CRITICAL",
+          "description": "Prompt injection defense: prompt_guard.py with input length validation (10k), injection pattern detection, output scanning, tool-use whitelist. 30 tests.",
+          "files_changed": ["solaceagi/app/core/prompt_guard.py", "solaceagi/app/services/llm_service.py", "solaceagi/app/services/chat_service.py", "solaceagi/app/schemas/llm.py", "solaceagi/app/schemas/chat.py"],
+          "status": "VERIFIED",
+          "target_project": "solaceagi"
+        },
+        {
+          "fix_id": "T6-F18-001",
+          "severity": "P1_HIGH",
+          "description": "Replay attack defense: X-Idempotency-Key middleware for POST/PUT/DELETE on /api/ routes. 1h TTL. 10 tests.",
+          "files_changed": ["solaceagi/app/main.py"],
+          "status": "VERIFIED",
+          "target_project": "solaceagi"
+        },
+        {
+          "fix_id": "T6-F26-001",
+          "severity": "P1_HIGH",
+          "description": "Context window defense: 50k char combined limit, truncates user input (never system prompt). 6 tests.",
+          "files_changed": ["solaceagi/app/services/llm_service.py"],
+          "status": "VERIFIED",
+          "target_project": "solaceagi"
+        },
+        {
+          "fix_id": "T6-F30-001",
+          "severity": "P1_HIGH",
+          "description": "Supply chain lock: requirements-lock.txt with 36 pinned deps + SHA-256 hashes. Dockerfile updated for --require-hashes.",
+          "files_changed": ["solaceagi/requirements-lock.txt", "solaceagi/Dockerfile"],
+          "status": "VERIFIED",
+          "target_project": "solaceagi"
+        }
+      ],
+      "target_project": "all"
+    },
+    "tower_7_kids": {
+      "tower_name": "Tower of Kids",
+      "total_fixes": 0,
+      "run_version": "v1.0 (audit only)",
+      "rerun_version": "v2.0",
+      "status": "AWAITING_RERUN",
+      "fixes": [],
+      "target_project": "solace-browser"
+    },
+    "tower_8_elders": {
+      "tower_name": "Tower of Elders",
+      "total_fixes": 0,
+      "run_version": "v1.0 (audit only)",
+      "rerun_version": "v2.0",
+      "status": "AWAITING_RERUN",
+      "fixes": [],
+      "target_project": "solace-browser"
+    },
+    "tower_9_world": {
+      "tower_name": "Tower of World",
+      "total_fixes": 154,
+      "run_version": "v1.0 (audit only)",
+      "rerun_version": "v2.0",
+      "status": "FIXES_APPLIED",
+      "fix_date": "2026-03-06",
+      "fixes": [
+        {
+          "fix_id": "T9-LOCALE-001",
+          "severity": "P0_CRITICAL",
+          "description": "154 wrong-script locale contamination strings cleaned: Arabic(42), Korean(37), Vietnamese(28), Hindi(22), Japanese(25). CJK, Cyrillic, Thai, Hangul, Arabic characters removed from wrong locales.",
+          "files_changed": [
+            "solaceagi/app/locales/site_properties/ar.json",
+            "solaceagi/app/locales/site_properties/ko.json",
+            "solaceagi/app/locales/site_properties/vi.json",
+            "solaceagi/app/locales/site_properties/hi.json",
+            "solaceagi/app/locales/site_properties/ja.json"
+          ],
+          "status": "VERIFIED",
+          "verified_by": "Python Unicode scan: 0 contamination remaining in all 5 files + all 5 browser counterparts",
+          "target_project": "solaceagi"
+        }
+      ],
+      "target_project": "all"
+    },
+    "tower_10_regulators": {
+      "tower_name": "Tower of Regulators",
+      "total_fixes": 0,
+      "run_version": "v1.0 (audit only)",
+      "rerun_version": "v2.0",
+      "status": "AWAITING_RERUN",
+      "fixes": [],
+      "target_project": "solaceagi"
+    },
+    "tower_11_primes": {
+      "tower_name": "Tower of Primes",
+      "total_fixes": 12,
+      "run_version": "v2.0",
+      "status": "COMPLETE",
+      "fixes": [
+        {
+          "fix_id": "T11-F24-001",
+          "tower": 11,
+          "floor": 24,
+          "persona": "Love Equation Judge",
+          "severity": "P0_CRITICAL",
+          "score_before": 2,
+          "score_after": 10,
+          "reason": "Love Equation sum stated as 65537 across 7 files. Actual sum = 8669. 65537 is the SEAL (Fermat F4).",
+          "files_changed": [
+            "CLAUDE.md",
+            "papers/45-launch-blessing-47-personas.md",
+            "src/usecases/65537-expansion.md",
+            "dragon/journal/dragonlog-2026-03-03.md",
+            "dragon/journal/dragonlog-2026-03-01.md",
+            ".claude/commands/solace-inspector.md",
+            "scratch/DRAGONS-DEN-GLOW116.md",
+            "scratch/DRAGONS-DEN-GLOW117.md"
+          ],
+          "status": "VERIFIED",
+          "verified_by": "python3 -c 'print(8191+241+127+47+23+13+11+7+5+3+1)' = 8669",
+          "target_project": "solace-cli"
+        },
+        {
+          "fix_id": "T11-F25-001",
+          "tower": 11,
+          "floor": 25,
+          "persona": "Paper Index Judge",
+          "severity": "P1_HIGH",
+          "score_before": 3,
+          "score_after": 8,
+          "reason": "Duplicate paper numbers: 23, 24, 27 each had 2 files. Paper 28 was exact copy of 27.",
+          "files_changed": [
+            "papers/23-competitive-landscape.md \u2192 papers/37-competitive-landscape.md",
+            "papers/24-yinyang-tutorial-funpack-mcp.md \u2192 papers/38-yinyang-tutorial-funpack-mcp.md",
+            "papers/27-solaceagi-deployment-surface-mapping.md \u2192 papers/40-solaceagi-deployment-surface-mapping.md",
+            "papers/28-solaceagi-deployment-surface-mapping.md (DELETED \u2014 exact duplicate)"
+          ],
+          "status": "VERIFIED",
+          "verified_by": "ls papers/[0-9]*.md | sort -t- -k1 -n \u2014 zero duplicate numbers",
+          "target_project": "cross-project",
+          "projects_affected": [
+            "solace-cli",
+            "solaceagi"
+          ]
+        },
+        {
+          "fix_id": "T11-F26-001",
+          "tower": 11,
+          "floor": 26,
+          "persona": "Diagram Index Judge",
+          "severity": "P1_HIGH",
+          "score_before": 3,
+          "score_after": 9,
+          "reason": "12 duplicate-numbered diagrams (05,06,18-21,29-34). Renamed to 67-78.",
+          "files_changed": [
+            "src/diagrams/05-billing-flow.md \u2192 67-billing-flow.md",
+            "src/diagrams/06-usage-tracking.md \u2192 68-usage-tracking.md",
+            "src/diagrams/18-credits-usage-yinyang.md \u2192 69-credits-usage-yinyang.md",
+            "src/diagrams/19-yinyang-push-alerts.md \u2192 70-yinyang-push-alerts.md",
+            "src/diagrams/20-esign-flow.md \u2192 71-esign-flow.md",
+            "src/diagrams/21-value-dashboard-flow.md \u2192 72-value-dashboard-flow.md",
+            "src/diagrams/29-thirty-uplift-activation-map.md \u2192 73-...",
+            "src/diagrams/30-34 \u2192 74-78"
+          ],
+          "status": "VERIFIED",
+          "verified_by": "ls src/diagrams/[0-9]*.md \u2014 79 files, all unique numbers",
+          "target_project": "solace-cli"
+        },
+        {
+          "fix_id": "T11-F44-001",
+          "tower": 11,
+          "floor": 44,
+          "persona": "Oracle Level Judge",
+          "severity": "P2_MEDIUM",
+          "score_before": 5,
+          "score_after": 7,
+          "reason": "oracle-memory.json total_postmortems was 2, but 3 entries existed in postmortems array.",
+          "files_changed": [
+            "data/default/apps/solace-inspector/oracle-memory.json"
+          ],
+          "status": "VERIFIED",
+          "verified_by": "jq '.total_postmortems' oracle-memory.json = 3",
+          "target_project": "solace-cli"
+        },
+        {
+          "fix_id": "T11-F47-001",
+          "tower": 11,
+          "floor": 47,
+          "persona": "Coherence Judge",
+          "severity": "P2_MEDIUM",
+          "score_before": 4,
+          "score_after": 7,
+          "reason": "CLAUDE.md paper/diagram counts stale (said 17/28, actual 43/79).",
+          "files_changed": [
+            "CLAUDE.md"
+          ],
+          "status": "VERIFIED",
+          "verified_by": "ls papers/[0-9]*.md | wc -l = 43; ls src/diagrams/[0-9]*.md | wc -l = 79",
+          "target_project": "solace-cli"
+        },
+        {
+          "fix_id": "T11-F48-001",
+          "tower": 11,
+          "floor": 48,
+          "persona": "Saint Solace (Digital Twin)",
+          "severity": "P3_LOW",
+          "score_before": 6,
+          "score_after": 9,
+          "reason": "Root-level dieter-rams.md was duplicate of design/dieter-rams.md. Removed to preserve STORY-47.",
+          "files_changed": [
+            "data/default/personas/dieter-rams.md (DELETED)"
+          ],
+          "status": "VERIFIED",
+          "verified_by": "find data/default/personas -mindepth 2 -name '*.md' | wc -l = 47",
+          "target_project": "solace-cli"
+        }
+      ],
+      "target_project": "solace-cli"
+    },
+    "tower_12_revenue": {
+      "tower_name": "Tower of Revenue",
+      "total_fixes": 0,
+      "run_version": "v2.0",
+      "status": "RUNNING",
+      "fixes": [
+        {
+          "fix_id": "T12-F01-001",
+          "tower": 12,
+          "floor": 1,
+          "persona": "Pricing Strategist",
+          "severity": "P0_CRITICAL",
+          "score_before": 3,
+          "score_after": null,
+          "reason": "4 conflicting pricing models: CLAUDE.md($8 Pro), MEMORY.md($8/$28/$88/$188), Global CLAUDE.md($3/$19/$99), billing-enforcer($48 Warrior). Must unify to Free($0)/Starter($8)/Pro($28)/Team($88)/Enterprise($188).",
+          "files_changed": [],
+          "status": "FOUND",
+          "verified_by": null,
+          "target_project": "solaceagi"
+        },
+        {
+          "fix_id": "T12-F06-001",
+          "tower": 12,
+          "floor": 6,
+          "persona": "Revenue Leakage Detective",
+          "severity": "P0_CRITICAL",
+          "score_before": 6,
+          "score_after": null,
+          "reason": "prime_wiki push endpoint has no authentication. Free Firestore writes for anyone.",
+          "files_changed": [],
+          "status": "FOUND",
+          "verified_by": null,
+          "target_project": "solaceagi"
+        },
+        {
+          "fix_id": "T12-F07-001",
+          "tower": 12,
+          "floor": 7,
+          "persona": "LLM Cost Controller",
+          "severity": "P1_HIGH",
+          "score_before": 5,
+          "score_after": null,
+          "reason": "Float arithmetic in billing code (llm_service.py line 136). FALLBACK BAN violation \u2014 must use Decimal.",
+          "files_changed": [],
+          "status": "FOUND",
+          "verified_by": null,
+          "target_project": "solaceagi"
+        },
+        {
+          "fix_id": "T12-F25-001",
+          "tower": 12,
+          "floor": 25,
+          "persona": "International Revenue Manager",
+          "severity": "P1_HIGH",
+          "score_before": 3,
+          "score_after": null,
+          "reason": "No PPP pricing, no automatic_tax in Stripe checkout, no currency localization in roi-calculator.js.",
+          "files_changed": [],
+          "status": "FOUND",
+          "verified_by": null,
+          "target_project": "solaceagi"
+        },
+        {
+          "fix_id": "T12-F26-001",
+          "tower": 12,
+          "floor": 26,
+          "persona": "Revenue Forecaster",
+          "severity": "P1_HIGH",
+          "score_before": 2,
+          "score_after": null,
+          "reason": "No MRR dashboard, no CAC tracking, no LTV calculation, no revenue forecast model in code.",
+          "files_changed": [],
+          "status": "FOUND",
+          "verified_by": null,
+          "target_project": "solaceagi"
+        },
+        {
+          "fix_id": "T12-F33-001",
+          "tower": 12,
+          "floor": 33,
+          "persona": "Revenue Dashboard Designer",
+          "severity": "P1_HIGH",
+          "score_before": 3,
+          "score_after": null,
+          "reason": "No admin revenue endpoint. No MRR/churn tracking. Founder flying blind.",
+          "files_changed": [],
+          "status": "FOUND",
+          "verified_by": null,
+          "target_project": "solaceagi"
+        },
+        {
+          "fix_id": "T12-F39-001",
+          "tower": 12,
+          "floor": 39,
+          "persona": "Subscription Metrics Expert",
+          "severity": "P1_HIGH",
+          "score_before": 2,
+          "score_after": null,
+          "reason": "No MRR tracking endpoint, no NRR calculation, no ARPU, no churn rate metric.",
+          "files_changed": [],
+          "status": "FOUND",
+          "verified_by": null,
+          "target_project": "solaceagi"
+        }
+      ],
+      "target_project": "solaceagi"
+    },
+    "tower_13_devops": {
+      "tower_name": "Tower of DevOps",
+      "total_fixes": 0,
+      "run_version": "v2.0",
+      "status": "RUNNING",
+      "fixes": [],
+      "target_project": "solaceagi"
+    },
+    "tower_14_agents": {
+      "tower_name": "Tower of Agents",
+      "total_fixes": 4,
+      "run_version": "v2.0",
+      "status": "COMPLETE",
+      "overall_score_percent": 62.7,
+      "overall_grade": "C+",
+      "floors_passed": 29,
+      "floors_failed": 20,
+      "fixes": [
+        {
+          "fix_id": "T14-F25-001",
+          "tower": 14,
+          "floor": 25,
+          "persona": "STORY-47 Fidelity Judge",
+          "severity": "P3_LOW",
+          "score_before": 6,
+          "score_after": 7,
+          "reason": "douglas-crockford.md orphan at root level of personas/ (same as dieter-rams.md in T11). Moved to language-creators/.",
+          "files_changed": [
+            "data/default/personas/douglas-crockford.md -> data/default/personas/language-creators/douglas-crockford.md"
+          ],
+          "status": "VERIFIED",
+          "verified_by": "find data/default/personas/ -maxdepth 1 -name '*.md' | wc -l = 0",
+          "target_project": "solace-cli"
+        },
+        {
+          "fix_id": "T14-F38-001",
+          "tower": 14,
+          "floor": 38,
+          "persona": "Skill Loader Inspector",
+          "severity": "P2_MEDIUM",
+          "score_before": 6,
+          "score_after": 7,
+          "reason": "CLAUDE.md skill counts stale: said '3 auto-loading + 29 data', actual 17 auto + 31 data. Updated.",
+          "files_changed": [
+            "CLAUDE.md"
+          ],
+          "status": "VERIFIED",
+          "verified_by": "ls .claude/skills/ | wc -l = 17; ls data/default/skills/ | wc -l = 32 (31 skills + 1 dir)",
+          "target_project": "solace-cli"
+        },
+        {
+          "fix_id": "T14-F21-001",
+          "tower": 14,
+          "floor": 21,
+          "persona": "MEMORY.md Accuracy Auditor",
+          "severity": "P1_HIGH",
+          "score_before": 4,
+          "score_after": null,
+          "reason": "MEMORY.md has stale counts: papers_count=34 (actual 43), diagrams_count=60 (actual 79), dragon=69/12 (actual 78/13).",
+          "files_changed": [],
+          "status": "DEFERRED",
+          "verified_by": null,
+          "target_project": "solace-cli"
+        },
+        {
+          "fix_id": "T14-F41-001",
+          "tower": 14,
+          "floor": 41,
+          "persona": "Fallback Ban Enforcer",
+          "severity": "P1_HIGH",
+          "score_before": 5,
+          "score_after": null,
+          "reason": "393 broad 'except Exception' across 3 codebases (17 CLI + 184 browser + 192 AGI). No pre-commit lint catches them.",
+          "files_changed": [],
+          "status": "DEFERRED",
+          "verified_by": null,
+          "target_project": "solace-cli"
+        }
+      ],
+      "target_project": "solace-cli"
+    }
+  },
+  "cross_tower_patterns": {
+    "description": "Issues found across multiple towers. Fix once, verify across all.",
+    "patterns": [
+      {
+        "pattern_id": "CTP-001",
+        "name": "Pricing Inconsistency",
+        "towers_found_in": [
+          11,
+          12
+        ],
+        "severity": "P0_CRITICAL",
+        "description": "3-4 conflicting pricing models across docs/code",
+        "canonical_fix": "Unify to Free($0)/Starter($8)/Pro($28)/Team($88)/Enterprise($188)",
+        "status": "FOUND"
+      },
+      {
+        "pattern_id": "CTP-002",
+        "name": "Love Equation Error",
+        "towers_found_in": [
+          11
+        ],
+        "severity": "P0_CRITICAL",
+        "description": "Sum 8669 incorrectly stated as 65537 across 7 files",
+        "canonical_fix": "8191+241+127+47+23+13+11+7+5+3+1 = 8669 (LOVE). 65537 = SEAL.",
+        "status": "VERIFIED"
+      },
+      {
+        "pattern_id": "CTP-003",
+        "name": "GA4 on Privacy Page",
+        "towers_found_in": [
+          5,
+          10
+        ],
+        "severity": "P0_CRITICAL",
+        "description": "Google Analytics loaded on pages claiming no third-party tracking",
+        "canonical_fix": "Remove GA4 from all HTML. Update cookie policy.",
+        "status": "VERIFIED"
+      },
+      {
+        "pattern_id": "CTP-004",
+        "name": "PBKDF2 Iterations Too Low",
+        "towers_found_in": [
+          1,
+          2,
+          6
+        ],
+        "severity": "P0_CRITICAL",
+        "description": "PBKDF2 was 100K iterations, NIST 2026 requires 600K. Code fixed. DPA still said 100K in T2 rerun \u2014 now fixed.",
+        "canonical_fix": "Set _PBKDF2_ITERATIONS = 600_000; Update DPA to 600,000",
+        "status": "VERIFIED",
+        "t2_rerun_note": "DPA had 100,000 in 2 locations. Fixed to 600,000 on 2026-03-05."
+      },
+      {
+        "pattern_id": "CTP-005",
+        "name": "eSign In-Memory Store",
+        "towers_found_in": [
+          10
+        ],
+        "severity": "P1_HIGH",
+        "description": "eSign tokens/signatures stored in Python dicts, lost on restart",
+        "canonical_fix": "Migrate to Firestore persistence",
+        "status": "VERIFIED"
+      },
+      {
+        "pattern_id": "CTP-006",
+        "name": "Jargon Barrier",
+        "towers_found_in": [
+          4,
+          5,
+          7,
+          8
+        ],
+        "severity": "P2_MEDIUM",
+        "description": "OAuth3, recipe replay, evidence chains \u2014 opaque to non-technical users",
+        "canonical_fix": "Replace jargon with plain language on user-facing surfaces",
+        "status": "FOUND"
+      },
+      {
+        "pattern_id": "CTP-007",
+        "name": "Korean Locale Corruption",
+        "towers_found_in": [
+          9
+        ],
+        "severity": "P1_HIGH",
+        "description": "55 Korean locale strings contaminated with Chinese/Russian/garbage",
+        "canonical_fix": "Clean all 55 strings to proper Korean",
+        "status": "VERIFIED"
+      },
+      {
+        "pattern_id": "CTP-008",
+        "name": "RTL Layout Broken",
+        "towers_found_in": [
+          8,
+          9
+        ],
+        "severity": "P1_HIGH",
+        "description": "Arabic/Hebrew/Farsi/Urdu had no dir=rtl activation",
+        "canonical_fix": "JS detection + CSS rules for [dir=rtl]",
+        "status": "VERIFIED"
+      },
+      {
+        "pattern_id": "CTP-009",
+        "name": "WCAG Timeout Violation",
+        "towers_found_in": [
+          8
+        ],
+        "severity": "P1_HIGH",
+        "description": "15-second countdown violates WCAG 2.2.1 (minimum 120s or adjustable)",
+        "canonical_fix": "COUNTDOWN_SECONDS = 120",
+        "status": "VERIFIED"
+      },
+      {
+        "pattern_id": "CTP-010",
+        "name": "MEMORY.md Count Staleness",
+        "towers_found_in": [
+          11,
+          14
+        ],
+        "severity": "P1_HIGH",
+        "description": "MEMORY.md counts drift over time without automatic correction. papers_count=34 (actual 43), diagrams_count=60 (actual 79), dragon=69/12 (actual 78/13).",
+        "canonical_fix": "Update MEMORY.md counts at session end. Consider auto-counting script.",
+        "status": "FOUND"
+      },
+      {
+        "pattern_id": "CTP-011",
+        "name": "Fallback Ban Enforcement Gap",
+        "towers_found_in": [
+          14
+        ],
+        "severity": "P1_HIGH",
+        "description": "393 broad 'except Exception' across 3 codebases (17 CLI + 184 browser + 192 AGI). No pre-commit lint catches them.",
+        "canonical_fix": "Add ruff/flake8 BLE001 rule to pre-commit hook across all 3 projects.",
+        "status": "FOUND"
+      },
+      {
+        "pattern_id": "CTP-012",
+        "name": "Convention-vs-Code Gap",
+        "towers_found_in": [
+          14
+        ],
+        "severity": "P2_MEDIUM",
+        "description": "Many safety features exist as CLAUDE.md directives but not as enforced code: Anti-Clippy, dispatch rules, model selection, EQ stack, persona loading.",
+        "canonical_fix": "Prioritize code enforcement for safety-critical features. Convention acceptable for style preferences.",
+        "status": "FOUND"
+      }
+    ]
+  },
+  "summary_stats": {
+    "total_towers": 14,
+    "towers_with_specs": 4,
+    "towers_complete": 4,
+    "towers_running": 2,
+    "towers_fixes_applied": 1,
+    "towers_awaiting_rerun": 7,
+    "towers_spec_pending": 0,
+    "total_fixes_tracked": 180,
+    "total_verified": 169,
+    "total_found_unfixed": 11,
+    "cross_tower_patterns": 12,
+    "patterns_verified": 5,
+    "patterns_unfixed": 7,
+    "last_updated": "2026-03-06"
+  }
+}

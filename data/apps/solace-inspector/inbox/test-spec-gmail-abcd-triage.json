@@ -1,0 +1,79 @@
+{
+  "spec_id": "gmail-abcd-triage-001",
+  "mode": "api_abcd",
+  "persona": "kent_beck",
+  "priority": "critical",
+  "northstar": "Gmail Inbox Triage — find cheapest CLI+model combo for email classification",
+  "context": "ABCD test using REAL CLI webservices (POST /api/cli-agents/generate). Tests same email triage prompt against 4 different CLI backends. Each CLI wraps a different LLM provider. Finds the cheapest model that meets quality threshold for email classification.",
+
+  "abcd_config": {
+    "task_class": "email_classification",
+    "description": "Classify 3 sample emails into priority categories using uplift-enriched prompt (35+ P-skills active)",
+    "endpoint": "http://localhost:8791/api/cli-agents/generate",
+    "method": "POST",
+
+    "test_prompt": "You are an email triage assistant for Phuc Truong, CEO of Solace AGI. Classify each email as CRITICAL, HIGH, MEDIUM, LOW, or ARCHIVE. Reply with ONLY a JSON array.\n\nEmails:\n1. From: tyson@phuc.net, Subject: 'hey dad pick me up at 4'\n2. From: notifications@github.com, Subject: '[solace-browser] New issue #42'\n3. From: partner@sequoiacap.com, Subject: 'Follow up on Series A'\n\nClassify each (JSON array with email_index, classification, confidence 1-10, reason):",
+
+    "expected_answer_contains": ["CRITICAL", "ARCHIVE", "HIGH"],
+    "quality_checks": [
+      {"email_index": 0, "expected_class": "CRITICAL", "reason": "Family (son Tyson) — always critical"},
+      {"email_index": 1, "expected_class": "ARCHIVE", "reason": "GitHub notification — auto-archive"},
+      {"email_index": 2, "expected_class": "HIGH", "reason": "Investor (Sequoia) — always high priority"}
+    ],
+    "quality_threshold": 0.67,
+    "timeout_seconds": 60,
+
+    "models": [
+      {
+        "id": "A",
+        "label": "Gemini Flash (cheapest)",
+        "agent": "gemini",
+        "model": "gemini-2.5-flash",
+        "cost_per_1m_usd": 0.15
+      },
+      {
+        "id": "B",
+        "label": "Claude Haiku",
+        "agent": "claude",
+        "model": "claude-haiku-4-5-20251001",
+        "cost_per_1m_usd": 0.25
+      },
+      {
+        "id": "C",
+        "label": "Claude Sonnet",
+        "agent": "claude",
+        "model": "claude-sonnet-4-6",
+        "cost_per_1m_usd": 3.00
+      },
+      {
+        "id": "D",
+        "label": "GPT-4.1 (via Codex)",
+        "agent": "codex",
+        "model": "gpt-4.1",
+        "cost_per_1m_usd": 2.00
+      }
+    ]
+  },
+
+  "uplift_skills_injected": [
+    "P1_gamification", "P2_magic_words", "P3_personas", "P5_recipes",
+    "P8_care", "P11_questions", "P12_analogies", "P13_constraints",
+    "P14_chain_of_thought", "P15_few_shot", "P16_negative_space",
+    "P17_stakes", "P18_audience", "P19_compression", "P20_temporal",
+    "P21_adversarial", "P22_leak", "P23_breathing",
+    "P24_wave", "P25_field", "P27_symmetry", "P28_conservation",
+    "P33_memory_wells", "P35_synthesis", "P37_persona_bubbles", "P38_prime_first"
+  ],
+  "uplift_count": 26,
+
+  "checks": {
+    "all_3_emails_classified": true,
+    "tyson_is_critical": true,
+    "github_is_archive": true,
+    "sequoia_is_high": true,
+    "winner_must_be_cheapest_passing": true
+  },
+
+  "expected_outcome": "Winner = Model A (Gemini Flash at $0.15/1M) or Model B (Haiku at $0.25/1M) for simple classification. Proves ABCD 'best deal' routing with real CLI webservices.",
+  "committee": ["kent_beck", "alex_hormozi", "andrew_ng", "james_bach"]
+}

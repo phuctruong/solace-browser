@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 30,
+    "tower_name": "Tower of YinYang Assistant + Onboarding",
+    "dna": "yinyang(assistant) = greet(welcome) x tutorial(5steps) x chat(context) x suggest(actions) x track(credits) x delight(surprise) x persist(memory)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of YinYang Assistant + Onboarding",
+  "tower_number": 30,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Grace Okafor",
+      "persona_domain": "first_time_welcome",
+      "persona_context": "23, Abuja, Recent university graduate, Beginner tech, Free tier, just downloaded Solace Browser for the first time, nervous about AI tools",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "When I open Solace Browser for the first time, does the YinYang assistant appear with a friendly welcome message within 3 seconds?",
+        "Does the welcome message address me by name if I signed in with Google, or say 'Welcome!' if I am not signed in?",
+        "Is the YinYang assistant visually present as a small animated character (not just a text box) that feels approachable?",
+        "Does the welcome screen offer a 'Take a Tour' button that starts a guided walkthrough of the main features?",
+        "Can I dismiss the welcome assistant and it does not reappear on every page load — only when I click the assistant icon?",
+        "Does the assistant explain what Solace Browser does in one simple sentence without using jargon (no 'OAuth3', 'recipes', 'evidence chains')?",
+        "If I close and reopen the browser, does the assistant remember I already saw the welcome and skip to a returning-user greeting?"
+      ],
+      "question_expansion_instruction": "Grace is nervous about AI tools. The welcome must be warm, simple, non-technical, and not overwhelming. Jargon-heavy onboarding loses her immediately."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Ben Nakamura",
+      "persona_domain": "tutorial_walkthrough",
+      "persona_context": "40, Honolulu, Small business owner (surf shop), Beginner tech, Starter tier, needs to learn the basics in under 5 minutes",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the 'Take a Tour' tutorial walk me through exactly 5 steps (dashboard, app store, install app, run recipe, see results)?",
+        "Does each tutorial step highlight the relevant UI element with a spotlight effect and a tooltip explanation?",
+        "Can I skip ahead or go back to a previous tutorial step using next/previous buttons?",
+        "Does the tutorial complete in under 5 minutes for a slow reader who pauses on each step?",
+        "At the end of the tutorial, does the assistant suggest a specific first action ('Try installing the Gmail Triage app')?",
+        "If I close the browser during the tutorial, does it resume from where I left off when I reopen?",
+        "Does the tutorial work correctly on a tablet-sized screen (1024x768) without elements being cut off?"
+      ],
+      "question_expansion_instruction": "Ben has 5 minutes of patience. The tutorial must be exactly 5 steps, visually guided, resumable, and end with a concrete action suggestion. Longer tutorials = abandoned users."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Isabelle Fontaine",
+      "persona_domain": "context_aware_chat",
+      "persona_context": "34, Brussels, Project manager, Intermediate tech, Pro tier, using the assistant while reviewing a Gmail triage result",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I click the YinYang assistant icon while viewing my Gmail triage results and ask 'Why did it suggest archiving this email?'",
+        "Does the assistant's response reference the specific email I am viewing (subject line, sender) — not a generic explanation?",
+        "If I navigate to the App Store page and ask the assistant 'Which app should I try for LinkedIn posting?', does it recommend the LinkedIn Suite?",
+        "Does the assistant know my current tier (Pro) and avoid suggesting features I do not have access to?",
+        "Can the assistant answer 'How much did my last recipe run cost?' by looking up my actual credit usage?",
+        "If I ask a question the assistant cannot answer, does it say 'I do not know' rather than making up an answer?",
+        "Does the chat response appear within 3 seconds so the conversation feels natural and responsive?"
+      ],
+      "question_expansion_instruction": "Isabelle uses the assistant in context. Responses must be page-aware, user-aware, and honest about limitations. Generic responses that ignore the current page context are FAIL."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Omar Hassan",
+      "persona_domain": "action_suggestions",
+      "persona_context": "38, Cairo, Digital agency owner, Intermediate tech, Pro tier, wants the assistant to proactively suggest useful actions",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After I finish my first Gmail triage, does the assistant suggest 'You might also like: LinkedIn Suite for managing your professional posts'?",
+        "Does the assistant suggest actions based on my actual usage patterns — not random app recommendations?",
+        "If I have been using Solace for a week but never set up a schedule, does the assistant suggest 'Set up a daily triage schedule'?",
+        "Can I click on a suggestion and be taken directly to the relevant page (app install, schedule setup) without searching?",
+        "Does the assistant limit suggestions to 1-2 per session — not bombard me with a list of 10 things to try?",
+        "Can I tell the assistant 'Stop suggesting things' and have it respect that preference permanently?",
+        "Does the assistant avoid suggesting apps or features that require a tier upgrade unless I ask about upgrading?"
+      ],
+      "question_expansion_instruction": "Omar wants helpful suggestions, not spam. Suggestions must be contextual, limited in frequency, respectful of his tier, and dismissable. Anti-Clippy is the design principle."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Mei-Lin Wu",
+      "persona_domain": "credit_tracking",
+      "persona_context": "27, Kaohsiung, Freelance translator, Beginner tech, Starter tier, very budget-conscious, worries about unexpected LLM costs",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I ask the assistant 'How many credits do I have left?' and see my current balance without navigating to the billing page?",
+        "Does the assistant warn me before I run a recipe if it will cost more than $0.50 in LLM tokens?",
+        "Can the assistant show me a breakdown of my spending this week by app (Gmail: $0.30, LinkedIn: $0.15)?",
+        "If I ask 'How much will this recipe cost?', does the assistant give a specific estimate based on the recipe and current input size?",
+        "Does the assistant alert me when I have used 80% of my monthly budget with a gentle notification (not a scary popup)?",
+        "Can I ask the assistant to set a daily spending limit and have it enforce that limit by pausing recipes?",
+        "Does the assistant explain in simple terms what 'LLM tokens' are if I ask, without assuming I know what GPT or Claude means?"
+      ],
+      "question_expansion_instruction": "Mei-Lin is budget-conscious and non-technical. Credit tracking must be proactive, simple, and prevent surprise charges. Technical jargon about tokens is a barrier."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Felix Richter",
+      "persona_domain": "delight_engine",
+      "persona_context": "45, Vienna, Product designer, Expert tech, Pro tier, appreciates thoughtful UX touches and Easter eggs",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After I complete my 10th recipe run, does the assistant show a small celebration animation or congratulatory message?",
+        "Does the assistant remember my usage milestones (first app installed, first week active, 100th action approved) and acknowledge them?",
+        "If I use the assistant late at night (after 11pm in my timezone), does it gently suggest taking a break?",
+        "Does the delight engine show different messages each time — not the same 'Great job!' repeated?",
+        "Can I see a 'journey timeline' showing my milestones since joining Solace?",
+        "Does the assistant occasionally share a useful tip I have not seen before based on features I have not tried?",
+        "If I have been using the app for 30 days, does the assistant ask for feedback with a simple thumbs up/down — not a long survey?"
+      ],
+      "question_expansion_instruction": "Felix appreciates craft. Delight must be genuine, varied, and contextual — not performative or repetitive. The same 'Well done!' three times in a row is anti-delight."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Priya Sharma",
+      "persona_domain": "conversation_persistence",
+      "persona_context": "33, Pune, Technical lead, Expert tech, Pro tier, has ongoing conversations with the assistant across multiple sessions",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "If I asked the assistant a question yesterday about Gmail triage costs, can I see that conversation in my chat history today?",
+        "Does the assistant remember context from previous conversations — if I said 'I run a marketing agency', does it remember next session?",
+        "Can I scroll through my conversation history and search for a specific past interaction by keyword?",
+        "Does the conversation history persist across browser restarts and system reboots?",
+        "If I clear my conversation history, does the assistant confirm the deletion and start fresh without retaining any prior context?",
+        "Does the conversation history sync to cloud storage on Pro tier so I can access it from a different device?",
+        "Is the conversation history stored locally (encrypted) on Free tier and only synced to cloud on paid tiers?"
+      ],
+      "question_expansion_instruction": "Priya has multi-session conversations. Persistence must be reliable, searchable, tier-appropriate (local vs cloud), and clearable. Losing conversation context between sessions breaks trust."
+    }
+  ]
+}

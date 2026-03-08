@@ -1,0 +1,712 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 13,
+    "tower_name": "Tower of DevOps",
+    "dna": "devops(system) = ci(green) * cd(auto) * monitoring(real) * security(layered) * testing(complete) * infra(resilient)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 100,
+    "question_expansion_instruction": "Each floor lists 7-10 seed questions. During execution, expand to 100 questions per persona by probing deeper into the domain. Search the actual codebase for evidence.",
+    "target_projects": [
+      "solace-cli"
+    ],
+    "target_project_paths": {
+      "solace-cli": "/home/phuc/projects/solace-cli"
+    }
+  },
+  "name": "Tower of DevOps",
+  "tower_number": 13,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "CI Pipeline Auditor",
+      "persona_domain": "continuous integration",
+      "questions": [
+        "Is there a CI pipeline that runs on every push?",
+        "Do all tests pass in CI before merge is allowed?",
+        "Is the CI pipeline fast enough (< 10 minutes)?",
+        "Are CI failures visible and actionable?",
+        "Is the CI configuration version-controlled?",
+        "Are there flaky tests that intermittently fail in CI?",
+        "Is the test suite comprehensive enough to catch regressions?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "CD Pipeline Auditor",
+      "persona_domain": "continuous deployment",
+      "questions": [
+        "Is deployment automated (git push → production)?",
+        "Is there a staging environment for pre-production testing?",
+        "Is the deployment pipeline documented?",
+        "Is there a rollback mechanism?",
+        "Is the deployment idempotent?",
+        "Are deployment secrets managed securely?",
+        "Is there blue-green or canary deployment capability?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Docker Optimization Expert",
+      "persona_domain": "container efficiency",
+      "questions": [
+        "Is the Docker image size minimized (multi-stage builds)?",
+        "Is the Dockerfile using appropriate base images?",
+        "Are unnecessary files excluded via .dockerignore?",
+        "Is the build cache used effectively?",
+        "Are health checks configured in the container?",
+        "Is the container running as non-root?",
+        "Is the image scanning for vulnerabilities?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Cloud Run Expert",
+      "persona_domain": "serverless container",
+      "questions": [
+        "Is Cloud Run configured with appropriate min/max instances?",
+        "Is cold start time acceptable (< 5 seconds)?",
+        "Is the CPU allocation correct (1 vCPU vs 2)?",
+        "Is memory allocation appropriate for the workload?",
+        "Is the concurrency setting optimized?",
+        "Is the request timeout configured correctly?",
+        "Are environment variables managed securely (Secret Manager)?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Brendan Gregg",
+      "persona_domain": "performance and observability",
+      "questions": [
+        "Is there application-level performance monitoring?",
+        "Are there metrics for response time (p50, p95, p99)?",
+        "Is CPU and memory utilization tracked?",
+        "Are there alerts for performance degradation?",
+        "Is there distributed tracing for cross-service requests?",
+        "Are there flame graphs or profiling capabilities?",
+        "Is the monitoring cost-effective (not oversampling)?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Kelsey Hightower",
+      "persona_domain": "cloud infrastructure",
+      "questions": [
+        "Is the infrastructure defined as code (Terraform, Pulumi)?",
+        "Is the cloud architecture well-documented?",
+        "Are there any single points of failure?",
+        "Is the infrastructure cost-optimized?",
+        "Is there a disaster recovery plan?",
+        "Is the network architecture secure (VPC, firewalls)?",
+        "Is the infrastructure reproducible (can be rebuilt from scratch)?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Werner Vogels",
+      "persona_domain": "distributed systems reliability",
+      "questions": [
+        "Is everything failing gracefully (not silently)?",
+        "Are there circuit breakers for external service calls?",
+        "Is there retry logic with exponential backoff?",
+        "Are there timeouts on all external calls?",
+        "Is the system designed for eventual consistency?",
+        "Are there health check endpoints?",
+        "Is the error handling following the Fallback Ban?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Mitchell Hashimoto",
+      "persona_domain": "developer tools and workflow",
+      "questions": [
+        "Is the local development setup documented and reproducible?",
+        "Can a new developer get started in < 30 minutes?",
+        "Is there a Makefile or equivalent for common tasks?",
+        "Are development dependencies version-locked?",
+        "Is the dev environment consistent with production?",
+        "Are there development-only features gated correctly?",
+        "Is the developer experience (DX) a priority?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Security DevOps Auditor",
+      "persona_domain": "DevSecOps",
+      "questions": [
+        "Are dependencies scanned for known vulnerabilities?",
+        "Is SAST (static analysis) running in the pipeline?",
+        "Is DAST (dynamic analysis) running against staging?",
+        "Are secrets rotated on a schedule?",
+        "Is there a security incident response plan?",
+        "Are container images scanned before deployment?",
+        "Is the principle of least privilege followed?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "SRE Deploy Master",
+      "persona_domain": "site reliability",
+      "questions": [
+        "Are there SLOs (Service Level Objectives) defined?",
+        "Is there an error budget tracked?",
+        "Is the uptime target realistic and measured?",
+        "Is there an on-call rotation (or at least monitoring)?",
+        "Is there a runbook for common incidents?",
+        "Is post-incident review (blameless) practiced?",
+        "Is the toil budget tracked and reduced?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Git Workflow Expert",
+      "persona_domain": "version control",
+      "questions": [
+        "Is the branching strategy documented (main, prod, feature branches)?",
+        "Are pre-commit hooks enforcing code quality?",
+        "Are pre-push hooks preventing broken builds?",
+        "Is the commit message format consistent?",
+        "Is there branch protection on main/prod?",
+        "Is the git history clean (no force pushes to shared branches)?",
+        "Are large files managed correctly (git-lfs or .gitignore)?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Test Infrastructure Engineer",
+      "persona_domain": "test reliability",
+      "questions": [
+        "Are all tests deterministic (no flaky tests)?",
+        "Is test isolation maintained (no shared state between tests)?",
+        "Are tests running in parallel for speed?",
+        "Is test coverage measured and reported?",
+        "Are integration tests separated from unit tests?",
+        "Are there end-to-end tests for critical paths?",
+        "Is the test infrastructure itself tested?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Firestore DBA",
+      "persona_domain": "database operations",
+      "questions": [
+        "Are Firestore indexes configured for all queries?",
+        "Is the data model documented?",
+        "Are there backup mechanisms for Firestore data?",
+        "Is read/write cost optimized (batch operations, pagination)?",
+        "Are there data migration scripts for schema changes?",
+        "Is the Firestore security rules file correct?",
+        "Are there monitoring alerts for Firestore costs?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Logging Expert",
+      "persona_domain": "structured logging",
+      "questions": [
+        "Is structured logging implemented (JSON format)?",
+        "Are log levels used correctly (DEBUG, INFO, WARN, ERROR)?",
+        "Are PII and secrets excluded from logs?",
+        "Is there centralized log aggregation?",
+        "Are logs searchable and filterable?",
+        "Is log retention configured appropriately?",
+        "Are there log-based alerts for critical errors?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "API Gateway Auditor",
+      "persona_domain": "API infrastructure",
+      "questions": [
+        "Is the API versioned (/api/v1/)?",
+        "Is rate limiting applied at the API gateway level?",
+        "Is CORS configured correctly?",
+        "Are API responses cached where appropriate?",
+        "Is the API documentation auto-generated (Swagger/OpenAPI)?",
+        "Are API errors returning consistent error formats?",
+        "Is the API health check endpoint returning useful information?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "SSL/TLS Expert",
+      "persona_domain": "transport security",
+      "questions": [
+        "Are all endpoints using HTTPS?",
+        "Is TLS 1.3 enforced (no downgrade)?",
+        "Are SSL certificates auto-renewed?",
+        "Is HSTS configured with appropriate max-age?",
+        "Are certificate pinning requirements documented?",
+        "Is the SSL configuration following Mozilla's recommended settings?",
+        "Are there monitoring alerts for certificate expiry?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "DNS and CDN Expert",
+      "persona_domain": "content delivery",
+      "questions": [
+        "Is DNS configured correctly for all domains?",
+        "Is there a CDN for static assets?",
+        "Is the TTL configured appropriately?",
+        "Are DNS changes version-controlled?",
+        "Is there DNS monitoring for availability?",
+        "Is there a CDN cache invalidation strategy?",
+        "Are subdomains configured correctly (api, app, docs)?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Backup and Recovery Specialist",
+      "persona_domain": "data protection",
+      "questions": [
+        "Is there a backup strategy for all persistent data?",
+        "Are backups tested regularly (restore drills)?",
+        "Is the RPO (Recovery Point Objective) defined?",
+        "Is the RTO (Recovery Time Objective) defined?",
+        "Are backups encrypted at rest?",
+        "Are backups stored in a separate region/account?",
+        "Is there automated backup verification?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Linus Torvalds",
+      "persona_domain": "code quality and build system",
+      "questions": [
+        "Is the build system simple and fast?",
+        "Is the code compiled without warnings?",
+        "Are there unnecessary abstractions that should be removed?",
+        "Is the codebase navigable without IDE assistance?",
+        "Is the coding style consistent throughout?",
+        "Are there any files that do too many things?",
+        "Is the project structure logical and discoverable?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Martin Fowler",
+      "persona_domain": "refactoring and architecture",
+      "questions": [
+        "Are there any code smells that need refactoring?",
+        "Is the architecture documented with diagrams?",
+        "Are there clear boundaries between modules?",
+        "Is there a strangler fig pattern for legacy migration?",
+        "Are there any circular dependencies?",
+        "Is the test pyramid balanced (unit > integration > e2e)?",
+        "Are there feature toggles for gradual rollouts?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "Dependency Auditor",
+      "persona_domain": "supply chain security",
+      "questions": [
+        "Are all dependencies pinned to specific versions?",
+        "Is there a lock file (requirements.txt, package-lock.json)?",
+        "Are there any known vulnerabilities in dependencies?",
+        "Is the dependency tree minimal (no unnecessary packages)?",
+        "Are there alternative dependencies that are better maintained?",
+        "Is there a process for updating dependencies?",
+        "Are there any deprecated dependencies still in use?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "Environment Manager",
+      "persona_domain": "environment configuration",
+      "questions": [
+        "Are environment variables documented in .env.example?",
+        "Is there a clear separation between dev/staging/production configs?",
+        "Are secrets never committed to git?",
+        "Is there a secret management solution (GCP Secret Manager)?",
+        "Are feature flags environment-specific?",
+        "Is the configuration validated at startup?",
+        "Are there any hardcoded values that should be configurable?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Error Handling Architect",
+      "persona_domain": "error management",
+      "questions": [
+        "Is the Fallback Ban enforced (no silent failures)?",
+        "Are error messages helpful and actionable?",
+        "Is there error tracking (Sentry, Cloud Error Reporting)?",
+        "Are errors categorized (user error vs system error)?",
+        "Are retry-able errors distinguished from permanent failures?",
+        "Is there a global error handler for unhandled exceptions?",
+        "Are error responses consistent across all endpoints?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Migration Engineer",
+      "persona_domain": "data and schema migrations",
+      "questions": [
+        "Is there a migration framework for schema changes?",
+        "Are migrations reversible?",
+        "Are migrations tested before production deployment?",
+        "Is the migration history tracked?",
+        "Are zero-downtime migrations supported?",
+        "Is there a data migration strategy for major version upgrades?",
+        "Are migrations idempotent (safe to run multiple times)?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Scalability Architect",
+      "persona_domain": "scaling strategy",
+      "questions": [
+        "Is the system horizontally scalable?",
+        "Are there bottlenecks at specific load levels?",
+        "Is the database designed for scale (partitioning, caching)?",
+        "Is the API stateless (no session affinity required)?",
+        "Is there load testing infrastructure?",
+        "Is auto-scaling configured correctly?",
+        "Is the system tested at 10x current load?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Cost Monitoring Expert",
+      "persona_domain": "cloud cost management",
+      "questions": [
+        "Is there a budget alert configured in GCP?",
+        "Is the monthly cloud spend tracked?",
+        "Are there any unused resources still incurring costs?",
+        "Is the cost per user calculated and trending?",
+        "Are there cost optimization recommendations being followed?",
+        "Is committed use discount appropriate for the workload?",
+        "Is the cost breakdown documented (compute, storage, network)?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Documentation DevOps",
+      "persona_domain": "operational documentation",
+      "questions": [
+        "Is there a CONTRIBUTING.md for new developers?",
+        "Is the deployment process documented step by step?",
+        "Is the architecture documented with diagrams?",
+        "Are runbooks available for common operational tasks?",
+        "Is the troubleshooting guide up to date?",
+        "Are post-mortems documented and accessible?",
+        "Is the documentation version-controlled with the code?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "Network Security Expert",
+      "persona_domain": "network hardening",
+      "questions": [
+        "Is the network segmented appropriately?",
+        "Are ingress/egress rules configured correctly?",
+        "Is there a WAF (Web Application Firewall) in place?",
+        "Are internal services not exposed to the internet?",
+        "Is there DDoS protection?",
+        "Is network traffic encrypted in transit?",
+        "Are there network monitoring and alerting rules?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Chaos Engineering Lead",
+      "persona_domain": "resilience testing",
+      "questions": [
+        "Is there chaos testing to validate resilience?",
+        "What happens when the database is unavailable?",
+        "What happens when an external API times out?",
+        "Is the system tested for partial failures?",
+        "Is there a game day or disaster recovery drill schedule?",
+        "Are failure modes documented?",
+        "Is the blast radius of failures contained?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Compliance as Code Expert",
+      "persona_domain": "automated compliance",
+      "questions": [
+        "Are compliance checks automated in the pipeline?",
+        "Is there automated license compliance checking?",
+        "Is there automated security policy enforcement?",
+        "Are compliance artifacts generated automatically?",
+        "Is there audit trail for all changes?",
+        "Are compliance requirements documented as code?",
+        "Is there SOC2 readiness tracking?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Multi-Project DevOps Lead",
+      "persona_domain": "ecosystem CI/CD",
+      "questions": [
+        "Is there a unified CI/CD strategy across all 9 projects?",
+        "Are cross-project dependencies managed?",
+        "Is there a monorepo vs multi-repo strategy documented?",
+        "Are shared libraries versioned and published?",
+        "Is there a dependency graph across projects?",
+        "Are there integration tests that span multiple projects?",
+        "Is the deployment order documented for cross-project releases?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Feature Flag Engineer",
+      "persona_domain": "feature management",
+      "questions": [
+        "Is there a feature flag system for gradual rollouts?",
+        "Are feature flags cleaned up after full rollout?",
+        "Is there A/B testing infrastructure?",
+        "Are feature flags documented?",
+        "Is there a kill switch for any feature?",
+        "Are feature flags per-user or per-environment?",
+        "Is the feature flag system itself tested?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "API Versioning Specialist",
+      "persona_domain": "API lifecycle",
+      "questions": [
+        "Is the API versioning strategy documented?",
+        "Are deprecated endpoints marked and scheduled for removal?",
+        "Is there backward compatibility for at least one major version?",
+        "Are API changes communicated to consumers?",
+        "Is there an API changelog?",
+        "Are breaking changes detected automatically?",
+        "Is there a deprecation policy?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Build Artifact Manager",
+      "persona_domain": "artifact management",
+      "questions": [
+        "Are build artifacts versioned and stored?",
+        "Is there a container registry for Docker images?",
+        "Are artifacts signed for integrity?",
+        "Is there artifact retention policy?",
+        "Are build artifacts reproducible?",
+        "Is there a promotion pipeline (dev → staging → prod)?",
+        "Are artifacts scanned before promotion?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Ada Lovelace",
+      "persona_domain": "computational correctness",
+      "questions": [
+        "Is the algorithm design documented for complex operations?",
+        "Are edge cases handled in critical code paths?",
+        "Is the code correct by construction (not by testing)?",
+        "Are mathematical operations verified for precision?",
+        "Is there formal verification for security-critical code?",
+        "Are invariants documented and enforced?",
+        "Is the code readable to a mathematician?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Grace Hopper",
+      "persona_domain": "debugging and standards",
+      "questions": [
+        "Are debugging tools and techniques documented?",
+        "Is there a standard way to reproduce issues?",
+        "Are error codes standardized?",
+        "Is there a bug triage process?",
+        "Are known issues tracked in a bug database?",
+        "Is there a 'fix it now' culture (no bug backlog)?",
+        "Are debugging sessions productive (systematic, not random)?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Kent Beck",
+      "persona_domain": "test-driven development",
+      "questions": [
+        "Is TDD practiced for new features?",
+        "Is the RED-GREEN-REFACTOR cycle followed?",
+        "Are tests written before code for critical paths?",
+        "Is the test suite a living specification?",
+        "Are tests expressing intent (not implementation)?",
+        "Is refactoring safe (tests catch regressions)?",
+        "Is the test suite fast enough to run on every save?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Incident Response Commander",
+      "persona_domain": "incident management",
+      "questions": [
+        "Is there an incident response process?",
+        "Are severity levels defined (P1-P4)?",
+        "Is there an escalation path documented?",
+        "Is there a communication plan for outages?",
+        "Are incidents tracked and reviewed?",
+        "Is there a post-incident review template?",
+        "Is the MTTR (Mean Time To Resolve) tracked?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Accessibility DevOps Engineer",
+      "persona_domain": "accessibility automation",
+      "questions": [
+        "Are accessibility tests automated in the CI pipeline?",
+        "Is there Lighthouse CI or similar running on every build?",
+        "Are WCAG violations blocking deployment?",
+        "Is there automated color contrast checking?",
+        "Is there screen reader testing in the pipeline?",
+        "Are accessibility regression tests in place?",
+        "Is the accessibility score tracked over time?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Internationalization DevOps",
+      "persona_domain": "i18n/l10n infrastructure",
+      "questions": [
+        "Is there an i18n build pipeline for locale files?",
+        "Are locale files validated in CI?",
+        "Is there automated translation quality checking?",
+        "Are missing translation keys caught before deployment?",
+        "Is the locale coverage tracked per language?",
+        "Is there a locale testing matrix?",
+        "Are RTL layouts tested automatically?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Phil Zimmermann",
+      "persona_domain": "cryptographic operations",
+      "questions": [
+        "Are cryptographic operations using well-tested libraries?",
+        "Is key management following best practices?",
+        "Are random numbers generated from CSPRNG?",
+        "Is the vault encryption implementation reviewed?",
+        "Are hash functions used correctly (SHA-256 for integrity, PBKDF2 for keys)?",
+        "Is there key rotation capability?",
+        "Are timing attacks mitigated in auth code?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Pre-commit Hook Engineer",
+      "persona_domain": "developer guardrails",
+      "questions": [
+        "Are pre-commit hooks catching common issues?",
+        "Is the hook execution fast enough to not frustrate developers?",
+        "Are the hooks documented?",
+        "Can hooks be skipped in emergencies (with audit trail)?",
+        "Are the hooks version-controlled?",
+        "Are there pre-push hooks for expensive checks?",
+        "Is the hook failure message helpful and actionable?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Configuration Drift Detector",
+      "persona_domain": "configuration management",
+      "questions": [
+        "Is there configuration drift detection between environments?",
+        "Are all configuration changes tracked?",
+        "Is the configuration validated against a schema?",
+        "Are there alerts for unexpected configuration changes?",
+        "Is the configuration documented?",
+        "Are default values sane and documented?",
+        "Is there a configuration change approval process?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Release Engineer",
+      "persona_domain": "release management",
+      "questions": [
+        "Is there a release process documented?",
+        "Are releases tagged in git?",
+        "Is there a changelog generated for each release?",
+        "Are releases tested in staging before production?",
+        "Is there a release cadence (weekly, bi-weekly)?",
+        "Is there a hotfix process for critical issues?",
+        "Are release notes communicated to users?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Open Source Compliance Officer",
+      "persona_domain": "license compliance",
+      "questions": [
+        "Are all OSS licenses compatible with the project's license?",
+        "Is there a NOTICE file with required attributions?",
+        "Are there any copyleft dependencies in the proprietary code?",
+        "Is the FSL license correctly applied to solace-browser?",
+        "Are dependency licenses checked automatically?",
+        "Is there a policy for evaluating new dependencies?",
+        "Are there any license conflicts across the 9 projects?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "DevOps Culture Auditor",
+      "persona_domain": "organizational readiness",
+      "questions": [
+        "Is there a 'you build it, you run it' culture?",
+        "Is the team capable of deploying independently?",
+        "Is there continuous learning from incidents?",
+        "Is automation prioritized over manual processes?",
+        "Is there a blameless culture for failures?",
+        "Is technical debt tracked and addressed?",
+        "Is the team's cognitive load manageable?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "DevOps Ecosystem Judge",
+      "persona_domain": "cross-project DevOps",
+      "questions": [
+        "Is the DevOps maturity consistent across all 9 projects?",
+        "Are there shared DevOps patterns and tools?",
+        "Is there a platform team or shared infrastructure?",
+        "Are there cross-project deployment dependencies documented?",
+        "Is the total DevOps tooling cost justified?",
+        "Is there a unified monitoring dashboard?",
+        "Are there DevOps standards that all projects follow?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Saint Solace (Digital Twin)",
+      "persona_domain": "AI DevOps self-inspection",
+      "questions": [
+        "Do I create reproducible builds when I modify code?",
+        "Do I respect the deployment pipeline (not bypassing CI)?",
+        "Do I maintain test coverage when adding new code?",
+        "Do I follow the commit message conventions?",
+        "Do I check for security implications in my changes?",
+        "Do I update documentation when I change behavior?",
+        "Do I leave the codebase better than I found it?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "The DevOps Oracle",
+      "persona_domain": "ultimate DevOps verdict",
+      "questions": [
+        "Can the entire system be rebuilt from scratch using only git and documentation?",
+        "Is the system resilient to the departure of any single team member?",
+        "Is the deployment pipeline a competitive advantage?",
+        "Is the system secure enough for enterprise customers?",
+        "Is the operational cost sustainable at 10x the current scale?",
+        "Is the DevOps maturity level appropriate for the product stage?",
+        "Would a DevOps expert be proud to inherit this system?"
+      ]
+    }
+  ]
+}

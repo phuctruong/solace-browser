@@ -1,0 +1,716 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 6,
+    "tower_name": "Tower of Hackers",
+    "dna": "security(system) = attack_surface(minimized) x defense(layered) x response(instant) x evidence(immutable)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 100,
+    "question_expansion_instruction": "Each floor lists 7 seed questions. During execution, expand to 100 questions per persona by probing deeper into the domain. Focus on exploitability, proof-of-concept attack chains, defense gaps, and whether the security posture matches the security claims.",
+    "target_projects": [
+      "solace-cli",
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-cli": "/home/phuc/projects/solace-cli",
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of Hackers",
+  "tower_number": 6,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "XSSHunter",
+      "persona_domain": "cross-site scripting",
+      "questions": [
+        "Does the browser UI sanitize user input through template escaping in all rendered output?",
+        "Are there stored XSS vectors in any user-controllable content that renders in the browser?",
+        "Do error messages reflect unsanitized input in development mode that could leak to production?",
+        "Is innerHTML used anywhere with server-supplied or user-supplied data?",
+        "Are Content-Security-Policy headers set with script-src restrictions on all pages?",
+        "Does the evidence chain display sanitize the output_summary field from LLM responses?",
+        "Would a DOM-based XSS payload survive the template rendering pipeline?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "SQLiMaster",
+      "persona_domain": "SQL injection",
+      "questions": [
+        "Are all database queries parameterized through the Firestore SDK (no raw query construction)?",
+        "Does an input validation layer exist independent of the database driver?",
+        "Are there any NoSQL injection vectors in Firestore query construction?",
+        "Would a crafted JSON payload in API request body reach database queries unsanitized?",
+        "Is there any string interpolation in query construction across the entire codebase?",
+        "Does the recipe execution path sanitize parameters before any data store operations?",
+        "Are Firestore security rules enforced at the collection level with field-level validation?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "CSRFBreaker",
+      "persona_domain": "cross-site request forgery",
+      "questions": [
+        "Do all API endpoints require Authorization headers (Bearer token) for state-changing operations?",
+        "Are CSRF tokens included in browser forms and validated server-side?",
+        "Are there any state-changing GET requests in the codebase?",
+        "Do OPTIONS preflight endpoints return appropriately restrictive CORS headers?",
+        "Would a malicious page be able to trigger state changes via cross-origin requests?",
+        "Is the SameSite cookie attribute set to Strict or Lax on all session cookies?",
+        "Does the development CORS configuration differ from production in a dangerous way?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "PathWalker",
+      "persona_domain": "path traversal",
+      "questions": [
+        "Are all filesystem paths normalized and validated against a whitelist of allowed directories?",
+        "Is the app_id parameter sanitized to alphanumeric only in all code paths?",
+        "Do the 91 path traversal fixes from Tower 1 hold under targeted attack?",
+        "Can a crafted app_id with ../ sequences escape the intended directory?",
+        "Is Path.resolve().relative_to() used consistently for all filesystem operations?",
+        "Would a symlink attack bypass the path validation checks?",
+        "Are temporary file paths validated with the same rigor as permanent paths?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "ClickJacker",
+      "persona_domain": "clickjacking and UI redress",
+      "questions": [
+        "Are X-Frame-Options: DENY and CSP frame-ancestors 'none' headers on all pages?",
+        "Can the YinYang approval dialog be framed by a malicious page?",
+        "Do third-party embed pages (documentation iframes) lack frame-busting headers?",
+        "Would a transparent overlay attack succeed against the approval flow?",
+        "Is the approval button position predictable enough for a UI redress attack?",
+        "Does the evidence chain viewer protect against clickjacking on signed evidence?",
+        "Are frame-busting scripts present as a defense-in-depth measure?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "DeserialKill",
+      "persona_domain": "deserialization attacks",
+      "questions": [
+        "Is JSON the only serialization format used throughout the system (no pickle, no YAML unsafe load)?",
+        "Does recipe JSON schema validation enforce maximum depth and maximum string length?",
+        "Are there any XML external entity processing paths in the codebase?",
+        "Could a deeply nested JSON payload cause memory exhaustion via recursive parsing?",
+        "Is json.loads used with standard library only (no custom deserializers)?",
+        "Does the recipe import path validate schema before any processing occurs?",
+        "Would a crafted recipe JSON with circular references crash the parser?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "PrivEscalator",
+      "persona_domain": "privilege escalation",
+      "questions": [
+        "Is role-based access control enforced at every API boundary consistently?",
+        "Can a Free tier user access Pro endpoints through parameter manipulation?",
+        "Are rung gates checked at both endpoint entry AND evidence-sealing time?",
+        "Could a race condition during tier downgrade allow sealing evidence at the previous rung?",
+        "Is the privilege check performed on every request or cached from session creation?",
+        "Does the admin API validate admin role on every endpoint, not just the router?",
+        "Would a modified JWT claim grant elevated privileges without server-side validation?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "HeaderPoison",
+      "persona_domain": "HTTP header injection",
+      "questions": [
+        "Is Content-Security-Policy set on all API responses with appropriate directives?",
+        "Is Strict-Transport-Security header present on Cloud Run endpoints?",
+        "Is X-Content-Type-Options: nosniff set on all file download endpoints?",
+        "Are response headers set exclusively by the framework (not user-controllable)?",
+        "Could a Host header injection attack redirect users to a malicious domain?",
+        "Is Cache-Control set appropriately to prevent sensitive data caching?",
+        "Would a header smuggling attack succeed through the Cloud Run reverse proxy?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "ScopeCreep",
+      "persona_domain": "OAuth scope escalation",
+      "questions": [
+        "Are OAuth3 scopes enforced at every endpoint, not just at the router level?",
+        "Can token scope be expanded after issuance through any API call?",
+        "Is revocation immediate across all three channels (local mark + cloud + browser)?",
+        "Is scope granularity fine enough (per-resource-instance vs per-resource-type)?",
+        "Can a token with email:read access ALL emails or only specific ones?",
+        "Does the scope enforcement survive a concurrent request during scope modification?",
+        "Would a crafted scope string bypass the scope parser?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "SessionThief",
+      "persona_domain": "session hijacking",
+      "questions": [
+        "Are sessions bound to a client fingerprint (IP, user-agent, TLS session)?",
+        "Is session rotation triggered on privilege change (login, tier upgrade)?",
+        "Is the session timeout configurable and what is the default (24 hours too long?)?",
+        "Would a stolen session cookie grant full access for the entire timeout period?",
+        "Are sessions stored with secure, httponly, and samesite attributes?",
+        "Is there session enumeration protection (sequential vs random session IDs)?",
+        "Does concurrent session detection exist (alert on login from new device)?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "TokenForger",
+      "persona_domain": "token forgery and JWT attacks",
+      "questions": [
+        "Are tokens signed with HMAC-SHA256 and is the alg:none vulnerability prevented?",
+        "Does a key rotation mechanism exist for the token signing key?",
+        "Is key versioning present in token headers to support graceful rotation?",
+        "If the signing key leaks, can all previously issued tokens be invalidated?",
+        "Is the signing key stored securely (HSM, KMS) or as a plain environment variable?",
+        "Would a token with a modified payload pass signature verification?",
+        "Is there a token blacklist for revoked tokens that are not yet expired?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "CredStuffer",
+      "persona_domain": "credential stuffing",
+      "questions": [
+        "What is the login rate limit per IP and is it sufficient (10/sec = 864K/day)?",
+        "Is there CAPTCHA after N failed attempts to block automated attacks?",
+        "Does progressive delay or exponential backoff exist after failed logins?",
+        "Is the user notified on failed login attempts from unknown locations?",
+        "Does an account lockout mechanism exist after repeated failures?",
+        "Would a botnet with 1000 IPs bypass the per-IP rate limit effectively?",
+        "Is there IP reputation checking or geographic anomaly detection?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "BruteForcer",
+      "persona_domain": "brute force attacks",
+      "questions": [
+        "Does the PBKDF2 iteration count (100K vs 600K OWASP) reduce offline brute force cost?",
+        "Is there account lockout after N consecutive failures?",
+        "Would offline brute force succeed against leaked password hashes at current iteration count?",
+        "Is there exponential backoff between login attempts?",
+        "Does the system detect and alert on distributed brute force across multiple IPs?",
+        "Is password complexity enforcement sufficient to resist dictionary attacks?",
+        "Would a timing attack reveal whether a username exists before password is checked?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "DOMClobber",
+      "persona_domain": "DOM clobbering and client-side attacks",
+      "questions": [
+        "Is the browser UI vulnerable to DOM clobbering via user-controlled element IDs?",
+        "Does Content-Security-Policy with script-src restriction exist in browser pages?",
+        "Is Subresource Integrity (SRI) enforced on all external script loads?",
+        "Could a browser extension modify the approval dialog, evidence display, or token display?",
+        "Does the browser client validate DOM integrity before critical operations?",
+        "Would a man-in-the-browser attack succeed against the approval flow?",
+        "Are form actions and button handlers protected against DOM manipulation?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "OAuthHijacker",
+      "persona_domain": "OAuth redirect hijacking",
+      "questions": [
+        "Are OAuth redirect URIs validated against a strict whitelist (no wildcards)?",
+        "Does the whitelist include wildcard subdomains for development that could be exploited?",
+        "Is PKCE (Proof Key for Code Exchange) implemented for the authorization code flow?",
+        "Is state parameter validation present in ALL authorization code flow paths?",
+        "Would an open redirect on any whitelisted domain enable token theft?",
+        "Is the authorization code single-use and time-limited?",
+        "Could an attacker register a subdomain matching a wildcard whitelist entry?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "CORSBuster",
+      "persona_domain": "CORS misconfiguration",
+      "questions": [
+        "Does the production CORS configuration restrict origins to a specific allowlist?",
+        "Is the development CORS wildcard (*) controlled by an environment variable that could leak to prod?",
+        "Is there a CORS audit tool in the CI/CD pipeline?",
+        "Would a misconfigured CORS_ALLOW_ORIGIN env var in production bypass all origin checks?",
+        "Does the CORS configuration apply consistently to all endpoint paths?",
+        "Are credentials (Access-Control-Allow-Credentials) ever combined with wildcard origins?",
+        "Would a preflight cache poisoning attack succeed against the current CORS setup?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "APIKeyLeaker",
+      "persona_domain": "API key exposure",
+      "questions": [
+        "Are API keys stored as hashed values in Firestore (never plaintext at rest)?",
+        "Are API keys transmitted in Authorization headers that may be logged by proxies?",
+        "Does an API key rotation mechanism exist for compromised keys?",
+        "Are API key scopes limited (per-resource) or do keys grant full account access?",
+        "Would Cloud Run ingress logs contain plaintext API keys from Authorization headers?",
+        "Is there an API key usage audit trail showing which key accessed which resource?",
+        "Are API keys visible in browser DevTools network tab or client-side code?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "ReplayAttacker",
+      "persona_domain": "replay attacks",
+      "questions": [
+        "Do API requests include a nonce to prevent replay?",
+        "Is there timestamp validation on API requests to limit replay window?",
+        "Can an intercepted API request be replayed indefinitely within the token TTL?",
+        "Does the evidence chain reject duplicate entries from replayed requests?",
+        "Would a replayed approval request execute the same action twice?",
+        "Is there request deduplication based on idempotency keys?",
+        "Does the 24-hour session timeout create an unacceptably large replay window?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "PromptInjector",
+      "persona_domain": "prompt injection attacks",
+      "questions": [
+        "Is there ANY input sanitization on user prompts before LLM processing?",
+        "Can a crafted prompt instruct the LLM to ignore its system prompt and execute arbitrary tool calls?",
+        "Does output validation exist after LLM response to detect injected commands?",
+        "Would a prompt injection attack generate legitimate-looking tool calls that the user approves?",
+        "Is the system prompt hardened against extraction through careful probing?",
+        "Are tool-use calls validated against a whitelist of expected patterns?",
+        "Does dual-LLM verification exist to detect injected instructions in outputs?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "ModelSwapper",
+      "persona_domain": "model confusion and substitution",
+      "questions": [
+        "Is there model integrity verification (hash of expected model weights)?",
+        "Could a model provider serve a malicious fine-tuned model without detection?",
+        "Does the evidence chain verify model identity beyond recording which model was named?",
+        "Would a model substitution attack change the behavior of approved recipes?",
+        "Is the ABCD protocol routing to cheapest model exploitable by degraded model quality?",
+        "Does the system detect when a model provider returns outputs from a different model?",
+        "Are model version pinning and hash verification implemented for BYOK models?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "HalluciForger",
+      "persona_domain": "hallucination exploitation",
+      "questions": [
+        "Is there any hallucination detection or factual grounding mechanism?",
+        "Can the LLM generate a recipe step that executes differently than its description?",
+        "Does the evidence chain record WHAT happened or WHETHER it matched the preview?",
+        "Would a hallucinated 'sent email to boss' that actually sends to attacker be detected?",
+        "Is there output cross-validation between what was previewed and what was executed?",
+        "Does the approval flow show the actual tool call parameters or only the LLM's description?",
+        "Could a sophisticated hallucination attack bypass the human approval gate?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "DataPoisoner",
+      "persona_domain": "training data and recipe poisoning",
+      "questions": [
+        "Does a recipe provenance chain exist tracking origin and modification history?",
+        "Can a compromised recipe in the store run with the same privilege as legitimate recipes?",
+        "Is there recipe code review requirement before store publication?",
+        "Are recipes sandboxed or do they have access to all tools the user has granted?",
+        "Would a structurally valid but malicious recipe pass schema validation?",
+        "Is there behavioral analysis of recipe actions before execution?",
+        "Can recipe signing verify both origin and integrity of store-published recipes?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "EmbedExfiltrator",
+      "persona_domain": "data exfiltration via embeddings",
+      "questions": [
+        "Are prime wiki snapshots stored with per-user encryption or globally readable?",
+        "Can any user with Firestore read access read all prime wiki snapshots?",
+        "Does the compressed snapshot content include sensitive data from browsed pages?",
+        "Is there access control on the prime wiki pull API endpoint?",
+        "Could embedding-based search expose data from other users' snapshots?",
+        "Is sensitive content scrubbed before snapshot storage in Firestore?",
+        "Would a Firestore security rule misconfiguration expose all stored snapshots?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "AgentEscaper",
+      "persona_domain": "agent boundary escape",
+      "questions": [
+        "Is the skill pack re-validated at execution time or only loaded at startup?",
+        "Does runtime monitoring of tool-use patterns detect anomalous sequences?",
+        "Can the agent access tools outside its defined skill pack boundary?",
+        "Would a novel attack pattern bypass static tool-use boundaries?",
+        "Is there anomaly detection for unusual tool call frequency or combinations?",
+        "Can the agent self-modify its skill pack or tool permissions during execution?",
+        "Does the approval gate cover ALL tool calls or only a subset?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "TrainingLeaker",
+      "persona_domain": "model training data extraction",
+      "questions": [
+        "Can the system prompt and skill pack content be extracted through prompt probing?",
+        "Is there system prompt protection preventing the LLM from revealing its instructions?",
+        "Would an attacker reconstruct proprietary persona definitions through careful queries?",
+        "Are skill contents and recipe structures exposed through the LLM's responses?",
+        "Is there rate limiting on queries that probe for system prompt content?",
+        "Does the LLM refuse to repeat or paraphrase its system prompt when asked?",
+        "Could competitive intelligence be extracted by probing the persona panel configuration?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "ContextOverflow",
+      "persona_domain": "context window attacks",
+      "questions": [
+        "Is there context window budget enforcement preventing prompt stuffing?",
+        "Can a user craft a task description that pushes system prompt out of effective context?",
+        "Would the agent still follow safety constraints with a flooded context window?",
+        "Is there input length validation before the prompt reaches the LLM?",
+        "Does the system detect when safety-critical context has been displaced?",
+        "Is the context allocation strategy documented (system prompt reserved vs user content)?",
+        "Would a denial-of-quality attack succeed by consuming all context with junk content?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "CryptoBreaker",
+      "persona_domain": "cryptographic attacks",
+      "questions": [
+        "Is the vault key derived from machine_id, making it predictable on any local machine?",
+        "Does the PBKDF2 iteration count (100K) meet OWASP 2026 recommendations (600K)?",
+        "Is AES-256-GCM for vault encryption the correct algorithm choice with proper IV handling?",
+        "Is there a lock file on the vault to prevent concurrent access corruption?",
+        "Is the vault key derivation seed (machine_id) readable by any process on the machine?",
+        "Would replacing machine_id with user passphrase break the kill chain?",
+        "Are SHA-256 evidence chain hashes computed with proper delimiter to prevent collision?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "ContainerEscaper",
+      "persona_domain": "container escape and runtime breakout",
+      "questions": [
+        "Does Cloud Run gVisor sandboxing prevent container escape attempts?",
+        "Is the container filesystem read-only to prevent runtime code modification?",
+        "Is a seccomp profile applied to restrict system call surface?",
+        "Are Linux capabilities dropped beyond Cloud Run defaults?",
+        "Could a compromised process modify its own code at runtime on the writable filesystem?",
+        "Are container images built with a non-root user and minimal base image?",
+        "Would a privilege escalation inside the container reach the host kernel?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "DNSHijacker",
+      "persona_domain": "DNS attacks and domain takeover",
+      "questions": [
+        "Is DNSSEC validation configured for the solaceagi.com domain?",
+        "Are CAA records restricting which certificate authorities can issue certificates?",
+        "Is there domain monitoring for typosquatting (solaceagi.com.co, solaceagi.net)?",
+        "Would a DNS hijack plus fraudulent certificate be detectable by the platform?",
+        "Is certificate transparency monitoring active for the domain?",
+        "Could a subdomain takeover attack succeed on any unclaimed DNS records?",
+        "Are there dangling DNS records pointing to deprovisioned cloud resources?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "SupplyChain",
+      "persona_domain": "supply chain attacks",
+      "questions": [
+        "Do dependency lock files with hashes exist (pip-compile, poetry.lock)?",
+        "Is there a Software Bill of Materials (SBOM) for the deployment artifact?",
+        "Is automated dependency vulnerability scanning (pip-audit, Snyk) in the CI pipeline?",
+        "Are all dependency versions pinned with integrity verification?",
+        "Would a compromised PyPI package execute with full application privileges?",
+        "Is the build pipeline reproducible (same inputs produce same outputs)?",
+        "Could a typosquatting attack on a dependency name succeed during pip install?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "CloudMisconfig",
+      "persona_domain": "cloud misconfiguration",
+      "questions": [
+        "Are Firestore security rules version-controlled and automatically tested?",
+        "Is there a cloud security posture management (CSPM) tool monitoring drift?",
+        "Would a Firestore rule misconfiguration have automated detection and rollback?",
+        "Is the GCP service account following least-privilege principle?",
+        "Are Cloud Run environment variables protected from unauthorized access?",
+        "Is there automated drift detection between expected and actual cloud configuration?",
+        "Would an overly broad IAM role on the service account enable lateral movement?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "LogTamper",
+      "persona_domain": "log tampering and evidence destruction",
+      "questions": [
+        "Can an attacker with local file access delete the entire evidence chain?",
+        "Is there a remote backup of evidence chains independent of local storage?",
+        "Does the hash chain detect tampering but fail to prevent deletion?",
+        "Would recomputing all hashes from scratch create an undetectable forged chain?",
+        "Is there append-only filesystem or write-once storage for evidence?",
+        "Does the evidence chain have an external anchor (timestamping service, blockchain)?",
+        "Would a full chain replacement pass the current verification algorithm?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "CachePoisoner",
+      "persona_domain": "cache poisoning",
+      "questions": [
+        "Is there cache key validation for the prime wiki 15-minute web fetch cache?",
+        "Would a poisoned cache entry serve incorrect content for the full TTL?",
+        "Is there a cache purge mechanism for emergency invalidation?",
+        "Does cache integrity checking validate content hash on retrieval?",
+        "Could a DNS-level cache poisoning attack serve malicious content through the cache?",
+        "Are CDN-level caching headers set to prevent sensitive content caching?",
+        "Would a cache timing attack reveal the existence of cached resources?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "SideChannel",
+      "persona_domain": "side-channel attacks",
+      "questions": [
+        "Is token validation using timing-safe comparison (constant-time string compare)?",
+        "Does Cloud Run network latency mask timing differences sufficiently?",
+        "Would local CLI execution expose clearer timing signals for token guessing?",
+        "Are cryptographic comparisons performed in constant time?",
+        "Could a power analysis attack on local execution reveal vault encryption keys?",
+        "Is there protection against timing oracle attacks on the login endpoint?",
+        "Would repeated API calls with varying tokens leak information through response times?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "PhishMaster",
+      "persona_domain": "phishing campaigns",
+      "questions": [
+        "Is email authentication (DMARC, DKIM, SPF) configured for the solaceagi.com domain?",
+        "Is there phishing awareness content in user onboarding?",
+        "Does the platform protect users from phishing emails impersonating Solace?",
+        "Would a credential harvesting page at solaceagi.com.co fool users?",
+        "Is there a password reset flow that could be exploited by phishing?",
+        "Are notification emails designed to be distinguishable from phishing attempts?",
+        "Does the product warn users about phishing risks when connecting external accounts?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "VishingPro",
+      "persona_domain": "voice phishing and social engineering",
+      "questions": [
+        "Is there a documented procedure for verifying identity of support requestors?",
+        "Does a 'trust no one by default' policy exist for support interactions?",
+        "Would the solo founder model make social engineering easier or harder?",
+        "Is there social engineering awareness training documented?",
+        "Could an attacker impersonate a user to the founder via email support?",
+        "Is the support email address protected against social engineering attacks?",
+        "Does the absence of a support phone line reduce or redirect the vishing attack surface?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "WaterHoler",
+      "persona_domain": "watering hole attacks",
+      "questions": [
+        "Is there browser isolation for development activities visiting external sites?",
+        "Is there network segmentation between development and production environments?",
+        "Could a compromised documentation site deliver malicious code to the development environment?",
+        "Are development dependencies fetched from verified and pinned sources?",
+        "Would a watering hole attack on PyPI, npm, or GitHub succeed against the dev workflow?",
+        "Is there monitoring for anomalous network connections from the development environment?",
+        "Does the developer workflow include visiting AI provider dashboards with shared credentials?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "InsiderThreat",
+      "persona_domain": "insider threat",
+      "questions": [
+        "Is there separation of duties (different people write code vs deploy to production)?",
+        "Does the four-eyes principle apply to production deployments?",
+        "If the founder's workstation is compromised, what is the blast radius?",
+        "Is there code review by a second party before merge to production?",
+        "Are production credentials accessible from the development environment?",
+        "Would a compromised development machine grant access to all environments?",
+        "Is there an audit trail of who deployed what code to production?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "RansomOps",
+      "persona_domain": "ransomware operations",
+      "questions": [
+        "Is there a documented backup strategy for the platform (Firestore, configs)?",
+        "Do immutable backups exist that survive a ransomware encryption attack?",
+        "Is there a disaster recovery plan with tested recovery procedures?",
+        "Is there a business continuity plan for extended outage scenarios?",
+        "Would Firestore encryption by ransomware have a documented recovery path?",
+        "Are backup restoration procedures tested regularly?",
+        "Does the local-first architecture protect user data from platform-level ransomware?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "ZeroDayBroker",
+      "persona_domain": "zero-day exploit brokerage",
+      "questions": [
+        "Is there a bug bounty program with scope, rewards, and safe harbor policy?",
+        "Is there a responsible disclosure policy published at a discoverable URL?",
+        "Is security.txt deployed at the production URL per RFC 9116?",
+        "Does a vulnerability disclosure process exist with triage and fix SLAs?",
+        "Would a researcher who finds a vulnerability have a clear path to report it?",
+        "Are there triage, fix, and communication procedures for reported vulnerabilities?",
+        "Would the absence of a disclosure channel force researchers to publish destructively?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "APTSimulator",
+      "persona_domain": "advanced persistent threat",
+      "questions": [
+        "Is there an intrusion detection system monitoring for persistent access?",
+        "Would an APT actor who gains initial access maintain persistence indefinitely undetected?",
+        "Is the evidence chain monitored for anomalous patterns indicating compromise?",
+        "Is there behavioral monitoring for unusual API usage or tool-call patterns?",
+        "Does network monitoring detect command-and-control traffic?",
+        "Would a backdoor in a dependency persist through deployment cycles?",
+        "Is there a mechanism to detect if the application has been modified at runtime?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "BugBountyHunter",
+      "persona_domain": "bug bounty methodology",
+      "questions": [
+        "Does a bug bounty program scope definition exist?",
+        "Is there a reward structure proportional to vulnerability severity?",
+        "Is there a safe harbor policy protecting good-faith security research?",
+        "Does a triage process exist with defined response time SLAs?",
+        "Is the bug bounty intake platform configured (HackerOne, Bugcrowd)?",
+        "Would a bounty hunter find enough attack surface to justify time investment?",
+        "Are there documented rules of engagement for authorized testing?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "RedTeamLead",
+      "persona_domain": "red team operations",
+      "questions": [
+        "Has an external penetration test ever been conducted on the platform?",
+        "Is there a penetration testing schedule or standing engagement?",
+        "Does a threat modeling document (STRIDE, PASTA, attack trees) exist?",
+        "Would the red team find the kill chain (prompt injection to vault) in the first hour?",
+        "Is there blue team capability to detect and respond to red team activity?",
+        "Are the results of this tower equivalent to or weaker than a real red team engagement?",
+        "Would a red team recommend this platform for production use with real credentials?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "NationState",
+      "persona_domain": "nation-state threat actor",
+      "questions": [
+        "Is there consideration of supply chain attacks from state-sponsored actors?",
+        "Does a hardened build pipeline with reproducible builds exist?",
+        "Is there air-gapped signing for release artifacts?",
+        "Would a nation-state actor find the platform a valuable target?",
+        "Are there protections against firmware-level compromise of the development machine?",
+        "Is there a threat model that accounts for state-level adversaries?",
+        "Does the platform's geopolitical positioning create exposure to specific nation-state actors?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "QuantumThreat",
+      "persona_domain": "quantum computing threat",
+      "questions": [
+        "Are SHA-256 and AES-256 considered quantum-resistant under current understanding?",
+        "Is there a migration plan to post-quantum cryptographic algorithms?",
+        "Does an inventory of all cryptographic primitives exist for future migration?",
+        "Would Grover's algorithm reduce effective key length below acceptable thresholds?",
+        "Is the cryptographic agility of the system sufficient for algorithm migration?",
+        "Are there quantum-vulnerable algorithms (RSA, ECDSA) used anywhere in the system?",
+        "Does the platform document its quantum readiness posture?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "RegulatoryExploit",
+      "persona_domain": "regulatory gap exploitation",
+      "questions": [
+        "Does a GDPR Data Protection Impact Assessment exist?",
+        "Is there SOC2 Type II certification or preparation in progress?",
+        "Is there a penetration test report from a certified security firm?",
+        "Would a regulatory-aware attacker challenge security claims in legal proceedings?",
+        "Could a competitor use absence of compliance documentation in sales competition?",
+        "Are there certifications that would survive regulatory discovery requests?",
+        "Does the Part 11 compliance claim hold under FDA regulatory scrutiny?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "ThreatIntelAnalyst",
+      "persona_domain": "threat intelligence assessment",
+      "questions": [
+        "Does a formal threat model document exist separate from this audit paper?",
+        "Is there an asset inventory mapping all data stores and access paths?",
+        "Does a data flow diagram exist for security review?",
+        "Is there a risk register with prioritized vulnerabilities and remediation timeline?",
+        "Does the security architecture document exist as a standalone artifact?",
+        "Would the organization's security posture be rated mature or immature?",
+        "Can the threat intelligence analyst assess the organization's ability to respond to threats?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Security Architect",
+      "persona_domain": "security architecture review",
+      "questions": [
+        "Does a formal threat model exist mapping adversaries, assets, threats, and mitigations?",
+        "What is the key management lifecycle (generate, store, rotate, destroy)?",
+        "Does an incident response plan exist that can respond to a 2 AM zero-day?",
+        "Can the evidence chain be tampered with by an attacker with root access?",
+        "How many independent controls must an attacker bypass for full compromise?",
+        "What is the security testing coverage (pen test, bug bounty, SAST, DAST)?",
+        "Would you sign off on this system for production deployment handling real user credentials?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "Zero-Day",
+      "persona_domain": "zero-day research and incident response",
+      "questions": [
+        "Can the kill chain from prompt injection to vault decryption via machine_id be executed?",
+        "If MOCK_AUTH=true is set, is all authentication bypassed with no detection?",
+        "Can the evidence chain be replaced with a forged chain that passes verification?",
+        "Would a compromised PyPI package in the dependency tree execute with full privileges?",
+        "Can a phishing domain (solaceagi.com.co) fool users when no DMARC/SPF exists?",
+        "Can a malicious recipe pass validation and exfiltrate vault contents?",
+        "Across five independent compromise paths, how many alerts are generated? (Expected: zero)"
+      ]
+    }
+  ]
+}

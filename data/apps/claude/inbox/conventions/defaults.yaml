@@ -1,0 +1,53 @@
+# Claude Uplift Reviewer — Default Configuration
+# Inject prime skills into Claude.ai for architecture/code/QA reviews.
+# Last updated: 2026-03-07 | Auth: 65537
+
+enabled: true
+
+# Account
+site_url: https://claude.ai
+model_preference: opus
+
+# Uplift behavior
+inject_skills_on_round_1: true
+reuse_conversation: true
+save_page_ids: true
+page_ids_path: /tmp/llm-uplift-tabs.json
+
+# Prompt behavior
+max_prompt_length: 12000
+wait_for_response_timeout_s: 180
+max_response_extract_length: 32000
+
+# Persona (auto-selected by task_type)
+persona_architecture: Mike West
+persona_code: Linus Torvalds
+persona_security: Mike West
+persona_ux: Dieter Rams
+persona_business: Pieter Levels
+
+# Schedule
+schedule: on_demand
+cooldown_seconds: 5
+
+# Evidence
+evidence_level: full
+hash_algorithm: sha256
+retain_screenshots: true
+retain_days: 90
+
+# Safety
+safety_rating: B
+require_approval: true
+
+# OAuth3 scopes
+scopes:
+  - claude.read.conversation
+  - claude.draft.message
+  - local.evidence
+  - local.screenshots
+
+# Claude-specific notes
+# Claude.ai cannot browse URLs — all content must be injected as text.
+# This makes the uplift injection MORE important for Claude.
+# Claude's strictest scoring provides the best negative-space coverage.

@@ -1,0 +1,25 @@
+{
+  "spec_id": "sb-api-apps-001",
+  "project": "solace-browser",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "curl -sf http://localhost:9222/api/apps",
+  "target_name": "Sidebar API: /api/apps endpoint",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": ["id", "name", "site", "tier", "gmail-inbox-triage"],
+    "stdout_not_contains": ["uplift_stack", "injection_content", "principle_weight", "prompt_template"],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "james_bach",
+  "persona_bio": "Software testing expert — verify sidebar lists apps with correct schema, no trade secrets leaked",
+  "domain_questions": [
+    "Does the response contain a JSON array of app objects?",
+    "Does each app have id, name, site, and tier fields?",
+    "Are there at least 10 apps listed?",
+    "Is any uplift/injection trade secret content exposed?"
+  ],
+  "tags": ["sidebar", "api", "model-marketplace", "trade-secret-guard"],
+  "paper_ref": "Paper 47 Section 22b"
+}

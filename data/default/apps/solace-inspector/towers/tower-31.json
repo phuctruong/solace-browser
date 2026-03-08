@@ -1,0 +1,149 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 31,
+    "tower_name": "Tower of Recipe Economics",
+    "dna": "recipe(economics) = discover(llm) x record(steps) x replay(deterministic) x cost(zero) x share(store) x version(immutable) x evidence(sealed)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions. Questions must be EXECUTABLE — answerable by checking if something actually works, not theoretical capability.",
+    "aggregate_prior": "NEW — no prior audit",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser",
+      "solace-cli"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solace-cli": "/home/phuc/projects/solace-cli"
+    }
+  },
+  "name": "Tower of Recipe Economics",
+  "tower_number": 31,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Nadia Petrova",
+      "persona_domain": "recipe_creator_power_user",
+      "persona_context": "29, Berlin, DevOps engineer at a mid-size startup. Expert tech level. Uses Solace Browser daily. Wants to create recipes from her daily LinkedIn outreach workflow and share them with her team.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "When I perform a LinkedIn outreach sequence manually, does the browser offer to record my steps as a new recipe?",
+        "Can I name and tag the recipe during creation so I can find it later in my recipe library?",
+        "Does the recipe creation wizard show me each captured step with a screenshot so I can verify what was recorded?",
+        "Can I delete or reorder individual steps in the recipe before saving it?",
+        "Does the recipe capture the CSS selectors and page structure so it can replay on slightly different page layouts?",
+        "Can I add a description and usage notes to the recipe that other users will see before running it?",
+        "Does the system warn me if my recipe contains steps that require authentication tokens that will expire?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all recipe creation edge cases. Nadia is Expert level — she needs the recording to be reliable, editable, and shareable. Every answer must point to a working UI element or API endpoint."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Carlos Mendez",
+      "persona_domain": "recipe_step_recording",
+      "persona_context": "34, Austin, QA engineer at an e-commerce company. Expert tech level. Needs to record multi-step browser workflows that include form fills, clicks, waits, and file uploads for product listing automation.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Does the step recorder capture form field inputs including dropdown selections and date pickers?",
+        "Can the recorder handle a workflow that spans multiple tabs — for example, copying data from a Google Sheet tab into a web form tab?",
+        "Does the recorder capture file upload actions so I can replay uploading product images?",
+        "Can I insert explicit wait steps for pages that load dynamically with AJAX content?",
+        "Does the recorder distinguish between typing in a search box and pressing Enter to submit?",
+        "Can I record a conditional branch — for example, 'if the price field is empty, skip this row'?",
+        "Does the recorder capture scroll actions needed to reach elements below the fold on long pages?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all step recording mechanics. Carlos needs robust recording that handles real-world web complexity — dynamic content, multi-tab, file uploads, conditionals. If recording fails on any of these, the recipe is useless."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Jenny Park",
+      "persona_domain": "deterministic_replay",
+      "persona_context": "41, Seoul, Operations Manager at a logistics company. Intermediate tech level. Runs the same supplier outreach recipe 50 times per week. Needs identical output every time — no hallucination, no variation, no LLM re-generation.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "When I replay a recipe that was approved last week, does it produce exactly the same email text without calling the LLM again?",
+        "Can I see a diff between the original recipe output and today's replay to confirm they are identical?",
+        "Does replay skip the LLM entirely and use the sealed output from the preview step?",
+        "If the target website changed its layout since the recipe was recorded, does replay fail loudly instead of silently producing wrong output?",
+        "Can I replay the same recipe on 50 different supplier contacts in a batch without approving each one individually?",
+        "Does the replay execution time show that no LLM API call was made (zero LLM latency in the evidence log)?",
+        "If I replay a recipe offline (no internet), does it still work for the deterministic steps that don't need network access?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all deterministic replay scenarios. Jenny runs 50 replays per week — any variation or LLM re-call is a cost leak and a trust violation. Replay must be provably identical to the approved output."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Trevor Okafor",
+      "persona_domain": "cost_tracking_economics",
+      "persona_context": "36, Lagos, Startup founder bootstrapping with a $200/month total tool budget. BYOK with his own Anthropic key. Needs to see exactly how much each recipe costs on first run vs replay, and project monthly spend before committing.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I see the exact LLM token cost of the first run (preview) for a recipe before I approve it?",
+        "Does the cost dashboard show me that replays cost $0 in LLM tokens with a clear comparison to first-run cost?",
+        "Can I set a monthly budget cap in dollars so the system blocks new recipe previews when I hit the limit?",
+        "Does the usage page show my cost curve — proving that cost per task decreases as I replay more recipes?",
+        "Can I see a projected monthly cost based on my current usage pattern before the month ends?",
+        "Does the system show me which recipes are the most expensive and suggest converting them to replay-only?",
+        "Can I export my full cost breakdown as a CSV to reconcile with my Anthropic API billing?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all cost tracking and economics scenarios. Trevor has $200/month total — every dollar matters. The cost dashboard must prove the recipe economics thesis: first run costs money, replays are free, cost curve inverts."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Suki Yamamoto",
+      "persona_domain": "recipe_sharing_store",
+      "persona_context": "27, Osaka, Freelance social media manager with 8 clients. Intermediate tech level. Wants to share her best Instagram posting recipe with other freelancers through the Stillwater Store, and discover recipes others have published.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I publish my Instagram posting recipe to the Stillwater Store with a description, tags, and preview screenshots?",
+        "Does the store show me how many people have installed my recipe and their average success rate?",
+        "Can I browse the store and filter recipes by category (social media, email, CRM) and sort by popularity?",
+        "Does the store verify that a recipe actually works before listing it (automated testing or review)?",
+        "Can I install someone else's recipe and customize it for my clients without modifying the original?",
+        "Does the store show the cost-per-run for each recipe so I can compare before installing?",
+        "Can I share a recipe directly with a specific person via a link without publishing it to the entire store?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all recipe sharing and store workflows. Suki wants a two-sided marketplace — she publishes and she discovers. The store must show real metrics (installs, success rate, cost) not just descriptions."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Martin Hofstadter",
+      "persona_domain": "recipe_versioning",
+      "persona_context": "52, Vienna, Compliance officer at a pharmaceutical company. Expert tech level. Needs immutable recipe versions for FDA Part 11 compliance — every change must be tracked, no silent modifications, full audit trail of who changed what and when.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Does every recipe save create a new immutable version with a unique hash, not overwrite the previous version?",
+        "Can I view the complete version history of a recipe showing all changes, timestamps, and the author of each change?",
+        "Does the system prevent me from modifying a recipe version that has already been executed in production?",
+        "Can I roll back to a previous recipe version and re-run it to reproduce an exact historical result?",
+        "Does the version diff show me exactly which steps changed between version 3 and version 7 of a recipe?",
+        "Is each recipe version signed with a SHA-256 hash that I can independently verify has not been tampered with?",
+        "Can I lock a recipe version so that no one on my team can create a new version without compliance approval?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all version management and immutability scenarios. Martin works in pharma — FDA Part 11 requires every modification to be traceable, immutable, and auditable. Silent changes are a regulatory violation."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Rina Chakraborty",
+      "persona_domain": "evidence_sealing",
+      "persona_context": "39, Mumbai, Legal operations manager at a law firm. Intermediate tech level. Needs sealed evidence that a recipe was executed exactly as recorded — for client billing, dispute resolution, and regulatory reporting.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "After a recipe executes, can I see a sealed evidence bundle with timestamps, screenshots, and the exact steps that ran?",
+        "Does the evidence bundle include a SHA-256 hash chain that proves no step was added or removed after execution?",
+        "Can I export the evidence bundle as a PDF or ZIP that I can attach to a client invoice as proof of work?",
+        "Does the sealed evidence include the recipe version hash so I can prove which exact recipe version was executed?",
+        "Can I search my evidence history by date range, recipe name, or client to find a specific execution record?",
+        "Does the evidence seal include a timestamp from a trusted source (not just my local clock)?",
+        "If someone tampers with the evidence bundle after export, does the hash chain detect the modification when I verify it?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all evidence sealing scenarios. Rina needs legally defensible proof that a recipe ran exactly as recorded. Evidence bundles must be exportable, searchable, tamper-evident, and tied to specific recipe versions."
+    }
+  ]
+}

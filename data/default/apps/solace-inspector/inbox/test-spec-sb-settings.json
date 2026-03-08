@@ -1,0 +1,19 @@
+{
+  "spec_id": "solace-browser-settings-001",
+  "project": "solace-browser",
+  "requested_by": "claude-code",
+  "mode": "web",
+  "target_url": "http://127.0.0.1:8791/settings",
+  "page_name": "Solace Browser Settings",
+  "checks": {
+    "aria": true,
+    "heuristics": true,
+    "llm_analysis": true,
+    "screenshot": true,
+    "baseline_diff": false
+  },
+  "persona": "kent_beck",
+  "priority": "high",
+  "context": "Self-diagnostic: Settings page must render all sections \u2014 YinYang personality, OAuth3 config, LLM config. Verify all form labels and inputs are accessible.",
+  "created_at": "2026-03-03T00:00:00Z"
+}

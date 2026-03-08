@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 35,
+    "tower_name": "Tower of Google Suite",
+    "dna": "google(suite) = auth(google) x drive(save) x calendar(brief) x search(trends) x export(report) x session(persist) x cross(app)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions. Questions must be EXECUTABLE — answerable by checking if something actually works, not theoretical capability.",
+    "aggregate_prior": "NEW — no prior audit",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Google Suite",
+  "tower_number": 35,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Aanya Patel",
+      "persona_domain": "google_account_auth",
+      "persona_context": "31, Mumbai, Project manager at a consulting firm. Intermediate tech level. Uses Google Workspace for everything — Gmail, Drive, Calendar, Docs. Needs to connect her Google account to Solace Browser with clear OAuth scopes and the ability to see exactly what the agent can access.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I connect my Google Workspace account through a standard Google OAuth login flow without entering my password into the Solace app directly?",
+        "Does the Google consent screen show me exactly which scopes Solace is requesting (read email, read calendar, write to Drive) before I approve?",
+        "Can I grant read-only Gmail access without granting send permission — and does the agent respect that boundary?",
+        "After authenticating, can I see my connected Google account in a Solace settings page showing the granted scopes and when the token expires?",
+        "Can I disconnect my Google account from Solace with one click and confirm that all cached tokens are deleted?",
+        "Does the authentication work with Google Workspace accounts that have admin-enforced 2FA and conditional access policies?",
+        "If my Google OAuth token expires during a recipe execution, does the system pause and ask me to re-authenticate instead of failing silently?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all Google account authentication scenarios. Aanya uses Google Workspace with enterprise policies — OAuth must be standard, scopes must be minimal, token lifecycle must be transparent. Storing passwords is a dealbreaker."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Ben Thornton",
+      "persona_domain": "drive_file_operations",
+      "persona_context": "38, Austin, Sales operations manager at a SaaS company. Intermediate tech level. Needs recipes that save reports to specific Google Drive folders, organize files by client name, and share documents with team members automatically.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can a recipe save a generated report as a Google Doc in a specific Drive folder that I designate during recipe setup?",
+        "Does the recipe create a new folder automatically if my designated folder path does not exist yet?",
+        "Can I set up a recipe that organizes downloaded files into Drive folders named by client — for example, '/Sales Reports/Acme Corp/March 2026'?",
+        "Does the system preserve the original file format when uploading (PDF stays PDF, CSV stays CSV) rather than converting everything to Google Docs format?",
+        "Can a recipe share the generated document with specific team members by email address and set their permission to 'Viewer' or 'Editor'?",
+        "Does the evidence log capture which file was saved, to which folder, and the Google Drive file ID for traceability?",
+        "Can I preview the file that the recipe is about to save to Drive before approving the write operation?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all Google Drive file operation scenarios. Ben needs automated file organization — save, folder creation, sharing, format preservation. Every file operation must be visible in the evidence trail with the Drive file ID."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Christine Dubois",
+      "persona_domain": "calendar_briefing",
+      "persona_context": "45, Montreal, Executive assistant to a CEO. Intermediate tech level. Needs a daily morning brief recipe that reads the CEO's Google Calendar, summarizes today's meetings with context about each attendee, and delivers it by 7:30am Eastern.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can a recipe read today's Google Calendar events and generate a briefing document showing meeting time, attendees, and agenda for each?",
+        "Does the briefing include context about each attendee — pulled from their LinkedIn profile or previous meeting notes in Drive?",
+        "Can I schedule the briefing recipe to run at 7:00 AM Eastern and deliver the summary to the CEO's Gmail inbox by 7:30 AM?",
+        "Does the briefing highlight schedule conflicts — for example, two meetings overlapping from 2-3 PM — with a suggested resolution?",
+        "Can the recipe pull preparation materials linked in calendar event descriptions and include a summary of each document?",
+        "Does the briefing show travel time between meetings if they are at different physical locations?",
+        "Can I customize the briefing format — for example, bullet points instead of paragraphs, with the most important meeting at the top?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all calendar briefing scenarios. Christine serves a CEO — the briefing must be accurate, contextual, and on time. A wrong meeting time or missing attendee is a professional embarrassment. Timezone handling across international meetings is critical."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Ryan Cooper",
+      "persona_domain": "search_trend_extraction",
+      "persona_context": "28, Portland, SEO specialist at a digital marketing agency. Expert tech level. Needs a recipe that uses Google Search to monitor trending topics, competitor rankings, and SERP changes for client keywords — then exports structured data for analysis.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can a recipe perform Google searches for a list of 20 client keywords and capture the top 10 results for each including title, URL, and snippet?",
+        "Does the recipe capture Google's 'People Also Ask' section for each keyword so I can identify content gap opportunities?",
+        "Can I schedule a weekly recipe that compares this week's search results to last week's and highlights ranking changes?",
+        "Does the recipe output structured JSON or CSV data that I can import directly into my SEO analysis tools?",
+        "Can the recipe detect if a competitor's page has entered or exited the top 10 for a tracked keyword and flag it?",
+        "Does the system handle Google's rate limiting gracefully — spacing out searches to avoid being blocked?",
+        "Can I save the raw SERP screenshots alongside the structured data as evidence of what Google showed on that date?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all Google Search trend extraction scenarios. Ryan needs structured, repeatable SERP data — not one-off searches. Rate limiting, historical comparison, and evidence capture are essential for professional SEO work."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Elena Vasquez",
+      "persona_domain": "report_generation",
+      "persona_context": "40, Miami, Account manager at a PR agency. Intermediate tech level. Needs a recipe that pulls data from Gmail (client emails), Drive (media lists), and Calendar (meeting notes) to generate a weekly client activity report as a formatted Google Doc.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can a recipe pull emails from a specific Gmail label, meeting notes from Calendar events, and documents from a Drive folder to compile a single report?",
+        "Does the generated report use a Google Docs template I provide — with my agency's logo, fonts, and section headings?",
+        "Can the recipe count and categorize client interactions by type (email, meeting, phone call) for the weekly summary?",
+        "Does the report include a timeline view showing client touchpoints chronologically throughout the week?",
+        "Can I review and edit the generated report in the approval dialog before it is saved to Drive and shared with the client?",
+        "Does the evidence trail capture which emails, events, and files were used to generate the report — so I can trace any data point back to its source?",
+        "Can the recipe generate reports for all 8 of my clients in a batch run, each customized with their specific data?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all multi-source report generation scenarios. Elena needs cross-app data aggregation — Gmail + Drive + Calendar into one document. The report must be client-presentable (formatted, branded) not a raw data dump."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Tanaka Hiroshi",
+      "persona_domain": "session_management",
+      "persona_context": "50, Osaka, IT administrator at a manufacturing company. Expert tech level. Manages 30 employees who use Solace Browser with their Google accounts. Needs to monitor active sessions, troubleshoot authentication issues, and ensure no stale sessions persist.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I see a dashboard showing all 30 employees' active Google sessions with their connection status, token expiry, and last activity time?",
+        "Does the session manager detect stale sessions — accounts where the Google token has expired but the session was not properly closed?",
+        "Can I force-disconnect a specific employee's Google session from the admin panel if they forgot to log out?",
+        "Does the system handle Google Workspace session policy changes (like reduced session length) without requiring employees to manually reconfigure?",
+        "Can I see error logs for failed Google authentication attempts to troubleshoot why a specific employee cannot connect?",
+        "Does the session manager track how many Google API calls each employee's recipes are making to identify potential quota issues?",
+        "If Google revokes our organization's API access, does the system notify all affected employees with clear instructions on how to re-authorize?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all Google session management scenarios. Tanaka manages 30 users — he needs centralized visibility, stale session detection, force-disconnect, and quota monitoring. Silent session failures mean recipes run against stale data."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Sarah McKinnon",
+      "persona_domain": "cross_app_data_flow",
+      "persona_context": "36, Edinburgh, Business analyst at a management consulting firm. Expert tech level. Needs recipes that chain Google apps together — search findings go into a Doc, Doc link goes into a Calendar invite, Calendar attendees get a Drive folder shared.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can a recipe chain actions across Google apps — for example, search results saved to a Doc, then the Doc link inserted into a Calendar event?",
+        "Does data flow between recipe steps preserve formatting — for example, a table copied from Search results appears as a table in the Google Doc, not plain text?",
+        "Can a recipe read attendees from a Calendar event and automatically share a specific Drive folder with all of them?",
+        "Does the cross-app recipe handle permission errors gracefully — for example, if one attendee's email address is not a valid Google account?",
+        "Can I see a data flow diagram in the recipe editor showing how data moves between Gmail, Drive, Calendar, and Docs in my recipe?",
+        "Does the evidence trail capture each cross-app handoff — showing the data that left one app and arrived at the next?",
+        "Can I test the cross-app flow with a dry run that shows me what would happen at each step without actually modifying any Google data?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all cross-app data flow scenarios. Sarah needs seamless Google-to-Google automation — the value is in chaining apps together, not using them in isolation. Permission handling across apps and data format preservation are the hardest problems."
+    }
+  ]
+}

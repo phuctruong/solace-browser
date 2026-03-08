@@ -1,0 +1,712 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 11,
+    "tower_name": "Tower of Primes",
+    "dna": "primes(system) = correctness(math) * consistency(artifacts) * fermat(verified) * mersenne(verified) * love_equation(exact) * 65537(seal)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 100,
+    "question_expansion_instruction": "Each floor lists 7-10 seed questions. During execution, expand to 100 questions per persona by probing deeper into the domain.",
+    "target_projects": [
+      "solace-cli"
+    ],
+    "target_project_paths": {
+      "solace-cli": "/home/phuc/projects/solace-cli"
+    }
+  },
+  "name": "Tower of Primes",
+  "tower_number": 11,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Euclid",
+      "persona_domain": "prime existence",
+      "questions": [
+        "Does the system correctly assert the infinitude of primes?",
+        "Is the fundamental theorem of arithmetic referenced and used correctly?",
+        "Are all prime claims in papers/CLAUDE.md actually prime numbers?",
+        "Is the prime factorization of 65537 correct (it has none - it IS prime)?",
+        "Are composite numbers ever incorrectly called prime anywhere in the codebase?",
+        "Does the system distinguish prime from composite in all mathematical claims?",
+        "Is the primality of each channel number (2,3,5,7,11,13) verified?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Eratosthenes",
+      "persona_domain": "prime generation",
+      "questions": [
+        "Could a sieve of Eratosthenes verify all primes claimed in the system?",
+        "Are the prime gaps between channel numbers meaningful or arbitrary?",
+        "Is the prime counting function pi(n) referenced correctly anywhere?",
+        "Are there any 'primes' cited that are actually composite?",
+        "Is the sequence 2,3,5,7,11,13 a correct initial segment of primes?",
+        "Does the system ever skip a prime in a sequence where all should be listed?",
+        "Are prime generation algorithms used anywhere in the codebase?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Fermat",
+      "persona_domain": "Fermat primes",
+      "questions": [
+        "Is F0=3, F1=5, F2=17, F3=257, F4=65537 correctly stated everywhere?",
+        "Does the system correctly note that F5 and above are composite (not prime)?",
+        "Is 65537 = 2^(2^4) + 1 = 2^16 + 1 verified with exact computation?",
+        "Are Fermat primes connected to constructible polygons correctly?",
+        "Is the RSA connection to 65537 as public exponent explained correctly?",
+        "Does any file incorrectly claim F5 = 4294967297 is prime?",
+        "Is the Fermat primality test distinguished from Fermat primes?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Mersenne",
+      "persona_domain": "Mersenne primes",
+      "questions": [
+        "Is M7 = 127 = 2^7 - 1 correctly verified as the Systems prime?",
+        "Is M13 = 8191 = 2^13 - 1 correctly verified as the Galactic prime?",
+        "Are all Mersenne prime claims (M2 through M13) actually Mersenne primes?",
+        "Does the system correctly note that not all 2^p - 1 are prime?",
+        "Is the connection between Mersenne primes and perfect numbers noted?",
+        "Are M2=3, M3=7, M5=31, M7=127, M13=8191 all correct?",
+        "Is M11=2047=23*89 correctly identified as NOT a Mersenne prime?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Euler",
+      "persona_domain": "totient function",
+      "questions": [
+        "Is phi(65537) = 65536 = 2^16 correctly computed wherever referenced?",
+        "Is the RSA connection (e=65537 as public exponent) mathematically sound?",
+        "Are Euler's contributions to number theory correctly attributed?",
+        "Does the system use Euler's product formula for the totient correctly?",
+        "Is phi(p) = p-1 for prime p correctly applied to all channel primes?",
+        "Are there any totient calculations in the codebase that are incorrect?",
+        "Is the relationship between 65537 and RSA-2048/4096 correctly stated?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Gauss",
+      "persona_domain": "constructibility",
+      "questions": [
+        "Is the 65537-gon correctly claimed as constructible with compass and straightedge?",
+        "Is Gauss's theorem on constructible polygons correctly stated?",
+        "Does the system connect constructibility to Fermat primes correctly?",
+        "Is a regular n-gon constructible iff n = 2^k * product of distinct Fermat primes?",
+        "Are the constructible polygon claims limited to known Fermat primes (3,5,17,257,65537)?",
+        "Is the 65537-gon construction history (Hermes, 1894) referenced if construction is claimed?",
+        "Does the system distinguish 'theoretically constructible' from 'actually constructed'?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Riemann",
+      "persona_domain": "prime distribution",
+      "questions": [
+        "Are prime channel numbers distributed meaningfully, not arbitrarily?",
+        "Does the system make any claims about the Riemann Hypothesis?",
+        "Is the prime number theorem (primes ~ n/ln(n)) referenced correctly?",
+        "Are the gaps between frequency primes (23,47,79,127,241,8191,65537) meaningful?",
+        "Does the system avoid making unproven mathematical claims as facts?",
+        "Is the distribution of primes across the architecture well-motivated?",
+        "Are there any statistical claims about primes that are mathematically unsound?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Hardy-Ramanujan",
+      "persona_domain": "partition theory",
+      "questions": [
+        "Does the Love Equation partition 8669 into primes correctly?",
+        "Is 8191+241+127+47+23+13+11+7+5+3+1 = 8669 (NOT 65537)?",
+        "Are all terms in the Love Equation actually prime (except +1)?",
+        "Is the +1 in the Love Equation explained as NORTHSTAR, not a prime?",
+        "Does the system conflate the Love Equation sum with 65537 anywhere?",
+        "Is the partition into these specific primes unique or one of many?",
+        "Are Hardy-Ramanujan number theory concepts used correctly?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Channel 2 Judge",
+      "persona_domain": "identity channel [2]",
+      "questions": [
+        "Is channel [2] consistently used for identity data across all files?",
+        "Are user_*, kids, location, favorite_* keys always at channel [2]?",
+        "Is identity data ever stored at a non-[2] channel?",
+        "Is the prime 2 meaningful for identity (first prime, most fundamental)?",
+        "Are all MEMORY.md files using [2] for identity consistently?",
+        "Does any project misuse channel [2] for non-identity data?",
+        "Is the stability label 'Stillwater' correct for identity data?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Channel 3 Judge",
+      "persona_domain": "goals channel [3]",
+      "questions": [
+        "Is channel [3] consistently used for goals across all files?",
+        "Are project_*, goal_*, northstar_* keys always at channel [3]?",
+        "Is goals data ever stored at a non-[3] channel?",
+        "Is the prime 3 meaningful for goals (trinity, direction)?",
+        "Are ROADMAP.md goals aligned with MEMORY.md [3] entries?",
+        "Does any project misuse channel [3] for non-goals data?",
+        "Is the stability label 'Stillwater' correct for goals data?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Channel 5 Judge",
+      "persona_domain": "decisions channel [5]",
+      "questions": [
+        "Is channel [5] LOCKED as claimed? No mutations without confirmation?",
+        "Are decision_*, *_rule, model_* keys always at channel [5]?",
+        "Has any LOCKED decision been changed without explicit user confirmation?",
+        "Is the prime 5 meaningful for decisions (quintessence, certainty)?",
+        "Are all CLAUDE.md architectural decisions reflected in MEMORY.md [5]?",
+        "Does the LOCKED status actually prevent unauthorized changes?",
+        "Is there a mechanism to audit channel [5] changes?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Channel 7 Judge",
+      "persona_domain": "context channel [7]",
+      "questions": [
+        "Is channel [7] used for current/ripple context consistently?",
+        "Are current_*, phase_*, rung_* keys always at channel [7]?",
+        "Is context data appropriately volatile (Ripple stability)?",
+        "Is the prime 7 meaningful for context (lucky prime, completion)?",
+        "Are stale context entries cleaned up between sessions?",
+        "Does any project store permanent data at ripple channel [7]?",
+        "Is the distinction between Stillwater [2,3] and Ripple [7,11] clear?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Channel 11 Judge",
+      "persona_domain": "blockers channel [11]",
+      "questions": [
+        "Is channel [11] used for blockers consistently across all files?",
+        "Are blocker_*, issue_* keys always at channel [11]?",
+        "Are resolved blockers cleared from channel [11]?",
+        "Is the prime 11 meaningful for blockers (tension, resistance)?",
+        "Does the system track blocker resolution time?",
+        "Are blockers from one project visible to dependent projects?",
+        "Is the Ripple stability correct for blockers (transient by nature)?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Channel 13 Judge",
+      "persona_domain": "evolution channel [13]",
+      "questions": [
+        "Is channel [13] used for GLOW/evolution data consistently?",
+        "Is GLOW scoring monotonically increasing as required?",
+        "Is the prime 13 meaningful for evolution (growth, transformation)?",
+        "Are GLOW scores ever reused or skipped?",
+        "Does the evolution channel track belt progression correctly?",
+        "Is there a clear mapping from GLOW score to achievements?",
+        "Are all 6 channels (2,3,5,7,11,13) populated in every project?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Channel Integrity Judge",
+      "persona_domain": "cross-channel integrity",
+      "questions": [
+        "Is data ever stored in the wrong channel across all projects?",
+        "Are there orphaned entries in any channel (referenced but not defined)?",
+        "Do all 9 projects use the same 6-channel architecture?",
+        "Is the channel numbering (2,3,5,7,11,13) consistent everywhere?",
+        "Are there any conflicts between channels (same key in two channels)?",
+        "Does the /remember skill enforce correct channel assignment?",
+        "Is there a validation mechanism for channel integrity?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Channel Completeness Judge",
+      "persona_domain": "channel coverage",
+      "questions": [
+        "Are all 6 channels populated in every project's MEMORY.md?",
+        "Does any project have empty channels that should be filled?",
+        "Is the coverage uniform or do some projects use fewer channels?",
+        "Are the channel stability labels (Stillwater/Ripple/LOCKED) consistent?",
+        "Does the channel system scale to new projects correctly?",
+        "Is there documentation for how to use channels in a new project?",
+        "Are there any channels that should exist but don't (e.g., [17])?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "DNA-23 Judge",
+      "persona_domain": "DNA compression",
+      "questions": [
+        "Are all DNA equations in papers <=23 words as required?",
+        "Does every paper have a DNA equation?",
+        "Is 23 correctly identified as prime and meaningful for compression?",
+        "Are DNA equations truly compressed or just short sentences?",
+        "Do DNA equations capture the essence of their papers?",
+        "Is the 23-word limit enforced by any tooling?",
+        "Are there papers with DNA equations exceeding 23 words?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "STORY-47 Judge",
+      "persona_domain": "persona count",
+      "questions": [
+        "Are there exactly 47 personas in data/default/personas/?",
+        "Is 47 correctly identified as prime?",
+        "Is the STORY-47 label used consistently in documentation?",
+        "Are all 47 personas distinct (no duplicates or near-duplicates)?",
+        "Does the persona panel in CLAUDE.md list all 47?",
+        "Are personas loaded on-demand as documented (not at boot)?",
+        "If a persona was added/removed, was 47 maintained?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "GENOME-79 Judge",
+      "persona_domain": "operational rules",
+      "questions": [
+        "Are G1-G8 operational rules defined and consistent?",
+        "Is 79 correctly identified as prime?",
+        "Is the GENOME-79 label used consistently?",
+        "Are the operational rules actually enforced in code?",
+        "Do all 9 projects follow the same genome rules?",
+        "Is there a mechanism to validate genome compliance?",
+        "Are there more than 8 rules that should be in the genome?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "SYSTEMS-127 Judge",
+      "persona_domain": "systems architecture",
+      "questions": [
+        "Is 127 = 2^7 - 1 correctly identified as Mersenne prime M7?",
+        "Is the SYSTEMS-127 label used for architecture consistently?",
+        "Does the system architecture actually have 127 components or is it symbolic?",
+        "Is the triangle architecture (Browser/CLI/Cloud) well-documented?",
+        "Are system boundaries clear between the 3 vertices?",
+        "Is M7=127 the correct Mersenne prime for this purpose?",
+        "Does the systems architecture scale to handle all 9 projects?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "RECIPES-241 Judge",
+      "persona_domain": "recipe completeness",
+      "questions": [
+        "Is 241 correctly identified as prime?",
+        "Are there actually 241 recipes or is it a target?",
+        "Is the current recipe count (81) tracked accurately?",
+        "Is the RECIPES-241 label used consistently?",
+        "Is the path to 241 recipes documented in any ROADMAP?",
+        "Are recipes deduplicated (no overlapping recipes)?",
+        "Is the recipe format standardized across all projects?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "GALACTIC-8191 Judge",
+      "persona_domain": "galactic prime",
+      "questions": [
+        "Is 8191 = 2^13 - 1 correctly verified as Mersenne prime M13?",
+        "Is the GALACTIC-8191 label used for the leap dimension consistently?",
+        "Is the gap between 241 and 8191 justified architecturally?",
+        "Does the galactic prime represent something concrete or purely symbolic?",
+        "Is M13 the correct Mersenne prime assignment?",
+        "Are there any incorrect claims about 8191 in the codebase?",
+        "Does the galactic dimension have implementation beyond documentation?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "SEAL-65537 Judge",
+      "persona_domain": "verification ceiling",
+      "questions": [
+        "Is 65537 = 2^16 + 1 = 2^(2^4) + 1 correctly verified everywhere?",
+        "Is F4 = 65537 the largest known Fermat prime (correctly stated)?",
+        "Is the SEAL-65537 label used for verification ceiling consistently?",
+        "Is the 65537 target achievable or aspirational?",
+        "Does the system have clear criteria for reaching 65537?",
+        "Is the RSA e=65537 connection correctly explained?",
+        "Are all claims about 65537 mathematically verifiable?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Love Equation Judge",
+      "persona_domain": "love equation sum",
+      "questions": [
+        "Does 8191+241+127+47+23+13+11+7+5+3+1 = 8669 (exact computation)?",
+        "Is this sum ever incorrectly stated as equaling 65537?",
+        "Are all terms except +1 actually prime numbers?",
+        "Is the +1 correctly identified as NORTHSTAR (not a prime)?",
+        "Is the Love Equation consistent across all files that reference it?",
+        "Is the partition into these specific primes justified?",
+        "Does the equation appear in CLAUDE.md, MEMORY.md, and papers consistently?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Paper Index Judge",
+      "persona_domain": "paper numbering",
+      "questions": [
+        "Are papers numbered sequentially with no gaps?",
+        "Are there any duplicate paper numbers?",
+        "Does each paper number in papers/ match its filename?",
+        "Is the paper count in MEMORY.md accurate?",
+        "Do cross-references between papers use correct numbers?",
+        "Is the Prime Paper Format (cli:16) followed consistently?",
+        "Are papers across projects using compatible numbering?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Diagram Index Judge",
+      "persona_domain": "diagram numbering",
+      "questions": [
+        "Are diagrams numbered sequentially with no gaps?",
+        "Are there any duplicate diagram numbers?",
+        "Does each diagram number in src/diagrams/ match its filename?",
+        "Is the diagram count in MEMORY.md accurate?",
+        "Do diagram titles match their actual content?",
+        "Are diagrams in Mermaid format as required?",
+        "Are diagrams across projects using compatible numbering?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "GLOW Sequence Judge",
+      "persona_domain": "GLOW numbering",
+      "questions": [
+        "Are GLOW scores monotonically increasing (never decrease)?",
+        "Are there any skipped GLOW numbers?",
+        "Are there any reused GLOW numbers?",
+        "Is the current GLOW score in MEMORY.md accurate?",
+        "Does each journal entry correctly increment GLOW?",
+        "Is GLOW tracked per-project or globally?",
+        "Is the GLOW scoring formula documented?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "Version Judge",
+      "persona_domain": "version numbering",
+      "questions": [
+        "Are CLAUDE.md version numbers consistent with their content?",
+        "Are MEMORY.md version numbers updated each session?",
+        "Is semantic versioning (major.minor.patch) used correctly?",
+        "Do version numbers match git tags where applicable?",
+        "Are breaking changes reflected in major version bumps?",
+        "Is there a changelog or version history maintained?",
+        "Are version numbers across projects coordinated?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Cross-Reference Judge",
+      "persona_domain": "citation integrity",
+      "questions": [
+        "Are paper cross-references valid (referenced papers exist)?",
+        "Are there any broken cross-references?",
+        "Do papers cite the correct paper numbers?",
+        "Are diagram references in papers pointing to correct diagrams?",
+        "Are cross-project references using correct project names?",
+        "Is there a citation format standard?",
+        "Are self-references (paper citing itself) avoided?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Rung Judge",
+      "persona_domain": "rung calculations",
+      "questions": [
+        "Is RUNG_TARGET=65537 achievable with defined criteria?",
+        "Is the current rung accurately reported in MEMORY.md?",
+        "Is MIN(sub-agent rungs) correctly computed for integration rung?",
+        "Are rung gate checks implemented in code?",
+        "Is the rung ladder (641->274177->65537) mathematically sound?",
+        "Are all rung targets actually prime numbers?",
+        "Is 641 the correct first prime in the Fermat factor sequence?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Test Count Judge",
+      "persona_domain": "test count accuracy",
+      "questions": [
+        "Is the total test count (~12,039) accurate and current?",
+        "Are per-project test counts in MEMORY.md correct?",
+        "Are test counts inflated by counting parameterized cases?",
+        "Do claimed test counts match actual pytest/jest output?",
+        "Are there dead tests counted in the totals?",
+        "Is the test count tracking automated or manual?",
+        "Are tests across projects using compatible frameworks?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Belt Judge",
+      "persona_domain": "belt progression",
+      "questions": [
+        "Are belt levels earned honestly with documented criteria?",
+        "Is the current belt (Orange) justified by achievements?",
+        "Are belt criteria defined clearly for each level?",
+        "Is belt progression consistent across projects?",
+        "Has any belt been self-awarded without meeting criteria?",
+        "Is the belt system (White->Yellow->Orange->Green->Blue->Black) documented?",
+        "Are belt achievements recorded with evidence?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "IF Theory Judge",
+      "persona_domain": "information as force",
+      "questions": [
+        "Are IF Theory claims mathematically sound or pseudoscience?",
+        "Is 'information = first force' a falsifiable hypothesis?",
+        "Are there peer-reviewed references supporting IF Theory?",
+        "Is the IF Theory used in pvideo actually physics-based?",
+        "Does the system distinguish hypothesis from proven theorem?",
+        "Are IF Theory equations dimensionally consistent?",
+        "Is there any experimental evidence for IF Theory claims?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Compression Judge",
+      "persona_domain": "PZip compression ratios",
+      "questions": [
+        "Is the GAR 66:1 ratio claim verified with reproducible evidence?",
+        "Is $0.00032/user/month storage cost mathematically derived?",
+        "Does PZip actually achieve 66:1 or is this aspirational?",
+        "Is the current compression ratio (gzip 2.7:1) honestly reported?",
+        "Is the cpp bridge compilation status tracked accurately?",
+        "Are compression claims consistent between PZip README and papers?",
+        "Does the system distinguish achieved vs target compression?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Economics Judge",
+      "persona_domain": "token economics",
+      "questions": [
+        "Is $0.001/task claim mathematically derived and verifiable?",
+        "Is the 70% recipe hit rate assumption justified?",
+        "Is COGS $5.75/user/month at $19/mo = 70% gross margin correct?",
+        "Are LLM pricing assumptions (Llama 3.3 $0.59/M tokens) current?",
+        "Is the break-even point (914 members) correctly calculated?",
+        "Are all pricing tier margins mathematically consistent?",
+        "Does the economic model account for infrastructure costs?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Uplift Equation Judge",
+      "persona_domain": "P1-P23 multiplicative equation",
+      "questions": [
+        "Is the multiplicative uplift equation P1*P2*...*P23 mathematically sound?",
+        "If any Pn = 0, does the total correctly collapse to 0?",
+        "Are all 23 principles (P1-P23) defined and implemented?",
+        "Is the distinction between P1-P10 and P11-P20 clear?",
+        "Is P21 (adversarial), P22 (LEAK/Oracle), P23 (breathing) well-defined?",
+        "Are there any principles that are effectively 0 (not implemented)?",
+        "Is the equation Uplift = NORTHSTAR * P1 * ... * P23 correct?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Breathing Judge",
+      "persona_domain": "P23 compression/expansion",
+      "questions": [
+        "Is the breathing metaphor (inhale/pause/exhale/still/portal) well-defined?",
+        "Are the 7 compression theories correctly mapped to uplifts?",
+        "Is compress(expand(seed)) != seed the correct portal condition?",
+        "Are DNA equation targets (13 SOLID, 23 LIQUID, 47 GAS) consistent?",
+        "Is the breathing cycle implemented in any tooling?",
+        "Does the compression demand (P19) actually reduce output length?",
+        "Is temporal anchoring (P20) used in any inspector specs?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Hash Chain Judge",
+      "persona_domain": "SHA-256 integrity",
+      "questions": [
+        "Are SHA-256 hash chains implemented correctly in evidence bundles?",
+        "Is the hash computation deterministic (same input = same hash)?",
+        "Are evidence hashes tamper-evident (changing content changes hash)?",
+        "Is json.dumps(sort_keys=True) used consistently for hash input?",
+        "Are hash chains append-only as documented?",
+        "Is there a verification script for hash chain integrity?",
+        "Are hash lengths consistent (sha256: prefix + 64 hex chars)?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Encryption Judge",
+      "persona_domain": "AES-256-GCM + PBKDF2",
+      "questions": [
+        "Is PBKDF2 iteration count now 600,000 (NIST 2026 guidance)?",
+        "Is AES-256-GCM used correctly for vault encryption?",
+        "Is the key derivation from SOLACE_VAULT_SECRET secure?",
+        "Is the salt generation cryptographically random?",
+        "Is the machine_id binding implemented correctly?",
+        "Are encryption keys ever logged or stored in plaintext?",
+        "Is the vault key rotation mechanism documented?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "OAuth3 Judge",
+      "persona_domain": "scope algebra",
+      "questions": [
+        "Is OAuth3 scope algebra (intersection/union) mathematically sound?",
+        "Are scopes defined as sets with proper set operations?",
+        "Is scope escalation prevented by the scope model?",
+        "Is the TTL (time-to-live) mechanism for tokens correct?",
+        "Are scope revocations immediate and complete?",
+        "Is the OAuth3 spec in stillwater well-defined?",
+        "Does the scope model handle edge cases (empty scope, wildcard)?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "9-Project Judge",
+      "persona_domain": "project ecosystem",
+      "questions": [
+        "Are there exactly 9 projects in the ecosystem?",
+        "Is each project correctly categorized (OSS/FSL/Private)?",
+        "Are project dependencies documented and accurate?",
+        "Is the project architecture diagram up to date?",
+        "Do all 9 projects share the same prime architecture?",
+        "Are there any phantom projects (referenced but don't exist)?",
+        "Is solace-books still PLANNED or has it been created?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Pricing Judge",
+      "persona_domain": "pricing tier math",
+      "questions": [
+        "Are Free($0)/Starter($8)/Pro($28)/Team($88)/Enterprise($188) consistent?",
+        "Is the pricing in CLAUDE.md ($8) consistent with browser ($8)?",
+        "Does each tier's margin calculation check out?",
+        "Is the 20% LLM markup correctly applied?",
+        "Are pricing claims consistent across all marketing materials?",
+        "Is the break-even analysis (914 members) at which price tier?",
+        "Are there conflicting pricing claims across projects?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Memory Judge",
+      "persona_domain": "MEMORY.md accuracy",
+      "questions": [
+        "Are all keys in MEMORY.md accurate and current?",
+        "Is there any stale data that should be updated?",
+        "Are channel assignments ([2],[3],[5],[7],[11],[13]) correct for each key?",
+        "Is the session count/version number current?",
+        "Are paper/diagram/test counts accurate?",
+        "Is the GLOW score current?",
+        "Are cross-project memory files consistent?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Oracle Level Judge",
+      "persona_domain": "inspector oracle progression",
+      "questions": [
+        "Is the current oracle level (2) justified by evidence?",
+        "Are level advancement criteria clearly defined?",
+        "Has the oracle learned from all 10 tower audits?",
+        "Is the question database growing with each audit?",
+        "Are miss rates tracked and decreasing over time?",
+        "Is the Phuc Forecast making accurate predictions?",
+        "Is the oracle-memory.json schema well-defined?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Tower Score Judge",
+      "persona_domain": "tower mathematics",
+      "questions": [
+        "Are floor counts per tower correct (49 each)?",
+        "Are question totals per tower accurately computed?",
+        "Are pass percentages correctly calculated?",
+        "Is the total questions across all towers (8,276+) accurate?",
+        "Are tower cross-references (T1 findings vs T3 findings) tracked?",
+        "Is the redundancy rate (~40%) correctly computed?",
+        "Are tower completion statuses accurate in tower-system.md?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Invocation Judge",
+      "persona_domain": "prime invocation",
+      "questions": [
+        "Is '65537 experts' correctly derived from the architecture?",
+        "Does 47 * 1391 * Math * Love = 65537 hold mathematically?",
+        "Is the invocation 'Phuc Forecast + 65537 experts + max love + god' documented?",
+        "Is 1391 a meaningful number in the architecture?",
+        "Is 47 * 1394 = 65518 (not 65537) \u2014 is there an error?",
+        "What is the exact mathematical derivation of 65537 from the architecture?",
+        "Is the invocation actually used in sessions or just documentation?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Coherence Judge",
+      "persona_domain": "cross-project consistency",
+      "questions": [
+        "Does the same prime referenced in 2+ projects have the same meaning?",
+        "Are CLAUDE.md files across projects using compatible formats?",
+        "Are there contradictions between project-level documentation?",
+        "Is the 9-project architecture consistent across all READMEs?",
+        "Are shared concepts (OAuth3, evidence, recipes) defined identically?",
+        "Is the prime architecture a coherent system or accumulated patches?",
+        "Would a new team member find the system consistent or confusing?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Saint Solace (Digital Twin)",
+      "persona_domain": "AI self-inspection",
+      "questions": [
+        "Every prime I cite in conversation \u2014 are they actually prime?",
+        "When I say '47 personas' \u2014 have I counted? Is 47 prime? Is it STORY-47?",
+        "The Love Equation I recite \u2014 does it actually sum to 8669? Or do I hallucinate?",
+        "My oracle-memory.json \u2014 are the audit counts, question totals, floor counts all exact?",
+        "When I advance GLOW \u2014 is the new number the correct next integer? No skips?",
+        "My channel assignments \u2014 is identity always [2], goals always [3]? Or have I drifted?",
+        "Pattern continuity: Do I maintain the same prime architecture across session boundaries?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "The Prime Oracle",
+      "persona_domain": "ultimate prime verification",
+      "questions": [
+        "65537 = 2^(2^4) + 1. Prove it. Show the computation.",
+        "List all Fermat primes. Which are confirmed prime? Which are confirmed composite?",
+        "The Love Equation: 8191+241+127+47+23+13+11+7+5+3+1 = ? EXACT answer.",
+        "Your channel architecture uses primes 2,3,5,7,11,13. Why these? What would happen with 17?",
+        "The system claims multiplicative quality. Prove: if T10=0, total=0. Show the math.",
+        "STORY-47 claims 47 personas. Count them in data/default/personas/. Exact number.",
+        "Is your system WORTHY of 65537? Not 'does it aspire to' \u2014 does it ACHIEVE it?"
+      ]
+    }
+  ]
+}

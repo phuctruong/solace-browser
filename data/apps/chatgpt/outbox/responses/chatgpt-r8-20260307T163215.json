@@ -1,0 +1,31 @@
+{
+  "id": "chatgpt-r8-20260307T163215",
+  "app": "chatgpt",
+  "round": 8,
+  "llm": "chatgpt-5.4",
+  "persona": "Addy Osmani",
+  "task_type": "architecture-review",
+  "methodology": "PATH_TO_100",
+  "target": "solace-browser yinyang sidebar",
+  "scores": {
+    "architecture": 94,
+    "security": 95,
+    "data_integrity": 96,
+    "recipe_engine": 92,
+    "implementation": 89,
+    "ux": 90,
+    "operational": 88,
+    "overall": 92,
+    "structural_ceiling": 97
+  },
+  "verdict": "NEEDS WORK",
+  "r7_to_r8_delta": "+8 points",
+  "findings_count": 32,
+  "top_5_path": [
+    "[IMPL] +4: Replace prose with normative state machines, JSON Schemas, error codes",
+    "[RECIPE] +3: Deterministic execution contract with postcondition hash per step",
+    "[SECURITY] +2: IPC anti-replay (nonce, sequence, replay-window)",
+    "[UX] +2: Failure-first user flow for every hard-stop condition",
+    "[OPS] +2: Move chain-break/auth-failure/quota alerting from POST-MVP to MVP"
+  ]
+}

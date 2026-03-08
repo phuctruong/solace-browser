@@ -1,0 +1,19 @@
+{
+  "spec_id": "solace-browser-sb-home-v2-001",
+  "project": "solace-browser",
+  "requested_by": "claude-code",
+  "mode": "web",
+  "target_url": "http://127.0.0.1:8791/",
+  "page_name": "Solace Browser Sb Home V2",
+  "checks": {
+    "aria": true,
+    "heuristics": true,
+    "llm_analysis": true,
+    "screenshot": true,
+    "baseline_diff": false
+  },
+  "persona": "michael_bolton",
+  "priority": "normal",
+  "context": "Solace Browser Home \u2014 repeat baseline",
+  "created_at": "2026-03-03T00:00:00Z"
+}

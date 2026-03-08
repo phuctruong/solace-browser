@@ -1,0 +1,151 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 28,
+    "tower_name": "Tower of eSign + FDA Part 11",
+    "dna": "esign(compliance) = attest(identity) x sign(document) x seal(hash) x chain(evidence) x retain(90d) x audit(trace) x export(package)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-cli",
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-cli": "/home/phuc/projects/solace-cli",
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of eSign + FDA Part 11",
+  "tower_number": 28,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Dr. Patricia Hawkins",
+      "persona_domain": "create_attestation",
+      "persona_context": "54, Boston, Quality Assurance Director at pharma company, Expert tech, Enterprise tier, needs FDA Part 11 compliant electronic signatures for batch release records",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I navigate to the eSign page and click 'Create Attestation' to start a new attestation with my authenticated identity?",
+        "Does the attestation form capture my full name, role, email, and timestamp as required by FDA 21 CFR Part 11?",
+        "Can I type a specific attestation statement ('I certify this batch release record is accurate') in a free-text field?",
+        "Does the attestation bind to a specific document or evidence bundle by reference ID — not just float as a standalone record?",
+        "After creating the attestation, can I see it listed in my attestation history with status 'Created' and a unique attestation ID?",
+        "Does the system prevent me from creating an attestation without first authenticating (no unsigned attestations possible)?",
+        "If I am logged in but my session token is expired, does the system re-authenticate me before allowing attestation creation?"
+      ],
+      "question_expansion_instruction": "Dr. Hawkins works under FDA regulations. Attestations must capture identity, bind to documents, and reject unauthenticated attempts. Missing any field is a regulatory violation."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Jonathan Pierce",
+      "persona_domain": "digital_signature",
+      "persona_context": "47, Philadelphia, Clinical Trial Manager, Expert tech, Enterprise tier, signs protocol amendments that must be legally binding",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After creating an attestation, can I click 'Sign' and see my digital signature applied with a SHA-256 hash of the document content?",
+        "Does the signature record include the signer's user ID, timestamp (UTC), IP address, and the hash of the signed content?",
+        "Can I verify that the signature hash matches the document content by running a verification check from the UI?",
+        "If I try to sign a document that has been modified since I last viewed it, does the system warn me about the content change?",
+        "Does the signed document show a visual signature indicator (signed badge, green checkmark) in the document list?",
+        "Can I download a signed PDF that includes the signature metadata embedded in the document properties?",
+        "If two people need to sign the same document (co-signature), does the system support sequential signing with separate hashes?"
+      ],
+      "question_expansion_instruction": "Jonathan signs legally binding documents. Digital signatures must be cryptographically verifiable, tamper-evident, and support multi-signer workflows."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Keiko Nakashima",
+      "persona_domain": "hash_chain_sealing",
+      "persona_context": "39, Tokyo, Compliance Engineer at medical device company, Expert tech, Enterprise tier, validates hash chain integrity for ISO 13485 audits",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After signing a document, can I see the hash chain showing this signature linked to the previous signature via parent hash?",
+        "Does the hash chain viewer display each record as a block with: hash, parent_hash, timestamp, action_type, and payload summary?",
+        "Can I click 'Verify Chain' and see a pass/fail result for the entire chain from genesis block to latest record?",
+        "If I manually corrupt one record's hash in the database, does the verification tool detect the break and show which record failed?",
+        "Does the sealing process use SHA-256 (not MD5 or SHA-1) as required by current cryptographic standards?",
+        "Can I view the raw JSON of any hash chain record to inspect the exact fields being hashed?",
+        "Does the hash chain include evidence of who sealed each record — preventing unauthorized sealing by non-signers?"
+      ],
+      "question_expansion_instruction": "Keiko validates cryptographic integrity for ISO audits. Hash chains must be verifiable, use strong algorithms, and detect any tampering. Weak hashing or missing chain links are audit failures."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Margaret Sullivan",
+      "persona_domain": "evidence_retention",
+      "persona_context": "62, Dublin, Regulatory Affairs VP at biotech, Expert tech, Enterprise tier, needs 90-day minimum evidence retention with configurable extensions",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I configure the evidence retention policy to 90 days minimum via the admin settings panel?",
+        "Does the system prevent deletion of evidence records that are within the retention period — even by administrators?",
+        "After 90 days, does the system archive (not delete) expired evidence to cold storage that is still queryable?",
+        "Can I extend the retention period for specific evidence bundles beyond 90 days for ongoing audits?",
+        "Does the retention policy display show the exact expiry date for each evidence bundle?",
+        "If I am on Free tier (no cloud), does the system still enforce 90-day local retention and warn before disk cleanup?",
+        "Can I generate a retention compliance report showing all evidence bundles, their creation dates, and expiry status?"
+      ],
+      "question_expansion_instruction": "Margaret must demonstrate retention compliance to regulators. Retention must be enforced (not advisory), configurable, and produce audit-ready reports."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Dr. Samuel Okonkwo",
+      "persona_domain": "audit_trail_query",
+      "persona_context": "45, Houston, FDA Inspector (external auditor role), Expert tech, audit access only, needs to query complete audit trails during facility inspections",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I search the audit trail by date range and see all attestations, signatures, and evidence records created in that period?",
+        "Does the audit trail show who did what, when, from which IP, and what the outcome was — for every action in the system?",
+        "Can I filter audit records by user to see all actions taken by a specific employee during a specific month?",
+        "Does the audit trail include failed actions (rejected signatures, failed attestations) — not just successful ones?",
+        "Can I export the complete audit trail for a date range as a single JSON or CSV file for offline analysis?",
+        "Does the audit trail include system events (token refresh, session timeout, config changes) — not just user actions?",
+        "Is the audit trail itself immutable — can I verify that no audit records have been deleted or modified?"
+      ],
+      "question_expansion_instruction": "Dr. Okonkwo is an external auditor. The audit trail must be comprehensive, immutable, filterable, and exportable. Missing or modifiable audit records are regulatory violations."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Claire Beaumont",
+      "persona_domain": "export_package",
+      "persona_context": "38, Lyon, Quality Systems Manager, Expert tech, Enterprise tier, needs to create self-contained export packages for regulatory submissions",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I select a set of evidence records and click 'Export Package' to generate a self-contained ZIP file?",
+        "Does the export package include all documents, signatures, hash chains, and a verification manifest?",
+        "Can I open the export package on a different computer without Solace installed and verify the hash chain integrity?",
+        "Does the export package include a human-readable summary (HTML or PDF) alongside the machine-readable JSON?",
+        "Is the export package itself hash-signed so the recipient can verify it was not tampered with after export?",
+        "Can I export packages for specific date ranges, specific documents, or specific users — with filtering?",
+        "Does the export include the software version and configuration state at the time of signing for reproducibility?"
+      ],
+      "question_expansion_instruction": "Claire submits export packages to regulators. Packages must be self-contained, verifiable offline, human-readable, and tamper-evident."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Dr. Richard Engel",
+      "persona_domain": "regulatory_compliance_check",
+      "persona_context": "58, Washington DC, Regulatory consultant advising pharma clients, Expert tech, evaluating Solace for client recommendation, needs 21 CFR Part 11 checklist compliance",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the system satisfy FDA 21 CFR Part 11.10(a) — validation: is there documented evidence that the system performs as intended?",
+        "Does the system satisfy Part 11.10(c) — protection of records: can records be protected from unauthorized access or modification?",
+        "Does the system satisfy Part 11.10(e) — audit trail: does the system generate a computer-generated, timestamped audit trail?",
+        "Does the system satisfy Part 11.50 — signature manifestations: does each signature include the signer's name, date, time, and meaning?",
+        "Does the system satisfy Part 11.70 — signature/record linking: are electronic signatures linked to their respective records so signatures cannot be transferred?",
+        "Can I generate a Part 11 compliance matrix document from the system showing each requirement and its implementation status?",
+        "Does the system documentation include an ERES (Electronic Records/Electronic Signatures) policy template I can adapt for my client?"
+      ],
+      "question_expansion_instruction": "Dr. Engel advises pharma clients. He needs to map Solace features to specific CFR sections. Generic claims of 'compliance-ready' without specific section mapping are worthless."
+    }
+  ]
+}

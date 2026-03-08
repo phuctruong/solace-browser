@@ -1,0 +1,151 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 32,
+    "tower_name": "Tower of OAuth3 Governance",
+    "dna": "oauth3(governance) = scope(fine) x ttl(expire) x revoke(instant) x budget(enforce) x stepup(approve) x audit(chain) x consent(explicit)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions. Questions must be EXECUTABLE — answerable by checking if something actually works, not theoretical capability.",
+    "aggregate_prior": "NEW — no prior audit",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-cli",
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-cli": "/home/phuc/projects/solace-cli",
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of OAuth3 Governance",
+  "tower_number": 32,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Kenji Watanabe",
+      "persona_domain": "scope_definition",
+      "persona_context": "44, Tokyo, CISO at a financial services firm. Expert tech level. Needs to define fine-grained OAuth3 scopes so each AI agent can only access the exact resources it needs — no more, no less. Zero tolerance for over-permissioned tokens.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I define a scope that limits an agent to reading Gmail but not sending emails, with that distinction enforced at the token level?",
+        "Does the scope definition UI show me a tree of available permissions so I can select exactly which actions to allow?",
+        "Can I create a compound scope like 'read:gmail + write:google-drive/reports-folder' that spans multiple services with path-level granularity?",
+        "Does the system reject an agent's attempt to perform an action outside its granted scope with a clear error message showing which scope is missing?",
+        "Can I view all active scopes granted to all agents in a single dashboard sorted by permission breadth?",
+        "Does the scope format follow a documented schema that I can version-control and review in a pull request?",
+        "Can I create a scope template (like 'read-only-researcher') that I can assign to multiple agents without redefining permissions each time?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all scope definition edge cases. Kenji is CISO — he needs granular, auditable, reviewable scopes. Over-permissioning is a fireable offense in his role. Every scope must be provably minimal."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Fatima Al-Rashid",
+      "persona_domain": "ttl_enforcement",
+      "persona_context": "37, Riyadh, Security architect at a government contractor. Expert tech level. Requires that all agent tokens expire automatically — no permanent tokens, no forgotten sessions, mandatory re-authentication after TTL expires.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I set a TTL of 4 hours on an agent's Gmail access token so it expires automatically even if the agent is still running?",
+        "Does the system show me a countdown of remaining TTL for each active token in the session dashboard?",
+        "When a token expires mid-task, does the agent pause and request re-authorization instead of failing silently?",
+        "Can I set different TTLs for different scopes — for example, 1 hour for email send but 8 hours for email read?",
+        "Does the system prevent me from setting a TTL longer than 24 hours for any scope (hard maximum)?",
+        "Can I see an audit log of all token expirations showing when each token was created, its TTL, and when it actually expired?",
+        "Does the system alert me if an agent is approaching token expiry during a long-running task so I can re-authorize proactively?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all TTL enforcement scenarios. Fatima works for a government contractor — perpetual tokens are a security violation. Every token must have a bounded lifetime, and expiry must be enforced server-side, not client-side."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Henrik Svensson",
+      "persona_domain": "instant_revocation",
+      "persona_context": "48, Stockholm, IT security manager at a multinational corporation. Expert tech level. An employee just left the company — needs to revoke all their agent tokens instantly across all services, all sessions, all devices.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I revoke all tokens for a specific user account with a single action and have it take effect within 5 seconds?",
+        "Does the revocation dashboard show me confirmation that each token was actually invalidated, not just marked for deletion?",
+        "If an agent is mid-execution when I revoke its token, does the agent stop immediately rather than completing the current step?",
+        "Can I revoke a specific scope without revoking the entire token — for example, removing Gmail access while keeping Drive access?",
+        "Does the system maintain a revocation log showing who revoked which token, when, and the reason they entered?",
+        "Can I set up automatic revocation rules — for example, revoke all tokens if a user fails 3 consecutive login attempts?",
+        "After revocation, if the agent tries to use the revoked token, does the error response reveal nothing about why it was revoked (preventing information leakage)?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all instant revocation scenarios. Henrik is handling an employee departure — revocation must be instant, complete, auditable, and irreversible. Any delay between revocation and enforcement is a security breach."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Grace Oduya",
+      "persona_domain": "budget_gates",
+      "persona_context": "32, Nairobi, Finance director at an NGO. Intermediate tech level. Manages a strict $500/month AI tool budget across 12 field workers. Needs hard spending limits that cannot be bypassed, with alerts before limits are reached.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I set a hard budget of $40/month per field worker that physically blocks recipe execution when exceeded?",
+        "Does the budget dashboard show real-time spend per user with a visual gauge showing percentage consumed?",
+        "When a user hits 80% of their budget, does the system send an email alert to both the user and me as the admin?",
+        "Can I set a per-recipe cost ceiling — for example, block any single recipe execution that would cost more than $5?",
+        "Does the system show me a projected month-end spend based on current run rate so I can intervene early?",
+        "Can I transfer unused budget from one user to another mid-month without resetting their usage history?",
+        "Does the budget enforcement work at the token level (pre-execution check) rather than post-execution billing reconciliation?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all budget gate scenarios. Grace manages an NGO — every dollar is accountable to donors. Budget enforcement must be pre-execution (fail-closed), not post-execution (surprise bills). Alert thresholds must be configurable."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Dr. Amara Singh",
+      "persona_domain": "stepup_approval",
+      "persona_context": "51, Toronto, Chief Medical Officer at a hospital network. Expert tech level. AI agents assist with patient scheduling and report generation. Any action that touches patient data must trigger step-up approval — the agent pauses and a human doctor approves.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "When an agent attempts to access a patient record, does the system pause execution and send me a step-up approval request showing exactly what data will be accessed?",
+        "Does the approval dialog show the patient name, record type, and specific fields the agent wants to read — not just 'access patient data'?",
+        "Can I configure step-up rules by data sensitivity — for example, demographics auto-approve but diagnosis requires manual approval?",
+        "Does the system enforce a timeout on step-up requests — if I don't approve within 15 minutes, the request is automatically denied?",
+        "Can I delegate step-up approval to specific colleagues during my off-hours without giving them full admin access?",
+        "Does the audit trail record who approved each step-up request, when, from which device, and the IP address?",
+        "If I deny a step-up request, does the agent receive a clear rejection with the option to proceed with a modified scope that excludes the sensitive data?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all step-up approval scenarios. Dr. Singh handles HIPAA-protected data — step-up must be mandatory, auditable, time-bounded, and show exactly what the agent wants to do. Auto-approve on sensitive data is a compliance violation."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Lucia Fernandez",
+      "persona_domain": "audit_chain",
+      "persona_context": "43, Madrid, Head of Internal Audit at a European bank. Expert tech level. Needs a complete, immutable audit chain of every permission granted, every action taken, every token issued and revoked — for ECB regulatory reporting.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I query the audit chain for all actions taken by a specific agent in a specific date range and export the results?",
+        "Does every entry in the audit chain include a SHA-256 hash linking it to the previous entry, forming a tamper-evident chain?",
+        "Can I verify the integrity of the entire audit chain with a single command that checks every hash link?",
+        "Does the audit chain capture permission changes — when a scope was added, modified, or revoked, and by whom?",
+        "Can I generate an ECB-compliant audit report directly from the chain without manual data transformation?",
+        "Does the audit chain survive a server restart — is it persisted to durable storage, not held in memory?",
+        "If an auditor finds a gap in the chain (missing entries), does the system flag it as a potential tampering event?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all audit chain scenarios. Lucia reports to the ECB — the chain must be immutable, verifiable, queryable, and exportable. Any gap or modification in the chain is a regulatory incident."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Peter Johansson",
+      "persona_domain": "consent_ui",
+      "persona_context": "62, Copenhagen, Data protection officer at a logistics company. Intermediate tech level. GDPR requires explicit, informed consent before any AI agent processes personal data. Needs a consent UI that non-technical warehouse staff can understand and use.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Does the consent dialog explain in plain language what the agent will do, what data it will access, and for how long — without technical jargon?",
+        "Can a warehouse worker who has never used a terminal understand the consent dialog and make an informed yes/no decision?",
+        "Does the consent record capture the exact text shown to the user, their response, the timestamp, and their user ID for GDPR accountability?",
+        "Can a user withdraw consent after granting it, and does withdrawal immediately stop all processing of their data?",
+        "Does the consent UI support multiple languages so my warehouse staff in Poland, Spain, and Germany each see consent in their native language?",
+        "Can I view a dashboard showing all active consents, pending consents, and withdrawn consents across my organization?",
+        "Does the system refuse to proceed if consent was not explicitly granted — no pre-checked boxes, no implied consent from inaction?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all consent UI scenarios. Peter is a DPO — GDPR requires informed, explicit, withdrawable consent. The UI must work for non-technical staff. Pre-checked boxes or implied consent are legal violations."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "spec_id": "api-qa-evidence-sync-northstar-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "curl -s -X POST https://www.solaceagi.com/api/v1/qa-evidence/sync -H 'Content-Type: application/json' -d '{\"project\":\"solace-browser\",\"qa_score\":95.0,\"belt\":\"Green\",\"run_id\":\"test-run-001\",\"evidence_hash\":\"abc123\"}'",
+  "target_name": "SolaceAGI QA Evidence Sync — POST Accepted (Northstar)",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": [
+      "ok",
+      "project"
+    ],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "michael_bolton",
+  "priority": "high",
+  "northstar": "northstar-api-qa-evidence-sync.json",
+  "context": "Northstar contract: /api/v1/qa-evidence/sync accepts inspector push results. Currently in demo mode: endpoint accepts writes without auth (in-memory store, not persistent). KNOWN_LIMITATION: Auth-gating for sync endpoint is Phase 2 (production hardening). Michael Bolton: evidence without a chain of custody is hearsay — auth gate WILL be added before production. For now verify the endpoint accepts valid payloads with 200 ok response containing {ok:true, project}. The evidence_hash sealing happens client-side in the inspector runner before sync.",
+  "created_at": "2026-03-04T00:00:00Z"
+}

@@ -1,0 +1,149 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 48,
+    "tower_name": "Tower of Browser-Cloud Integration",
+    "dna": "browser_cloud(integration) = sync(twin_session) x evidence(hash_chain_continuity) x oauth3(token_flow) x recipe(cache_sync) x privacy(local_vs_cloud) x remote(dispatch) x resilience(failure_modes)",
+    "generated_at": "2026-03-06T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a distinct persona who depends on browser-cloud integration. Questions must verify that sync, evidence, OAuth3, recipes, privacy, remote automation, and failure recovery work correctly across the browser-cloud boundary.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of Browser-Cloud Integration",
+  "tower_number": 48,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Nadia Volkov",
+      "persona_domain": "session_sync",
+      "persona_context": "36, Berlin, Remote team lead at a SaaS startup, Expert tech, Pro tier, runs Solace Browser on her laptop and needs her cloud twin to continue tasks when she closes the lid — session state must survive browser shutdown and resume on cloud without data loss",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "When I close my laptop mid-task, does the cloud twin pick up the browser session from the exact step where I stopped within 30 seconds?",
+        "Does the session sync include all open tabs, form data, and navigation history — not just the current URL?",
+        "If the cloud twin modifies session state while my laptop is closed, does my browser reflect those changes when I reopen it?",
+        "Is there a conflict resolution UI when both my local browser and the cloud twin have diverged on the same session state?",
+        "Does the session sync handoff include authentication cookies so the cloud twin does not need to re-login to third-party sites?",
+        "Can I see a sync status indicator in the browser UI showing 'Synced', 'Syncing...', or 'Offline — changes queued'?",
+        "Does the reconnection after network restore replay queued local changes in order without duplicating any actions already executed by the cloud twin?"
+      ],
+      "question_expansion_instruction": "Nadia depends on seamless handoff between local browser and cloud twin. Questions verify that session state transfers completely, conflicts are surfaced, and reconnection is lossless."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "James Okafor",
+      "persona_domain": "evidence_continuity",
+      "persona_context": "45, Lagos, Compliance officer at a fintech startup, Expert tech, Enterprise tier, needs tamper-evident evidence chains that span browser-to-cloud without hash chain gaps — a broken chain means a failed audit",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does every evidence bundle generated in the browser include a hash that chains to the previous evidence entry regardless of whether that entry was created on browser or cloud?",
+        "When the browser uploads evidence to the cloud, does the cloud verify the hash chain integrity before accepting the bundle?",
+        "Can I export a single continuous evidence chain that includes both browser-local and cloud-stored entries in chronological order?",
+        "If evidence is generated while offline, does the browser queue it and upload with correct chain ordering when connectivity resumes?",
+        "Does the cloud reject an evidence upload if there is a gap in the hash chain sequence — no silent acceptance of broken chains?",
+        "Is there an evidence chain audit endpoint (GET /api/v1/evidence/verify) that validates the full browser+cloud chain and reports any discontinuities?",
+        "Does each evidence entry include a source field ('browser' or 'cloud') so auditors can trace where each action was executed?"
+      ],
+      "question_expansion_instruction": "James needs unbroken evidence chains for regulatory compliance. Questions verify that hash chains span the browser-cloud boundary with zero gaps, offline queuing preserves order, and audit tools can validate the full chain."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Kenji Tanaka",
+      "persona_domain": "oauth3_token_flow",
+      "persona_context": "40, Tokyo, Security engineer at an enterprise bank, Expert security, Enterprise tier, responsible for ensuring that OAuth3 tokens flowing between browser and cloud are scoped, time-limited, and never exposed in transit or logs",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the browser request OAuth3 tokens from the cloud with explicit scope declarations (e.g., 'gmail:read', 'drive:write') rather than blanket access?",
+        "Are OAuth3 tokens transmitted between browser and cloud exclusively over TLS 1.3 with certificate pinning?",
+        "Does the cloud issue tokens with a maximum TTL of 1 hour for standard operations and 5 minutes for high-risk operations?",
+        "When a token expires during a browser session, does the browser automatically refresh it via the cloud without interrupting the user's workflow?",
+        "Are OAuth3 tokens stored in the browser's encrypted local vault and never written to browser localStorage, sessionStorage, or cookies?",
+        "Does the cloud revocation endpoint immediately invalidate a token across both browser and cloud — no grace period where a revoked token still works?",
+        "Are token values redacted from all browser and cloud logs, error messages, and evidence bundles — showing only the token hash for correlation?"
+      ],
+      "question_expansion_instruction": "Kenji audits security at a bank. Questions verify that OAuth3 tokens between browser and cloud are properly scoped, short-lived, encrypted in transit and at rest, revocable instantly, and never leaked to logs."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Maria Santos",
+      "persona_domain": "recipe_sync",
+      "persona_context": "31, Lisbon, DevOps engineer at a consulting firm, Expert tech, Pro tier, manages 40+ recipes across a team of 12 — needs local browser cache to stay in sync with the cloud recipe store without version conflicts causing broken automations",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "When I publish a new recipe version to the cloud store, do all team members' browsers pull the update within 5 minutes without manual refresh?",
+        "Does the browser cache recipes locally so they execute at replay speed ($0.001/task) even when the cloud is unreachable?",
+        "If I edit a recipe locally in my browser while a teammate publishes a new version to cloud, does the system detect the conflict before overwriting either version?",
+        "Does each cached recipe include a version hash so the browser can compare it against the cloud version and show 'Update available' in the UI?",
+        "Can I pin a specific recipe version in my browser so automatic sync does not upgrade it until I explicitly approve?",
+        "Does the recipe sync transfer only the diff (changed fields) rather than the full recipe JSON to minimize bandwidth on slow connections?",
+        "Is there a sync log showing when each recipe was last synced, from which source (local edit vs cloud pull), and whether any conflicts were resolved?"
+      ],
+      "question_expansion_instruction": "Maria manages recipes for a team. Questions verify that recipe sync is fast, bandwidth-efficient, conflict-aware, supports version pinning, and maintains a clear audit trail of sync operations."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Ingrid Haugen",
+      "persona_domain": "data_privacy",
+      "persona_context": "47, Oslo, Data Protection Officer at a healthcare company, Expert compliance, Enterprise tier, must ensure GDPR compliance — needs to know exactly what browser data syncs to cloud, what stays local, and how to exercise data deletion rights",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Is there a data classification document listing every data type with its sync policy: 'local-only', 'sync-to-cloud', or 'user-choice'?",
+        "Are OAuth3 tokens, browsing history, and form autofill data classified as 'local-only' and never transmitted to the cloud?",
+        "Can a user exercise GDPR Article 17 (right to erasure) via a single 'Delete My Data' button that removes all cloud-synced data within 72 hours?",
+        "Does the browser show a privacy dashboard listing every data category currently synced to the cloud with a toggle to stop syncing each one?",
+        "When a user disables cloud sync for a data category, is the existing cloud copy deleted — not just orphaned?",
+        "Is all data transmitted from browser to cloud encrypted with a user-specific key so that even Solace infrastructure operators cannot read it?",
+        "Does the system generate a GDPR-compliant data processing record (Article 30) for every browser-to-cloud data transfer?"
+      ],
+      "question_expansion_instruction": "Ingrid is a DPO at a healthcare company. Questions verify GDPR compliance: data classification, local-only guarantees, right to erasure, user-controlled sync toggles, end-to-end encryption, and Article 30 records."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Derek Washington",
+      "persona_domain": "remote_automation",
+      "persona_context": "39, Chicago, Operations manager at an e-commerce company, Intermediate tech, Pro tier, needs the cloud to dispatch tasks to his browser (scrape product pages, check competitor pricing) and report results back — all while he is in meetings",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I queue a task on the cloud dashboard that dispatches to my running browser instance and executes without me touching the browser?",
+        "Does the cloud-to-browser dispatch use a secure WebSocket channel authenticated with the same OAuth3 token — no unauthenticated command injection?",
+        "When the browser completes a dispatched task, does it automatically upload the result (screenshot, extracted data, evidence) back to the cloud?",
+        "Can I see the real-time status of a dispatched task on the cloud dashboard (queued, running, completed, failed) without checking my browser?",
+        "If my browser is offline when the cloud dispatches a task, does the task queue on the cloud and execute when the browser reconnects?",
+        "Does the browser reject dispatched tasks that exceed its configured scope — e.g., if the task requires 'email:send' but the browser only has 'email:read'?",
+        "Can I set a maximum number of concurrent dispatched tasks so my browser does not become overloaded while I am using it for other work?"
+      ],
+      "question_expansion_instruction": "Derek needs cloud-to-browser task dispatch while he is away. Questions verify secure dispatch channels, automatic result upload, real-time status visibility, offline queuing, scope enforcement, and concurrency limits."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Priya Sharma",
+      "persona_domain": "failure_modes",
+      "persona_context": "44, Bangalore, Site Reliability Engineer at a cloud-native startup, Expert tech, Enterprise tier, needs to understand and test every failure mode in the browser-cloud integration — network drops, partial syncs, stale tokens, clock skew — before deploying to 200 users",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "If the network drops mid-evidence-upload, does the browser retry with exponential backoff and resume from the last acknowledged byte rather than re-uploading the entire bundle?",
+        "Does the system handle clock skew between browser and cloud gracefully — evidence timestamps use server-issued logical clocks, not client wall time?",
+        "If a partial recipe sync occurs (metadata synced but execution steps failed), does the system mark the recipe as 'incomplete' rather than allowing execution of a half-synced recipe?",
+        "When a stale OAuth3 token is used for a cloud API call, does the cloud return a specific 401 error code that triggers automatic token refresh rather than a generic failure?",
+        "If the cloud returns a 503 (service unavailable), does the browser queue operations locally and show a degraded-mode banner rather than showing an error for every action?",
+        "Is there a health check endpoint (GET /api/v1/health) that the browser pings every 30 seconds to detect cloud availability before attempting sync operations?",
+        "Can I simulate a network partition in a test environment to verify that all queued operations sync correctly when connectivity is restored — zero data loss, zero duplicates?"
+      ],
+      "question_expansion_instruction": "Priya stress-tests failure modes before deployment. Questions verify retry logic, clock skew handling, partial sync detection, stale token recovery, graceful degradation, health checks, and chaos testing support."
+    }
+  ]
+}

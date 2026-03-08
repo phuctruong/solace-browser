@@ -1,0 +1,9 @@
+{
+  "prompt_id": "sample-001",
+  "image_prompt": "A photorealistic sunset over Boston harbor with sailboats",
+  "num_variations": 4,
+  "style": "photorealistic",
+  "output_dir": "outbox/images/",
+  "human_review": true,
+  "notes": "Generate 4 variations. Human picks the best for phuc.net hero image."
+}

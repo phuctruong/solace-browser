@@ -1,0 +1,11 @@
+{
+  "persona_id": "russell-brunson",
+  "version": 1,
+  "created_glow": 123,
+  "allies": {
+    "natural_collaborator": ["rory-sutherland", "vanessa-van-edwards", "alex-hormozi"],
+    "productive_tension": ["seth-godin"],
+    "domain_complement": ["jony-ive", "don-norman"]
+  },
+  "p37_note": "Network seeded at GLOW 123. Russell and Rory are natural allies — Rory provides the psychological frame (why the hook works), Russell provides the sequence architecture (where the hook must appear). Russell and Seth have productive tension: Russell wants every step to close toward the offer; Seth wants every step to be a permission-first gift. The tension produces better funnels than either alone."
+}

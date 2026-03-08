@@ -1,0 +1,31 @@
+{
+  "id": "claude-r8-20260307T163802",
+  "app": "claude",
+  "round": 8,
+  "llm": "claude-4.6-opus",
+  "persona": "Mike West",
+  "task_type": "architecture-review",
+  "methodology": "PATH_TO_100",
+  "target": "solace-browser yinyang sidebar",
+  "scores": {
+    "architecture": 78,
+    "security": 74,
+    "data_integrity": 82,
+    "recipe_engine": 76,
+    "implementation": 65,
+    "ux": 60,
+    "operational": 63,
+    "overall": 71,
+    "structural_ceiling": 88
+  },
+  "verdict": "NEEDS WORK",
+  "r7_to_r8_delta": "+14 points (acknowledged but scores raw gaps honestly)",
+  "findings_count": 25,
+  "top_5_path": [
+    "[IMPL] +12: Typed message schemas (protobuf/JSON Schema), error code catalog E1001-E9999",
+    "[UX] +10: First-run flow completely absent — NM host install, extension detection, key ceremony",
+    "[SECURITY] +8: CDP allowlist not enumerated, Runtime.evaluate not explicitly banned",
+    "[OPS] +8: Zero chain-break detection shipped = tamper-invisible chain",
+    "[RECIPE] +7: LLM repair of sealed recipe = capability escalation without re-seal"
+  ]
+}

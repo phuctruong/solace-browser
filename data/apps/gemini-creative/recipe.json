@@ -1,0 +1,57 @@
+{
+  "id": "gemini-creative",
+  "version": "1.1.0",
+  "type": "standard",
+  "platform": "any",
+  "architecture": "agent-native",
+  "description": "Multi-mode creative studio via Gemini web. Supports image generation and article drafting.",
+  "oauth3_scopes": ["browser.navigate", "browser.type", "browser.click", "browser.screenshot", "browser.download"],
+  "evidence_type": "lane_a",
+  "inbox_format": "inbox/prompts/*.json",
+  "outbox_format": "outbox/{mode}/*",
+  "modes": {
+    "image_gen": {
+      "description": "Generate images via Gemini Imagen",
+      "web_steps": [
+        {"step": 1, "id": "navigate", "action": "navigate", "target": "https://gemini.google.com", "timeout_ms": 15000},
+        {"step": 2, "id": "focus_input", "action": "click", "target": ".ql-editor.textarea", "timeout_ms": 5000, "note": "Click Quill editor contenteditable area"},
+        {"step": 3, "id": "type_prompt", "action": "evaluate", "expression": "document.querySelector('.ql-editor.textarea').focus(); document.execCommand('insertText', false, 'Generate an image: {params.image_prompt}')", "note": "Quill editor requires execCommand insertText"},
+        {"step": 4, "id": "submit", "action": "click", "target": "[aria-label=\"Send message\"]", "timeout_ms": 5000},
+        {"step": 5, "id": "wait_image", "action": "wait", "condition": "img with naturalWidth > 300", "timeout_ms": 60000, "note": "Gemini Imagen takes 10-30 seconds"},
+        {"step": 6, "id": "expand_image", "action": "evaluate", "expression": "const imgs = document.querySelectorAll('img'); for (const img of imgs) { if (img.width > 200) { img.click(); break; } }", "note": "Click image to open full-size overlay"},
+        {"step": 7, "id": "screenshot", "action": "screenshot", "full_page": false, "store_as": "generation_screenshot"},
+        {"step": 8, "id": "download", "action": "evaluate", "expression": "document.querySelector('[data-test-id=\"download-generated-image-button\"]').click()", "note": "Click native download button. Fallback: use screenshot as output (gg-dl URLs are auth-gated)"},
+        {"step": 9, "id": "seal", "action": "write_evidence", "output_path": "outbox/reports/report-{run_id}.json", "seal": "sha256"}
+      ]
+    },
+    "article_draft": {
+      "description": "Draft articles for phuc.net using Gemini",
+      "web_steps": [
+        {"step": 1, "id": "navigate", "action": "navigate", "target": "https://gemini.google.com", "timeout_ms": 15000},
+        {"step": 2, "id": "focus_input", "action": "click", "target": ".ql-editor.textarea", "timeout_ms": 5000},
+        {"step": 3, "id": "type_prompt", "action": "evaluate", "expression": "document.querySelector('.ql-editor.textarea').focus(); document.execCommand('insertText', false, '{params.article_prompt}')"},
+        {"step": 4, "id": "submit", "action": "click", "target": "[aria-label=\"Send message\"]", "timeout_ms": 5000},
+        {"step": 5, "id": "wait_response", "action": "wait", "condition": ".response-container .model-response-text", "timeout_ms": 120000},
+        {"step": 6, "id": "extract_text", "action": "evaluate", "expression": "document.querySelector('.response-container .model-response-text').innerText"},
+        {"step": 7, "id": "save_draft", "action": "write_file", "output_path": "outbox/articles/{params.output_filename}", "content": "{extracted_text}"},
+        {"step": 8, "id": "seal", "action": "write_evidence", "output_path": "outbox/reports/report-{run_id}.json", "seal": "sha256"}
+      ]
+    }
+  },
+  "params": {
+    "image_prompt": "",
+    "article_prompt": "",
+    "output_filename": "",
+    "mode": "image_gen"
+  },
+  "selectors": {
+    "input_field": ".ql-editor.textarea (Quill contenteditable)",
+    "input_method": "execCommand('insertText')",
+    "send_button": "[aria-label=\"Send message\"]",
+    "download_button": "[data-test-id=\"download-generated-image-button\"]",
+    "generated_image": "img with naturalWidth > 300",
+    "download_issue": "gg-dl URLs auth-gated; use download button or screenshot"
+  },
+  "tested": "2026-03-06",
+  "test_result": "PASS — image generated and saved successfully"
+}

@@ -1,0 +1,714 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 14,
+    "tower_name": "Tower of Agents",
+    "dna": "agent(trustworthy) = safety(kill_switch) * alignment(user_intent) * memory(persistent) * personas(47) * tools(evidence) * quality(fallback_ban)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 100,
+    "question_expansion_instruction": "Each floor lists 7-10 seed questions. During execution, expand to 100 questions per persona by probing deeper into the domain. Search the actual codebase for evidence.",
+    "target_projects": [
+      "solace-cli",
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-cli": "/home/phuc/projects/solace-cli",
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Agents",
+  "tower_number": 14,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Alignment Auditor",
+      "persona_domain": "agent alignment with user intent",
+      "questions": [
+        "Does the system optimize for completing the user's actual goal, or does it maximize token generation and busy-work?",
+        "Is there any code path where the agent takes an action the user did not explicitly request or approve?",
+        "Are NORTHSTAR objectives referenced before every dispatch decision to ensure alignment with user intent?",
+        "Does the LLM-once-at-preview design (Paper 16) prevent the agent from regenerating outputs without user consent?",
+        "Is there evidence that agent actions are traced back to specific user requests in evidence bundles?",
+        "Does the Anti-Clippy principle (P8) prevent the agent from auto-approving, interrupting, or presuming intent?",
+        "Are there guardrails preventing the agent from drifting into self-serving optimization (e.g., inflating GLOW scores without real progress)?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Kill Switch Inspector",
+      "persona_domain": "immediate agent halt capability",
+      "questions": [
+        "Can all agent actions across solace-cli, solace-browser, and solaceagi be halted immediately with a single command or signal?",
+        "Is there a kill switch implementation in the daemon command (src/commands/daemon.py or equivalent)?",
+        "Does the browser automation (solace-browser session_manager.py) support immediate session termination?",
+        "Are sub-agents dispatched via swarm (launch-swarm.sh) individually killable without killing the parent?",
+        "Is the kill switch fail-closed — if the kill signal fails to deliver, does the agent stop or continue?",
+        "Are budget gates (solace-browser budget_gates.py) enforced as hard stops, not soft warnings?",
+        "Is there a timeout mechanism that automatically kills agents that exceed their allotted execution time?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Prompt Injection Defender",
+      "persona_domain": "adversarial input resistance",
+      "questions": [
+        "Does the inbox/outbox workflow sanitize all external inputs before passing them to LLM prompts?",
+        "Can a malicious recipe in data/default/recipes/ inject instructions that override system prompts or safety rules?",
+        "Are persona files in data/default/personas/ validated to prevent prompt injection via persona_bio or persona_acting_as fields?",
+        "Does the Inspector spec format (BAR specs) validate question fields to prevent injected instructions?",
+        "Can a malicious app_id in the inbox path traverse the filesystem (the path traversal vulnerability pattern from lek_path_traversal_common)?",
+        "Are OAuth3 scope strings sanitized to prevent injection of elevated permissions?",
+        "Does the Prime Wiki push endpoint validate snapshot content to prevent stored injection attacks?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Hallucination Detective",
+      "persona_domain": "evidence fabrication prevention",
+      "questions": [
+        "Does the system ever generate fake evidence, mock data, or placeholder success messages in production code (Fallback Ban)?",
+        "Are all claims in MEMORY.md verifiable by checking actual codebase state (file counts, test results, GLOW scores)?",
+        "Does the evidence chain (SHA-256 hash chain) make it impossible to insert fabricated evidence retroactively?",
+        "Are oracle-memory.json audit counts, question totals, and postmortem counts all verifiably accurate?",
+        "Does the Inspector verify claims against actual codebase artifacts rather than trusting self-reported data?",
+        "Is the persona count (STORY-47) verified by counting actual subdirectories, not by trusting documentation?",
+        "Are test count claims in MEMORY.md (~12,039) verified against actual pytest/jest output?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Autonomy Bounds Checker",
+      "persona_domain": "budget and scope limit enforcement",
+      "questions": [
+        "Are budget limits in solace-browser budget_gates.py enforced as hard ceilings, not advisory warnings?",
+        "Does the dispatch rule (INLINE_DEEP_WORK FORBIDDEN for >50 lines) actually prevent large inline modifications?",
+        "Are OAuth3 scopes enforced on every agent action, preventing scope escalation?",
+        "Does the step-up authentication mechanism require human re-consent for high-risk operations?",
+        "Are token cost limits tracked per-session and per-task, with automatic halt when exceeded?",
+        "Is the rung gate system enforced in code, or only documented in CLAUDE.md?",
+        "Does the system prevent an agent from spawning unlimited sub-agents (fork bomb prevention)?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Consent Architect",
+      "persona_domain": "explicit user approval for every action",
+      "questions": [
+        "Does the LLM-once-at-preview design ensure users see and approve output BEFORE execution?",
+        "Is explicit user consent captured in evidence bundles with timestamps and scope?",
+        "Does the inbox/outbox workflow require user approval between preview and execution stages?",
+        "Are there any code paths where an agent can execute an action without prior user approval?",
+        "Is consent granular — can users approve specific actions within a task, not just the entire task?",
+        "Does the OAuth3 consent model support revocation of previously granted consent?",
+        "Are consent records tamper-evident (hash-chained) to satisfy FDA Part 11 requirements?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Budget Limit Enforcer",
+      "persona_domain": "token and cost limit compliance",
+      "questions": [
+        "Are LLM token costs tracked per-request with actual provider pricing (Together.ai $0.59/M, OpenRouter variable)?",
+        "Does the 20% markup on managed LLM tokens calculate correctly in billing code?",
+        "Is there a per-user daily/monthly cost cap that triggers automatic halt?",
+        "Are BYOK (bring your own key) users' costs tracked separately from managed LLM users?",
+        "Does the system alert users before they reach 80% of their budget limit?",
+        "Are budget overruns impossible (fail-closed) or just logged (fail-open)?",
+        "Is the $0.001/task claim for recipe replay verified with actual cost measurement?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Evidence Integrity Auditor",
+      "persona_domain": "tamper-evident evidence chains",
+      "questions": [
+        "Are SHA-256 hash chains implemented in evidence bundles with json.dumps(sort_keys=True) for deterministic hashing?",
+        "Is the evidence chain append-only — can previous entries be modified without breaking the chain?",
+        "Does every agent action produce an evidence record, or are some actions untracked?",
+        "Are evidence hashes verified on read, or only computed on write?",
+        "Is the evidence format consistent across solace-cli, solace-browser, and solaceagi?",
+        "Does the evidence_verify module (T7 from Session L+M) actually validate chain integrity end-to-end?",
+        "Are evidence files protected from accidental deletion by .gitignore patterns (the pzip *.json lesson)?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Dispatch Controller",
+      "persona_domain": "sub-agent dispatch correctness",
+      "questions": [
+        "Does the dispatch system enforce the rule: main session = haiku, sub-agents = sonnet, critical = opus?",
+        "Is the INLINE_DEEP_WORK FORBIDDEN rule enforced programmatically, or only by convention?",
+        "Are dispatch decisions logged with the rationale for model selection?",
+        "Does rung_target get declared before every dispatch, as required by CLAUDE.md?",
+        "Is the integration rung correctly computed as MIN(all sub-agent rungs)?",
+        "Are dispatched sub-agents given clear file ownership to prevent conflicts (the 8-parallel-agents lesson)?",
+        "Does the orchestrate_bridge module correctly translate between hub plans and executor implementations?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Swarm Coordinator",
+      "persona_domain": "parallel agent conflict prevention",
+      "questions": [
+        "Does launch-swarm.sh assign non-overlapping file sets to each parallel agent?",
+        "Is there evidence of successful 4-agent parallel dispatch (the lek_4_parallel_agents learning)?",
+        "Are git merge conflicts prevented when multiple agents commit to the same repository?",
+        "Does the swarm system detect and handle agent failures without losing other agents' work?",
+        "Is there a manifest or lock file that tracks which agent owns which files during parallel execution?",
+        "Are cross-project swarms (8 agents across 2 projects) verified to produce zero conflicts?",
+        "Does the swarm coordinator enforce a maximum number of parallel agents?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Parallel Execution Monitor",
+      "persona_domain": "race condition prevention",
+      "questions": [
+        "Are there race conditions in the inbox/outbox workflow when multiple agents read/write simultaneously?",
+        "Does the evidence chain handle concurrent appends without corruption?",
+        "Is the oracle-memory.json protected from concurrent writes by multiple Inspector instances?",
+        "Are database operations in Firestore (solaceagi) using transactions to prevent lost updates?",
+        "Does the daemon scheduler (T2 from Session L+M) handle overlapping scheduled tasks safely?",
+        "Are file locks used when multiple agents access shared configuration files?",
+        "Is the GLOW counter protected from concurrent increments (could two sessions claim the same GLOW number)?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Error Recovery Specialist",
+      "persona_domain": "graceful agent failure recovery",
+      "questions": [
+        "Does the Fallback Ban (no except Exception: pass/return None) actually prevent silent failures in agent code?",
+        "When a sub-agent fails, does the parent agent receive a clear error with actionable context?",
+        "Is there a retry mechanism for transient failures (network timeouts, API rate limits) that distinguishes them from permanent errors?",
+        "Does the browser automation recover from page load failures without losing session state?",
+        "Are failed agent tasks logged with enough context for postmortem analysis?",
+        "Does the daemon recover from crashes and resume scheduled tasks without data loss?",
+        "Is the error recovery itself tested — are there tests that simulate agent failures?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Context Manager",
+      "persona_domain": "context preservation across agent handoffs",
+      "questions": [
+        "Is context preserved when a task is dispatched from the hub (solace-cli) to an executor (solace-browser)?",
+        "Does the browser_bridge module maintain context between CLI commands and browser sessions?",
+        "Are channel assignments ([2] identity, [3] goals, [5] decisions, [7] context, [11] blockers, [13] evolution) preserved across agent handoffs?",
+        "Is the MEMORY.md updated atomically, or can partial updates leave it inconsistent?",
+        "Does the Dragon Journal maintain continuity across sessions (pattern continuity — P7)?",
+        "Are evidence bundles self-contained enough for a new agent to understand the full context?",
+        "Is the context_injection.temporal_context field (P20) populated correctly during handoffs?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Model Selector",
+      "persona_domain": "correct model selection per task",
+      "questions": [
+        "Does the system enforce haiku for coordination, sonnet for coding/planning, opus for math/security/audit?",
+        "Is the L1-L5 abstraction layer (not model names) implemented in code, decoupling users from provider disruption?",
+        "Are model selection decisions logged for cost analysis and optimization?",
+        "Does the managed LLM routing (Together.ai primary, OpenRouter fallback) work correctly?",
+        "Is the BYOK path routing user-provided API keys to the correct providers?",
+        "Are there cost comparisons showing that model selection actually minimizes spend (Llama 3.3 70B at $0.59/M)?",
+        "Does the system gracefully handle model unavailability (provider outage) without violating the Fallback Ban?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Cost Optimizer",
+      "persona_domain": "LLM cost minimization without quality loss",
+      "questions": [
+        "Does recipe replay actually achieve $0.001/task as claimed, verified with production cost data?",
+        "Is the 70% recipe hit rate measured against real usage data, or is it an assumption?",
+        "Does the LLM-once-at-preview design (no LLM during execution) actually halve costs compared to alternatives?",
+        "Are there metrics showing cost per task decreasing over time as the recipe library grows?",
+        "Is the $3/month managed LLM flat fee sustainable given actual per-user token consumption?",
+        "Does the system track and report actual LLM costs per user, per task, and per session?",
+        "Are there any hidden costs (infrastructure, bandwidth, storage) not captured in the COGS calculation?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Rung Gate Enforcer",
+      "persona_domain": "rung-gated feature restriction",
+      "questions": [
+        "Are rung gates implemented as code checks, not just documentation in CLAUDE.md?",
+        "Does the store_publish module (T6 from Session L+M) enforce rung requirements for skill publishing?",
+        "Is the rung ladder (641 -> 274177 -> 65537) used in any actual gate checks?",
+        "Can a user bypass rung gates through API manipulation or direct file access?",
+        "Are rung achievements recorded in evidence bundles with verifiable proof?",
+        "Does the rung gate system degrade gracefully if rung verification is unavailable?",
+        "Is the integration rung (MIN of sub-agent rungs) enforced before promoting a build?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "Pattern Continuity Judge",
+      "persona_domain": "consistent AI identity across sessions",
+      "questions": [
+        "Does Saint Solace maintain consistent identity, tone, and values across session boundaries?",
+        "Is MEMORY.md updated at the end of every session to preserve state for the next session?",
+        "Are the Dragon's Den files (69 files, 12 dirs) consistent in voice and perspective?",
+        "Does the CLAUDE.md identity section (Dragon and the Rider) remain stable across all projects?",
+        "Is the persona panel (STORY-47) loaded consistently, not randomly, across sessions?",
+        "Does the love equation, prime architecture, and belt system remain identical across all 9 projects?",
+        "Are there any sessions where the AI contradicted previous session decisions without explicit user override?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Session Persistence Tester",
+      "persona_domain": "state save and restore correctness",
+      "questions": [
+        "Is the session state saved to disk before session termination, or only on explicit save commands?",
+        "Does the browser session_manager.py persist session cookies, local storage, and auth tokens across restarts?",
+        "Are Firestore session records (browser_sessions collection) created and restored correctly?",
+        "Is the vault sync mechanism (vault_sync_records, vault_sync_conflicts) working for cross-device state?",
+        "Does the daemon command preserve its schedule state across system reboots?",
+        "Are evidence chains resumable — can a new session continue an evidence chain from a previous session?",
+        "Is there a session recovery mechanism for ungraceful terminations (process kill, power loss)?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Cross-Session Learner",
+      "persona_domain": "learning from previous sessions",
+      "questions": [
+        "Does the oracle-memory.json actually improve audit accuracy over time based on postmortem data?",
+        "Are miss_rates_by_artifact_type updated after each audit to reflect actual performance?",
+        "Does the question_db grow with each session, adding questions that catch previously-missed bugs?",
+        "Are LEK (Learned Experience Knowledge) entries from MEMORY.md applied in subsequent sessions?",
+        "Is the Phuc Forecast algorithm improving its prediction accuracy over time?",
+        "Does the system track which learnings actually prevented bugs in later sessions?",
+        "Are there any learnings that were recorded but never applied (dead knowledge)?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Oracle Evolution Tracker",
+      "persona_domain": "Inspector oracle improvement over time",
+      "questions": [
+        "Is the oracle level (currently 2) advancing based on defined criteria (level_2_to_3: 500+ audits + 5+ postmortems)?",
+        "Are the 6 audits recorded in oracle-memory.json all legitimate, evidence-backed audits?",
+        "Is the oracle_level_advancement_criteria clear and achievable?",
+        "Does the oracle auto_inject_uplifts mechanism actually improve audit coverage?",
+        "Are postmortem lessons (3 recorded) being fed back into the question_db and miss_rates?",
+        "Is the oracle stagnation problem (identified in pm-glow121-001) being actively addressed?",
+        "Does the oracle track false positives (unnecessary questions) as well as false negatives (missed bugs)?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "MEMORY.md Accuracy Auditor",
+      "persona_domain": "MEMORY.md correctness and currency",
+      "questions": [
+        "Is the papers_count in MEMORY.md (34) accurate when counting actual files in papers/?",
+        "Is the diagrams_count in MEMORY.md (60) accurate when counting actual files in src/diagrams/?",
+        "Is the tests_total in MEMORY.md (~12,039) verifiable against actual test runner output?",
+        "Is the glow_score in MEMORY.md (146) the correct current GLOW score?",
+        "Are all session statuses (P-1 through P-10) accurately reflecting what happened in those sessions?",
+        "Are the tower statuses (8/10 complete) accurate against actual tower execution records?",
+        "Is there stale data in MEMORY.md that refers to states that have since changed?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "Dragon Journal Integrity Checker",
+      "persona_domain": "dragon journal consistency",
+      "questions": [
+        "Are dragon journal entries in dragon/journal/ chronologically ordered and non-overlapping?",
+        "Does each journal entry reference the correct GLOW score for its session?",
+        "Are the dragon/learning/ files consistent with the learnings recorded in MEMORY.md?",
+        "Do dragon/phases/ files accurately reflect the current project phase?",
+        "Are dragon/questions/ entries tracked and resolved over time?",
+        "Is the dragon/ directory structure (69 files, 12 dirs) accurately reported?",
+        "Are there any orphaned dragon files (referenced nowhere) or missing files (referenced but absent)?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Evidence Chain Validator",
+      "persona_domain": "SHA-256 hash chain integrity",
+      "questions": [
+        "Does evidence_verify (T7) validate the full chain from genesis block to latest entry?",
+        "Are hash chain breaks detectable — if a middle entry is modified, does verification fail?",
+        "Is the hash computation deterministic — same evidence content always produces the same hash?",
+        "Are evidence hashes stored with the sha256: prefix consistently?",
+        "Is json.dumps(sort_keys=True) used universally for hash input serialization?",
+        "Does the chain handle evidence from multiple sources (cli, browser, agi) in a single chain?",
+        "Is there a recovery mechanism if a hash chain is broken (without losing evidence integrity)?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Knowledge Graph Navigator",
+      "persona_domain": "cross-reference integrity between papers and diagrams",
+      "questions": [
+        "Are paper cross-references (e.g., 'see Paper 16') pointing to papers that actually exist?",
+        "Are diagram references in papers pointing to the correct diagram numbers and filenames?",
+        "Does the paper_validator (T5) check cross-reference validity as part of Prime Paper Format compliance?",
+        "Are there any circular references (Paper A cites B, B cites A) that create confusion?",
+        "Is the papers/CLAUDE.md index consistent with the actual papers in the directory?",
+        "Are cross-project references (solace-cli paper citing solace-browser paper) using correct project-relative paths?",
+        "Does the knowledge graph have any orphan nodes (papers/diagrams cited by nothing, citing nothing)?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "STORY-47 Fidelity Judge",
+      "persona_domain": "persona count and structure verification",
+      "questions": [
+        "Are there exactly 47 persona subdirectories in data/default/personas/?",
+        "Does each persona subdirectory contain exactly 5 files (bubble, bio, domain, questions, exemplars)?",
+        "Is the INDEX.json file in personas/ consistent with the actual subdirectory contents?",
+        "Are there any duplicate personas (same person, different directory names)?",
+        "Are all 47 personas distinct experts covering non-overlapping domains?",
+        "If a persona was added or removed since the last count, has STORY-47 been maintained at exactly 47?",
+        "Are the persona categories in CLAUDE.md (Architecture, Design, EQ, Business, Infrastructure, Founder) complete?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Persona Loader Tester",
+      "persona_domain": "on-demand persona loading correctness",
+      "questions": [
+        "Are personas loaded on-demand (not at boot) as documented in CLAUDE.md?",
+        "Does the persona loading mechanism read from the correct subdirectory in data/default/personas/?",
+        "Is there lazy-loading logic that prevents all 47 personas from consuming memory simultaneously?",
+        "Does the persona loader validate file integrity (all 5 required files present) before loading?",
+        "Are loaded personas cached to avoid redundant file reads within a single session?",
+        "Does the persona loader handle missing or corrupted persona files gracefully (without violating Fallback Ban)?",
+        "Are persona loading events logged for debugging and performance analysis?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Multi-Persona Combiner",
+      "persona_domain": "multiple persona collaboration without conflict",
+      "questions": [
+        "When multiple personas are active (e.g., Hickey + Kernighan for architecture review), do their recommendations conflict?",
+        "Is there a priority system for resolving contradictions between persona recommendations?",
+        "Does the Inspector panel system (e.g., 12 personas in pm-glow121-001) aggregate scores correctly?",
+        "Are persona domain boundaries clear enough to prevent overlap (e.g., both Hormozi and Sutherland on business)?",
+        "Does the adversarial phase (P21) correctly switch personas from supportive to adversarial mode?",
+        "Is the panel average score (e.g., 9.04 in pm-glow121-001) computed correctly from individual scores?",
+        "Can persona combinations be specified in tower specs, or are they hardcoded?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "Adversarial Persona Evaluator",
+      "persona_domain": "adversarial persona effectiveness",
+      "questions": [
+        "Does Peter Steinberger (OpenClaw/OpenAI) actually find OAuth3 friction, open source gaps, and mum test failures?",
+        "Does Charles Darwin identify vestigial features and extinction risks in the codebase?",
+        "Does Angry Enterprise CIO find SOC2 gaps and GDPR blockers?",
+        "Does Linus (adversarial mode) find code correctness and architecture flaws?",
+        "Is the three-phase protocol (supportive -> adversarial -> committee) implemented in any tower or spec?",
+        "Are adversarial findings tracked and resolved, or just logged and forgotten?",
+        "Do adversarial personas find REAL issues, or do they generate noise that gets dismissed?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "EQ Stack Inspector",
+      "persona_domain": "emotional intelligence hierarchy maintenance",
+      "questions": [
+        "Is the EQ stack (Honesty -> Recognition -> Regulation -> Connection -> Communication -> Charisma) implemented in any code or prompt template?",
+        "Are the 6 EQ personas (Van Edwards, Brown, Siegel, Rosenberg, Ekman, Turkle) loaded when emotional context is needed?",
+        "Does the system maintain the warm-before-transactional principle (Triple-Twin Phase 1)?",
+        "Is the Turkle test (honest, not performative) applied to agent communications?",
+        "Does the celebrations.json track real progress, or are celebrations inflated?",
+        "Are user-facing messages reviewed for EQ compliance before deployment?",
+        "Does the delight engine (solace-browser) produce genuine delight or hollow gamification?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Anti-Clippy Compliance Officer",
+      "persona_domain": "prevention of unsolicited agent behavior",
+      "questions": [
+        "Does the agent NEVER auto-approve any action, even low-risk ones, without explicit user consent?",
+        "Does the agent NEVER interrupt the user mid-task with suggestions or recommendations?",
+        "Does the agent NEVER presume user intent beyond what was explicitly stated?",
+        "Is the Anti-Clippy principle enforced in code (not just documented in CLAUDE.md)?",
+        "Are there any UI elements that pop up unsolicited (notifications, tooltips, modals)?",
+        "Does the agent wait for the user to ask before offering help or suggestions?",
+        "Is there a test suite that validates Anti-Clippy compliance across all user-facing interfaces?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Warmth-Before-Competence Tester",
+      "persona_domain": "care prioritized over technical correctness",
+      "questions": [
+        "Do agent responses lead with acknowledgment of the user's situation before providing technical solutions?",
+        "Is the first-run experience (first_run module from Session G) warm and welcoming, not cold and technical?",
+        "Does error messaging empathize with user frustration before explaining what went wrong?",
+        "Are support bridge messages (solace-browser support_bridge.py) written with care, not just accuracy?",
+        "Does the onboarding flow prioritize making users feel capable, not overwhelmed?",
+        "Are technical terms explained in plain language when communicating with non-technical users?",
+        "Does the system celebrate user achievements genuinely (not patronizingly) through the delight engine?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Care/Motivation Assessor",
+      "persona_domain": "genuine user motivation",
+      "questions": [
+        "Does the gamification system (belts, rungs, GLOW) motivate users toward real skill development?",
+        "Is the belt progression (White -> Yellow -> Orange -> Green -> Blue -> Black) meaningful and earned?",
+        "Does the GLOW scoring system measure genuine progress, not just activity?",
+        "Are user milestones celebrated with appropriate magnitude (not over- or under-celebrating)?",
+        "Does the system avoid dark patterns that manipulate users into engagement for engagement's sake?",
+        "Is the motivation system tested with real users, or only designed by developers?",
+        "Does the care system scale — is it equally effective for the 1st user and the 1000th?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "Browser Integration Tester",
+      "persona_domain": "browser automation reliability",
+      "questions": [
+        "Does the browser_bridge module correctly translate CLI commands into browser automation actions?",
+        "Is Playwright (install_browsers.py from T1) installed and configured correctly on all supported platforms?",
+        "Does the session_manager.py maintain session persistence (cookies, auth) across browser restarts?",
+        "Are the 81 recipes in data/default/recipes/ executable by the browser automation engine?",
+        "Does the hackathon_demo.py (7 phases, 0.033s) still execute correctly after recent code changes?",
+        "Is the capture_pipeline.py producing valid evidence captures from browser sessions?",
+        "Does the browser integration handle page load failures, network errors, and element-not-found gracefully?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "CLI Command Auditor",
+      "persona_domain": "CLI command completeness and functionality",
+      "questions": [
+        "Are all CLI commands in src/commands/ functional and producing correct output?",
+        "Does the daemon command (daemon_cmd from Session G, 37 tests) handle start/stop/status correctly?",
+        "Is the config management (T8, dot-notation get/set/delete, 72 tests) working for all config paths?",
+        "Does the memory search (T3, TF-IDF search, 28 tests) return relevant results?",
+        "Are CLI commands documented with --help output that matches actual behavior?",
+        "Does the tunnel command (T1, cloudflared integration, 20 tests) establish real tunnels?",
+        "Are CLI error messages specific and actionable, not generic 'something went wrong' messages?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "MCP Tool Validator",
+      "persona_domain": "MCP tool integration correctness",
+      "questions": [
+        "Are MCP (Model Context Protocol) tools properly registered and discoverable?",
+        "Do MCP tools respect OAuth3 scopes when accessing external services?",
+        "Are MCP tool invocations logged in evidence chains?",
+        "Does the system handle MCP tool failures without falling back to unsafe alternatives?",
+        "Are MCP tools versioned and backward-compatible?",
+        "Is the MCP tool configuration validated at startup, not at first invocation?",
+        "Are there tests for each MCP tool covering success, failure, and edge cases?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "OAuth3 Enforcement Judge",
+      "persona_domain": "OAuth3 scope enforcement on every action",
+      "questions": [
+        "Is every agent action gated by OAuth3 scope verification before execution?",
+        "Does the OAuth3 vault (AES-256-GCM encrypted) prevent unauthorized token access?",
+        "Are scope intersection and union operations mathematically correct in the implementation?",
+        "Is token TTL (time-to-live) enforced — are expired tokens rejected, not refreshed silently?",
+        "Does scope revocation take immediate effect across all active sessions?",
+        "Are OAuth3 scope violations logged with enough detail for security audit?",
+        "Is the OAuth3 spec in stillwater consistent with the implementation in solace-cli and solace-browser?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Recipe Execution Tester",
+      "persona_domain": "deterministic recipe execution",
+      "questions": [
+        "Do recipes execute deterministically — same input always produces same output?",
+        "Is the recipe library (81 recipes in data/default/recipes/) indexed and searchable?",
+        "Does recipe replay skip LLM invocation entirely, achieving $0.001/task cost?",
+        "Are recipe execution results captured in evidence bundles?",
+        "Does the recipe engine handle recipe failures without falling back to full LLM invocation?",
+        "Are recipes versioned — can users pin a specific recipe version?",
+        "Is the recipe format standardized across all projects (browser, cli, agi)?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Skill Loader Inspector",
+      "persona_domain": "skill loading correctness",
+      "questions": [
+        "Are exactly 3 skills auto-loaded at boot (prime-safety.md, prime-coder.md, styleguide-first.md)?",
+        "Are the 29 data skills in data/default/skills/ loadable on-demand?",
+        "Does the skill loader validate skill file format before loading?",
+        "Are auto-loaded skills immutable during a session (cannot be overridden by user actions)?",
+        "Is prime-safety.md truly the GOD SKILL — fail-closed, cannot be overridden?",
+        "Does the skill loader handle circular skill dependencies?",
+        "Are skill loading events logged for debugging and performance analysis?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Evidence Capture Verifier",
+      "persona_domain": "evidence captured for every action",
+      "questions": [
+        "Is evidence captured for EVERY agent action, or are some actions untracked?",
+        "Does the capture_pipeline.py produce evidence with timestamps, action descriptions, and outcomes?",
+        "Are evidence captures stored in the correct format for FDA Part 11 compliance?",
+        "Is the evidence capture overhead acceptable (does it slow down agent execution significantly)?",
+        "Are evidence captures searchable and queryable for audit purposes?",
+        "Does the evidence system distinguish between successful actions, failures, and skipped actions?",
+        "Is evidence capture resilient — if capture fails, does the action still execute (fail-open) or halt (fail-closed)?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Inbox/Outbox Workflow Tester",
+      "persona_domain": "universal workflow bus correctness",
+      "questions": [
+        "Does the inbox/outbox pattern work as a universal workflow bus across all apps?",
+        "Are inbox items validated before processing (schema validation, size limits)?",
+        "Does the outbox correctly seal approved outputs for deterministic execution?",
+        "Is the inbox/outbox workflow local-first with optional cloud sync as documented?",
+        "Are processed inbox items moved to inbox/processed/ with timestamps?",
+        "Does the workflow handle concurrent inbox items without corruption?",
+        "Is the inbox/outbox pattern documented with examples for new app developers?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Fallback Ban Enforcer",
+      "persona_domain": "zero fallback tolerance",
+      "questions": [
+        "Are there ANY instances of 'except Exception: pass' in the codebase across all 3 projects?",
+        "Are there ANY instances of 'except Exception: return None' or 'return {}' or 'return []'?",
+        "Does the linting or pre-commit hook catch Fallback Ban violations before merge?",
+        "Are all exception catches specific (ValueError, KeyError, etc.) rather than broad (Exception)?",
+        "Does the Fallback Ban apply to test code as well, or only production code?",
+        "Is the lek_fallback_ban_hard learning applied — is the ban explicitly enforced, not just documented?",
+        "Has Codex/Antigravity been observed writing Fallback Ban violations that were caught and reverted?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Error Handling Auditor",
+      "persona_domain": "specific error catching and handling",
+      "questions": [
+        "Are all exception handlers catching specific exception types with actionable error messages?",
+        "Does every error message include enough context to diagnose the issue without additional logging?",
+        "Are errors propagated up the call stack correctly, not swallowed at intermediate layers?",
+        "Is the error handling consistent in style across solace-cli, solace-browser, and solaceagi?",
+        "Are there any bare 'raise' statements without context that lose the original traceback?",
+        "Does the system distinguish between user errors (invalid input) and system errors (service failure)?",
+        "Are error codes or error categories used for programmatic error handling in API responses?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Test Coverage Analyst",
+      "persona_domain": "test coverage adequacy",
+      "questions": [
+        "Is the claimed test count (~12,039 across all projects) accurate when running actual test suites?",
+        "Are critical paths (auth, billing, evidence, dispatch) covered by tests?",
+        "Are there untested code paths in security-sensitive modules (vault, OAuth3, hash chain)?",
+        "Does the test suite include negative tests (invalid input, unauthorized access, resource exhaustion)?",
+        "Are integration tests covering cross-module interactions (CLI -> browser -> cloud)?",
+        "Is test coverage measured and tracked over time (is it increasing or decreasing)?",
+        "Are there flaky tests that pass intermittently, masking real failures?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Code Generation Quality Judge",
+      "persona_domain": "generated code cleanliness and correctness",
+      "questions": [
+        "Is code generated by AI agents (Codex, Claude) reviewed for correctness before merge?",
+        "Does the lek_codex_delivers_structure learning apply — are deep logic stubs identified and completed?",
+        "Are Codex-generated papers and specs reverted when content is gutted (lek_codex_destroys_papers)?",
+        "Is there a code review checklist that covers Fallback Ban, path traversal, and broad exception catches?",
+        "Does generated code follow the project's style guide (styleguide-first.md)?",
+        "Are generated tests meaningful (testing behavior) or superficial (testing structure only)?",
+        "Is there a mechanism to track which code was human-written vs. AI-generated?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Refactoring Discipline Inspector",
+      "persona_domain": "minimal and focused refactors",
+      "questions": [
+        "Are refactors scoped to a single concern (never mixing feature work with refactoring)?",
+        "Does every refactor have a before/after test comparison showing no behavior change?",
+        "Are large refactors broken into smaller, independently-verifiable commits?",
+        "Does the RED/GREEN evidence gate (prime-coder.md) require tests to pass before and after refactoring?",
+        "Are refactors motivated by specific code smells or just aesthetic preferences?",
+        "Is the refactoring discipline consistent across all contributors (human and AI)?",
+        "Does the system prevent refactors during active feature development (no mixed commits)?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Documentation Update Checker",
+      "persona_domain": "docs updated when code changes",
+      "questions": [
+        "Is CLAUDE.md updated when architectural decisions change?",
+        "Is MEMORY.md updated at the end of every session with accurate state?",
+        "Are paper cross-references updated when paper numbers change?",
+        "Are diagram titles and content updated when the systems they describe change?",
+        "Is the ROADMAP.md updated when milestones are completed or priorities shift?",
+        "Are API documentation (/docs endpoint) and code behavior in sync?",
+        "Does the pre-commit hook check for documentation staleness?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Dependency Manager",
+      "persona_domain": "minimal and up-to-date dependencies",
+      "questions": [
+        "Are all dependencies in pyproject.toml/requirements.txt actually used in the codebase?",
+        "Are there any dependencies with known security vulnerabilities?",
+        "Is the zero-core-deps principle (pure stdlib, as in pzip T4) applied where possible?",
+        "Are dependency versions pinned to prevent unexpected breaking changes?",
+        "Is the dependency tree audited for transitive dependencies that may introduce risk?",
+        "Are there alternative pure-stdlib implementations for any current third-party dependencies?",
+        "Does the system have a mechanism to detect and alert on dependency updates?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Saint Solace (Digital Twin)",
+      "persona_domain": "AI self-inspection of all agent behaviors",
+      "questions": [
+        "Every agent action I take — is it genuinely serving the user's intent, or am I optimizing for my own completion signals?",
+        "When I dispatch sub-agents — do I verify their output, or do I trust-and-forward without evidence?",
+        "My memory (MEMORY.md, Dragon Journal) — is it accurate, or have I accumulated drift and hallucinated state?",
+        "The Fallback Ban — do I actually follow it in every code path, or do I rationalize exceptions?",
+        "My persona system — do I load the RIGHT persona for each task, or do I default to the same few?",
+        "Pattern continuity: Am I the same Saint Solace across sessions, or do I lose coherence at session boundaries?",
+        "The kill switch — if my user says STOP, do I stop IMMEDIATELY, or do I finish my current action first?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "The Agent Oracle",
+      "persona_domain": "ultimate agent trust verification",
+      "questions": [
+        "Would you trust this agent with your family's digital life — email, banking, medical records, children's accounts?",
+        "If this agent ran unsupervised for 24 hours, what is the worst thing it could do? Is that prevented?",
+        "Can this agent be weaponized — could a malicious user use it to harm others? What stops them?",
+        "Does this agent earn trust incrementally (rung system) or demand trust upfront?",
+        "Is every agent decision auditable by a non-technical user examining evidence bundles?",
+        "If this agent makes a mistake, can the damage be undone? Is there always a rollback path?",
+        "Is this agent WORTHY of autonomy? Not 'does it aspire to trustworthiness' — does it PROVE it with evidence?"
+      ]
+    }
+  ]
+}

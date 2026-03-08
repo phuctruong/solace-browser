@@ -1,0 +1,23 @@
+---
+title: Gemini Uplift Flow
+---
+stateDiagram-v2
+    [*] --> LoadSession: load_session (Google account)
+    LoadSession --> Navigate: Round 1
+    LoadSession --> ReuseTab: Round 2+
+    Navigate --> CheckAuth
+    ReuseTab --> CheckAuth
+    CheckAuth --> EnsureProModel: button[aria-haspopup]
+    EnsureProModel --> ComposeUplift: Round 1
+    EnsureProModel --> InjectReview: Round 2+
+    ComposeUplift --> InjectUplift: inbox/skills/* + template + persona
+    InjectUplift --> SendUplift: .ql-editor + base64_chunked_insert
+    SendUplift --> WaitAck: model-response
+    WaitAck --> InjectReview: Gemini acknowledges skills
+    InjectReview --> SendReview: base64_chunked_insert
+    SendReview --> WaitResponse: wait_for_stable (3min max)
+    WaitResponse --> Extract: model-response:last-child
+    Extract --> SaveOutbox: outbox/responses/
+    SaveOutbox --> HashEvidence: SHA-256 chain
+    HashEvidence --> ReturnResult: {status, scores, page_id}
+    ReturnResult --> [*]

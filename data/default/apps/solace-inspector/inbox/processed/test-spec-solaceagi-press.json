@@ -1,0 +1,19 @@
+{
+  "spec_id": "solaceagi-press-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "web",
+  "target_url": "https://www.solaceagi.com/press-releases",
+  "page_name": "SolaceAGI Press Releases",
+  "checks": {
+    "aria": true,
+    "heuristics": true,
+    "llm_analysis": true,
+    "screenshot": true,
+    "baseline_diff": false
+  },
+  "persona": "michael_bolton",
+  "priority": "normal",
+  "context": "Press page: verify H1, proper date formatting on press releases, no broken links to full articles. Michael Bolton: what story does the press page tell? Every date and headline is a testable claim. Verify the most recent press release is within 90 days.",
+  "created_at": "2026-03-03T00:00:00Z"
+}

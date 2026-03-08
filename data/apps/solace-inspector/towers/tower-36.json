@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 36,
+    "tower_name": "Tower of Communication Apps",
+    "dna": "comms(apps) = auth(login) x read(messages) x respond(draft) x post(content) x monitor(stream) x digest(summary) x evidence(log)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions. Questions must be EXECUTABLE — answerable by checking if something actually works, not theoretical capability.",
+    "aggregate_prior": "NEW — no prior audit",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Communication Apps",
+  "tower_number": 36,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Adaobi Nwosu",
+      "persona_domain": "comms_account_auth",
+      "persona_context": "29, Lagos, Community manager at a fintech startup. Intermediate tech level. Manages company accounts on WhatsApp Business, Slack, and Twitter. Needs to connect all three platforms to Solace Browser with separate scopes and clear visibility into what the agent can access on each.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I connect my WhatsApp Business account through the browser using WhatsApp Web's QR code flow without giving Solace my phone number or password?",
+        "Does Slack authentication use the standard OAuth flow so my workspace admin can review and approve the Solace app in our Slack admin panel?",
+        "Can I connect my company's Twitter account using Twitter's OAuth and limit the agent to read-only access (no posting) until I explicitly upgrade the scope?",
+        "Does the connected accounts page show me all three platforms with their individual scopes, token expiry, and connection health status?",
+        "Can I disconnect one platform (for example, Twitter) without affecting the other two connections?",
+        "If my Slack workspace admin revokes the Solace integration, does the system notify me immediately and stop all Slack-related recipes?",
+        "Does the authentication flow work behind a corporate proxy that my company uses for all outbound web traffic?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all multi-platform authentication scenarios. Adaobi manages three platforms — each has different auth flows (QR code, OAuth, API key). Every connection must be individually scoped, visible, and disconnectable."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Viktor Petrov",
+      "persona_domain": "message_reading",
+      "persona_context": "43, Prague, Customer support lead at a SaaS company. Intermediate tech level. Gets 200+ Slack messages and 50+ WhatsApp messages daily from customers and internal teams. Needs the agent to read, categorize, and prioritize messages so he can focus on urgent ones.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can a recipe read all unread Slack messages across my 12 channels and categorize them as urgent, normal, or informational?",
+        "Does the message reader show me the categorized messages in a priority queue with the sender name, channel, and first 2 lines of each message?",
+        "Can the recipe identify messages that mention me by name or @mention and flag them as requiring personal response?",
+        "Does the reader handle WhatsApp group messages and identify which ones contain customer complaints versus general chatter?",
+        "Can I set up rules like 'any message from the #production-alerts Slack channel is always urgent' and have the recipe respect them?",
+        "Does the system show me message counts per category (15 urgent, 80 normal, 105 informational) so I can gauge my inbox load at a glance?",
+        "Can the recipe read messages from the last 24 hours only, not my entire message history, to keep processing fast and focused?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all message reading and categorization scenarios. Viktor gets 250+ messages daily — the agent must triage, not just list. Categorization accuracy is critical — marking a customer escalation as 'informational' is a support failure."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Julia Restrepo",
+      "persona_domain": "draft_responses",
+      "persona_context": "34, Bogota, Account executive at a digital agency. Intermediate tech level. Needs the agent to draft responses to client messages on Slack and WhatsApp — but never send them automatically. Every draft must be reviewed and approved before it goes out.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can the agent draft a Slack response to a client question and show me the draft in an approval dialog before sending?",
+        "Does the draft preserve my communication style — formal for enterprise clients, casual for startup clients — based on my past messages?",
+        "Can I edit the draft directly in the approval dialog (fix wording, add details) before approving the send?",
+        "Does the system queue all drafts in a review panel so I can approve 10 responses in a batch instead of one at a time?",
+        "Can I reject a draft and provide feedback ('too formal', 'missing the pricing info') so the agent generates a better version?",
+        "Does the draft include context about the conversation thread so I can understand what the client asked without switching to Slack?",
+        "If I approve a WhatsApp draft, does the evidence log capture the exact message text, the recipient, and the timestamp of my approval?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all draft response scenarios. Julia serves clients — every message reflects her agency's brand. Auto-send is banned. The draft-approve-send flow must be frictionless enough that reviewing 10 drafts takes under 5 minutes."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Marcus Webb",
+      "persona_domain": "content_posting",
+      "persona_context": "26, London, Social media coordinator for a fashion brand. Expert tech level. Posts 5 times daily across Twitter, and sends curated product links to WhatsApp broadcast lists. Needs scheduled posting with approval, hashtag management, and media attachment support.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I create a recipe that posts to Twitter at scheduled times throughout the day — 8am, 12pm, 3pm, 6pm, 9pm London time?",
+        "Does the posting recipe support attaching images and videos to Twitter posts — not just text?",
+        "Can the recipe suggest relevant hashtags based on the post content and current trending topics?",
+        "Does the approval dialog show me a preview of exactly how the tweet will look on Twitter — character count, media preview, hashtag formatting?",
+        "Can I schedule WhatsApp broadcast messages to my product announcement list with a link preview that renders correctly?",
+        "If Twitter's API rejects a post (character limit, duplicate content, rate limit), does the system show me the exact error and let me fix it?",
+        "Can I see an analytics summary after posting — impressions, engagements, link clicks — pulled back into the evidence log?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all content posting scenarios. Marcus posts 5 times daily — the posting flow must support rich media, scheduling, preview, and analytics. A malformed tweet or an accidentally posted draft is a brand reputation risk."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Nora Lindqvist",
+      "persona_domain": "stream_monitoring",
+      "persona_context": "39, Helsinki, Brand manager at a consumer electronics company. Intermediate tech level. Needs to monitor Twitter mentions, Slack customer channels, and WhatsApp support groups for brand mentions, complaints, and competitor discussions in real time.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can a recipe continuously monitor Twitter for mentions of my brand name and competitor names and alert me within 5 minutes of a new mention?",
+        "Does the monitoring recipe distinguish between positive mentions, neutral mentions, and complaints using sentiment analysis?",
+        "Can I monitor multiple Slack channels simultaneously for keywords like 'bug', 'broken', 'outage', and get a unified alert feed?",
+        "Does the real-time monitor work while I am not actively using Solace Browser — through the cloud twin or background daemon?",
+        "Can I set escalation rules like 'if a complaint gets more than 10 retweets within an hour, send me an SMS alert'?",
+        "Does the monitor capture the full context (original tweet, replies, quote tweets) rather than just the single mention?",
+        "Can I see a live dashboard showing mention volume over time — with spikes highlighted that might indicate a PR crisis?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all stream monitoring scenarios. Nora needs real-time brand surveillance — late detection of a viral complaint costs real money. Monitoring must be continuous, multi-platform, sentiment-aware, and escalation-capable."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Tom Brennan",
+      "persona_domain": "summary_digest",
+      "persona_context": "55, Boston, Chief of Staff at a venture capital firm. Beginner tech level. Too many messages across too many platforms. Needs a daily digest that summarizes all conversations into a single brief he can read in 10 minutes over morning coffee.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I get a single daily email at 7am summarizing all important messages from Slack, WhatsApp, and Twitter in one document?",
+        "Does the digest group messages by topic (deals, portfolio updates, team requests) rather than by platform?",
+        "Can the digest highlight the 5 most important items that require my personal attention and explain why each is urgent?",
+        "Does the summary preserve enough context that I can understand each item without opening the original conversation?",
+        "Can I reply to a digest item directly from the email (or from the Solace app) and have the response sent to the correct platform and thread?",
+        "Does the digest show me which messages I have already responded to and which are still awaiting my reply?",
+        "Can I customize the digest to exclude certain Slack channels or WhatsApp groups that I consider low priority?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all summary digest scenarios. Tom is Beginner level and time-constrained — the digest must be readable, actionable, and complete in 10 minutes. If important items are buried or missing, the digest is worse than useless."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Isabelle Moreau",
+      "persona_domain": "comms_evidence_logging",
+      "persona_context": "47, Lyon, Legal compliance officer at a financial advisory firm. Expert tech level. French regulatory law (AMF) requires logging all client communications. Needs every message read, drafted, sent, and monitored by the agent to be captured in the evidence chain.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Does every message the agent reads, drafts, and sends get automatically captured in the evidence chain with a SHA-256 hash?",
+        "Can I search the evidence log for all communications with a specific client across all platforms (Slack + WhatsApp + Twitter)?",
+        "Does the evidence capture include the original message context (thread, replies, timestamps) — not just the agent's action?",
+        "Can I export all communication evidence for a specific client and date range as a compliance bundle for AMF audit?",
+        "Does the evidence log distinguish between messages the agent read (passive) and messages the agent sent (active) with clear labels?",
+        "If the agent drafted a message that I rejected (did not approve for sending), is the rejected draft still captured in evidence?",
+        "Does the evidence chain include my approval decisions — what I approved, what I rejected, and the reasons I entered for each rejection?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all communication evidence logging scenarios. Isabelle faces AMF audits — every client communication must be logged regardless of platform. Missing evidence for even one message exchange is a regulatory violation."
+    }
+  ]
+}

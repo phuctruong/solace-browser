@@ -1,0 +1,19 @@
+{
+  "spec_id": "solaceagi-security-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "web",
+  "target_url": "https://www.solaceagi.com/security",
+  "page_name": "SolaceAGI Security Page",
+  "checks": {
+    "aria": true,
+    "heuristics": true,
+    "llm_analysis": true,
+    "screenshot": true,
+    "baseline_diff": false
+  },
+  "persona": "cem_kaner",
+  "priority": "critical",
+  "context": "Paper 06 + 07 (Part 11 + Budget): Security claims must be visible. Verify: AES-256-GCM encryption claim, SHA-256 evidence sealing claim, OAuth3 time-bounded tokens claim, fail-closed rules visible. Cem Kaner: if you claim SOC2 readiness, every claim must be verifiable or removable.",
+  "created_at": "2026-03-03T00:00:00Z"
+}

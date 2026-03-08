@@ -1,0 +1,9 @@
+{
+  "remaining_runs": 100,
+  "cooldown_seconds": 15,
+  "reads_per_run": 5,
+  "drafts_per_run": 4,
+  "writes_per_run": 4,
+  "daily_limit": 30,
+  "note": "Gemini has generous free tier"
+}

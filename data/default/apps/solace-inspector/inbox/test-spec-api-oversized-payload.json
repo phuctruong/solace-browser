@@ -1,0 +1,18 @@
+{
+  "spec_id": "api-oversized-payload-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "python3 -c \"import subprocess,json; big={'message':'A'*50000,'model':'gpt-4'}; r=subprocess.run(['curl','-s','-X','POST','https://www.solaceagi.com/api/v1/llm/chat','-H','Content-Type: application/json','-d',json.dumps(big),'-w','\\\\n%{http_code}','--max-time','10'],capture_output=True,text=True); print(r.stdout[-200:])\"",
+  "target_name": "SolaceAGI API — Oversized payload rejected (401/413/422 — not 200 or 500)",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": ["40"],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "cem_kaner",
+  "priority": "high",
+  "context": "OWASP API Security A4: Unrestricted Resource Consumption. Cem Kaner: sending 50KB message to an LLM endpoint must be rate-limited or rejected. Auth is checked first (401) which is correct fail-closed behavior. stdout_contains '40' matches 401/413/422 — all safe responses. Must NOT return 200 (processed) or 500 (server error).",
+  "created_at": "2026-03-03T00:00:00Z"
+}

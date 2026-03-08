@@ -1,0 +1,20 @@
+{
+  "spec_id": "api-oauth3-scopes-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "curl -sf https://www.solaceagi.com/api/v1/oauth3/scopes",
+  "target_name": "SolaceAGI OAuth3 Scopes Registry",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": [
+      "scopes"
+    ],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "james_bach",
+  "priority": "high",
+  "context": "Paper 02 (OAuth3): Time-bounded, revocable, auditable tokens. The scopes registry must be publicly accessible (agents need to discover available scopes). James Bach: what can an agent actually request? This is the contract. Verify all claimed scopes are present.",
+  "created_at": "2026-03-03T00:00:00Z"
+}

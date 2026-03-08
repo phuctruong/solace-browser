@@ -1,0 +1,50 @@
+{
+  "spec_id": "northstar-api-health",
+  "type": "northstar",
+  "version": "1.0",
+  "authored": "2026-03-03",
+  "committee": ["kent_beck", "michael_bolton"],
+
+  "webservice": {
+    "method": "GET",
+    "endpoint": "/api/v1/health",
+    "base_url": "https://www.solaceagi.com",
+    "description": "Always-alive health check — returns 200 + {status:ok} unconditionally",
+    "auth": "None — public endpoint (no Bearer token required)",
+    "content_type": "none"
+  },
+
+  "contract": {
+    "inputs": {},
+    "outputs": {
+      "status": "string — always 'ok'",
+      "version": "string — current deployed version",
+      "env": "string — 'qa' or 'prod'"
+    },
+    "guarantees": [
+      "Always returns HTTP 200 (never 4xx or 5xx)",
+      "Always returns {status: 'ok'} in JSON body",
+      "Response time < 2s (no DB or LLM in path)",
+      "No authentication required"
+    ],
+    "owasp_guarantees": []
+  },
+
+  "cost_class": "CPU",
+  "abcd_models": null,
+
+  "cpu_tests": [
+    "test-spec-api-health.json"
+  ],
+  "abcd_tests": [],
+
+  "frontend_dependencies": [
+    "web/settings.html → connection status indicator (green dot)",
+    "web/js/solace.js → Solace.checkHealth() on page load"
+  ],
+
+  "certification_status": "CPU_CERTIFIED",
+  "certified_at": "2026-03-03",
+  "evidence_notes": "Sealed in GLOW 96 batch. 100/100 Green.",
+  "evidence_hash": null
+}

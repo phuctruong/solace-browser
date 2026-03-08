@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 25,
+    "tower_name": "Tower of LinkedIn Suite",
+    "dna": "linkedin(suite) = connect(account) x analyze(profile) x post(content) x outreach(leads) x trend(daily)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of LinkedIn Suite",
+  "tower_number": 25,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Derek Huang",
+      "persona_domain": "account_linking",
+      "persona_context": "37, San Francisco, Tech recruiter, Intermediate tech, Pro tier, LinkedIn is primary professional tool, needs seamless account linking",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I find the LinkedIn Suite app in the Solace Browser App Store and see it lists three modules: Outreach, Poster, and Profile Optimizer?",
+        "After clicking Install, does the app prompt me to log in to LinkedIn through the Solace Browser's built-in session?",
+        "Does the LinkedIn login use Solace Browser's session persistence so I do not need to re-enter credentials every session?",
+        "After logging in, does the app show my LinkedIn profile name, photo, and headline to confirm the right account is linked?",
+        "If LinkedIn shows a CAPTCHA or verification challenge during login, does the app surface it to me instead of silently failing?",
+        "Can I disconnect my LinkedIn account from the app and see the linked status update to 'Not Connected' immediately?",
+        "Does the app warn me that LinkedIn rate-limits automated actions and show my current daily action quota?"
+      ],
+      "question_expansion_instruction": "Derek relies on LinkedIn daily. Account linking must work through real browser sessions, handle CAPTCHAs, and show clear connection status. LinkedIn auth is session-based, not OAuth."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Amara Osei",
+      "persona_domain": "profile_analysis",
+      "persona_context": "26, Accra, Junior software engineer looking for remote jobs, Beginner tech, Free tier, wants to optimize LinkedIn profile for recruiter visibility",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I click 'Analyze Profile' and see a score breakdown for my headline, summary, experience, skills, and endorsements within 30 seconds?",
+        "Does the profile analysis tell me specific improvements like 'Add 3 more skills related to Python' rather than generic advice?",
+        "Can I see how my profile compares to top-performing profiles in the 'Software Engineer' category in my region?",
+        "Does the analysis detect that my headline says 'Student' and suggest changing it to something recruiter-friendly?",
+        "If my profile photo is missing, does the analysis flag it as a critical issue that reduces profile views by X%?",
+        "Can I click 'Apply Suggestion' on a recommended headline change and see the preview before it modifies my actual LinkedIn profile?",
+        "Does the analysis work on Free tier without requiring a paid LinkedIn Premium subscription?"
+      ],
+      "question_expansion_instruction": "Amara is early-career and non-technical. Profile analysis must give actionable, specific advice — not platitudes. Must work without LinkedIn Premium."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Rachel Stein",
+      "persona_domain": "content_posting",
+      "persona_context": "44, New York, B2B Sales Director, Expert tech, Pro tier, posts thought leadership content 3x per week, needs scheduling and tone control",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I compose a LinkedIn post in the app's editor and see a live preview of how it will appear in the LinkedIn feed?",
+        "Does the post editor support formatting (bold, italic, bullet points, emojis) that matches LinkedIn's actual rendering?",
+        "Can I schedule a post for next Tuesday at 9am EST and see it in a calendar view of my scheduled posts?",
+        "If I paste a blog URL into the post, does the app generate a preview card with the correct title, image, and description?",
+        "Does the app offer tone suggestions (professional, casual, provocative) and show me how the same post reads in each tone?",
+        "Can I save a post as a draft and return to edit it in a later session without losing any formatting?",
+        "After a post is published, does the app show engagement metrics (likes, comments, reposts) within the app itself?"
+      ],
+      "question_expansion_instruction": "Rachel is an experienced LinkedIn power user. The posting flow must match or exceed native LinkedIn UX — preview accuracy, scheduling reliability, and engagement tracking are non-negotiable."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Miguel Torres",
+      "persona_domain": "outreach_sequences",
+      "persona_context": "39, Austin, Startup founder doing outbound sales, Intermediate tech, Pro tier, needs to send personalized connection requests to 50 leads per week",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I upload a CSV of 50 leads with LinkedIn URLs and have the app create personalized connection request messages for each?",
+        "Does each generated connection request include a specific detail from the lead's profile (company, role, recent post) to avoid looking spammy?",
+        "Can I preview all 50 connection requests before sending and edit any individual message?",
+        "Does the app enforce LinkedIn's daily connection request limit (around 100/week) and warn me if I am approaching it?",
+        "Can I set up a follow-up sequence: connection request → wait 3 days → send message if accepted → wait 7 days → follow up?",
+        "Does the app track which leads accepted, ignored, or declined my connection request in a pipeline view?",
+        "If a lead replies to my message, does the app surface the reply so I can respond manually rather than auto-replying?"
+      ],
+      "question_expansion_instruction": "Miguel does outbound sales. Outreach must be personalized (not template spam), respect LinkedIn rate limits, and surface replies for human follow-up. Auto-reply to prospect messages is BANNED."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Yuki Tanaka",
+      "persona_domain": "trend_monitoring",
+      "persona_context": "31, Tokyo, Product marketer at AI startup, Expert tech, Pro tier, monitors LinkedIn trends in AI/ML space to inform content strategy",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I set up a daily trend scan for 'AI agents' and 'LLM tools' topics and see top-performing posts in my feed each morning?",
+        "Does the trend monitor show me which of my competitors' posts are getting the most engagement this week?",
+        "Can I add specific LinkedIn profiles to a watchlist and get a daily digest of their new posts and engagement?",
+        "Does the trend analysis show engagement velocity (likes per hour) so I can identify posts that are going viral early?",
+        "Can I export this week's trend data as a CSV or JSON file for my marketing team's weekly planning meeting?",
+        "Does the app identify trending hashtags in my industry and suggest which ones to use in my next post?",
+        "If the trend scan finds a post highly relevant to my product, can I click 'Draft Response' and get a contextual comment suggestion?"
+      ],
+      "question_expansion_instruction": "Yuki uses trend data to drive content strategy. Trend monitoring must be specific, timely (daily), and actionable — not a generic feed algorithm. Export and watchlist features are critical."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Naomi Blackwell",
+      "persona_domain": "analytics",
+      "persona_context": "48, London, VP Marketing at mid-size SaaS, Expert tech, Enterprise tier, reports LinkedIn ROI to the board quarterly",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I see a dashboard showing total impressions, engagement rate, follower growth, and post frequency over the last 90 days?",
+        "Does the analytics dashboard compare my performance this quarter vs last quarter with percentage change indicators?",
+        "Can I generate a PDF report of my LinkedIn analytics that I can present to the board without manual formatting?",
+        "Does the app track which post types (text, image, carousel, video) get the highest engagement for my account?",
+        "Can I see which of my posts drove the most profile visits and connection requests in the last 30 days?",
+        "Does the analytics include best posting times based on my audience's actual engagement patterns (not generic advice)?",
+        "Can I compare my engagement metrics against industry benchmarks for VP-level B2B SaaS thought leadership?"
+      ],
+      "question_expansion_instruction": "Naomi reports to the board. Analytics must be export-ready, historically accurate, and benchmarked. Vanity metrics without context are useless."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Kwame Asante",
+      "persona_domain": "session_management",
+      "persona_context": "35, Nairobi, Growth marketer managing LinkedIn for 3 client accounts, Intermediate tech, Pro tier, switches between accounts frequently",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I add multiple LinkedIn accounts to the app and switch between them without logging out and back in each time?",
+        "Does each client account's data (drafts, analytics, outreach pipeline) stay completely separate with no cross-contamination?",
+        "If LinkedIn logs me out of one session due to inactivity, does the app notify me and prompt re-login for that account only?",
+        "Can I schedule posts for all 3 client accounts in the same session and see each account's schedule in separate calendar views?",
+        "Does the app persist all 3 account sessions across browser restarts so I do not need to re-authenticate Monday morning?",
+        "If LinkedIn detects unusual activity on one account and locks it, does the app show the lock notification clearly?",
+        "Can I see a unified activity log showing which actions I took on which client account for my own time tracking?"
+      ],
+      "question_expansion_instruction": "Kwame manages multiple client accounts. Session isolation, cross-account safety, and multi-session persistence are critical. Posting to the wrong client account is a career-ending mistake."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+id: linkedin-profile-optimizer
+name: LinkedIn Profile Optimizer
+description: Analyze your LinkedIn profile against thought leadership best practices. Suggests headline, about section, and featured content improvements for maximum visibility.
+category: marketing
+status: installed
+safety: B
+tier: pro
+tier_reason: "LinkedIn write.drafts + profile analysis requires cloud sync + evidence"
+site: linkedin.com
+type: standard
+orchestrates: []
+scopes:
+- linkedin.read.profile
+- linkedin.write.drafts
+- local.evidence
+partners:
+  produces_for:
+  - linkedin-poster
+  - linkedin-outreach
+  consumes_from:
+  - google-search-trends
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

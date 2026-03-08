@@ -1,0 +1,19 @@
+{
+  "spec_id": "solaceagi-oauth3-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "web",
+  "target_url": "https://www.solaceagi.com/oauth3",
+  "page_name": "SolaceAGI Oauth3",
+  "checks": {
+    "aria": true,
+    "heuristics": true,
+    "llm_analysis": true,
+    "screenshot": true,
+    "baseline_diff": false
+  },
+  "persona": "cem_kaner",
+  "priority": "normal",
+  "context": "OAuth3 \u2014 standard, security model, examples",
+  "created_at": "2026-03-03T00:00:00Z"
+}

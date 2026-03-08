@@ -1,0 +1,63 @@
+{
+  "run_id": "run-20260306-112400",
+  "app_id": "competitor-monitor",
+  "competitor": "browser-use",
+  "query": "browser-use AI agent 2026",
+  "timestamp": "2026-03-06T16:25:15.244452+00:00",
+  "result": "SUCCESS",
+  "results": [
+    {
+      "title": "Browser Use - Enable AI to automate the web",
+      "url": "https://browser-use.com/",
+      "type": "official"
+    },
+    {
+      "title": "10 Best Agentic Browsers for AI Automation in 2026",
+      "url": "https://brightdata.com/blog/ai/best-agent-browsers",
+      "type": "listicle"
+    },
+    {
+      "title": "An Open-Source Browser Agent Called Browser Use",
+      "url": "https://medium.com/@jess-writes-about-tech/...",
+      "type": "article"
+    },
+    {
+      "title": "11 Best AI Browser Agents in 2026",
+      "url": "https://www.firecrawl.dev/blog/best-browser-agents",
+      "type": "listicle"
+    },
+    {
+      "title": "I tested the latest agentic browsers in 2026",
+      "url": "https://www.reddit.com/r/AI_Agents/...",
+      "type": "user_review"
+    },
+    {
+      "title": "The 5 best AI browsers in 2026",
+      "url": "https://zapier.com/blog/best-ai-browser/",
+      "type": "listicle"
+    },
+    {
+      "title": "Browser Agent Benchmark: Comparing LLM Models",
+      "url": "https://browser-use.com/posts/...",
+      "type": "benchmark"
+    },
+    {
+      "title": "2026 List of Top Agentic AI Browsers",
+      "url": "https://www.usaii.org/ai-insights/...",
+      "type": "industry"
+    }
+  ],
+  "insights": {
+    "browser_use_positioning": "Open-source, agents at scale, trusted by teams",
+    "market_category": "Agentic browsers for AI automation",
+    "competitors_mentioned": [
+      "Browser Use",
+      "Bardeen",
+      "MultiOn",
+      "AgentQ",
+      "Firecrawl"
+    ],
+    "solace_gap": "Solace Browser not appearing in any top lists yet"
+  },
+  "evidence_hash": "e6590b7848ea1e3cd5f54480e02ab2a372993f878f27c3906d4a6acd9e985128"
+}

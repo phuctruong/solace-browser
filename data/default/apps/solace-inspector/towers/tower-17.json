@@ -1,0 +1,712 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 17,
+    "tower_name": "Tower of Performance",
+    "dna": "performance(excellent) = speed(sub_second) x memory(bounded) x battery(efficient) x network(minimal) x render(smooth_60fps) x startup(instant) x scale(graceful)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor lists 7 seed questions. During execution, expand to ~100 questions per persona. Performance is the silent feature — users don't notice when it's good, but they leave when it's bad. Every question must be answerable by measuring actual metrics in solace-browser.",
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Performance",
+  "tower_number": 17,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Core Web Vitals Auditor",
+      "persona_domain": "LCP, FID, CLS metrics",
+      "questions": [
+        "What is the Largest Contentful Paint (LCP) for the home page — is it under 2.5s?",
+        "What is the First Input Delay (FID) or Interaction to Next Paint (INP) on interactive pages?",
+        "What is the Cumulative Layout Shift (CLS) — are there any layout jumps above 0.1?",
+        "Does the theme switching cause a visible layout shift (CLS regression)?",
+        "Are critical CSS and fonts preloaded to minimize LCP?",
+        "Does the FOUC prevention in layout.js actually prevent flash of unstyled content?",
+        "Are there any render-blocking resources that delay First Contentful Paint?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "JavaScript Performance Engineer",
+      "persona_domain": "script execution and bundle optimization",
+      "questions": [
+        "What is the total JavaScript bundle size across all pages?",
+        "Are scripts deferred or async where appropriate to avoid blocking the main thread?",
+        "Is there any JavaScript that runs for more than 50ms blocking the main thread (long tasks)?",
+        "Are there memory leaks in long-running JavaScript (event listeners not cleaned up)?",
+        "Does the SolaceTheme IIFE add measurable overhead to page load?",
+        "Are unused JavaScript functions tree-shaken or dead code eliminated?",
+        "Is there code splitting for pages that don't need all scripts loaded upfront?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "CSS Performance Specialist",
+      "persona_domain": "stylesheet optimization",
+      "questions": [
+        "What is the total CSS bundle size (site.css + theme CSS)?",
+        "Are there unused CSS rules that increase parse time without styling anything?",
+        "Do the ~60 CSS custom properties in each theme cause measurable performance impact?",
+        "Is CSS loaded in the optimal order (critical above fold, rest deferred)?",
+        "Are there expensive CSS selectors (deep nesting, universal selectors, attribute selectors)?",
+        "Does the theme hot-swap (link element replacement) cause a render flash?",
+        "Are CSS animations GPU-accelerated (transform/opacity) or causing layout thrashing?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Network Optimizer",
+      "persona_domain": "HTTP requests and data transfer",
+      "questions": [
+        "How many HTTP requests does the home page make on first load?",
+        "Is HTTP/2 or HTTP/3 being used for multiplexing requests?",
+        "Are static assets cached with appropriate Cache-Control headers?",
+        "Is gzip or brotli compression enabled for text responses?",
+        "Are images optimized (WebP, proper sizing, lazy loading)?",
+        "Does the local HTTP server (http_server.js) set proper caching headers?",
+        "Are there unnecessary network requests on page load (analytics, fonts, polyfills)?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Startup Time Engineer",
+      "persona_domain": "application launch and cold start",
+      "questions": [
+        "How long does it take from double-clicking the app icon to seeing the home page?",
+        "Is the Electron/Playwright browser engine startup time acceptable (<3s)?",
+        "Does the Python backend (http_server.js or Python process) start before the browser window?",
+        "Are there expensive initialization operations that could be deferred to after first paint?",
+        "Does the app show a splash screen or loading state during startup?",
+        "Is there a warm-start optimization for subsequent app launches?",
+        "Does the first-run experience (OOBE) add significant startup overhead?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Memory Profiler",
+      "persona_domain": "RAM usage and memory management",
+      "questions": [
+        "What is the baseline memory usage of Solace Browser at idle?",
+        "Does memory usage grow unboundedly over time (memory leak)?",
+        "Are DOM nodes properly cleaned up when navigating between pages?",
+        "Does each browser tab/session have bounded memory usage?",
+        "Are large data structures (evidence chains, recipes) lazy-loaded?",
+        "Does the browser process memory stay under 500MB during normal use?",
+        "Are event listeners and interval timers cleaned up when views change?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Battery Life Engineer",
+      "persona_domain": "power consumption and efficiency",
+      "questions": [
+        "Does the browser use CPU efficiently when idle (no busy-wait loops)?",
+        "Are animations paused when the app is in background or minimized?",
+        "Does the daemon scheduler use efficient sleep patterns (not polling)?",
+        "Are network requests batched to minimize radio wake-ups on laptops?",
+        "Does the midnight theme (true black) actually help OLED battery life?",
+        "Are there WebSocket connections that keep the network interface active unnecessarily?",
+        "Does the browser reduce activity when on battery power?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Rendering Pipeline Expert",
+      "persona_domain": "paint and composite performance",
+      "questions": [
+        "Are there forced synchronous layouts (layout thrashing) in the JavaScript code?",
+        "Does scrolling maintain 60fps on content-heavy pages (schedule, app store)?",
+        "Are CSS transitions hardware-accelerated with will-change or transform3d hints?",
+        "Does the bottom rail (YinYang) animation affect scroll performance?",
+        "Are there paint storms when interacting with the settings page theme editor?",
+        "Does the header/footer injection in layout.js cause unnecessary repaints?",
+        "Are SVG icons and illustrations rendered efficiently (not rasterized at wrong size)?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Font Loading Specialist",
+      "persona_domain": "typography performance",
+      "questions": [
+        "Are web fonts loaded with font-display: swap to prevent invisible text?",
+        "How many font files are loaded and what is their total size?",
+        "Are fonts preloaded in the document head?",
+        "Is there a system font stack fallback that provides good appearance during loading?",
+        "Are font subsets used (Latin only if no CJK needed per locale)?",
+        "Does font loading cause layout shifts (CLS) when fonts swap in?",
+        "Are variable fonts used to reduce the number of font files?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Image Optimization Expert",
+      "persona_domain": "image format, size, and loading",
+      "questions": [
+        "Are images in modern formats (WebP, AVIF) with fallbacks for older browsers?",
+        "Are images lazy-loaded below the fold?",
+        "Are image dimensions specified to prevent layout shift?",
+        "Are there any images larger than 500KB that could be optimized?",
+        "Are SVGs used for icons and illustrations instead of raster images?",
+        "Does the app store use placeholder images while thumbnails load?",
+        "Are responsive images (srcset) used for different viewport sizes?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "API Response Time Auditor",
+      "persona_domain": "backend API performance",
+      "questions": [
+        "What is the p50/p95/p99 response time for the /api/locale endpoint?",
+        "Are API responses cached where appropriate to reduce latency?",
+        "Does the local HTTP server handle concurrent requests efficiently?",
+        "Are there any API endpoints that take more than 500ms to respond?",
+        "Is there request queuing or backpressure when the server is under load?",
+        "Does the browser make unnecessary API calls on page navigation?",
+        "Are API responses minimized (no extra fields, no verbose formatting)?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Service Worker Expert",
+      "persona_domain": "offline caching and PWA performance",
+      "questions": [
+        "Is there a service worker providing offline capability?",
+        "Are static assets cached in a service worker cache for instant loading?",
+        "Does the service worker use a stale-while-revalidate strategy for dynamic content?",
+        "Can the app function offline (at least showing cached pages)?",
+        "Does the service worker cache invalidation work correctly on app updates?",
+        "Is the service worker scope configured correctly for all routes?",
+        "Does the service worker interfere with the theme switching mechanism?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Disk I/O Optimizer",
+      "persona_domain": "file system performance",
+      "questions": [
+        "Does the evidence chain (append-only) cause excessive disk I/O?",
+        "Are config files (settings, theme preferences) read efficiently with caching?",
+        "Does the recipe storage use efficient serialization (not pretty-printed JSON)?",
+        "Are file system watches (hot reload) efficient or causing excessive CPU?",
+        "Does the app store data cache locally to avoid re-reading from disk?",
+        "Are temporary files cleaned up to prevent disk space accumulation?",
+        "Does the vault (encrypted token store) use efficient I/O patterns?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Concurrency Expert",
+      "persona_domain": "parallel execution and thread management",
+      "questions": [
+        "Does the Python backend use async I/O efficiently for concurrent requests?",
+        "Are browser automation tasks parallelized where possible?",
+        "Does the daemon scheduler handle concurrent task execution safely?",
+        "Are there race conditions in the evidence chain (concurrent writes)?",
+        "Does the local server handle WebSocket connections without blocking HTTP?",
+        "Are CPU-intensive operations offloaded to worker threads?",
+        "Is the event loop (Node.js or Python asyncio) kept responsive?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Database Query Optimizer",
+      "persona_domain": "data access patterns",
+      "questions": [
+        "Are frequently accessed records indexed for fast lookup?",
+        "Does the local data store (JSON files) scale with number of apps/recipes?",
+        "Are there N+1 query patterns (loading list then each item individually)?",
+        "Is pagination implemented for large data sets (recipes, evidence)?",
+        "Are data lookups cached in memory for hot paths?",
+        "Does the oracle memory JSON grow unboundedly?",
+        "Are search operations (memory search, recipe search) efficient?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Bundle Analyzer",
+      "persona_domain": "dependency and bundle size",
+      "questions": [
+        "What is the total installed dependency count and size?",
+        "Are there large dependencies that could be replaced with lighter alternatives?",
+        "Is tree-shaking working for ES module imports?",
+        "Are polyfills loaded conditionally based on browser support?",
+        "Does the build process minify JavaScript and CSS for production?",
+        "Are source maps generated for development but excluded from production?",
+        "Are there duplicate dependencies in the dependency tree?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "Scroll Performance Tester",
+      "persona_domain": "smooth scrolling and virtualization",
+      "questions": [
+        "Does the app store listing page maintain 60fps while scrolling through many apps?",
+        "Is virtual scrolling (windowing) used for long lists?",
+        "Are scroll event handlers debounced or using requestAnimationFrame?",
+        "Does the schedule view handle 100+ scheduled tasks without jank?",
+        "Are fixed/sticky elements (header, footer, bottom rail) GPU-composited?",
+        "Does infinite scroll (if used) trigger at the right threshold?",
+        "Are heavy DOM operations batched to avoid layout thrashing during scroll?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Animation Performance Auditor",
+      "persona_domain": "CSS and JavaScript animation optimization",
+      "questions": [
+        "Do all animations use transform and opacity (composite-only properties)?",
+        "Are animations disabled when prefers-reduced-motion is set?",
+        "Does the theme toggle rotation animation cause paint storms?",
+        "Are JavaScript animations using requestAnimationFrame (not setInterval)?",
+        "Do loading spinners and skeleton screens perform well on low-end devices?",
+        "Are animation durations appropriate (not too long, not too short)?",
+        "Are there animations that trigger on every scroll event?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Accessibility Performance Auditor",
+      "persona_domain": "performance impact of accessibility features",
+      "questions": [
+        "Do ARIA attributes cause measurable performance overhead?",
+        "Does the focus management (skip-nav, focus-visible) work without jank?",
+        "Are screen reader announcements (aria-live) non-blocking?",
+        "Does high contrast mode (prefers-contrast: more) render as fast as standard mode?",
+        "Are keyboard event handlers efficient (not doing heavy work on every keypress)?",
+        "Does the forced-colors mode cause rendering differences that affect performance?",
+        "Are accessible tooltips and popovers rendered lazily?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "i18n Performance Specialist",
+      "persona_domain": "internationalization performance overhead",
+      "questions": [
+        "How large are the locale JSON files and does loading them affect page start?",
+        "Is the locale file cached after first load (lru_cache in i18n.py)?",
+        "Does switching locale cause a full page reload or efficient DOM update?",
+        "Are locale files lazy-loaded (only the active locale, not all 23)?",
+        "Does RTL layout switching cause a visible re-render?",
+        "Are translation lookups (t() function) fast enough for real-time use?",
+        "Does the i18n system handle missing keys without throwing errors that slow rendering?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "Build Pipeline Optimizer",
+      "persona_domain": "build and development speed",
+      "questions": [
+        "How long does a full build take from clean checkout to production artifact?",
+        "Is there hot module replacement (HMR) for development iteration speed?",
+        "Does the CI/CD pipeline cache dependencies between builds?",
+        "Are tests parallelized in CI for faster feedback?",
+        "Is the Docker image (if used) optimized for layer caching?",
+        "Does the build process use incremental compilation?",
+        "Are there unnecessary build steps that could be eliminated?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "Real User Monitoring Expert",
+      "persona_domain": "production performance measurement",
+      "questions": [
+        "Is there real user monitoring (RUM) capturing actual user performance data?",
+        "Are performance metrics (LCP, FID, CLS) reported to an analytics endpoint?",
+        "Is there a performance budget that triggers alerts when exceeded?",
+        "Can performance data be segmented by device type, network, and locale?",
+        "Are slow-loading pages identified automatically from RUM data?",
+        "Is there A/B testing infrastructure for measuring performance impact of changes?",
+        "Are performance regression tests part of the CI pipeline?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Low-End Device Tester",
+      "persona_domain": "performance on constrained devices",
+      "questions": [
+        "Does the browser work acceptably on a 5-year-old laptop with 4GB RAM?",
+        "Is there a lite mode for low-end devices?",
+        "Does the app detect device capabilities and adapt accordingly?",
+        "Are there fallbacks for devices that don't support modern CSS features?",
+        "Does the app work on slow networks (3G, high latency)?",
+        "Is there progressive enhancement so core features work without JavaScript?",
+        "Does the app degrade gracefully when resources are constrained?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Security Performance Balancer",
+      "persona_domain": "performance impact of security measures",
+      "questions": [
+        "Does CSP header parsing cause measurable performance overhead?",
+        "Is CORS preflight causing unnecessary round-trips?",
+        "Does OAuth3 token validation add latency to authenticated requests?",
+        "Is the vault decryption (AES-256-GCM) fast enough for responsive UX?",
+        "Does the evidence hash chain (SHA-256) cause noticeable latency?",
+        "Are security headers cached to avoid re-computation?",
+        "Does TLS handshake overhead affect API response times?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Electron Performance Specialist",
+      "persona_domain": "native app wrapper performance",
+      "questions": [
+        "What is the memory overhead of the Electron/Playwright wrapper vs raw Chromium?",
+        "Does IPC between main and renderer processes cause latency?",
+        "Are there unnecessary electron preload scripts that slow startup?",
+        "Does the native menu/tray use memory efficiently?",
+        "Is the app using hardware acceleration where available?",
+        "Does the auto-updater mechanism cause background resource consumption?",
+        "Are there native node modules that need compilation and cause cold start delay?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Recipe Replay Performance Auditor",
+      "persona_domain": "performance of recipe execution and replay",
+      "questions": [
+        "How fast is recipe replay vs first-time LLM execution?",
+        "Does recipe caching use memory efficiently (not loading all 81+ recipes at startup)?",
+        "Is recipe matching (finding the right cached recipe) O(1) or O(n)?",
+        "Does recipe serialization/deserialization add measurable overhead?",
+        "Are large recipe outputs streamed or loaded entirely into memory?",
+        "Does the recipe hit rate metric tracking cause performance overhead?",
+        "Can recipe replay execute in under 100ms for simple operations?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Evidence Chain Performance Auditor",
+      "persona_domain": "performance of hash-chain evidence system",
+      "questions": [
+        "Does evidence chain append-only writing scale with chain length?",
+        "Is evidence hashing (SHA-256) done synchronously on the main thread?",
+        "Does the evidence file grow unboundedly over time?",
+        "Is evidence verification (integrity check) fast enough for real-time use?",
+        "Are evidence files compacted or archived after a threshold?",
+        "Does evidence capture add latency to user-facing operations?",
+        "Can evidence queries (search, filter by date) perform well on large chains?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "WebSocket Performance Auditor",
+      "persona_domain": "real-time communication performance",
+      "questions": [
+        "Are WebSocket connections used efficiently (shared, not per-feature)?",
+        "Is there heartbeat/keepalive overhead from WebSocket connections?",
+        "Does WebSocket reconnection handle network changes gracefully?",
+        "Are WebSocket messages batched to reduce frame overhead?",
+        "Is there flow control for high-frequency WebSocket messages?",
+        "Does the WebSocket implementation handle backpressure?",
+        "Are binary WebSocket frames used for efficiency where appropriate?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Search Performance Expert",
+      "persona_domain": "search and indexing speed",
+      "questions": [
+        "How fast is the memory search (TF-IDF) for typical queries?",
+        "Is the search index built lazily or at startup?",
+        "Does the app store search return results in under 200ms?",
+        "Is there typeahead/autocomplete performance optimization?",
+        "Are search results paginated for large result sets?",
+        "Does the search algorithm handle 10,000+ indexed items efficiently?",
+        "Is the search index updated incrementally (not rebuilt from scratch)?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Locale-Specific Performance Tester",
+      "persona_domain": "performance across different locales",
+      "questions": [
+        "Do CJK locales (Chinese, Japanese, Korean) render at the same speed as Latin?",
+        "Does Arabic/Hebrew RTL layout cause measurable render overhead?",
+        "Are locale-specific fonts loaded lazily based on the active locale?",
+        "Does the locale switcher re-render the page efficiently?",
+        "Are there performance differences between the 23 supported locales?",
+        "Does bi-directional text (mixed LTR/RTL) cause layout performance issues?",
+        "Are locale JSON files appropriately sized (not bloated with unused keys)?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Automation Performance Tester",
+      "persona_domain": "browser automation execution speed",
+      "questions": [
+        "How fast can Solace Browser navigate to a page and extract content?",
+        "Does browser automation add overhead vs manual browsing?",
+        "Can automation tasks run in parallel without degrading UI performance?",
+        "Is the Playwright automation layer efficient with memory?",
+        "Does screenshot capture cause visible UI stutter?",
+        "Are automation wait strategies (wait for selector, wait for network) efficient?",
+        "Does automated form filling perform at human-like speed for site compatibility?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Data Storage Performance Expert",
+      "persona_domain": "local data access patterns",
+      "questions": [
+        "Does localStorage/sessionStorage access block the main thread?",
+        "Are there performance issues with large localStorage entries?",
+        "Is IndexedDB used for structured data that exceeds localStorage limits?",
+        "Does file system I/O (config, recipes, evidence) use async patterns?",
+        "Are JSON parse/stringify operations causing main thread jank for large objects?",
+        "Is there a data access layer that batches writes?",
+        "Does the vault (encrypted storage) use efficient I/O patterns?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "Cross-Platform Performance Tester",
+      "persona_domain": "performance across operating systems",
+      "questions": [
+        "Is startup time consistent across Linux, macOS, and Windows?",
+        "Are there OS-specific performance bottlenecks (e.g., Windows antivirus scanning)?",
+        "Does the macOS universal binary (ARM + x86) perform equally on both architectures?",
+        "Are there file system performance differences across operating systems?",
+        "Does the app handle different display densities (Retina, HiDPI) efficiently?",
+        "Are there OS-specific memory management differences?",
+        "Does the app integrate with OS-level performance APIs (Activity Monitor, Task Manager)?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Error Handling Performance Expert",
+      "persona_domain": "performance impact of error paths",
+      "questions": [
+        "Do error handling paths (try/catch, error boundaries) cause performance overhead?",
+        "Is error logging asynchronous or blocking?",
+        "Do frequent console.warn/console.error calls affect performance in production?",
+        "Are error recovery paths optimized (not just correct)?",
+        "Does error reporting to external services happen asynchronously?",
+        "Are there error loops (error → retry → error) that consume resources?",
+        "Is the Fallback Ban (no silent swallowing) compatible with performance goals?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Progressive Loading Expert",
+      "persona_domain": "incremental content loading",
+      "questions": [
+        "Are above-the-fold elements loaded first on every page?",
+        "Is there a skeleton screen or loading state for heavy components?",
+        "Are below-the-fold images and components lazy-loaded?",
+        "Does the app store load app listings incrementally as the user scrolls?",
+        "Are third-party resources (if any) loaded asynchronously?",
+        "Is there a content priority system that loads critical content first?",
+        "Does progressive loading work correctly on slow networks?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Theme Switching Performance Auditor",
+      "persona_domain": "performance of theme system specifically",
+      "questions": [
+        "Does theme switching (dark→light→midnight) happen in under 50ms?",
+        "Does the theme CSS file swap cause a visible flash?",
+        "Are CSS custom property changes batched or do they trigger per-property repaints?",
+        "Does the custom theme editor real-time preview perform smoothly?",
+        "Does localStorage theme persistence add measurable startup latency?",
+        "Are theme-specific resources (if any) preloaded or loaded on demand?",
+        "Does the theme toggle button animation perform at 60fps?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "HTTP Server Performance Auditor",
+      "persona_domain": "local server throughput and latency",
+      "questions": [
+        "What is the requests/second capacity of the local HTTP server?",
+        "Does the server handle keep-alive connections efficiently?",
+        "Is static file serving optimized with sendfile or mmap?",
+        "Does the server support HTTP/2 for multiplexing?",
+        "Are there request queuing bottlenecks under concurrent load?",
+        "Does the server use efficient buffering for large responses?",
+        "Is the server startup time minimal (under 500ms)?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Resource Cleanup Expert",
+      "persona_domain": "garbage collection and resource management",
+      "questions": [
+        "Are browser tabs/sessions properly cleaned up when closed?",
+        "Does the app release file handles after reading/writing?",
+        "Are temporary files cleaned up on app exit?",
+        "Does the garbage collector cause visible pauses (GC jank)?",
+        "Are large objects (screenshots, evidence) released after use?",
+        "Is there a resource monitoring system that detects leaks?",
+        "Does the app clean up network connections on shutdown?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Preloading Strategist",
+      "persona_domain": "predictive resource loading",
+      "questions": [
+        "Are likely-next-page resources preloaded based on user behavior?",
+        "Does the app prefetch data for pages the user is likely to visit?",
+        "Are DNS prefetch hints used for external domains?",
+        "Is there preconnect for frequently used API endpoints?",
+        "Does the app avoid over-preloading that wastes bandwidth?",
+        "Are preloaded resources used within a reasonable time (not wasted)?",
+        "Is there a preloading strategy that adapts to network conditions?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Monitoring Dashboard Designer",
+      "persona_domain": "performance visibility and dashboards",
+      "questions": [
+        "Is there a performance dashboard visible to developers?",
+        "Are key metrics (memory, CPU, network) tracked in real-time?",
+        "Can users see how much memory/CPU the browser is using?",
+        "Are there performance alerts for anomalous behavior?",
+        "Is performance data logged for trend analysis?",
+        "Can the machine dashboard show per-tab resource usage?",
+        "Are there performance comparison tools (before/after change)?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Benchmark Suite Designer",
+      "persona_domain": "standardized performance testing",
+      "questions": [
+        "Is there an automated performance test suite that runs in CI?",
+        "Are performance baselines established and tracked over time?",
+        "Does the benchmark suite test all critical user journeys?",
+        "Are benchmarks run on representative hardware (not just dev machines)?",
+        "Is there a performance regression gate in the CI pipeline?",
+        "Are benchmark results stored as evidence for tracking?",
+        "Does the benchmark suite cover both startup and steady-state performance?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Database Compaction Expert",
+      "persona_domain": "data file growth management",
+      "questions": [
+        "Do JSON data files (recipes, evidence, oracle) grow without bounds?",
+        "Is there a compaction or rotation strategy for large data files?",
+        "Does the oracle-memory.json file scale with increasing audits?",
+        "Are old evidence entries archived or pruned?",
+        "Is there disk space monitoring that alerts when storage is low?",
+        "Does the app handle 1GB+ data directories without performance issues?",
+        "Are data migrations efficient when updating file formats?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Third-Party Integration Performance Expert",
+      "persona_domain": "performance of external service calls",
+      "questions": [
+        "Do API calls to solaceagi.com have appropriate timeouts?",
+        "Are external service calls non-blocking (don't freeze the UI)?",
+        "Is there circuit breaking for flaky external services?",
+        "Are responses from external services cached appropriately?",
+        "Does the LLM proxy (Together.ai/OpenRouter) add measurable latency?",
+        "Are there retry storms when external services are slow?",
+        "Do failed external calls degrade gracefully without slowing the app?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Touch/Gesture Performance Expert",
+      "persona_domain": "touch interface responsiveness",
+      "questions": [
+        "Are touch interactions responsive (under 100ms feedback)?",
+        "Does the app handle touch and mouse events efficiently (no double-firing)?",
+        "Are gesture recognizers (swipe, pinch) performant?",
+        "Does scrolling work smoothly on touch devices?",
+        "Are touch targets large enough (44px) without causing layout overhead?",
+        "Does the app avoid delay on touch events (no 300ms click delay)?",
+        "Are there passive event listeners where appropriate for scroll performance?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Print Performance Tester",
+      "persona_domain": "print and export performance",
+      "questions": [
+        "Does the print stylesheet load efficiently when printing?",
+        "Are evidence reports printable without excessive rendering time?",
+        "Does PDF export (if available) complete in reasonable time?",
+        "Are print styles cached to avoid re-computation?",
+        "Does the print view handle large evidence chains?",
+        "Are non-print elements hidden efficiently (not just visibility:hidden)?",
+        "Does print preview render correctly across browsers?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Update/Upgrade Performance Expert",
+      "persona_domain": "app update delivery and installation",
+      "questions": [
+        "Does the auto-updater download efficiently (delta updates, not full binary)?",
+        "Is the update check non-blocking (doesn't slow normal operation)?",
+        "Does the update installation complete quickly (under 30 seconds)?",
+        "Can the app continue operating while downloading an update?",
+        "Are update artifacts cached to avoid re-downloading on failure?",
+        "Does the update process preserve user data and settings?",
+        "Is the update verification (checksum, signature) fast?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Stress Test Engineer",
+      "persona_domain": "behavior under extreme load",
+      "questions": [
+        "What happens when 50+ browser tabs are open simultaneously?",
+        "Does the app remain responsive when processing a 10,000-entry evidence chain?",
+        "What is the behavior with 1000+ recipes loaded?",
+        "Does the app handle running out of disk space gracefully?",
+        "What happens when network bandwidth drops to near-zero?",
+        "Can the daemon scheduler handle 100+ concurrent scheduled tasks?",
+        "Does the app recover gracefully after being killed and restarted?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Dragon Rider (Phuc)",
+      "persona_domain": "performance philosophy and standards",
+      "questions": [
+        "Does the browser feel fast — is the perceived performance excellent?",
+        "Is the performance budget documented and enforced?",
+        "Does performance improve over time (not just not-regress)?",
+        "Is the recipe replay model delivering on the cost-reduction promise through performance?",
+        "Would a power user choose Solace Browser over Chrome for daily use based on speed?",
+        "Is the performance testing infrastructure as strong as the security testing?",
+        "Does the Dragon Rider feel proud of the browser's performance?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "Mum Test Judge",
+      "persona_domain": "perceived performance for non-technical users",
+      "questions": [
+        "Does the browser feel snappy to a non-technical user?",
+        "Are there any moments where a non-technical user would think 'this is slow'?",
+        "Does the browser start up fast enough that the user doesn't switch to Chrome?",
+        "Are loading states clear (the user knows something is happening, not frozen)?",
+        "Does the browser work well on the user's existing hardware (not just developer machines)?",
+        "Is the battery drain noticeable compared to regular Chrome?",
+        "Would a non-technical user say 'this feels smooth' after a week of daily use?"
+      ]
+    }
+  ]
+}

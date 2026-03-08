@@ -1,0 +1,6 @@
+# Sealed QA reports — append-only, SHA-256 sealed, kept locally
+# Not tracked in git to prevent repo bloat (1942+ files)
+outbox/report-*.json
+
+# Bypass log — local evidence of INSPECTOR_SKIP usage
+bypass.log

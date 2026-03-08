@@ -1,0 +1,38 @@
+id: "phucnet-publisher"
+name: "Phuc.net Content Publisher"
+description: "Orchestrate content publication to phuc.net. Receives images and articles from AI generators, queues for human review, and publishes approved content."
+category: "publishing"
+status: "installed"
+safety: "B"
+site: "phuc.net"
+type: "orchestrator"
+version: "1.0.0"
+author: "Dragon Rider"
+created_at: "2026-03-06"
+private: true
+trade_secret: true
+never_publish: true
+
+scopes:
+  - "local.filesystem.read"
+  - "local.filesystem.write"
+  - "local.evidence"
+
+partners:
+  produces_for: []
+  consumes_from:
+    - "openai-image-gen"
+    - "gemini-creative"
+    - "competitor-monitor"
+
+orchestrates:
+  - "openai-image-gen"
+  - "gemini-creative"
+
+publish_target: "/home/phuc/projects/phucnet/articles/queue/"
+
+tags:
+  - "publishing"
+  - "orchestrator"
+  - "content-pipeline"
+  - "secret-sauce"

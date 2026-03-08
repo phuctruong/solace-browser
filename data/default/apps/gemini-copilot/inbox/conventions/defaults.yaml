@@ -1,0 +1,34 @@
+# Gemini Copilot — Default Configuration
+# Send prompts to Gemini and capture responses for cross-LLM QA.
+# Last updated: 2026-03-07 | Auth: 65537
+
+enabled: true
+
+# Account
+site_url: https://gemini.google.com
+model_preference: gemini-2.5-pro  # gemini-2.5-flash | gemini-2.5-pro
+
+# Prompt behavior
+max_prompt_length: 8000
+wait_for_response_timeout_s: 120
+max_response_extract_length: 16000
+
+# Schedule
+schedule: "on_demand"
+cooldown_seconds: 5
+
+# Evidence
+evidence_level: full
+hash_algorithm: sha256
+retain_screenshots: true
+retain_days: 90
+
+# Safety
+safety_rating: B
+require_approval: true
+
+# OAuth3 scopes
+scopes:
+  - gemini.read.conversation
+  - gemini.draft.message
+  - local.evidence

@@ -1,0 +1,149 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 27,
+    "tower_name": "Tower of Auth + Stripe + Billing",
+    "dna": "billing(pipeline) = signup(google) x verify(email) x subscribe(stripe) x credits(manage) x upgrade(tier) x cancel(clean)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solaceagi",
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solaceagi": "/home/phuc/projects/solaceagi",
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Auth + Stripe + Billing",
+  "tower_number": 27,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Nina Petrov",
+      "persona_domain": "google_sign_in",
+      "persona_context": "30, Berlin, Frontend developer, Expert tech, Free tier, signing up for Solace for the first time using Google account",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I click 'Sign in with Google' on the Solace login page and see the Google OAuth consent screen within 2 seconds?",
+        "After approving the Google sign-in, does the app redirect me to my Solace dashboard with my Google name and profile photo displayed?",
+        "If I already have a Solace account with a different email, does the sign-in flow detect the conflict and offer to link accounts?",
+        "Does the sign-in work if my Google account has 2FA enabled (TOTP or security key)?",
+        "If I click 'Sign in with Google' and then cancel the OAuth consent, does the app return me to the login page with no error state?",
+        "Is the Google sign-in button styled correctly (following Google's branding guidelines) and not a generic 'Login' button?",
+        "After sign-in, can I verify in my browser's network tab that no Google credentials were sent to any third-party servers?"
+      ],
+      "question_expansion_instruction": "Nina is security-conscious and technically savvy. The Google sign-in must follow OAuth best practices, handle edge cases, and be visually correct."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Roberto Ferreira",
+      "persona_domain": "firebase_token_exchange",
+      "persona_context": "43, Sao Paulo, Backend engineer evaluating Solace for his team, Expert tech, evaluating Enterprise tier, needs to understand the auth architecture",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After Google sign-in, does the backend exchange the Google ID token for a Firebase custom token within 1 second?",
+        "Can I see in the network tab that the Firebase token is a JWT with correct claims (uid, email, tier)?",
+        "Does the Firebase token expire after a reasonable TTL (1 hour) and auto-refresh without logging me out?",
+        "If the Firebase token exchange fails (backend down), does the app show a specific error rather than a blank screen?",
+        "Is the Firebase token stored in an httpOnly secure cookie or secure local storage — not in a plain cookie or URL parameter?",
+        "Does the /auth/verify endpoint return 401 with a clear error message when I send an expired or invalid token?",
+        "Can I log out and verify that the Firebase token is deleted from storage and the /auth/verify endpoint rejects it?"
+      ],
+      "question_expansion_instruction": "Roberto is evaluating auth security. Every question must be verifiable by inspecting network requests, storage, and error responses. Architecture diagrams alone are not sufficient."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Ashley Williams",
+      "persona_domain": "stripe_checkout",
+      "persona_context": "35, Chicago, Marketing agency owner, Intermediate tech, upgrading from Free to Pro tier, has a company credit card",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I click 'Upgrade to Pro' on the pricing page and be redirected to a Stripe Checkout session with the correct $28/month price?",
+        "Does the Stripe Checkout page show my email pre-filled and the plan name 'Solace Pro' with monthly billing?",
+        "After entering my credit card and clicking Pay, does the app redirect me to /billing/success with a confirmation and receipt?",
+        "If I close the Stripe Checkout tab without paying, does the app show my account still on Free tier — no orphaned subscription?",
+        "Does the Stripe Checkout support Apple Pay and Google Pay as alternative payment methods?",
+        "After successful payment, does my account tier update to Pro immediately (not after a manual admin action)?",
+        "Can I find a receipt for my payment in my email inbox within 2 minutes of completing Stripe Checkout?"
+      ],
+      "question_expansion_instruction": "Ashley is paying with a company card. Stripe Checkout must be seamless, show correct pricing, handle abandonment, and activate the tier instantly."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Hiroshi Yamamoto",
+      "persona_domain": "credits_panel",
+      "persona_context": "51, Osaka, IT consultant, Expert tech, Pro tier, monitors LLM token usage carefully, bought $5 credits top-up",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I see my current credit balance displayed in the dashboard header showing both dollar amount and estimated tasks remaining?",
+        "Does the credits panel show a breakdown of credit usage by app (Gmail Triage: $0.42, LinkedIn Poster: $0.18) for the current billing period?",
+        "Can I click 'Buy Credits' and purchase a $5 top-up through Stripe without changing my subscription tier?",
+        "After buying credits, does the balance update immediately in the dashboard without requiring a page refresh?",
+        "Does the credits panel show a usage graph over the last 30 days so I can see if my spending is increasing?",
+        "If my credit balance drops below $1, does the app show a warning banner with a link to buy more credits?",
+        "Can I set a monthly spending cap so the app stops executing recipes when I hit my budget limit?"
+      ],
+      "question_expansion_instruction": "Hiroshi tracks every yen. The credits panel must be transparent, real-time, and provide spending controls. Surprise charges or unclear usage breakdowns are deal-breakers."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Chloe Dubois",
+      "persona_domain": "tier_upgrade",
+      "persona_context": "28, Paris, Startup co-founder, Intermediate tech, currently on Starter $8/month, needs cloud twin features available in Pro $28/month",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I see a comparison table of Starter vs Pro features on the pricing page showing exactly what I gain by upgrading?",
+        "When I click 'Upgrade to Pro', does Stripe prorate my current billing cycle so I am not double-charged for this month?",
+        "After upgrading, can I immediately access Pro features (cloud twin, OAuth3 vault) without logging out and back in?",
+        "Does my billing page show the upgrade date, next billing date, and the new monthly amount?",
+        "If I upgrade mid-cycle, does the billing page explain the prorated amount clearly (not just a weird charge amount)?",
+        "Can I downgrade from Pro back to Starter and see which features I will lose before confirming?",
+        "Does downgrading take effect at the end of the current billing cycle (not immediately) so I do not lose access mid-month?"
+      ],
+      "question_expansion_instruction": "Chloe is a founder watching cash flow. Upgrade/downgrade must be transparent about prorating, feature changes, and timing. Surprise charges destroy trust."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Marcus Webb",
+      "persona_domain": "plan_cancellation",
+      "persona_context": "60, Denver, Retired accountant, Beginner tech, Pro tier, cancelling because he wants to try the Free tier first",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I find the 'Cancel Plan' option in my account settings without needing to contact support or send an email?",
+        "Does the cancellation flow show me what I will lose (cloud twin, vault sync) and what I keep (local data, evidence chains)?",
+        "After clicking Cancel, does the app confirm that my Pro access continues until the end of the current billing period?",
+        "Does the cancellation send a confirmation email to my registered email address with the cancellation date?",
+        "After cancellation takes effect, does my account gracefully downgrade to Free — not lock me out of the app entirely?",
+        "Can I resubscribe to Pro after cancelling without losing my previously saved evidence chains and app configurations?",
+        "If I cancel within 24 hours of subscribing, does the app offer a full refund or at least explain the refund policy?"
+      ],
+      "question_expansion_instruction": "Marcus is non-technical and cancelling. The cancellation flow must be easy to find, transparent about what happens, and not punitive. Dark patterns (hiding cancel, guilt-tripping) are BANNED."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Lena Nowak",
+      "persona_domain": "api_key_management",
+      "persona_context": "33, Krakow, DevOps engineer, Expert tech, Pro tier with BYOK, manages her own Anthropic and OpenAI API keys",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I navigate to Settings > API Keys and add my Anthropic API key, seeing it stored with only the last 4 characters visible?",
+        "After adding my BYOK key, does the app route all LLM requests through my key instead of the managed LLM service?",
+        "Can I add both an Anthropic key and an OpenAI key and choose which one to use per app or per recipe?",
+        "Does the app validate my API key on save by making a test request and showing 'Key valid' or 'Key invalid' status?",
+        "If my API key is revoked or expires, does the app show a clear error on the next recipe run rather than silently falling back to managed LLM?",
+        "Can I delete my API key from settings and verify it is removed from local encrypted storage (not just hidden in the UI)?",
+        "Does using BYOK disable the managed LLM billing line item on my invoice so I am only paying $8 base?"
+      ],
+      "question_expansion_instruction": "Lena manages her own API keys. BYOK must be truly bring-your-own with no hidden charges, proper key validation, and fail-loud behavior when keys expire."
+    }
+  ]
+}

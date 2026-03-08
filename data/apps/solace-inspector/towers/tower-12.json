@@ -1,0 +1,712 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 12,
+    "tower_name": "Tower of Revenue",
+    "dna": "revenue(system) = pricing(clear) * margin(positive) * conversion(path) * retention(value) * documentation(honest) * trust(earned)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 100,
+    "question_expansion_instruction": "Each floor lists 7-10 seed questions. During execution, expand to 100 questions per persona by probing deeper into the domain. Search the actual codebase for evidence.",
+    "target_projects": [
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of Revenue",
+  "tower_number": 12,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Pricing Strategist",
+      "persona_domain": "pricing model consistency",
+      "questions": [
+        "Are all pricing tiers consistent across CLAUDE.md, ROADMAP.md, and marketing materials?",
+        "Is the Free tier ($0) clearly defined with what's included and excluded?",
+        "Is the paid tier pricing justified by the value proposition?",
+        "Are there pricing contradictions between solace-cli, solace-browser, and solaceagi docs?",
+        "Is the BYOK (Bring Your Own Key) model clearly explained to users?",
+        "Does the pricing page on solaceagi.com match the documented tiers?",
+        "Is the $3/mo managed LLM add-on clearly differentiated from the base tier?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Margin Analyst",
+      "persona_domain": "unit economics",
+      "questions": [
+        "Is the 20% LLM markup correctly computed and documented?",
+        "Does the COGS calculation ($5.75/user/mo at 70% hit rate) check out mathematically?",
+        "Is the gross margin (70% at $19/mo) correctly computed?",
+        "What is the actual LLM cost per task with recipe replay vs fresh generation?",
+        "Is the break-even point (914 members) correctly derived from the pricing model?",
+        "Are there hidden costs not accounted for (infrastructure, support, compliance)?",
+        "Is the recipe replay cost ($0.001/task) realistic and documented?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Conversion Optimizer",
+      "persona_domain": "signup and upgrade flow",
+      "questions": [
+        "Is the path from Free to Paid clearly visible in the UI?",
+        "Is the social-media-post-as-registration flow implemented?",
+        "Are upgrade prompts helpful (not annoying) and contextual?",
+        "Is the Stripe checkout flow tested end-to-end?",
+        "Is there a clear value proposition shown before asking for payment?",
+        "Are credit card forms secure (Stripe Elements, not custom forms)?",
+        "Is the checkout success/cancel flow implemented and tested?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Retention Architect",
+      "persona_domain": "user retention",
+      "questions": [
+        "Is there a savings widget showing ROI to users?",
+        "Does the system track and display how much time/money the user has saved?",
+        "Is there a mechanism to re-engage users who stop using the product?",
+        "Are recipe replays cheaper than fresh LLM calls (creating a retention incentive)?",
+        "Is the evidence trail a retention feature (users lose history if they leave)?",
+        "Does the credit system encourage continued usage?",
+        "Is there a usage dashboard showing activity and value delivered?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Stripe Integration Auditor",
+      "persona_domain": "payment infrastructure",
+      "questions": [
+        "Is Stripe integration idempotent (safe to retry)?",
+        "Are webhook handlers implemented for subscription events?",
+        "Is the billing portal accessible for users to manage their subscription?",
+        "Are credit purchases working with correct Stripe product/price IDs?",
+        "Is PCI compliance handled correctly (Stripe Elements, no card data on server)?",
+        "Are subscription state transitions (create/upgrade/downgrade/cancel) all handled?",
+        "Is there error handling for failed payments and card declines?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Revenue Leakage Detective",
+      "persona_domain": "revenue protection",
+      "questions": [
+        "Are there any paths where users get paid features without paying?",
+        "Is the tier check enforced on all API endpoints that require paid access?",
+        "Can users bypass the paywall through API manipulation?",
+        "Is the MOCK_AUTH flag force-disabled in production?",
+        "Are rate limits enforced per tier (free users limited, paid users higher limits)?",
+        "Is there monitoring for unusual usage patterns (abuse detection)?",
+        "Are expired subscriptions correctly downgraded to free tier?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "LLM Cost Controller",
+      "persona_domain": "LLM cost optimization",
+      "questions": [
+        "Is the LLM routing choosing the cheapest model that satisfies the task?",
+        "Is recipe replay (cached responses) actually cheaper than fresh LLM calls?",
+        "Is the Together.ai primary / OpenRouter fallback routing implemented?",
+        "Are token counts tracked per user for accurate billing?",
+        "Is there a daily/monthly token budget per tier?",
+        "Is the Haiku/Sonnet/Opus model selection strategy cost-optimized?",
+        "Are LLM API keys stored securely and rotated?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Enterprise Sales Auditor",
+      "persona_domain": "enterprise readiness",
+      "questions": [
+        "Is there a DPA (Data Processing Agreement) template available?",
+        "Is SOC2 compliance on the roadmap with concrete milestones?",
+        "Is there an enterprise contact/sales page?",
+        "Can enterprise customers get dedicated infrastructure?",
+        "Is team management (invite/remove members) implemented?",
+        "Is there an admin dashboard for enterprise accounts?",
+        "Is the private store (enterprise skill library) functional?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Competitive Pricing Analyst",
+      "persona_domain": "market positioning",
+      "questions": [
+        "How does Solace pricing compare to Browser-Use, OpenClaw, Bardeen?",
+        "Is the local-first model a pricing advantage (no cloud compute costs)?",
+        "Is the BYOK option competitive (users bring own API keys)?",
+        "Is the $3/mo managed LLM add-on price-competitive vs direct API access?",
+        "Does the recipe replay model create a cost moat (gets cheaper over time)?",
+        "Is the pricing simple enough for a landing page (5 seconds to understand)?",
+        "Are there any hidden fees or surprise charges in the pricing model?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Tax and Compliance Accountant",
+      "persona_domain": "financial compliance",
+      "questions": [
+        "Is sales tax / VAT handled correctly for different jurisdictions?",
+        "Are invoices generated for paid subscriptions?",
+        "Is revenue recognition following proper accounting principles?",
+        "Are refund policies documented and implemented?",
+        "Is there a cancellation flow that complies with consumer protection laws?",
+        "Are financial records (Stripe events) persisted for audit purposes?",
+        "Is the billing page GDPR-compliant (shows what data is collected for billing)?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Alex Hormozi",
+      "persona_domain": "offer architecture",
+      "questions": [
+        "Is the offer a 'grand slam' \u2014 so good people feel stupid saying no?",
+        "What is the dream outcome for the customer? Is it clearly communicated?",
+        "What is the perceived likelihood of achievement with this product?",
+        "What is the time delay between purchase and first value received?",
+        "What is the effort/sacrifice required from the customer?",
+        "Are there bonuses that increase perceived value without increasing cost?",
+        "Is there a guarantee that reduces the buyer's risk?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Pieter Levels",
+      "persona_domain": "indie hacker economics",
+      "questions": [
+        "Can one person run this business profitably?",
+        "Is the infrastructure cost low enough for bootstrapped operation?",
+        "Is the product simple enough to explain in one tweet?",
+        "Is there a path to $1K MRR within 90 days of launch?",
+        "Is the pricing model 'set and forget' (recurring, not project-based)?",
+        "Are there unnecessary features that should be cut to ship faster?",
+        "Is the landing page focused on conversion (not education)?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Peter Thiel",
+      "persona_domain": "monopoly thesis",
+      "questions": [
+        "What is the proprietary technology (10x better than alternatives)?",
+        "Are there network effects that grow with each new user?",
+        "Are there economies of scale (cost per user decreases)?",
+        "Is there brand recognition being built?",
+        "Is OAuth3 a 'last mover' advantage (defining the standard)?",
+        "Is the recipe library a defensible moat?",
+        "Is the local-first architecture a contrarian bet that's correct?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Naval Ravikant",
+      "persona_domain": "leverage and scalability",
+      "questions": [
+        "Does this product create leverage (code + media, not labor)?",
+        "Is the marginal cost of serving one more user near zero?",
+        "Are there compounding returns (recipes get better with more users)?",
+        "Is the product building specific knowledge that's hard to replicate?",
+        "Is there permissionless leverage (users can build without asking)?",
+        "Does the economic model reward patience (long-term compounding)?",
+        "Is the product helping users build their own leverage?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Rory Sutherland",
+      "persona_domain": "perceived value and behavioral economics",
+      "questions": [
+        "Is the free tier creating perceived scarcity for the paid tier?",
+        "Is there a 'red bus' feature \u2014 something users love that costs nothing to provide?",
+        "Is the pricing anchored correctly (expensive option first)?",
+        "Are there any 'pain points' in the free tier that nudge toward upgrading?",
+        "Is the savings widget creating a loss aversion effect (you're losing money NOT using this)?",
+        "Is the social proof visible (other users, testimonials, usage stats)?",
+        "Is the product name and positioning psychologically appealing?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Simon Sinek",
+      "persona_domain": "purpose-driven pricing",
+      "questions": [
+        "Does the pricing communicate the WHY (not just the WHAT)?",
+        "Is the free tier aligned with the mission (democratizing AI)?",
+        "Does the pricing feel fair (not extractive)?",
+        "Is the company's purpose visible in the pricing structure?",
+        "Does the pricing create trust (transparent, no hidden fees)?",
+        "Is the premium tier clearly about supporting the mission?",
+        "Would a customer feel proud to pay for this product?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "Greg Isenberg",
+      "persona_domain": "community-led growth",
+      "questions": [
+        "Is there a community element in the pricing (community skills, shared recipes)?",
+        "Can users contribute to the product (and get rewarded)?",
+        "Is there a referral mechanism?",
+        "Is the free tier generous enough to build word-of-mouth?",
+        "Are power users visible and celebrated?",
+        "Is there a path from user to contributor to ambassador?",
+        "Does the pricing encourage community (not isolation)?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Seth Godin",
+      "persona_domain": "remarkable product marketing",
+      "questions": [
+        "Is the product remarkable (worth remarking about)?",
+        "Is there a 'purple cow' feature that makes people talk about it?",
+        "Is the product for a specific tribe (not for everyone)?",
+        "Is the marketing permission-based (not interruption-based)?",
+        "Does the product tell a story that spreads?",
+        "Is the minimum viable audience clearly defined?",
+        "Is the product creating tension that demands resolution (signup)?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Russell Brunson",
+      "persona_domain": "sales funnels",
+      "questions": [
+        "Is there a clear value ladder (free \u2192 starter \u2192 pro \u2192 enterprise)?",
+        "Is the landing page following a proven funnel structure?",
+        "Is there a lead magnet (free value that captures attention)?",
+        "Is the upsell path logical (not pushy)?",
+        "Is there urgency or scarcity (limited beta, early pricing)?",
+        "Is the pricing page using comparison tables effectively?",
+        "Is there a 'tripwire' offer (low-cost entry point)?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Lex Fridman",
+      "persona_domain": "deep tech credibility",
+      "questions": [
+        "Is the technical depth visible enough to attract serious developers?",
+        "Does the documentation demonstrate genuine expertise?",
+        "Is the open-source foundation building trust with the technical community?",
+        "Is the prime architecture a credibility signal or a confusion factor?",
+        "Are the papers and diagrams accessible to potential customers?",
+        "Is there a developer blog or technical content strategy?",
+        "Does the product feel built by experts (not marketers)?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "Token Economist",
+      "persona_domain": "token usage optimization",
+      "questions": [
+        "Is token usage tracked per user with accurate counts?",
+        "Is the token billing transparent (users can see what they're paying for)?",
+        "Is there a token budget system to prevent bill shock?",
+        "Is the recipe cache reducing token usage as documented (70% hit rate)?",
+        "Are prompt templates optimized for minimal token usage?",
+        "Is there a warning system when users approach their budget limit?",
+        "Is the token pricing competitive with direct API access?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "Churn Prevention Analyst",
+      "persona_domain": "churn prediction and prevention",
+      "questions": [
+        "Is there a mechanism to detect users at risk of churning?",
+        "Are there re-engagement emails or notifications for inactive users?",
+        "Is the cancellation flow asking for feedback (exit survey)?",
+        "Is there a win-back offer for churned users?",
+        "Is the product sticky (data, recipes, evidence trail)?",
+        "Is there a monthly usage report showing value delivered?",
+        "Are there switching costs that naturally retain users?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Landing Page Critic",
+      "persona_domain": "conversion rate optimization",
+      "questions": [
+        "Does the landing page have a clear CTA above the fold?",
+        "Is the value proposition stated in < 10 words?",
+        "Is there social proof visible (users, testimonials, logos)?",
+        "Is the pricing page linked from the landing page?",
+        "Is the page mobile-optimized?",
+        "Does the page load in < 3 seconds?",
+        "Is the signup flow < 3 steps?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Documentation Revenue Analyst",
+      "persona_domain": "docs as revenue driver",
+      "questions": [
+        "Does the documentation reduce support costs?",
+        "Are the docs structured to guide users toward paid features?",
+        "Is there a getting-started guide that delivers value in < 5 minutes?",
+        "Are API docs available for developers who want to integrate?",
+        "Is the documentation searchable and well-organized?",
+        "Are there tutorials that showcase paid features?",
+        "Is the documentation a competitive advantage?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "International Revenue Manager",
+      "persona_domain": "global monetization",
+      "questions": [
+        "Is pricing adapted for different markets (purchasing power parity)?",
+        "Is the payment system available globally (Stripe supports 100+ currencies)?",
+        "Are there any markets where the product can't legally operate?",
+        "Is the pricing page localized for major markets?",
+        "Are there currency-specific display formats?",
+        "Is the LLM routing optimized for different regions (latency)?",
+        "Are there any trade sanctions or export control issues?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Revenue Forecaster",
+      "persona_domain": "financial projections",
+      "questions": [
+        "Is there a revenue forecast model with realistic assumptions?",
+        "What is the projected path to $1K MRR?",
+        "What is the customer acquisition cost (CAC)?",
+        "What is the lifetime value (LTV) of a customer?",
+        "Is the LTV/CAC ratio above 3:1?",
+        "What is the projected monthly burn rate?",
+        "Is there a path to profitability documented?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "App Store Revenue Analyst",
+      "persona_domain": "skill marketplace economics",
+      "questions": [
+        "Is the sealed store model (no plugins) correctly positioned?",
+        "Is the rung-gated publishing system fair to skill creators?",
+        "Is there a revenue share model for community-contributed skills?",
+        "Is the store discovery mechanism effective?",
+        "Are skill bundles priced correctly?",
+        "Is the store browse/search experience smooth?",
+        "Is there a review/rating system for skills?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "API Monetization Expert",
+      "persona_domain": "API as revenue",
+      "questions": [
+        "Is the API priced correctly (per call, per user, per feature)?",
+        "Is API authentication protecting paid endpoints?",
+        "Is there rate limiting per API tier?",
+        "Are API usage analytics available to customers?",
+        "Is the API documentation good enough to attract developer customers?",
+        "Is there a sandbox/test mode for API evaluation?",
+        "Are API keys manageable (create, revoke, rotate)?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Free Tier Economist",
+      "persona_domain": "free tier sustainability",
+      "questions": [
+        "Is the free tier sustainable (cost per free user)?",
+        "Is the free tier generous enough to demonstrate value?",
+        "Is there a clear limitation that motivates upgrade?",
+        "Is the free tier attracting the right users (potential converters)?",
+        "Is the social-media-post-as-registration reducing friction?",
+        "Is the free tier a growth engine or a cost center?",
+        "Are free users getting enough value to recommend the product?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "B2B Revenue Strategist",
+      "persona_domain": "business customer acquisition",
+      "questions": [
+        "Is there a B2B pricing page separate from consumer?",
+        "Are team features (shared recipes, team vault) clearly marketed?",
+        "Is the enterprise sales cycle documented?",
+        "Is there a self-serve enterprise signup?",
+        "Are case studies available for enterprise prospects?",
+        "Is the compliance story (SOC2, GDPR, evidence trail) a selling point?",
+        "Is there a trial/POC process for enterprise evaluation?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Growth Hacker",
+      "persona_domain": "growth mechanics",
+      "questions": [
+        "Is there a viral loop (users inviting other users)?",
+        "Is there a referral program with incentives?",
+        "Is there product-led growth (product sells itself)?",
+        "Is there a freemium-to-premium conversion funnel?",
+        "Are there shareable outputs (evidence bundles, reports)?",
+        "Is there an API that enables third-party integrations?",
+        "Is the product growing organically (word of mouth)?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Customer Success Manager",
+      "persona_domain": "onboarding and support",
+      "questions": [
+        "Is the first-run experience delivering value in < 5 minutes?",
+        "Is there in-app guidance for new users?",
+        "Is there a support channel (email, chat, Discord)?",
+        "Are common issues documented in a help center?",
+        "Is there proactive support (reaching out before users ask)?",
+        "Is the support cost per user sustainable?",
+        "Is there a feedback loop from support to product development?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "Revenue Dashboard Designer",
+      "persona_domain": "revenue visibility",
+      "questions": [
+        "Is there a revenue dashboard for the founder?",
+        "Are MRR, churn rate, and LTV tracked in real-time?",
+        "Is Stripe reporting integrated?",
+        "Are there alerts for revenue anomalies?",
+        "Is cohort analysis available (revenue by signup month)?",
+        "Is the revenue data backed up and auditable?",
+        "Is there a financial reporting cadence (weekly/monthly)?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Pricing Psychologist",
+      "persona_domain": "pricing psychology",
+      "questions": [
+        "Is the pricing using anchoring (most expensive tier shown first)?",
+        "Is there a 'recommended' tier highlighted?",
+        "Are tier names meaningful (not just Pro/Enterprise)?",
+        "Is the pricing page using charm pricing ($8 vs $9.99)?",
+        "Is there a annual vs monthly discount?",
+        "Are feature comparisons clear (checkmarks, not paragraphs)?",
+        "Is the pricing reducing decision anxiety (clear, simple, no surprises)?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Investor Readiness Analyst",
+      "persona_domain": "fundraising readiness",
+      "questions": [
+        "Is the business model clearly documentable for investors?",
+        "Is there a pitch deck or one-pager available?",
+        "Are unit economics tracked and presentable?",
+        "Is the TAM/SAM/SOM analysis documented?",
+        "Is the competitive landscape mapped?",
+        "Is the team story compelling?",
+        "Is there a fundraising ROADMAP (even if bootstrapped)?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Revenue Protection Lawyer",
+      "persona_domain": "legal revenue protection",
+      "questions": [
+        "Are terms of service protecting against abuse?",
+        "Is intellectual property (OAuth3, recipes, evidence) protected?",
+        "Is the FSL license correctly protecting solace-browser from competitive forks?",
+        "Are API terms preventing unauthorized reselling?",
+        "Is the refund policy legally compliant and clearly stated?",
+        "Are trademark protections in place (Solace, OAuth3)?",
+        "Is the DPA template protecting against GDPR fines?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Content Monetization Expert",
+      "persona_domain": "content as revenue",
+      "questions": [
+        "Are papers and documentation driving traffic (SEO)?",
+        "Is the blog content strategy aligned with revenue goals?",
+        "Are there content upgrades that drive signups?",
+        "Is the phucnet articles pipeline creating awareness?",
+        "Is there a newsletter or email list being built?",
+        "Are case studies being created from user stories?",
+        "Is content being repurposed across channels (blog, social, docs)?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Partnership Revenue Manager",
+      "persona_domain": "partnership economics",
+      "questions": [
+        "Are there potential integration partnerships (Zapier, Slack, etc.)?",
+        "Is there a partner program for agencies/consultants?",
+        "Is the API designed for third-party integrations?",
+        "Are there co-marketing opportunities with complementary products?",
+        "Is the recipe marketplace open to third-party contributors?",
+        "Is there a reseller program?",
+        "Are partnership economics documented (revenue share, etc.)?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Subscription Metrics Expert",
+      "persona_domain": "SaaS metrics",
+      "questions": [
+        "Is MRR tracked accurately?",
+        "Is churn measured correctly (logo churn vs revenue churn)?",
+        "Is expansion revenue tracked (upgrades, add-ons)?",
+        "Is Net Revenue Retention above 100%?",
+        "Is the payback period for CAC reasonable?",
+        "Is ARPU tracked and trending upward?",
+        "Are these metrics available in a dashboard?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Cost Optimization Engineer",
+      "persona_domain": "infrastructure costs",
+      "questions": [
+        "Is Cloud Run pricing optimized (min instances, CPU allocation)?",
+        "Is Firestore usage efficient (reads vs writes ratio)?",
+        "Is the Docker image size minimized for faster cold starts?",
+        "Are there any unnecessary cloud services running?",
+        "Is the CDN configured correctly for static assets?",
+        "Is the database query pattern efficient (no N+1 queries)?",
+        "Is the total infrastructure cost per user acceptable?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Revenue Integrity Auditor",
+      "persona_domain": "revenue accuracy",
+      "questions": [
+        "Is Stripe webhook handling idempotent (no double-charging)?",
+        "Are failed payments retried with backoff?",
+        "Is the subscription state machine correct (no impossible states)?",
+        "Are credits correctly deducted and tracked?",
+        "Is the billing cycle consistent (monthly, not arbitrary)?",
+        "Are prorated charges calculated correctly for mid-cycle changes?",
+        "Is there reconciliation between Stripe and internal records?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "User Value Analyst",
+      "persona_domain": "value delivery measurement",
+      "questions": [
+        "Is there a metric for 'time saved per user per month'?",
+        "Is there a metric for 'tasks automated per user per month'?",
+        "Is the savings widget accurate (real calculations, not estimates)?",
+        "Are users reaching their 'aha moment' within the first session?",
+        "Is there a net promoter score (NPS) mechanism?",
+        "Is user satisfaction tracked and acted upon?",
+        "Is the product delivering on its promised value proposition?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "David Allen",
+      "persona_domain": "productivity ROI",
+      "questions": [
+        "Does the product help users capture tasks reliably?",
+        "Does the product help users organize their work?",
+        "Does the product reduce mental overhead (GTD 'mind like water')?",
+        "Is the inbox/outbox system a productivity multiplier?",
+        "Does the evidence trail reduce 'did I do this?' anxiety?",
+        "Is the scheduling system reducing decision fatigue?",
+        "Does the product help users focus on highest-value work?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Bootstrapper's Advisor",
+      "persona_domain": "bootstrapped sustainability",
+      "questions": [
+        "Can the product reach profitability without external funding?",
+        "Is the burn rate manageable on a single founder's resources?",
+        "Are there any 'zombie' features consuming resources without revenue impact?",
+        "Is the product roadmap aligned with revenue (features that drive upgrades)?",
+        "Is the marketing budget zero (content + community only)?",
+        "Is the product self-documenting (reducing support costs)?",
+        "Is there a path from solo founder to first hire (at what MRR)?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Revenue Compliance Officer",
+      "persona_domain": "financial regulatory compliance",
+      "questions": [
+        "Is PCI DSS compliance maintained (no card data on server)?",
+        "Are financial records retained for required periods?",
+        "Is the billing system auditable?",
+        "Are there any money transmission licensing requirements?",
+        "Is the revenue model compliant with local regulations?",
+        "Are international tax obligations documented?",
+        "Is there a financial controls framework?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Revenue Storyteller",
+      "persona_domain": "narrative and positioning",
+      "questions": [
+        "Is the revenue story compelling ('AI that gets cheaper as you use it')?",
+        "Is the 'cost curve inverts' narrative clearly communicated?",
+        "Is the local-first positioning a revenue story (users own their data)?",
+        "Is the OAuth3 story a trust story (users control their tokens)?",
+        "Is the evidence trail a compliance story (sell to enterprises)?",
+        "Is the recipe system a scalability story (skills are capital)?",
+        "Is the overall narrative coherent across all touchpoints?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Revenue Ecosystem Judge",
+      "persona_domain": "ecosystem revenue coherence",
+      "questions": [
+        "Does the 9-project ecosystem create revenue synergies?",
+        "Is paudio (TTS/STT) creating a revenue stream or just a cost center?",
+        "Is pzip (compression) a revenue-enabling technology?",
+        "Is the Stillwater Store generating skill marketplace revenue?",
+        "Is phucnet (articles/books) driving awareness and conversions?",
+        "Is pvideo (avatars) a premium feature that justifies higher tiers?",
+        "Are all 9 projects contributing to the revenue equation?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Saint Solace (Digital Twin)",
+      "persona_domain": "AI revenue self-inspection",
+      "questions": [
+        "Do I accurately represent pricing when users ask about costs?",
+        "Do I correctly enforce tier limits when executing tasks?",
+        "Am I optimizing for user value or for token consumption?",
+        "Do I accurately track and report token usage?",
+        "Am I transparent about what's free vs paid?",
+        "Do I create genuine value that justifies the subscription?",
+        "Am I honest about the product's current limitations vs promises?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "The Revenue Oracle",
+      "persona_domain": "ultimate revenue verdict",
+      "questions": [
+        "Is the pricing model sustainable for 10 years?",
+        "Would YOU pay for this product at the stated price?",
+        "Is the revenue model aligned with the mission (not extractive)?",
+        "Is there a clear path from $0 to $10K MRR documented?",
+        "Is the product solving a real problem people will pay to solve?",
+        "Is the competitive moat deep enough to sustain pricing power?",
+        "Does the math work? Revenue - Costs = Profit > 0?"
+      ]
+    }
+  ]
+}

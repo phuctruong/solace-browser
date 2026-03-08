@@ -1,0 +1,255 @@
+{
+  "id": "chatgpt-uplift",
+  "platform": "chatgpt",
+  "version": "1.0.0",
+  "description": "Inject prime uplift skills into ChatGPT conversation, then send a review prompt and capture the uplifted response. Skills are loaded from inbox/skills/ as inline context.",
+  "author": "65537",
+  "rung": 641,
+  "created": "2026-03-07",
+  "oauth3_scopes": ["chatgpt.read.conversation", "chatgpt.draft.message", "local.evidence"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "External LLMs have no access to our skill files. By injecting the full skill content as a message BEFORE the review prompt, the LLM internalizes our quality rules. This is equivalent to how Claude Code loads skills from .claude/skills/ — except we deliver via conversation context instead of system prompt.",
+    "uplift_theory": "Paper 17: Uplift = P1 * P2 * ... * P10. Missing any principle = incomplete. By injecting 7 core skills, we activate: P4(Skills), P13(Constraints), P16(NegativeSpace), P17(Stakes), P19(Compression). Expected quality improvement: 30-50%.",
+    "selector_strategy": "Input: #prompt-textarea (contenteditable). Send: button[data-testid='send-button']. Response: div[data-message-author-role='assistant']. Injection: base64 encode + chunked insertText (4KB chunks, 100ms delay).",
+    "saved_reasoning": "ChatGPT processes uplift as conversation context, making all subsequent responses higher quality. The persona activation (P3) and constraints (P13) provide the biggest single-turn quality jumps. Conversation persistence means R2+ prompts can be shorter."
+  },
+
+  "input_params": {
+    "task_type": {
+      "type": "string",
+      "description": "Type of review: architecture, code, ux, business, security",
+      "required": true,
+      "enum": ["architecture", "code", "ux", "business", "security"],
+      "default": "architecture"
+    },
+    "review_content": {
+      "type": "string",
+      "description": "The content to review (architecture doc, code, page HTML, etc.)",
+      "required": true
+    },
+    "project_context": {
+      "type": "string",
+      "description": "Project-specific context to include (1 paragraph)",
+      "required": false,
+      "default": ""
+    },
+    "conversation_id": {
+      "type": "string",
+      "description": "Existing conversation tab page_id for follow-up rounds. Empty = new conversation.",
+      "required": false,
+      "default": ""
+    },
+    "round": {
+      "type": "integer",
+      "description": "Review round number (1 = inject uplift + full prompt, 2+ = delta only)",
+      "required": false,
+      "default": 1
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/chatgpt_working_session.json",
+      "description": "Load saved ChatGPT session cookies",
+      "timeout_ms": 5000
+    },
+    {
+      "step": 2,
+      "action": "conditional",
+      "condition": "{params.conversation_id} == ''",
+      "if_true": {
+        "action": "navigate",
+        "target": "https://chatgpt.com/",
+        "wait_for": "#prompt-textarea",
+        "timeout_ms": 15000,
+        "description": "Navigate to ChatGPT for new conversation"
+      },
+      "if_false": {
+        "action": "activate_tab",
+        "page_id": "{params.conversation_id}",
+        "description": "Reuse existing conversation tab"
+      }
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": "#prompt-textarea",
+      "fallback_url_pattern": "auth.openai.com",
+      "description": "Verify authentication active"
+    },
+    {
+      "step": 4,
+      "action": "conditional",
+      "condition": "{params.round} == 1",
+      "if_true": {
+        "action": "compose_uplift",
+        "description": "Build uplift message from inbox/skills/ + persona + project context",
+        "skills_dir": "inbox/skills/",
+        "template": "inbox/templates/{params.task_type}-review.md",
+        "persona_key": "{params.task_type}",
+        "project_context": "{params.project_context}",
+        "output_var": "uplift_message"
+      },
+      "if_false": {
+        "action": "noop",
+        "description": "Round 2+: skip uplift injection (already loaded in conversation)"
+      }
+    },
+    {
+      "step": 5,
+      "action": "conditional",
+      "condition": "{params.round} == 1",
+      "if_true": {
+        "action": "inject_text",
+        "selector": "#prompt-textarea",
+        "text": "{uplift_message}",
+        "method": "base64_chunked_insert",
+        "chunk_size": 4000,
+        "chunk_delay_ms": 100,
+        "description": "Inject uplift skills via base64 decode + chunked insertText"
+      },
+      "if_false": {
+        "action": "noop",
+        "description": "Round 2+: skip injection"
+      }
+    },
+    {
+      "step": 6,
+      "action": "conditional",
+      "condition": "{params.round} == 1",
+      "if_true": {
+        "action": "click",
+        "selector": "button[data-testid='send-button']",
+        "description": "Send the uplift message",
+        "timeout_ms": 5000
+      },
+      "if_false": {
+        "action": "noop"
+      }
+    },
+    {
+      "step": 7,
+      "action": "conditional",
+      "condition": "{params.round} == 1",
+      "if_true": {
+        "action": "wait_for_stable",
+        "selector": "div[data-message-author-role='assistant']:last-child",
+        "stability_ms": 3000,
+        "timeout_ms": 30000,
+        "description": "Wait for ChatGPT to acknowledge uplift"
+      },
+      "if_false": {
+        "action": "noop"
+      }
+    },
+    {
+      "step": 8,
+      "action": "inject_text",
+      "selector": "#prompt-textarea",
+      "text": "{params.review_content}",
+      "method": "base64_chunked_insert",
+      "chunk_size": 4000,
+      "chunk_delay_ms": 100,
+      "description": "Inject the review content (architecture doc, code, page HTML)"
+    },
+    {
+      "step": 9,
+      "action": "click",
+      "selector": "button[data-testid='send-button']",
+      "description": "Send the review prompt",
+      "timeout_ms": 5000,
+      "screenshot": true
+    },
+    {
+      "step": 10,
+      "action": "wait_for_stable",
+      "selector": "div[data-message-author-role='assistant']:last-child",
+      "stability_ms": 5000,
+      "timeout_ms": 180000,
+      "description": "Wait for ChatGPT to finish the review (up to 3 minutes)",
+      "screenshot": true
+    },
+    {
+      "step": 11,
+      "action": "extract",
+      "selector": "div[data-message-author-role='assistant']:last-child",
+      "fields": {
+        "response_text": {"selector": "self", "type": "textContent"},
+        "response_html": {"selector": "self", "type": "innerHTML"},
+        "has_code_blocks": {"selector": "pre code, code", "type": "exists"}
+      },
+      "description": "Extract the uplifted review response"
+    },
+    {
+      "step": 12,
+      "action": "save_to_outbox",
+      "path": "outbox/responses/",
+      "filename": "chatgpt-r{params.round}-{timestamp}.json",
+      "data": {
+        "llm": "chatgpt",
+        "round": "{params.round}",
+        "task_type": "{params.task_type}",
+        "response_text": "{response_text}",
+        "response_html": "{response_html}",
+        "conversation_url": "{current_url}",
+        "page_id": "{current_page_id}",
+        "timestamp": "{timestamp}"
+      },
+      "description": "Save response to outbox for consensus analysis"
+    },
+    {
+      "step": 13,
+      "action": "hash_evidence",
+      "algorithm": "sha256",
+      "inputs": ["{params.review_content}", "{response_text}", "{timestamp}"],
+      "output_path": "outbox/evidence/chatgpt-r{params.round}-{timestamp}.json",
+      "description": "Create SHA-256 evidence hash for the interaction"
+    },
+    {
+      "step": 14,
+      "action": "return_result",
+      "description": "Return the uplifted review response with evidence",
+      "output": {
+        "status": "reviewed",
+        "llm": "chatgpt",
+        "round": "{params.round}",
+        "task_type": "{params.task_type}",
+        "response_text": "{response_text}",
+        "conversation_url": "{current_url}",
+        "page_id": "{current_page_id}",
+        "evidence_hash": "{evidence_hash}",
+        "skills_loaded": ["prime-safety", "prime-coder", "fallback-ban", "negative-space", "browser-domain", "constraints", "stakes"]
+      }
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "status": {"type": "string", "enum": ["reviewed", "failed", "partial"]},
+      "llm": {"type": "string"},
+      "round": {"type": "integer"},
+      "task_type": {"type": "string"},
+      "response_text": {"type": "string"},
+      "conversation_url": {"type": "string"},
+      "page_id": {"type": "string"},
+      "evidence_hash": {"type": "string"},
+      "skills_loaded": {"type": "array", "items": {"type": "string"}}
+    }
+  },
+
+  "metadata": {
+    "tags": ["chatgpt", "uplift", "cross-llm-qa", "architecture-review", "code-review", "skills"],
+    "difficulty": "medium",
+    "prerequisites": ["chatgpt_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 120,
+    "idempotent": true,
+    "destructive": false,
+    "chain_with": ["gemini-uplift", "claude-uplift"]
+  }
+}

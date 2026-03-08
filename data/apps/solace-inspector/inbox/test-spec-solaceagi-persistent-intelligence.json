@@ -1,0 +1,19 @@
+{
+  "spec_id": "solaceagi-persistent-intelligence-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "web",
+  "target_url": "https://www.solaceagi.com/persistent-intelligence",
+  "page_name": "SolaceAGI Persistent-Intelligence",
+  "checks": {
+    "aria": true,
+    "heuristics": true,
+    "llm_analysis": true,
+    "screenshot": true,
+    "baseline_diff": false
+  },
+  "persona": "michael_bolton",
+  "priority": "normal",
+  "context": "Persistent Intelligence \u2014 evidence chain concept",
+  "created_at": "2026-03-03T00:00:00Z"
+}

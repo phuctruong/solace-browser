@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 34,
+    "tower_name": "Tower of Schedule Automation",
+    "dna": "schedule(auto) = create(cron) x approve(first) x run(recurring) x budget(enforce) x notify(result) x pause(control) x evidence(log)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions. Questions must be EXECUTABLE — answerable by checking if something actually works, not theoretical capability.",
+    "aggregate_prior": "NEW — no prior audit",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Schedule Automation",
+  "tower_number": 34,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Omar Hassan",
+      "persona_domain": "schedule_creation",
+      "persona_context": "30, Cairo, Marketing manager at a regional e-commerce company. Intermediate tech level. Wants to schedule a daily competitor price check recipe that runs every morning at 7am Cairo time before his team's standup meeting.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I schedule a recipe to run daily at 7:00 AM Cairo time (EET, UTC+2) and see the next 5 scheduled run times to confirm they are correct?",
+        "Does the schedule creation UI let me pick from common patterns (daily, weekly, monthly) without writing a cron expression manually?",
+        "Can I schedule a recipe to run only on weekdays (Monday through Friday) and skip weekends?",
+        "Does the scheduler handle daylight saving time transitions so my 7am run does not shift to 6am or 8am?",
+        "Can I schedule a recipe to run on the first business day of each month for monthly reporting?",
+        "Does the schedule dashboard show me all my scheduled recipes in a calendar view with run times visible?",
+        "Can I create a schedule that runs a sequence of 3 recipes in order — first price check, then comparison report, then email digest?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all schedule creation scenarios. Omar needs timezone-aware, DST-safe scheduling with visual confirmation. If his 7am Cairo run fires at 5am UTC in summer and 6am UTC in winter, the schedule must handle both correctly."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Lisa Chen",
+      "persona_domain": "first_run_approval",
+      "persona_context": "47, Vancouver, VP of Customer Success at a SaaS company. Intermediate tech level. Setting up automated weekly NPS survey emails to 2,000 customers. Needs to see and approve the exact first execution before the system runs it autonomously every week.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "When I create a new scheduled recipe, does the system require me to approve the first execution before any subsequent runs happen automatically?",
+        "Does the first-run approval dialog show me the complete output — the exact email subject, body, and recipient list — not just a summary?",
+        "Can I modify the first-run output (fix a typo in the email template) and have the corrected version become the template for future runs?",
+        "Does the system clearly distinguish between 'this is the first run requiring your approval' and 'this is a routine scheduled run'?",
+        "If I reject the first run, does the schedule remain paused until I approve a revised version?",
+        "Can I run a dry-run that shows me what would be sent to all 2,000 customers without actually sending anything?",
+        "Does the first-run approval record who approved it, when, and the exact output hash — so future runs can be verified against the approved template?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all first-run approval scenarios. Lisa is sending to 2,000 customers — one bad automated email damages trust. First-run approval must show complete output, support modification, and become the immutable template for future runs."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Miguel Santos",
+      "persona_domain": "recurring_execution",
+      "persona_context": "39, Sao Paulo, Operations analyst at a logistics company. Intermediate tech level. Runs a daily inventory reconciliation recipe across 3 warehouse systems. Needs the recurring execution to be reliable — no missed runs, no duplicates, no silent failures.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I see a history of all past scheduled runs showing start time, duration, status (success/failure), and the number of items processed?",
+        "If a scheduled run fails, does the system retry once and then alert me instead of retrying indefinitely?",
+        "Does the system guarantee that a scheduled recipe runs exactly once per scheduled time — never duplicated due to a race condition?",
+        "Can I see the next 10 upcoming scheduled runs with their expected execution times in my local timezone?",
+        "If my computer is off when a scheduled run is supposed to happen, does the cloud twin execute it and sync results when I come back online?",
+        "Does the system detect if a scheduled run takes significantly longer than usual and flag it as a potential issue?",
+        "Can I view the detailed evidence log of any past scheduled run — identical to the evidence I would see for a manual run?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all recurring execution reliability scenarios. Miguel runs daily reconciliation — a missed run means inventory mismatches. Execution must be exactly-once, failure-alerting, and produce the same evidence trail as manual runs."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Priya Desai",
+      "persona_domain": "schedule_budget_enforcement",
+      "persona_context": "35, Pune, Finance controller at a mid-size IT services company. Intermediate tech level. 15 employees have scheduled recipes running daily. Needs hard budget enforcement — no scheduled recipe should exceed its allocated spend, and the total monthly spend must stay under $300.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I set a per-schedule budget limit that automatically pauses the schedule when the month-to-date spend for that recipe reaches the cap?",
+        "Does the budget dashboard show me the combined monthly spend across all 15 employees' scheduled recipes in a single view?",
+        "When a scheduled recipe is about to exceed its budget, does the system skip the run and notify me instead of executing and billing?",
+        "Can I set a global monthly budget ceiling of $300 that overrides individual schedule budgets if the total is reached?",
+        "Does the system show me a cost-per-run for each scheduled recipe so I can identify which ones are consuming the most budget?",
+        "Can I see the projected end-of-month total based on the remaining scheduled runs and their historical cost-per-run?",
+        "If I reduce a schedule from daily to weekly mid-month, does the budget dashboard immediately reflect the projected savings?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all schedule budget enforcement scenarios. Priya manages 15 employees — budgets must enforce pre-execution, not post-billing. The system must prevent overspend, not just report it after the fact."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "David Acheson",
+      "persona_domain": "result_notification",
+      "persona_context": "53, Dublin, Regional sales director managing a 20-person team. Beginner tech level. Has 5 scheduled recipes running (lead scoring, CRM updates, weekly reports). Needs clear notifications about what happened — not raw logs, but plain-English summaries.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "After a scheduled recipe completes, do I receive an email summary saying what was done, how many items were processed, and whether anything failed?",
+        "Does the notification include a link to the full evidence log so I can drill into details if something looks wrong?",
+        "Can I configure which scheduled recipes send me notifications and which run silently?",
+        "If a scheduled recipe fails, does the failure notification explain what went wrong in plain English — not stack traces or error codes?",
+        "Can I receive a single daily digest summarizing all 5 scheduled recipe results instead of 5 separate notifications?",
+        "Does the notification show the cost of the run so I can track spending without logging into the dashboard?",
+        "Can I forward the notification email to my team members who do not have Solace accounts so they can see the results?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all result notification scenarios. David is Beginner level — notifications must be plain-English summaries, not technical logs. He manages a team and needs to share results with people who do not use Solace."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Annika Lindgren",
+      "persona_domain": "pause_resume_control",
+      "persona_context": "42, Helsinki, Head of HR at a growing tech company. Intermediate tech level. Uses scheduled recipes for candidate outreach and interview reminders. Needs to pause all hiring automation during a company-wide hiring freeze and resume when the freeze lifts.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Can I pause all scheduled recipes with a single button click and see a confirmation that all schedules are paused?",
+        "Does the paused state clearly show in the schedule dashboard — with a visual indicator distinguishing paused from active schedules?",
+        "When I resume a paused schedule, does it pick up from the next scheduled time — not re-run the missed executions during the pause?",
+        "Can I pause a specific schedule without affecting the others — for example, pause candidate outreach but keep interview reminders running?",
+        "Does the system log who paused and resumed each schedule with a timestamp for audit purposes?",
+        "If a schedule has been paused for 30 days, does the system remind me that it is still paused so I do not forget about it?",
+        "Can I set a pause with an automatic resume date — for example, pause until April 1 and then automatically resume?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all pause and resume control scenarios. Annika needs bulk and individual pause control with clear visual state. Missed-run backfill after resume is dangerous — paused runs should be skipped, not queued."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Roberto Bianchi",
+      "persona_domain": "execution_logs",
+      "persona_context": "44, Milan, IT compliance manager at a pharmaceutical company. Expert tech level. Needs complete execution logs for every scheduled run — what the recipe did, what data it touched, what the output was — for GxP (Good Practice) regulatory audits.",
+      "pass_rate_prior": "NEW",
+      "questions": [
+        "Does every scheduled execution produce a complete log showing each step executed, its input, output, duration, and success/failure status?",
+        "Can I view the execution log for any past scheduled run by clicking on it in the schedule history table?",
+        "Does the log include the exact recipe version hash that was executed, so I can confirm which logic produced the results?",
+        "Can I export execution logs for a date range as a single archive file for submission to GxP auditors?",
+        "Does the system retain execution logs for the same 90-day period as evidence, and can I extend retention for regulatory holds?",
+        "If a scheduled run was skipped (due to budget cap or pause), does the log record that the skip happened and why?",
+        "Can I compare execution logs from two different runs of the same recipe to identify when output diverged and what changed?"
+      ],
+      "question_expansion_instruction": "Expand from seed questions to cover all execution log scenarios. Roberto works in pharma — GxP requires complete, traceable execution records. Every scheduled run must produce the same quality of evidence as a manually triggered run."
+    }
+  ]
+}

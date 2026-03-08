@@ -1,0 +1,53 @@
+id: "competitor-monitor"
+name: "Competitor Intelligence Monitor"
+description: "Track competitor activity via Google Search. Monitor pricing changes, product launches, press coverage, and GitHub activity for AI agent platforms."
+category: "intelligence"
+status: "installed"
+safety: "A"
+site: "google.com"
+type: "standard"
+version: "1.0.0"
+author: "Dragon Rider"
+created_at: "2026-03-06"
+private: true
+trade_secret: true
+never_publish: true
+
+scopes:
+  - "browser.navigate"
+  - "browser.type"
+  - "browser.click"
+  - "browser.screenshot"
+  - "browser.evaluate"
+  - "local.evidence"
+  - "local.filesystem.write"
+
+partners:
+  produces_for:
+    - "phucnet-publisher"
+  consumes_from: []
+
+competitors:
+  - name: "OpenClaw"
+    domains: ["openclaw.com", "github.com/OpenInterpreter"]
+    keywords: ["OpenClaw AI", "Open Interpreter agent"]
+  - name: "Browser-Use"
+    domains: ["browser-use.com", "github.com/browser-use"]
+    keywords: ["browser-use AI agent", "browser automation AI"]
+  - name: "Bardeen"
+    domains: ["bardeen.ai"]
+    keywords: ["Bardeen AI automation", "Bardeen pricing"]
+  - name: "n8n"
+    domains: ["n8n.io"]
+    keywords: ["n8n workflow automation", "n8n AI agents"]
+  - name: "Vercel Agent Browser"
+    domains: ["vercel.com"]
+    keywords: ["Vercel AI agent browser", "Vercel AI SDK browser"]
+  - name: "Claude Computer Use"
+    domains: ["anthropic.com"]
+    keywords: ["Claude computer use", "Anthropic agent"]
+
+tags:
+  - "competitive-intelligence"
+  - "web-automation"
+  - "secret-sauce"

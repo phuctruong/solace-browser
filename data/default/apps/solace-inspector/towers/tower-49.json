@@ -1,0 +1,151 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 49,
+    "tower_name": "Tower of CLI Hub Integration",
+    "dna": "cli_hub(integration) = browser_control(spawn_monitor) x cloud_deploy(push_sync) x skill_store(private_sealed) x recipe_author(create_test_seal) x stillwater_ext(oss_private_boundary) x remote_target(dispatch_security) x evidence(audit_all)",
+    "generated_at": "2026-03-06T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a distinct persona who depends on CLI hub integration. Questions must verify that the CLI correctly controls browsers, deploys to cloud, manages private skills, authors recipes, enforces OSS/private boundaries, handles remote commands securely, and generates evidence for all cross-system operations.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-cli",
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-cli": "/home/phuc/projects/solace-cli",
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of CLI Hub Integration",
+  "tower_number": 49,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Marcus Chen",
+      "persona_domain": "cli_browser_control",
+      "persona_context": "33, San Francisco, Full-stack developer at a growth-stage startup, Expert tech, Pro tier, needs to spawn, navigate, screenshot, and stop Solace Browser instances from the CLI for automated testing and web scraping pipelines — all without opening a GUI",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I run 'solace browser spawn --headless' from the CLI and get a running browser instance with a session ID returned to stdout within 10 seconds?",
+        "Does 'solace browser navigate <session-id> <url>' load the specified URL in the headless browser and return the HTTP status code?",
+        "Can I run 'solace browser screenshot <session-id> --output /tmp/page.png' and get an actual PNG screenshot of the current page saved to the specified path?",
+        "Does 'solace browser list' show all active browser instances with session ID, PID, URL, uptime, and memory usage?",
+        "Can I run 'solace browser stop <session-id>' and confirm the browser process terminates within 5 seconds — no orphaned chromium processes left behind?",
+        "Does the CLI expose browser DevTools on a configurable port via 'solace browser spawn --devtools-port 8888' for external tool integration?",
+        "If I spawn 3 browser instances, does 'solace browser stop --all' terminate all of them and confirm each one was stopped by session ID?"
+      ],
+      "question_expansion_instruction": "Marcus uses the CLI for headless browser automation. Questions verify that spawn, navigate, screenshot, list, and stop commands work correctly, return structured output, and leave no orphaned processes."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Elena Rodriguez",
+      "persona_domain": "cli_cloud_deploy",
+      "persona_context": "38, Madrid, Platform engineer at a mid-size fintech, Expert tech, Enterprise tier, responsible for deploying solaceagi.com backend updates via CLI — needs zero-downtime deploys, Firestore schema migrations, and rollback capability from the terminal",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does 'solace deploy push --env production' trigger a Cloud Run deployment and show real-time build logs streamed to the terminal?",
+        "Can I run 'solace deploy status' and see the current deployed version, deployment timestamp, health status, and active revision count?",
+        "Does 'solace deploy rollback --to <revision>' revert to a previous Cloud Run revision with zero downtime and confirm the rollback in stdout?",
+        "Can I run 'solace deploy migrate --collection users --add-field tier:string' to add a field to all Firestore documents in the users collection with a progress bar?",
+        "Does the CLI validate that my GCP credentials and IAM permissions are sufficient before starting a deploy — failing fast with a specific error rather than failing mid-deploy?",
+        "Can I run 'solace deploy diff' to see a git diff of what will be deployed compared to the currently running production revision?",
+        "Does every deploy command generate an evidence bundle with the commit hash, deployer identity, timestamp, and deployment outcome (success/rollback/fail)?"
+      ],
+      "question_expansion_instruction": "Elena manages production deployments from the CLI. Questions verify that deploy, rollback, migrate, and status commands work reliably, provide real-time feedback, validate prerequisites, and generate deployment evidence."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "David Park",
+      "persona_domain": "private_skill_store",
+      "persona_context": "42, Seoul, CTO at a consulting firm that builds custom Solace skills for enterprise clients, Expert tech, Enterprise tier, needs to ensure his firm's proprietary skills are stored securely in the CLI, never published to the public store, and protected from accidental leakage",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I create a private skill with 'solace skill create --private my-client-skill' that is stored only in my local CLI data directory and never appears in the public Stillwater Store?",
+        "Does 'solace skill list --private' show all private skills with their names, versions, and last-modified dates separately from public skills?",
+        "If I accidentally run 'solace skill publish my-client-skill', does the CLI block the publish with an error because the skill is marked private — no confirmation prompt bypass?",
+        "Can I export a private skill as an encrypted archive with 'solace skill export my-client-skill --encrypt --password' for secure transfer to a client?",
+        "Does the CLI git-ignore private skills by default so they are never committed to a repository that might be pushed to a public remote?",
+        "Can I set a skill classification ('public', 'private', 'confidential') at creation time that cannot be downgraded from 'confidential' to 'public' without an explicit override flag?",
+        "Does 'solace skill audit' scan all local skills and warn if any private or confidential skills are referenced in public recipes or committed to a git remote?"
+      ],
+      "question_expansion_instruction": "David builds proprietary skills for clients. Questions verify that private skills are securely stored, publication-blocked, exportable with encryption, git-ignored, classification-enforced, and auditable for leakage."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Amara Osei",
+      "persona_domain": "recipe_authoring",
+      "persona_context": "29, Accra, Automation engineer at a digital marketing agency, Intermediate tech, Pro tier, creates recipes for client workflows (Gmail triage, LinkedIn outreach, report generation) and needs to test, seal, and version them from the CLI before deploying to the team",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I run 'solace recipe create gmail-client-triage' and get a scaffolded recipe JSON with required fields (name, steps, scopes, version) pre-populated in my editor?",
+        "Does 'solace recipe test gmail-client-triage --dry-run' execute the recipe against a mock Gmail inbox and show me the preview output without sending any real emails?",
+        "Can I run 'solace recipe seal gmail-client-triage' to cryptographically seal the recipe with a SHA-256 hash that prevents tampering after deployment?",
+        "Does 'solace recipe version gmail-client-triage --bump minor' increment the version from 1.0.0 to 1.1.0 and create a new sealed version while keeping the old one accessible?",
+        "Can I run 'solace recipe diff gmail-client-triage --v1.0.0 --v1.1.0' and see a human-readable diff of what changed between two sealed versions?",
+        "Does 'solace recipe validate gmail-client-triage' check that all referenced skills exist, all OAuth3 scopes are declared, and all step inputs match their expected types?",
+        "Can I run 'solace recipe publish gmail-client-triage --team' to push the sealed recipe to my team's cloud store without making it available in the public Stillwater Store?"
+      ],
+      "question_expansion_instruction": "Amara builds recipes for clients. Questions verify that the CLI supports the full recipe lifecycle: scaffold, test with dry-run, seal, version, diff, validate, and team-scoped publish."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Liam O'Brien",
+      "persona_domain": "stillwater_extension",
+      "persona_context": "35, Dublin, Open-source contributor who uses stillwater CLI daily and is evaluating solace-cli as a private extension, Expert tech, Free tier, needs to understand exactly where the OSS boundary is — what he gets for free from stillwater vs what requires the private solace-cli extension",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does 'solace --version' show both the stillwater base version and the solace-cli extension version so I can tell which layer I am running?",
+        "Can I use all stillwater CLI commands (skill list, recipe run, evidence verify) without a solace-cli license or solaceagi.com account?",
+        "Does the CLI clearly error with 'This command requires solace-cli (private extension)' when I try to use OAuth3 vault, cloud deploy, or twin commands on bare stillwater?",
+        "Is there a 'solace capabilities' command that lists which features come from stillwater (OSS) vs solace-cli (private) vs solaceagi.com (cloud)?",
+        "If I install solace-cli on top of stillwater, does it extend without modifying any stillwater core files — no monkey-patching or file replacement?",
+        "Can I uninstall solace-cli and still have a fully functional stillwater CLI with all my local skills, recipes, and evidence intact?",
+        "Does the CLI enforce that private solace-cli code is never bundled into stillwater OSS releases — build pipeline blocks cross-contamination?"
+      ],
+      "question_expansion_instruction": "Liam is an OSS purist evaluating the private extension. Questions verify that the OSS/private boundary is explicit, non-destructive, clearly communicated, and enforced in the build pipeline."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Yuki Watanabe",
+      "persona_domain": "remote_control",
+      "persona_context": "41, Osaka, Security researcher who pen-tests enterprise tools, Expert security, Enterprise tier, needs to verify that the CLI's remote control surface (browser/cloud sending commands to CLI) is secure — no unauthorized command execution, no privilege escalation, no RCE vectors",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the CLI require an explicit 'solace remote enable --allow-from cloud' command before accepting any remote commands — disabled by default?",
+        "Are remote commands authenticated with a mutual TLS certificate or pre-shared key that the CLI and the command source (browser/cloud) both possess?",
+        "Does the CLI maintain an allowlist of permitted remote commands — and reject any command not on the list with a 'Command not permitted remotely' error?",
+        "If a remote command attempts to execute a shell command (e.g., 'rm -rf /'), does the CLI block it categorically — no shell execution from remote dispatch?",
+        "Does every remote command execution generate an evidence entry with the source (browser/cloud), command, arguments, and execution result?",
+        "Can I run 'solace remote audit' and see a log of all remote commands received in the last 30 days with source, timestamp, command, and allow/deny decision?",
+        "If the mutual auth certificate expires, does the CLI stop accepting remote commands immediately and log a security warning — no grace period?"
+      ],
+      "question_expansion_instruction": "Yuki pen-tests the remote control surface. Questions verify that remote command execution is opt-in, mutually authenticated, allowlist-restricted, shell-execution-blocked, evidence-generating, auditable, and fail-closed on expired credentials."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Fatou Diallo",
+      "persona_domain": "evidence_and_audit",
+      "persona_context": "46, Dakar, Chief Compliance Officer at a pan-African bank, Expert compliance, Enterprise tier, needs the CLI to generate tamper-evident evidence for every cross-system operation (browser spawn, cloud deploy, skill publish, recipe seal) — the bank's regulator requires it",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does every CLI command that touches an external system (browser, cloud, store) automatically generate an evidence bundle without the user needing to pass an '--evidence' flag?",
+        "Is each evidence bundle SHA-256 hash-chained to the previous one so that inserting, deleting, or modifying a single entry breaks the chain and is detectable?",
+        "Can I run 'solace evidence verify --from 2026-01-01 --to 2026-03-06' and get a PASS/FAIL verdict on the integrity of the entire evidence chain for that date range?",
+        "Does the evidence bundle for a cloud deploy include the git commit hash, the deployer's identity (email), the target environment, and the deployment outcome?",
+        "Does the evidence bundle for a browser spawn include the session ID, the PID, the spawn timestamp, and the command-line arguments used?",
+        "Can I export the full evidence chain as a signed JSON file with 'solace evidence export --sign --format json' for submission to our banking regulator?",
+        "Does the CLI refuse to execute a command if the evidence subsystem is unavailable (disk full, write permission denied) — fail-closed, not silent evidence loss?"
+      ],
+      "question_expansion_instruction": "Fatou needs regulatory-grade evidence from the CLI. Questions verify that evidence is automatic, hash-chained, verifiable, comprehensive (deploys + browser + skills + recipes), exportable, and fail-closed when the evidence subsystem is unavailable."
+    }
+  ]
+}

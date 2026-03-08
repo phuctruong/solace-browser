@@ -1,0 +1,11 @@
+{
+  "persona_id": "seth-godin",
+  "version": 1,
+  "created_glow": 123,
+  "allies": {
+    "natural_collaborator": ["vanessa-van-edwards", "jony-ive", "sherry-turkle"],
+    "productive_tension": ["russell-brunson", "alex-hormozi"],
+    "domain_complement": ["rory-sutherland", "don-norman"]
+  },
+  "p37_note": "Network seeded at GLOW 123. Seth and Russell have productive tension: Russell wants the funnel to pull the user forward; Seth wants the user to pull themselves forward. When both voices are present in a review, the resulting tutorial earns each step rather than engineering it. Seth and Alex Hormozi also have tension: Alex wants the offer to be irresistible; Seth wants the offer to be earned. The tension produces offers that are both irresistible AND trusted."
+}

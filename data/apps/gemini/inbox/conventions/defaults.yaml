@@ -1,0 +1,49 @@
+# Gemini Uplift Reviewer — Default Configuration
+# Inject prime skills into Gemini Pro for architecture/code/QA reviews.
+# Last updated: 2026-03-07 | Auth: 65537
+
+enabled: true
+
+# Account
+site_url: https://gemini.google.com/app
+model_preference: pro
+
+# Uplift behavior
+inject_skills_on_round_1: true
+reuse_conversation: true
+save_page_ids: true
+page_ids_path: /tmp/llm-uplift-tabs.json
+ensure_pro_model: true
+
+# Prompt behavior
+max_prompt_length: 12000
+wait_for_response_timeout_s: 180
+max_response_extract_length: 32000
+
+# Persona (auto-selected by task_type)
+persona_architecture: Martin Kleppmann
+persona_code: Brendan Gregg
+persona_security: Tavis Ormandy
+persona_ux: Don Norman
+persona_business: Peter Thiel
+
+# Schedule
+schedule: on_demand
+cooldown_seconds: 5
+
+# Evidence
+evidence_level: full
+hash_algorithm: sha256
+retain_screenshots: true
+retain_days: 90
+
+# Safety
+safety_rating: B
+require_approval: true
+
+# OAuth3 scopes
+scopes:
+  - gemini.read.conversation
+  - gemini.draft.message
+  - local.evidence
+  - local.screenshots

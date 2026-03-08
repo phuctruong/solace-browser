@@ -1,0 +1,19 @@
+{
+  "spec_id": "solaceagi-pricing-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "web",
+  "target_url": "https://www.solaceagi.com/pricing",
+  "page_name": "SolaceAGI Pricing",
+  "checks": {
+    "aria": true,
+    "heuristics": true,
+    "llm_analysis": true,
+    "screenshot": true,
+    "baseline_diff": false
+  },
+  "persona": "cem_kaner",
+  "priority": "normal",
+  "context": "Pricing Page \u2014 tiers, CTAs, feature comparison",
+  "created_at": "2026-03-03T00:00:00Z"
+}

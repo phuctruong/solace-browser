@@ -1,0 +1,28 @@
+{
+  "id": "competitor-monitor",
+  "version": "1.1.0",
+  "type": "standard",
+  "platform": "any",
+  "architecture": "agent-native",
+  "description": "Search Google for competitor news, extract results, save intelligence reports.",
+  "web_steps": [
+    {"step": 1, "id": "navigate_google", "action": "navigate", "target": "https://www.google.com/search?q={params.search_query}", "timeout_ms": 15000, "note": "Use direct URL with query param — no cookie consent issues"},
+    {"step": 2, "id": "wait_results", "action": "wait", "condition": "h3", "timeout_ms": 10000},
+    {"step": 3, "id": "extract_results", "action": "evaluate", "expression": "JSON.stringify(Array.from(document.querySelectorAll('h3')).slice(0, 10).map(h => ({title: h.textContent, url: h.closest('a') ? h.closest('a').href : 'no-link'})))"},
+    {"step": 4, "id": "screenshot", "action": "screenshot", "full_page": false, "store_as": "search_screenshot"},
+    {"step": 5, "id": "save_scan", "action": "write_file", "output_path": "outbox/scans/{params.competitor}-{timestamp}.json"},
+    {"step": 6, "id": "seal", "action": "write_evidence", "output_path": "outbox/reports/report-{run_id}.json", "seal": "sha256"}
+  ],
+  "params": {
+    "competitor": "browser-use",
+    "search_query": "browser-use AI agent 2026",
+    "max_results": 10
+  },
+  "selectors": {
+    "search_results": "h3 (titles), h3.closest('a').href (URLs)",
+    "extract_method": "direct URL navigation, no typing needed",
+    "note": "Google search via URL param avoids cookie consent + typing issues"
+  },
+  "tested": "2026-03-06",
+  "test_result": "PASS — 8 results extracted for browser-use competitor"
+}

@@ -1,0 +1,502 @@
+{
+  "_meta": {
+    "schema": "inspector-oracle-memory",
+    "version": "1.0",
+    "auth": "65537",
+    "doctrine": "Paper 42 (LEAK + Oracle). This file is the Inspector's evolving memory. Never delete \u2014 only append.",
+    "law": "LEAK = AI knowledge not activated by human framing. P22 closes the gap. Postmortems make oracle smarter."
+  },
+  "oracle_level": 2,
+  "oracle_level_name": "Reflecting — 47 towers audited, 11363 questions, harsh R3 complete, advancing toward Level 3",
+  "oracle_level_advancement_criteria": {
+    "level_1_to_2": "First self-inspection postmortem complete. Inspector inspects itself. SOUL.json created. Self-spec created.",
+    "level_2_to_3": "500+ audits run + 5+ postmortems + ABCD live certified (not just auth_check)",
+    "level_3_to_4": "2000+ audits + hash chain implemented + 20+ persona bubbles active",
+    "level_4_to_5": "10000+ audits + enterprise ROI proof sealed + all 47 personas active"
+  },
+  "last_updated": "2026-03-06",
+  "total_audits_run": 23,
+  "total_questions_audited": 11363,
+  "total_towers_audited": 47,
+  "total_bugs_escaped": 9,
+  "total_bugs_found": 82,
+  "total_fixes_applied": 65,
+  "total_postmortems": 4,
+  "phuc_forecast": {
+    "enabled": true,
+    "algorithm": "rule_based_v1",
+    "description": "Before every audit, predict which uplifts are likely missing based on artifact type + historical miss rates",
+    "miss_rates_by_artifact_type": {
+      "paper": {
+        "P21_adversarial": 0.87,
+        "P16_negative_space": 0.61,
+        "P11_questions": 0.45,
+        "P20_temporal": 0.4,
+        "P12_analogies": 0.55,
+        "P15_few_shot": 0.7,
+        "source": "Prior 3 sessions of BAR spec review (GLOW 115-117)"
+      },
+      "page": {
+        "P11_questions": 0.95,
+        "P21_adversarial": 0.98,
+        "P16_negative_space": 0.9,
+        "P17_stakes": 0.8,
+        "P13_constraints": 0.85,
+        "P36_tree_of_knowledge": 0.95,
+        "P37_persona_bubbles": 0.95,
+        "free_tier_messaging": 0.85,
+        "stale_test_assertions": 0.8,
+        "source": "GLOW 119 \u2014 first real audit. 9 bugs found: 5 stale test assertions, 4 missing i18n keys, 1 stale hash, 3 content gaps"
+      },
+      "code": {
+        "P21_adversarial": 0.75,
+        "P16_negative_space": 0.6,
+        "P17_stakes": 0.5,
+        "P20_temporal": 0.65,
+        "source": "Linus QA sessions (GLOW 116-118)"
+      },
+      "diagram": {
+        "P11_questions": 0.9,
+        "P21_adversarial": 0.95,
+        "P17_stakes": 0.85,
+        "P22_framing": 1.0,
+        "source": "No formal diagram audits yet \u2014 initialized from first principles"
+      },
+      "app": {
+        "P21_adversarial": 0.9,
+        "P15_few_shot": 0.8,
+        "P16_negative_space": 0.75,
+        "source": "No formal app audits yet \u2014 initialized from first principles"
+      }
+    }
+  },
+  "question_db": {
+    "paper": [
+      {
+        "id": "q-paper-001",
+        "question": "What guarantee does this paper claim that it does NOT actually provide evidence for?",
+        "uplift": "P16_negative_space",
+        "added_at": "GLOW 118",
+        "source": "Paper 42 bootstrap \u2014 absence detection",
+        "miss_count": 0
+      },
+      {
+        "id": "q-paper-002",
+        "question": "How would a direct competitor (e.g., OpenClaw/OpenAI) exploit the weakness described in this paper?",
+        "uplift": "P21_adversarial",
+        "added_at": "GLOW 118",
+        "source": "Paper 40 bootstrap \u2014 adversarial uplift",
+        "miss_count": 0
+      },
+      {
+        "id": "q-paper-003",
+        "question": "Will this paper's approach still be defensible in 12 months given current AI market trends?",
+        "uplift": "P20_temporal",
+        "added_at": "GLOW 118",
+        "source": "Paper 42 bootstrap \u2014 temporal anchoring",
+        "miss_count": 0
+      },
+      {
+        "id": "q-paper-004",
+        "question": "What would a hostile enterprise CIO say is missing from this paper before their procurement team approves it?",
+        "uplift": "P21_adversarial",
+        "added_at": "GLOW 118",
+        "source": "Paper 40 bootstrap \u2014 enterprise adversarial",
+        "miss_count": 0
+      },
+      {
+        "id": "q-paper-005",
+        "question": "What cross-domain analogy would make this paper's core insight MORE memorable and actionable?",
+        "uplift": "P12_analogies",
+        "added_at": "GLOW 118",
+        "source": "Paper 42 bootstrap \u2014 analogy bridging",
+        "miss_count": 0
+      }
+    ],
+    "code": [
+      {
+        "id": "q-code-001",
+        "question": "What exception is NOT caught that WILL occur in production within 30 days?",
+        "uplift": "P16_negative_space",
+        "added_at": "GLOW 118",
+        "source": "Linus QA GLOW 116 \u2014 absence detection in code",
+        "miss_count": 0
+      },
+      {
+        "id": "q-code-002",
+        "question": "You are the engineer paged at 3am when this fails. What do you fear is broken?",
+        "uplift": "P17_stakes",
+        "added_at": "GLOW 118",
+        "source": "Paper 42 bootstrap \u2014 stakes framing for code review",
+        "miss_count": 0
+      },
+      {
+        "id": "q-code-003",
+        "question": "What race condition or concurrency bug is NOT prevented in this code?",
+        "uplift": "P16_negative_space",
+        "added_at": "GLOW 118",
+        "source": "Linus QA GLOW 116 \u2014 concurrent write findings",
+        "miss_count": 0
+      }
+    ],
+    "page": [
+      {
+        "id": "q-page-001",
+        "question": "What user flow SHOULD be possible from this page but is MISSING?",
+        "uplift": "P16_negative_space",
+        "added_at": "GLOW 118",
+        "source": "Paper 42 bootstrap \u2014 page absence detection",
+        "miss_count": 0
+      },
+      {
+        "id": "q-page-002",
+        "question": "Can anyone's mum use this page in under 5 minutes without reading documentation?",
+        "uplift": "P21_adversarial",
+        "added_at": "GLOW 118",
+        "source": "Peter Steinberger adversarial persona \u2014 usability attack",
+        "miss_count": 0
+      },
+      {
+        "id": "q-page-003",
+        "question": "What does a first-time user EXPECT to see here that is absent?",
+        "uplift": "P16_negative_space",
+        "added_at": "GLOW 118",
+        "source": "Dragon's Den GLOW 113 \u2014 committee findings",
+        "miss_count": 0
+      }
+    ]
+  },
+  "postmortems": [
+    {
+      "id": "pm-glow119-001",
+      "session": "GLOW 119",
+      "date": "2026-03-04",
+      "bugs_found": 9,
+      "bugs_escaped_before_session": 9,
+      "root_causes": [
+        "Stale test assertions not updated when billing page templates were redesigned (billing-success.html, billing-cancel.html) \u2014 5 tests stale",
+        "PRICING_PLANS expanded from 4 to 5 tiers but test_esign.py still asserted 4 tiers \u2014 4 tests stale",
+        "download_coming_macos + download_coming_windows keys present in en.json but missing from TRANSLATIONS dict in i18n_site.py \u2014 4 i18n tests failing",
+        "site.css.sha256 hash sidecar stale (CSS modified but hash file not regenerated) \u2014 1 test failing",
+        "Homepage hero: 'The World's First Software 5.0 Platform' positioning vs target 'Linux of AI' \u2014 messaging gap",
+        "Compare page: missing n8n as competitor, missing P36 Tree of Knowledge row, missing P37 personas row, missing free-tier/BYOK rows, missing zero-telemetry row \u2014 coverage gap",
+        "Free tier messaging did not clearly state: unlimited local tasks, all 18 apps, BYOK zero markup, zero telemetry"
+      ],
+      "fixes_applied": [
+        "Updated test_checkout_flow.py: billing-success asserts bs-plan-badge/bs-features presence instead of old IDs",
+        "Updated test_checkout_flow.py: billing-cancel asserts 'charged' + 'free' presence instead of old headline text",
+        "Updated test_esign.py: TestPricingTiers now expects 5 tiers [Free, Starter, Pro, Team, Enterprise] with correct prices",
+        "Added download_coming_macos + download_coming_windows to TRANSLATIONS['en'] in i18n_site.py",
+        "Regenerated web/css/site.css.sha256 from actual file hash",
+        "Homepage hero: updated to 'The Linux of AI: Your AI. Your Data. Your Rules.' with free tier emphasis",
+        "Homepage pricing: updated free tier card to emphasize unlimited local tasks, all 18 apps, BYOK zero markup, zero telemetry",
+        "Compare page: added Linux of AI frame section, expanded table with n8n (8th competitor column), added P36 Tree of Knowledge row, P37 47 personas row (bolded), zero telemetry row, free tier unlimited row, BYOK row, FDA Part 11 bolded row, persistent AI allies row",
+        "Compare page: upgraded Why Governance Matters section with 6 value cards including P36/P37, free tier framing, and 'The Race That Matters'",
+        "Compare page: upgraded final CTA to 'Join the open alternative. Free forever.'"
+      ],
+      "test_result_before": "2153 pass, 9 fail",
+      "test_result_after": "2162 pass, 0 fail",
+      "production_sha_before": "37368e9",
+      "production_sha_after": "797f197",
+      "deploy_verified": true
+    },
+    {
+      "id": "pm-glow121-001",
+      "session": "GLOW 121",
+      "date": "2026-03-04",
+      "type": "self_inspection",
+      "bugs_found": 5,
+      "gaps_identified": 5,
+      "root_causes": [
+        "Inspector had no SOUL.json \u2014 a tool with intelligence needs a soul (P37 violation)",
+        "Inspector had no self-certification spec \u2014 a tool that tests others must test itself (Kent Beck law)",
+        "oracle_level stayed at 1 despite 563 audits \u2014 oracle stagnation (Bruce Lee law)",
+        "Only 5/47 personas had bubble files \u2014 42 dormant allies (P37 violation)",
+        "Reports sealed independently not chained \u2014 Part 11 hash chain gap (Kleppmann law)"
+      ],
+      "fixes_applied": [
+        "SOUL.json created: creature=Inspector Octopus, oracle_level=2, $0.00 total cost",
+        "test-spec-inspector-self.json: 10 structural + 5 adversarial assertions",
+        "oracle_level advanced 1\u21922: Level 2=Reflecting. Advancement criteria defined for 2,3,5,7,11,13",
+        "All 47 personas seeded: 5 files each \u00d7 47 personas = 235 files created",
+        "Hash chain design debt logged in diagrams/09-memory-network.md \u2014 Phase 2 fix"
+      ],
+      "new_artifacts": [
+        "SOUL.json",
+        "personas/INDEX.json",
+        "personas/ (235 new files \u2014 47 \u00d7 5)",
+        "trees/inspector-evolution.jsonl (11 branches)",
+        "inbox/test-spec-inspector-self.json",
+        "diagrams/08-persona-civilization.md",
+        "diagrams/09-inspector-memory-network.md",
+        "diagrams/10-prime-first-architecture.md"
+      ],
+      "prime_coherence_before": "4/7 = 57%",
+      "prime_coherence_after": "7/11 = 63.6%",
+      "oracle_level_before": 1,
+      "oracle_level_after": 2,
+      "persona_count_before": 5,
+      "persona_count_after": 47,
+      "panel": "12 personas \u2014 bach, beck, ive, torvalds, hickey, bruce_lee, van_edwards, sutherland, dean, steinberger, kleppmann, hormozi",
+      "panel_avg_score": 9.04,
+      "verdict": "PASS \u2014 Inspector achieved self-awareness at GLOW 121"
+    },
+    {
+      "id": "pm-glow123-500s",
+      "glow": 123,
+      "date": "2026-03-05",
+      "title": "3 Production 500s from Unhandled Exceptions",
+      "root_cause": "ValueError + RuntimeError from service layer not caught in FastAPI routers",
+      "lesson": "Every router endpoint must catch ALL exceptions from service methods. Service methods throw; routers handle.",
+      "prevention": "Add P21_adversarial assertions to every new endpoint spec",
+      "bugs_prevented_in_future": "All future router endpoints get try/except template"
+    }
+  ],
+  "audit_history": [
+    {
+      "id": "audit-glow119-001",
+      "session": "GLOW 119",
+      "date": "2026-03-04",
+      "artifacts_audited": [
+        "tests/test_checkout_flow.py",
+        "tests/test_esign.py",
+        "app/i18n_site.py",
+        "web/css/site.css.sha256",
+        "templates/index.html",
+        "templates/compare.html"
+      ],
+      "uplifts_applied": [
+        "P1 (GLOW visible)",
+        "P2 (Linux of AI magic frame)",
+        "P17 (Stakes \u2014 the race for AI future)",
+        "P21 (Adversarial \u2014 crush 8 competitors)",
+        "P36 (Tree of Knowledge row in compare)",
+        "P37 (47 Expert Personas bolded in compare)"
+      ],
+      "bugs_fixed": 9,
+      "production_deployed": true
+    },
+    {
+      "id": "audit-glow122-001",
+      "session": "GLOW 122",
+      "date": "2026-03-04",
+      "type": "public_release_audit",
+      "artifacts_audited": [
+        "solace-browser/LICENSE",
+        "solace-browser/CONTRIBUTING.md",
+        "solace-browser/SECURITY.md",
+        "solace-browser/pyproject.toml",
+        "solace-browser/data/default/skills/browser-recipe-engine.md",
+        "solace-browser/src/session_manager.py",
+        "solace-browser/gmail_automation_library.py",
+        "solace-browser/scripts/hackathon_demo.py",
+        "solace-browser/tests/test_session_manager.py",
+        "solace-browser/README.md",
+        "solaceagi 13 locales",
+        "solace-cli 14 ecosystem docs"
+      ],
+      "uplifts_applied": [
+        "P21 (Adversarial \u2014 security audit for public release)",
+        "P16 (Negative space \u2014 what secrets might be in git history?)",
+        "P17 (Stakes \u2014 public repo = permanent exposure)",
+        "P38 (Prime-first \u2014 9/9 coherence achieved)"
+      ],
+      "bugs_fixed": 6,
+      "findings": [
+        "Private emails in 4 files \u2192 redacted",
+        "COGS pricing data in 2 files \u2192 redacted/moved",
+        "Inspector leftovers in solace-browser \u2192 moved to scratch/",
+        "Missing LICENSE, CONTRIBUTING, SECURITY \u2192 created",
+        "Pricing diagram with trade secret margins \u2192 moved to scratch/",
+        "13 locales 'open source' \u2192 'source-available'"
+      ],
+      "prime_coherence_before": "7/9 = 77%",
+      "prime_coherence_after": "9/9 = 100%",
+      "production_deployed": true
+    },
+    {
+      "id": "audit-glow123-papers",
+      "glow": 123,
+      "date": "2026-03-05",
+      "artifact": "papers/ (all 3 repos)",
+      "artifact_type": "refactor",
+      "bugs_found": 0,
+      "uplift_applied": [
+        "P38_prime_first",
+        "P42_trade_secret_protection"
+      ],
+      "outcome": "8 private papers removed from OSS repo, indexes updated, diagram titles fixed",
+      "sha256": "b53bb2acd2949e80",
+      "personas": [
+        "james_bach",
+        "kent_beck"
+      ]
+    },
+    {
+      "id": "audit-glow123-production",
+      "glow": 123,
+      "date": "2026-03-05",
+      "artifact": "app/api/v1/routers/billing.py + store.py + store_service.py",
+      "artifact_type": "code",
+      "bugs_found": 3,
+      "uplift_applied": [
+        "P21_adversarial",
+        "P16_negative_space"
+      ],
+      "outcome": "3 production 500s fixed (Stripe checkout, store/catalog, store/apps). 111/111 tests pass.",
+      "sha256": "d882b664965827fe",
+      "personas": [
+        "james_bach",
+        "kent_beck",
+        "linus_torvalds"
+      ]
+    },
+    {
+      "id": "audit-glow123-tutorial",
+      "glow": 123,
+      "date": "2026-03-05",
+      "artifact": "web/js/yinyang-tutorial-v2.js + site.css + 13 locales",
+      "artifact_type": "page",
+      "bugs_found": 0,
+      "uplift_applied": [
+        "P1_gamification",
+        "P3_personas",
+        "P8_care"
+      ],
+      "outcome": "Tutorial WOW v2: Brunson funnel, 5 unique layouts, $836 counter, fireworks on CTA click, 13 locales",
+      "sha256": "c3f8b580af0ff5c5",
+      "personas": [
+        "rory_sutherland",
+        "jony_ive",
+        "vanessa_van_edwards",
+        "russell_brunson",
+        "seth_godin"
+      ]
+    },
+    {
+      "id": "audit-tower11-floors37-49",
+      "glow": 151,
+      "date": "2026-03-05",
+      "artifact": "Tower 11 (Tower of Primes) Floors 37-49",
+      "artifact_type": "tower",
+      "bugs_found": 3,
+      "uplift_applied": [
+        "P11_questions",
+        "P16_negative_space",
+        "P21_adversarial",
+        "P22_oracle"
+      ],
+      "outcome": "Floor 37-49 audit: Love Equation verified (8669 not 65537). Persona count = 47 (subdirs) + 2 orphans. oracle total_postmortems fixed (2->3). STORY-47 confirmed correct (47 subdirectory personas).",
+      "personas": [
+        "breathing_judge",
+        "hash_chain_judge",
+        "prime_oracle"
+      ]
+    },
+    {
+      "id": "audit-tower-rerun-v2-batch",
+      "glow": 152,
+      "date": "2026-03-05",
+      "artifact": "Towers 1-14 full v2.0 rerun (AUDIT → FIX → VERIFY)",
+      "artifact_type": "tower",
+      "questions_audited": 4802,
+      "tower_results": {
+        "T1_Masters": {"score": "100%", "grade": "A+", "fixes": 12, "status": "COMPLETE"},
+        "T2_Customers": {"score": "78.6%", "grade": "B+", "fixes": 4, "status": "COMPLETE"},
+        "T3_Competitors": {"score": "54.8%", "grade": "D+", "fixes": 0, "critical": "fabricated testimonials P0"},
+        "T4_Fans": {"score": "50.2%", "grade": "D+", "fixes": 0, "critical": "community infrastructure F"},
+        "T5_Press": {"score": "52.0%", "grade": "D+", "fixes": 0, "critical": "Architecture A Business F"},
+        "T6_Hackers": {"score": "38.8%", "grade": "D-", "fixes": 4, "critical": "XSS+vault+wiki+security.txt"},
+        "T7_Kids": {"score": "39.2%", "grade": "D-", "fixes": 0, "critical": "COPPA zero"},
+        "T8_Elders": {"score": "24.8%", "grade": "F", "fixes": 2, "critical": "simplicity(radical)=0"},
+        "T9_World": {"score": "48.1%", "grade": "F", "fixes": 0, "critical": "Arabic 365 contaminated strings"},
+        "T10_Regulators": {"score": "50.2%", "grade": "D+", "fixes": 0, "critical": "COPPA+cookie consent zero"},
+        "T11_Primes": {"score": "100%", "grade": "A+", "fixes": 6, "status": "COMPLETE"},
+        "T12_Revenue": {"score": "50.8%", "grade": "D+", "fixes": 0, "critical": "revenue dashboard missing"},
+        "T13_DevOps": {"score": "62.0%", "grade": "C+", "fixes": 8, "status": "COMPLETE"},
+        "T14_Agents": {"score": "62.7%", "grade": "C+", "fixes": 0, "critical": "393 broad except Exception"}
+      },
+      "cross_tower_patterns": [
+        "CTP-001: COPPA age gate zero (T7, T10)",
+        "CTP-002: Fabricated testimonials live (T3, T5, T12)",
+        "CTP-003: Arabic locale 365 strings contaminated (T9)",
+        "CTP-004: Korean locale 145 strings contaminated (T9)",
+        "CTP-005: Cookie consent banner missing (T10)",
+        "CTP-006: Jargon barrier persists (T4, T5, T8)",
+        "CTP-007: Simple mode absent (T7, T8)",
+        "CTP-008: 393 Fallback Ban violations (T14)",
+        "CTP-009: Browser PBKDF2 390K vs CLI 600K (T3, T5, T6)"
+      ],
+      "outcome": "14 towers audited, 4802 questions, T1+T11 A+, massive fix swarm dispatched for remaining",
+      "personas": ["all_49_floor_personas_x14_towers"]
+    }
+  ],
+  "oracle_rules": {
+    "auto_inject_uplifts": {
+      "paper": [
+        "P16_negative_space",
+        "P11_questions"
+      ],
+      "page": [
+        "P16_negative_space",
+        "P11_questions"
+      ],
+      "code": [
+        "P16_negative_space",
+        "P17_stakes"
+      ],
+      "diagram": [
+        "P11_questions"
+      ],
+      "app": [
+        "P15_few_shot",
+        "P16_negative_space"
+      ]
+    },
+    "require_human_confirmation_uplifts": {
+      "paper": [
+        "P21_adversarial"
+      ],
+      "page": [
+        "P21_adversarial"
+      ],
+      "code": [
+        "P21_adversarial"
+      ],
+      "diagram": [
+        "P21_adversarial"
+      ],
+      "app": [
+        "P21_adversarial"
+      ]
+    },
+    "mandatory_uplifts_by_artifact_type": {
+      "paper": [
+        "P11",
+        "P13",
+        "P17",
+        "P21"
+      ],
+      "page": [
+        "P11",
+        "P13",
+        "P16",
+        "P21"
+      ],
+      "code": [
+        "P13",
+        "P16",
+        "P17"
+      ],
+      "diagram": [
+        "P2",
+        "P11"
+      ],
+      "app": [
+        "P5",
+        "P13",
+        "P15"
+      ]
+    }
+  }
+}

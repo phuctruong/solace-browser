@@ -1,0 +1,28 @@
+---
+title: ChatGPT Uplift Flow
+---
+stateDiagram-v2
+    [*] --> LoadSession: load_session
+    LoadSession --> Navigate: Round 1
+    LoadSession --> ReuseTab: Round 2+
+    Navigate --> CheckAuth
+    ReuseTab --> CheckAuth
+    CheckAuth --> ComposeUplift: Round 1
+    CheckAuth --> InjectReview: Round 2+ (skills already loaded)
+    ComposeUplift --> InjectUplift: inbox/skills/* + template + persona
+    InjectUplift --> SendUplift: base64_chunked_insert
+    SendUplift --> WaitAck: button[data-testid='send-button']
+    WaitAck --> InjectReview: ChatGPT acknowledges skills
+    InjectReview --> SendReview: base64_chunked_insert
+    SendReview --> WaitResponse: wait_for_stable (3min max)
+    WaitResponse --> Extract: div[data-message-author-role='assistant']
+    Extract --> SaveOutbox: outbox/responses/
+    SaveOutbox --> HashEvidence: SHA-256 chain
+    HashEvidence --> ReturnResult: {status, scores, page_id}
+    ReturnResult --> [*]
+
+    state ComposeUplift {
+        ReadSkills --> BuildTemplate
+        BuildTemplate --> InjectPersona
+        InjectPersona --> AddContext
+    }

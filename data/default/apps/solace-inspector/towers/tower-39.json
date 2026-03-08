@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 39,
+    "tower_name": "Tower of Gmail Spam Cleaner",
+    "dna": "spam(clean) = scan(folder) x classify(confidence) x preview(report) x approve(human) x delete(safe) x evidence(sealed) x protect(false_positive)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Gmail Spam Cleaner",
+  "tower_number": 39,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Tom Brennan",
+      "persona_domain": "spam_folder_scan",
+      "persona_context": "55, Dublin, Retired accountant, Beginner tech, Free tier, has 4,200 emails in his spam folder accumulated over 3 years, never cleaned it, worried about missing important emails marked as spam",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I click 'Scan Spam Folder' and see a progress bar while the app reads all 4,200 spam emails?",
+        "Does the scan complete within 60 seconds for 4,200 emails without timing out or crashing?",
+        "Does the scan results page show total spam count, date range covered, and top spam sender domains?",
+        "Can I see how many emails in spam are from senders I have previously replied to (possible false positives)?",
+        "Does the app scan only the spam folder by default and NOT touch my inbox, sent, or drafts?",
+        "If I close the browser during the scan, does the app resume from where it stopped or do I have to restart?",
+        "Can I schedule automatic spam scans (daily, weekly) instead of clicking the button manually each time?"
+      ],
+      "question_expansion_instruction": "Tom is not tech-savvy and has years of accumulated spam. Every question must verify the scan actually works at scale, handles large volumes, and does not accidentally touch non-spam folders. 'Scan complete' without visible results is a FAIL."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Nina Kowalski",
+      "persona_domain": "confidence_classification",
+      "persona_context": "28, Warsaw, Data analyst at a fintech startup, Expert tech, Pro tier, subscribes to many newsletters and industry reports, some of which Gmail incorrectly marks as spam",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the app classify each spam email with a confidence score (e.g., 95% spam, 60% spam, 20% spam)?",
+        "Can I sort the spam list by confidence score to see the most uncertain classifications first?",
+        "Does the classification distinguish between obvious spam (Nigerian prince), gray area (marketing emails I once subscribed to), and likely false positives (colleague emails)?",
+        "Can I see the specific signals the AI used to classify each email (sender reputation, link density, language patterns)?",
+        "Does the classifier correctly identify newsletter emails from legitimate sources (Substack, Morning Brew) that Gmail misclassified as spam?",
+        "If I mark a low-confidence email as 'Not Spam', does the classifier learn and improve for similar future emails?",
+        "Does the classification work without sending my email content to any external server when I am using a local LLM?"
+      ],
+      "question_expansion_instruction": "Nina relies on newsletters for her job and cannot afford to lose legitimate emails. Every question verifies the confidence classification is granular, explainable, and correctly identifies false positives. Binary spam/not-spam without confidence is a FAIL."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Roberto Esposito",
+      "persona_domain": "preview_report",
+      "persona_context": "62, Rome, Small restaurant owner, Beginner tech, Free tier, uses Gmail on his phone mostly, wants to see a simple report before anything is deleted",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the app generate a visual report showing spam breakdown by category (scam, marketing, phishing, false positive)?",
+        "Can I see a pie chart or bar graph showing what percentage of my spam is deletable vs needs review?",
+        "Does the report highlight any emails from contacts in my address book that ended up in spam?",
+        "Can I click on any category in the report to drill down and see the individual emails in that group?",
+        "Does the report show the total storage space I will reclaim by deleting confirmed spam?",
+        "Is the report text large enough and clear enough for someone who is not a tech expert to understand?",
+        "Can I share or export the report as a PDF or screenshot before I make any deletion decisions?"
+      ],
+      "question_expansion_instruction": "Roberto needs a simple, visual preview before he trusts any automated cleaning. Every question verifies the report is clear, visual, non-technical, and gives him confidence in what will happen. A text-only log dump is a FAIL."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Aisha Patel",
+      "persona_domain": "human_approval",
+      "persona_context": "35, London, HR Manager at a recruitment agency, Intermediate tech, Pro tier, receives candidate applications that sometimes land in spam, cannot afford to auto-delete without review",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the app require my explicit approval before deleting any email — no auto-delete without consent?",
+        "Can I review and approve deletion in batches: 'delete all 95%+ confidence spam' while reviewing the rest individually?",
+        "Does the approval screen show the full email subject, sender, date, and first 2 lines so I can make an informed decision?",
+        "If I mark an email as 'Keep — Not Spam', does it get moved back to my inbox and removed from the deletion queue?",
+        "Can I undo my approval decision before the deletion is executed if I change my mind?",
+        "Does the app show a final confirmation dialog listing exactly how many emails will be permanently deleted before proceeding?",
+        "If I approve deletion of 500 emails, does the app process them in the background without freezing the browser?"
+      ],
+      "question_expansion_instruction": "Aisha handles job applications that Gmail sometimes miscategorizes. The human approval gate is critical — every question verifies that nothing is deleted without explicit, informed consent. Auto-delete or unclear approval flows are a FAIL."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Kevin O'Brien",
+      "persona_domain": "bulk_safe_delete",
+      "persona_context": "42, Boston, Sales director at a software company, Intermediate tech, Enterprise tier, needs to clean 8,000 spam emails quickly but safely, previously lost an important client email to accidental deletion",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I select 'Delete All Confirmed Spam' for the 7,500 emails above 95% confidence and execute it in one click?",
+        "Does the bulk deletion process complete within 2 minutes for 7,500 emails without errors or partial completion?",
+        "After bulk deletion, does the app show a summary: '7,500 deleted, 500 kept for review, 0 errors'?",
+        "Does the app move deleted emails to Gmail's Trash (30-day recovery) rather than permanently deleting them immediately?",
+        "If the deletion fails midway due to a network error, does the app report which emails were deleted and which were not?",
+        "Can I see a 'Recently Deleted' log with timestamps so I can verify what was removed in each cleaning session?",
+        "Does the app enforce a rate limit on Gmail API calls to avoid triggering Google's abuse protections during bulk operations?"
+      ],
+      "question_expansion_instruction": "Kevin needs speed but has been burned by data loss before. Every question verifies that bulk deletion is fast, safe, recoverable, and handles errors gracefully. Permanent deletion without recovery path is a FAIL."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Mei-Lin Chang",
+      "persona_domain": "false_positive_protection",
+      "persona_context": "30, Taipei, Freelance translator, Intermediate tech, Starter tier, works with clients worldwide and receives emails in 4 languages that Gmail often marks as spam due to foreign language content",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the app flag emails from senders I have previously replied to as 'Likely Not Spam' regardless of Gmail's classification?",
+        "Can the classifier correctly identify legitimate emails in Chinese, Japanese, French, and English without treating non-English content as a spam signal?",
+        "Does the app maintain a personal whitelist of senders whose emails should never be suggested for deletion?",
+        "If I rescue an email from the spam deletion queue, does the app add that sender to my whitelist automatically?",
+        "Can I see a 'Rescued Emails' history showing all false positives I have recovered in past sessions?",
+        "Does the app warn me before deleting any email that contains an attachment, since attachments often indicate legitimate correspondence?",
+        "If I have a custom Gmail filter that routes certain senders to spam, does the app respect my filter or override it?"
+      ],
+      "question_expansion_instruction": "Mei-Lin loses real client emails to spam misclassification because she works in multiple languages. Every question verifies that false positive protection is aggressive and language-aware. Deleting a legitimate multilingual email is a critical FAIL."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "David Moreau",
+      "persona_domain": "deletion_evidence",
+      "persona_context": "58, Lyon, IT Director at a mid-size insurance company, Expert tech, Enterprise tier, needs audit trails for data deletion under GDPR Article 17 (right to erasure), reports to DPO quarterly",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does each spam deletion generate a sealed evidence record with SHA-256 hash, timestamp, email message ID, and deletion reason?",
+        "Can I export a deletion evidence report for a date range that satisfies GDPR Article 17 audit requirements?",
+        "Does the evidence chain include which AI model classified each email and the confidence score at time of classification?",
+        "If 500 emails are bulk deleted, does the evidence bundle contain one record per email or just a summary count?",
+        "Can I verify the integrity of the deletion evidence chain independently without access to Solace software?",
+        "Does the evidence record distinguish between 'user approved deletion' and 'system recommended deletion' for each email?",
+        "If my DPO requests evidence that no personal data was retained after deletion, can I generate a data retention report from the evidence chain?"
+      ],
+      "question_expansion_instruction": "David reports to a Data Protection Officer and needs deletion evidence for GDPR audits. Every question verifies evidence is per-email, hash-chained, independently verifiable, and GDPR-compliant. A summary log without per-record evidence is a FAIL."
+    }
+  ]
+}

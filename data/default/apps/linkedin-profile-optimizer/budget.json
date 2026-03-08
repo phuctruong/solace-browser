@@ -1,0 +1,12 @@
+{
+  "daily_max_pages": 5,
+  "daily_max_llm_calls": 2,
+  "daily_max_screenshots": 5,
+  "max_cost_per_run_usd": 0.10,
+  "current_usage": {
+    "pages_today": 0,
+    "llm_calls_today": 0,
+    "screenshots_today": 0,
+    "cost_today_usd": 0.0
+  }
+}

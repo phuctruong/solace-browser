@@ -1,0 +1,35 @@
+id: "gemini-creative"
+name: "Gemini Creative Studio"
+description: "Generate images, draft articles, and create content via Gemini web interface. Uses your Google account — no API key required."
+category: "creative"
+status: "installed"
+safety: "B"
+site: "gemini.google.com"
+type: "standard"
+version: "1.0.0"
+author: "Dragon Rider"
+created_at: "2026-03-06"
+private: true
+trade_secret: true
+never_publish: true
+
+scopes:
+  - "browser.navigate"
+  - "browser.type"
+  - "browser.click"
+  - "browser.screenshot"
+  - "browser.download"
+  - "local.evidence"
+  - "local.filesystem.write"
+
+partners:
+  produces_for:
+    - "phucnet-publisher"
+  consumes_from: []
+
+tags:
+  - "ai-wrapper"
+  - "image-generation"
+  - "article-drafting"
+  - "web-automation"
+  - "secret-sauce"

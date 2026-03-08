@@ -1,0 +1,149 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 26,
+    "tower_name": "Tower of App Store & Lifecycle",
+    "dna": "appstore(lifecycle) = browse(catalog) x detail(view) x install(app) x run(recipe) x approve(action) x evidence(seal) x uninstall(clean)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of App Store & Lifecycle",
+  "tower_number": 26,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Olivia Park",
+      "persona_domain": "browse_catalog",
+      "persona_context": "27, Seattle, UX researcher, Intermediate tech, Free tier, exploring what apps are available before committing to Solace",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I open the App Store page in Solace Browser and see a grid of available apps with icons, names, and one-line descriptions?",
+        "Does the App Store have categories (Email, Social, Productivity, Finance) that I can click to filter the app list?",
+        "Can I search for apps by typing 'gmail' in a search bar and see matching results instantly?",
+        "Does each app tile show whether it is free, requires a Starter plan, or requires Pro — before I click into it?",
+        "Can I sort apps by 'Most Popular', 'Newest', or 'Category' to find what I want quickly?",
+        "Does the App Store load and display all apps within 3 seconds on a normal broadband connection?",
+        "If there are no apps matching my search query, does the page show 'No results found' rather than a blank screen?"
+      ],
+      "question_expansion_instruction": "Olivia is evaluating Solace. The App Store is her first impression. It must look polished, load fast, and help her find relevant apps without confusion."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Tomasz Kowalczyk",
+      "persona_domain": "app_detail_page",
+      "persona_context": "55, Warsaw, Small business owner, Beginner tech, Starter tier, needs to understand what an app does before installing",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "When I click on an app in the catalog, does a detail page open showing the full description, screenshots, and feature list?",
+        "Does the detail page show the app's required permissions (email access, browser automation) in plain language I can understand?",
+        "Can I see which tier is required to use this app (Free, Starter, Pro) and what happens if I am on a lower tier?",
+        "Does the detail page show a version number and last updated date so I know the app is maintained?",
+        "Is there a 'Back to Catalog' button that returns me to the App Store without losing my scroll position?",
+        "Does the detail page show the app's estimated cost per run (LLM tokens) so I can budget?",
+        "If the app requires a connected account (Google, LinkedIn), does the detail page say so before I install?"
+      ],
+      "question_expansion_instruction": "Tomasz is non-technical and cautious. The detail page must give him all the information needed to make an install decision without jargon or hidden requirements."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Zainab Ibrahim",
+      "persona_domain": "install_flow",
+      "persona_context": "32, Lagos, Digital marketer, Intermediate tech, Pro tier, installing multiple apps for email + social workflow",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I click 'Install' on an app and see it download and install within 5 seconds without leaving the page?",
+        "After installation, does the app immediately appear in my sidebar under 'Installed Apps' with a status badge?",
+        "If I try to install an app that requires Pro tier but I am on Starter, does it show an upgrade prompt instead of failing silently?",
+        "Can I install 5 apps in sequence without any of them conflicting or overwriting each other's configuration?",
+        "Does the install button change to 'Installed' with a checkmark after successful installation?",
+        "If installation fails due to a network error, does the app show a retry button with the specific error message?",
+        "Can I see a list of all my installed apps in one place with install date and version for each?"
+      ],
+      "question_expansion_instruction": "Zainab installs multiple apps at once. Install flow must be fast, reliable, handle errors gracefully, and provide clear status feedback."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Anders Lindqvist",
+      "persona_domain": "run_flow",
+      "persona_context": "46, Gothenburg, Account manager at consulting firm, Beginner tech, Pro tier, running his first app recipe to automate client follow-ups",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After installing the Gmail Triage app, can I click 'Run' and see the app's recipe start executing with a progress indicator?",
+        "Does the run flow show me what the recipe is doing at each step (connecting to Gmail, scanning inbox, generating drafts)?",
+        "If the recipe requires my Google account but I have not connected one yet, does it prompt me to connect before running?",
+        "Can I cancel a running recipe mid-execution and see it stop cleanly without leaving partially-completed actions?",
+        "Does the run flow show estimated time remaining based on the number of emails or items being processed?",
+        "If the recipe encounters an error (API timeout, invalid credential), does it show the error in plain language with a suggested fix?",
+        "After the recipe completes, does it show a summary: 15 emails scanned, 8 actions suggested, 0 executed (awaiting approval)?"
+      ],
+      "question_expansion_instruction": "Anders is running his first recipe. The run flow must be transparent, show progress, handle errors gracefully, and never execute actions without his approval."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Maria Gonzalez",
+      "persona_domain": "approval_modal",
+      "persona_context": "40, Madrid, Legal operations manager, Expert tech, Enterprise tier, reviews every automated action before approval for compliance",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "When a recipe suggests an action, does the approval modal show the complete action detail — not just 'Send email' but the full email content?",
+        "Does the approval modal clearly show the action type (send, archive, delete, forward) with a color-coded risk level (green/yellow/red)?",
+        "Can I approve low-risk actions (archive) in batch while reviewing high-risk actions (send, delete) individually?",
+        "Does the modal show which account and which recipient the action targets so I do not accidentally act on the wrong account?",
+        "If I reject an action, does the modal ask for a rejection reason that gets logged in the evidence chain?",
+        "Can I click 'View Original' in the approval modal to see the source email or document the action is based on?",
+        "Does the approval modal display correctly on a 1366x768 laptop screen without requiring horizontal scrolling?"
+      ],
+      "question_expansion_instruction": "Maria is in legal ops. The approval modal is the last safety gate before actions execute. It must show complete context, log rejections, and work on standard laptop screens."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "David Nkosi",
+      "persona_domain": "evidence_capture",
+      "persona_context": "50, Johannesburg, Audit partner at mid-tier firm, Expert tech, Enterprise tier, needs tamper-evident records of every automated action",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After I approve and execute an action, does the app create an evidence record with SHA-256 hash, timestamp, user ID, and action payload?",
+        "Can I view the evidence chain for a specific app's executions in chronological order with hash links between records?",
+        "Does each evidence record include a link to the previous record's hash, forming an unbroken chain?",
+        "If I export the evidence chain as JSON, does it include all fields needed for an external audit tool to verify integrity?",
+        "Can I search evidence records by date range, action type, or target account to find specific actions quickly?",
+        "Does the evidence system store the full input (original email) and full output (sent reply) — not just metadata?",
+        "If someone tampers with an evidence record in local storage, does the verification tool detect the broken hash chain?"
+      ],
+      "question_expansion_instruction": "David is an auditor. Evidence must be cryptographically verifiable, exportable, searchable, and include full content — not just metadata. Incomplete evidence chains are audit failures."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Emma Richardson",
+      "persona_domain": "app_management",
+      "persona_context": "36, Sydney, Operations coordinator, Intermediate tech, Starter tier, needs to uninstall apps she no longer uses and manage storage",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I go to my installed apps list and click 'Uninstall' on an app I no longer need?",
+        "Does uninstalling an app remove its configuration, cached data, and sidebar entry completely?",
+        "After uninstalling, does the app revert to 'Install' status in the App Store catalog so I can reinstall later if needed?",
+        "Does uninstalling an app preserve my evidence chain for actions I previously executed (evidence is immutable)?",
+        "Can I see how much local storage each installed app is using so I can decide which to uninstall?",
+        "If I try to uninstall an app that has pending approved-but-not-executed actions, does it warn me first?",
+        "Can I update an app to a newer version from the installed apps list without losing my configuration and connected accounts?"
+      ],
+      "question_expansion_instruction": "Emma needs clean app lifecycle management. Uninstall must be complete but preserve evidence. Updates must preserve config. Storage visibility helps her manage disk space."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "spec_id": "agi-swagger-docs-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "curl -s https://www.solaceagi.com/api/docs | grep -c 'swagger\\|openapi\\|paths' | python3 -c \"import sys; n=int(sys.stdin.read().strip()); print('SWAGGER_FOUND: YES (' + str(n) + ' matches)' if n > 0 else 'SWAGGER_FOUND: NO (0 matches)')\"",
+  "target_name": "GitHub Copilot Attack — Is /api/docs a Real Swagger UI?",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": ["SWAGGER_FOUND: YES"],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "github_copilot_team",
+  "priority": "high",
+  "context": "GitHub Copilot oracle (q-agi-051): /api/docs should be a real, populated Swagger UI. Copilot team attack: 'Developers trust tools they can test immediately.' If /api/docs returns a real OpenAPI spec with paths, curl examples, and auth info, developers can trust the API. If it's empty or broken, trust is zero. Check: does /api/docs HTML contain swagger/openapi/paths keywords indicating a real spec is loaded?",
+  "created_at": "2026-03-04T00:00:00Z"
+}

@@ -1,0 +1,71 @@
+{
+  "run_id": "run-20260306-112000",
+  "app_id": "gemini-creative",
+  "mode": "image_gen",
+  "timestamp": "2026-03-06T16:24:13.785082+00:00",
+  "prompt": "Generate an image: A futuristic AI companion robot sitting in a cozy Boston coffee shop, reading a book, warm lighting, photorealistic",
+  "result": "SUCCESS",
+  "image_file": "outbox/images/boston-robot-cafe-20260306.png",
+  "image_size_bytes": 1764371,
+  "platform": "gemini.google.com",
+  "model": "Gemini (Imagen via Gemini web)",
+  "steps_completed": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "target": "https://gemini.google.com",
+      "status": "PASS"
+    },
+    {
+      "step": 2,
+      "action": "verify_login",
+      "user": "Phuc Truong (phuc@phuc.net)",
+      "status": "PASS"
+    },
+    {
+      "step": 3,
+      "action": "focus_input",
+      "selector": ".ql-editor.textarea",
+      "status": "PASS"
+    },
+    {
+      "step": 4,
+      "action": "type_prompt",
+      "method": "execCommand(insertText)",
+      "status": "PASS"
+    },
+    {
+      "step": 5,
+      "action": "submit",
+      "selector": "[aria-label=\"Send message\"]",
+      "status": "PASS"
+    },
+    {
+      "step": 6,
+      "action": "wait_generation",
+      "wait_ms": 20000,
+      "status": "PASS"
+    },
+    {
+      "step": 7,
+      "action": "expand_image",
+      "method": "img.click()",
+      "status": "PASS"
+    },
+    {
+      "step": 8,
+      "action": "download",
+      "method": "screenshot (gg-dl URLs auth-gated)",
+      "status": "PASS"
+    }
+  ],
+  "selectors_discovered": {
+    "input_field": ".ql-editor.textarea (Quill contenteditable)",
+    "input_method": "document.execCommand(\"insertText\", false, text)",
+    "send_button": "[aria-label=\"Send message\"]",
+    "download_button": "[data-test-id=\"download-generated-image-button\"]",
+    "generated_image": "img with naturalWidth > 300",
+    "download_issue": "gg-dl URLs require auth cookies; use screenshot or JS click download button"
+  },
+  "evidence_hash": "56a87e7cbca8def64def5b62464c488f8d48f09b800ae85195f16ae5eca47a9a"
+}

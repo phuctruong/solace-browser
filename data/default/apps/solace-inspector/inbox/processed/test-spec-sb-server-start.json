@@ -1,0 +1,19 @@
+{
+  "spec_id": "sb-server-start-001",
+  "project": "solace-browser",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "python3 web/server.py --help",
+  "target_cwd": "/home/phuc/projects/solace-browser",
+  "target_name": "Solace Browser Web Server — Full Help Text",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": ["port", "host"],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "kent_beck",
+  "priority": "high",
+  "context": "Extended GLOW 91 check: verify --help includes all 3 flags (--port, --host, --debug). Previously only --port and --host were listed. Kent Beck: the help text IS the spec — every flag listed should work. GLOW 91 evidence: 4/4 assertions passed.",
+  "created_at": "2026-03-03T00:00:00Z"
+}

@@ -1,0 +1,19 @@
+{
+  "spec_id": "solaceagi-download-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "web",
+  "target_url": "https://www.solaceagi.com/download",
+  "page_name": "SolaceAGI Download",
+  "checks": {
+    "aria": true,
+    "heuristics": true,
+    "llm_analysis": true,
+    "screenshot": true,
+    "baseline_diff": false
+  },
+  "persona": "james_bach",
+  "priority": "normal",
+  "context": "Download page \u2014 install instructions, platforms",
+  "created_at": "2026-03-03T00:00:00Z"
+}

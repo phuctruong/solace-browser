@@ -1,0 +1,9 @@
+{
+  "remaining_runs": 200,
+  "cooldown_seconds": 10,
+  "reads_per_run": 10,
+  "drafts_per_run": 0,
+  "writes_per_run": 1,
+  "daily_limit": 50,
+  "note": "Google search has no rate limits for normal browsing"
+}

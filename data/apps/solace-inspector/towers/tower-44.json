@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 44,
+    "tower_name": "Tower of YinYang AI Assistant",
+    "dna": "yinyang(assistant) = chat(persistent) x suggest(contextual) x help(inline) x action(quick) x learn(user) x delight(warm) x compete(copilot)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of YinYang AI Assistant",
+  "tower_number": 44,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Maya Rodriguez",
+      "persona_domain": "first_time_chat",
+      "persona_context": "24, Denver, Recent college graduate starting her first job as a marketing coordinator, Beginner tech, Free tier, has never used an AI assistant beyond ChatGPT, opened Solace Browser for the first time",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Is there a visible chat bar or input field on the main screen where I can type a question without searching through menus?",
+        "When I type 'How do I set up Gmail triage?' does the assistant respond with step-by-step instructions specific to Solace?",
+        "Does the chat response load within 3 seconds so I do not feel like the app is frozen?",
+        "Can I see a list of suggested questions or prompts if I do not know what to ask the assistant?",
+        "Does the assistant introduce itself with a friendly greeting on first use that explains what it can help with?",
+        "Can I scroll up to see my previous messages in the same chat session without losing the conversation?",
+        "If I close the browser and reopen it, does the chat history persist so I can continue where I left off?"
+      ],
+      "question_expansion_instruction": "Maya is a complete beginner who has never used Solace. Every question verifies that the chat interface is immediately discoverable, responsive, and welcoming. A hidden chat feature requiring configuration is a FAIL."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Jordan Blake",
+      "persona_domain": "contextual_suggestions",
+      "persona_context": "31, Seattle, Full-stack developer and Solace power user, Expert tech, Pro tier, uses Solace daily for Gmail triage, GitHub issues, and scheduling, expects the assistant to anticipate what he needs",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "When I navigate to the Gmail Triage page, does the assistant suggest 'Run inbox scan?' or 'Review yesterday's triage results?'",
+        "Does the assistant change its suggestions based on the page I am on (Gmail suggestions on Gmail page, GitHub suggestions on GitHub page)?",
+        "If I just finished a triage run, does the assistant suggest relevant follow-ups like 'Export evidence' or 'Review flagged items'?",
+        "Can I dismiss a suggestion with one click without it appearing again for the same context?",
+        "Does the assistant suggest time-based actions ('You have a meeting in 15 minutes — review the agenda?')?",
+        "If I run the same workflow every Monday morning, does the assistant learn the pattern and suggest it on Monday mornings?",
+        "Can I see a settings panel where I can enable/disable contextual suggestions per app?"
+      ],
+      "question_expansion_instruction": "Jordan expects the assistant to be proactive and context-aware like a good co-pilot. Every question verifies that suggestions are page-aware, behavior-aware, and dismissible. Generic suggestions unrelated to current context are a FAIL."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Patricia Hoffman",
+      "persona_domain": "summarize_and_report",
+      "persona_context": "48, Dallas, Director of Operations at a healthcare company, Intermediate tech, Enterprise tier, uses Solace for email triage and scheduling, wants the assistant to provide summaries of recent activity across all apps",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I ask the assistant 'Summarize my triage runs this week' and get a data-backed response with numbers?",
+        "Does the summary include how many emails were processed, actions taken, and time saved across all triage sessions?",
+        "Can I ask 'What were the most common email categories this week?' and get a breakdown by label?",
+        "Does the assistant pull data from multiple apps (Gmail triage, calendar, focus timer) when I ask for a cross-app summary?",
+        "Can I ask 'Compare this week to last week' and see a side-by-side productivity comparison?",
+        "Does the assistant cite specific evidence records or session IDs when presenting data so I can verify the numbers?",
+        "Can I ask the assistant to generate a formatted summary report and export it as a PDF?"
+      ],
+      "question_expansion_instruction": "Patricia wants the assistant to be a reporting tool she can query in natural language. Every question verifies responses contain real data from actual app usage, not generated estimates. 'You had a productive week!' without data is a FAIL."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Ravi Krishnamurthy",
+      "persona_domain": "mobile_interaction",
+      "persona_context": "35, Mumbai, Sales executive who is always on his phone between client meetings, Intermediate tech, Pro tier, accesses Solace from his Android phone's Chrome browser, needs quick interactions without typing long messages",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the chat interface render correctly on a mobile screen (Android Chrome) without overlapping elements or cut-off text?",
+        "Can I tap a quick-action button (e.g., 'Run Triage', 'Morning Brief') instead of typing the command manually?",
+        "Does the assistant support voice input so I can speak my question instead of typing on a small screen?",
+        "Are the assistant's responses concise enough to read on a phone without excessive scrolling?",
+        "Can I tap on a suggestion card and have it execute immediately with one tap, not two?",
+        "Does the mobile chat persist across browser sessions so I do not lose my conversation when Chrome restarts?",
+        "If I switch between mobile and desktop mid-conversation, does the chat history sync between devices?"
+      ],
+      "question_expansion_instruction": "Ravi uses Solace on his phone between meetings and needs fast, thumb-friendly interaction. Every question verifies the mobile experience is responsive, supports quick actions, and works on real Android hardware. A desktop-only chat interface is a FAIL."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Laura Svensson",
+      "persona_domain": "privacy_local_chat",
+      "persona_context": "41, Malmo, Data protection consultant for Nordic enterprises, Expert tech, Pro tier, advises clients on AI tool privacy, will not recommend any tool where chat history is stored on external servers",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Is chat history stored exclusively in the browser's local storage and NOT synced to Solace's cloud servers?",
+        "Can I verify in the browser developer tools that no chat messages are sent to any external endpoint?",
+        "Does the app provide a 'Clear Chat History' button that permanently deletes all stored conversations?",
+        "If I use BYOK mode, does the chat content go only to my specified LLM provider (e.g., my Anthropic key) and nowhere else?",
+        "Can I see a privacy indicator in the chat interface showing whether my conversation is local-only or cloud-synced?",
+        "If I enable cloud sync (Enterprise tier), does the app encrypt chat history with my key before uploading?",
+        "Can I export my chat history as a local JSON file and then delete all cloud copies?"
+      ],
+      "question_expansion_instruction": "Laura will reject the tool if chat data leaks to any server without explicit consent. Every question verifies chat privacy is local-first, verifiable, and transparent. 'We respect your privacy' without technical proof is a FAIL."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Chris Nakamura",
+      "persona_domain": "team_collaboration",
+      "persona_context": "39, Vancouver, Team lead at a digital agency, Intermediate tech, Enterprise tier, manages a 12-person team and wants to share useful chat threads (how-tos, triage results) with team members",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I select a chat thread and share it with a team member by sending them a link or exporting it?",
+        "Does the shared thread include the full conversation context (my questions and the assistant's answers) in a readable format?",
+        "Can team members comment on a shared thread without being able to edit the original conversation?",
+        "Does the team sharing feature respect access controls — can I share with specific people, not the entire organization?",
+        "Can I create a 'Team Knowledge Base' channel where useful assistant conversations are saved for everyone?",
+        "Does the shared thread include any referenced data (triage results, analytics) or just the text of the conversation?",
+        "If I share a thread that references my personal email data, does the app warn me before including sensitive content?"
+      ],
+      "question_expansion_instruction": "Chris wants to leverage the assistant's knowledge across his team. Every question verifies that sharing works with proper access control and privacy warnings. Sharing that exposes personal data without warning is a critical FAIL."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Angela Park",
+      "persona_domain": "copilot_comparison",
+      "persona_context": "45, Chicago, CTO at a 200-person financial services company, Expert tech, Enterprise tier, currently deploys Microsoft 365 Copilot at $30/user/month, evaluating if Solace YinYang is a viable replacement",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does YinYang provide contextual assistance across all Solace apps the way Copilot provides assistance across Office 365 apps?",
+        "Can YinYang answer questions about my data (emails, calendar, documents) with the same accuracy as Copilot?",
+        "Is YinYang's total cost per user per month lower than Copilot's $30/user when including LLM token costs?",
+        "Does YinYang provide evidence-grade audit trails for every AI interaction that Copilot does not offer?",
+        "Can YinYang operate with local-first data processing, giving me privacy guarantees that Copilot cannot match?",
+        "Does YinYang's recipe system mean costs decrease over time as patterns are cached, unlike Copilot's flat per-seat pricing?",
+        "Can I run a 30-day parallel pilot — YinYang and Copilot side by side for 20 users — and generate a comparison report?"
+      ],
+      "question_expansion_instruction": "Angela is making a $72,000/year decision (200 users x $30/mo Copilot). Every question must provide provable, measurable advantages over Copilot — not marketing claims. 'We are better than Copilot' without side-by-side evidence is a FAIL."
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "company": "gatan",
+  "date": "2026-03-06",
+  "generated_by": "solace-browser reddit-trends app v1.0.0",
+  "sources_scanned": [
+    "r/electronmicroscopy (hot + gatan search)",
+    "r/labrats (EM search)",
+    "Google (competitor landscape)"
+  ],
+  "competitor_landscape": {
+    "source": "Google search 2026-03-06",
+    "top_competitors": [
+      {
+        "name": "Carl Zeiss",
+        "category": "Full-stack EM (SEM+TEM+sample prep)"
+      },
+      {
+        "name": "Thermo Fisher Scientific",
+        "category": "Cryo-EM market leader (acquired FEI)"
+      },
+      {
+        "name": "JEOL",
+        "category": "TEM/SEM instruments (Japan)"
+      },
+      {
+        "name": "Hitachi High-Technologies",
+        "category": "SEM specialist"
+      },
+      {
+        "name": "Bruker",
+        "category": "EDS/spectroscopy + nano-analysis"
+      },
+      {
+        "name": "Oxford Instruments",
+        "category": "EDS detectors + sample prep"
+      },
+      {
+        "name": "Direct Electron",
+        "category": "Direct detection cameras (cryo-EM)"
+      },
+      {
+        "name": "Leica Microsystems",
+        "category": "Sample preparation + light microscopy"
+      },
+      {
+        "name": "AMETEK",
+        "category": "Parent company of EDAX (EDS)"
+      },
+      {
+        "name": "Olympus",
+        "category": "Industrial microscopy"
+      }
+    ]
+  },
+  "reddit_findings": {
+    "r/electronmicroscopy": {
+      "gatan_mentions": [
+        {
+          "title": "Gatan Digital Micrograph on Windows ARM",
+          "signal": "User seeking ARM compatibility \u2014 potential feature gap"
+        },
+        {
+          "title": "GMS 3 Export Issues",
+          "signal": "Software usability friction"
+        },
+        {
+          "title": "Gatan Digital micrograph on mac",
+          "signal": "Cross-platform demand"
+        }
+      ],
+      "competitor_mentions": [
+        {
+          "title": "Quick update - ZEISS stage works",
+          "signal": "ZEISS users helping each other \u2014 community engagement"
+        },
+        {
+          "title": "Stage initialization on ZEISS GEMINI",
+          "signal": "ZEISS SEM troubleshooting \u2014 old equipment still in use"
+        }
+      ],
+      "community_needs": [
+        {
+          "title": "Magnetic sample holder in the SEM chamber",
+          "signal": "Sample prep innovation opportunity"
+        },
+        {
+          "title": "Rehydrating and Hydrating tissue mounted on a slide",
+          "signal": "Bio sample prep questions"
+        },
+        {
+          "title": "Serial sections keep folding back toward the block",
+          "signal": "Microtomy technique help needed"
+        },
+        {
+          "title": "Deparaffinization on a slide",
+          "signal": "Histopath workflow questions"
+        }
+      ]
+    },
+    "r/labrats": {
+      "relevant_posts": [
+        {
+          "title": "Unidentified particles in TEM of plasma EVs purified by SEC",
+          "signal": "TEM imaging for extracellular vesicles \u2014 growing field"
+        },
+        {
+          "title": "Electron microscopy",
+          "signal": "General EM discussion"
+        },
+        {
+          "title": "Glutaraldehyde vs Formaldehyde for tissue fixation",
+          "signal": "Sample prep discussion"
+        }
+      ]
+    }
+  },
+  "morning_brief_summary": [
+    "GATAN SOFTWARE: 3 Reddit threads about Digital Micrograph \u2014 users want Windows ARM + macOS support + better GMS 3 export. Action: product team should review cross-platform roadmap.",
+    "COMPETITOR: ZEISS GEMINI SEM getting community troubleshooting attention \u2014 old units still in active use. Their community engagement is strong.",
+    "MARKET: Cryo-EM + extracellular vesicles TEM is trending in r/labrats. Direct Electron emerging as formidable competitor in direct detection cameras.",
+    "OPPORTUNITY: Sample preparation questions dominate r/electronmicroscopy \u2014 could Gatan position sample prep solutions more prominently?",
+    "TALENT: Active community of microscopy professionals sharing expertise on Reddit \u2014 potential for Gatan-sponsored content or AMAs."
+  ]
+}

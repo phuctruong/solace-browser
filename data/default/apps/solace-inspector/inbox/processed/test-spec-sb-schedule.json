@@ -1,0 +1,19 @@
+{
+  "spec_id": "solace-browser-schedule-001",
+  "project": "solace-browser",
+  "requested_by": "claude-code",
+  "mode": "web",
+  "target_url": "http://127.0.0.1:8791/schedule",
+  "page_name": "Solace Browser Schedule",
+  "checks": {
+    "aria": true,
+    "heuristics": true,
+    "llm_analysis": true,
+    "screenshot": true,
+    "baseline_diff": false
+  },
+  "persona": "james_bach",
+  "priority": "high",
+  "context": "Self-diagnostic: Schedule page shows upcoming runs and scheduled tasks. Verify empty state renders well, no broken images, all controls labeled.",
+  "created_at": "2026-03-03T00:00:00Z"
+}

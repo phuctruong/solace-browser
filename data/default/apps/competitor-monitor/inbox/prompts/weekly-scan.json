@@ -1,0 +1,73 @@
+{
+  "id": "weekly-scan",
+  "name": "Weekly Competitor Scan (All 6)",
+  "description": "Run a full scan of all 6 tracked competitors. Searches for recent news, pricing changes, product launches, and GitHub activity.",
+  "schedule": "weekly",
+  "created_at": "2026-03-06",
+  "runs": [
+    {
+      "competitor": "OpenClaw",
+      "searches": [
+        "OpenClaw AI agent 2026 news",
+        "Open Interpreter pricing changes 2026",
+        "OpenClaw product launch",
+        "github.com/OpenInterpreter releases"
+      ]
+    },
+    {
+      "competitor": "Browser-Use",
+      "searches": [
+        "browser-use AI agent 2026 news",
+        "browser-use pricing update",
+        "browser-use product launch announcement",
+        "github.com/browser-use releases"
+      ]
+    },
+    {
+      "competitor": "Bardeen",
+      "searches": [
+        "Bardeen AI automation 2026 news",
+        "Bardeen pricing changes 2026",
+        "Bardeen new features launch",
+        "Bardeen AI browser extension update"
+      ]
+    },
+    {
+      "competitor": "n8n",
+      "searches": [
+        "n8n workflow automation 2026 news",
+        "n8n AI agents update",
+        "n8n pricing changes 2026",
+        "n8n product launch announcement"
+      ]
+    },
+    {
+      "competitor": "Vercel Agent Browser",
+      "searches": [
+        "Vercel AI agent browser 2026",
+        "Vercel AI SDK browser automation",
+        "Vercel agent product launch",
+        "Vercel AI pricing update 2026"
+      ]
+    },
+    {
+      "competitor": "Claude Computer Use",
+      "searches": [
+        "Claude computer use 2026 news",
+        "Anthropic agent browser update",
+        "Claude computer use pricing",
+        "Anthropic AI agent launch 2026"
+      ]
+    }
+  ],
+  "output": {
+    "format": "json",
+    "path": "outbox/reports/weekly-scan-{date}.json",
+    "evidence": "outbox/evidence/weekly-scan-{run_id}.json"
+  },
+  "params": {
+    "max_results_per_search": 10,
+    "filter": "past_month",
+    "screenshot": true
+  }
+}

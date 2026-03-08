@@ -1,0 +1,9 @@
+{
+  "remaining_runs": 50,
+  "cooldown_seconds": 30,
+  "reads_per_run": 5,
+  "drafts_per_run": 4,
+  "writes_per_run": 4,
+  "daily_limit": 20,
+  "note": "Rate limited to avoid ChatGPT throttling"
+}

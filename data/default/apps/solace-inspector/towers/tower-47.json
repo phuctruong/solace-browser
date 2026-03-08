@@ -1,0 +1,149 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 48,
+    "tower_name": "Tower of Cron & Scheduled Operations",
+    "dna": "cron(schedule) = trigger(time) x recurrence(rrule) x execution(reliable) x evidence(sealed) x cost(bounded) x notification(status) x recovery(retry)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a distinct persona who depends on scheduled operations. Questions must verify that scheduling, execution, evidence, and recovery work reliably in production.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser",
+      "solace-cli"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solace-cli": "/home/phuc/projects/solace-cli"
+    }
+  },
+  "name": "Tower of Cron & Scheduled Operations",
+  "tower_number": 47,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Linda Park",
+      "persona_domain": "scheduled_regular_user",
+      "persona_context": "42, Seattle, Office Manager at a law firm, Beginner tech, Free tier, drowning in email, wants to schedule Gmail triage every morning at 8am and spam cleaner every Sunday evening without understanding cron syntax",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I schedule Gmail Inbox Triage to run every weekday morning at 8am from a simple dropdown — no cron syntax needed?",
+        "Can I schedule the spam cleaner recipe to run every Sunday at 7pm with one click?",
+        "Does the schedule page show my upcoming runs in a calendar or list view so I can see what is planned?",
+        "Do I get an email or notification when my scheduled triage completes with a summary of results?",
+        "Can I pause a schedule temporarily (e.g., during vacation) and resume it when I return?",
+        "If I set the schedule to 8am, does it run at 8am in MY timezone — not UTC or the server's timezone?",
+        "Can I cancel a scheduled run that has not started yet if I realize I do not need it?"
+      ],
+      "question_expansion_instruction": "Linda is non-technical and overwhelmed by email. Questions verify that scheduling is simple, timezone-aware, and provides clear feedback without requiring cron syntax knowledge."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Marcus Thompson",
+      "persona_domain": "scheduled_power_user",
+      "persona_context": "35, Austin, Operations Lead at a marketing agency managing 8 client accounts, Expert tech, Pro tier, needs complex schedules like every weekday, first Monday of month, and timezone handling across US and EU clients",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I create a schedule that runs every weekday at 9am ET and a different one at 9am CET for my EU clients?",
+        "Does the scheduler support 'first Monday of each month' and 'last Friday of each quarter' recurrence patterns?",
+        "Can I chain multiple recipes in one schedule — e.g., triage inbox, then summarize, then send Slack digest?",
+        "Does the scheduler handle daylight saving time transitions correctly without skipping or doubling runs?",
+        "Can I set different schedules for different Gmail accounts connected to Solace?",
+        "Is there a schedule history view showing every past run with status (success/fail/skipped) and duration?",
+        "Can I duplicate an existing schedule and modify it instead of creating one from scratch?"
+      ],
+      "question_expansion_instruction": "Marcus manages complex multi-timezone, multi-account schedules. Questions verify RRULE complexity, DST handling, chained recipes, and schedule management for power users."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Aisha Patel",
+      "persona_domain": "scheduled_api_developer",
+      "persona_context": "29, London, Backend Developer at a fintech startup, Expert tech, Pro tier, wants to CRUD schedules via API, receive webhooks on completion, and manage schedules programmatically from her own systems",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does POST /api/v1/schedules create a new schedule with a JSON body specifying recipe, recurrence, and timezone?",
+        "Does GET /api/v1/schedules return a list of all my schedules with their status, next run time, and recurrence rule?",
+        "Can I update a schedule via PATCH /api/v1/schedules/{id} to change the time or recurrence without deleting and recreating?",
+        "Does DELETE /api/v1/schedules/{id} cancel the schedule and stop all future runs?",
+        "Can I register a webhook URL that receives a POST with the run result when a scheduled task completes?",
+        "Does the API support cron expressions (e.g., '0 8 * * 1-5') as an alternative to the RRULE format?",
+        "Is the schedule API authenticated with the same OAuth3 token and does it respect user-level rate limits?"
+      ],
+      "question_expansion_instruction": "Aisha wants full programmatic control over schedules. Questions verify RESTful CRUD operations, webhook notifications, cron expression support, and API authentication."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Viktor Kozlov",
+      "persona_domain": "scheduled_reliability",
+      "persona_context": "48, Moscow, Site Reliability Engineer at a cloud infrastructure company, Expert tech, Enterprise tier, needs to ensure scheduled tasks are reliable: missed runs recover, failures retry, execution is idempotent, and overlapping runs are prevented",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "If the server is down at the scheduled time, does the system detect the missed run and execute it when the server recovers?",
+        "Does the scheduler retry a failed task automatically with exponential backoff (e.g., 1min, 5min, 15min)?",
+        "Is task execution idempotent — running the same scheduled triage twice does not produce duplicate results or side effects?",
+        "Does the scheduler prevent overlapping runs — if the 8am run is still executing at 9am, does it skip or queue the 9am run?",
+        "Is there a dead letter queue or alert when a scheduled task fails more than 3 consecutive times?",
+        "Does the scheduler use distributed locking to prevent duplicate execution in a multi-node deployment?",
+        "Can I see a reliability dashboard showing schedule hit rate (% of runs that executed on time) over the past 30 days?"
+      ],
+      "question_expansion_instruction": "Viktor is an SRE who needs production-grade reliability. Questions verify missed run recovery, retry logic, idempotent execution, overlap prevention, and failure alerting."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Diana Chen",
+      "persona_domain": "scheduled_cost",
+      "persona_context": "50, Singapore, Finance Director at a mid-size consulting firm, Non-technical, Pro tier, manages budget for 15 consultants using Solace, needs to understand and control the cost of recurring scheduled tasks",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I set a monthly budget cap for all scheduled tasks combined — and does the system pause schedules when the cap is hit?",
+        "Does the billing dashboard show a breakdown of cost per schedule (e.g., 'Morning Triage: $2.40/mo, Weekly Report: $0.80/mo')?",
+        "Before creating a schedule, does the system show a cost projection (e.g., 'This schedule will cost approximately $3.50/month')?",
+        "Does the system send a warning notification when scheduled task spending reaches 80% of the monthly budget?",
+        "Can I set per-schedule budget limits so that one expensive schedule does not consume the entire team budget?",
+        "Are recipe-replay runs (no LLM cost) clearly shown as $0.00 in the schedule cost breakdown?",
+        "Does the cost dashboard show a month-over-month trend so I can see if scheduled task costs are increasing?"
+      ],
+      "question_expansion_instruction": "Diana controls the budget for 15 users. Questions verify budget caps, per-schedule cost visibility, cost projections, spending alerts, and recipe-replay cost savings."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Omar Farouk",
+      "persona_domain": "scheduled_security",
+      "persona_context": "43, Cairo, Security Architect at a government technology agency, Expert security, Enterprise tier, must ensure that scheduled operations meet audit and access control requirements before deployment across 50 employees",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does creating a schedule require the same OAuth3 consent as running the task manually — no privilege escalation?",
+        "Can I restrict which users are allowed to create, modify, or delete schedules via role-based access control?",
+        "Does every scheduled run produce a tamper-evident evidence bundle (SHA-256 hash chain) identical to manual runs?",
+        "Is there an audit log showing who created, modified, paused, or deleted each schedule with timestamps?",
+        "Can I set a policy that requires human approval for any new schedule before its first run?",
+        "Are scheduled task credentials (OAuth tokens) refreshed securely before each run without exposing them in logs?",
+        "Does the schedule system fail closed — if authentication expires, does it stop running and alert rather than running without auth?"
+      ],
+      "question_expansion_instruction": "Omar is a government security architect. Questions verify OAuth3 consent, RBAC, evidence chains, audit logs, approval gates, and fail-closed behavior for scheduled operations."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Rachel Kim",
+      "persona_domain": "scheduled_cloud_integration",
+      "persona_context": "37, Seoul, Cloud Architect at a multinational e-commerce company, Expert tech, Enterprise tier, needs Cloud Scheduler triggers to Cloud Run, solaceagi.com scheduled tasks for distributed teams, and cross-timezone team scheduling",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I trigger a Solace scheduled task via Google Cloud Scheduler sending an HTTP POST to the solaceagi.com API?",
+        "Does solaceagi.com Cloud Run wake up on schedule trigger and execute the task within the existing auto-scaling infrastructure?",
+        "Can I configure a team schedule where the same task runs at 9am local time for each team member's timezone?",
+        "Does the schedule integrate with the cloud twin — can a scheduled task spin up a cloud twin browser for execution?",
+        "Can I export schedule definitions as JSON/YAML for version control and infrastructure-as-code workflows?",
+        "Does the scheduler support cross-app orchestration — e.g., schedule a Gmail triage that triggers a Slack notification on completion?",
+        "Is there a global schedule dashboard showing all team members' schedules with timezone-normalized next-run times?"
+      ],
+      "question_expansion_instruction": "Rachel architects cloud infrastructure for a global team. Questions verify Cloud Scheduler integration, Cloud Run triggering, cross-timezone team scheduling, and infrastructure-as-code support."
+    }
+  ]
+}

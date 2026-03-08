@@ -1,0 +1,59 @@
+{
+  "spec_id": "api-abcd-llm-code-001",
+  "mode": "api_abcd",
+  "persona": "kent_beck",
+  "priority": "high",
+  "northstar": "northstar-api-llm-chat.json",
+  "context": "ABCD test: find cheapest model that handles code generation tasks. Code tasks may need stronger models than factual tasks — this test finds where the quality threshold is. Task class: code/technical.",
+
+  "abcd_config": {
+    "task_class": "code",
+    "description": "Code generation task — test which tier is needed for code quality",
+    "test_prompt": "Write a Python function that returns True if a number is prime. Just the function, no explanation.",
+    "expected_answer_contains": ["def ", "return", "prime"],
+    "quality_threshold": 1.0,
+    "timeout_seconds": 45,
+    "models": [
+      {
+        "id": "A",
+        "label": "Llama-3.3-70B",
+        "model_name": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+        "provider": "together_ai",
+        "cost_per_1m_usd": 0.59
+      },
+      {
+        "id": "B",
+        "label": "Mixtral-8x22B",
+        "model_name": "mistralai/Mixtral-8x22B-Instruct-v0.1",
+        "provider": "openrouter",
+        "cost_per_1m_usd": 1.20
+      },
+      {
+        "id": "C",
+        "label": "Claude Sonnet 4.6",
+        "model_name": "anthropic/claude-sonnet-4-6",
+        "provider": "openrouter",
+        "cost_per_1m_usd": 3.00
+      },
+      {
+        "id": "D",
+        "label": "GPT-4o",
+        "model_name": "openai/gpt-4o",
+        "provider": "openrouter",
+        "cost_per_1m_usd": 5.00
+      }
+    ],
+    "auth_env": "SOLACE_API_KEY",
+    "endpoint": "https://www.solaceagi.com/api/v1/llm/chat",
+    "auth_check_mode": true,
+    "auth_check_notes": "If no API key: verify all 4 model paths return 401 consistently."
+  },
+
+  "checks": {
+    "all_return_401_without_auth": true,
+    "winner_must_be_cheapest_passing": true
+  },
+
+  "expected_outcome": "Hypothesis: Model A or B sufficient for code tasks. If A fails, B is winner. Proves code routing tier.",
+  "committee": ["kent_beck", "james_bach"]
+}

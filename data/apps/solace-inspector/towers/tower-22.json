@@ -1,0 +1,713 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 22,
+    "tower_name": "Tower of iPhone",
+    "dna": "iphone(native) = swiftui(modern) x app_store(distributed) x simulator(tested) x keychain(integrated) x notifications(apns) x privacy(atl) x handoff(continuity)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor lists 7 seed questions. iPhone users have high expectations for polish, privacy, and App Store compliance. These questions prepare for MVP+1 mobile deployment. Set up now, implement after desktop MVP ships. Apple's review process is strict — every question anticipates App Store requirements.",
+    "implementation_status": "SETUP_ONLY — implement after MVP desktop launch",
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of iPhone",
+  "tower_number": 22,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Xcode Simulator Setup Expert",
+      "persona_domain": "iOS simulator configuration and testing",
+      "questions": [
+        "Is Xcode installed with iOS simulators for testing?",
+        "Can the simulator run iOS 16-18 for compatibility testing?",
+        "Does the PWA install correctly on the iOS simulator?",
+        "Can the simulator test different iPhone models (SE, standard, Pro Max)?",
+        "Does the simulator support network condition simulation?",
+        "Can CI/CD run iOS simulator tests headlessly (xcodebuild)?",
+        "Are simulator configurations saved for reproducible testing?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "SwiftUI Designer",
+      "persona_domain": "iOS Human Interface Guidelines",
+      "questions": [
+        "Does the iOS UI follow Apple Human Interface Guidelines?",
+        "Are native iOS navigation patterns used (tab bar, navigation stack)?",
+        "Does the app support Dynamic Type for accessible text sizes?",
+        "Are SF Symbols used for consistent iconography?",
+        "Does the app support iOS dark/light mode?",
+        "Are safe area insets handled correctly (notch, home indicator)?",
+        "Does the app use haptic feedback for important interactions?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Safari WebKit Expert",
+      "persona_domain": "Safari and WebKit compatibility",
+      "questions": [
+        "Does the web app work correctly in Safari/WKWebView?",
+        "Are WebKit-specific CSS features handled (viewport units, safe areas)?",
+        "Does the app handle Safari's Intelligent Tracking Prevention?",
+        "Can the app work as a Safari Web App (Add to Home Screen)?",
+        "Does the app handle Safari's different JavaScript engine behavior?",
+        "Are Safari extensions a viable distribution channel?",
+        "Does the app handle Safari's restrictions on service workers?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "App Store Review Expert",
+      "persona_domain": "Apple App Store review compliance",
+      "questions": [
+        "Does the app meet Apple's App Store Review Guidelines?",
+        "Does the app comply with guideline 4.2 (minimum functionality)?",
+        "Does the app handle in-app purchases through StoreKit (30% Apple tax)?",
+        "Is the app's privacy nutrition label accurate?",
+        "Does the app comply with guideline 2.1 (app completeness)?",
+        "Can the app pass the review for browser-like apps (guideline 2.5.6)?",
+        "Does the app handle App Store rejection feedback process?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Face ID / Touch ID Expert",
+      "persona_domain": "biometric authentication on iOS",
+      "questions": [
+        "Can the OAuth3 vault be unlocked with Face ID / Touch ID?",
+        "Does the app use LocalAuthentication framework correctly?",
+        "Are Keychain items stored with biometric access policy?",
+        "Does the app handle biometric changes (face re-enrollment)?",
+        "Can users fall back to passcode when biometrics fail?",
+        "Are step-up auth requests authenticated via biometrics?",
+        "Does the app handle Face ID in landscape on iPad?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Push Notification Expert (iOS)",
+      "persona_domain": "APNs and notification management",
+      "questions": [
+        "Does the app use APNs for push notifications?",
+        "Can the app handle notification permission request elegantly?",
+        "Are notifications categorized with action buttons (approve/reject)?",
+        "Does the app support notification grouping (threads)?",
+        "Can the app use Time Sensitive notifications for approvals?",
+        "Does the app support notification service extensions (rich media)?",
+        "Can the app handle provisional notifications (quiet delivery)?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "App Clip Expert",
+      "persona_domain": "instant experiences without installation",
+      "questions": [
+        "Could an App Clip provide quick approval functionality?",
+        "Would NFC tags trigger App Clips for specific workflows?",
+        "Does the App Clip meet the 15MB size limit?",
+        "Can the App Clip authenticate with the full app's credentials?",
+        "Would QR codes launch App Clips for onboarding?",
+        "Does the App Clip provide enough functionality to convert to full app?",
+        "Can the App Clip use the camera for QR/barcode scanning?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Keychain Integration Expert (iOS)",
+      "persona_domain": "iOS Keychain and credential management",
+      "questions": [
+        "Does the OAuth3 vault use iOS Keychain Services?",
+        "Are Keychain items stored with appropriate access groups?",
+        "Does the app use Keychain Sharing for multi-app access?",
+        "Are Keychain items synced via iCloud Keychain (when appropriate)?",
+        "Does the app handle Keychain migration on app updates?",
+        "Are Keychain queries efficient (using attributes, not scanning)?",
+        "Does the app handle Keychain errors (locked, full, denied)?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Widget Expert (iOS)",
+      "persona_domain": "iOS home screen and Lock Screen widgets",
+      "questions": [
+        "Can the app provide WidgetKit home screen widgets?",
+        "Does a widget show pending approval count?",
+        "Can Lock Screen widgets display essential status?",
+        "Are widgets interactive (iOS 17+ WidgetKit interactivity)?",
+        "Do widgets update via timeline providers efficiently?",
+        "Can widgets support different sizes (small, medium, large)?",
+        "Do widgets adapt to the user's wallpaper tint (iOS 16+)?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Siri Shortcuts Expert",
+      "persona_domain": "Siri integration and shortcuts",
+      "questions": [
+        "Can users create Siri Shortcuts for common Solace actions?",
+        "Does the app donate intents for intelligent suggestions?",
+        "Can Siri Shortcuts trigger approvals via voice?",
+        "Are App Intents (iOS 16+) used for Shortcuts integration?",
+        "Can the app provide parameterized shortcuts?",
+        "Does the app support Shortcuts automation triggers?",
+        "Can Siri read out pending task summaries?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Handoff Expert (iOS)",
+      "persona_domain": "Continuity and cross-device features",
+      "questions": [
+        "Does the app support Handoff between iPhone, iPad, and Mac?",
+        "Can users start approving on iPhone and continue on Mac?",
+        "Does Universal Clipboard work across Solace on all devices?",
+        "Can AirDrop share recipes and themes between devices?",
+        "Does the app support Continuity Camera?",
+        "Can the app use iPhone as a scanner from Mac?",
+        "Does the app's state sync via iCloud for Handoff?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "VoiceOver Tester (iOS)",
+      "persona_domain": "iOS screen reader accessibility",
+      "questions": [
+        "Can VoiceOver users navigate all app screens?",
+        "Are all UI elements properly labeled with accessibility traits?",
+        "Does the app support VoiceOver rotor actions?",
+        "Are custom views accessible with proper traits?",
+        "Does the app announce dynamic content changes?",
+        "Can VoiceOver users complete the approval workflow?",
+        "Does the app support Voice Control for hands-free operation?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "App Privacy Expert (iOS)",
+      "persona_domain": "iOS privacy features and ATT",
+      "questions": [
+        "Does the app comply with App Tracking Transparency (ATT)?",
+        "Is the privacy manifest (PrivacyInfo.xcprivacy) complete?",
+        "Does the app use required reason APIs correctly?",
+        "Is the privacy nutrition label accurate and complete?",
+        "Does the app handle location permission appropriately?",
+        "Can the app function with all optional permissions denied?",
+        "Does the app comply with App Privacy Report disclosures?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "iPad Multitasking Expert",
+      "persona_domain": "iPad Split View, Slide Over, Stage Manager",
+      "questions": [
+        "Does the app support Split View on iPad?",
+        "Does the app work in Slide Over mode?",
+        "Is the app compatible with Stage Manager (iPadOS 16+)?",
+        "Does the app handle different window sizes in multitasking?",
+        "Can the app be resized freely in Stage Manager?",
+        "Does the app support multiple windows on iPad?",
+        "Is the keyboard handling correct in split-screen mode?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "StoreKit Expert",
+      "persona_domain": "in-app purchases and subscriptions",
+      "questions": [
+        "Can the app offer subscriptions through StoreKit 2?",
+        "Does the app handle subscription offers (introductory, promotional)?",
+        "Can the app restore purchases on new devices?",
+        "Does the app handle subscription grace periods?",
+        "Is the subscription management screen accessible?",
+        "Does the app comply with Apple's auto-renewable subscription guidelines?",
+        "Can the app use offer codes for marketing?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Core Data / SwiftData Expert",
+      "persona_domain": "local data persistence on iOS",
+      "questions": [
+        "Does the app use SwiftData or Core Data for local storage?",
+        "Is data migration handled for app updates?",
+        "Can data sync via CloudKit for cross-device access?",
+        "Is the data schema appropriate for the app's needs?",
+        "Are data queries optimized with proper indices?",
+        "Does the app handle concurrent data access safely?",
+        "Is sensitive data encrypted in the local store?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "Network Extension Expert",
+      "persona_domain": "VPN and network configuration",
+      "questions": [
+        "Could the app use Network Extension for tunneling?",
+        "Does the app handle VPN configurations correctly?",
+        "Can the app detect network changes (WiFi, cellular, VPN)?",
+        "Does the app work with corporate MDM VPN profiles?",
+        "Can the cloudflared tunnel work on iOS?",
+        "Does the app handle captive portals on iOS?",
+        "Is the app compatible with Private Relay?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Performance Expert (iOS)",
+      "persona_domain": "iOS performance optimization",
+      "questions": [
+        "Does the app maintain 120fps on ProMotion displays?",
+        "Is the app startup time under 1 second on recent iPhones?",
+        "Does the app handle thermal throttling gracefully?",
+        "Is memory usage within iOS's recommended limits?",
+        "Does the app use lazy loading for heavy resources?",
+        "Are animations smooth using Core Animation?",
+        "Does the app use Instruments for performance profiling?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Focus Mode Expert (iOS)",
+      "persona_domain": "iOS Focus and Do Not Disturb",
+      "questions": [
+        "Does the app work with iOS Focus modes?",
+        "Can users allow Solace notifications in specific Focus modes?",
+        "Does the app support Focus Filters for content customization?",
+        "Are Time Sensitive notifications delivered during Focus?",
+        "Does the app handle scheduled summaries correctly?",
+        "Can the app suggest Focus mode configurations?",
+        "Does the app respect Do Not Disturb schedules?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Share Extension Expert",
+      "persona_domain": "iOS share sheet integration",
+      "questions": [
+        "Does the app provide a Share Extension for receiving content?",
+        "Can users share URLs, text, and files to Solace?",
+        "Does the Share Extension work without launching the full app?",
+        "Can shared content trigger specific workflows?",
+        "Does the app appear in the Share Sheet for relevant content types?",
+        "Is the Share Extension UI consistent with the main app?",
+        "Does the Share Extension handle large files efficiently?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "Apple Watch Expert",
+      "persona_domain": "watchOS companion app",
+      "questions": [
+        "Can the app provide an Apple Watch companion?",
+        "Can users approve/reject from Apple Watch?",
+        "Does the watch show pending task notifications?",
+        "Can the watch companion use complications for at-a-glance info?",
+        "Is the watch companion battery-efficient?",
+        "Can the watch companion work independently (watchOS 9+)?",
+        "Does the watch companion support Digital Crown interaction?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "Action Extension Expert",
+      "persona_domain": "iOS action extensions",
+      "questions": [
+        "Can the app provide Action Extensions for Safari?",
+        "Can users trigger Solace actions from within Safari?",
+        "Does the action extension share data securely with the main app?",
+        "Can the extension analyze web page content?",
+        "Is the extension performant (doesn't slow Safari)?",
+        "Can the extension work without launching the full app?",
+        "Does the extension handle errors gracefully?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "iMessage App Expert",
+      "persona_domain": "iMessage app integration",
+      "questions": [
+        "Could Solace provide an iMessage app for sharing?",
+        "Can users share evidence or task links via iMessage app?",
+        "Would interactive iMessage cards be useful for approvals?",
+        "Does the iMessage app meet Apple's sticker/app guidelines?",
+        "Can the iMessage app display rich previews of tasks?",
+        "Is the iMessage app discoverable in the App Store for iMessage?",
+        "Does the iMessage app handle different message sizes?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "AR/VisionOS Expert",
+      "persona_domain": "augmented reality and spatial computing",
+      "questions": [
+        "Could Solace provide a visionOS companion for Apple Vision Pro?",
+        "Would a spatial dashboard be useful for monitoring?",
+        "Can AR features enhance the evidence review experience?",
+        "Would visionOS enable new interaction patterns for approvals?",
+        "Is the design system adaptable for spatial UI?",
+        "Could pvideo avatars render in visionOS?",
+        "Would a visionOS app be a competitive differentiator?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Localization Expert (iOS)",
+      "persona_domain": "iOS localization features",
+      "questions": [
+        "Does the app use NSLocalizedString for all user-facing text?",
+        "Are RTL layouts correct on iOS?",
+        "Does the app support per-app language setting (iOS 13+)?",
+        "Are date/time/currency formatted with locale-aware formatters?",
+        "Does the app handle Dynamic Type with localized text?",
+        "Are string catalogs used for localization management?",
+        "Does the app handle bi-directional text correctly?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "CarPlay Expert",
+      "persona_domain": "CarPlay integration",
+      "questions": [
+        "Could the app provide CarPlay functionality?",
+        "Can notification summaries be read via CarPlay?",
+        "Would voice-based approval be safe for CarPlay?",
+        "Does the app meet CarPlay design guidelines?",
+        "Can the app display monitoring dashboards on CarPlay?",
+        "Is the CarPlay interface driver-distraction-free?",
+        "Can CarPlay integration use Siri for hands-free control?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Background Processing Expert (iOS)",
+      "persona_domain": "iOS background execution",
+      "questions": [
+        "Does the app use BGTaskScheduler for background work?",
+        "Can background tasks sync data with the server?",
+        "Does the app handle background fetch efficiently?",
+        "Are background processing tasks battery-efficient?",
+        "Can the app process push notifications silently?",
+        "Does the app handle background session URLSession?",
+        "Are background tasks reliable across different iOS versions?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "Crash Expert (iOS)",
+      "persona_domain": "crash reporting and diagnostics",
+      "questions": [
+        "Does the app use a crash reporting service (Crashlytics, Sentry)?",
+        "Are crash reports symbolicated with dSYM files?",
+        "Can the app recover from crashes gracefully?",
+        "Are memory warnings handled (didReceiveMemoryWarning)?",
+        "Is the crash-free rate tracked and above 99%?",
+        "Does the app handle watchdog kills (too long in background)?",
+        "Can developers reproduce crashes from reports?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "TestFlight Expert",
+      "persona_domain": "beta testing and TestFlight distribution",
+      "questions": [
+        "Is the app distributed via TestFlight for beta testing?",
+        "Can external testers access the app through TestFlight?",
+        "Does TestFlight feedback collection work?",
+        "Are crash reports available in TestFlight?",
+        "Can the beta group scale to 10,000 external testers?",
+        "Does the app handle TestFlight expiration gracefully?",
+        "Are TestFlight builds auto-distributed on new versions?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Xcode Cloud Expert",
+      "persona_domain": "CI/CD with Xcode Cloud",
+      "questions": [
+        "Can the app build and test on Xcode Cloud?",
+        "Are custom build scripts compatible with Xcode Cloud?",
+        "Can Xcode Cloud distribute to TestFlight automatically?",
+        "Does the CI pipeline include unit and UI tests?",
+        "Can Xcode Cloud handle the project's dependencies?",
+        "Are build times acceptable on Xcode Cloud?",
+        "Can Xcode Cloud run on multiple iOS versions?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Enterprise Distribution Expert",
+      "persona_domain": "enterprise app distribution on iOS",
+      "questions": [
+        "Can the app be distributed via Apple Business Manager?",
+        "Does the app support MDM (Jamf, Intune) management?",
+        "Can IT admins pre-configure settings via managed preferences?",
+        "Does the app support per-app VPN?",
+        "Can the app be deployed as a custom B2B app?",
+        "Does the app handle enterprise certificate rotation?",
+        "Can the app report compliance status to MDM?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "HealthKit Expert",
+      "persona_domain": "health and wellness integration",
+      "questions": [
+        "Could the app use HealthKit data for wellness features?",
+        "Can the app suggest breaks based on screen time?",
+        "Does the app support Apple Health data privacy?",
+        "Could step count gamify productivity features?",
+        "Can the app respect bedtime mode settings?",
+        "Would mindfulness minutes tracking be useful?",
+        "Does the app comply with HealthKit review guidelines?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "Universal Link Expert",
+      "persona_domain": "iOS deep linking and Universal Links",
+      "questions": [
+        "Does the app support Apple Universal Links?",
+        "Is the apple-app-site-association file hosted correctly?",
+        "Can users share links that open directly in the app?",
+        "Do Universal Links work from Safari, Messages, and Mail?",
+        "Does the app handle Universal Link parameters securely?",
+        "Can Universal Links route to specific app screens?",
+        "Does the app handle Universal Links when not installed (graceful fallback)?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "CloudKit Expert",
+      "persona_domain": "iCloud data sync",
+      "questions": [
+        "Could the app use CloudKit for settings sync?",
+        "Does CloudKit handle conflict resolution correctly?",
+        "Can the app work offline with CloudKit sync pending?",
+        "Is CloudKit used efficiently (batch operations, subscriptions)?",
+        "Are CloudKit zones structured for performance?",
+        "Can the app handle iCloud account changes?",
+        "Is CloudKit data encrypted in transit and at rest?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Battery Expert (iOS)",
+      "persona_domain": "iOS battery optimization",
+      "questions": [
+        "Is the app's battery impact visible in Settings → Battery?",
+        "Does the app use background app refresh efficiently?",
+        "Are location services used sparingly (when needed)?",
+        "Does the app reduce network activity in Low Power Mode?",
+        "Are animation frame rates reduced to save battery?",
+        "Does the app handle thermal state changes?",
+        "Is the app optimized for Apple's Energy Efficiency Guide?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Camera Expert (iOS)",
+      "persona_domain": "camera and image capture",
+      "questions": [
+        "Can the app scan QR codes for quick actions?",
+        "Can the app use the camera for document scanning?",
+        "Does the app use AVFoundation or VisionKit for scanning?",
+        "Can scanned content be used as evidence?",
+        "Does the app handle camera permission properly?",
+        "Can the app use the LiDAR scanner (if applicable)?",
+        "Does the app support Live Text for content extraction?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Keyboard Extension Expert",
+      "persona_domain": "custom keyboard and input",
+      "questions": [
+        "Does the app handle custom keyboards correctly?",
+        "Can the app disable custom keyboards for secure input (passwords)?",
+        "Does the app support dictation input?",
+        "Are text fields configured with correct keyboard types?",
+        "Does the app handle autocorrect and predictive text?",
+        "Can the app use the numeric keypad for codes?",
+        "Does the app handle keyboard appearance changes (dark/light)?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "iPhone SE Tester",
+      "persona_domain": "compact iPhone support",
+      "questions": [
+        "Does the app work on iPhone SE (4.7-inch screen)?",
+        "Are all UI elements reachable with one hand on SE?",
+        "Is text readable at SE screen size?",
+        "Does the layout handle the smaller SE safe areas?",
+        "Are touch targets large enough on the smaller screen?",
+        "Does the app scroll correctly on the shorter display?",
+        "Is the app usable in landscape on SE?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Pro Max Tester",
+      "persona_domain": "large iPhone optimization",
+      "questions": [
+        "Does the app utilize the larger Pro Max screen effectively?",
+        "Is the layout optimized for 6.7-inch displays?",
+        "Are there additional columns or content on larger screens?",
+        "Does the app handle Dynamic Island interactions?",
+        "Can the app use Always-On Display for status?",
+        "Does the app support ProMotion (120Hz) smooth scrolling?",
+        "Are the action buttons reachable one-handed on Pro Max?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Offline Expert (iOS)",
+      "persona_domain": "offline capability on iOS",
+      "questions": [
+        "Can the app function offline for core features?",
+        "Does the app queue actions for when connectivity returns?",
+        "Can users browse cached data offline?",
+        "Does the app indicate offline status clearly?",
+        "Is conflict resolution handled for offline edits?",
+        "Does the app pre-cache data for anticipated offline use?",
+        "Can the app handle airplane mode gracefully?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Swift Package Manager Expert",
+      "persona_domain": "dependency management",
+      "questions": [
+        "Are dependencies managed via Swift Package Manager?",
+        "Are dependency versions pinned for reproducible builds?",
+        "Are there minimal third-party dependencies?",
+        "Does the project avoid CocoaPods for simplicity?",
+        "Are SPM packages from trusted sources only?",
+        "Does the build work with SPM binary dependencies?",
+        "Are SPM caches handled correctly in CI?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Accessibility Expert (iOS)",
+      "persona_domain": "comprehensive iOS accessibility",
+      "questions": [
+        "Does the app support all iOS accessibility features?",
+        "Can the app be operated with Switch Control?",
+        "Does the app support AssistiveTouch?",
+        "Are custom accessibility actions defined where needed?",
+        "Does the app use semantic content descriptions?",
+        "Can the app be navigated with an external switch or head pointer?",
+        "Does the app pass Apple's Accessibility Audit in Xcode?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Migration Expert (iOS)",
+      "persona_domain": "device migration and data transfer",
+      "questions": [
+        "Does app data transfer via iPhone migration (Quick Start)?",
+        "Is the app data included in iCloud/iTunes backups?",
+        "Does the app handle first launch after migration?",
+        "Are Keychain items transferred during migration?",
+        "Can users export/import settings manually?",
+        "Does the app detect migrated vs fresh installation?",
+        "Are migration edge cases tested (partial migration, interrupted)?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Security Expert (iOS)",
+      "persona_domain": "iOS security features",
+      "questions": [
+        "Does the app use App Transport Security (ATS) correctly?",
+        "Are all connections over HTTPS with no exceptions?",
+        "Does the app use certificate pinning for API calls?",
+        "Is jailbreak detection implemented (and graceful)?",
+        "Are Data Protection classes set on sensitive files?",
+        "Does the app prevent screen capture of sensitive content?",
+        "Is the app compiled with address space layout randomization?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "App Store Optimization Expert",
+      "persona_domain": "ASO and discoverability",
+      "questions": [
+        "Are App Store keywords optimized for discoverability?",
+        "Are screenshots compelling and showing key features?",
+        "Is the app preview video demonstrating the value proposition?",
+        "Is the subtitle/promotional text compelling?",
+        "Are ratings and reviews managed proactively?",
+        "Does the app use in-app events for seasonal promotion?",
+        "Is the app categorized correctly for its audience?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Backward Compatibility Expert (iOS)",
+      "persona_domain": "older iOS version support",
+      "questions": [
+        "What is the minimum supported iOS version?",
+        "Are API availability checks used for newer APIs?",
+        "Does the app work on iOS 16 (two versions back)?",
+        "Are deprecated APIs replaced with modern equivalents?",
+        "Does the app handle different Swift runtime versions?",
+        "Are there feature gates for iOS-version-specific features?",
+        "Is the minimum deployment target documented?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Privacy-First iOS Developer",
+      "persona_domain": "privacy-preserving iOS patterns",
+      "questions": [
+        "Does the app minimize data collection?",
+        "Can the app operate without analytics?",
+        "Is on-device processing preferred over cloud?",
+        "Does the app respect Ask App Not To Track?",
+        "Can the app use on-device ML (Core ML) instead of cloud?",
+        "Is the privacy nutrition label accurate?",
+        "Does the app support App Privacy Report transparency?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Dragon Rider (Phuc)",
+      "persona_domain": "iPhone experience vision",
+      "questions": [
+        "Does the iPhone experience feel truly native (not a web wrapper)?",
+        "Would iPhone users discover Solace naturally in the App Store?",
+        "Is the approve-on-phone workflow the killer feature for iOS?",
+        "Does the iOS experience match Apple's quality bar?",
+        "Can the iPhone app become essential for AI-powered browsing?",
+        "Would the Dragon Rider use the iPhone app daily?",
+        "Would Apple feature Solace Browser as an 'App of the Day'?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "Mum Test Judge",
+      "persona_domain": "non-technical iPhone user experience",
+      "questions": [
+        "Can a non-technical iPhone user install the app from the App Store easily?",
+        "Does the app look and feel like a well-made iOS app?",
+        "Can the user understand what the app does within 30 seconds?",
+        "Does the app crash or behave oddly on a typical iPhone?",
+        "Would the user know how to approve AI actions on their phone?",
+        "Does the app drain battery noticeably?",
+        "Would a non-technical iPhone user recommend this app to a friend?"
+      ]
+    }
+  ]
+}

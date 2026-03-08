@@ -1,0 +1,65 @@
+{
+  "id": "phucnet-publisher",
+  "version": "1.0.0",
+  "type": "orchestrator",
+  "platform": "any",
+  "architecture": "agent-native",
+  "description": "Content publication pipeline: collect from AI generators → review queue → human approval → publish to phuc.net",
+  "orchestration_steps": [
+    {
+      "step": 1,
+      "id": "collect_content",
+      "action": "collect_from_partners",
+      "sources": [
+        {"app": "openai-image-gen", "path": "outbox/images/"},
+        {"app": "gemini-creative", "path": "outbox/images/"},
+        {"app": "gemini-creative", "path": "outbox/articles/"},
+        {"app": "competitor-monitor", "path": "outbox/reports/"}
+      ],
+      "note": "Gather all generated content from partner apps"
+    },
+    {
+      "step": 2,
+      "id": "create_review_queue",
+      "action": "create_review_bundle",
+      "output_path": "outbox/review-queue/bundle-{timestamp}.json",
+      "note": "Bundle all content for human review"
+    },
+    {
+      "step": 3,
+      "id": "human_review",
+      "action": "await_approval",
+      "review_ui": "outbox/review-queue/",
+      "note": "Human picks best images, edits articles, approves for publication"
+    },
+    {
+      "step": 4,
+      "id": "format_article",
+      "action": "format_for_phucnet",
+      "template": "inbox/templates/article-template.md",
+      "output_path": "outbox/formatted/",
+      "note": "Format approved content as phuc.net article (frontmatter + markdown)"
+    },
+    {
+      "step": 5,
+      "id": "publish_to_queue",
+      "action": "copy_to_target",
+      "source": "outbox/formatted/",
+      "target": "/home/phuc/projects/phucnet/articles/queue/",
+      "note": "Copy approved articles to phucnet publication queue"
+    },
+    {
+      "step": 6,
+      "id": "seal_evidence",
+      "action": "write_evidence",
+      "output_path": "outbox/evidence/publish-{run_id}.json",
+      "seal": "sha256",
+      "note": "Record what was published, when, by whom"
+    }
+  ],
+  "params": {
+    "publish_target": "/home/phuc/projects/phucnet/articles/queue/",
+    "review_required": true,
+    "auto_format": true
+  }
+}

@@ -1,0 +1,714 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 10,
+    "tower_name": "Tower of Regulators",
+    "dna": "compliance(system) = evidence(strong) x audit(absent) x consent(partial) x governance(missing) ~ 0",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 100,
+    "question_expansion_instruction": "Each floor lists 7-10 seed questions. During execution, expand to 100 questions per persona by probing deeper into the domain.",
+    "target_projects": [
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of Regulators",
+  "tower_number": 10,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "GDPR Officer",
+      "persona_domain": "EU General Data Protection Regulation (GDPR)",
+      "questions": [
+        "Does the product implement GDPR Article 17 right-to-erasure with a data deletion API?",
+        "Is there a GDPR Article 20 data portability export endpoint?",
+        "Has a Data Protection Impact Assessment (DPIA) been conducted?",
+        "Is a Data Protection Officer (DPO) appointed per GDPR Article 37?",
+        "Does GA4 load on pages while the privacy policy states no Google Analytics is used?",
+        "Are evidence chains compatible with GDPR Article 30 record-keeping requirements?",
+        "Is the lawful basis for processing user data documented (consent, legitimate interest, etc.)?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "CCPA Enforcer",
+      "persona_domain": "California Consumer Privacy Act (CCPA)",
+      "questions": [
+        "Is there a 'Do Not Sell My Personal Information' mechanism?",
+        "Does a comprehensive data inventory exist documenting all collected categories?",
+        "Does GA4 fire without providing an opt-out mechanism for California users?",
+        "Can consumers request disclosure of the categories of personal information collected?",
+        "Is there a verified consumer request process for data access and deletion?",
+        "Does the product distinguish between 'sale' and 'sharing' of personal information?",
+        "Is there a privacy notice meeting CCPA Section 1798.100 requirements?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "LGPD Auditor",
+      "persona_domain": "Brazil Lei Geral de Protecao de Dados (LGPD)",
+      "questions": [
+        "Is there a Portuguese-language privacy notice for Brazilian users?",
+        "Is a DPO equivalent (Encarregado) designated per LGPD Article 41?",
+        "Does the Portuguese locale include legally required privacy and data handling text?",
+        "Can Brazilian users exercise their data rights in Portuguese?",
+        "Is there a lawful basis documented for processing Brazilian user data?",
+        "Does the product comply with LGPD's data minimization principle?",
+        "Is cross-border data transfer from Brazil documented with adequate safeguards?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "PIPL Compliance Officer",
+      "persona_domain": "China Personal Information Protection Law (PIPL)",
+      "questions": [
+        "Does the product implement data localization for Chinese user data?",
+        "Is there a cross-border data transfer mechanism compliant with PIPL?",
+        "Does the zh-TW/zh-CN conflation (Paper 35) affect PIPL compliance messaging?",
+        "Is there a local data storage option for Chinese users?",
+        "Does the product's local-first architecture satisfy PIPL data localization requirements?",
+        "Is personal information processing consent obtained per PIPL Article 13?",
+        "Is there a PIPL-specific privacy assessment for cross-border transfers?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "POPIA Commissioner",
+      "persona_domain": "South Africa Protection of Personal Information Act (POPIA)",
+      "questions": [
+        "Is an Information Officer registered per POPIA Section 55?",
+        "Does a PAIA (Promotion of Access to Information Act) manual exist?",
+        "Is there a Section 18 notification to data subjects?",
+        "Is consent for processing personal information obtained per POPIA requirements?",
+        "Does the product's evidence chain support POPIA's accountability principle?",
+        "Is there a data breach notification procedure meeting POPIA's 72-hour requirement?",
+        "Can South African users exercise their rights under POPIA in their local context?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "PDPA Regulator",
+      "persona_domain": "Thailand/Singapore Personal Data Protection Act (PDPA)",
+      "questions": [
+        "Is there a consent record-keeping mechanism for PDPA compliance?",
+        "Is a DPO designated per PDPA requirements?",
+        "Does the product have a data breach notification procedure?",
+        "Can users withdraw consent and have their data deleted?",
+        "Does the product's purpose limitation align with PDPA's collection limitation?",
+        "Is there a retention limitation policy documented?",
+        "Does the local-first architecture support PDPA's data protection by design principle?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "APPI Inspector",
+      "persona_domain": "Japan Act on Protection of Personal Information (APPI)",
+      "questions": [
+        "Does the evidence chain architecture map to APPI record-keeping requirements?",
+        "Is there a cross-border consent mechanism for transferring data outside Japan?",
+        "Does the product's local-first architecture reduce APPI compliance burden?",
+        "Is the purpose of personal information use clearly specified per APPI?",
+        "Are APPI-required notifications provided to data subjects?",
+        "Does the product handle special care-required personal information per APPI?",
+        "Is the evidence chain structured to serve as APPI-compliant processing records?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "UK GDPR Commissioner",
+      "persona_domain": "UK General Data Protection Regulation (post-Brexit)",
+      "questions": [
+        "Are all EU GDPR gaps replicated for UK GDPR (same requirements)?",
+        "Is the product registered with the UK Information Commissioner's Office (ICO)?",
+        "Is a UK representative appointed per UK GDPR Article 27?",
+        "Does the product meet UK-specific data adequacy requirements for EU transfers?",
+        "Is there a UK-specific privacy notice?",
+        "Does the GA4 contradiction violate UK GDPR's transparency principle?",
+        "Are Standard Contractual Clauses (SCCs) in place for UK-EU data flows?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "HIPAA Auditor",
+      "persona_domain": "US Health Insurance Portability and Accountability Act (HIPAA)",
+      "questions": [
+        "Is there a Business Associate Agreement (BAA) template available?",
+        "Are Protected Health Information (PHI) handling procedures documented?",
+        "Does the product implement access controls specific to healthcare data?",
+        "Can the evidence chain serve as a HIPAA-compliant audit trail?",
+        "Is there a risk assessment for handling healthcare-related data?",
+        "Does the product's encryption (AES-256-GCM) meet HIPAA's technical safeguards?",
+        "Are minimum necessary standards enforced when processing healthcare data?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "FDA Part 11 Auditor",
+      "persona_domain": "US FDA 21 CFR Part 11 (electronic records and signatures)",
+      "questions": [
+        "Does the evidence chain implement ALCOA+ principles (Attributable, Legible, Contemporaneous, Original, Accurate)?",
+        "Are approval gates functioning as valid electronic signatures per Part 11?",
+        "Does the SHA-256 hash chain provide tamper-evident audit trails?",
+        "Is there a formal validation protocol (IQ/OQ/PQ) for the evidence chain?",
+        "Is a 21 CFR Part 11 mapping document available?",
+        "Are electronic records with integrity maintained through hash-chained evidence?",
+        "Does the approval gate with 30-second auto-deny satisfy Part 11 signature requirements?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "MHRA Inspector",
+      "persona_domain": "UK Medicines and Healthcare products Regulatory Agency (MHRA)",
+      "questions": [
+        "Is there UK-specific GxP documentation mapping to MHRA requirements?",
+        "Does the product have an Annex 11 (computerized systems) mapping document?",
+        "Does the evidence chain meet MHRA data integrity expectations (ALCOA+)?",
+        "Is there a validated system state for GxP-regulated use?",
+        "Does the product support MHRA's expectations for electronic records?",
+        "Are change control procedures documented for system updates?",
+        "Is there a supplier qualification process for the LLM providers used?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "EMA Compliance Officer",
+      "persona_domain": "European Medicines Agency (EMA) GxP validation",
+      "questions": [
+        "Is there a GxP validation strategy document?",
+        "Are clinical data integrity procedures defined?",
+        "Does the product meet EMA expectations for computerized system validation?",
+        "Is there a risk assessment for using the product in GxP-regulated environments?",
+        "Are audit trails compliant with EMA Annex 11 requirements?",
+        "Does the evidence chain support EMA's data integrity requirements?",
+        "Is the product's change management process documented for GxP compliance?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "TGA Assessor",
+      "persona_domain": "Australia Therapeutic Goods Administration (TGA)",
+      "questions": [
+        "Is there an Australian regulatory mapping document?",
+        "Is a local representative appointed for Australian regulatory purposes?",
+        "Does the product meet TGA's expectations for computerized systems in clinical contexts?",
+        "Is the evidence chain compliant with TGA's data integrity requirements?",
+        "Are Australian-specific privacy requirements (Privacy Act 1988) addressed?",
+        "Does the product handle Australian healthcare data per TGA guidelines?",
+        "Is there a TGA-specific risk assessment for the evidence chain?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Health Canada Reviewer",
+      "persona_domain": "Health Canada pharmaceutical and device regulation",
+      "questions": [
+        "Is there a Canadian regulatory mapping document?",
+        "Does the product meet bilingual requirements (EN/FR) for health contexts?",
+        "Is the French locale complete enough for Health Canada compliance?",
+        "Does the evidence chain meet Health Canada's GxP data integrity expectations?",
+        "Are PIPEDA (privacy) requirements addressed for Canadian healthcare use?",
+        "Is there a Canadian representative for regulatory communications?",
+        "Does the product support Health Canada's electronic signature requirements?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "WHO Digital Health Advisor",
+      "persona_domain": "World Health Organization digital health data integrity",
+      "questions": [
+        "Does the evidence chain map to WHO digital health data integrity principles?",
+        "Is there an implementation guide for WHO-aligned data integrity?",
+        "Does the product support WHO's recommendations for digital health interventions?",
+        "Can the evidence chain serve as a WHO-quality audit trail for health data?",
+        "Does the product's local-first architecture support WHO's data sovereignty principles?",
+        "Is there documentation mapping product features to WHO digital health standards?",
+        "Does the product address WHO's concerns about AI in healthcare decision-making?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "ICH GCP Auditor",
+      "persona_domain": "International Council for Harmonisation E6(R3) Good Clinical Practice",
+      "questions": [
+        "Does the evidence chain align with ICH E6(R3) data integrity requirements?",
+        "Is the hash chain structure compatible with GCP audit trail requirements?",
+        "Does the product's evidence capture meet ICH's quality-by-design principles?",
+        "Can the evidence chain support a clinical trial audit?",
+        "Is there a formal mapping of product capabilities to ICH E6(R3) requirements?",
+        "Does the product address ICH's expectations for electronic source data?",
+        "Are there controls for ensuring data is attributable and contemporaneous per ICH?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "PCI-DSS Assessor",
+      "persona_domain": "Payment Card Industry Data Security Standard (PCI-DSS)",
+      "questions": [
+        "Is the cardholder data environment (CDE) documented?",
+        "Is payment processing correctly delegated to Stripe (no cardholder data stored locally)?",
+        "Is there a PCI scope documentation showing what is in scope and what is not?",
+        "Does the product store, process, or transmit cardholder data anywhere?",
+        "Is PCI DSS compliance correctly scoped to Stripe as the payment processor?",
+        "Are there any API endpoints that could inadvertently handle payment card data?",
+        "Does the product maintain a SAQ (Self-Assessment Questionnaire) for its PCI scope?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "SOX Compliance Officer",
+      "persona_domain": "Sarbanes-Oxley Act (SOX) internal controls",
+      "questions": [
+        "Is internal controls documentation available for financial reporting?",
+        "Is there segregation of duties in the development and deployment process?",
+        "Is a change management audit trail maintained?",
+        "Does the evidence chain support SOX Section 302 certification requirements?",
+        "Are financial records immutable and auditable?",
+        "Is there a documented control environment for the product?",
+        "Can the product demonstrate compliance with SOX Section 404 internal controls?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Basel III Risk Officer",
+      "persona_domain": "Basel III banking regulation operational risk",
+      "questions": [
+        "Is operational risk documentation available if banks use Solace for tasks?",
+        "Does the product meet Basel III's IT risk management requirements?",
+        "Is there an operational risk framework for AI-assisted banking tasks?",
+        "Can the evidence chain support banking regulatory audit requirements?",
+        "Are there controls for managing operational risk from AI agent actions?",
+        "Does the product's fail-closed design align with banking risk management?",
+        "Is there documentation for operational resilience of automated banking tasks?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "MiFID II Analyst",
+      "persona_domain": "Markets in Financial Instruments Directive II",
+      "questions": [
+        "Are transaction recording requirements met if financial advisors use Solace?",
+        "Does the evidence chain satisfy MiFID II's record-keeping requirements?",
+        "Is there documentation for best execution obligations in automated tasks?",
+        "Can the product's audit trail support MiFID II compliance demonstrations?",
+        "Are client communication archival requirements addressed?",
+        "Does the product meet MiFID II's transparency requirements for automated advice?",
+        "Is there a regulatory mapping for MiFID II applicability?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "DORA Assessor",
+      "persona_domain": "EU Digital Operational Resilience Act (DORA)",
+      "questions": [
+        "Is there an ICT risk management framework per DORA Article 6?",
+        "Does the product have an incident reporting procedure per DORA requirements?",
+        "Is third-party risk management documented for LLM providers?",
+        "Does the product's resilience testing meet DORA's digital operational resilience standards?",
+        "Is there a business continuity plan for the product's automated services?",
+        "Are ICT third-party dependencies (Together.ai, OpenRouter) risk-assessed per DORA?",
+        "Does the product maintain information registers of ICT third-party arrangements?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "SEC Compliance Counsel",
+      "persona_domain": "US Securities and Exchange Commission record retention",
+      "questions": [
+        "Is there a record retention policy (SEC requires 3-7 year retention)?",
+        "Is communication archival implemented for regulatory compliance?",
+        "Does the evidence chain support SEC's electronic recordkeeping requirements?",
+        "Can the product demonstrate compliance with SEC Rule 17a-4?",
+        "Are there controls preventing the destruction of required records?",
+        "Does the product's hash chain provide SEC-grade audit trail integrity?",
+        "Is there a legal hold capability for preserving records in litigation?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "FCA Compliance Manager",
+      "persona_domain": "UK Financial Conduct Authority",
+      "questions": [
+        "Is there an FCA compliance mapping for the product?",
+        "Has a consumer duty assessment been conducted per FCA requirements?",
+        "Does the product meet FCA's expectations for treating customers fairly?",
+        "Is there documentation for FCA SYSC (Senior Management Arrangements)?",
+        "Does the evidence chain support FCA's record-keeping requirements?",
+        "Are there controls for managing conflicts of interest in automated financial tasks?",
+        "Does the product's pricing transparency meet FCA consumer duty standards?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "MAS Technology Risk Officer",
+      "persona_domain": "Monetary Authority of Singapore technology risk management",
+      "questions": [
+        "Is there a technology risk management guidelines mapping for MAS?",
+        "Does the product have an outsourcing framework per MAS requirements?",
+        "Are MAS's cloud computing and AI governance requirements addressed?",
+        "Does the product meet MAS's expectations for technology risk controls?",
+        "Is third-party risk management documented for Singapore regulatory purposes?",
+        "Does the product's security architecture meet MAS's baseline standards?",
+        "Is there an incident response plan meeting MAS's notification requirements?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "EU AI Act Compliance Officer",
+      "persona_domain": "EU Artificial Intelligence Act risk classification and oversight",
+      "questions": [
+        "Is human oversight scoring 8/10 via approval gates (Article 14 compliance)?",
+        "Is there an AI system risk classification per the EU AI Act risk tiers?",
+        "Does a model card exist documenting which LLMs are used and their limitations?",
+        "Is the AI system registered in any EU AI Act registry?",
+        "Are transparency obligations met (Article 52) for AI-generated content?",
+        "Does the approval gate with 30-second auto-deny satisfy human oversight requirements?",
+        "Is there a conformity assessment for the AI system under the EU AI Act?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "NIST AI RMF Assessor",
+      "persona_domain": "US NIST AI Risk Management Framework",
+      "questions": [
+        "Is the MAP function partially implemented (use cases documented)?",
+        "Is the MEASURE function implemented (bias testing, fairness metrics)?",
+        "Is the MANAGE function implemented (incident response for AI failures)?",
+        "Does the GOVERN function address organizational AI governance?",
+        "Is there a documented AI risk profile per NIST AI RMF?",
+        "Are AI-specific risks assessed and documented with mitigation strategies?",
+        "Does the product maintain an AI Bill of Materials?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Canada AIDA Reviewer",
+      "persona_domain": "Canada Artificial Intelligence and Data Act",
+      "questions": [
+        "Has an algorithmic impact assessment been conducted?",
+        "Is human oversight present in the AI decision pipeline?",
+        "Are bilingual (EN/FR) requirements met for AI disclosures?",
+        "Does the product meet AIDA's transparency requirements?",
+        "Is there documentation of the AI system's potential impacts?",
+        "Are there mechanisms for explaining AI decisions to affected individuals?",
+        "Does the product support AIDA's requirements for high-impact AI systems?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "China AI Regulation Officer",
+      "persona_domain": "China's AI regulation (algorithm filing, content labeling)",
+      "questions": [
+        "Is there an algorithm filing prepared per China's algorithm registration requirements?",
+        "Is AI-generated content labeled per China's deep synthesis regulations?",
+        "Is there a deep synthesis service registration?",
+        "Does the product label AI-generated outputs distinctly from human content?",
+        "Are content recommendation algorithms documented per Chinese regulations?",
+        "Does the product address China's requirements for AI-generated content watermarking?",
+        "Is there a Chinese-market-specific compliance plan?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "UK AI Safety Institute Evaluator",
+      "persona_domain": "UK AI Safety Institute pre-deployment testing",
+      "questions": [
+        "Is human oversight strong (approval gates with evidence capture)?",
+        "Has pre-deployment testing been conducted per UK AI Safety Institute guidance?",
+        "Is there a safety case document for the AI system?",
+        "Has a frontier model evaluation been conducted?",
+        "Does the product document AI failure modes and mitigations?",
+        "Is there a mechanism for reporting AI safety incidents?",
+        "Does the product participate in any AI safety testing frameworks?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Singapore Model AI Framework Assessor",
+      "persona_domain": "Singapore Model AI Governance Framework",
+      "questions": [
+        "Is human-in-the-loop present in the AI decision pipeline?",
+        "Is explainability addressed (evidence chains explain WHAT, but do they explain WHY)?",
+        "Has an algorithm audit been conducted?",
+        "Does the product meet Singapore's principles for responsible AI?",
+        "Is there documentation of the AI system's decision-making process?",
+        "Does the evidence chain support explainability requirements?",
+        "Are fairness considerations documented for the AI system?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Japan AI Guidelines Reviewer",
+      "persona_domain": "Japan AI Strategy and Society 5.0 principles",
+      "questions": [
+        "Does human oversight align with Japan's Society 5.0 AI principles?",
+        "Has an AI impact assessment been conducted per Japanese guidelines?",
+        "Is there a transparency report for the AI system?",
+        "Does the product's approval gate philosophy align with Japanese deliberation culture?",
+        "Are there documented principles for AI ethics in the product?",
+        "Does the evidence chain support Japanese expectations for AI accountability?",
+        "Is the Japanese locale's politeness register (desu/masu) appropriate for regulatory contexts?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "IEEE 7000 Ethics Assessor",
+      "persona_domain": "IEEE 7000 ethically aligned design",
+      "questions": [
+        "Are value-based design principles present (care, evidence, consent)?",
+        "Has a formal ethical impact assessment been conducted?",
+        "Is there an ethics board or ethical review process?",
+        "Does the product implement IEEE 7000's requirements for stakeholder engagement?",
+        "Are ethical considerations documented in the design process?",
+        "Does the product address IEEE 7000's transparency requirements?",
+        "Is there a mechanism for ethical review of new features or recipes?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "FTC Investigator",
+      "persona_domain": "US Federal Trade Commission consumer protection",
+      "questions": [
+        "Do marketing claims require substantiation per FTC standards?",
+        "Is the 'AI Worker Platform' claim tested by FTC standard for deceptive advertising?",
+        "Are endorsement disclosures present where required?",
+        "Does the product's pricing transparency meet FTC unfairness standards?",
+        "Are there any unfair or deceptive acts or practices under FTC Section 5?",
+        "Does GA4 tracking without disclosure constitute a deceptive trade practice?",
+        "Are testimonials genuine and properly disclosed?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "CMA Digital Markets Officer",
+      "persona_domain": "UK Competition and Markets Authority consumer duty",
+      "questions": [
+        "Does the product meet CMA's consumer duty framework for transparency?",
+        "Is pricing transparent with no dark patterns in the UI?",
+        "Is cancel-anytime billing implemented without friction?",
+        "Does the feature comparison table accurately represent capabilities?",
+        "Is there a formal CMA compliance review?",
+        "Does the product's open architecture prevent anti-competitive lock-in?",
+        "Are consumer terms fair and clearly communicated?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "ACCC Consumer Advocate",
+      "persona_domain": "Australia Competition and Consumer Commission",
+      "questions": [
+        "Is there Australian consumer guarantee documentation?",
+        "Is a local dispute resolution mechanism available for Australian users?",
+        "Do product claims meet Australian Consumer Law (ACL) substantiation requirements?",
+        "Is there an Australian-specific terms of service?",
+        "Does the product comply with ACCC's guidelines on digital platforms?",
+        "Are consumer remedies (repair, replace, refund) clearly documented?",
+        "Does the product meet ACCC's expectations for digital product quality?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "COPPA Enforcement Officer",
+      "persona_domain": "US Children's Online Privacy Protection Act (COPPA)",
+      "questions": [
+        "Is there any age gate or age verification mechanism?",
+        "Is parental consent obtained before collecting data from users under 13?",
+        "Does a child-specific data handling policy exist?",
+        "Can a child access the product today with zero barriers (CRITICAL: yes)?",
+        "Are there FTC-enforceable COPPA violations (fines up to $5.7M per violation)?",
+        "Does the privacy policy state the product is not for under 13 while no code enforcement exists?",
+        "Is Paper 33 (Tower of Kids) finding of zero COPPA implementation addressed?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "CAN-SPAM Compliance Reviewer",
+      "persona_domain": "US Controlling the Assault of Non-Solicited Pornography and Marketing Act",
+      "questions": [
+        "Does the email infrastructure include a functioning unsubscribe mechanism?",
+        "Is a physical mailing address included in automated emails?",
+        "Is the opt-in vs opt-out distinction clearly implemented?",
+        "Are commercial emails properly identified as advertisements?",
+        "Does the unsubscribe mechanism process within 10 business days?",
+        "Are there controls preventing the product from sending spam via automated recipes?",
+        "Does the product's email automation comply with CAN-SPAM's header requirements?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "ePrivacy Directive Auditor",
+      "persona_domain": "EU ePrivacy Directive (cookie consent and electronic communications)",
+      "questions": [
+        "Does GA4 fire without user consent (Article 5(3) violation)?",
+        "Is there a cookie consent banner meeting ePrivacy requirements?",
+        "Does the privacy policy contradict actual tracking behavior (GA4)?",
+        "Is consent freely given, specific, informed, and unambiguous per GDPR Article 7?",
+        "Is a GA4 tracking pixel that contradicts the privacy policy an active misrepresentation?",
+        "Are all cookies and tracking technologies documented and consent-gated?",
+        "Does the product implement a consent management platform (CMP)?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Digital Services Act Officer",
+      "persona_domain": "EU Digital Services Act (DSA) transparency and content moderation",
+      "questions": [
+        "Is there a transparency report per DSA requirements?",
+        "Is there an illegal content flagging mechanism?",
+        "Does the product cooperate with trusted flaggers?",
+        "Is a point-of-contact designated for DSA purposes?",
+        "Are terms of service clearly communicated per DSA requirements?",
+        "Does the product implement DSA's transparency obligations for recommender systems?",
+        "Is there a mechanism for users to challenge content moderation decisions?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Digital Markets Act Analyst",
+      "persona_domain": "EU Digital Markets Act (DMA) interoperability and gatekeeping",
+      "questions": [
+        "Is the product subject to DMA gatekeeper designation?",
+        "Do interoperability requirements for browser automation apply?",
+        "Has an assessment been conducted for DMA applicability?",
+        "Does the product's open architecture support DMA's interoperability goals?",
+        "Are there any self-preferencing practices that violate DMA?",
+        "Does the product provide data portability per DMA requirements?",
+        "Is the product's business model compatible with DMA's fairness requirements?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "DMCA Agent",
+      "persona_domain": "US Digital Millennium Copyright Act (DMCA)",
+      "questions": [
+        "Is a designated DMCA agent registered with the US Copyright Office?",
+        "Is there a documented takedown procedure for copyright-infringing content?",
+        "Is the copyright status of AI-generated content clarified?",
+        "Does the product have a counter-notification procedure?",
+        "Is there a repeat infringer policy?",
+        "Are recipes that access copyrighted content evaluated for DMCA compliance?",
+        "Does the product's automated browsing raise DMCA Section 1201 (anti-circumvention) concerns?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Open Source License Auditor",
+      "persona_domain": "open source license compliance and dependency audit",
+      "questions": [
+        "Is FSL-1.1-Apache-2.0 for solace-browser well-documented and correctly applied?",
+        "Is the dependency license audit complete across all projects?",
+        "Does a NOTICE file aggregate all third-party licenses?",
+        "Are there license-incompatible dependencies in any project?",
+        "Is the attribution chain complete for all open source dependencies?",
+        "Does the product comply with all transitive dependency license requirements?",
+        "Is the FSL-to-OSS conversion timeline (4 years) clearly communicated?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "SOC 2 Auditor",
+      "persona_domain": "AICPA SOC 2 Trust Services Criteria",
+      "questions": [
+        "Is there any Trust Services Criteria documentation (security, availability, processing integrity)?",
+        "Are there documented controls for any of the SOC 2 trust principles?",
+        "Has a SOC 2 readiness assessment been conducted?",
+        "Is an audit engagement with a CPA firm in progress or planned?",
+        "Does the evidence chain architecture support SOC 2 monitoring controls?",
+        "Are logical access controls documented?",
+        "Is there a change management process documented per SOC 2 requirements?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "ISO 27001 Assessor",
+      "persona_domain": "ISO/IEC 27001 Information Security Management System (ISMS)",
+      "questions": [
+        "Does an Information Security Management System (ISMS) exist?",
+        "Has a risk assessment been conducted per ISO 27001 requirements?",
+        "Is there a Statement of Applicability (SoA) documenting selected controls?",
+        "Is there a controls catalog mapping to ISO 27001 Annex A?",
+        "Are information security policies documented?",
+        "Is there a risk treatment plan for identified security risks?",
+        "Has management review of the ISMS been conducted?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "SBOM/Supply Chain Auditor",
+      "persona_domain": "Software Bill of Materials and supply chain security",
+      "questions": [
+        "Does an SBOM exist in CycloneDX or SPDX format?",
+        "Is there dependency vulnerability scanning (pip-audit, npm audit)?",
+        "Is the software supply chain documented and transparent?",
+        "Does Executive Order 14028 (US) require SBOMs for government sales?",
+        "Will the EU Cyber Resilience Act require SBOMs by 2027?",
+        "Can the SBOM be generated with standard tools (syft, cdxgen)?",
+        "Are all transitive dependencies tracked and vulnerability-assessed?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Patent/Trade Secret Counsel",
+      "persona_domain": "intellectual property protection and trade secrets",
+      "questions": [
+        "Is trade secret protection via PRIVATE repos reasonable and documented?",
+        "Are there patent filings or a patent strategy documented?",
+        "Are IP assignment agreements documented for contributors?",
+        "Is the distinction between OSS, source-available, and private code clearly documented?",
+        "Does the product's licensing strategy protect core innovations?",
+        "Are trade secrets identified and protected with appropriate access controls?",
+        "Is there a freedom-to-operate analysis for key product features?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Ethics Board Chair",
+      "persona_domain": "ethics governance, whistleblower protection, ethical review",
+      "questions": [
+        "Does an ethics board exist?",
+        "Is there a formal ethical review process for new features?",
+        "Is there a whistleblower channel and protection policy?",
+        "Do the 10 Uplift Principles (Paper 17) provide values but lack governance mechanism?",
+        "Is there an ethical impact assessment process?",
+        "Are stakeholder interests balanced in product decisions?",
+        "Is there a mechanism for ethical concerns to block product decisions?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Saint Solace (Digital Twin)",
+      "persona_domain": "boss floor: AI self-inspection -- does this product have the legal right to exist in every jurisdiction?",
+      "questions": [
+        "Can a user exercise their right to deletion, access, and portability today?",
+        "Does the product's tracking behavior match its privacy policy (GA4 contradiction)?",
+        "Can a regulator understand what AI models are used and what decisions they make?",
+        "Is there a human in the loop for every consequential AI decision?",
+        "Is a child protected from accessing or being harmed by this product?",
+        "If a data breach occurs at 3am on a Saturday, what happens?",
+        "Can you prove, with cryptographic certainty, what this system did and when?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "The Auditor General",
+      "persona_domain": "boss floor: the regulator with a pen -- consent decree test, can you prove compliance?",
+      "questions": [
+        "Does the product's public-facing documentation match its actual behavior?",
+        "Does the product collect only what it needs, and can the user see what is collected?",
+        "Is consent freely given, specific, informed, and unambiguous?",
+        "Who is the Data Protection Officer, and who do you call at 3am?",
+        "Are security measures proportionate to the data being processed?",
+        "If ordered to fix something today, can you demonstrate remediation velocity?",
+        "Does this product pose systemic risk to the users it serves (eSign in-memory)?"
+      ]
+    }
+  ]
+}

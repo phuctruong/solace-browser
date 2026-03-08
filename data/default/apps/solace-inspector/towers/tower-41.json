@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 41,
+    "tower_name": "Tower of Productivity Suite",
+    "dna": "productivity(suite) = brief(morning) x calendar(sync) x focus(timer) x digest(weekly) x routine(automate) x insight(analyze) x time(save)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Productivity Suite",
+  "tower_number": 41,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Clara Richter",
+      "persona_domain": "morning_briefing",
+      "persona_context": "43, Berlin, VP of Operations at a logistics company, Intermediate tech, Pro tier, starts every day at 6:30am with coffee and needs a 2-minute summary of what matters today before she opens email",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I open Solace at 6:30am and see a pre-generated morning brief that summarizes my emails, calendar, and tasks from overnight?",
+        "Does the morning brief prioritize urgent items (overdue tasks, emails from my boss, meetings in the next 2 hours) at the top?",
+        "Can I read the entire morning brief in under 2 minutes — is it concise enough to fit on one screen?",
+        "Does the brief include a weather snapshot and commute estimate for my Berlin location?",
+        "If I have a meeting at 8am, does the brief pull the agenda, attendees, and any pre-read documents linked in the calendar invite?",
+        "Can I configure which data sources feed into my morning brief (email yes, Slack no, calendar yes, news no)?",
+        "Does the brief auto-generate at my configured wake time (6:30am) or do I have to click a button every morning?"
+      ],
+      "question_expansion_instruction": "Clara needs her morning briefing to be automatic, concise, and immediately useful. Every question verifies the brief actually pulls real data, prioritizes correctly, and respects her time. A generic 'Good morning!' without actionable content is a FAIL."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "James Oduya",
+      "persona_domain": "calendar_sync",
+      "persona_context": "37, Nairobi, Project manager at a software consultancy, Expert tech, Enterprise tier, uses Google Calendar for work and Apple Calendar for personal, has 8-12 meetings per day, needs unified view",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I connect both my Google Calendar (work) and Apple Calendar (personal) and see all events in a single unified view?",
+        "Does the calendar sync update within 2 minutes when I add a new event in Google Calendar from my phone?",
+        "Can the app detect double-booked time slots across my work and personal calendars and alert me?",
+        "Does the calendar brief show travel time between back-to-back meetings if I have in-person meetings at different locations?",
+        "Can I create a new calendar event directly from the Solace calendar view and have it sync back to the correct source calendar?",
+        "Does the calendar integration show meeting prep notes (agenda, previous meeting notes) inline with each calendar entry?",
+        "If I decline a meeting in Solace, does the decline sync back to Google Calendar and notify the organizer?"
+      ],
+      "question_expansion_instruction": "James lives in his calendar and needs bidirectional sync that actually works. Every question verifies real calendar integration with read AND write operations. A read-only calendar display without sync-back is a FAIL."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Sophie Andersen",
+      "persona_domain": "focus_sessions",
+      "persona_context": "26, Oslo, UX researcher conducting user interviews, Intermediate tech, Starter tier, struggles with context-switching between interviews and report writing, uses Pomodoro technique inconsistently",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I start a 25-minute focus timer with one click and see a visible countdown in the Solace interface?",
+        "Does the focus mode suppress all non-urgent notifications (email alerts, social media updates) during the timer?",
+        "After the focus session ends, does the app show what I accomplished (emails deferred, notifications blocked, time saved)?",
+        "Can I configure custom focus durations (45 minutes for deep work, 15 minutes for quick tasks) beyond the default 25?",
+        "Does the app track my focus session history and show me a weekly report of total focused hours vs interrupted hours?",
+        "Can I tag focus sessions by project (user interviews, report writing) so I can see how I split my deep work time?",
+        "Does the focus timer integrate with my calendar to auto-start focus mode when I have a 'Focus Time' block on my calendar?"
+      ],
+      "question_expansion_instruction": "Sophie needs focus sessions to actually block distractions, not just display a timer. Every question verifies the timer suppresses interruptions, tracks outcomes, and integrates with her workflow. A decorative timer without notification suppression is a FAIL."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Patrick Leung",
+      "persona_domain": "weekly_digest",
+      "persona_context": "51, Hong Kong, Managing director of a private equity firm, Beginner tech, Enterprise tier, does not check email daily, needs a curated weekly summary of everything important his team sent him",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the app generate a weekly digest every Friday at 5pm summarizing all important emails, calendar events, and tasks from the past 7 days?",
+        "Does the digest rank items by importance rather than chronological order so I see what matters first?",
+        "Can the digest distinguish between items that require my decision vs items that are FYI only?",
+        "Does the weekly digest include a 'Missed Items' section highlighting emails I received but never opened?",
+        "Can I reply to items directly from the digest view without searching through my inbox to find the original email?",
+        "Does the digest show key metrics I care about (portfolio performance emails, deal updates) with the actual numbers extracted?",
+        "Can I forward the entire weekly digest as an email to my executive assistant for follow-up on items I delegate?"
+      ],
+      "question_expansion_instruction": "Patrick is a senior executive who checks in once a week. Every question verifies the digest surfaces genuinely important items, enables action from the digest itself, and saves him from inbox trawling. A list of all 200 emails received is a FAIL."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Maria Gonzalez",
+      "persona_domain": "routine_automation",
+      "persona_context": "34, Buenos Aires, Operations manager at a logistics startup, Intermediate tech, Pro tier, repeats the same 5-step morning routine daily: check shipment emails, update tracking spreadsheet, brief the team on Slack, flag delays, send customer updates",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I record my 5-step morning routine as a recipe that Solace executes automatically every weekday at 7am?",
+        "Does the automated routine actually extract shipment tracking numbers from emails and update my Google Sheet?",
+        "Can the routine post a formatted summary to my Slack channel with delay alerts highlighted in red?",
+        "If one step in the routine fails (Slack API down), does the app continue the remaining steps and report the failure?",
+        "Can I edit a single step in my routine recipe without rebuilding the entire 5-step workflow from scratch?",
+        "Does the routine produce an evidence record showing each step completed, with timestamps and outputs?",
+        "Can I pause the automated routine on holidays without deleting it, and resume it when I return?"
+      ],
+      "question_expansion_instruction": "Maria does the same 5 things every morning and wants it automated. Every question verifies the routine actually performs real actions across real services, handles failures, and is editable. A reminder notification instead of actual automation is a FAIL."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Erik Lindqvist",
+      "persona_domain": "productivity_insights",
+      "persona_context": "45, Gothenburg, Engineering manager leading 3 teams, Expert tech, Enterprise tier, wants data on where his time goes each week — meetings vs deep work vs email vs context-switching",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the app generate a weekly productivity report showing how my time was split: meetings, email, focus sessions, and idle time?",
+        "Can I see a trend chart showing whether my meeting load has increased or decreased over the past 4 weeks?",
+        "Does the report identify my most productive day and time of week based on focus session completion and email response speed?",
+        "Can I see how many times I was interrupted during focus sessions and what caused each interruption?",
+        "Does the insight engine suggest specific changes (e.g., 'Move your 1:1s to Tuesday afternoon — you have 3 hours of fragmented time there')?",
+        "Can I compare my productivity metrics across weeks and set improvement goals (e.g., 'Increase focus time to 15 hours/week')?",
+        "Does the report show email response time trends — am I getting faster or slower at responding to my team?"
+      ],
+      "question_expansion_instruction": "Erik manages his time analytically and needs real data, not motivational quotes. Every question verifies that insights are based on actual usage data, show trends, and provide actionable recommendations. 'You had a productive week!' without data is a FAIL."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Yuki Tanaka",
+      "persona_domain": "time_savings_tracking",
+      "persona_context": "29, Tokyo, Startup founder working 70-hour weeks, Intermediate tech, Free tier with BYOK, needs to justify the time spent setting up Solace by seeing measurable time savings from automation",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I see a dashboard showing total hours saved this week by Solace automation (email triage, calendar prep, focus sessions)?",
+        "Does the time savings calculation show the methodology: 'Morning brief saved 15 min/day x 5 days = 1.25 hours' with breakdowns?",
+        "Can I see cumulative time saved since I started using Solace (e.g., 'Total: 47 hours saved over 3 months')?",
+        "Does the time savings tracker compare manual time (how long it took before Solace) vs automated time (how long it takes now)?",
+        "Can I export a time savings report to share with my co-founder to justify our team adopting Solace?",
+        "Does the tracker account for setup time (configuring routines, training recipes) as an investment before net savings begin?",
+        "If I stop using Solace for a week, does the app show the estimated time I 'lost' by not having automation running?"
+      ],
+      "question_expansion_instruction": "Yuki needs hard numbers to justify tool adoption. Every question verifies that time savings are measurable, methodologically transparent, and exportable. 'You are more productive!' without quantified proof is a FAIL."
+    }
+  ]
+}

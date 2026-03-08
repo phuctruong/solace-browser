@@ -1,0 +1,713 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 21,
+    "tower_name": "Tower of Android",
+    "dna": "android(native) = material_you(adaptive) x play_store(distributed) x emulator(tested) x pwa(offline) x deep_links(integrated) x kotlin(first_class) x permission(granular)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor lists 7 seed questions. Android is the largest mobile platform with billions of devices. These questions prepare for MVP+1 mobile deployment. Set up now, implement after desktop MVP ships. Every question should anticipate the mobile-first experience.",
+    "implementation_status": "SETUP_ONLY — implement after MVP desktop launch",
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Android",
+  "tower_number": 21,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Android Emulator Setup Expert",
+      "persona_domain": "emulator configuration and testing",
+      "questions": [
+        "Is Android Studio installed with emulator images for testing?",
+        "Can the Android emulator run API levels 28-34 (Android 9-14)?",
+        "Does the PWA install correctly on the Android emulator?",
+        "Can the emulator simulate different screen sizes (phone, tablet, foldable)?",
+        "Does the emulator support network throttling for slow connection testing?",
+        "Can CI/CD run Android emulator tests headlessly?",
+        "Are emulator snapshots used for fast test startup?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Material You Designer",
+      "persona_domain": "Material Design 3 and dynamic color",
+      "questions": [
+        "Does the mobile UI follow Material Design 3 guidelines?",
+        "Does the app support Material You dynamic color theming?",
+        "Are bottom navigation patterns used for mobile navigation?",
+        "Are touch targets at least 48dp (Material guidelines)?",
+        "Does the app support system dark/light theme switching?",
+        "Are Material components (FAB, bottom sheet, snackbar) used correctly?",
+        "Does the app adapt to different screen sizes (phone vs tablet)?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "PWA Expert (Android)",
+      "persona_domain": "Progressive Web App on Android",
+      "questions": [
+        "Does the PWA install prompt appear when visiting the web app in Chrome?",
+        "Is the web app manifest correct (icons, colors, display mode)?",
+        "Does the PWA work offline with a service worker?",
+        "Can the PWA receive push notifications on Android?",
+        "Does the PWA appear in the app drawer like a native app?",
+        "Can the PWA use the Share Target API to receive shared content?",
+        "Does the PWA support the Badging API for notification badges?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Play Store Publisher",
+      "persona_domain": "Google Play Store distribution",
+      "questions": [
+        "Can the app be published as a TWA (Trusted Web Activity) on Play Store?",
+        "Does the app meet Google Play Store policies?",
+        "Is the app listing complete (screenshots, description, categories)?",
+        "Does the app pass the Play Store security review?",
+        "Can the app use Play Store billing for in-app purchases?",
+        "Is the APK/AAB signed with the correct keystore?",
+        "Does the app handle Play Store auto-updates?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Android Permission Expert",
+      "persona_domain": "runtime permissions and scoped storage",
+      "questions": [
+        "Does the app request only necessary permissions?",
+        "Are runtime permissions requested in context (not on first launch)?",
+        "Does the app handle permission denial gracefully?",
+        "Is scoped storage (SAF) used instead of legacy file access?",
+        "Does the app use the new photo picker API on Android 13+?",
+        "Are background location/camera/mic permissions avoided unless essential?",
+        "Does the permission rationale explain why each permission is needed?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Android Notification Expert",
+      "persona_domain": "notification channels and delivery",
+      "questions": [
+        "Does the app use notification channels for user control?",
+        "Can users configure notification preferences per channel?",
+        "Are approval requests delivered as high-priority notifications?",
+        "Do notifications include actionable buttons (approve/reject)?",
+        "Does the app handle notification permission (Android 13+ POST_NOTIFICATIONS)?",
+        "Are notifications grouped to prevent spam?",
+        "Does the app support notification bubbles for approvals?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Battery Optimization Expert (Android)",
+      "persona_domain": "Doze mode and battery management",
+      "questions": [
+        "Does the app work correctly with Doze mode and App Standby?",
+        "Are background tasks optimized to avoid battery drain?",
+        "Does the app use WorkManager for deferred background work?",
+        "Can the app function without being whitelisted from battery optimization?",
+        "Are FCM high-priority messages used only for time-critical notifications?",
+        "Does the app handle battery saver mode gracefully?",
+        "Is the app's battery impact visible in Settings → Battery?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Deep Link Expert",
+      "persona_domain": "Android deep links and App Links",
+      "questions": [
+        "Does the app support Android App Links for verified deep links?",
+        "Can users share links that open in the Solace app?",
+        "Does the app handle deep links to specific pages (settings, approvals)?",
+        "Is the Digital Asset Links file hosted on the domain?",
+        "Do deep links work from notifications and widgets?",
+        "Can the app handle deep links when not yet installed (deferred deep links)?",
+        "Are deep link parameters validated to prevent injection?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Biometric Auth Expert (Android)",
+      "persona_domain": "fingerprint and face authentication",
+      "questions": [
+        "Can the OAuth3 vault be unlocked with fingerprint/face on Android?",
+        "Does the app use BiometricPrompt API for authentication?",
+        "Are credentials stored in Android Keystore with biometric binding?",
+        "Does the app handle biometric enrollment/unenrollment?",
+        "Can users fall back to PIN/pattern when biometrics fail?",
+        "Are step-up auth requests authenticated via biometrics?",
+        "Does the app handle device security level (strong vs weak biometrics)?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Android Widget Expert",
+      "persona_domain": "home screen widgets",
+      "questions": [
+        "Can the app provide home screen widgets for quick actions?",
+        "Does a widget show pending approval count?",
+        "Can widgets trigger approvals without opening the full app?",
+        "Do widgets update automatically with Material You styling?",
+        "Are widgets resizable and responsive?",
+        "Can widgets display schedule or dashboard information?",
+        "Do widgets work on launchers other than stock (Nova, Niagara)?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Foldable Device Tester",
+      "persona_domain": "foldable and multi-screen devices",
+      "questions": [
+        "Does the app handle fold/unfold transitions smoothly?",
+        "Is the layout adaptive for different folded/unfolded sizes?",
+        "Does the app support multi-window mode on foldables?",
+        "Can the app use the cover display on foldables?",
+        "Does the app handle hinge areas (avoid placing content there)?",
+        "Is the UX optimized for tabletop/book postures?",
+        "Does the app respond to window size changes during fold?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Wear OS Companion Expert",
+      "persona_domain": "smartwatch integration",
+      "questions": [
+        "Can the app send approval notifications to Wear OS watches?",
+        "Can users approve/reject from a Wear OS companion?",
+        "Does the watch companion show minimal, essential information?",
+        "Can the watch trigger voice commands for the browser?",
+        "Is the watch companion battery-efficient?",
+        "Does the watch companion handle offline scenarios?",
+        "Can the watch companion display task status?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "TalkBack Tester",
+      "persona_domain": "Android screen reader accessibility",
+      "questions": [
+        "Can TalkBack users navigate the entire app?",
+        "Are all interactive elements properly labeled for TalkBack?",
+        "Does the app support TalkBack gestures (swipe, double-tap)?",
+        "Are custom views accessible to TalkBack?",
+        "Does the app handle TalkBack focus correctly?",
+        "Are dynamic content changes announced to TalkBack?",
+        "Does the app work with Switch Access on Android?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Android TV Expert",
+      "persona_domain": "Android TV and ChromeOS tablet mode",
+      "questions": [
+        "Can the app run on Android TV for dashboard display?",
+        "Does the app support D-pad navigation for TV?",
+        "Is the UI legible from TV viewing distance?",
+        "Can the app display evidence reports on TV?",
+        "Does the app work on ChromeOS in tablet mode?",
+        "Is the app's Lean Back layout appropriate for TV?",
+        "Can the TV version be used for monitoring dashboards?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Camera Integration Expert",
+      "persona_domain": "document scanning and QR codes",
+      "questions": [
+        "Can the app scan QR codes for quick linking?",
+        "Can the app use the camera for document scanning?",
+        "Does the app use CameraX for consistent camera experience?",
+        "Can scanned documents be attached to evidence?",
+        "Does the app handle camera permission correctly?",
+        "Can the camera be used for visual evidence capture?",
+        "Does the app support barcode scanning for data entry?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Offline-First Expert (Android)",
+      "persona_domain": "offline capability and sync",
+      "questions": [
+        "Can the app function offline for core features?",
+        "Does the app sync data when connectivity is restored?",
+        "Are pending actions queued for offline execution?",
+        "Can users browse cached recipes and evidence offline?",
+        "Does the app indicate offline status clearly?",
+        "Is conflict resolution handled for offline changes?",
+        "Does the app pre-cache critical data for offline use?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "Network Expert (Android)",
+      "persona_domain": "mobile network handling",
+      "questions": [
+        "Does the app handle 3G/4G/5G transitions smoothly?",
+        "Can the app work on metered connections (WiFi or cellular)?",
+        "Does the app respect data saver mode?",
+        "Are large downloads deferred to WiFi?",
+        "Does the app handle airplane mode gracefully?",
+        "Can the app work behind mobile proxies and VPNs?",
+        "Does the app handle captive portals on mobile?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Kotlin/Android Dev Expert",
+      "persona_domain": "native Android development patterns",
+      "questions": [
+        "If native: is the app written in Kotlin with modern Android patterns?",
+        "Are Jetpack libraries (Compose, Navigation, Room) used?",
+        "Does the app follow the MVVM architecture pattern?",
+        "Is coroutine-based async used throughout?",
+        "Does the app use Hilt for dependency injection?",
+        "Are unit tests and instrumented tests comprehensive?",
+        "Is the build system (Gradle) optimized for build speed?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Android Auto Expert",
+      "persona_domain": "car dashboard integration",
+      "questions": [
+        "Can the app display notifications on Android Auto?",
+        "Can users approve/reject requests via Android Auto?",
+        "Does the voice interface work in the car context?",
+        "Are only essential features available in the driving context?",
+        "Does the app follow Android Auto driver distraction guidelines?",
+        "Can the app read notifications aloud in the car?",
+        "Is the UI appropriate for glanceable interaction?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Backup Expert (Android)",
+      "persona_domain": "Android backup and restore",
+      "questions": [
+        "Does the app support Auto Backup to Google Drive?",
+        "Are backup rules configured to include essential data?",
+        "Is sensitive data (vault tokens) excluded from cloud backup?",
+        "Does the app restore correctly from backup on a new device?",
+        "Can users manually trigger backup/export?",
+        "Does the backup include settings, themes, and preferences?",
+        "Is the backup size reasonable (not including cache)?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "WebView Expert (Android)",
+      "persona_domain": "WebView performance and security",
+      "questions": [
+        "Is the Android System WebView version checked for compatibility?",
+        "Does the app handle WebView crashes gracefully?",
+        "Are WebView security settings configured correctly (no file:// access)?",
+        "Does the app handle JavaScript interface security?",
+        "Can the WebView render the full Solace Browser UI?",
+        "Is WebView content cached for offline access?",
+        "Does the WebView handle mixed content (HTTP in HTTPS) correctly?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "Share Intent Expert",
+      "persona_domain": "Android share and receive intents",
+      "questions": [
+        "Can users share content FROM Solace to other apps?",
+        "Can users share content TO Solace from other apps?",
+        "Does the app handle text, URL, and file share intents?",
+        "Is the app listed in the Share Sheet for relevant content types?",
+        "Can shared content trigger appropriate workflows?",
+        "Does the app handle received content securely?",
+        "Can the app generate shareable deep links?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Gesture Navigation Expert",
+      "persona_domain": "Android gesture and button navigation",
+      "questions": [
+        "Does the app work with gesture navigation (swipe up, back gesture)?",
+        "Does the app work with 3-button navigation (back, home, recent)?",
+        "Is the back button/gesture behavior predictable?",
+        "Are edge gestures handled correctly (don't conflict with app gestures)?",
+        "Does the app handle the predictive back gesture (Android 13+)?",
+        "Is the navigation bar styled to match the app theme?",
+        "Does the app work in landscape orientation with gestures?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Clipboard Expert (Android)",
+      "persona_domain": "clipboard and text selection",
+      "questions": [
+        "Does copy/paste work correctly in the app?",
+        "Does the app handle clipboard warnings on Android 12+?",
+        "Is sensitive data cleared from clipboard after use?",
+        "Can users select and copy text from all UI elements?",
+        "Does the text selection toolbar show relevant actions?",
+        "Can the app paste rich content (HTML, images)?",
+        "Does the app handle clipboard data from other apps?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Android Localization Expert",
+      "persona_domain": "localization on Android",
+      "questions": [
+        "Does the app use Android's per-app language setting (Android 13+)?",
+        "Are RTL layouts correctly handled on Android?",
+        "Does the app support dynamic locale switching without restart?",
+        "Are font sizes adjustable with Android's accessibility settings?",
+        "Does the app handle date/time/currency locale formatting?",
+        "Are strings externalized for translation?",
+        "Does the app support bi-directional text correctly?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Performance Expert (Android)",
+      "persona_domain": "Android performance optimization",
+      "questions": [
+        "Does the app maintain 60fps scrolling and animation?",
+        "Is the app startup time under 2 seconds on mid-range devices?",
+        "Does the app use ProGuard/R8 for code shrinking?",
+        "Are images loaded efficiently (Glide/Coil with caching)?",
+        "Does the app handle memory pressure (onTrimMemory)?",
+        "Is the APK/AAB size under 20MB for fast downloads?",
+        "Does the app use baseline profiles for fast startup?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Security Expert (Android)",
+      "persona_domain": "Android-specific security",
+      "questions": [
+        "Does the app use certificate pinning for API connections?",
+        "Are Android Keystore operations used for cryptography?",
+        "Does the app detect rooted devices and warn users?",
+        "Is network security config set to disallow cleartext traffic?",
+        "Does the app handle backup encryption correctly?",
+        "Are exported components (activities, services) protected?",
+        "Does the app prevent overlay attacks on approval dialogs?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "Play Integrity Expert",
+      "persona_domain": "device attestation and integrity",
+      "questions": [
+        "Does the app use Play Integrity API for device verification?",
+        "Can the server verify that requests come from a legitimate app?",
+        "Does the app detect tampering or repackaging?",
+        "Is SafetyNet/Play Integrity used for sensitive operations?",
+        "Can the app function with failed integrity checks (graceful degradation)?",
+        "Are integrity check results cached to minimize API calls?",
+        "Does the app handle Play Integrity on non-GMS devices?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Automation Testing Expert (Android)",
+      "persona_domain": "automated testing on Android",
+      "questions": [
+        "Can Espresso UI tests be run against the app?",
+        "Does the CI/CD pipeline include Android instrumented tests?",
+        "Can UI Automator test cross-app interactions?",
+        "Are screenshot tests used for visual regression?",
+        "Can the test suite run on Firebase Test Lab?",
+        "Are there performance tests (Benchmark library)?",
+        "Does the test coverage meet the project's standards?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Samsung OneUI Tester",
+      "persona_domain": "Samsung-specific features",
+      "questions": [
+        "Does the app work correctly on Samsung devices with OneUI?",
+        "Does the app support Samsung DeX (desktop mode)?",
+        "Does the app handle Samsung's split screen and pop-up view?",
+        "Are Samsung-specific permissions handled?",
+        "Does the app work with Samsung Internet browser?",
+        "Does the app support Samsung Pay integration (if applicable)?",
+        "Are Samsung's accessibility features compatible?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Android Automotive Expert",
+      "persona_domain": "Android Automotive OS",
+      "questions": [
+        "Could the app be adapted for Android Automotive OS (AAOS)?",
+        "Would AAOS distribution requirements be met?",
+        "Are safety guidelines for in-car use considered?",
+        "Could fleet management use cases be served?",
+        "Would voice-first interaction be sufficient for AAOS?",
+        "Can monitoring dashboards display on AAOS?",
+        "Are AAOS-specific APIs needed?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Multi-Window Expert (Android)",
+      "persona_domain": "split screen and picture-in-picture",
+      "questions": [
+        "Does the app support split-screen mode?",
+        "Does the app handle window size changes in multi-window?",
+        "Can the app use picture-in-picture for monitoring?",
+        "Does the app save state during multi-window transitions?",
+        "Does the app handle freeform windows on supported devices?",
+        "Can the app be resized without layout breakage?",
+        "Does the app support drag-and-drop between windows?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "React Native/Flutter Evaluator",
+      "persona_domain": "cross-platform framework selection",
+      "questions": [
+        "Is a cross-platform framework appropriate for the mobile app?",
+        "Would React Native provide sufficient performance?",
+        "Would Flutter provide better UI consistency?",
+        "Could a WebView-based approach (Capacitor) work?",
+        "What are the trade-offs between native and cross-platform?",
+        "Can the existing web codebase be reused in a mobile framework?",
+        "Would KMP (Kotlin Multiplatform) share code with iOS?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Privacy Expert (Android)",
+      "persona_domain": "Android privacy features",
+      "questions": [
+        "Does the app comply with Privacy Dashboard (Android 12+)?",
+        "Are approximate location permissions used when exact isn't needed?",
+        "Does the app use privacy indicators for camera/mic access?",
+        "Can users see what data the app has accessed?",
+        "Does the app handle data deletion requests?",
+        "Are privacy-sensitive APIs used with proper consent?",
+        "Does the app comply with Android privacy sandbox?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Crash Expert (Android)",
+      "persona_domain": "crash reporting and diagnostics",
+      "questions": [
+        "Does the app use Firebase Crashlytics or similar for crash reporting?",
+        "Are crash reports symbolicated for debugging?",
+        "Can the app recover from crashes gracefully (restore state)?",
+        "Are ANR (Application Not Responding) events tracked?",
+        "Does the app handle low-memory kills correctly?",
+        "Can developers reproduce crashes from reports?",
+        "Are crash-free user rates monitored?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Edge-to-Edge Expert",
+      "persona_domain": "edge-to-edge display and system bars",
+      "questions": [
+        "Does the app support edge-to-edge display (Android 15+)?",
+        "Are system bar insets handled correctly (status bar, navigation bar)?",
+        "Does the app handle display cutouts (notches, punch holes)?",
+        "Is the app compatible with gesture hint bars?",
+        "Are system bar colors synchronized with the app theme?",
+        "Does the app handle different status bar heights?",
+        "Are keyboard insets handled for edge-to-edge?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "NFC Expert (Android)",
+      "persona_domain": "NFC and contactless features",
+      "questions": [
+        "Can NFC be used for quick pairing between devices?",
+        "Could NFC tags trigger specific Solace workflows?",
+        "Does the app handle NFC intent filters correctly?",
+        "Can NFC enable tap-to-share for recipes or settings?",
+        "Is NFC used for secure authentication scenarios?",
+        "Does the app handle NDEF message formatting?",
+        "Can NFC work for enterprise badge integration?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Storage Expert (Android)",
+      "persona_domain": "data storage and file management",
+      "questions": [
+        "Does the app use app-specific storage (internal) for sensitive data?",
+        "Can users export data to shared storage with MediaStore?",
+        "Is storage usage visible in Android Settings?",
+        "Does the app handle storage permissions correctly?",
+        "Can the app clear cache without losing important data?",
+        "Is the data directory encrypted on devices with FDE/FBE?",
+        "Does the app handle SD card storage on supported devices?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Update Expert (Android)",
+      "persona_domain": "in-app updates and versioning",
+      "questions": [
+        "Does the app support in-app updates (Play Core API)?",
+        "Can critical updates be forced (immediate update flow)?",
+        "Are flexible updates available for non-critical versions?",
+        "Does the update process preserve user data?",
+        "Can the app detect outdated versions and prompt upgrade?",
+        "Is the version code/name scheme appropriate?",
+        "Does the update respect user bandwidth (WiFi only option)?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Enterprise Android Expert",
+      "persona_domain": "Android Enterprise and managed devices",
+      "questions": [
+        "Can the app be deployed via Android Enterprise (work profile)?",
+        "Does the app support managed configurations?",
+        "Can IT admins restrict features via EMM/MDM?",
+        "Does the app work in fully managed device mode?",
+        "Can the app be silently installed via DPC?",
+        "Does the app comply with enterprise app licensing?",
+        "Can the app report compliance status to MDM?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Google Services Expert",
+      "persona_domain": "Google Play Services integration",
+      "questions": [
+        "Does the app work on devices without Google Play Services (Huawei)?",
+        "Can the app use Google Sign-In for authentication?",
+        "Does the app use Firebase for analytics, crash reporting, and messaging?",
+        "Can the app function with reduced GMS availability?",
+        "Does the app handle GMS version checking?",
+        "Can the app use Google Maps for location-based features?",
+        "Does the app support Google Pay for payments?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "AOSP/Custom ROM Tester",
+      "persona_domain": "Android Open Source Project and custom ROMs",
+      "questions": [
+        "Does the app work on AOSP-based ROMs (LineageOS, GrapheneOS)?",
+        "Can the app function without Google Play Services (microG)?",
+        "Does the app handle custom ROM security restrictions?",
+        "Can the app be installed via F-Droid (if open source)?",
+        "Does the app work on de-Googled devices?",
+        "Are alternative push notification systems supported (UnifiedPush)?",
+        "Does the app handle non-standard Android APIs gracefully?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Low-End Device Tester (Android)",
+      "persona_domain": "Android Go and budget devices",
+      "questions": [
+        "Does the app work on Android Go Edition?",
+        "Is the app's memory footprint under 50MB for budget devices?",
+        "Can the app handle 1-2GB RAM devices?",
+        "Are images and resources optimized for low-resolution screens?",
+        "Does the app handle slow eMMC storage gracefully?",
+        "Can the app function on Android 9 (API 28) as minimum?",
+        "Is the APK size minimized for limited storage devices?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Tablet Expert (Android)",
+      "persona_domain": "Android tablet optimization",
+      "questions": [
+        "Does the app have a tablet-optimized layout?",
+        "Is the UI responsive for 10-13 inch screens?",
+        "Does the app support landscape orientation on tablets?",
+        "Can the app use multi-pane layouts on tablets?",
+        "Does the app support stylus/pen input on tablets?",
+        "Are font sizes appropriate for tablet viewing distance?",
+        "Does the app support external keyboard on tablets?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Health Connect Expert",
+      "persona_domain": "health data and wellness integration",
+      "questions": [
+        "Could the app integrate with Health Connect for break reminders?",
+        "Can the app track screen time and suggest breaks?",
+        "Does the app support Digital Wellbeing features?",
+        "Can focus modes limit app functionality during health breaks?",
+        "Could the app use step count to gamify productivity?",
+        "Does the app respect bedtime mode settings?",
+        "Can the app integrate with Fitbit/wearable data?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Compatibility Test Expert",
+      "persona_domain": "device compatibility matrix",
+      "questions": [
+        "Is there a device compatibility matrix for testing?",
+        "Does the app work on the top 20 most popular Android devices?",
+        "Are chipset-specific issues tested (Qualcomm, MediaTek, Exynos)?",
+        "Does the app handle different screen densities (ldpi to xxxhdpi)?",
+        "Is the app tested on devices from 5 major manufacturers?",
+        "Does Firebase Test Lab cover the required device matrix?",
+        "Are compatibility issues tracked and prioritized?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Privacy-First Android Developer",
+      "persona_domain": "privacy-preserving Android patterns",
+      "questions": [
+        "Can the app operate without any Google services?",
+        "Does the app minimize data collection on Android?",
+        "Can the app use on-device ML instead of cloud APIs?",
+        "Are analytics opt-in rather than opt-out?",
+        "Does the app support ephemeral sessions?",
+        "Can the app use Private Compute Core for sensitive processing?",
+        "Is the app's data safety section in Play Store accurate?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Dragon Rider (Phuc)",
+      "persona_domain": "Android experience vision",
+      "questions": [
+        "Does the Android experience feel native, not like a shrunken desktop app?",
+        "Would Android users discover Solace Browser naturally?",
+        "Does the mobile-first design unlock use cases desktop can't?",
+        "Is the approve-on-phone workflow the killer feature for mobile?",
+        "Can the Android app become the daily driver for AI-powered mobile browsing?",
+        "Does the Android experience showcase Solace's unique value?",
+        "Would the Dragon Rider recommend the Android app to Tyson?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "Mum Test Judge",
+      "persona_domain": "non-technical Android user experience",
+      "questions": [
+        "Can a non-technical Android user install the app from Play Store easily?",
+        "Does the app look and feel like a well-made Android app?",
+        "Can the user understand what the app does within 30 seconds?",
+        "Does the app crash or behave oddly on a typical Android phone?",
+        "Would the user know how to approve AI actions on their phone?",
+        "Does the app drain battery noticeably?",
+        "Would a non-technical Android user recommend this app to a friend?"
+      ]
+    }
+  ]
+}

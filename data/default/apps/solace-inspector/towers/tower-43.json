@@ -1,0 +1,149 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 43,
+    "tower_name": "Tower of Sales & Marketing",
+    "dna": "sales(pipeline) = leads(track) x prices(monitor) x outreach(automate) x linkedin(optimize) x nurture(sequence) x convert(close) x roi(measure)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of Sales & Marketing",
+  "tower_number": 43,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Vanessa Liu",
+      "persona_domain": "lead_tracking",
+      "persona_context": "36, San Francisco, Head of Sales at a 30-person B2B SaaS startup, Expert tech, Enterprise tier, manages a pipeline of 150 leads across LinkedIn, email, and events, currently tracks leads in a spreadsheet",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I import my 150 leads from a CSV and see them in a pipeline view with stages (new, contacted, qualified, proposal, closed)?",
+        "Does the app automatically enrich lead data by pulling company info, role, and LinkedIn profile from the lead's email address?",
+        "Can I move a lead between pipeline stages with drag-and-drop and see the total deal value per stage?",
+        "Does the lead tracker show the last interaction date and next follow-up date for each lead?",
+        "Can I filter leads by source (LinkedIn, email, event), stage, deal size, and last activity date?",
+        "Does the app alert me when a lead has had no activity for 7+ days so I do not let warm leads go cold?",
+        "Can I see a pipeline health summary showing total leads, conversion rate per stage, and projected revenue?"
+      ],
+      "question_expansion_instruction": "Vanessa manages a real sales pipeline and needs to replace her spreadsheet. Every question verifies the lead tracker handles real pipeline operations with enrichment, alerts, and metrics. An empty CRM shell requiring manual data entry for every field is a FAIL."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Carlos Ramirez",
+      "persona_domain": "price_monitoring",
+      "persona_context": "42, Monterrey, Procurement manager at a manufacturing company, Intermediate tech, Pro tier, tracks competitor and supplier pricing on Amazon for 40 products, currently checks prices manually every morning",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I add 40 Amazon product URLs and have the app check their prices automatically every day?",
+        "Does the app send me an alert when a tracked product's price drops below a threshold I set?",
+        "Can I see a price history chart for each tracked product showing the last 30 days of price changes?",
+        "Does the app track the Buy Box seller for each product so I know if the seller changed, not just the price?",
+        "Can I set up a competitor price comparison — track the same product across multiple Amazon sellers?",
+        "Does the price monitoring work for Amazon Mexico (amazon.com.mx), not just Amazon US?",
+        "Can I export a weekly price report showing all price changes, alerts triggered, and recommended actions as a spreadsheet?"
+      ],
+      "question_expansion_instruction": "Carlos checks prices manually every day and wants automation. Every question verifies that price monitoring actually scrapes real Amazon data, tracks changes over time, and sends real alerts. A manual price entry form is a FAIL."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Sarah Mitchell",
+      "persona_domain": "outreach_automation",
+      "persona_context": "29, New York, SDR (Sales Development Rep) at a cybersecurity company, Intermediate tech, Pro tier, sends 50 cold outreach emails per day, needs to personalize each one without spending 5 minutes per email",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I upload a list of 50 prospect profiles and generate personalized outreach emails for each one in under 2 minutes?",
+        "Does each generated email reference something specific about the prospect (their company, role, recent news, or LinkedIn post)?",
+        "Can I set up a 3-email outreach sequence (initial, follow-up day 3, break-up day 7) that auto-sends on schedule?",
+        "Does the app track which prospects opened my email, clicked links, and replied — shown in a per-prospect timeline?",
+        "Can I A/B test two subject lines and see which has a higher open rate after 100 sends?",
+        "Does the outreach automation respect sending limits (max 50/day) to avoid triggering Gmail's spam detection?",
+        "Can I pause a sequence for a specific prospect if they reply, without stopping the sequence for everyone else?"
+      ],
+      "question_expansion_instruction": "Sarah sends 50 emails per day and needs speed with personalization. Every question verifies that outreach automation generates truly personalized emails, tracks engagement, and respects email deliverability. Generic template mail merge is a FAIL."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "David Chung",
+      "persona_domain": "linkedin_optimization",
+      "persona_context": "34, Singapore, Career coach and personal branding consultant, Expert tech, Pro tier, optimizes LinkedIn profiles for executives and wants AI assistance to scale his service",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I paste a LinkedIn profile URL and get an AI-generated analysis of strengths and weaknesses in the profile?",
+        "Does the optimization report cover headline, summary, experience descriptions, skills, and recommendations sections?",
+        "Can the AI generate improved versions of the headline and summary that I can copy-paste into LinkedIn?",
+        "Does the optimizer benchmark the profile against industry peers (e.g., 'Your headline is weaker than 70% of CTOs in fintech')?",
+        "Can I see keyword suggestions for the profile based on the target job market (e.g., top 20 keywords for 'VP Engineering' in Singapore)?",
+        "Does the app track LinkedIn profile views and engagement before and after optimization to measure improvement?",
+        "Can I generate a complete LinkedIn post calendar (4 posts/week for a month) aligned with the optimized profile's key themes?"
+      ],
+      "question_expansion_instruction": "David optimizes LinkedIn profiles professionally and needs actionable AI analysis. Every question verifies the optimizer produces specific, implementable recommendations with benchmarking. 'Your profile looks good!' without specifics is a FAIL."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Emily Thornton",
+      "persona_domain": "nurture_sequences",
+      "persona_context": "38, London, Marketing director at a legal tech startup, Intermediate tech, Enterprise tier, manages a nurture funnel of 500 trial users who need to be converted to paid, currently does this manually via Mailchimp",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I create a 5-email nurture sequence that triggers when a user signs up for a free trial and drips over 14 days?",
+        "Does each email in the sequence adapt its content based on user behavior (e.g., if they used feature X, highlight feature Y)?",
+        "Can I see which email in the sequence has the highest open rate and which has the highest drop-off?",
+        "Does the nurture engine automatically move users who convert to paid out of the nurture sequence?",
+        "Can I segment my 500 trial users by company size, industry, and feature usage to send different sequences?",
+        "Does the app show a funnel visualization: 500 trial > 300 opened email 1 > 150 clicked CTA > 50 converted?",
+        "Can I A/B test the entire sequence (version A: educational vs version B: urgency-driven) and compare conversion rates?"
+      ],
+      "question_expansion_instruction": "Emily needs to convert trial users to paid at scale. Every question verifies the nurture engine actually sends behavior-triggered emails, tracks per-email metrics, and visualizes the funnel. A static email list without behavioral triggers is a FAIL."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Mike Antonov",
+      "persona_domain": "conversion_tracking",
+      "persona_context": "47, Moscow, VP of Sales at a mid-size CRM company, Expert tech, Enterprise tier, needs to track the full pipeline from lead to closed deal with conversion rates at every stage",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I see a conversion funnel showing the percentage of leads that move from each stage to the next?",
+        "Does the app show average time spent in each pipeline stage so I can identify where deals stall?",
+        "Can I see which lead sources (LinkedIn, cold email, events) have the highest conversion rate to closed deals?",
+        "Does the conversion tracker show win/loss analysis — why did deals close or why were they lost?",
+        "Can I set conversion rate targets per stage and get alerted when actuals fall below target?",
+        "Does the app attribute revenue to specific outreach campaigns so I can see which campaigns generated the most revenue?",
+        "Can I forecast next quarter's revenue based on current pipeline stage distribution and historical conversion rates?"
+      ],
+      "question_expansion_instruction": "Mike runs a sales team and needs data to coach reps and forecast revenue. Every question verifies conversion tracking produces real pipeline metrics, identifies bottlenecks, and enables forecasting. A deal counter without stage analysis is a FAIL."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Jennifer Okafor",
+      "persona_domain": "roi_measurement",
+      "persona_context": "44, Atlanta, CFO at a 100-person marketing agency, Expert tech, Enterprise tier, needs to justify the $2,000/month spent on AI-assisted sales and marketing tools to the board",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I see a total ROI dashboard showing revenue generated by Solace-assisted deals vs total Solace subscription and LLM costs?",
+        "Does the ROI calculation include time savings (hours saved on manual outreach, price monitoring, lead tracking) converted to dollar value?",
+        "Can I break down ROI by tool (lead tracker, price monitor, outreach, LinkedIn optimizer) to see which delivers the most value?",
+        "Does the app show cost-per-lead and cost-per-acquisition metrics for AI-assisted vs manual sales efforts?",
+        "Can I generate a board-ready ROI report with charts showing investment, returns, and payback period?",
+        "Does the ROI tracker show month-over-month trends so I can see if value is increasing as recipes improve?",
+        "Can I compare our Solace sales ROI against industry benchmarks or our previous Salesforce + Mailchimp stack costs?"
+      ],
+      "question_expansion_instruction": "Jennifer answers to a board and needs provable ROI. Every question verifies that ROI measurement is quantitative, exportable, and based on real revenue and cost data. 'You are getting great value!' without numbers is a FAIL."
+    }
+  ]
+}

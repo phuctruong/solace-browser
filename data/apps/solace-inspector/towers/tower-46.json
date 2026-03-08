@@ -1,0 +1,149 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 47,
+    "tower_name": "Tower of Mobile Apps (iOS/iPhone)",
+    "dna": "mobile(ios) = pwa(installable) x capacitor(native) x appstore(distribution) x offline(resilient) x notification(push) x auth(faceid) x responsive(adaptive)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a distinct iOS user persona. Questions must verify that the Solace platform works as a real, installable iOS app \u2014 not just a responsive website viewed in Safari.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of Mobile Apps (iOS/iPhone)",
+  "tower_number": 46,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Emily Richardson",
+      "persona_domain": "iphone_user",
+      "persona_context": "36, San Francisco, Marketing Director at a tech company, Intermediate tech, iPhone 15 Pro as primary device, wants App Store install, Face ID login, and iCloud Keychain integration for seamless authentication",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I find Solace in the Apple App Store and install it with one tap like any other iPhone app?",
+        "After installing, does the app launch with a native iOS splash screen and feel like a real iPhone app \u2014 not a web page?",
+        "Can I log in using Face ID instead of typing my password every time I open the app?",
+        "Does the app offer to save my credentials to iCloud Keychain so I can log in seamlessly across my iPhone, iPad, and Mac?",
+        "Can I run Gmail Inbox Triage entirely from my iPhone without needing a desktop?",
+        "Does the app respect iOS conventions: swipe-to-go-back, pull-to-refresh, haptic feedback on actions?",
+        "Can I use Siri to open Solace or trigger a quick action like 'Hey Siri, run my morning triage'?"
+      ],
+      "question_expansion_instruction": "Emily is a mainstream iPhone user who expects App Store install, Face ID, and iCloud Keychain integration. Questions verify that the app feels native and works with iOS ecosystem features."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Kenji Nakamura",
+      "persona_domain": "ios_developer",
+      "persona_context": "30, Osaka, iOS Developer at a fintech startup, Expert tech, Pro tier, wants Universal Links, App Clips, Shortcuts integration, and SwiftUI compatibility for deep platform integration",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the app register Universal Links so that https://solaceagi.com/task/12345 opens directly in the app instead of Safari?",
+        "Is there an App Clip that lets new users try a basic task (e.g., email summary) without installing the full app?",
+        "Does the app expose Shortcuts actions so users can create custom automations in the Shortcuts app?",
+        "Is the Capacitor bridge properly configured so native iOS APIs (camera, files, HealthKit) are accessible from the web layer?",
+        "Does the app handle iOS URL schemes (solace://) for deep linking from other apps?",
+        "Can I attach a debugger via Xcode and inspect the WKWebView using Safari Web Inspector?",
+        "Are the Capacitor iOS plugin versions documented and compatible with the latest Xcode and iOS SDK?"
+      ],
+      "question_expansion_instruction": "Kenji is an iOS developer who wants deep platform integration. Questions verify Universal Links, App Clips, Shortcuts, SwiftUI compatibility, and developer tooling."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Margaret O'Brien",
+      "persona_domain": "ipad_user",
+      "persona_context": "52, Dublin, University Professor using iPad Pro 12.9 as primary work device, Intermediate tech, Pro tier, needs Split View, multitasking, Apple Pencil annotation, and Stage Manager support",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the app support iPad Split View so I can run Solace side-by-side with my lecture notes?",
+        "Does the app properly adapt its layout to the iPad's larger screen \u2014 using the space, not just scaling up the iPhone layout?",
+        "Can I use Slide Over to quickly check task status without leaving my current app?",
+        "Does the app work with Stage Manager on iPadOS 16+ for windowed multitasking?",
+        "Can I use Apple Pencil to annotate or mark up evidence screenshots within the app?",
+        "Does the app support drag-and-drop to move content between Solace and other iPad apps?",
+        "Does the keyboard shortcut Cmd+F work for search within the app when using an external keyboard?"
+      ],
+      "question_expansion_instruction": "Margaret uses an iPad Pro as her primary device. Questions verify Split View, multitasking, Apple Pencil, Stage Manager, and external keyboard support on iPadOS."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Henrik Lindqvist",
+      "persona_domain": "ios_security",
+      "persona_context": "47, Stockholm, Head of Security at a Nordic bank, Expert security, Enterprise tier, must ensure the iOS app meets financial industry security standards before approving deployment to 500 employees",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Are OAuth3 tokens and credentials stored in the iOS Keychain (Secure Enclave backed) rather than UserDefaults or plain files?",
+        "Does the app enforce App Transport Security (ATS) with no exceptions \u2014 all network calls over TLS 1.2+?",
+        "Is data protection set to NSFileProtectionComplete so that files are encrypted when the device is locked?",
+        "Does the app detect jailbroken devices and warn or restrict functionality to prevent token extraction?",
+        "Can I enforce biometric + passcode authentication via MDM policy before the app displays any data?",
+        "Does the app prevent sensitive data from appearing in the iOS app switcher snapshot?",
+        "Is the app binary protected against reverse engineering with code obfuscation and anti-tampering checks?"
+      ],
+      "question_expansion_instruction": "Henrik manages security for a bank. Questions verify Keychain storage, ATS enforcement, data protection, jailbreak detection, and MDM compatibility on iOS."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Sofia Garcia",
+      "persona_domain": "ios_performance",
+      "persona_context": "25, Barcelona, Mobile QA Engineer, Expert tech, tests across iPhone SE to iPhone 15 Pro Max, focused on launch time, memory footprint, battery impact, and App Store size limits",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the app launch from cold (killed state) to interactive home screen in under 2 seconds on iPhone SE (3rd gen)?",
+        "Does the app's memory usage stay under 150MB during normal operation as reported by Xcode Instruments?",
+        "Is the app download size under 50MB to allow cellular download without the App Store size warning?",
+        "Does the app avoid excessive battery drain \u2014 verified by showing minimal Background Activity in iOS Battery settings?",
+        "Does scrolling through task lists and evidence maintain 60fps on older devices (iPhone 11)?",
+        "Are images and heavy assets loaded lazily so the initial screen renders quickly even on slow LTE?",
+        "Does MetricKit / Xcode Organizer show zero hang rate and healthy launch time percentiles?"
+      ],
+      "question_expansion_instruction": "Sofia tests on a range of iPhones from SE to Pro Max. Questions verify launch time, memory, app size, battery impact, and smooth rendering across device tiers."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "James Whitfield",
+      "persona_domain": "ios_accessibility",
+      "persona_context": "44, Boston, Accessibility Specialist who is blind, uses VoiceOver as primary interaction method, Expert in iOS accessibility, evaluates apps for WCAG 2.1 AA and Apple HIG compliance",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I navigate every screen and interact with every control using VoiceOver gestures without getting trapped?",
+        "Does the app respect the Dynamic Type setting \u2014 scaling text up to Accessibility sizes without layout breakage?",
+        "Are color accommodations (Increase Contrast, Reduce Transparency, Differentiate Without Color) properly supported?",
+        "Does Switch Control work for users who cannot use touch \u2014 can every action be triggered via switch scanning?",
+        "Are custom actions and rotor items provided for complex interactions (e.g., swipe actions on task cards)?",
+        "Does the app support Bold Text and Reduce Motion accessibility preferences?",
+        "Are all status indicators (pass/fail, active/inactive, error) conveyed through text labels or icons in addition to color?"
+      ],
+      "question_expansion_instruction": "James is blind and uses VoiceOver as his primary interaction method. Questions verify VoiceOver navigation, Dynamic Type, color accommodations, and Switch Control on iOS."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Mei-Ling Wu",
+      "persona_domain": "appstore_distribution",
+      "persona_context": "38, Taipei, Product Manager experienced in App Store submissions, Expert in Apple review guidelines, manages TestFlight, screenshots, in-app purchases, and compliance across 15 markets",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the app comply with Apple's App Review Guidelines \u2014 no private API usage, no hidden functionality, clear purpose?",
+        "Are App Store screenshots provided for all required device sizes (6.7\", 6.1\", 5.5\" iPhone + iPad)?",
+        "Is TestFlight configured with internal and external testing groups for beta distribution?",
+        "Are in-app purchases (Pro subscription) properly configured with StoreKit and server-side receipt validation?",
+        "Does the app include a privacy nutrition label that accurately describes data collection practices?",
+        "Are release notes localized for all supported languages and published with each version update?",
+        "Does the app handle the App Store review process gracefully \u2014 demo account provided, no login walls during review?"
+      ],
+      "question_expansion_instruction": "Mei-Ling manages App Store submissions across markets. Questions verify review guideline compliance, screenshots, TestFlight, in-app purchases, and privacy labels."
+    }
+  ]
+}

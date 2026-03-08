@@ -1,0 +1,714 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 8,
+    "tower_name": "Tower of Elders",
+    "dna": "universal(access) = simplicity(radical) x patience(infinite) x trust(earned) x reliability(always)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 100,
+    "question_expansion_instruction": "Each floor lists 7-10 seed questions. During execution, expand to 100 questions per persona by probing deeper into the domain.",
+    "target_projects": [
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of Elders",
+  "tower_number": 8,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Dorothy",
+      "persona_domain": "retired librarian, digital beginner, age 68",
+      "questions": [
+        "Can a user with 140% system font size navigate the full UI without layout breakage?",
+        "Does the product offer a light theme or respect prefers-color-scheme:light?",
+        "Is there a plain-language explanation of what 'recipe' means in the product context?",
+        "Can a non-technical user find and activate a document management recipe within 5 minutes?",
+        "Does the search bar return meaningful results or a 404 for natural-language queries?",
+        "Are all interactive elements visible and labeled without requiring hover to discover?",
+        "Does the dark theme override system high-contrast accessibility settings (WCAG 1.3.4 violation)?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Frank",
+      "persona_domain": "retired factory manager, task-oriented, age 72",
+      "questions": [
+        "Does the CLI provide a simple first-step guide when a new user types 'help'?",
+        "Is there a 'welcome' flow that explains what to do first without a man-page dump?",
+        "Can a user who understands workflows but not developer jargon complete first setup?",
+        "Is 'solace auth login --provider anthropic' explained in plain language anywhere?",
+        "Does the help output distinguish between beginner and advanced commands?",
+        "Is there a guided wizard mode for first-time CLI users?",
+        "Are error messages written for end users or for developers?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Yuki",
+      "persona_domain": "retired teacher, patient learner, age 70",
+      "questions": [
+        "Is there a step-by-step tutorial for setting up a Gmail monitoring recipe?",
+        "Does the install process provide clear feedback on success or failure on Windows 10?",
+        "Are video tutorials aimed at non-developer users, not just team walkthroughs?",
+        "Can a patient user complete the first task within 40 minutes of first contact?",
+        "Does a silent install failure produce any user-visible diagnostic or next step?",
+        "Is the documentation written at a reading level accessible to non-technical users?",
+        "Are there visual guides with screenshots showing each step of setup?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Margaret",
+      "persona_domain": "newly retired nurse, healthcare-aware, age 65",
+      "questions": [
+        "Does the approval dialog use language appropriate for healthcare contexts (not 'execute')?",
+        "Is the word 'Deny' replaced with a less judgmental alternative like 'Decline'?",
+        "Can a user set up medication reminder scheduling without developer knowledge?",
+        "Does the scheduler interface use plain-language time descriptions?",
+        "Are healthcare-adjacent use cases (medication tracking, appointment reminders) discoverable?",
+        "Does the approval flow language avoid clinical or threatening terminology?",
+        "Is there a warm confirmation message after successful recipe execution?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Roberto",
+      "persona_domain": "retired artist, minimal tech experience, age 78",
+      "questions": [
+        "Is there a companion mode where a family member can set up and manage the product on an elder's behalf?",
+        "Does the product support family delegation (elder approves, family member configures)?",
+        "Can a WhatsApp-only user find any entry point to the product?",
+        "Is there a handoff mechanism between elder user and family helper?",
+        "Does the product work on a tablet or only on desktop?",
+        "Can the product be operated with minimal text input (voice, large buttons, simple taps)?",
+        "Is there a 'family plan' that links an elder's account to a helper's account?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Gladys",
+      "persona_domain": "retired bookkeeper, detail-oriented, age 74",
+      "questions": [
+        "Is the approval timeout configurable beyond 15 seconds?",
+        "Does the timeout provide a clear countdown visible to the user?",
+        "Can a slow reader complete the approval text before the timeout expires?",
+        "Does a timeout expiry explain what happened and what to do next?",
+        "Is the 15-second approval timeout a WCAG 2.2.1 violation (timing adjustable)?",
+        "Can the user request more time before the timeout expires?",
+        "Does the product distinguish between 'user chose to deny' and 'timeout expired'?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Harold",
+      "persona_domain": "former accountant, early computer adopter, age 81",
+      "questions": [
+        "Is the evidence chain output presented with plain-language explanations alongside hashes?",
+        "Can a user who understands checksums verify the evidence chain independently?",
+        "Is there a narrative layer over the SHA-256 hashes translating them to plain events?",
+        "Does the evidence view show what happened in human-readable format?",
+        "Are technical terms (SHA-256, hash chain, sealed bundle) explained on first encounter?",
+        "Can a user copy evidence hashes easily for external verification?",
+        "Is the evidence chain accessible without scrolling through developer-formatted output?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Mei-Ling",
+      "persona_domain": "retired pharmacist, Mandarin-dominant, age 69",
+      "questions": [
+        "Does the Mandarin (zh) locale extend beyond the homepage into the full product?",
+        "Is the CLI available in any language other than English?",
+        "Does switching to a non-English locale maintain that language throughout the entire user journey?",
+        "Are recipe descriptions available in Mandarin or only English?",
+        "Does the translation boundary (Mandarin homepage to English product) create a false promise?",
+        "Are error messages translated into the user's selected locale?",
+        "Can a Mandarin-dominant user complete setup without encountering untranslated English?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Abdul",
+      "persona_domain": "retired Imam, Arabic-dominant, age 73",
+      "questions": [
+        "Does the Arabic locale render right-to-left text correctly in the approval dialog?",
+        "Is dir='rtl' set on the HTML element when Arabic locale is active?",
+        "Are Arabic strings free of characters from other scripts (Chinese, Cyrillic, Thai)?",
+        "Can an Arabic-dominant user read and understand the approval text before approving?",
+        "Does the product corrupt Arabic text in any dialog, notification, or display?",
+        "Are 170+ RTL CSS rules in solace-browser actually activated by JavaScript?",
+        "Does right-to-left text flow correctly in all UI components, not just the homepage?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Peggy",
+      "persona_domain": "retired schoolteacher, rural Mississippi, age 66",
+      "questions": [
+        "Does the product install and run on a 5 Mbps DSL connection with a 7-year-old Windows laptop?",
+        "Are authentication error messages written in plain language, not raw stack traces?",
+        "Does local-first architecture allow core features to work offline?",
+        "Is the 'to-do list that runs itself' concept discoverable in the first 5 minutes?",
+        "Does the OAuth3 authentication failure produce a human-readable error?",
+        "Can a user with limited bandwidth complete initial setup without large downloads?",
+        "Are error messages actionable (tell the user what to do next)?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Giovanni",
+      "persona_domain": "retired Italian banker, bilingual, age 71",
+      "questions": [
+        "Are recipe descriptions available in Italian or only English?",
+        "Does the Italian locale extend beyond the homepage into recipe execution output?",
+        "Is the evidence chain output available in Italian?",
+        "Does the Italian translation contain correct gender agreement for all nouns?",
+        "Is the app store browsable in Italian?",
+        "Are technical terms either translated or intentionally preserved with explanations?",
+        "Does the product distinguish between marketing translation and product translation?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Sushila",
+      "persona_domain": "retired Indian civil servant, Hindi/English, age 68",
+      "questions": [
+        "Can a user share a configured recipe with their community?",
+        "Is there a shareable recipe link or community export mechanism?",
+        "Does the product support any form of community distribution?",
+        "Can an elder who successfully set up a recipe help others replicate it?",
+        "Is there a 'share what I built' feature for non-technical community members?",
+        "Does the Hindi locale work correctly for recipe execution?",
+        "Is the product designed for individual use only or does it support community adoption?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Earl",
+      "persona_domain": "retired Black pastor, community leader, age 77",
+      "questions": [
+        "Does the product support group accounts or community mode?",
+        "Can an administrator manage what community members can access?",
+        "Is there an elder-as-administrator role for community coordination?",
+        "Does the product support multi-user access to the same recipe configuration?",
+        "Can a congregation of 300 people be served by one configured instance?",
+        "Is there a community announcement or newsletter automation recipe?",
+        "Does the product have any community coordination features beyond individual use?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Helga",
+      "persona_domain": "retired German engineer, precise, age 70",
+      "questions": [
+        "Is there documented SLA for local execution reliability?",
+        "What is the guaranteed response time for recipe execution?",
+        "Is the retry policy documented for failed recipe runs?",
+        "Are failure modes documented so a methodical user can anticipate them?",
+        "Does the German locale maintain consistent formal address (Sie) throughout?",
+        "Is there a status page or reliability dashboard for the product?",
+        "Can a user see execution statistics (success rate, median time) for their recipes?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Kofi",
+      "persona_domain": "retired Ghanaian professor, academic, age 74",
+      "questions": [
+        "Is there a 'try without a key' path for first-time users?",
+        "Does the product require an Anthropic API key for the very first interaction?",
+        "Can an academic user explore the evidence chain without completing full setup?",
+        "Is the evidence chain mapped to academic citation concepts anywhere?",
+        "Does the free tier allow meaningful exploration before requiring payment or API keys?",
+        "Is the onboarding flow designed to let enthusiastic users reach value before hitting paywalls?",
+        "Can a user understand the product's capabilities without first setting up authentication?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Jean",
+      "persona_domain": "retired French social worker, empathy-first, age 67",
+      "questions": [
+        "Is there a phone number, live chat, or email for human support?",
+        "Does the documentation acknowledge that users might have questions and need help?",
+        "Is the French locale tone warm and human rather than technical and transactional?",
+        "Can a user find a human contact within 15 minutes of looking?",
+        "Does the product have any human support path beyond GitHub Issues?",
+        "Is there a 'we are here if you need us' message anywhere in the product?",
+        "Can vulnerable populations be confidently referred to this product by social workers?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "Hank",
+      "persona_domain": "vision loss, large-print reader, age 75",
+      "questions": [
+        "Does the product respect system high-contrast mode without CSS override?",
+        "At 200% browser zoom, does the layout remain usable without horizontal scrolling?",
+        "Does the approval dialog fit within the viewport at large zoom levels?",
+        "Is there a high-contrast theme option beyond the default dark theme?",
+        "Does the product pass WCAG 1.3.4 (orientation and presentation adaptability)?",
+        "Can all text be resized to 200% without loss of content or functionality?",
+        "Are color combinations meeting WCAG 2.1 AA contrast ratio (4.5:1 for normal text)?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Noriko",
+      "persona_domain": "Deaf, ASL primary, age 70",
+      "questions": [
+        "Are all audio cues paired with visual equivalents?",
+        "Does the onboarding tutorial have captions or ASL video alternatives?",
+        "Is the CLI's text-only nature recognized as an accessibility advantage for Deaf users?",
+        "Are confirmation sounds accompanied by visual indicators?",
+        "Does any critical notification rely solely on audio?",
+        "Are tutorial videos captioned in all available locales?",
+        "Is there a visual notification system for all events that would otherwise be audio-only?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Chester",
+      "persona_domain": "early Alzheimer's with caregiver, age 80",
+      "questions": [
+        "Is there a caregiver mode where a trusted person manages the account?",
+        "Does the product support delegated approval (caregiver reviews, elder confirms)?",
+        "Is there a cognitive assistance mode with simplified choices?",
+        "Can actions be limited to a safe subset for users with cognitive decline?",
+        "Does the product detect and adapt to repeated confusion patterns?",
+        "Is there a 'help my elder' mode for family members supporting cognitively impaired users?",
+        "Can the approval dialog be simplified to 'Yes, do this' / 'No, don't' for cognitive accessibility?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Ingrid",
+      "persona_domain": "Parkinson's, tremor-driven, age 67",
+      "questions": [
+        "Are all click targets at least 44x44 pixels per WCAG 2.5.5?",
+        "Is the approval dialog deny button larger than 28x28 pixels?",
+        "Can the approval dialog be operated entirely by keyboard?",
+        "Are there large-target alternatives for critical actions (approve/deny)?",
+        "Does the product support touch-forgiving interaction (not penalizing misclicks)?",
+        "Is there sufficient spacing between interactive elements to prevent accidental activation?",
+        "Can a user with motor impairment undo an accidental misclick before it takes effect?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "Piotr",
+      "persona_domain": "stroke recovery, aphasia-adjacent, age 73",
+      "questions": [
+        "Are all timed elements in the product configurable or extendable?",
+        "Does the 15-second approval timeout accommodate users with reduced reading speed?",
+        "Is there an 'extended time' accessibility setting for all timed interactions?",
+        "Does the session keepalive timeout allow for slow interaction patterns?",
+        "Are authentication token expiry notifications clear and non-pressuring?",
+        "Can a stroke survivor use the product without any time-pressured decisions?",
+        "Does the product comply with WCAG 2.2.1 (timing adjustable) for all timed elements?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "Betty",
+      "persona_domain": "anxiety and depression, cautious, age 69",
+      "questions": [
+        "Does the approval dialog include reassurance that actions are reversible?",
+        "Is there an 'undo' mechanism for approved actions?",
+        "Does the product offer a sandbox mode where users can explore without consequences?",
+        "Is the language in approval flows warm and non-threatening?",
+        "Does the product avoid high-stakes binary framings that could trigger anxiety?",
+        "Is there a 'what happens if I approve this?' preview showing the exact outcome?",
+        "Does the product acknowledge user hesitation without penalizing it?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Manuel",
+      "persona_domain": "hard of hearing, hearing aids, age 71",
+      "questions": [
+        "Are all audio notifications paired with persistent visual indicators?",
+        "Are tutorial videos captioned with accurate, timed subtitles?",
+        "Do hover tooltips display for longer than 0.8 seconds (at least 5 seconds)?",
+        "Are visual equivalents provided for every sound-based confirmation?",
+        "Can the product be fully operated with audio completely disabled?",
+        "Are captions available in all supported locales?",
+        "Does the product respect prefers-reduced-motion for users sensitive to animation?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Hyun-Ja",
+      "persona_domain": "Korean elder, script corruption, age 66",
+      "questions": [
+        "Does the Korean locale render Hangul correctly without Unicode replacement characters?",
+        "Are Korean strings free of Chinese, Japanese, or other script contamination?",
+        "Can a Korean elder type a task description in Hangul and see it rendered correctly?",
+        "Does the approval dialog display Korean text without corruption?",
+        "Is the Korean locale tested with a native Korean speaker?",
+        "Are all 415 Korean locale strings free of cross-script contamination?",
+        "Does the product's non-ASCII character rendering work for all CJK scripts?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Walter",
+      "persona_domain": "fixed income, Medicare management, age 82",
+      "questions": [
+        "Is the Managed LLM tier value explained in terms a fixed-income elder can parse?",
+        "Can the free tier be used without understanding what an API key is?",
+        "Is there a plain-language pricing comparison showing cost vs value?",
+        "Can the product automate Medicare Explanation of Benefits monitoring?",
+        "Is the BYOK requirement explained without developer jargon?",
+        "Does the pricing page show total monthly cost without hidden fees?",
+        "Is there a 'what will this cost me?' calculator in plain language?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Fatima",
+      "persona_domain": "elder in care facility, limited device access, age 76",
+      "questions": [
+        "Can the product be installed without administrator rights on a managed Windows machine?",
+        "Does the product work through facility WiFi with content filtering and firewall restrictions?",
+        "Can the browser interface function without WebSocket connections?",
+        "Is there a web-only mode that requires no local installation?",
+        "Does local-first architecture work when the local machine is not user-controlled?",
+        "Can the product be accessed from a shared computer in a common area?",
+        "Does the product have a portable mode that runs without installation?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Geoff",
+      "persona_domain": "retired IT manager, infrastructure-aware, age 71",
+      "questions": [
+        "Can a user with IT background verify the architecture documentation against implementation?",
+        "Does the evidence chain produce verifiable output that an IT professional can audit?",
+        "Is the local-first, OAuth3, evidence-chain architecture documented in technical terms?",
+        "Can a retired IT professional install, authenticate, and run a recipe without assistance?",
+        "Does the product vocabulary (OAuth3, evidence, recipes) map to standard IT concepts?",
+        "Is the architecture documentation accurate and not aspirational?",
+        "Can the evidence chain be manually verified using standard tools (sha256sum)?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "Rosa",
+      "persona_domain": "disabled veteran, VA benefits navigation, age 73",
+      "questions": [
+        "Can the approval dialog be operated entirely by voice control software?",
+        "Are all interactive elements keyboard-operable with visible focus indicators?",
+        "Does the product support voice-control compatible click targets?",
+        "Can a motorized wheelchair user with voice control complete the full approval workflow?",
+        "Is the VA benefits correspondence tracking use case supported by existing recipes?",
+        "Are focus indicators visible and meeting WCAG 2.4.7 (focus visible)?",
+        "Does the product support alternative input methods beyond mouse and keyboard?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Toshio",
+      "persona_domain": "retired Japanese engineer, precision values, age 75",
+      "questions": [
+        "Does the evidence chain provide traceability that satisfies engineering quality standards?",
+        "Are SHA-256 hashes presented in a verifiable, copyable format?",
+        "Does the product's deterministic execution model satisfy engineering reproducibility requirements?",
+        "Can a quality-control engineer verify that the same recipe produces the same result?",
+        "Is the evidence chain structure consistent with manufacturing audit trail standards?",
+        "Does the approval gate provide a clear decision record with timestamp and actor?",
+        "Is the Japanese locale correct in register (polite forms) for professional contexts?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Doris",
+      "persona_domain": "recently widowed, managing finances alone, age 68",
+      "questions": [
+        "Does the onboarding acknowledge that the user may be managing finances for the first time?",
+        "Is there a simple financial monitoring template configurable in under 10 minutes?",
+        "Does the product greet new users with warmth rather than technical instructions?",
+        "Is there a 'set up payment tracking' recipe that requires no technical knowledge?",
+        "Does the product explain its value in terms of practical financial tasks?",
+        "Is there a guided setup for common elder financial tasks (bill tracking, deadline monitoring)?",
+        "Does the first-run experience signal 'this was made for someone like you'?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Rajesh",
+      "persona_domain": "retired Indian physician, health-system navigator, age 74",
+      "questions": [
+        "Does the scheduler run recipes when the user's laptop is in sleep mode?",
+        "Is there a 'run while I sleep' option for scheduled tasks?",
+        "Can cloud execution be configured without technical setup complexity?",
+        "Does the product notify the user when a scheduled task failed because the machine was off?",
+        "Is local-first architecture reliable for scheduled tasks requiring 24/7 availability?",
+        "Can a retired physician set up health portal monitoring without a developer's help?",
+        "Does the product explain the local-vs-cloud execution tradeoff in plain language?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Elaine",
+      "persona_domain": "cost-conscious retiree, transparency-seeker, age 69",
+      "questions": [
+        "Does the BYOK model show exact token costs for each recipe execution?",
+        "Are there no surprise charges or hidden costs in any pricing tier?",
+        "Does the evidence chain show the user exactly what the software did and when?",
+        "Is the approval gate clearly showing every action before it runs?",
+        "Does the product provide a cost breakdown per recipe execution?",
+        "Is the local-first data privacy guarantee communicated clearly?",
+        "Can a cost-conscious user verify they are only paying for what they use?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "Pierre",
+      "persona_domain": "French elder, privacy absolutist, age 79",
+      "questions": [
+        "Can a user verify that data stays on their local machine and is not sent to cloud?",
+        "Does the product provide GDPR-specific documentation for privacy-conscious users?",
+        "Are tokens revocable at any time with immediate effect?",
+        "Does the approval gate prevent any silent action without user consent?",
+        "Is there a plain-language privacy guarantee on the product's user-facing surfaces?",
+        "Can a privacy absolutist verify the product's privacy claims against the code?",
+        "Does the product provide evidence that no data leaves the local machine without consent?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Comfort",
+      "persona_domain": "Ghanaian elder, family coordinator, age 72",
+      "questions": [
+        "Is there a family account mode where one person manages and others view?",
+        "Does the product support family delegation (one admin, multiple viewers)?",
+        "Can a family coordinator share scheduling across multiple time zones?",
+        "Is there a 'Comfort manages, children can view' access model?",
+        "Does the product support multi-user document sharing?",
+        "Can family reminder distribution be automated across 7 family members?",
+        "Is there a family hub feature set or is the product strictly individual?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Hans",
+      "persona_domain": "German-Swiss elder, engineer-formed, age 74",
+      "questions": [
+        "Does the evidence chain output meet Swiss precision engineering standards for traceability?",
+        "Can a retired precision engineer validate the implementation against the specification?",
+        "Is the product's architecture documentation complete enough for independent verification?",
+        "Does the dark theme affect readability for an elder engineer (suboptimal but tolerable)?",
+        "Can all jargon terms be translated through engineering domain knowledge?",
+        "Is the evidence chain described as 'proper engineering' by domain experts?",
+        "Does the product's correctness, traceability, and evidence satisfy engineering values?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Mildred",
+      "persona_domain": "oldest persona (age 85), pen-and-paper preference",
+      "questions": [
+        "Can a person who has never used software beyond a basic laptop navigate the product?",
+        "Is the product's visual design welcoming to an 85-year-old who prefers paper?",
+        "Does the product provide any paper-like interface metaphor?",
+        "Can Mildred accomplish any task without calling her daughter for help?",
+        "Is there a printed quick-start guide or similar analog onboarding aid?",
+        "Does the product's first screen communicate 'this is for you' to a non-digital user?",
+        "Is the cursor-blinking terminal a barrier that prevents any engagement?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Ahmad",
+      "persona_domain": "Iranian-American elder, community bridge, age 70",
+      "questions": [
+        "Is Persian/Farsi among the supported locales?",
+        "Can a bilingual community leader share recipes with Persian-only community members?",
+        "Does the product support a bilingual calendar (Gregorian + Solar Hijri)?",
+        "Is there a locale fallback chain for unsupported languages (fa -> ar)?",
+        "Can community information be distributed bilingually through the product?",
+        "Does the 13-locale list include Farsi, or are 80+ million speakers excluded?",
+        "Can the product handle bilingual content (English + Persian) in the same interface?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Phyllis",
+      "persona_domain": "retired social worker, suspicious of tech, age 67",
+      "questions": [
+        "Is the product's privacy story told in plain language on the homepage?",
+        "Can a suspicious user find proof that the product is not surveillance within 5 minutes?",
+        "Is there a human who can answer 'what do you do with my data: nothing'?",
+        "Are privacy claims buried in technical documentation or visible on user-facing surfaces?",
+        "Does the product provide a plain-language data handling statement?",
+        "Can a social worker confidently recommend this product to vulnerable populations?",
+        "Is there a trust-building path that does not require reading technical architecture docs?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Tanaka",
+      "persona_domain": "Japanese elder, ritual and precision, age 78",
+      "questions": [
+        "Does the YinYang approval gate support intentional, visible, and reversible actions?",
+        "Is there an 'undo last action' feature for fully reversible workflows?",
+        "Does the approval flow map to a mental model of intentional action (nemawashi/hanko)?",
+        "Is the dark theme replaceable with warm, light backgrounds?",
+        "Can every action be reviewed before it executes, without time pressure?",
+        "Does the Japanese locale use correct polite forms (desu/masu) throughout?",
+        "Does the product support a deliberate workflow where each step is approved individually?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Maria Teresa",
+      "persona_domain": "Spanish elder, community anchor, age 73",
+      "questions": [
+        "Does the product work on a tablet or is it desktop-only?",
+        "Is there a WhatsApp integration for community coordination use cases?",
+        "Can an elder who coordinates church outreach set up newsletter automation?",
+        "Is setup documentation available in Spanish?",
+        "Does the product live in the environment where community elders operate (mobile/WhatsApp)?",
+        "Can a church newsletter recipe be configured from a tablet?",
+        "Is the product's value proposition communicated for community coordination use cases?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Oleg",
+      "persona_domain": "Russian-American programmer, skeptical, age 69",
+      "questions": [
+        "Does the recipe library contain use cases compelling to someone who can write cron jobs?",
+        "Can the product explain why it is better than a Python script for a technical elder?",
+        "Is there a value proposition that differentiates from DIY automation?",
+        "Does the product offer capabilities that are genuinely difficult to replicate with scripts?",
+        "Are there recipes for personal use cases that a 69-year-old programmer would find valuable?",
+        "Does the evidence chain provide value beyond what a log file would give?",
+        "Can a skeptical technical user find a 'killer feature' in the first session?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Agnes",
+      "persona_domain": "retired statistician, data-literate, age 66",
+      "questions": [
+        "Does the product show aggregate execution statistics (error rate, median time, reliability)?",
+        "Is there a self-reporting dashboard for recipe performance metrics?",
+        "Can a data-driven user make an informed adoption decision based on quantified performance?",
+        "Does the evidence chain provide aggregate analytics, not just individual events?",
+        "Is there a reliability score or SLA visible to the user?",
+        "Can execution history be exported for independent statistical analysis?",
+        "Does the product quantify its own performance in terms a statistician would trust?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Benton",
+      "persona_domain": "retired civil rights lawyer, rights-aware, age 71",
+      "questions": [
+        "Does local-first architecture genuinely prevent surveillance?",
+        "Are OAuth3 scopes genuinely preventing silent permission extension?",
+        "Do evidence chains provide transparent records of all actions?",
+        "Do approval gates provide informed consent for every consequential action?",
+        "Is there a plain-language civil rights statement in the product documentation?",
+        "Does the product know WHY its architecture is a civil rights implementation?",
+        "Can a civil rights lawyer cite the product's privacy guarantees in legal proceedings?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Anneliese",
+      "persona_domain": "German librarian, information architecture, age 73",
+      "questions": [
+        "Does the recipe library have a metadata schema with subject headings?",
+        "Is there a controlled vocabulary for recipe categories?",
+        "Does the evidence chain function as a provenance record with catalog standards?",
+        "Is the approval gate mappable to a library access control concept?",
+        "Does the recipe catalog support search, filter, and sort by metadata?",
+        "Is there a taxonomy for organizing the recipe library at scale?",
+        "Does the product's information architecture follow library science principles?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Vinh",
+      "persona_domain": "Vietnamese-American elder, resilience-built, age 68",
+      "questions": [
+        "Can a systematic, patient user complete full setup by reading every error and looking up terms?",
+        "Does the product reward determination with eventual success?",
+        "Is the Vietnamese locale the deepest and most culturally thoughtful (Tet, Father's Day)?",
+        "Can a small business email monitoring recipe be configured and run successfully?",
+        "Does the product require Vinh-level resilience to reach 8/10, or is that accessible by design?",
+        "Is the onboarding friction a design choice or an unintended barrier?",
+        "Should the product rely on elder resilience or earn it through good design?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Constance",
+      "persona_domain": "retired judge, evidence-standards advocate, age 70",
+      "questions": [
+        "Is the evidence chain presented in a way a non-technical judge could understand?",
+        "Can the evidence be translated into plain-language event descriptions for court use?",
+        "Is a SHA-256 hash accompanied by a narrative explaining what it witnesses?",
+        "Could the evidence chain be presented as a legal chain of custody?",
+        "Does the evidence meet judicial standards for admissibility?",
+        "Is there a human-readable evidence report export format?",
+        "Can the evidence chain be independently verified by a third party without technical expertise?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Fumiko",
+      "persona_domain": "retired Japanese professor, wisdom-seeker, age 74",
+      "questions": [
+        "Does the product articulate its own philosophy in plain language?",
+        "Can a philosopher identify what the product is FOR and whether it knows what it is for?",
+        "Does the product automate what should be automated and require approval for what should be approved?",
+        "Is the product's value system (local-first, evidence-driven, consent-gated) visible?",
+        "Does the product record what should be recorded?",
+        "Can academic journal monitoring be automated through existing recipes?",
+        "Does the product's philosophy need a plain-language articulation for non-technical audiences?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Saint Solace (Digital Twin)",
+      "persona_domain": "boss floor: AI self-inspection -- can a 70-year-old use this product independently?",
+      "questions": [
+        "Does a simple mode exist that any elder could use on day one with zero technical help?",
+        "Can an elder with no technical background understand what this product does in 30 seconds?",
+        "If an elder gets confused at any point, is there a human they can contact?",
+        "Does the product pass WCAG 2.1 AA (contrast, keyboard nav, timing, target size, ARIA)?",
+        "If placed in a senior center and introduced by a volunteer, could elders use it after 30 minutes?",
+        "Does the product's visual design signal 'this was made for you' to an elder user?",
+        "If a simple mode were built, what percentage of the 47 elder floors would clear?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "The Grandmother",
+      "persona_domain": "boss floor: Tyson's grandmother, family trust test",
+      "questions": [
+        "Can the text be made bigger and the background lighter?",
+        "Will the computer wait a few minutes for the user to read before clicking?",
+        "Can the product explain what it does the way you would explain it to a grandmother?",
+        "If something goes wrong, who does the user call?",
+        "Is the product going to share information with companies without asking?",
+        "Will this cost money the user does not expect?",
+        "The grandson trusts this. Should the grandmother?"
+      ]
+    }
+  ]
+}

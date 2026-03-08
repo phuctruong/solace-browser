@@ -1,0 +1,72 @@
+id: claude
+name: Claude Reviewer
+description: Inject prime skills into Claude.ai, send review prompts, capture uplifted responses. Skills loaded from inbox/skills/ as inline context before the review prompt.
+category: cross-llm-qa
+status: installed
+safety: B
+tier: pro
+tier_reason: "Uplift skills injection requires cloud sync + evidence chain"
+site: claude.ai
+type: uplift
+orchestrates:
+  - claude-send-prompt
+scopes:
+  - claude.read.conversation
+  - claude.draft.message
+  - local.evidence
+  - local.screenshots
+partners:
+  produces_for:
+    - chatgpt
+    - gemini
+  consumes_from:
+    - chatgpt
+    - gemini
+required_inbox:
+  prompts:
+    - architecture-review
+    - code-review
+    - page-qa
+  templates:
+    - architecture-review.md
+    - code-review.md
+    - page-qa.md
+  skills:
+    - prime-safety.md
+    - prime-coder.md
+    - styleguide-first.md
+    - fallback-ban.md
+    - negative-space.md
+    - browser-domain.md
+    - constraints.md
+    - stakes.md
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml
+persona:
+  architecture: Mike West
+  code: Linus Torvalds
+  security: Mike West
+  ux: Dieter Rams
+  business: Pieter Levels
+setup:
+  schedule:
+    default: "manual"
+    options: ["manual", "daily@09:00", "weekly@monday-09:00"]
+  ingestion:
+    scan_sources:
+      - "*/outbox/responses/*.json"
+      - "*/outbox/evidence/*.json"
+    target_fields: ["scores", "findings", "verdict"]
+    auto_feed_inbox: true
+  defaults_mode: "auto_with_hover_edit"
+  phuc_forecast: true
+evidence:
+  capture: true
+  hash_algorithm: sha256
+  retain_days: 90
+  chain: append_only

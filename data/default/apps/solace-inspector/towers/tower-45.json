@@ -1,0 +1,146 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 45,
+    "tower_name": "Tower of Cloud Twin Browser",
+    "dna": "twin(cloud) = spawn(gcloud) x session(persist) x control(remote) x stream(visual) x auth(oauth3) x corporate(bypass) x cost(cap)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a corporate user who cannot install software locally. Questions must verify that the cloud twin actually works end-to-end.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": ["solaceagi", "solace-browser"],
+    "target_project_paths": {
+      "solaceagi": "/home/phuc/projects/solaceagi",
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Cloud Twin Browser",
+  "tower_number": 45,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Michael Chen",
+      "persona_domain": "corporate_restricted",
+      "persona_context": "35, San Francisco, Senior Analyst at a Fortune 500 bank, Intermediate tech, cannot install any software on work laptop due to IT policy, needs to automate Gmail triage from personal device controlling cloud twin",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I log into solaceagi.com from any browser without installing anything and access a cloud twin browser?",
+        "Does the cloud twin dashboard show a Start Twin button that provisions a browser session in under 30 seconds?",
+        "Once the twin is running, can I see a live visual stream of what the twin browser is doing?",
+        "Can I run Gmail Inbox Triage through the cloud twin without my work laptop having Solace installed?",
+        "Does the twin session persist if I close my browser tab and reopen it within 30 minutes?",
+        "Is there a clear cost indicator showing how much the cloud twin session is costing me per minute?",
+        "Can I stop the twin session with one click and see a summary of what it accomplished?"
+      ],
+      "question_expansion_instruction": "Michael represents the core use case: corporate restriction prevents local install. Every question must verify the cloud twin works from a plain web browser on any device."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Sarah Kim",
+      "persona_domain": "twin_provisioning",
+      "persona_context": "29, New York, Product Manager at a tech startup, Expert tech, Pro tier subscriber, wants to understand how the twin is provisioned and what infrastructure backs it",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does POST /api/v1/twin/start return a session_id and a websocket URL for the visual stream?",
+        "Is the twin browser running in an isolated Cloud Run container with its own Chromium instance?",
+        "Does the twin automatically install Playwright and required browser binaries on provisioning?",
+        "Can I specify which apps to pre-install on the twin when starting it?",
+        "Does GET /api/v1/twin/status return the current state (provisioning, ready, running, stopped)?",
+        "Is the twin session time-limited with automatic shutdown after 60 minutes of inactivity?",
+        "Does the twin use the same OAuth3 scoped consent as the local browser?"
+      ],
+      "question_expansion_instruction": "Sarah is technical and wants to understand the plumbing. Questions verify that real infrastructure exists, not just UI mocks."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "David Okafor",
+      "persona_domain": "twin_security",
+      "persona_context": "42, London, CISO at a healthcare company, Expert security, Enterprise tier, needs the cloud twin to meet compliance requirements before his team can use it",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Are twin browser sessions isolated from each other — can one user's twin access another's data?",
+        "Is the visual stream encrypted end-to-end (WSS not WS)?",
+        "Does the twin session get destroyed (container killed, disk wiped) when the user stops it?",
+        "Are twin session credentials (OAuth tokens, API keys) stored only in memory and never persisted to disk?",
+        "Does the twin produce the same SHA-256 evidence chain as the local browser?",
+        "Can I get an audit log of all twin sessions run by my team with timestamps and cost?",
+        "Does the twin enforce the same budget caps and human approval gates as local execution?"
+      ],
+      "question_expansion_instruction": "David will block adoption if security is weak. Questions verify isolation, encryption, evidence, and compliance."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Lisa Tran",
+      "persona_domain": "twin_ux",
+      "persona_context": "26, Ho Chi Minh City, Junior developer and Quy's colleague, Beginner tech, Starter tier, just wants to use the twin from her phone during commute",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I start and control the twin from a mobile browser (phone) without a desktop?",
+        "Does the twin visual stream adapt to small screens without horizontal scrolling?",
+        "Can I approve or reject twin actions with a simple tap on mobile?",
+        "If my connection drops during commute, does the twin pause and resume when I reconnect?",
+        "Is there a simplified mobile view that shows just status and approval buttons?",
+        "Can I receive push notifications when the twin needs my approval?",
+        "Does the twin dashboard load in under 3 seconds on a 4G connection?"
+      ],
+      "question_expansion_instruction": "Lisa tests mobile-first cloud twin usage from Vietnam with potentially unreliable connectivity."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Robert Martinez",
+      "persona_domain": "twin_cost",
+      "persona_context": "50, Miami, CFO of a mid-size company, Non-technical, Pro tier, needs to understand and control the cost of running cloud twins for his 20-person team",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Is there a clear pricing page showing twin session cost (e.g., $0.05/minute or $X/hour)?",
+        "Can I set a monthly budget cap for twin usage per team member?",
+        "Does the billing dashboard show total twin cost this month separate from other Solace costs?",
+        "If a team member forgets to stop their twin, does it auto-shutdown after the budget is hit?",
+        "Is twin pricing competitive with alternatives (Browserless, Apify, etc.)?",
+        "Can I see a cost-per-task breakdown (e.g., Gmail triage via twin cost $0.12)?",
+        "Is there a free trial of the cloud twin for Pro subscribers to test before committing?"
+      ],
+      "question_expansion_instruction": "Robert controls the budget. Questions verify transparent pricing, cost controls, and competitive positioning."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Anika Johansson",
+      "persona_domain": "twin_integration",
+      "persona_context": "38, Stockholm, DevOps Engineer, Expert tech, Enterprise tier, wants to integrate cloud twin into CI/CD pipeline for automated testing",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I start a twin session via API (POST /api/v1/twin/start) with an API key and no browser UI?",
+        "Can I send commands to the twin programmatically (navigate, click, extract)?",
+        "Does the twin API support webhooks to notify my system when tasks complete?",
+        "Can I run multiple twin sessions in parallel for different tasks?",
+        "Is there a headless mode for the twin (no visual stream, lower cost)?",
+        "Can I schedule twin sessions to run at specific times via API?",
+        "Does the twin API return structured JSON results I can pipe into my data pipeline?"
+      ],
+      "question_expansion_instruction": "Anika wants API-first twin access for automation. Questions verify programmatic control."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "James Park",
+      "persona_domain": "twin_vs_local",
+      "persona_context": "33, Chicago, CTO of a SaaS company, Expert tech, Enterprise tier, evaluating whether to recommend cloud twin vs local install to his 50-person engineering team",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Is there a comparison page showing cloud twin vs local install: features, cost, latency, privacy?",
+        "Does the cloud twin run the exact same apps and recipes as the local browser?",
+        "Is there a hybrid mode where the local browser delegates heavy tasks to the cloud twin?",
+        "What is the added latency of cloud twin vs local execution (measured in seconds)?",
+        "Can a team mix local and cloud twin users on the same Enterprise account?",
+        "Does the cloud twin support all 23 languages like the local browser?",
+        "Is there an SLA for cloud twin uptime (e.g., 99.9%)?"
+      ],
+      "question_expansion_instruction": "James is making a buy/build decision for 50 engineers. Questions verify parity, performance, and enterprise readiness."
+    }
+  ]
+}

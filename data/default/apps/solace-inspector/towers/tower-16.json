@@ -1,0 +1,714 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 16,
+    "tower_name": "Tower of AI Coders",
+    "dna": "ai_coder(effective) = context(deep) x safety(kill_switch) x evidence(immutable) x tools(browser+cli) x collaboration(human_in_loop) x cost(recipe_replay) x quality(convergent)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor lists 7 seed questions. During execution, expand to ~100 questions per persona. AI coding agents are the primary power users of Solace Browser — they browse, extract, automate, and build on behalf of humans. Every question must probe whether the platform makes AI coders safer, faster, and more trustworthy.",
+    "target_projects": [
+      "solace-browser",
+      "solace-cli"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solace-cli": "/home/phuc/projects/solace-cli"
+    }
+  },
+  "name": "Tower of AI Coders",
+  "tower_number": 16,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Claude Code Agent",
+      "persona_domain": "AI coding assistant using Solace Browser for web tasks",
+      "questions": [
+        "Can Claude Code spawn a Solace Browser session to research documentation, test APIs, and capture evidence?",
+        "Does the browser bridge (browser_bridge.py) expose a clean API for AI agents to navigate, extract, and interact?",
+        "Is there an MCP server that lets AI coding agents control Solace Browser through the Model Context Protocol?",
+        "Can an AI agent read page content in structured form (headings, tables, links) without parsing raw HTML?",
+        "Does the session persistence allow AI agents to resume browser sessions across coding tasks?",
+        "Can an AI agent capture screenshots as evidence of test results or visual states?",
+        "Is there rate limiting that prevents AI agents from overwhelming target websites?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Codex Agent",
+      "persona_domain": "autonomous code generation and execution",
+      "questions": [
+        "Can Codex-style agents use Solace Browser to validate their generated code in a real browser environment?",
+        "Does the platform provide sandboxed execution environments where AI-generated code can run safely?",
+        "Can AI agents create, run, and verify test suites through the browser automation layer?",
+        "Is there a feedback loop where test failures from AI-generated code improve the next generation attempt?",
+        "Does the evidence chain capture which code was AI-generated vs human-written for audit purposes?",
+        "Can autonomous agents checkpoint their work so humans can review before destructive actions?",
+        "Does the kill switch work immediately when an autonomous agent is producing harmful code?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Research Agent",
+      "persona_domain": "AI agents performing web research",
+      "questions": [
+        "Can research agents navigate multiple tabs to gather information from different sources simultaneously?",
+        "Does the browser provide content extraction tools optimized for research (article text, tables, citations)?",
+        "Can research agents save extracted data in structured formats (JSON, CSV) with source attribution?",
+        "Is there a Prime Wiki integration that lets research agents push verified knowledge for team access?",
+        "Does the browser handle authentication for research on gated sites (via OAuth3 vault)?",
+        "Can research agents detect and flag potentially unreliable sources?",
+        "Is research evidence hash-chained to prove when and where information was gathered?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "QA Automation Agent",
+      "persona_domain": "AI agents running quality assurance tests",
+      "questions": [
+        "Can QA agents run notebook probes against live web applications through Solace Browser?",
+        "Does the platform support visual regression testing (screenshot comparison) for AI QA agents?",
+        "Can QA agents generate test cases from user stories or requirements documents?",
+        "Is there an API for QA agents to report test results in standard formats (JUnit, TAP)?",
+        "Can QA agents test accessibility compliance (WCAG) automatically through the browser?",
+        "Does the platform support cross-browser testing for QA agents (different viewports, user agents)?",
+        "Can QA agents create reproducible bug reports with steps, screenshots, and DOM snapshots?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Deployment Agent",
+      "persona_domain": "AI agents managing deployments",
+      "questions": [
+        "Can deployment agents use Solace Browser to verify production deployments (health checks, smoke tests)?",
+        "Does the platform prevent deployment agents from deploying without human approval (step-up auth)?",
+        "Can deployment agents capture before/after evidence of deployments?",
+        "Is there rollback support that deployment agents can trigger automatically on failure?",
+        "Can deployment agents monitor deployment pipelines (GitHub Actions, Cloud Build) through the browser?",
+        "Does the evidence system create an audit trail of every deployment action?",
+        "Can deployment agents run deployment notebooks that verify binary format, checksums, and version numbers?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Security Scanner Agent",
+      "persona_domain": "AI agents performing security scanning",
+      "questions": [
+        "Can security agents scan web applications for OWASP Top 10 vulnerabilities through Solace Browser?",
+        "Does the platform provide tools for security agents to test XSS, CSRF, and injection vectors?",
+        "Can security agents perform authenticated scanning using OAuth3 vault credentials?",
+        "Is there a vulnerability reporting format that security agents can use?",
+        "Does the platform prevent security agents from performing denial-of-service attacks?",
+        "Can security agents scan for exposed secrets, API keys, and credentials in web pages?",
+        "Does the evidence system capture security scan results with tamper-evident hashing?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Data Extraction Agent",
+      "persona_domain": "AI agents scraping and structuring web data",
+      "questions": [
+        "Can data extraction agents use CSS selectors and XPath to precisely target data on pages?",
+        "Does the browser handle JavaScript rendering so extraction agents can access dynamic content?",
+        "Can extraction agents handle pagination (next page, infinite scroll, load more)?",
+        "Is there robots.txt and rate limit enforcement to prevent abusive scraping?",
+        "Can extraction agents transform raw data into structured schemas (JSON-LD, CSV)?",
+        "Does the platform cache extracted data so the same page isn't scraped repeatedly?",
+        "Can extraction agents handle authentication walls and CAPTCHAs gracefully (not by bypassing)?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Documentation Agent",
+      "persona_domain": "AI agents generating and maintaining documentation",
+      "questions": [
+        "Can documentation agents browse codebases through Solace Browser to extract API signatures?",
+        "Is there a documentation generation pipeline that uses browser content extraction?",
+        "Can documentation agents verify that code examples in docs actually work by running them?",
+        "Does the platform support documentation agents that keep docs in sync with code changes?",
+        "Can documentation agents extract JSDoc, docstrings, and type annotations from source code?",
+        "Is there a quality check for generated documentation (completeness, accuracy, readability)?",
+        "Can documentation agents generate API documentation in OpenAPI/Swagger format?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Code Review Agent",
+      "persona_domain": "AI agents reviewing code changes",
+      "questions": [
+        "Can code review agents browse GitHub PRs through Solace Browser and leave review comments?",
+        "Does the platform provide diff analysis tools for AI code reviewers?",
+        "Can review agents check for security vulnerabilities, style violations, and test coverage?",
+        "Is there an evidence trail showing which code was reviewed by AI vs human?",
+        "Can review agents suggest fixes inline (not just flag issues)?",
+        "Does the platform prevent review agents from approving merges (human-in-loop required)?",
+        "Can review agents learn from past review feedback to improve future reviews?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "CI/CD Integration Agent",
+      "persona_domain": "AI agents integrated into build pipelines",
+      "questions": [
+        "Can CI/CD agents trigger Solace Browser sessions as part of a build pipeline?",
+        "Does the platform provide CI-friendly exit codes and machine-readable output?",
+        "Can CI agents run browser-based integration tests and report results to the pipeline?",
+        "Is there a headless mode for CI environments without displays?",
+        "Can CI agents cache browser state between pipeline runs for speed?",
+        "Does the platform integrate with GitHub Actions, GitLab CI, and Jenkins?",
+        "Can CI agents capture test evidence (screenshots, HAR files) as build artifacts?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Multi-Agent Coordinator",
+      "persona_domain": "orchestrating multiple AI agents",
+      "questions": [
+        "Can multiple AI agents share a Solace Browser session without conflicts?",
+        "Does the platform support agent-to-agent communication through the inbox/outbox system?",
+        "Can a coordinator agent dispatch sub-agents and collect their results?",
+        "Is there resource isolation between concurrent agent sessions?",
+        "Can the coordinator enforce budget limits across all sub-agents?",
+        "Does the platform prevent deadlocks when multiple agents compete for the same resource?",
+        "Can agent swarms be killed with a single command from the coordinator?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Context Window Manager",
+      "persona_domain": "managing large context for AI agents",
+      "questions": [
+        "Can AI agents use Solace Browser to offload large documents outside their context window?",
+        "Does the browser provide summarization tools for pages that exceed context limits?",
+        "Can agents bookmark and revisit specific sections of large documents?",
+        "Is there a memory system that persists relevant context across agent sessions?",
+        "Can agents search previously visited pages without re-fetching them?",
+        "Does the platform provide chunking utilities for large codebases?",
+        "Can the Prime Wiki serve as external memory for AI agents working across sessions?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Tool Use Agent",
+      "persona_domain": "AI agents using browser-based tools",
+      "questions": [
+        "Can AI agents fill out web forms accurately (input fields, dropdowns, checkboxes, file uploads)?",
+        "Does the platform provide reliable element targeting that survives page layout changes?",
+        "Can agents interact with rich web applications (drag-and-drop, canvas, WebGL)?",
+        "Is there a page object model or selector abstraction that makes tool use more robust?",
+        "Can agents handle multi-step forms with validation feedback?",
+        "Does the platform wait for page loads and network requests before acting (not race conditions)?",
+        "Can agents interact with shadow DOM elements in web components?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Error Recovery Agent",
+      "persona_domain": "AI agents handling failures gracefully",
+      "questions": [
+        "Can AI agents detect when a page load fails and retry with backoff?",
+        "Does the platform provide error classification (network, auth, rate limit, server error)?",
+        "Can agents recover from browser crashes without losing their progress?",
+        "Is there a checkpoint system that allows agents to resume from the last successful step?",
+        "Can agents handle CAPTCHAs by escalating to human assistance?",
+        "Does the platform provide fallback strategies when primary actions fail?",
+        "Can agents distinguish between transient errors (retry) and permanent errors (report)?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Cost Optimizer Agent",
+      "persona_domain": "minimizing AI agent operational costs",
+      "questions": [
+        "Does the recipe replay system reduce LLM costs for repeated agent tasks?",
+        "Can agents track their LLM token usage and estimate costs per task?",
+        "Is there a cost dashboard showing per-agent and per-task spending?",
+        "Can agents choose between LLM tiers (L1-L5) based on task complexity to optimize costs?",
+        "Does the platform cache browser content to reduce unnecessary page loads?",
+        "Can agents batch similar operations to reduce overhead?",
+        "Is there a budget gate that stops agents when they approach cost limits?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Human-in-the-Loop Agent",
+      "persona_domain": "AI agents that collaborate with humans",
+      "questions": [
+        "Does the YinYang approval flow work correctly for AI agent actions that need human consent?",
+        "Can agents present their reasoning to humans in a clear, auditable format?",
+        "Is there a notification system that alerts humans when an agent needs their input?",
+        "Can humans override, correct, or redirect agent actions mid-execution?",
+        "Does the platform track which decisions were made by AI vs human for compliance?",
+        "Can agents learn from human corrections to improve future autonomous decisions?",
+        "Is the step-up auth mechanism reliable for escalating sensitive actions to humans?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "Prompt Engineering Agent",
+      "persona_domain": "AI agents optimizing their own prompts",
+      "questions": [
+        "Can agents use Solace Browser to test different prompt strategies against web applications?",
+        "Does the platform provide prompt templates that agents can use as starting points?",
+        "Can agents measure prompt effectiveness (output quality, cost, latency) systematically?",
+        "Is there a prompt versioning system that tracks which prompts produced which results?",
+        "Can agents A/B test prompts and automatically select the better performing one?",
+        "Does the persona system provide domain-specific prompt context for agents?",
+        "Can agents compress long prompts using the DNA equation format for efficiency?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "API Testing Agent",
+      "persona_domain": "AI agents testing REST and GraphQL APIs",
+      "questions": [
+        "Can API testing agents discover endpoints from OpenAPI/Swagger specs through the browser?",
+        "Does the platform provide HTTP client tools that agents can use for API testing?",
+        "Can agents generate test cases from API documentation automatically?",
+        "Is there support for GraphQL introspection and mutation testing?",
+        "Can agents test authentication flows (OAuth, API keys, JWT) through the API?",
+        "Does the platform capture API response times and compare against SLA thresholds?",
+        "Can agents test edge cases (empty payloads, oversize fields, Unicode, injection) systematically?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Accessibility Testing Agent",
+      "persona_domain": "AI agents auditing web accessibility",
+      "questions": [
+        "Can accessibility agents run axe-core or similar tools through Solace Browser?",
+        "Does the platform support screen reader simulation for accessibility testing?",
+        "Can agents test keyboard navigation paths and tab order?",
+        "Is there support for testing with different viewport sizes and zoom levels?",
+        "Can agents check color contrast ratios against WCAG 2.1 AA/AAA standards?",
+        "Does the platform support testing with prefers-reduced-motion and forced-colors?",
+        "Can agents generate VPAT (Voluntary Product Accessibility Template) reports?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Performance Testing Agent",
+      "persona_domain": "AI agents measuring web performance",
+      "questions": [
+        "Can performance agents measure Core Web Vitals (LCP, FID, CLS) through Solace Browser?",
+        "Does the platform support Lighthouse audits triggered by AI agents?",
+        "Can agents profile JavaScript execution time and memory usage?",
+        "Is there support for network throttling to simulate slow connections?",
+        "Can agents track performance metrics over time and detect regressions?",
+        "Does the platform capture HAR files for detailed network analysis?",
+        "Can agents test performance under load (concurrent sessions, large datasets)?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "Migration Agent",
+      "persona_domain": "AI agents migrating data and systems",
+      "questions": [
+        "Can migration agents extract data from legacy web applications through browser automation?",
+        "Does the platform support bulk data operations for migration tasks?",
+        "Can agents validate data integrity after migration (checksums, record counts)?",
+        "Is there rollback support if a migration fails partway through?",
+        "Can agents handle authentication for both source and destination systems?",
+        "Does the evidence system capture the complete migration audit trail?",
+        "Can agents generate migration reports showing what was moved, transformed, and skipped?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "Monitoring Agent",
+      "persona_domain": "AI agents monitoring web services",
+      "questions": [
+        "Can monitoring agents perform scheduled health checks through Solace Browser?",
+        "Does the platform support alerting when monitored services go down?",
+        "Can agents monitor visual changes on web pages (screenshot diff)?",
+        "Is there support for monitoring SSL certificate expiry and domain status?",
+        "Can agents check response times and flag performance degradation?",
+        "Does the scheduling system (daemon scheduler) support monitoring intervals?",
+        "Can monitoring agents aggregate results from multiple sites into a single dashboard?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Content Generation Agent",
+      "persona_domain": "AI agents creating web content",
+      "questions": [
+        "Can content agents use Solace Browser to research topics before generating content?",
+        "Does the platform enforce content safety guidelines for AI-generated content?",
+        "Can agents publish content through CMS integrations (WordPress, Ghost, Substack)?",
+        "Is there a content review flow that requires human approval before publishing?",
+        "Can agents generate content in multiple languages using the i18n system?",
+        "Does the evidence system track AI-generated vs human-edited content?",
+        "Can content agents optimize for SEO using browser-based keyword research tools?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Email Agent",
+      "persona_domain": "AI agents managing email workflows",
+      "questions": [
+        "Can email agents access Gmail/Outlook through OAuth3-scoped browser sessions?",
+        "Does the platform prevent email agents from sending messages without human approval?",
+        "Can agents categorize, label, and prioritize incoming emails?",
+        "Is there a template system for AI-generated email responses?",
+        "Can agents extract structured data from emails (invoices, receipts, confirmations)?",
+        "Does the inbox/outbox system integrate with email workflows?",
+        "Can email agents respect opt-out preferences and unsubscribe requests?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Social Media Agent",
+      "persona_domain": "AI agents managing social media presence",
+      "questions": [
+        "Can social media agents schedule posts through browser automation?",
+        "Does the platform prevent spam-like behavior (mass posting, automated engagement)?",
+        "Can agents monitor brand mentions and sentiment across platforms?",
+        "Is there OAuth3 integration for major social platforms (LinkedIn, Twitter, Instagram)?",
+        "Can agents generate social media content that matches brand voice?",
+        "Does the evidence system capture what was posted, when, and where?",
+        "Can social media agents handle multi-platform posting with platform-specific formatting?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Legal Document Agent",
+      "persona_domain": "AI agents processing legal documents",
+      "questions": [
+        "Can legal agents extract key terms and clauses from contracts viewed in the browser?",
+        "Does the platform provide document comparison tools for legal review?",
+        "Can agents flag potential legal risks in documents without providing legal advice?",
+        "Is there an eSign integration that legal agents can trigger (with human approval)?",
+        "Can agents track document versions and changes over time?",
+        "Does the evidence system provide legally admissible audit trails?",
+        "Can legal agents handle sensitive documents with appropriate data protection?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Financial Data Agent",
+      "persona_domain": "AI agents processing financial information",
+      "questions": [
+        "Can financial agents access banking portals through OAuth3-scoped browser sessions?",
+        "Does the platform prevent financial agents from initiating transactions without step-up auth?",
+        "Can agents extract and categorize transactions from bank statements?",
+        "Is there support for financial data formats (OFX, QFX, CSV)?",
+        "Can agents generate financial reports and summaries?",
+        "Does the platform handle sensitive financial data with appropriate encryption?",
+        "Can financial agents comply with financial regulations (PCI-DSS, SOX)?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "Customer Support Agent",
+      "persona_domain": "AI agents handling customer support tasks",
+      "questions": [
+        "Can support agents use Solace Browser to access CRM and helpdesk systems?",
+        "Does the platform prevent support agents from accessing customer data beyond what's needed?",
+        "Can agents draft support responses for human review before sending?",
+        "Is there sentiment analysis for incoming support requests?",
+        "Can agents escalate complex issues to human agents with full context?",
+        "Does the platform track support agent performance (resolution time, satisfaction)?",
+        "Can agents learn from resolved tickets to improve future responses?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Project Management Agent",
+      "persona_domain": "AI agents managing project workflows",
+      "questions": [
+        "Can PM agents create and update tasks in project management tools (Linear, Jira, Asana)?",
+        "Does the platform support sprint planning assistance through browser automation?",
+        "Can agents generate status reports from project data?",
+        "Is there integration with version control for tracking code-related tasks?",
+        "Can agents estimate task complexity and suggest priority ordering?",
+        "Does the platform support Gantt/timeline views that agents can populate?",
+        "Can PM agents track dependencies and flag blocked tasks?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Database Agent",
+      "persona_domain": "AI agents interacting with databases through web UIs",
+      "questions": [
+        "Can database agents interact with web-based database tools (Firebase Console, pgAdmin)?",
+        "Does the platform prevent agents from executing destructive queries without approval?",
+        "Can agents generate database migration scripts based on schema analysis?",
+        "Is there support for data anonymization when agents access production databases?",
+        "Can agents perform query optimization by analyzing execution plans?",
+        "Does the evidence system capture all database operations for audit?",
+        "Can agents validate data integrity constraints across database operations?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Compliance Agent",
+      "persona_domain": "AI agents ensuring regulatory compliance",
+      "questions": [
+        "Can compliance agents scan web applications for GDPR, CCPA, and HIPAA violations?",
+        "Does the platform provide compliance checklists that agents can audit against?",
+        "Can agents generate compliance reports with evidence?",
+        "Is there support for privacy policy analysis and gap detection?",
+        "Can agents monitor for compliance drift over time?",
+        "Does the platform's evidence system meet regulatory requirements for audit trails?",
+        "Can compliance agents verify that consent mechanisms work correctly?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Infrastructure Agent",
+      "persona_domain": "AI agents managing cloud infrastructure",
+      "questions": [
+        "Can infrastructure agents access cloud consoles (GCP, AWS, Azure) through OAuth3?",
+        "Does the platform prevent agents from making infrastructure changes without approval?",
+        "Can agents monitor cloud costs and flag unexpected charges?",
+        "Is there support for infrastructure-as-code validation through browser tools?",
+        "Can agents detect security misconfigurations in cloud settings?",
+        "Does the evidence system capture infrastructure changes for compliance?",
+        "Can agents perform capacity planning based on usage metrics?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "Testing Swarm Coordinator",
+      "persona_domain": "orchestrating parallel test execution",
+      "questions": [
+        "Can a coordinator spawn multiple browser sessions for parallel test execution?",
+        "Does the platform support test sharding across multiple agent instances?",
+        "Can test results be aggregated from parallel runs into a single report?",
+        "Is there resource management to prevent parallel tests from competing for resources?",
+        "Can the coordinator retry failed tests on different agents?",
+        "Does the platform support test matrix execution (multiple browsers/viewports/locales)?",
+        "Can parallel test execution stay within budget gates?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Knowledge Graph Agent",
+      "persona_domain": "AI agents building and querying knowledge graphs",
+      "questions": [
+        "Can agents extract entities and relationships from web pages to build knowledge graphs?",
+        "Does the Prime Wiki provide a graph-queryable interface for agents?",
+        "Can agents link information across multiple web sources?",
+        "Is there support for RDF, JSON-LD, or other semantic web formats?",
+        "Can agents detect contradictions between sources?",
+        "Does the platform cache entity extraction results for reuse?",
+        "Can knowledge graph agents provide citation chains for their assertions?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Benchmark Agent",
+      "persona_domain": "AI agents running standardized benchmarks",
+      "questions": [
+        "Can benchmark agents run SWE-bench, HumanEval, or custom benchmarks through the platform?",
+        "Does the platform provide standardized measurement infrastructure for benchmarks?",
+        "Can agents compare benchmark results across different configurations?",
+        "Is there support for statistical significance testing on benchmark results?",
+        "Can benchmark agents run in isolated environments to prevent interference?",
+        "Does the evidence system capture benchmark conditions (hardware, software, parameters)?",
+        "Can agents publish benchmark results to leaderboards or dashboards?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Pair Programming Agent",
+      "persona_domain": "AI agents working alongside human developers",
+      "questions": [
+        "Can pair programming agents share a browser view with a human developer?",
+        "Does the platform support real-time collaboration between AI and human?",
+        "Can agents suggest code changes while the human writes in their IDE?",
+        "Is there a communication channel between the AI agent and human developer?",
+        "Can the human pause, correct, and redirect the AI agent mid-task?",
+        "Does the platform track contribution ratios between AI and human?",
+        "Can pair programming sessions be recorded for review and learning?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Refactoring Agent",
+      "persona_domain": "AI agents performing code refactoring",
+      "questions": [
+        "Can refactoring agents analyze codebases through browser-based IDE tools?",
+        "Does the platform support safe refactoring patterns (extract, rename, inline)?",
+        "Can agents verify that refactoring preserves behavior (test suite green)?",
+        "Is there support for large-scale refactoring across multiple files?",
+        "Can agents detect code smells and suggest refactoring opportunities?",
+        "Does the evidence system capture before/after states for refactoring?",
+        "Can refactoring agents handle language-specific patterns (Python, JS, Rust)?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Incident Response Agent",
+      "persona_domain": "AI agents responding to production incidents",
+      "questions": [
+        "Can incident agents access monitoring dashboards through Solace Browser during outages?",
+        "Does the platform support rapid evidence gathering during incidents?",
+        "Can agents correlate metrics, logs, and traces to identify root cause?",
+        "Is there a runbook system that agents can follow for common incident types?",
+        "Can agents communicate incident status to stakeholders through the platform?",
+        "Does the platform support war-room style collaboration during incidents?",
+        "Can agents generate post-incident reports with timeline and evidence?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Dependency Auditor Agent",
+      "persona_domain": "AI agents auditing software dependencies",
+      "questions": [
+        "Can agents scan package.json/requirements.txt for known vulnerabilities?",
+        "Does the platform integrate with vulnerability databases (CVE, npm audit, Snyk)?",
+        "Can agents detect outdated dependencies and suggest safe upgrade paths?",
+        "Is there support for license compliance scanning?",
+        "Can agents identify unused dependencies that can be removed?",
+        "Does the evidence system capture dependency audit results for compliance?",
+        "Can agents perform transitive dependency analysis (not just direct deps)?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Localization Agent",
+      "persona_domain": "AI agents managing translations and localization",
+      "questions": [
+        "Can localization agents use browser tools to extract translatable strings from web apps?",
+        "Does the platform provide translation memory for consistent translations?",
+        "Can agents verify that translations fit UI containers (no text overflow)?",
+        "Is there support for plural forms, gender agreement, and other linguistic rules?",
+        "Can agents detect hardcoded strings that should be extracted for translation?",
+        "Does the platform support right-to-left layout testing for Arabic/Hebrew?",
+        "Can localization agents work with standard formats (XLIFF, PO, JSON)?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Architecture Documentation Agent",
+      "persona_domain": "AI agents creating and maintaining architecture docs",
+      "questions": [
+        "Can agents generate architecture diagrams from codebase analysis?",
+        "Does the platform support Mermaid, PlantUML, or other diagram formats?",
+        "Can agents detect architectural drift (code vs documentation divergence)?",
+        "Is there support for C4 model documentation through agents?",
+        "Can agents map dependencies between services and components?",
+        "Does the evidence system link architecture decisions to the code that implements them?",
+        "Can agents generate sequence diagrams from actual API call traces?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Cost Analysis Agent",
+      "persona_domain": "AI agents analyzing and optimizing costs",
+      "questions": [
+        "Can cost agents analyze cloud billing through web consoles?",
+        "Does the platform track agent operational costs (LLM tokens, compute, storage)?",
+        "Can agents recommend cost optimizations based on usage patterns?",
+        "Is there support for cost allocation by project, team, or feature?",
+        "Can agents project future costs based on growth trends?",
+        "Does the platform support budget alerts and spending limits?",
+        "Can agents compare costs across different LLM providers and model tiers?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Ethics Auditor Agent",
+      "persona_domain": "AI agents checking for ethical concerns",
+      "questions": [
+        "Can ethics agents audit AI outputs for bias, fairness, and harm?",
+        "Does the platform provide bias detection tools for AI-generated content?",
+        "Can agents check for discriminatory patterns in automated decision-making?",
+        "Is there support for ethical review workflows before AI decisions take effect?",
+        "Can agents flag potential dual-use concerns in automation workflows?",
+        "Does the evidence system capture ethical review decisions for audit?",
+        "Can ethics agents check that AI disclaimers and transparency notices are present?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Model Evaluation Agent",
+      "persona_domain": "AI agents evaluating LLM performance",
+      "questions": [
+        "Can evaluation agents test multiple LLMs through the platform's L1-L5 abstraction?",
+        "Does the platform support blind evaluation (model identity hidden during scoring)?",
+        "Can agents run evaluation suites with ground truth comparison?",
+        "Is there support for measuring hallucination rates across models?",
+        "Can agents test model performance on domain-specific tasks?",
+        "Does the evidence system capture evaluation methodology and results?",
+        "Can evaluation agents recommend the optimal model tier for specific use cases?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Legacy System Agent",
+      "persona_domain": "AI agents interacting with legacy web applications",
+      "questions": [
+        "Can agents navigate and interact with legacy web apps that use frames, Flash, or Java applets?",
+        "Does the browser handle non-standard HTML and outdated JavaScript frameworks?",
+        "Can agents extract data from legacy systems that lack APIs?",
+        "Is there support for interacting with mainframe terminal emulators through the browser?",
+        "Can agents handle non-UTF8 character encodings in legacy systems?",
+        "Does the platform support form-based authentication used by legacy apps?",
+        "Can agents create API wrappers for legacy systems through browser automation?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Multi-Language Code Agent",
+      "persona_domain": "AI agents working across programming languages",
+      "questions": [
+        "Can code agents use browser-based IDEs to work with any programming language?",
+        "Does the platform provide language-specific linting and formatting tools?",
+        "Can agents cross-reference code across languages in polyglot projects?",
+        "Is there support for language-specific test frameworks through the platform?",
+        "Can agents generate code in one language based on implementations in another?",
+        "Does the platform support REPL environments for interactive coding?",
+        "Can agents manage build systems across multiple languages (Make, npm, Cargo, pip)?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Safety Guardian Agent",
+      "persona_domain": "AI agent safety enforcement",
+      "questions": [
+        "Does every AI agent action pass through the kill switch check before execution?",
+        "Can the safety guardian halt all agents across the platform in an emergency?",
+        "Is there an anomaly detection system that flags unusual agent behavior?",
+        "Does the platform enforce the Fallback Ban for AI agents (no silent failures)?",
+        "Can the safety system detect and prevent prompt injection attacks on agents?",
+        "Does every agent session have a budget ceiling that cannot be exceeded?",
+        "Is there a STORY-47 persona-based adversarial testing of agent safety boundaries?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Dragon Rider (Phuc)",
+      "persona_domain": "AI agent ecosystem vision",
+      "questions": [
+        "Does the AI coder experience make the Solace platform the obvious choice for AI agent deployment?",
+        "Is the evidence-driven approach (hash chains, tamper-evident trails) a competitive moat for AI agents?",
+        "Does the platform make AI agents trustworthy enough that enterprises will adopt them?",
+        "Is the LLM-once-at-preview design the right architecture for agent cost optimization?",
+        "Does the kill switch + step-up auth model solve the AI agency problem?",
+        "Would the Dragon Rider trust Solace-powered AI agents to manage critical business processes?",
+        "Is the platform's safety model (prime-safety) the gold standard for AI agent governance?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "Mum Test Judge",
+      "persona_domain": "can a non-technical person understand AI agent capabilities",
+      "questions": [
+        "Can a non-technical person understand what AI agents do on their behalf in Solace Browser?",
+        "Are agent actions presented in plain language (not technical logs)?",
+        "Can a non-technical person approve or reject agent actions without confusion?",
+        "Is the trust model (what agents can/cannot do) explained simply?",
+        "Can a non-technical person see the value of AI agents in their first 5 minutes?",
+        "Would a non-technical person feel safe letting AI agents browse the web for them?",
+        "Could a non-technical person explain to a friend why Solace's AI agents are trustworthy?"
+      ]
+    }
+  ]
+}

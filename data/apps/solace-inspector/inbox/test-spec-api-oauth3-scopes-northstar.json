@@ -1,0 +1,23 @@
+{
+  "spec_id": "api-oauth3-scopes-northstar-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "curl -s https://www.solaceagi.com/api/v1/oauth3/scopes",
+  "target_name": "SolaceAGI OAuth3 Scopes — Public Catalog (Northstar)",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": [
+      "scopes",
+      "files.read",
+      "browser.navigate"
+    ],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "james_bach",
+  "priority": "high",
+  "northstar": "northstar-api-oauth3-scopes.json",
+  "context": "Northstar contract: /api/v1/oauth3/scopes is the SYSTEM CATALOG of available OAuth3 scope names — intentionally public. Agents must be able to enumerate available scopes before requesting them in OAuth3 flows. This is analogous to a public OpenID Connect discovery endpoint. What requires auth is: user-specific granted scopes, token introspection. James Bach: distinguish between 'what scopes exist' (public catalog) vs 'what scopes this user has' (PII, must be auth-gated). Endpoint correctly returns 200 with scope list without auth.",
+  "created_at": "2026-03-04T00:00:00Z"
+}

@@ -1,0 +1,28 @@
+id: chatgpt-copilot
+name: ChatGPT Copilot
+description: Send prompts to ChatGPT web interface, capture responses for cross-LLM QA.
+category: productivity
+status: installed
+safety: B
+tier: free
+tier_reason: "Basic send/receive with ChatGPT web UI, BYOK"
+site: chatgpt.com
+type: standard
+orchestrates: []
+scopes:
+- chatgpt.read.conversation
+- chatgpt.draft.message
+- local.evidence
+partners:
+  produces_for: []
+  consumes_from: []
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

@@ -1,0 +1,714 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 15,
+    "tower_name": "Tower of App Makers",
+    "dna": "platform(thriving) = sdk(intuitive) x docs(complete) x store(fair) x feedback(fast) x templates(inspiring) x monetization(transparent) x community(growing)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor lists 7 seed questions. During execution, expand to ~100 questions per persona by probing deeper. App Makers are the lifeblood of the Solace ecosystem — if they can't build, publish, and earn, the platform dies. Every question should be answerable by examining actual code, docs, and UI in solace-browser.",
+    "target_projects": [
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of App Makers",
+  "tower_number": 15,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "First-Time App Builder",
+      "persona_domain": "onboarding and first app experience",
+      "questions": [
+        "Can a new developer go from zero to a published app in under 30 minutes using only the documentation?",
+        "Is there a create-app wizard or template that generates a working app skeleton with one command?",
+        "Does the create-app page (/create-app) explain what an app IS in the Solace ecosystem in plain language?",
+        "Are there example apps with working code that a beginner can clone and modify?",
+        "Does the app store submission flow explain rejection reasons clearly before the user submits?",
+        "Is there a local preview/test mode where app makers can test their app before publishing?",
+        "Does the documentation explain the difference between apps, recipes, and skills clearly?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Recipe Author",
+      "persona_domain": "recipe creation and testing",
+      "questions": [
+        "Is there a recipe authoring UI or CLI command that scaffolds a new recipe with proper JSON schema?",
+        "Can recipe authors test their recipes against a sandbox environment without touching production data?",
+        "Does the recipe format documentation show all available step types with examples?",
+        "Can a recipe author see replay analytics (hit rate, cost savings, failure rate) for their published recipes?",
+        "Is recipe versioning supported so authors can update without breaking existing users?",
+        "Does the recipe preview system (LLM-once-at-preview) work correctly for recipe testing?",
+        "Are there validation tools that catch recipe errors before submission to the store?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "OAuth3 Integrator",
+      "persona_domain": "OAuth3 scope and permission design for apps",
+      "questions": [
+        "Does the app creation flow clearly explain OAuth3 scopes and how to request only the minimum needed?",
+        "Is there documentation showing all available OAuth3 scopes with human-readable descriptions?",
+        "Can app makers test OAuth3 consent flows locally before publishing?",
+        "Does the app detail page (/app-detail) show which scopes the app requests and why?",
+        "Is there a scope audit tool that warns app makers if they're requesting more permissions than their app uses?",
+        "Does the OAuth3 consent dialog show the app maker's identity and trust level to the end user?",
+        "Are there code examples showing how to handle OAuth3 token refresh, revocation, and step-up auth?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Store Publisher",
+      "persona_domain": "app store submission and review process",
+      "questions": [
+        "Is the app store submission process documented with clear acceptance criteria?",
+        "Does the store show estimated review time and current queue length?",
+        "Can publishers see the review status of their submitted apps in a dashboard?",
+        "Is there an automated pre-review that catches common rejection reasons (missing icon, bad manifest, etc.)?",
+        "Does the rung-gating system clearly explain what rung level is needed to publish different app types?",
+        "Can publishers update their app listing (description, screenshots, pricing) without re-review?",
+        "Is the sealed store policy explained — why users suggest but Solace implements?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Revenue-Seeking Developer",
+      "persona_domain": "monetization and earnings",
+      "questions": [
+        "Can app makers set a price for their apps and see projected earnings?",
+        "Is the revenue split between platform and developer clearly documented?",
+        "Is there an earnings dashboard showing installs, active users, and revenue per app?",
+        "Can developers offer free trials or freemium tiers for their apps?",
+        "Does the pricing page explain how app maker earnings relate to Solace subscription tiers?",
+        "Are there payout mechanisms documented (Stripe Connect, bank transfer, etc.)?",
+        "Can app makers see which markets/locales their apps perform best in?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "API Consumer",
+      "persona_domain": "API documentation and developer experience",
+      "questions": [
+        "Does /docs show a complete API reference with request/response examples for every endpoint?",
+        "Is there an interactive API explorer (like Swagger/OpenAPI) where developers can try endpoints?",
+        "Are API error responses consistent (same JSON shape, error codes, human-readable messages)?",
+        "Does the API documentation show rate limits, authentication requirements, and quota info?",
+        "Are there SDK libraries or code snippets in multiple languages (JS, Python, CLI)?",
+        "Does the API versioning strategy protect app makers from breaking changes?",
+        "Is there a webhook system so apps can react to events (task completed, approval needed, etc.)?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Theme Designer",
+      "persona_domain": "visual customization and theme creation",
+      "questions": [
+        "Does the theme editor in settings provide real-time preview of CSS variable changes?",
+        "Are all CSS custom properties documented with acceptable value ranges?",
+        "Can theme designers export their themes as shareable JSON/CSS bundles?",
+        "Does the theme submission to app store include a preview screenshot requirement?",
+        "Is there a theme validation tool that checks accessibility (contrast ratios, font sizes) before submission?",
+        "Can themes override only specific variables or must they provide all ~60 tokens?",
+        "Does the theme system support dark/light auto-switching based on OS preference?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Extension Builder",
+      "persona_domain": "browser extension and plugin architecture",
+      "questions": [
+        "Is the extension/plugin architecture documented with clear boundaries of what extensions can and cannot do?",
+        "Does the sealed store model still allow enough flexibility for creative app makers?",
+        "Can extensions hook into the YinYang approval flow to add custom approval logic?",
+        "Are there extension lifecycle hooks (install, activate, deactivate, uninstall) documented?",
+        "Does the security model prevent extensions from accessing data outside their declared scopes?",
+        "Can extensions add UI elements (toolbar buttons, sidebar panels, settings sections)?",
+        "Is there a manifest.json schema that extensions must conform to?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Documentation Writer",
+      "persona_domain": "developer documentation quality",
+      "questions": [
+        "Does every public page in /docs have a clear title, description, and working code examples?",
+        "Is the quick-start guide (/docs/quick-start) completable in under 10 minutes?",
+        "Are there architecture diagrams showing how apps, recipes, and the browser interact?",
+        "Does the documentation cover error handling patterns and common failure modes?",
+        "Are code examples tested and guaranteed to work (not stale snippets)?",
+        "Is there a changelog or migration guide for API changes that affect app makers?",
+        "Does the documentation have search functionality that actually finds relevant content?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Community Contributor",
+      "persona_domain": "open source contribution and community health",
+      "questions": [
+        "Is there a CONTRIBUTING.md that explains how community members can contribute apps, recipes, and skills?",
+        "Does the FSL license make it clear what community contributors can and cannot do?",
+        "Is there a community forum, Discord, or discussion space linked from the browser and docs?",
+        "Can contributors see their contribution stats (apps published, downloads, ratings)?",
+        "Are there community guidelines that set expectations for app quality and behavior?",
+        "Does the sealed store model discourage community contribution by centralizing control?",
+        "Is there a path from community contributor to trusted developer with higher rung access?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Accessibility-First App Maker",
+      "persona_domain": "accessible app development patterns",
+      "questions": [
+        "Does the app template include ARIA attributes and semantic HTML by default?",
+        "Are there accessibility testing tools or checklists provided to app makers?",
+        "Does the app review process check for WCAG 2.1 AA compliance?",
+        "Can app makers use the same theme system CSS variables to ensure their apps match the user's chosen theme?",
+        "Are there guidelines for making app UIs work with screen readers?",
+        "Does the platform provide accessible component libraries (buttons, forms, dialogs) for app makers?",
+        "Are app makers required to support keyboard navigation in their apps?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "i18n-Aware App Maker",
+      "persona_domain": "internationalization for third-party apps",
+      "questions": [
+        "Can app makers use the platform's i18n system (t() function, locale files) for their apps?",
+        "Does the app framework support RTL layout automatically based on locale?",
+        "Are there tools to help app makers extract and manage translation strings?",
+        "Can apps declare which locales they support in their manifest?",
+        "Does the store show locale coverage for each app (e.g., 'Available in 12 languages')?",
+        "Are there community translation workflows where users can contribute translations for apps?",
+        "Does the i18n system handle pluralization rules for languages with complex plural forms?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Security-Conscious App Maker",
+      "persona_domain": "secure app development practices",
+      "questions": [
+        "Does the app creation template include security best practices (CSP, input sanitization)?",
+        "Are there static analysis tools that scan app code for vulnerabilities before store submission?",
+        "Does the OAuth3 scope system prevent apps from requesting more data than they need?",
+        "Are app makers required to declare data handling practices (what data is collected, stored, shared)?",
+        "Does the review process include a security audit for apps that request sensitive scopes?",
+        "Is there a vulnerability disclosure process for third-party apps?",
+        "Can users see what data an app has accessed and revoke access at any time?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Enterprise App Builder",
+      "persona_domain": "enterprise-grade app requirements",
+      "questions": [
+        "Can enterprise customers deploy private apps visible only to their team?",
+        "Does the app framework support SSO integration for enterprise authentication?",
+        "Are there audit logs showing which enterprise users installed and used which apps?",
+        "Can enterprise app builders set compliance requirements (SOC2, HIPAA) on their apps?",
+        "Does the private store support role-based access control for app installation?",
+        "Are there SLA guarantees for enterprise apps (uptime, support response time)?",
+        "Can enterprise app builders white-label the Solace Browser for their organization?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Indie Hacker",
+      "persona_domain": "solo developer building a business on the platform",
+      "questions": [
+        "Can an indie developer build and launch a profitable app with zero upfront cost?",
+        "Does the platform provide analytics that help indie developers find product-market fit?",
+        "Is the app store discovery algorithm fair to small developers (not just featuring big names)?",
+        "Can indie developers get featured in 'New & Notable' or 'Staff Picks'?",
+        "Does the revenue model allow indie developers to earn enough to justify the time investment?",
+        "Are there case studies or success stories showing what indie developers have built?",
+        "Can indie developers use the free tier to build, test, and launch without any subscription?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Automation Architect",
+      "persona_domain": "complex multi-step workflow automation",
+      "questions": [
+        "Can app makers chain multiple recipes into complex workflows with conditional branching?",
+        "Is there a visual workflow builder or must all automation be done in code/JSON?",
+        "Can workflows trigger on external events (webhooks, schedules, file changes)?",
+        "Does the platform support error handling and retry logic in multi-step workflows?",
+        "Can workflow state be persisted across browser restarts?",
+        "Are there rate limiting and backoff mechanisms to prevent runaway automation?",
+        "Can workflows interact with multiple apps and services in a single execution chain?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "Data Pipeline Builder",
+      "persona_domain": "data extraction and transformation apps",
+      "questions": [
+        "Can app makers build ETL pipelines that extract data from websites, transform it, and load it into user-specified destinations?",
+        "Does the platform provide structured data extraction tools (CSS selectors, XPath, JSON)?",
+        "Are there guardrails preventing data pipeline apps from scraping sites that block bots?",
+        "Can data pipeline results be cached and replayed without re-scraping?",
+        "Does the evidence system capture what data was extracted and when?",
+        "Are there data format converters (CSV, JSON, XML) available as platform primitives?",
+        "Can data pipeline apps handle pagination, authentication, and dynamic content loading?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Testing Framework Builder",
+      "persona_domain": "test automation apps",
+      "questions": [
+        "Can app makers build test suites that run against websites using Solace Browser's automation capabilities?",
+        "Does the platform expose Playwright-level APIs for precise DOM interaction in test apps?",
+        "Can test apps capture screenshots and visual diffs for regression testing?",
+        "Are there assertion libraries or test helpers provided by the platform?",
+        "Can test results be exported in standard formats (JUnit XML, TAP)?",
+        "Does the platform support parallel test execution across multiple browser sessions?",
+        "Can test apps integrate with CI/CD pipelines via the API?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Notification System Builder",
+      "persona_domain": "alert and notification apps",
+      "questions": [
+        "Can apps send notifications to users through the browser's notification system?",
+        "Does the platform provide a unified notification API (push, email, in-app)?",
+        "Can users control notification preferences per-app?",
+        "Are there rate limits preventing notification spam from poorly built apps?",
+        "Does the notification system respect do-not-disturb schedules?",
+        "Can notifications include actionable buttons (approve, dismiss, snooze)?",
+        "Is there a notification history view where users can see all past notifications?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Debugging Developer",
+      "persona_domain": "developer tools and debugging experience",
+      "questions": [
+        "Is there a developer console or debug mode in Solace Browser for app makers?",
+        "Can app makers see logs, network requests, and errors from their app's execution?",
+        "Does the platform provide source maps or error stack traces that point to app maker code?",
+        "Is there a way to attach a debugger to a running recipe execution?",
+        "Can app makers replay a failed execution step-by-step to diagnose issues?",
+        "Does the evidence chain capture enough detail to debug production failures?",
+        "Are there performance profiling tools for app makers to optimize their apps?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "Migration Specialist",
+      "persona_domain": "migrating from other platforms",
+      "questions": [
+        "Can users import automations from Zapier, Make, or Bardeen into Solace recipes?",
+        "Is there a migration guide for developers coming from Chrome extensions?",
+        "Can OAuth tokens from other services be imported into the Solace OAuth3 vault?",
+        "Does the platform provide adapters for popular APIs (Google, Microsoft, Slack)?",
+        "Is there a compatibility layer for Selenium/Puppeteer scripts?",
+        "Can users export their Solace apps to run independently (portability)?",
+        "Does the migration path preserve user data and settings?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "App Reviewer",
+      "persona_domain": "quality standards and review process",
+      "questions": [
+        "Are the app review criteria published and transparent?",
+        "Do reviewers have automated tools that check for common quality issues?",
+        "Is the review process fast enough to not discourage app makers (under 48 hours)?",
+        "Can app makers appeal rejections with a clear escalation path?",
+        "Does the review process check for accessibility, performance, and security — not just functionality?",
+        "Are there different review tracks for updates vs new submissions?",
+        "Do reviewers provide actionable feedback when rejecting an app?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Analytics-Driven Developer",
+      "persona_domain": "app analytics and insights",
+      "questions": [
+        "Can app makers see usage analytics (daily active users, session duration, feature adoption)?",
+        "Does the analytics system respect user privacy (no PII, aggregate only)?",
+        "Can app makers set up A/B tests or feature flags within their apps?",
+        "Are crash reports and error rates visible in a developer dashboard?",
+        "Can app makers track conversion funnels (install → activate → retain → pay)?",
+        "Does the analytics API allow custom events beyond platform-provided metrics?",
+        "Are analytics data retention policies documented and compliant with GDPR?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Versioning Strategist",
+      "persona_domain": "app versioning, updates, and backwards compatibility",
+      "questions": [
+        "Can app makers publish updates without breaking existing user installations?",
+        "Is there semantic versioning support with automatic compatibility checking?",
+        "Can users pin to a specific app version and defer updates?",
+        "Does the platform handle database migrations when apps update their data schema?",
+        "Are there rollback mechanisms if an app update introduces bugs?",
+        "Can app makers maintain multiple versions simultaneously (LTS + latest)?",
+        "Does the update notification system inform users about what changed?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Cross-Platform App Builder",
+      "persona_domain": "apps that work across desktop, mobile, cloud",
+      "questions": [
+        "Can apps detect whether they're running in desktop Solace Browser vs cloud twin?",
+        "Does the platform provide responsive layout primitives for apps?",
+        "Can apps access platform-specific features (desktop: file system, cloud: scaling)?",
+        "Is there a single codebase approach or do apps need separate desktop/cloud versions?",
+        "Does the platform handle capability negotiation (what's available in each mode)?",
+        "Can apps sync state between desktop and cloud instances?",
+        "Are there platform-specific testing tools for each deployment target?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Collaboration Tool Builder",
+      "persona_domain": "multi-user and team apps",
+      "questions": [
+        "Can apps support multiple users working on the same data simultaneously?",
+        "Does the platform provide real-time sync primitives for collaborative apps?",
+        "Can apps define team roles and permissions?",
+        "Is there a shared workspace concept that apps can leverage?",
+        "Can collaborative apps handle offline mode and conflict resolution?",
+        "Does the platform provide presence indicators (who's online, who's editing)?",
+        "Are there team billing models for collaborative apps?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "CLI Tool Builder",
+      "persona_domain": "building CLI-first apps and tools",
+      "questions": [
+        "Can app makers build apps that expose CLI commands through solace-cli?",
+        "Is there a CLI plugin architecture that apps can hook into?",
+        "Can CLI apps use the same OAuth3 scopes as browser apps?",
+        "Does the CLI provide a standard argument parsing framework for app commands?",
+        "Can CLI apps render rich output (tables, colors, progress bars)?",
+        "Is there a testing framework for CLI app output assertions?",
+        "Can CLI and browser versions of the same app share business logic?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "AI-Powered App Builder",
+      "persona_domain": "apps that leverage LLM capabilities",
+      "questions": [
+        "Can app makers use the platform's LLM routing (BYOK + managed) in their apps?",
+        "Does the LLM abstraction layer (L1-L5) work correctly for third-party apps?",
+        "Can apps specify which LLM capability level they need without naming specific models?",
+        "Are LLM costs attributed correctly to the app user (not the app maker)?",
+        "Can apps implement custom prompts while still benefiting from recipe replay cost reduction?",
+        "Does the platform prevent apps from using LLMs to generate harmful content?",
+        "Can apps access the persona system to use domain-specific expert prompts?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Feedback Loop Architect",
+      "persona_domain": "user feedback collection and app improvement",
+      "questions": [
+        "Can apps collect user feedback through a platform-provided feedback widget?",
+        "Does the platform route user complaints to app makers (not just to Solace)?",
+        "Can app makers see satisfaction scores and NPS for their apps?",
+        "Is there an in-app rating system that users can use without leaving the app?",
+        "Does the feedback system support feature requests, bug reports, and general comments?",
+        "Can app makers respond to user feedback publicly (like app store responses)?",
+        "Does the platform provide sentiment analysis on feedback to surface trends?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Legal Compliance App Maker",
+      "persona_domain": "regulatory and legal requirements for apps",
+      "questions": [
+        "Does the platform require apps to have privacy policies?",
+        "Can apps declare their data processing purposes for GDPR compliance?",
+        "Does the app manifest support declaring geographic availability restrictions?",
+        "Are there templates for app-specific terms of service?",
+        "Does the platform handle age-gating for apps that aren't suitable for minors?",
+        "Can apps declare which personal data categories they process?",
+        "Is there guidance on COPPA compliance for apps that might be used by children?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Developer Relations",
+      "persona_domain": "developer community and ecosystem growth",
+      "questions": [
+        "Is there a developer blog or newsletter keeping app makers informed of platform changes?",
+        "Are there hackathons, bounties, or challenges to encourage app creation?",
+        "Does the platform provide developer support channels (forum, chat, office hours)?",
+        "Are there partner programs for high-performing app makers?",
+        "Does the platform showcase developer success stories prominently?",
+        "Is there a developer certification or badge program?",
+        "Can developers get early access to new platform features through a beta program?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Scalability Tester",
+      "persona_domain": "app performance at scale",
+      "questions": [
+        "Can apps handle 1000+ concurrent users without degradation?",
+        "Does the platform provide load testing tools for app makers?",
+        "Are there auto-scaling mechanisms for popular apps in cloud mode?",
+        "Can apps specify resource limits (memory, CPU, network) in their manifests?",
+        "Does the platform monitor app resource usage and alert on anomalies?",
+        "Are there CDN or caching mechanisms apps can leverage for static assets?",
+        "Does the platform support graceful degradation when an app exceeds its resource quota?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "Error Recovery Specialist",
+      "persona_domain": "resilience and error handling in apps",
+      "questions": [
+        "Does the platform provide circuit breaker patterns for app API calls?",
+        "Can apps define retry strategies with exponential backoff?",
+        "Is there a dead letter queue for failed app events?",
+        "Does the platform notify app makers when their app has high error rates?",
+        "Can apps checkpoint their state to enable resume-from-failure?",
+        "Does the evidence system capture error context for post-mortem analysis?",
+        "Are there platform-level health checks that can disable unhealthy apps?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Marketplace Optimizer",
+      "persona_domain": "app store listing optimization",
+      "questions": [
+        "Can app makers see search keywords that lead users to their app?",
+        "Does the store support rich media (screenshots, videos, GIFs) in listings?",
+        "Is there an A/B testing mechanism for app store listings?",
+        "Can app makers see conversion rates (listing views → installs)?",
+        "Does the store algorithm favor quality (ratings, retention) over recency?",
+        "Can app makers respond to user reviews publicly?",
+        "Are there categories and tags that help users discover relevant apps?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Deprecation Manager",
+      "persona_domain": "sunsetting and lifecycle management",
+      "questions": [
+        "Can app makers deprecate an app version with a migration path for users?",
+        "Does the platform notify affected users when an app is being sunset?",
+        "Can deprecated apps continue to function for a grace period?",
+        "Is there a data export mechanism for users of deprecated apps?",
+        "Can app makers transfer ownership of their apps to other developers?",
+        "Does the platform archive deprecated apps or fully remove them?",
+        "Are there statistics on how many users would be affected by a deprecation?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "UI Component Builder",
+      "persona_domain": "reusable UI components and design system",
+      "questions": [
+        "Does the platform provide a UI component library that app makers can use?",
+        "Can app makers create custom components that follow the Solace design system?",
+        "Do platform components automatically adapt to the user's chosen theme?",
+        "Is there a component preview/storybook for app makers to browse available components?",
+        "Can components be composed and nested to build complex UIs?",
+        "Are platform components accessible by default (ARIA, keyboard, screen reader)?",
+        "Does the component library support both HTML/CSS and framework-specific bindings?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Storage System Builder",
+      "persona_domain": "data persistence and storage for apps",
+      "questions": [
+        "Does the platform provide a key-value store for app data?",
+        "Can apps use local storage, cloud storage, or both with transparent sync?",
+        "Is there a quota system for app storage with clear limits?",
+        "Can apps encrypt their stored data at rest?",
+        "Does the platform handle data migration when users switch devices?",
+        "Are there backup and restore mechanisms for app data?",
+        "Can apps access the user's file system (with permission) for import/export?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Payment Integration Builder",
+      "persona_domain": "in-app purchases and payment flows",
+      "questions": [
+        "Can apps implement in-app purchases through the Solace payment system?",
+        "Does the platform handle payment processing or must app makers integrate Stripe directly?",
+        "Are there subscription management APIs for apps that offer recurring billing?",
+        "Can apps offer one-time purchases, subscriptions, and credit-based billing?",
+        "Does the platform handle refund processing for in-app purchases?",
+        "Are payment flows PCI-compliant out of the box for app makers?",
+        "Can app makers see real-time payment analytics and transaction history?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Webhook Consumer",
+      "persona_domain": "event-driven architecture for apps",
+      "questions": [
+        "Can apps register webhook endpoints to receive platform events?",
+        "Does the platform guarantee webhook delivery (at-least-once, ordered)?",
+        "Can apps filter which events they subscribe to?",
+        "Is there a webhook testing tool that lets app makers simulate events?",
+        "Does the platform sign webhook payloads for verification?",
+        "Can apps process webhooks asynchronously without blocking the event pipeline?",
+        "Is there a webhook log showing delivery attempts, responses, and failures?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Sandbox Tester",
+      "persona_domain": "testing environment and isolation",
+      "questions": [
+        "Is there a sandbox environment where app makers can test without affecting production?",
+        "Does the sandbox include mock OAuth3 providers for testing auth flows?",
+        "Can the sandbox simulate different user tiers (free, starter, pro, enterprise)?",
+        "Are sandbox resources free for app makers during development?",
+        "Does the sandbox support automated testing (CI integration)?",
+        "Can the sandbox simulate network failures and edge cases?",
+        "Is there a staging → production promotion flow for apps?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Competitive App Maker",
+      "persona_domain": "competing with established apps on other platforms",
+      "questions": [
+        "Does Solace's sealed store model give app makers a competitive advantage over Chrome Web Store?",
+        "Can app makers build things on Solace that are impossible on other browser platforms?",
+        "Does the recipe system create a moat for app makers (replay = recurring value)?",
+        "Are there exclusive platform capabilities (twin, OAuth3 vault) that attract app makers?",
+        "Is the developer experience good enough to attract developers away from Zapier/Make?",
+        "Does the platform's AI integration give app makers superpowers competitors lack?",
+        "Can app makers reach the same audience size as competing platforms?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Startup CTO",
+      "persona_domain": "building a startup product on the Solace platform",
+      "questions": [
+        "Can a startup build their entire product as a Solace app without a separate backend?",
+        "Does the platform provide enough infrastructure (auth, storage, compute) to replace a custom stack?",
+        "Are there SLA guarantees that a startup can rely on for their business?",
+        "Can the platform handle the growth trajectory of a successful startup (0 to 100K users)?",
+        "Is vendor lock-in a concern — can startups export their app to run independently?",
+        "Does the platform's pricing scale favorably for startups (not punished for growth)?",
+        "Can startups use custom domains for their Solace-hosted apps?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Open Source Contributor",
+      "persona_domain": "open source app development on the platform",
+      "questions": [
+        "Can app makers publish their app source code alongside the store listing?",
+        "Does the FSL license allow community contributions to open source apps?",
+        "Can multiple developers collaborate on a single app through the platform?",
+        "Is there a forking mechanism for open source apps in the store?",
+        "Does the platform support community governance for popular open source apps?",
+        "Can open source apps earn revenue (donations, sponsorships, premium tiers)?",
+        "Is the platform's own codebase a good example of how to build high-quality apps?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Productivity App Builder",
+      "persona_domain": "building productivity tools and utilities",
+      "questions": [
+        "Does the platform provide calendar, task, and note-taking primitives?",
+        "Can productivity apps integrate with external services (Google Calendar, Notion, Todoist)?",
+        "Does the browser provide keyboard shortcut registration for productivity apps?",
+        "Can productivity apps use the scheduling system (daemon scheduler) for recurring tasks?",
+        "Are there widgets or dashboard panels that productivity apps can populate?",
+        "Can productivity apps sync data across user devices?",
+        "Does the platform support offline-first patterns for productivity apps?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Education App Builder",
+      "persona_domain": "learning and educational apps",
+      "questions": [
+        "Can education apps track learner progress and skill levels?",
+        "Does the platform support interactive tutorials and guided workflows?",
+        "Can education apps use the LLM for adaptive learning and personalized feedback?",
+        "Are there accessibility requirements specific to education apps (WCAG, Section 508)?",
+        "Can education apps support classroom scenarios (teacher dashboard, student views)?",
+        "Does the platform provide quiz/assessment primitives?",
+        "Can education apps comply with FERPA (student data protection)?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "DevOps App Builder",
+      "persona_domain": "monitoring, deployment, and infrastructure apps",
+      "questions": [
+        "Can DevOps apps monitor external services and alert on downtime?",
+        "Does the platform support long-running background tasks for monitoring apps?",
+        "Can DevOps apps trigger deployments or infrastructure changes through recipes?",
+        "Are there dashboard templates for DevOps metric visualization?",
+        "Can DevOps apps integrate with GitHub, GitLab, and other CI/CD platforms?",
+        "Does the platform provide log aggregation or structured logging for app execution?",
+        "Can DevOps apps use the evidence system to create audit trails for infrastructure changes?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Privacy-First App Builder",
+      "persona_domain": "privacy-preserving app design",
+      "questions": [
+        "Can apps operate entirely locally without sending data to the cloud?",
+        "Does the platform provide privacy-preserving analytics (differential privacy, k-anonymity)?",
+        "Can apps declare 'local-only' mode in their manifest?",
+        "Are there data minimization tools (auto-expiry, anonymization) for app makers?",
+        "Does the platform enforce data retention limits on app-stored data?",
+        "Can users audit exactly what data an app has collected about them?",
+        "Is there a 'privacy score' or badge for apps that meet high privacy standards?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Dragon Rider (Phuc)",
+      "persona_domain": "platform vision and ecosystem health",
+      "questions": [
+        "Does the app maker experience embody the principle 'users suggest, we implement'?",
+        "Is the platform's DNA equation (hub → executors → evidence → learn) visible in the developer experience?",
+        "Does the app ecosystem create a positive-sum game (platform grows, makers earn, users benefit)?",
+        "Are the 10 Uplift Principles (P1-P10) accessible to app makers who want to build high-quality apps?",
+        "Is evidence-driven development (hash chains, tamper-evident audit trails) available as a platform primitive?",
+        "Does the sealed store balance quality control with developer freedom correctly?",
+        "Would the Dragon Rider be proud to show this developer experience to the world?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "Mum Test Judge",
+      "persona_domain": "can a non-technical person understand and use the app store",
+      "questions": [
+        "Can a non-developer understand what the app store offers in under 60 seconds?",
+        "Are app descriptions written in plain language (no jargon, no acronyms)?",
+        "Can a non-technical user install an app with one click and start using it immediately?",
+        "Is the uninstall process as simple as the install process?",
+        "Can a non-technical user leave a meaningful review of an app?",
+        "Does the app store feel trustworthy (not sketchy, not overwhelming)?",
+        "Would a non-technical person recommend the app store to a friend?"
+      ]
+    }
+  ]
+}

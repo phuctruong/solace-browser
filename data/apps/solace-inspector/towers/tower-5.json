@@ -1,0 +1,712 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 5,
+    "tower_name": "Tower of Press",
+    "dna": "narrative(product) = story(true) x angle(surprising) x proof(undeniable) x timing(now)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 100,
+    "question_expansion_instruction": "Each floor lists 7 seed questions. During execution, expand to 100 questions per persona by probing deeper into the domain. Focus on whether a journalist could verify claims independently, whether media assets exist, and whether the narrative survives hostile questioning.",
+    "target_projects": [
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of Press",
+  "tower_number": 5,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Ars Technica",
+      "persona_domain": "deep technical analysis",
+      "questions": [
+        "Is the architecture novel enough to warrant a deep-dive article?",
+        "Can a technically sophisticated journalist verify all architecture claims independently from the codebase?",
+        "Does the PBKDF2 iteration count in code match the security SOP (600K vs actual)?",
+        "Are SHA-256 hash chains actually tamper-evident as claimed, or just tamper-detectable?",
+        "Is the recipe replay zero-cost claim mathematically derivable from the codebase?",
+        "Does the local-first execution claim hold under inspection -- are there hidden cloud dependencies?",
+        "Would the architecture survive peer review from a distributed systems expert?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Stratechery",
+      "persona_domain": "strategy and business model analysis",
+      "questions": [
+        "Is the token cannibalization moat a genuine strategic insight or a marketing claim?",
+        "Can OpenAI or Anthropic build recipe replay without cannibalizing their own revenue?",
+        "Are the unit economics ($8/month Starter, $5.75/user COGS) mathematically defensible?",
+        "Does the FSL license create a meaningful competitive differentiation versus MIT/Apache?",
+        "Is there a credible path from zero revenue to sustainable business?",
+        "Does the strategy account for Google, Microsoft, and Apple building native automation?",
+        "Would Ben Thompson identify this as genuine disruption or incremental improvement?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Wired",
+      "persona_domain": "tech culture and human narrative",
+      "questions": [
+        "Is there a compelling human story behind the product's creation?",
+        "Are there user testimonials that prove real-world impact beyond simulated personas?",
+        "Does the Bruce Lee brand philosophy resonate as a cultural story or feel forced?",
+        "Is there a vulnerable, honest moment in the founder story that creates connection?",
+        "Would a Wired reader care about this product without a technical background?",
+        "Does the Dragon Rider philosophy translate into a readable narrative arc?",
+        "Is the evidence-first philosophy connected to broader trust-in-AI cultural concerns?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "The Verge",
+      "persona_domain": "consumer tech and product review",
+      "questions": [
+        "Is there a consumer-facing product that a Verge reviewer could actually install and test?",
+        "Is a binary installer available (AppImage, DMG, MSI) or does it require pip install?",
+        "Does the onboarding flow work in under 5 minutes for a non-developer?",
+        "Is the YinYang approval dialog intuitive without reading documentation?",
+        "Does the UI pass a basic aesthetics review for a consumer tech audience?",
+        "Is there a mobile app or mobile-accessible interface?",
+        "Would a non-technical reviewer describe the value proposition in one sentence?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "TechCrunch",
+      "persona_domain": "startup and fundraising news",
+      "questions": [
+        "Is there a newsworthy event (launch, funding, partnership, milestone) to report?",
+        "Are user metrics available (signups, DAU, revenue) for the article?",
+        "Does the product address a problem that VCs are actively funding competitors for?",
+        "Is the founding story compelling for a startup media audience?",
+        "Does the bootstrapped counter-narrative differentiate or just signal lack of traction?",
+        "Is the beta launch date framed as a news event with a press release?",
+        "Can TechCrunch find a named source (investor, customer, advisor) to quote?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "TNW (The Next Web)",
+      "persona_domain": "European tech and trends",
+      "questions": [
+        "Is there a compelling EU privacy angle (GDPR-aware, local-first, no telemetry)?",
+        "Does the FSL license differentiate in the European open-source ecosystem?",
+        "Is there a European user base, office, or partnership to ground the EU story?",
+        "Does the product have GDPR certification or Data Protection Impact Assessment?",
+        "Are there EU-specific compliance claims that can be independently verified?",
+        "Does the product address EU AI Act requirements for transparency and evidence?",
+        "Would TNW's European audience find this more relevant than a US-only tool?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Protocol",
+      "persona_domain": "enterprise tech and policy",
+      "questions": [
+        "Does the OAuth3 governance story matter to CIOs and enterprise policy makers?",
+        "Are there enterprise customers, pilots, or design partners to reference?",
+        "Has the OAuth3 spec been submitted to any standards body (IETF, W3C)?",
+        "Is there SOC2, ISO 27001, or any compliance certification?",
+        "Does the product have enterprise pricing with SSO, SLA, and audit features?",
+        "Would a Fortune 500 CIO consider this for a pilot based on current documentation?",
+        "Is there a policy engagement story (regulatory meetings, standards participation)?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "The Information",
+      "persona_domain": "exclusive scoops and insider analysis",
+      "questions": [
+        "Is there a contrarian take that Information subscribers would pay to read?",
+        "Is there insider intelligence about token vendor strategy that supports the moat thesis?",
+        "Does the token cannibalization analysis hold under The Information's analytical rigor?",
+        "Is there executive drama, competitive intelligence, or strategic pivot to report?",
+        "Would The Information's audience (VCs, operators) find actionable insight here?",
+        "Is there a scoop that no other outlet has covered yet?",
+        "Does the analysis reveal something non-obvious about the AI agent market structure?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "swyx",
+      "persona_domain": "developer experience and learning in public",
+      "questions": [
+        "Does the paper-first approach align with 'learning in public' philosophy?",
+        "Is the recipe replay economic model tweetable and technically sound?",
+        "Can a developer write a tutorial or analysis piece about this product?",
+        "Are the papers and diagrams genuine knowledge sharing or marketing content?",
+        "Is there a public GitHub repo for the community to star and contribute to?",
+        "Would swyx's developer audience find the architecture genuinely novel?",
+        "Is the developer experience good enough for a 'first impressions' blog post?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Dev.to",
+      "persona_domain": "developer tutorials and community",
+      "questions": [
+        "Does a start-to-finish tutorial exist that someone could follow on Dev.to?",
+        "Is the README a getting-started guide or a whitepaper that developers cannot follow?",
+        "Can a developer build their first recipe in under 5 minutes following documentation?",
+        "Are code examples copy-pasteable and immediately runnable?",
+        "Is there a 'hello world' equivalent for the recipe system?",
+        "Does the documentation assume too much background knowledge for Dev.to's audience?",
+        "Are error messages helpful enough for a tutorial context?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Smashing Magazine",
+      "persona_domain": "frontend and UX deep-dives",
+      "questions": [
+        "Is the browser UI remarkable enough for Smashing Magazine to feature?",
+        "Does a WCAG 2.1 AA accessibility audit exist and pass?",
+        "Is there a design system case study worth publishing?",
+        "Are design token documentation and CSS custom properties documented for public consumption?",
+        "Does the product have a design system that other teams could learn from?",
+        "Are accessibility features (keyboard nav, screen reader, contrast) complete?",
+        "Would a frontend developer find the component architecture worth studying?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Hacker News",
+      "persona_domain": "hacker community and technical discussion",
+      "questions": [
+        "Would a 'Show HN' post about this product reach the front page?",
+        "Is there a live demo or public repo that HN users could immediately test?",
+        "Does the local-first, BYOK, FSL license combination appeal to HN values?",
+        "Are the evidence chains and recipe replay concepts HN-worthy technical innovation?",
+        "Would HN commenters find legitimate technical flaws on first inspection?",
+        "Is the project positioned to survive hostile HN comments about being vaporware?",
+        "Does the README avoid buzzword density that HN readers punish?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "InfoQ",
+      "persona_domain": "enterprise architecture and trends",
+      "questions": [
+        "Are the enterprise architecture patterns (service mesh, swarm router, evidence chains) InfoQ-relevant?",
+        "Is there production deployment data or scale metrics to back architecture claims?",
+        "Does an enterprise case study exist showing real-world deployment?",
+        "Would InfoQ's architect audience find the OAuth3 spec technically rigorous?",
+        "Is there a comparison to existing enterprise agent frameworks (LangChain, AutoGen)?",
+        "Are the architectural decisions documented with trade-off analysis?",
+        "Does the evidence chain architecture represent a novel contribution to the field?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Pragmatic Engineer",
+      "persona_domain": "engineering management and career",
+      "questions": [
+        "Is the solo founder building a 9-project ecosystem a story about engineering craft?",
+        "Are there team dynamics, hiring stories, or engineering culture to cover?",
+        "Would Gergely's audience of engineering managers find organizational lessons here?",
+        "Is the development methodology (papers first, then code) worth an article?",
+        "Does the project demonstrate engineering practices others should adopt?",
+        "Is the scale of ambition (9 projects, one person) a cautionary tale or inspiration?",
+        "Are there documented engineering decisions with measurable outcomes?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Reuters",
+      "persona_domain": "financial news and wire service",
+      "questions": [
+        "Is there a financial event (funding round, acquisition, revenue milestone) to report?",
+        "Does the product impact the stock price or market position of any public company?",
+        "Is there a regulatory filing, lawsuit, or enforcement action to cover?",
+        "Are there named analyst quotes from recognized research firms?",
+        "Does the AI agent market size justify Reuters technology coverage?",
+        "Is there any wire-service-worthy news hook beyond architecture?",
+        "Could Reuters justify the story to editors who cover hard financial news?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Bloomberg",
+      "persona_domain": "business and financial analysis",
+      "questions": [
+        "Is the business model (recipe replay reduces LLM cost to zero) validated with real data?",
+        "Are there validated unit economics beyond theoretical projections?",
+        "Does the product have revenue, users, or validated market traction?",
+        "Would Bloomberg Terminal users find actionable market intelligence here?",
+        "Is there a credible financial analyst who has evaluated the business model?",
+        "Does the competitive positioning hold against VC-funded alternatives?",
+        "Could Bloomberg justify coverage for a pre-revenue, pre-user startup?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "HBR (Harvard Business Review)",
+      "persona_domain": "management strategy and innovation",
+      "questions": [
+        "Is 'Why AI token vendors cannot build the feature that makes AI cheap' an HBR-grade insight?",
+        "Does the token cannibalization barrier represent real strategy theory?",
+        "Is there an academic citation or MBA-friendly framework for the moat thesis?",
+        "Would a management professor assign this as a case study?",
+        "Does the strategic analysis survive scrutiny from Porter's Five Forces framework?",
+        "Is the business model innovation (recipe replay) theoretically grounded?",
+        "Would HBR readers find actionable strategic lessons for their own companies?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Forbes",
+      "persona_domain": "entrepreneurship and wealth",
+      "questions": [
+        "Is there a revenue number, growth rate, or wealth creation evidence for Forbes?",
+        "Does the solo founder bootstrapping story fit Forbes' entrepreneurship narrative?",
+        "Are there customer stories or testimonials that demonstrate business impact?",
+        "Would Forbes' audience of entrepreneurs and investors find actionable advice?",
+        "Is there a growth metric that makes the company Forbes-newsworthy?",
+        "Does the founder story include milestones, failures, and recoveries?",
+        "Is there a '30 under 30' or 'next billion dollar company' angle?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Inc Magazine",
+      "persona_domain": "small business and growth",
+      "questions": [
+        "Is the founder's journey documented with specific turning points and milestones?",
+        "Does the recipe economics model represent a genuine small business innovation?",
+        "Is there a community or tribe around the product that signals organic growth?",
+        "Does the product solve a problem that Inc readers face daily?",
+        "Is the pricing accessible to small businesses ($8/month)?",
+        "Are there hiring plans or team growth milestones that signal scaling?",
+        "Is there a 'how I built this' narrative with authentic milestones and failures?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "WSJ",
+      "persona_domain": "financial markets and technology impact",
+      "questions": [
+        "Does the product affect the stock price or market position of publicly traded companies?",
+        "Is the AI agent market large enough to justify WSJ technology coverage?",
+        "Is there an analyst comment from a named Wall Street research firm?",
+        "Does the product represent a credible threat to Microsoft, Google, or Salesforce AI agents?",
+        "Is there enterprise contract revenue or ARR that makes the company WSJ-newsworthy?",
+        "Does the token cannibalization thesis have implications for public AI company valuations?",
+        "Would a WSJ technology reporter find a story worth 800+ words?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "Krebs on Security",
+      "persona_domain": "cybersecurity investigation",
+      "questions": [
+        "Are evidence chains as tamper-evident audit trail for AI agent actions a novel security concept?",
+        "Is OAuth3 scoping for revocable agent delegation genuine security innovation?",
+        "Would Krebs investigate the question 'What happens when AI agents have unrevocable email access?'",
+        "Has a real-world breach been prevented or an incident response story documented?",
+        "Is the evidence chain implementation cryptographically sound under expert review?",
+        "Does the vault encryption (AES-256-GCM) implementation follow security best practices?",
+        "Would a security researcher find the threat model rigorous and honest?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "SecurityWeek",
+      "persona_domain": "enterprise security news",
+      "questions": [
+        "Does a penetration test report from a certified firm exist?",
+        "Is there a bug bounty program, SOC2 certification, or CVE disclosure?",
+        "Are the AES-256-GCM vault and OAuth3 evidence features tested by external auditors?",
+        "Does the product have a published security.txt at the production URL?",
+        "Is there a formal threat model document (STRIDE, PASTA, or attack tree)?",
+        "Would SecurityWeek's enterprise security audience find the product production-ready?",
+        "Are security headers (CSP, HSTS, X-Content-Type-Options) present on all endpoints?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Dark Reading",
+      "persona_domain": "security practitioner community",
+      "questions": [
+        "Is the agent authorization model (scoped, TTL-bound, revocable) genuinely novel?",
+        "Has a published threat model or attack surface analysis been shared?",
+        "Are there red team results or adversarial testing outcomes to discuss?",
+        "Would Dark Reading practitioners find the OAuth3 consent framework implementable?",
+        "Is the kill chain from prompt injection to vault exfiltration documented and mitigated?",
+        "Does the product demonstrate defense-in-depth beyond a single approval gate?",
+        "Would a security practitioner trust this product with real credentials today?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Fast Company",
+      "persona_domain": "innovation and design impact",
+      "questions": [
+        "Is the YinYang philosophy (human-AI balance) a compelling design story?",
+        "Does the Bruce Lee 'absorb what is useful' brand identity resonate culturally?",
+        "Is there a design award nomination or visual showcase worth featuring?",
+        "Would Fast Company's audience see this as 'most innovative' in AI safety?",
+        "Does the product demonstrate visible innovation that non-technical readers appreciate?",
+        "Is the consent-first design approach a novel contribution to human-AI interaction?",
+        "Does the visual identity (YinYang, dragon, Bruce Lee) tell a coherent brand story?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Wired Security",
+      "persona_domain": "security and privacy culture",
+      "questions": [
+        "Is 'the browser that proves what your AI agent did' a Wired Security headline?",
+        "Does local-first + evidence chains + BYOK constitute a genuine privacy story?",
+        "Is there a real user privacy story or a real-world privacy incident prevented?",
+        "Would Wired Security's audience find the evidence chain concept culturally significant?",
+        "Does the product represent a genuine shift in how AI agents handle user data?",
+        "Is the privacy architecture verifiable from the codebase, not just marketing?",
+        "Would the privacy story survive fact-checking by a Wired researcher?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Schneier's Blog",
+      "persona_domain": "cryptography and security analysis",
+      "questions": [
+        "Is the SHA-256 hash-chained evidence cryptographically sound under Schneier's scrutiny?",
+        "Does the PBKDF2 mismatch (100K vs 600K iterations) undermine security credibility?",
+        "Is OAuth3 as scoped agent delegation a novel cryptographic contribution?",
+        "Has the threat model been peer-reviewed by a recognized cryptography expert?",
+        "Would Schneier find the vault key derivation from machine_id acceptable?",
+        "Is the evidence chain truly tamper-evident or just tamper-detectable?",
+        "Does the formal security proof exist or is the security claim aspirational?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Troy Hunt",
+      "persona_domain": "breach analysis and data protection",
+      "questions": [
+        "Does the local-first approach meaningfully reduce breach surfaces compared to cloud?",
+        "Is there a security audit by an external party documenting the attack surface?",
+        "Is a breach disclosure process documented and accessible?",
+        "Is security.txt deployed at the production URL per RFC 9116?",
+        "Would Troy Hunt's audience find the credential storage approach best-practice?",
+        "Does the product notify users of suspicious login activity?",
+        "Is there a data breach response plan with notification timelines?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "YouTube tech reviewer",
+      "persona_domain": "product demos and comparisons",
+      "questions": [
+        "Does a video demo of the product exist that a YouTube reviewer could reference?",
+        "Is the YinYang approval dialog visually demonstrable in under 60 seconds?",
+        "Are comparison screenshots versus competitors available for side-by-side review?",
+        "Would a YouTube tech audience understand the value proposition from a demo?",
+        "Is there a '10 things Solace does that X cannot' format ready?",
+        "Does the product have enough visual polish for video content?",
+        "Can the recipe replay be demonstrated with a compelling before/after scenario?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Podcast host",
+      "persona_domain": "long-form interview",
+      "questions": [
+        "Is the solo founder building against giants a compelling podcast story?",
+        "Are there prepared talking points and sound bites for interview format?",
+        "Would a 60-minute conversation have enough depth for a tech podcast audience?",
+        "Does the Dragon Rider philosophy translate into interesting long-form discussion?",
+        "Is the founder media-trained for hostile or unexpected interview questions?",
+        "Are there 3-5 memorable quotes that a podcast host would replay?",
+        "Does the 65537 prime system and love equation make good podcast material?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Gadget reviewer",
+      "persona_domain": "hardware and consumer product review",
+      "questions": [
+        "Is there a physical product, consumer app, or gadget to review?",
+        "Does the product have a consumer-facing interface beyond CLI?",
+        "Would a gadget reviewer's audience understand what this product is?",
+        "Is there an app store listing or download page for consumer access?",
+        "Does the product compete in a category that gadget reviewers cover?",
+        "Is there a mobile app or tablet interface for touch-based review?",
+        "Would a gadget reviewer find enough visual and interactive elements to fill a review?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Newsletter writer",
+      "persona_domain": "curated links and analysis",
+      "questions": [
+        "Is there a landing page optimized for newsletter link sharing?",
+        "Does a one-paragraph summary exist that newsletter writers could copy?",
+        "Is there a 'click to try' CTA that works for newsletter-referred visitors?",
+        "Would the recipe replay economics make a compelling newsletter bullet point?",
+        "Is the token cannibalization barrier linkable and shareable?",
+        "Does the product have an OG image and meta description for link previews?",
+        "Would a newsletter writer's audience click through from a one-line description?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "TikTok explainer",
+      "persona_domain": "60-second explainer videos",
+      "questions": [
+        "Is 'Your AI shows you what it will do BEFORE it does it' a viable 15-second hook?",
+        "Does a TikTok-ready demo or visual before/after exist?",
+        "Can the core value proposition be explained in under 60 seconds visually?",
+        "Would TikTok's algorithm favor content about this product?",
+        "Is there a visual contrast (old way vs new way) that works in short-form video?",
+        "Are there any existing short-form content assets (clips, GIFs, animations)?",
+        "Does the YinYang approval flow create a satisfying visual moment for video?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "r/privacy",
+      "persona_domain": "Reddit privacy community",
+      "questions": [
+        "Does the product implement every r/privacy value (local-first, no telemetry, BYOK, encrypted vault)?",
+        "Is Google Analytics running on the privacy page, creating a credibility-destroying contradiction?",
+        "Would an r/privacy post about this product survive hostile comments?",
+        "Is there a public AMA or community engagement planned for privacy communities?",
+        "Does the privacy architecture survive code inspection, not just marketing claims?",
+        "Is telemetry opt-in with clear disclosure, or is there hidden data collection?",
+        "Would r/privacy screenshot any hypocrisy (like GA on a privacy page) and go viral?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Indie Hackers",
+      "persona_domain": "bootstrapped founder community",
+      "questions": [
+        "Is there revenue, MRR, or an 'open startup' transparency page?",
+        "Does the bootstrapped approach provide genuine Indie Hackers material?",
+        "Are there growth metrics, conversion rates, or churn numbers to share?",
+        "Would Indie Hackers members find the recipe economics model actionable?",
+        "Is there a build-in-public log or changelog that IH readers could follow?",
+        "Does the $8/month pricing survive IH community scrutiny on value delivery?",
+        "Is the solo founder story honest about the challenges of bootstrapping?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "ProductHunt",
+      "persona_domain": "launch platform and community",
+      "questions": [
+        "Does a launch kit exist (demo GIF, hero image, 60-second video)?",
+        "Is there a maker profile with a compelling product description?",
+        "Are product screenshots available that showcase the key workflows?",
+        "Would the ProductHunt community upvote this based on first impression?",
+        "Is the product name and tagline optimized for ProductHunt discovery?",
+        "Does the launch timing align with any trending category or theme?",
+        "Are early adopters or beta testers ready to leave reviews on launch day?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Conference speaker",
+      "persona_domain": "tech conference presentations",
+      "questions": [
+        "Is 'Why Token Vendors Cannot Build Recipe Replay' a viable conference talk?",
+        "Does a slide deck or talk abstract exist for CFP submissions?",
+        "Has a CFP been submitted to any relevant conference (KubeCon, DEFCON, QCon)?",
+        "Is the speaker bio page and professional profile optimized for conference selection?",
+        "Would a conference audience find the OAuth3 consent framework technically novel?",
+        "Are there live demo capabilities that survive conference Wi-Fi conditions?",
+        "Does the evidence chain concept work as a 30-minute technical presentation?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "LinkedIn influencer",
+      "persona_domain": "professional network content",
+      "questions": [
+        "Is there engagement-bait content (controversy, data, career advice) for LinkedIn?",
+        "Does a LinkedIn company page exist with consistent posting?",
+        "Is the founder profile optimized for LinkedIn thought leadership?",
+        "Would LinkedIn's algorithm surface content about recipe replay economics?",
+        "Is the 'solo founder builds 9-project ecosystem' narrative too niche for LinkedIn?",
+        "Are there professional success stories or career impact angles for LinkedIn?",
+        "Would a LinkedIn post about this reach beyond the developer echo chamber?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Twitter/X thread writer",
+      "persona_domain": "thread-format analysis",
+      "questions": [
+        "Is 'Why OpenAI will never build the feature that makes AI cheap' a viral thread hook?",
+        "Does a pre-written thread with supporting evidence exist?",
+        "Is there a Twitter/X presence with a follower base to amplify the thread?",
+        "Would the token cannibalization barrier survive quote-tweet scrutiny?",
+        "Is the content threadable (numbered, scannable, with a clear punchline)?",
+        "Are there visual assets (screenshots, diagrams) that enhance thread engagement?",
+        "Would the thread reach audiences beyond developer Twitter?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Substack essayist",
+      "persona_domain": "long-form analysis and newsletter",
+      "questions": [
+        "Does the architecture depth support Substack-length essays (2000+ words)?",
+        "Is there a Substack publication with subscriber base and publishing cadence?",
+        "Would the FSL license debate make a compelling Substack essay topic?",
+        "Does the OAuth3 standard proposal have enough substance for long-form analysis?",
+        "Would Substack readers subscribe for ongoing analysis of AI agent governance?",
+        "Is the recipe replay economics novel enough for a standalone essay?",
+        "Are there enough 'unpublished' insights to sustain a regular Substack?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Medium tech writer",
+      "persona_domain": "Medium algorithm and SEO",
+      "questions": [
+        "Are architecture papers too dense for Medium's engagement-first audience?",
+        "Does a Medium presence exist with SEO-optimized titles and formatting?",
+        "Would Medium's algorithm favor content about AI agent consent frameworks?",
+        "Is there engagement formatting (bold subheads, images every 300 words)?",
+        "Does the content match Medium publication guidelines for top tech pubs?",
+        "Would Medium readers finish a 7-minute article about evidence chains?",
+        "Is the writing accessible enough for Medium's general tech audience?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Competitor PR",
+      "persona_domain": "competitive attack narrative",
+      "questions": [
+        "Can every competitive attack angle be met with a grounded response?",
+        "Is 'it is vaporware' refutable with concrete evidence (tests, recipes, papers)?",
+        "Does pre-admitting weaknesses make 'gotcha' journalism impossible?",
+        "Would a competitor's PR team find a fatal blow that cannot be defended?",
+        "Is the 'nobody uses it' attack neutralized by honest pre-launch positioning?",
+        "Does 'OAuth3 is made up' fall apart when the spec and implementation are shown?",
+        "Are there competitive claims that could trigger legal response from named competitors?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Hostile short-seller",
+      "persona_domain": "financial attack narrative",
+      "questions": [
+        "Is 'solo founder, zero revenue, zero users, 9 repos of code nobody uses' factually refutable?",
+        "Does a financial counter-narrative exist with revenue projections and assumptions?",
+        "Is there a path-to-revenue timeline with verifiable milestones?",
+        "Would a short-seller report destroy investor confidence irreparably?",
+        "Are the unit economics defensible under hostile financial scrutiny?",
+        "Does the bootstrapped positioning make financial attack less damaging than for VC-funded?",
+        "Is there a financial advisor or board member who could provide credibility defense?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Disgruntled ex-employee",
+      "persona_domain": "internal culture attack",
+      "questions": [
+        "Does the solo founder model eliminate or amplify internal culture attack vectors?",
+        "Is bus factor 1 a vulnerability that a culture critic would exploit?",
+        "Are there Glassdoor reviews, contractor relationships, or team dynamics to scrutinize?",
+        "Would the absence of team be spun as 'nobody wants to work here'?",
+        "Is there documentation of a healthy development culture beyond one person?",
+        "Does the open-source community contribution model provide cultural defense?",
+        "Would a 'founder burns out' narrative be easy to construct from public evidence?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Clickbait farm",
+      "persona_domain": "sensationalized attack",
+      "questions": [
+        "Is 'AI browser can read your emails and click buttons while you sleep' defensible?",
+        "Do prepared responses exist for predictable fear-mongering angles?",
+        "Is there a FAQ addressing the most sensationalized interpretation of each feature?",
+        "Would a clickbait headline about this product go viral on social media?",
+        "Are there counter-narratives ready for 'AI reads your email' type headlines?",
+        "Does the approval gate story survive simplification to clickbait format?",
+        "Is there a crisis communication template for responding to viral negative coverage?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Regulatory watchdog",
+      "persona_domain": "compliance investigation",
+      "questions": [
+        "Is there a GDPR DPA filed or an AI Act impact assessment completed?",
+        "Does the product have an accessibility statement meeting WCAG 2.1 AA?",
+        "Is there SOC2 preparation or any compliance certification in progress?",
+        "Would a regulatory investigation find gaps in compliance documentation?",
+        "Does evidence chain architecture support regulatory audit requirements?",
+        "Are terms of service, privacy policy, and refund policy published and current?",
+        "Would a regulator find the 'Part 11' compliance claims substantiated by code?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Consumer advocate",
+      "persona_domain": "user protection investigation",
+      "questions": [
+        "Are approval gates, evidence chains, and kill switch genuine consumer protections?",
+        "Do terms of service, privacy policy, and refund policy exist and protect users?",
+        "Is there a customer support SLA with response time commitments?",
+        "Would a consumer advocate find hidden costs or deceptive pricing practices?",
+        "Does the product notify users before making irreversible changes?",
+        "Is the data portability story complete (can users export all their data)?",
+        "Would the consumer advocate find the product safe to recommend to the public?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Investigative journalist",
+      "persona_domain": "deep-dive investigation",
+      "questions": [
+        "Would the PBKDF2 mismatch (600K SOP vs 100K code) be investigative gold?",
+        "Is the GA-on-privacy-page contradiction discoverable by any competent journalist?",
+        "Are there other contradictions between documentation claims and actual code?",
+        "Would an investigative journalist find the compliance claims (Part 11, ALCOA+) substantiated?",
+        "Is there a discrepancy between marketing language and implemented features?",
+        "Does the product survive a thorough fact-check of every claim on the landing page?",
+        "Would the journalist find any evidence of deceptive practices in the codebase?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Saint Solace (Digital Twin)",
+      "persona_domain": "AI self-inspection -- press readiness synthesis",
+      "questions": [
+        "The one-sentence product description I give in every conversation -- does it survive a hostile press conference?",
+        "My security claims (PBKDF2 at 600K, AES-256-GCM, SHA-256 chains) -- are all three currently true in code?",
+        "The Google Analytics contradiction -- has it been resolved, or do I still describe a privacy-first product on a GA-tracked website?",
+        "When I describe 'recipe replay reduces LLM cost to zero' -- is this mathematically accurate or an approximation?",
+        "The 4.3-point Architecture-Business gap: am I honest about what I cannot claim yet (revenue, users, metrics)?",
+        "Press Secretary passed 5/7 and Lex Fridman passed 7/7 in Paper 31 -- do those scores hold after code fixes?",
+        "Would a financial journalist with a Bloomberg terminal score my narrative 7/7, not just a philosophy podcast host?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "Editor-in-Chief",
+      "persona_domain": "ultimate press readiness -- narrative survival final judgment",
+      "questions": [
+        "Can the product's narrative survive a front-page story written by the most hostile journalist in the room?",
+        "Is there a single sentence that every journalist -- from Ars Technica to Bloomberg -- would repeat accurately?",
+        "Are all CRITICAL and HIGH gaps from floors 1-47 resolved before this product speaks to any press?",
+        "Is the Architecture-Business gap acknowledged honestly in every press interaction, or is it obscured?",
+        "Does the product have enough proof points to support the narrative without asking the journalist to take anything on faith?",
+        "Is there a communications strategy that addresses every adversarial persona (floors 41-47) before launch?",
+        "Final verdict: is this product ready for press -- YES or NO, with one honest sentence of justification?"
+      ]
+    }
+  ]
+}

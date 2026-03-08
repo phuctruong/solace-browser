@@ -1,0 +1,247 @@
+{
+  "id": "gemini-uplift",
+  "platform": "gemini",
+  "version": "1.0.0",
+  "description": "Inject prime uplift skills into Gemini Pro conversation, then send a review prompt and capture the uplifted response. Skills are loaded from inbox/skills/ as inline context.",
+  "author": "65537",
+  "rung": 641,
+  "created": "2026-03-07",
+  "oauth3_scopes": ["gemini.read.conversation", "gemini.draft.message", "local.evidence"],
+  "evidence_type": "lane_a",
+
+  "reasoning": {
+    "research": "Gemini Pro uses a Quill-based rich text editor (.ql-editor). Responses render in model-response elements. Gemini tends to score higher on architecture reviews (95/100 in R5) and provides the most structured feedback.",
+    "uplift_theory": "Same skill injection as ChatGPT but with different persona assignment. Gemini responds well to distributed systems framing (Martin Kleppmann persona). Expected quality improvement: 30-50%.",
+    "selector_strategy": "Input: .ql-editor (contenteditable). Send: button[aria-label='Send message']. Response: model-response (last). Model selector: ensure 'Pro' not 'Fast'. Injection: base64 encode + chunked insertText.",
+    "saved_reasoning": "Gemini Pro has strongest reasoning for distributed systems and scalability. Consistently highest scorer in our panel. The persona activation of Kleppmann/Gregg/Ormandy aligns with Google's internal culture of systems thinking."
+  },
+
+  "input_params": {
+    "task_type": {
+      "type": "string",
+      "description": "Type of review: architecture, code, ux, business, security",
+      "required": true,
+      "enum": ["architecture", "code", "ux", "business", "security"],
+      "default": "architecture"
+    },
+    "review_content": {
+      "type": "string",
+      "description": "The content to review",
+      "required": true
+    },
+    "project_context": {
+      "type": "string",
+      "description": "Project-specific context to include",
+      "required": false,
+      "default": ""
+    },
+    "conversation_id": {
+      "type": "string",
+      "description": "Existing conversation tab page_id for follow-up rounds",
+      "required": false,
+      "default": ""
+    },
+    "round": {
+      "type": "integer",
+      "description": "Review round number (1 = inject uplift + full prompt, 2+ = delta only)",
+      "required": false,
+      "default": 1
+    }
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "load_session",
+      "path": "artifacts/gemini_working_session.json",
+      "description": "Load saved Gemini session cookies (Google account)",
+      "timeout_ms": 5000
+    },
+    {
+      "step": 2,
+      "action": "conditional",
+      "condition": "{params.conversation_id} == ''",
+      "if_true": {
+        "action": "navigate",
+        "target": "https://gemini.google.com/app",
+        "wait_for": ".ql-editor, rich-textarea, div[contenteditable='true']",
+        "timeout_ms": 15000,
+        "description": "Navigate to Gemini for new conversation"
+      },
+      "if_false": {
+        "action": "activate_tab",
+        "page_id": "{params.conversation_id}",
+        "description": "Reuse existing conversation tab"
+      }
+    },
+    {
+      "step": 3,
+      "action": "check_auth",
+      "selector": ".ql-editor, rich-textarea, div[contenteditable='true']",
+      "fallback_url_pattern": "accounts.google.com",
+      "description": "Verify Google authentication active"
+    },
+    {
+      "step": "3.5",
+      "action": "ensure_model",
+      "model": "Pro",
+      "selector_toggle": "button[aria-haspopup]",
+      "selector_option": "[role='menuitemradio']",
+      "description": "Ensure Gemini Pro model is selected (not Flash/Fast)"
+    },
+    {
+      "step": 4,
+      "action": "conditional",
+      "condition": "{params.round} == 1",
+      "if_true": {
+        "action": "compose_uplift",
+        "skills_dir": "inbox/skills/",
+        "template": "inbox/templates/{params.task_type}-review.md",
+        "persona_key": "{params.task_type}",
+        "project_context": "{params.project_context}",
+        "output_var": "uplift_message"
+      },
+      "if_false": {"action": "noop"}
+    },
+    {
+      "step": 5,
+      "action": "conditional",
+      "condition": "{params.round} == 1",
+      "if_true": {
+        "action": "inject_text",
+        "selector": ".ql-editor",
+        "text": "{uplift_message}",
+        "method": "base64_chunked_insert",
+        "chunk_size": 4000,
+        "chunk_delay_ms": 100,
+        "description": "Inject uplift skills into Gemini"
+      },
+      "if_false": {"action": "noop"}
+    },
+    {
+      "step": 6,
+      "action": "conditional",
+      "condition": "{params.round} == 1",
+      "if_true": {
+        "action": "click",
+        "selector": "button[aria-label='Send message']",
+        "timeout_ms": 5000
+      },
+      "if_false": {"action": "noop"}
+    },
+    {
+      "step": 7,
+      "action": "conditional",
+      "condition": "{params.round} == 1",
+      "if_true": {
+        "action": "wait_for_stable",
+        "selector": "model-response:last-child",
+        "stability_ms": 3000,
+        "timeout_ms": 30000,
+        "description": "Wait for Gemini to acknowledge uplift"
+      },
+      "if_false": {"action": "noop"}
+    },
+    {
+      "step": 8,
+      "action": "inject_text",
+      "selector": ".ql-editor",
+      "text": "{params.review_content}",
+      "method": "base64_chunked_insert",
+      "chunk_size": 4000,
+      "chunk_delay_ms": 100,
+      "description": "Inject the review content"
+    },
+    {
+      "step": 9,
+      "action": "click",
+      "selector": "button[aria-label='Send message']",
+      "timeout_ms": 5000,
+      "screenshot": true
+    },
+    {
+      "step": 10,
+      "action": "wait_for_stable",
+      "selector": "model-response:last-child",
+      "stability_ms": 5000,
+      "timeout_ms": 180000,
+      "description": "Wait for Gemini to finish the review",
+      "screenshot": true
+    },
+    {
+      "step": 11,
+      "action": "extract",
+      "selector": "model-response:last-child .markdown-main-panel, model-response:last-child",
+      "fields": {
+        "response_text": {"selector": "self", "type": "textContent"},
+        "response_html": {"selector": "self", "type": "innerHTML"},
+        "has_code_blocks": {"selector": "pre code, code-block, code", "type": "exists"}
+      },
+      "description": "Extract the uplifted review response"
+    },
+    {
+      "step": 12,
+      "action": "save_to_outbox",
+      "path": "outbox/responses/",
+      "filename": "gemini-r{params.round}-{timestamp}.json",
+      "data": {
+        "llm": "gemini",
+        "round": "{params.round}",
+        "task_type": "{params.task_type}",
+        "response_text": "{response_text}",
+        "response_html": "{response_html}",
+        "conversation_url": "{current_url}",
+        "page_id": "{current_page_id}",
+        "timestamp": "{timestamp}"
+      }
+    },
+    {
+      "step": 13,
+      "action": "hash_evidence",
+      "algorithm": "sha256",
+      "inputs": ["{params.review_content}", "{response_text}", "{timestamp}"],
+      "output_path": "outbox/evidence/gemini-r{params.round}-{timestamp}.json"
+    },
+    {
+      "step": 14,
+      "action": "return_result",
+      "output": {
+        "status": "reviewed",
+        "llm": "gemini",
+        "round": "{params.round}",
+        "task_type": "{params.task_type}",
+        "response_text": "{response_text}",
+        "conversation_url": "{current_url}",
+        "page_id": "{current_page_id}",
+        "evidence_hash": "{evidence_hash}",
+        "skills_loaded": ["prime-safety", "prime-coder", "fallback-ban", "negative-space", "browser-domain", "constraints", "stakes"]
+      }
+    }
+  ],
+
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "status": {"type": "string", "enum": ["reviewed", "failed", "partial"]},
+      "llm": {"type": "string"},
+      "round": {"type": "integer"},
+      "task_type": {"type": "string"},
+      "response_text": {"type": "string"},
+      "conversation_url": {"type": "string"},
+      "page_id": {"type": "string"},
+      "evidence_hash": {"type": "string"},
+      "skills_loaded": {"type": "array", "items": {"type": "string"}}
+    }
+  },
+
+  "metadata": {
+    "tags": ["gemini", "uplift", "cross-llm-qa", "architecture-review", "code-review", "skills"],
+    "difficulty": "medium",
+    "prerequisites": ["gemini_session"],
+    "cloud_run_ready": true,
+    "estimated_duration_s": 120,
+    "idempotent": true,
+    "destructive": false,
+    "chain_with": ["chatgpt-uplift", "claude-uplift"]
+  }
+}

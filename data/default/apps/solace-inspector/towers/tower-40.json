@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 40,
+    "tower_name": "Tower of Social Media Suite",
+    "dna": "social(suite) = post(multi) x schedule(auto) x monitor(brand) x engage(reply) x analytics(track) x content(generate) x budget(cap)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Social Media Suite",
+  "tower_number": 40,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Jasmine Torres",
+      "persona_domain": "multi_platform_posting",
+      "persona_context": "27, Miami, Social media manager for a boutique fitness brand, Intermediate tech, Pro tier, manages Instagram, Twitter/X, and Reddit accounts, currently uses Buffer and wants to consolidate",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I compose a single post and publish it to Instagram, Twitter/X, and Reddit simultaneously with one click?",
+        "Does the app auto-adapt the post format for each platform (character limits for Twitter, hashtag style for Instagram, subreddit rules for Reddit)?",
+        "Can I preview how the post will look on each platform before publishing, including image crop and text truncation?",
+        "If publishing to one platform fails (e.g., Twitter API error), does the app still publish to the others and report the specific failure?",
+        "Can I attach different images or videos to each platform version of the same post?",
+        "Does the app support Instagram carousel posts (multiple images) or only single-image posts?",
+        "After publishing, can I see a confirmation screen showing the live URL of my post on each platform?"
+      ],
+      "question_expansion_instruction": "Jasmine posts to 3 platforms daily and needs one workflow. Every question verifies that multi-platform posting actually works end-to-end with real API integrations. 'Coming soon' or stub posting is a FAIL."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Andrew Kim",
+      "persona_domain": "content_scheduling",
+      "persona_context": "33, Toronto, Content strategist for a fintech startup, Expert tech, Enterprise tier, schedules 20+ posts per week across platforms, needs a calendar view with drag-and-drop rescheduling",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I schedule a post for a specific date and time on each platform and see it in a weekly calendar view?",
+        "Does the calendar support drag-and-drop to reschedule a post from Tuesday 9am to Thursday 2pm?",
+        "Can I set up a recurring post schedule (e.g., 'Motivation Monday' every Monday at 8am) that auto-repeats?",
+        "Does the scheduler show optimal posting times for each platform based on my audience engagement data?",
+        "If I schedule a post for 9am EST, does it correctly convert to the right local time for my Toronto timezone?",
+        "Can I see all scheduled posts across all platforms in a single unified calendar view, color-coded by platform?",
+        "Does the scheduler warn me if I am scheduling two posts within 30 minutes of each other on the same platform?"
+      ],
+      "question_expansion_instruction": "Andrew manages a complex posting schedule across platforms. Every question verifies that scheduling works with real calendar functionality, timezone handling, and conflict detection. A simple queue without calendar visualization is a FAIL."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Rachel Okonkwo",
+      "persona_domain": "brand_monitoring",
+      "persona_context": "38, Lagos, Brand manager for a consumer electronics company expanding into West Africa, Intermediate tech, Pro tier, needs to track brand mentions across Twitter, Reddit, and YouTube comments",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I set up a brand monitor for my company name 'TechVibe' and see all mentions across Twitter, Reddit, and YouTube in one feed?",
+        "Does the monitor detect both exact matches ('TechVibe') and variations ('tech vibe', '@techvibe', '#TechVibe')?",
+        "Can I see the sentiment (positive, negative, neutral) of each brand mention with a confidence score?",
+        "Does the monitor alert me in real-time (within 5 minutes) when a negative mention crosses a threshold I set?",
+        "Can I filter mentions by platform, sentiment, or date range to focus on what matters right now?",
+        "Does the monitor track competitor mentions alongside mine so I can see share-of-voice comparison?",
+        "Can I export a weekly brand monitoring report as a PDF or CSV for my leadership team?"
+      ],
+      "question_expansion_instruction": "Rachel needs to protect her brand across multiple platforms in a new market. Every question verifies that monitoring captures real mentions, analyzes sentiment, and alerts on negative trends. Delayed or incomplete monitoring is a FAIL."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Lucas Petersen",
+      "persona_domain": "engagement_tracking",
+      "persona_context": "25, Copenhagen, Community manager for an indie game studio, Intermediate tech, Starter tier, tracks Reddit threads and Twitter replies for player feedback, responds to 50+ comments daily",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I see all replies, comments, and mentions across Twitter and Reddit in a single unified inbox sorted by recency?",
+        "Does the engagement feed show context (the original post a comment replies to) so I do not have to click through to each platform?",
+        "Can I reply to a Reddit comment or Twitter mention directly from the Solace engagement feed without opening the platform?",
+        "Does the app track which comments I have replied to and which are still pending response?",
+        "Can I tag or label engagement items (bug report, feature request, praise) for later analysis?",
+        "Does the app surface high-priority engagement (comments from verified accounts, threads with 50+ replies) at the top?",
+        "Can I set up auto-draft replies for common questions (pricing, release date) that I approve before posting?"
+      ],
+      "question_expansion_instruction": "Lucas talks to his community daily across platforms. Every question verifies that engagement tracking consolidates conversations, enables direct response, and surfaces what matters. Opening each platform separately to find comments is a FAIL."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Samira Al-Hassan",
+      "persona_domain": "content_generation",
+      "persona_context": "31, Dubai, Content creator and influencer with 200K followers across platforms, Expert tech, Pro tier, needs AI to help generate captions, Twitter threads, and YouTube script outlines",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I describe a topic and get AI-generated captions for Instagram, Twitter thread drafts, and a YouTube script outline in one generation?",
+        "Does the AI adapt tone and style per platform (casual for Twitter, professional for LinkedIn, engaging for Instagram)?",
+        "Can I provide a brand voice guide (keywords to use, words to avoid, emoji preferences) that the AI follows?",
+        "Does the YouTube script writer generate timestamped outlines with intro hook, key points, and CTA that I can use as a recording guide?",
+        "Can I regenerate just the Twitter thread without affecting the Instagram caption if I do not like the first draft?",
+        "Does the content generator suggest relevant hashtags for each platform based on current trending topics?",
+        "Can I see the estimated engagement metrics (based on historical data) for each generated content variation before choosing one?"
+      ],
+      "question_expansion_instruction": "Samira creates content for a living and needs AI that saves time without sacrificing quality. Every question verifies that content generation is platform-aware, brand-consistent, and produces usable output. Generic filler text is a FAIL."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Brian Nakamura",
+      "persona_domain": "analytics_dashboard",
+      "persona_context": "40, San Francisco, CMO at a Series B startup, Expert tech, Enterprise tier, reports social media ROI to the board quarterly, needs cross-platform analytics in one dashboard",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I see a unified analytics dashboard showing followers, engagement rate, and reach across Instagram, Twitter, Reddit, and YouTube?",
+        "Does the dashboard show week-over-week and month-over-month trends with visual charts (line graphs, bar charts)?",
+        "Can I see which specific posts drove the most engagement across all platforms in a given date range?",
+        "Does the analytics track conversion metrics (link clicks, sign-ups) if I use UTM-tagged URLs in my posts?",
+        "Can I generate a board-ready report with key metrics, top-performing content, and growth trends as a PDF?",
+        "Does the dashboard show audience demographics (geography, age range, peak active hours) aggregated across platforms?",
+        "Can I set KPI targets (reach 10K followers by Q2) and see a progress tracker toward each goal?"
+      ],
+      "question_expansion_instruction": "Brian reports to a board and needs real analytics, not vanity metrics. Every question verifies that the dashboard aggregates cross-platform data, supports trend analysis, and produces exportable reports. Follower count without engagement context is a FAIL."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Eleanor Vasquez",
+      "persona_domain": "budget_enforcement",
+      "persona_context": "46, Mexico City, Finance director at a mid-size CPG company, Intermediate tech, Enterprise tier, needs to cap social media AI spending at $200/month across all platforms and all team members",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I set a monthly LLM budget cap of $200 for all social media AI operations and see a real-time spend tracker?",
+        "Does the app refuse to generate content or analyze posts when the budget cap is reached, with a clear message explaining why?",
+        "Can I allocate budget per platform ($80 Instagram, $60 Twitter, $40 Reddit, $20 YouTube) and track each separately?",
+        "Does the budget dashboard show cost per content piece generated so I can see which operations are most expensive?",
+        "Can I set budget alerts at 50%, 75%, and 90% usage thresholds with email or in-app notifications?",
+        "Does the budget enforcement work across all team members sharing the same company account, not just my individual usage?",
+        "At the end of the month, can I export a detailed cost breakdown by operation type, platform, and team member for accounting?"
+      ],
+      "question_expansion_instruction": "Eleanor controls the budget and needs hard spending limits, not suggestions. Every question verifies that budget caps are enforced (operations blocked at limit), transparent, and reportable. A 'recommended budget' without enforcement is a FAIL."
+    }
+  ]
+}

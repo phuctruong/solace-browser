@@ -1,0 +1,53 @@
+{
+  "spec_id": "northstar-api-oauth3-scopes",
+  "type": "northstar",
+  "version": "1.0",
+  "authored": "2026-03-04",
+  "committee": ["james_bach", "kent_beck"],
+
+  "webservice": {
+    "method": "GET",
+    "endpoint": "/api/v1/oauth3/scopes",
+    "base_url": "https://www.solaceagi.com",
+    "description": "Returns the authenticated user's active OAuth3 scopes with names, descriptions, granted status, and expiry timestamps",
+    "auth": "Bearer token required — returns 401 if missing or invalid",
+    "content_type": "none"
+  },
+
+  "contract": {
+    "inputs": {},
+    "outputs": {
+      "scopes": "array — [{name, description, granted, expires_at}]",
+      "total": "integer — total count of scopes in response"
+    },
+    "guarantees": [
+      "Returns 401 if Authorization header is missing",
+      "Returns 401 if Bearer token is invalid or expired",
+      "Scopes are time-bounded: expires_at is never null for granted scopes",
+      "Each scope entry has: name (string), description (string), granted (boolean), expires_at (ISO 8601)",
+      "Response time < 2s (no LLM in path)"
+    ],
+    "owasp_guarantees": [
+      "No token → 401 (not 200 with empty or another user's scopes)",
+      "Invalid token → 401 (not 500)",
+      "User A's token cannot enumerate User B's granted scopes"
+    ]
+  },
+
+  "cost_class": "CPU",
+  "abcd_models": null,
+
+  "cpu_tests": [
+    "test-spec-api-oauth3-scopes-northstar.json"
+  ],
+  "abcd_tests": [],
+
+  "frontend_dependencies": [
+    "web/settings.html → OAuth3 section (active scopes list, revoke buttons)"
+  ],
+
+  "certification_status": "CPU_CERTIFIED",
+  "certified_at": "2026-03-04",
+  "evidence_notes": "Paper 02 (OAuth3): time-bounded, revocable, auditable tokens. James Bach: what can an agent actually do? The scopes list IS the contract. expires_at is load-bearing — a scope without expiry is not OAuth3.",
+  "evidence_hash": null
+}

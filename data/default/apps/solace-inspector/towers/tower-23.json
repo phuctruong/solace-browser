@@ -1,0 +1,714 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 23,
+    "tower_name": "Tower of Web",
+    "dna": "web(universal) = responsive(mobile_first) x pwa(offline) x seo(discoverable) x cloud_twin(persistent) x api(documented) x cdn(fast) x a11y(wcag_aaa)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor lists 7 seed questions. The web is the universal platform — no install, instant access, searchable, shareable. The cloud twin runs Solace Browser in the cloud. Every question must probe whether the web experience is compelling enough to convert visitors to desktop/mobile users.",
+    "target_projects": [
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of Web",
+  "tower_number": 23,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Responsive Design Expert",
+      "persona_domain": "mobile-first responsive layout",
+      "questions": [
+        "Does every page work on viewports from 320px to 2560px?",
+        "Are breakpoints consistent across all pages (mobile, tablet, desktop)?",
+        "Does the navigation collapse to a hamburger menu on mobile?",
+        "Are images responsive (srcset, picture element) for different viewports?",
+        "Do touch targets meet minimum size (44px) on mobile viewports?",
+        "Does the home page layout adapt gracefully from phone to ultrawide?",
+        "Are CSS Grid and Flexbox used for robust responsive layouts?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "PWA Expert",
+      "persona_domain": "Progressive Web App capabilities",
+      "questions": [
+        "Does the web app have a complete manifest.json (name, icons, theme_color)?",
+        "Is there a service worker for offline capability?",
+        "Does the PWA install prompt appear on supported browsers?",
+        "Can the PWA work offline (cached pages, offline indicator)?",
+        "Does the PWA support push notifications?",
+        "Are app icons correct for all sizes (192x192, 512x512, maskable)?",
+        "Does the PWA pass the Lighthouse PWA audit?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "SEO Expert",
+      "persona_domain": "search engine optimization",
+      "questions": [
+        "Does every page have unique title and meta description?",
+        "Is there structured data (JSON-LD) for rich search results?",
+        "Does the site have a sitemap.xml with all public pages?",
+        "Is there a robots.txt that allows search engine crawling?",
+        "Are canonical URLs set correctly (no duplicate content)?",
+        "Does the site use semantic HTML (h1-h6, article, nav, main)?",
+        "Are Open Graph and Twitter Card meta tags on all pages?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Cloud Twin Architect",
+      "persona_domain": "browser-as-a-service cloud deployment",
+      "questions": [
+        "Can the cloud twin provide a full browser experience in the browser?",
+        "Is the cloud twin deployed on scalable infrastructure (Cloud Run)?",
+        "Can the cloud twin persist sessions across reconnections?",
+        "Is the latency acceptable for interactive use (<200ms round-trip)?",
+        "Can the cloud twin handle multiple concurrent users?",
+        "Does the cloud twin use the same theme and settings as local?",
+        "Is the cloud twin cost-effective for the pricing model?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Landing Page Expert",
+      "persona_domain": "marketing page conversion",
+      "questions": [
+        "Does the landing page clearly communicate what Solace Browser is?",
+        "Is there a clear call-to-action (download, try free) above the fold?",
+        "Does the page load in under 2 seconds (LCP)?",
+        "Are social proof elements present (testimonials, user count)?",
+        "Does the pricing page clearly explain tiers and value?",
+        "Is the download page easy to navigate (auto-detect OS)?",
+        "Does the blog provide valuable content for SEO?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Cross-Browser Tester",
+      "persona_domain": "browser compatibility",
+      "questions": [
+        "Does the web app work in Chrome, Firefox, Safari, and Edge?",
+        "Are there browser-specific CSS issues (webkit, moz prefixes)?",
+        "Does the app handle different JavaScript engine behaviors?",
+        "Are there polyfills for features not supported in older browsers?",
+        "Does the app work in iOS Safari (WebKit) correctly?",
+        "Are there Chromium vs Firefox rendering differences?",
+        "Does the app handle browser extensions that modify pages?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "API Documentation Expert",
+      "persona_domain": "public API documentation",
+      "questions": [
+        "Is there an OpenAPI/Swagger specification for all public APIs?",
+        "Does the API documentation include request/response examples?",
+        "Is there an interactive API explorer (try-it-now)?",
+        "Are authentication requirements documented per endpoint?",
+        "Are rate limits and quota documented?",
+        "Is there a changelog for API version changes?",
+        "Are error response formats consistent and documented?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "CDN Expert",
+      "persona_domain": "content delivery and edge caching",
+      "questions": [
+        "Are static assets served from a CDN?",
+        "Are cache headers (Cache-Control, ETag) set correctly?",
+        "Is there cache busting for updated assets (hash in filename)?",
+        "Are CDN costs optimized (not serving uncacheable content)?",
+        "Does the CDN support HTTP/2 or HTTP/3?",
+        "Is there edge computing for API responses?",
+        "Does the CDN cover the target geographic regions?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "HTTPS/TLS Expert",
+      "persona_domain": "transport security",
+      "questions": [
+        "Is HTTPS enforced on all pages (HTTP redirects to HTTPS)?",
+        "Is HSTS configured with includeSubDomains and preload?",
+        "Are TLS 1.2 and 1.3 supported (not older versions)?",
+        "Is the certificate chain complete and valid?",
+        "Does the site have an A+ rating on SSL Labs?",
+        "Are mixed content warnings eliminated?",
+        "Is OCSP stapling enabled for faster TLS handshakes?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Web Accessibility Expert",
+      "persona_domain": "WCAG 2.1 AA compliance for web",
+      "questions": [
+        "Does the website pass WCAG 2.1 AA for all public pages?",
+        "Are all images alt-tagged appropriately?",
+        "Is keyboard navigation working on all pages?",
+        "Are form labels associated with inputs correctly?",
+        "Do error messages identify the problem and suggest solutions?",
+        "Are ARIA landmarks used correctly (main, nav, banner)?",
+        "Does the color contrast meet AA ratios (4.5:1 text, 3:1 large)?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Web Performance Expert",
+      "persona_domain": "Lighthouse 100 performance score",
+      "questions": [
+        "What is the Lighthouse performance score for the home page?",
+        "Are images in next-gen formats (WebP, AVIF)?",
+        "Is JavaScript minified and code-split?",
+        "Is CSS minified and critical CSS inlined?",
+        "Are third-party scripts deferred or async?",
+        "Is there a performance budget enforced in CI?",
+        "Does the site achieve green Core Web Vitals?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Analytics Expert",
+      "persona_domain": "web analytics and tracking",
+      "questions": [
+        "Is there privacy-respecting analytics (no GA4, use Plausible/Fathom)?",
+        "Are conversion events tracked (download, signup, purchase)?",
+        "Is there funnel analysis for the onboarding flow?",
+        "Can the analytics run without cookies (cookie-free)?",
+        "Are analytics compliant with GDPR (no consent required if cookie-free)?",
+        "Is there A/B testing infrastructure for landing page optimization?",
+        "Are analytics data accessible to the team in real-time?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Email Integration Expert",
+      "persona_domain": "transactional and marketing email",
+      "questions": [
+        "Can the web app send transactional emails (verification, password reset)?",
+        "Is email authentication set up (SPF, DKIM, DMARC)?",
+        "Are email templates responsive and accessible?",
+        "Can users manage email preferences on the web?",
+        "Is there a newsletter signup with double opt-in?",
+        "Are emails sent through a reliable provider (SendGrid, Postmark)?",
+        "Do email links work correctly (deep links to web app)?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Error Handling Expert (Web)",
+      "persona_domain": "web error pages and recovery",
+      "questions": [
+        "Is there a custom 404 page that helps users find what they need?",
+        "Does the 500 error page provide useful information without leaking details?",
+        "Are client-side errors caught and reported?",
+        "Does the web app handle network disconnection gracefully?",
+        "Are form errors displayed inline (not just at top)?",
+        "Does the app retry failed API calls with backoff?",
+        "Are error pages accessible and styled consistently?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Authentication Expert (Web)",
+      "persona_domain": "web authentication flows",
+      "questions": [
+        "Is the login/signup flow clear and secure?",
+        "Does the web app support multiple auth methods (email, OAuth)?",
+        "Is there rate limiting on auth endpoints?",
+        "Does the app handle session expiration gracefully?",
+        "Are passwords handled securely (never logged, hashed server-side)?",
+        "Is there account recovery (password reset, email change)?",
+        "Does the web app support WebAuthn/passkeys?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Content Strategy Expert",
+      "persona_domain": "web content and copywriting",
+      "questions": [
+        "Is the web copy clear, concise, and jargon-free?",
+        "Does every page have a clear purpose and call-to-action?",
+        "Is the content structured for scanability (headings, bullets, short paragraphs)?",
+        "Are features explained in terms of user benefits (not technical specs)?",
+        "Is there a blog with valuable content for the target audience?",
+        "Does the documentation balance comprehensiveness with readability?",
+        "Is the tone consistent across all web pages?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "Social Sharing Expert",
+      "persona_domain": "social media integration",
+      "questions": [
+        "Do shared URLs generate attractive social media cards?",
+        "Are Open Graph images sized correctly for each platform?",
+        "Does the Twitter Card preview show useful information?",
+        "Can users share specific pages with pre-filled social text?",
+        "Are social sharing buttons accessible and non-intrusive?",
+        "Does LinkedIn preview show the correct title and description?",
+        "Are UTM parameters tracked for social campaign effectiveness?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Form Design Expert",
+      "persona_domain": "web forms and data collection",
+      "questions": [
+        "Do all forms use proper HTML5 input types (email, tel, url)?",
+        "Is form validation inline and helpful (not just 'invalid input')?",
+        "Do forms work with browser autofill?",
+        "Are forms accessible (labels, fieldsets, error announcements)?",
+        "Is there progress indication for multi-step forms?",
+        "Do forms prevent double submission?",
+        "Are form data submissions secure (CSRF tokens, HTTPS)?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Cookie/Storage Expert",
+      "persona_domain": "web storage and privacy",
+      "questions": [
+        "Does the site work without cookies (cookie-free first)?",
+        "Is localStorage used responsibly (not for sensitive data)?",
+        "Is there a cookie consent banner (if cookies are used)?",
+        "Are session tokens stored securely (HttpOnly, Secure, SameSite)?",
+        "Does the site respect DNT (Do Not Track) headers?",
+        "Is IndexedDB used for larger client-side storage?",
+        "Are storage quotas handled gracefully?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Print Style Expert",
+      "persona_domain": "print stylesheet for web pages",
+      "questions": [
+        "Does the site have a print stylesheet?",
+        "Are navigation, footer, and decorative elements hidden in print?",
+        "Are links shown with their URLs in print?",
+        "Is the print layout appropriate for A4/Letter paper?",
+        "Are evidence reports printable with correct formatting?",
+        "Does print preserve the semantic structure of content?",
+        "Are print styles tested across browsers?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "Internationalization Expert (Web)",
+      "persona_domain": "web i18n beyond UI strings",
+      "questions": [
+        "Does the site use hreflang tags for language versions?",
+        "Are URLs localized (/es/pricing, /fr/docs)?",
+        "Does the site detect and suggest the user's language?",
+        "Are RTL layouts correct for Arabic, Hebrew, Farsi pages?",
+        "Are date/time/currency localized in the web UI?",
+        "Is there a language switcher accessible from all pages?",
+        "Does the site handle URL-based locale switching correctly?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "Web Component Expert",
+      "persona_domain": "reusable web components",
+      "questions": [
+        "Are custom elements used for reusable UI components?",
+        "Do web components encapsulate styles (Shadow DOM)?",
+        "Are web components accessible (shadow DOM + ARIA)?",
+        "Can web components be used by third-party app makers?",
+        "Do web components work across all supported browsers?",
+        "Are web components server-rendered for SEO?",
+        "Is there a component library/storybook for developers?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "DNS Expert",
+      "persona_domain": "domain configuration and DNS",
+      "questions": [
+        "Is DNS configured correctly (A, CNAME, MX records)?",
+        "Is there a CAA record restricting certificate issuance?",
+        "Is DNSSEC enabled for the domain?",
+        "Are subdomains configured correctly (www, api, docs)?",
+        "Is there a redirect from www to apex (or vice versa)?",
+        "Are DNS TTLs appropriate for the update frequency?",
+        "Is there DNS-based load balancing or failover?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Rate Limiting Expert",
+      "persona_domain": "API rate limiting and abuse prevention",
+      "questions": [
+        "Are all API endpoints rate-limited?",
+        "Are rate limits documented in API responses (headers)?",
+        "Is there IP-based and user-based rate limiting?",
+        "Does the rate limiter use a sliding window algorithm?",
+        "Are rate limit responses (429) clear about retry-after?",
+        "Is there DDoS protection (Cloudflare, Cloud Armor)?",
+        "Are rate limits appropriate for different tiers (free vs paid)?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "WebSocket Expert (Web)",
+      "persona_domain": "real-time web communication",
+      "questions": [
+        "Are WebSockets used for real-time features (approvals, status)?",
+        "Does the WebSocket connection handle reconnection gracefully?",
+        "Is there fallback to polling if WebSockets are blocked?",
+        "Are WebSocket messages authenticated?",
+        "Is there heartbeat/keepalive for connection health?",
+        "Are WebSocket connections efficient (shared, not per-feature)?",
+        "Does the WebSocket work through corporate proxies?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Server-Side Rendering Expert",
+      "persona_domain": "SSR and initial page load",
+      "questions": [
+        "Are critical pages server-rendered for fast initial load?",
+        "Does SSR improve SEO (search engines see full content)?",
+        "Is there streaming SSR for faster time-to-first-byte?",
+        "Does client-side hydration work without flicker?",
+        "Are dynamic meta tags rendered server-side for social sharing?",
+        "Does SSR handle errors gracefully (no blank pages)?",
+        "Is SSR cache strategy effective for performance?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Monitoring Expert (Web)",
+      "persona_domain": "uptime and health monitoring",
+      "questions": [
+        "Is there uptime monitoring for the web application?",
+        "Are health check endpoints available (/health, /readiness)?",
+        "Is there alerting for downtime (PagerDuty, email)?",
+        "Are response times monitored with percentile tracking?",
+        "Is there synthetic monitoring (scheduled checks from multiple regions)?",
+        "Are error rates tracked and alerted on thresholds?",
+        "Is there a public status page for users?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "Deployment Expert (Web)",
+      "persona_domain": "web deployment and CI/CD",
+      "questions": [
+        "Does the CI/CD pipeline deploy automatically on merge to main?",
+        "Is there a staging/QA environment for testing before production?",
+        "Can deployments be rolled back quickly?",
+        "Is there zero-downtime deployment (blue/green, rolling)?",
+        "Are deployment artifacts immutable (tagged, versioned)?",
+        "Is the deployment process documented and reproducible?",
+        "Are deployment notifications sent to the team?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Security Headers Expert",
+      "persona_domain": "HTTP security headers",
+      "questions": [
+        "Is Content-Security-Policy configured correctly?",
+        "Is X-Content-Type-Options set to nosniff?",
+        "Is X-Frame-Options or frame-ancestors CSP set?",
+        "Is Referrer-Policy configured appropriately?",
+        "Is Permissions-Policy restricting unused features?",
+        "Is X-XSS-Protection set (or CSP replaces it)?",
+        "Does the security headers score A+ on securityheaders.com?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Legal Pages Expert",
+      "persona_domain": "terms, privacy, and legal compliance",
+      "questions": [
+        "Is there a Terms of Service page?",
+        "Is there a Privacy Policy that covers data collection?",
+        "Is there a Cookie Policy (if cookies are used)?",
+        "Is there a DPA (Data Processing Agreement) for enterprise?",
+        "Are legal pages accessible from every page (footer links)?",
+        "Is there an Acceptable Use Policy?",
+        "Are legal pages kept up to date with regulatory changes?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Sitemap Expert",
+      "persona_domain": "site architecture and navigation",
+      "questions": [
+        "Is the site architecture logical and shallow (3 clicks to any page)?",
+        "Is the navigation consistent across all pages?",
+        "Is there breadcrumb navigation for deep pages?",
+        "Does the sitemap.xml include all indexable pages?",
+        "Is the footer providing useful secondary navigation?",
+        "Are internal links using descriptive anchor text?",
+        "Is there a search function for finding content?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Webhook Delivery Expert",
+      "persona_domain": "outbound webhook system",
+      "questions": [
+        "Does the web platform support webhook delivery to app makers?",
+        "Are webhooks signed (HMAC) for verification?",
+        "Is there retry logic with exponential backoff?",
+        "Are webhook payloads documented?",
+        "Can users test webhooks with a request inspection tool?",
+        "Is there a webhook delivery log for debugging?",
+        "Are webhooks delivered asynchronously (not blocking)?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "GraphQL Expert",
+      "persona_domain": "GraphQL API design",
+      "questions": [
+        "Would a GraphQL API serve app makers better than REST?",
+        "Can the existing REST API coexist with GraphQL?",
+        "Would GraphQL reduce over-fetching for mobile clients?",
+        "Is there a GraphQL schema that mirrors the REST API?",
+        "Can GraphQL subscriptions replace polling for real-time data?",
+        "Is there depth/complexity limiting for GraphQL queries?",
+        "Would a GraphQL playground improve developer experience?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Observability Expert",
+      "persona_domain": "logging, tracing, and metrics",
+      "questions": [
+        "Is structured logging implemented (JSON format)?",
+        "Is there distributed tracing for API requests?",
+        "Are key metrics exported to a monitoring system?",
+        "Can logs be searched and filtered efficiently?",
+        "Is there log rotation and retention policy?",
+        "Are PII fields redacted from logs?",
+        "Can the system trace a user request end-to-end?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Database Expert (Web)",
+      "persona_domain": "web backend data storage",
+      "questions": [
+        "Is Firestore the right database for the workload?",
+        "Are Firestore security rules configured correctly?",
+        "Is there a data backup and recovery strategy?",
+        "Are queries optimized with appropriate indexes?",
+        "Is data pagination implemented for large collections?",
+        "Are Firestore costs monitored and optimized?",
+        "Is there a data migration strategy for schema changes?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Testing Expert (Web)",
+      "persona_domain": "web testing strategy",
+      "questions": [
+        "Is there end-to-end testing for critical web flows?",
+        "Are visual regression tests catching UI changes?",
+        "Is there API contract testing for backend endpoints?",
+        "Are accessibility tests automated (axe-core in CI)?",
+        "Is there cross-browser testing in CI?",
+        "Are performance tests part of the CI pipeline?",
+        "Is test coverage tracked and improving?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Infrastructure as Code Expert",
+      "persona_domain": "cloud infrastructure management",
+      "questions": [
+        "Is infrastructure defined as code (Terraform, Pulumi)?",
+        "Are deployments reproducible from IaC definitions?",
+        "Is the GCP project configured with least-privilege IAM?",
+        "Are secrets managed via Secret Manager (not environment variables)?",
+        "Is there a disaster recovery plan for the infrastructure?",
+        "Are infrastructure changes reviewed before applying?",
+        "Is the infrastructure cost-optimized for the traffic level?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Multi-Region Expert",
+      "persona_domain": "global web deployment",
+      "questions": [
+        "Can the web app serve users globally with acceptable latency?",
+        "Is there multi-region deployment for redundancy?",
+        "Are static assets served from edge locations near users?",
+        "Does the database support multi-region reads?",
+        "Is there geographic routing for API requests?",
+        "Can the system failover between regions automatically?",
+        "Are data residency requirements handled for different regions?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Capacity Planning Expert",
+      "persona_domain": "scaling for growth",
+      "questions": [
+        "Can the web app handle 10x current traffic?",
+        "Is auto-scaling configured correctly?",
+        "Are there load tests simulating peak traffic?",
+        "Is the database scaled for anticipated growth?",
+        "Are there cost projections for scaling?",
+        "Can the system handle viral traffic spikes?",
+        "Is there a capacity planning document?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Migration Expert (Web)",
+      "persona_domain": "platform migration and portability",
+      "questions": [
+        "Can the web app be migrated to a different cloud provider?",
+        "Is there vendor lock-in with GCP services?",
+        "Can the app run on any container platform (not just Cloud Run)?",
+        "Is the data exportable from Firestore?",
+        "Can users self-host the web application?",
+        "Is the deployment portable (Docker-based)?",
+        "Are there migration guides for different hosting options?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Compliance Expert (Web)",
+      "persona_domain": "web-specific compliance requirements",
+      "questions": [
+        "Does the web app comply with GDPR for EU users?",
+        "Is there CCPA compliance for California users?",
+        "Does the site meet ePrivacy directive requirements?",
+        "Is there an accessible privacy dashboard for data subjects?",
+        "Are data deletion requests handled within 30 days?",
+        "Is there a Data Protection Impact Assessment?",
+        "Does the web app comply with accessibility laws (ADA, EAA)?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "WebRTC Expert",
+      "persona_domain": "real-time communication",
+      "questions": [
+        "Could WebRTC enable real-time screen sharing with the cloud twin?",
+        "Would WebRTC reduce latency compared to WebSocket for interactive use?",
+        "Can WebRTC be used for peer-to-peer desktop ↔ mobile sync?",
+        "Is TURN/STUN server infrastructure needed?",
+        "Would WebRTC enable voice commands from the web?",
+        "Can WebRTC handle NAT traversal in enterprise networks?",
+        "Is WebRTC supported in all target browsers?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Edge Computing Expert",
+      "persona_domain": "edge functions and serverless",
+      "questions": [
+        "Could edge functions reduce API latency globally?",
+        "Are there functions that should run at the edge (auth, locale)?",
+        "Can edge computing reduce backend costs?",
+        "Is there a CDN with edge function support (Cloudflare Workers)?",
+        "Can edge functions handle A/B testing?",
+        "Are edge function cold start times acceptable?",
+        "Can edge functions access Firestore efficiently?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Web3 Compatibility Expert",
+      "persona_domain": "blockchain and decentralized web",
+      "questions": [
+        "Could the evidence chain be anchored to a blockchain for immutability?",
+        "Would Web3 wallet integration be useful for authentication?",
+        "Can decentralized storage (IPFS) be used for evidence archival?",
+        "Would cryptocurrency payments be a tier option?",
+        "Can smart contracts enforce OAuth3 scope agreements?",
+        "Is there demand for Web3 integration from the target audience?",
+        "Would Web3 features be a competitive differentiator or a distraction?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Microservice Architecture Expert",
+      "persona_domain": "backend service architecture",
+      "questions": [
+        "Is the backend architecture appropriate for the current scale?",
+        "Would microservices improve scalability or add unnecessary complexity?",
+        "Are service boundaries aligned with business domains?",
+        "Is there service-to-service authentication?",
+        "Can services be deployed independently?",
+        "Is there an API gateway for routing and rate limiting?",
+        "Are service dependencies managed to prevent cascading failures?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Developer Portal Expert",
+      "persona_domain": "developer-facing web experience",
+      "questions": [
+        "Is there a dedicated developer portal for API consumers?",
+        "Can developers register for API keys through the web?",
+        "Is there a sandbox environment accessible from the web?",
+        "Does the developer portal show usage metrics and billing?",
+        "Are SDKs downloadable from the developer portal?",
+        "Is there a developer community forum on the web?",
+        "Can developers test webhooks from the portal?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Conversion Rate Expert",
+      "persona_domain": "web conversion optimization",
+      "questions": [
+        "What is the visitor → download conversion rate?",
+        "What is the download → active user conversion rate?",
+        "Are there clear conversion paths on every page?",
+        "Is the pricing page optimized for conversion?",
+        "Are there trust signals (security badges, testimonials)?",
+        "Is the checkout flow minimal and frictionless?",
+        "Are there win-back mechanisms for churned visitors?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Dragon Rider (Phuc)",
+      "persona_domain": "web experience vision",
+      "questions": [
+        "Does the web presence make people want to try Solace Browser?",
+        "Is the web experience compelling enough to convert visitors?",
+        "Does the cloud twin demonstrate AI browsing without installation?",
+        "Is the web the best funnel for user acquisition?",
+        "Does the web experience match the quality of the desktop app?",
+        "Would the Dragon Rider be proud to share the website?",
+        "Is the web the universal gateway to the Solace ecosystem?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "Mum Test Judge",
+      "persona_domain": "non-technical web visitor experience",
+      "questions": [
+        "Can a non-technical visitor understand what Solace Browser does in 10 seconds?",
+        "Can they find the download button easily?",
+        "Does the website feel trustworthy (not sketchy or overly techy)?",
+        "Can they understand the pricing without a PhD in cloud computing?",
+        "Would they feel comfortable entering their email to sign up?",
+        "Does the website work well on their phone?",
+        "Would a non-technical visitor tell a friend about this website?"
+      ]
+    }
+  ]
+}

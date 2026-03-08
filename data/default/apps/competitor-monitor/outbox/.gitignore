@@ -1,0 +1,4 @@
+# Keep directory structure but ignore generated reports and evidence
+reports/*.json
+evidence/*.json
+!.gitignore

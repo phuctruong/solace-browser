@@ -1,0 +1,20 @@
+{
+  "spec_id": "api-health-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "curl -sf https://www.solaceagi.com/api/v1/health",
+  "target_name": "SolaceAGI API Health Endpoint",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": [
+      "ok"
+    ],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "kent_beck",
+  "priority": "critical",
+  "context": "QA Best Practice: Health endpoint is the first thing you test. Must return 200 + JSON with status:ok. Kent Beck: if this fails, nothing else matters. Verifies: (1) server is up, (2) JSON response valid, (3) no 500 errors.",
+  "created_at": "2026-03-03T00:00:00Z"
+}

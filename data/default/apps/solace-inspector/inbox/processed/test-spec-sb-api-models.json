@@ -1,0 +1,25 @@
+{
+  "spec_id": "sb-api-models-001",
+  "project": "solace-browser",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "curl -sf http://localhost:9222/api/models",
+  "target_name": "Model Marketplace: /api/models endpoint",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": ["models", "count", "solace-managed", "tier_required"],
+    "stdout_not_contains": ["prompt_template", "injection_content", "uplift_stack", "principle_weights", "interaction_matrix"],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "james_bach",
+  "persona_bio": "Software testing expert — verify model detection works and no trade secrets leak",
+  "domain_questions": [
+    "Does the response include a models array with count?",
+    "Is solace-managed always listed regardless of API keys?",
+    "Does each model have id, provider, source, name, available, tier_required?",
+    "Are any uplift internals or prompt templates exposed?"
+  ],
+  "tags": ["sidebar", "api", "model-marketplace", "trade-secret-guard"],
+  "paper_ref": "Paper 47 Section 22b"
+}

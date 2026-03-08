@@ -1,0 +1,712 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 19,
+    "tower_name": "Tower of Windows",
+    "dna": "windows(native) = msi(signed) x defender(trusted) x registry(clean) x hidpi(scaled) x narrator(accessible) x enterprise(gpo) x wsl(compatible)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor lists 7 seed questions. During execution, expand to ~100 questions per persona. Windows is the largest desktop market. Enterprise IT admins, gamers, and office workers all expect a polished Windows experience. Every question must probe whether Solace Browser is a first-class Windows citizen.",
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Windows",
+  "tower_number": 19,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "MSI Installer Expert",
+      "persona_domain": "Windows installer and distribution",
+      "questions": [
+        "Is the MSI installer signed with a valid code signing certificate?",
+        "Does the installer work for both per-user and per-machine installation?",
+        "Can IT admins deploy the MSI silently via Group Policy or SCCM?",
+        "Does the installer register the app in Add/Remove Programs?",
+        "Is the uninstaller thorough (removes all files, registry entries, scheduled tasks)?",
+        "Does the installer handle upgrades in-place without data loss?",
+        "Is the installer tested on Windows 10 and Windows 11?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Windows Defender Compatibility Tester",
+      "persona_domain": "antivirus and SmartScreen",
+      "questions": [
+        "Does Windows Defender flag the installer or executable as suspicious?",
+        "Does SmartScreen show 'unrecognized app' warnings?",
+        "Is the executable signed with an EV code signing certificate for SmartScreen reputation?",
+        "Does the app trigger false positives in enterprise antivirus solutions?",
+        "Does real-time protection slow down Solace Browser operations?",
+        "Can the app be whitelisted in Windows Security without admin intervention?",
+        "Does the app's network activity trigger firewall alerts?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Windows UX Designer",
+      "persona_domain": "Fluent Design and Windows 11 aesthetics",
+      "questions": [
+        "Does the app follow Windows 11 Fluent Design guidelines?",
+        "Are rounded corners, Mica material, or acrylic blur used appropriately?",
+        "Does the app support Windows dark/light mode via prefers-color-scheme?",
+        "Does the title bar match the Windows 11 style?",
+        "Are standard keyboard shortcuts (Ctrl+C/V/X, Alt+F4, etc.) working?",
+        "Does the app support Snap Layouts for window management?",
+        "Does the app integrate with the Windows 11 notification center?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "HiDPI Display Specialist",
+      "persona_domain": "display scaling on Windows",
+      "questions": [
+        "Does the app render correctly at 100%, 125%, 150%, 175%, and 200% scaling?",
+        "Are all icons and images sharp at high DPI settings?",
+        "Does the app handle per-monitor DPI scaling on multi-monitor setups?",
+        "Does the app respond to DPI changes when moved between monitors?",
+        "Are there any blurry text or images at non-100% scaling?",
+        "Does the app handle Windows display scaling changes without restart?",
+        "Are dialog boxes and popups correctly positioned at all scaling levels?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Narrator Accessibility Tester",
+      "persona_domain": "Windows screen reader accessibility",
+      "questions": [
+        "Can a Narrator user navigate all UI elements of Solace Browser?",
+        "Are ARIA labels correctly announced by Narrator?",
+        "Does the YinYang approval dialog work with Narrator?",
+        "Can Narrator users access the settings page and change themes?",
+        "Are focus indicators visible in Windows High Contrast mode?",
+        "Does Narrator's scan mode work for reading page content?",
+        "Are keyboard shortcuts discoverable through Narrator?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Registry Expert",
+      "persona_domain": "Windows registry usage",
+      "questions": [
+        "Does the app register URL protocol handlers correctly?",
+        "Are registry entries created under the correct hive (HKCU for per-user)?",
+        "Does the uninstaller remove all registry entries?",
+        "Are file associations registered properly?",
+        "Does the app use the registry for auto-start configuration?",
+        "Are registry entries compatible with registry-based GPO management?",
+        "Does the app handle registry access denial gracefully?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Windows Credential Manager Expert",
+      "persona_domain": "secure credential storage on Windows",
+      "questions": [
+        "Does the OAuth3 vault integrate with Windows Credential Manager?",
+        "Are credentials stored with appropriate persistence and protection levels?",
+        "Can users see Solace entries in Windows Credential Manager?",
+        "Are credentials cleaned up on app uninstall?",
+        "Does the vault fallback to encrypted file storage if Credential Manager is unavailable?",
+        "Does Windows Hello (biometric) unlock work for the vault?",
+        "Are credential storage operations atomic and crash-safe?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Taskbar Integration Expert",
+      "persona_domain": "taskbar, system tray, and jump list",
+      "questions": [
+        "Does the app pin correctly to the Windows taskbar?",
+        "Does the taskbar icon show a badge for pending approvals?",
+        "Is there a system tray icon for background operation?",
+        "Does right-clicking the taskbar icon show a useful Jump List?",
+        "Does the app support taskbar progress indication for long operations?",
+        "Can the daemon mode run as a system tray-only application?",
+        "Does the app handle taskbar icon scaling at different DPI levels?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Windows Notification Expert",
+      "persona_domain": "toast notifications and Action Center",
+      "questions": [
+        "Does the app send notifications through the Windows notification system?",
+        "Are notifications actionable (approve/reject buttons in the toast)?",
+        "Do notifications appear in Action Center for later review?",
+        "Can users configure notification settings in Windows Settings?",
+        "Do notifications respect Focus Assist / Do Not Disturb?",
+        "Are notification sounds appropriate and configurable?",
+        "Does the app handle notification interaction correctly?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Windows Service Expert",
+      "persona_domain": "background service and scheduled task management",
+      "questions": [
+        "Can the daemon mode run as a Windows Service?",
+        "Is the service registered correctly in services.msc?",
+        "Does the service start automatically on boot?",
+        "Can the service be managed via sc.exe or PowerShell?",
+        "Is the service resilient to crashes (auto-restart on failure)?",
+        "Does the service run under the correct user account?",
+        "Can the service communicate with the GUI app?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "PowerShell Integration Expert",
+      "persona_domain": "CLI and PowerShell integration",
+      "questions": [
+        "Can solace-cli be invoked from PowerShell and cmd.exe?",
+        "Is the PATH configured correctly during installation?",
+        "Does the CLI handle Windows file paths (backslash, spaces, UNC)?",
+        "Can PowerShell scripts automate Solace Browser operations?",
+        "Is there tab completion for PowerShell (Register-ArgumentCompleter)?",
+        "Does the CLI handle Windows line endings (CRLF) correctly?",
+        "Can the CLI output be piped to other Windows commands?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Enterprise GPO Expert",
+      "persona_domain": "Group Policy and enterprise management",
+      "questions": [
+        "Can IT admins configure Solace Browser via Group Policy?",
+        "Is there an ADMX template for GPO-based configuration?",
+        "Can GPO disable specific features (custom themes, store access)?",
+        "Does the app respect proxy settings configured via GPO?",
+        "Can IT admins force-install extensions or apps via GPO?",
+        "Is the app compatible with Microsoft Intune management?",
+        "Can IT admins lock down the OAuth3 vault configuration?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Windows Firewall Expert",
+      "persona_domain": "firewall and network security",
+      "questions": [
+        "Does the app create Windows Firewall rules during installation?",
+        "Are firewall rules scoped to necessary ports only?",
+        "Does the app work behind corporate firewalls with deep packet inspection?",
+        "Can the cloudflared tunnel work through Windows Firewall?",
+        "Does the app handle proxy authentication (NTLM, Kerberos)?",
+        "Are firewall rules cleaned up on uninstall?",
+        "Does the app prompt for firewall exceptions or handle denial gracefully?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "NTFS Expert",
+      "persona_domain": "Windows file system behavior",
+      "questions": [
+        "Does the app handle long file paths (>260 characters) on Windows?",
+        "Are file permissions set correctly (not world-readable for vault data)?",
+        "Does the app handle NTFS alternate data streams?",
+        "Are file names safe (no reserved characters or names like CON, PRN)?",
+        "Does the app handle file locking correctly on Windows?",
+        "Are temporary files stored in %TEMP% or the app's data directory?",
+        "Does the app handle OneDrive Files On-Demand (cloud-only files)?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Windows Update Compatibility Tester",
+      "persona_domain": "compatibility with Windows updates",
+      "questions": [
+        "Does the app survive Windows Updates without breaking?",
+        "Is the app compatible with Windows Insider Preview builds?",
+        "Does the app handle .NET Framework version changes?",
+        "Are Visual C++ redistributables bundled or handled correctly?",
+        "Does the app work on Windows 10 LTSC (enterprise long-term)?",
+        "Is there a compatibility testing matrix for Windows versions?",
+        "Does the app handle Windows version detection correctly?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "WSL Integration Expert",
+      "persona_domain": "Windows Subsystem for Linux compatibility",
+      "questions": [
+        "Can solace-cli installed in WSL interact with the Windows GUI browser?",
+        "Does the app handle cross-WSL/Windows file path translation?",
+        "Can WSL Python run Solace Browser automation scripts?",
+        "Does the app work when installed in both WSL and Windows?",
+        "Can WSL users access the Windows vault and evidence store?",
+        "Does the cloudflared tunnel work from WSL?",
+        "Is there documentation for WSL-specific setup?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "Windows Terminal Expert",
+      "persona_domain": "modern terminal integration",
+      "questions": [
+        "Does the CLI render colors and formatting correctly in Windows Terminal?",
+        "Are Unicode characters (emojis, CJK) displayed correctly?",
+        "Does the CLI handle Windows Terminal profiles?",
+        "Can users create a Solace Browser profile in Windows Terminal?",
+        "Does the CLI support Windows Terminal's tab and pane features?",
+        "Are ANSI escape codes used correctly for Windows Terminal?",
+        "Does the CLI work in ConEmu, Cmder, and other terminal emulators?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Touch Screen Tester (Windows)",
+      "persona_domain": "touch and pen input on Windows",
+      "questions": [
+        "Does the app work correctly on Windows touch screens (Surface)?",
+        "Are touch targets sized appropriately for finger input?",
+        "Does pen/stylus input work for form fields?",
+        "Does the app handle touch and mouse input simultaneously?",
+        "Are gesture interactions (pinch zoom, swipe) supported?",
+        "Does the on-screen keyboard appear when tapping input fields?",
+        "Does the app work in Windows tablet mode?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Windows Store Expert",
+      "persona_domain": "Microsoft Store distribution",
+      "questions": [
+        "Can the app be distributed through the Microsoft Store?",
+        "Does the app meet Microsoft Store certification requirements?",
+        "Can the app be packaged as MSIX for Store distribution?",
+        "Would Store distribution improve SmartScreen reputation?",
+        "Can the app auto-update through the Microsoft Store?",
+        "Does the Store listing meet all metadata requirements?",
+        "Can enterprise users install from a private Microsoft Store?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Multi-User Expert (Windows)",
+      "persona_domain": "Windows multi-user support",
+      "questions": [
+        "Does the app work correctly in multi-user Windows environments?",
+        "Is user data isolated between Windows user accounts?",
+        "Can multiple users install the app independently?",
+        "Does the app handle Fast User Switching?",
+        "Are file paths using user-specific directories (%APPDATA%)?",
+        "Can the daemon service run per-user or per-machine?",
+        "Does the app handle Remote Desktop sessions?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "Backup Expert (Windows)",
+      "persona_domain": "backup and restore on Windows",
+      "questions": [
+        "Are app data files included in Windows Backup?",
+        "Can users restore app state from a Windows backup?",
+        "Does the app handle restoring from backup gracefully?",
+        "Are temporary/cache files excluded from backups?",
+        "Does the app work after a Windows System Restore?",
+        "Can users export settings for manual backup?",
+        "Does the app handle OneDrive backup of Desktop/Documents folders?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "Winget Package Manager Expert",
+      "persona_domain": "Windows Package Manager distribution",
+      "questions": [
+        "Is there a winget manifest for installing Solace Browser?",
+        "Does `winget install SolaceBrowser` work correctly?",
+        "Is the manifest published to the winget community repository?",
+        "Does winget handle upgrades correctly?",
+        "Is the installer hash verified by winget?",
+        "Does the winget manifest include all required metadata?",
+        "Can enterprise IT use winget for silent deployment?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Windows ARM64 Tester",
+      "persona_domain": "Windows on ARM compatibility",
+      "questions": [
+        "Does the app run on Windows ARM64 (Snapdragon) devices?",
+        "Is there a native ARM64 build or does it run under x86 emulation?",
+        "What is the performance impact of x86 emulation on ARM64?",
+        "Does the installer detect and install the correct architecture?",
+        "Are native node modules compatible with ARM64?",
+        "Does the app handle Qualcomm GPU correctly?",
+        "Is ARM64 support tested in CI/CD?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "BitLocker Compatibility Tester",
+      "persona_domain": "full disk encryption compatibility",
+      "questions": [
+        "Does the app work correctly on BitLocker-encrypted drives?",
+        "Are there performance impacts from BitLocker on app operations?",
+        "Does the vault handle double encryption (BitLocker + AES-256-GCM)?",
+        "Can the app detect if the drive is encrypted?",
+        "Does the app handle BitLocker recovery scenarios?",
+        "Are temporary files placed on the encrypted volume?",
+        "Does evidence chain hashing work correctly on encrypted storage?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Windows Accessibility Expert",
+      "persona_domain": "comprehensive Windows accessibility features",
+      "questions": [
+        "Does the app support Windows High Contrast themes (all 4 built-in themes)?",
+        "Does Magnifier work correctly with the app?",
+        "Can users control the app with voice (Speech Recognition)?",
+        "Does the app support Sticky Keys and Filter Keys?",
+        "Are system font size changes reflected in the app?",
+        "Does the app support Color Filters (Windows accessibility)?",
+        "Can users customize the app's colors via Windows Ease of Access?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Gaming Laptop Tester",
+      "persona_domain": "performance on gaming hardware",
+      "questions": [
+        "Does the app use the integrated GPU (not dedicated) for power efficiency?",
+        "Can users force GPU selection for the app?",
+        "Does the app handle variable refresh rate displays (G-Sync/FreeSync)?",
+        "Is the app compatible with gaming overlay software (GeForce Experience, Discord)?",
+        "Does the app handle Gaming Mode/Game Bar?",
+        "Is power management correct on gaming laptops with hybrid GPU?",
+        "Does the app perform well on high-refresh-rate displays (144Hz+)?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Clipboard Expert (Windows)",
+      "persona_domain": "clipboard and sharing",
+      "questions": [
+        "Does copy/paste work correctly between Solace Browser and other apps?",
+        "Does Windows Clipboard History (Win+V) capture Solace content?",
+        "Does Cloud Clipboard sync work between Windows devices?",
+        "Are rich formats (HTML, images) preserved in clipboard operations?",
+        "Does the app handle clipboard manager tools?",
+        "Are sensitive items (passwords) cleared from clipboard history?",
+        "Does Ctrl+Shift+V (paste as plain text) work?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "Locale Expert (Windows)",
+      "persona_domain": "Windows locale and regional settings",
+      "questions": [
+        "Does the app respect Windows regional format settings (date, time, numbers)?",
+        "Are IME inputs (Japanese, Chinese, Korean) handled correctly?",
+        "Does the app handle RTL system locale on Windows?",
+        "Are font fallbacks correct for CJK characters on Windows?",
+        "Does the app handle emoji rendering on Windows?",
+        "Are system locale changes reflected without restart?",
+        "Does the app handle mixed-language content on Windows?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Print Expert (Windows)",
+      "persona_domain": "Windows print system integration",
+      "questions": [
+        "Does the app use the native Windows print dialog?",
+        "Can users print to Microsoft Print to PDF?",
+        "Does the print preview render correctly?",
+        "Are print margins and page layout appropriate?",
+        "Does printing work with network printers?",
+        "Can users print evidence reports and audit trails?",
+        "Does the app handle printer driver compatibility issues?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Windows Server Tester",
+      "persona_domain": "running on Windows Server",
+      "questions": [
+        "Can Solace Browser run in headless mode on Windows Server?",
+        "Does the daemon mode work as a Windows Service?",
+        "Can the cloud twin run on a Windows Server instance?",
+        "Does the app handle Windows Server's IE-restricted configuration?",
+        "Can the app run on Windows Server Core (no GUI)?",
+        "Does the app work in Hyper-V virtual machines?",
+        "Is there documentation for Windows Server deployment?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Performance Monitor (Windows)",
+      "persona_domain": "Windows-specific performance metrics",
+      "questions": [
+        "What does Task Manager show for CPU and memory usage?",
+        "Does the app appear in Resource Monitor with reasonable I/O?",
+        "Can Windows Performance Monitor track app-specific counters?",
+        "Is the app compatible with Windows Performance Recorder (WPR)?",
+        "Are there excessive disk reads/writes visible in Process Monitor?",
+        "Does the app handle memory pressure from other applications?",
+        "Are there runaway threads or handles visible in Process Explorer?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Chocolatey Package Expert",
+      "persona_domain": "Chocolatey package distribution",
+      "questions": [
+        "Is there a Chocolatey package for Solace Browser?",
+        "Does `choco install solace-browser` work correctly?",
+        "Is the package published to the Chocolatey community feed?",
+        "Does Chocolatey handle dependencies correctly?",
+        "Can the package be used in automated deployment scripts?",
+        "Is the checksum verified during installation?",
+        "Does `choco upgrade solace-browser` work for updates?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "Virtual Desktop Expert",
+      "persona_domain": "Windows Virtual Desktops",
+      "questions": [
+        "Does the app work correctly across Windows Virtual Desktops?",
+        "Can the app pin a window to all virtual desktops?",
+        "Does the app handle virtual desktop switches gracefully?",
+        "Are notifications delivered regardless of active virtual desktop?",
+        "Does the system tray icon appear on all virtual desktops?",
+        "Can the daemon mode alert across virtual desktops?",
+        "Does the app remember window position per virtual desktop?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Sandbox Expert (Windows)",
+      "persona_domain": "Windows Sandbox and containerization",
+      "questions": [
+        "Does the app work in Windows Sandbox?",
+        "Can the app run in Docker containers on Windows?",
+        "Does the app work in Windows containers (Server containers)?",
+        "Is the app compatible with application virtualization (App-V)?",
+        "Can the app run in a MSIX sandbox?",
+        "Does the app handle container network isolation?",
+        "Can the app be tested in Windows Sandbox for security evaluation?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Auto-Update Expert (Windows)",
+      "persona_domain": "update mechanism on Windows",
+      "questions": [
+        "Does the auto-updater work on Windows (Squirrel or similar)?",
+        "Are updates signed with the same code signing certificate?",
+        "Does the update process preserve user data?",
+        "Can users check for updates manually?",
+        "Does the updater handle UAC prompts correctly?",
+        "Is the update download verified with checksum?",
+        "Does the app handle update failure gracefully (rollback)?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Event Log Expert",
+      "persona_domain": "Windows Event Log integration",
+      "questions": [
+        "Does the app write to the Windows Event Log for auditing?",
+        "Are event sources registered correctly?",
+        "Can IT admins monitor app events via Event Viewer?",
+        "Are security-relevant events logged (auth failures, vault access)?",
+        "Does the app use appropriate event severity levels?",
+        "Can events be forwarded to a central SIEM?",
+        "Are event logs compatible with Windows Event Forwarding?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Uninstall Cleanliness Tester (Windows)",
+      "persona_domain": "clean uninstallation on Windows",
+      "questions": [
+        "Does the uninstaller remove all files from Program Files and AppData?",
+        "Are registry entries cleaned up on uninstall?",
+        "Are scheduled tasks removed on uninstall?",
+        "Are Windows Firewall rules removed?",
+        "Are file associations deregistered?",
+        "Does the uninstaller offer to keep user data?",
+        "Can third-party uninstallers (Revo) find leftover files?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Network Drive Expert",
+      "persona_domain": "UNC paths and network drives",
+      "questions": [
+        "Does the app work with data stored on network drives (UNC paths)?",
+        "Can the app handle mapped drives (Z:\\) and UNC (\\\\server\\share)?",
+        "Does the app handle network disconnection gracefully?",
+        "Are file locking mechanisms compatible with SMB shares?",
+        "Can the app access data on NAS devices?",
+        "Does the app handle network drive authentication?",
+        "Are network drive performance implications documented?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Virus Scanner Compatibility Expert",
+      "persona_domain": "antivirus software compatibility",
+      "questions": [
+        "Is the app compatible with Norton, McAfee, Kaspersky, and Bitdefender?",
+        "Does the app avoid behaviors that trigger heuristic detection?",
+        "Can IT admins whitelist the app in antivirus management consoles?",
+        "Does the installer handle antivirus interference gracefully?",
+        "Are file operations safe when antivirus is actively scanning?",
+        "Does the app avoid writing to directories monitored by ransomware protection?",
+        "Is the app submitted to major antivirus vendors for whitelisting?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Remote Desktop Tester",
+      "persona_domain": "RDP and remote access",
+      "questions": [
+        "Does the app work correctly over Remote Desktop Protocol (RDP)?",
+        "Are animations and transitions smooth over RDP?",
+        "Does the app handle RDP disconnection and reconnection?",
+        "Can the app detect RDP sessions and optimize accordingly?",
+        "Does clipboard sharing work correctly over RDP?",
+        "Are multi-monitor RDP sessions handled correctly?",
+        "Does the app work with Windows 365 Cloud PC?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Windows Subsystem for Android Tester",
+      "persona_domain": "WSA and mobile app compatibility",
+      "questions": [
+        "If a mobile version exists, can it run via WSA on Windows 11?",
+        "Does the web version work in WSA's browser?",
+        "Can the app handle WSA's unique window management?",
+        "Does touch input work correctly through WSA?",
+        "Are network connections from WSA handled correctly?",
+        "Does the app handle WSA's sandboxed file system?",
+        "Is there documentation for WSA compatibility?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Kiosk Mode Expert",
+      "persona_domain": "Windows kiosk and signage deployment",
+      "questions": [
+        "Can Solace Browser run in Windows Assigned Access (kiosk) mode?",
+        "Does the app support single-app kiosk deployment?",
+        "Can the app be locked to specific functionality in kiosk mode?",
+        "Does the app handle kiosk auto-restart on crash?",
+        "Can kiosk mode be configured via Group Policy?",
+        "Does the app handle screen timeout in kiosk mode?",
+        "Can the app be used for digital signage dashboards?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Windows Privacy Expert",
+      "persona_domain": "Windows privacy features",
+      "questions": [
+        "Does the app comply with Windows privacy settings?",
+        "Are diagnostic data collection practices transparent?",
+        "Does the app respect Windows advertising ID settings?",
+        "Can users control data collection in Windows Settings?",
+        "Does the app handle Windows telemetry opt-out?",
+        "Are privacy-relevant activities logged in Windows settings?",
+        "Does the app follow Microsoft Store privacy requirements?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Font Rendering Expert (Windows)",
+      "persona_domain": "text rendering on Windows",
+      "questions": [
+        "Does text render clearly with ClearType enabled and disabled?",
+        "Are fonts consistent across Windows 10 and Windows 11?",
+        "Does the app handle ClearType settings changes?",
+        "Are fallback fonts appropriate for CJK text on Windows?",
+        "Does the app handle system font size (DPI) changes?",
+        "Are custom fonts loaded correctly on Windows?",
+        "Does the app handle font smoothing preferences?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Power Management Expert (Windows)",
+      "persona_domain": "battery and power settings",
+      "questions": [
+        "Does the app respect Windows power plans (balanced, power saver, high performance)?",
+        "Is the app listed in Battery Usage in Windows Settings?",
+        "Does the app reduce activity on battery power?",
+        "Can Windows background app settings control the daemon?",
+        "Does the app prevent system sleep when performing critical operations?",
+        "Is the app's energy impact reasonable compared to Chrome?",
+        "Does the app handle hibernation and resume correctly?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Backward Compatibility Tester",
+      "persona_domain": "older Windows version support",
+      "questions": [
+        "Does the app work on Windows 10 version 1809 (oldest supported)?",
+        "Are there features that require specific Windows versions?",
+        "Does the app detect and warn about unsupported Windows versions?",
+        "Are Win32 API calls compatible across supported Windows versions?",
+        "Does the app handle .NET Framework version differences?",
+        "Is the minimum supported Windows version documented?",
+        "Does the app gracefully handle deprecated Windows features?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Windows Developer Tester",
+      "persona_domain": "developer experience on Windows",
+      "questions": [
+        "Can developers build Solace Browser from source on Windows?",
+        "Are build instructions clear for Windows-specific steps?",
+        "Does the development setup work with Visual Studio and VS Code?",
+        "Can developers use Windows debugger (WinDbg) for debugging?",
+        "Are Windows-specific test suites maintained?",
+        "Does the CI/CD pipeline include Windows build and test?",
+        "Are developer docs current for Windows-specific quirks?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Dragon Rider (Phuc)",
+      "persona_domain": "Windows experience vision",
+      "questions": [
+        "Does Solace Browser feel like a first-class Windows application?",
+        "Would a Windows power user choose Solace Browser as their daily driver?",
+        "Does the Windows build showcase the best of the platform?",
+        "Is the install-to-first-value time under 5 minutes on Windows?",
+        "Would Microsoft feature Solace Browser in the Microsoft Store?",
+        "Does the Windows experience match the macOS experience in quality?",
+        "Is this the Windows app the Dragon Rider would recommend?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "Mum Test Judge",
+      "persona_domain": "non-technical Windows user experience",
+      "questions": [
+        "Can a non-technical Windows user install the app without getting a scary SmartScreen warning?",
+        "Does the app look and feel familiar to a regular Windows user?",
+        "Can the user find and change settings without getting lost?",
+        "Does the app crash or behave oddly in normal use on Windows?",
+        "Would the user know how to uninstall the app if they wanted to?",
+        "Does the app integrate with the tools the user already knows (File Explorer, Start Menu)?",
+        "Would a non-technical Windows user recommend this app to a friend?"
+      ]
+    }
+  ]
+}

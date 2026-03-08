@@ -1,0 +1,25 @@
+{
+  "spec_id": "sb-api-benchmarks-001",
+  "project": "solace-browser",
+  "requested_by": "claude-code",
+  "mode": "cli",
+  "target_cmd": "curl -sf http://localhost:9222/api/apps/gmail-inbox-triage/benchmarks",
+  "target_name": "Model Marketplace: /api/apps/{id}/benchmarks",
+  "checks": {
+    "exit_code": 0,
+    "stdout_contains": ["app_id", "benchmarks", "gmail-inbox-triage"],
+    "stdout_not_contains": ["prompt_template", "injection_payload", "uplift_principles"],
+    "stderr_empty": true,
+    "llm_analysis": true
+  },
+  "persona": "james_bach",
+  "persona_bio": "Software testing expert — verify benchmark data structure and trade secret safety",
+  "domain_questions": [
+    "Does the response include app_id and benchmarks fields?",
+    "Are quality scores, costs, and latency numbers present?",
+    "Is the solace_managed entry showing uplift_delta?",
+    "Are any uplift implementation details exposed?"
+  ],
+  "tags": ["sidebar", "api", "model-marketplace", "benchmarks", "trade-secret-guard"],
+  "paper_ref": "Paper 47 Section 22b"
+}

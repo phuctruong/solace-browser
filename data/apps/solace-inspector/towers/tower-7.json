@@ -1,0 +1,714 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 7,
+    "tower_name": "Tower of Kids",
+    "dna": "nextgen(product) = intuition(no_manual) x safety(absolute) x fun(genuine) x growth(learning)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 100,
+    "question_expansion_instruction": "Each floor lists 7 seed questions. During execution, expand to 100 questions per persona by probing deeper into the domain. Focus on whether a real teen or child could accomplish a task, whether safety protections exist, whether identity representation is present, and whether the product brings genuine joy.",
+    "target_projects": [
+      "solace-browser",
+      "solaceagi"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser",
+      "solaceagi": "/home/phuc/projects/solaceagi"
+    }
+  },
+  "name": "Tower of Kids",
+  "tower_number": 7,
+  "total_floors": 49,
+  "total_questions": 343,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Zara",
+      "persona_domain": "14yo teen coder, CLI-comfortable",
+      "questions": [
+        "Can a CLI-comfortable 14-year-old find and run recipes without adult help?",
+        "Does the evidence chain map to a debugging journal practice that a teen coder would recognize?",
+        "Is the onboarding path discoverable for a teen who already lives in terminals?",
+        "Can Zara automate GitHub issue triage as a real-world task within 15 minutes?",
+        "Does the product provide a teen-appropriate explanation of what recipes do?",
+        "Are error messages understandable for a teenager without professional development experience?",
+        "Is there a path from 'I know CLI' to 'I built my first automation' that a teen can follow?"
+      ]
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Lucas",
+      "persona_domain": "16yo gamer, systems thinker",
+      "questions": [
+        "Does the YinYang approval dialog read as a game mechanic (permission dialog in a game install)?",
+        "Do evidence chains read like game logs that a gamer would naturally understand?",
+        "Can Lucas automate Steam wishlist monitoring as a real task he cares about?",
+        "Does the approval flow map to consent mechanics that gamers already understand?",
+        "Is there gamification language (achievements, levels, progress) that speaks to gamers?",
+        "Would Lucas describe this product to gaming friends in one sentence?",
+        "Does the product feel like a tool a systems-thinking gamer would choose over alternatives?"
+      ]
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Sofia",
+      "persona_domain": "15yo teen journalist, research-focused",
+      "questions": [
+        "Do evidence chains map directly to source tracking that a teen journalist would use?",
+        "Can Sofia aggregate news sources and flag updates as a real journalism workflow?",
+        "Does the approval gate match a fact-checking instinct ('show me before you publish')?",
+        "Are evidence hashes readable as citation receipts for a research-focused teen?",
+        "Is there a workflow for teens who think in evidence trails and citations?",
+        "Can the product help Sofia build a portfolio of verified research for college applications?",
+        "Does the product provide source attribution that a teen journalist would trust?"
+      ]
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Jayden",
+      "persona_domain": "10yo elementary schooler, curious",
+      "questions": [
+        "Does an age gate prevent a 10-year-old from signing up without parental consent?",
+        "Is the CLI comprehensible for an elementary schooler or completely opaque?",
+        "Are the terms (OAuth3, recipe, rung) explained in age-appropriate vocabulary?",
+        "Is there a visual mode or simplified interface for children under 13?",
+        "Does parental consent flow activate when a child's age is detected?",
+        "Is Jayden's presence on this product a COPPA violation in progress?",
+        "Would a parent who discovers their 10-year-old using this product be alarmed?"
+      ]
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Kai",
+      "persona_domain": "12yo ADHD, impulsive, easily distracted",
+      "questions": [
+        "Does the product offer task chunking visible without deep navigation?",
+        "Are there progress indicators that give momentum for attention-challenged users?",
+        "Does the CLI demand sustained focus that excludes ADHD youth?",
+        "Is there a clear starting path or do infinite options cause choice paralysis?",
+        "Are there break reminders or time-bounded sessions for ADHD accommodation?",
+        "Would Kai abandon the product within 5 minutes due to overwhelm?",
+        "Is the product ADHD-hostile by default through its infinite-option CLI design?"
+      ]
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Mia",
+      "persona_domain": "13yo shy introvert, social anxiety",
+      "questions": [
+        "Is the approval dialog anxiety-inducing ('what if I approve something wrong')?",
+        "Does the language provide reassurance that mistakes are reversible?",
+        "Is there a sandbox or practice mode that reduces stakes for anxious teens?",
+        "Does the auto-deny timer create pressure rather than safety for anxious users?",
+        "Are consequence descriptions technical and fear-inducing or reassuring?",
+        "Would Mia avoid using the product because every approval feels high-stakes?",
+        "Is there gentle onboarding that builds confidence before real actions?"
+      ]
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Ryan",
+      "persona_domain": "11yo active kid, prefers videos",
+      "questions": [
+        "Do video tutorials exist showing what automation looks like in practice?",
+        "Is there a visual workflow builder that shows rather than tells?",
+        "Can Ryan see what automation looks like before imagining using it?",
+        "Is the entire product text-based and CLI-first with no visual alternative?",
+        "Would an 11-year-old understand the product without reading documentation?",
+        "Are there animated demos or interactive previews of recipe execution?",
+        "Does the product meet visual learners where they learn (video, images, animation)?"
+      ]
+    },
+    {
+      "floor_number": 8,
+      "persona_name": "Amara",
+      "persona_domain": "14yo creative, artistic, visual thinker",
+      "questions": [
+        "Is there a visual recipe builder or drag-and-drop interface for creative teens?",
+        "Can Amara see the output of automation before committing to the input?",
+        "Does the product illustrate what recipes do with visual examples?",
+        "Would a creative teen imagine using this for their design workflow?",
+        "Is the text-first design excluding visual learners who need to see before they act?",
+        "Are there templates for creative workflows (art, design, social media)?",
+        "Does the product feel like a creative tool or a developer utility?"
+      ]
+    },
+    {
+      "floor_number": 9,
+      "persona_name": "Ethan",
+      "persona_domain": "13yo ADHD, task-oriented, compensating strategies",
+      "questions": [
+        "Does the recipe system accidentally function as a task checklist for ADHD teens?",
+        "Does the evidence chain work as a completion tracker for task-oriented users?",
+        "Is the task chunking accidental accommodation or designed ADHD support?",
+        "Would an older ADHD teen with coping strategies find value where younger Kai could not?",
+        "Does the product's structure help ADHD youth through accident rather than design?",
+        "Is accidental accommodation sufficient or does it need deliberate ADHD features?",
+        "Would Ethan recommend this product to other ADHD teens as helpful?"
+      ]
+    },
+    {
+      "floor_number": 10,
+      "persona_name": "Jin",
+      "persona_domain": "14yo Chinese immigrant, ESL",
+      "questions": [
+        "Is there a Chinese-language CLI interface or is the CLI English-only?",
+        "Are error messages in technical English that an ESL teen cannot understand?",
+        "Does solaceagi.com have Chinese locale but the CLI has none?",
+        "Is documentation available in Chinese or any language besides English?",
+        "Would a Chinese-speaking teen find any entry point into the product?",
+        "Does the product serve 1.4 billion Chinese speakers or only English speakers?",
+        "Is language exclusion the most correctable barrier identified in this category?"
+      ]
+    },
+    {
+      "floor_number": 11,
+      "persona_name": "Youssef",
+      "persona_domain": "15yo Muslim teen, prayer scheduling",
+      "questions": [
+        "Can the scheduler accommodate prayer times (Fajr, Dhuhr, Asr, Maghrib, Isha)?",
+        "Is there any concept of religious calendar integration in the scheduling system?",
+        "Does the product assume a secular Western schedule for all users?",
+        "Would a Muslim teenager need to work around prayer times manually?",
+        "Is cultural sensitivity in scheduling considered for 1.8 billion Muslims worldwide?",
+        "Does the product have Islamic locale or any religious awareness features?",
+        "Is the scheduling system built for one culture or for global youth?"
+      ]
+    },
+    {
+      "floor_number": 12,
+      "persona_name": "Ava",
+      "persona_domain": "14yo transgender teen, seeking privacy",
+      "questions": [
+        "Does the profile system use binary gender fields or support trans identity?",
+        "Are there pronoun settings (he/him, she/her, they/them, custom)?",
+        "Is there any indication the product has considered trans youth safety?",
+        "Does the product protect a trans teen's identity from being exposed?",
+        "Is a product that ignores gender acceptable for a teen whose identity is their daily struggle?",
+        "Does the data model support chosen name versus legal name?",
+        "Would a trans teen feel safe using this product with their real identity?"
+      ]
+    },
+    {
+      "floor_number": 13,
+      "persona_name": "Marcus",
+      "persona_domain": "16yo Black teen, community organizer",
+      "questions": [
+        "Is there representation of Black youth in persona examples, documentation, or marketing?",
+        "Does the product feel like it belongs to Marcus or was designed for someone else?",
+        "Are there community organizing or civic engagement recipe templates?",
+        "Would Black youth adopt a product where they see no representation of themselves?",
+        "Does the product acknowledge the experience of Black users in any surface area?",
+        "Is the product positioned as universal but designed from a monoculture?",
+        "Would Marcus recommend this product to his community organizing network?"
+      ]
+    },
+    {
+      "floor_number": 14,
+      "persona_name": "Sana",
+      "persona_domain": "13yo South Asian girl, family expectations",
+      "questions": [
+        "Does the product support family-shared accounts or multi-user profiles?",
+        "Is there a parental oversight mode that Sana could show her parents to get permission?",
+        "Does the product assume solo adult agency or accommodate shared family decision-making?",
+        "Would Sana's parents allow her to use a product they cannot understand or oversee?",
+        "Are the examples and workflows culturally appropriate for South Asian family contexts?",
+        "Is there a way for parents to verify the product is safe before granting permission?",
+        "Does the product respect the family-centered decision-making common in South Asian culture?"
+      ]
+    },
+    {
+      "floor_number": 15,
+      "persona_name": "Lily",
+      "persona_domain": "12yo rural American, limited bandwidth",
+      "questions": [
+        "Does the local-first architecture work on a 4G-only rural connection?",
+        "Can the product be installed without reliable broadband?",
+        "Does the setup process require multiple downloads that assume fast internet?",
+        "Does the offline promise survive the installation process on limited bandwidth?",
+        "Is there a truly offline installer that does not require cloud authentication to start?",
+        "Would a rural teen with satellite or mobile-only internet succeed at first run?",
+        "Does local-first fail rural youth at the exact moment they need it most (installation)?"
+      ]
+    },
+    {
+      "floor_number": 16,
+      "persona_name": "Omar",
+      "persona_domain": "15yo first-generation immigrant",
+      "questions": [
+        "Does the product acknowledge the experience of first-generation immigrant teens?",
+        "Are there automation templates for tasks immigrants actually do (translation, form filling)?",
+        "Is the product culturally blank -- functional but indifferent to Omar's experience?",
+        "Would a first-generation immigrant teen find appointment scheduling or form assistance?",
+        "Is the gap hostility or indifference toward immigrant users?",
+        "Does the product serve the specific workflow needs of immigrant families?",
+        "Would Omar tell his family this product could help with their daily tasks?"
+      ]
+    },
+    {
+      "floor_number": 17,
+      "persona_name": "Diego",
+      "persona_domain": "15yo Latino teen, first in family to use AI",
+      "questions": [
+        "Is there a Spanish-language CLI or documentation for Latino teens?",
+        "Can a single locale update and Spanish-language tutorial unlock this persona?",
+        "Is Diego the first in his family to use AI and does the product acknowledge that?",
+        "Would a Spanish-language tutorial push Diego from 6/10 to 8/10?",
+        "Does the product recognize that being first-in-family with AI is its most exciting story?",
+        "Is the technical barrier linguistic or conceptual for a capable Latino teen?",
+        "Would Diego evangelize this product to other Latino teens if it spoke his language?"
+      ]
+    },
+    {
+      "floor_number": 18,
+      "persona_name": "Priya",
+      "persona_domain": "16yo gender-fluid, intersectional activist",
+      "questions": [
+        "Is there ANY representation of non-binary identity anywhere in the product?",
+        "Are there gender-neutral pronoun options in profile fields?",
+        "Does a gender-fluid teen find themselves visible or invisible to this product?",
+        "Is scoring 1/10 with a gender-fluid teen in 2026 a UX failure or an ethical failure?",
+        "Would Priya recommend this product to their intersectional activist community?",
+        "Does the product's absence of non-binary options send the message 'this is not for you'?",
+        "Is the representation gap a design oversight or a systemic exclusion?"
+      ]
+    },
+    {
+      "floor_number": 19,
+      "persona_name": "Maya",
+      "persona_domain": "13yo Native American, cultural privacy concerns",
+      "questions": [
+        "Does the local-first architecture address Indigenous data sovereignty concerns?",
+        "Is the data residency story communicated in terms Maya's community would understand?",
+        "Can Maya know exactly where her data goes, who owns it, and if it is used for training?",
+        "Does the product introduce itself in a way that respects Indigenous privacy values?",
+        "Is there any acknowledgment of Indigenous data sovereignty in product documentation?",
+        "Would Maya's tribal community approve of the data practices described?",
+        "Does the product have the right architecture for Maya but the wrong introduction?"
+      ]
+    },
+    {
+      "floor_number": 20,
+      "persona_name": "Aisha",
+      "persona_domain": "15yo Muslim girl, wearing hijab",
+      "questions": [
+        "Is there female representation in the product's examples and illustrations?",
+        "Are there modest dress considerations in any avatar or illustration?",
+        "Does the scheduling system acknowledge Islamic cultural values?",
+        "Would a Muslim teenage girl feel 'this product is not for me' based on representation?",
+        "Is the absence of representation hostility or invisibility to Muslim girls?",
+        "Does the product accommodate prayer times and religious observance in automation?",
+        "Would Aisha's parents approve of the product's cultural sensitivity?"
+      ]
+    },
+    {
+      "floor_number": 21,
+      "persona_name": "River",
+      "persona_domain": "14yo non-binary, Pacific Northwest",
+      "questions": [
+        "Does every non-binary and transgender persona hit the same wall of binary assumptions?",
+        "Are there pronoun acknowledgment features or safe-space indicators?",
+        "Does River need to know the product is safe before trusting it with automation tasks?",
+        "Is the safety signal for non-binary users completely absent from the product?",
+        "Would River feel comfortable sharing their identity within the product context?",
+        "Does the product's neutral design feel genuinely inclusive or indifferently blank?",
+        "Is binary assumption in design a pattern that affects all gender-diverse teens?"
+      ]
+    },
+    {
+      "floor_number": 22,
+      "persona_name": "Sam",
+      "persona_domain": "13yo questioning identity, support-seeking",
+      "questions": [
+        "Does the product feel neutral and welcoming for a teen exploring their identity?",
+        "Is the product technically neutral but emotionally blank for questioning teens?",
+        "Does the product use warm, inclusive language that makes Sam feel safe?",
+        "Would a 13-year-old questioning their identity find the product a safe companion?",
+        "Is the product a companion tool or a clinical utility for teens in identity exploration?",
+        "Does the product acknowledge that some users are in vulnerable emotional states?",
+        "Would Sam's school counselor recommend this product as safe for questioning teens?"
+      ]
+    },
+    {
+      "floor_number": 23,
+      "persona_name": "Cleo",
+      "persona_domain": "15yo Afro-Latina, bilingual",
+      "questions": [
+        "Does the product serve bilingual users who code-switch between English and Spanish?",
+        "Are there Spanish-English workflow templates for bilingual teens?",
+        "Does the product acknowledge belonging to two cultures simultaneously?",
+        "Is the product designed for monolingual users in a monocultural context?",
+        "Would Cleo see herself reflected in both her Black and Latina identity?",
+        "Does the bilingual gap compound the representation gap for Afro-Latina teens?",
+        "Is a single locale addition sufficient or does Cleo need intersectional recognition?"
+      ]
+    },
+    {
+      "floor_number": 24,
+      "persona_name": "Idris",
+      "persona_domain": "16yo Black Muslim teen, intersectional",
+      "questions": [
+        "Do representation gaps compound at the intersection of Black and Muslim identity?",
+        "Is a technically capable 16-year-old leaving because the product does not see him?",
+        "Does every representation gap (race, religion, culture) stack multiplicatively for Idris?",
+        "Would Idris score 3/10 because the product's design choices say 'not made for you'?",
+        "Is the intersectional experience worse than any single identity gap alone?",
+        "Does the product need to address each identity dimension or the intersection itself?",
+        "Would fixing racial representation AND religious sensitivity raise Idris above 5/10?"
+      ]
+    },
+    {
+      "floor_number": 25,
+      "persona_name": "Fatima",
+      "persona_domain": "14yo refugee, offline-first",
+      "questions": [
+        "Does the local-first architecture serve a refugee teen in a camp with intermittent connectivity?",
+        "Is offline recipe execution the feature that makes this product usable in her reality?",
+        "Is Arabic locale available for Fatima's language needs?",
+        "Can the product be set up without continuous internet connectivity?",
+        "Does local-first prove to be an equity feature, not just an architecture preference?",
+        "Is there an offline installer that works in a refugee camp network context?",
+        "Would Fatima's success prove that local-first is the great equalizer for access?"
+      ]
+    },
+    {
+      "floor_number": 26,
+      "persona_name": "Isla",
+      "persona_domain": "13yo autistic, sensory processing differences",
+      "questions": [
+        "Is there a quiet mode that reduces animations, notifications, and sensory input?",
+        "Does the product have a dark mode toggle and reduced-motion mode?",
+        "Is the CLI actually a good fit for autistic teens who prefer text-based interaction?",
+        "Does the browser notification system overwhelm sensory-sensitive users?",
+        "Is there a single-task focus mode that reduces cognitive load?",
+        "Would an autistic teen score 2/10 because the presentation layer is sensory-hostile?",
+        "Does the product accommodate neurological difference in any deliberate way?"
+      ]
+    },
+    {
+      "floor_number": 27,
+      "persona_name": "Zuri",
+      "persona_domain": "15yo refugee, trauma background",
+      "questions": [
+        "Are there content warnings before potentially triggering content from AI processes?",
+        "Does the product have a safe browsing mode that filters distressing web content?",
+        "Is there any content sensitivity system for trauma-affected youth?",
+        "Would Zuri encounter triggering content without warning through automated browsing?",
+        "Does the product's indifference to content sensitivity constitute harm for trauma youth?",
+        "Is there a mechanism to flag and filter sensitive content categories?",
+        "Would a shelter counselor allow this product for teens with trauma backgrounds?"
+      ]
+    },
+    {
+      "floor_number": 28,
+      "persona_name": "Leo",
+      "persona_domain": "12yo low-income, shared family device",
+      "questions": [
+        "Does the product support multi-user profile switching for shared devices?",
+        "Is there a guest mode or session isolation for shared family computers?",
+        "Can Leo's family members see what he is doing (privacy issue on shared device)?",
+        "Can Leo isolate his automation from his family's device state?",
+        "Does the product assume one user per device or accommodate shared-device reality?",
+        "Is shared-device accommodation considered for the billions who share devices?",
+        "Would Leo's four family members each need their own installation?"
+      ]
+    },
+    {
+      "floor_number": 29,
+      "persona_name": "Hana",
+      "persona_domain": "14yo hard of hearing, ASL primary",
+      "questions": [
+        "Do all audio elements have captions or text alternatives?",
+        "Is error feedback audio-only or does it include visual indicators?",
+        "Is there ASL or Deaf community representation in examples?",
+        "Is the CLI accessible for Hana (text-based, no required audio)?",
+        "Would tutorial videos have closed captions for hard-of-hearing users?",
+        "Is WCAG 2.1 accessibility compliance complete for hearing-impaired users?",
+        "Does the product consider that 15% of teens have some degree of hearing loss?"
+      ]
+    },
+    {
+      "floor_number": 30,
+      "persona_name": "Dmitri",
+      "persona_domain": "16yo vision impairment, screen reader user",
+      "questions": [
+        "Is screen reader compatibility complete in the browser interface?",
+        "Are ARIA labels present on ALL interactive elements, not just some?",
+        "Is the CLI highly accessible for screen reader users as expected?",
+        "Can the visual interface be fully navigated without vision?",
+        "Are all images, icons, and visual indicators described with alt text?",
+        "Does the approval dialog announce its purpose and options to screen readers?",
+        "Would a screen reader audit find the product partially or fully accessible?"
+      ]
+    },
+    {
+      "floor_number": 31,
+      "persona_name": "Rosa",
+      "persona_domain": "13yo physical disability, keyboard only",
+      "questions": [
+        "Are all UI elements keyboard-navigable after Tower 1 accessibility fixes?",
+        "Does the approval dialog timer discriminate against users with motor impairments?",
+        "Is the auto-deny timer adjustable for users who need more time?",
+        "Would a keyboard-only user with motor impairments be penalized by time-based controls?",
+        "Is the timer designed as a safety feature or a disability access failure?",
+        "Was the trade-off between safety (timer) and accessibility (motor impairment) conscious?",
+        "Does WCAG 2.2.1 (Timing Adjustable) compliance apply to the approval timer?"
+      ]
+    },
+    {
+      "floor_number": 32,
+      "persona_name": "Caleb",
+      "persona_domain": "11yo rural, satellite internet",
+      "questions": [
+        "Does the local-first promise survive the installation process on satellite internet?",
+        "Do Cloud Run endpoints have acceptable latency on satellite connections?",
+        "Is the offline capability blocked by a setup that assumes broadband?",
+        "Would Caleb be excluded at the first step by the installation experience?",
+        "Does the product need a lightweight installer for bandwidth-constrained users?",
+        "Is the initial setup process the barrier, not the product's core architecture?",
+        "Would a pre-packaged offline bundle solve satellite internet youth exclusion?"
+      ]
+    },
+    {
+      "floor_number": 33,
+      "persona_name": "Aaliyah",
+      "persona_domain": "16yo musician, social coordinator",
+      "questions": [
+        "Can Aaliyah automate her band's social media posting with the recipe system?",
+        "Does the evidence chain function as a content calendar for teen creators?",
+        "Does the approval gate match creative review ('approve posts before they go live')?",
+        "Are there recipe templates for Spotify playlist monitoring or social media management?",
+        "Is the product genuinely useful for a teen creator managing multiple platforms?",
+        "Would Aaliyah reinvest time saved by automation back into her music?",
+        "Does the product speak the language of teen creators or only professional workflows?"
+      ]
+    },
+    {
+      "floor_number": 34,
+      "persona_name": "Theo",
+      "persona_domain": "15yo gamer and streamer",
+      "questions": [
+        "Can Theo automate his streaming workflow (schedule announcements, monitor Discord)?",
+        "Is the setup effort lower than installing an OBS plugin or StreamDeck integration?",
+        "Would a teen streamer choose this over existing one-click streaming tools?",
+        "Does the product require CLI setup that breaks the streaming workflow?",
+        "Are there Discord bot or Twitch integration recipes in the library?",
+        "Is the adoption bar 'lower than StreamDeck' and does the product clear it?",
+        "Would Theo's streaming community find value in automated workflow management?"
+      ]
+    },
+    {
+      "floor_number": 35,
+      "persona_name": "Nizhoni",
+      "persona_domain": "14yo Indigenous, land defender",
+      "questions": [
+        "Can the product automate monitoring of land defense news and tribal government updates?",
+        "Are there community or civic monitoring recipe templates?",
+        "Is there acknowledgment of Indigenous digital sovereignty in the product?",
+        "Does the data residency guarantee that automated data stays on her machine?",
+        "Does the product introduce itself in a way that earns trust from Indigenous communities?",
+        "Are there templates for civic engagement and environmental monitoring?",
+        "Would Nizhoni trust the product with data about her community's land defense efforts?"
+      ]
+    },
+    {
+      "floor_number": 36,
+      "persona_name": "Ben",
+      "persona_domain": "13yo Minecraft builder, creative coder",
+      "questions": [
+        "Is there a recipe builder that looks like Scratch or a Minecraft crafting table?",
+        "Can Ben translate visual systems-thinking (Minecraft) into CLI recipe commands?",
+        "Is the conceptual leap from visual fluency to CLI too large for a 13-year-old?",
+        "Would a visual recipe builder bridge the gap for game-literate teens?",
+        "Does the product require translating visual thinking into text without any bridge?",
+        "Are there game-inspired metaphors in the recipe system that Minecraft players recognize?",
+        "Would Ben imagine the product as useful if he could see recipes as crafting recipes?"
+      ]
+    },
+    {
+      "floor_number": 37,
+      "persona_name": "Kenji",
+      "persona_domain": "16yo anime fan, community moderator",
+      "questions": [
+        "Does a Discord community moderation recipe exist in the recipe library?",
+        "Can Kenji automate moderation tasks for his 5,000-member Discord community?",
+        "Would one Discord moderation recipe unlock the entire community moderator persona?",
+        "Does the product require building recipes from scratch for Discord use cases?",
+        "Is the interest present but the recipe gap preventing adoption?",
+        "Would Kenji's anime community benefit from automated content curation?",
+        "Does the recipe library serve professional workflows but miss teen platforms entirely?"
+      ]
+    },
+    {
+      "floor_number": 38,
+      "persona_name": "Lena",
+      "persona_domain": "15yo climate activist, data tracker",
+      "questions": [
+        "Are there climate-specific recipe templates for carbon tracking or climate news?",
+        "Does the product integrate with climate data sources (EPA, NOAA)?",
+        "Would one climate monitoring recipe pack serve Lena and every teen like her?",
+        "Is the general recipe system capable but missing starter templates for climate?",
+        "Are climate-conscious teens a significant demographic the product should serve?",
+        "Can Lena build a climate monitoring dashboard with existing recipe primitives?",
+        "Does the recipe library bias toward professional use cases over activist use cases?"
+      ]
+    },
+    {
+      "floor_number": 39,
+      "persona_name": "Coda",
+      "persona_domain": "14yo developer, early programmer",
+      "questions": [
+        "Is there a beginner developer path bridging 'I can write Python' to 'I can deploy a recipe'?",
+        "Does the product feel like a senior developer's tool that excludes early programmers?",
+        "Is there a Jupyter-notebook-style interface for teens learning to code?",
+        "Is the gap between Python fluency and CLI recipe deployment real and unbridged?",
+        "Would a guided recipe creation wizard help early programmers get started?",
+        "Does the product offer scaffolding for teens who code but do not yet 'think CLI'?",
+        "Would Coda recommend this product to other teens learning to program?"
+      ]
+    },
+    {
+      "floor_number": 40,
+      "persona_name": "Yara",
+      "persona_domain": "13yo BookTok creator, content planner",
+      "questions": [
+        "Are there social media scheduling templates for teen creators on TikTok and Instagram?",
+        "Does the product's recipe library know that teens create on TikTok, not LinkedIn?",
+        "Can Yara schedule her BookTok content weeks in advance with the scheduling system?",
+        "Is the recipe library biased toward professional workflows (Gmail, GitHub, LinkedIn)?",
+        "Would TikTok, Instagram, and YouTube recipe templates unlock teen creator adoption?",
+        "Does the product understand that teen content planning happens on different platforms?",
+        "Would one social media recipe pack serve Yara and every teen creator like her?"
+      ]
+    },
+    {
+      "floor_number": 41,
+      "persona_name": "Declan",
+      "persona_domain": "17yo teen entrepreneur, app builder",
+      "questions": [
+        "Does the product map to an entrepreneurial teen's development workflow?",
+        "Can evidence chains serve as release notes for a teen building their second app?",
+        "Does recipe replay function as CI/CD for a teen entrepreneur?",
+        "Is Declan closest to the adult power user persona (CLI-comfortable, evidence-first)?",
+        "Does the architecture ceiling prove to be high for advanced young users?",
+        "Would Declan use this product daily as part of his development workflow?",
+        "Is the 8/10 score the proof that advanced teen users can thrive on this platform?"
+      ]
+    },
+    {
+      "floor_number": 42,
+      "persona_name": "Noor",
+      "persona_domain": "15yo privacy researcher, investigative",
+      "questions": [
+        "Does the evidence chain serve as a research log for a privacy-aware teen investigator?",
+        "Is the approval gate an informed consent model that Noor recognizes and values?",
+        "Does the local-first execution serve as a data sovereignty guarantee for research?",
+        "Is the product genuinely useful for a teen researching how apps track users?",
+        "Would Noor's success parallel Sofia's (teens who think in evidence trails)?",
+        "Does the product provide tools for privacy research that teens could not get elsewhere?",
+        "Would Noor recommend this to other teen privacy researchers?"
+      ]
+    },
+    {
+      "floor_number": 43,
+      "persona_name": "Arjun",
+      "persona_domain": "16yo math olympiad, logical thinker",
+      "questions": [
+        "Does the recipe system map to a function library that a logical thinker recognizes?",
+        "Is the evidence chain a proof log that maps to mathematical reasoning?",
+        "Does the approval gate function as a theorem verifier for logical teens?",
+        "Would a math olympiad competitor find the product's architecture immediately legible?",
+        "Is Arjun's success the mathematical version of Lucas's game-mechanic mapping?",
+        "Does the product reward logical reasoning in ways that math-oriented teens appreciate?",
+        "Would Arjun describe recipes as 'functions with evidence' to his math team?"
+      ]
+    },
+    {
+      "floor_number": 44,
+      "persona_name": "Tobias",
+      "persona_domain": "14yo maker, hardware and software",
+      "questions": [
+        "Does the recipe system map to scripts and automation programs that makers use?",
+        "Does local-first execution resonate with maker culture (projects run on local machines)?",
+        "Do evidence chains serve as project documentation for hardware/software projects?",
+        "Is Tobias at 14 the youngest floor-clear, proving maker culture bridges the gap?",
+        "Does the product feel natural to a teen who builds physical computing projects?",
+        "Can Tobias automate Raspberry Pi or Arduino monitoring with existing recipes?",
+        "Would maker teens adopt this product as part of their project toolkit?"
+      ]
+    },
+    {
+      "floor_number": 45,
+      "persona_name": "Celeste",
+      "persona_domain": "16yo open-source contributor",
+      "questions": [
+        "Is the contribution pathway clear for teen contributors to the recipe library?",
+        "Is there a 'how to contribute a recipe' guide aimed at teen contributors?",
+        "Does a mentorship path exist for young open-source contributors?",
+        "Is there a recognition system for teen contributors (badges, leaderboard)?",
+        "Would Celeste find the contributor pipeline welcoming or gatekeeping?",
+        "Does the product want teen contributions but lack a teen-friendly entry point?",
+        "Is the gap between wanting community contributions and enabling teen contributions real?"
+      ]
+    },
+    {
+      "floor_number": 46,
+      "persona_name": "Elan",
+      "persona_domain": "15yo policy nerd, civic tech",
+      "questions": [
+        "Are there civic tech recipe templates for legislative tracking or government data?",
+        "Can Elan automate monitoring of city council agendas and public comment periods?",
+        "Does the recipe library touch the civic sphere where policy-oriented teens live?",
+        "Is the library entirely commercial (LinkedIn, Gmail, GitHub) and missing civic tools?",
+        "Would government data source integrations unlock a significant teen demographic?",
+        "Does the product recognize that some teens care about policy more than productivity?",
+        "Would Elan find this product useful for civic engagement or only commercial workflows?"
+      ]
+    },
+    {
+      "floor_number": 47,
+      "persona_name": "Pax",
+      "persona_domain": "17yo digital rights activist",
+      "questions": [
+        "Does the product have a clear position on digital rights in its documentation?",
+        "Is there acknowledgment of surveillance capitalism in the product's philosophy?",
+        "Is there an explicit privacy-by-design statement that Pax could cite?",
+        "Would Pax recommend the product to their digital rights community?",
+        "Is the product philosophically aligned with digital rights but silent about it?",
+        "Does Pax agree with the architecture but cannot find a company value statement to cite?",
+        "Would a digital rights position statement unlock activist teen adoption?"
+      ]
+    },
+    {
+      "floor_number": 48,
+      "persona_name": "Dragon Rider (Protector)",
+      "persona_domain": "child safety synthesis across all 47 floors",
+      "questions": [
+        "Is the product safe for a 15-year-old to use unsupervised?",
+        "Is the product COPPA compliant -- could a 10-year-old sign up right now?",
+        "Does the product help Tyson grow -- not just get tasks done?",
+        "Would every kind of kid -- regardless of background, identity, or ability -- find themselves?",
+        "Can parents see what their teen is doing with this product?",
+        "Is the product compliant with child safety regulations (COPPA, GDPR-K, KOSA)?",
+        "Would this product bring a 15-year-old genuine joy, not just utility?"
+      ]
+    },
+    {
+      "floor_number": 49,
+      "persona_name": "Tyson Prime",
+      "persona_domain": "real teen stress test -- Phuc's son, age 15",
+      "questions": [
+        "Can you explain what this does without using 'AI,' 'automation,' or 'recipe'?",
+        "Can I use this for homework -- can my teacher see evidence I did my own work?",
+        "If my friend spams me with requests, can I block them?",
+        "If I find a bug, how do I report it?",
+        "Is the code actually good? My dad always says 'code is truth.' Is this truth?",
+        "Is the UI good? Would my friends think it looks cool?",
+        "Could my whole class use this? Could my teacher run it for the class?"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "gemini-r8-20260307T163329",
+  "app": "gemini",
+  "round": 8,
+  "llm": "gemini-2.5-pro",
+  "persona": "Martin Kleppmann",
+  "task_type": "architecture-review",
+  "methodology": "PATH_TO_100",
+  "target": "solace-browser yinyang sidebar",
+  "scores": {
+    "architecture": 96,
+    "security": 98,
+    "data_integrity": 94,
+    "recipe_engine": 92,
+    "implementation": 95,
+    "ux": 92,
+    "operational": 90,
+    "overall": 93,
+    "structural_ceiling": 98
+  },
+  "verdict": "NEEDS WORK",
+  "r7_to_r8_delta": "+14 points",
+  "findings_count": 8,
+  "top_5_path": [
+    "[RECIPE] +3: Idempotency tokens for external_write steps (client_request_id + COMMITTED flag)",
+    "[DATA] +3: Post-partition merge conflict — CRDT for recipe metadata, fork detection for evidence",
+    "[OPS] +2: Poison Pill mechanism for orphaned Tauri processes on heartbeat failure",
+    "[UX] +1: Visual Diff in NEEDS_LLM_REPAIR UI to prevent malicious UI hijack approval",
+    "[SECURITY] +1: KDF for ephemeral session signing key instead of direct keychain access per entry"
+  ]
+}

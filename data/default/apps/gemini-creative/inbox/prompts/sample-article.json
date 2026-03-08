@@ -1,0 +1,12 @@
+{
+  "id": "sample-article-001",
+  "mode": "article_draft",
+  "params": {
+    "article_prompt": "Write a 1500-word article for phuc.net about why local-first AI agents will replace cloud-only SaaS. Cover these points: 1) Privacy advantages of local execution, 2) Cost savings when recipes replace LLM calls, 3) Evidence trails for compliance (FDA Part 11, SOC2), 4) The OAuth3 delegation model. Tone: technical but accessible. Audience: developers and CTOs evaluating AI agent platforms.",
+    "output_filename": "local-first-ai-agents-draft.md"
+  },
+  "created_at": "2026-03-06T00:00:00Z",
+  "status": "pending",
+  "priority": "normal",
+  "notes": "Sample prompt for testing article drafting via Gemini"
+}

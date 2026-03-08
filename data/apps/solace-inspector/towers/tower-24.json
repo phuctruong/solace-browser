@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 24,
+    "tower_name": "Tower of Gmail Inbox Triage",
+    "dna": "gmail(app) = install(easy) x auth(google) x extract(inbox) x preview(actions) x approve(human) x execute(safe) x evidence(sealed)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Gmail Inbox Triage",
+  "tower_number": 24,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Dana Whitfield",
+      "persona_domain": "first_time_installer",
+      "persona_context": "34, Portland, Freelance copywriter, Intermediate tech, Free tier, has never used Solace before, wants to try Gmail triage app first",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I find the Gmail Inbox Triage app in the Solace Browser App Store by searching 'gmail' or browsing the email category?",
+        "Does the app detail page show a clear description of what Gmail Inbox Triage does before I click Install?",
+        "Can I click 'Install' on the Gmail Inbox Triage app and see it added to my installed apps list within 5 seconds?",
+        "After installation, does the app appear in my sidebar or dashboard with a recognizable Gmail icon?",
+        "Does the install process complete without requiring me to use a terminal, run pip, or edit any config file?",
+        "If I click 'Install' while not logged in, does the app prompt me to sign in first rather than silently failing?",
+        "Can I see the app's required permissions (email read, email send) listed before I confirm the install?"
+      ],
+      "question_expansion_instruction": "Dana is a first-time Solace user. Every question must verify she can discover, understand, and install the Gmail app without technical knowledge. 'It is possible if you configure X' is a FAIL."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Raj Mehta",
+      "persona_domain": "google_auth_flow",
+      "persona_context": "41, Mumbai, Small business owner with Google Workspace, Beginner tech, Pro tier, has 3 email accounts, worried about security",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After installing the Gmail Triage app, does it prompt me to connect my Google account with a 'Sign in with Google' button?",
+        "Does the Google OAuth consent screen clearly show which permissions Solace is requesting (read-only email access)?",
+        "After I approve Google access, does the app show a confirmation that my account raj@mehta-exports.com is connected?",
+        "Can I connect a second Google account (raj.personal@gmail.com) without disconnecting the first one?",
+        "If I deny the Google OAuth permission, does the app show a clear error message explaining why it needs access?",
+        "Is my Google OAuth token stored locally in the encrypted vault and NOT sent to Solace's cloud servers?",
+        "Can I revoke the Google connection from within the app and see it reflected immediately in my Google account's third-party access list?"
+      ],
+      "question_expansion_instruction": "Raj is security-conscious and has multiple Google accounts. Every question must verify the OAuth flow works correctly, handles edge cases, and respects token storage policies."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Lisa Johansson",
+      "persona_domain": "inbox_extraction",
+      "persona_context": "29, Stockholm, Marketing manager, Intermediate tech, Starter tier, receives 150+ emails/day, inbox is overwhelming",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After connecting my Google account, can I click 'Scan Inbox' and see my latest 50 emails loaded within 10 seconds?",
+        "Does the inbox extraction show sender name, subject line, date, and a snippet for each email in a scannable list?",
+        "Can I filter the extracted emails by category (promotions, updates, social, primary) before triaging?",
+        "Does the app correctly identify and group email threads rather than showing each reply as a separate item?",
+        "If I have unread emails in Swedish, does the app display their subject lines and snippets without garbling Unicode characters?",
+        "Can I see a count of total unread emails vs total extracted so I know the scan covered my full inbox?",
+        "Does the extraction skip emails already triaged in a previous session so I am not re-processing old messages?"
+      ],
+      "question_expansion_instruction": "Lisa has a high-volume inbox. Questions verify extraction actually pulls real emails, displays them correctly, handles non-ASCII content, and provides useful filtering."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Carlos Mendoza",
+      "persona_domain": "action_preview",
+      "persona_context": "52, Mexico City, Real estate agent, Beginner tech, Pro tier, gets client inquiries via email, needs to respond quickly",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After inbox scan, does the app suggest specific actions for each email (reply, archive, label, forward) with a preview of what it will do?",
+        "Can I see the full draft reply text the app generated before it sends anything to my client?",
+        "Does the preview clearly distinguish between 'will archive' and 'will delete' so I do not accidentally lose a client email?",
+        "If the app suggests replying to a property inquiry, does the draft include the correct client name and property address from the original email?",
+        "Can I edit the suggested reply text in the preview before approving it?",
+        "Does the preview show me the estimated cost (LLM tokens) for generating each suggested action?",
+        "If I click 'Skip' on a suggested action, does it move to the next email without taking any action on the skipped one?"
+      ],
+      "question_expansion_instruction": "Carlos is not tech-savvy and handles high-stakes client communication. Every preview must show EXACTLY what will happen. Vague descriptions like 'an email will be sent' are FAIL."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Fatima Al-Rashidi",
+      "persona_domain": "approval_flow",
+      "persona_context": "38, Riyadh, HR Director, Intermediate tech, Enterprise tier, handles sensitive employee communications, requires approval for every action",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does every suggested action (reply, forward, archive) require my explicit approval before executing — no auto-send?",
+        "Can I approve multiple low-risk actions (archive promotions) in batch while reviewing sensitive replies one-by-one?",
+        "Does the approval modal show me the full email content and the full proposed action side-by-side?",
+        "If I reject a suggested reply, can I provide feedback on why so the next suggestion is better?",
+        "Is there a 'Reject All' button that cancels all pending actions if I realize the suggestions are wrong?",
+        "Does the approval flow work correctly in RTL layout for my Arabic locale without overlapping text?",
+        "After I approve an action, is there a 3-second undo window before the action actually executes?"
+      ],
+      "question_expansion_instruction": "Fatima handles sensitive HR emails. The approval gate is her safety net. Every question verifies that NOTHING executes without explicit human consent and that the UI works in RTL."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "James Okafor",
+      "persona_domain": "execute_and_evidence",
+      "persona_context": "45, Lagos, Compliance officer at fintech startup, Expert tech, Enterprise tier, needs audit trail for every email action taken",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "After I approve a reply action, does the app send the email through Gmail's API and show a 'Sent' confirmation with timestamp?",
+        "Is each executed action recorded in an evidence bundle with SHA-256 hash, timestamp, action type, and my user ID?",
+        "Can I view the evidence chain for all actions taken in today's triage session in a single evidence log?",
+        "Does the evidence record include the original email content AND the reply content so I can prove what was sent?",
+        "If the Gmail API returns an error (rate limit, network failure), does the app show the specific error instead of silently failing?",
+        "Can I export the evidence chain for a specific date range as a JSON file for our compliance audit?",
+        "Does the evidence hash chain maintain integrity — if I tamper with one record, does verification of the chain fail?"
+      ],
+      "question_expansion_instruction": "James needs proof of every action for regulatory compliance. Evidence must be real, hash-chained, exportable, and tamper-evident. Silent failures or missing evidence = compliance violation."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Sophie Chen-Nakamura",
+      "persona_domain": "session_persistence",
+      "persona_context": "33, Vancouver, Product manager, Expert tech, Pro tier, triages email across morning laptop and evening tablet sessions",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "If I triage 30 emails in the morning and close the browser, does my evening session remember which emails were already processed?",
+        "Does the app persist my Google account connection across browser restarts without requiring re-authentication?",
+        "If I processed emails on my laptop, can I open Solace Browser on my tablet and see the same triage history?",
+        "Does the app save my custom filters (skip promotions, prioritize clients) between sessions?",
+        "If the browser crashes mid-triage, does the app resume from the last completed action rather than starting over?",
+        "Can I see a history of all past triage sessions with date, email count processed, and actions taken?",
+        "Does the session state sync to my local storage only (not cloud) if I am on the Free tier without cloud sync?"
+      ],
+      "question_expansion_instruction": "Sophie works across multiple devices and sessions. Every question verifies that state persists correctly, syncs where appropriate, and handles crashes gracefully."
+    }
+  ]
+}

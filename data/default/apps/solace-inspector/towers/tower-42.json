@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "format": "tower-spec",
+    "version": "2.1",
+    "auth": "65537",
+    "tower_number": 42,
+    "tower_name": "Tower of Developer Tools",
+    "dna": "devtools(suite) = issues(triage) x pr(review) x alert(notify) x priority(rank) x assign(auto) x report(generate) x integrate(ci)",
+    "generated_at": "2026-03-05T00:00:00Z",
+    "question_target_per_floor": 7,
+    "question_expansion_instruction": "Each floor has 7 seed questions from a specific persona context. Questions must be answerable by checking if something actually works — click it, see it, verify it. Not theoretical.",
+    "aggregate_prior": "0/49 (not yet run)",
+    "systemic_failures": [],
+    "target_projects": [
+      "solace-browser"
+    ],
+    "target_project_paths": {
+      "solace-browser": "/home/phuc/projects/solace-browser"
+    }
+  },
+  "name": "Tower of Developer Tools",
+  "tower_number": 42,
+  "total_floors": 7,
+  "total_questions": 49,
+  "protocol": "FORECAST -> CROSS-REF -> AUDIT(7q) -> FIX -> VERIFY -> SEAL -> POSTMORTEM",
+  "floors": [
+    {
+      "floor_number": 1,
+      "persona_name": "Alex Petrov",
+      "persona_domain": "issue_scanning",
+      "persona_context": "32, Kyiv, Lead developer at a 15-person startup, Expert tech, Pro tier, manages 3 GitHub repos with 200+ open issues across them, needs to triage new issues every morning without manually reading each one",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I connect my GitHub account and see all open issues across my 3 repositories in a single unified view?",
+        "Does the app scan new issues created since my last triage session and highlight them separately from older issues?",
+        "Can I see a one-sentence AI summary of each issue so I do not have to click into every one to understand it?",
+        "Does the app detect duplicate issues and group them together with a 'Possible Duplicate' badge?",
+        "Can I filter issues by repository, label, author, and creation date in the unified view?",
+        "Does the scan complete within 30 seconds for 200 issues across 3 repos without hitting GitHub API rate limits?",
+        "Can I see which issues have had community comments or reactions since the last scan?"
+      ],
+      "question_expansion_instruction": "Alex manages hundreds of issues across multiple repos. Every question verifies that scanning actually pulls real GitHub data, surfaces new items, detects duplicates, and completes quickly. An empty dashboard requiring manual configuration per repo is a FAIL."
+    },
+    {
+      "floor_number": 2,
+      "persona_name": "Priya Shankar",
+      "persona_domain": "priority_ranking",
+      "persona_context": "28, Pune, Product manager at a B2B SaaS company, Intermediate tech, Enterprise tier, receives 30 new GitHub issues per week and needs to prioritize them by customer impact, severity, and engineering effort",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Does the app rank issues by priority using signals like labels (bug vs feature), customer mentions, and comment frequency?",
+        "Can I see a priority score (P0-P4) assigned to each issue with an explanation of why it received that score?",
+        "Does the ranking algorithm weight customer-reported bugs higher than internal feature requests?",
+        "Can I override the AI priority ranking by dragging an issue to a different priority tier?",
+        "Does the app learn from my priority overrides and improve its ranking for future issues?",
+        "Can I set custom priority rules (e.g., 'Any issue mentioning data loss is always P0') that the AI applies automatically?",
+        "Does the priority view show a breakdown of issues per priority level (e.g., 5 P0, 12 P1, 45 P2) so I can see workload distribution?"
+      ],
+      "question_expansion_instruction": "Priya needs to prioritize 30 issues per week without reading every one in detail. Every question verifies that priority ranking is automated, explainable, overridable, and learnable. A flat alphabetical issue list is a FAIL."
+    },
+    {
+      "floor_number": 3,
+      "persona_name": "Marcus Chen",
+      "persona_domain": "auto_assignment",
+      "persona_context": "35, Austin TX, Engineering manager for a 20-person team, Expert tech, Enterprise tier, spends 3 hours/week manually assigning issues to developers based on expertise, availability, and current sprint load",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can the app suggest which developer to assign each issue to based on their past work on similar issues?",
+        "Does the assignment suggestion consider each developer's current open issue count to avoid overloading anyone?",
+        "Can I see the reasoning behind each assignment suggestion (e.g., 'Sarah fixed 3 similar auth bugs this quarter')?",
+        "If I accept the assignment suggestion, does the app actually assign the issue on GitHub via the API?",
+        "Can I define team expertise areas (frontend, backend, infra) that the AI uses as input for assignment suggestions?",
+        "Does the app warn me if a suggested assignee is on PTO or has more than 5 open P0/P1 issues?",
+        "Can I bulk-accept assignment suggestions for all P2+ issues while manually reviewing P0 and P1 assignments?"
+      ],
+      "question_expansion_instruction": "Marcus wants to eliminate the 3 hours/week he spends on manual assignment. Every question verifies that suggestions are based on real team data, consider workload, and actually execute on GitHub. A 'Random Assignment' button is a FAIL."
+    },
+    {
+      "floor_number": 4,
+      "persona_name": "Hannah Olsen",
+      "persona_domain": "pr_review",
+      "persona_context": "30, Copenhagen, Senior developer at a fintech company, Expert tech, Pro tier, reviews 10-15 pull requests per week, needs AI to pre-screen PRs for obvious issues before she spends time on them",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I connect my GitHub repos and see all open pull requests awaiting my review in a prioritized list?",
+        "Does the app provide an AI-generated summary of each PR's changes (what files changed, estimated risk, scope)?",
+        "Can the AI flag common issues in PR code (missing tests, security concerns, breaking API changes) before I start reviewing?",
+        "Does the PR review screen show diff highlights with AI annotations inline next to the relevant code lines?",
+        "Can I approve or request changes on the PR directly from the Solace interface without switching to GitHub?",
+        "Does the AI distinguish between low-risk PRs (documentation, typos) and high-risk PRs (database migrations, auth changes)?",
+        "Can I see how long each PR has been waiting for review and which ones are blocking other team members?"
+      ],
+      "question_expansion_instruction": "Hannah reviews many PRs and needs AI to do the first pass. Every question verifies that PR review assistance provides real code analysis, flags actual issues, and enables GitHub actions from Solace. A PR list without analysis is a FAIL."
+    },
+    {
+      "floor_number": 5,
+      "persona_name": "Tomasz Nowak",
+      "persona_domain": "notification_alerts",
+      "persona_context": "27, Krakow, DevOps engineer at a cloud infrastructure company, Expert tech, Pro tier, monitors 5 GitHub repos and needs instant alerts for critical events (security advisories, CI failures, P0 bugs) without drowning in noise",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I configure alert rules that notify me only for specific events (security advisories, CI failures, P0 labels) and filter out everything else?",
+        "Does the alert arrive within 2 minutes of the GitHub event occurring, not on a delayed polling schedule?",
+        "Can I receive alerts through multiple channels (in-app notification, browser push, email) based on severity?",
+        "Does the alert include enough context (issue title, repo, link, assignee) that I can triage without clicking through?",
+        "Can I snooze an alert for 2 hours if I am in a focus session without permanently dismissing it?",
+        "Does the alert system deduplicate — if 5 comments are added to the same issue in 10 minutes, do I get one alert or five?",
+        "Can I see an alert history log showing all alerts received, acknowledged, and snoozed in the past 7 days?"
+      ],
+      "question_expansion_instruction": "Tomasz needs signal, not noise. Every question verifies that alerts are fast, configurable, contextual, and deduplicated. Getting 50 alerts for 50 comments on the same issue is a FAIL. Getting no alert for a security advisory is a critical FAIL."
+    },
+    {
+      "floor_number": 6,
+      "persona_name": "Diana Reyes",
+      "persona_domain": "sprint_reports",
+      "persona_context": "40, Bogota, Scrum master for 3 development teams, Intermediate tech, Enterprise tier, spends 2 hours every Friday compiling sprint reports from GitHub data, wants this automated",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can the app auto-generate a sprint report summarizing issues closed, PRs merged, and carry-over items for the past 2 weeks?",
+        "Does the report show per-developer metrics (issues closed, PR reviews completed, average cycle time) for each team?",
+        "Can I see a burndown chart showing sprint progress over the 2-week period?",
+        "Does the report highlight blockers — issues that were open all sprint with no progress?",
+        "Can I customize the report template (add/remove sections, change metrics displayed) to match my organization's format?",
+        "Does the report compare this sprint's velocity to the previous 3 sprints to show trends?",
+        "Can I export the report as a PDF or Confluence page and schedule it to auto-generate every other Friday at 4pm?"
+      ],
+      "question_expansion_instruction": "Diana compiles sprint reports manually and wants automation. Every question verifies the report pulls real GitHub data, calculates real metrics, and produces a deliverable output. A placeholder report with dummy data is a FAIL."
+    },
+    {
+      "floor_number": 7,
+      "persona_name": "Ryan Fitzgerald",
+      "persona_domain": "ci_integration",
+      "persona_context": "33, Melbourne, Platform engineer at a media company, Expert tech, Enterprise tier, manages CI/CD pipelines on GitHub Actions for 8 repositories, needs visibility into build failures and deployment status",
+      "pass_rate_prior": "0%",
+      "questions": [
+        "Can I see a dashboard of all GitHub Actions workflow runs across my 8 repos with pass/fail status?",
+        "Does the dashboard show which specific step in a failed workflow caused the failure without me reading the full log?",
+        "Can I trigger a workflow re-run directly from the Solace interface for a failed build?",
+        "Does the app track build failure trends — is a specific repo or workflow becoming less reliable over time?",
+        "Can I see the average build duration per workflow and get alerted when a build takes 2x longer than usual?",
+        "Does the CI dashboard show deployment status (staging deployed, production pending) alongside build status?",
+        "Can I set up a rule that auto-assigns the developer whose commit caused a build failure to investigate the issue?"
+      ],
+      "question_expansion_instruction": "Ryan manages CI/CD across many repos and needs one pane of glass. Every question verifies real GitHub Actions integration with actionable data, re-run capability, and trend analysis. A list of workflow names without status is a FAIL."
+    }
+  ]
+}

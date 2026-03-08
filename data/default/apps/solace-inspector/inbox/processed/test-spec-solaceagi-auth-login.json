@@ -1,0 +1,19 @@
+{
+  "spec_id": "solaceagi-auth-login-001",
+  "project": "solaceagi",
+  "requested_by": "claude-code",
+  "mode": "web",
+  "target_url": "https://www.solaceagi.com/auth/login",
+  "page_name": "SolaceAGI Auth Login Page",
+  "checks": {
+    "aria": true,
+    "heuristics": true,
+    "llm_analysis": true,
+    "screenshot": true,
+    "baseline_diff": false
+  },
+  "persona": "kent_beck",
+  "priority": "critical",
+  "context": "CLAUDE.md Forced Sign-Up Flow: auth login page is the gateway. Verify: (1) Firebase Auth UI loads, (2) Google OAuth button visible and labeled, (3) GitHub OAuth button visible, (4) form accessible (ARIA labels), (5) no JS console errors visible. Kent Beck: can any user log in on their first try?",
+  "created_at": "2026-03-03T00:00:00Z"
+}

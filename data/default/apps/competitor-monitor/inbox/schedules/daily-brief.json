@@ -1,0 +1,56 @@
+{
+  "id": "daily-brief",
+  "name": "Daily Competitor Intelligence Brief",
+  "description": "Quick daily check across all 6 competitors for breaking news, major announcements, and pricing changes. Lighter than weekly scan — one search per competitor.",
+  "schedule": {
+    "type": "cron",
+    "expression": "0 8 * * *",
+    "timezone": "America/Los_Angeles",
+    "note": "Runs every morning at 8am Pacific"
+  },
+  "created_at": "2026-03-06",
+  "runs": [
+    {
+      "competitor": "OpenClaw",
+      "search_query": "OpenClaw OR \"Open Interpreter\" AI agent news",
+      "priority": "high"
+    },
+    {
+      "competitor": "Browser-Use",
+      "search_query": "browser-use AI agent news update",
+      "priority": "high"
+    },
+    {
+      "competitor": "Bardeen",
+      "search_query": "Bardeen AI automation news pricing",
+      "priority": "medium"
+    },
+    {
+      "competitor": "n8n",
+      "search_query": "n8n AI workflow automation news",
+      "priority": "medium"
+    },
+    {
+      "competitor": "Vercel Agent Browser",
+      "search_query": "Vercel AI agent browser SDK news",
+      "priority": "medium"
+    },
+    {
+      "competitor": "Claude Computer Use",
+      "search_query": "Claude computer use Anthropic agent news",
+      "priority": "high"
+    }
+  ],
+  "output": {
+    "format": "json",
+    "path": "outbox/reports/daily-brief-{date}.json",
+    "evidence": "outbox/evidence/daily-brief-{run_id}.json",
+    "summary": true,
+    "alert_on": ["pricing change", "product launch", "funding round", "acquisition", "partnership"]
+  },
+  "budget": {
+    "max_searches": 6,
+    "timeout_per_search_ms": 15000,
+    "cooldown_between_searches_ms": 10000
+  }
+}

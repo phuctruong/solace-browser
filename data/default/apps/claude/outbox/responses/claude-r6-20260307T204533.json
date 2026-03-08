@@ -1,0 +1,36 @@
+{
+  "id": "claude-r6-20260307T204533",
+  "app": "claude",
+  "round": 6,
+  "llm": "chatgpt-5.4-as-proxy",
+  "llm_note": "Claude.ai tab hijacked by keep-alive cron twice. Used ChatGPT with Mike West persona (Claude prompt). Response quality valid.",
+  "persona": "Mike West (via ChatGPT proxy)",
+  "task_type": "architecture-review",
+  "target": "solace-browser yinyang sidebar",
+  "timestamp": "20260307T204533",
+  "scores": {
+    "architectural_soundness": 88,
+    "business_viability": 86,
+    "competitive_positioning": 87,
+    "implementation_feasibility": 82,
+    "user_experience": 81,
+    "security": 84,
+    "scalability": 85,
+    "overall": 85
+  },
+  "verdict": "NEEDS WORK",
+  "findings_count": 18,
+  "skills_loaded": [
+    "prime-safety",
+    "prime-coder",
+    "styleguide-first",
+    "fallback-ban",
+    "negative-space",
+    "browser-domain",
+    "constraints",
+    "stakes"
+  ],
+  "prompt_hash": "67d52adbc16ed8e65f4663974d468eabcecd40d5f82e5cb705c6c26a8b817e36",
+  "response_hash": "d0711f2c7aed0b81a37ee426e12ffe6832a38a6d63fd08dd854434cf4c6b6b65",
+  "response_text": "Architecture:88 Business:86 Competitive:87 Implementation:82 UX:81 Security:84 Scalability:85\nOVERALL: 85/100\n\nFINDINGS:\n\n[Security] [P0] Native Messaging bootstrap lacks peer-authentication binding. EXACT FIX: require one-time bootstrap nonce via Tauri, HMAC'd with per-install secret.\n\n[Security] [P0] Uplift apps create prompt-injection ingress into evidence/outbox. EXACT FIX: enforce write schema with server-side UUIDv7 paths only.\n\n[Implementation] [P1] stdin key-handoff ack doesn't show partial-load ambiguity. EXACT FIX: ack schema with attempted/loaded/failed arrays.\n\n[Implementation] [P1] PAUSED->ABANDONED on restart creates false abandonment. EXACT FIX: INTERRUPTED_BY_RESTART state, only ABANDONED after TTL.\n\n[Scalability] [P1] Background sweep can double-transition tasks. EXACT FIX: atomic SQL with state_version compare-and-swap.\n\n[Security] [P1] VACUUM reschedule violates fail-loud rule. EXACT FIX: visible warning on missed window, block after 14 days.\n\n[Architecture] [P1] WebSocket reconnect lacks idempotency. EXACT FIX: run_id + step_id + command_seq, reject duplicates with 409.\n\n[Competitive] [P1] Cross-session memory needs capability bounds. EXACT FIX: per-workflow memory scopes with explicit labels.\n\n[Business] [P1] Pro-tier gating risks perceived paywall around safety. EXACT FIX: keep safety linting free, gate orchestration/evidence.\n\n[UX] [P1] Session recovery hides replay cost/risk. EXACT FIX: enumerate steps, block one-click for side-effecting.\n\n[Security] [P1] Uplift skill injection risks secret leakage. EXACT FIX: redaction pass before compose_uplift.\n\n[Implementation] [P2] 5-second ack timeout too short for Windows cold-start. EXACT FIX: two-phase timeout (2s spawn, 15s key-load).\n\n[Scalability] [P2] Evidence retention/compaction missing. EXACT FIX: 90-day responses, 1-year manifests, SHA-256 dedup.\n\n[Architecture] [P2] Action aliases can silently expand capability. EXACT FIX: normalize to canonical before authorization.\n\n[Security] [P2] ensure_model underspecified. EXACT FIX: static hostname allowlist + verified DOM anchors.\n\n[UX] [P2] Inbox/outbox naming not user-friendly. EXACT FIX: rename in UI (Review Requests, Rules, Findings, Audit Trail).\n\n[Implementation] [P2] No RED/GREEN tests for 7 new actions. EXACT FIX: one failing + one passing test per alias.\n\n[Business] [P2] Linux distribution/signing policy missing. EXACT FIX: AppImage/deb/rpm signing + checksum instructions.\n\nVERDICT: NEEDS WORK"
+}

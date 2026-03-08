@@ -1,0 +1,98 @@
+{
+  "id": "openai-image-gen",
+  "version": "1.1.0",
+  "type": "standard",
+  "platform": "any",
+  "architecture": "agent-native",
+  "description": "Generate images via ChatGPT web. Navigate to chatgpt.com/images, type a DALL-E prompt, wait for generation, download results. Human picks favorites.",
+  "oauth3_scopes": ["browser.navigate", "browser.type", "browser.click", "browser.screenshot", "browser.download"],
+  "evidence_type": "lane_a",
+  "inbox_format": "inbox/prompts/*.json",
+  "outbox_format": "outbox/images/*.png",
+  "web_steps": [
+    {
+      "step": 1,
+      "id": "navigate_chatgpt",
+      "action": "navigate",
+      "target": "https://chatgpt.com",
+      "timeout_ms": 15000,
+      "note": "User must be logged in already"
+    },
+    {
+      "step": 2,
+      "id": "go_to_images",
+      "action": "click",
+      "target": "text=Images",
+      "timeout_ms": 10000,
+      "note": "Click Images link in sidebar to enter DALL-E mode"
+    },
+    {
+      "step": 3,
+      "id": "focus_input",
+      "action": "click",
+      "target": "#prompt-textarea",
+      "timeout_ms": 5000,
+      "note": "Click ProseMirror contenteditable input to focus"
+    },
+    {
+      "step": 4,
+      "id": "type_prompt",
+      "action": "evaluate",
+      "expression": "document.querySelector('#prompt-textarea').focus(); document.execCommand('insertText', false, '{params.image_prompt}')",
+      "note": "ProseMirror requires execCommand insertText — standard fill/type fails"
+    },
+    {
+      "step": 5,
+      "id": "submit_prompt",
+      "action": "click",
+      "target": "button[data-testid='send-button']",
+      "timeout_ms": 5000
+    },
+    {
+      "step": 6,
+      "id": "wait_for_image",
+      "action": "wait",
+      "condition": "img[alt='Generated image']",
+      "timeout_ms": 60000,
+      "note": "DALL-E takes 10-30 seconds to generate"
+    },
+    {
+      "step": 7,
+      "id": "screenshot_result",
+      "action": "screenshot",
+      "full_page": false,
+      "store_as": "generation_screenshot"
+    },
+    {
+      "step": 8,
+      "id": "download_image",
+      "action": "evaluate",
+      "expression": "const img = document.querySelector('img[alt=\"Generated image\"]'); const canvas = document.createElement('canvas'); canvas.width = img.naturalWidth; canvas.height = img.naturalHeight; canvas.getContext('2d').drawImage(img, 0, 0); canvas.toDataURL('image/png')",
+      "output_path": "outbox/images/{params.output_filename}",
+      "note": "Extract via canvas.toDataURL — authenticated URLs can't be fetched directly"
+    },
+    {
+      "step": 9,
+      "id": "seal_evidence",
+      "action": "write_evidence",
+      "output_path": "outbox/reports/report-{run_id}.json",
+      "seal": "sha256"
+    }
+  ],
+  "params": {
+    "image_prompt": "A photorealistic sunset over Boston harbor with sailboats",
+    "num_variations": 4,
+    "output_filename": "generated-{timestamp}.png",
+    "style": "photorealistic"
+  },
+  "selectors": {
+    "images_link": "text=Images",
+    "input_field": "#prompt-textarea",
+    "input_method": "execCommand('insertText')",
+    "send_button": "button[data-testid='send-button']",
+    "generated_image": "img[alt='Generated image']",
+    "download_method": "canvas.toDataURL('image/png')"
+  },
+  "tested": "2026-03-06",
+  "test_result": "PASS — image generated and downloaded successfully"
+}
