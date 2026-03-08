@@ -712,7 +712,7 @@
 
     <!-- System Health Metrics (Task 018) -->
     <div class="card" id="metrics-panel">
-      <h2>System Health</h2>
+      <h2 style="display:flex;align-items:center;gap:8px;">System Health<button class="pin-btn" data-section="metrics-panel" onclick="togglePin('metrics-panel',this)" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted);padding:0;" title="Pin section">📌</button></h2>
       <div class="metrics-row">
         <div class="metric-item">
           <span class="metric-value" id="m-uptime">-</span>
@@ -2688,6 +2688,37 @@
     }
     refreshWatchdog();
     setInterval(refreshWatchdog, 30_000);
+
+    // Pinned sections (Task 039)
+    let _pinnedSections = new Set();
+    async function loadPinnedSections() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/pinned', { signal: AbortSignal.timeout(2000) });
+        if (!r.ok) return;
+        const d = await r.json();
+        _pinnedSections = new Set(d.pinned || []);
+        applyPinnedStyles();
+      } catch (_) {}
+    }
+    function applyPinnedStyles() {
+      document.querySelectorAll('.pin-btn').forEach(btn => {
+        const id = btn.dataset.section;
+        btn.style.opacity = _pinnedSections.has(id) ? '1' : '0.3';
+      });
+    }
+    async function togglePin(sectionId, btn) {
+      if (_pinnedSections.has(sectionId)) { _pinnedSections.delete(sectionId); }
+      else { _pinnedSections.add(sectionId); }
+      applyPinnedStyles();
+      try {
+        await fetch('http://localhost:8888/api/v1/pinned', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${window.__hubToken || ''}`},
+          body: JSON.stringify({pinned: Array.from(_pinnedSections)}),
+        });
+      } catch (_) {}
+    }
+    loadPinnedSections();
 
     // Global search (Task 038)
     let _searchTimer = null;

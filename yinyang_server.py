@@ -126,6 +126,8 @@ WATCHDOG_LOG_PATH: Path = Path.home() / ".solace" / "watchdog.log"
 _WATCHDOG_LOCK = threading.Lock()
 THEME_PATH: Path = Path.home() / ".solace" / "theme.json"
 _THEME_LOCK = threading.Lock()
+PINNED_SECTIONS_PATH: Path = Path.home() / ".solace" / "pinned_sections.json"
+_PINNED_LOCK = threading.Lock()
 SUPPORTED_CLI_TOOLS: frozenset = frozenset(["claude", "openai", "ollama", "aider", "continue"])
 _CLI_LOCK = threading.Lock()
 _COMMUNITY_RECIPES: list = [
@@ -582,6 +584,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_system_status()
         elif path == "/api/v1/search":
             self._handle_search(query)
+        elif path == "/api/v1/pinned":
+            self._handle_pinned_get()
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -673,6 +677,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_theme_set()
         elif path == "/api/v1/settings/import":
             self._handle_settings_import()
+        elif path == "/api/v1/pinned":
+            self._handle_pinned_set()
         elif path == "/api/v1/byok/set":
             self._handle_byok_set()
         elif path == "/api/v1/byok/test":
@@ -1921,6 +1927,37 @@ function choose(mode) {
                 CLI_CONFIG_PATH.write_text(json.dumps(body["cli_config"], indent=2))
             imported.append("cli_config")
         self._send_json({"status": "imported", "imported": imported})
+
+    # --- Task 039: Pinned sections handlers ---
+
+    def _handle_pinned_get(self) -> None:
+        """GET /api/v1/pinned — return pinned section IDs. Task 039."""
+        with _PINNED_LOCK:
+            pinned: list = []
+            if PINNED_SECTIONS_PATH.exists():
+                try:
+                    data = json.loads(PINNED_SECTIONS_PATH.read_text())
+                    pinned = data if isinstance(data, list) else []
+                except (json.JSONDecodeError, OSError):
+                    pinned = []
+        self._send_json({"pinned": pinned})
+
+    def _handle_pinned_set(self) -> None:
+        """POST /api/v1/pinned — save pinned section IDs. Task 039."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        pinned = body.get("pinned", [])
+        if not isinstance(pinned, list):
+            self._send_json({"error": "pinned must be a list"}, 400)
+            return
+        pinned = [str(p) for p in pinned[:20]]
+        with _PINNED_LOCK:
+            PINNED_SECTIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
+            PINNED_SECTIONS_PATH.write_text(json.dumps(pinned))
+        self._send_json({"status": "ok", "pinned": pinned})
 
     # --- Task 038: Global search handler ---
 

@@ -523,6 +523,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     spend_history_path = tmp / "spend_history.json"
     watchdog_log_path = tmp / "watchdog.log"
     theme_path = tmp / "theme.json"
+    pinned_sections_path = tmp / "pinned_sections.json"
 
     original_lock = ys.PORT_LOCK_PATH
     original_evidence = ys.EVIDENCE_PATH
@@ -539,6 +540,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     original_spend_history = ys.SPEND_HISTORY_PATH
     original_watchdog_log = ys.WATCHDOG_LOG_PATH
     original_theme = ys.THEME_PATH
+    original_pinned = ys.PINNED_SECTIONS_PATH
 
     ys.PORT_LOCK_PATH = lock_path
     ys.EVIDENCE_PATH = evidence_path
@@ -554,6 +556,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.CLI_CONFIG_PATH = cli_config_path
     ys.SPEND_HISTORY_PATH = spend_history_path
     ys.WATCHDOG_LOG_PATH = watchdog_log_path
+    ys.PINNED_SECTIONS_PATH = pinned_sections_path
     ys.THEME_PATH = theme_path
 
     httpd = ys.build_server(AUTH_TEST_PORT, str(REPO_ROOT), session_token_sha256=VALID_TOKEN)
@@ -583,6 +586,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.INSTALLED_RECIPES_PATH = original_installed_recipes
     ys.CLI_CONFIG_PATH = original_cli_config
     ys.SPEND_HISTORY_PATH = original_spend_history
+    ys.PINNED_SECTIONS_PATH = original_pinned
     ys.WATCHDOG_LOG_PATH = original_watchdog_log
     ys.THEME_PATH = original_theme
 
@@ -2462,3 +2466,33 @@ class TestSearch:
         assert "total" in data
         assert "query" in data
         assert data["query"] == "gmail"
+
+
+# ── Task 039: Pinned Sections ─────────────────────────────────────────────────
+
+class TestPinnedSections:
+    def test_pinned_get_empty(self, auth_server):
+        status, data = _get_json_auth("/api/v1/pinned")
+        assert status == 200
+        assert "pinned" in data
+        assert isinstance(data["pinned"], list)
+
+    def test_pinned_set_requires_auth(self, auth_server):
+        body = json.dumps({"pinned": ["budget-panel"]}).encode()
+        req = urllib.request.Request(
+            f"{AUTH_BASE}/api/v1/pinned",
+            data=body, method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req):
+                pass
+            assert False, "expected 401"
+        except urllib.error.HTTPError as e:
+            assert e.code == 401
+
+    def test_pinned_set(self, auth_server):
+        status, data = _post_with_auth("/api/v1/pinned", {"pinned": ["budget-panel", "metrics-panel"]})
+        assert status == 200
+        assert data["status"] == "ok"
+        assert "budget-panel" in data["pinned"]

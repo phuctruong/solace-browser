@@ -803,3 +803,18 @@ class TestSearchUI:
         """index.html must contain search input."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "search" in html.lower()
+
+
+# ── Task 039: Pinned Sections ─────────────────────────────────────────────────
+
+class TestPinnedUI:
+    def test_pinned_in_server(self):
+        """yinyang_server.py must implement /api/v1/pinned."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/pinned" in server
+        assert "PINNED_SECTIONS_PATH" in server
+
+    def test_pin_in_html(self):
+        """index.html must contain pin functionality."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "pin" in html.lower()
