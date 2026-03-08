@@ -3474,6 +3474,7 @@ dependencies = [
 name = "solace-hub"
 version = "0.1.0"
 dependencies = [
+ "dirs-next",
  "hex",
  "keyring",
  "serde",
