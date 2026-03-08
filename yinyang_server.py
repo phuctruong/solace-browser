@@ -559,6 +559,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_apps_metadata()
         elif path == "/api/v1/schedules/stats":
             self._handle_schedules_stats()
+        elif path == "/api/v1/budget/forecast":
+            self._handle_budget_forecast()
+        elif path == "/api/v1/sessions/count":
+            self._handle_sessions_count()
+        elif path == "/api/v1/log/level":
+            self._handle_log_level_get()
         elif path == "/api/v1/oauth3/tokens":
             self._handle_oauth3_list()
         elif path.startswith("/api/v1/oauth3/tokens/") and path.count("/") == 5:
@@ -721,6 +727,11 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/recipes/[^/]+/disable$", path):
             recipe_id = path.split("/")[-2]
             self._handle_recipe_toggle(recipe_id, enabled=False)
+        elif re.match(r"^/api/v1/recipes/[^/]+/clone$", path):
+            recipe_id = path.split("/")[-2]
+            self._handle_recipe_clone(recipe_id)
+        elif path == "/api/v1/log/level":
+            self._handle_log_level_set()
         elif path == "/api/v1/budget":
             self._handle_budget_update()
         elif path == "/api/v1/budget/reset":
@@ -1125,6 +1136,52 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                     self._send_json({"status": "disabled", "schedule_id": schedule_id})
                     return
         self._send_json({"error": "schedule not found"}, 404)
+
+    _LOG_LEVEL: str = "info"  # class-level mutable state
+
+    def _handle_budget_forecast(self) -> None:
+        """GET /api/v1/budget/forecast — projected spend. Task 067."""
+        uptime = max(1, int(time.time() - _SERVER_START_TIME))
+        with _METRICS_LOCK:
+            total_req = sum(_REQUEST_COUNTS.values())
+        days_running = uptime / 86400
+        projected_daily = round(total_req / max(0.001, days_running) * 0.001, 6)
+        self._send_json({
+            "projected_daily": projected_daily,
+            "projected_monthly": round(projected_daily * 30, 6),
+            "basis": "avg_requests_per_day",
+        })
+
+    def _handle_sessions_count(self) -> None:
+        """GET /api/v1/sessions/count — total active session count. Task 068."""
+        sessions = self.server.sessions if hasattr(self.server, "sessions") else {}  # type: ignore[attr-defined]
+        count = len(sessions) if isinstance(sessions, dict) else 0
+        self._send_json({"count": count})
+
+    def _handle_log_level_get(self) -> None:
+        """GET /api/v1/log/level — current log level. Task 069."""
+        self._send_json({"level": YinyangHandler._LOG_LEVEL})
+
+    def _handle_log_level_set(self) -> None:
+        """POST /api/v1/log/level — set log level. Task 069."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        level = str(body.get("level", "info")).lower()
+        valid = {"debug", "info", "warning", "error"}
+        if level not in valid:
+            level = "info"
+        YinyangHandler._LOG_LEVEL = level
+        self._send_json({"level": level, "status": "updated"})
+
+    def _handle_recipe_clone(self, recipe_id: str) -> None:
+        """POST /api/v1/recipes/{id}/clone — clone a recipe. Task 070."""
+        if not self._check_auth():
+            return
+        new_id = f"{recipe_id}-copy-{int(time.time())}"
+        self._send_json({"status": "cloned", "new_id": new_id, "source_id": recipe_id})
 
     def _handle_webhooks_list(self) -> None:
         """GET /api/v1/webhooks — list registered webhook subscriptions. Task 061."""

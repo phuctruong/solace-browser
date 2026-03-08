@@ -1122,3 +1122,26 @@ class TestScheduleStatsUI:
     def test_schedule_stats_in_server(self):
         server = (REPO_ROOT / "yinyang_server.py").read_text()
         assert "/api/v1/schedules/stats" in server
+
+
+# ── Tasks 066-070: Bulk UI Tests ──────────────────────────────────────────────
+
+class TestBudgetForecastUI:
+    def test_forecast_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/budget/forecast" in server
+
+class TestSessionReplayUI:
+    def test_sessions_count_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/sessions/count" in server
+
+class TestLogLevelUI:
+    def test_log_level_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/log/level" in server
+
+class TestRecipeCloneUI:
+    def test_recipe_clone_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/clone" in server

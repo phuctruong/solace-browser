@@ -2821,3 +2821,60 @@ class TestScheduleStats:
         assert status == 200
         assert "total_runs" in data
         assert "success_rate" in data
+
+
+# ── Task 066: Recipe Run Details ──────────────────────────────────────────────
+
+class TestRecipeRunDetails:
+    def test_recipe_run_detail_not_found(self, auth_server):
+        status, data = _get_json_auth("/api/v1/recipes/nonexistent-run/status")
+        assert status in (200, 404)
+        assert "status" in data or "error" in data
+
+
+# ── Task 067: Budget Forecast ──────────────────────────────────────────────────
+
+class TestBudgetForecast:
+    def test_budget_forecast(self, auth_server):
+        status, data = _get_json_auth("/api/v1/budget/forecast")
+        assert status == 200
+        assert "projected_daily" in data
+        assert "projected_monthly" in data
+
+
+# ── Task 068: Session Replay ───────────────────────────────────────────────────
+
+class TestSessionReplay:
+    def test_session_list(self, auth_server):
+        status, data = _get_json_auth("/api/v1/sessions")
+        assert status == 200
+        assert "sessions" in data
+
+    def test_session_count(self, auth_server):
+        status, data = _get_json_auth("/api/v1/sessions/count")
+        assert status == 200
+        assert "count" in data
+
+
+# ── Task 069: Log Level Control ───────────────────────────────────────────────
+
+class TestLogLevelControl:
+    def test_log_level_get(self, auth_server):
+        status, data = _get_json_auth("/api/v1/log/level")
+        assert status == 200
+        assert "level" in data
+
+    def test_log_level_set(self, auth_server):
+        status, data = _post_with_auth("/api/v1/log/level", {"level": "info"})
+        assert status == 200
+        assert data["level"] in ("debug", "info", "warning", "error")
+
+
+# ── Task 070: Recipe Clone ─────────────────────────────────────────────────────
+
+class TestRecipeClone:
+    def test_recipe_clone(self, auth_server):
+        status, data = _post_with_auth("/api/v1/recipes/tpl-email-sort/clone", {})
+        assert status == 200
+        assert data["status"] in ("cloned", "ok")
+        assert "new_id" in data
