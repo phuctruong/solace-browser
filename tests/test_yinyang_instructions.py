@@ -2399,3 +2399,21 @@ class TestUsageStats:
         assert status == 200
         assert data["total_calls"] == 0
         assert data["total_cost_usd"] == 0.0
+
+
+# ── Task 035: Keyboard Shortcuts ──────────────────────────────────────────────
+
+class TestShortcuts:
+    def test_shortcuts_list(self, auth_server):
+        status, data = _get_json_auth("/api/v1/shortcuts")
+        assert status == 200
+        assert "shortcuts" in data
+        assert "total" in data
+        assert len(data["shortcuts"]) > 0
+
+    def test_shortcuts_have_keys(self, auth_server):
+        status, data = _get_json_auth("/api/v1/shortcuts")
+        assert status == 200
+        for s in data["shortcuts"]:
+            assert "key" in s
+            assert "description" in s

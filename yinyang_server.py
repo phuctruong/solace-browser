@@ -576,6 +576,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_settings_export()
         elif path == "/api/v1/usage/stats":
             self._handle_usage_stats(query)
+        elif path == "/api/v1/shortcuts":
+            self._handle_shortcuts()
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -1915,6 +1917,21 @@ function choose(mode) {
                 CLI_CONFIG_PATH.write_text(json.dumps(body["cli_config"], indent=2))
             imported.append("cli_config")
         self._send_json({"status": "imported", "imported": imported})
+
+    # --- Task 035: Keyboard shortcuts handler ---
+
+    def _handle_shortcuts(self) -> None:
+        """GET /api/v1/shortcuts — return keyboard shortcuts map. Task 035."""
+        shortcuts = [
+            {"key": "?", "description": "Show/hide shortcuts panel"},
+            {"key": "h", "description": "Go to top"},
+            {"key": "r", "description": "Refresh all panels"},
+            {"key": "d", "description": "Toggle dark mode"},
+            {"key": "Escape", "description": "Close open panels"},
+            {"key": "j", "description": "Scroll down"},
+            {"key": "k", "description": "Scroll up"},
+        ]
+        self._send_json({"shortcuts": shortcuts, "total": len(shortcuts)})
 
     # --- Task 034: API usage stats handler ---
 

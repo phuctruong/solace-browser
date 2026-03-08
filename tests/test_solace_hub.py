@@ -746,3 +746,17 @@ class TestUsageStatsUI:
         """index.html must reference usage or provider."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "usage" in html.lower() or "provider" in html.lower()
+
+
+# ── Task 035: Keyboard Shortcuts ──────────────────────────────────────────────
+
+class TestShortcutsUI:
+    def test_shortcuts_in_server(self):
+        """yinyang_server.py must implement /api/v1/shortcuts."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/shortcuts" in server
+
+    def test_shortcuts_in_html(self):
+        """index.html must reference shortcuts or keyboard."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "shortcut" in html.lower() or "keyboard" in html.lower()
