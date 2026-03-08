@@ -958,3 +958,17 @@ class TestServerConfigUI:
         """index.html must show server config or features."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "feature" in html.lower() or "config" in html.lower() or "version" in html.lower()
+
+
+# ── Task 050: App Categories ───────────────────────────────────────────────────
+
+class TestAppCategoriesUI:
+    def test_categories_in_server(self):
+        """yinyang_server.py must implement /api/v1/apps/categories."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/apps/categories" in server
+
+    def test_categories_in_html(self):
+        """index.html must show category or tag UI."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "categor" in html.lower() or "tag" in html.lower()

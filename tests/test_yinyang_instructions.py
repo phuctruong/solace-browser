@@ -2635,3 +2635,14 @@ class TestServerConfig:
         assert "port" in data
         assert "version" in data
         assert "features" in data
+
+
+# ── Task 050: App Categories ───────────────────────────────────────────────────
+
+class TestAppCategories:
+    def test_app_categories(self, auth_server):
+        status, data = _get_json_auth("/api/v1/apps/categories")
+        assert status == 200
+        assert "categories" in data
+        assert isinstance(data["categories"], list)
+        assert data["total"] >= 1

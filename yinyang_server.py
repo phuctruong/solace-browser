@@ -537,6 +537,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_vault_status()
         elif path == "/api/v1/apps/run-count":
             self._handle_apps_run_count()
+        elif path == "/api/v1/apps/categories":
+            self._handle_apps_categories()
         elif path == "/api/v1/server/config":
             self._handle_server_config()
         elif path == "/api/v1/oauth3/tokens":
@@ -1087,6 +1089,17 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                     self._send_json({"status": "disabled", "schedule_id": schedule_id})
                     return
         self._send_json({"error": "schedule not found"}, 404)
+
+    def _handle_apps_categories(self) -> None:
+        """GET /api/v1/apps/categories — list app categories derived from app IDs. Task 050."""
+        category_counts: dict = {}
+        for app in self.server.apps:
+            app_id = app if isinstance(app, str) else app.get("id", "")
+            parts = str(app_id).split("-")
+            cat = parts[0] if parts else "other"
+            category_counts[cat] = category_counts.get(cat, 0) + 1
+        categories = [{"name": k, "count": v} for k, v in sorted(category_counts.items())]
+        self._send_json({"categories": categories, "total": len(categories)})
 
     def _handle_server_config(self) -> None:
         """GET /api/v1/server/config — server configuration + feature flags. Task 049."""
