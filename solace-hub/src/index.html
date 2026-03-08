@@ -442,6 +442,41 @@
       cursor: pointer;
     }
 
+    /* ── Metrics panel (Task 018) ── */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .metric-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .metric-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .hub-link {
+      font-size: 11px;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .hub-link:hover { text-decoration: underline; }
+
     /* ── Footer ── */
     footer {
       padding: 10px 20px;
@@ -469,6 +504,32 @@
 
   <!-- ── Main content ── -->
   <main>
+
+    <!-- System Health Metrics (Task 018) -->
+    <div class="card" id="metrics-panel">
+      <h2>System Health</h2>
+      <div class="metrics-row">
+        <div class="metric-item">
+          <span class="metric-value" id="m-uptime">-</span>
+          <span class="metric-label">Uptime</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-value" id="m-requests">-</span>
+          <span class="metric-label">Requests</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-value" id="m-errors">-</span>
+          <span class="metric-label">Errors</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-value" id="m-error-rate">-</span>
+          <span class="metric-label">Error Rate</span>
+        </div>
+      </div>
+      <div style="margin-top:8px;">
+        <a href="http://localhost:8888/metrics" target="_blank" class="hub-link">Prometheus /metrics</a>
+      </div>
+    </div>
 
     <!-- Server status -->
     <div class="card">
@@ -1526,6 +1587,109 @@
       }
     }
 
+    // ── Metrics (Task 018) ───────────────────────────────────────────────────
+    function formatUptime(s) {
+      if (s < 60) return s + 's';
+      if (s < 3600) return Math.floor(s / 60) + 'm';
+      return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
+    }
+
+    async function refreshMetrics() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/metrics', { signal: AbortSignal.timeout(3000) });
+        if (!r.ok) return;
+        const d = await r.json();
+        document.getElementById('m-uptime').textContent = formatUptime(d.uptime_seconds || 0);
+        document.getElementById('m-requests').textContent = d.total_requests;
+        document.getElementById('m-errors').textContent = d.total_errors;
+        document.getElementById('m-error-rate').textContent = ((d.error_rate || 0) * 100).toFixed(1) + '%';
+      } catch (_) {}
+    }
+
+    // ── WebSocket Dashboard (Task 017) ────────────────────────────────────────
+    let _dashboardWs = null;
+    let _wsReconnectTimer = null;
+    let _pollingFallback = null;
+
+    function connectDashboardWs() {
+      if (_dashboardWs && _dashboardWs.readyState === WebSocket.OPEN) return;
+      try {
+        _dashboardWs = new WebSocket('ws://localhost:8888/ws/dashboard');
+        _dashboardWs.onopen = () => {
+          console.log('[Hub] Dashboard WS connected');
+          clearTimeout(_wsReconnectTimer);
+          // Stop polling fallback when WS is connected
+          if (_pollingFallback) {
+            clearInterval(_pollingFallback);
+            _pollingFallback = null;
+          }
+        };
+        _dashboardWs.onmessage = (evt) => {
+          try {
+            const msg = JSON.parse(evt.data);
+            handleDashboardEvent(msg);
+          } catch (_) {}
+        };
+        _dashboardWs.onclose = () => {
+          // reconnect after 5s
+          _wsReconnectTimer = setTimeout(connectDashboardWs, 5000);
+        };
+        _dashboardWs.onerror = () => {
+          if (_dashboardWs) _dashboardWs.close();
+        };
+      } catch (_) {}
+    }
+
+    function handleDashboardEvent(msg) {
+      if (msg.type === 'state') {
+        updateDashboardState(msg.data);
+      } else if (msg.type === 'alert') {
+        console.warn('[Hub] Alert:', msg.level, msg.message);
+      }
+    }
+
+    function updateDashboardState(data) {
+      if (data && data.server) updateServerStatus(data.server);
+      if (data && data.sessions) updateSessionsDisplay(data.sessions);
+      if (data && data.tunnel) updateTunnelDisplay(data.tunnel);
+    }
+
+    function updateServerStatus(server) {
+      const dot = document.getElementById('server-dot');
+      const label = document.getElementById('server-status');
+      if (dot && label) {
+        dot.className = 'dot ' + (server.status === 'ok' ? 'green' : 'red');
+        label.textContent = 'Running — localhost:' + (server.port || 8888);
+      }
+    }
+
+    function updateSessionsDisplay(sessions) {
+      const el = document.getElementById('stat-sessions');
+      if (el) el.textContent = sessions.count != null ? sessions.count : '—';
+    }
+
+    function updateTunnelDisplay(tunnel) {
+      const dot = document.getElementById('tunnel-dot');
+      const urlDisplay = document.getElementById('tunnel-url-display');
+      const startBtn = document.getElementById('tunnel-start-btn');
+      const stopBtn = document.getElementById('tunnel-stop-btn');
+      if (dot) dot.className = 'dot ' + (tunnel.active ? 'green' : 'red');
+      if (urlDisplay) urlDisplay.textContent = tunnel.url || 'Not active';
+      if (startBtn) startBtn.style.display = tunnel.active ? 'none' : '';
+      if (stopBtn) stopBtn.style.display = tunnel.active ? '' : 'none';
+    }
+
+    function startPollingFallback() {
+      // Fallback polling when WebSocket is not available
+      if (_pollingFallback) return;
+      _pollingFallback = setInterval(() => {
+        refreshStatus();
+        refreshBudgetStatus();
+        refreshTunnelStatus();
+        refreshMetrics();
+      }, 15000);
+    }
+
     // ── Boot ──────────────────────────────────────────────────────────────────
     refreshStatus();
     refreshOnboarding();
@@ -1536,13 +1700,22 @@
     refreshScheduleManagement();
     refreshRecipeList();
     refreshBudgetStatus();
-    // Poll every 10 seconds
+    refreshMetrics();
+    // Connect WebSocket dashboard (Task 017)
+    connectDashboardWs();
+    // After 10s, if WS not connected, start polling fallback
+    setTimeout(() => {
+      if (!_dashboardWs || _dashboardWs.readyState !== WebSocket.OPEN) {
+        startPollingFallback();
+      }
+    }, 10000);
+    // Poll every 10 seconds (kept as fallback; WS drives real-time updates)
     setInterval(refreshStatus, 10_000);
     setInterval(refreshOnboarding, 10_000);
     setInterval(refreshTunnelStatus, 10_000);
     // OAuth3 tokens poll every 30 seconds
     setInterval(refreshOAuth3Tokens, 30_000);
-    // Evidence chain + schedules poll every 60 seconds
+    // Evidence chain + schedules poll every 60 seconds (full list refresh)
     setInterval(refreshEvidenceChain, 60_000);
     setInterval(refreshScheduleManagement, 30_000);
     // Sync status poll every 60 seconds
@@ -1550,6 +1723,8 @@
     // Recipes poll every 60 seconds, budget status every 30 seconds
     setInterval(refreshRecipeList, 60_000);
     setInterval(refreshBudgetStatus, 30_000);
+    // Metrics poll every 15 seconds (Task 018)
+    setInterval(refreshMetrics, 15_000);
   </script>
 
 </body>

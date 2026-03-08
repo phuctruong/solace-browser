@@ -449,3 +449,43 @@ class TestBudgetPanel:
         """Budget additions must not introduce legacy hub name."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert LEGACY_HUB_NAME not in html
+
+
+# ── Task 018: Hub Health Metrics ─────────────────────────────────────────────
+
+class TestMetricsPanel:
+    def test_index_html_metrics_section(self):
+        """index.html must contain metrics or uptime panel."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "metrics" in html.lower() or "uptime" in html.lower()
+
+    def test_index_html_prometheus_link(self):
+        """index.html must reference Prometheus /metrics endpoint."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "prometheus" in html.lower() or "/metrics" in html
+
+    def test_metrics_endpoints_in_server(self):
+        """yinyang_server.py must implement /api/v1/metrics and /metrics."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/metrics" in server
+        assert "/metrics" in server
+        assert "uptime_seconds" in server
+
+
+# ── Task 017: WebSocket Live Dashboard ───────────────────────────────────────
+
+class TestDashboardWebSocket:
+    def test_index_html_ws_dashboard_connection(self):
+        """index.html must reference ws/dashboard WebSocket URL."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "ws/dashboard" in html
+
+    def test_index_html_ws_reconnect_logic(self):
+        """index.html must have WebSocket onclose/reconnect handler."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "onclose" in html or "reconnect" in html.lower()
+
+    def test_index_html_fallback_polling(self):
+        """index.html must have polling fallback when WS not available."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "fallback" in html.lower() or "polling" in html.lower() or "setInterval" in html

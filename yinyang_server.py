@@ -11,7 +11,7 @@ Architecture:
   - FALLBACK BAN: only FileNotFoundError, OSError, json.JSONDecodeError caught
 
 Route table:
-  GET  /health                         → {"status": "ok", "apps": N, "version": "1.1"}
+  GET  /health                         → {"status": "ok", "apps": N, "version": "1.1", "uptime_seconds": N}
   GET  /instructions                   → capabilities JSON
   GET  /credits                        → {"apps": [...]}
   GET  /start                          → browser start page HTML
@@ -50,6 +50,9 @@ Route table:
   GET  /api/v1/budget/status           → spend vs limit with alert/paused flags
   POST /api/v1/budget                  → update budget settings (requires auth)
   POST /api/v1/budget/reset            → reset to defaults (requires auth)
+  GET  /api/v1/metrics                 → JSON metrics (uptime, request counts, error rates)
+  GET  /metrics                        → Prometheus-format metrics (text/plain; version=0.0.4)
+  WS   /ws/dashboard                   → WebSocket: push state updates every 5s, accept ping→pong
 """
 import argparse
 import atexit
@@ -62,6 +65,7 @@ import re
 import secrets
 import shutil
 import signal
+import struct
 import subprocess
 import threading
 import time
@@ -101,6 +105,30 @@ _SESSION_TOKEN_SHA256: str = ""
 _TUNNEL_PROC: Optional[subprocess.Popen] = None
 _TUNNEL_LOCK = threading.Lock()
 _TUNNEL_URL: str = ""
+
+# ---------------------------------------------------------------------------
+# Metrics globals — Task 018
+# ---------------------------------------------------------------------------
+_SERVER_START_TIME: float = time.time()
+_REQUEST_COUNTS: dict = {}
+_ERROR_COUNTS: dict = {}
+_METRICS_LOCK = threading.Lock()
+
+
+def _record_request(path: str, status_code: int) -> None:
+    """Record request count and errors per path. Thread-safe."""
+    with _METRICS_LOCK:
+        _REQUEST_COUNTS[path] = _REQUEST_COUNTS.get(path, 0) + 1
+        if status_code >= 400:
+            key = f"{path}:{status_code}"
+            _ERROR_COUNTS[key] = _ERROR_COUNTS.get(key, 0) + 1
+
+
+# ---------------------------------------------------------------------------
+# WebSocket dashboard clients — Task 017
+# ---------------------------------------------------------------------------
+_WS_DASHBOARD_CLIENTS: list = []
+_WS_DASHBOARD_LOCK = threading.Lock()
 
 VAULT_PATH = Path.home() / ".solace" / "oauth3_tokens.json"
 VAULT_EXPORT_PATH = Path.home() / ".solace" / "vault_export.json"
@@ -420,6 +448,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_budget_get()
         elif path == "/api/v1/budget/status":
             self._handle_budget_status()
+        elif path == "/api/v1/metrics":
+            self._handle_metrics_json()
+        elif path == "/metrics":
+            self._handle_metrics_prometheus()
+        elif path == "/ws/dashboard":
+            self._handle_ws_dashboard()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -493,6 +527,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             "version": _SERVER_VERSION,
             "evidence_count": count_evidence(),
             "schedule_count": len(load_schedules()),
+            "uptime_seconds": int(time.time() - _SERVER_START_TIME),
+            "port": YINYANG_PORT,
         })
 
     def _handle_instructions(self) -> None:
@@ -1476,6 +1512,220 @@ function choose(mode) {
         BUDGET_PATH.write_text(json.dumps(DEFAULT_BUDGET, indent=2))
         self._send_json({"status": "reset", "budget": DEFAULT_BUDGET})
 
+    # --- Task 018: Metrics handlers ---
+
+    def _handle_metrics_json(self) -> None:
+        """GET /api/v1/metrics — JSON metrics: uptime, request counts, error rates."""
+        uptime = int(time.time() - _SERVER_START_TIME)
+        with _METRICS_LOCK:
+            req_counts = dict(_REQUEST_COUNTS)
+            err_counts = dict(_ERROR_COUNTS)
+        total_requests = sum(req_counts.values())
+        total_errors = sum(err_counts.values())
+        self._send_json({
+            "uptime_seconds": uptime,
+            "total_requests": total_requests,
+            "total_errors": total_errors,
+            "error_rate": round(total_errors / max(total_requests, 1), 4),
+            "endpoints": req_counts,
+            "errors": err_counts,
+            "server_start": int(_SERVER_START_TIME),
+        })
+
+    def _handle_metrics_prometheus(self) -> None:
+        """GET /metrics — Prometheus-format metrics (text/plain; version=0.0.4)."""
+        uptime = int(time.time() - _SERVER_START_TIME)
+        with _METRICS_LOCK:
+            req_counts = dict(_REQUEST_COUNTS)
+        lines = [
+            "# HELP solace_uptime_seconds Server uptime in seconds",
+            "# TYPE solace_uptime_seconds gauge",
+            f"solace_uptime_seconds {uptime}",
+            "# HELP solace_http_requests_total Total HTTP requests",
+            "# TYPE solace_http_requests_total counter",
+        ]
+        for path_key, count in req_counts.items():
+            lines.append(f'solace_http_requests_total{{path="{path_key}"}} {count}')
+        body = "\n".join(lines) + "\n"
+        body_bytes = body.encode()
+        _record_request("/metrics", 200)
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain; version=0.0.4")
+        self.send_header("Content-Length", str(len(body_bytes)))
+        self.end_headers()
+        self.wfile.write(body_bytes)
+
+    # --- Task 017: WebSocket dashboard handler ---
+
+    def _handle_ws_dashboard(self) -> None:
+        """
+        WebSocket upgrade for /ws/dashboard.
+        Performs RFC 6455 handshake, then sends state every 5s.
+        Accepts {"type": "ping"} → responds {"type": "pong"}.
+        """
+        upgrade = self.headers.get("Upgrade", "").lower()
+        if upgrade != "websocket":
+            self._send_json({"error": "WebSocket upgrade required"}, 426)
+            return
+        ws_key = self.headers.get("Sec-WebSocket-Key", "")
+        if not ws_key:
+            self._send_json({"error": "missing Sec-WebSocket-Key"}, 400)
+            return
+        # RFC 6455 accept key
+        accept = base64.b64encode(
+            hashlib.sha1((ws_key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").encode()).digest()
+        ).decode()
+        # Send 101 Switching Protocols
+        response = (
+            "HTTP/1.1 101 Switching Protocols\r\n"
+            "Upgrade: websocket\r\n"
+            "Connection: Upgrade\r\n"
+            f"Sec-WebSocket-Accept: {accept}\r\n"
+            "\r\n"
+        )
+        try:
+            self.wfile.write(response.encode())
+            self.wfile.flush()
+        except OSError:
+            return
+
+        conn = self.connection  # type: ignore[attr-defined]
+        conn.settimeout(None)
+
+        def _ws_send(payload: str) -> None:
+            """Send a UTF-8 text frame (opcode 0x81)."""
+            data = payload.encode("utf-8")
+            length = len(data)
+            if length <= 125:
+                header = struct.pack("!BB", 0x81, length)
+            elif length <= 65535:
+                header = struct.pack("!BBH", 0x81, 126, length)
+            else:
+                header = struct.pack("!BBQ", 0x81, 127, length)
+            try:
+                self.wfile.write(header + data)
+                self.wfile.flush()
+            except OSError:
+                pass
+
+        def _build_state() -> str:
+            uptime = int(time.time() - _SERVER_START_TIME)
+            with _SESSIONS_LOCK:
+                session_count = len(_SESSIONS)
+            schedules = load_schedules()
+            schedule_count = len(schedules)
+            schedule_enabled = sum(1 for s in schedules if s.get("enabled", True))
+            with _TUNNEL_LOCK:
+                tunnel_active = _TUNNEL_PROC is not None and _TUNNEL_PROC.poll() is None
+                tunnel_url = _TUNNEL_URL if tunnel_active else ""
+            budget_status: dict = {}
+            return json.dumps({
+                "type": "state",
+                "data": {
+                    "server": {
+                        "status": "ok",
+                        "uptime_seconds": uptime,
+                        "port": YINYANG_PORT,
+                    },
+                    "budget": {
+                        "daily_pct": 0.0,
+                        "paused": False,
+                        "daily_spend_usd": 0.0,
+                    },
+                    "sessions": {
+                        "count": session_count,
+                        "alive": session_count,
+                    },
+                    "schedules": {
+                        "count": schedule_count,
+                        "enabled": schedule_enabled,
+                    },
+                    "tunnel": {
+                        "active": tunnel_active,
+                        "url": tunnel_url,
+                    },
+                },
+            })
+
+        # Send initial state
+        _ws_send(_build_state())
+
+        # Heartbeat thread — sends state every 5s
+        stop_event = threading.Event()
+
+        def _heartbeat() -> None:
+            while not stop_event.is_set():
+                stop_event.wait(5)
+                if stop_event.is_set():
+                    break
+                try:
+                    _ws_send(_build_state())
+                except OSError:
+                    break
+
+        hb_thread = threading.Thread(target=_heartbeat, daemon=True)
+        hb_thread.start()
+
+        # Receive loop — handle client messages
+        try:
+            while True:
+                # Read frame header (2 bytes minimum)
+                try:
+                    header_bytes = self.rfile.read(2)
+                except OSError:
+                    break
+                if len(header_bytes) < 2:
+                    break
+                b0, b1 = header_bytes[0], header_bytes[1]
+                opcode = b0 & 0x0F
+                masked = bool(b1 & 0x80)
+                payload_len = b1 & 0x7F
+                if payload_len == 126:
+                    try:
+                        ext = self.rfile.read(2)
+                    except OSError:
+                        break
+                    if len(ext) < 2:
+                        break
+                    payload_len = struct.unpack("!H", ext)[0]
+                elif payload_len == 127:
+                    try:
+                        ext = self.rfile.read(8)
+                    except OSError:
+                        break
+                    if len(ext) < 8:
+                        break
+                    payload_len = struct.unpack("!Q", ext)[0]
+                mask_key = b""
+                if masked:
+                    try:
+                        mask_key = self.rfile.read(4)
+                    except OSError:
+                        break
+                    if len(mask_key) < 4:
+                        break
+                try:
+                    payload_bytes = self.rfile.read(payload_len)
+                except OSError:
+                    break
+                if masked and mask_key:
+                    payload_bytes = bytes(
+                        b ^ mask_key[i % 4] for i, b in enumerate(payload_bytes)
+                    )
+                if opcode == 8:  # Close frame
+                    break
+                if opcode == 1:  # Text frame
+                    try:
+                        msg = json.loads(payload_bytes.decode("utf-8"))
+                    except (json.JSONDecodeError, UnicodeDecodeError):
+                        continue
+                    if msg.get("type") == "ping":
+                        _ws_send(json.dumps({"type": "pong"}))
+        except OSError:
+            pass
+        finally:
+            stop_event.set()
+
     # --- Helpers ---
     def _read_json_body(self) -> Optional[dict]:
         """Read and parse JSON body. Sends error response and returns None on failure."""
@@ -1714,6 +1964,7 @@ function choose(mode) {
         return result
 
     def _send_json(self, data: dict, status: int = 200) -> None:
+        _record_request(self.path.split("?")[0], status)
         body = json.dumps(data).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
