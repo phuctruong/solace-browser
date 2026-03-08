@@ -103,7 +103,7 @@
 ### T15: MCP server core — stdio transport + tool registry
 **Paper:** 47 §24 | **Priority:** P0
 **Acceptance:** `solace-browser mcp` starts stdio MCP server, `tools/list` returns core browser tools
-**Files:** src/mcp/__init__.py, src/mcp/server.py, src/mcp/transport.py
+**Files:** src/solace_mcp/__init__.py, src/solace_mcp/server.py, src/solace_mcp/transport.py
 **Tests:** ~20
 **Details:**
 - MCP server runs in companion app process (same as webservice)
@@ -114,7 +114,7 @@
 ### T16: Core browser tools — navigate, screenshot, click, type, scroll, snapshot
 **Paper:** 47 §24 | **Priority:** P0
 **Acceptance:** AI agent can navigate, take screenshots, interact with page elements via MCP tools
-**Files:** src/mcp/tools_core.py
+**Files:** src/solace_mcp/tools_core.py
 **Tests:** ~25
 **Details:**
 - 1:1 mapping to existing webservice endpoints
@@ -125,7 +125,7 @@
 ### T17: Dynamic app tools — generate MCP tools from app manifests
 **Paper:** 47 §24 | **Priority:** P0
 **Acceptance:** Install a new app manifest → `tools/list` shows new tools automatically. No code changes needed.
-**Files:** src/mcp/tools_apps.py
+**Files:** src/solace_mcp/tools_apps.py
 **Tests:** ~20
 **Details:**
 - Read all manifest.yaml from data/default/apps/
@@ -136,7 +136,7 @@
 ### T18: Model + evidence tools
 **Paper:** 47 §24 | **Priority:** P1
 **Acceptance:** AI agent can list models, get benchmarks, search/verify evidence via MCP
-**Files:** src/mcp/tools_evidence.py
+**Files:** src/solace_mcp/tools_evidence.py
 **Tests:** ~15
 **Details:**
 - `solace_list_models`, `solace_list_apps`, `solace_app_benchmarks`
@@ -147,7 +147,7 @@
 ### T19: OAuth3 scope gating for MCP calls
 **Paper:** 47 §24 | **Priority:** P1
 **Acceptance:** MCP tool calls check OAuth3 scopes. Unauthorized calls return clear error.
-**Files:** src/mcp/oauth3_gate.py
+**Files:** src/solace_mcp/oauth3_gate.py
 **Tests:** ~15
 **Details:**
 - Same scope model as webservice: navigate=LOW, click=MEDIUM, run_app=per-app-scope
@@ -157,7 +157,7 @@
 ### T20: SSE transport for remote/tunnel MCP access
 **Paper:** 47 §24 | **Priority:** P2
 **Acceptance:** MCP clients can connect via SSE over tunnel for cloud twin scenarios
-**Files:** src/mcp/transport.py (extend)
+**Files:** src/solace_mcp/transport.py (extend)
 **Tests:** ~10
 **Details:**
 - SSE endpoint at /mcp/sse on webservice port

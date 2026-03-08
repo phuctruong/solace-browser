@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "solace-browser": {
+      "command": "python",
+      "args": ["solace_browser_server.py", "--mcp"],
+      "cwd": "/path/to/solace-browser",
+      "env": {}
+    }
+  }
+}

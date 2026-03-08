@@ -1493,7 +1493,7 @@ These map 1:1 to existing webservice endpoints:
 The MCP server runs inside the companion app process (same process as the webservice). It uses `stdio` transport for local agents and `SSE` transport for remote/tunnel access.
 
 ```python
-# src/mcp/server.py — MCP server with dynamic app tools
+# src/solace_mcp/server.py — MCP server with dynamic app tools
 
 class SolaceMCPServer:
     """MCP server that dynamically generates tools from app manifests + webservice endpoints."""
@@ -1592,7 +1592,7 @@ The same Trade Secret Boundary from Section 22b applies to MCP responses:
 ### File Structure
 
 ```
-src/mcp/
+src/solace_mcp/
   __init__.py
   server.py          # SolaceMCPServer — main server class
   tools_core.py      # Core browser tools (navigate, screenshot, click, ...)

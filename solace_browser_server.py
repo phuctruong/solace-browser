@@ -358,6 +358,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help='Solace AGI cloud URL for Yinyang relay',
     )
     parser.add_argument(
+        '--mcp',
+        action='store_true',
+        help='Run as MCP server on stdio (for Claude Code, Codex, Gemini CLI)',
+    )
+    parser.add_argument(
         '--version',
         action='version',
         version=f'solace-browser {__version__}',
@@ -4370,6 +4375,13 @@ async def main():
     """Main entry point"""
     parser = build_arg_parser()
     args = parser.parse_args()
+
+    # MCP server mode — stdio transport, no browser needed
+    if getattr(args, 'mcp', False):
+        from solace_mcp.server import SolaceMCPServer
+        server = SolaceMCPServer()
+        server.run_stdio()
+        return
 
     # Start the web UI dashboard server BEFORE the browser so the home page loads
     web_ui_port = int(os.getenv("SOLACE_WEB_UI_PORT", "8791"))

@@ -26,11 +26,11 @@ import pytest
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from mcp.tools_core import core_tool_definitions, ACT_TYPE_MAP
-from mcp.tools_apps import AppToolGenerator, _safe_tool_name
-from mcp.tools_evidence import evidence_tool_definitions
-from mcp.oauth3_gate import check_scope, MCPScopeError, requires_step_up
-from mcp.server import SolaceMCPServer
+from solace_mcp.tools_core import core_tool_definitions, ACT_TYPE_MAP
+from solace_mcp.tools_apps import AppToolGenerator, _safe_tool_name
+from solace_mcp.tools_evidence import evidence_tool_definitions
+from solace_mcp.oauth3_gate import check_scope, MCPScopeError, requires_step_up
+from solace_mcp.server import SolaceMCPServer
 
 
 # ---------------------------------------------------------------------------
