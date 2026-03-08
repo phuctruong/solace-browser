@@ -934,6 +934,13 @@
           <p style="color:var(--text-muted);">Loading run history…</p>
         </div>
       </details>
+      <!-- Templates (Task 046) -->
+      <details style="margin-top:12px;">
+        <summary style="cursor:pointer;font-size:12px;font-weight:600;">Start from Template</summary>
+        <div id="recipe-templates-list" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
+          <p style="color:var(--text-muted);font-size:11px;">Loading templates…</p>
+        </div>
+      </details>
     </div>
 
     <!-- Budget &amp; Spending (Task 016) -->
@@ -3096,6 +3103,27 @@
     }
     refreshRecipeHistory();
     setInterval(refreshRecipeHistory, 30_000);
+
+    // Recipe templates (Task 046)
+    async function refreshRecipeTemplates() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/recipes/templates', { signal: AbortSignal.timeout(3000) });
+        if (!r.ok) throw new Error('bad status');
+        const d = await r.json();
+        const el = document.getElementById('recipe-templates-list');
+        if (!el) return;
+        if (!d.templates || d.templates.length === 0) {
+          el.innerHTML = '<p style="color:var(--text-muted);font-size:11px;">No templates available.</p>';
+          return;
+        }
+        el.innerHTML = d.templates.map(t =>
+          `<button class="hub-btn hub-btn-sm" title="${t.description}" style="font-size:11px;">
+            ${t.name} <span style="opacity:0.6;">[${t.category}]</span>
+          </button>`
+        ).join('');
+      } catch (_) {}
+    }
+    refreshRecipeTemplates();
 
     // Dark mode (Task 031)
     function applyTheme(theme) {

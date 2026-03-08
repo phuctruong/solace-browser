@@ -902,3 +902,17 @@ class TestAppFavoritesUI:
         """index.html must contain favorite/star UI."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "favorite" in html.lower() or "★" in html or "star" in html.lower()
+
+
+# ── Task 046: Recipe Templates ────────────────────────────────────────────────
+
+class TestRecipeTemplatesUI:
+    def test_templates_in_server(self):
+        """yinyang_server.py must implement /api/v1/recipes/templates."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/recipes/templates" in server
+
+    def test_templates_in_html(self):
+        """index.html must contain template UI."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "template" in html.lower()

@@ -2592,3 +2592,14 @@ class TestAppFavorites:
         status, data = _delete_with_auth("/api/v1/apps/favorites?app_id=gmail")
         assert status == 200
         assert data["status"] == "unfavorited"
+
+
+# ── Task 046: Recipe Templates ────────────────────────────────────────────────
+
+class TestRecipeTemplates:
+    def test_recipe_templates(self, auth_server):
+        status, data = _get_json_auth("/api/v1/recipes/templates")
+        assert status == 200
+        assert "templates" in data
+        assert data["total"] >= 3
+        assert all("id" in t and "name" in t for t in data["templates"])

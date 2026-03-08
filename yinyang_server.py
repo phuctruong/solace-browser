@@ -557,6 +557,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_sync_status()
         elif path == "/api/v1/recipes":
             self._handle_recipes_list()
+        elif path == "/api/v1/recipes/templates":
+            self._handle_recipe_templates()
         elif path == "/api/v1/recipes/history":
             self._handle_recipe_history(query)
         elif re.match(r"^/api/v1/recipes/[^/]+/preview$", path):
@@ -2240,6 +2242,19 @@ function choose(mode) {
             runs = []
         runs = runs[-limit:]
         self._send_json({"runs": runs, "total": len(runs)})
+
+    # --- Task 046: Recipe Templates handler ---
+
+    def _handle_recipe_templates(self) -> None:
+        """GET /api/v1/recipes/templates — list starter recipe templates. Task 046."""
+        templates = [
+            {"id": "tpl-email-sort", "name": "Email Sorter", "description": "Sort inbox by sender/subject", "category": "email", "steps": 3},
+            {"id": "tpl-social-post", "name": "Social Post", "description": "Compose and schedule social content", "category": "social", "steps": 2},
+            {"id": "tpl-data-extract", "name": "Data Extractor", "description": "Extract structured data from web pages", "category": "data", "steps": 4},
+            {"id": "tpl-form-filler", "name": "Form Filler", "description": "Auto-fill forms from saved data", "category": "forms", "steps": 2},
+            {"id": "tpl-screenshot-report", "name": "Screenshot Report", "description": "Capture pages and compile report", "category": "reporting", "steps": 3},
+        ]
+        self._send_json({"templates": templates, "total": len(templates)})
 
     # --- Task 018: Metrics handlers ---
 
