@@ -1983,28 +1983,31 @@ class TestMetrics:
 # ---------------------------------------------------------------------------
 # Task 017: WebSocket Live Dashboard
 # ---------------------------------------------------------------------------
+_REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
+
+
 class TestDashboardWebSocket:
     def test_ws_dashboard_endpoint_in_server(self):
         """yinyang_server.py must reference /ws/dashboard."""
-        server = pathlib.Path("yinyang_server.py").read_text()
+        server = (_REPO_ROOT / "yinyang_server.py").read_text()
         assert "/ws/dashboard" in server
 
     def test_ws_dashboard_state_event_structure(self):
         """Server code must reference dashboard state event."""
-        server = pathlib.Path("yinyang_server.py").read_text()
+        server = (_REPO_ROOT / "yinyang_server.py").read_text()
         assert "dashboard" in server.lower()
         assert "state" in server.lower()
 
     def test_ws_dashboard_reconnect_in_html(self):
         """index.html must have ws/dashboard and reconnect logic."""
-        html = pathlib.Path("solace-hub/src/index.html").read_text()
+        html = (_REPO_ROOT / "solace-hub/src/index.html").read_text()
         assert "ws/dashboard" in html or "dashboard" in html.lower()
         assert "reconnect" in html.lower() or "onclose" in html.lower()
 
     def test_ws_dashboard_connects(self, auth_server):
         """WebSocket /ws/dashboard endpoint is referenced in server code."""
         # Primary check: code-level (no websocket-client library required)
-        server = pathlib.Path("yinyang_server.py").read_text()
+        server = (_REPO_ROOT / "yinyang_server.py").read_text()
         connected = "/ws/dashboard" in server
         assert connected
 
