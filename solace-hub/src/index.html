@@ -864,6 +864,14 @@
       <div id="settings-import-status" style="font-size:11px;color:var(--text-muted);margin-top:6px;min-height:1.2em;"></div>
     </div>
 
+    <!-- Accessibility Report (Task 040) -->
+    <div class="card" id="accessibility-panel">
+      <h2>Accessibility</h2>
+      <div id="a11y-score" style="font-size:24px;font-weight:700;text-align:center;margin:8px 0;">—</div>
+      <div id="a11y-checks" style="font-size:11px;"></div>
+      <button class="btn-secondary" style="margin-top:8px;" onclick="refreshA11y()">Re-check</button>
+    </div>
+
     <!-- Automation Schedules (Task 014) -->
     <div class="card" id="automation-schedules-panel">
       <h2>Automation Schedules</h2>
@@ -2688,6 +2696,28 @@
     }
     refreshWatchdog();
     setInterval(refreshWatchdog, 30_000);
+
+    // Accessibility report (Task 040)
+    async function refreshA11y() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/accessibility', { signal: AbortSignal.timeout(3000) });
+        if (!r.ok) return;
+        const d = await r.json();
+        const score = document.getElementById('a11y-score');
+        const checks = document.getElementById('a11y-checks');
+        if (score) { score.textContent = `${d.score}%`; score.style.color = d.score >= 80 ? 'var(--green)' : d.score >= 50 ? '#f59e0b' : 'var(--red)'; }
+        if (checks) {
+          const statusColor = {pass: 'var(--green)', not_implemented: '#f59e0b', manual_check_required: 'var(--text-muted)'};
+          checks.innerHTML = (d.checks || []).map(c =>
+            `<div style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;">
+              <span style="color:${statusColor[c.status] || 'var(--text-muted)'};font-size:10px;min-width:8px;">●</span>
+              <span>${c.label}</span>
+            </div>`
+          ).join('');
+        }
+      } catch (_) {}
+    }
+    refreshA11y();
 
     // Pinned sections (Task 039)
     let _pinnedSections = new Set();

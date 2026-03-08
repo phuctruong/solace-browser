@@ -818,3 +818,17 @@ class TestPinnedUI:
         """index.html must contain pin functionality."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "pin" in html.lower()
+
+
+# ── Task 040: Accessibility Report ───────────────────────────────────────────
+
+class TestAccessibilityUI:
+    def test_accessibility_in_server(self):
+        """yinyang_server.py must implement /api/v1/accessibility."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/accessibility" in server
+
+    def test_accessibility_in_html(self):
+        """index.html must contain accessibility panel."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "accessibility" in html.lower() or "a11y" in html.lower()

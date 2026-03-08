@@ -2496,3 +2496,24 @@ class TestPinnedSections:
         assert status == 200
         assert data["status"] == "ok"
         assert "budget-panel" in data["pinned"]
+
+
+# ── Task 040: Accessibility Report ───────────────────────────────────────────
+
+class TestAccessibility:
+    def test_accessibility_report(self, auth_server):
+        status, data = _get_json_auth("/api/v1/accessibility")
+        assert status == 200
+        assert "checks" in data
+        assert "total" in data
+        assert "passed" in data
+        assert "score" in data
+        assert data["total"] > 0
+
+    def test_accessibility_checks_structure(self, auth_server):
+        status, data = _get_json_auth("/api/v1/accessibility")
+        assert status == 200
+        for check in data["checks"]:
+            assert "id" in check
+            assert "label" in check
+            assert "status" in check

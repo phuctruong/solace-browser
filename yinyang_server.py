@@ -586,6 +586,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_search(query)
         elif path == "/api/v1/pinned":
             self._handle_pinned_get()
+        elif path == "/api/v1/accessibility":
+            self._handle_accessibility()
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -1927,6 +1929,26 @@ function choose(mode) {
                 CLI_CONFIG_PATH.write_text(json.dumps(body["cli_config"], indent=2))
             imported.append("cli_config")
         self._send_json({"status": "imported", "imported": imported})
+
+    # --- Task 040: Accessibility report handler ---
+
+    def _handle_accessibility(self) -> None:
+        """GET /api/v1/accessibility — basic a11y checklist. Task 040."""
+        checks = [
+            {"id": "aria_labels", "label": "ARIA labels on interactive elements", "status": "manual_check_required"},
+            {"id": "color_contrast", "label": "Color contrast ratio ≥ 4.5:1", "status": "manual_check_required"},
+            {"id": "keyboard_nav", "label": "Full keyboard navigation", "status": "pass", "detail": "Tab + Enter + Escape supported"},
+            {"id": "focus_visible", "label": "Focus visible on all elements", "status": "manual_check_required"},
+            {"id": "skip_link", "label": "Skip to main content link", "status": "not_implemented"},
+            {"id": "lang_attr", "label": "HTML lang attribute set", "status": "pass", "detail": "lang=en"},
+        ]
+        passed = sum(1 for c in checks if c["status"] == "pass")
+        self._send_json({
+            "checks": checks,
+            "total": len(checks),
+            "passed": passed,
+            "score": round(passed / len(checks) * 100),
+        })
 
     # --- Task 039: Pinned sections handlers ---
 
