@@ -376,7 +376,7 @@ fn update_tray_tooltip(app: &tauri::AppHandle) {
         .set_tooltip(&tray_tooltip(server_running, sessions));
 }
 
-fn show_status_notification(app: &tauri::AppHandle) {
+fn show_status_notification(_app: &tauri::AppHandle) {
     let server_running = cmd_get_server_status().unwrap_or(false);
     let status = if server_running { "running" } else { "stopped" };
     let body = format!("Yinyang Server: {status}");
