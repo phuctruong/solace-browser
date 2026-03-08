@@ -1034,6 +1034,26 @@
       </div>
     </div>
 
+    <!-- ── Task 024: Community Recipe Store ── -->
+    <div class="card" id="store-panel">
+      <h2>Community Store</h2>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input id="store-search" type="text" placeholder="Search recipes…"
+               style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);"
+               oninput="refreshStore()"/>
+        <select id="store-tag" onchange="refreshStore()"
+               style="padding:6px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);">
+          <option value="">All tags</option>
+          <option value="email">email</option>
+          <option value="social">social</option>
+          <option value="dev">dev</option>
+          <option value="news">news</option>
+          <option value="productivity">productivity</option>
+        </select>
+      </div>
+      <div id="store-recipes-list" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+    </div>
+
     <!-- ── Task 023: Profile Manager ── -->
     <div class="card" id="profiles-panel">
       <h2>Browser Profiles</h2>
@@ -2277,6 +2297,56 @@
     }
     refreshProfiles();
     setInterval(refreshProfiles, 30_000);
+
+    // ── Task 024: Community Recipe Store ─────────────────────────────────
+    async function refreshStore() {
+      const q = (document.getElementById('store-search') || {}).value || '';
+      const tag = (document.getElementById('store-tag') || {}).value || '';
+      let url = 'http://localhost:8888/api/v1/store/recipes';
+      const params = [];
+      if (q) params.push(`q=${encodeURIComponent(q)}`);
+      if (tag) params.push(`tag=${encodeURIComponent(tag)}`);
+      if (params.length) url += '?' + params.join('&');
+      try {
+        const r = await fetch(url);
+        const data = await r.json();
+        const container = document.getElementById('store-recipes-list');
+        if (!container) return;
+        if (!data.recipes || data.recipes.length === 0) {
+          container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No recipes found.</div>';
+          return;
+        }
+        container.innerHTML = data.recipes.map(recipe => `
+          <div style="border:1px solid var(--border);border-radius:var(--radius);padding:10px;">
+            <div style="font-weight:600;font-size:13px;">${recipe.name}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin:2px 0;">
+              <span style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1px 5px;">${recipe.tag}</span>
+              ★ ${recipe.rating} · ${recipe.installs} installs
+            </div>
+            ${recipe.installed
+              ? `<button class="hub-btn hub-btn-sm" onclick="uninstallRecipe('${recipe.id}')">Uninstall</button>`
+              : `<button class="hub-btn hub-btn-sm" onclick="installRecipe('${recipe.id}')">Install</button>`}
+          </div>`).join('');
+      } catch (_) {}
+    }
+    async function installRecipe(id) {
+      try {
+        await fetch(`http://localhost:8888/api/v1/store/recipes/${id}/install`, {
+          method: 'POST', headers: { 'Authorization': `Bearer ${HUB_TOKEN}` }
+        });
+        refreshStore();
+      } catch (_) {}
+    }
+    async function uninstallRecipe(id) {
+      try {
+        await fetch(`http://localhost:8888/api/v1/store/recipes/${id}/uninstall`, {
+          method: 'POST', headers: { 'Authorization': `Bearer ${HUB_TOKEN}` }
+        });
+        refreshStore();
+      } catch (_) {}
+    }
+    refreshStore();
+    setInterval(refreshStore, 60_000);
   </script>
 
 </body>

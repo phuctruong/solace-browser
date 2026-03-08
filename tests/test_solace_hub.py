@@ -585,3 +585,18 @@ class TestProfileUI:
         server = (REPO_ROOT / "yinyang_server.py").read_text()
         assert "/api/v1/profiles" in server
         assert "PROFILES_PATH" in server
+
+
+# ── Task 024: Recipe Store ────────────────────────────────────────────────────
+
+class TestRecipeStoreUI:
+    def test_index_html_store_section(self):
+        """index.html must contain a community store section."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "store" in html.lower() or "community" in html.lower()
+
+    def test_store_endpoints_in_server(self):
+        """yinyang_server.py must implement store API routes."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/store/recipes" in server
+        assert "INSTALLED_RECIPES_PATH" in server

@@ -518,6 +518,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     notifications_path = tmp / "notifications.json"
     profiles_path = tmp / "profiles.json"
     active_profile_path = tmp / "active_profile.json"
+    installed_recipes_path = tmp / "installed_recipes.json"
 
     original_lock = ys.PORT_LOCK_PATH
     original_evidence = ys.EVIDENCE_PATH
@@ -529,6 +530,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     original_notifications = ys.NOTIFICATIONS_PATH
     original_profiles = ys.PROFILES_PATH
     original_active_profile = ys.ACTIVE_PROFILE_PATH
+    original_installed_recipes = ys.INSTALLED_RECIPES_PATH
 
     ys.PORT_LOCK_PATH = lock_path
     ys.EVIDENCE_PATH = evidence_path
@@ -540,6 +542,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.NOTIFICATIONS_PATH = notifications_path
     ys.PROFILES_PATH = profiles_path
     ys.ACTIVE_PROFILE_PATH = active_profile_path
+    ys.INSTALLED_RECIPES_PATH = installed_recipes_path
 
     httpd = ys.build_server(AUTH_TEST_PORT, str(REPO_ROOT), session_token_sha256=VALID_TOKEN)
 
@@ -565,6 +568,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.NOTIFICATIONS_PATH = original_notifications
     ys.PROFILES_PATH = original_profiles
     ys.ACTIVE_PROFILE_PATH = original_active_profile
+    ys.INSTALLED_RECIPES_PATH = original_installed_recipes
 
 
 def _post_with_auth(path: str, payload: dict, token: str = VALID_TOKEN) -> tuple[int, dict]:
@@ -2005,4 +2009,64 @@ class TestProfileManager:
 
     def test_profiles_delete_not_found(self, auth_server):
         status, data = _delete_with_auth("/api/v1/profiles/nonexistent")
+        assert status == 404
+
+
+# ── Task 024: Recipe Store ────────────────────────────────────────────────────
+
+class TestRecipeStore:
+    def test_store_list(self, auth_server):
+        status, data = _get_json_auth("/api/v1/store/recipes")
+        assert status == 200
+        assert "recipes" in data
+        assert len(data["recipes"]) > 0
+
+    def test_store_search(self, auth_server):
+        status, data = _get_json_auth("/api/v1/store/recipes?q=gmail")
+        assert status == 200
+        for recipe in data["recipes"]:
+            assert "gmail" in recipe["name"].lower() or "gmail" in recipe.get("tag", "").lower()
+
+    def test_store_filter_by_tag(self, auth_server):
+        status, data = _get_json_auth("/api/v1/store/recipes?tag=email")
+        assert status == 200
+        for recipe in data["recipes"]:
+            assert recipe["tag"] == "email"
+
+    def test_store_install_requires_auth(self, auth_server):
+        body = b""
+        req = urllib.request.Request(
+            f"{AUTH_BASE}/api/v1/store/recipes/r001/install",
+            data=body, method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req):
+                pass
+            assert False, "expected 401"
+        except urllib.error.HTTPError as e:
+            assert e.code == 401
+
+    def test_store_install(self, auth_server):
+        status, data = _post_with_auth("/api/v1/store/recipes/r001/install", {})
+        assert status == 200
+        assert data["status"] in ("installed", "already_installed")
+
+    def test_store_install_not_found(self, auth_server):
+        status, data = _post_with_auth("/api/v1/store/recipes/nonexistent/install", {})
+        assert status == 404
+
+    def test_store_installed_list(self, auth_server):
+        status, data = _get_json_auth("/api/v1/store/installed")
+        assert status == 200
+        assert "installed" in data
+
+    def test_store_uninstall(self, auth_server):
+        _post_with_auth("/api/v1/store/recipes/r002/install", {})
+        status, data = _post_with_auth("/api/v1/store/recipes/r002/uninstall", {})
+        assert status == 200
+        assert data["status"] == "uninstalled"
+
+    def test_store_uninstall_not_installed(self, auth_server):
+        status, data = _post_with_auth("/api/v1/store/recipes/r999/uninstall", {})
         assert status == 404

@@ -117,6 +117,15 @@ PROFILES_PATH: Path = Path.home() / ".solace" / "profiles.json"
 ACTIVE_PROFILE_PATH: Path = Path.home() / ".solace" / "active_profile.json"
 _PROFILES_LOCK = threading.Lock()
 MAX_PROFILES = 10
+INSTALLED_RECIPES_PATH: Path = Path.home() / ".solace" / "installed_recipes.json"
+_STORE_LOCK = threading.Lock()
+_COMMUNITY_RECIPES: list = [
+    {"id": "r001", "name": "Gmail Unsubscribe", "tag": "email", "author": "solace", "version": "1.0", "rating": 4.8, "installs": 1240},
+    {"id": "r002", "name": "LinkedIn Auto-Connect", "tag": "social", "author": "community", "version": "1.2", "rating": 4.5, "installs": 890},
+    {"id": "r003", "name": "GitHub PR Summary", "tag": "dev", "author": "solace", "version": "2.0", "rating": 4.9, "installs": 567},
+    {"id": "r004", "name": "HackerNews Digest", "tag": "news", "author": "community", "version": "1.0", "rating": 4.3, "installs": 234},
+    {"id": "r005", "name": "Expense Report Filler", "tag": "productivity", "author": "solace", "version": "1.1", "rating": 4.7, "installs": 445},
+]
 _SESSIONS: dict[str, dict] = {}
 _SESSIONS_LOCK = threading.Lock()
 _SESSION_TOKEN_SHA256: str = ""
@@ -532,6 +541,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_profiles_list()
         elif path == "/api/v1/profiles/active":
             self._handle_profiles_active()
+        elif path == "/api/v1/store/recipes":
+            self._handle_store_list(query)
+        elif path == "/api/v1/store/installed":
+            self._handle_store_installed()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -594,6 +607,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/profiles/[^/]+/activate$", path):
             profile_id = path.split("/")[-2]
             self._handle_profiles_activate(profile_id)
+        elif re.match(r"^/api/v1/store/recipes/[^/]+/install$", path):
+            recipe_id = path.split("/")[-2]
+            self._handle_store_install(recipe_id)
+        elif re.match(r"^/api/v1/store/recipes/[^/]+/uninstall$", path):
+            recipe_id = path.split("/")[-2]
+            self._handle_store_uninstall(recipe_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -2346,6 +2365,69 @@ function choose(mode) {
                 return
             self._save_profiles(profiles)
         self._send_json({"status": "deleted", "id": profile_id})
+
+    # ── Recipe Store (Task 024) ────────────────────────────────────────────
+
+    def _load_installed_recipes(self) -> list:
+        if not INSTALLED_RECIPES_PATH.exists():
+            return []
+        try:
+            data = json.loads(INSTALLED_RECIPES_PATH.read_text())
+            return data if isinstance(data, list) else []
+        except json.JSONDecodeError:
+            return []
+
+    def _handle_store_list(self, query: str) -> None:
+        from urllib.parse import parse_qs, unquote
+        params = parse_qs(query.lstrip("?"))
+        tag = params.get("tag", [None])[0]
+        search = params.get("q", [None])[0]
+        recipes = [dict(r) for r in _COMMUNITY_RECIPES]
+        if tag:
+            recipes = [r for r in recipes if r.get("tag") == tag]
+        if search:
+            q = unquote(search).lower()
+            recipes = [r for r in recipes if q in r.get("name", "").lower() or q in r.get("tag", "").lower()]
+        with _STORE_LOCK:
+            installed_ids = {r["id"] for r in self._load_installed_recipes()}
+        for r in recipes:
+            r["installed"] = r["id"] in installed_ids
+        self._send_json({"recipes": recipes, "total": len(recipes)})
+
+    def _handle_store_installed(self) -> None:
+        with _STORE_LOCK:
+            installed = self._load_installed_recipes()
+        self._send_json({"installed": installed, "total": len(installed)})
+
+    def _handle_store_install(self, recipe_id: str) -> None:
+        if not self._check_auth():
+            return
+        recipe = next((r for r in _COMMUNITY_RECIPES if r["id"] == recipe_id), None)
+        if not recipe:
+            self._send_json({"error": "recipe not found"}, 404)
+            return
+        with _STORE_LOCK:
+            installed = self._load_installed_recipes()
+            if any(r["id"] == recipe_id for r in installed):
+                self._send_json({"status": "already_installed", "recipe": recipe})
+                return
+            installed.append({**recipe, "installed_at": int(time.time())})
+            INSTALLED_RECIPES_PATH.parent.mkdir(parents=True, exist_ok=True)
+            INSTALLED_RECIPES_PATH.write_text(json.dumps(installed, indent=2))
+        self._send_json({"status": "installed", "recipe": recipe})
+
+    def _handle_store_uninstall(self, recipe_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _STORE_LOCK:
+            installed = self._load_installed_recipes()
+            before = len(installed)
+            installed = [r for r in installed if r["id"] != recipe_id]
+            if len(installed) == before:
+                self._send_json({"error": "recipe not installed"}, 404)
+                return
+            INSTALLED_RECIPES_PATH.write_text(json.dumps(installed, indent=2))
+        self._send_json({"status": "uninstalled", "id": recipe_id})
 
     def _parse_query(self, query: str) -> dict[str, str]:
         """Parse ?key=value&key2=value2 into dict."""
