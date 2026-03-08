@@ -91,6 +91,7 @@ RECIPES_DIR: Path = Path(__file__).parent / "data" / "default" / "recipes"
 RECIPE_RUNS_PATH: Path = Path.home() / ".solace" / "recipe_runs.json"
 BUDGET_PATH: Path = Path.home() / ".solace" / "budget.json"
 BYOK_PATH: Path = Path.home() / ".solace" / "byok_keys.json"
+NOTIFICATIONS_PATH: Path = Path.home() / ".solace" / "notifications.json"
 SUPPORTED_PROVIDERS: frozenset = frozenset(["anthropic", "openai", "together", "openrouter"])
 DEFAULT_BUDGET: dict = {
     "daily_limit_usd": 1.00,
@@ -106,6 +107,10 @@ MAX_BODY = 1_048_576
 _SCHEDULES_LOCK = threading.Lock()
 _TOKENS_LOCK = threading.Lock()
 _BYOK_LOCK = threading.Lock()
+_NOTIF_LOCK = threading.Lock()
+
+MAX_NOTIFICATIONS = 200  # keep last 200
+NOTIF_CATEGORIES: frozenset = frozenset(["budget", "session", "schedule", "error", "info", "recipe"])
 _SESSIONS: dict[str, dict] = {}
 _SESSIONS_LOCK = threading.Lock()
 _SESSION_TOKEN_SHA256: str = ""
@@ -252,6 +257,42 @@ def count_evidence() -> int:
         return sum(1 for ln in EVIDENCE_PATH.read_text().splitlines() if ln.strip())
     except FileNotFoundError:
         return 0
+
+
+# ---------------------------------------------------------------------------
+# Notification storage — Task 020
+# ---------------------------------------------------------------------------
+def _load_notifications_raw() -> list:
+    """Load notifications from ~/.solace/notifications.json. Returns list."""
+    if not NOTIFICATIONS_PATH.exists():
+        return []
+    try:
+        data = json.loads(NOTIFICATIONS_PATH.read_text())
+        return data if isinstance(data, list) else []
+    except json.JSONDecodeError:
+        return []
+
+
+def _append_notification(category: str, title: str, body: str, level: str = "info") -> None:
+    """Append a notification to the store. Thread-safe."""
+    if category not in NOTIF_CATEGORIES:
+        category = "info"
+    notif = {
+        "id": str(uuid.uuid4()),
+        "category": category,
+        "title": title[:128],
+        "body": body[:512],
+        "level": level,  # info | warn | error
+        "timestamp": int(time.time()),
+        "read": False,
+    }
+    with _NOTIF_LOCK:
+        notifs = _load_notifications_raw()
+        notifs.append(notif)
+        if len(notifs) > MAX_NOTIFICATIONS:
+            notifs = notifs[-MAX_NOTIFICATIONS:]
+        NOTIFICATIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        NOTIFICATIONS_PATH.write_text(json.dumps(notifs, indent=2))
 
 
 # ---------------------------------------------------------------------------
@@ -466,6 +507,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_byok_providers()
         elif path == "/api/v1/byok/active":
             self._handle_byok_active()
+        elif path == "/api/v1/notifications/unread-count":
+            self._handle_notifications_unread_count()
+        elif path == "/api/v1/notifications":
+            self._handle_notifications_list(query)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -518,6 +563,11 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_byok_test()
         elif path == "/api/v1/byok/clear":
             self._handle_byok_clear()
+        elif path == "/api/v1/notifications/mark-all-read":
+            self._handle_notifications_mark_all_read()
+        elif re.match(r"^/api/v1/notifications/[^/]+/read$", path):
+            notif_id = path.split("/")[-2]
+            self._handle_notification_mark_read(notif_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -2103,6 +2153,58 @@ function choose(mode) {
                 self._send_json({"status": "cleared", "provider": provider})
             else:
                 self._send_json({"error": f"no key configured for {provider}"}, 404)
+
+    # --- Task 020: Notification handlers ---
+
+    def _handle_notifications_list(self, query: str) -> None:
+        from urllib.parse import parse_qs
+        params = parse_qs(query.lstrip("?"))
+        limit = min(int(params.get("limit", ["50"])[0]), 200)
+        category = params.get("category", [None])[0]
+        unread_only = params.get("unread", ["false"])[0].lower() == "true"
+
+        with _NOTIF_LOCK:
+            notifs = _load_notifications_raw()
+        if category:
+            notifs = [n for n in notifs if n.get("category") == category]
+        if unread_only:
+            notifs = [n for n in notifs if not n.get("read", False)]
+        notifs = notifs[-limit:]
+        unread_count = sum(1 for n in notifs if not n.get("read", False))
+        self._send_json({
+            "notifications": notifs,
+            "total": len(notifs),
+            "unread_count": unread_count,
+        })
+
+    def _handle_notifications_unread_count(self) -> None:
+        with _NOTIF_LOCK:
+            notifs = _load_notifications_raw()
+        count = sum(1 for n in notifs if not n.get("read", False))
+        self._send_json({"unread_count": count})
+
+    def _handle_notifications_mark_all_read(self) -> None:
+        if not self._check_auth():
+            return
+        with _NOTIF_LOCK:
+            notifs = _load_notifications_raw()
+            for n in notifs:
+                n["read"] = True
+            NOTIFICATIONS_PATH.write_text(json.dumps(notifs, indent=2))
+        self._send_json({"status": "all_read"})
+
+    def _handle_notification_mark_read(self, notif_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _NOTIF_LOCK:
+            notifs = _load_notifications_raw()
+            for n in notifs:
+                if n.get("id") == notif_id:
+                    n["read"] = True
+                    NOTIFICATIONS_PATH.write_text(json.dumps(notifs, indent=2))
+                    self._send_json({"status": "read", "id": notif_id})
+                    return
+        self._send_json({"error": "notification not found"}, 404)
 
     def _parse_query(self, query: str) -> dict[str, str]:
         """Parse ?key=value&key2=value2 into dict."""

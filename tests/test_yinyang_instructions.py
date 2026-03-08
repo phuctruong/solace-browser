@@ -515,6 +515,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     recipe_runs_path = tmp / "recipe_runs.json"
 
     byok_path = tmp / "byok_keys.json"
+    notifications_path = tmp / "notifications.json"
 
     original_lock = ys.PORT_LOCK_PATH
     original_evidence = ys.EVIDENCE_PATH
@@ -523,6 +524,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     original_budget = ys.BUDGET_PATH
     original_recipe_runs = ys.RECIPE_RUNS_PATH
     original_byok = ys.BYOK_PATH
+    original_notifications = ys.NOTIFICATIONS_PATH
 
     ys.PORT_LOCK_PATH = lock_path
     ys.EVIDENCE_PATH = evidence_path
@@ -531,6 +533,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.BUDGET_PATH = budget_path
     ys.RECIPE_RUNS_PATH = recipe_runs_path
     ys.BYOK_PATH = byok_path
+    ys.NOTIFICATIONS_PATH = notifications_path
 
     httpd = ys.build_server(AUTH_TEST_PORT, str(REPO_ROOT), session_token_sha256=VALID_TOKEN)
 
@@ -553,6 +556,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.BUDGET_PATH = original_budget
     ys.RECIPE_RUNS_PATH = original_recipe_runs
     ys.BYOK_PATH = original_byok
+    ys.NOTIFICATIONS_PATH = original_notifications
 
 
 def _post_with_auth(path: str, payload: dict, token: str = VALID_TOKEN) -> tuple[int, dict]:
@@ -1796,3 +1800,43 @@ class TestBYOKManagement:
         response_text = json.dumps(data)
         assert full_key not in response_text
         assert "never-show" not in response_text
+
+
+# ---------------------------------------------------------------------------
+# Task 020: Notification System + Event Log
+# ---------------------------------------------------------------------------
+class TestNotifications:
+    def test_notifications_list_empty(self, auth_server):
+        status, data = _get_json_auth("/api/v1/notifications")
+        assert status == 200
+        assert "notifications" in data
+        assert "unread_count" in data
+        assert isinstance(data["notifications"], list)
+
+    def test_notifications_unread_count(self, auth_server):
+        status, data = _get_json_auth("/api/v1/notifications/unread-count")
+        assert status == 200
+        assert "unread_count" in data
+        assert isinstance(data["unread_count"], int)
+
+    def test_notifications_mark_all_read_requires_auth(self, auth_server):
+        status, data = _post_no_auth("/api/v1/notifications/mark-all-read", {})
+        assert status == 401
+
+    def test_notifications_mark_all_read(self, auth_server):
+        status, data = _post_with_auth("/api/v1/notifications/mark-all-read", {})
+        assert status == 200
+        assert data["status"] == "all_read"
+
+    def test_notification_mark_read_not_found(self, auth_server):
+        status, data = _post_with_auth("/api/v1/notifications/nonexistent-id/read", {})
+        assert status == 404
+
+    def test_notifications_unread_filter(self, auth_server):
+        status, data = _get_json_auth("/api/v1/notifications?unread=true")
+        assert status == 200
+
+    def test_notifications_limit_param(self, auth_server):
+        status, data = _get_json_auth("/api/v1/notifications?limit=10")
+        assert status == 200
+        assert len(data.get("notifications", [])) <= 10

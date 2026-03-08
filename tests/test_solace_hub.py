@@ -519,3 +519,20 @@ class TestBYOKPanel:
         """BYOK additions must not introduce legacy hub name."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert LEGACY_HUB_NAME not in html
+
+
+# ── Task 020: Notification System ─────────────────────────────────────────────
+
+class TestNotificationUI:
+    def test_index_html_notification_bell(self):
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "notification" in html.lower() or "notif" in html.lower()
+
+    def test_index_html_mark_all_read(self):
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "mark" in html.lower() and "read" in html.lower()
+
+    def test_notification_endpoints_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/notifications" in server
+        assert "unread_count" in server
