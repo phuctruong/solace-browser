@@ -280,3 +280,37 @@ class TestOAuth3Dashboard:
         """index.html must not reference the legacy hub name."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert LEGACY_HUB_NAME not in html
+
+
+# ── Task 012: Tunnel + Sync UI ────────────────────────────────────────────────
+
+class TestTunnelSyncUI:
+    def test_index_html_tunnel_panel(self):
+        """index.html must contain tunnel section."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "tunnel" in html.lower()
+
+    def test_index_html_tunnel_warning(self):
+        """index.html must warn users about internet exposure."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "internet" in html.lower() or "warning" in html.lower() or "expose" in html.lower()
+
+    def test_index_html_sync_panel(self):
+        """index.html must contain sync/vault section."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "sync" in html.lower() or "vault" in html.lower()
+
+    def test_index_html_export_button(self):
+        """index.html must have export button or function."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "export" in html.lower() or "Export" in html
+
+    def test_index_html_no_port_9222_tunnel(self):
+        """Tunnel panel must not reference the forbidden debug port."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert FORBIDDEN_DEBUG_PORT not in html
+
+    def test_index_html_no_companion_app_tunnel(self):
+        """Tunnel/sync additions must not introduce legacy hub name."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert LEGACY_HUB_NAME not in html

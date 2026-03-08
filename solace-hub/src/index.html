@@ -435,6 +435,52 @@
       <div class="evidence-log" id="evidence-log">Loading…</div>
     </div>
 
+    <!-- Remote Tunnel -->
+    <div class="card" id="tunnel-panel">
+      <h2>Remote Tunnel</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+        Expose your local Solace Hub to remote AI agents via Cloudflare Tunnel.
+      </p>
+      <div class="status-row" id="tunnel-status-row">
+        <div class="dot red" id="tunnel-dot"></div>
+        <span class="status-label" id="tunnel-url-display">Not active</span>
+      </div>
+      <p style="font-size:11px;color:var(--red);margin-top:8px;margin-bottom:8px;">
+        ⚠ Warning: A tunnel exposes your local Hub to the internet. Only enable when needed.
+      </p>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn-primary" id="tunnel-start-btn" onclick="tunnelStart()">Start Tunnel</button>
+        <button class="btn-secondary" id="tunnel-stop-btn" onclick="tunnelStop()" style="display:none;">Stop Tunnel</button>
+      </div>
+    </div>
+
+    <!-- Vault Sync -->
+    <div class="card" id="sync-panel">
+      <h2>Vault Sync</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+        Export and import your OAuth3 vault for backup or migration.
+      </p>
+      <div id="sync-status-row" style="font-size:12px;margin-bottom:8px;">
+        <span id="vault-token-count">Loading…</span>
+        &nbsp;·&nbsp;
+        <span id="vault-last-sync" style="color:var(--text-muted);"></span>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="syncExport()">Export Vault</button>
+      </div>
+      <details style="margin-top:12px;">
+        <summary>Import Vault</summary>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+          <textarea id="sync-import-data" placeholder="Paste export JSON here" rows="4"
+            style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text-primary);font-family:var(--font);font-size:12px;resize:vertical;"></textarea>
+          <input type="text" id="sync-import-token" placeholder="Enter your token SHA256 (64 hex chars)" maxlength="64"
+            style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text-primary);font-family:var(--font);font-size:12px;" />
+          <button class="btn-secondary" onclick="syncImport()">Import</button>
+        </div>
+      </details>
+      <div id="sync-result" style="font-size:11px;color:var(--text-muted);margin-top:8px;"></div>
+    </div>
+
     <!-- OAuth3 Token Management -->
     <div class="card" id="oauth3-panel">
       <h2>OAuth3 Tokens</h2>
@@ -817,15 +863,105 @@
       }
     }
 
+    // ── Tunnel management ─────────────────────────────────────────────────────
+    async function tunnelStart() {
+      try {
+        const r = await fetch("http://localhost:8888/api/v1/tunnel/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+        const d = await r.json();
+        document.getElementById("tunnel-url-display").textContent = d.url || "Starting…";
+        refreshTunnelStatus();
+      } catch (e) {
+        console.error("Tunnel start failed:", e);
+      }
+    }
+
+    async function tunnelStop() {
+      try {
+        await fetch("http://localhost:8888/api/v1/tunnel/stop", { method: "POST" });
+        refreshTunnelStatus();
+      } catch (e) {
+        console.error("Tunnel stop failed:", e);
+      }
+    }
+
+    async function refreshTunnelStatus() {
+      try {
+        const r = await fetch("http://localhost:8888/api/v1/tunnel/status");
+        const d = await r.json();
+        document.getElementById("tunnel-dot").className = "dot " + (d.active ? "green" : "red");
+        document.getElementById("tunnel-url-display").textContent = d.url || "Not active";
+        document.getElementById("tunnel-start-btn").style.display = d.active ? "none" : "";
+        document.getElementById("tunnel-stop-btn").style.display = d.active ? "" : "none";
+      } catch (_) {}
+    }
+
+    // ── Vault sync ────────────────────────────────────────────────────────────
+    async function syncExport() {
+      try {
+        const r = await fetch("http://localhost:8888/api/v1/sync/export", { method: "POST" });
+        const d = await r.json();
+        const el = document.getElementById("sync-result");
+        if (d.error) {
+          el.textContent = "Error: " + d.error;
+        } else {
+          el.textContent = "Exported to: " + d.path + " (sha256: " + (d.checksum || "").slice(0, 8) + "…)";
+        }
+        refreshSyncStatus();
+      } catch (e) {
+        console.error("Export failed:", e);
+      }
+    }
+
+    async function syncImport() {
+      const exportData = document.getElementById("sync-import-data").value;
+      const tokenSha = document.getElementById("sync-import-token").value;
+      try {
+        const r = await fetch("http://localhost:8888/api/v1/sync/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ export_data: exportData, token_sha256: tokenSha }),
+        });
+        const d = await r.json();
+        const el = document.getElementById("sync-result");
+        if (d.error) {
+          el.textContent = "Error: " + d.error;
+        } else {
+          el.textContent = "Imported: " + d.tokens_added + " added, " + d.tokens_skipped + " skipped";
+        }
+        refreshSyncStatus();
+      } catch (e) {
+        console.error("Import failed:", e);
+      }
+    }
+
+    async function refreshSyncStatus() {
+      try {
+        const r = await fetch("http://localhost:8888/api/v1/sync/status");
+        const d = await r.json();
+        document.getElementById("vault-token-count").textContent = d.token_count + " tokens";
+        document.getElementById("vault-last-sync").textContent = d.last_sync
+          ? "Last export: " + new Date(d.last_sync * 1000).toLocaleString()
+          : "Never exported";
+      } catch (_) {}
+    }
+
     // ── Boot ──────────────────────────────────────────────────────────────────
     refreshStatus();
     refreshOnboarding();
     refreshOAuth3Tokens();
+    refreshTunnelStatus();
+    refreshSyncStatus();
     // Poll every 10 seconds
     setInterval(refreshStatus, 10_000);
     setInterval(refreshOnboarding, 10_000);
+    setInterval(refreshTunnelStatus, 10_000);
     // OAuth3 tokens poll every 30 seconds
     setInterval(refreshOAuth3Tokens, 30_000);
+    // Sync status poll every 60 seconds
+    setInterval(refreshSyncStatus, 60_000);
   </script>
 
 </body>

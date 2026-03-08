@@ -1282,3 +1282,87 @@ class TestSessionManager:
         finally:
             with ys._SESSIONS_LOCK:
                 ys._SESSIONS.pop(dead_session_id, None)
+
+
+# ── Task 012: Tunnel + Vault Sync Management ─────────────────────────────────
+
+class TestTunnelSync:
+    def test_tunnel_status_initial(self, auth_server):
+        """GET /api/v1/tunnel/status → active=False initially."""
+        status, data = _get_json_auth("/api/v1/tunnel/status")
+        assert status == 200
+        assert "active" in data
+        assert data["active"] is False
+        assert "port" in data
+
+    def test_tunnel_start_no_cloudflared(self, auth_server, monkeypatch):
+        """When cloudflared not on PATH, return 503 with install instructions."""
+        import shutil as _shutil
+        import yinyang_server as ys
+
+        original_which = _shutil.which
+
+        def mock_which(cmd):
+            if cmd == "cloudflared":
+                return None
+            return original_which(cmd)
+
+        monkeypatch.setattr(_shutil, "which", mock_which)
+        # Also patch the shutil imported in yinyang_server
+        monkeypatch.setattr(ys.shutil, "which", mock_which)
+
+        status, data = _post_with_auth("/api/v1/tunnel/start", {})
+        assert status == 503
+        assert "cloudflared" in data.get("error", "").lower()
+        assert "install" in data
+
+    def test_tunnel_stop_when_not_running(self, auth_server):
+        """POST /api/v1/tunnel/stop when no tunnel → 200 not_running."""
+        import yinyang_server as ys
+        # Ensure no tunnel is running
+        with ys._TUNNEL_LOCK:
+            ys._TUNNEL_PROC = None
+            ys._TUNNEL_URL = ""
+        status, data = _post_with_auth("/api/v1/tunnel/stop", {})
+        assert status == 200
+        assert data.get("status") == "not_running"
+
+    def test_tunnel_requires_auth_start(self, auth_server):
+        """POST /api/v1/tunnel/start without Bearer → 401."""
+        status, data = _post_no_auth("/api/v1/tunnel/start", {})
+        assert status == 401
+
+    def test_tunnel_requires_auth_stop(self, auth_server):
+        """POST /api/v1/tunnel/stop without Bearer → 401."""
+        status, data = _post_no_auth("/api/v1/tunnel/stop", {})
+        assert status == 401
+
+    def test_sync_status(self, auth_server):
+        """GET /api/v1/sync/status → returns vault_exists and token_count."""
+        status, data = _get_json_auth("/api/v1/sync/status")
+        assert status == 200
+        assert "vault_exists" in data
+        assert "token_count" in data
+        assert isinstance(data["token_count"], int)
+
+    def test_sync_export_requires_auth(self, auth_server):
+        """POST /api/v1/sync/export without Bearer → 401."""
+        status, data = _post_no_auth("/api/v1/sync/export", {})
+        assert status == 401
+
+    def test_sync_import_invalid_token_sha256(self, auth_server):
+        """POST /api/v1/sync/import with bad token_sha256 → 400."""
+        status, data = _post_with_auth(
+            "/api/v1/sync/import",
+            {"export_data": "{}", "token_sha256": "not-valid-hex"},
+        )
+        assert status == 400
+        assert "64 hex" in data.get("error", "").lower()
+
+    def test_sync_import_requires_auth(self, auth_server):
+        """POST /api/v1/sync/import without Bearer → 401."""
+        status, data = _post_no_auth(
+            "/api/v1/sync/import",
+            {"export_data": "{}", "token_sha256": "a" * 64},
+        )
+        assert status == 401

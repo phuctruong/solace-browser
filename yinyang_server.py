@@ -39,12 +39,14 @@ Route table:
 """
 import argparse
 import atexit
+import base64
 import hashlib
 import http.server
 import json
 import os
 import re
 import secrets
+import shutil
 import signal
 import subprocess
 import threading
@@ -64,6 +66,7 @@ OAUTH3_TOKENS_PATH: Path = Path.home() / ".solace" / "oauth3-tokens.json"
 ONBOARDING_PATH: Path = Path.home() / ".solace" / "onboarding.json"
 
 _SERVER_VERSION = "1.1"
+YINYANG_PORT = 8888
 MAX_BODY = 1_048_576
 
 _SCHEDULES_LOCK = threading.Lock()
@@ -71,6 +74,13 @@ _TOKENS_LOCK = threading.Lock()
 _SESSIONS: dict[str, dict] = {}
 _SESSIONS_LOCK = threading.Lock()
 _SESSION_TOKEN_SHA256: str = ""
+
+_TUNNEL_PROC: Optional[subprocess.Popen] = None
+_TUNNEL_LOCK = threading.Lock()
+_TUNNEL_URL: str = ""
+
+VAULT_PATH = Path.home() / ".solace" / "oauth3_tokens.json"
+VAULT_EXPORT_PATH = Path.home() / ".solace" / "vault_export.json"
 _SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
 _CRON_RE = re.compile(r"^\S+\s+\S+\s+\S+\s+\S+\s+\S+$")
 _ONBOARDING_MODES = frozenset(["agent", "byok", "paid", "cli"])
@@ -361,6 +371,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/sessions/[^/]+$", path):
             session_id = path.split("/")[-1]
             self._handle_session_detail(session_id)
+        elif path == "/api/v1/tunnel/status":
+            self._handle_tunnel_status()
+        elif path == "/api/v1/sync/status":
+            self._handle_sync_status()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -386,6 +400,14 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_onboarding_reset()
         elif path == "/api/v1/sessions":
             self._handle_session_create()
+        elif path == "/api/v1/tunnel/start":
+            self._handle_tunnel_start()
+        elif path == "/api/v1/tunnel/stop":
+            self._handle_tunnel_stop()
+        elif path == "/api/v1/sync/export":
+            self._handle_sync_export()
+        elif path == "/api/v1/sync/import":
+            self._handle_sync_import()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -1044,6 +1066,211 @@ function choose(mode) {
         except json.JSONDecodeError:
             self._send_json({"error": "invalid JSON"}, 400)
             return None
+
+    # --- Tunnel handlers ---
+
+    def _handle_tunnel_status(self) -> None:
+        global _TUNNEL_URL
+        with _TUNNEL_LOCK:
+            active = _TUNNEL_PROC is not None and _TUNNEL_PROC.poll() is None
+            url = _TUNNEL_URL if active else ""
+        self._send_json({"active": active, "url": url, "port": YINYANG_PORT})
+
+    def _handle_tunnel_start(self) -> None:
+        if not self._check_auth():
+            return
+        global _TUNNEL_PROC, _TUNNEL_URL
+        cloudflared = shutil.which("cloudflared")
+        if not cloudflared:
+            self._send_json({
+                "error": "cloudflared not found",
+                "install": "https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/",
+            }, 503)
+            return
+        with _TUNNEL_LOCK:
+            if _TUNNEL_PROC is not None and _TUNNEL_PROC.poll() is None:
+                self._send_json({"status": "already_running", "url": _TUNNEL_URL})
+                return
+            proc = subprocess.Popen(
+                [cloudflared, "tunnel", "--url", f"http://localhost:{YINYANG_PORT}"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            _TUNNEL_PROC = proc
+            _TUNNEL_URL = ""
+        # Read output to find trycloudflare.com URL
+        _url_pattern = re.compile(r"https://[a-z0-9-]+\.trycloudflare\.com")
+        url_found = ""
+        try:
+            for _ in range(50):  # max 50 lines to find URL
+                line = proc.stdout.readline().decode("utf-8", errors="replace")
+                if not line:
+                    break
+                m = _url_pattern.search(line)
+                if m:
+                    url_found = m.group(0)
+                    break
+        except OSError:
+            pass
+        with _TUNNEL_LOCK:
+            _TUNNEL_URL = url_found
+        self._send_json({"status": "started", "url": url_found})
+
+    def _handle_tunnel_stop(self) -> None:
+        if not self._check_auth():
+            return
+        global _TUNNEL_PROC, _TUNNEL_URL
+        with _TUNNEL_LOCK:
+            if _TUNNEL_PROC is None:
+                self._send_json({"status": "not_running"})
+                return
+            try:
+                _TUNNEL_PROC.terminate()
+            except OSError:
+                pass
+            _TUNNEL_PROC = None
+            _TUNNEL_URL = ""
+        self._send_json({"status": "stopped"})
+
+    # --- Vault sync handlers ---
+
+    def _handle_sync_status(self) -> None:
+        token_count = 0
+        vault_exists = VAULT_PATH.exists()
+        if vault_exists:
+            try:
+                tokens = json.loads(VAULT_PATH.read_text())
+                token_count = len(tokens) if isinstance(tokens, list) else 0
+            except json.JSONDecodeError:
+                pass
+        last_sync = None
+        if VAULT_EXPORT_PATH.exists():
+            last_sync = int(VAULT_EXPORT_PATH.stat().st_mtime)
+        self._send_json({
+            "vault_exists": vault_exists,
+            "token_count": token_count,
+            "last_sync": last_sync,
+        })
+
+    def _handle_sync_export(self) -> None:
+        if not self._check_auth():
+            return
+        try:
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+            crypto_available = True
+        except ImportError:
+            crypto_available = False
+        if not crypto_available:
+            self._send_json({
+                "error": "cryptography package required for vault sync",
+                "install": "pip install cryptography",
+            }, 503)
+            return
+        if not VAULT_PATH.exists():
+            self._send_json({"error": "vault not found — no OAuth3 tokens registered yet"}, 404)
+            return
+        try:
+            vault_bytes = VAULT_PATH.read_bytes()
+        except OSError as e:
+            self._send_json({"error": f"cannot read vault: {e}"}, 500)
+            return
+        # Use session token sha256 as AES-256 key (32 bytes from 64-char hex)
+        key_hex = _SESSION_TOKEN_SHA256 or ("0" * 64)
+        key = bytes.fromhex(key_hex)
+        nonce = os.urandom(12)
+        aesgcm = AESGCM(key)
+        ciphertext = aesgcm.encrypt(nonce, vault_bytes, None)
+        export_data = {
+            "version": "1",
+            "nonce": base64.b64encode(nonce).decode(),
+            "ct": base64.b64encode(ciphertext).decode(),
+        }
+        export_json = json.dumps(export_data)
+        try:
+            VAULT_EXPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+            VAULT_EXPORT_PATH.write_text(export_json)
+        except OSError as e:
+            self._send_json({"error": f"cannot write export: {e}"}, 500)
+            return
+        checksum = hashlib.sha256(export_json.encode()).hexdigest()
+        self._send_json({
+            "status": "exported",
+            "path": str(VAULT_EXPORT_PATH),
+            "checksum": checksum,
+        })
+
+    def _handle_sync_import(self) -> None:
+        if not self._check_auth():
+            return
+        try:
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+            crypto_available = True
+        except ImportError:
+            crypto_available = False
+        if not crypto_available:
+            self._send_json({
+                "error": "cryptography package required",
+                "install": "pip install cryptography",
+            }, 503)
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        export_data_str = body.get("export_data", "")
+        token_sha256 = body.get("token_sha256", "")
+        if not _SHA256_HEX_RE.fullmatch(token_sha256):
+            self._send_json({"error": "token_sha256 must be 64 hex chars"}, 400)
+            return
+        try:
+            export_obj = json.loads(export_data_str) if isinstance(export_data_str, str) else export_data_str
+            nonce = base64.b64decode(export_obj["nonce"])
+            ct = base64.b64decode(export_obj["ct"])
+        except (KeyError, ValueError, json.JSONDecodeError) as e:
+            self._send_json({"error": f"invalid export_data: {e}"}, 400)
+            return
+        key = bytes.fromhex(token_sha256)
+        aesgcm = AESGCM(key)
+        try:
+            plaintext = aesgcm.decrypt(nonce, ct, None)
+        except Exception:  # cryptography raises platform-specific exceptions on decrypt failure
+            self._send_json({"error": "decryption failed — wrong token or corrupted data"}, 400)
+            return
+        try:
+            imported_tokens = json.loads(plaintext)
+        except json.JSONDecodeError:
+            self._send_json({"error": "decrypted data is not valid JSON"}, 400)
+            return
+        if not isinstance(imported_tokens, list):
+            self._send_json({"error": "vault must be a list of tokens"}, 400)
+            return
+        # Merge: add new tokens by token_id, skip existing
+        existing: list = []
+        if VAULT_PATH.exists():
+            try:
+                existing = json.loads(VAULT_PATH.read_text())
+                if not isinstance(existing, list):
+                    existing = []
+            except json.JSONDecodeError:
+                existing = []
+        existing_ids = {t.get("token_id") for t in existing if isinstance(t, dict)}
+        added = 0
+        skipped = 0
+        for t in imported_tokens:
+            if not isinstance(t, dict):
+                continue
+            tid = t.get("token_id")
+            if tid in existing_ids:
+                skipped += 1
+            else:
+                existing.append(t)
+                added += 1
+        try:
+            VAULT_PATH.parent.mkdir(parents=True, exist_ok=True)
+            VAULT_PATH.write_text(json.dumps(existing, indent=2))
+        except OSError as e:
+            self._send_json({"error": f"cannot write vault: {e}"}, 500)
+            return
+        self._send_json({"status": "imported", "tokens_added": added, "tokens_skipped": skipped})
 
     def _parse_query(self, query: str) -> dict[str, str]:
         """Parse ?key=value&key2=value2 into dict."""
