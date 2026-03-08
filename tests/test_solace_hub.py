@@ -672,3 +672,18 @@ class TestBudgetAlertsUI:
         """index.html must contain alert threshold controls."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "alert" in html.lower() or "threshold" in html.lower()
+
+
+# ── Task 030: Hub Health Watchdog ─────────────────────────────────────────────
+
+class TestWatchdogUI:
+    def test_watchdog_in_server(self):
+        """yinyang_server.py must implement watchdog endpoints."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/watchdog/status" in server
+        assert "restart_count" in server
+
+    def test_watchdog_status_in_html(self):
+        """index.html must reference watchdog or uptime."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "watchdog" in html.lower() or "restart" in html.lower() or "uptime" in html.lower()

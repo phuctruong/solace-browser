@@ -521,6 +521,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     installed_recipes_path = tmp / "installed_recipes.json"
     cli_config_path = tmp / "cli_config.json"
     spend_history_path = tmp / "spend_history.json"
+    watchdog_log_path = tmp / "watchdog.log"
 
     original_lock = ys.PORT_LOCK_PATH
     original_evidence = ys.EVIDENCE_PATH
@@ -535,6 +536,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     original_installed_recipes = ys.INSTALLED_RECIPES_PATH
     original_cli_config = ys.CLI_CONFIG_PATH
     original_spend_history = ys.SPEND_HISTORY_PATH
+    original_watchdog_log = ys.WATCHDOG_LOG_PATH
 
     ys.PORT_LOCK_PATH = lock_path
     ys.EVIDENCE_PATH = evidence_path
@@ -549,6 +551,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.INSTALLED_RECIPES_PATH = installed_recipes_path
     ys.CLI_CONFIG_PATH = cli_config_path
     ys.SPEND_HISTORY_PATH = spend_history_path
+    ys.WATCHDOG_LOG_PATH = watchdog_log_path
 
     httpd = ys.build_server(AUTH_TEST_PORT, str(REPO_ROOT), session_token_sha256=VALID_TOKEN)
 
@@ -577,6 +580,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.INSTALLED_RECIPES_PATH = original_installed_recipes
     ys.CLI_CONFIG_PATH = original_cli_config
     ys.SPEND_HISTORY_PATH = original_spend_history
+    ys.WATCHDOG_LOG_PATH = original_watchdog_log
 
 
 def _post_with_auth(path: str, payload: dict, token: str = VALID_TOKEN) -> tuple[int, dict]:
@@ -2264,3 +2268,26 @@ class TestBudgetAlerts:
         status, data = _post_with_auth("/api/v1/budget/alerts", {"threshold_80": False})
         assert status == 200
         assert data["status"] == "updated"
+
+
+# ── Task 030: Hub Health Watchdog ─────────────────────────────────────────────
+
+class TestWatchdog:
+    def test_watchdog_status(self, auth_server):
+        status, data = _get_json_auth("/api/v1/watchdog/status")
+        assert status == 200
+        assert data["status"] == "ok"
+        assert "uptime_seconds" in data
+        assert "restart_count" in data
+        assert "last_start" in data
+
+    def test_watchdog_ping(self, auth_server):
+        status, data = _post_with_auth("/api/v1/watchdog/ping", {})
+        assert status == 200
+        assert data["status"] == "pong"
+        assert "timestamp" in data
+
+    def test_watchdog_uptime_nonnegative(self, auth_server):
+        status, data = _get_json_auth("/api/v1/watchdog/status")
+        assert status == 200
+        assert data["uptime_seconds"] >= 0

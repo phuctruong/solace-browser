@@ -677,6 +677,12 @@
       <div style="margin-top:8px;">
         <a href="http://localhost:8888/metrics" target="_blank" class="hub-link">Prometheus /metrics</a>
       </div>
+      <!-- Watchdog indicator (Task 030) -->
+      <div class="status-row" style="margin-top:10px;" id="watchdog-row">
+        <span class="status-dot status-unknown" id="watchdog-dot"></span>
+        <span id="watchdog-label">Watchdog: checking…</span>
+        <span id="watchdog-restart" style="margin-left:8px;font-size:0.85em;color:#888;"></span>
+      </div>
     </div>
 
     <!-- Server status -->
@@ -2568,6 +2574,28 @@
     }
     refreshAppLauncher();
     setInterval(refreshAppLauncher, 60_000);
+
+    // Watchdog status refresh (Task 030)
+    async function refreshWatchdog() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/watchdog/status', { signal: AbortSignal.timeout(3000) });
+        if (!r.ok) throw new Error('bad status');
+        const d = await r.json();
+        const dot = document.getElementById('watchdog-dot');
+        const lbl = document.getElementById('watchdog-label');
+        const rst = document.getElementById('watchdog-restart');
+        if (dot) { dot.className = 'status-dot status-ok'; }
+        if (lbl) { lbl.textContent = 'Watchdog: alive — uptime ' + formatUptime(d.uptime_seconds || 0); }
+        if (rst && d.restart_count > 0) { rst.textContent = '(' + d.restart_count + ' restart' + (d.restart_count !== 1 ? 's' : '') + ')'; }
+      } catch (_) {
+        const dot = document.getElementById('watchdog-dot');
+        const lbl = document.getElementById('watchdog-label');
+        if (dot) { dot.className = 'status-dot status-error'; }
+        if (lbl) { lbl.textContent = 'Watchdog: unreachable'; }
+      }
+    }
+    refreshWatchdog();
+    setInterval(refreshWatchdog, 30_000);
   </script>
 
 </body>

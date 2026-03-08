@@ -122,6 +122,8 @@ _STORE_LOCK = threading.Lock()
 CLI_CONFIG_PATH: Path = Path.home() / ".solace" / "cli_config.json"
 SPEND_HISTORY_PATH: Path = Path.home() / ".solace" / "spend_history.json"
 _SPEND_HISTORY_LOCK = threading.Lock()
+WATCHDOG_LOG_PATH: Path = Path.home() / ".solace" / "watchdog.log"
+_WATCHDOG_LOCK = threading.Lock()
 SUPPORTED_CLI_TOOLS: frozenset = frozenset(["claude", "openai", "ollama", "aider", "continue"])
 _CLI_LOCK = threading.Lock()
 _COMMUNITY_RECIPES: list = [
@@ -562,6 +564,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_budget_history(query)
         elif path == "/api/v1/budget/alerts":
             self._handle_budget_alerts()
+        elif path == "/api/v1/watchdog/status":
+            self._handle_watchdog_status()
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -647,6 +651,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_budget_reset()
         elif path == "/api/v1/budget/alerts":
             self._handle_budget_alerts_set()
+        elif path == "/api/v1/watchdog/ping":
+            self._handle_watchdog_ping()
         elif path == "/api/v1/byok/set":
             self._handle_byok_set()
         elif path == "/api/v1/byok/test":
@@ -1780,6 +1786,32 @@ function choose(mode) {
         BUDGET_PATH.parent.mkdir(parents=True, exist_ok=True)
         BUDGET_PATH.write_text(json.dumps(budget, indent=2))
         self._send_json({"status": "updated", "alerts": alerts})
+
+    # ── Watchdog (Task 030) ────────────────────────────────────────────────
+
+    def _handle_watchdog_status(self) -> None:
+        """GET /api/v1/watchdog/status — server health + restart count. Task 030."""
+        uptime = int(time.time() - _SERVER_START_TIME)
+        restart_count = 0
+        if WATCHDOG_LOG_PATH.exists():
+            try:
+                last_line = WATCHDOG_LOG_PATH.read_text().strip().split("\n")[-1]
+                restart_count = int(last_line.split("count=")[-1])
+            except (ValueError, IndexError, OSError):
+                restart_count = 0
+        self._send_json({
+            "status": "ok",
+            "uptime_seconds": uptime,
+            "restart_count": restart_count,
+            "last_start": int(_SERVER_START_TIME),
+        })
+
+    def _handle_watchdog_ping(self) -> None:
+        """POST /api/v1/watchdog/ping — watchdog heartbeat. Task 030."""
+        with _WATCHDOG_LOCK:
+            WATCHDOG_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+            WATCHDOG_LOG_PATH.write_text(f"last_ping={int(time.time())} count=0\n")
+        self._send_json({"status": "pong", "timestamp": int(time.time())})
 
     # --- Task 018: Metrics handlers ---
 
