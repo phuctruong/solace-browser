@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  solace-browser.wxs — WiX v4 MSI installer for Solace Browser (Windows)
+  Auth: 65537 | Port 9222: PERMANENTLY BANNED
+
+  Build:
+    wix build -src scripts/windows/solace-browser.wxs \
+              -out dist/solace-browser-windows-x86_64.msi \
+              -d ExeDir=dist
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+    Name="Solace Browser"
+    Manufacturer="Solace AI"
+    Version="1.0.0"
+    UpgradeCode="A5C2F4D7-3B8E-4A91-B6C0-2D7F1E9A4B83"
+    Scope="perMachine"
+    Compressed="yes"
+    InstallerVersion="500">
+
+    <!-- Upgrade logic: remove older versions before install -->
+    <MajorUpgrade
+      DowngradeErrorMessage="A newer version of Solace Browser is already installed."
+      Schedule="afterInstallInitialize" />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="ProductFeature" Title="Solace Browser" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="ShortcutComponents" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="Solace Browser" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Solace Browser" />
+      </Directory>
+      <Directory Id="DesktopFolder" />
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="MainExecutable" Guid="B7D3E2A1-9C4F-4D81-A0B5-3E8C6F2D1A94">
+        <File
+          Id="SolaceBrowserExe"
+          Source="!(bind.Variable.ExeDir)/solace-browser-windows-x86_64.exe"
+          Name="solace-browser.exe"
+          KeyPath="yes" />
+        <!-- Auto-launch headed after interactive install -->
+        <RegistryValue
+          Root="HKLM"
+          Key="SOFTWARE\Solace Browser"
+          Name="InstallDir"
+          Value="[INSTALLFOLDER]"
+          Type="string"
+          KeyPath="no" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="ShortcutComponents" Directory="ApplicationProgramsFolder">
+      <Component Id="StartMenuShortcut" Guid="C8E4F3B2-0D5A-4E92-B1C6-4F9D7A3E2B05">
+        <!-- Start Menu shortcut — always uses --head flag -->
+        <Shortcut
+          Id="StartMenuShortcutEntry"
+          Name="Solace Browser"
+          Description="Yinyang Server for Solace Browser"
+          Target="[INSTALLFOLDER]solace-browser.exe"
+          Arguments="--head"
+          WorkingDirectory="INSTALLFOLDER" />
+        <!-- Desktop shortcut — also uses --head flag -->
+        <Shortcut
+          Id="DesktopShortcutEntry"
+          Directory="DesktopFolder"
+          Name="Solace Browser"
+          Description="Yinyang Server for Solace Browser"
+          Target="[INSTALLFOLDER]solace-browser.exe"
+          Arguments="--head"
+          WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="CleanupStartMenu" On="uninstall" />
+        <RegistryValue
+          Root="HKCU"
+          Key="SOFTWARE\Solace Browser\Shortcuts"
+          Name="installed"
+          Value="1"
+          Type="integer"
+          KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

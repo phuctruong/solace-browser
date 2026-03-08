@@ -5,6 +5,10 @@ depot_tools/
 # Build output
 out/
 
+# Release artifacts + release cycle runs (local, never committed)
+dist/
+scratch/
+
 # OS files
 .DS_Store
 Thumbs.db

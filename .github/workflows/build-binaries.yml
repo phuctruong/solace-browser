@@ -1,0 +1,162 @@
+name: build-binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: 'Upload artifacts to GCS (true/false)'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: read
+  id-token: write   # for Workload Identity Federation GCS upload
+
+jobs:
+  build:
+    name: build-${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            platform: linux
+            artifact_name: native-linux
+            binary: solace-browser-linux-x86_64
+          - os: macos-latest
+            platform: macos
+            artifact_name: native-macos
+            binary: solace-browser-macos-universal
+          - os: windows-latest
+            platform: windows
+            artifact_name: native-windows
+            binary: solace-browser-windows-x86_64.msi
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller fastapi uvicorn cryptography websockets httpx pydantic
+
+      - name: Install WiX Toolset (Windows only)
+        if: matrix.platform == 'windows'
+        run: |
+          dotnet tool install --global wix
+          wix --version
+
+      - name: Build binary — Linux
+        if: matrix.platform == 'linux'
+        env:
+          TARGET_OS: linux
+          UPLOAD_ENABLED: '0'
+        run: bash scripts/release_browser_cycle.sh
+
+      - name: Build binary — macOS (universal2)
+        if: matrix.platform == 'macos'
+        env:
+          TARGET_OS: macos
+          UPLOAD_ENABLED: '0'
+        run: bash scripts/release_browser_cycle.sh
+
+      - name: Build binary — Windows + MSI
+        if: matrix.platform == 'windows'
+        env:
+          TARGET_OS: windows
+          UPLOAD_ENABLED: '0'
+        shell: bash
+        run: bash scripts/release_browser_cycle.sh
+
+      - name: Verify binary headers
+        shell: python
+        run: |
+          import struct, sys
+          from pathlib import Path
+
+          platform = "${{ matrix.platform }}"
+          binary = "${{ matrix.binary }}"
+          dist = Path("dist")
+
+          if platform == "linux":
+              b = (dist / binary).read_bytes()
+              assert b[:4] == b'\x7fELF', f"Not ELF: {binary}"
+              print(f"OK Linux ELF: {binary}")
+
+          elif platform == "macos":
+              b = (dist / binary).read_bytes()
+              macho = {b'\xfe\xed\xfa\xce', b'\xce\xfa\xed\xfe', b'\xfe\xed\xfa\xcf',
+                       b'\xcf\xfa\xed\xfe', b'\xca\xfe\xba\xbe', b'\xbe\xba\xfe\xca',
+                       b'\xca\xfe\xba\xbf', b'\xbf\xba\xfe\xca'}
+              assert b[:4] in macho, f"Not Mach-O: {binary}"
+              print(f"OK macOS Mach-O: {binary}")
+
+          elif platform == "windows":
+              b = (dist / binary).read_bytes()
+              ole2 = b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'
+              assert b[:8] == ole2, f"Not MSI (OLE2 header missing): {binary}"
+              print(f"OK Windows MSI: {binary} ({len(b):,} bytes)")
+
+      - name: Generate sha256
+        shell: python
+        run: |
+          import hashlib
+          from pathlib import Path
+
+          binary = Path("dist") / "${{ matrix.binary }}"
+          data = binary.read_bytes()
+          digest = hashlib.sha256(data).hexdigest()
+          sha_file = Path("dist") / f"${{ matrix.binary }}.sha256"
+          sha_file.write_text(f"{digest}  ${{ matrix.binary }}\n", encoding="utf-8")
+          print(f"sha256: {digest}")
+          print(f"size:   {len(data):,} bytes")
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            dist/${{ matrix.binary }}
+            dist/${{ matrix.binary }}.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+  promote:
+    name: promote-to-gcs
+    needs: build
+    runs-on: ubuntu-22.04
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: scratch/github-artifacts
+
+      - name: Promote to GCS
+        run: |
+          python scripts/promote_native_builds_to_gcs.py \
+            --tag "${GITHUB_REF_NAME}" \
+            --artifacts-dir scratch/github-artifacts \
+            --bucket solace-downloads
