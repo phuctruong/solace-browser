@@ -128,6 +128,8 @@ THEME_PATH: Path = Path.home() / ".solace" / "theme.json"
 _THEME_LOCK = threading.Lock()
 PINNED_SECTIONS_PATH: Path = Path.home() / ".solace" / "pinned_sections.json"
 _PINNED_LOCK = threading.Lock()
+FAVORITES_PATH: Path = Path.home() / ".solace" / "favorites.json"
+_FAVORITES_LOCK = threading.Lock()
 SUPPORTED_CLI_TOOLS: frozenset = frozenset(["claude", "openai", "ollama", "aider", "continue"])
 _CLI_LOCK = threading.Lock()
 _COMMUNITY_RECIPES: list = [
@@ -594,6 +596,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_accessibility()
         elif path == "/api/v1/ping":
             self._handle_ping()
+        elif path == "/api/v1/apps/favorites":
+            self._handle_apps_favorites_get()
         elif path == "/api/v1/apps/tags":
             self._handle_apps_tags()
         elif path == "/api/v1/broadcast":
@@ -695,6 +699,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_broadcast_post()
         elif path == "/api/v1/pinned":
             self._handle_pinned_set()
+        elif path == "/api/v1/apps/favorites":
+            self._handle_apps_favorites_post()
         elif path == "/api/v1/byok/set":
             self._handle_byok_set()
         elif path == "/api/v1/byok/test":
@@ -742,6 +748,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/profiles/[^/]+$", path):
             profile_id = path.split("/")[-1]
             self._handle_profiles_delete(profile_id)
+        elif path == "/api/v1/apps/favorites":
+            self._handle_apps_favorites_delete()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -2006,6 +2014,64 @@ function choose(mode) {
                 if len(parts) > 1:
                     tags.add(parts[0])
         self._send_json({"tags": sorted(tags), "total": len(tags)})
+
+    # --- Task 045: App Favorites handlers ---
+
+    def _handle_apps_favorites_get(self) -> None:
+        """GET /api/v1/apps/favorites — list favorited app IDs. Task 045."""
+        with _FAVORITES_LOCK:
+            if FAVORITES_PATH.exists():
+                try:
+                    favs = json.loads(FAVORITES_PATH.read_text())
+                except (json.JSONDecodeError, OSError):
+                    favs = []
+            else:
+                favs = []
+        self._send_json({"favorites": favs, "total": len(favs)})
+
+    def _handle_apps_favorites_post(self) -> None:
+        """POST /api/v1/apps/favorites — add app to favorites. Task 045."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        app_id = str(body.get("app_id", "")).strip()
+        if not app_id:
+            self._send_error(400, "app_id required")
+            return
+        with _FAVORITES_LOCK:
+            favs: list = []
+            if FAVORITES_PATH.exists():
+                try:
+                    favs = json.loads(FAVORITES_PATH.read_text())
+                except (json.JSONDecodeError, OSError):
+                    favs = []
+            if app_id not in favs:
+                favs.append(app_id)
+            FAVORITES_PATH.parent.mkdir(parents=True, exist_ok=True)
+            FAVORITES_PATH.write_text(json.dumps(favs))
+        self._send_json({"status": "favorited", "app_id": app_id, "total": len(favs)})
+
+    def _handle_apps_favorites_delete(self) -> None:
+        """DELETE /api/v1/apps/favorites?app_id=X — remove app from favorites. Task 045."""
+        if not self._check_auth():
+            return
+        parsed = urllib.parse.urlparse(self.path)
+        params = urllib.parse.parse_qs(parsed.query)
+        app_id = params.get("app_id", [""])[0].strip()
+        with _FAVORITES_LOCK:
+            favs = []
+            if FAVORITES_PATH.exists():
+                try:
+                    favs = json.loads(FAVORITES_PATH.read_text())
+                except (json.JSONDecodeError, OSError):
+                    favs = []
+            if app_id in favs:
+                favs.remove(app_id)
+            FAVORITES_PATH.parent.mkdir(parents=True, exist_ok=True)
+            FAVORITES_PATH.write_text(json.dumps(favs))
+        self._send_json({"status": "unfavorited", "app_id": app_id, "total": len(favs)})
 
     # --- Task 041: Connection health ping handler ---
 

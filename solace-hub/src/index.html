@@ -1180,6 +1180,8 @@
       <div id="app-tag-filter" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
         <button class="tag-pill active" data-tag="all" onclick="filterAppsByTag('all',this)" style="padding:2px 8px;border-radius:12px;border:1px solid var(--border);background:var(--accent);color:#fff;font-size:11px;cursor:pointer;">All</button>
       </div>
+      <!-- Favorites star filter (Task 045) -->
+      <div style="margin-bottom:8px;font-size:11px;color:var(--text-muted);">★ = favorited app — click star to toggle</div>
       <div id="app-launcher-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;"></div>
     </div>
 
@@ -2652,7 +2654,32 @@
     }
     connectChatWs();
 
-    // ── Task 027: App Launcher ────────────────────────────────────────────
+    // ── Task 027: App Launcher + Task 045: Favorites ─────────────────────
+    let _appFavorites = new Set();
+    async function loadAppFavorites() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/apps/favorites');
+        const data = await r.json();
+        _appFavorites = new Set(data.favorites || []);
+      } catch (_) {}
+    }
+    async function toggleFavorite(appId) {
+      const isFav = _appFavorites.has(appId);
+      const method = isFav ? 'DELETE' : 'POST';
+      const url = isFav
+        ? `http://localhost:8888/api/v1/apps/favorites?app_id=${encodeURIComponent(appId)}`
+        : 'http://localhost:8888/api/v1/apps/favorites';
+      try {
+        const opts = { method, headers: { 'Authorization': `Bearer ${HUB_TOKEN}` } };
+        if (!isFav) {
+          opts.headers['Content-Type'] = 'application/json';
+          opts.body = JSON.stringify({ app_id: appId });
+        }
+        await fetch(url, opts);
+        if (isFav) _appFavorites.delete(appId); else _appFavorites.add(appId);
+        refreshAppLauncher();
+      } catch (_) {}
+    }
     async function refreshAppLauncher() {
       try {
         const r = await fetch('http://localhost:8888/api/v1/apps');
@@ -2665,12 +2692,16 @@
           grid.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No apps loaded.</div>';
           return;
         }
-        grid.innerHTML = data.apps.map(app => `
-          <div style="border:1px solid var(--border);border-radius:var(--radius);padding:10px;text-align:center;">
+        const sorted = [...data.apps].sort((a, b) => (_appFavorites.has(b.id) ? 1 : 0) - (_appFavorites.has(a.id) ? 1 : 0));
+        grid.innerHTML = sorted.map(app => {
+          const isFav = _appFavorites.has(app.id);
+          return `<div style="border:1px solid var(--border);border-radius:var(--radius);padding:10px;text-align:center;position:relative;">
+            <button onclick="toggleFavorite('${app.id}')" title="${isFav ? 'Unfavorite' : 'Favorite'}" style="position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;font-size:14px;color:${isFav ? '#f5a623' : 'var(--text-muted)'};">${isFav ? '★' : '☆'}</button>
             <div style="font-size:20px;margin-bottom:4px;">🤖</div>
             <div style="font-size:11px;font-weight:600;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${app.name}">${app.name}</div>
             <button class="hub-btn hub-btn-sm" onclick="launchApp('${app.id}')">Launch</button>
-          </div>`).join('');
+          </div>`;
+        }).join('');
       } catch (_) {}
     }
     async function launchApp(appId) {
@@ -2689,7 +2720,7 @@
         }
       } catch (_) {}
     }
-    refreshAppLauncher();
+    loadAppFavorites().then(refreshAppLauncher);
     setInterval(refreshAppLauncher, 60_000);
 
     // Watchdog status refresh (Task 030)

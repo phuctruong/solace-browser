@@ -524,6 +524,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     watchdog_log_path = tmp / "watchdog.log"
     theme_path = tmp / "theme.json"
     pinned_sections_path = tmp / "pinned_sections.json"
+    favorites_path = tmp / "favorites.json"
 
     original_lock = ys.PORT_LOCK_PATH
     original_evidence = ys.EVIDENCE_PATH
@@ -541,6 +542,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     original_watchdog_log = ys.WATCHDOG_LOG_PATH
     original_theme = ys.THEME_PATH
     original_pinned = ys.PINNED_SECTIONS_PATH
+    original_favorites = ys.FAVORITES_PATH
 
     ys.PORT_LOCK_PATH = lock_path
     ys.EVIDENCE_PATH = evidence_path
@@ -558,6 +560,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.WATCHDOG_LOG_PATH = watchdog_log_path
     ys.PINNED_SECTIONS_PATH = pinned_sections_path
     ys.THEME_PATH = theme_path
+    ys.FAVORITES_PATH = favorites_path
 
     httpd = ys.build_server(AUTH_TEST_PORT, str(REPO_ROOT), session_token_sha256=VALID_TOKEN)
 
@@ -589,6 +592,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.PINNED_SECTIONS_PATH = original_pinned
     ys.WATCHDOG_LOG_PATH = original_watchdog_log
     ys.THEME_PATH = original_theme
+    ys.FAVORITES_PATH = original_favorites
 
 
 def _post_with_auth(path: str, payload: dict, token: str = VALID_TOKEN) -> tuple[int, dict]:
@@ -2566,3 +2570,25 @@ class TestRateLimit:
         assert "limits" in data
         assert "current" in data
         assert "avg_rpm" in data
+
+
+# ── Task 045: App Favorites ───────────────────────────────────────────────────
+
+class TestAppFavorites:
+    def test_favorites_get(self, auth_server):
+        status, data = _get_json_auth("/api/v1/apps/favorites")
+        assert status == 200
+        assert "favorites" in data
+        assert isinstance(data["favorites"], list)
+
+    def test_favorites_post(self, auth_server):
+        status, data = _post_with_auth("/api/v1/apps/favorites", {"app_id": "gmail"})
+        assert status == 200
+        assert data["status"] == "favorited"
+        assert data["app_id"] == "gmail"
+
+    def test_favorites_delete(self, auth_server):
+        _post_with_auth("/api/v1/apps/favorites", {"app_id": "gmail"})
+        status, data = _delete_with_auth("/api/v1/apps/favorites?app_id=gmail")
+        assert status == 200
+        assert data["status"] == "unfavorited"

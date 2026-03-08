@@ -888,3 +888,17 @@ class TestRateLimitUI:
         """index.html must contain rate limit display."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "rate" in html.lower() or "rpm" in html.lower() or "limit" in html.lower()
+
+
+# ── Task 045: App Favorites ───────────────────────────────────────────────────
+
+class TestAppFavoritesUI:
+    def test_favorites_in_server(self):
+        """yinyang_server.py must implement /api/v1/apps/favorites."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/apps/favorites" in server
+
+    def test_favorites_in_html(self):
+        """index.html must contain favorite/star UI."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "favorite" in html.lower() or "★" in html or "star" in html.lower()
