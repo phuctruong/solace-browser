@@ -507,6 +507,27 @@
       line-height: 14px;
     }
 
+    /* Tray Status Bar (Task 022) */
+    .tray-status-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.status-ok { background: var(--green); }
+    .status-dot.status-error { background: var(--red); }
+    .status-dot.status-unknown { background: var(--text-muted); }
+
     .notif-drawer {
       position: fixed;
       top: 56px;
@@ -621,6 +642,12 @@
       <button onclick="markAllRead()">Mark all read</button>
     </div>
     <div id="notif-list"><div class="notif-empty">No notifications</div></div>
+  </div>
+
+  <!-- ── Tray Status Bar (Task 022) ── -->
+  <div id="tray-status-bar" class="tray-status-bar">
+    <span id="tray-server-dot" class="status-dot status-unknown"></span>
+    <span id="tray-summary">Connecting...</span>
   </div>
 
   <!-- ── Main content ── -->
@@ -2152,6 +2179,37 @@
 
     refreshRequestLog();
     setInterval(refreshRequestLog, 5_000);
+
+    // Tray Status Bar (Task 022)
+    async function refreshTrayStatus() {
+      try {
+        const [metricsRes, sessionsRes, budgetRes] = await Promise.all([
+          fetch('http://localhost:8888/api/v1/metrics'),
+          fetch('http://localhost:8888/api/v1/sessions'),
+          fetch('http://localhost:8888/api/v1/budget/status'),
+        ]);
+        const metrics = metricsRes.ok ? await metricsRes.json() : null;
+        const sessions = sessionsRes.ok ? await sessionsRes.json() : null;
+        const budget = budgetRes.ok ? await budgetRes.json() : null;
+
+        const dot = document.getElementById('tray-server-dot');
+        const summary = document.getElementById('tray-summary');
+        if (!dot || !summary) return;
+
+        dot.className = 'status-dot status-ok';
+        const sessionCount = sessions ? sessions.sessions.length : 0;
+        const budgetPct = budget ? (budget.daily_pct * 100).toFixed(0) : '?';
+        const uptime = metrics ? formatUptime(metrics.uptime_seconds) : '?';
+        summary.textContent = `● Active | ${sessionCount} session${sessionCount !== 1 ? 's' : ''} | Budget ${budgetPct}% | Uptime ${uptime}`;
+      } catch (_) {
+        const dot = document.getElementById('tray-server-dot');
+        const summary = document.getElementById('tray-summary');
+        if (dot) dot.className = 'status-dot status-error';
+        if (summary) summary.textContent = '○ Server offline';
+      }
+    }
+    refreshTrayStatus();
+    setInterval(refreshTrayStatus, 15_000);
   </script>
 
 </body>

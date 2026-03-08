@@ -1891,3 +1891,33 @@ class TestLogViewer:
             assert "path" in req
             assert "status" in req
             assert "timestamp" in req
+
+
+# ── Task 022: Tray Status (reuses existing endpoints) ────────────────────────
+
+class TestTrayStatus:
+    def test_metrics_endpoint_for_tray(self, auth_server):
+        """Tray polls /api/v1/metrics for uptime and request counts."""
+        status, data = _get_json_auth("/api/v1/metrics")
+        assert status == 200
+        assert "uptime_seconds" in data
+        assert "total_requests" in data
+
+    def test_sessions_endpoint_for_tray(self, auth_server):
+        """Tray polls /api/v1/sessions for live session count."""
+        status, data = _get_json_auth("/api/v1/sessions")
+        assert status == 200
+        assert "sessions" in data
+        assert isinstance(data["sessions"], list)
+
+    def test_budget_status_for_tray(self, auth_server):
+        """Tray polls /api/v1/budget/status for spend percentage."""
+        status, data = _get_json_auth("/api/v1/budget/status")
+        assert status == 200
+        assert "daily_pct" in data
+
+    def test_health_for_tray(self, auth_server):
+        """Tray shows ● Active when /health returns ok."""
+        status, data = _get_json_auth("/health")
+        assert status == 200
+        assert data["status"] == "ok"

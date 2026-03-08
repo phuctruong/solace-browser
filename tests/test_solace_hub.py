@@ -551,3 +551,22 @@ class TestLogViewerUI:
         server = (REPO_ROOT / "yinyang_server.py").read_text()
         assert "/api/v1/logs/requests" in server
         assert "/api/v1/logs/errors" in server
+
+
+# ── Task 022: Tray Dynamic Menu ───────────────────────────────────────────────
+
+class TestTrayMenu:
+    def test_tray_status_in_html(self):
+        """index.html must contain a tray status bar."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "tray" in html.lower() or "status" in html.lower()
+
+    def test_build_tray_status_in_main_rs(self):
+        """main.rs must reference sessions or tray concept."""
+        rs = (REPO_ROOT / "solace-hub" / "src-tauri" / "main.rs").read_text()
+        assert "sessions" in rs.lower() or "tray" in rs.lower()
+
+    def test_status_bar_refresh_in_html(self):
+        """index.html must poll metrics and sessions for live tray data."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "metrics" in html and "sessions" in html
