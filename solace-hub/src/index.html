@@ -227,6 +227,114 @@
       line-height: 1.6;
     }
 
+    /* ── Evidence chain table ── */
+    .evidence-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .evidence-table th {
+      text-align: left;
+      padding: 6px 8px;
+      color: var(--text-muted);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .evidence-table td {
+      padding: 5px 8px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .evidence-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .ev-filters {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .ev-filters select {
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 12px;
+    }
+
+    .badge-green { color: var(--green); font-weight: 600; }
+    .badge-red   { color: var(--red); font-weight: 600; }
+
+    /* ── Automation schedules ── */
+    .schedule-mgmt-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .schedule-mgmt-table th {
+      text-align: left;
+      padding: 6px 8px;
+      color: var(--text-muted);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .schedule-mgmt-table td {
+      padding: 5px 8px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .schedule-mgmt-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .btn-sm {
+      padding: 3px 8px;
+      font-size: 11px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+
+    .btn-enable  { background: var(--green); color: #fff; }
+    .btn-disable { background: var(--text-muted); color: #fff; }
+    .btn-delete  { background: var(--red); color: #fff; }
+
+    .add-schedule-form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .add-schedule-form input,
+    .add-schedule-form select {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 12px;
+    }
+
     /* ── OAuth3 token table ── */
     .token-table {
       width: 100%;
@@ -433,6 +541,58 @@
     <div class="card">
       <h2>Evidence Log (last 10 events)</h2>
       <div class="evidence-log" id="evidence-log">Loading…</div>
+    </div>
+
+    <!-- Evidence Chain (Task 013) -->
+    <div class="card" id="evidence-chain-panel">
+      <h2>Evidence Chain</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+        Immutable audit trail of all AI agent actions.
+      </p>
+      <div class="ev-filters">
+        <select id="ev-action-filter" onchange="refreshEvidenceChain()">
+          <option value="">All actions</option>
+          <option value="recipe_run">Recipe runs</option>
+          <option value="browse">Browse</option>
+          <option value="schedule_trigger">Schedule triggers</option>
+        </select>
+        <span id="ev-verify-badge" style="font-size:12px;"></span>
+        <button class="btn-secondary" style="padding:4px 10px;font-size:12px;" onclick="refreshEvidenceChain()">Refresh</button>
+        <button class="btn-primary" style="padding:4px 10px;font-size:12px;" onclick="verifyEvidenceChain()">Verify Chain</button>
+      </div>
+      <table class="evidence-table">
+        <thead><tr><th>Time</th><th>Action</th><th>URL</th><th>Status</th><th>ID</th></tr></thead>
+        <tbody id="evidence-chain-rows"><tr><td colspan="5" style="color:var(--text-muted);">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- Automation Schedules (Task 014) -->
+    <div class="card" id="automation-schedules-panel">
+      <h2>Automation Schedules</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+        Manage recurring automation schedules. Enable, disable, or delete without needing cron syntax.
+      </p>
+      <table class="schedule-mgmt-table">
+        <thead><tr><th>Name</th><th>Cron</th><th>Enabled</th><th>Next Run</th><th>Actions</th></tr></thead>
+        <tbody id="schedule-mgmt-rows"><tr><td colspan="5" style="color:var(--text-muted);">Loading…</td></tr></tbody>
+      </table>
+      <details style="margin-top:12px;">
+        <summary style="cursor:pointer;font-size:12px;color:var(--accent);user-select:none;">Add Schedule</summary>
+        <form class="add-schedule-form" id="add-schedule-form" onsubmit="addSchedule(event)">
+          <input type="text" id="sched-name" placeholder="Schedule name (e.g. Daily Gmail)" maxlength="128" required />
+          <input type="text" id="sched-app-id" placeholder="App ID (e.g. gmail-inbox-triage)" maxlength="128" required />
+          <input type="text" id="sched-url" placeholder="URL (e.g. https://mail.google.com)" maxlength="2048" />
+          <select id="sched-preset" onchange="applySchedulePreset()">
+            <option value="0 * * * *">Every hour</option>
+            <option value="0 9 * * *">Every day at 9am</option>
+            <option value="0 8 * * 1">Every Monday 8am</option>
+            <option value="custom">Custom cron…</option>
+          </select>
+          <input type="text" id="sched-cron" placeholder="Cron expression (e.g. 0 9 * * *)" maxlength="64" required />
+          <button type="submit" class="btn-primary" style="align-self:flex-start;">Add Schedule</button>
+          <div id="add-schedule-status" style="font-size:11px;color:var(--text-muted);"></div>
+        </form>
+      </details>
     </div>
 
     <!-- Remote Tunnel -->
@@ -948,18 +1108,210 @@
       } catch (_) {}
     }
 
+    // ── Evidence Chain (Task 013) ─────────────────────────────────────────────
+
+    async function refreshEvidenceChain() {
+      const action = document.getElementById("ev-action-filter").value;
+      const params = new URLSearchParams({ limit: "50" });
+      if (action) params.set("action", action);
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/evidence?" + params.toString(), {
+          signal: AbortSignal.timeout(5000)
+        });
+        if (!resp.ok) {
+          document.getElementById("evidence-chain-rows").innerHTML =
+            '<tr><td colspan="5">Could not load evidence (HTTP ' + resp.status + ")</td></tr>";
+          return;
+        }
+        const d = await resp.json();
+        const entries = d.entries || d.records || [];
+        renderEvidenceChainTable(entries);
+      } catch (err) {
+        document.getElementById("evidence-chain-rows").innerHTML =
+          '<tr><td colspan="5">Error: ' + escapeHtml(err.message) + "</td></tr>";
+      }
+    }
+
+    async function verifyEvidenceChain() {
+      const badge = document.getElementById("ev-verify-badge");
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/evidence/verify", {
+          signal: AbortSignal.timeout(5000)
+        });
+        const d = await resp.json();
+        if (d.valid) {
+          badge.textContent = "Chain intact (" + d.entries + " entries)";
+          badge.className = "badge-green";
+        } else {
+          badge.textContent = "Broken at entry " + d.broken_at;
+          badge.className = "badge-red";
+        }
+      } catch (err) {
+        badge.textContent = "Verify failed: " + err.message;
+        badge.className = "badge-red";
+      }
+    }
+
+    function renderEvidenceChainTable(entries) {
+      const tbody = document.getElementById("evidence-chain-rows");
+      if (!entries.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text-muted);">No evidence entries</td></tr>';
+        return;
+      }
+      tbody.innerHTML = entries.map(function(e) {
+        const ts = e.ts ? new Date(e.ts * 1000).toLocaleString() :
+                   (e.timestamp ? new Date(e.timestamp * 1000).toLocaleString() : "-");
+        const action = escapeHtml(e.type || e.action || "-");
+        const url = escapeHtml((e.url || (e.data && e.data.url) || "").slice(0, 40));
+        const status = e.status || (e.data && e.data.status) || "-";
+        const statusCls = status === "success" ? "badge-green" : (status === "-" ? "" : "badge-red");
+        const id = escapeHtml((e.id || "").slice(0, 8));
+        return "<tr><td>" + ts + "</td><td>" + action + "</td><td>" + url +
+               "</td><td class='" + statusCls + "'>" + escapeHtml(status) +
+               "</td><td style='font-family:monospace'>" + id + "</td></tr>";
+      }).join("");
+    }
+
+    // ── Automation Schedules Management (Task 014) ────────────────────────────
+
+    async function refreshScheduleManagement() {
+      try {
+        const [listResp, nextResp] = await Promise.all([
+          fetch("http://localhost:8888/api/v1/browser/schedules", { signal: AbortSignal.timeout(5000) }),
+          fetch("http://localhost:8888/api/v1/browser/schedules/next-runs", { signal: AbortSignal.timeout(5000) })
+        ]);
+        const listData = listResp.ok ? await listResp.json() : { schedules: [] };
+        const nextData = nextResp.ok ? await nextResp.json() : { schedules: [] };
+        const schedules = listData.schedules || (Array.isArray(listData) ? listData : []);
+        const nextRuns = nextData.schedules || [];
+        const nextMap = {};
+        nextRuns.forEach(function(n) { if (n.schedule_id) nextMap[n.schedule_id] = n; });
+        renderScheduleManagement(schedules, nextMap);
+      } catch (err) {
+        document.getElementById("schedule-mgmt-rows").innerHTML =
+          '<tr><td colspan="5">Error: ' + escapeHtml(err.message) + "</td></tr>";
+      }
+    }
+
+    function renderScheduleManagement(schedules, nextMap) {
+      const tbody = document.getElementById("schedule-mgmt-rows");
+      if (!schedules.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text-muted);">No schedules — add one below.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = schedules.map(function(s) {
+        const id = s.id || "";
+        const name = escapeHtml(s.name || s.app_id || id.slice(0, 8));
+        const cron = escapeHtml(s.cron || "");
+        const enabled = s.enabled !== false;
+        const nr = nextMap[id];
+        const nextRun = nr && nr.next_run_human ? escapeHtml(nr.next_run_human) : "—";
+        const toggleBtn = enabled
+          ? '<button class="btn-sm btn-disable" onclick="toggleSchedule(' + JSON.stringify(id) + ', false)">Disable</button>'
+          : '<button class="btn-sm btn-enable" onclick="toggleSchedule(' + JSON.stringify(id) + ', true)">Enable</button>';
+        return "<tr>" +
+          "<td>" + name + "</td>" +
+          "<td style='font-family:monospace'>" + cron + "</td>" +
+          "<td>" + (enabled ? '<span class="badge-green">Yes</span>' : '<span style="color:var(--text-muted)">No</span>') + "</td>" +
+          "<td>" + nextRun + "</td>" +
+          "<td style='display:flex;gap:4px;'>" + toggleBtn +
+          ' <button class="btn-sm btn-delete" onclick="deleteScheduleMgmt(' + JSON.stringify(id) + ')">Delete</button>' +
+          "</td></tr>";
+      }).join("");
+    }
+
+    async function toggleSchedule(id, enable) {
+      const bearerToken = _getSessionToken();
+      const action = enable ? "enable" : "disable";
+      try {
+        await fetch("http://localhost:8888/api/v1/browser/schedules/" + encodeURIComponent(id) + "/" + action, {
+          method: "POST",
+          headers: bearerToken ? { "Authorization": "Bearer " + bearerToken } : {},
+          signal: AbortSignal.timeout(5000)
+        });
+        await refreshScheduleManagement();
+      } catch (err) {
+        alert("Toggle failed: " + err.message);
+      }
+    }
+
+    async function deleteScheduleMgmt(id) {
+      if (!confirm("Delete this schedule?")) return;
+      const bearerToken = _getSessionToken();
+      try {
+        await fetch("http://localhost:8888/api/v1/browser/schedules/" + encodeURIComponent(id), {
+          method: "DELETE",
+          headers: bearerToken ? { "Authorization": "Bearer " + bearerToken } : {},
+          signal: AbortSignal.timeout(5000)
+        });
+        await refreshScheduleManagement();
+      } catch (err) {
+        alert("Delete failed: " + err.message);
+      }
+    }
+
+    function applySchedulePreset() {
+      const preset = document.getElementById("sched-preset").value;
+      const cronInput = document.getElementById("sched-cron");
+      if (preset !== "custom") cronInput.value = preset;
+    }
+
+    async function addSchedule(event) {
+      event.preventDefault();
+      const statusEl = document.getElementById("add-schedule-status");
+      const name = document.getElementById("sched-name").value.trim();
+      const appId = document.getElementById("sched-app-id").value.trim();
+      const url = document.getElementById("sched-url").value.trim();
+      const cron = document.getElementById("sched-cron").value.trim();
+      if (!appId || !cron) {
+        statusEl.textContent = "App ID and cron expression are required.";
+        return;
+      }
+      const bearerToken = _getSessionToken();
+      statusEl.textContent = "Adding…";
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/browser/schedules", {
+          method: "POST",
+          headers: Object.assign(
+            { "Content-Type": "application/json" },
+            bearerToken ? { "Authorization": "Bearer " + bearerToken } : {}
+          ),
+          body: JSON.stringify({ app_id: appId, name: name, cron: cron, url: url }),
+          signal: AbortSignal.timeout(5000)
+        });
+        if (resp.ok) {
+          statusEl.textContent = "Schedule added.";
+          document.getElementById("sched-name").value = "";
+          document.getElementById("sched-app-id").value = "";
+          document.getElementById("sched-url").value = "";
+          document.getElementById("sched-cron").value = "";
+          await refreshScheduleManagement();
+        } else {
+          const err = await resp.json();
+          statusEl.textContent = "Error: " + (err.error || resp.status);
+        }
+      } catch (err) {
+        statusEl.textContent = "Error: " + err.message;
+      }
+    }
+
     // ── Boot ──────────────────────────────────────────────────────────────────
     refreshStatus();
     refreshOnboarding();
     refreshOAuth3Tokens();
     refreshTunnelStatus();
     refreshSyncStatus();
+    refreshEvidenceChain();
+    refreshScheduleManagement();
     // Poll every 10 seconds
     setInterval(refreshStatus, 10_000);
     setInterval(refreshOnboarding, 10_000);
     setInterval(refreshTunnelStatus, 10_000);
     // OAuth3 tokens poll every 30 seconds
     setInterval(refreshOAuth3Tokens, 30_000);
+    // Evidence chain + schedules poll every 60 seconds
+    setInterval(refreshEvidenceChain, 60_000);
+    setInterval(refreshScheduleManagement, 30_000);
     // Sync status poll every 60 seconds
     setInterval(refreshSyncStatus, 60_000);
   </script>

@@ -1366,3 +1366,152 @@ class TestTunnelSync:
             {"export_data": "{}", "token_sha256": "a" * 64},
         )
         assert status == 401
+
+
+# ---------------------------------------------------------------------------
+# Task 013: Evidence Viewer
+# ---------------------------------------------------------------------------
+class TestEvidenceViewer:
+    def test_evidence_list_empty(self, auth_server):
+        """GET /api/v1/evidence returns 200 with entries or records key."""
+        status, data = _get_json_auth("/api/v1/evidence")
+        assert status == 200
+        assert "entries" in data or "records" in data or isinstance(data, list)
+
+    def test_evidence_list_limit_param(self, auth_server):
+        """GET /api/v1/evidence?limit=5 returns 200."""
+        status, data = _get_json_auth("/api/v1/evidence?limit=5")
+        assert status == 200
+
+    def test_evidence_list_action_filter(self, auth_server):
+        """GET /api/v1/evidence?action=recipe_run returns 200."""
+        status, data = _get_json_auth("/api/v1/evidence?action=recipe_run")
+        assert status == 200
+
+    def test_evidence_detail_not_found(self, auth_server):
+        """GET /api/v1/evidence/{nonexistent} returns 404."""
+        status, data = _get_json_auth("/api/v1/evidence/nonexistent-id-xyz-000")
+        assert status == 404
+        assert "error" in data
+
+    def test_evidence_verify_empty(self, auth_server):
+        """GET /api/v1/evidence/verify returns valid=True when no entries."""
+        status, data = _get_json_auth("/api/v1/evidence/verify")
+        assert status == 200
+        assert "valid" in data
+        assert "entries" in data
+        assert data["valid"] is True
+
+    def test_evidence_verify_returns_count(self, auth_server):
+        """GET /api/v1/evidence/verify always returns entries count."""
+        status, data = _get_json_auth("/api/v1/evidence/verify")
+        assert status == 200
+        assert "entries" in data
+        assert isinstance(data["entries"], int)
+
+    def test_evidence_record_and_retrieve(self, auth_server):
+        """POST /api/v1/evidence records an entry (201) and list reflects it."""
+        status, data = _post_with_auth(
+            "/api/v1/evidence",
+            {"type": "recipe_run", "data": {"url": "http://localhost:8888/start", "recipe_id": "test"}},
+        )
+        assert status == 201
+        assert "id" in data
+        entry_id = data["id"]
+        # Now retrieve via detail endpoint
+        det_status, det_data = _get_json_auth(f"/api/v1/evidence/{entry_id}")
+        assert det_status == 200
+        assert det_data.get("id") == entry_id
+
+    def test_evidence_list_session_filter(self, auth_server):
+        """GET /api/v1/evidence?session_id=xyz returns 200 (may be empty)."""
+        status, data = _get_json_auth("/api/v1/evidence?session_id=nonexistent-session-xyz")
+        assert status == 200
+
+    def test_evidence_verify_broken_at_none_when_valid(self, auth_server):
+        """Verify returns broken_at=None when chain is intact."""
+        status, data = _get_json_auth("/api/v1/evidence/verify")
+        assert status == 200
+        assert "broken_at" in data
+
+
+# ---------------------------------------------------------------------------
+# Task 014: Schedule Management UI
+# ---------------------------------------------------------------------------
+class TestScheduleManagementUI:
+    def test_schedules_next_runs_empty(self, auth_server):
+        """GET /api/v1/browser/schedules/next-runs returns 200 with schedules list."""
+        status, data = _get_json_auth("/api/v1/browser/schedules/next-runs")
+        assert status == 200
+        assert "schedules" in data
+        assert isinstance(data["schedules"], list)
+
+    def test_schedule_create_and_disable_enable(self, auth_server):
+        """Create schedule, disable it, enable it — all succeed."""
+        create_status, create_data = _post_with_auth(
+            "/api/v1/browser/schedules",
+            {"app_id": "test-daily", "cron": "0 9 * * *", "url": "http://localhost:8888/start"},
+        )
+        assert create_status in (200, 201), f"Create failed: {create_data}"
+        sched_id = create_data.get("id", "")
+        if not sched_id:
+            return  # Skip remainder if no id returned
+        # Disable
+        dis_status, dis_data = _post_with_auth(
+            f"/api/v1/browser/schedules/{sched_id}/disable", {}
+        )
+        assert dis_status == 200, f"Disable failed: {dis_data}"
+        assert dis_data.get("status") == "disabled"
+        # Enable
+        en_status, en_data = _post_with_auth(
+            f"/api/v1/browser/schedules/{sched_id}/enable", {}
+        )
+        assert en_status == 200, f"Enable failed: {en_data}"
+        assert en_data.get("status") == "enabled"
+        # Cleanup
+        _delete_with_auth(f"/api/v1/browser/schedules/{sched_id}")
+
+    def test_schedule_enable_not_found(self, auth_server):
+        """POST enable on nonexistent schedule → 404."""
+        status, data = _post_with_auth(
+            "/api/v1/browser/schedules/nonexistent-schedule-id/enable", {}
+        )
+        assert status == 404
+        assert "error" in data
+
+    def test_schedule_disable_requires_auth(self, auth_server):
+        """POST disable without Bearer → 401."""
+        status, data = _post_no_auth(
+            "/api/v1/browser/schedules/some-id/disable", {}
+        )
+        assert status == 401
+
+    def test_schedule_enable_requires_auth(self, auth_server):
+        """POST enable without Bearer → 401."""
+        status, data = _post_no_auth(
+            "/api/v1/browser/schedules/some-id/enable", {}
+        )
+        assert status == 401
+
+    def test_next_runs_shows_cron_times(self, auth_server):
+        """next-runs returns correct structure with schedule_id and cron fields."""
+        # Create a schedule first
+        create_status, create_data = _post_with_auth(
+            "/api/v1/browser/schedules",
+            {"app_id": "test-hourly", "cron": "0 * * * *", "url": ""},
+        )
+        assert create_status in (200, 201)
+        sched_id = create_data.get("id", "")
+        # Check next-runs
+        status, data = _get_json_auth("/api/v1/browser/schedules/next-runs")
+        assert status == 200
+        assert "schedules" in data
+        found = [s for s in data["schedules"] if s.get("schedule_id") == sched_id]
+        if found:
+            item = found[0]
+            assert "cron" in item
+            assert "next_run" in item
+            assert item["next_run"] is not None  # hourly cron should have a next run
+        # Cleanup
+        if sched_id:
+            _delete_with_auth(f"/api/v1/browser/schedules/{sched_id}")

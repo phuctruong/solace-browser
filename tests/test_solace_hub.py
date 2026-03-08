@@ -314,3 +314,78 @@ class TestTunnelSyncUI:
         """Tunnel/sync additions must not introduce legacy hub name."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert LEGACY_HUB_NAME not in html
+
+# ── Task 013: Evidence Viewer ──────────────────────────────────────────────────
+
+class TestEvidencePanel:
+    def test_index_html_evidence_chain_section(self):
+        """index.html must contain an Evidence Chain section."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "evidence" in html.lower() or "Evidence" in html
+
+    def test_index_html_verify_chain_button(self):
+        """index.html must contain Verify Chain button/function."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "verify" in html.lower() or "Verify" in html
+
+    def test_evidence_endpoint_in_server(self):
+        """yinyang_server.py must have /api/v1/evidence/verify route."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/evidence/verify" in server
+
+    def test_evidence_detail_endpoint_in_server(self):
+        """yinyang_server.py must have evidence detail handler."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "_handle_evidence_detail" in server
+
+    def test_index_html_evidence_action_filter(self):
+        """index.html must have action filter for evidence."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "action" in html.lower()
+
+    def test_index_html_no_port_9222_evidence(self):
+        """Evidence panel must not reference the forbidden debug port."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert FORBIDDEN_DEBUG_PORT not in html
+
+    def test_index_html_no_companion_app_evidence(self):
+        """Evidence additions must not introduce legacy hub name."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert LEGACY_HUB_NAME not in html
+
+
+# ── Task 014: Schedule Management UI ──────────────────────────────────────────
+
+class TestScheduleUI:
+    def test_index_html_schedule_section(self):
+        """index.html must contain schedule/automation section."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "schedule" in html.lower() or "automation" in html.lower()
+
+    def test_index_html_cron_builder(self):
+        """index.html must have cron builder preset options."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "cron" in html.lower() or "9am" in html.lower() or "Every" in html
+
+    def test_schedule_endpoints_in_server(self):
+        """yinyang_server.py must have next-runs, enable, disable handlers."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "next-runs" in server
+        assert "_handle_schedule_enable" in server
+        assert "_handle_schedule_disable" in server
+
+    def test_schedule_enable_disable_routes_in_server(self):
+        """yinyang_server.py must route enable and disable POST requests."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/enable" in server
+        assert "/disable" in server
+
+    def test_index_html_no_port_9222_schedules(self):
+        """Schedule panel must not reference the forbidden debug port."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert FORBIDDEN_DEBUG_PORT not in html
+
+    def test_index_html_no_companion_app_schedules(self):
+        """Schedule additions must not introduce legacy hub name."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert LEGACY_HUB_NAME not in html

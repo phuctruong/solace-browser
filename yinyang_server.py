@@ -16,10 +16,15 @@ Route table:
   GET  /credits                        → {"apps": [...]}
   GET  /start                          → browser start page HTML
   POST /detect                         → {"url": "..."} → {"apps": [...]}
-  GET  /api/v1/evidence                → evidence log (limit/offset params)
+  GET  /api/v1/evidence                → evidence log (limit/offset/action/session_id/since/until params)
+  GET  /api/v1/evidence/verify         → verify sha256 chain integrity
+  GET  /api/v1/evidence/{id}           → single evidence entry detail
   POST /api/v1/evidence                → record evidence event
   GET  /api/v1/browser/schedules       → list schedules
+  GET  /api/v1/browser/schedules/next-runs → preview next run timestamps per schedule
   POST /api/v1/browser/schedules       → create schedule
+  POST /api/v1/browser/schedules/{id}/enable  → enable schedule
+  POST /api/v1/browser/schedules/{id}/disable → disable schedule
   DELETE /api/v1/browser/schedules/{id} → delete schedule
   GET  /api/v1/oauth3/tokens           → list token metadata (never plaintext)
   GET  /api/v1/oauth3/tokens/{id}     → single token detail
@@ -351,6 +356,13 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_start()
         elif path == "/api/v1/evidence":
             self._handle_evidence_list(query)
+        elif path == "/api/v1/evidence/verify":
+            self._handle_evidence_verify()
+        elif re.match(r"^/api/v1/evidence/[^/]+$", path):
+            entry_id = path.split("/")[-1]
+            self._handle_evidence_detail(entry_id)
+        elif path == "/api/v1/browser/schedules/next-runs":
+            self._handle_schedules_next_runs()
         elif path == "/api/v1/browser/schedules":
             self._handle_schedules_list()
         elif path == "/api/v1/oauth3/tokens":
@@ -387,6 +399,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_evidence_record()
         elif path == "/api/v1/browser/schedules":
             self._handle_schedule_create()
+        elif re.match(r"^/api/v1/browser/schedules/[^/]+/enable$", path):
+            schedule_id = path.split("/")[-2]
+            self._handle_schedule_enable(schedule_id)
+        elif re.match(r"^/api/v1/browser/schedules/[^/]+/disable$", path):
+            schedule_id = path.split("/")[-2]
+            self._handle_schedule_disable(schedule_id)
         elif path == "/api/v1/oauth3/tokens":
             self._handle_oauth3_register()
         elif re.match(r"^/api/v1/oauth3/tokens/[^/]+/extend$", path):
@@ -490,14 +508,29 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         if not limit_raw.isdigit() or not offset_raw.isdigit():
             self._send_json({"error": "invalid limit or offset"}, 400)
             return
-        limit = min(int(limit_raw), 200)
+        limit = min(int(limit_raw), 500)
         offset = max(int(offset_raw), 0)
-        records = load_evidence(limit=limit, offset=offset)
+        action_filter = params.get("action")
+        session_filter = params.get("session_id")
+        since_raw = params.get("since")
+        until_raw = params.get("until")
+        records = load_evidence(limit=500, offset=0)
+        if action_filter:
+            records = [r for r in records if r.get("type") == action_filter or r.get("action") == action_filter]
+        if session_filter:
+            records = [r for r in records if r.get("session_id") == session_filter]
+        if since_raw and since_raw.isdigit():
+            records = [r for r in records if r.get("ts", r.get("timestamp", 0)) >= int(since_raw)]
+        if until_raw and until_raw.isdigit():
+            records = [r for r in records if r.get("ts", r.get("timestamp", 0)) <= int(until_raw)]
+        total = len(records)
+        records = records[offset: offset + limit]
         self._send_json({
-            "total": count_evidence(),
+            "total": total,
             "limit": limit,
             "offset": offset,
             "records": records,
+            "entries": records,
         })
 
     def _handle_evidence_record(self) -> None:
@@ -561,6 +594,140 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._send_json({"deleted": schedule_id})
         else:
             self._send_json({"error": "schedule not found"}, 404)
+
+    # --- Task 013: Evidence detail + verify ---
+
+    def _handle_evidence_detail(self, entry_id: str) -> None:
+        """GET /api/v1/evidence/{id} — return a single evidence entry by id."""
+        try:
+            lines = EVIDENCE_PATH.read_text().splitlines()
+        except FileNotFoundError:
+            self._send_json({"error": "evidence entry not found"}, 404)
+            return
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if entry.get("id") == entry_id:
+                self._send_json(entry)
+                return
+        self._send_json({"error": "evidence entry not found"}, 404)
+
+    def _handle_evidence_verify(self) -> None:
+        """GET /api/v1/evidence/verify — check sha256 chain integrity."""
+        try:
+            lines = EVIDENCE_PATH.read_text().splitlines()
+        except FileNotFoundError:
+            self._send_json({"valid": True, "entries": 0, "broken_at": None})
+            return
+        entries = []
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entries.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+        if not entries:
+            self._send_json({"valid": True, "entries": 0, "broken_at": None})
+            return
+        broken_at = None
+        for i, entry in enumerate(entries):
+            entry_hash = entry.get("sha256", "")
+            if entry_hash and len(entry_hash) >= 8:
+                expected = hashlib.sha256(
+                    f"{entry.get('id', '')}{entry.get('ts', entry.get('timestamp', 0))}{entry.get('type', entry.get('action', ''))}".encode()
+                ).hexdigest()[:8]
+                if entry_hash[:8] != expected:
+                    broken_at = i
+                    break
+        self._send_json({
+            "valid": broken_at is None,
+            "entries": len(entries),
+            "broken_at": broken_at,
+        })
+
+    # --- Task 014: Schedule enable/disable + next-runs ---
+
+    def _next_cron_run(self, cron_expr: str) -> Optional[int]:
+        """Return next Unix timestamp when cron_expr will fire, or None if invalid."""
+        parts = cron_expr.split()
+        if len(parts) != 5:
+            return None
+        now = int(time.time())
+        for delta_minutes in range(1, 10081):
+            t = now + delta_minutes * 60
+            s = time.gmtime(t)
+            minute, hour, day, month, weekday = s.tm_min, s.tm_hour, s.tm_mday, s.tm_mon, s.tm_wday
+            cron_weekday = (weekday + 1) % 7
+
+            def _match(field: str, val: int) -> bool:
+                if field == "*":
+                    return True
+                try:
+                    return int(field) == val
+                except ValueError:
+                    return False
+
+            if (_match(parts[0], minute) and _match(parts[1], hour) and
+                    _match(parts[2], day) and _match(parts[3], month) and
+                    _match(parts[4], cron_weekday)):
+                return t
+        return None
+
+    def _handle_schedules_next_runs(self) -> None:
+        """GET /api/v1/browser/schedules/next-runs — preview next run time per schedule."""
+        with _SCHEDULES_LOCK:
+            schedules = load_schedules()
+        result = []
+        for s in schedules:
+            cron = s.get("cron", "")
+            next_run = self._next_cron_run(cron)
+            result.append({
+                "schedule_id": s.get("id"),
+                "name": s.get("name", s.get("app_id", "")),
+                "cron": cron,
+                "enabled": s.get("enabled", True),
+                "next_run": next_run,
+                "next_run_human": (
+                    time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(next_run))
+                    if next_run else None
+                ),
+            })
+        self._send_json({"schedules": result})
+
+    def _handle_schedule_enable(self, schedule_id: str) -> None:
+        """POST /api/v1/browser/schedules/{id}/enable — enable a schedule."""
+        if not self._check_auth():
+            return
+        with _SCHEDULES_LOCK:
+            schedules = load_schedules()
+            for s in schedules:
+                if s.get("id") == schedule_id:
+                    s["enabled"] = True
+                    save_schedules(schedules)
+                    self._send_json({"status": "enabled", "schedule_id": schedule_id})
+                    return
+        self._send_json({"error": "schedule not found"}, 404)
+
+    def _handle_schedule_disable(self, schedule_id: str) -> None:
+        """POST /api/v1/browser/schedules/{id}/disable — disable a schedule."""
+        if not self._check_auth():
+            return
+        with _SCHEDULES_LOCK:
+            schedules = load_schedules()
+            for s in schedules:
+                if s.get("id") == schedule_id:
+                    s["enabled"] = False
+                    save_schedules(schedules)
+                    self._send_json({"status": "disabled", "schedule_id": schedule_id})
+                    return
+        self._send_json({"error": "schedule not found"}, 404)
 
     def _handle_oauth3_list(self) -> None:
         tokens = load_oauth3_tokens()
