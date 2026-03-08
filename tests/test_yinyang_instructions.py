@@ -511,16 +511,22 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     evidence_path = tmp / "evidence.jsonl"
     schedules_path = tmp / "schedules.json"
     oauth3_tokens_path = tmp / "oauth3-tokens.json"
+    budget_path = tmp / "budget.json"
+    recipe_runs_path = tmp / "recipe_runs.json"
 
     original_lock = ys.PORT_LOCK_PATH
     original_evidence = ys.EVIDENCE_PATH
     original_schedules = ys.SCHEDULES_PATH
     original_oauth3_tokens = ys.OAUTH3_TOKENS_PATH
+    original_budget = ys.BUDGET_PATH
+    original_recipe_runs = ys.RECIPE_RUNS_PATH
 
     ys.PORT_LOCK_PATH = lock_path
     ys.EVIDENCE_PATH = evidence_path
     ys.SCHEDULES_PATH = schedules_path
     ys.OAUTH3_TOKENS_PATH = oauth3_tokens_path
+    ys.BUDGET_PATH = budget_path
+    ys.RECIPE_RUNS_PATH = recipe_runs_path
 
     httpd = ys.build_server(AUTH_TEST_PORT, str(REPO_ROOT), session_token_sha256=VALID_TOKEN)
 
@@ -540,6 +546,8 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.EVIDENCE_PATH = original_evidence
     ys.SCHEDULES_PATH = original_schedules
     ys.OAUTH3_TOKENS_PATH = original_oauth3_tokens
+    ys.BUDGET_PATH = original_budget
+    ys.RECIPE_RUNS_PATH = original_recipe_runs
 
 
 def _post_with_auth(path: str, payload: dict, token: str = VALID_TOKEN) -> tuple[int, dict]:
@@ -1515,3 +1523,115 @@ class TestScheduleManagementUI:
         # Cleanup
         if sched_id:
             _delete_with_auth(f"/api/v1/browser/schedules/{sched_id}")
+
+
+# ---------------------------------------------------------------------------
+# Task 015: Recipe Management
+# ---------------------------------------------------------------------------
+class TestRecipeManagement:
+    def test_recipes_list(self, auth_server):
+        """GET /api/v1/recipes → 200 with recipes list and count."""
+        status, data = _get_json_auth("/api/v1/recipes")
+        assert status == 200
+        assert "recipes" in data
+        assert "count" in data
+        assert isinstance(data["recipes"], list)
+
+    def test_recipe_not_found(self, auth_server):
+        """GET /api/v1/recipes/nonexistent → 404."""
+        status, data = _get_json_auth("/api/v1/recipes/nonexistent-recipe-xyz")
+        assert status == 404
+
+    def test_recipe_preview_not_found(self, auth_server):
+        """GET /api/v1/recipes/nonexistent/preview → 404."""
+        status, data = _get_json_auth("/api/v1/recipes/nonexistent-xyz/preview")
+        assert status == 404
+
+    def test_recipe_run_not_found(self, auth_server):
+        """POST /api/v1/recipes/nonexistent/run with auth → 404."""
+        status, data = _post_with_auth("/api/v1/recipes/nonexistent-xyz/run", {})
+        assert status == 404
+
+    def test_recipe_run_requires_auth(self, auth_server):
+        """POST /api/v1/recipes/some-recipe/run without auth → 401."""
+        status, data = _post_no_auth("/api/v1/recipes/some-recipe/run", {})
+        assert status == 401
+
+    def test_recipe_run_status_not_found(self, auth_server):
+        """GET /api/v1/recipes/nonexistent-run-id/status → 404."""
+        status, data = _get_json_auth("/api/v1/recipes/nonexistent-run-id/status")
+        assert status == 404
+
+    def test_recipes_list_has_correct_structure(self, auth_server):
+        """Each recipe in list has name or id field."""
+        status, data = _get_json_auth("/api/v1/recipes")
+        assert status == 200
+        for recipe in data.get("recipes", []):
+            assert "name" in recipe or "id" in recipe
+
+    def test_recipes_count_matches_list(self, auth_server):
+        """count field equals len(recipes)."""
+        status, data = _get_json_auth("/api/v1/recipes")
+        assert status == 200
+        assert data["count"] == len(data["recipes"])
+
+
+# ---------------------------------------------------------------------------
+# Task 016: Budget Management
+# ---------------------------------------------------------------------------
+class TestBudgetManagement:
+    def test_budget_get(self, auth_server):
+        """GET /api/v1/budget → 200 with daily_limit_usd and monthly_limit_usd."""
+        status, data = _get_json_auth("/api/v1/budget")
+        assert status == 200
+        assert "daily_limit_usd" in data
+        assert "monthly_limit_usd" in data
+
+    def test_budget_status(self, auth_server):
+        """GET /api/v1/budget/status → 200 with spend and paused fields."""
+        status, data = _get_json_auth("/api/v1/budget/status")
+        assert status == 200
+        assert "daily_spend_usd" in data
+        assert "daily_limit_usd" in data
+        assert "paused" in data
+        assert isinstance(data["paused"], bool)
+
+    def test_budget_update_daily_limit(self, auth_server):
+        """POST /api/v1/budget with auth → 200 and new daily_limit_usd stored."""
+        status, data = _post_with_auth("/api/v1/budget", {"daily_limit_usd": 2.50})
+        assert status == 200
+        assert data["budget"]["daily_limit_usd"] == 2.50
+
+    def test_budget_update_invalid_threshold(self, auth_server):
+        """POST /api/v1/budget with alert_threshold > 1.0 → 400."""
+        status, data = _post_with_auth("/api/v1/budget", {"alert_threshold": 1.5})
+        assert status == 400
+
+    def test_budget_update_negative_limit(self, auth_server):
+        """POST /api/v1/budget with negative daily_limit_usd → 400."""
+        status, data = _post_with_auth("/api/v1/budget", {"daily_limit_usd": -1.0})
+        assert status == 400
+
+    def test_budget_reset(self, auth_server):
+        """POST /api/v1/budget/reset with auth → 200 status=reset."""
+        status, data = _post_with_auth("/api/v1/budget/reset", {})
+        assert status == 200
+        assert data["status"] == "reset"
+
+    def test_budget_update_requires_auth(self, auth_server):
+        """POST /api/v1/budget without auth → 401."""
+        status, data = _post_no_auth("/api/v1/budget", {"daily_limit_usd": 5.0})
+        assert status == 401
+
+    def test_budget_reset_requires_auth(self, auth_server):
+        """POST /api/v1/budget/reset without auth → 401."""
+        status, data = _post_no_auth("/api/v1/budget/reset", {})
+        assert status == 401
+
+    def test_budget_status_monthly_fields(self, auth_server):
+        """GET /api/v1/budget/status → monthly spend fields present."""
+        status, data = _get_json_auth("/api/v1/budget/status")
+        assert status == 200
+        assert "monthly_spend_usd" in data
+        assert "monthly_limit_usd" in data
+        assert "monthly_pct" in data

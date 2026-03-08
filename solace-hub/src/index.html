@@ -595,6 +595,70 @@
       </details>
     </div>
 
+    <!-- Recipes (Task 015) -->
+    <div class="card" id="recipe-panel">
+      <h2>Recipes</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+        Available automation recipes — replay at $0.001/task instead of $1+ LLM calls.
+      </p>
+      <div id="recipe-list-container">
+        <p style="font-size:12px;color:var(--text-muted);">Loading recipes…</p>
+      </div>
+      <div id="recipe-run-status" style="font-size:11px;color:var(--text-muted);margin-top:8px;min-height:1.2em;"></div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn-secondary" onclick="refreshRecipeList()">Refresh</button>
+      </div>
+    </div>
+
+    <!-- Budget &amp; Spending (Task 016) -->
+    <div class="card" id="budget-panel">
+      <h2>Budget &amp; Spending</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+        Daily and monthly spend limits — fail-closed when exceeded.
+      </p>
+      <div id="budget-paused-banner" style="display:none;background:var(--red);color:#fff;padding:6px 10px;border-radius:var(--radius);margin-bottom:10px;font-size:12px;">
+        Budget exceeded — recipe runs are paused.
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px;margin-bottom:4px;">Daily: <span id="budget-daily-spend">—</span> / <span id="budget-daily-limit">—</span> USD</div>
+        <div style="background:var(--border);border-radius:3px;height:8px;overflow:hidden;">
+          <div id="budget-daily-bar" style="background:var(--green);height:100%;width:0%;transition:width 0.3s;"></div>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px;margin-bottom:4px;">Monthly: <span id="budget-monthly-spend">—</span> / <span id="budget-monthly-limit">—</span> USD</div>
+        <div style="background:var(--border);border-radius:3px;height:8px;overflow:hidden;">
+          <div id="budget-monthly-bar" style="background:var(--green);height:100%;width:0%;transition:width 0.3s;"></div>
+        </div>
+      </div>
+      <details style="margin-top:12px;">
+        <summary style="cursor:pointer;font-size:12px;color:var(--accent);user-select:none;">Edit Budget Settings</summary>
+        <form style="display:flex;flex-direction:column;gap:8px;margin-top:10px;" onsubmit="updateBudget(event)">
+          <label style="font-size:12px;">Daily Limit (USD)
+            <input type="number" id="budget-daily-input" min="0" step="0.01" placeholder="1.00"
+              style="width:100%;margin-top:4px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text-primary);font-family:var(--font);font-size:12px;" />
+          </label>
+          <label style="font-size:12px;">Monthly Limit (USD)
+            <input type="number" id="budget-monthly-input" min="0" step="0.01" placeholder="20.00"
+              style="width:100%;margin-top:4px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text-primary);font-family:var(--font);font-size:12px;" />
+          </label>
+          <label style="font-size:12px;">Alert Threshold (0.0–1.0)
+            <input type="number" id="budget-threshold-input" min="0" max="1" step="0.05" placeholder="0.80"
+              style="width:100%;margin-top:4px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text-primary);font-family:var(--font);font-size:12px;" />
+          </label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="budget-pause-input" checked />
+            Pause on exceeded
+          </label>
+          <div class="btn-row">
+            <button type="submit" class="btn-primary">Update Budget</button>
+            <button type="button" class="btn-secondary" onclick="resetBudget()">Reset to Defaults</button>
+          </div>
+          <div id="budget-update-status" style="font-size:11px;color:var(--text-muted);"></div>
+        </form>
+      </details>
+    </div>
+
     <!-- Remote Tunnel -->
     <div class="card" id="tunnel-panel">
       <h2>Remote Tunnel</h2>
@@ -1295,6 +1359,173 @@
       }
     }
 
+    // ── Recipes (Task 015) ────────────────────────────────────────────────────
+    async function refreshRecipeList() {
+      const container = document.getElementById("recipe-list-container");
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/recipes", {
+          signal: AbortSignal.timeout(5000)
+        });
+        if (!resp.ok) {
+          container.innerHTML = '<p style="font-size:12px;color:var(--text-muted);">Could not load recipes (HTTP ' + resp.status + ')</p>';
+          return;
+        }
+        const data = await resp.json();
+        const recipes = data.recipes || [];
+        if (recipes.length === 0) {
+          container.innerHTML = '<p style="font-size:12px;color:var(--text-muted);">No recipes available.</p>';
+          return;
+        }
+        let rows = recipes.map(r => {
+          const rid = escapeHtml(r.id || "");
+          const name = escapeHtml(r.name || r.id || "");
+          const desc = escapeHtml(r.description || "");
+          const cost = r.cost_estimate != null ? "$" + r.cost_estimate.toFixed(4) : "—";
+          return '<tr>' +
+            '<td>' + name + '</td>' +
+            '<td style="color:var(--text-muted);">' + desc + '</td>' +
+            '<td>' + cost + '</td>' +
+            '<td>' +
+              '<button class="btn-secondary" style="font-size:11px;padding:3px 8px;" onclick="previewRecipe(' + JSON.stringify(rid) + ')">Preview</button>' +
+              ' <button class="btn-primary" style="font-size:11px;padding:3px 8px;" onclick="runRecipe(' + JSON.stringify(rid) + ')">Run</button>' +
+            '</td>' +
+            '</tr>';
+        }).join("");
+        container.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+          '<thead><tr><th style="text-align:left;padding:4px 6px;">Name</th><th style="text-align:left;padding:4px 6px;">Description</th><th style="text-align:left;padding:4px 6px;">Cost</th><th style="padding:4px 6px;">Actions</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody></table>';
+      } catch (err) {
+        container.innerHTML = '<p style="font-size:12px;color:var(--text-muted);">Error: ' + escapeHtml(err.message) + '</p>';
+      }
+    }
+
+    async function previewRecipe(recipeId) {
+      const statusEl = document.getElementById("recipe-run-status");
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/recipes/" + encodeURIComponent(recipeId) + "/preview", {
+          signal: AbortSignal.timeout(5000)
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          statusEl.textContent = "Preview: " + (data.name || recipeId) + " — " + data.total_steps + " steps, estimated $" + (data.total_cost_estimate || 0).toFixed(4);
+        } else {
+          statusEl.textContent = "Preview error: " + (data.error || resp.status);
+        }
+      } catch (err) {
+        statusEl.textContent = "Preview error: " + err.message;
+      }
+    }
+
+    async function runRecipe(recipeId) {
+      const statusEl = document.getElementById("recipe-run-status");
+      const bearerToken = _getSessionToken();
+      if (!confirm("Run recipe: " + recipeId + "?")) return;
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/recipes/" + encodeURIComponent(recipeId) + "/run", {
+          method: "POST",
+          headers: Object.assign(
+            { "Content-Type": "application/json" },
+            bearerToken ? { "Authorization": "Bearer " + bearerToken } : {}
+          ),
+          body: JSON.stringify({}),
+          signal: AbortSignal.timeout(5000)
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          statusEl.textContent = "Queued run_id: " + (data.run_id || "") + " — status: " + (data.status || "queued");
+        } else {
+          statusEl.textContent = "Run error: " + (data.error || resp.status);
+        }
+      } catch (err) {
+        statusEl.textContent = "Run error: " + err.message;
+      }
+    }
+
+    // ── Budget (Task 016) ─────────────────────────────────────────────────────
+    async function refreshBudgetStatus() {
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/budget/status", {
+          signal: AbortSignal.timeout(5000)
+        });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        document.getElementById("budget-daily-spend").textContent = (data.daily_spend_usd || 0).toFixed(4);
+        document.getElementById("budget-daily-limit").textContent = (data.daily_limit_usd || 0).toFixed(2);
+        document.getElementById("budget-monthly-spend").textContent = (data.monthly_spend_usd || 0).toFixed(4);
+        document.getElementById("budget-monthly-limit").textContent = (data.monthly_limit_usd || 0).toFixed(2);
+        const dailyPct = Math.min(100, Math.round((data.daily_pct || 0) * 100));
+        const monthlyPct = Math.min(100, Math.round((data.monthly_pct || 0) * 100));
+        const dailyBar = document.getElementById("budget-daily-bar");
+        dailyBar.style.width = dailyPct + "%";
+        dailyBar.style.background = data.daily_exceeded ? "var(--red)" : (data.daily_alert ? "#f59e0b" : "var(--green)");
+        const monthlyBar = document.getElementById("budget-monthly-bar");
+        monthlyBar.style.width = monthlyPct + "%";
+        monthlyBar.style.background = data.monthly_exceeded ? "var(--red)" : (data.monthly_alert ? "#f59e0b" : "var(--green)");
+        const banner = document.getElementById("budget-paused-banner");
+        banner.style.display = data.paused ? "block" : "none";
+      } catch (_) {}
+    }
+
+    async function updateBudget(event) {
+      event.preventDefault();
+      const statusEl = document.getElementById("budget-update-status");
+      const bearerToken = _getSessionToken();
+      const body = {};
+      const dailyVal = document.getElementById("budget-daily-input").value;
+      const monthlyVal = document.getElementById("budget-monthly-input").value;
+      const thresholdVal = document.getElementById("budget-threshold-input").value;
+      if (dailyVal) body.daily_limit_usd = parseFloat(dailyVal);
+      if (monthlyVal) body.monthly_limit_usd = parseFloat(monthlyVal);
+      if (thresholdVal) body.alert_threshold = parseFloat(thresholdVal);
+      body.pause_on_exceeded = document.getElementById("budget-pause-input").checked;
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/budget", {
+          method: "POST",
+          headers: Object.assign(
+            { "Content-Type": "application/json" },
+            bearerToken ? { "Authorization": "Bearer " + bearerToken } : {}
+          ),
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(5000)
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          statusEl.textContent = "Budget updated.";
+          await refreshBudgetStatus();
+        } else {
+          statusEl.textContent = "Error: " + (data.error || resp.status);
+        }
+      } catch (err) {
+        statusEl.textContent = "Error: " + err.message;
+      }
+    }
+
+    async function resetBudget() {
+      if (!confirm("Reset budget to defaults?")) return;
+      const statusEl = document.getElementById("budget-update-status");
+      const bearerToken = _getSessionToken();
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/budget/reset", {
+          method: "POST",
+          headers: Object.assign(
+            { "Content-Type": "application/json" },
+            bearerToken ? { "Authorization": "Bearer " + bearerToken } : {}
+          ),
+          body: JSON.stringify({}),
+          signal: AbortSignal.timeout(5000)
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          statusEl.textContent = "Budget reset to defaults.";
+          await refreshBudgetStatus();
+        } else {
+          statusEl.textContent = "Error: " + (data.error || resp.status);
+        }
+      } catch (err) {
+        statusEl.textContent = "Error: " + err.message;
+      }
+    }
+
     // ── Boot ──────────────────────────────────────────────────────────────────
     refreshStatus();
     refreshOnboarding();
@@ -1303,6 +1534,8 @@
     refreshSyncStatus();
     refreshEvidenceChain();
     refreshScheduleManagement();
+    refreshRecipeList();
+    refreshBudgetStatus();
     // Poll every 10 seconds
     setInterval(refreshStatus, 10_000);
     setInterval(refreshOnboarding, 10_000);
@@ -1314,6 +1547,9 @@
     setInterval(refreshScheduleManagement, 30_000);
     // Sync status poll every 60 seconds
     setInterval(refreshSyncStatus, 60_000);
+    // Recipes poll every 60 seconds, budget status every 30 seconds
+    setInterval(refreshRecipeList, 60_000);
+    setInterval(refreshBudgetStatus, 30_000);
   </script>
 
 </body>

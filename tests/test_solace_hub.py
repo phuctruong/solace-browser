@@ -389,3 +389,63 @@ class TestScheduleUI:
         """Schedule additions must not introduce legacy hub name."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert LEGACY_HUB_NAME not in html
+
+
+# ── Task 015: Recipe Panel ────────────────────────────────────────────────────
+
+class TestRecipePanel:
+    def test_index_html_recipe_section(self):
+        """index.html must contain recipe section."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "recipe" in html.lower() or "Recipe" in html
+
+    def test_recipe_endpoints_in_server(self):
+        """yinyang_server.py must have /api/v1/recipes route."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/recipes" in server
+        assert "recipe_id" in server
+
+    def test_recipe_run_endpoint_in_server(self):
+        """yinyang_server.py must have /run route for recipes."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "_handle_recipe_run" in server
+
+    def test_index_html_no_port_9222_recipes(self):
+        """Recipe panel must not reference the forbidden debug port."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert FORBIDDEN_DEBUG_PORT not in html
+
+    def test_index_html_no_companion_app_recipes(self):
+        """Recipe additions must not introduce legacy hub name."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert LEGACY_HUB_NAME not in html
+
+
+# ── Task 016: Budget Panel ────────────────────────────────────────────────────
+
+class TestBudgetPanel:
+    def test_index_html_budget_section(self):
+        """index.html must contain budget section."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "budget" in html.lower() or "Budget" in html
+
+    def test_index_html_daily_limit(self):
+        """index.html must reference daily limit concept."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "daily" in html.lower() or "limit" in html.lower()
+
+    def test_budget_endpoints_in_server(self):
+        """yinyang_server.py must have /api/v1/budget route with daily_limit_usd."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/budget" in server
+        assert "daily_limit_usd" in server
+
+    def test_index_html_no_port_9222_budget(self):
+        """Budget panel must not reference the forbidden debug port."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert FORBIDDEN_DEBUG_PORT not in html
+
+    def test_index_html_no_companion_app_budget(self):
+        """Budget additions must not introduce legacy hub name."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert LEGACY_HUB_NAME not in html

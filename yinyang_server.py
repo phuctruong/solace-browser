@@ -41,6 +41,15 @@ Route table:
   GET  /api/v1/sessions/{id}           → single session detail
   POST /api/v1/sessions                → spawn new browser session (requires auth)
   DELETE /api/v1/sessions/{id}         → terminate session (SIGTERM+SIGKILL, requires auth)
+  GET  /api/v1/recipes                 → list all available recipes
+  GET  /api/v1/recipes/{id}/preview    → preview steps without running
+  GET  /api/v1/recipes/{run_id}/status → check run status
+  GET  /api/v1/recipes/{id}            → recipe detail
+  POST /api/v1/recipes/{id}/run        → run a recipe (async, returns run_id, requires auth)
+  GET  /api/v1/budget                  → current budget config
+  GET  /api/v1/budget/status           → spend vs limit with alert/paused flags
+  POST /api/v1/budget                  → update budget settings (requires auth)
+  POST /api/v1/budget/reset            → reset to defaults (requires auth)
 """
 import argparse
 import atexit
@@ -69,6 +78,15 @@ EVIDENCE_PATH: Path = Path.home() / ".solace" / "evidence.jsonl"
 SCHEDULES_PATH: Path = Path.home() / ".solace" / "schedules.json"
 OAUTH3_TOKENS_PATH: Path = Path.home() / ".solace" / "oauth3-tokens.json"
 ONBOARDING_PATH: Path = Path.home() / ".solace" / "onboarding.json"
+RECIPES_DIR: Path = Path(__file__).parent / "data" / "default" / "recipes"
+RECIPE_RUNS_PATH: Path = Path.home() / ".solace" / "recipe_runs.json"
+BUDGET_PATH: Path = Path.home() / ".solace" / "budget.json"
+DEFAULT_BUDGET: dict = {
+    "daily_limit_usd": 1.00,
+    "monthly_limit_usd": 20.00,
+    "alert_threshold": 0.80,
+    "pause_on_exceeded": True,
+}
 
 _SERVER_VERSION = "1.1"
 YINYANG_PORT = 8888
@@ -387,6 +405,21 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_tunnel_status()
         elif path == "/api/v1/sync/status":
             self._handle_sync_status()
+        elif path == "/api/v1/recipes":
+            self._handle_recipes_list()
+        elif re.match(r"^/api/v1/recipes/[^/]+/preview$", path):
+            recipe_id = path.split("/")[-2]
+            self._handle_recipe_preview(recipe_id)
+        elif re.match(r"^/api/v1/recipes/[^/]+/status$", path):
+            run_id = path.split("/")[-2]
+            self._handle_recipe_run_status(run_id)
+        elif re.match(r"^/api/v1/recipes/[^/]+$", path):
+            recipe_id = path.split("/")[-1]
+            self._handle_recipe_detail(recipe_id)
+        elif path == "/api/v1/budget":
+            self._handle_budget_get()
+        elif path == "/api/v1/budget/status":
+            self._handle_budget_status()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -426,6 +459,13 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_sync_export()
         elif path == "/api/v1/sync/import":
             self._handle_sync_import()
+        elif re.match(r"^/api/v1/recipes/[^/]+/run$", path):
+            recipe_id = path.split("/")[-2]
+            self._handle_recipe_run(recipe_id)
+        elif path == "/api/v1/budget":
+            self._handle_budget_update()
+        elif path == "/api/v1/budget/reset":
+            self._handle_budget_reset()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -1212,6 +1252,229 @@ function choose(mode) {
             stderr=subprocess.DEVNULL,
         )
         return proc.pid
+
+    # --- Task 015: Recipe Management ---
+
+    def _load_recipe(self, recipe_id: str) -> Optional[dict]:
+        """Load a recipe by ID from RECIPES_DIR or ~/.solace/recipes/."""
+        for search_path in [RECIPES_DIR, Path.home() / ".solace" / "recipes"]:
+            recipe_file = search_path / f"{recipe_id}.json"
+            if recipe_file.exists():
+                try:
+                    return json.loads(recipe_file.read_text())
+                except json.JSONDecodeError:
+                    return None
+        return None
+
+    def _handle_recipes_list(self) -> None:
+        recipes = []
+        seen: set = set()
+        for search_path in [RECIPES_DIR, Path.home() / ".solace" / "recipes"]:
+            if search_path.exists():
+                for f in sorted(search_path.glob("*.json")):
+                    if f.stem in seen:
+                        continue
+                    seen.add(f.stem)
+                    try:
+                        r = json.loads(f.read_text())
+                        recipes.append({
+                            "id": r.get("id", f.stem),
+                            "name": r.get("name", f.stem),
+                            "description": r.get("description", ""),
+                            "cost_estimate": r.get("cost_estimate", 0.001),
+                            "version": r.get("version", "1.0"),
+                        })
+                    except json.JSONDecodeError:
+                        pass
+        self._send_json({"recipes": recipes, "count": len(recipes)})
+
+    def _handle_recipe_detail(self, recipe_id: str) -> None:
+        r = self._load_recipe(recipe_id)
+        if r is None:
+            self._send_json({"error": f"recipe '{recipe_id}' not found"}, 404)
+            return
+        self._send_json(r)
+
+    def _handle_recipe_preview(self, recipe_id: str) -> None:
+        r = self._load_recipe(recipe_id)
+        if r is None:
+            self._send_json({"error": f"recipe '{recipe_id}' not found"}, 404)
+            return
+        steps = r.get("steps", [])
+        preview = []
+        for i, step in enumerate(steps):
+            preview.append({
+                "step": i + 1,
+                "action": step.get("action", "unknown"),
+                "description": step.get("description", ""),
+                "estimated_cost": step.get("cost", 0.0),
+            })
+        self._send_json({
+            "recipe_id": recipe_id,
+            "name": r.get("name", recipe_id),
+            "total_steps": len(steps),
+            "total_cost_estimate": r.get("cost_estimate", sum(s.get("cost", 0) for s in steps)),
+            "preview": preview,
+        })
+
+    def _handle_recipe_run(self, recipe_id: str) -> None:
+        if not self._check_auth():
+            return
+        r = self._load_recipe(recipe_id)
+        if r is None:
+            self._send_json({"error": f"recipe '{recipe_id}' not found"}, 404)
+            return
+        run_id = str(uuid.uuid4())
+        run_record = {
+            "run_id": run_id,
+            "recipe_id": recipe_id,
+            "status": "queued",
+            "started_at": int(time.time()),
+            "completed_at": None,
+            "result": None,
+        }
+        runs: list = []
+        if RECIPE_RUNS_PATH.exists():
+            try:
+                runs = json.loads(RECIPE_RUNS_PATH.read_text())
+            except json.JSONDecodeError:
+                runs = []
+        runs.append(run_record)
+        RECIPE_RUNS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        RECIPE_RUNS_PATH.write_text(json.dumps(runs, indent=2))
+        self._send_json({"run_id": run_id, "status": "queued", "recipe_id": recipe_id}, 202)
+
+    def _handle_recipe_run_status(self, run_id: str) -> None:
+        if not RECIPE_RUNS_PATH.exists():
+            self._send_json({"error": "run not found"}, 404)
+            return
+        try:
+            runs = json.loads(RECIPE_RUNS_PATH.read_text())
+        except json.JSONDecodeError:
+            self._send_json({"error": "run not found"}, 404)
+            return
+        for run in runs:
+            if run.get("run_id") == run_id:
+                self._send_json(run)
+                return
+        self._send_json({"error": "run not found"}, 404)
+
+    # --- Task 016: Budget Management ---
+
+    def _load_evidence(self) -> list:
+        """Load all evidence entries (module-level load_evidence with no pagination)."""
+        try:
+            lines = EVIDENCE_PATH.read_text().splitlines()
+        except FileNotFoundError:
+            return []
+        records = []
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+        return records
+
+    def _load_budget(self) -> dict:
+        if not BUDGET_PATH.exists():
+            return dict(DEFAULT_BUDGET)
+        try:
+            b = json.loads(BUDGET_PATH.read_text())
+            result = dict(DEFAULT_BUDGET)
+            result.update(b)
+            return result
+        except json.JSONDecodeError:
+            return dict(DEFAULT_BUDGET)
+
+    def _calculate_spend(self, period: str) -> float:
+        """Sum cost_usd from evidence entries in current day or month."""
+        entries = self._load_evidence()
+        now = int(time.time())
+        if period == "day":
+            cutoff = now - 86400
+        elif period == "month":
+            cutoff = now - 2592000
+        else:
+            cutoff = 0
+        total = 0.0
+        for e in entries:
+            if e.get("timestamp", e.get("ts", 0)) >= cutoff:
+                cost = e.get("cost_usd", 0.0)
+                if isinstance(cost, (int, float)):
+                    total += cost
+        return round(total, 6)
+
+    def _handle_budget_get(self) -> None:
+        self._send_json(self._load_budget())
+
+    def _handle_budget_status(self) -> None:
+        budget = self._load_budget()
+        daily_spend = self._calculate_spend("day")
+        monthly_spend = self._calculate_spend("month")
+        daily_limit = budget.get("daily_limit_usd", 1.00)
+        monthly_limit = budget.get("monthly_limit_usd", 20.00)
+        threshold = budget.get("alert_threshold", 0.80)
+        daily_pct = daily_spend / daily_limit if daily_limit > 0 else 0.0
+        monthly_pct = monthly_spend / monthly_limit if monthly_limit > 0 else 0.0
+        self._send_json({
+            "daily_spend_usd": daily_spend,
+            "daily_limit_usd": daily_limit,
+            "daily_pct": round(daily_pct, 4),
+            "daily_alert": daily_pct >= threshold,
+            "daily_exceeded": daily_spend >= daily_limit,
+            "monthly_spend_usd": monthly_spend,
+            "monthly_limit_usd": monthly_limit,
+            "monthly_pct": round(monthly_pct, 4),
+            "monthly_alert": monthly_pct >= threshold,
+            "monthly_exceeded": monthly_spend >= monthly_limit,
+            "pause_on_exceeded": budget.get("pause_on_exceeded", True),
+            "paused": (
+                (daily_spend >= daily_limit or monthly_spend >= monthly_limit)
+                and budget.get("pause_on_exceeded", True)
+            ),
+        })
+
+    def _handle_budget_update(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        budget = self._load_budget()
+        if "daily_limit_usd" in body:
+            v = body["daily_limit_usd"]
+            if not isinstance(v, (int, float)) or v < 0:
+                self._send_json({"error": "daily_limit_usd must be non-negative number"}, 400)
+                return
+            budget["daily_limit_usd"] = float(v)
+        if "monthly_limit_usd" in body:
+            v = body["monthly_limit_usd"]
+            if not isinstance(v, (int, float)) or v < 0:
+                self._send_json({"error": "monthly_limit_usd must be non-negative number"}, 400)
+                return
+            budget["monthly_limit_usd"] = float(v)
+        if "alert_threshold" in body:
+            v = body["alert_threshold"]
+            if not isinstance(v, (int, float)) or not (0.0 <= v <= 1.0):
+                self._send_json({"error": "alert_threshold must be 0.0-1.0"}, 400)
+                return
+            budget["alert_threshold"] = float(v)
+        if "pause_on_exceeded" in body:
+            budget["pause_on_exceeded"] = bool(body["pause_on_exceeded"])
+        budget["updated_at"] = int(time.time())
+        BUDGET_PATH.parent.mkdir(parents=True, exist_ok=True)
+        BUDGET_PATH.write_text(json.dumps(budget, indent=2))
+        self._send_json({"status": "updated", "budget": budget})
+
+    def _handle_budget_reset(self) -> None:
+        if not self._check_auth():
+            return
+        BUDGET_PATH.parent.mkdir(parents=True, exist_ok=True)
+        BUDGET_PATH.write_text(json.dumps(DEFAULT_BUDGET, indent=2))
+        self._send_json({"status": "reset", "budget": DEFAULT_BUDGET})
 
     # --- Helpers ---
     def _read_json_body(self) -> Optional[dict]:
