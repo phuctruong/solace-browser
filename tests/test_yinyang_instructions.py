@@ -2340,3 +2340,39 @@ class TestRecipeHistory:
         status, data = _get_json_auth("/api/v1/recipes/history")
         assert status == 200
         assert isinstance(data["runs"], list)
+
+
+# ── Task 033: Settings Export / Import ───────────────────────────────────────
+
+class TestSettingsExportImport:
+    def test_settings_export(self, auth_server):
+        status, data = _get_json_auth("/api/v1/settings/export")
+        assert status == 200
+        assert "exported_at" in data
+        assert "version" in data
+        assert "theme" in data
+
+    def test_settings_import_requires_auth(self, auth_server):
+        body = json.dumps({"theme": {"theme": "dark"}}).encode()
+        req = urllib.request.Request(
+            f"{AUTH_BASE}/api/v1/settings/import",
+            data=body, method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req):
+                pass
+            assert False, "expected 401"
+        except urllib.error.HTTPError as e:
+            assert e.code == 401
+
+    def test_settings_import_theme(self, auth_server):
+        status, data = _post_with_auth("/api/v1/settings/import", {"theme": {"theme": "dark"}})
+        assert status == 200
+        assert data["status"] == "imported"
+        assert "theme" in data["imported"]
+
+    def test_settings_export_has_budget(self, auth_server):
+        status, data = _get_json_auth("/api/v1/settings/export")
+        assert status == 200
+        assert "budget" in data

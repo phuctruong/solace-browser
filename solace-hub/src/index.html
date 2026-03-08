@@ -803,6 +803,22 @@
       </div>
     </div>
 
+    <!-- Settings Export / Import (Task 033) -->
+    <div class="card" id="settings-panel">
+      <h2>Settings</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+        Export all hub settings (theme, CLI config, profiles) to a portable JSON file, or import from a previous export.
+      </p>
+      <div class="hub-actions">
+        <a href="http://localhost:8888/api/v1/settings/export" download="solace-settings.json" class="hub-btn">Export Settings</a>
+        <label class="hub-btn" style="cursor:pointer;">
+          Import Settings
+          <input type="file" accept=".json" style="display:none;" onchange="importSettings(this)">
+        </label>
+      </div>
+      <div id="settings-import-status" style="font-size:11px;color:var(--text-muted);margin-top:6px;min-height:1.2em;"></div>
+    </div>
+
     <!-- Automation Schedules (Task 014) -->
     <div class="card" id="automation-schedules-panel">
       <h2>Automation Schedules</h2>
@@ -2620,6 +2636,27 @@
     }
     refreshWatchdog();
     setInterval(refreshWatchdog, 30_000);
+
+    // Settings import (Task 033)
+    async function importSettings(input) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const statusEl = document.getElementById('settings-import-status');
+      try {
+        const text = await file.text();
+        const payload = JSON.parse(text);
+        const r = await fetch('http://localhost:8888/api/v1/settings/import', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${window.__hubToken || ''}`},
+          body: JSON.stringify(payload),
+        });
+        const d = await r.json();
+        if (statusEl) { statusEl.textContent = r.ok ? `Imported: ${(d.imported || []).join(', ') || 'none'}` : `Error: ${d.error || 'failed'}`; }
+      } catch (e) {
+        if (statusEl) { statusEl.textContent = `Import failed: ${e.message}`; }
+      }
+      input.value = '';
+    }
 
     // Recipe run history (Task 032)
     async function refreshRecipeHistory() {

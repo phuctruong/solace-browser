@@ -572,6 +572,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_watchdog_status()
         elif path == "/api/v1/theme":
             self._handle_theme_get()
+        elif path == "/api/v1/settings/export":
+            self._handle_settings_export()
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -661,6 +663,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_watchdog_ping()
         elif path == "/api/v1/theme":
             self._handle_theme_set()
+        elif path == "/api/v1/settings/import":
+            self._handle_settings_import()
         elif path == "/api/v1/byok/set":
             self._handle_byok_set()
         elif path == "/api/v1/byok/test":
@@ -1848,6 +1852,67 @@ function choose(mode) {
             THEME_PATH.parent.mkdir(parents=True, exist_ok=True)
             THEME_PATH.write_text(json.dumps({"theme": theme}))
         self._send_json({"status": "ok", "theme": theme})
+
+    # --- Task 033: Settings export/import handlers ---
+
+    def _handle_settings_export(self) -> None:
+        """GET /api/v1/settings/export — export all hub settings as JSON. Task 033."""
+        settings: dict = {
+            "exported_at": int(time.time()),
+            "version": "1.0",
+            "budget": self._load_budget_config(),
+            "theme": {"theme": "light"},
+            "cli_config": {},
+            "profiles": [],
+        }
+        if THEME_PATH.exists():
+            try:
+                settings["theme"] = json.loads(THEME_PATH.read_text())
+            except (json.JSONDecodeError, OSError):
+                pass
+        if CLI_CONFIG_PATH.exists():
+            try:
+                settings["cli_config"] = json.loads(CLI_CONFIG_PATH.read_text())
+            except (json.JSONDecodeError, OSError):
+                pass
+        if PROFILES_PATH.exists():
+            try:
+                profiles = json.loads(PROFILES_PATH.read_text())
+                settings["profiles"] = [
+                    {"id": p["id"], "name": p["name"]}
+                    for p in profiles if isinstance(p, dict) and "id" in p and "name" in p
+                ]
+            except (json.JSONDecodeError, OSError, KeyError):
+                pass
+        body = json.dumps(settings, indent=2).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Disposition", 'attachment; filename="solace-settings.json"')
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _handle_settings_import(self) -> None:
+        """POST /api/v1/settings/import — restore hub settings from export JSON. Task 033."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        imported: list = []
+        if "theme" in body and isinstance(body["theme"], dict):
+            theme = body["theme"].get("theme", "light")
+            if theme in ("light", "dark"):
+                with _THEME_LOCK:
+                    THEME_PATH.parent.mkdir(parents=True, exist_ok=True)
+                    THEME_PATH.write_text(json.dumps({"theme": theme}))
+                imported.append("theme")
+        if "cli_config" in body and isinstance(body["cli_config"], dict):
+            with _CLI_LOCK:
+                CLI_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+                CLI_CONFIG_PATH.write_text(json.dumps(body["cli_config"], indent=2))
+            imported.append("cli_config")
+        self._send_json({"status": "imported", "imported": imported})
 
     # --- Task 032: Recipe history handler ---
 

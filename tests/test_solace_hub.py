@@ -716,3 +716,18 @@ class TestRecipeHistoryUI:
         """index.html must reference run history."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "history" in html.lower() or "run" in html.lower()
+
+
+# ── Task 033: Settings Export / Import ───────────────────────────────────────
+
+class TestSettingsUI:
+    def test_settings_export_in_server(self):
+        """yinyang_server.py must implement /api/v1/settings/export."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/settings/export" in server
+        assert "/api/v1/settings/import" in server
+
+    def test_settings_in_html(self):
+        """index.html must reference settings export."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "settings" in html.lower() and "export" in html.lower()
