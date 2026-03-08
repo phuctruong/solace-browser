@@ -220,6 +220,26 @@ class TestOnboardingGate:
 
 # ── Task 010: OAuth3 Token Management Dashboard ─────────────────────────────
 
+class TestSessionCommands:
+    def test_cmd_list_sessions_in_invoke_handler(self):
+        source = MAIN_RS.read_text()
+        assert "cmd_list_sessions" in source
+
+    def test_cmd_kill_all_sessions_in_invoke_handler(self):
+        source = MAIN_RS.read_text()
+        assert "cmd_kill_all_sessions" in source
+
+    def test_session_endpoint_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/sessions" in server
+
+    def test_session_url_localhost_only(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "localhost" in server
+        # Ensure external URL check exists via urlparse hostname check
+        assert "hostname" in server
+
+
 class TestOAuth3Dashboard:
     def test_index_html_oauth3_section(self):
         """index.html must contain OAuth3 Tokens section."""

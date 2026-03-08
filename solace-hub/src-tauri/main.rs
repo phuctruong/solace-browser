@@ -202,6 +202,45 @@ fn wait_for_server(url: &str, timeout_secs: u64) -> bool {
     false
 }
 
+/// Minimal HTTP GET that returns the full response body as a String.
+/// Uses only stdlib (TcpStream + raw HTTP/1.0) — no external crates.
+fn http_get_body(url: &str) -> Result<String, Box<dyn std::error::Error>> {
+    use std::io::{BufRead, BufReader, Read};
+    use std::net::TcpStream;
+
+    let url_str = url.to_string();
+    let stripped = url_str
+        .strip_prefix("http://")
+        .ok_or("only http:// supported")?;
+    let (host_port, path) = stripped.split_once('/').unwrap_or((stripped, ""));
+    let path = format!("/{}", path);
+    let (host, port_str) = host_port.split_once(':').unwrap_or((host_port, "8888"));
+    let port: u16 = port_str.parse()?;
+
+    let mut stream = TcpStream::connect((host, port))?;
+    stream.set_read_timeout(Some(Duration::from_secs(5)))?;
+
+    let request = format!(
+        "GET {} HTTP/1.0\r\nHost: {}\r\nConnection: close\r\n\r\n",
+        path, host_port
+    );
+    stream.write_all(request.as_bytes())?;
+
+    let mut reader = BufReader::new(stream);
+    // Skip headers: read until blank line
+    loop {
+        let mut line = String::new();
+        reader.read_line(&mut line)?;
+        if line == "\r\n" || line == "\n" || line.is_empty() {
+            break;
+        }
+    }
+    // Read body
+    let mut body = String::new();
+    reader.read_to_string(&mut body)?;
+    Ok(body)
+}
+
 /// Minimal HTTP GET returning Ok(true) on 2xx status.
 /// Uses only stdlib (TcpStream + raw HTTP) to avoid heavy crate dependency at this layer.
 fn ureq_get(url: &str) -> Result<bool, Box<dyn std::error::Error>> {
@@ -409,6 +448,26 @@ fn cmd_token_is_present() -> bool {
     retrieve_token_keychain().is_ok()
 }
 
+#[tauri::command]
+fn cmd_list_sessions() -> Result<String, String> {
+    let url = format!("http://localhost:{}/api/v1/sessions", YINYANG_PORT);
+    http_get_body(&url).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn cmd_kill_all_sessions(state: State<HubState>) -> Result<String, String> {
+    // Kill local browser child if any
+    {
+        let mut guard = state.browser_child.lock().map_err(|e| e.to_string())?;
+        if let Some(ref mut child) = *guard {
+            let _ = child.kill();
+        }
+        *guard = None;
+    }
+    // Server handles its own session registry — we return success for local child.
+    Ok("All local sessions terminated".to_string())
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // main
 // ────────────────────────────────────────────────────────────────────────────
@@ -495,6 +554,8 @@ fn main() {
             cmd_open_browser,
             cmd_get_server_status,
             cmd_token_is_present,
+            cmd_list_sessions,
+            cmd_kill_all_sessions,
         ])
         .on_system_tray_event(|app, event| match event {
             SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {

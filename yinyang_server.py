@@ -32,14 +32,20 @@ Route table:
   POST /onboarding/complete            → {"mode": str} → 200
   POST /onboarding/reset               → requires auth; delete onboarding.json
   GET  /api/v1/onboarding/status       → {"completed": bool, "mode": str|null}
+  GET  /api/v1/sessions                → list all tracked sessions with alive status
+  GET  /api/v1/sessions/{id}           → single session detail
+  POST /api/v1/sessions                → spawn new browser session (requires auth)
+  DELETE /api/v1/sessions/{id}         → terminate session (SIGTERM+SIGKILL, requires auth)
 """
 import argparse
 import atexit
 import hashlib
 import http.server
 import json
+import os
 import re
 import secrets
+import signal
 import subprocess
 import threading
 import time
@@ -62,6 +68,8 @@ MAX_BODY = 1_048_576
 
 _SCHEDULES_LOCK = threading.Lock()
 _TOKENS_LOCK = threading.Lock()
+_SESSIONS: dict[str, dict] = {}
+_SESSIONS_LOCK = threading.Lock()
 _SESSION_TOKEN_SHA256: str = ""
 _SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
 _CRON_RE = re.compile(r"^\S+\s+\S+\s+\S+\s+\S+\s+\S+$")
@@ -348,6 +356,11 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_onboarding_page()
         elif path == "/api/v1/onboarding/status":
             self._handle_onboarding_status()
+        elif path == "/api/v1/sessions":
+            self._handle_sessions_list()
+        elif re.match(r"^/api/v1/sessions/[^/]+$", path):
+            session_id = path.split("/")[-1]
+            self._handle_session_detail(session_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -371,6 +384,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_onboarding_complete()
         elif path == "/onboarding/reset":
             self._handle_onboarding_reset()
+        elif path == "/api/v1/sessions":
+            self._handle_session_create()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -383,6 +398,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif path.startswith("/api/v1/oauth3/tokens/"):
             token_id = path[len("/api/v1/oauth3/tokens/"):]
             self._handle_oauth3_revoke(token_id)
+        elif re.match(r"^/api/v1/sessions/[^/]+$", path):
+            session_id = path.split("/")[-1]
+            self._handle_session_delete(session_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -888,6 +906,123 @@ function choose(mode) {
             completed = False
             mode = None
         self._send_json({"completed": completed, "mode": mode})
+
+    # --- Session manager handlers ---
+    def _is_session_alive(self, pid: int) -> bool:
+        try:
+            os.kill(pid, 0)
+            return True
+        except OSError:
+            return False
+
+    def _handle_sessions_list(self) -> None:
+        with _SESSIONS_LOCK:
+            result = []
+            for sid, sess in _SESSIONS.items():
+                result.append({
+                    "session_id": sid,
+                    "url": sess["url"],
+                    "profile": sess["profile"],
+                    "pid": sess["pid"],
+                    "started_at": sess["started_at"],
+                    "alive": self._is_session_alive(sess["pid"]),
+                })
+        self._send_json({"sessions": result})
+
+    def _handle_session_detail(self, session_id: str) -> None:
+        with _SESSIONS_LOCK:
+            sess = _SESSIONS.get(session_id)
+        if sess is None:
+            self._send_json({"error": "session not found"}, 404)
+            return
+        self._send_json({
+            "session_id": session_id,
+            "url": sess["url"],
+            "profile": sess["profile"],
+            "pid": sess["pid"],
+            "started_at": sess["started_at"],
+            "alive": self._is_session_alive(sess["pid"]),
+        })
+
+    def _handle_session_create(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url = body.get("url", "")
+        profile = body.get("profile", "default")
+        # URL must be localhost only
+        parsed = urllib.parse.urlparse(url)
+        if parsed.scheme not in ("http", "https") or parsed.hostname != "localhost":
+            self._send_json({"error": "url must be a localhost URL (http://localhost:...)"}, 400)
+            return
+        # Profile validation: alphanumeric + hyphen, max 32 chars
+        if not re.match(r'^[a-zA-Z0-9-]{1,32}$', profile):
+            self._send_json({"error": "profile must be alphanumeric + hyphens, max 32 chars"}, 400)
+            return
+        try:
+            pid = self._spawn_browser_session(url, profile)
+        except FileNotFoundError as exc:
+            self._send_json({"error": str(exc)}, 503)
+            return
+        session_id = str(uuid.uuid4())
+        with _SESSIONS_LOCK:
+            _SESSIONS[session_id] = {
+                "url": url,
+                "profile": profile,
+                "pid": pid,
+                "started_at": int(time.time()),
+            }
+        self._send_json({"session_id": session_id, "pid": pid, "url": url}, 201)
+
+    def _handle_session_delete(self, session_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _SESSIONS_LOCK:
+            sess = _SESSIONS.get(session_id)
+            if sess is None:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            pid = sess["pid"]
+            del _SESSIONS[session_id]
+        # SIGTERM then SIGKILL after 3s
+        try:
+            os.kill(pid, signal.SIGTERM)
+
+            def _force_kill() -> None:
+                time.sleep(3)
+                try:
+                    os.kill(pid, signal.SIGKILL)
+                except OSError:
+                    pass
+            threading.Thread(target=_force_kill, daemon=True).start()
+        except OSError:
+            pass  # Already dead — that's fine
+        self._send_json({"status": "terminated", "session_id": session_id})
+
+    def _spawn_browser_session(self, url: str, profile: str) -> int:
+        browser = os.environ.get("SOLACE_BROWSER", "")
+        if not browser:
+            candidates = [
+                Path(__file__).parent.parent / "source" / "out" / "Solace" / "chrome",
+                Path.home() / ".local" / "bin" / "solace-browser",
+                Path("/usr/bin/solace-browser"),
+            ]
+            for c in candidates:
+                if Path(c).exists():
+                    browser = str(c)
+                    break
+        if not browser or not Path(browser).exists():
+            raise FileNotFoundError(
+                "Solace Browser binary not found. Set SOLACE_BROWSER environment variable."
+            )
+        proc = subprocess.Popen(
+            [browser, f"--profile-directory={profile}", url],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return proc.pid
 
     # --- Helpers ---
     def _read_json_body(self) -> Optional[dict]:

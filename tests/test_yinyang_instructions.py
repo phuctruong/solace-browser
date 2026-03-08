@@ -1131,3 +1131,154 @@ class TestOAuth3Management:
         )
         assert status == 400
         assert "revoked" in data.get("error", "").lower()
+
+
+# ── Task 011: Browser Session Manager ─────────────────────────────────────────
+
+
+def _get_json_auth(path: str, base: str = AUTH_BASE) -> tuple[int, dict]:
+    req = urllib.request.Request(f"{base}{path}", method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return resp.status, json.loads(resp.read().decode())
+    except urllib.error.URLError as exc:
+        assert hasattr(exc, "code"), f"Expected HTTP error, got: {exc}"
+        assert hasattr(exc, "read"), f"Expected readable HTTP error, got: {exc}"
+        return exc.code, json.loads(exc.read().decode())
+
+
+def _delete_with_auth(path: str, token: str = VALID_TOKEN, base: str = AUTH_BASE) -> tuple[int, dict]:
+    req = urllib.request.Request(
+        f"{base}{path}",
+        headers={"Authorization": f"Bearer {token}"},
+        method="DELETE",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return resp.status, json.loads(resp.read().decode())
+    except urllib.error.URLError as exc:
+        assert hasattr(exc, "code"), f"Expected HTTP error, got: {exc}"
+        assert hasattr(exc, "read"), f"Expected readable HTTP error, got: {exc}"
+        return exc.code, json.loads(exc.read().decode())
+
+
+def _delete_no_auth(path: str, base: str = AUTH_BASE) -> tuple[int, dict]:
+    req = urllib.request.Request(f"{base}{path}", method="DELETE")
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return resp.status, json.loads(resp.read().decode())
+    except urllib.error.URLError as exc:
+        assert hasattr(exc, "code"), f"Expected HTTP error, got: {exc}"
+        assert hasattr(exc, "read"), f"Expected readable HTTP error, got: {exc}"
+        return exc.code, json.loads(exc.read().decode())
+
+
+class TestSessionManager:
+    def test_sessions_list_empty(self, auth_server):
+        """GET /api/v1/sessions → 200 with sessions list (may be empty)."""
+        import yinyang_server as ys
+        # Clear any stale sessions from other tests
+        with ys._SESSIONS_LOCK:
+            ys._SESSIONS.clear()
+        status, data = _get_json_auth("/api/v1/sessions")
+        assert status == 200
+        assert "sessions" in data
+        assert isinstance(data["sessions"], list)
+
+    def test_session_create_url_validation_external(self, auth_server):
+        """Must reject non-localhost URLs."""
+        status, data = _post_with_auth(
+            "/api/v1/sessions",
+            {"url": "https://evil.com/steal"},
+        )
+        assert status == 400
+        assert "localhost" in data.get("error", "").lower()
+
+    def test_session_create_url_validation_https_evil(self, auth_server):
+        """Must reject non-localhost IP addresses."""
+        status, data = _post_with_auth(
+            "/api/v1/sessions",
+            {"url": "http://192.168.1.1/admin"},
+        )
+        assert status == 400
+
+    def test_session_profile_validation_dotdot(self, auth_server):
+        """Profile with '..' path traversal must be rejected."""
+        status, data = _post_with_auth(
+            "/api/v1/sessions",
+            {"url": "http://localhost:8888/start", "profile": "../evil"},
+        )
+        assert status == 400
+
+    def test_session_profile_validation_slash(self, auth_server):
+        """Profile with '/' must be rejected."""
+        status, data = _post_with_auth(
+            "/api/v1/sessions",
+            {"url": "http://localhost:8888/start", "profile": "foo/bar"},
+        )
+        assert status == 400
+
+    def test_session_create_no_binary(self, auth_server, monkeypatch):
+        """When browser binary is not found, must return 503."""
+        import os as _os
+        original_env = _os.environ.get("SOLACE_BROWSER", "")
+        _os.environ["SOLACE_BROWSER"] = "/nonexistent/solace-browser"
+        try:
+            status, data = _post_with_auth(
+                "/api/v1/sessions",
+                {"url": "http://localhost:8888/start", "profile": "default"},
+            )
+            assert status == 503
+            assert "not found" in data.get("error", "").lower()
+        finally:
+            if original_env:
+                _os.environ["SOLACE_BROWSER"] = original_env
+            else:
+                _os.environ.pop("SOLACE_BROWSER", None)
+
+    def test_session_kill_not_found(self, auth_server):
+        """DELETE /api/v1/sessions/nonexistent → 404."""
+        status, data = _delete_with_auth("/api/v1/sessions/nonexistent-session-id")
+        assert status == 404
+        assert "not found" in data.get("error", "").lower()
+
+    def test_sessions_require_auth_post(self, auth_server):
+        """POST /api/v1/sessions without Bearer → 401."""
+        status, data = _post_no_auth(
+            "/api/v1/sessions",
+            {"url": "http://localhost:8888/start"},
+        )
+        assert status == 401
+
+    def test_sessions_require_auth_delete(self, auth_server):
+        """DELETE /api/v1/sessions/{id} without Bearer → 401."""
+        status, data = _delete_no_auth("/api/v1/sessions/some-id")
+        assert status == 401
+
+    def test_session_detail_not_found(self, auth_server):
+        """GET /api/v1/sessions/{unknown_id} → 404."""
+        status, data = _get_json_auth("/api/v1/sessions/00000000-0000-0000-0000-000000000000")
+        assert status == 404
+        assert "not found" in data.get("error", "").lower()
+
+    def test_session_list_shows_dead_session(self, auth_server):
+        """A session with a dead PID shows alive=False in list response."""
+        import yinyang_server as ys
+        dead_session_id = "dead-test-session-0001"
+        with ys._SESSIONS_LOCK:
+            ys._SESSIONS[dead_session_id] = {
+                "url": "http://localhost:8888/start",
+                "profile": "default",
+                "pid": 99999999,  # will not exist
+                "started_at": 0,
+            }
+        try:
+            status, data = _get_json_auth("/api/v1/sessions")
+            assert status == 200
+            sessions = data["sessions"]
+            dead = [s for s in sessions if s["session_id"] == dead_session_id]
+            assert dead, "Dead session must appear in list"
+            assert dead[0]["alive"] is False
+        finally:
+            with ys._SESSIONS_LOCK:
+                ys._SESSIONS.pop(dead_session_id, None)
