@@ -3529,8 +3529,9 @@ function choose(mode) {
         key = bytes.fromhex(token_sha256)
         aesgcm = AESGCM(key)
         try:
+            from cryptography.exceptions import InvalidTag
             plaintext = aesgcm.decrypt(nonce, ct, None)
-        except Exception:  # cryptography raises platform-specific exceptions on decrypt failure
+        except InvalidTag:
             self._send_json({"error": "decryption failed — wrong token or corrupted data"}, 400)
             return
         try:
