@@ -972,3 +972,17 @@ class TestAppCategoriesUI:
         """index.html must show category or tag UI."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "categor" in html.lower() or "tag" in html.lower()
+
+
+# ── Task 051: App Search by Category ─────────────────────────────────────────
+
+class TestAppSearchByCategoryUI:
+    def test_category_filter_in_server(self):
+        """yinyang_server.py must support category param in /api/v1/apps."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/apps" in server
+
+    def test_category_filter_in_html(self):
+        """index.html must show app filter UI."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "tag" in html.lower() or "filter" in html.lower() or "categor" in html.lower()

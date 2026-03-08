@@ -2646,3 +2646,18 @@ class TestAppCategories:
         assert "categories" in data
         assert isinstance(data["categories"], list)
         assert data["total"] >= 1
+
+
+# ── Task 051: App Search by Category ─────────────────────────────────────────
+
+class TestAppSearchByCategory:
+    def test_apps_by_category(self, auth_server):
+        status, data = _get_json_auth("/api/v1/apps?category=gmail")
+        assert status == 200
+        assert "apps" in data
+
+    def test_apps_no_category_filter(self, auth_server):
+        status, data = _get_json_auth("/api/v1/apps")
+        assert status == 200
+        assert "apps" in data
+        assert data["total"] >= 0
