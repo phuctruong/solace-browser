@@ -2528,3 +2528,14 @@ class TestConnectionHealth:
         assert data["pong"] is True
         assert "timestamp" in data
         assert "version" in data
+
+
+# ── Task 042: App Tag Filter ──────────────────────────────────────────────────
+
+class TestAppTags:
+    def test_apps_tags(self, auth_server):
+        status, data = _get_json_auth("/api/v1/apps/tags")
+        assert status == 200
+        assert "tags" in data
+        assert "total" in data
+        assert isinstance(data["tags"], list)

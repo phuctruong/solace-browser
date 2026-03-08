@@ -590,6 +590,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_accessibility()
         elif path == "/api/v1/ping":
             self._handle_ping()
+        elif path == "/api/v1/apps/tags":
+            self._handle_apps_tags()
         elif path == "/api/v1/metrics":
             self._handle_metrics_json()
         elif path == "/metrics":
@@ -1931,6 +1933,21 @@ function choose(mode) {
                 CLI_CONFIG_PATH.write_text(json.dumps(body["cli_config"], indent=2))
             imported.append("cli_config")
         self._send_json({"status": "imported", "imported": imported})
+
+    # --- Task 042: App tags handler ---
+
+    def _handle_apps_tags(self) -> None:
+        """GET /api/v1/apps/tags — list all unique app tags. Task 042."""
+        tags: set = set()
+        for app in self.server.apps:
+            if isinstance(app, dict):
+                for t in app.get("tags", []):
+                    tags.add(str(t))
+            elif isinstance(app, str):
+                parts = app.split("-")
+                if len(parts) > 1:
+                    tags.add(parts[0])
+        self._send_json({"tags": sorted(tags), "total": len(tags)})
 
     # --- Task 041: Connection health ping handler ---
 

@@ -846,3 +846,17 @@ class TestConnectionHealthUI:
         """index.html must reference latency or ping."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "latency" in html.lower() or "ping" in html.lower()
+
+
+# ── Task 042: App Tag Filter ──────────────────────────────────────────────────
+
+class TestAppTagsUI:
+    def test_apps_tags_in_server(self):
+        """yinyang_server.py must implement /api/v1/apps/tags."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/apps/tags" in server
+
+    def test_tag_filter_in_html(self):
+        """index.html must contain tag filter UI."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "tag" in html.lower() or "filter" in html.lower()

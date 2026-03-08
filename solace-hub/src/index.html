@@ -1169,6 +1169,10 @@
     <!-- ── Task 027: App Launcher ── -->
     <div class="card" id="app-launcher-panel">
       <h2>App Launcher <span id="app-count-badge" style="font-size:12px;color:var(--text-muted);font-weight:400;"></span></h2>
+      <!-- Tag filter (Task 042) -->
+      <div id="app-tag-filter" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+        <button class="tag-pill active" data-tag="all" onclick="filterAppsByTag('all',this)" style="padding:2px 8px;border-radius:12px;border:1px solid var(--border);background:var(--accent);color:#fff;font-size:11px;cursor:pointer;">All</button>
+      </div>
       <div id="app-launcher-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;"></div>
     </div>
 
@@ -2702,6 +2706,39 @@
     }
     refreshWatchdog();
     setInterval(refreshWatchdog, 30_000);
+
+    // App tag filter (Task 042)
+    let _activeAppTag = 'all';
+    async function loadAppTags() {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/apps/tags', { signal: AbortSignal.timeout(2000) });
+        if (!r.ok) return;
+        const d = await r.json();
+        const bar = document.getElementById('app-tag-filter');
+        if (!bar || !d.tags || d.tags.length === 0) return;
+        d.tags.forEach(tag => {
+          const btn = document.createElement('button');
+          btn.className = 'tag-pill';
+          btn.dataset.tag = tag;
+          btn.textContent = tag;
+          btn.onclick = () => filterAppsByTag(tag, btn);
+          btn.style.cssText = 'padding:2px 8px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text-primary);font-size:11px;cursor:pointer;';
+          bar.appendChild(btn);
+        });
+      } catch (_) {}
+    }
+    function filterAppsByTag(tag, btn) {
+      _activeAppTag = tag;
+      document.querySelectorAll('.tag-pill').forEach(p => {
+        p.style.background = p.dataset.tag === tag ? 'var(--accent)' : 'var(--bg)';
+        p.style.color = p.dataset.tag === tag ? '#fff' : 'var(--text-primary)';
+      });
+      document.querySelectorAll('.app-tile').forEach(tile => {
+        const tileTag = tile.dataset.tag || '';
+        tile.style.display = (tag === 'all' || tileTag.startsWith(tag)) ? '' : 'none';
+      });
+    }
+    loadAppTags();
 
     // Connection health / latency monitor (Task 041)
     const _latencyHistory = [];
