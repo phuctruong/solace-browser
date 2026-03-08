@@ -227,6 +227,113 @@
       line-height: 1.6;
     }
 
+    /* ── OAuth3 token table ── */
+    .token-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .token-table th {
+      text-align: left;
+      padding: 6px 8px;
+      color: var(--text-muted);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .token-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .token-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .scope-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--border);
+      font-size: 10px;
+      margin-right: 3px;
+      color: var(--text-primary);
+    }
+
+    .status-active  { color: var(--green); font-weight: 600; }
+    .status-expired { color: var(--text-muted); }
+    .status-revoked { color: var(--red); font-weight: 600; }
+
+    .btn-danger {
+      background: var(--red);
+      color: #fff;
+      padding: 4px 10px;
+      font-size: 11px;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      filter: brightness(0.88);
+    }
+
+    .btn-extend {
+      background: var(--border);
+      color: var(--text-primary);
+      padding: 4px 10px;
+      font-size: 11px;
+    }
+
+    .btn-extend:hover:not(:disabled) {
+      filter: brightness(0.92);
+    }
+
+    /* ── Register form ── */
+    details summary {
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--accent);
+      margin-top: 12px;
+      user-select: none;
+    }
+
+    details[open] summary {
+      margin-bottom: 10px;
+    }
+
+    .register-form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .register-form input,
+    .register-form select {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 12px;
+    }
+
+    .register-form .scope-checks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .register-form .scope-checks label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
     /* ── Footer ── */
     footer {
       padding: 10px 20px;
@@ -326,6 +433,42 @@
     <div class="card">
       <h2>Evidence Log (last 10 events)</h2>
       <div class="evidence-log" id="evidence-log">Loading…</div>
+    </div>
+
+    <!-- OAuth3 Token Management -->
+    <div class="card" id="oauth3-panel">
+      <h2>OAuth3 Tokens</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+        Manage AI delegation tokens — revoke access anytime.
+      </p>
+      <div id="oauth3-token-list">Loading tokens…</div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn-secondary" onclick="refreshOAuth3Tokens()">Refresh</button>
+      </div>
+      <details>
+        <summary>Register New Token</summary>
+        <form class="register-form" id="oauth3-register-form" onsubmit="registerOAuth3Token(event)">
+          <input type="text" id="oauth3-agent-name" placeholder="Agent name (e.g. Cursor IDE)" maxlength="128" required />
+          <select id="oauth3-expiry">
+            <option value="3600">1 hour</option>
+            <option value="86400" selected>24 hours</option>
+            <option value="604800">7 days</option>
+            <option value="2592000">30 days</option>
+          </select>
+          <div class="scope-checks" id="oauth3-scopes">
+            <label><input type="checkbox" value="browse" checked /> browse</label>
+            <label><input type="checkbox" value="run_recipe" /> run_recipe</label>
+            <label><input type="checkbox" value="read_evidence" /> read_evidence</label>
+            <label><input type="checkbox" value="create_schedule" /> create_schedule</label>
+            <label><input type="checkbox" value="write_evidence" /> write_evidence</label>
+            <label><input type="checkbox" value="delete_schedule" /> delete_schedule</label>
+            <label><input type="checkbox" value="cli_run" /> cli_run</label>
+            <label><input type="checkbox" value="detect_apps" /> detect_apps</label>
+          </div>
+          <button type="submit" class="btn-primary">Register Token</button>
+          <div id="oauth3-register-status" style="font-size:11px;color:var(--text-muted);"></div>
+        </form>
+      </details>
     </div>
 
   </main>
@@ -525,12 +668,164 @@
       return div.innerHTML;
     }
 
+    // ── OAuth3 Token Management ───────────────────────────────────────────────
+
+    function _getSessionToken() {
+      // Retrieve Bearer token from Tauri keychain via cmd_token_is_present pattern.
+      // Returns empty string when running outside binary (dev mode).
+      return window._solaceToken || "";
+    }
+
+    function _tokenStatus(token) {
+      if (token.revoked) return { label: "Revoked", cls: "status-revoked" };
+      const now = Math.floor(Date.now() / 1000);
+      if (token.expires_at && token.expires_at < now) return { label: "Expired", cls: "status-expired" };
+      return { label: "Active", cls: "status-active" };
+    }
+
+    function _formatExpiry(ts) {
+      if (!ts) return "—";
+      const d = new Date(ts * 1000);
+      return d.toLocaleString();
+    }
+
+    async function refreshOAuth3Tokens() {
+      const container = document.getElementById("oauth3-token-list");
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/oauth3/tokens", {
+          signal: AbortSignal.timeout(5000)
+        });
+        if (!resp.ok) {
+          container.textContent = "Could not load tokens (HTTP " + resp.status + ")";
+          return;
+        }
+        const data = await resp.json();
+        const tokens = data.tokens || [];
+        if (tokens.length === 0) {
+          container.innerHTML = '<p style="font-size:12px;color:var(--text-muted);">No tokens registered.</p>';
+          return;
+        }
+        let rows = tokens.map(t => {
+          const id = t.id || t.token_id || "";
+          const name = escapeHtml(t.agent_name || t.service || id.slice(0, 8));
+          const scopes = (t.scopes || (t.scope ? [t.scope] : [])).map(s =>
+            '<span class="scope-badge">' + escapeHtml(s) + "</span>"
+          ).join("");
+          const status = _tokenStatus(t);
+          const expiry = _formatExpiry(t.expires_at || t.expires);
+          const canExtend = !t.revoked;
+          return '<tr>' +
+            '<td>' + name + '</td>' +
+            '<td>' + scopes + '</td>' +
+            '<td>' + expiry + '</td>' +
+            '<td><span class="' + status.cls + '">' + status.label + '</span></td>' +
+            '<td>' +
+              (canExtend ? '<button class="btn-extend" onclick="extendToken(' + JSON.stringify(id) + ')">Extend 24h</button> ' : '') +
+              '<button class="btn-danger" onclick="revokeToken(' + JSON.stringify(id) + ')">Revoke</button>' +
+            '</td>' +
+            '</tr>';
+        }).join("");
+        container.innerHTML = '<table class="token-table">' +
+          '<thead><tr><th>Agent</th><th>Scopes</th><th>Expires</th><th>Status</th><th>Actions</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody></table>';
+      } catch (err) {
+        container.textContent = "Error: " + err.message;
+      }
+    }
+
+    async function revokeToken(tokenId) {
+      if (!confirm("Revoke this token? The agent will lose access immediately.")) return;
+      const bearerToken = _getSessionToken();
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/oauth3/tokens/" + encodeURIComponent(tokenId), {
+          method: "DELETE",
+          headers: bearerToken ? { "Authorization": "Bearer " + bearerToken } : {},
+          signal: AbortSignal.timeout(5000)
+        });
+        if (resp.ok) {
+          await refreshOAuth3Tokens();
+        } else {
+          const err = await resp.json();
+          alert("Revoke failed: " + (err.error || resp.status));
+        }
+      } catch (err) {
+        alert("Revoke error: " + err.message);
+      }
+    }
+
+    async function extendToken(tokenId) {
+      const bearerToken = _getSessionToken();
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/oauth3/tokens/" + encodeURIComponent(tokenId) + "/extend", {
+          method: "POST",
+          headers: Object.assign(
+            { "Content-Type": "application/json" },
+            bearerToken ? { "Authorization": "Bearer " + bearerToken } : {}
+          ),
+          body: JSON.stringify({ seconds: 86400 }),
+          signal: AbortSignal.timeout(5000)
+        });
+        if (resp.ok) {
+          await refreshOAuth3Tokens();
+        } else {
+          const err = await resp.json();
+          alert("Extend failed: " + (err.error || resp.status));
+        }
+      } catch (err) {
+        alert("Extend error: " + err.message);
+      }
+    }
+
+    async function registerOAuth3Token(event) {
+      event.preventDefault();
+      const statusEl = document.getElementById("oauth3-register-status");
+      const agentName = document.getElementById("oauth3-agent-name").value.trim();
+      const expirySeconds = parseInt(document.getElementById("oauth3-expiry").value, 10);
+      const checkboxes = document.querySelectorAll('#oauth3-scopes input[type="checkbox"]:checked');
+      const scopes = Array.from(checkboxes).map(cb => cb.value);
+      if (!agentName) {
+        statusEl.textContent = "Agent name is required.";
+        return;
+      }
+      if (scopes.length === 0) {
+        statusEl.textContent = "Select at least one scope.";
+        return;
+      }
+      const expiresAt = Math.floor(Date.now() / 1000) + expirySeconds;
+      const bearerToken = _getSessionToken();
+      statusEl.textContent = "Registering…";
+      try {
+        const resp = await fetch("http://localhost:8888/api/v1/oauth3/tokens", {
+          method: "POST",
+          headers: Object.assign(
+            { "Content-Type": "application/json" },
+            bearerToken ? { "Authorization": "Bearer " + bearerToken } : {}
+          ),
+          body: JSON.stringify({ agent_name: agentName, scopes: scopes, expires_at: expiresAt }),
+          signal: AbortSignal.timeout(5000)
+        });
+        if (resp.ok) {
+          statusEl.textContent = "Token registered.";
+          document.getElementById("oauth3-agent-name").value = "";
+          await refreshOAuth3Tokens();
+        } else {
+          const err = await resp.json();
+          statusEl.textContent = "Error: " + (err.error || resp.status);
+        }
+      } catch (err) {
+        statusEl.textContent = "Error: " + err.message;
+      }
+    }
+
     // ── Boot ──────────────────────────────────────────────────────────────────
     refreshStatus();
     refreshOnboarding();
+    refreshOAuth3Tokens();
     // Poll every 10 seconds
     setInterval(refreshStatus, 10_000);
     setInterval(refreshOnboarding, 10_000);
+    // OAuth3 tokens poll every 30 seconds
+    setInterval(refreshOAuth3Tokens, 30_000);
   </script>
 
 </body>

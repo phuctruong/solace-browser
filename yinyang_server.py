@@ -22,6 +22,9 @@ Route table:
   POST /api/v1/browser/schedules       → create schedule
   DELETE /api/v1/browser/schedules/{id} → delete schedule
   GET  /api/v1/oauth3/tokens           → list token metadata (never plaintext)
+  GET  /api/v1/oauth3/tokens/{id}     → single token detail
+  POST /api/v1/oauth3/tokens/{id}/extend → extend expiry (max 30 days)
+  GET  /api/v1/oauth3/audit           → audit log entries
   DELETE /api/v1/oauth3/tokens/{id}    → revoke token
   GET  /api/v1/cli/available           → {"available": bool, "version": str|null}
   POST /api/v1/cli/run                 → {"command": str} → {"exit_code": int, "stdout": str, "stderr": str}
@@ -63,6 +66,10 @@ _SESSION_TOKEN_SHA256: str = ""
 _SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
 _CRON_RE = re.compile(r"^\S+\s+\S+\s+\S+\s+\S+\s+\S+$")
 _ONBOARDING_MODES = frozenset(["agent", "byok", "paid", "cli"])
+ALLOWED_SCOPES = frozenset([
+    "browse", "run_recipe", "read_evidence", "write_evidence",
+    "create_schedule", "delete_schedule", "cli_run", "detect_apps"
+])
 _CLI_ALLOWLIST = frozenset([
     "hub status",
     "hub start",
@@ -255,11 +262,12 @@ def register_oauth3_token(scope: str, service: str, token_sha256_val: str) -> di
 
 
 def revoke_oauth3_token(token_id: str) -> bool:
-    """Mark token as revoked. Returns True if found."""
+    """Mark token as revoked. Returns True if found.
+    Handles both legacy ('id') and new ('token_id') schema fields."""
     with _TOKENS_LOCK:
         tokens = load_oauth3_tokens()
         for t in tokens:
-            if t.get("id") == token_id:
+            if t.get("id") == token_id or t.get("token_id") == token_id:
                 t["revoked"] = True
                 t["revoked_ts"] = int(time.time())
                 save_oauth3_tokens(tokens)
@@ -329,6 +337,11 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_schedules_list()
         elif path == "/api/v1/oauth3/tokens":
             self._handle_oauth3_list()
+        elif path.startswith("/api/v1/oauth3/tokens/") and path.count("/") == 5:
+            token_id = path.split("/")[-1]
+            self._handle_oauth3_token_detail(token_id)
+        elif path == "/api/v1/oauth3/audit":
+            self._handle_oauth3_audit()
         elif path == "/api/v1/cli/available":
             self._handle_cli_available()
         elif path == "/onboarding":
@@ -349,6 +362,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_schedule_create()
         elif path == "/api/v1/oauth3/tokens":
             self._handle_oauth3_register()
+        elif re.match(r"^/api/v1/oauth3/tokens/[^/]+/extend$", path):
+            token_id = path.split("/")[-2]
+            self._handle_oauth3_extend(token_id)
         elif path == "/api/v1/cli/run":
             self._handle_cli_run()
         elif path == "/onboarding/complete":
@@ -521,6 +537,42 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         payload = self._read_json_body()
         if payload is None:
             return
+
+        # New schema: agent_name + scopes + expires_at (Task 010 — OAuth3 dashboard)
+        if "agent_name" in payload or "scopes" in payload or "expires_at" in payload:
+            agent_name = payload.get("agent_name", "")
+            if not isinstance(agent_name, str) or not agent_name:
+                self._send_json({"error": "missing 'agent_name'"}, 400)
+                return
+            agent_name = agent_name[:128]
+            scopes = payload.get("scopes", [])
+            if not isinstance(scopes, list):
+                self._send_json({"error": "scopes must be a list"}, 400)
+                return
+            invalid = [s for s in scopes if s not in ALLOWED_SCOPES]
+            if invalid:
+                self._send_json({"error": f"invalid scopes: {invalid}", "allowed": sorted(ALLOWED_SCOPES)}, 400)
+                return
+            expires_at = payload.get("expires_at", int(time.time()) + 86400)
+            if not isinstance(expires_at, int) or expires_at <= int(time.time()):
+                self._send_json({"error": "expires_at must be in the future"}, 400)
+                return
+            with _TOKENS_LOCK:
+                tokens = load_oauth3_tokens()
+                record = {
+                    "token_id": str(uuid.uuid4()),
+                    "agent_name": agent_name,
+                    "scopes": scopes,
+                    "expires_at": expires_at,
+                    "created_at": int(time.time()),
+                    "revoked": False,
+                }
+                tokens.append(record)
+                save_oauth3_tokens(tokens)
+            self._send_json(record, 200)
+            return
+
+        # Legacy schema: scope + service + token_sha256
         scope = payload.get("scope")
         service = payload.get("service")
         token_sha256_val = payload.get("token_sha256")
@@ -557,6 +609,64 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._send_json({"revoked": token_id})
         else:
             self._send_json({"error": "token not found"}, 404)
+
+    def _handle_oauth3_token_detail(self, token_id: str) -> None:
+        """GET /api/v1/oauth3/tokens/{token_id} — return single token metadata."""
+        tokens = self._load_oauth3_tokens()
+        for t in tokens:
+            if t.get("token_id") == token_id or t.get("id") == token_id:
+                safe = {k: v for k, v in t.items() if k != "token_sha256"}
+                self._send_json(safe)
+                return
+        self._send_json({"error": "token not found"}, 404)
+
+    def _handle_oauth3_audit(self) -> None:
+        """GET /api/v1/oauth3/audit — return recent audit log entries."""
+        audit_path = Path.home() / ".solace" / "oauth3_audit.json"
+        if not audit_path.exists():
+            self._send_json({"entries": []})
+            return
+        try:
+            entries = json.loads(audit_path.read_text())
+        except json.JSONDecodeError:
+            entries = []
+        self._send_json({"entries": entries})
+
+    def _handle_oauth3_extend(self, token_id: str) -> None:
+        """POST /api/v1/oauth3/tokens/{token_id}/extend — extend expiry by N seconds."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        seconds = body.get("seconds")
+        if not isinstance(seconds, int) or seconds <= 0:
+            self._send_json({"error": "seconds must be positive integer"}, 400)
+            return
+        MAX_EXTENSION = 2592000  # 30 days
+        if seconds > MAX_EXTENSION:
+            self._send_json({"error": f"max extension is {MAX_EXTENSION} seconds (30 days)"}, 400)
+            return
+        with _TOKENS_LOCK:
+            tokens = self._load_oauth3_tokens()
+            for t in tokens:
+                if t.get("token_id") == token_id or t.get("id") == token_id:
+                    if t.get("revoked", False):
+                        self._send_json({"error": "cannot extend revoked token"}, 400)
+                        return
+                    t["expires_at"] = int(time.time()) + seconds
+                    self._save_oauth3_tokens(tokens)
+                    self._send_json({"status": "extended", "expires_at": t["expires_at"]})
+                    return
+        self._send_json({"error": "token not found"}, 404)
+
+    def _load_oauth3_tokens(self) -> list:
+        """Instance-level loader so handlers can call self._load_oauth3_tokens()."""
+        return load_oauth3_tokens()
+
+    def _save_oauth3_tokens(self, tokens: list) -> None:
+        """Instance-level saver so handlers can call self._save_oauth3_tokens()."""
+        save_oauth3_tokens(tokens)
 
     def _handle_detect(self) -> None:
         if not self._check_auth():

@@ -216,3 +216,47 @@ class TestOnboardingGate:
         """Source must route to /start when onboarding is complete"""
         source = main_rs_source()
         assert "/start" in source
+
+
+# ── Task 010: OAuth3 Token Management Dashboard ─────────────────────────────
+
+class TestOAuth3Dashboard:
+    def test_index_html_oauth3_section(self):
+        """index.html must contain OAuth3 Tokens section."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "oauth3" in html.lower() or "OAuth3" in html
+
+    def test_index_html_revoke_button(self):
+        """index.html must contain revoke functionality."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "revoke" in html.lower() or "Revoke" in html
+
+    def test_index_html_register_form(self):
+        """index.html must have register new token form."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "register" in html.lower() or "Register" in html
+
+    def test_index_html_oauth3_panel_id(self):
+        """index.html must have oauth3-panel element."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert 'id="oauth3-panel"' in html
+
+    def test_index_html_extend_function(self):
+        """index.html must have extendToken JS function."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "extendToken" in html
+
+    def test_index_html_refresh_oauth3_function(self):
+        """index.html must have refreshOAuth3Tokens JS function."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "refreshOAuth3Tokens" in html
+
+    def test_index_html_no_port_9222(self):
+        """index.html must not reference the forbidden debug port."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert FORBIDDEN_DEBUG_PORT not in html
+
+    def test_index_html_no_companion_app(self):
+        """index.html must not reference the legacy hub name."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert LEGACY_HUB_NAME not in html

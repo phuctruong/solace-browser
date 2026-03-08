@@ -946,3 +946,188 @@ class TestOnboardingEndpoints:
                 assert forbidden not in data, f"Forbidden field '{forbidden}' in onboarding.json"
         except FileNotFoundError:
             pass  # file may not exist in test isolation
+
+
+# ---------------------------------------------------------------------------
+# Task 010: OAuth3 Token Management Dashboard
+# ---------------------------------------------------------------------------
+def _get_auth(path: str) -> tuple[int, dict]:
+    """GET request to auth server, return (status, body)."""
+    try:
+        with urllib.request.urlopen(f"{AUTH_BASE}{path}", timeout=5) as resp:
+            return resp.status, json.loads(resp.read().decode())
+    except urllib.error.URLError as exc:
+        assert hasattr(exc, "code"), f"Expected HTTP error, got: {exc}"
+        assert hasattr(exc, "read"), f"Expected readable HTTP error, got: {exc}"
+        return exc.code, json.loads(exc.read().decode())
+
+
+class TestOAuth3Management:
+    def test_oauth3_token_detail_not_found(self, auth_server):
+        """GET /api/v1/oauth3/tokens/{nonexistent} → 404."""
+        status, data = _get_auth("/api/v1/oauth3/tokens/nonexistent-id-xyz")
+        assert status == 404
+        assert "error" in data
+
+    def test_oauth3_extend_max_days(self, auth_server):
+        """Extend by >30 days → 400."""
+        # First register a token with new schema
+        reg_status, reg_data = _post_with_auth(
+            "/api/v1/oauth3/tokens",
+            {
+                "agent_name": "Test Agent",
+                "scopes": ["browse"],
+                "expires_at": int(time.time()) + 3600,
+            },
+            VALID_TOKEN,
+        )
+        assert reg_status == 200, f"Register failed: {reg_data}"
+        token_id = reg_data.get("token_id", "")
+        assert token_id, f"token_id missing in response: {reg_data}"
+        # Try extending beyond 30 days
+        status, data = _post_with_auth(
+            f"/api/v1/oauth3/tokens/{token_id}/extend",
+            {"seconds": 2592001},  # > 30 days
+            VALID_TOKEN,
+        )
+        assert status == 400
+        assert "max" in data.get("error", "").lower()
+
+    def test_oauth3_scope_validation(self, auth_server):
+        """Register with invalid scope → 400."""
+        status, data = _post_with_auth(
+            "/api/v1/oauth3/tokens",
+            {
+                "agent_name": "Bad Agent",
+                "scopes": ["invalid_scope_xyz"],
+                "expires_at": int(time.time()) + 3600,
+            },
+            VALID_TOKEN,
+        )
+        assert status == 400
+        assert "invalid" in data.get("error", "").lower()
+
+    def test_oauth3_audit_list(self, auth_server):
+        """GET /api/v1/oauth3/audit → 200 with entries list."""
+        status, data = _get_auth("/api/v1/oauth3/audit")
+        assert status == 200
+        assert "entries" in data
+        assert isinstance(data["entries"], list)
+
+    def test_oauth3_extend_not_found(self, auth_server):
+        """Extend nonexistent token → 404."""
+        status, data = _post_with_auth(
+            "/api/v1/oauth3/tokens/nonexistent/extend",
+            {"seconds": 3600},
+            VALID_TOKEN,
+        )
+        assert status == 404
+
+    def test_oauth3_extend_requires_auth(self, auth_server):
+        """POST extend without auth → 401."""
+        status, data = _post_no_auth(
+            "/api/v1/oauth3/tokens/some-id/extend",
+            {"seconds": 3600},
+        )
+        assert status == 401
+
+    def test_oauth3_scope_allowlist_only(self, auth_server):
+        """Valid scopes from ALLOWED_SCOPES accepted → 200."""
+        status, data = _post_with_auth(
+            "/api/v1/oauth3/tokens",
+            {
+                "agent_name": "Valid Agent",
+                "scopes": ["browse", "run_recipe"],
+                "expires_at": int(time.time()) + 3600,
+            },
+            VALID_TOKEN,
+        )
+        assert status == 200
+
+    def test_oauth3_expires_at_past(self, auth_server):
+        """Token with expires_at in the past → 400."""
+        status, data = _post_with_auth(
+            "/api/v1/oauth3/tokens",
+            {
+                "agent_name": "Expired Agent",
+                "scopes": ["browse"],
+                "expires_at": int(time.time()) - 1,
+            },
+            VALID_TOKEN,
+        )
+        assert status == 400
+
+    def test_oauth3_token_detail_found(self, auth_server):
+        """After registering, GET /api/v1/oauth3/tokens/{id} → 200 with token fields."""
+        reg_status, reg_data = _post_with_auth(
+            "/api/v1/oauth3/tokens",
+            {
+                "agent_name": "Detail Agent",
+                "scopes": ["browse"],
+                "expires_at": int(time.time()) + 3600,
+            },
+            VALID_TOKEN,
+        )
+        assert reg_status == 200
+        token_id = reg_data.get("token_id", "")
+        assert token_id
+        status, data = _get_auth(f"/api/v1/oauth3/tokens/{token_id}")
+        assert status == 200
+        assert data.get("token_id") == token_id
+        assert "token_sha256" not in data
+
+    def test_oauth3_extend_token(self, auth_server):
+        """POST extend with valid seconds → 200 with updated expires_at."""
+        reg_status, reg_data = _post_with_auth(
+            "/api/v1/oauth3/tokens",
+            {
+                "agent_name": "Extend Agent",
+                "scopes": ["browse"],
+                "expires_at": int(time.time()) + 3600,
+            },
+            VALID_TOKEN,
+        )
+        assert reg_status == 200
+        token_id = reg_data.get("token_id", "")
+        assert token_id
+        status, data = _post_with_auth(
+            f"/api/v1/oauth3/tokens/{token_id}/extend",
+            {"seconds": 3600},
+            VALID_TOKEN,
+        )
+        assert status == 200
+        assert data.get("status") == "extended"
+        assert "expires_at" in data
+
+    def test_oauth3_revoked_cannot_extend(self, auth_server):
+        """Revoke a token then try extend → 400."""
+        reg_status, reg_data = _post_with_auth(
+            "/api/v1/oauth3/tokens",
+            {
+                "agent_name": "Revoke Then Extend",
+                "scopes": ["browse"],
+                "expires_at": int(time.time()) + 3600,
+            },
+            VALID_TOKEN,
+        )
+        assert reg_status == 200
+        token_id = reg_data.get("token_id", "")
+        # Revoke it
+        rev_req = urllib.request.Request(
+            f"{AUTH_BASE}/api/v1/oauth3/tokens/{token_id}",
+            headers={"Authorization": f"Bearer {VALID_TOKEN}"},
+            method="DELETE",
+        )
+        try:
+            with urllib.request.urlopen(rev_req, timeout=5) as resp:
+                pass
+        except urllib.error.URLError:
+            pass
+        # Now try to extend
+        status, data = _post_with_auth(
+            f"/api/v1/oauth3/tokens/{token_id}/extend",
+            {"seconds": 3600},
+            VALID_TOKEN,
+        )
+        assert status == 400
+        assert "revoked" in data.get("error", "").lower()
