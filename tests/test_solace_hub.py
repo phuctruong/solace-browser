@@ -986,3 +986,15 @@ class TestAppSearchByCategoryUI:
         """index.html must show app filter UI."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "tag" in html.lower() or "filter" in html.lower() or "categor" in html.lower()
+
+
+# ── Task 052: Health History ──────────────────────────────────────────────────
+
+class TestHealthHistoryUI:
+    def test_health_history_in_server(self):
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/health/history" in server
+
+    def test_health_in_html(self):
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "health" in html.lower() or "status" in html.lower()

@@ -2661,3 +2661,13 @@ class TestAppSearchByCategory:
         assert status == 200
         assert "apps" in data
         assert data["total"] >= 0
+
+
+# ── Task 052: Health History ──────────────────────────────────────────────────
+
+class TestHealthHistory:
+    def test_health_history(self, auth_server):
+        status, data = _get_json_auth("/api/v1/health/history")
+        assert status == 200
+        assert "history" in data
+        assert isinstance(data["history"], list)

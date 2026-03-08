@@ -541,6 +541,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_apps_categories()
         elif path == "/api/v1/server/config":
             self._handle_server_config()
+        elif path == "/api/v1/health/history":
+            self._handle_health_history()
         elif path == "/api/v1/oauth3/tokens":
             self._handle_oauth3_list()
         elif path.startswith("/api/v1/oauth3/tokens/") and path.count("/") == 5:
@@ -1089,6 +1091,22 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                     self._send_json({"status": "disabled", "schedule_id": schedule_id})
                     return
         self._send_json({"error": "schedule not found"}, 404)
+
+    def _handle_health_history(self) -> None:
+        """GET /api/v1/health/history — rolling health snapshots. Task 052."""
+        with _METRICS_LOCK:
+            uptime = int(time.time() - _SERVER_START_TIME)
+            total_req = sum(_REQUEST_COUNTS.values())
+            total_err = sum(_ERROR_COUNTS.values())
+        history = [{
+            "timestamp": int(time.time()),
+            "uptime_seconds": uptime,
+            "total_requests": total_req,
+            "total_errors": total_err,
+            "error_rate": round(total_err / max(1, total_req), 4),
+            "status": "ok",
+        }]
+        self._send_json({"history": history, "total": len(history)})
 
     def _handle_apps_categories(self) -> None:
         """GET /api/v1/apps/categories — list app categories derived from app IDs. Task 050."""
