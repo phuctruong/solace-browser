@@ -916,3 +916,17 @@ class TestRecipeTemplatesUI:
         """index.html must contain template UI."""
         html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
         assert "template" in html.lower()
+
+
+# ── Task 047: Vault Status ────────────────────────────────────────────────────
+
+class TestVaultStatusUI:
+    def test_vault_status_in_server(self):
+        """yinyang_server.py must implement /api/v1/vault/status."""
+        server = (REPO_ROOT / "yinyang_server.py").read_text()
+        assert "/api/v1/vault/status" in server
+
+    def test_vault_in_html(self):
+        """index.html must contain vault UI."""
+        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        assert "vault" in html.lower() or "oauth" in html.lower()

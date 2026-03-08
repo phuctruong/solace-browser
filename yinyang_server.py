@@ -533,6 +533,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_schedules_next_runs()
         elif path == "/api/v1/browser/schedules":
             self._handle_schedules_list()
+        elif path == "/api/v1/vault/status":
+            self._handle_vault_status()
         elif path == "/api/v1/oauth3/tokens":
             self._handle_oauth3_list()
         elif path.startswith("/api/v1/oauth3/tokens/") and path.count("/") == 5:
@@ -1081,6 +1083,33 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                     self._send_json({"status": "disabled", "schedule_id": schedule_id})
                     return
         self._send_json({"error": "schedule not found"}, 404)
+
+    def _handle_vault_status(self) -> None:
+        """GET /api/v1/vault/status — vault health summary. Task 047."""
+        now = int(time.time())
+        token_count = 0
+        expiring_soon = 0
+        expired = 0
+        if OAUTH3_TOKENS_PATH.exists():
+            try:
+                tokens = json.loads(OAUTH3_TOKENS_PATH.read_text())
+                if isinstance(tokens, list):
+                    token_count = len(tokens)
+                    for tok in tokens:
+                        exp = tok.get("expires_at", 0)
+                        if exp and exp < now:
+                            expired += 1
+                        elif exp and exp < now + 86400:
+                            expiring_soon += 1
+            except (json.JSONDecodeError, OSError):
+                pass
+        self._send_json({
+            "status": "ok",
+            "token_count": token_count,
+            "expiring_soon": expiring_soon,
+            "expired": expired,
+            "healthy": expired == 0,
+        })
 
     def _handle_oauth3_list(self) -> None:
         tokens = load_oauth3_tokens()

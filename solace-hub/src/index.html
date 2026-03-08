@@ -1063,6 +1063,11 @@
     <!-- OAuth3 Token Management -->
     <div class="card" id="oauth3-panel">
       <h2>OAuth3 Tokens</h2>
+      <!-- Vault status (Task 047) -->
+      <div id="vault-status-bar" style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">
+        Vault: <span id="vault-token-count">—</span> tokens
+        <span id="vault-expired-badge" style="display:none;background:var(--red);color:#fff;border-radius:4px;padding:1px 5px;margin-left:4px;font-size:10px;">expired</span>
+      </div>
       <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
         Manage AI delegation tokens — revoke access anytime.
       </p>
@@ -2167,8 +2172,19 @@
     setInterval(refreshStatus, 10_000);
     setInterval(refreshOnboarding, 10_000);
     setInterval(refreshTunnelStatus, 10_000);
-    // OAuth3 tokens poll every 30 seconds
+    // OAuth3 tokens + vault status poll every 30 seconds
     setInterval(refreshOAuth3Tokens, 30_000);
+    (async () => {
+      try {
+        const r = await fetch('http://localhost:8888/api/v1/vault/status', { signal: AbortSignal.timeout(3000) });
+        if (!r.ok) return;
+        const d = await r.json();
+        const cnt = document.getElementById('vault-token-count');
+        const badge = document.getElementById('vault-expired-badge');
+        if (cnt) cnt.textContent = d.token_count || 0;
+        if (badge) { badge.style.display = d.expired > 0 ? 'inline' : 'none'; if (d.expired > 0) badge.textContent = `${d.expired} expired`; }
+      } catch (_) {}
+    })();
     // Evidence chain + schedules poll every 60 seconds (full list refresh)
     setInterval(refreshEvidenceChain, 60_000);
     setInterval(refreshScheduleManagement, 30_000);

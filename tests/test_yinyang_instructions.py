@@ -2603,3 +2603,14 @@ class TestRecipeTemplates:
         assert "templates" in data
         assert data["total"] >= 3
         assert all("id" in t and "name" in t for t in data["templates"])
+
+
+# ── Task 047: Vault Status ────────────────────────────────────────────────────
+
+class TestVaultStatus:
+    def test_vault_status(self, auth_server):
+        status, data = _get_json_auth("/api/v1/vault/status")
+        assert status == 200
+        assert data["status"] == "ok"
+        assert "token_count" in data
+        assert "healthy" in data
