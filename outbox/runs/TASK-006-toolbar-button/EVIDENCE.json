@@ -1,0 +1,11 @@
+{
+  "task_id": "TASK-006-toolbar-button",
+  "status": "green",
+  "kill_checks": {
+    "port_\u0039\u0032\u0032\u0032": true,
+    "companion_app": true,
+    "kYinyang_in_toolbar": true,
+    "gn_gen": true
+  },
+  "rung": 641
+}
