@@ -1,0 +1,90 @@
+:root {
+  --hub-bg: #1a1a2e;
+  --hub-surface: #16213e;
+  --hub-border: #0f3460;
+  --hub-text: #e2e8f0;
+  --hub-text-muted: #94a3b8;
+  --hub-primary: #3b82f6;
+  --hub-success: #22c55e;
+  --hub-warning: #f59e0b;
+  --hub-error: #ef4444;
+  --hub-radius: 8px;
+  --hub-spacing: 1rem;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+  padding: var(--hub-spacing);
+}
+
+.page-header { margin-bottom: var(--hub-spacing); }
+.page-header h1 { font-size: 1.5rem; }
+.page-subtitle { color: var(--hub-text-muted); font-size: 0.875rem; }
+
+.card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: var(--hub-spacing);
+  margin-bottom: var(--hub-spacing);
+}
+
+.card h2 { font-size: 1rem; margin-bottom: 0.75rem; }
+
+.alert-form label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; }
+.alert-form select,
+.alert-form input {
+  display: block;
+  width: 100%;
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  color: var(--hub-text);
+  padding: 0.375rem 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.rules-list,
+.triggered-list { list-style: none; }
+
+.rule-item,
+.triggered-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--hub-border);
+  font-size: 0.875rem;
+}
+
+.rule-metric { font-weight: 600; color: var(--hub-primary); }
+.rule-threshold { color: var(--hub-warning); }
+.rule-action { color: var(--hub-success); }
+.acked { color: var(--hub-success); font-size: 0.75rem; }
+.empty { color: var(--hub-text-muted); padding: 0.5rem; font-size: 0.875rem; }
+
+.btn {
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--hub-radius);
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+.btn-primary { background: var(--hub-primary); color: #fff; }
+.btn-danger { background: var(--hub-error); color: #fff; }
+.btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+.btn-ack { background: var(--hub-success); color: #fff; }
+
+.status-banner {
+  background: var(--hub-success);
+  color: #fff;
+  padding: 0.5rem var(--hub-spacing);
+  border-radius: var(--hub-radius);
+  margin-bottom: var(--hub-spacing);
+}
+.banner-error { background: var(--hub-error); }
+.hidden { display: none; }

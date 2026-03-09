@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookmarks — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/bookmarks.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Bookmarks</h1>
+    <span class="page-subtitle">Save and organize your favorite URLs</span>
+  </div>
+  <div id="status-banner" class="status-banner hidden"></div>
+  <div class="card">
+    <h2>Add Bookmark</h2>
+    <form id="add-bookmark-form">
+      <input type="text" id="bm-title" placeholder="Title" required>
+      <input type="url" id="bm-url" placeholder="URL" required>
+      <input type="text" id="bm-tags" placeholder="Tags (comma-separated)">
+      <button type="submit" class="btn btn-primary">Save Bookmark</button>
+    </form>
+  </div>
+  <div class="card">
+    <h2>My Bookmarks</h2>
+    <input type="text" id="search-input" placeholder="Search bookmarks...">
+    <table id="bookmarks-table">
+      <thead><tr><th>Title</th><th>URL</th><th>Tags</th><th>Actions</th></tr></thead>
+      <tbody id="bookmarks-body"></tbody>
+    </table>
+  </div>
+  <script src="/web/js/bookmarks.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notification Settings — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/notification-settings.css">
+</head>
+<body>
+<div class="ns-container">
+  <h1 class="ns-title">Notification Settings</h1>
+  <p class="ns-subtitle">Control what you hear — zero noise, zero missed alerts</p>
+
+  <section class="ns-section">
+    <h2 class="ns-section-title">Channels</h2>
+    <div id="channels-list" class="ns-channels"></div>
+  </section>
+
+  <section class="ns-section">
+    <h2 class="ns-section-title">Minimum Severity</h2>
+    <select id="min-severity" class="ns-select">
+      <option value="info">Info (all notifications)</option>
+      <option value="warning">Warning and above</option>
+      <option value="error">Error and above</option>
+      <option value="critical">Critical only</option>
+    </select>
+  </section>
+
+  <section class="ns-section">
+    <h2 class="ns-section-title">Quiet Hours</h2>
+    <label class="ns-toggle-label">
+      <input type="checkbox" id="quiet-enabled" class="ns-toggle">
+      <span>Enable quiet hours</span>
+    </label>
+    <div id="quiet-hours-config" class="ns-quiet-config">
+      <div class="ns-time-row">
+        <label for="quiet-start">From</label>
+        <input type="time" id="quiet-start" class="ns-time-input" value="22:00">
+        <label for="quiet-end">To</label>
+        <input type="time" id="quiet-end" class="ns-time-input" value="08:00">
+      </div>
+      <div class="ns-tz-row">
+        <label for="quiet-tz">Timezone</label>
+        <input type="text" id="quiet-tz" class="ns-text-input" value="UTC" placeholder="UTC">
+      </div>
+    </div>
+  </section>
+
+  <div class="ns-actions">
+    <button id="btn-test" class="ns-btn ns-btn-secondary">Send Test Notification</button>
+    <button id="btn-save" class="ns-btn ns-btn-primary">Save Settings</button>
+  </div>
+  <div id="ns-status" class="ns-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/notification-settings.js"></script>
+</body>
+</html>

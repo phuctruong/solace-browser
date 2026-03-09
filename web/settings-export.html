@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings Export/Import — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/settings-export.css">
+</head>
+<body>
+<div class="se-container">
+  <h1 class="se-title">Settings Export / Import</h1>
+  <p class="se-subtitle">Portable settings — carry your whole environment anywhere</p>
+
+  <section class="se-section">
+    <h2 class="se-section-title">Current Settings</h2>
+    <div id="se-table" class="se-table"></div>
+  </section>
+
+  <section class="se-section">
+    <h2 class="se-section-title">Diff from Defaults</h2>
+    <div id="se-diff" class="se-diff-view"></div>
+  </section>
+
+  <section class="se-section">
+    <h2 class="se-section-title">Export</h2>
+    <button id="btn-export" class="se-btn se-btn-primary">Download settings.json</button>
+  </section>
+
+  <section class="se-section">
+    <h2 class="se-section-title">Import</h2>
+    <textarea id="se-import-json" class="se-textarea" placeholder='Paste JSON here, e.g. {"theme":"dark",...}'></textarea>
+    <button id="btn-import" class="se-btn se-btn-secondary">Apply Import</button>
+  </section>
+
+  <section class="se-section">
+    <h2 class="se-section-title">Reset</h2>
+    <button id="btn-reset" class="se-btn se-btn-danger">Reset to Defaults</button>
+  </section>
+
+  <div id="se-status" class="se-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/settings-export.js"></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Alerts — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/budget-alerts.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Budget Alert Rules</h1>
+    <span class="page-subtitle">Never exceed budget without confirmation</span>
+  </div>
+  <div id="status-banner" class="status-banner hidden"></div>
+
+  <div class="card">
+    <h2>Create Alert Rule</h2>
+    <form id="alert-form" class="alert-form">
+      <label>Metric
+        <select id="alert-metric" name="metric" required>
+          <option value="daily_cost">Daily Cost</option>
+          <option value="monthly_cost">Monthly Cost</option>
+          <option value="request_count">Request Count</option>
+          <option value="token_count">Token Count</option>
+        </select>
+      </label>
+      <label>Threshold
+        <input type="text" id="alert-threshold" name="threshold" placeholder="10.00" required>
+      </label>
+      <label>Action
+        <select id="alert-action" name="action" required>
+          <option value="notify">Notify</option>
+          <option value="pause">Pause</option>
+          <option value="block">Block</option>
+        </select>
+      </label>
+      <button type="submit" class="btn btn-primary">Create Alert</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Alert Rules</h2>
+    <ul id="rules-list" class="rules-list"></ul>
+  </div>
+
+  <div class="card">
+    <h2>Triggered Alerts</h2>
+    <ul id="triggered-list" class="triggered-list"></ul>
+  </div>
+  <script src="/web/js/budget-alerts.js"></script>
+</body>
+</html>

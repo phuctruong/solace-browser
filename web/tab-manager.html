@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tab Manager — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/tab-manager.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Tab Manager <span id="tab-count" class="tab-count-badge">0</span></h1>
+    <span class="page-subtitle">Manage all browser tabs from one panel</span>
+  </div>
+  <div id="status-banner" class="status-banner hidden"></div>
+
+  <div class="toolbar">
+    <label>Filter by session:
+      <select id="session-filter">
+        <option value="">All sessions</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="card">
+    <ul id="tabs-list" class="tabs-list"></ul>
+  </div>
+  <script src="/web/js/tab-manager.js"></script>
+</body>
+</html>

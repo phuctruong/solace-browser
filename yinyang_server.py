@@ -359,6 +359,42 @@ _LIVE_METRICS_RPS: list[float] = []
 # ---------------------------------------------------------------------------
 # Task 032 — Quick Actions Menu
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Task 033 — Recipe Detail Panel
+# ---------------------------------------------------------------------------
+RECIPE_CATALOG: list[dict] = [
+    {"recipe_id": "gmail-triage",   "name": "Gmail Triage",   "category": "Email",    "steps": 4, "cost_estimate": "0.02"},
+    {"recipe_id": "linkedin-daily", "name": "LinkedIn Daily", "category": "Social",   "steps": 3, "cost_estimate": "0.01"},
+    {"recipe_id": "substack-post",  "name": "Substack Post",  "category": "Content",  "steps": 6, "cost_estimate": "0.05"},
+    {"recipe_id": "github-summary", "name": "GitHub Summary", "category": "Dev",      "steps": 3, "cost_estimate": "0.01"},
+    {"recipe_id": "news-digest",    "name": "News Digest",    "category": "Research", "steps": 5, "cost_estimate": "0.03"},
+    {"recipe_id": "calendar-prep",  "name": "Calendar Prep",  "category": "Planning", "steps": 4, "cost_estimate": "0.02"},
+]
+_RECIPE_RUNS: list[dict] = []
+_RECIPE_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 034 — Budget Alert System
+# ---------------------------------------------------------------------------
+ALERT_METRICS: frozenset = frozenset(["daily_cost", "monthly_cost", "request_count", "token_count"])
+ALERT_ACTIONS: frozenset = frozenset(["notify", "pause", "block"])
+_ALERT_RULES: list[dict] = []
+_TRIGGERED_ALERTS: list[dict] = []
+_ALERTS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 035 — Multi-Tab Manager
+# ---------------------------------------------------------------------------
+TAB_STATUSES: frozenset = frozenset(["loading", "ready", "error", "idle"])
+_TABS: list[dict] = []
+_TABS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 036 — URL Bookmarks Manager
+# ---------------------------------------------------------------------------
+_BOOKMARKS: list[dict] = []
+_BOOKMARKS_LOCK = threading.Lock()
+
 _QUICK_ACTIONS_LOCK = threading.Lock()
 DEFAULT_ACTIONS: list[dict] = [
     {"id": "qa-open-dashboard",    "label": "Open Dashboard",        "icon": "grid",     "url": "/web/dashboard.html",      "builtin": True},
@@ -580,6 +616,73 @@ CHAT_SUGGESTIONS: dict[str, list[str]] = {
 CHAT_DEFAULT_SUGGESTIONS: list[str] = [
     "Run Gmail triage", "View schedule", "Browse recipes", "Check evidence"
 ]
+
+# ---------------------------------------------------------------------------
+# Task 037 — Notification Settings Panel
+# ---------------------------------------------------------------------------
+NOTIFICATION_CHANNELS: tuple[str, ...] = ("browser", "desktop", "email", "webhook")
+NOTIFICATION_SEVERITIES: tuple[str, ...] = ("info", "warning", "error", "critical")
+
+_NOTIF_SETTINGS: dict = {
+    "channels": {"browser": True, "desktop": True, "email": False, "webhook": False},
+    "min_severity": "info",
+    "quiet_hours_enabled": False,
+    "quiet_start": "22:00",
+    "quiet_end": "08:00",
+    "quiet_timezone": "UTC",
+}
+_NOTIF_SETTINGS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 038 — Clipboard Manager
+# ---------------------------------------------------------------------------
+CLIPBOARD_TYPES: tuple[str, ...] = ("text", "url", "code", "json", "other")
+MAX_CLIPBOARD_ENTRIES = 50
+MAX_CLIPBOARD_CONTENT = 50_000
+
+_CLIPBOARD: list[dict] = []
+_CLIPBOARD_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 039 — Command Palette
+# ---------------------------------------------------------------------------
+DEFAULT_COMMANDS: tuple[dict, ...] = (
+    {"cmd_id": "nav-budget",      "name": "Open Budget",         "category": "Navigation", "shortcut": "b"},
+    {"cmd_id": "nav-evidence",    "name": "Open Evidence Chain",  "category": "Navigation", "shortcut": "e"},
+    {"cmd_id": "nav-sessions",    "name": "Open Sessions",        "category": "Navigation", "shortcut": "s"},
+    {"cmd_id": "nav-recipes",     "name": "Open Recipes",         "category": "Navigation", "shortcut": "r"},
+    {"cmd_id": "nav-metrics",     "name": "Open Live Metrics",    "category": "Navigation", "shortcut": "m"},
+    {"cmd_id": "sys-refresh",     "name": "Refresh All",          "category": "System",     "shortcut": None},
+    {"cmd_id": "sys-dark-mode",   "name": "Toggle Dark Mode",     "category": "System",     "shortcut": "d"},
+    {"cmd_id": "recipe-gmail",    "name": "Run Gmail Triage",     "category": "Recipe",     "shortcut": None},
+    {"cmd_id": "recipe-linkedin", "name": "Run LinkedIn Daily",   "category": "Recipe",     "shortcut": None},
+    {"cmd_id": "oauth3-consent",  "name": "Open OAuth3 Consent",  "category": "OAuth3",    "shortcut": None},
+    {"cmd_id": "insights-search", "name": "Global Search",        "category": "Insights",   "shortcut": "/"},
+    {"cmd_id": "insights-export", "name": "Export Audit Log",     "category": "Insights",   "shortcut": None},
+)
+
+_COMMAND_HISTORY: list[dict] = []
+_CMD_LOCK = threading.Lock()
+MAX_COMMAND_HISTORY = 30
+
+# ---------------------------------------------------------------------------
+# Task 040 — Settings Store (in-memory, separate from legacy file-based settings)
+# ---------------------------------------------------------------------------
+DEFAULT_SETTINGS: dict = {
+    "theme": "light",
+    "language": "en",
+    "auto_refresh_interval": 5,
+    "max_sessions": 10,
+    "budget_daily_limit": "10.00",
+    "budget_monthly_limit": "100.00",
+    "notifications_enabled": True,
+    "debug_mode": False,
+    "session_timeout_min": 60,
+    "export_format": "json",
+}
+
+_SETTINGS_STORE: dict = dict(DEFAULT_SETTINGS)
+_SETTINGS_STORE_LOCK = threading.Lock()
 
 
 def _triage_single_email(email: dict[str, Any], config: dict[str, bool]) -> dict[str, Any]:
@@ -3814,6 +3917,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/recipes/[^/]+/status$", path):
             run_id = path.split("/")[-2]
             self._handle_recipe_run_status(run_id)
+        # --- Task 033: catalog + runs must precede generic [^/]+ match ---
+        elif path == "/api/v1/recipes/catalog":
+            self._handle_recipe_catalog()
+        elif re.match(r"^/api/v1/recipes/[^/]+/runs$", path):
+            recipe_id = path.split("/")[-2]
+            self._handle_recipe_runs(recipe_id)
         elif re.match(r"^/api/v1/recipes/[^/]+$", path):
             recipe_id = path.split("/")[-1]
             self._handle_recipe_detail(recipe_id)
@@ -4185,6 +4294,104 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_keyboard_shortcuts_js()
         elif path == "/web/css/keyboard-shortcuts.css":
             self._handle_keyboard_shortcuts_css()
+        # --- Task 033: Recipe Detail Panel (web files) ---
+        elif path == "/web/recipe-detail.html":
+            self._handle_recipe_detail_html()
+        elif path == "/web/js/recipe-detail.js":
+            self._handle_recipe_detail_js()
+        elif path == "/web/css/recipe-detail.css":
+            self._handle_recipe_detail_css()
+        # --- Task 034: Budget Alert System ---
+        elif path == "/api/v1/budget/alert-rules":
+            self._handle_budget_alert_rules_list()
+        elif path == "/api/v1/budget/alert-rules/triggered":
+            self._handle_budget_alert_rules_triggered()
+        elif path == "/web/budget-alerts.html":
+            self._handle_budget_alerts_html()
+        elif path == "/web/js/budget-alerts.js":
+            self._handle_budget_alerts_js()
+        elif path == "/web/css/budget-alerts.css":
+            self._handle_budget_alerts_css()
+        # --- Task 035: Multi-Tab Manager ---
+        elif path == "/api/v1/tabs":
+            self._handle_tabs_list()
+        elif re.match(r"^/api/v1/tabs/[^/]+$", path):
+            tab_id = path.split("/")[-1]
+            self._handle_tab_detail(tab_id)
+        elif path == "/web/tab-manager.html":
+            self._handle_tab_manager_html()
+        elif path == "/web/js/tab-manager.js":
+            self._handle_tab_manager_js()
+        elif path == "/web/css/tab-manager.css":
+            self._handle_tab_manager_css()
+        # --- Task 036: URL Bookmarks Manager ---
+        elif path == "/api/v1/bookmarks":
+            self._handle_bookmarks_list(query)
+        elif path == "/api/v1/bookmarks/tags":
+            self._handle_bookmarks_tags()
+        elif path == "/api/v1/bookmarks/search":
+            self._handle_bookmarks_search(query)
+        elif path == "/web/bookmarks.html":
+            self._handle_bookmarks_html()
+        elif path == "/web/js/bookmarks.js":
+            self._handle_bookmarks_js()
+        elif path == "/web/css/bookmarks.css":
+            self._handle_bookmarks_css()
+        elif re.match(r"^/api/v1/bookmarks/[^/]+$", path):
+            bm_id = path.split("/")[-1]
+            self._handle_bookmark_detail(bm_id)
+        # --- Task 037: Notification Settings Panel ---
+        elif path == "/api/v1/notification-settings":
+            self._handle_notif_settings_get()
+        elif path == "/api/v1/notification-settings/channels":
+            self._handle_notif_channels_list()
+        elif path == "/web/notification-settings.html":
+            self._handle_notif_settings_html()
+        elif path == "/web/js/notification-settings.js":
+            self._handle_notif_settings_js()
+        elif path == "/web/css/notification-settings.css":
+            self._handle_notif_settings_css()
+        # --- Task 038: Clipboard Manager ---
+        elif path == "/api/v1/clipboard":
+            self._handle_clipboard_list()
+        elif path == "/api/v1/clipboard/search":
+            _qs = self.path.split("?", 1)[1] if "?" in self.path else ""
+            _qp = dict(p.split("=", 1) for p in _qs.split("&") if "=" in p)
+            self._handle_clipboard_search(_qp.get("q", ""))
+        elif path == "/web/clipboard.html":
+            self._handle_clipboard_html()
+        elif path == "/web/js/clipboard.js":
+            self._handle_clipboard_js()
+        elif path == "/web/css/clipboard.css":
+            self._handle_clipboard_css()
+        # --- Task 039: Command Palette ---
+        elif path == "/api/v1/commands":
+            self._handle_commands_list()
+        elif path == "/api/v1/commands/history":
+            self._handle_commands_history()
+        elif path == "/api/v1/commands/search":
+            _qs = self.path.split("?", 1)[1] if "?" in self.path else ""
+            _qp = dict(p.split("=", 1) for p in _qs.split("&") if "=" in p)
+            self._handle_commands_search(_qp.get("q", ""))
+        elif path == "/web/command-palette.html":
+            self._handle_command_palette_html()
+        elif path == "/web/js/command-palette.js":
+            self._handle_command_palette_js()
+        elif path == "/web/css/command-palette.css":
+            self._handle_command_palette_css()
+        # --- Task 040: Settings Export/Import ---
+        elif path == "/api/v1/settings":
+            self._handle_settings_store_get()
+        elif path == "/api/v1/settings/export-bundle":
+            self._handle_settings_store_export()
+        elif path == "/api/v1/settings/diff-bundle":
+            self._handle_settings_store_diff()
+        elif path == "/web/settings-export.html":
+            self._handle_settings_export_html()
+        elif path == "/web/js/settings-export.js":
+            self._handle_settings_export_js()
+        elif path == "/web/css/settings-export.css":
+            self._handle_settings_export_css()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -4452,6 +4659,44 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Keyboard Shortcuts Panel — Task 028 ---
         elif path == "/api/v1/keyboard-shortcuts":
             self._handle_keyboard_shortcuts_add()
+        # --- Task 033: Recipe Detail Panel ---
+        elif re.match(r"^/api/v1/recipes/[^/]+/preview$", path) and self.command == "POST":
+            recipe_id = path.split("/")[-2]
+            self._handle_recipe_catalog_preview(recipe_id)
+        # --- Task 034: Budget Alert System ---
+        elif path == "/api/v1/budget/alert-rules":
+            self._handle_budget_alert_rule_create()
+        elif re.match(r"^/api/v1/budget/alert-rules/[^/]+/acknowledge$", path):
+            alert_id = path.split("/")[-2]
+            self._handle_budget_alert_acknowledge(alert_id)
+        # --- Task 035: Multi-Tab Manager ---
+        elif path == "/api/v1/tabs":
+            self._handle_tab_register()
+        elif re.match(r"^/api/v1/tabs/[^/]+/focus$", path):
+            tab_id = path.split("/")[-2]
+            self._handle_tab_focus(tab_id)
+        # --- Task 036: URL Bookmarks Manager ---
+        elif path == "/api/v1/bookmarks":
+            self._handle_bookmark_add()
+        elif re.match(r"^/api/v1/bookmarks/[^/]+/tags$", path):
+            bm_id = path.split("/")[-2]
+            self._handle_bookmark_add_tags(bm_id)
+        # --- Task 037: Notification Settings Panel ---
+        elif path == "/api/v1/notification-settings":
+            self._handle_notif_settings_update()
+        elif path == "/api/v1/notification-settings/test":
+            self._handle_notif_test_send()
+        # --- Task 038: Clipboard Manager ---
+        elif path == "/api/v1/clipboard":
+            self._handle_clipboard_add()
+        # --- Task 039: Command Palette ---
+        elif path == "/api/v1/commands/execute":
+            self._handle_commands_execute()
+        # --- Task 040: Settings Export/Import ---
+        elif path == "/api/v1/settings/import-bundle":
+            self._handle_settings_store_import()
+        elif path == "/api/v1/settings/reset-bundle":
+            self._handle_settings_store_reset()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -4514,6 +4759,24 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/keyboard-shortcuts/[^/]+$", path):
             shortcut_id = path.split("/")[-1]
             self._handle_keyboard_shortcut_delete(shortcut_id)
+        # --- Task 034: Budget Alert System ---
+        elif re.match(r"^/api/v1/budget/alert-rules/[^/]+$", path):
+            alert_id = path.split("/")[-1]
+            self._handle_budget_alert_rule_delete(alert_id)
+        # --- Task 035: Multi-Tab Manager ---
+        elif re.match(r"^/api/v1/tabs/[^/]+$", path):
+            tab_id = path.split("/")[-1]
+            self._handle_tab_delete(tab_id)
+        # --- Task 036: URL Bookmarks Manager ---
+        elif re.match(r"^/api/v1/bookmarks/[^/]+$", path):
+            bm_id = path.split("/")[-1]
+            self._handle_bookmark_delete(bm_id)
+        # --- Task 038: Clipboard Manager ---
+        elif path == "/api/v1/clipboard":
+            self._handle_clipboard_clear()
+        elif re.match(r"^/api/v1/clipboard/[^/]+$", path):
+            entry_id = path.split("/")[-1]
+            self._handle_clipboard_delete(entry_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -12992,6 +13255,933 @@ function choose(mode) {
             content = p.read_bytes()
         except FileNotFoundError:
             self._send_json({"error": "keyboard-shortcuts.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # ---------------------------------------------------------------------------
+    # Task 037 — Notification Settings Panel handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_notif_settings_get(self) -> None:
+        """GET /api/v1/notification-settings — return current notification settings (public)."""
+        with _NOTIF_SETTINGS_LOCK:
+            settings = dict(_NOTIF_SETTINGS)
+            settings["channels"] = dict(_NOTIF_SETTINGS["channels"])
+        self._send_json(settings)
+
+    def _handle_notif_settings_update(self) -> None:
+        """POST /api/v1/notification-settings — update settings (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        with _NOTIF_SETTINGS_LOCK:
+            if "channels" in body:
+                incoming = body["channels"]
+                if not isinstance(incoming, dict):
+                    self._send_json({"error": "channels must be a dict"}, 400)
+                    return
+                for ch in incoming:
+                    if ch not in NOTIFICATION_CHANNELS:
+                        self._send_json({"error": f"unknown channel: {ch}"}, 400)
+                        return
+                _NOTIF_SETTINGS["channels"].update({k: bool(v) for k, v in incoming.items()})
+            if "min_severity" in body:
+                sev = str(body["min_severity"])
+                if sev not in NOTIFICATION_SEVERITIES:
+                    self._send_json({"error": f"invalid severity: {sev}"}, 400)
+                    return
+                _NOTIF_SETTINGS["min_severity"] = sev
+            if "quiet_hours_enabled" in body:
+                _NOTIF_SETTINGS["quiet_hours_enabled"] = bool(body["quiet_hours_enabled"])
+            if "quiet_start" in body:
+                _NOTIF_SETTINGS["quiet_start"] = str(body["quiet_start"])[:5]
+            if "quiet_end" in body:
+                _NOTIF_SETTINGS["quiet_end"] = str(body["quiet_end"])[:5]
+            if "quiet_timezone" in body:
+                _NOTIF_SETTINGS["quiet_timezone"] = str(body["quiet_timezone"])[:64]
+            result = dict(_NOTIF_SETTINGS)
+            result["channels"] = dict(_NOTIF_SETTINGS["channels"])
+        self._send_json({"status": "updated", "settings": result})
+
+    def _handle_notif_channels_list(self) -> None:
+        """GET /api/v1/notification-settings/channels — list available channels."""
+        with _NOTIF_SETTINGS_LOCK:
+            channel_states = dict(_NOTIF_SETTINGS["channels"])
+        channels = [{"id": ch, "enabled": channel_states.get(ch, False)} for ch in NOTIFICATION_CHANNELS]
+        self._send_json({"channels": channels, "total": len(channels)})
+
+    def _handle_notif_test_send(self) -> None:
+        """POST /api/v1/notification-settings/test — send test notification (auth required)."""
+        if not self._check_auth():
+            return
+        with _NOTIF_SETTINGS_LOCK:
+            enabled_channels = [ch for ch, on in _NOTIF_SETTINGS["channels"].items() if on]
+        self._send_json({
+            "sent": True,
+            "channels_notified": enabled_channels,
+            "message": "Test notification sent",
+        })
+
+    def _handle_notif_settings_html(self) -> None:
+        """GET /web/notification-settings.html"""
+        p = Path(__file__).parent / "web" / "notification-settings.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "notification-settings.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_notif_settings_js(self) -> None:
+        """GET /web/js/notification-settings.js"""
+        p = Path(__file__).parent / "web" / "js" / "notification-settings.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "notification-settings.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_notif_settings_css(self) -> None:
+        """GET /web/css/notification-settings.css"""
+        p = Path(__file__).parent / "web" / "css" / "notification-settings.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "notification-settings.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # ---------------------------------------------------------------------------
+    # Task 038 — Clipboard Manager handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_clipboard_list(self) -> None:
+        """GET /api/v1/clipboard — list clipboard history (newest first, max 50)."""
+        with _CLIPBOARD_LOCK:
+            entries = list(reversed(_CLIPBOARD))
+        self._send_json({"entries": entries, "total": len(entries)})
+
+    def _handle_clipboard_add(self) -> None:
+        """POST /api/v1/clipboard — add entry (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        content = str(body.get("content", ""))
+        if len(content) > MAX_CLIPBOARD_CONTENT:
+            self._send_json({"error": "content exceeds 50000 char limit"}, 422)
+            return
+        content_type = str(body.get("content_type", "text"))
+        if content_type not in CLIPBOARD_TYPES:
+            self._send_json({"error": f"invalid content_type: {content_type}"}, 400)
+            return
+        import uuid as _uuid
+        entry = {
+            "entry_id": f"clip_{_uuid.uuid4().hex}",
+            "content": content,
+            "content_type": content_type,
+            "preview": content[:100],
+            "created_at": _utc_isoformat(time.time()),
+        }
+        with _CLIPBOARD_LOCK:
+            _CLIPBOARD.append(entry)
+            if len(_CLIPBOARD) > MAX_CLIPBOARD_ENTRIES:
+                _CLIPBOARD.pop(0)  # remove oldest
+        self._send_json({"status": "added", "entry_id": entry["entry_id"]})
+
+    def _handle_clipboard_delete(self, entry_id: str) -> None:
+        """DELETE /api/v1/clipboard/{entry_id} — remove entry (auth required)."""
+        if not self._check_auth():
+            return
+        with _CLIPBOARD_LOCK:
+            before = len(_CLIPBOARD)
+            _CLIPBOARD[:] = [e for e in _CLIPBOARD if e["entry_id"] != entry_id]
+            after = len(_CLIPBOARD)
+        if before == after:
+            self._send_json({"error": "entry not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "entry_id": entry_id})
+
+    def _handle_clipboard_clear(self) -> None:
+        """DELETE /api/v1/clipboard — clear all entries (auth required)."""
+        if not self._check_auth():
+            return
+        with _CLIPBOARD_LOCK:
+            count = len(_CLIPBOARD)
+            _CLIPBOARD.clear()
+        self._send_json({"status": "cleared", "removed": count})
+
+    def _handle_clipboard_search(self, query_str: str) -> None:
+        """GET /api/v1/clipboard/search?q=<query> — search clipboard entries."""
+        q = query_str.lower()
+        with _CLIPBOARD_LOCK:
+            results = [e for e in _CLIPBOARD if q in e.get("content", "").lower() or q in e.get("preview", "").lower()]
+        self._send_json({"entries": list(reversed(results)), "total": len(results)})
+
+    def _handle_clipboard_html(self) -> None:
+        """GET /web/clipboard.html"""
+        p = Path(__file__).parent / "web" / "clipboard.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "clipboard.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_clipboard_js(self) -> None:
+        """GET /web/js/clipboard.js"""
+        p = Path(__file__).parent / "web" / "js" / "clipboard.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "clipboard.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_clipboard_css(self) -> None:
+        """GET /web/css/clipboard.css"""
+        p = Path(__file__).parent / "web" / "css" / "clipboard.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "clipboard.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # ---------------------------------------------------------------------------
+    # Task 039 — Command Palette handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_commands_list(self) -> None:
+        """GET /api/v1/commands — list all available commands."""
+        self._send_json({"commands": list(DEFAULT_COMMANDS), "total": len(DEFAULT_COMMANDS)})
+
+    def _handle_commands_search(self, query_str: str) -> None:
+        """GET /api/v1/commands/search?q=<query> — search commands by name or category."""
+        q = query_str.lower()
+        results = [
+            c for c in DEFAULT_COMMANDS
+            if q in c["name"].lower() or q in c["category"].lower()
+        ]
+        self._send_json({"commands": results, "total": len(results)})
+
+    def _handle_commands_execute(self) -> None:
+        """POST /api/v1/commands/execute — execute a command by id (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        cmd_id = str(body.get("cmd_id", "")).strip()
+        cmd = next((c for c in DEFAULT_COMMANDS if c["cmd_id"] == cmd_id), None)
+        if cmd is None:
+            self._send_json({"error": f"command not found: {cmd_id}"}, 404)
+            return
+        import uuid as _uuid
+        execution_id = f"exec_{_uuid.uuid4().hex[:12]}"
+        record = {
+            "execution_id": execution_id,
+            "cmd_id": cmd_id,
+            "name": cmd["name"],
+            "category": cmd["category"],
+            "executed_at": _utc_isoformat(time.time()),
+        }
+        with _CMD_LOCK:
+            _COMMAND_HISTORY.append(record)
+            if len(_COMMAND_HISTORY) > MAX_COMMAND_HISTORY:
+                _COMMAND_HISTORY.pop(0)
+        self._send_json({"status": "executed", "execution_id": execution_id, "cmd_id": cmd_id})
+
+    def _handle_commands_history(self) -> None:
+        """GET /api/v1/commands/history — recently executed commands (last 30)."""
+        with _CMD_LOCK:
+            history = list(reversed(_COMMAND_HISTORY))
+        self._send_json({"history": history, "total": len(history)})
+
+    def _handle_command_palette_html(self) -> None:
+        """GET /web/command-palette.html"""
+        p = Path(__file__).parent / "web" / "command-palette.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "command-palette.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_command_palette_js(self) -> None:
+        """GET /web/js/command-palette.js"""
+        p = Path(__file__).parent / "web" / "js" / "command-palette.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "command-palette.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_command_palette_css(self) -> None:
+        """GET /web/css/command-palette.css"""
+        p = Path(__file__).parent / "web" / "css" / "command-palette.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "command-palette.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # ---------------------------------------------------------------------------
+    # Task 040 — Settings Export/Import (new in-memory store) handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_settings_store_get(self) -> None:
+        """GET /api/v1/settings — return current settings snapshot (public)."""
+        with _SETTINGS_STORE_LOCK:
+            snap = dict(_SETTINGS_STORE)
+        self._send_json(snap)
+
+    def _handle_settings_store_export(self) -> None:
+        """GET /api/v1/settings/export-bundle — export settings as JSON (auth required)."""
+        if not self._check_auth():
+            return
+        with _SETTINGS_STORE_LOCK:
+            snap = dict(_SETTINGS_STORE)
+        body = json.dumps({
+            "exported_at": _utc_isoformat(time.time()),
+            "version": "1.0",
+            "settings": snap,
+        }, indent=2).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Disposition", 'attachment; filename="solace-settings-bundle.json"')
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _handle_settings_store_import(self) -> None:
+        """POST /api/v1/settings/import-bundle — import settings from JSON (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        incoming = body.get("settings", body)  # accept flat or wrapped
+        if not isinstance(incoming, dict):
+            self._send_json({"error": "settings must be a dict"}, 400)
+            return
+        with _SETTINGS_STORE_LOCK:
+            for k, v in incoming.items():
+                if k in DEFAULT_SETTINGS:
+                    _SETTINGS_STORE[k] = v
+        with _SETTINGS_STORE_LOCK:
+            snap = dict(_SETTINGS_STORE)
+        self._send_json({"status": "imported", "settings": snap})
+
+    def _handle_settings_store_reset(self) -> None:
+        """POST /api/v1/settings/reset-bundle — reset settings to defaults (auth required)."""
+        if not self._check_auth():
+            return
+        with _SETTINGS_STORE_LOCK:
+            _SETTINGS_STORE.clear()
+            _SETTINGS_STORE.update(DEFAULT_SETTINGS)
+            snap = dict(_SETTINGS_STORE)
+        self._send_json({"status": "reset", "settings": snap})
+
+    def _handle_settings_store_diff(self) -> None:
+        """GET /api/v1/settings/diff-bundle — show diff between current and defaults."""
+        with _SETTINGS_STORE_LOCK:
+            current = dict(_SETTINGS_STORE)
+        diff = {k: {"current": current[k], "default": DEFAULT_SETTINGS[k]}
+                for k in DEFAULT_SETTINGS if current.get(k) != DEFAULT_SETTINGS[k]}
+        self._send_json({"diff": diff, "changed_count": len(diff)})
+
+    def _handle_settings_export_html(self) -> None:
+        """GET /web/settings-export.html"""
+        p = Path(__file__).parent / "web" / "settings-export.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "settings-export.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_settings_export_js(self) -> None:
+        """GET /web/js/settings-export.js"""
+        p = Path(__file__).parent / "web" / "js" / "settings-export.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "settings-export.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_settings_export_css(self) -> None:
+        """GET /web/css/settings-export.css"""
+        p = Path(__file__).parent / "web" / "css" / "settings-export.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "settings-export.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # =========================================================================
+    # Task 033 — Recipe Detail Panel
+    # =========================================================================
+
+    def _handle_recipe_catalog(self) -> None:
+        """GET /api/v1/recipes/catalog — list all 6 catalog recipes. Public."""
+        self._send_json({"recipes": RECIPE_CATALOG, "total": len(RECIPE_CATALOG)})
+
+    def _recipe_catalog_entry(self, recipe_id: str) -> Optional[dict]:
+        """Return catalog entry or None."""
+        return next((r for r in RECIPE_CATALOG if r["recipe_id"] == recipe_id), None)
+
+    def _handle_recipe_catalog_preview(self, recipe_id: str) -> None:
+        """POST /api/v1/recipes/{id}/preview — dry-run preview. Requires auth."""
+        if not self._check_auth():
+            return
+        entry = self._recipe_catalog_entry(recipe_id)
+        if not entry:
+            self._send_json({"error": "recipe not found"}, 404)
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        n = entry["steps"]
+        preview_steps = [
+            {
+                "step": i + 1,
+                "action": f"step_{i + 1}",
+                "description": f"Preview step {i + 1} of {n}",
+                "would_execute": True,
+            }
+            for i in range(n)
+        ]
+        self._send_json({
+            "recipe_id": recipe_id,
+            "name": entry["name"],
+            "preview_steps": preview_steps,
+            "cost_estimate": entry["cost_estimate"],
+            "status": "preview_only",
+        })
+
+    def _handle_recipe_runs(self, recipe_id: str) -> None:
+        """GET /api/v1/recipes/{id}/runs — run history. Public."""
+        entry = self._recipe_catalog_entry(recipe_id)
+        if not entry:
+            self._send_json({"error": "recipe not found"}, 404)
+            return
+        with _RECIPE_LOCK:
+            runs = [r for r in _RECIPE_RUNS if r.get("recipe_id") == recipe_id]
+        self._send_json({"recipe_id": recipe_id, "runs": runs, "total": len(runs)})
+
+    def _handle_recipe_detail_html(self) -> None:
+        """GET /web/recipe-detail.html"""
+        p = Path(__file__).parent / "web" / "recipe-detail.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "recipe-detail.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_recipe_detail_js(self) -> None:
+        """GET /web/js/recipe-detail.js"""
+        p = Path(__file__).parent / "web" / "js" / "recipe-detail.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "recipe-detail.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_recipe_detail_css(self) -> None:
+        """GET /web/css/recipe-detail.css"""
+        p = Path(__file__).parent / "web" / "css" / "recipe-detail.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "recipe-detail.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # =========================================================================
+    # Task 034 — Budget Alert System
+    # =========================================================================
+
+    def _handle_budget_alert_rules_list(self) -> None:
+        """GET /api/v1/budget/alert-rules — list alert rules. Public."""
+        with _ALERTS_LOCK:
+            rules = list(_ALERT_RULES)
+        self._send_json({"rules": rules, "total": len(rules)})
+
+    def _handle_budget_alert_rule_create(self) -> None:
+        """POST /api/v1/budget/alert-rules — create alert rule. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        metric = str(body.get("metric", "")).strip()
+        if metric not in ALERT_METRICS:
+            self._send_json({"error": f"metric must be one of: {', '.join(sorted(ALERT_METRICS))}"}, 400)
+            return
+        action = str(body.get("action", "")).strip()
+        if action not in ALERT_ACTIONS:
+            self._send_json({"error": f"action must be one of: {', '.join(sorted(ALERT_ACTIONS))}"}, 400)
+            return
+        threshold_raw = body.get("threshold", "")
+        try:
+            threshold = str(Decimal(str(threshold_raw)))
+        except Exception:
+            self._send_json({"error": "threshold must be a valid decimal number"}, 400)
+            return
+        rule: dict[str, Any] = {
+            "alert_id": "alrt_" + str(uuid.uuid4()),
+            "metric": metric,
+            "threshold": threshold,
+            "action": action,
+            "is_active": True,
+            "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        }
+        with _ALERTS_LOCK:
+            _ALERT_RULES.append(rule)
+        self._send_json({"rule": rule, "status": "created"}, 201)
+
+    def _handle_budget_alert_rule_delete(self, alert_id: str) -> None:
+        """DELETE /api/v1/budget/alert-rules/{id} — remove alert rule. Requires auth."""
+        if not self._check_auth():
+            return
+        with _ALERTS_LOCK:
+            before = len(_ALERT_RULES)
+            remaining = [r for r in _ALERT_RULES if r.get("alert_id") != alert_id]
+            if len(remaining) == before:
+                self._send_json({"error": "alert rule not found"}, 404)
+                return
+            _ALERT_RULES.clear()
+            _ALERT_RULES.extend(remaining)
+        self._send_json({"status": "deleted", "alert_id": alert_id})
+
+    def _handle_budget_alert_rules_triggered(self) -> None:
+        """GET /api/v1/budget/alert-rules/triggered — last 50 triggered. Public."""
+        with _ALERTS_LOCK:
+            triggered = list(_TRIGGERED_ALERTS[-50:])
+        self._send_json({"triggered": triggered, "total": len(triggered)})
+
+    def _handle_budget_alert_acknowledge(self, alert_id: str) -> None:
+        """POST /api/v1/budget/alert-rules/{id}/acknowledge — ack triggered alert. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        with _ALERTS_LOCK:
+            entry = next((a for a in _TRIGGERED_ALERTS if a.get("alert_id") == alert_id), None)
+            if not entry:
+                self._send_json({"error": "triggered alert not found"}, 404)
+                return
+            entry["acknowledged"] = True
+            entry["acknowledged_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        self._send_json({"status": "acknowledged", "alert_id": alert_id, "acknowledged": True})
+
+    def _handle_budget_alerts_html(self) -> None:
+        """GET /web/budget-alerts.html"""
+        p = Path(__file__).parent / "web" / "budget-alerts.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "budget-alerts.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_budget_alerts_js(self) -> None:
+        """GET /web/js/budget-alerts.js"""
+        p = Path(__file__).parent / "web" / "js" / "budget-alerts.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "budget-alerts.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_budget_alerts_css(self) -> None:
+        """GET /web/css/budget-alerts.css"""
+        p = Path(__file__).parent / "web" / "css" / "budget-alerts.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "budget-alerts.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # =========================================================================
+    # Task 035 — Multi-Tab Manager
+    # =========================================================================
+
+    def _handle_tabs_list(self) -> None:
+        """GET /api/v1/tabs — list all tracked tab contexts. Public."""
+        with _TABS_LOCK:
+            tabs = list(_TABS)
+        self._send_json({"tabs": tabs, "total": len(tabs)})
+
+    def _handle_tab_register(self) -> None:
+        """POST /api/v1/tabs — register a new tab context. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url = str(body.get("url", "")).strip()
+        if len(url) > 2000:
+            self._send_json({"error": "url exceeds 2000 characters"}, 422)
+            return
+        title = str(body.get("title", "")).strip()
+        if len(title) > 200:
+            self._send_json({"error": "title exceeds 200 characters"}, 422)
+            return
+        status = str(body.get("status", "idle")).strip()
+        if status not in TAB_STATUSES:
+            self._send_json({"error": f"status must be one of: {', '.join(sorted(TAB_STATUSES))}"}, 400)
+            return
+        session_id = body.get("session_id")
+        if session_id is not None:
+            session_id = str(session_id)
+        tab: dict[str, Any] = {
+            "tab_id": "tab_" + str(uuid.uuid4()),
+            "session_id": session_id,
+            "url": url,
+            "title": title,
+            "status": status,
+            "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "last_focused_at": None,
+        }
+        with _TABS_LOCK:
+            _TABS.append(tab)
+        self._send_json({"tab": tab, "status": "registered"}, 201)
+
+    def _handle_tab_detail(self, tab_id: str) -> None:
+        """GET /api/v1/tabs/{id} — get tab detail. Public."""
+        with _TABS_LOCK:
+            tab = next((t for t in _TABS if t.get("tab_id") == tab_id), None)
+        if not tab:
+            self._send_json({"error": "tab not found"}, 404)
+            return
+        self._send_json({"tab": tab})
+
+    def _handle_tab_delete(self, tab_id: str) -> None:
+        """DELETE /api/v1/tabs/{id} — untrack a tab. Requires auth."""
+        if not self._check_auth():
+            return
+        with _TABS_LOCK:
+            before = len(_TABS)
+            remaining = [t for t in _TABS if t.get("tab_id") != tab_id]
+            if len(remaining) == before:
+                self._send_json({"error": "tab not found"}, 404)
+                return
+            _TABS.clear()
+            _TABS.extend(remaining)
+        self._send_json({"status": "deleted", "tab_id": tab_id})
+
+    def _handle_tab_focus(self, tab_id: str) -> None:
+        """POST /api/v1/tabs/{id}/focus — mark tab as focused. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        with _TABS_LOCK:
+            tab = next((t for t in _TABS if t.get("tab_id") == tab_id), None)
+            if not tab:
+                self._send_json({"error": "tab not found"}, 404)
+                return
+            tab["last_focused_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        self._send_json({"status": "focused", "tab_id": tab_id, "last_focused_at": tab["last_focused_at"]})
+
+    def _handle_tab_manager_html(self) -> None:
+        """GET /web/tab-manager.html"""
+        p = Path(__file__).parent / "web" / "tab-manager.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "tab-manager.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_tab_manager_js(self) -> None:
+        """GET /web/js/tab-manager.js"""
+        p = Path(__file__).parent / "web" / "js" / "tab-manager.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "tab-manager.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_tab_manager_css(self) -> None:
+        """GET /web/css/tab-manager.css"""
+        p = Path(__file__).parent / "web" / "css" / "tab-manager.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "tab-manager.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # =========================================================================
+    # Task 036 — URL Bookmarks Manager
+    # =========================================================================
+
+    def _handle_bookmarks_list(self, query: str = "") -> None:
+        """GET /api/v1/bookmarks — list bookmarks, optional ?tag= filter. Public."""
+        params = urllib.parse.parse_qs(query.lstrip("?"))
+        tag_filter = params.get("tag", [None])[0]
+        with _BOOKMARKS_LOCK:
+            bms = list(_BOOKMARKS)
+        if tag_filter:
+            bms = [b for b in bms if tag_filter in b.get("tags", [])]
+        self._send_json({"bookmarks": bms, "total": len(bms)})
+
+    def _handle_bookmark_detail(self, bm_id: str) -> None:
+        """GET /api/v1/bookmarks/{id} — single bookmark. Public."""
+        with _BOOKMARKS_LOCK:
+            bm = next((b for b in _BOOKMARKS if b.get("bookmark_id") == bm_id), None)
+        if not bm:
+            self._send_json({"error": "bookmark not found"}, 404)
+            return
+        self._send_json({"bookmark": bm})
+
+    def _handle_bookmark_add(self) -> None:
+        """POST /api/v1/bookmarks — add a bookmark. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url = str(body.get("url", "")).strip()
+        if not (url.startswith("http://") or url.startswith("https://")):
+            self._send_json({"error": "url must start with http:// or https://"}, 400)
+            return
+        if len(url) > 2000:
+            self._send_json({"error": "url exceeds 2000 characters"}, 422)
+            return
+        title = str(body.get("title", "")).strip()
+        if len(title) > 200:
+            self._send_json({"error": "title exceeds 200 characters"}, 422)
+            return
+        tags_raw = body.get("tags", [])
+        if not isinstance(tags_raw, list):
+            self._send_json({"error": "tags must be a list"}, 400)
+            return
+        if len(tags_raw) > 10:
+            self._send_json({"error": "maximum 10 tags per bookmark"}, 422)
+            return
+        tags = []
+        for t in tags_raw:
+            ts = str(t).strip()
+            if len(ts) > 50:
+                self._send_json({"error": "each tag must be at most 50 characters"}, 422)
+                return
+            tags.append(ts)
+        bm: dict[str, Any] = {
+            "bookmark_id": "bm_" + str(uuid.uuid4()),
+            "url": url,
+            "title": title,
+            "tags": tags,
+            "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "visit_count": 0,
+        }
+        with _BOOKMARKS_LOCK:
+            _BOOKMARKS.append(bm)
+        self._send_json({"bookmark": bm, "status": "added"}, 201)
+
+    def _handle_bookmark_delete(self, bm_id: str) -> None:
+        """DELETE /api/v1/bookmarks/{id} — remove bookmark. Requires auth."""
+        if not self._check_auth():
+            return
+        with _BOOKMARKS_LOCK:
+            before = len(_BOOKMARKS)
+            remaining = [b for b in _BOOKMARKS if b.get("bookmark_id") != bm_id]
+            if len(remaining) == before:
+                self._send_json({"error": "bookmark not found"}, 404)
+                return
+            _BOOKMARKS.clear()
+            _BOOKMARKS.extend(remaining)
+        self._send_json({"status": "deleted", "bookmark_id": bm_id})
+
+    def _handle_bookmarks_tags(self) -> None:
+        """GET /api/v1/bookmarks/tags — list all unique tags. Public."""
+        with _BOOKMARKS_LOCK:
+            all_tags: set[str] = set()
+            for b in _BOOKMARKS:
+                all_tags.update(b.get("tags", []))
+        self._send_json({"tags": sorted(all_tags)})
+
+    def _handle_bookmark_add_tags(self, bm_id: str) -> None:
+        """POST /api/v1/bookmarks/{id}/tags — add tags to bookmark. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        new_tags_raw = body.get("tags", [])
+        if not isinstance(new_tags_raw, list):
+            self._send_json({"error": "tags must be a list"}, 400)
+            return
+        with _BOOKMARKS_LOCK:
+            bm = next((b for b in _BOOKMARKS if b.get("bookmark_id") == bm_id), None)
+            if not bm:
+                self._send_json({"error": "bookmark not found"}, 404)
+                return
+            existing = list(bm.get("tags", []))
+            for t in new_tags_raw:
+                ts = str(t).strip()
+                if ts not in existing:
+                    existing.append(ts)
+            if len(existing) > 10:
+                self._send_json({"error": "maximum 10 tags per bookmark"}, 422)
+                return
+            bm["tags"] = existing
+        self._send_json({"status": "updated", "bookmark_id": bm_id, "tags": existing})
+
+    def _handle_bookmarks_search(self, query: str = "") -> None:
+        """GET /api/v1/bookmarks/search?q=... — search by title or URL. Public."""
+        params = urllib.parse.parse_qs(query.lstrip("?"))
+        q = params.get("q", [""])[0].lower()
+        with _BOOKMARKS_LOCK:
+            bms = list(_BOOKMARKS)
+        if q:
+            bms = [
+                b for b in bms
+                if q in b.get("title", "").lower() or q in b.get("url", "").lower()
+            ]
+        self._send_json({"bookmarks": bms, "total": len(bms), "query": q})
+
+    def _handle_bookmarks_html(self) -> None:
+        """GET /web/bookmarks.html"""
+        p = Path(__file__).parent / "web" / "bookmarks.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "bookmarks.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_bookmarks_js(self) -> None:
+        """GET /web/js/bookmarks.js"""
+        p = Path(__file__).parent / "web" / "js" / "bookmarks.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "bookmarks.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_bookmarks_css(self) -> None:
+        """GET /web/css/bookmarks.css"""
+        p = Path(__file__).parent / "web" / "css" / "bookmarks.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "bookmarks.css not found"}, 404)
             return
         self.send_response(200)
         self.send_header("Content-Type", "text/css")

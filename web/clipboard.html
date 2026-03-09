@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clipboard Manager — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/clipboard.css">
+</head>
+<body>
+<div class="cb-container">
+  <h1 class="cb-title">Clipboard Manager</h1>
+  <p class="cb-subtitle">Never lose a copied value — instant paste history</p>
+
+  <div class="cb-toolbar">
+    <input type="text" id="cb-search" class="cb-search" placeholder="Search clipboard...">
+    <button id="btn-clear-all" class="cb-btn cb-btn-danger">Clear All</button>
+  </div>
+
+  <div id="cb-list" class="cb-list" aria-live="polite"></div>
+  <div id="cb-status" class="cb-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/clipboard.js"></script>
+</body>
+</html>
