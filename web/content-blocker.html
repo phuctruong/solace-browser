@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Blocker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/content-blocker.css">
+</head>
+<body>
+<div class="cb-container">
+  <h1 class="cb-title">Content Blocker</h1>
+  <div class="cb-card">
+    <h2 class="cb-subtitle">Add Rule</h2>
+    <select id="cb-type" class="cb-select"></select>
+    <input id="cb-pattern" type="text" placeholder="Block pattern…" class="cb-input">
+    <label class="cb-checkbox-label">
+      <input type="checkbox" id="cb-enabled" checked> Enabled
+    </label>
+    <button id="cb-add-btn" class="cb-btn">Add Rule</button>
+  </div>
+  <div class="cb-card">
+    <h2 class="cb-subtitle">Check URL</h2>
+    <input id="cb-check-url" type="text" placeholder="URL to check…" class="cb-input">
+    <button id="cb-check-btn" class="cb-btn">Check</button>
+    <div id="cb-check-result" class="cb-check-result"></div>
+  </div>
+  <div class="cb-stats" id="cb-stats-bar"></div>
+  <div id="cb-status" class="cb-status"></div>
+  <table class="cb-table">
+    <thead><tr><th>Type</th><th>Pattern Hash</th><th>Enabled</th><th>Blocks</th><th>Created</th><th></th></tr></thead>
+    <tbody id="cb-tbody"></tbody>
+  </table>
+</div>
+<script src="/web/js/content-blocker.js"></script>
+</body>
+</html>

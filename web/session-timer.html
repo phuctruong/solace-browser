@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Timer — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/session-timer.css">
+</head>
+<body>
+<div class="st-container">
+  <h1 class="st-title">Session Timer</h1>
+  <div class="st-card">
+    <div id="st-active-display" class="st-active-display">No active session</div>
+    <div class="st-controls">
+      <select id="st-type" class="st-select"></select>
+      <input id="st-goal" type="number" min="1" max="480" value="25" placeholder="Goal (min)" class="st-input">
+      <button id="st-start" class="st-btn st-btn-start">Start</button>
+      <button id="st-stop" class="st-btn st-btn-stop" disabled>Stop</button>
+    </div>
+    <div id="st-status" class="st-status"></div>
+  </div>
+  <div class="st-stats-row" id="st-stats-row"></div>
+  <div class="st-card">
+    <h2 class="st-subtitle">History</h2>
+    <table class="st-table">
+      <thead><tr><th>Type</th><th>Duration (min)</th><th>Goal (min)</th><th>Domain Hash</th><th>Started</th></tr></thead>
+      <tbody id="st-tbody"></tbody>
+    </table>
+  </div>
+</div>
+<script src="/web/js/session-timer.js"></script>
+</body>
+</html>

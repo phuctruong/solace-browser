@@ -1,0 +1,133 @@
+:root {
+  --hub-bg: #1a1a2e;
+  --hub-surface: #16213e;
+  --hub-accent: #0f3460;
+  --hub-text: #e0e0e0;
+  --hub-muted: #888;
+  --hub-border: #2a2a4a;
+  --hub-btn-bg: #0f3460;
+  --hub-btn-text: #e0e0e0;
+  --hub-danger: #c0392b;
+  --hub-success: #27ae60;
+  --hub-tag-bg: #0f3460;
+  --hub-input-bg: #0d0d1a;
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.bm-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.bm-title {
+  color: var(--hub-text);
+  font-size: 1.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.bm-add-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.bm-input {
+  background: var(--hub-input-bg);
+  color: var(--hub-text);
+  border: 1px solid var(--hub-border);
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  flex: 1;
+  min-width: 150px;
+}
+
+.bm-search-row {
+  margin-bottom: 1rem;
+}
+
+.bm-btn {
+  background: var(--hub-btn-bg);
+  color: var(--hub-btn-text);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.bm-btn:hover {
+  opacity: 0.85;
+}
+
+.bm-btn-danger {
+  background: var(--hub-danger);
+}
+
+.bm-tags-bar {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.bm-tag-filter {
+  background: var(--hub-tag-bg);
+  color: var(--hub-text);
+  border: none;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.bm-tag-filter.active {
+  background: var(--hub-accent);
+}
+
+.bm-status {
+  color: var(--hub-success);
+  min-height: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.bm-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--hub-surface);
+}
+
+.bm-table th,
+.bm-table td {
+  border: 1px solid var(--hub-border);
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+}
+
+.bm-table th {
+  background: var(--hub-accent);
+  color: var(--hub-text);
+}
+
+.bm-hash {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--hub-muted);
+}
+
+.bm-tag-pill {
+  display: inline-block;
+  background: var(--hub-tag-bg);
+  color: var(--hub-text);
+  border-radius: 10px;
+  padding: 0.1rem 0.4rem;
+  margin: 0.1rem;
+  font-size: 0.78rem;
+}

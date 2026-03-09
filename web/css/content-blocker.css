@@ -1,0 +1,142 @@
+:root {
+  --hub-bg: #1a1a2e;
+  --hub-surface: #16213e;
+  --hub-accent: #0f3460;
+  --hub-text: #e0e0e0;
+  --hub-muted: #888;
+  --hub-border: #2a2a4a;
+  --hub-btn-bg: #0f3460;
+  --hub-btn-text: #e0e0e0;
+  --hub-danger: #c0392b;
+  --hub-success: #27ae60;
+  --hub-input-bg: #0d0d1a;
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.cb-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.cb-title {
+  font-size: 1.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.cb-subtitle {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.cb-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 6px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.cb-card h2 {
+  width: 100%;
+  margin: 0 0 0.5rem;
+}
+
+.cb-select,
+.cb-input {
+  background: var(--hub-input-bg);
+  color: var(--hub-text);
+  border: 1px solid var(--hub-border);
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.cb-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cb-btn {
+  background: var(--hub-btn-bg);
+  color: var(--hub-btn-text);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cb-btn:hover { opacity: 0.85; }
+
+.cb-btn-danger { background: var(--hub-danger); }
+
+.cb-check-result {
+  width: 100%;
+  margin-top: 0.5rem;
+  font-weight: bold;
+}
+
+.cb-stats {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.cb-stat-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  text-align: center;
+}
+
+.cb-stat-value {
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.cb-stat-label {
+  font-size: 0.75rem;
+  color: var(--hub-muted);
+}
+
+.cb-status {
+  color: var(--hub-success);
+  min-height: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.cb-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--hub-surface);
+}
+
+.cb-table th,
+.cb-table td {
+  border: 1px solid var(--hub-border);
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+}
+
+.cb-table th { background: var(--hub-accent); }
+
+.cb-hash {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--hub-muted);
+}

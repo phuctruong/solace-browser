@@ -1,0 +1,149 @@
+:root {
+  --hub-bg: #1a1a2e;
+  --hub-surface: #16213e;
+  --hub-accent: #0f3460;
+  --hub-text: #e0e0e0;
+  --hub-muted: #888;
+  --hub-border: #2a2a4a;
+  --hub-btn-bg: #0f3460;
+  --hub-btn-text: #e0e0e0;
+  --hub-danger: #c0392b;
+  --hub-success: #27ae60;
+  --hub-input-bg: #0d0d1a;
+  --hub-active-bg: #1a3a1a;
+  --hub-start-btn: #1e7e34;
+  --hub-stop-btn: #c0392b;
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.st-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.st-title {
+  font-size: 1.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.st-subtitle {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.st-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 6px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.st-active-display {
+  font-size: 1.4rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  background: var(--hub-accent);
+}
+
+.st-active-display.running {
+  background: var(--hub-active-bg);
+  color: var(--hub-success);
+}
+
+.st-controls {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.st-select,
+.st-input {
+  background: var(--hub-input-bg);
+  color: var(--hub-text);
+  border: 1px solid var(--hub-border);
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.st-btn {
+  color: var(--hub-btn-text);
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.st-btn-start { background: var(--hub-start-btn); }
+.st-btn-stop { background: var(--hub-stop-btn); }
+.st-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.st-btn:hover:not(:disabled) { opacity: 0.85; }
+
+.st-status {
+  color: var(--hub-success);
+  min-height: 1.2rem;
+  margin-top: 0.6rem;
+}
+
+.st-stats-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.st-stat-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 6px;
+  padding: 0.75rem 1.25rem;
+  flex: 1;
+  text-align: center;
+}
+
+.st-stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.st-stat-label {
+  font-size: 0.78rem;
+  color: var(--hub-muted);
+}
+
+.st-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.st-table th,
+.st-table td {
+  border: 1px solid var(--hub-border);
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+}
+
+.st-table th {
+  background: var(--hub-accent);
+}
+
+.st-hash {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--hub-muted);
+}

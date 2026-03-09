@@ -1107,6 +1107,118 @@ _TIMER_ACTIVE: dict[str, dict] = {}   # token_hash → active session
 _TIMER_HISTORY: list[dict] = []
 _TIMER_LOCK = threading.Lock()
 
+# ---------------------------------------------------------------------------
+# Task 076 — Tab Screenshot
+# ---------------------------------------------------------------------------
+SCREENSHOT_FORMATS_076: tuple[str, ...] = ("png", "jpeg", "webp")
+MAX_TAB_SCREENSHOTS = 200
+
+_TAB_SCREENSHOTS: list[dict] = []
+_TAB_SCREENSHOT_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 077 — Privacy Dashboard
+# ---------------------------------------------------------------------------
+PRIVACY_EVENT_TYPES: list[str] = [
+    "tracker_blocked", "cookie_cleared", "fingerprint_blocked",
+    "data_shared", "permission_denied", "vpn_connected", "dns_leak_detected"
+]
+
+_PRIVACY_EVENTS: list[dict] = []
+_PRIVACY_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 078 — Certificate Inspector
+# ---------------------------------------------------------------------------
+CERT_GRADES: list[str] = ["A+", "A", "B", "C", "F"]
+CERT_ALERT_TYPES: list[str] = ["expiring_soon", "expired", "self_signed", "weak_cipher", "revoked"]
+
+_CERTIFICATES: list[dict] = []
+_CERT_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 079 — URL Categorizer
+# ---------------------------------------------------------------------------
+URL_CATEGORIES: list[str] = [
+    "productivity", "social_media", "news", "entertainment", "shopping",
+    "education", "technology", "finance", "health", "travel", "other"
+]
+CONFIDENCE_LEVELS: list[str] = ["low", "medium", "high"]
+MAX_URL_HISTORY = 1000
+
+_URL_HISTORY: list[dict] = []
+_URL_CAT_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 080 — Extension Store
+# ---------------------------------------------------------------------------
+EXTENSION_CATEGORIES: list[str] = [
+    "productivity", "security", "privacy", "developer_tools",
+    "accessibility", "shopping", "social", "entertainment"
+]
+_EXT_LISTINGS: list[dict] = []
+_EXT_INSTALLS: dict[str, list[str]] = {}   # token_hash → list[ext_id]
+_EXT_STORE_LOCK = threading.Lock()
+
+# Task 081 — Search Suggestions
+# ---------------------------------------------------------------------------
+MAX_SEARCH_HISTORY = 500
+MAX_SUGGESTIONS = 10
+
+_SEARCH_HISTORY: list[dict] = []
+_SEARCH_LOCK = threading.Lock()
+
+# Task 082 — User Preferences
+# ---------------------------------------------------------------------------
+PREFERENCE_SCHEMA: dict[str, dict] = {
+    "theme": {"type": "enum", "values": ["light", "dark", "auto"], "default": "auto"},
+    "language": {"type": "enum", "values": ["en", "fr", "de", "es", "ja", "zh"], "default": "en"},
+    "timezone": {"type": "string", "default": "UTC"},
+    "notifications_enabled": {"type": "boolean", "default": True},
+    "auto_save": {"type": "boolean", "default": True},
+    "compact_view": {"type": "boolean", "default": False},
+    "session_timeout_minutes": {"type": "integer", "min": 5, "max": 480, "default": 60},
+    "result_page_size": {"type": "integer", "min": 10, "max": 100, "default": 20},
+}
+
+_USER_PREFS: dict[str, dict] = {}   # token_hash → {pref_key: value}
+_PREFS_LOCK = threading.Lock()
+
+# Task 083 — DevTools Assistant
+# ---------------------------------------------------------------------------
+SNIPPET_LANGUAGES: list[str] = ["javascript", "python", "bash", "css", "html", "json", "sql"]
+CONSOLE_LOG_LEVELS: list[str] = ["log", "info", "warn", "error", "debug"]
+
+MAX_SNIPPETS = 100
+MAX_CONSOLE_LOGS = 500
+
+_DEVTOOLS_SNIPPETS: list[dict] = []
+_CONSOLE_LOGS: list[dict] = []
+_DEVTOOLS_LOCK = threading.Lock()
+
+# Task 084 — Request Interceptor
+# ---------------------------------------------------------------------------
+INTERCEPT_RULE_TYPES: list[str] = ["block", "redirect", "modify_headers", "inject_script", "log_only"]
+INTERCEPT_ACTIONS: list[str] = ["allow", "block", "redirect", "modify"]
+HTTP_METHODS_INTERCEPT: list[str] = ["GET", "POST", "PUT", "DELETE", "PATCH", "ALL"]
+
+MAX_INTERCEPT_RULES = 200
+MAX_INTERCEPT_LOG = 1000
+
+_INTERCEPT_RULES: list[dict] = []
+_INTERCEPT_LOG: list[dict] = []
+_INTERCEPT_LOCK = threading.Lock()
+
+# Task 085 — AI Page Summarizer
+# ---------------------------------------------------------------------------
+SUMMARY_MODELS: list[str] = ["haiku", "sonnet", "opus", "gpt-4o", "gpt-4o-mini", "local"]
+SUMMARY_LENGTH_TYPES: list[str] = ["brief", "standard", "detailed"]
+
+MAX_SUMMARIES = 500
+
+_PAGE_SUMMARIES: list[dict] = []
+_SUMMARIZER_LOCK = threading.Lock()
+
 # Task 070 — Performance Profiler
 # ---------------------------------------------------------------------------
 PROFILER_METRIC_TYPES: list[str] = [
@@ -5189,13 +5301,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/performance-profiler.js", "application/javascript")
         elif path == "/web/css/performance-profiler.css":
             self._handle_static_file("web/css/performance-profiler.css", "text/css")
-        # --- Task 071: Bookmark Manager ---
-        elif path == "/api/v1/bookmarks":
-            self._handle_bookmarks_list()
-        elif path == "/api/v1/bookmarks/search":
-            self._handle_bookmarks_search(query)
-        elif path == "/api/v1/bookmarks/tags":
-            self._handle_bookmarks_tags()
+        # --- Task 071: Bookmark Manager (new endpoint, deduplicated) ---
         elif path == "/web/bookmark-manager.html":
             self._handle_static_file("web/bookmark-manager.html", "text/html; charset=utf-8")
         elif path == "/web/js/bookmark-manager.js":
@@ -5252,6 +5358,137 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/session-timer.js", "application/javascript")
         elif path == "/web/css/session-timer.css":
             self._handle_static_file("web/css/session-timer.css", "text/css")
+        # --- Task 076: Tab Screenshot ---
+        elif path == "/api/v1/tab-screenshot/gallery":
+            self._handle_tab_screenshot_gallery()
+        elif path == "/api/v1/tab-screenshot/stats":
+            self._handle_tab_screenshot_stats()
+        elif path == "/api/v1/tab-screenshot/formats":
+            self._handle_tab_screenshot_formats()
+        elif path == "/web/tab-screenshot.html":
+            self._handle_static_file("web/tab-screenshot.html", "text/html; charset=utf-8")
+        elif path == "/web/js/tab-screenshot.js":
+            self._handle_static_file("web/js/tab-screenshot.js", "application/javascript")
+        elif path == "/web/css/tab-screenshot.css":
+            self._handle_static_file("web/css/tab-screenshot.css", "text/css")
+        # --- Task 077: Privacy Dashboard ---
+        elif path == "/api/v1/privacy/summary":
+            self._handle_privacy_summary()
+        elif path == "/api/v1/privacy/events":
+            self._handle_privacy_events_list()
+        elif path == "/api/v1/privacy/event-types":
+            self._handle_privacy_event_types()
+        elif path == "/web/privacy-dashboard.html":
+            self._handle_static_file("web/privacy-dashboard.html", "text/html; charset=utf-8")
+        elif path == "/web/js/privacy-dashboard.js":
+            self._handle_static_file("web/js/privacy-dashboard.js", "application/javascript")
+        elif path == "/web/css/privacy-dashboard.css":
+            self._handle_static_file("web/css/privacy-dashboard.css", "text/css")
+        # --- Task 078: Certificate Inspector ---
+        elif path == "/api/v1/certificates":
+            self._handle_cert_list()
+        elif path == "/api/v1/certificates/alerts":
+            self._handle_cert_alerts()
+        elif re.match(r"^/api/v1/certificates/[^/]+$", path):
+            cert_id = path.split("/")[-1]
+            self._handle_cert_get(cert_id)
+        elif path == "/web/certificate-inspector.html":
+            self._handle_static_file("web/certificate-inspector.html", "text/html; charset=utf-8")
+        elif path == "/web/js/certificate-inspector.js":
+            self._handle_static_file("web/js/certificate-inspector.js", "application/javascript")
+        elif path == "/web/css/certificate-inspector.css":
+            self._handle_static_file("web/css/certificate-inspector.css", "text/css")
+        # --- Task 079: URL Categorizer ---
+        elif path == "/api/v1/url-categorizer/history":
+            self._handle_url_cat_history()
+        elif path == "/api/v1/url-categorizer/summary":
+            self._handle_url_cat_summary()
+        elif path == "/api/v1/url-categorizer/categories":
+            self._handle_url_cat_categories()
+        elif path == "/web/url-categorizer.html":
+            self._handle_static_file("web/url-categorizer.html", "text/html; charset=utf-8")
+        elif path == "/web/js/url-categorizer.js":
+            self._handle_static_file("web/js/url-categorizer.js", "application/javascript")
+        elif path == "/web/css/url-categorizer.css":
+            self._handle_static_file("web/css/url-categorizer.css", "text/css")
+        # --- Task 080: Extension Store ---
+        elif path == "/api/v1/extension-store/listings":
+            self._handle_ext_listings_list()
+        elif re.match(r"^/api/v1/extension-store/listings/[^/]+$", path):
+            ext_id = path.split("/")[-1]
+            self._handle_ext_listing_get(ext_id)
+        elif path == "/api/v1/extension-store/installed":
+            self._handle_ext_installed_list()
+        elif path == "/web/extension-store.html":
+            self._handle_static_file("web/extension-store.html", "text/html; charset=utf-8")
+        elif path == "/web/js/extension-store.js":
+            self._handle_static_file("web/js/extension-store.js", "application/javascript")
+        elif path == "/web/css/extension-store.css":
+            self._handle_static_file("web/css/extension-store.css", "text/css")
+        # --- Task 081: Search Suggestions ---
+        elif path == "/api/v1/search-suggestions/suggest":
+            self._handle_search_suggest(query)
+        elif path == "/api/v1/search-suggestions/popular":
+            self._handle_search_popular()
+        elif path == "/api/v1/search-suggestions/stats":
+            self._handle_search_stats()
+        elif path == "/web/search-suggestions.html":
+            self._handle_static_file("web/search-suggestions.html", "text/html; charset=utf-8")
+        elif path == "/web/js/search-suggestions.js":
+            self._handle_static_file("web/js/search-suggestions.js", "application/javascript")
+        elif path == "/web/css/search-suggestions.css":
+            self._handle_static_file("web/css/search-suggestions.css", "text/css")
+        # --- Task 082: User Preferences ---
+        elif path == "/api/v1/preferences":
+            self._handle_prefs_get()
+        elif path == "/api/v1/preferences/schema":
+            self._handle_prefs_schema()
+        elif re.match(r"^/api/v1/preferences/[^/]+$", path):
+            pref_key = path.split("/")[-1]
+            self._handle_prefs_get_one(pref_key)
+        elif path == "/web/user-preferences.html":
+            self._handle_static_file("web/user-preferences.html", "text/html; charset=utf-8")
+        elif path == "/web/js/user-preferences.js":
+            self._handle_static_file("web/js/user-preferences.js", "application/javascript")
+        elif path == "/web/css/user-preferences.css":
+            self._handle_static_file("web/css/user-preferences.css", "text/css")
+        # --- Task 083: DevTools Assistant ---
+        elif path == "/api/v1/devtools/snippets":
+            self._handle_devtools_snippets_list()
+        elif path == "/api/v1/devtools/console-logs":
+            self._handle_devtools_console_list()
+        elif path == "/web/devtools-assistant.html":
+            self._handle_static_file("web/devtools-assistant.html", "text/html; charset=utf-8")
+        elif path == "/web/js/devtools-assistant.js":
+            self._handle_static_file("web/js/devtools-assistant.js", "application/javascript")
+        elif path == "/web/css/devtools-assistant.css":
+            self._handle_static_file("web/css/devtools-assistant.css", "text/css")
+        # --- Task 084: Request Interceptor ---
+        elif path == "/api/v1/interceptor/rules":
+            self._handle_interceptor_rules_list()
+        elif path == "/api/v1/interceptor/log":
+            self._handle_interceptor_log_list()
+        elif path == "/api/v1/interceptor/rule-types":
+            self._handle_interceptor_rule_types()
+        elif path == "/web/request-interceptor.html":
+            self._handle_static_file("web/request-interceptor.html", "text/html; charset=utf-8")
+        elif path == "/web/js/request-interceptor.js":
+            self._handle_static_file("web/js/request-interceptor.js", "application/javascript")
+        elif path == "/web/css/request-interceptor.css":
+            self._handle_static_file("web/css/request-interceptor.css", "text/css")
+        # --- Task 085: AI Page Summarizer ---
+        elif path == "/api/v1/page-summarizer/history":
+            self._handle_summarizer_history()
+        elif path == "/api/v1/page-summarizer/stats":
+            self._handle_summarizer_stats()
+        elif path == "/api/v1/page-summarizer/models":
+            self._handle_summarizer_models()
+        elif path == "/web/ai-page-summarizer.html":
+            self._handle_static_file("web/ai-page-summarizer.html", "text/html; charset=utf-8")
+        elif path == "/web/js/ai-page-summarizer.js":
+            self._handle_static_file("web/js/ai-page-summarizer.js", "application/javascript")
+        elif path == "/web/css/ai-page-summarizer.css":
+            self._handle_static_file("web/css/ai-page-summarizer.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -5696,9 +5933,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/profiler/sessions/[^/]+/metrics$", path):
             session_id = path.split("/")[-2]
             self._handle_profiler_metric_add(session_id)
-        # --- Task 071: Bookmark Manager ---
-        elif path == "/api/v1/bookmarks":
-            self._handle_bookmark_add()
+        # --- Task 071: Bookmark Manager (POST handled by Task 036 above) ---
         # --- Task 072: Password Generator ---
         elif path == "/api/v1/passwords/generate":
             self._handle_pw_generate()
@@ -5719,6 +5954,45 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_timer_start()
         elif path == "/api/v1/session-timer/stop":
             self._handle_timer_stop()
+        # --- Task 076: Tab Screenshot ---
+        elif path == "/api/v1/tab-screenshot/capture":
+            self._handle_tab_screenshot_capture()
+        # --- Task 077: Privacy Dashboard ---
+        elif path == "/api/v1/privacy/report":
+            self._handle_privacy_report()
+        # --- Task 078: Certificate Inspector ---
+        elif path == "/api/v1/certificates/record":
+            self._handle_cert_record()
+        # --- Task 079: URL Categorizer ---
+        elif path == "/api/v1/url-categorizer/categorize":
+            self._handle_url_cat_categorize()
+        # --- Task 080: Extension Store ---
+        elif path == "/api/v1/extension-store/listings":
+            self._handle_ext_listing_publish()
+        elif re.match(r"^/api/v1/extension-store/install/[^/]+$", path):
+            ext_id = path.split("/")[-1]
+            self._handle_ext_install(ext_id)
+        # --- Task 081: Search Suggestions ---
+        elif path == "/api/v1/search-suggestions/record":
+            self._handle_search_record()
+        # --- Task 082: User Preferences ---
+        elif path == "/api/v1/preferences":
+            self._handle_prefs_set()
+        elif path == "/api/v1/preferences/reset-all":
+            self._handle_prefs_reset_all()
+        # --- Task 083: DevTools Assistant ---
+        elif path == "/api/v1/devtools/snippets":
+            self._handle_devtools_snippet_save()
+        elif path == "/api/v1/devtools/console-logs":
+            self._handle_devtools_console_record()
+        # --- Task 084: Request Interceptor ---
+        elif path == "/api/v1/interceptor/rules":
+            self._handle_interceptor_rule_create()
+        elif path == "/api/v1/interceptor/log":
+            self._handle_interceptor_log_record()
+        # --- Task 085: AI Page Summarizer ---
+        elif path == "/api/v1/page-summarizer/summarize":
+            self._handle_summarizer_record()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -5916,6 +6190,45 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/content-blocker/rules/[^/]+$", path):
             rule_id = path.split("/")[-1]
             self._handle_cb_rule_delete(rule_id)
+        # --- Task 076: Tab Screenshot ---
+        elif re.match(r"^/api/v1/tab-screenshot/[^/]+$", path):
+            screenshot_id = path.split("/")[-1]
+            self._handle_tab_screenshot_delete(screenshot_id)
+        # --- Task 077: Privacy Dashboard ---
+        elif path == "/api/v1/privacy/events":
+            self._handle_privacy_events_clear()
+        # --- Task 078: Certificate Inspector ---
+        elif re.match(r"^/api/v1/certificates/[^/]+$", path):
+            cert_id = path.split("/")[-1]
+            self._handle_cert_delete(cert_id)
+        # --- Task 079: URL Categorizer ---
+        elif path == "/api/v1/url-categorizer/history":
+            self._handle_url_cat_history_clear()
+        # --- Task 080: Extension Store ---
+        elif re.match(r"^/api/v1/extension-store/installed/[^/]+$", path):
+            ext_id = path.split("/")[-1]
+            self._handle_ext_uninstall(ext_id)
+        # --- Task 081: Search Suggestions ---
+        elif path == "/api/v1/search-suggestions/history":
+            self._handle_search_history_clear()
+        # --- Task 082: User Preferences ---
+        elif re.match(r"^/api/v1/preferences/[^/]+$", path):
+            pref_key = path.split("/")[-1]
+            self._handle_prefs_reset_key(pref_key)
+        # --- Task 083: DevTools Assistant ---
+        elif re.match(r"^/api/v1/devtools/snippets/[^/]+$", path):
+            snippet_id = path.split("/")[-1]
+            self._handle_devtools_snippet_delete(snippet_id)
+        elif path == "/api/v1/devtools/console-logs":
+            self._handle_devtools_console_clear()
+        # --- Task 084: Request Interceptor ---
+        elif re.match(r"^/api/v1/interceptor/rules/[^/]+$", path):
+            rule_id = path.split("/")[-1]
+            self._handle_interceptor_rule_delete(rule_id)
+        # --- Task 085: AI Page Summarizer ---
+        elif re.match(r"^/api/v1/page-summarizer/history/[^/]+$", path):
+            summary_id = path.split("/")[-1]
+            self._handle_summarizer_delete(summary_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -17963,6 +18276,1493 @@ function choose(mode) {
                 "min_value": agg["min_value"] if agg["min_value"] is not None else 0.0,
             }
         self._send_json({"aggregates": result, "metric_types": PROFILER_METRIC_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 071 — Bookmark Manager handlers (bkm_ prefix — separate from Task 036)
+    # ---------------------------------------------------------------------------
+
+    def _handle_bkm_list(self) -> None:
+        """GET /api/v1/bookmarks — list bookmarks (public, Task 071)."""
+        with _BOOKMARK_LOCK:
+            items = [dict(b) for b in _BOOKMARKS]
+        self._send_json({"bookmarks": items, "total": len(items)})
+
+    def _handle_bkm_search(self, query: str) -> None:
+        """GET /api/v1/bookmarks/search — search by tag or title_hash (public, Task 071)."""
+        params = self._parse_query(query)
+        q = params.get("q", "").strip().lower()
+        with _BOOKMARK_LOCK:
+            results = [
+                dict(b) for b in _BOOKMARKS
+                if q in b.get("title", "").lower()
+                or any(q in t.lower() for t in b.get("tags", []))
+                or q in b.get("url_hash", "").lower()
+            ]
+        self._send_json({"bookmarks": results, "total": len(results)})
+
+    def _handle_bkm_tags(self) -> None:
+        """GET /api/v1/bookmarks/tags — list all unique tags (public, Task 071)."""
+        with _BOOKMARK_LOCK:
+            all_tags: set[str] = set()
+            for b in _BOOKMARKS:
+                for t in b.get("tags", []):
+                    all_tags.add(t)
+        self._send_json({"tags": sorted(all_tags), "total": len(all_tags)})
+
+    def _handle_bkm_add(self) -> None:
+        """POST /api/v1/bookmarks — add bookmark with URL hashing (auth required, Task 071)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url = str(body.get("url", "")).strip()
+        if not url:
+            self._send_json({"error": "url required"}, 400)
+            return
+        url_hash = hashlib.sha256(url.encode()).hexdigest()
+        title = str(body.get("title", "")).strip()
+        if len(title) > 128:
+            self._send_json({"error": "title max 128 chars"}, 400)
+            return
+        tags_raw = body.get("tags", [])
+        if not isinstance(tags_raw, list):
+            self._send_json({"error": "tags must be a list"}, 400)
+            return
+        if len(tags_raw) > MAX_TAGS_PER_BOOKMARK:
+            self._send_json({"error": f"max {MAX_TAGS_PER_BOOKMARK} tags"}, 400)
+            return
+        tags: list[str] = []
+        for t in tags_raw:
+            tag = str(t).strip()
+            if len(tag) > 32:
+                self._send_json({"error": "each tag max 32 chars"}, 400)
+                return
+            tags.append(tag)
+        with _BOOKMARK_LOCK:
+            if len(_BOOKMARKS) >= MAX_BOOKMARKS:
+                self._send_json({"error": f"max {MAX_BOOKMARKS} bookmarks"}, 400)
+                return
+            bookmark = {
+                "bookmark_id": "bkm_" + uuid.uuid4().hex,
+                "url_hash": url_hash,
+                "title": title,
+                "tags": tags,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+            _BOOKMARKS.append(bookmark)
+        self._send_json({"status": "created", "bookmark": dict(bookmark)}, 201)
+
+    def _handle_bkm_delete(self, bookmark_id: str) -> None:
+        """DELETE /api/v1/bookmarks/{id} — delete bookmark (auth required, Task 071)."""
+        if not self._check_auth():
+            return
+        with _BOOKMARK_LOCK:
+            idx = next((i for i, b in enumerate(_BOOKMARKS) if b["bookmark_id"] == bookmark_id), None)
+            if idx is None:
+                self._send_json({"error": "bookmark not found"}, 404)
+                return
+            _BOOKMARKS.pop(idx)
+        self._send_json({"status": "deleted", "bookmark_id": bookmark_id})
+
+    # ---------------------------------------------------------------------------
+    # Task 072 — Password Generator handlers
+    # ---------------------------------------------------------------------------
+
+    def _pw_strength(self, password: str) -> tuple[int, str]:
+        """Compute strength score and level for a password."""
+        length = len(password)
+        charsets_used = 0
+        if any(c in PASSWORD_CHARSETS["uppercase"] for c in password):
+            charsets_used += 1
+        if any(c in PASSWORD_CHARSETS["lowercase"] for c in password):
+            charsets_used += 1
+        if any(c in PASSWORD_CHARSETS["numbers"] for c in password):
+            charsets_used += 1
+        if any(c in PASSWORD_CHARSETS["symbols"] for c in password):
+            charsets_used += 1
+        if length < 8:
+            return 10, "very_weak"
+        if length <= 11 and charsets_used <= 1:
+            return 30, "weak"
+        if length <= 15 or charsets_used >= 2:
+            if length >= 24 and charsets_used >= 3:
+                return 90, "very_strong"
+            if length >= 16 or charsets_used >= 3:
+                return 70, "strong"
+            return 50, "fair"
+        if length >= 24 and charsets_used >= 3:
+            return 90, "very_strong"
+        if length >= 16 or charsets_used >= 3:
+            return 70, "strong"
+        return 50, "fair"
+
+    def _handle_pw_generate(self) -> None:
+        """POST /api/v1/passwords/generate — generate password (public)."""
+        body = self._read_json_body()
+        if body is None:
+            return
+        length_raw = body.get("length", 16)
+        try:
+            length = int(length_raw)
+        except (TypeError, ValueError):
+            self._send_json({"error": "length must be an integer"}, 400)
+            return
+        if length < 8 or length > 128:
+            self._send_json({"error": "length must be 8-128"}, 400)
+            return
+        charset_keys = body.get("charsets", ["uppercase", "lowercase", "numbers"])
+        if not isinstance(charset_keys, list) or len(charset_keys) == 0:
+            self._send_json({"error": "charsets must be a non-empty list"}, 400)
+            return
+        for ck in charset_keys:
+            if ck not in PASSWORD_CHARSETS:
+                self._send_json({"error": f"unknown charset: {ck}"}, 400)
+                return
+        alphabet = "".join(PASSWORD_CHARSETS[ck] for ck in charset_keys)
+        exclude_similar = bool(body.get("exclude_similar", False))
+        if exclude_similar:
+            similar = set("0Oo1lI")
+            alphabet = "".join(c for c in alphabet if c not in similar)
+        if not alphabet:
+            self._send_json({"error": "no characters available after filtering"}, 400)
+            return
+        password = "".join(secrets.choice(alphabet) for _ in range(length))
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        score, level = self._pw_strength(password)
+        entry = {
+            "entry_id": "pwh_" + uuid.uuid4().hex,
+            "password_hash": password_hash,
+            "length": length,
+            "charsets_used": list(charset_keys),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        auth_header = self.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token_hash = hashlib.sha256(auth_header[7:].encode()).hexdigest()
+            with _PW_LOCK:
+                if token_hash not in _PASSWORD_HISTORY:
+                    _PASSWORD_HISTORY[token_hash] = []
+                hist = _PASSWORD_HISTORY[token_hash]
+                if len(hist) >= MAX_PW_HISTORY:
+                    hist.pop(0)
+                hist.append(entry)
+        self._send_json({
+            "password_hash": password_hash,
+            "length": length,
+            "strength_score": score,
+            "strength_level": level,
+            "charsets_used": list(charset_keys),
+        }, 201)
+
+    def _handle_pw_audit(self) -> None:
+        """POST /api/v1/passwords/audit — audit password strength (public)."""
+        body = self._read_json_body()
+        if body is None:
+            return
+        password = str(body.get("password", ""))
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        score, level = self._pw_strength(password)
+        self._send_json({
+            "password_hash": password_hash,
+            "strength_score": score,
+            "strength_level": level,
+        })
+
+    def _handle_pw_history_list(self) -> None:
+        """GET /api/v1/passwords/history — list generated password hashes (auth required)."""
+        if not self._check_auth():
+            return
+        auth_header = self.headers.get("Authorization", "")
+        token_hash = hashlib.sha256(auth_header[7:].encode()).hexdigest() if auth_header.startswith("Bearer ") else ""
+        with _PW_LOCK:
+            hist = list(_PASSWORD_HISTORY.get(token_hash, []))
+        self._send_json({"history": hist, "total": len(hist)})
+
+    def _handle_pw_history_clear(self) -> None:
+        """DELETE /api/v1/passwords/history — clear history (auth required)."""
+        if not self._check_auth():
+            return
+        auth_header = self.headers.get("Authorization", "")
+        token_hash = hashlib.sha256(auth_header[7:].encode()).hexdigest() if auth_header.startswith("Bearer ") else ""
+        with _PW_LOCK:
+            _PASSWORD_HISTORY.pop(token_hash, None)
+        self.send_response(204)
+        self.end_headers()
+
+    def _handle_pw_options(self) -> None:
+        """GET /api/v1/passwords/options — list available generation options (public)."""
+        self._send_json({
+            "charsets": {k: list(v) for k, v in PASSWORD_CHARSETS.items()},
+            "strength_levels": STRENGTH_LEVELS,
+            "min_length": 8,
+            "max_length": 128,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 073 — Network Traffic Logger handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_network_log_record(self) -> None:
+        """POST /api/v1/network-log/record — record a network request (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url = str(body.get("url", "")).strip()
+        if not url:
+            self._send_json({"error": "url required"}, 400)
+            return
+        url_hash = hashlib.sha256(url.encode()).hexdigest()
+        domain = url.split("/")[2] if url.count("/") >= 2 else url
+        domain_hash = hashlib.sha256(domain.encode()).hexdigest()
+        method = str(body.get("method", "")).strip().upper()
+        if method not in HTTP_METHODS:
+            self._send_json({"error": f"method must be one of {HTTP_METHODS}"}, 400)
+            return
+        status_raw = body.get("status_code", 200)
+        try:
+            status_code = int(status_raw)
+        except (TypeError, ValueError):
+            self._send_json({"error": "status_code must be an integer"}, 400)
+            return
+        if status_code < 100 or status_code > 599:
+            self._send_json({"error": "status_code must be 100-599"}, 400)
+            return
+        duration_raw = body.get("duration_ms", 0)
+        try:
+            duration_ms = max(0, int(duration_raw))
+        except (TypeError, ValueError):
+            duration_ms = 0
+        req_size = max(0, int(body.get("request_size_bytes", 0) or 0))
+        resp_size = max(0, int(body.get("response_size_bytes", 0) or 0))
+        entry = {
+            "log_id": "nrl_" + uuid.uuid4().hex,
+            "url_hash": url_hash,
+            "domain_hash": domain_hash,
+            "method": method,
+            "status_code": status_code,
+            "duration_ms": duration_ms,
+            "request_size_bytes": req_size,
+            "response_size_bytes": resp_size,
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _NETWORK_LOG_LOCK:
+            if len(_NETWORK_LOG) >= MAX_LOG_ENTRIES:
+                _NETWORK_LOG.pop(0)
+            _NETWORK_LOG.append(entry)
+        self._send_json({"status": "recorded", "log_id": entry["log_id"]}, 201)
+
+    def _handle_network_log_list(self) -> None:
+        """GET /api/v1/network-log/requests — list logged requests (auth required)."""
+        if not self._check_auth():
+            return
+        with _NETWORK_LOG_LOCK:
+            entries = [dict(e) for e in _NETWORK_LOG]
+        self._send_json({"requests": entries, "total": len(entries)})
+
+    def _handle_network_log_clear(self) -> None:
+        """DELETE /api/v1/network-log/clear — clear all logs (auth required)."""
+        if not self._check_auth():
+            return
+        with _NETWORK_LOG_LOCK:
+            count = len(_NETWORK_LOG)
+            _NETWORK_LOG.clear()
+        self._send_json({"status": "cleared", "removed": count})
+
+    def _handle_network_log_summary(self) -> None:
+        """GET /api/v1/network-log/summary — stats by domain and method (auth required)."""
+        if not self._check_auth():
+            return
+        with _NETWORK_LOG_LOCK:
+            entries = list(_NETWORK_LOG)
+        by_method: dict[str, int] = {m: 0 for m in HTTP_METHODS}
+        by_domain_hash: dict[str, int] = {}
+        for e in entries:
+            m = e.get("method", "")
+            if m in by_method:
+                by_method[m] += 1
+            dh = e.get("domain_hash", "")
+            by_domain_hash[dh] = by_domain_hash.get(dh, 0) + 1
+        self._send_json({
+            "by_method": by_method,
+            "by_domain_hash": by_domain_hash,
+            "total": len(entries),
+        })
+
+    def _handle_network_log_methods(self) -> None:
+        """GET /api/v1/network-log/methods — list supported HTTP methods (public)."""
+        self._send_json({"methods": HTTP_METHODS})
+
+    # ---------------------------------------------------------------------------
+    # Task 074 — Content Blocker handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_cb_rules_list(self) -> None:
+        """GET /api/v1/content-blocker/rules — list all blocking rules (auth required)."""
+        if not self._check_auth():
+            return
+        with _CONTENT_LOCK:
+            rules = [dict(r) for r in _CONTENT_RULES]
+        self._send_json({"rules": rules, "total": len(rules)})
+
+    def _handle_cb_rule_add(self) -> None:
+        """POST /api/v1/content-blocker/rules — add a rule (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        rule_type = str(body.get("rule_type", "")).strip()
+        if rule_type not in CONTENT_RULE_TYPES:
+            self._send_json({"error": f"rule_type must be one of {CONTENT_RULE_TYPES}"}, 400)
+            return
+        pattern = str(body.get("pattern", "")).strip()
+        if not pattern:
+            self._send_json({"error": "pattern required"}, 400)
+            return
+        pattern_hash = hashlib.sha256(pattern.encode()).hexdigest()
+        enabled = bool(body.get("enabled", True))
+        with _CONTENT_LOCK:
+            if len(_CONTENT_RULES) >= MAX_CONTENT_RULES:
+                self._send_json({"error": f"max {MAX_CONTENT_RULES} rules"}, 400)
+                return
+            rule = {
+                "rule_id": "cbr_" + uuid.uuid4().hex,
+                "rule_type": rule_type,
+                "pattern_hash": pattern_hash,
+                "enabled": enabled,
+                "block_count": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+            _CONTENT_RULES.append(rule)
+            _BLOCK_STATS[rule["rule_id"]] = 0
+        self._send_json({"status": "created", "rule": dict(rule)}, 201)
+
+    def _handle_cb_rule_delete(self, rule_id: str) -> None:
+        """DELETE /api/v1/content-blocker/rules/{id} — remove rule (auth required)."""
+        if not self._check_auth():
+            return
+        with _CONTENT_LOCK:
+            idx = next((i for i, r in enumerate(_CONTENT_RULES) if r["rule_id"] == rule_id), None)
+            if idx is None:
+                self._send_json({"error": "rule not found"}, 404)
+                return
+            _CONTENT_RULES.pop(idx)
+            _BLOCK_STATS.pop(rule_id, None)
+        self._send_json({"status": "deleted", "rule_id": rule_id})
+
+    def _handle_cb_check(self) -> None:
+        """POST /api/v1/content-blocker/check — check if URL matches any rule (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url = str(body.get("url", "")).strip()
+        if not url:
+            self._send_json({"error": "url required"}, 400)
+            return
+        url_hash = hashlib.sha256(url.encode()).hexdigest()
+        matched = False
+        matched_rule_id = None
+        matched_rule_type = None
+        with _CONTENT_LOCK:
+            for rule in _CONTENT_RULES:
+                if not rule.get("enabled", True):
+                    continue
+                # Match by pattern_hash against url_hash prefix (simplified check)
+                ph = rule.get("pattern_hash", "")
+                if ph and ph[:8] == url_hash[:8]:
+                    matched = True
+                    matched_rule_id = rule["rule_id"]
+                    matched_rule_type = rule["rule_type"]
+                    rule["block_count"] = rule.get("block_count", 0) + 1
+                    _BLOCK_STATS[rule["rule_id"]] = rule["block_count"]
+                    break
+        self._send_json({
+            "matched": matched,
+            "rule_id": matched_rule_id,
+            "rule_type": matched_rule_type,
+            "url_hash": url_hash,
+        })
+
+    def _handle_cb_stats(self) -> None:
+        """GET /api/v1/content-blocker/stats — blocking statistics (auth required)."""
+        if not self._check_auth():
+            return
+        with _CONTENT_LOCK:
+            rules = list(_CONTENT_RULES)
+            stats = dict(_BLOCK_STATS)
+        total_rules = len(rules)
+        enabled_rules = sum(1 for r in rules if r.get("enabled", True))
+        total_blocks = sum(stats.values())
+        by_type: dict[str, int] = {rt: 0 for rt in CONTENT_RULE_TYPES}
+        for r in rules:
+            rt = r.get("rule_type", "")
+            if rt in by_type:
+                by_type[rt] += stats.get(r["rule_id"], 0)
+        self._send_json({
+            "total_rules": total_rules,
+            "enabled_rules": enabled_rules,
+            "total_blocks": total_blocks,
+            "by_type": by_type,
+        })
+
+    def _handle_cb_rule_types(self) -> None:
+        """GET /api/v1/content-blocker/rule-types — list rule types (public)."""
+        self._send_json({"rule_types": CONTENT_RULE_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 075 — Session Timer handlers
+    # ---------------------------------------------------------------------------
+
+    def _timer_token_key(self) -> str:
+        """Derive a per-user key from auth header for timer storage."""
+        auth_header = self.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            return hashlib.sha256(auth_header[7:].encode()).hexdigest()
+        return "anonymous"
+
+    def _handle_timer_start(self) -> None:
+        """POST /api/v1/session-timer/start — start a timed session (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        session_type = str(body.get("session_type", "")).strip()
+        if session_type not in SESSION_TIMER_TYPES:
+            self._send_json({"error": f"session_type must be one of {SESSION_TIMER_TYPES}"}, 400)
+            return
+        goal_raw = body.get("goal_minutes", 25)
+        try:
+            goal_minutes = int(goal_raw)
+        except (TypeError, ValueError):
+            self._send_json({"error": "goal_minutes must be an integer"}, 400)
+            return
+        if goal_minutes < 1 or goal_minutes > MAX_SESSION_MINUTES:
+            self._send_json({"error": f"goal_minutes must be 1-{MAX_SESSION_MINUTES}"}, 400)
+            return
+        domain = str(body.get("domain", "")).strip()
+        domain_hash = hashlib.sha256(domain.encode()).hexdigest() if domain else ""
+        key = self._timer_token_key()
+        with _TIMER_LOCK:
+            if key in _TIMER_ACTIVE:
+                self._send_json({"error": "session already active"}, 409)
+                return
+            session = {
+                "session_id": "stm_" + uuid.uuid4().hex,
+                "session_type": session_type,
+                "goal_minutes": goal_minutes,
+                "domain_hash": domain_hash,
+                "started_at": datetime.now(timezone.utc).isoformat(),
+                "stopped_at": None,
+                "duration_minutes": None,
+                "status": "active",
+                "_start_ts": time.time(),
+            }
+            _TIMER_ACTIVE[key] = session
+        out = {k: v for k, v in session.items() if not k.startswith("_")}
+        self._send_json({"status": "started", "session": out}, 201)
+
+    def _handle_timer_stop(self) -> None:
+        """POST /api/v1/session-timer/stop — stop current session (auth required)."""
+        if not self._check_auth():
+            return
+        key = self._timer_token_key()
+        with _TIMER_LOCK:
+            session = _TIMER_ACTIVE.pop(key, None)
+            if session is None:
+                self._send_json({"error": "no active session"}, 404)
+                return
+            now = time.time()
+            start_ts = session.pop("_start_ts", now)
+            elapsed = now - start_ts
+            duration_minutes = max(0, round(elapsed / 60))
+            session["stopped_at"] = datetime.now(timezone.utc).isoformat()
+            session["duration_minutes"] = duration_minutes
+            session["status"] = "completed"
+            if len(_TIMER_HISTORY) >= MAX_TIMER_HISTORY:
+                _TIMER_HISTORY.pop(0)
+            _TIMER_HISTORY.append(dict(session))
+        self._send_json({"status": "stopped", "session": dict(session)})
+
+    def _handle_timer_current(self) -> None:
+        """GET /api/v1/session-timer/current — get active session info (auth required)."""
+        if not self._check_auth():
+            return
+        key = self._timer_token_key()
+        with _TIMER_LOCK:
+            session = _TIMER_ACTIVE.get(key)
+            if session is None:
+                self._send_json({"active": False, "session": None})
+                return
+            elapsed = round((time.time() - session.get("_start_ts", time.time())) / 60)
+            out = {k: v for k, v in session.items() if not k.startswith("_")}
+            out["elapsed_minutes"] = elapsed
+        self._send_json({"active": True, "session": out})
+
+    def _handle_timer_history(self) -> None:
+        """GET /api/v1/session-timer/history — list past sessions (auth required)."""
+        if not self._check_auth():
+            return
+        with _TIMER_LOCK:
+            history = [dict(s) for s in _TIMER_HISTORY]
+        self._send_json({"history": history, "total": len(history)})
+
+    def _handle_timer_stats(self) -> None:
+        """GET /api/v1/session-timer/stats — daily/weekly totals (auth required)."""
+        if not self._check_auth():
+            return
+        now = datetime.now(timezone.utc)
+        today_str = now.date().isoformat()
+        week_ago_ts = now.timestamp() - 7 * 86400
+        with _TIMER_LOCK:
+            history = list(_TIMER_HISTORY)
+        today_minutes = 0
+        this_week_minutes = 0
+        for s in history:
+            dur = s.get("duration_minutes", 0) or 0
+            stopped_at = s.get("stopped_at", "")
+            if stopped_at and stopped_at[:10] == today_str:
+                today_minutes += dur
+            if stopped_at:
+                try:
+                    stop_ts = datetime.fromisoformat(stopped_at.replace("Z", "+00:00")).timestamp()
+                    if stop_ts >= week_ago_ts:
+                        this_week_minutes += dur
+                except ValueError:
+                    pass
+        self._send_json({
+            "today_minutes": today_minutes,
+            "this_week_minutes": this_week_minutes,
+            "session_count": len(history),
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 076 — Tab Screenshot handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_tab_screenshot_capture(self) -> None:
+        """POST /api/v1/tab-screenshot/capture — capture a tab screenshot (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        fmt = str(body.get("format", "png")).strip().lower()
+        if fmt not in SCREENSHOT_FORMATS_076:
+            self._send_json({"error": f"format must be one of {list(SCREENSHOT_FORMATS_076)}"}, 400)
+            return
+        url = str(body.get("url", "")).strip()
+        title = str(body.get("title", "")).strip()
+        file_content = str(body.get("file_content", "")).strip()
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else ""
+        title_hash = hashlib.sha256(title.encode()).hexdigest() if title else ""
+        file_hash = hashlib.sha256(file_content.encode()).hexdigest() if file_content else ""
+        size_bytes = max(0, int(body.get("size_bytes", 0) or 0))
+        entry = {
+            "screenshot_id": "scr_" + uuid.uuid4().hex,
+            "url_hash": url_hash,
+            "title_hash": title_hash,
+            "format": fmt,
+            "file_hash": file_hash,
+            "size_bytes": size_bytes,
+            "captured_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _TAB_SCREENSHOT_LOCK:
+            if len(_TAB_SCREENSHOTS) >= MAX_TAB_SCREENSHOTS:
+                _TAB_SCREENSHOTS.pop(0)
+            _TAB_SCREENSHOTS.append(entry)
+        self._send_json({"status": "captured", "screenshot_id": entry["screenshot_id"]}, 201)
+
+    def _handle_tab_screenshot_gallery(self) -> None:
+        """GET /api/v1/tab-screenshot/gallery — list screenshot metadata (auth required)."""
+        if not self._check_auth():
+            return
+        with _TAB_SCREENSHOT_LOCK:
+            items = sorted(list(_TAB_SCREENSHOTS), key=lambda x: x.get("captured_at", ""), reverse=True)
+        self._send_json({"screenshots": items, "total": len(items)})
+
+    def _handle_tab_screenshot_delete(self, screenshot_id: str) -> None:
+        """DELETE /api/v1/tab-screenshot/{screenshot_id} — delete screenshot (auth required)."""
+        if not self._check_auth():
+            return
+        with _TAB_SCREENSHOT_LOCK:
+            idx = next((i for i, s in enumerate(_TAB_SCREENSHOTS) if s["screenshot_id"] == screenshot_id), -1)
+            if idx == -1:
+                self._send_json({"error": "screenshot not found"}, 404)
+                return
+            _TAB_SCREENSHOTS.pop(idx)
+        self._send_json({"status": "deleted", "screenshot_id": screenshot_id})
+
+    def _handle_tab_screenshot_stats(self) -> None:
+        """GET /api/v1/tab-screenshot/stats — screenshot stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _TAB_SCREENSHOT_LOCK:
+            items = list(_TAB_SCREENSHOTS)
+        total_size = sum(s.get("size_bytes", 0) for s in items)
+        self._send_json({"count": len(items), "total_size_bytes": total_size})
+
+    def _handle_tab_screenshot_formats(self) -> None:
+        """GET /api/v1/tab-screenshot/formats — list supported formats (public)."""
+        self._send_json({"formats": list(SCREENSHOT_FORMATS_076)})
+
+    # ---------------------------------------------------------------------------
+    # Task 077 — Privacy Dashboard handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_privacy_report(self) -> None:
+        """POST /api/v1/privacy/report — record a privacy event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        event_type = str(body.get("event_type", "")).strip()
+        if event_type not in PRIVACY_EVENT_TYPES:
+            self._send_json({"error": f"event_type must be one of {PRIVACY_EVENT_TYPES}"}, 400)
+            return
+        domain = str(body.get("domain", "")).strip()
+        details = str(body.get("details", "")).strip()
+        domain_hash = hashlib.sha256(domain.encode()).hexdigest() if domain else ""
+        details_hash = hashlib.sha256(details.encode()).hexdigest() if details else ""
+        entry = {
+            "event_id": "prv_" + uuid.uuid4().hex,
+            "event_type": event_type,
+            "domain_hash": domain_hash,
+            "details_hash": details_hash,
+            "occurred_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _PRIVACY_LOCK:
+            _PRIVACY_EVENTS.append(entry)
+        self._send_json({"status": "recorded", "event_id": entry["event_id"]}, 201)
+
+    def _handle_privacy_events_list(self) -> None:
+        """GET /api/v1/privacy/events — list privacy events (auth required)."""
+        if not self._check_auth():
+            return
+        with _PRIVACY_LOCK:
+            events = list(_PRIVACY_EVENTS)
+        self._send_json({"events": events, "total": len(events)})
+
+    def _handle_privacy_events_clear(self) -> None:
+        """DELETE /api/v1/privacy/events — clear all events (auth required)."""
+        if not self._check_auth():
+            return
+        with _PRIVACY_LOCK:
+            count = len(_PRIVACY_EVENTS)
+            _PRIVACY_EVENTS.clear()
+        self._send_json({"status": "cleared", "removed": count})
+
+    def _handle_privacy_summary(self) -> None:
+        """GET /api/v1/privacy/summary — overall privacy summary (auth required)."""
+        if not self._check_auth():
+            return
+        with _PRIVACY_LOCK:
+            events = list(_PRIVACY_EVENTS)
+        by_type: dict[str, int] = {t: 0 for t in PRIVACY_EVENT_TYPES}
+        for e in events:
+            et = e.get("event_type", "")
+            if et in by_type:
+                by_type[et] += 1
+        count = len(events)
+        privacy_score = min(100, count * 2)
+        self._send_json({"event_count": count, "by_type": by_type, "privacy_score": privacy_score})
+
+    def _handle_privacy_event_types(self) -> None:
+        """GET /api/v1/privacy/event-types — list event types (public)."""
+        self._send_json({"event_types": PRIVACY_EVENT_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 078 — Certificate Inspector handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_cert_record(self) -> None:
+        """POST /api/v1/certificates/record — record a certificate observation (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        grade = str(body.get("grade", "")).strip()
+        if grade not in CERT_GRADES:
+            self._send_json({"error": f"grade must be one of {CERT_GRADES}"}, 400)
+            return
+        domain = str(body.get("domain", "")).strip()
+        fingerprint = str(body.get("fingerprint", "")).strip()
+        issuer = str(body.get("issuer", "")).strip()
+        subject = str(body.get("subject", "")).strip()
+        domain_hash = hashlib.sha256(domain.encode()).hexdigest() if domain else ""
+        fingerprint_hash = hashlib.sha256(fingerprint.encode()).hexdigest() if fingerprint else ""
+        issuer_hash = hashlib.sha256(issuer.encode()).hexdigest() if issuer else ""
+        subject_hash = hashlib.sha256(subject.encode()).hexdigest() if subject else ""
+        validity_days_remaining = int(body.get("validity_days_remaining", 365) or 365)
+        # Determine alert_type
+        alert_type: str | None = None
+        if validity_days_remaining <= 0:
+            alert_type = "expired"
+        elif validity_days_remaining < 30:
+            alert_type = "expiring_soon"
+        elif grade in ("C", "F"):
+            alert_type = "weak_cipher"
+        entry = {
+            "cert_id": "crt_" + uuid.uuid4().hex,
+            "domain_hash": domain_hash,
+            "fingerprint_hash": fingerprint_hash,
+            "issuer_hash": issuer_hash,
+            "subject_hash": subject_hash,
+            "grade": grade,
+            "validity_days_remaining": validity_days_remaining,
+            "alert_type": alert_type,
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _CERT_LOCK:
+            _CERTIFICATES.append(entry)
+        self._send_json({"status": "recorded", "cert_id": entry["cert_id"]}, 201)
+
+    def _handle_cert_list(self) -> None:
+        """GET /api/v1/certificates — list recorded certificates (auth required)."""
+        if not self._check_auth():
+            return
+        with _CERT_LOCK:
+            certs = list(_CERTIFICATES)
+        self._send_json({"certificates": certs, "total": len(certs)})
+
+    def _handle_cert_get(self, cert_id: str) -> None:
+        """GET /api/v1/certificates/{cert_id} — get certificate details (auth required)."""
+        if not self._check_auth():
+            return
+        with _CERT_LOCK:
+            cert = next((c for c in _CERTIFICATES if c["cert_id"] == cert_id), None)
+        if cert is None:
+            self._send_json({"error": "certificate not found"}, 404)
+            return
+        self._send_json({"certificate": dict(cert)})
+
+    def _handle_cert_delete(self, cert_id: str) -> None:
+        """DELETE /api/v1/certificates/{cert_id} — remove record (auth required)."""
+        if not self._check_auth():
+            return
+        with _CERT_LOCK:
+            idx = next((i for i, c in enumerate(_CERTIFICATES) if c["cert_id"] == cert_id), -1)
+            if idx == -1:
+                self._send_json({"error": "certificate not found"}, 404)
+                return
+            _CERTIFICATES.pop(idx)
+        self._send_json({"status": "deleted", "cert_id": cert_id})
+
+    def _handle_cert_alerts(self) -> None:
+        """GET /api/v1/certificates/alerts — list certificate alerts (auth required)."""
+        if not self._check_auth():
+            return
+        with _CERT_LOCK:
+            alerts = [dict(c) for c in _CERTIFICATES if c.get("alert_type") is not None]
+        self._send_json({"alerts": alerts, "total": len(alerts)})
+
+    # ---------------------------------------------------------------------------
+    # Task 079 — URL Categorizer handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_url_cat_categorize(self) -> None:
+        """POST /api/v1/url-categorizer/categorize — categorize a URL (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        category = str(body.get("category", "")).strip()
+        if category not in URL_CATEGORIES:
+            self._send_json({"error": f"category must be one of {URL_CATEGORIES}"}, 400)
+            return
+        url = str(body.get("url", "")).strip()
+        domain = str(body.get("domain", "")).strip()
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else ""
+        domain_hash = hashlib.sha256(domain.encode()).hexdigest() if domain else ""
+        raw_score = body.get("confidence_score", "0.50")
+        try:
+            score_val = float(str(raw_score))
+            score_val = max(0.0, min(1.0, score_val))
+        except (TypeError, ValueError):
+            score_val = 0.50
+        from decimal import Decimal
+        confidence_score = str(Decimal(str(round(score_val, 2))).quantize(Decimal("0.01")))
+        if score_val < 0.4:
+            confidence_level = "low"
+        elif score_val < 0.7:
+            confidence_level = "medium"
+        else:
+            confidence_level = "high"
+        entry = {
+            "entry_id": "urc_" + uuid.uuid4().hex,
+            "url_hash": url_hash,
+            "domain_hash": domain_hash,
+            "category": category,
+            "confidence_score": confidence_score,
+            "confidence_level": confidence_level,
+            "categorized_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _URL_CAT_LOCK:
+            if len(_URL_HISTORY) >= MAX_URL_HISTORY:
+                _URL_HISTORY.pop(0)
+            _URL_HISTORY.append(entry)
+        self._send_json({"status": "categorized", "entry_id": entry["entry_id"]}, 201)
+
+    def _handle_url_cat_history(self) -> None:
+        """GET /api/v1/url-categorizer/history — list categorized URLs (auth required)."""
+        if not self._check_auth():
+            return
+        with _URL_CAT_LOCK:
+            history = list(_URL_HISTORY)
+        self._send_json({"history": history, "total": len(history)})
+
+    def _handle_url_cat_history_clear(self) -> None:
+        """DELETE /api/v1/url-categorizer/history — clear history (auth required)."""
+        if not self._check_auth():
+            return
+        with _URL_CAT_LOCK:
+            count = len(_URL_HISTORY)
+            _URL_HISTORY.clear()
+        self._send_json({"status": "cleared", "removed": count})
+
+    def _handle_url_cat_summary(self) -> None:
+        """GET /api/v1/url-categorizer/summary — category breakdown (auth required)."""
+        if not self._check_auth():
+            return
+        with _URL_CAT_LOCK:
+            history = list(_URL_HISTORY)
+        by_category: dict[str, int] = {c: 0 for c in URL_CATEGORIES}
+        for e in history:
+            cat = e.get("category", "")
+            if cat in by_category:
+                by_category[cat] += 1
+        self._send_json({"by_category": by_category, "total": len(history)})
+
+    def _handle_url_cat_categories(self) -> None:
+        """GET /api/v1/url-categorizer/categories — list all categories (public)."""
+        self._send_json({"categories": URL_CATEGORIES})
+
+    # ---------------------------------------------------------------------------
+    # Task 080 — Extension Store handlers
+    # ---------------------------------------------------------------------------
+
+    def _ext_token_key(self) -> str:
+        auth = self.headers.get("Authorization", "")
+        token = auth[len("Bearer "):].strip() if auth.startswith("Bearer ") else ""
+        return hashlib.sha256(token.encode()).hexdigest()
+
+    def _handle_ext_listings_list(self) -> None:
+        """GET /api/v1/extension-store/listings — list available extensions (public)."""
+        with _EXT_STORE_LOCK:
+            listings = list(_EXT_LISTINGS)
+        self._send_json({"listings": listings, "total": len(listings)})
+
+    def _handle_ext_listing_publish(self) -> None:
+        """POST /api/v1/extension-store/listings — publish extension listing (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        category = str(body.get("category", "")).strip()
+        if category not in EXTENSION_CATEGORIES:
+            self._send_json({"error": f"category must be one of {EXTENSION_CATEGORIES}"}, 400)
+            return
+        import re as _re
+        version = str(body.get("version", "")).strip()
+        if not _re.match(r"^\d+\.\d+\.\d+$", version):
+            self._send_json({"error": "version must be semver (e.g. 1.0.0)"}, 400)
+            return
+        name = str(body.get("name", "")).strip()
+        manifest = str(body.get("manifest", "")).strip()
+        code = str(body.get("code", "")).strip()
+        raw_rating = body.get("rating", "0.00")
+        from decimal import Decimal
+        try:
+            rating_val = max(0.0, min(5.0, float(str(raw_rating))))
+            rating = str(Decimal(str(round(rating_val, 2))).quantize(Decimal("0.01")))
+        except (TypeError, ValueError):
+            rating = "0.00"
+        entry = {
+            "ext_id": "ext_" + uuid.uuid4().hex,
+            "name": name,
+            "manifest_hash": hashlib.sha256(manifest.encode()).hexdigest() if manifest else "",
+            "code_hash": hashlib.sha256(code.encode()).hexdigest() if code else "",
+            "category": category,
+            "version": version,
+            "install_count": 0,
+            "rating": rating,
+            "published_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _EXT_STORE_LOCK:
+            _EXT_LISTINGS.append(entry)
+        self._send_json({"status": "published", "ext_id": entry["ext_id"]}, 201)
+
+    def _handle_ext_listing_get(self, ext_id: str) -> None:
+        """GET /api/v1/extension-store/listings/{ext_id} — get extension details (public)."""
+        with _EXT_STORE_LOCK:
+            listing = next((e for e in _EXT_LISTINGS if e["ext_id"] == ext_id), None)
+        if listing is None:
+            self._send_json({"error": "extension not found"}, 404)
+            return
+        self._send_json({"extension": dict(listing)})
+
+    def _handle_ext_install(self, ext_id: str) -> None:
+        """POST /api/v1/extension-store/install/{ext_id} — record installation (auth required)."""
+        if not self._check_auth():
+            return
+        token_key = self._ext_token_key()
+        with _EXT_STORE_LOCK:
+            listing = next((e for e in _EXT_LISTINGS if e["ext_id"] == ext_id), None)
+            if listing is None:
+                self._send_json({"error": "extension not found"}, 404)
+                return
+            installed = _EXT_INSTALLS.setdefault(token_key, [])
+            if ext_id in installed:
+                self._send_json({"error": "already installed"}, 409)
+                return
+            installed.append(ext_id)
+            listing["install_count"] = listing.get("install_count", 0) + 1
+        self._send_json({"status": "installed", "ext_id": ext_id}, 201)
+
+    def _handle_ext_installed_list(self) -> None:
+        """GET /api/v1/extension-store/installed — list user's installed extensions (auth required)."""
+        if not self._check_auth():
+            return
+        token_key = self._ext_token_key()
+        with _EXT_STORE_LOCK:
+            installed_ids = list(_EXT_INSTALLS.get(token_key, []))
+            listings_map = {e["ext_id"]: e for e in _EXT_LISTINGS}
+            installed = [dict(listings_map[eid]) for eid in installed_ids if eid in listings_map]
+        self._send_json({"installed": installed, "total": len(installed)})
+
+    def _handle_ext_uninstall(self, ext_id: str) -> None:
+        """DELETE /api/v1/extension-store/installed/{ext_id} — uninstall (auth required)."""
+        if not self._check_auth():
+            return
+        token_key = self._ext_token_key()
+        with _EXT_STORE_LOCK:
+            installed = _EXT_INSTALLS.get(token_key, [])
+            if ext_id not in installed:
+                self._send_json({"error": "extension not installed"}, 404)
+                return
+            installed.remove(ext_id)
+        self._send_json({"status": "uninstalled", "ext_id": ext_id})
+
+
+# ---------------------------------------------------------------------------
+# Task 081 — Search Suggestions handlers
+# ---------------------------------------------------------------------------
+
+    def _handle_search_record(self) -> None:
+        """POST /api/v1/search-suggestions/record — record a search query (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        query_raw = str(body.get("query", "")).strip()
+        if not query_raw:
+            self._send_json({"error": "query required"}, 400)
+            return
+        query_hash = hashlib.sha256(query_raw.encode()).hexdigest()
+        engine_url = str(body.get("engine_url", "")).strip()
+        engine_hash = hashlib.sha256(engine_url.encode()).hexdigest()
+        result_count_raw = body.get("result_count", 0)
+        try:
+            result_count = int(result_count_raw)
+        except (TypeError, ValueError):
+            self._send_json({"error": "result_count must be an integer"}, 400)
+            return
+        if result_count < 0:
+            self._send_json({"error": "result_count must be >= 0"}, 400)
+            return
+        entry = {
+            "search_id": "srh_" + uuid.uuid4().hex,
+            "query_hash": query_hash,
+            "engine_hash": engine_hash,
+            "result_count": result_count,
+            "searched_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _SEARCH_LOCK:
+            if len(_SEARCH_HISTORY) >= MAX_SEARCH_HISTORY:
+                _SEARCH_HISTORY.pop(0)
+            _SEARCH_HISTORY.append(entry)
+        self._send_json({"status": "recorded", "search_id": entry["search_id"]}, 201)
+
+    def _handle_search_suggest(self, query: str) -> None:
+        """GET /api/v1/search-suggestions/suggest — get suggestions for prefix (public)."""
+        params = self._parse_query(query)
+        prefix = params.get("q", "").strip()
+        prefix_hash = hashlib.sha256(prefix.encode()).hexdigest() if prefix else ""
+        with _SEARCH_LOCK:
+            entries = list(_SEARCH_HISTORY)
+        if prefix_hash:
+            suggestions = [e for e in entries if e.get("query_hash", "").startswith(prefix_hash[:8])]
+        else:
+            suggestions = entries[-MAX_SUGGESTIONS:]
+        suggestions = suggestions[-MAX_SUGGESTIONS:]
+        self._send_json({"suggestions": suggestions, "total": len(suggestions)})
+
+    def _handle_search_popular(self) -> None:
+        """GET /api/v1/search-suggestions/popular — most popular queries (public)."""
+        with _SEARCH_LOCK:
+            entries = list(_SEARCH_HISTORY)
+        counts: dict[str, int] = {}
+        for e in entries:
+            qh = e.get("query_hash", "")
+            counts[qh] = counts.get(qh, 0) + 1
+        sorted_items = sorted(counts.items(), key=lambda x: x[1], reverse=True)[:10]
+        popular = [{"query_hash": qh, "count": cnt} for qh, cnt in sorted_items]
+        self._send_json({"popular": popular, "total": len(popular)})
+
+    def _handle_search_history_clear(self) -> None:
+        """DELETE /api/v1/search-suggestions/history — clear search history (auth required)."""
+        if not self._check_auth():
+            return
+        with _SEARCH_LOCK:
+            count = len(_SEARCH_HISTORY)
+            _SEARCH_HISTORY.clear()
+        self._send_json({"status": "cleared", "removed": count})
+
+    def _handle_search_stats(self) -> None:
+        """GET /api/v1/search-suggestions/stats — search stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _SEARCH_LOCK:
+            entries = list(_SEARCH_HISTORY)
+        unique_hashes = len({e.get("query_hash", "") for e in entries})
+        last_searched_at = entries[-1].get("searched_at") if entries else None
+        self._send_json({
+            "total_searches": len(entries),
+            "unique_hashes": unique_hashes,
+            "last_searched_at": last_searched_at,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 082 — User Preferences handlers
+    # ---------------------------------------------------------------------------
+
+    def _prefs_token_key(self) -> str:
+        """Derive per-user key from auth header."""
+        auth_header = self.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            return hashlib.sha256(auth_header[7:].encode()).hexdigest()
+        return "anonymous"
+
+    def _handle_prefs_get(self) -> None:
+        """GET /api/v1/preferences — get all preferences (auth required)."""
+        if not self._check_auth():
+            return
+        key = self._prefs_token_key()
+        with _PREFS_LOCK:
+            user_prefs = dict(_USER_PREFS.get(key, {}))
+        result = {}
+        for pref_key, schema in PREFERENCE_SCHEMA.items():
+            result[pref_key] = user_prefs.get(pref_key, schema["default"])
+        self._send_json({"preferences": result})
+
+    def _handle_prefs_get_one(self, pref_key: str) -> None:
+        """GET /api/v1/preferences/{key} — get single preference (auth required)."""
+        if not self._check_auth():
+            return
+        if pref_key not in PREFERENCE_SCHEMA:
+            self._send_json({"error": f"unknown preference key: {pref_key}"}, 400)
+            return
+        key = self._prefs_token_key()
+        with _PREFS_LOCK:
+            user_prefs = _USER_PREFS.get(key, {})
+            value = user_prefs.get(pref_key, PREFERENCE_SCHEMA[pref_key]["default"])
+        self._send_json({"key": pref_key, "value": value})
+
+    def _handle_prefs_set(self) -> None:
+        """POST /api/v1/preferences — set a preference (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        pref_key = str(body.get("key", "")).strip()
+        if pref_key not in PREFERENCE_SCHEMA:
+            self._send_json({"error": f"unknown preference key: {pref_key}"}, 400)
+            return
+        value = body.get("value")
+        schema = PREFERENCE_SCHEMA[pref_key]
+        pref_type = schema["type"]
+        if pref_type == "enum":
+            if value not in schema["values"]:
+                self._send_json({"error": f"value must be one of {schema['values']}"}, 400)
+                return
+        elif pref_type == "boolean":
+            if not isinstance(value, bool):
+                self._send_json({"error": "value must be a boolean"}, 400)
+                return
+        elif pref_type == "integer":
+            if not isinstance(value, int) or isinstance(value, bool):
+                self._send_json({"error": "value must be an integer"}, 400)
+                return
+            if value < schema["min"] or value > schema["max"]:
+                self._send_json({"error": f"value must be {schema['min']}-{schema['max']}"}, 400)
+                return
+        elif pref_type == "string":
+            value = str(value)
+        key = self._prefs_token_key()
+        with _PREFS_LOCK:
+            if key not in _USER_PREFS:
+                _USER_PREFS[key] = {}
+            _USER_PREFS[key][pref_key] = value
+        self._send_json({"status": "saved", "key": pref_key, "value": value})
+
+    def _handle_prefs_reset_key(self, pref_key: str) -> None:
+        """DELETE /api/v1/preferences/{key} — reset preference to default (auth required)."""
+        if not self._check_auth():
+            return
+        if pref_key not in PREFERENCE_SCHEMA:
+            self._send_json({"error": f"unknown preference key: {pref_key}"}, 400)
+            return
+        key = self._prefs_token_key()
+        with _PREFS_LOCK:
+            if key in _USER_PREFS:
+                _USER_PREFS[key].pop(pref_key, None)
+        default_value = PREFERENCE_SCHEMA[pref_key]["default"]
+        self._send_json({"status": "reset", "key": pref_key, "value": default_value})
+
+    def _handle_prefs_reset_all(self) -> None:
+        """POST /api/v1/preferences/reset-all — reset all to defaults (auth required)."""
+        if not self._check_auth():
+            return
+        key = self._prefs_token_key()
+        with _PREFS_LOCK:
+            _USER_PREFS.pop(key, None)
+        defaults = {k: v["default"] for k, v in PREFERENCE_SCHEMA.items()}
+        self._send_json({"status": "reset", "preferences": defaults})
+
+    def _handle_prefs_schema(self) -> None:
+        """GET /api/v1/preferences/schema — list all preference keys + types (public)."""
+        self._send_json({"schema": PREFERENCE_SCHEMA})
+
+    # ---------------------------------------------------------------------------
+    # Task 083 — DevTools Assistant handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_devtools_snippet_save(self) -> None:
+        """POST /api/v1/devtools/snippets — save a code snippet (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        language = str(body.get("language", "")).strip()
+        if language not in SNIPPET_LANGUAGES:
+            self._send_json({"error": f"language must be one of {SNIPPET_LANGUAGES}"}, 400)
+            return
+        title = str(body.get("title", "")).strip()
+        if not title:
+            self._send_json({"error": "title required"}, 400)
+            return
+        if len(title) > 128:
+            self._send_json({"error": "title max 128 characters"}, 400)
+            return
+        content = str(body.get("content", "")).strip()
+        if not content:
+            self._send_json({"error": "content required"}, 400)
+            return
+        content_hash = hashlib.sha256(content.encode()).hexdigest()
+        with _DEVTOOLS_LOCK:
+            if len(_DEVTOOLS_SNIPPETS) >= MAX_SNIPPETS:
+                self._send_json({"error": f"max {MAX_SNIPPETS} snippets"}, 400)
+                return
+            snippet = {
+                "snippet_id": "snp_" + uuid.uuid4().hex,
+                "language": language,
+                "title": title,
+                "content_hash": content_hash,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+            _DEVTOOLS_SNIPPETS.append(snippet)
+        self._send_json({"status": "saved", "snippet": dict(snippet)}, 201)
+
+    def _handle_devtools_snippets_list(self) -> None:
+        """GET /api/v1/devtools/snippets — list snippets (auth required)."""
+        if not self._check_auth():
+            return
+        with _DEVTOOLS_LOCK:
+            snippets = [dict(s) for s in _DEVTOOLS_SNIPPETS]
+        self._send_json({"snippets": snippets, "total": len(snippets)})
+
+    def _handle_devtools_snippet_delete(self, snippet_id: str) -> None:
+        """DELETE /api/v1/devtools/snippets/{id} — delete snippet (auth required)."""
+        if not self._check_auth():
+            return
+        with _DEVTOOLS_LOCK:
+            idx = next((i for i, s in enumerate(_DEVTOOLS_SNIPPETS) if s["snippet_id"] == snippet_id), None)
+            if idx is None:
+                self._send_json({"error": "snippet not found"}, 404)
+                return
+            _DEVTOOLS_SNIPPETS.pop(idx)
+        self._send_json({"status": "deleted", "snippet_id": snippet_id})
+
+    def _handle_devtools_console_record(self) -> None:
+        """POST /api/v1/devtools/console-logs — record console log (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        log_level = str(body.get("log_level", "")).strip()
+        if log_level not in CONSOLE_LOG_LEVELS:
+            self._send_json({"error": f"log_level must be one of {CONSOLE_LOG_LEVELS}"}, 400)
+            return
+        message = str(body.get("message", "")).strip()
+        if not message:
+            self._send_json({"error": "message required"}, 400)
+            return
+        message_hash = hashlib.sha256(message.encode()).hexdigest()
+        page_url = str(body.get("page_url", "")).strip()
+        page_hash = hashlib.sha256(page_url.encode()).hexdigest()
+        entry = {
+            "log_id": "clog_" + uuid.uuid4().hex,
+            "log_level": log_level,
+            "message_hash": message_hash,
+            "page_hash": page_hash,
+            "logged_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _DEVTOOLS_LOCK:
+            if len(_CONSOLE_LOGS) >= MAX_CONSOLE_LOGS:
+                _CONSOLE_LOGS.pop(0)
+            _CONSOLE_LOGS.append(entry)
+        self._send_json({"status": "recorded", "log_id": entry["log_id"]}, 201)
+
+    def _handle_devtools_console_list(self) -> None:
+        """GET /api/v1/devtools/console-logs — list console logs (auth required)."""
+        if not self._check_auth():
+            return
+        with _DEVTOOLS_LOCK:
+            logs = [dict(l) for l in _CONSOLE_LOGS]
+        self._send_json({"logs": logs, "total": len(logs)})
+
+    def _handle_devtools_console_clear(self) -> None:
+        """DELETE /api/v1/devtools/console-logs — clear logs (auth required)."""
+        if not self._check_auth():
+            return
+        with _DEVTOOLS_LOCK:
+            count = len(_CONSOLE_LOGS)
+            _CONSOLE_LOGS.clear()
+        self._send_json({"status": "cleared", "removed": count})
+
+    # ---------------------------------------------------------------------------
+    # Task 084 — Request Interceptor handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_interceptor_rules_list(self) -> None:
+        """GET /api/v1/interceptor/rules — list interception rules (auth required)."""
+        if not self._check_auth():
+            return
+        with _INTERCEPT_LOCK:
+            rules = [dict(r) for r in _INTERCEPT_RULES]
+        self._send_json({"rules": rules, "total": len(rules)})
+
+    def _handle_interceptor_rule_create(self) -> None:
+        """POST /api/v1/interceptor/rules — create rule (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        rule_type = str(body.get("rule_type", "")).strip()
+        if rule_type not in INTERCEPT_RULE_TYPES:
+            self._send_json({"error": f"rule_type must be one of {INTERCEPT_RULE_TYPES}"}, 400)
+            return
+        action = str(body.get("action", "")).strip()
+        if action not in INTERCEPT_ACTIONS:
+            self._send_json({"error": f"action must be one of {INTERCEPT_ACTIONS}"}, 400)
+            return
+        method = str(body.get("method", "GET")).strip().upper()
+        if method not in HTTP_METHODS_INTERCEPT:
+            self._send_json({"error": f"method must be one of {HTTP_METHODS_INTERCEPT}"}, 400)
+            return
+        pattern = str(body.get("pattern", "")).strip()
+        if not pattern:
+            self._send_json({"error": "pattern required"}, 400)
+            return
+        pattern_hash = hashlib.sha256(pattern.encode()).hexdigest()
+        enabled = bool(body.get("enabled", True))
+        with _INTERCEPT_LOCK:
+            if len(_INTERCEPT_RULES) >= MAX_INTERCEPT_RULES:
+                self._send_json({"error": f"max {MAX_INTERCEPT_RULES} rules"}, 400)
+                return
+            rule = {
+                "rule_id": "irl_" + uuid.uuid4().hex,
+                "rule_type": rule_type,
+                "pattern_hash": pattern_hash,
+                "action": action,
+                "method": method,
+                "enabled": enabled,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+            _INTERCEPT_RULES.append(rule)
+        self._send_json({"status": "created", "rule": dict(rule)}, 201)
+
+    def _handle_interceptor_rule_delete(self, rule_id: str) -> None:
+        """DELETE /api/v1/interceptor/rules/{id} — delete rule (auth required)."""
+        if not self._check_auth():
+            return
+        with _INTERCEPT_LOCK:
+            idx = next((i for i, r in enumerate(_INTERCEPT_RULES) if r["rule_id"] == rule_id), None)
+            if idx is None:
+                self._send_json({"error": "rule not found"}, 404)
+                return
+            _INTERCEPT_RULES.pop(idx)
+        self._send_json({"status": "deleted", "rule_id": rule_id})
+
+    def _handle_interceptor_log_record(self) -> None:
+        """POST /api/v1/interceptor/log — log an intercepted request (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url = str(body.get("url", "")).strip()
+        if not url:
+            self._send_json({"error": "url required"}, 400)
+            return
+        url_hash = hashlib.sha256(url.encode()).hexdigest()
+        request_body = str(body.get("request_body", "")).strip()
+        request_body_hash = hashlib.sha256(request_body.encode()).hexdigest() if request_body else ""
+        matched_rule_id = str(body.get("matched_rule_id", "")).strip() or None
+        action_taken = str(body.get("action_taken", "log_only")).strip()
+        entry = {
+            "log_id": "ilog_" + uuid.uuid4().hex,
+            "url_hash": url_hash,
+            "request_body_hash": request_body_hash,
+            "matched_rule_id": matched_rule_id,
+            "action_taken": action_taken,
+            "logged_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _INTERCEPT_LOCK:
+            if len(_INTERCEPT_LOG) >= MAX_INTERCEPT_LOG:
+                _INTERCEPT_LOG.pop(0)
+            _INTERCEPT_LOG.append(entry)
+        self._send_json({"status": "logged", "log_id": entry["log_id"]}, 201)
+
+    def _handle_interceptor_log_list(self) -> None:
+        """GET /api/v1/interceptor/log — list intercepted requests (auth required)."""
+        if not self._check_auth():
+            return
+        with _INTERCEPT_LOCK:
+            entries = [dict(e) for e in _INTERCEPT_LOG]
+        self._send_json({"log": entries, "total": len(entries)})
+
+    def _handle_interceptor_rule_types(self) -> None:
+        """GET /api/v1/interceptor/rule-types — list rule types (public)."""
+        self._send_json({
+            "rule_types": INTERCEPT_RULE_TYPES,
+            "actions": INTERCEPT_ACTIONS,
+            "methods": HTTP_METHODS_INTERCEPT,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 085 — AI Page Summarizer handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_summarizer_record(self) -> None:
+        """POST /api/v1/page-summarizer/summarize — record a page summary (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        model = str(body.get("model", "")).strip()
+        if model not in SUMMARY_MODELS:
+            self._send_json({"error": f"model must be one of {SUMMARY_MODELS}"}, 400)
+            return
+        length_type = str(body.get("length_type", "")).strip()
+        if length_type not in SUMMARY_LENGTH_TYPES:
+            self._send_json({"error": f"length_type must be one of {SUMMARY_LENGTH_TYPES}"}, 400)
+            return
+        page_url = str(body.get("page_url", "")).strip()
+        if not page_url:
+            self._send_json({"error": "page_url required"}, 400)
+            return
+        url_hash = hashlib.sha256(page_url.encode()).hexdigest()
+        page_title = str(body.get("page_title", "")).strip()
+        title_hash = hashlib.sha256(page_title.encode()).hexdigest()
+        page_content = str(body.get("page_content", "")).strip()
+        content_hash = hashlib.sha256(page_content.encode()).hexdigest()
+        summary_text = str(body.get("summary", "")).strip()
+        if not summary_text:
+            self._send_json({"error": "summary required"}, 400)
+            return
+        summary_hash = hashlib.sha256(summary_text.encode()).hexdigest()
+        word_count_raw = body.get("word_count", 0)
+        try:
+            word_count = max(0, int(word_count_raw))
+        except (TypeError, ValueError):
+            word_count = 0
+        entry = {
+            "summary_id": "psum_" + uuid.uuid4().hex,
+            "url_hash": url_hash,
+            "title_hash": title_hash,
+            "content_hash": content_hash,
+            "summary_hash": summary_hash,
+            "model": model,
+            "length_type": length_type,
+            "word_count": word_count,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _SUMMARIZER_LOCK:
+            if len(_PAGE_SUMMARIES) >= MAX_SUMMARIES:
+                _PAGE_SUMMARIES.pop(0)
+            _PAGE_SUMMARIES.append(entry)
+        self._send_json({"status": "recorded", "summary_id": entry["summary_id"]}, 201)
+
+    def _handle_summarizer_history(self) -> None:
+        """GET /api/v1/page-summarizer/history — list summaries (auth required)."""
+        if not self._check_auth():
+            return
+        with _SUMMARIZER_LOCK:
+            summaries = [dict(s) for s in _PAGE_SUMMARIES]
+        self._send_json({"summaries": summaries, "total": len(summaries)})
+
+    def _handle_summarizer_delete(self, summary_id: str) -> None:
+        """DELETE /api/v1/page-summarizer/history/{id} — delete summary (auth required)."""
+        if not self._check_auth():
+            return
+        with _SUMMARIZER_LOCK:
+            idx = next((i for i, s in enumerate(_PAGE_SUMMARIES) if s["summary_id"] == summary_id), None)
+            if idx is None:
+                self._send_json({"error": "summary not found"}, 404)
+                return
+            _PAGE_SUMMARIES.pop(idx)
+        self._send_json({"status": "deleted", "summary_id": summary_id})
+
+    def _handle_summarizer_stats(self) -> None:
+        """GET /api/v1/page-summarizer/stats — summary stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _SUMMARIZER_LOCK:
+            summaries = list(_PAGE_SUMMARIES)
+        by_model: dict[str, int] = {m: 0 for m in SUMMARY_MODELS}
+        by_length_type: dict[str, int] = {lt: 0 for lt in SUMMARY_LENGTH_TYPES}
+        for s in summaries:
+            m = s.get("model", "")
+            if m in by_model:
+                by_model[m] += 1
+            lt = s.get("length_type", "")
+            if lt in by_length_type:
+                by_length_type[lt] += 1
+        self._send_json({
+            "total": len(summaries),
+            "by_model": by_model,
+            "by_length_type": by_length_type,
+        })
+
+    def _handle_summarizer_models(self) -> None:
+        """GET /api/v1/page-summarizer/models — list supported summary models (public)."""
+        self._send_json({"models": SUMMARY_MODELS, "length_types": SUMMARY_LENGTH_TYPES})
 
 
 # ---------------------------------------------------------------------------

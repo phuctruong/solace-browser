@@ -1,0 +1,122 @@
+:root {
+  --hub-bg: #1a1a2e;
+  --hub-surface: #16213e;
+  --hub-accent: #0f3460;
+  --hub-text: #e0e0e0;
+  --hub-muted: #888;
+  --hub-border: #2a2a4a;
+  --hub-btn-bg: #0f3460;
+  --hub-btn-text: #e0e0e0;
+  --hub-danger: #c0392b;
+  --hub-success: #27ae60;
+  --hub-input-bg: #0d0d1a;
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.ntl-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.ntl-title {
+  font-size: 1.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.ntl-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.ntl-select,
+.ntl-input {
+  background: var(--hub-input-bg);
+  color: var(--hub-text);
+  border: 1px solid var(--hub-border);
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+}
+
+.ntl-btn {
+  background: var(--hub-btn-bg);
+  color: var(--hub-btn-text);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ntl-btn:hover { opacity: 0.85; }
+
+.ntl-btn-danger { background: var(--hub-danger); }
+
+.ntl-summary-cards {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.ntl-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  min-width: 80px;
+  text-align: center;
+}
+
+.ntl-card-label {
+  font-size: 0.75rem;
+  color: var(--hub-muted);
+}
+
+.ntl-card-value {
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.ntl-status {
+  color: var(--hub-success);
+  min-height: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.ntl-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--hub-surface);
+}
+
+.ntl-table th,
+.ntl-table td {
+  border: 1px solid var(--hub-border);
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+}
+
+.ntl-table th {
+  background: var(--hub-accent);
+}
+
+.ntl-hash {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--hub-muted);
+}
+
+.ntl-method {
+  font-weight: bold;
+  font-size: 0.85rem;
+}

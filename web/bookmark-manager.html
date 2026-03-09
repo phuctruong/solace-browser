@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookmark Manager — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/bookmark-manager.css">
+</head>
+<body>
+<div class="bm-container">
+  <h1 class="bm-title">Bookmark Manager</h1>
+  <div class="bm-add-form">
+    <input id="bm-url" type="text" placeholder="URL" class="bm-input">
+    <input id="bm-title" type="text" placeholder="Title (max 128)" class="bm-input">
+    <input id="bm-tags" type="text" placeholder="Tags (comma-separated)" class="bm-input">
+    <button id="bm-add-btn" class="bm-btn">Add Bookmark</button>
+  </div>
+  <div class="bm-search-row">
+    <input id="bm-search" type="text" placeholder="Search by title or tag…" class="bm-input">
+  </div>
+  <div id="bm-tags-bar" class="bm-tags-bar"></div>
+  <div id="bm-status" class="bm-status"></div>
+  <table class="bm-table">
+    <thead><tr><th>Title</th><th>URL Hash</th><th>Tags</th><th>Created</th><th></th></tr></thead>
+    <tbody id="bm-tbody"></tbody>
+  </table>
+</div>
+<script src="/web/js/bookmark-manager.js"></script>
+</body>
+</html>

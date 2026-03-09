@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Traffic Logger — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/network-traffic-logger.css">
+</head>
+<body>
+<div class="ntl-container">
+  <h1 class="ntl-title">Network Traffic Logger</h1>
+  <div class="ntl-controls">
+    <select id="ntl-method-filter" class="ntl-select">
+      <option value="">All Methods</option>
+    </select>
+    <input id="ntl-status-filter" type="text" placeholder="Status (e.g. 200)" class="ntl-input">
+    <button id="ntl-refresh" class="ntl-btn">Refresh</button>
+    <button id="ntl-clear" class="ntl-btn ntl-btn-danger">Clear All</button>
+  </div>
+  <div class="ntl-summary-cards" id="ntl-summary"></div>
+  <div id="ntl-status" class="ntl-status"></div>
+  <table class="ntl-table">
+    <thead><tr><th>Method</th><th>URL Hash</th><th>Status</th><th>Duration (ms)</th><th>Time</th></tr></thead>
+    <tbody id="ntl-tbody"></tbody>
+  </table>
+</div>
+<script src="/web/js/network-traffic-logger.js"></script>
+</body>
+</html>
