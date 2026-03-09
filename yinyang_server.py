@@ -1209,6 +1209,55 @@ _INTERCEPT_RULES: list[dict] = []
 _INTERCEPT_LOG: list[dict] = []
 _INTERCEPT_LOCK = threading.Lock()
 
+# ---------------------------------------------------------------------------
+# Task 086 — Download Manager v2
+# ---------------------------------------------------------------------------
+DOWNLOAD_FILE_TYPES: list[str] = ["pdf", "image", "video", "audio", "archive", "document", "code", "other"]
+DOWNLOAD_STATUSES: list[str] = ["queued", "downloading", "paused", "completed", "failed", "cancelled"]
+MAX_DOWNLOAD_QUEUE_SIZE = 50
+MAX_DOWNLOAD_HISTORY = 200
+_DOWNLOAD_QUEUE: list[dict] = []
+_DOWNLOAD_HISTORY: list[dict] = []
+_DOWNLOAD_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 087 — Accessibility Checker
+# ---------------------------------------------------------------------------
+WCAG_LEVELS: list[str] = ["A", "AA", "AAA"]
+ACCESSIBILITY_CATEGORIES: list[str] = ["perceivable", "operable", "understandable", "robust"]
+_ACCESSIBILITY_SCANS: list[dict] = []
+_ACCESS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 088 — Session Recorder
+# ---------------------------------------------------------------------------
+RECORDING_EVENT_TYPES: list[str] = ["click", "scroll", "input", "navigation", "resize", "keydown", "mutation"]
+MAX_EVENTS_PER_RECORDING = 10000
+MAX_RECORDINGS = 50
+_RECORDINGS: list[dict] = []
+_ACTIVE_RECORDING: dict[str, str] = {}  # token_hash → recording_id
+_REC_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 089 — Proxy Manager
+# ---------------------------------------------------------------------------
+PROXY_PROTOCOLS: list[str] = ["http", "https", "socks4", "socks5", "shadowsocks"]
+MAX_PROXY_PROFILES = 20
+_PROXY_PROFILES: list[dict] = []
+_ACTIVE_PROXY: dict | None = None
+_PROXY_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 090 — Automation Recorder
+# ---------------------------------------------------------------------------
+AUTOMATION_ACTION_TYPES: list[str] = ["click", "type", "navigate", "wait", "scroll", "hover", "select", "check", "uncheck", "submit"]
+MAX_ACTIONS_PER_AUTOMATION = 500
+MAX_AUTOMATIONS = 100
+_AUTOMATIONS: list[dict] = []
+_ACTIVE_AUTOMATION_RECORDING: dict[str, dict] = {}  # token_hash → {automation_id, actions, started_at}
+_AUTOMATION_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
 # Task 085 — AI Page Summarizer
 # ---------------------------------------------------------------------------
 SUMMARY_MODELS: list[str] = ["haiku", "sonnet", "opus", "gpt-4o", "gpt-4o-mini", "local"]
@@ -1218,6 +1267,39 @@ MAX_SUMMARIES = 500
 
 _PAGE_SUMMARIES: list[dict] = []
 _SUMMARIZER_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 091 — Font Manager
+# ---------------------------------------------------------------------------
+FONT_FAMILIES_BUILTIN: list[str] = ["Arial", "Georgia", "Verdana", "Courier New", "Times New Roman", "system-ui"]
+FONT_WEIGHTS: list[str] = ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+FONT_SIZES: list[int] = [10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32]
+MAX_CUSTOM_FONTS: int = 20
+_CUSTOM_FONTS: list[dict] = []
+_ACTIVE_FONT: dict = {"family": "system-ui", "size": 16, "weight": "400"}
+_FONT_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 092 — Translation Overlay
+# ---------------------------------------------------------------------------
+SUPPORTED_LANGUAGES: dict[str, str] = {
+    "en": "English", "fr": "French", "de": "German", "es": "Spanish",
+    "ja": "Japanese", "zh": "Chinese", "ar": "Arabic", "pt": "Portuguese",
+    "ru": "Russian", "ko": "Korean",
+}
+MAX_TRANSLATION_CHARS: int = 5000
+MAX_TRANSLATION_HISTORY: int = 100
+_TRANSLATION_HISTORY: list[dict] = []
+_TRANSLATION_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 093 — Annotation Tool
+# ---------------------------------------------------------------------------
+ANNOTATION_TYPES: list[str] = ["highlight", "note", "bookmark_note", "question", "todo", "correction"]
+ANNOTATION_COLORS: list[str] = ["yellow", "green", "blue", "red", "purple", "orange"]
+MAX_ANNOTATIONS: int = 5000
+_ANNOTATIONS: list[dict] = []
+_ANNOTATION_LOCK = threading.Lock()
 
 # Task 070 — Performance Profiler
 # ---------------------------------------------------------------------------
@@ -5489,6 +5571,103 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/ai-page-summarizer.js", "application/javascript")
         elif path == "/web/css/ai-page-summarizer.css":
             self._handle_static_file("web/css/ai-page-summarizer.css", "text/css")
+        # --- Task 086: Download Manager v2 ---
+        elif path == "/api/v1/downloads/queue":
+            self._handle_downloads_v2_queue_list()
+        elif path == "/api/v1/downloads/history":
+            self._handle_downloads_v2_history()
+        elif path == "/api/v1/downloads/file-types":
+            self._handle_downloads_v2_file_types()
+        elif path == "/web/download-manager-v2.html":
+            self._handle_static_file("web/download-manager-v2.html", "text/html; charset=utf-8")
+        elif path == "/web/js/download-manager-v2.js":
+            self._handle_static_file("web/js/download-manager-v2.js", "application/javascript")
+        elif path == "/web/css/download-manager-v2.css":
+            self._handle_static_file("web/css/download-manager-v2.css", "text/css")
+        # --- Task 087: Accessibility Checker ---
+        elif path == "/api/v1/accessibility/scans":
+            self._handle_accessibility_list()
+        elif re.match(r"^/api/v1/accessibility/scans/[^/]+$", path):
+            scan_id = path.split("/")[-1]
+            self._handle_accessibility_get(scan_id)
+        elif path == "/api/v1/accessibility/wcag-levels":
+            self._handle_accessibility_wcag_levels()
+        elif path == "/web/accessibility-checker.html":
+            self._handle_static_file("web/accessibility-checker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/accessibility-checker.js":
+            self._handle_static_file("web/js/accessibility-checker.js", "application/javascript")
+        elif path == "/web/css/accessibility-checker.css":
+            self._handle_static_file("web/css/accessibility-checker.css", "text/css")
+        # --- Task 088: Session Recorder ---
+        elif path == "/api/v1/session-recorder/recordings":
+            self._handle_recorder_list()
+        elif path == "/web/session-recorder.html":
+            self._handle_static_file("web/session-recorder.html", "text/html; charset=utf-8")
+        elif path == "/web/js/session-recorder.js":
+            self._handle_static_file("web/js/session-recorder.js", "application/javascript")
+        elif path == "/web/css/session-recorder.css":
+            self._handle_static_file("web/css/session-recorder.css", "text/css")
+        # --- Task 089: Proxy Manager ---
+        elif path == "/api/v1/proxy-manager/profiles":
+            self._handle_proxy_list()
+        elif path == "/api/v1/proxy-manager/active":
+            self._handle_proxy_active()
+        elif path == "/api/v1/proxy-manager/protocols":
+            self._handle_proxy_protocols()
+        elif path == "/web/proxy-manager.html":
+            self._handle_static_file("web/proxy-manager.html", "text/html; charset=utf-8")
+        elif path == "/web/js/proxy-manager.js":
+            self._handle_static_file("web/js/proxy-manager.js", "application/javascript")
+        elif path == "/web/css/proxy-manager.css":
+            self._handle_static_file("web/css/proxy-manager.css", "text/css")
+        # --- Task 090: Automation Recorder ---
+        elif path == "/api/v1/automation-recorder/automations":
+            self._handle_automation_list()
+        elif path == "/api/v1/automation-recorder/action-types":
+            self._handle_automation_action_types()
+        elif path == "/web/automation-recorder.html":
+            self._handle_static_file("web/automation-recorder.html", "text/html; charset=utf-8")
+        elif path == "/web/js/automation-recorder.js":
+            self._handle_static_file("web/js/automation-recorder.js", "application/javascript")
+        elif path == "/web/css/automation-recorder.css":
+            self._handle_static_file("web/css/automation-recorder.css", "text/css")
+        # --- Task 091: Font Manager ---
+        elif path == "/api/v1/font-manager/fonts":
+            self._handle_font_list()
+        elif path == "/api/v1/font-manager/active":
+            self._handle_font_active()
+        elif path == "/web/font-manager.html":
+            self._handle_static_file("web/font-manager.html", "text/html; charset=utf-8")
+        elif path == "/web/js/font-manager.js":
+            self._handle_static_file("web/js/font-manager.js", "application/javascript")
+        elif path == "/web/css/font-manager.css":
+            self._handle_static_file("web/css/font-manager.css", "text/css")
+        # --- Task 092: Translation Overlay ---
+        elif path == "/api/v1/translation/history":
+            self._handle_translation_history()
+        elif path == "/api/v1/translation/stats":
+            self._handle_translation_stats()
+        elif path == "/api/v1/translation/languages":
+            self._handle_translation_languages()
+        elif path == "/web/translation-overlay.html":
+            self._handle_static_file("web/translation-overlay.html", "text/html; charset=utf-8")
+        elif path == "/web/js/translation-overlay.js":
+            self._handle_static_file("web/js/translation-overlay.js", "application/javascript")
+        elif path == "/web/css/translation-overlay.css":
+            self._handle_static_file("web/css/translation-overlay.css", "text/css")
+        # --- Task 093: Annotation Tool ---
+        elif path == "/api/v1/annotations/by-page":
+            self._handle_annotation_by_page()
+        elif path == "/api/v1/annotations/types":
+            self._handle_annotation_types()
+        elif path == "/api/v1/annotations":
+            self._handle_annotation_list()
+        elif path == "/web/annotation-tool.html":
+            self._handle_static_file("web/annotation-tool.html", "text/html; charset=utf-8")
+        elif path == "/web/js/annotation-tool.js":
+            self._handle_static_file("web/js/annotation-tool.js", "application/javascript")
+        elif path == "/web/css/annotation-tool.css":
+            self._handle_static_file("web/css/annotation-tool.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -5993,6 +6172,46 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 085: AI Page Summarizer ---
         elif path == "/api/v1/page-summarizer/summarize":
             self._handle_summarizer_record()
+        # --- Task 086: Download Manager v2 ---
+        elif path == "/api/v1/downloads/queue":
+            self._handle_downloads_v2_add()
+        elif re.match(r"^/api/v1/downloads/queue/[^/]+/complete$", path):
+            dl_id = path.split("/")[5]
+            self._handle_downloads_v2_complete(dl_id)
+        # --- Task 087: Accessibility Checker ---
+        elif path == "/api/v1/accessibility/scan":
+            self._handle_accessibility_scan()
+        # --- Task 088: Session Recorder ---
+        elif path == "/api/v1/session-recorder/start":
+            self._handle_recorder_start()
+        elif path == "/api/v1/session-recorder/stop":
+            self._handle_recorder_stop()
+        elif path == "/api/v1/session-recorder/events":
+            self._handle_recorder_event()
+        # --- Task 089: Proxy Manager ---
+        elif path == "/api/v1/proxy-manager/profiles":
+            self._handle_proxy_add()
+        elif re.match(r"^/api/v1/proxy-manager/profiles/[^/]+/activate$", path):
+            profile_id = path.split("/")[5]
+            self._handle_proxy_activate(profile_id)
+        # --- Task 090: Automation Recorder ---
+        elif path == "/api/v1/automation-recorder/start":
+            self._handle_automation_start()
+        elif path == "/api/v1/automation-recorder/action":
+            self._handle_automation_action()
+        elif path == "/api/v1/automation-recorder/stop":
+            self._handle_automation_stop()
+        # --- Task 091: Font Manager ---
+        elif path == "/api/v1/font-manager/fonts":
+            self._handle_font_add()
+        elif path == "/api/v1/font-manager/apply":
+            self._handle_font_apply()
+        # --- Task 092: Translation Overlay ---
+        elif path == "/api/v1/translation/translate":
+            self._handle_translation_translate()
+        # --- Task 093: Annotation Tool ---
+        elif path == "/api/v1/annotations":
+            self._handle_annotation_create()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -6229,6 +6448,37 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/page-summarizer/history/[^/]+$", path):
             summary_id = path.split("/")[-1]
             self._handle_summarizer_delete(summary_id)
+        # --- Task 086: Download Manager v2 ---
+        elif re.match(r"^/api/v1/downloads/queue/[^/]+$", path):
+            dl_id = path.split("/")[-1]
+            self._handle_downloads_v2_remove(dl_id)
+        # --- Task 087: Accessibility Checker ---
+        elif re.match(r"^/api/v1/accessibility/scans/[^/]+$", path):
+            scan_id = path.split("/")[-1]
+            self._handle_accessibility_delete(scan_id)
+        # --- Task 088: Session Recorder ---
+        elif re.match(r"^/api/v1/session-recorder/recordings/[^/]+$", path):
+            recording_id = path.split("/")[-1]
+            self._handle_recorder_delete(recording_id)
+        # --- Task 089: Proxy Manager ---
+        elif re.match(r"^/api/v1/proxy-manager/profiles/[^/]+$", path):
+            profile_id = path.split("/")[-1]
+            self._handle_proxy_delete(profile_id)
+        # --- Task 090: Automation Recorder ---
+        elif re.match(r"^/api/v1/automation-recorder/automations/[^/]+$", path):
+            automation_id = path.split("/")[-1]
+            self._handle_automation_delete(automation_id)
+        # --- Task 091: Font Manager ---
+        elif re.match(r"^/api/v1/font-manager/fonts/[^/]+$", path):
+            font_id = path.split("/")[-1]
+            self._handle_font_delete(font_id)
+        # --- Task 092: Translation Overlay ---
+        elif path == "/api/v1/translation/history":
+            self._handle_translation_history_clear()
+        # --- Task 093: Annotation Tool ---
+        elif re.match(r"^/api/v1/annotations/[^/]+$", path):
+            annotation_id = path.split("/")[-1]
+            self._handle_annotation_delete(annotation_id)
         else:
             self._send_json({"error": "not found"}, 404)
 

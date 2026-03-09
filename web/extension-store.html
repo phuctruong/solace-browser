@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Extension Store — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/extension-store.css" />
+</head>
+<body>
+  <div class="es-container">
+    <header class="es-header">
+      <h1 class="es-title">Extension Store</h1>
+      <nav class="es-tabs">
+        <button id="es-tab-store" class="es-tab es-tab-active" data-tab="store">Browse</button>
+        <button id="es-tab-installed" class="es-tab" data-tab="installed">My Extensions</button>
+        <button id="es-tab-publish" class="es-tab" data-tab="publish">Publish</button>
+      </nav>
+    </header>
+
+    <section id="es-panel-store" class="es-panel">
+      <div class="es-filter-row">
+        <label for="es-category-filter">Filter by category:</label>
+        <select id="es-category-filter">
+          <option value="">All</option>
+          <option value="productivity">Productivity</option>
+          <option value="security">Security</option>
+          <option value="privacy">Privacy</option>
+          <option value="developer_tools">Developer Tools</option>
+          <option value="accessibility">Accessibility</option>
+          <option value="shopping">Shopping</option>
+          <option value="social">Social</option>
+          <option value="entertainment">Entertainment</option>
+        </select>
+      </div>
+      <div id="es-listings" class="es-grid" aria-live="polite">
+        <p class="es-loading">Loading…</p>
+      </div>
+    </section>
+
+    <section id="es-panel-installed" class="es-panel" hidden>
+      <div id="es-installed" class="es-grid" aria-live="polite">
+        <p class="es-loading">Loading…</p>
+      </div>
+    </section>
+
+    <section id="es-panel-publish" class="es-panel" hidden>
+      <h2 class="es-section-title">Publish Extension</h2>
+      <div class="es-form-row">
+        <label for="es-pub-name">Name</label>
+        <input type="text" id="es-pub-name" placeholder="My Extension" />
+      </div>
+      <div class="es-form-row">
+        <label for="es-pub-category">Category</label>
+        <select id="es-pub-category">
+          <option value="productivity">Productivity</option>
+          <option value="security">Security</option>
+          <option value="privacy">Privacy</option>
+          <option value="developer_tools">Developer Tools</option>
+          <option value="accessibility">Accessibility</option>
+          <option value="shopping">Shopping</option>
+          <option value="social">Social</option>
+          <option value="entertainment">Entertainment</option>
+        </select>
+      </div>
+      <div class="es-form-row">
+        <label for="es-pub-version">Version (semver)</label>
+        <input type="text" id="es-pub-version" placeholder="1.0.0" />
+      </div>
+      <div class="es-form-row">
+        <label for="es-pub-manifest">Manifest (hashed on submit)</label>
+        <textarea id="es-pub-manifest" rows="3" placeholder="{}" style="resize:vertical;"></textarea>
+      </div>
+      <button id="es-publish-btn" class="es-btn es-btn-primary">Publish</button>
+      <p id="es-publish-msg" class="es-msg" hidden></p>
+    </section>
+  </div>
+  <script src="/web/js/extension-store.js"></script>
+</body>
+</html>

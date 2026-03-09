@@ -1,0 +1,191 @@
+/* extension-store.css — Extension Store | Task 080 | var(--hub-*) tokens only */
+:root {
+  --hub-bg: #ffffff;
+  --hub-surface: #f8f9fa;
+  --hub-border: #dee2e6;
+  --hub-text: #212529;
+  --hub-text-muted: #6c757d;
+  --hub-accent: #0d6efd;
+  --hub-accent-hover: #0b5ed7;
+  --hub-success: #198754;
+  --hub-warning: #ffc107;
+  --hub-danger: #dc3545;
+  --hub-radius: 0.5rem;
+  --hub-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.es-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.es-header {
+  border-bottom: 1px solid var(--hub-border);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+.es-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.es-tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.es-tab {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--hub-text);
+}
+
+.es-tab-active {
+  background: var(--hub-accent);
+  color: var(--hub-bg);
+  border-color: var(--hub-accent);
+}
+
+.es-panel {
+  display: block;
+}
+
+.es-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.es-filter-row select {
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 0.3rem 0.5rem;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+}
+
+.es-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.es-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 1rem;
+  box-shadow: var(--hub-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.es-card-name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.es-card-meta {
+  font-size: 0.8rem;
+  color: var(--hub-text-muted);
+}
+
+.es-card-rating {
+  font-size: 0.85rem;
+  color: var(--hub-warning);
+}
+
+.es-card-footer {
+  margin-top: auto;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.es-btn {
+  padding: 0.35rem 0.9rem;
+  border: none;
+  border-radius: var(--hub-radius);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.es-btn-primary {
+  background: var(--hub-accent);
+  color: var(--hub-bg);
+}
+
+.es-btn-primary:hover {
+  background: var(--hub-accent-hover);
+}
+
+.es-btn-danger {
+  background: var(--hub-danger);
+  color: var(--hub-bg);
+}
+
+.es-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.es-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.es-form-row label {
+  font-size: 0.875rem;
+  color: var(--hub-text-muted);
+}
+
+.es-form-row input,
+.es-form-row select,
+.es-form-row textarea {
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: inherit;
+}
+
+.es-msg {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--hub-success);
+}
+
+.es-loading {
+  color: var(--hub-text-muted);
+  font-size: 0.9rem;
+}

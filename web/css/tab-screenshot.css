@@ -1,0 +1,174 @@
+/* tab-screenshot.css — Tab Screenshot | Task 076 | var(--hub-*) tokens only */
+:root {
+  --hub-bg: #ffffff;
+  --hub-surface: #f8f9fa;
+  --hub-border: #dee2e6;
+  --hub-text: #212529;
+  --hub-text-muted: #6c757d;
+  --hub-accent: #0d6efd;
+  --hub-accent-hover: #0b5ed7;
+  --hub-success: #198754;
+  --hub-warning: #ffc107;
+  --hub-danger: #dc3545;
+  --hub-radius: 0.5rem;
+  --hub-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.ts-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.ts-header {
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--hub-border);
+  padding-bottom: 1rem;
+}
+
+.ts-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.ts-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--hub-text);
+}
+
+.ts-capture-panel,
+.ts-stats-panel,
+.ts-gallery-panel {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.ts-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.ts-form-row label {
+  font-size: 0.875rem;
+  color: var(--hub-text-muted);
+}
+
+.ts-form-row input,
+.ts-form-row select {
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+}
+
+.ts-btn {
+  padding: 0.4rem 1rem;
+  border: none;
+  border-radius: var(--hub-radius);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.ts-btn-primary {
+  background: var(--hub-accent);
+  color: var(--hub-bg);
+}
+
+.ts-btn-primary:hover {
+  background: var(--hub-accent-hover);
+}
+
+.ts-btn-danger {
+  background: var(--hub-danger);
+  color: var(--hub-bg);
+  font-size: 0.8rem;
+  padding: 0.3rem 0.6rem;
+}
+
+.ts-msg {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--hub-success);
+}
+
+.ts-stats-grid {
+  display: flex;
+  gap: 1rem;
+}
+
+.ts-stat-card {
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 8rem;
+}
+
+.ts-stat-label {
+  font-size: 0.75rem;
+  color: var(--hub-text-muted);
+}
+
+.ts-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.ts-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.ts-gallery-item {
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 0.75rem;
+  box-shadow: var(--hub-shadow);
+}
+
+.ts-gallery-item-hash {
+  font-size: 0.7rem;
+  color: var(--hub-text-muted);
+  word-break: break-all;
+  margin-bottom: 0.4rem;
+}
+
+.ts-gallery-item-meta {
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.ts-loading {
+  color: var(--hub-text-muted);
+  font-size: 0.9rem;
+}

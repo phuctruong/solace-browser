@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Dashboard — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/privacy-dashboard.css" />
+</head>
+<body>
+  <div class="pd-container">
+    <header class="pd-header">
+      <h1 class="pd-title">Privacy Dashboard</h1>
+    </header>
+
+    <section class="pd-summary-panel">
+      <h2 class="pd-section-title">Summary</h2>
+      <div class="pd-summary-cards">
+        <div class="pd-card"><span class="pd-card-label">Privacy Score</span><span id="pd-score" class="pd-card-value">—</span></div>
+        <div class="pd-card"><span class="pd-card-label">Total Events</span><span id="pd-count" class="pd-card-value">—</span></div>
+        <div class="pd-card"><span class="pd-card-label">Trackers Blocked</span><span id="pd-trackers" class="pd-card-value">—</span></div>
+        <div class="pd-card"><span class="pd-card-label">Cookies Cleared</span><span id="pd-cookies" class="pd-card-value">—</span></div>
+      </div>
+    </section>
+
+    <section class="pd-report-panel">
+      <h2 class="pd-section-title">Report Event</h2>
+      <div class="pd-form-row">
+        <label for="pd-event-type">Event Type</label>
+        <select id="pd-event-type">
+          <option value="tracker_blocked">Tracker Blocked</option>
+          <option value="cookie_cleared">Cookie Cleared</option>
+          <option value="fingerprint_blocked">Fingerprint Blocked</option>
+          <option value="data_shared">Data Shared</option>
+          <option value="permission_denied">Permission Denied</option>
+          <option value="vpn_connected">VPN Connected</option>
+          <option value="dns_leak_detected">DNS Leak Detected</option>
+        </select>
+      </div>
+      <div class="pd-form-row">
+        <label for="pd-domain">Domain (hashed on submit)</label>
+        <input type="text" id="pd-domain" placeholder="example.com" />
+      </div>
+      <div class="pd-form-row">
+        <label for="pd-details">Details</label>
+        <input type="text" id="pd-details" placeholder="Optional details" />
+      </div>
+      <button id="pd-report-btn" class="pd-btn pd-btn-primary">Report Event</button>
+      <p id="pd-report-msg" class="pd-msg" hidden></p>
+    </section>
+
+    <section class="pd-events-panel">
+      <div class="pd-events-header">
+        <h2 class="pd-section-title">Events Timeline</h2>
+        <button id="pd-clear-btn" class="pd-btn pd-btn-danger">Clear All</button>
+      </div>
+      <div id="pd-events" class="pd-events" aria-live="polite">
+        <p class="pd-loading">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script src="/web/js/privacy-dashboard.js"></script>
+</body>
+</html>

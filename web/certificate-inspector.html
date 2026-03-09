@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Certificate Inspector — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/certificate-inspector.css" />
+</head>
+<body>
+  <div class="ci-container">
+    <header class="ci-header">
+      <h1 class="ci-title">Certificate Inspector</h1>
+    </header>
+
+    <section class="ci-record-panel">
+      <h2 class="ci-section-title">Record Certificate</h2>
+      <div class="ci-form-row">
+        <label for="ci-domain">Domain (hashed on submit)</label>
+        <input type="text" id="ci-domain" placeholder="example.com" />
+      </div>
+      <div class="ci-form-row">
+        <label for="ci-fingerprint">Fingerprint</label>
+        <input type="text" id="ci-fingerprint" placeholder="SHA-256 fingerprint value" />
+      </div>
+      <div class="ci-form-row">
+        <label for="ci-issuer">Issuer DN</label>
+        <input type="text" id="ci-issuer" placeholder="CN=Let's Encrypt, O=Let's Encrypt" />
+      </div>
+      <div class="ci-form-row">
+        <label for="ci-subject">Subject DN</label>
+        <input type="text" id="ci-subject" placeholder="CN=example.com" />
+      </div>
+      <div class="ci-form-row">
+        <label for="ci-grade">Grade</label>
+        <select id="ci-grade">
+          <option value="A+">A+</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="F">F</option>
+        </select>
+      </div>
+      <div class="ci-form-row">
+        <label for="ci-validity">Validity Days Remaining</label>
+        <input type="number" id="ci-validity" value="365" />
+      </div>
+      <button id="ci-record-btn" class="ci-btn ci-btn-primary">Record Certificate</button>
+      <p id="ci-record-msg" class="ci-msg" hidden></p>
+    </section>
+
+    <section class="ci-alerts-panel">
+      <h2 class="ci-section-title">Alerts</h2>
+      <div id="ci-alerts" class="ci-alerts" aria-live="polite">
+        <p class="ci-loading">Loading…</p>
+      </div>
+    </section>
+
+    <section class="ci-list-panel">
+      <h2 class="ci-section-title">Certificates</h2>
+      <div id="ci-list" class="ci-list" aria-live="polite">
+        <p class="ci-loading">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script src="/web/js/certificate-inspector.js"></script>
+</body>
+</html>

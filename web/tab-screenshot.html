@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tab Screenshot — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/tab-screenshot.css" />
+</head>
+<body>
+  <div class="ts-container">
+    <header class="ts-header">
+      <h1 class="ts-title">Tab Screenshot</h1>
+    </header>
+
+    <section class="ts-capture-panel">
+      <h2 class="ts-section-title">Capture Screenshot</h2>
+      <div class="ts-form-row">
+        <label for="ts-url">Page URL</label>
+        <input type="text" id="ts-url" placeholder="https://example.com" />
+      </div>
+      <div class="ts-form-row">
+        <label for="ts-title">Page Title</label>
+        <input type="text" id="ts-title" placeholder="Example Page" />
+      </div>
+      <div class="ts-form-row">
+        <label for="ts-format">Format</label>
+        <select id="ts-format">
+          <option value="png">PNG</option>
+          <option value="jpeg">JPEG</option>
+          <option value="webp">WebP</option>
+        </select>
+      </div>
+      <button id="ts-capture-btn" class="ts-btn ts-btn-primary">Capture</button>
+      <p id="ts-capture-msg" class="ts-msg" hidden></p>
+    </section>
+
+    <section class="ts-stats-panel">
+      <h2 class="ts-section-title">Stats</h2>
+      <div id="ts-stats" class="ts-stats-grid">
+        <div class="ts-stat-card"><span class="ts-stat-label">Count</span><span id="ts-stat-count" class="ts-stat-value">—</span></div>
+        <div class="ts-stat-card"><span class="ts-stat-label">Total Size</span><span id="ts-stat-size" class="ts-stat-value">—</span></div>
+      </div>
+    </section>
+
+    <section class="ts-gallery-panel">
+      <h2 class="ts-section-title">Gallery</h2>
+      <div id="ts-gallery" class="ts-gallery" aria-live="polite">
+        <p class="ts-loading">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script src="/web/js/tab-screenshot.js"></script>
+</body>
+</html>

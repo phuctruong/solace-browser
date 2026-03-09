@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>URL Categorizer — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/url-categorizer.css" />
+</head>
+<body>
+  <div class="uc-container">
+    <header class="uc-header">
+      <h1 class="uc-title">URL Categorizer</h1>
+    </header>
+
+    <section class="uc-categorize-panel">
+      <h2 class="uc-section-title">Categorize URL</h2>
+      <div class="uc-form-row">
+        <label for="uc-url">URL (hashed on submit)</label>
+        <input type="text" id="uc-url" placeholder="https://example.com/page" />
+      </div>
+      <div class="uc-form-row">
+        <label for="uc-domain">Domain (hashed on submit)</label>
+        <input type="text" id="uc-domain" placeholder="example.com" />
+      </div>
+      <div class="uc-form-row">
+        <label for="uc-category">Category</label>
+        <select id="uc-category">
+          <option value="productivity">Productivity</option>
+          <option value="social_media">Social Media</option>
+          <option value="news">News</option>
+          <option value="entertainment">Entertainment</option>
+          <option value="shopping">Shopping</option>
+          <option value="education">Education</option>
+          <option value="technology">Technology</option>
+          <option value="finance">Finance</option>
+          <option value="health">Health</option>
+          <option value="travel">Travel</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="uc-form-row">
+        <label for="uc-confidence">Confidence Score (0.00–1.00)</label>
+        <input type="text" id="uc-confidence" value="0.85" />
+      </div>
+      <button id="uc-categorize-btn" class="uc-btn uc-btn-primary">Categorize</button>
+      <p id="uc-categorize-msg" class="uc-msg" hidden></p>
+    </section>
+
+    <section class="uc-summary-panel">
+      <h2 class="uc-section-title">Category Summary</h2>
+      <div id="uc-summary" class="uc-summary-grid" aria-live="polite">
+        <p class="uc-loading">Loading…</p>
+      </div>
+    </section>
+
+    <section class="uc-history-panel">
+      <div class="uc-history-header">
+        <h2 class="uc-section-title">History</h2>
+        <button id="uc-clear-btn" class="uc-btn uc-btn-danger">Clear History</button>
+      </div>
+      <div id="uc-history" class="uc-history" aria-live="polite">
+        <p class="uc-loading">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script src="/web/js/url-categorizer.js"></script>
+</body>
+</html>
