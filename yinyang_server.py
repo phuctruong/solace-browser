@@ -4591,8 +4591,6 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
 
     def _handle_evidence_stats(self) -> None:
         """GET /api/v1/evidence/stats — evidence chain stats. Task 089 + Task 016."""
-        if not self._check_auth():
-            return
         evidence = load_evidence(limit=10000, offset=0)
         total = count_evidence()
         if not evidence:

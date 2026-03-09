@@ -1,0 +1,292 @@
+/* evidence-viewer.css — Evidence Viewer for Solace Hub (Task 016)
+   Laws: var(--hub-*) tokens ONLY in component rules. Token definitions in :root may contain hex values.
+   No CDN. No Bootstrap. No Tailwind. No jQuery. No hardcoded hex outside :root. Banned port omitted.
+*/
+
+:root {
+  --hub-bg: #1a1a2e;
+  --hub-surface: #16213e;
+  --hub-border: #0f3460;
+  --hub-accent: #e94560;
+  --hub-text: #f5f5f5;
+  --hub-text-muted: #a8a8b3;
+  --hub-success: #4caf50;
+  --hub-warning: #ff9800;
+  --hub-error: #ef4444;
+  --hub-mono: 'Courier New', monospace;
+}
+
+body {
+  margin: 0;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+}
+
+.ev-page {
+  padding: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* --- Page header --- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* --- Chain status badge --- */
+.chain-status {
+  font-size: 0.85rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.chain-status--verified {
+  background: color-mix(in srgb, var(--hub-success) 20%, transparent);
+  color: var(--hub-success);
+}
+
+.chain-status--unknown {
+  background: color-mix(in srgb, var(--hub-text-muted) 15%, transparent);
+  color: var(--hub-text-muted);
+}
+
+.chain-status--error {
+  background: color-mix(in srgb, var(--hub-error) 20%, transparent);
+  color: var(--hub-error);
+}
+
+/* --- Stats banner --- */
+.stats-banner {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: var(--hub-text-muted);
+}
+
+/* --- Search bar --- */
+.search-bar {
+  margin-bottom: 0.75rem;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 6px;
+  color: var(--hub-text);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 1px;
+}
+
+/* --- Filter bar --- */
+.filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.filter-btn {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text-muted);
+  border-radius: 20px;
+  padding: 4px 14px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.filter-btn--active {
+  background: var(--hub-accent);
+  border-color: var(--hub-accent);
+  color: var(--hub-text);
+}
+
+/* --- Evidence table --- */
+.ev-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ev-table th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  color: var(--hub-text-muted);
+  border-bottom: 1px solid var(--hub-border);
+  font-weight: 600;
+}
+
+.ev-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--hub-border);
+  vertical-align: top;
+}
+
+.ev-row:hover {
+  background: var(--hub-surface);
+}
+
+.ev-ts {
+  white-space: nowrap;
+  color: var(--hub-text-muted);
+  font-size: 0.8rem;
+}
+
+.ev-type {
+  font-weight: 600;
+  color: var(--hub-accent);
+}
+
+.ev-id {
+  font-family: var(--hub-mono);
+  font-size: 0.75rem;
+  color: var(--hub-text-muted);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ev-hash-cell {
+  font-family: var(--hub-mono);
+  font-size: 0.75rem;
+  color: var(--hub-text-muted);
+}
+
+.ev-desc {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Expand button --- */
+.btn-expand {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text-muted);
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.btn-expand:hover {
+  border-color: var(--hub-accent);
+  color: var(--hub-accent);
+}
+
+/* --- Expanded detail row --- */
+.ev-detail-json {
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-family: var(--hub-mono);
+  font-size: 0.75rem;
+  color: var(--hub-text);
+  overflow-x: auto;
+  max-height: 300px;
+  white-space: pre;
+  margin: 0 0 0.5rem 0;
+}
+
+.ev-full-hash {
+  font-family: var(--hub-mono);
+  font-size: 0.75rem;
+  color: var(--hub-accent);
+  word-break: break-all;
+}
+
+/* --- Pagination --- */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.pag-info {
+  color: var(--hub-text-muted);
+  font-size: 0.85rem;
+}
+
+.btn-pag {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text);
+  border-radius: 6px;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-pag:hover {
+  border-color: var(--hub-accent);
+  color: var(--hub-accent);
+}
+
+/* --- Buttons --- */
+.btn-verify, .btn-export {
+  background: var(--hub-accent);
+  color: var(--hub-text);
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-export {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text);
+}
+
+.btn-export:hover {
+  border-color: var(--hub-accent);
+  color: var(--hub-accent);
+}
+
+/* --- Empty state --- */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--hub-text-muted);
+}
