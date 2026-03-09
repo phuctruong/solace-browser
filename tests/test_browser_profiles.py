@@ -20,6 +20,11 @@ VALID_TOKEN = "a" * 64
 def profiles_server():
     import yinyang_server as ys
 
+    # Clear profiles file to avoid MAX_BROWSER_PROFILES limit from prior runs
+    profiles_path = pathlib.Path.home() / ".solace" / "browser_profiles.json"
+    if profiles_path.exists():
+        profiles_path.write_text("[]")
+
     httpd = ys.build_server(TEST_PORT, str(REPO_ROOT), session_token_sha256=VALID_TOKEN)
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)
     thread.start()

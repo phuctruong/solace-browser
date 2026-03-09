@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility Checker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/accessibility-checker.css">
+</head>
+<body>
+<div class="ac-container">
+  <h1 class="ac-title">Accessibility Checker</h1>
+  <p class="ac-subtitle">WCAG compliance scan results</p>
+  <div class="ac-toolbar">
+    <button id="btn-ac-scans" class="ac-btn ac-btn-primary">Scans</button>
+    <button id="btn-ac-levels" class="ac-btn ac-btn-secondary">WCAG Levels</button>
+  </div>
+  <div id="ac-panel" class="ac-panel" aria-live="polite"></div>
+  <div id="ac-status" class="ac-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/accessibility-checker.js"></script>
+</body>
+</html>

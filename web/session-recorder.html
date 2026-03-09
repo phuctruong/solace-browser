@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Recorder — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/session-recorder.css">
+</head>
+<body>
+<div class="sr-container">
+  <h1 class="sr-title">Session Recorder</h1>
+  <p class="sr-subtitle">Record browser session events for replay and analysis</p>
+  <div class="sr-toolbar">
+    <button id="btn-sr-start" class="sr-btn sr-btn-primary">Start Recording</button>
+    <button id="btn-sr-stop" class="sr-btn sr-btn-secondary">Stop</button>
+    <button id="btn-sr-list" class="sr-btn sr-btn-secondary">Recordings</button>
+  </div>
+  <div id="sr-panel" class="sr-panel" aria-live="polite"></div>
+  <div id="sr-status" class="sr-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/session-recorder.js"></script>
+</body>
+</html>

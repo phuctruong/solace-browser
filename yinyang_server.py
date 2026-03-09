@@ -1293,6 +1293,41 @@ _TRANSLATION_HISTORY: list[dict] = []
 _TRANSLATION_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
+# Task 094 — Reading Mode
+# ---------------------------------------------------------------------------
+READING_THEMES = ["light", "dark", "sepia", "high-contrast", "paper"]
+READING_FONT_SIZES = [14, 16, 18, 20, 22, 24, 26, 28]
+COLUMN_WIDTHS = ["narrow", "medium", "wide", "full"]
+MAX_READING_SESSIONS = 200
+_READING_SESSIONS: list[dict] = []
+_READING_SETTINGS: dict = {"theme": "light", "font_size": 18, "line_height": "1.6", "column_width": "medium"}
+_READING_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 095 — Code Snippet Saver
+# ---------------------------------------------------------------------------
+SNIPPET_LANGUAGES = [
+    "python", "javascript", "typescript", "rust", "go", "java", "cpp",
+    "c", "bash", "sql", "html", "css", "json", "yaml", "markdown", "other"
+]
+MAX_SNIPPETS = 2000
+_SNIPPETS: list[dict] = []
+_SNIPPET_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 096 — Form Validator
+# ---------------------------------------------------------------------------
+VALIDATION_TYPES = [
+    "required", "min_length", "max_length", "regex_pattern",
+    "email_format", "url_format", "numeric", "integer",
+    "min_value", "max_value", "enum_values"
+]
+MAX_RULE_SETS = 100
+MAX_FIELDS_PER_RULE_SET = 50
+_FORM_RULE_SETS: list[dict] = []
+_FORM_VALIDATOR_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
 # Task 093 — Annotation Tool
 # ---------------------------------------------------------------------------
 ANNOTATION_TYPES: list[str] = ["highlight", "note", "bookmark_note", "question", "todo", "correction"]
@@ -1300,6 +1335,34 @@ ANNOTATION_COLORS: list[str] = ["yellow", "green", "blue", "red", "purple", "ora
 MAX_ANNOTATIONS: int = 5000
 _ANNOTATIONS: list[dict] = []
 _ANNOTATION_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 097 — Color Picker Tool
+# ---------------------------------------------------------------------------
+COLOR_FORMATS: list[str] = ["hex", "rgb", "rgba", "hsl", "hsla", "oklch", "named"]
+MAX_SAVED_COLORS: int = 500
+MAX_PALETTE_SIZE: int = 20
+MAX_PALETTES: int = 50
+_SAVED_COLORS: list[dict] = []
+_COLOR_PALETTES: list[dict] = []
+_COLOR_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 098 — Page Diff Tracker
+# ---------------------------------------------------------------------------
+PAGE_CHANGE_TYPES: list[str] = ["added", "removed", "modified", "unchanged"]
+MAX_SNAPSHOTS: int = 1000
+_PAGE_SNAPSHOTS: list[dict] = []
+_DIFF_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 099 — Tab Organizer
+# ---------------------------------------------------------------------------
+TAB_STATUSES: list[str] = ["active", "pinned", "sleeping", "loading", "error", "closed"]
+MAX_WORKSPACES: int = 20
+MAX_TABS_PER_WORKSPACE: int = 100
+_WORKSPACES: list[dict] = []
+_WORKSPACE_LOCK = threading.Lock()
 
 # Task 070 — Performance Profiler
 # ---------------------------------------------------------------------------
@@ -5668,6 +5731,43 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/annotation-tool.js", "application/javascript")
         elif path == "/web/css/annotation-tool.css":
             self._handle_static_file("web/css/annotation-tool.css", "text/css")
+        # --- Task 094: Reading Mode ---
+        elif path == "/api/v1/reading-mode/sessions":
+            self._handle_reading_session_list()
+        elif path == "/api/v1/reading-mode/settings":
+            self._handle_reading_settings_get()
+        elif path == "/api/v1/reading-mode/themes":
+            self._handle_reading_themes()
+        elif path == "/web/reading-mode.html":
+            self._handle_static_file("web/reading-mode.html", "text/html; charset=utf-8")
+        elif path == "/web/js/reading-mode.js":
+            self._handle_static_file("web/js/reading-mode.js", "application/javascript")
+        elif path == "/web/css/reading-mode.css":
+            self._handle_static_file("web/css/reading-mode.css", "text/css")
+        # --- Task 095: Code Snippet Saver ---
+        elif path == "/api/v1/snippets/by-language":
+            self._handle_snippet_by_language()
+        elif path == "/api/v1/snippets/languages":
+            self._handle_snippet_languages()
+        elif path == "/api/v1/snippets":
+            self._handle_snippet_list()
+        elif path == "/web/code-snippet-saver.html":
+            self._handle_static_file("web/code-snippet-saver.html", "text/html; charset=utf-8")
+        elif path == "/web/js/code-snippet-saver.js":
+            self._handle_static_file("web/js/code-snippet-saver.js", "application/javascript")
+        elif path == "/web/css/code-snippet-saver.css":
+            self._handle_static_file("web/css/code-snippet-saver.css", "text/css")
+        # --- Task 096: Form Validator ---
+        elif path == "/api/v1/form-validator/rules":
+            self._handle_form_rule_list()
+        elif path == "/api/v1/form-validator/types":
+            self._handle_form_validator_types()
+        elif path == "/web/form-validator.html":
+            self._handle_static_file("web/form-validator.html", "text/html; charset=utf-8")
+        elif path == "/web/js/form-validator.js":
+            self._handle_static_file("web/js/form-validator.js", "application/javascript")
+        elif path == "/web/css/form-validator.css":
+            self._handle_static_file("web/css/form-validator.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -6212,6 +6312,19 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 093: Annotation Tool ---
         elif path == "/api/v1/annotations":
             self._handle_annotation_create()
+        # --- Task 094: Reading Mode ---
+        elif path == "/api/v1/reading-mode/sessions":
+            self._handle_reading_session_create()
+        elif path == "/api/v1/reading-mode/settings":
+            self._handle_reading_settings_update()
+        # --- Task 095: Code Snippet Saver ---
+        elif path == "/api/v1/snippets":
+            self._handle_snippet_save()
+        # --- Task 096: Form Validator ---
+        elif path == "/api/v1/form-validator/rules":
+            self._handle_form_rule_create()
+        elif path == "/api/v1/form-validator/validate":
+            self._handle_form_validate()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -6479,6 +6592,18 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/annotations/[^/]+$", path):
             annotation_id = path.split("/")[-1]
             self._handle_annotation_delete(annotation_id)
+        # --- Task 094: Reading Mode ---
+        elif re.match(r"^/api/v1/reading-mode/sessions/[^/]+$", path):
+            session_id = path.split("/")[-1]
+            self._handle_reading_session_delete(session_id)
+        # --- Task 095: Code Snippet Saver ---
+        elif re.match(r"^/api/v1/snippets/[^/]+$", path):
+            snippet_id = path.split("/")[-1]
+            self._handle_snippet_delete(snippet_id)
+        # --- Task 096: Form Validator ---
+        elif re.match(r"^/api/v1/form-validator/rules/[^/]+$", path):
+            rule_id = path.split("/")[-1]
+            self._handle_form_rule_delete(rule_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -20774,6 +20899,297 @@ function choose(mode) {
     def _handle_annotation_types(self) -> None:
         """GET /api/v1/annotations/types — list annotation types (public)."""
         self._send_json({"types": ANNOTATION_TYPES, "colors": ANNOTATION_COLORS})
+
+    # ---------------------------------------------------------------------------
+    # Task 094 — Reading Mode handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_reading_session_create(self) -> None:
+        """POST /api/v1/reading-mode/sessions — create reading session (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url_hash = str(body.get("url_hash", "")).strip()
+        if not url_hash:
+            self._send_json({"error": "url_hash required"}, 400)
+            return
+        title_hash = str(body.get("title_hash", "")).strip()
+        if not title_hash:
+            self._send_json({"error": "title_hash required"}, 400)
+            return
+        word_count_raw = body.get("word_count", 0)
+        try:
+            word_count = max(0, int(word_count_raw))
+        except (TypeError, ValueError):
+            word_count = 0
+        import math
+        reading_time_mins = math.ceil(word_count / 200) if word_count > 0 else 0
+        entry = {
+            "session_id": "rds_" + uuid.uuid4().hex,
+            "url_hash": url_hash,
+            "title_hash": title_hash,
+            "word_count": word_count,
+            "reading_time_mins": reading_time_mins,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _READING_LOCK:
+            if len(_READING_SESSIONS) >= MAX_READING_SESSIONS:
+                _READING_SESSIONS.pop(0)
+            _READING_SESSIONS.append(entry)
+        self._send_json({"status": "created", "session": dict(entry)}, 201)
+
+    def _handle_reading_session_list(self) -> None:
+        """GET /api/v1/reading-mode/sessions — list reading sessions (auth required)."""
+        if not self._check_auth():
+            return
+        with _READING_LOCK:
+            sessions = [dict(s) for s in _READING_SESSIONS]
+        self._send_json({"sessions": sessions, "total": len(sessions)})
+
+    def _handle_reading_session_delete(self, session_id: str) -> None:
+        """DELETE /api/v1/reading-mode/sessions/{id} — delete reading session (auth required)."""
+        if not self._check_auth():
+            return
+        with _READING_LOCK:
+            idx = next((i for i, s in enumerate(_READING_SESSIONS) if s["session_id"] == session_id), None)
+            if idx is None:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            _READING_SESSIONS.pop(idx)
+        self._send_json({"status": "deleted", "session_id": session_id})
+
+    def _handle_reading_settings_update(self) -> None:
+        """POST /api/v1/reading-mode/settings — update reading settings (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        with _READING_LOCK:
+            if "theme" in body:
+                theme = str(body["theme"]).strip()
+                if theme not in READING_THEMES:
+                    self._send_json({"error": f"theme must be one of {READING_THEMES}"}, 400)
+                    return
+                _READING_SETTINGS["theme"] = theme
+            if "font_size" in body:
+                try:
+                    font_size = int(body["font_size"])
+                except (TypeError, ValueError):
+                    self._send_json({"error": f"font_size must be one of {READING_FONT_SIZES}"}, 400)
+                    return
+                if font_size not in READING_FONT_SIZES:
+                    self._send_json({"error": f"font_size must be one of {READING_FONT_SIZES}"}, 400)
+                    return
+                _READING_SETTINGS["font_size"] = font_size
+            if "column_width" in body:
+                column_width = str(body["column_width"]).strip()
+                if column_width not in COLUMN_WIDTHS:
+                    self._send_json({"error": f"column_width must be one of {COLUMN_WIDTHS}"}, 400)
+                    return
+                _READING_SETTINGS["column_width"] = column_width
+            if "line_height" in body:
+                _READING_SETTINGS["line_height"] = str(body["line_height"]).strip()
+            settings = dict(_READING_SETTINGS)
+        self._send_json({"status": "updated", "settings": settings})
+
+    def _handle_reading_settings_get(self) -> None:
+        """GET /api/v1/reading-mode/settings — get reading settings (auth required)."""
+        if not self._check_auth():
+            return
+        with _READING_LOCK:
+            settings = dict(_READING_SETTINGS)
+        self._send_json({"settings": settings})
+
+    def _handle_reading_themes(self) -> None:
+        """GET /api/v1/reading-mode/themes — list reading themes (public)."""
+        self._send_json({
+            "themes": READING_THEMES,
+            "font_sizes": READING_FONT_SIZES,
+            "column_widths": COLUMN_WIDTHS,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 095 — Code Snippet Saver handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_snippet_save(self) -> None:
+        """POST /api/v1/snippets — save snippet (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        language = str(body.get("language", "")).strip()
+        if language not in SNIPPET_LANGUAGES:
+            self._send_json({"error": f"language must be one of {SNIPPET_LANGUAGES}"}, 400)
+            return
+        code_hash = str(body.get("code_hash", "")).strip()
+        if not code_hash:
+            self._send_json({"error": "code_hash required"}, 400)
+            return
+        description_hash = str(body.get("description_hash", "")).strip()
+        source_url_hash = str(body.get("source_url_hash", "")).strip()
+        tags = body.get("tags", [])
+        if not isinstance(tags, list):
+            tags = []
+        if len(tags) > 10:
+            self._send_json({"error": "tags: max 10 items"}, 400)
+            return
+        for tag in tags:
+            if len(str(tag)) > 32:
+                self._send_json({"error": "each tag max 32 chars"}, 400)
+                return
+        entry = {
+            "snippet_id": "snp_" + uuid.uuid4().hex,
+            "language": language,
+            "code_hash": code_hash,
+            "description_hash": description_hash,
+            "source_url_hash": source_url_hash,
+            "tags": [str(t) for t in tags],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _SNIPPET_LOCK:
+            if len(_SNIPPETS) >= MAX_SNIPPETS:
+                _SNIPPETS.pop(0)
+            _SNIPPETS.append(entry)
+        self._send_json({"status": "saved", "snippet": dict(entry)}, 201)
+
+    def _handle_snippet_list(self) -> None:
+        """GET /api/v1/snippets — list all snippets (auth required)."""
+        if not self._check_auth():
+            return
+        with _SNIPPET_LOCK:
+            snippets = [dict(s) for s in _SNIPPETS]
+        self._send_json({"snippets": snippets, "total": len(snippets)})
+
+    def _handle_snippet_delete(self, snippet_id: str) -> None:
+        """DELETE /api/v1/snippets/{id} — delete snippet (auth required)."""
+        if not self._check_auth():
+            return
+        with _SNIPPET_LOCK:
+            idx = next((i for i, s in enumerate(_SNIPPETS) if s["snippet_id"] == snippet_id), None)
+            if idx is None:
+                self._send_json({"error": "snippet not found"}, 404)
+                return
+            _SNIPPETS.pop(idx)
+        self._send_json({"status": "deleted", "snippet_id": snippet_id})
+
+    def _handle_snippet_by_language(self) -> None:
+        """GET /api/v1/snippets/by-language?language=python — filter (auth required)."""
+        if not self._check_auth():
+            return
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        language = params.get("language", [""])[0]
+        with _SNIPPET_LOCK:
+            if language:
+                snippets = [dict(s) for s in _SNIPPETS if s.get("language") == language]
+            else:
+                snippets = [dict(s) for s in _SNIPPETS]
+        self._send_json({"snippets": snippets, "total": len(snippets)})
+
+    def _handle_snippet_languages(self) -> None:
+        """GET /api/v1/snippets/languages — list languages (public)."""
+        self._send_json({"languages": SNIPPET_LANGUAGES})
+
+    # ---------------------------------------------------------------------------
+    # Task 096 — Form Validator handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_form_rule_create(self) -> None:
+        """POST /api/v1/form-validator/rules — create rule set (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        name_hash = str(body.get("name_hash", "")).strip()
+        if not name_hash:
+            self._send_json({"error": "name_hash required"}, 400)
+            return
+        form_hash = str(body.get("form_hash", "")).strip()
+        if not form_hash:
+            self._send_json({"error": "form_hash required"}, 400)
+            return
+        fields = body.get("fields", [])
+        if not isinstance(fields, list):
+            fields = []
+        if len(fields) > MAX_FIELDS_PER_RULE_SET:
+            self._send_json({"error": f"max {MAX_FIELDS_PER_RULE_SET} fields per rule set"}, 400)
+            return
+        for field in fields:
+            vtype = str(field.get("validation_type", "")).strip()
+            if vtype not in VALIDATION_TYPES:
+                self._send_json({"error": f"validation_type must be one of {VALIDATION_TYPES}"}, 400)
+                return
+        rule = {
+            "rule_id": "fvr_" + uuid.uuid4().hex,
+            "name_hash": name_hash,
+            "form_hash": form_hash,
+            "fields": [dict(f) for f in fields],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _FORM_VALIDATOR_LOCK:
+            if len(_FORM_RULE_SETS) >= MAX_RULE_SETS:
+                self._send_json({"error": f"max {MAX_RULE_SETS} rule sets"}, 400)
+                return
+            _FORM_RULE_SETS.append(rule)
+        self._send_json({"status": "created", "rule": dict(rule)}, 201)
+
+    def _handle_form_rule_list(self) -> None:
+        """GET /api/v1/form-validator/rules — list rule sets (auth required)."""
+        if not self._check_auth():
+            return
+        with _FORM_VALIDATOR_LOCK:
+            rules = [dict(r) for r in _FORM_RULE_SETS]
+        self._send_json({"rules": rules, "total": len(rules)})
+
+    def _handle_form_rule_delete(self, rule_id: str) -> None:
+        """DELETE /api/v1/form-validator/rules/{id} — delete rule set (auth required)."""
+        if not self._check_auth():
+            return
+        with _FORM_VALIDATOR_LOCK:
+            idx = next((i for i, r in enumerate(_FORM_RULE_SETS) if r["rule_id"] == rule_id), None)
+            if idx is None:
+                self._send_json({"error": "rule not found"}, 404)
+                return
+            _FORM_RULE_SETS.pop(idx)
+        self._send_json({"status": "deleted", "rule_id": rule_id})
+
+    def _handle_form_validate(self) -> None:
+        """POST /api/v1/form-validator/validate — validate submission (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        rule_id = str(body.get("rule_id", "")).strip()
+        with _FORM_VALIDATOR_LOCK:
+            rule = next((dict(r) for r in _FORM_RULE_SETS if r["rule_id"] == rule_id), None)
+        if rule is None:
+            self._send_json({"error": "rule not found"}, 404)
+            return
+        submission_hash = str(body.get("submission_hash", "")).strip()
+        field_results = body.get("field_results", {})
+        if not isinstance(field_results, dict):
+            field_results = {}
+        passed_count = sum(1 for v in field_results.values() if v is True)
+        failed_count = sum(1 for v in field_results.values() if v is False)
+        valid = failed_count == 0 and passed_count > 0
+        self._send_json({
+            "valid": valid,
+            "rule_id": rule_id,
+            "submission_hash": submission_hash,
+            "passed_count": passed_count,
+            "failed_count": failed_count,
+            "validated_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    def _handle_form_validator_types(self) -> None:
+        """GET /api/v1/form-validator/types — list validation types (public)."""
+        self._send_json({"types": VALIDATION_TYPES})
 
 
 # ---------------------------------------------------------------------------
