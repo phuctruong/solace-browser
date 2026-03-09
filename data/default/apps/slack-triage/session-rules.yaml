@@ -1,0 +1,27 @@
+app: slack-triage
+display_name: "Slack Triage — Summarize Channels + Draft Responses"
+version: "1.0.0"
+category: messaging
+site: app.slack.com
+login_url: "https://slack.com/signin"
+check_url: "https://app.slack.com/client"
+success_signals:
+  - "Jump to"
+  - "Direct Messages"
+  - "All channels"
+failure_signals:
+  - "Sign in to Slack"
+  - "Your session has expired"
+keep_alive:
+  interval_minutes: 15
+  action: "navigate"
+  url: "https://app.slack.com/client"
+oauth3_scope: "slack.read.channels"
+tier_required: "pro"
+evidence_on_check: true
+description: "Summarize Slack channels, draft responses, and escalate urgent items."
+parent_app: slack-web
+produces_for:
+  - morning-brief
+  - gmail-inbox-triage
+  - github-issue-triage

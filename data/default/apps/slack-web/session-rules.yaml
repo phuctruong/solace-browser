@@ -1,0 +1,26 @@
+app: slack-web
+display_name: "Slack Web — Session Keep-Alive"
+version: "1.0.0"
+category: messaging
+site: app.slack.com
+login_url: "https://slack.com/signin"
+check_url: "https://app.slack.com/client"
+success_signals:
+  - "Jump to"
+  - "Direct Messages"
+  - "All channels"
+failure_signals:
+  - "Sign in to Slack"
+  - "Your session has expired"
+  - "Create a new workspace"
+keep_alive:
+  interval_minutes: 15
+  action: "navigate"
+  url: "https://app.slack.com/client"
+oauth3_scope: "slack.read.channels"
+tier_required: "free"
+evidence_on_check: true
+description: "Keeps Slack session alive. Login once — Hub monitors channel activity."
+sub_apps:
+  - slack-triage
+  - slack-dm

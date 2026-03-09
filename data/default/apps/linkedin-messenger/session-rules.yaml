@@ -1,0 +1,26 @@
+app: linkedin-messenger
+display_name: "LinkedIn Messenger — Inbox Monitor + Response Drafts"
+version: "1.0.0"
+category: professional
+site: linkedin.com
+login_url: "https://www.linkedin.com/login"
+check_url: "https://www.linkedin.com/messaging/"
+success_signals:
+  - "Messaging"
+  - "Send a message"
+  - "compose"
+failure_signals:
+  - "Sign in"
+  - "Join now"
+  - "Be seen by recruiters"
+keep_alive:
+  interval_minutes: 20
+  action: "navigate"
+  url: "https://www.linkedin.com/messaging/"
+oauth3_scope: "linkedin.read.messages"
+tier_required: "pro"
+evidence_on_check: true
+description: "Monitor LinkedIn messages, draft responses for outreach campaigns."
+produces_for:
+  - morning-brief
+  - lead-pipeline

@@ -1,0 +1,26 @@
+app: whatsapp-responder
+display_name: "WhatsApp Responder — Prepare Responses with Approval"
+version: "1.0.0"
+category: messaging
+site: web.whatsapp.com
+login_url: "https://web.whatsapp.com/"
+check_url: "https://web.whatsapp.com/"
+success_signals:
+  - "Chats"
+  - "New chat"
+  - "data-icon='chat'"
+failure_signals:
+  - "Keep your phone connected"
+  - "Log in with QR code"
+keep_alive:
+  interval_minutes: 10
+  action: "navigate"
+  url: "https://web.whatsapp.com/"
+oauth3_scope: "whatsapp.write.drafts"
+tier_required: "enterprise"
+evidence_on_check: true
+description: "Prepare WhatsApp responses with explicit approval gate. No auto-send."
+parent_app: whatsapp-web
+produces_for: []
+consumes_from:
+  - morning-brief

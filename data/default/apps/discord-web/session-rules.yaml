@@ -1,0 +1,26 @@
+app: discord-web
+display_name: "Discord Web — Session Keep-Alive"
+version: "1.0.0"
+category: messaging
+site: discord.com
+login_url: "https://discord.com/login"
+check_url: "https://discord.com/channels/@me"
+success_signals:
+  - "Direct Messages"
+  - "Friends"
+  - "Nitro"
+failure_signals:
+  - "Log in to your Discord account"
+  - "Invalid credentials"
+  - "Discord | Your Place to Talk and Hang Out"
+keep_alive:
+  interval_minutes: 20
+  action: "navigate"
+  url: "https://discord.com/channels/@me"
+oauth3_scope: "discord.read.messages"
+tier_required: "pro"
+evidence_on_check: true
+description: "Keeps Discord Web session alive. Monitor server notifications without leaving browser."
+sub_apps:
+  - discord-notifications
+  - discord-mentions

@@ -1,0 +1,26 @@
+app: whatsapp-web
+display_name: "WhatsApp Web — Session Keep-Alive"
+version: "1.0.0"
+category: messaging
+site: web.whatsapp.com
+login_url: "https://web.whatsapp.com/"
+check_url: "https://web.whatsapp.com/"
+success_signals:
+  - "Chats"
+  - "New chat"
+  - "data-icon='chat'"
+failure_signals:
+  - "Keep your phone connected"
+  - "Log in with QR code"
+  - "Use WhatsApp on your computer"
+keep_alive:
+  interval_minutes: 10
+  action: "navigate"
+  url: "https://web.whatsapp.com/"
+oauth3_scope: "whatsapp.read.messages"
+tier_required: "pro"
+evidence_on_check: true
+description: "Keeps WhatsApp Web session alive. Login once — Hub monitors forever."
+sub_apps:
+  - whatsapp-unread
+  - whatsapp-responder

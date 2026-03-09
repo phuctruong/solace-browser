@@ -1,0 +1,25 @@
+id: linkedin-messenger
+name: LinkedIn Messenger
+description: Monitor LinkedIn messages and draft responses for outreach campaigns.
+category: professional
+status: installed
+safety: B
+tier: pro
+tier_reason: "Professional messaging requires evidence chain + approval gate"
+site: linkedin.com
+type: standard
+orchestrates: []
+scopes:
+  - linkedin.read.messages
+  - linkedin.write.drafts
+  - local.evidence
+partners:
+  produces_for:
+    - morning-brief
+    - lead-pipeline
+  consumes_from:
+    - linkedin-outreach
+required_inbox:
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

@@ -1,0 +1,25 @@
+app: telegram-unread
+display_name: "Telegram — Unread Messages Checker"
+version: "1.0.0"
+category: messaging
+site: web.telegram.org
+login_url: "https://web.telegram.org/"
+check_url: "https://web.telegram.org/"
+success_signals:
+  - "Saved Messages"
+  - "Chat list"
+failure_signals:
+  - "Your phone number"
+  - "Log in by QR Code"
+keep_alive:
+  interval_minutes: 10
+  action: "check_unread_badges"
+  url: "https://web.telegram.org/"
+oauth3_scope: "telegram.read.unread"
+tier_required: "free"
+evidence_on_check: true
+description: "Checks Telegram unread badge counts. Reports to morning-brief."
+parent_app: telegram-web
+produces_for:
+  - morning-brief
+  - weekly-digest

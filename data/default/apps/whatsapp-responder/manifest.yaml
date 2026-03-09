@@ -1,0 +1,23 @@
+id: whatsapp-responder
+name: WhatsApp Responder
+description: Prepare responses in WhatsApp Web with explicit approval.
+category: messaging
+status: installed
+safety: C
+tier: enterprise
+tier_reason: "Messaging automation requires SSO + SOC2 audit trail"
+site: web.whatsapp.com
+type: standard
+orchestrates: []
+scopes:
+  - whatsapp.read.messages
+  - whatsapp.write.drafts
+  - local.evidence
+partners:
+  produces_for: []
+  consumes_from:
+    - morning-brief
+required_inbox:
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

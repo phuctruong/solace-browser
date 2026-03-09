@@ -1,0 +1,25 @@
+app: telegram-web
+display_name: "Telegram Web — Session Keep-Alive"
+version: "1.0.0"
+category: messaging
+site: web.telegram.org
+login_url: "https://web.telegram.org/"
+check_url: "https://web.telegram.org/"
+success_signals:
+  - "Saved Messages"
+  - "Chat list"
+  - "Search"
+failure_signals:
+  - "Your phone number"
+  - "Log in by QR Code"
+  - "Telegram Web"
+keep_alive:
+  interval_minutes: 20
+  action: "navigate"
+  url: "https://web.telegram.org/"
+oauth3_scope: "telegram.read.messages"
+tier_required: "free"
+evidence_on_check: true
+description: "Keeps Telegram Web session alive. Login once — Hub keeps chat list available."
+sub_apps:
+  - telegram-unread

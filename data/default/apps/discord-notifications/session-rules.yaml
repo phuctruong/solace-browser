@@ -1,0 +1,23 @@
+app: discord-notifications
+display_name: "Discord — Notification Checker"
+version: "1.0.0"
+category: messaging
+site: discord.com
+login_url: "https://discord.com/login"
+check_url: "https://discord.com/channels/@me"
+success_signals:
+  - "Direct Messages"
+  - "Friends"
+failure_signals:
+  - "Log in to your Discord account"
+keep_alive:
+  interval_minutes: 15
+  action: "check_notification_count"
+  url: "https://discord.com/channels/@me"
+oauth3_scope: "discord.read.notifications"
+tier_required: "pro"
+evidence_on_check: true
+description: "Checks Discord server mentions and DM notifications. Routes @mentions to morning-brief."
+parent_app: discord-web
+produces_for:
+  - morning-brief

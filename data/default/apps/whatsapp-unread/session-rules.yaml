@@ -1,0 +1,25 @@
+app: whatsapp-unread
+display_name: "WhatsApp — Check Unread Messages"
+version: "1.0.0"
+category: messaging
+site: web.whatsapp.com
+login_url: "https://web.whatsapp.com/"
+check_url: "https://web.whatsapp.com/"
+success_signals:
+  - "Chats"
+  - "New chat"
+failure_signals:
+  - "Keep your phone connected"
+  - "Log in with QR code"
+keep_alive:
+  interval_minutes: 5
+  action: "extract_unread_count"
+  url: "https://web.whatsapp.com/"
+oauth3_scope: "whatsapp.read.messages"
+tier_required: "pro"
+evidence_on_check: true
+description: "Checks WhatsApp unread count every 5 minutes. Reports to morning-brief."
+parent_app: whatsapp-web
+produces_for:
+  - morning-brief
+  - weekly-digest

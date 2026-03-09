@@ -1,0 +1,27 @@
+app: slack-dm
+display_name: "Slack — Direct Messages Checker"
+version: "1.0.0"
+category: messaging
+site: app.slack.com
+login_url: "https://slack.com/signin"
+check_url: "https://app.slack.com/client"
+success_signals:
+  - "Direct Messages"
+  - "Jump to"
+failure_signals:
+  - "Sign in to Slack"
+  - "session has expired"
+keep_alive:
+  interval_minutes: 10
+  action: "check_dm_unread"
+  url: "https://app.slack.com/client"
+oauth3_scope: "slack.read.messages"
+tier_required: "pro"
+evidence_on_check: true
+description: "Checks Slack DMs for unread messages. Reports urgent DMs to morning-brief."
+parent_app: slack-web
+produces_for:
+  - morning-brief
+  - weekly-digest
+consumes_from:
+  - slack-triage

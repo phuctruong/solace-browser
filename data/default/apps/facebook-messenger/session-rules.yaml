@@ -1,0 +1,25 @@
+app: facebook-messenger
+display_name: "Facebook Messenger — Session Keep-Alive"
+version: "1.0.0"
+category: messaging
+site: messenger.com
+login_url: "https://www.messenger.com/"
+check_url: "https://www.messenger.com/t/"
+success_signals:
+  - "Chats"
+  - "New Message"
+  - "messenger-inbox-header"
+failure_signals:
+  - "Log into Facebook"
+  - "Create new account"
+  - "Forgot password?"
+keep_alive:
+  interval_minutes: 15
+  action: "navigate"
+  url: "https://www.messenger.com/"
+oauth3_scope: "messenger.read.messages"
+tier_required: "pro"
+evidence_on_check: true
+description: "Keeps Facebook Messenger session alive at messenger.com. No Facebook API needed."
+sub_apps:
+  - messenger-unread

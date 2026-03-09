@@ -1,0 +1,23 @@
+app: messenger-unread
+display_name: "Messenger — Unread Count Checker"
+version: "1.0.0"
+category: messaging
+site: messenger.com
+login_url: "https://www.messenger.com/"
+check_url: "https://www.messenger.com/"
+success_signals:
+  - "Chats"
+  - "New Message"
+failure_signals:
+  - "Log into Facebook"
+keep_alive:
+  interval_minutes: 10
+  action: "extract_unread_count"
+  url: "https://www.messenger.com/"
+oauth3_scope: "messenger.read.unread"
+tier_required: "pro"
+evidence_on_check: true
+description: "Extracts unread message count from Messenger. Reports to morning-brief."
+parent_app: facebook-messenger
+produces_for:
+  - morning-brief
