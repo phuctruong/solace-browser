@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gmail Inbox Triage — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/gmail-triage.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Gmail Inbox Triage</h1>
+    <span class="page-subtitle">Zero-inbox in 5 minutes — every action sealed</span>
+  </div>
+
+  <div class="triage-page">
+
+    <!-- Connection Status Card -->
+    <div class="card" id="status-card">
+      <div class="card-title">Connection Status</div>
+      <div class="status-row">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="status-label" id="status-label">Checking...</span>
+      </div>
+      <div class="status-meta" id="status-meta"></div>
+    </div>
+
+    <!-- Setup Card (shown when disconnected) -->
+    <div class="card" id="setup-card" hidden>
+      <div class="card-title">Connect Gmail</div>
+      <p class="card-hint">Paste your Gmail OAuth2 token below. It will be stored as a SHA-256 hash — never in plaintext.</p>
+      <div class="form-row">
+        <label for="token-input" class="form-label">OAuth2 Token</label>
+        <input type="password" id="token-input" class="form-input" placeholder="ya29...." autocomplete="off" aria-label="OAuth2 token">
+      </div>
+      <button class="btn btn--primary" id="btn-connect" type="button">Connect</button>
+      <div class="setup-error" id="setup-error" hidden></div>
+    </div>
+
+    <!-- Triage Controls -->
+    <div class="card" id="run-card">
+      <div class="card-title">Run Triage</div>
+      <p class="card-hint">Preview mode: see what will be archived, snoozed, or labeled before anything executes.</p>
+      <button class="btn btn--accent" id="btn-run" type="button" disabled>Run Triage</button>
+      <div class="run-meta" id="run-meta"></div>
+    </div>
+
+    <!-- Preview Panel (shown after run) -->
+    <div class="card" id="preview-card" hidden>
+      <div class="card-title">Preview — Review Before Executing</div>
+      <p class="card-hint preview-warn">Nothing has been changed yet. Approve to execute, or dismiss to cancel.</p>
+      <div class="preview-actions">
+        <button class="btn btn--success" id="btn-approve" type="button">Approve &amp; Execute</button>
+        <button class="btn btn--ghost" id="btn-dismiss" type="button">Dismiss</button>
+      </div>
+      <div class="countdown-bar" id="countdown-bar">
+        <span>Auto-reject in <span id="countdown-secs">30</span>s</span>
+      </div>
+      <div class="results-table-wrap">
+        <table class="results-table" id="preview-table" aria-label="Triage preview">
+          <thead>
+            <tr>
+              <th>Sender</th>
+              <th>Subject</th>
+              <th>Action</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody id="preview-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Last Results -->
+    <div class="card" id="results-card" hidden>
+      <div class="card-title">Last Triage Results</div>
+      <div class="results-meta" id="results-meta"></div>
+      <div class="results-table-wrap">
+        <table class="results-table" id="results-table" aria-label="Last triage results">
+          <thead>
+            <tr>
+              <th>Sender</th>
+              <th>Subject</th>
+              <th>Action</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody id="results-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Config / Rules Panel -->
+    <div class="card" id="config-card">
+      <div class="card-title">Triage Rules</div>
+      <div class="rules-list" id="rules-list">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  </div>
+
+  <script src="/web/js/gmail-triage.js"></script>
+</body>
+</html>
