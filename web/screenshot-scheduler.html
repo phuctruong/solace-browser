@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Screenshot Scheduler — Solace Browser</title>
+  <link rel="stylesheet" href="/web/css/screenshot-scheduler.css">
+</head>
+<body>
+  <div class="ssc-container">
+    <h1 class="ssc-title">Screenshot Scheduler</h1>
+    <p class="ssc-subtitle">Automatically capture screenshots of pages at defined intervals.</p>
+
+    <div class="ssc-section">
+      <h2 class="ssc-section-title">New Schedule</h2>
+      <div class="ssc-form">
+        <input id="ssc-url" class="ssc-input" type="url" placeholder="https://example.com" aria-label="Page URL">
+        <select id="ssc-interval" class="ssc-select" aria-label="Capture interval"></select>
+        <button id="ssc-create-btn" class="ssc-btn ssc-btn-primary">Add Schedule</button>
+      </div>
+      <div id="ssc-msg" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="ssc-section">
+      <h2 class="ssc-section-title">Active Schedules</h2>
+      <div id="ssc-schedules-list" class="ssc-list"></div>
+    </div>
+
+    <div class="ssc-section">
+      <h2 class="ssc-section-title">Capture History</h2>
+      <button id="ssc-refresh-captures" class="ssc-btn ssc-btn-primary ssc-btn-sm" style="margin-bottom:0.75rem">Refresh</button>
+      <div id="ssc-captures-list" class="ssc-list"></div>
+    </div>
+  </div>
+  <script src="/web/js/screenshot-scheduler.js"></script>
+</body>
+</html>

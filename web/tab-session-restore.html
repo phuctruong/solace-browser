@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tab Session Restore — Solace Browser</title>
+  <link rel="stylesheet" href="/web/css/tab-session-restore.css">
+</head>
+<body>
+  <div class="tsr-container">
+    <h1 class="tsr-title">Tab Session Restore</h1>
+    <p class="tsr-subtitle">Save and restore sets of browser tabs as named sessions.</p>
+
+    <div class="tsr-section">
+      <h2 class="tsr-section-title">Save Session</h2>
+      <div class="tsr-form">
+        <input id="tsr-name" class="tsr-input" type="text" placeholder="Session name" aria-label="Session name">
+        <input id="tsr-tab-count" class="tsr-input" type="number" min="1" value="1" style="max-width:80px" aria-label="Tab count">
+        <select id="tsr-tag" class="tsr-select" aria-label="Tag"></select>
+        <button id="tsr-save-btn" class="tsr-btn tsr-btn-primary">Save Session</button>
+      </div>
+      <div id="tsr-msg" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="tsr-section">
+      <h2 class="tsr-section-title">Saved Sessions</h2>
+      <div id="tsr-sessions-list" class="tsr-list"></div>
+    </div>
+
+    <div class="tsr-section">
+      <h2 class="tsr-section-title">Statistics</h2>
+      <div id="tsr-stats"></div>
+    </div>
+  </div>
+  <script src="/web/js/tab-session-restore.js"></script>
+</body>
+</html>

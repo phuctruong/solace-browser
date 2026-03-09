@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Request Blocker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/network-request-blocker.css">
+</head>
+<body>
+<div class="nrb-container">
+  <h1 class="nrb-title">Network Request Blocker</h1>
+  <p class="nrb-subtitle">Create rules to block network requests by domain, pattern, or resource type</p>
+
+  <section class="nrb-section">
+    <h2 class="nrb-section-title">Add Block Rule</h2>
+    <form id="nrb-rule-form" class="nrb-form">
+      <input id="nrb-pattern" class="nrb-input" type="text" placeholder="Pattern (hashed for privacy)" aria-label="Pattern">
+      <select id="nrb-rule-type" class="nrb-input" aria-label="Rule type"></select>
+      <select id="nrb-resource-type" class="nrb-input" aria-label="Resource type"></select>
+      <button type="submit" class="nrb-btn nrb-btn-primary">Add Rule</button>
+    </form>
+  </section>
+
+  <section class="nrb-section">
+    <h2 class="nrb-section-title">Block Rules</h2>
+    <div id="nrb-rules-list" class="nrb-list" aria-live="polite"></div>
+  </section>
+
+  <section class="nrb-section">
+    <h2 class="nrb-section-title">Blocked Log</h2>
+    <div id="nrb-log-list" class="nrb-list" aria-live="polite"></div>
+  </section>
+
+  <div id="nrb-status" class="nrb-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/network-request-blocker.js"></script>
+</body>
+</html>

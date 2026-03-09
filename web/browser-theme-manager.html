@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browser Theme Manager — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/browser-theme-manager.css">
+</head>
+<body>
+<div class="btm-container">
+  <h1 class="btm-title">Browser Theme Manager</h1>
+  <p class="btm-subtitle">Create, activate, and manage browser color themes</p>
+
+  <section class="btm-section">
+    <h2 class="btm-section-title">Active Theme</h2>
+    <div id="btm-active" class="btm-active-panel" aria-live="polite">None</div>
+  </section>
+
+  <section class="btm-section">
+    <h2 class="btm-section-title">Create Theme</h2>
+    <form id="btm-form" class="btm-form">
+      <input id="btm-name" class="btm-input" type="text" placeholder="Theme name" aria-label="Theme name">
+      <select id="btm-type" class="btm-input" aria-label="Theme type"></select>
+      <select id="btm-accent" class="btm-input" aria-label="Accent color"></select>
+      <button type="submit" class="btm-btn btm-btn-primary">Create</button>
+    </form>
+  </section>
+
+  <section class="btm-section">
+    <h2 class="btm-section-title">Themes</h2>
+    <div id="btm-list" class="btm-list" aria-live="polite"></div>
+  </section>
+
+  <div id="btm-status" class="btm-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/browser-theme-manager.js"></script>
+</body>
+</html>

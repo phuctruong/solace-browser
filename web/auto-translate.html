@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto Translate — Solace Browser</title>
+  <link rel="stylesheet" href="/web/css/auto-translate.css">
+</head>
+<body>
+  <div class="atr-container">
+    <h1 class="atr-title">Auto Translate</h1>
+    <p class="atr-subtitle">Configure per-site translation preferences and track translation activity.</p>
+
+    <div class="atr-section">
+      <h2 class="atr-section-title">New Preference</h2>
+      <div class="atr-form">
+        <select id="atr-source" class="atr-select" aria-label="Source language"></select>
+        <select id="atr-target" class="atr-select" aria-label="Target language"></select>
+        <select id="atr-engine" class="atr-select" aria-label="Translation engine"></select>
+        <input id="atr-site" class="atr-input" type="text" placeholder="Site domain (e.g. example.com)" aria-label="Site domain">
+        <button id="atr-save-btn" class="atr-btn atr-btn-primary">Save Preference</button>
+      </div>
+      <div id="atr-msg" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="atr-section">
+      <h2 class="atr-section-title">Preferences</h2>
+      <div id="atr-prefs-list" class="atr-list"></div>
+    </div>
+
+    <div class="atr-section">
+      <h2 class="atr-section-title">Translation Statistics</h2>
+      <button id="atr-refresh-stats" class="atr-btn atr-btn-primary atr-btn-sm" style="margin-bottom:0.75rem">Refresh</button>
+      <div id="atr-stats"></div>
+    </div>
+  </div>
+  <script src="/web/js/auto-translate.js"></script>
+</body>
+</html>

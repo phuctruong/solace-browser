@@ -1657,7 +1657,7 @@ MAX_BLOCK_RULES = 1000
 MAX_BLOCKED_LOG = 100000
 _NET_BLOCK_RULES: list[dict] = []
 _NET_BLOCKED_LOG: list[dict] = []
-_BLOCKER_LOCK = threading.Lock()
+_NET_BLOCKER_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
 # Task 132 — Browser Theme Manager
@@ -24973,9 +24973,9 @@ function choose(mode) {
             return
         pattern = body.get("pattern", "")
         pattern_hash = hashlib.sha256(pattern.encode()).hexdigest() if pattern else body.get("pattern_hash", "")
-        with _BLOCKER_LOCK:
-            if len(_NET_BLOCK_RULES) >= MAX_NET_BLOCK_RULES:
-                self._send_json({"error": f"max {MAX_NET_BLOCK_RULES} rules"}, 400)
+        with _NET_BLOCKER_LOCK:
+            if len(_NET_BLOCK_RULES) >= MAX_BLOCK_RULES:
+                self._send_json({"error": f"max {MAX_BLOCK_RULES} rules"}, 400)
                 return
             rule_id = "blr_" + str(uuid.uuid4())
             record: dict[str, Any] = {
@@ -24994,7 +24994,7 @@ function choose(mode) {
         """GET /api/v1/request-blocker/rules — list block rules (auth required)."""
         if not self._check_auth():
             return
-        with _BLOCKER_LOCK:
+        with _NET_BLOCKER_LOCK:
             rules = [dict(r) for r in _NET_BLOCK_RULES]
         self._send_json({"rules": rules, "total": len(rules)})
 
@@ -25002,7 +25002,7 @@ function choose(mode) {
         """DELETE /api/v1/request-blocker/rules/{id} — delete rule (auth required)."""
         if not self._check_auth():
             return
-        with _BLOCKER_LOCK:
+        with _NET_BLOCKER_LOCK:
             idx = next((i for i, r in enumerate(_NET_BLOCK_RULES) if r["rule_id"] == rule_id), None)
             if idx is None:
                 self._send_json({"error": "rule not found"}, 404)
@@ -25016,7 +25016,7 @@ function choose(mode) {
             return
         body = self._read_json_body()
         rule_id = body.get("rule_id", "")
-        with _BLOCKER_LOCK:
+        with _NET_BLOCKER_LOCK:
             rule = next((r for r in _NET_BLOCK_RULES if r["rule_id"] == rule_id), None)
             if rule is None:
                 self._send_json({"error": "rule not found"}, 404)
@@ -25024,7 +25024,7 @@ function choose(mode) {
             rule["hit_count"] += 1
             url = body.get("url", "")
             url_hash = hashlib.sha256(url.encode()).hexdigest() if url else body.get("url_hash", "")
-            if len(_NET_BLOCKED_LOG) >= MAX_NET_BLOCKED_LOG:
+            if len(_NET_BLOCKED_LOG) >= MAX_BLOCKED_LOG:
                 _NET_BLOCKED_LOG.pop(0)
             blocked_id = "blk_" + str(uuid.uuid4())
             record: dict[str, Any] = {
@@ -25040,7 +25040,7 @@ function choose(mode) {
         """GET /api/v1/request-blocker/blocked-log — list blocked log (auth required)."""
         if not self._check_auth():
             return
-        with _BLOCKER_LOCK:
+        with _NET_BLOCKER_LOCK:
             log = [dict(e) for e in _NET_BLOCKED_LOG]
         self._send_json({"blocked_log": log, "total": len(log)})
 
