@@ -862,7 +862,7 @@ SHORTCUT_ACTIONS = [
 MODIFIER_KEYS = ["Ctrl", "Alt", "Shift", "Meta"]
 MAX_CUSTOM_SHORTCUTS = 50
 
-DEFAULT_SHORTCUTS = [
+SC_DEFAULT_SHORTCUTS = [
     {"shortcut_id": "sys-001", "keys": "Ctrl+K", "action": "open-recipe",
      "description": "Open recipe palette", "is_default": True, "trigger_count": 0},
     {"shortcut_id": "sys-002", "keys": "Ctrl+Shift+N", "action": "open-notes",
@@ -1051,6 +1051,62 @@ _LINK_RESULTS: list[dict] = []
 _LINKS_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Task 071 — Bookmark Manager
+# ---------------------------------------------------------------------------
+MAX_BOOKMARKS = 1000
+MAX_TAGS_PER_BOOKMARK = 10
+
+_BOOKMARKS: list[dict] = []
+_BOOKMARK_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 072 — Password Generator
+# ---------------------------------------------------------------------------
+PASSWORD_CHARSETS: dict[str, str] = {
+    "uppercase": "ABCDEFGHJKLMNPQRSTUVWXYZ",
+    "lowercase": "abcdefghjkmnpqrstuvwxyz",
+    "numbers": "23456789",
+    "symbols": "!@#$%^&*()-_=+[]{}|;:,.<>?",
+}
+
+STRENGTH_LEVELS: list[str] = ["very_weak", "weak", "fair", "strong", "very_strong"]
+
+MAX_PW_HISTORY = 50
+
+_PASSWORD_HISTORY: dict[str, list[dict]] = {}  # token_hash → list[entry]
+_PW_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 073 — Network Traffic Logger
+# ---------------------------------------------------------------------------
+HTTP_METHODS: list[str] = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+MAX_LOG_ENTRIES = 1000
+
+_NETWORK_LOG: list[dict] = []
+_NETWORK_LOG_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 074 — Content Blocker
+# ---------------------------------------------------------------------------
+CONTENT_RULE_TYPES: list[str] = ["domain", "url_pattern", "element_selector", "script_hash", "tracker"]
+MAX_CONTENT_RULES = 500
+
+_CONTENT_RULES: list[dict] = []
+_BLOCK_STATS: dict[str, int] = {}  # rule_id → block count
+_CONTENT_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 075 — Session Timer
+# ---------------------------------------------------------------------------
+SESSION_TIMER_TYPES: list[str] = ["focus", "break", "unrestricted"]
+MAX_SESSION_MINUTES = 480  # 8 hours max
+MAX_TIMER_HISTORY = 200
+
+_TIMER_ACTIVE: dict[str, dict] = {}   # token_hash → active session
+_TIMER_HISTORY: list[dict] = []
+_TIMER_LOCK = threading.Lock()
+
 # Task 070 — Performance Profiler
 # ---------------------------------------------------------------------------
 PROFILER_METRIC_TYPES: list[str] = [
@@ -5133,6 +5189,69 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/performance-profiler.js", "application/javascript")
         elif path == "/web/css/performance-profiler.css":
             self._handle_static_file("web/css/performance-profiler.css", "text/css")
+        # --- Task 071: Bookmark Manager ---
+        elif path == "/api/v1/bookmarks":
+            self._handle_bookmarks_list()
+        elif path == "/api/v1/bookmarks/search":
+            self._handle_bookmarks_search(query)
+        elif path == "/api/v1/bookmarks/tags":
+            self._handle_bookmarks_tags()
+        elif path == "/web/bookmark-manager.html":
+            self._handle_static_file("web/bookmark-manager.html", "text/html; charset=utf-8")
+        elif path == "/web/js/bookmark-manager.js":
+            self._handle_static_file("web/js/bookmark-manager.js", "application/javascript")
+        elif path == "/web/css/bookmark-manager.css":
+            self._handle_static_file("web/css/bookmark-manager.css", "text/css")
+        # --- Task 072: Password Generator ---
+        elif path == "/api/v1/passwords/history":
+            self._handle_pw_history_list()
+        elif path == "/api/v1/passwords/options":
+            self._handle_pw_options()
+        elif path == "/web/password-generator.html":
+            self._handle_static_file("web/password-generator.html", "text/html; charset=utf-8")
+        elif path == "/web/js/password-generator.js":
+            self._handle_static_file("web/js/password-generator.js", "application/javascript")
+        elif path == "/web/css/password-generator.css":
+            self._handle_static_file("web/css/password-generator.css", "text/css")
+        # --- Task 073: Network Traffic Logger ---
+        elif path == "/api/v1/network-log/requests":
+            self._handle_network_log_list()
+        elif path == "/api/v1/network-log/summary":
+            self._handle_network_log_summary()
+        elif path == "/api/v1/network-log/methods":
+            self._handle_network_log_methods()
+        elif path == "/web/network-traffic-logger.html":
+            self._handle_static_file("web/network-traffic-logger.html", "text/html; charset=utf-8")
+        elif path == "/web/js/network-traffic-logger.js":
+            self._handle_static_file("web/js/network-traffic-logger.js", "application/javascript")
+        elif path == "/web/css/network-traffic-logger.css":
+            self._handle_static_file("web/css/network-traffic-logger.css", "text/css")
+        # --- Task 074: Content Blocker ---
+        elif path == "/api/v1/content-blocker/rules":
+            self._handle_cb_rules_list()
+        elif path == "/api/v1/content-blocker/stats":
+            self._handle_cb_stats()
+        elif path == "/api/v1/content-blocker/rule-types":
+            self._handle_cb_rule_types()
+        elif path == "/web/content-blocker.html":
+            self._handle_static_file("web/content-blocker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/content-blocker.js":
+            self._handle_static_file("web/js/content-blocker.js", "application/javascript")
+        elif path == "/web/css/content-blocker.css":
+            self._handle_static_file("web/css/content-blocker.css", "text/css")
+        # --- Task 075: Session Timer ---
+        elif path == "/api/v1/session-timer/current":
+            self._handle_timer_current()
+        elif path == "/api/v1/session-timer/history":
+            self._handle_timer_history()
+        elif path == "/api/v1/session-timer/stats":
+            self._handle_timer_stats()
+        elif path == "/web/session-timer.html":
+            self._handle_static_file("web/session-timer.html", "text/html; charset=utf-8")
+        elif path == "/web/js/session-timer.js":
+            self._handle_static_file("web/js/session-timer.js", "application/javascript")
+        elif path == "/web/css/session-timer.css":
+            self._handle_static_file("web/css/session-timer.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -5577,6 +5696,29 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/profiler/sessions/[^/]+/metrics$", path):
             session_id = path.split("/")[-2]
             self._handle_profiler_metric_add(session_id)
+        # --- Task 071: Bookmark Manager ---
+        elif path == "/api/v1/bookmarks":
+            self._handle_bookmark_add()
+        # --- Task 072: Password Generator ---
+        elif path == "/api/v1/passwords/generate":
+            self._handle_pw_generate()
+        elif path == "/api/v1/passwords/audit":
+            self._handle_pw_audit()
+        elif path == "/api/v1/passwords/history":
+            self._handle_pw_history_clear()
+        # --- Task 073: Network Traffic Logger ---
+        elif path == "/api/v1/network-log/record":
+            self._handle_network_log_record()
+        # --- Task 074: Content Blocker ---
+        elif path == "/api/v1/content-blocker/rules":
+            self._handle_cb_rule_add()
+        elif path == "/api/v1/content-blocker/check":
+            self._handle_cb_check()
+        # --- Task 075: Session Timer ---
+        elif path == "/api/v1/session-timer/start":
+            self._handle_timer_start()
+        elif path == "/api/v1/session-timer/stop":
+            self._handle_timer_stop()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -5760,6 +5902,20 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/profiler/sessions/[^/]+$", path):
             session_id = path.split("/")[-1]
             self._handle_profiler_session_delete(session_id)
+        # --- Task 071: Bookmark Manager ---
+        elif re.match(r"^/api/v1/bookmarks/[^/]+$", path):
+            bookmark_id = path.split("/")[-1]
+            self._handle_bookmark_delete(bookmark_id)
+        # --- Task 072: Password Generator ---
+        elif path == "/api/v1/passwords/history":
+            self._handle_pw_history_clear()
+        # --- Task 073: Network Traffic Logger ---
+        elif path == "/api/v1/network-log/clear":
+            self._handle_network_log_clear()
+        # --- Task 074: Content Blocker ---
+        elif re.match(r"^/api/v1/content-blocker/rules/[^/]+$", path):
+            rule_id = path.split("/")[-1]
+            self._handle_cb_rule_delete(rule_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -17307,7 +17463,7 @@ function choose(mode) {
         """GET /api/v1/shortcuts — list all shortcuts."""
         with _SHORTCUT_LOCK:
             custom = [dict(s) for s in _CUSTOM_SHORTCUTS]
-        defaults = [dict(s) for s in DEFAULT_SHORTCUTS]
+        defaults = [dict(s) for s in SC_DEFAULT_SHORTCUTS]
         all_shortcuts = defaults + custom
         self._send_json({"shortcuts": all_shortcuts, "total": len(all_shortcuts)})
 
@@ -17365,7 +17521,7 @@ function choose(mode) {
         """POST /api/v1/shortcuts/{shortcut_id}/trigger — record trigger event (auth required)."""
         if not self._check_auth():
             return
-        for s in DEFAULT_SHORTCUTS:
+        for s in SC_DEFAULT_SHORTCUTS:
             if s["shortcut_id"] == shortcut_id:
                 s["trigger_count"] += 1
                 self._send_json({"status": "triggered", "shortcut_id": shortcut_id,
@@ -17384,7 +17540,7 @@ function choose(mode) {
         """GET /api/v1/shortcuts/stats — shortcut usage stats."""
         with _SHORTCUT_LOCK:
             custom = list(_CUSTOM_SHORTCUTS)
-        all_shortcuts = list(DEFAULT_SHORTCUTS) + custom
+        all_shortcuts = list(SC_DEFAULT_SHORTCUTS) + custom
         total_shortcuts = len(all_shortcuts)
         total_triggers = sum(s.get("trigger_count", 0) for s in all_shortcuts)
         most_used = max(all_shortcuts, key=lambda s: s.get("trigger_count", 0), default=None)

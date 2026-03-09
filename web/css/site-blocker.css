@@ -1,0 +1,14 @@
+/* Site Blocker — Task 065 */
+.sb-container { max-width: 900px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; color: var(--hub-text, #1a1a1a); }
+.sb-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; color: var(--hub-text, #1a1a1a); }
+.sb-subtitle { color: var(--hub-text-muted, #666); margin-bottom: 20px; }
+.sb-toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
+.sb-btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.sb-btn-primary { background: var(--hub-accent, #4A90E2); color: var(--hub-btn-text, #fff); }
+.sb-btn-secondary { background: var(--hub-surface, #e8e8e8); color: var(--hub-text, #333); }
+.sb-content { display: flex; flex-direction: column; gap: 4px; min-height: 48px; }
+.sb-rule { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--hub-surface, #f9f9f9); border-radius: 6px; }
+.sb-rule-pattern { flex: 1; font-size: 0.9rem; color: var(--hub-text, #1a1a1a); }
+.sb-rule-type { font-size: 0.75rem; padding: 2px 6px; background: var(--hub-surface-2, #ddd); border-radius: 10px; color: var(--hub-text, #333); }
+.sb-rule-cat { font-size: 0.8rem; color: var(--hub-text-muted, #555); }
+.sb-status { margin-top: 12px; font-size: 0.85rem; color: var(--hub-text-muted, #555); }

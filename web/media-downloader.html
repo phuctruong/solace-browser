@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Media Downloader — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/media-downloader.css">
+</head>
+<body>
+<div class="md-container">
+  <h1 class="md-title">Media Downloader</h1>
+  <p class="md-subtitle">Queue and track media downloads with privacy</p>
+  <div class="md-toolbar">
+    <button id="btn-md-queue" class="md-btn md-btn-primary">Queue</button>
+    <button id="btn-md-stats" class="md-btn md-btn-secondary">Stats</button>
+    <button id="btn-md-types" class="md-btn md-btn-secondary">Types</button>
+  </div>
+  <div id="md-content" class="md-content" aria-live="polite"></div>
+  <div id="md-status" class="md-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/media-downloader.js"></script>
+</body>
+</html>
