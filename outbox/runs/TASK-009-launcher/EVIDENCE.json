@@ -1,0 +1,32 @@
+{
+  "task_id": "TASK-009-launcher",
+  "status": "green",
+  "files_changed": [
+    "README.md",
+    "scripts/install.sh",
+    "scripts/launch-yinyang.sh",
+    "scripts/stop-yinyang.sh",
+    "scripts/yinyang.service"
+  ],
+  "acceptance": {
+    "bash_n_launch": "PASS",
+    "bash_n_stop": "PASS",
+    "bash_n_install": "PASS",
+    "service_required_fields": "PASS",
+    "stub_harness_install_twice": "PASS",
+    "stub_harness_launch_twice": "PASS",
+    "stub_harness_stop_twice": "PASS",
+    "real_launcher_invokes_entrypoint": "PASS",
+    "real_launcher_in_sandbox": "BLOCKED_BY_SOCKET_PERMISSION",
+    "systemd_analyze_verify": "BLOCKED_BY_SANDBOX"
+  },
+  "artifacts": {
+    "stub_home": "/tmp/solace-task009-home",
+    "real_home": "/tmp/solace-task009-real"
+  },
+  "notes": [
+    "The installed launcher resolves the repository root from $HOME/.solace/repo-root.",
+    "The launch script writes logs to $HOME/.solace/yinyang.log and PID state to $HOME/.solace/yinyang.pid.",
+    "The sandbox prevented a real localhost bind during evidence capture, but the launcher surfaced the failure cleanly."
+  ]
+}

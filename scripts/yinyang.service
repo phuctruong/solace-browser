@@ -1,0 +1,11 @@
+[Unit]
+Description=Yinyang AI Server
+
+[Service]
+Type=simple
+ExecStart=/bin/sh %h/.local/lib/solace/launch-yinyang.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
