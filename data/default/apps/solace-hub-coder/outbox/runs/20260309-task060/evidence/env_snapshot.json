@@ -1,0 +1,6 @@
+{
+  "cwd": "/home/phuc/projects/solace-browser",
+  "python_test_command": "pytest -q tests/test_solace_hub.py tests/test_yinyang_instructions.py",
+  "targeted_red_command": "pytest -q tests/test_solace_hub.py tests/test_yinyang_instructions.py -k 'ScheduleOperations4Tab'",
+  "targeted_green_command": "pytest -q tests/test_solace_hub.py tests/test_yinyang_instructions.py -k 'ScheduleOperations4Tab'"
+}

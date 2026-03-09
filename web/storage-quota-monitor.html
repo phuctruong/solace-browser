@@ -7,18 +7,38 @@
 <link rel="stylesheet" href="/web/css/storage-quota-monitor.css">
 </head>
 <body>
-<div class="sqm-container">
-  <h1 class="sqm-title">Storage Quota Monitor</h1>
-  <p class="sqm-subtitle">Track browser storage usage — sites stored as SHA-256 hashes only</p>
-  <div class="sqm-toolbar">
-    <button id="btn-sqm-list" class="sqm-btn sqm-btn-primary">Measurements</button>
-    <button id="btn-sqm-latest" class="sqm-btn sqm-btn-secondary">Latest by Type</button>
-    <button id="btn-sqm-types" class="sqm-btn sqm-btn-secondary">Storage Types</button>
-    <button id="btn-sqm-add" class="sqm-btn sqm-btn-accent">Record Measurement</button>
-  </div>
-  <div id="sqm-panel" class="sqm-panel" aria-live="polite"></div>
-  <div id="sqm-status" class="sqm-status" aria-live="polite"></div>
-</div>
+<main class="sqm-shell">
+  <header class="sqm-header">
+    <h1>Storage Quota Monitor</h1>
+    <p>Record storage quota snapshots while storing page locations as SHA-256 only.</p>
+  </header>
+  <section class="sqm-card">
+    <div class="sqm-actions">
+      <button id="sqm-load-snapshots" type="button">Snapshots</button>
+      <button id="sqm-load-stats" type="button">Stats</button>
+      <button id="sqm-load-types" type="button">Storage Types</button>
+    </div>
+    <form id="sqm-form" class="sqm-form">
+      <label>Storage Type
+        <select id="sqm-storage-type"></select>
+      </label>
+      <label>Page URL
+        <input id="sqm-url" type="url" placeholder="https://example.com/app">
+      </label>
+      <label>Used Bytes
+        <input id="sqm-used-bytes" type="number" min="0" value="0">
+      </label>
+      <label>Quota Bytes
+        <input id="sqm-quota-bytes" type="number" min="1" value="10485760">
+      </label>
+      <button type="submit">Record Snapshot</button>
+    </form>
+  </section>
+  <section class="sqm-card">
+    <div id="sqm-status" class="sqm-status" aria-live="polite"></div>
+    <div id="sqm-results" class="sqm-results" aria-live="polite"></div>
+  </section>
+</main>
 <script src="/web/js/storage-quota-monitor.js"></script>
 </body>
 </html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canvas Fingerprint Detector — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/canvas-fingerprint-detector.css">
+</head>
+<body>
+<main class="cfp-shell">
+  <header class="cfp-header">
+    <h1>Canvas Fingerprint Detector</h1>
+    <p>Log privacy-sensitive fingerprinting attempts while storing only SHA-256 hashes.</p>
+  </header>
+
+  <section class="cfp-card">
+    <h2>Record Detection</h2>
+    <form id="cfp-form" class="cfp-form">
+      <select id="cfp-technique" class="cfp-input" aria-label="Technique"></select>
+      <input id="cfp-url" class="cfp-input" type="url" placeholder="Page URL" aria-label="Page URL">
+      <input id="cfp-script-url" class="cfp-input" type="url" placeholder="Script URL (optional)" aria-label="Script URL">
+      <input id="cfp-confidence" class="cfp-input" type="number" min="0" max="1" step="0.01" value="0.50" aria-label="Confidence score">
+      <label class="cfp-check"><input id="cfp-blocked" type="checkbox"> Blocked</label>
+      <button class="cfp-btn" type="submit">Record</button>
+    </form>
+  </section>
+
+  <section class="cfp-card">
+    <h2>Stats</h2>
+    <div id="cfp-stats" class="cfp-stats"></div>
+  </section>
+
+  <section class="cfp-card">
+    <h2>Detections</h2>
+    <div id="cfp-detections" class="cfp-list"></div>
+  </section>
+
+  <p id="cfp-status" class="cfp-status" aria-live="polite"></p>
+</main>
+<script src="/web/js/canvas-fingerprint-detector.js"></script>
+</body>
+</html>

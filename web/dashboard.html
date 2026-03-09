@@ -7,23 +7,17 @@
 </head>
 <body>
   <div class="value-rail">
-    <!-- Left zone: state dot + state text + app name -->
     <div class="rail-left">
       <span class="state-dot" id="state-dot"></span>
       <span class="state-text" id="state-text">IDLE</span>
       <span class="app-label" id="app-label"></span>
     </div>
 
-    <!-- Center zone: rotating stats / delight -->
-    <div class="rail-center" id="rail-center">
-      <!-- Populated by dashboard.js -->
-    </div>
+    <div class="rail-center" id="rail-center" aria-live="polite"></div>
 
-    <!-- Right zone: status indicator -->
     <div class="rail-right" id="rail-right">OK</div>
   </div>
 
-  <!-- Stats cards below the rail -->
   <div class="stats-grid">
     <div class="stat-card">
       <span class="stat-value" id="pages-count">0</span>
@@ -40,14 +34,6 @@
     <div class="stat-card">
       <span class="stat-value" id="saved-pct">0%</span>
       <span class="stat-label">cost saved</span>
-    </div>
-    <div class="stat-card">
-      <span class="stat-value" id="replays-count">0</span>
-      <span class="stat-label">recipe replays</span>
-    </div>
-    <div class="stat-card">
-      <span class="stat-value" id="evidence-count">0</span>
-      <span class="stat-label">evidence captured</span>
     </div>
   </div>
 

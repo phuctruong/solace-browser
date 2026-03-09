@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "agent_type": "coder",
+  "command": "pytest -q tests/test_app_onboarding.py tests/test_app_store.py",
+  "exit_code": 0,
+  "failing_tests_before": [
+    "tests/test_app_onboarding.py::test_activate_requires_all_required_fields",
+    "tests/test_app_onboarding.py::test_activate_returns_activated_state",
+    "tests/test_app_onboarding.py::test_activate_stores_config_encrypted",
+    "tests/test_app_onboarding.py::test_setup_requirements_has_config_fields",
+    "tests/test_app_onboarding.py::test_state_classes_are_4_valid_values"
+  ],
+  "passing_tests_after": [
+    "tests/test_app_onboarding.py",
+    "tests/test_app_store.py"
+  ],
+  "regressions_introduced": [],
+  "null_checks_performed": true
+}

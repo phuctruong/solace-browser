@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permission Policy Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/permission-policy-tracker.css">
+</head>
+<body>
+<main class="ppe-shell">
+  <header class="ppe-header">
+    <h1>Permission Policy Tracker</h1>
+    <p>Track permission policy events while hashing page and origin values before storage.</p>
+  </header>
+  <section class="ppe-card">
+    <div class="ppe-actions">
+      <button id="ppe-load-events" type="button">Events</button>
+      <button id="ppe-load-stats" type="button">Stats</button>
+      <button id="ppe-load-types" type="button">Policy Types</button>
+    </div>
+    <form id="ppe-form" class="ppe-form">
+      <label>Policy Type
+        <select id="ppe-policy-type"></select>
+      </label>
+      <label>Action
+        <select id="ppe-action">
+          <option value="allow">allow</option>
+          <option value="deny">deny</option>
+          <option value="inherit">inherit</option>
+          <option value="violation">violation</option>
+        </select>
+      </label>
+      <label>Page URL
+        <input id="ppe-url" type="url" placeholder="https://example.com/settings">
+      </label>
+      <label>Origin
+        <input id="ppe-origin" type="text" placeholder="https://example.com">
+      </label>
+      <label class="ppe-check"><input id="ppe-violation" type="checkbox"> Violation</label>
+      <button type="submit">Record Event</button>
+    </form>
+  </section>
+  <section class="ppe-card">
+    <div id="ppe-status" class="ppe-status" aria-live="polite"></div>
+    <div id="ppe-results" class="ppe-results" aria-live="polite"></div>
+  </section>
+</main>
+<script src="/web/js/permission-policy-tracker.js"></script>
+</body>
+</html>

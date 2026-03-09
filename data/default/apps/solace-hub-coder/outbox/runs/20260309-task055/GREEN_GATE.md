@@ -1,19 +1,21 @@
 # GREEN Gate
 
-## Focused task proof
+## Focused fix proof
 ```bash
-pytest -q tests/test_part11_evidence.py
+python -m pytest -q tests/test_part11_evidence.py tests/test_session_rules.py
 ```
-- Result: `8 passed in 0.14s`
+- Result: `16 passed in 0.37s`
 
 ## Adjacent regression proof
 ```bash
-pytest -q tests/test_session_rules.py tests/test_solace_hub.py
+python -m pytest -q tests/test_part11_evidence.py tests/test_session_rules.py tests/test_solace_hub.py
 ```
-- Result: `188 passed in 0.38s`
+- Result: `197 passed in 0.54s`
 
-## Combined final verification
+## Stability proof
 ```bash
-pytest -q tests/test_part11_evidence.py tests/test_session_rules.py tests/test_solace_hub.py
+python -m pytest -q tests/test_part11_evidence.py
+python -m pytest -q tests/test_part11_evidence.py
+python -m pytest -q tests/test_part11_evidence.py
 ```
-- Result: `196 passed in 0.39s`
+- Results: `9 passed in 0.20s`, `9 passed in 0.19s`, `9 passed in 0.20s`

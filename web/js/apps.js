@@ -1,131 +1,244 @@
 'use strict';
+
 const TOKEN = localStorage.getItem('solace_token') || '';
 const APP_STATE_KEY = (appId) => `app:${appId}:state`;
-let _currentSetupAppId = null;
+const STATE_CLASSES = ['app-state--installed', 'app-state--setup', 'app-state--activated', 'app-state--running'];
 
-function apiFetch(path, opts = {}) {
-  return fetch(path, { headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json', ...opts.headers }, ...opts });
+let currentSetupAppId = null;
+let currentApps = [];
+
+function apiFetch(path, options = {}) {
+  return fetch(path, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${TOKEN}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+}
+
+function statusLabelForState(state) {
+  const statusMap = {
+    installed: 'Needs setup',
+    setup: 'Setting up...',
+    activated: 'Ready',
+    running: 'Running',
+  };
+  return statusMap[state] || state;
 }
 
 function saveAppState(appId, state) {
   localStorage.setItem(APP_STATE_KEY(appId), state);
   updateAppCardVisual(appId, state);
+  updateSetupBanner(currentApps);
+}
+
+function applyStateClass(card, state) {
+  STATE_CLASSES.forEach((className) => card.classList.remove(className));
+  card.classList.add(`app-state--${state}`);
 }
 
 function updateAppCardVisual(appId, state) {
   const card = document.querySelector(`[data-app-id="${appId}"]`);
-  if (!card) return;
-  card.className = card.className.replace(/app-state--\w+/g, '').trim();
-  card.classList.add(`app-state--${state}`);
-  const statusEl = card.querySelector('.app-card__status');
-  const statusMap = { installed: 'Needs setup', setup: 'Setting up...', activated: 'Ready', running: 'Running' };
-  if (statusEl) statusEl.textContent = statusMap[state] || state;
-  // Swap setup/run button
-  const setupBtn = card.querySelector('.app-card__setup-btn');
-  const runBtn = card.querySelector('.app-card__run-btn');
-  if (state === 'activated' || state === 'running') {
-    if (setupBtn) { setupBtn.style.display = 'none'; }
-    if (runBtn) { runBtn.style.display = 'block'; }
-  } else {
-    if (setupBtn) { setupBtn.style.display = 'block'; }
-    if (runBtn) { runBtn.style.display = 'none'; }
+  if (!card) {
+    return;
+  }
+
+  applyStateClass(card, state);
+
+  const statusElement = card.querySelector('.app-card__status');
+  if (statusElement) {
+    statusElement.textContent = statusLabelForState(state);
+  }
+
+  const setupButton = card.querySelector('.app-card__setup-btn');
+  const runButton = card.querySelector('.app-card__run-btn');
+  const isReady = state === 'activated' || state === 'running';
+
+  if (setupButton) {
+    setupButton.hidden = isReady;
+  }
+  if (runButton) {
+    runButton.hidden = !isReady;
   }
 }
 
-function loadAppStates() {
-  apiFetch('/api/v1/apps/lifecycle').then(r => r.json()).then(data => {
-    const apps = data.apps || data;
-    renderAppsGrid(apps);
-    apps.forEach(app => {
-      const localState = localStorage.getItem(APP_STATE_KEY(app.app_id));
-      const state = localState || app.state;
-      saveAppState(app.app_id, state);
-    });
-    updateSetupBanner(apps);
-  }).catch(() => {});
+function renderEmptyState() {
+  const grid = document.getElementById('apps-grid');
+  grid.innerHTML = '<p class="apps-empty-state">No apps installed.</p>';
 }
 
 function renderAppsGrid(apps) {
   const grid = document.getElementById('apps-grid');
-  if (!apps.length) { grid.innerHTML = '<p style="color:var(--hub-text-muted)">No apps installed.</p>'; return; }
-  grid.innerHTML = apps.map(app => {
-    const localState = localStorage.getItem(APP_STATE_KEY(app.app_id)) || app.state;
-    const isReady = localState === 'activated' || localState === 'running';
+  if (!apps.length) {
+    renderEmptyState();
+    return;
+  }
+
+  grid.innerHTML = apps.map((app) => {
+    const state = localStorage.getItem(APP_STATE_KEY(app.app_id)) || app.state;
+    const isReady = state === 'activated' || state === 'running';
     return `
-    <div class="app-card app-state--${localState}" data-app-id="${app.app_id}">
-      <span class="app-card__icon">${app.icon || '\u{1F4E6}'}</span>
-      <div class="app-card__name">${app.name}</div>
-      <div class="app-card__status">${isReady ? 'Ready' : 'Needs setup'}</div>
-      ${isReady
-        ? `<button class="app-card__run-btn" onclick="runApp('${app.app_id}')">Run</button>`
-        : `<button class="app-card__setup-btn" onclick="openSetupDrawer('${app.app_id}', '${app.name}')">Set up</button>`}
-    </div>`;
+      <div class="app-card app-state--${state}" data-app-id="${app.app_id}">
+        <span class="app-card__icon">${app.icon || '📦'}</span>
+        <div class="app-card__name">${app.name}</div>
+        <div class="app-card__status">${statusLabelForState(state)}</div>
+        <button class="app-card__setup-btn" data-action="setup" data-app-id="${app.app_id}" data-app-name="${app.name}"${isReady ? ' hidden' : ''}>Set up</button>
+        <button class="app-card__run-btn" data-action="run" data-app-id="${app.app_id}" data-app-name="${app.name}"${isReady ? '' : ' hidden'}>Run</button>
+      </div>
+    `;
   }).join('');
 }
 
 function updateSetupBanner(apps) {
-  const needSetup = apps.filter(a => {
-    const state = localStorage.getItem(APP_STATE_KEY(a.app_id)) || a.state;
+  const pendingApps = apps.filter((app) => {
+    const state = localStorage.getItem(APP_STATE_KEY(app.app_id)) || app.state;
     return state === 'installed' || state === 'setup';
   });
+
   const banner = document.getElementById('setup-banner');
-  banner.hidden = needSetup.length === 0;
-  document.getElementById('setup-count').textContent = needSetup.length;
+  banner.hidden = pendingApps.length === 0;
+  document.getElementById('setup-count').textContent = String(pendingApps.length);
+}
+
+function renderSetupMessage(message, modifier = '') {
+  return `<p class="setup-form__message${modifier ? ` setup-form__message--${modifier}` : ''}">${message}</p>`;
+}
+
+function renderSetupFields(fields) {
+  if (!fields.length) {
+    return renderSetupMessage('No configuration needed for this app.');
+  }
+
+  return fields.map((field) => `
+    <div class="setup-form__field">
+      <label for="field-${field.name}">${field.description || field.name}${field.required ? ' *' : ''}</label>
+      <input id="field-${field.name}" name="${field.name}" type="${field.type === 'oauth' ? 'password' : 'text'}" placeholder="${field.placeholder || ''}"${field.required ? ' required' : ''}>
+    </div>
+  `).join('');
+}
+
+function closeSetupDrawer() {
+  document.getElementById('setup-drawer').hidden = true;
 }
 
 function openSetupDrawer(appId, appName) {
-  _currentSetupAppId = appId;
+  currentSetupAppId = appId;
   document.getElementById('setup-drawer-title').textContent = `Set up ${appName}`;
   document.getElementById('setup-drawer').hidden = false;
-  // Load fields
-  apiFetch(`/api/v1/apps/${appId}/setup-requirements`).then(r => r.json()).then(data => {
-    const form = document.getElementById('setup-form');
-    const fields = data.fields || [];
-    form.innerHTML = fields.length
-      ? fields.map(f => `
-          <div>
-            <label for="field-${f.name}">${f.description || f.name}${f.required ? ' *' : ''}</label>
-            <input id="field-${f.name}" name="${f.name}" type="${f.type === 'oauth' ? 'password' : 'text'}" placeholder="${f.placeholder || ''}" ${f.required ? 'required' : ''}>
-          </div>`).join('')
-      : '<p style="color:var(--hub-text-muted)">No configuration needed for this app.</p>';
-  }).catch(() => {
-    document.getElementById('setup-form').innerHTML = '<p style="color:var(--hub-text-muted)">Could not load setup requirements.</p>';
-  });
   saveAppState(appId, 'setup');
+
+  apiFetch(`/api/v1/apps/${appId}/setup-requirements`)
+    .then((response) => response.json())
+    .then((data) => {
+      const form = document.getElementById('setup-form');
+      const fields = Array.isArray(data.fields) ? data.fields : [];
+      form.innerHTML = renderSetupFields(fields);
+    })
+    .catch(() => {
+      document.getElementById('setup-form').innerHTML = renderSetupMessage('Could not load setup requirements.', 'error');
+    });
 }
 
-document.getElementById('setup-drawer-close').addEventListener('click', () => {
-  document.getElementById('setup-drawer').hidden = true;
-});
-document.getElementById('cancel-setup-btn').addEventListener('click', () => {
-  document.getElementById('setup-drawer').hidden = true;
-});
+function applyServerState(data, appId, fallbackState) {
+  const localStorageUpdate = data.local_storage || {
+    key: APP_STATE_KEY(appId),
+    value: fallbackState,
+  };
+  localStorage.setItem(localStorageUpdate.key, localStorageUpdate.value);
+  updateAppCardVisual(appId, localStorageUpdate.value);
+  updateSetupBanner(currentApps);
+}
 
-document.getElementById('setup-form').addEventListener('submit', (e) => {
-  e.preventDefault();
-  if (!_currentSetupAppId) return;
-  const formData = new FormData(e.target);
-  const config = {};
-  formData.forEach((v, k) => { config[k] = v; });
-  apiFetch(`/api/v1/apps/${_currentSetupAppId}/activate`, {
-    method: 'POST',
-    body: JSON.stringify({ config })
-  }).then(r => r.json()).then(data => {
-    if (data.activated || data.state === 'activated') {
-      saveAppState(_currentSetupAppId, 'activated');
-      document.getElementById('setup-drawer').hidden = true;
-      loadAppStates();
-    }
-  }).catch(() => {});
-});
+function loadAppStates() {
+  apiFetch('/api/v1/apps/lifecycle')
+    .then((response) => response.json())
+    .then((data) => {
+      currentApps = Array.isArray(data.apps) ? data.apps : [];
+      renderAppsGrid(currentApps);
+      currentApps.forEach((app) => {
+        const state = localStorage.getItem(APP_STATE_KEY(app.app_id)) || app.state;
+        saveAppState(app.app_id, state);
+      });
+      updateSetupBanner(currentApps);
+    })
+    .catch(() => {
+      currentApps = [];
+      renderEmptyState();
+      updateSetupBanner(currentApps);
+    });
+}
 
 function runApp(appId) {
   saveAppState(appId, 'running');
-  // In production: POST /api/v1/apps/{app_id}/run
 }
 
-// State class map (app-state--installed | app-state--setup | app-state--activated | app-state--running)
-const _STATE_CLASSES = ['app-state--installed', 'app-state--setup', 'app-state--activated', 'app-state--running'];
+document.getElementById('apps-grid').addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-action]');
+  if (!button) {
+    return;
+  }
 
-// Init
+  const appId = button.dataset.appId || '';
+  const appName = button.dataset.appName || appId;
+  if (button.dataset.action === 'setup') {
+    openSetupDrawer(appId, appName);
+    return;
+  }
+  if (button.dataset.action === 'run') {
+    runApp(appId);
+  }
+});
+
+document.getElementById('setup-all-btn').addEventListener('click', () => {
+  const firstPendingApp = currentApps.find((app) => {
+    const state = localStorage.getItem(APP_STATE_KEY(app.app_id)) || app.state;
+    return state === 'installed' || state === 'setup';
+  });
+  if (firstPendingApp) {
+    openSetupDrawer(firstPendingApp.app_id, firstPendingApp.name);
+  }
+});
+
+document.getElementById('setup-drawer-close').addEventListener('click', closeSetupDrawer);
+document.getElementById('cancel-setup-btn').addEventListener('click', closeSetupDrawer);
+
+document.getElementById('setup-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (!currentSetupAppId) {
+    return;
+  }
+
+  const formData = new FormData(event.target);
+  const config = {};
+  formData.forEach((value, key) => {
+    config[key] = value;
+  });
+
+  apiFetch(`/api/v1/apps/${currentSetupAppId}/activate`, {
+    method: 'POST',
+    body: JSON.stringify({ config }),
+  })
+    .then(async (response) => ({ ok: response.ok, data: await response.json() }))
+    .then(({ ok, data }) => {
+      if (!ok) {
+        document.getElementById('setup-form').insertAdjacentHTML(
+          'afterbegin',
+          renderSetupMessage(data.error || 'Activation failed.', 'error'),
+        );
+        return;
+      }
+      applyServerState(data, currentSetupAppId, 'activated');
+      closeSetupDrawer();
+      loadAppStates();
+    })
+    .catch(() => {
+      document.getElementById('setup-form').insertAdjacentHTML(
+        'afterbegin',
+        renderSetupMessage('Activation failed.', 'error'),
+      );
+    });
+});
+
 loadAppStates();

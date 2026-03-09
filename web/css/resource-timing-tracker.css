@@ -1,0 +1,99 @@
+:root {
+  --hub-bg: #082f49;
+  --hub-surface: #0f172a;
+  --hub-surface-alt: #1e293b;
+  --hub-border: #334155;
+  --hub-text: #e0f2fe;
+  --hub-muted: #94a3b8;
+  --hub-primary: #22d3ee;
+  --hub-danger: #ef4444;
+  --hub-success: #22c55e;
+}
+
+body {
+  margin: 0;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+}
+
+.rte-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.rte-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.rte-header p,
+.rte-status {
+  color: var(--hub-muted);
+}
+
+.rte-actions,
+.rte-form,
+.rte-results {
+  display: grid;
+  gap: 12px;
+}
+
+.rte-actions,
+.rte-form {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.rte-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.rte-check {
+  align-items: center;
+}
+
+button,
+input,
+select {
+  border-radius: 10px;
+  border: 1px solid var(--hub-border);
+  background: var(--hub-surface-alt);
+  color: var(--hub-text);
+  padding: 10px 12px;
+}
+
+button {
+  cursor: pointer;
+  background: var(--hub-primary);
+  color: var(--hub-bg);
+  font-weight: 700;
+}
+
+.rte-item,
+.rte-code {
+  background: var(--hub-surface-alt);
+  border: 1px solid var(--hub-border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.rte-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--hub-muted);
+}
+
+.rte-danger {
+  background: var(--hub-danger);
+  color: var(--hub-text);
+}
+
+.rte-success {
+  color: var(--hub-success);
+}

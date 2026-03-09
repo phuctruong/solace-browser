@@ -1,8 +1,7 @@
 /**
- * schedule.js — Schedule 4-Tab Redesign for Solace Hub
+ * schedule.js — Schedule Operations 4-tab view for Solace Hub
  * Laws:
  *   - No CDN dependencies. No jQuery. No Bootstrap. No Tailwind.
- *   - Port 8888 ONLY (same origin).
  *   - AUTO_APPROVE_ON_TIMEOUT = BANNED. Countdown = auto-REJECT only.
  *   - Solace Hub only. Legacy name BANNED.
  */
@@ -10,85 +9,142 @@
 'use strict';
 
 const TOKEN = localStorage.getItem('solace_token') || '';
+const CRON_PRESETS = {
+  daily_7am: '0 7 * * *',
+  weekdays_9am: '0 9 * * 1-5',
+  hourly: '0 * * * *',
+  every_2h: '0 */2 * * *',
+  weekly_monday: '0 9 * * 1',
+};
+
+let activeScheduleAppId = '';
+let activeScheduleAppLabel = '';
+const countdowns = {};
 
 function apiFetch(path, opts) {
-  var options = opts || {};
+  const options = opts || {};
   return fetch(path, {
+    method: options.method || 'GET',
     headers: Object.assign(
       { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
       options.headers || {}
     ),
-    method: options.method || 'GET',
     body: options.body || undefined,
   });
 }
 
-// --- Tab switching ---
-document.querySelectorAll('.tab').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
-    document.querySelectorAll('.tab-panel').forEach(function(p) {
-      p.classList.remove('active');
-      p.hidden = true;
-    });
-    btn.classList.add('active');
-    var panel = document.getElementById('tab-' + btn.dataset.tab);
-    panel.hidden = false;
-    panel.classList.add('active');
-    if (btn.dataset.tab === 'upcoming') { loadUpcoming(); }
-    if (btn.dataset.tab === 'approval') { loadApprovalQueue(); }
-    if (btn.dataset.tab === 'history') { loadHistory(); }
-    if (btn.dataset.tab === 'esign') { loadESign(); }
-  });
-});
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
-// --- Tab 1: Upcoming ---
+function emptyState(message) {
+  return '<div class="empty-state">' + escapeHtml(message) + '</div>';
+}
+
+function fmtSecs(seconds) {
+  const value = Math.max(0, Number(seconds) || 0);
+  if (value < 60) {
+    return value + 's';
+  }
+  if (value < 3600) {
+    return Math.floor(value / 60) + 'm';
+  }
+  return Math.floor(value / 3600) + 'h ' + Math.floor((value % 3600) / 60) + 'm';
+}
+
+function switchTab(tabName) {
+  document.querySelectorAll('.tab').forEach(function(tabButton) {
+    tabButton.classList.toggle('active', tabButton.dataset.tab === tabName);
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(panel) {
+    const isActive = panel.id === 'tab-' + tabName;
+    panel.hidden = !isActive;
+    panel.classList.toggle('active', isActive);
+  });
+  if (tabName === 'upcoming') {
+    loadUpcoming();
+  }
+  if (tabName === 'approval') {
+    loadApprovalQueue();
+  }
+  if (tabName === 'history') {
+    loadHistory();
+  }
+  if (tabName === 'esign') {
+    loadESign();
+  }
+}
+
 function loadUpcoming() {
   Promise.all([
-    apiFetch('/api/v1/schedule/upcoming').then(function(r) { return r.json(); }),
-    apiFetch('/api/v1/schedule/calendar').then(function(r) { return r.json(); }),
-    apiFetch('/api/v1/schedule/roi').then(function(r) { return r.json(); })
+    apiFetch('/api/v1/schedule/upcoming').then(function(response) { return response.json(); }),
+    apiFetch('/api/v1/schedule/roi').then(function(response) { return response.json(); })
   ])
     .then(function(results) {
-      var upcoming = results[0] || {};
+      const upcoming = results[0] || {};
+      const roi = results[1] || {};
       renderSchedules(upcoming.schedules || []);
       renderKeepalive(upcoming.keepalive || {});
-      renderPendingCounters(upcoming);
+      renderPendingCounters(upcoming.pending_approvals || 0, upcoming.pending_esign || 0);
       updateApprovalBadge(upcoming.pending_approvals || 0);
-      renderCalendar(results[1] || {});
-      renderRoiStrip(results[2] || {});
+      renderRoiStrip(roi);
     })
     .catch(function() {});
 }
 
 function renderSchedules(schedules) {
-  var el = document.getElementById('schedules-list');
+  const element = document.getElementById('schedules-list');
   if (!schedules.length) {
-    el.innerHTML = '';
+    element.innerHTML = emptyState('No scheduled activity yet.');
     return;
   }
-  el.innerHTML = schedules.map(function(s) {
-    return '<div class="schedule-row" onclick="openScheduleEditor(\'' + s.app_id + '\')">' +
-      '<span>' + (s.app_name || s.app_id) + '</span>' +
-      '<span class="schedule-row__cron">' + (s.cron_human || s.cron) + '</span>' +
-      '<span class="schedule-row__cron">' + (s.countdown_seconds ? 'in ' + fmtSecs(s.countdown_seconds) : '') + '</span>' +
-      '</div>';
+  element.innerHTML = schedules.map(function(schedule) {
+    const countdownLabel = schedule.countdown_seconds ? 'Runs in ' + fmtSecs(schedule.countdown_seconds) : 'Awaiting next run';
+    const enabledLabel = schedule.enabled ? 'Enabled' : 'Disabled';
+    return '<button class="schedule-row" type="button" data-app-id="' + escapeHtml(schedule.app_id) + '" data-app-name="' + escapeHtml(schedule.app_name || schedule.app_id) + '">' +
+      '<span class="schedule-row__identity">' +
+        '<strong>' + escapeHtml(schedule.app_name || schedule.app_id) + '</strong>' +
+        '<span class="schedule-row__cron">' + escapeHtml(schedule.cron_human || schedule.cron || 'Custom schedule') + '</span>' +
+      '</span>' +
+      '<span class="schedule-row__meta">' +
+        '<span class="schedule-row__countdown">' + escapeHtml(countdownLabel) + '</span>' +
+        '<span class="status-chip">' + escapeHtml(enabledLabel) + '</span>' +
+      '</span>' +
+    '</button>';
   }).join('');
 }
 
-function renderCalendar(days) {
-  var el = document.getElementById('calendar-view');
-  var keys = Object.keys(days).sort();
-  if (!keys.length) {
-    el.innerHTML = '<div class="empty-state">No scheduled activity yet.</div>';
+function renderKeepalive(keepalive) {
+  const element = document.getElementById('keepalive-summary');
+  if (keepalive.active_count > 0) {
+    element.innerHTML = '<div class="summary-card">' +
+      '<strong>' + escapeHtml(String(keepalive.active_count)) + ' session(s) protected</strong>' +
+      '<p class="muted-copy">Last refresh ' + escapeHtml(keepalive.last_refresh || 'just now') + ' · next refresh in ' + escapeHtml(fmtSecs(keepalive.next_refresh_seconds || 0)) + '.</p>' +
+    '</div>';
     return;
   }
-  el.innerHTML = keys.map(function(day) {
-    var pills = (days[day] || []).map(function(item) {
-      return '<span class="calendar-pill status-' + item.status + '">' + item.time + ' · ' + item.app + '</span>';
-    }).join('');
-    return '<section class="calendar-day"><h4>' + day + '</h4><div class="calendar-pills">' + pills + '</div></section>';
-  }).join('');
+  element.innerHTML = emptyState('No keep-alive sessions right now.');
+}
+
+function renderPendingCounters(pendingApprovals, pendingESign) {
+  const element = document.getElementById('pending-counters');
+  const cards = [];
+  if (pendingApprovals > 0) {
+    cards.push('<div class="counter-card counter-card--warning"><strong>' + escapeHtml(String(pendingApprovals)) + '</strong><span>Approval Queue</span></div>');
+  }
+  if (pendingESign > 0) {
+    cards.push('<div class="counter-card counter-card--warning"><strong>' + escapeHtml(String(pendingESign)) + '</strong><span>eSign pending</span></div>');
+  }
+  if (!cards.length) {
+    element.innerHTML = emptyState('Everything is clear right now.');
+    return;
+  }
+  element.innerHTML = cards.join('');
 }
 
 function renderRoiStrip(roi) {
@@ -97,265 +153,354 @@ function renderRoiStrip(roi) {
   document.getElementById('roi-value-usd').textContent = '$' + String(roi.week_value_usd_at_30_per_hour || '0.00');
 }
 
-function renderKeepalive(ka) {
-  var el = document.getElementById('keepalive-summary');
-  if (ka.active_count != null) {
-    el.innerHTML = '<p>' + ka.active_count + ' active session(s). Next refresh in ' + fmtSecs(ka.next_refresh_seconds || 0) + '.</p>';
-  } else {
-    el.innerHTML = '<p style="color:var(--hub-text-muted)">No keep-alive sessions.</p>';
-  }
-}
-
-function renderPendingCounters(data) {
-  var el = document.getElementById('pending-counters');
-  var parts = [];
-  if (data.pending_approvals) {
-    parts.push('<span style="color:var(--hub-warning)">' + data.pending_approvals + ' awaiting approval</span>');
-  }
-  if (data.pending_esign) {
-    parts.push('<span style="color:var(--hub-warning)">' + data.pending_esign + ' awaiting eSign</span>');
-  }
-  el.innerHTML = parts.join(' &nbsp;|&nbsp; ') || '';
-}
-
 function updateApprovalBadge(count) {
-  var badge = document.getElementById('approval-badge');
+  const badge = document.getElementById('approval-badge');
   badge.hidden = count === 0;
-  badge.textContent = count;
+  badge.textContent = String(count);
 }
-
-// --- Tab 2: Approval Queue ---
-var _countdowns = {};
 
 function loadApprovalQueue() {
-  Promise.all([
-    apiFetch('/api/v1/schedule/queue').then(function(r) { return r.json(); }),
-    apiFetch('/api/v1/schedule').then(function(r) { return r.json(); })
-  ])
-    .then(function(results) {
-      var queueData = results[0] || {};
-      var scheduleData = results[1] || {};
-      renderApprovalQueue(queueData.queue || []);
-      renderKanban(scheduleData.items || []);
+  apiFetch('/api/v1/schedule/queue')
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+      renderApprovalQueue(data.queue || []);
+      updateApprovalBadge(data.count || 0);
     })
     .catch(function() {});
 }
 
 function renderApprovalQueue(items) {
-  var el = document.getElementById('approval-list');
-  renderSignoffSheet(items);
-  if (!items.length) { el.innerHTML = ''; return; }
-  el.innerHTML = items.map(function(item) {
-    return '<div class="approval-item" id="approval-' + item.run_id + '">' +
-      '<div><strong>' + item.action_type + '</strong> &mdash; ' + item.app_id + '</div>' +
-      '<div class="approval-item__countdown" id="countdown-' + item.run_id + '">' +
-        item.countdown_seconds_remaining + 's &rarr; auto-REJECT' +
+  const element = document.getElementById('approval-list');
+  Object.keys(countdowns).forEach(function(runId) {
+    clearInterval(countdowns[runId]);
+    delete countdowns[runId];
+  });
+  if (!items.length) {
+    element.innerHTML = emptyState('No approvals waiting for sign-off.');
+    return;
+  }
+  element.innerHTML = items.map(function(item) {
+    const riskTier = escapeHtml(item.class || item.risk_tier || 'B');
+    const approveDisabled = Number(item.countdown_seconds_remaining || 0) > 0 ? ' disabled' : '';
+    return '<article class="approval-item" id="approval-' + escapeHtml(item.run_id) + '">' +
+      '<div class="approval-item__header">' +
+        '<strong>' + escapeHtml(item.preview_text || item.action_type || item.run_id) + '</strong>' +
+        '<span class="risk-badge risk-badge--' + riskTier + '">Risk ' + riskTier + '</span>' +
       '</div>' +
+      '<div class="approval-item__meta">' + escapeHtml(item.app_id || '') + ' · ' + escapeHtml(item.action_type || '') + '</div>' +
+      '<div class="approval-item__countdown" id="countdown-' + escapeHtml(item.run_id) + '">' + escapeHtml(String(item.countdown_seconds_remaining || 0)) + 's → auto-REJECT</div>' +
       '<div class="approval-item__actions">' +
-        '<button class="btn-approve" onclick="approveItem(\'' + item.run_id + '\')">Approve</button>' +
-        '<button class="btn-reject" onclick="rejectItem(\'' + item.run_id + '\')">Reject</button>' +
+        '<button class="btn-primary btn-approve" type="button" data-approve-run-id="' + escapeHtml(item.run_id) + '"' + approveDisabled + '>Approve</button>' +
+        '<button class="btn-secondary btn-danger btn-reject" type="button" data-reject-run-id="' + escapeHtml(item.run_id) + '">Reject</button>' +
       '</div>' +
-    '</div>';
+    '</article>';
   }).join('');
   items.forEach(function(item) {
-    startCountdown(item.run_id, item.countdown_seconds_remaining);
+    startCountdown(item.run_id, item.countdown_seconds_remaining || 0);
   });
 }
 
-function renderKanban(items) {
-  var board = document.getElementById('kanban-board');
-  var groups = { past: [], pending: [], future: [] };
-  items.forEach(function(item) {
-    if (item.status === 'scheduled' || item.status === 'queued') { groups.future.push(item); return; }
-    if (item.status === 'pending_approval' || item.status === 'cooldown') { groups.pending.push(item); return; }
-    groups.past.push(item);
-  });
-  board.innerHTML = ['past', 'pending', 'future'].map(function(key) {
-    var title = key === 'past' ? 'Past' : key === 'pending' ? 'Pending' : 'Future';
-    var cards = groups[key].map(function(item) {
-      return '<div class="kanban-card status-' + item.status + '"><strong>' + (item.app_name || item.app_id) + '</strong><span>' + item.status + '</span></div>';
-    }).join('') || '<div class="empty-state">None</div>';
-    return '<section class="kanban-column"><h4>' + title + '</h4>' + cards + '</section>';
-  }).join('');
+function updateCountdownDisplay(runId, remaining) {
+  const countdownElement = document.getElementById('countdown-' + runId);
+  const approveButton = document.querySelector('[data-approve-run-id="' + runId + '"]');
+  if (countdownElement) {
+    countdownElement.textContent = String(Math.max(0, remaining)) + 's → auto-REJECT';
+  }
+  if (approveButton) {
+    approveButton.disabled = remaining > 0;
+  }
 }
 
-function renderSignoffSheet(items) {
-  var sheet = document.getElementById('signoff-sheet');
-  var list = document.getElementById('signoff-list');
-  sheet.hidden = items.length === 0;
-  list.innerHTML = items.map(function(item) {
-    return '<div class="signoff-item">' +
-      '<strong>' + item.app_id + '</strong>' +
-      '<div>' + item.action_type + '</div>' +
-      '<div class="approval-item__countdown">' + item.countdown_seconds_remaining + 's → auto-REJECT</div>' +
-    '</div>';
-  }).join('');
-}
-
-// AUTO-REJECT on countdown = 0. NEVER auto-approve.
 function startCountdown(runId, seconds) {
-  if (_countdowns[runId]) { clearInterval(_countdowns[runId]); }
-  var remaining = seconds;
-  _countdowns[runId] = setInterval(function() {
-    remaining--;
-    var el = document.getElementById('countdown-' + runId);
-    if (el) { el.textContent = remaining + 's \u2192 auto-REJECT'; }
+  if (countdowns[runId]) {
+    clearInterval(countdowns[runId]);
+  }
+  let remaining = Math.max(0, Number(seconds) || 0);
+  updateCountdownDisplay(runId, remaining);
+  if (remaining <= 0) {
+    autoRejectItem(runId);
+    return;
+  }
+  countdowns[runId] = setInterval(function() {
+    remaining -= 1;
+    updateCountdownDisplay(runId, remaining);
     if (remaining <= 0) {
-      clearInterval(_countdowns[runId]);
+      clearInterval(countdowns[runId]);
+      delete countdowns[runId];
       autoRejectItem(runId);
     }
   }, 1000);
 }
 
-async function autoRejectItem(runId) {
-  return rejectItem(runId);
+function markAsRejected(runId) {
+  const approvalElement = document.getElementById('approval-' + runId);
+  const countdownElement = document.getElementById('countdown-' + runId);
+  const approveButton = document.querySelector('[data-approve-run-id="' + runId + '"]');
+  if (approvalElement) {
+    approvalElement.classList.add('approval-item--rejected');
+  }
+  if (countdownElement) {
+    countdownElement.textContent = 'Rejected after countdown_expired';
+  }
+  if (approveButton) {
+    approveButton.disabled = true;
+  }
 }
 
-async function refreshSignoffQueue() {
-  return loadApprovalQueue();
+function autoRejectItem(runId) {
+  apiFetch('/api/v1/schedule/cancel/' + runId, {
+    method: 'POST',
+    body: JSON.stringify({ reason: 'countdown_expired' }),
+  })
+    .then(function() {
+      markAsRejected(runId);
+      loadUpcoming();
+      loadApprovalQueue();
+      loadHistory();
+    })
+    .catch(function() {});
 }
 
 function approveItem(runId) {
-  apiFetch('/api/v1/schedule/approve/' + runId, { method: 'POST' })
-    .then(function() { loadApprovalQueue(); })
+  apiFetch('/api/v1/schedule/approve/' + runId, { method: 'POST', body: JSON.stringify({}) })
+    .then(function() {
+      loadUpcoming();
+      loadApprovalQueue();
+      loadHistory();
+    })
     .catch(function() {});
 }
 
 function rejectItem(runId) {
-  if (_countdowns[runId]) { clearInterval(_countdowns[runId]); }
   apiFetch('/api/v1/schedule/cancel/' + runId, {
     method: 'POST',
     body: JSON.stringify({ reason: 'user_rejected' }),
-  }).then(function() {
-    var el = document.getElementById('approval-' + runId);
-    if (el) { el.remove(); }
-  }).catch(function() {});
+  })
+    .then(function() {
+      markAsRejected(runId);
+      loadUpcoming();
+      loadApprovalQueue();
+      loadHistory();
+    })
+    .catch(function() {});
 }
 
-// --- Tab 3: History ---
 function loadHistory() {
-  apiFetch('/api/v1/schedule')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      renderHistory(data.runs || data.items || []);
-    })
-    .catch(function() {});
-  apiFetch('/api/v1/schedule/roi')
-    .then(function(r) { return r.json(); })
-    .then(function(roi) {
-      document.getElementById('roi-display').innerHTML =
-        '<p>This week: ' + (roi.hours_saved_this_week || roi.week_hours_saved || 0) + 'h saved' +
-        ' \u2192 $' + (roi.value_usd_this_week || roi.week_value_usd_at_30_per_hour || '0.00') + ' at $30/hr</p>';
+  Promise.all([
+    apiFetch('/api/v1/schedule').then(function(response) { return response.json(); }),
+    apiFetch('/api/v1/schedule/roi').then(function(response) { return response.json(); })
+  ])
+    .then(function(results) {
+      const historyData = results[0] || {};
+      const roi = results[1] || {};
+      const items = historyData.items || historyData.runs || [];
+      populateHistoryFilter(items);
+      renderHistory(items);
+      renderRoiSummary(roi);
     })
     .catch(function() {});
 }
 
-function renderHistory(runs) {
-  var timeline = document.getElementById('timeline-view');
-  var el = document.getElementById('history-list');
-  if (!runs.length) {
-    timeline.innerHTML = '<div class="empty-state">No activity yet.</div>';
-    el.innerHTML = '';
+function populateHistoryFilter(items) {
+  const select = document.getElementById('history-app-filter');
+  const currentValue = select.value;
+  const appIds = Array.from(new Set(items.map(function(item) {
+    return item.app_id || '';
+  }).filter(Boolean))).sort();
+  const options = ['<option value="">All Apps</option>'];
+  appIds.forEach(function(appId) {
+    const selected = currentValue === appId ? ' selected' : '';
+    options.push('<option value="' + escapeHtml(appId) + '"' + selected + '>' + escapeHtml(appId) + '</option>');
+  });
+  select.innerHTML = options.join('');
+  if (currentValue && appIds.indexOf(currentValue) === -1) {
+    select.value = '';
+  }
+}
+
+function renderHistory(items) {
+  const historyElement = document.getElementById('history-list');
+  const statusFilter = document.getElementById('history-status-filter').value;
+  const appFilter = document.getElementById('history-app-filter').value;
+  const filteredItems = items.filter(function(item) {
+    if (statusFilter && item.status !== statusFilter) {
+      return false;
+    }
+    if (appFilter && item.app_id !== appFilter) {
+      return false;
+    }
+    return true;
+  });
+  if (!filteredItems.length) {
+    historyElement.innerHTML = emptyState('No activity matches the current filters.');
     return;
   }
-  timeline.innerHTML = runs.map(function(r) {
-    return '<div class="timeline-item">' +
-      '<strong>' + (r.app_id || '') + '</strong>' +
-      '<span>' + (r.status || '') + '</span>' +
-      '<span>' + (r.scheduled_at || r.started_at || '') + '</span>' +
-    '</div>';
+  historyElement.innerHTML = filteredItems.map(function(item) {
+    return '<article class="history-item">' +
+      '<div class="history-item__header">' +
+        '<strong>' + escapeHtml(item.app_name || item.app_id || item.action_type || 'Unknown app') + '</strong>' +
+        '<span class="status-chip">' + escapeHtml(item.status || 'unknown') + '</span>' +
+      '</div>' +
+      '<div class="history-item__meta">' + escapeHtml(item.scheduled_at || item.started_at || '') + '</div>' +
+      '<div class="history-item__summary">' + escapeHtml(item.output_summary || item.preview_text || 'No summary yet.') + '</div>' +
+      '<div class="history-item__evidence">Evidence: ' + escapeHtml(item.evidence_hash || item.evidence_path || 'Pending seal') + '</div>' +
+    '</article>';
   }).join('');
-  el.innerHTML = '';
 }
 
-// --- Tab 4: List ---
+function renderRoiSummary(roi) {
+  document.getElementById('roi-display').innerHTML = '<div class="summary-card">' +
+    '<strong>This week: ' + escapeHtml(String(roi.week_hours_saved || '0.00')) + 'h saved</strong>' +
+    '<p class="muted-copy">→ $' + escapeHtml(String(roi.week_value_usd_at_30_per_hour || '0.00')) + ' at $30/hr</p>' +
+  '</div>';
+}
+
 function loadESign() {
-  apiFetch('/api/v1/schedule')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      renderScheduleList(data.items || []);
+  Promise.all([
+    apiFetch('/api/v1/esign/pending').then(function(response) { return response.json(); }),
+    apiFetch('/api/v1/esign/history').then(function(response) { return response.json(); })
+  ])
+    .then(function(results) {
+      renderESignPending(Array.isArray(results[0]) ? results[0] : []);
+      renderESignHistory(Array.isArray(results[1]) ? results[1] : []);
     })
     .catch(function() {});
-}
-
-function renderScheduleList(items) {
-  var el = document.getElementById('list-view');
-  if (!items.length) {
-    el.innerHTML = '<div class="empty-state">No rows yet.</div>';
-    return;
-  }
-  el.innerHTML = '<table class="schedule-table"><thead><tr><th>App</th><th>Status</th><th>When</th><th>Safety</th></tr></thead><tbody>' + items.map(function(item) {
-    return '<tr><td>' + (item.app_name || item.app_id) + '</td><td>' + item.status + '</td><td>' + (item.scheduled_at || item.started_at || '') + '</td><td>' + (item.safety_tier || '') + '</td></tr>';
-  }).join('') + '</tbody></table>';
 }
 
 function renderESignPending(items) {
-  var el = document.getElementById('esign-pending');
+  const element = document.getElementById('esign-pending');
   if (!items.length) {
-    el.innerHTML = '<p style="color:var(--hub-text-muted)">No pending signatures.</p>';
+    element.innerHTML = emptyState('No pending signatures.');
     return;
   }
-  el.innerHTML = '<h4>Pending Signatures</h4>' + items.map(function(i) {
-    return '<div class="esign-item">' +
-      '<div>' + i.preview_text + '</div>' +
-      '<div class="esign-item__status">Requested by ' + i.requested_by + ' \u2022 Expires ' + i.expires_at + '</div>' +
-      '<button class="btn-approve" onclick="signItem(\'' + i.esign_id + '\')">Sign</button>' +
-    '</div>';
+  element.innerHTML = items.map(function(item) {
+    return '<article class="esign-item">' +
+      '<div class="esign-item__header">' +
+        '<strong>' + escapeHtml(item.preview_text || item.action_type || item.esign_id) + '</strong>' +
+        '<span class="status-chip">Pending</span>' +
+      '</div>' +
+      '<div class="esign-item__status">Requested by ' + escapeHtml(item.requested_by || 'unknown') + ' · Expires ' + escapeHtml(item.expires_at || '') + '</div>' +
+      '<button class="btn-primary" type="button" data-esign-id="' + escapeHtml(item.esign_id) + '">Sign</button>' +
+    '</article>';
   }).join('');
 }
 
 function renderESignHistory(items) {
-  var el = document.getElementById('esign-history');
-  if (!items.length) { el.innerHTML = ''; return; }
-  el.innerHTML = '<h4>Signed History</h4>' + items.map(function(i) {
-    return '<div class="esign-item">' +
-      '<div>' + i.action_type + ' \u2014 Signed ' + i.signed_at + '</div>' +
-      '<div class="esign-item__status">By ' + i.approver + ' | Hash: ' + (i.evidence_hash ? i.evidence_hash.slice(0, 12) : '') + '...</div>' +
-    '</div>';
+  const element = document.getElementById('esign-history');
+  if (!items.length) {
+    element.innerHTML = emptyState('No signature history yet.');
+    return;
+  }
+  element.innerHTML = items.map(function(item) {
+    return '<article class="esign-item">' +
+      '<div class="esign-item__header">' +
+        '<strong>' + escapeHtml(item.action_type || item.esign_id) + '</strong>' +
+        '<span class="status-chip">Signed</span>' +
+      '</div>' +
+      '<div class="esign-item__status">Signed ' + escapeHtml(item.signed_at || '') + ' · By ' + escapeHtml(item.approver || '') + '</div>' +
+      '<div class="history-item__evidence">Evidence: ' + escapeHtml(item.evidence_hash || '') + '</div>' +
+    '</article>';
   }).join('');
 }
 
 function signItem(esignId) {
-  var token = prompt('Enter signature token:');
-  if (!token) { return; }
+  const signatureToken = window.prompt('Enter signature token');
+  if (!signatureToken) {
+    return;
+  }
   apiFetch('/api/v1/esign/' + esignId + '/sign', {
     method: 'POST',
-    body: JSON.stringify({ signature_token: token }),
-  }).then(function() { loadESign(); }).catch(function() {});
+    body: JSON.stringify({ signature_token: signatureToken }),
+  })
+    .then(function() {
+      loadUpcoming();
+      loadESign();
+    })
+    .catch(function() {});
 }
 
-// --- Schedule Editor Drawer ---
-function openScheduleEditor(appId) {
+function openScheduleEditor(appId, appLabel) {
+  activeScheduleAppId = appId || 'custom-app';
+  activeScheduleAppLabel = appLabel || appId || 'Custom app';
+  document.getElementById('drawer-app-label').textContent = 'Editing schedule for ' + activeScheduleAppLabel + '.';
   document.getElementById('schedule-drawer').hidden = false;
 }
 
-document.getElementById('cancel-schedule-btn').addEventListener('click', function() {
+function closeScheduleEditor() {
   document.getElementById('schedule-drawer').hidden = true;
+}
+
+function saveSchedule() {
+  const preset = document.getElementById('cron-preset').value;
+  const rawCron = document.getElementById('cron-raw').value.trim();
+  const cronExpression = preset === 'custom' ? rawCron : CRON_PRESETS[preset];
+  if (!cronExpression) {
+    return;
+  }
+  apiFetch('/api/v1/browser/schedules', {
+    method: 'POST',
+    body: JSON.stringify({
+      app_id: activeScheduleAppId || 'custom-app',
+      cron: cronExpression,
+      url: '',
+    }),
+  })
+    .then(function() {
+      closeScheduleEditor();
+      loadUpcoming();
+    })
+    .catch(function() {});
+}
+
+document.querySelectorAll('.tab').forEach(function(tabButton) {
+  tabButton.addEventListener('click', function() {
+    switchTab(tabButton.dataset.tab);
+  });
 });
 
+document.getElementById('history-status-filter').addEventListener('change', loadHistory);
+document.getElementById('history-app-filter').addEventListener('change', loadHistory);
+document.getElementById('add-schedule-btn').addEventListener('click', function() {
+  openScheduleEditor('custom-app', 'Custom app');
+});
+document.getElementById('cancel-schedule-btn').addEventListener('click', closeScheduleEditor);
+document.getElementById('save-schedule-btn').addEventListener('click', saveSchedule);
 document.getElementById('cron-preset').addEventListener('change', function() {
   document.getElementById('cron-raw').hidden = this.value !== 'custom';
 });
-
-document.getElementById('bulk-approve-a').addEventListener('click', function() {
-  apiFetch('/api/v1/schedule/queue')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      (data.queue || []).filter(function(item) { return item.class === 'A'; }).forEach(function(item) {
-        approveItem(item.run_id);
-      });
-    })
-    .catch(function() {});
+document.getElementById('request-signature-btn').addEventListener('click', function() {
+  window.alert('Signature requests appear here once an app submits them.');
 });
 
-// --- Utility ---
-function fmtSecs(s) {
-  if (s < 60) { return s + 's'; }
-  if (s < 3600) { return Math.floor(s / 60) + 'm'; }
-  return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
-}
+document.getElementById('schedules-list').addEventListener('click', function(event) {
+  const target = event.target.closest('[data-app-id]');
+  if (!target) {
+    return;
+  }
+  openScheduleEditor(target.dataset.appId, target.dataset.appName);
+});
 
-// --- Init ---
+document.getElementById('approval-list').addEventListener('click', function(event) {
+  const approveTarget = event.target.closest('[data-approve-run-id]');
+  const rejectTarget = event.target.closest('[data-reject-run-id]');
+  if (approveTarget) {
+    approveItem(approveTarget.dataset.approveRunId);
+  }
+  if (rejectTarget) {
+    rejectItem(rejectTarget.dataset.rejectRunId);
+  }
+});
+
+document.getElementById('esign-pending').addEventListener('click', function(event) {
+  const signTarget = event.target.closest('[data-esign-id]');
+  if (!signTarget) {
+    return;
+  }
+  signItem(signTarget.dataset.esignId);
+});
+
 loadUpcoming();
 loadApprovalQueue();
+loadHistory();
+loadESign();
 setInterval(loadUpcoming, 30000);

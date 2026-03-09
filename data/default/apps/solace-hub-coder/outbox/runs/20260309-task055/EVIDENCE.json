@@ -1,46 +1,44 @@
 {
   "task_id": "20260309-task055",
   "rung": 274177,
-  "timestamp": "2026-03-09T13:25:44Z",
+  "timestamp": "2026-03-09T21:09:38Z",
+  "northstar_metric": "ENTERPRISE_TRUST",
   "files_changed": [
-    "evidence_bundle.py",
     "yinyang_server.py",
     "tests/test_part11_evidence.py"
   ],
+  "diff_sha256": "bbae7866dc628e41355d382c53e31855e340d189ef10a48132337e0e12fe9bfc",
+  "green_output_sha256": "bd01752ba8b1a8cc60362f8d43fa6cd9a8c207f3c9d8e61777eb61e3bbe4022c",
   "red_gate": {
-    "command": "pytest -q tests/test_part11_evidence.py",
-    "workdir": "/tmp/task055-red-1680750",
-    "result": "1 error",
+    "command": "python -m pytest -q tests/test_part11_evidence.py tests/test_session_rules.py tests/test_solace_hub.py",
+    "result": "2 failed, 194 passed in 3.02s",
+    "failing_tests_before": [
+      "tests/test_session_rules.py::test_check_app_returns_status",
+      "tests/test_session_rules.py::test_session_check_records_evidence"
+    ],
     "witness": [
-      "ModuleNotFoundError: No module named 'evidence_bundle'"
+      "PermissionError: [Errno 13] Permission denied: '/home/phuc/.solace/evidence/evidence.jsonl'"
     ]
   },
   "green_gate": {
     "focused": {
-      "command": "pytest -q tests/test_part11_evidence.py",
-      "result": "8 passed in 0.14s"
+      "command": "python -m pytest -q tests/test_part11_evidence.py tests/test_session_rules.py",
+      "result": "16 passed in 0.37s"
     },
     "regression": {
-      "command": "pytest -q tests/test_session_rules.py tests/test_solace_hub.py",
-      "result": "188 passed in 0.38s"
+      "command": "python -m pytest -q tests/test_part11_evidence.py tests/test_session_rules.py tests/test_solace_hub.py",
+      "result": "197 passed in 0.54s"
     },
-    "combined": {
-      "command": "pytest -q tests/test_part11_evidence.py tests/test_session_rules.py tests/test_solace_hub.py",
-      "result": "196 passed in 0.39s"
+    "oracle_sweep": {
+      "command": "python -m pytest -q tests/test_part11_evidence.py",
+      "results": [
+        "9 passed in 0.20s",
+        "9 passed in 0.19s",
+        "9 passed in 0.20s"
+      ]
     }
   },
-  "oracle_sweep": {
-    "commands": [
-      "pytest -q tests/test_part11_evidence.py",
-      "pytest -q tests/test_part11_evidence.py",
-      "pytest -q tests/test_part11_evidence.py"
-    ],
-    "results": [
-      "8 passed in 0.14s",
-      "8 passed in 0.15s",
-      "8 passed in 0.14s"
-    ]
-  },
+  "regressions_introduced": [],
   "artifacts": [
     "data/default/apps/solace-hub-coder/outbox/runs/20260309-task055/PATCH_DIFF.md",
     "data/default/apps/solace-hub-coder/outbox/runs/20260309-task055/RED_GATE.md",

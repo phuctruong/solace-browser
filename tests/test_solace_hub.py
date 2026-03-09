@@ -1181,3 +1181,58 @@ class TestEvidenceSearchUI:
     def test_evidence_search_in_server(self):
         server = (REPO_ROOT / "yinyang_server.py").read_text()
         assert "/api/v1/evidence/search" in server
+
+
+# ── Task 060: Schedule Operations 4-Tab Redesign ────────────────────────────
+
+class TestScheduleOperations4TabUI:
+    def test_schedule_html_uses_four_task_tabs(self):
+        html = (REPO_ROOT / "web" / "schedule.html").read_text()
+        assert "Upcoming" in html
+        assert "Approval Queue" in html
+        assert "History" in html
+        assert "eSign" in html
+        assert ">Calendar<" not in html
+        assert ">Kanban<" not in html
+        assert ">Timeline<" not in html
+        assert ">List<" not in html
+
+    def test_schedule_html_no_cdn(self):
+        html = (REPO_ROOT / "web" / "schedule.html").read_text().lower()
+        assert "cdn" not in html
+        assert "bootstrap" not in html
+        assert "tailwind" not in html
+        assert "jquery" not in html
+        assert "https://" not in html
+        assert "http://" not in html
+
+    def test_schedule_js_never_auto_approves(self):
+        js = (REPO_ROOT / "web" / "js" / "schedule.js").read_text()
+        assert "auto-REJECT" in js
+        assert "countdown_expired" in js
+        assert "schedule/cancel/" in js
+        start_idx = js.index("function startCountdown")
+        auto_reject_idx = js.index("function autoRejectItem")
+        countdown_block = js[start_idx:auto_reject_idx]
+        assert "approveItem(" not in countdown_block
+
+    def test_schedule_4tab_css_no_hardcoded_hex(self):
+        import re
+        # Detect hex color values (#abc / #aabbcc) but NOT CSS ID selectors (#kanban-board)
+        _HEX_COLOR_RE = re.compile(r"#[0-9a-fA-F]{3,8}(?:[^0-9a-zA-Z_-]|$)")
+        css_lines = (REPO_ROOT / "web" / "css" / "schedule.css").read_text().splitlines()
+        for line_number, line in enumerate(css_lines, start=1):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("/*"):
+                continue
+            if stripped.startswith("--hub-"):
+                continue
+            assert not _HEX_COLOR_RE.search(line), f"Hardcoded hex color at line {line_number}: {line.strip()}"
+
+    def test_schedule_html_has_cron_presets(self):
+        html = (REPO_ROOT / "web" / "schedule.html").read_text()
+        assert 'value="daily_7am"' in html
+        assert 'value="weekdays_9am"' in html
+        assert 'value="hourly"' in html
+        assert 'value="every_2h"' in html
+        assert 'value="weekly_monday"' in html

@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "skill_version": "prime-coder-2.0.2",
+  "profile": "strict",
+  "stop_reason": "PASS",
+  "last_known_state": "FINAL_SEAL",
+  "loop_budgets": {
+    "max_iterations": 6,
+    "iterations_used": 2,
+    "max_tool_calls": 80,
+    "tool_calls_used": 21
+  },
+  "localization_summary": {
+    "files_read": [
+      "yinyang_server.py",
+      "web/schedule.html",
+      "web/js/schedule.js",
+      "web/css/schedule.css",
+      "tests/test_solace_hub.py",
+      "tests/test_yinyang_instructions.py"
+    ],
+    "witness_lines_used": 0
+  },
+  "verification_rung_target": 641,
+  "verification_rung": 641,
+  "seed_agreement": true,
+  "null_checks_performed": true,
+  "forecast_summary": "Replace old schedule views with task-oriented tabs, enforce reject-only expiry, and seal eSign history with evidence hashes.",
+  "env_snapshot_pointer": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/evidence/env_snapshot.json",
+  "evidence_manifest_pointer": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/evidence/evidence_manifest.json"
+}

@@ -1,0 +1,100 @@
+:root {
+  --hub-bg: #172554;
+  --hub-surface: #0f172a;
+  --hub-surface-alt: #1e293b;
+  --hub-border: #334155;
+  --hub-text: #dbeafe;
+  --hub-muted: #93c5fd;
+  --hub-primary: #60a5fa;
+  --hub-danger: #ef4444;
+  --hub-success: #22c55e;
+}
+
+body {
+  margin: 0;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+}
+
+.uat-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.uat-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.uat-header p,
+.uat-status {
+  color: var(--hub-muted);
+}
+
+.uat-actions,
+.uat-form,
+.uat-results {
+  display: grid;
+  gap: 12px;
+}
+
+.uat-actions,
+.uat-form {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.uat-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.uat-check {
+  align-items: center;
+}
+
+button,
+input,
+select,
+textarea {
+  border-radius: 10px;
+  border: 1px solid var(--hub-border);
+  background: var(--hub-surface-alt);
+  color: var(--hub-text);
+  padding: 10px 12px;
+}
+
+button {
+  cursor: pointer;
+  background: var(--hub-primary);
+  color: var(--hub-bg);
+  font-weight: 700;
+}
+
+.uat-item,
+.uat-code {
+  background: var(--hub-surface-alt);
+  border: 1px solid var(--hub-border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.uat-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--hub-muted);
+}
+
+.uat-danger {
+  background: var(--hub-danger);
+  color: var(--hub-text);
+}
+
+.uat-success {
+  color: var(--hub-success);
+}

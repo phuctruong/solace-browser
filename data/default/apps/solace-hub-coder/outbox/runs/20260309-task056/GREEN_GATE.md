@@ -1,10 +1,15 @@
 # GREEN Gate
 
-## Validation
-- `python -m py_compile yinyang_server.py tests/test_prime_wiki_snapshots.py`
-- `pytest -q tests/test_prime_wiki_snapshots.py`
+- NORTHSTAR metric advanced: Evidence by Default
+- Targeted command: `pytest -q tests/test_prime_wiki_snapshots.py`
+- Broader command: `pytest -q tests/test_prime_wiki_snapshots.py tests/test_prime_wiki_ui.py`
 
-## Result
-- `8 passed`
-- Snapshot create/detail/content/diff/stats flows are covered.
-- Compression, SHA-256 integrity, extraction behavior, async cloud push wiring, and local storage layout are covered.
+```text
+$ pytest -q tests/test_prime_wiki_snapshots.py
+.........                                                                [100%]
+9 passed in 3.39s
+
+$ pytest -q tests/test_prime_wiki_snapshots.py tests/test_prime_wiki_ui.py
+...................                                                      [100%]
+19 passed in 3.91s
+```

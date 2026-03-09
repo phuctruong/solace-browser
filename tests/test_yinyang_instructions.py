@@ -5,6 +5,7 @@ Donald Knuth law: every test is a proof. RED → GREEN gate.
 Port: 18888 (test-only, avoids conflict with production 8888)
 """
 import json
+import os
 import pathlib
 import sys
 import threading
@@ -633,6 +634,88 @@ def _post_no_auth(path: str, payload: dict) -> tuple[int, dict]:
         assert hasattr(exc, "code"), f"Expected HTTP error, got: {exc}"
         assert hasattr(exc, "read"), f"Expected readable HTTP error, got: {exc}"
         return exc.code, json.loads(exc.read().decode())
+
+
+def _get_json_with_auth(path: str, token: str = VALID_TOKEN, base: str = AUTH_BASE):
+    req = urllib.request.Request(
+        f"{base}{path}",
+        headers={"Authorization": f"Bearer {token}"},
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return resp.status, json.loads(resp.read().decode())
+    except urllib.error.URLError as exc:
+        assert hasattr(exc, "code"), f"Expected HTTP error, got: {exc}"
+        assert hasattr(exc, "read"), f"Expected readable HTTP error, got: {exc}"
+        return exc.code, json.loads(exc.read().decode())
+
+
+def _schedule_settings_runtime_path(ys) -> pathlib.Path:
+    runtime_dir = ys.PORT_LOCK_PATH.parent
+    if ys.SETTINGS_PATH.parent == runtime_dir:
+        return ys.SETTINGS_PATH
+    return runtime_dir / ys.SETTINGS_PATH.name
+
+
+def _clear_schedule_ops_state(ys) -> None:
+    with ys._PENDING_ACTIONS_LOCK:
+        ys._PENDING_ACTIONS.clear()
+    with ys._ACTIONS_HISTORY_LOCK:
+        ys._ACTIONS_HISTORY.clear()
+    with ys._SESSIONS_LOCK:
+        ys._SESSIONS.clear()
+    if ys.SCHEDULES_PATH.exists():
+        ys.SCHEDULES_PATH.unlink()
+    settings_path = _schedule_settings_runtime_path(ys)
+    if settings_path.exists():
+        settings_path.unlink()
+    audit_dir = ys.PORT_LOCK_PATH.parent / "audit"
+    if audit_dir.exists():
+        for audit_path in audit_dir.glob("*.jsonl"):
+            audit_path.unlink()
+
+
+def _write_schedule_settings(ys, payload: dict) -> pathlib.Path:
+    settings_path = _schedule_settings_runtime_path(ys)
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    settings_path.write_text(json.dumps(payload, indent=2))
+    return settings_path
+
+
+def _seed_schedule_action(ys, run_id: str, cooldown_offset_seconds: int) -> None:
+    now_ts = time.time()
+    # approval_expires_at: when cooldown_offset < 0, the action has passed cooldown
+    # AND we set approval_expires_at to now-1 to simulate an expired sign-off window.
+    # When cooldown_offset >= 0 (cooldown still active), approval window is far future.
+    if cooldown_offset_seconds < 0:
+        approval_expires_at = now_ts - 1  # expired sign-off window
+    else:
+        approval_expires_at = now_ts + cooldown_offset_seconds + 86400  # 24h after cooldown
+    record = {
+        "action_id": run_id,
+        "action_type": "post_message",
+        "app_id": "linkedin",
+        "created_at": now_ts - 5,
+        "cooldown_ends_at": now_ts + cooldown_offset_seconds,
+        "approval_expires_at": approval_expires_at,
+        "class": "B",
+        "status": "PENDING_APPROVAL",
+        "preview": {"preview_text": "Publish queued post"},
+        "params": {},
+        "action_hash": f"hash-{run_id}",
+    }
+    with ys._PENDING_ACTIONS_LOCK:
+        ys._PENDING_ACTIONS[run_id] = record
+
+
+@pytest.fixture()
+def schedule_ops_state(auth_server):
+    import yinyang_server as ys
+
+    _clear_schedule_ops_state(ys)
+    yield ys
+    _clear_schedule_ops_state(ys)
 
 
 class TestAuthSecurity:
@@ -3385,3 +3468,137 @@ class TestHubSummary:
         assert "apps" in data
         assert "schedules" in data
         assert "evidence" in data
+
+
+# ── Task 060: Schedule Operations 4-Tab Redesign ────────────────────────────
+
+class TestScheduleOperations4Tab:
+    def test_upcoming_returns_schedules_and_keepalive(self, auth_server, schedule_ops_state):
+        ys = schedule_ops_state
+        ys.SCHEDULES_PATH.parent.mkdir(parents=True, exist_ok=True)
+        ys.SCHEDULES_PATH.write_text(json.dumps([
+            {
+                "id": "sched-1",
+                "app_id": "gmail",
+                "label": "Gmail Inbox",
+                "cron": "0 7 * * *",
+                "next_run_iso": "2026-03-09T07:00:00Z",
+                "countdown_seconds": 120,
+                "enabled": True,
+            }
+        ]))
+        _write_schedule_settings(ys, {
+            "esign_pending": [
+                {
+                    "esign_id": "es-1",
+                    "action_type": "release_signoff",
+                    "requested_by": "qa@solace.local",
+                    "requested_at": "2026-03-09T06:50:00Z",
+                    "expires_at": "2026-03-09T07:20:00Z",
+                    "preview_text": "Approve release package",
+                }
+            ]
+        })
+        _seed_schedule_action(ys, "run-pending", 25)
+        with ys._SESSIONS_LOCK:
+            ys._SESSIONS["sess-1"] = {
+                "url": "https://mail.google.com",
+                "profile": "default",
+                "pid": os.getpid(),
+                "started_at": "2026-03-09T06:40:00Z",
+            }
+
+        status, data = _get_json_with_auth("/api/v1/schedule/upcoming")
+
+        assert status == 200
+        assert data["schedules"][0]["app_id"] == "gmail"
+        assert data["schedules"][0]["cron_human"] == "Every day at 7:00 AM"
+        assert data["keepalive"]["active_count"] == 1
+        assert data["pending_approvals"] == 1
+        assert data["pending_esign"] == 1
+
+    def test_approval_queue_timeout_auto_rejects(self, auth_server, schedule_ops_state):
+        ys = schedule_ops_state
+        _seed_schedule_action(ys, "run-expired", -1)
+
+        status, data = _get_json_with_auth("/api/v1/schedule/queue")
+
+        assert status == 200
+        assert data["count"] == 0
+        with ys._PENDING_ACTIONS_LOCK:
+            record = dict(ys._PENDING_ACTIONS["run-expired"])
+        assert record["status"] == "REJECTED"
+        assert record["reject_reason"] == "countdown_expired"
+        assert (ys.PORT_LOCK_PATH.parent / "audit" / "run-expired.jsonl").exists()
+
+    def test_esign_pending_list(self, auth_server, schedule_ops_state):
+        ys = schedule_ops_state
+        _write_schedule_settings(ys, {
+            "esign_pending": [
+                {
+                    "esign_id": "es-42",
+                    "action_type": "attest_record",
+                    "requested_by": "ops@solace.local",
+                    "requested_at": "2026-03-09T07:00:00Z",
+                    "expires_at": "2026-03-09T07:30:00Z",
+                    "preview_text": "Attest that the run output is accurate",
+                }
+            ]
+        })
+
+        status, data = _get_json_with_auth("/api/v1/esign/pending")
+
+        assert status == 200
+        assert "pending" in data
+        assert isinstance(data["pending"], list)
+        assert data["pending"][0]["esign_id"] == "es-42"
+        assert data["pending"][0]["requested_by"] == "ops@solace.local"
+
+    def test_esign_sign_creates_evidence(self, auth_server, schedule_ops_state):
+        ys = schedule_ops_state
+        _write_schedule_settings(ys, {
+            "esign_pending": [
+                {
+                    "esign_id": "es-77",
+                    "action_type": "release_signoff",
+                    "requested_by": "ops@solace.local",
+                    "requested_at": "2026-03-09T07:00:00Z",
+                    "expires_at": "2026-03-09T07:30:00Z",
+                    "preview_text": "Sign release evidence bundle",
+                }
+            ],
+            "esign_history": [],
+        })
+
+        status, data = _post_with_auth("/api/v1/esign/es-77/sign", {"signature_token": "token-123", "reason": "approved"})
+        history_status, history = _get_json_with_auth("/api/v1/esign/history")
+
+        assert status == 200
+        assert data["signed"] is True
+        assert data["esign_id"] == "es-77"
+        assert history_status == 200
+        assert "history" in history
+        assert isinstance(history["history"], list)
+        assert history["history"][0]["esign_id"] == "es-77"
+        assert history["history"][0]["approver"] == VALID_TOKEN
+        assert history["history"][0]["evidence_hash"].startswith("sha256:")
+
+    def test_approval_queue_never_auto_approves(self, auth_server, schedule_ops_state):
+        ys = schedule_ops_state
+        _seed_schedule_action(ys, "run-never-approve", -1)
+
+        status, data = _post_with_auth("/api/v1/schedule/approve/run-never-approve", {})
+
+        assert status in (400, 409)
+        assert data.get("approved") is not True
+        with ys._PENDING_ACTIONS_LOCK:
+            record = dict(ys._PENDING_ACTIONS["run-never-approve"])
+        assert record["status"] == "REJECTED"
+        assert record["reject_reason"] == "countdown_expired"
+
+    def test_history_roi_uses_decimal(self, auth_server, schedule_ops_state):
+        status, data = _get_json_with_auth("/api/v1/schedule/roi")
+
+        assert status == 200
+        assert isinstance(data["week_hours_saved"], str)
+        assert isinstance(data["week_value_usd_at_30_per_hour"], str)

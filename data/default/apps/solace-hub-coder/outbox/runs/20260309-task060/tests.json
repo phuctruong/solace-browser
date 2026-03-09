@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "agent_type": "coder",
+  "command": "pytest -q tests/test_solace_hub.py tests/test_yinyang_instructions.py",
+  "exit_code": 0,
+  "failing_tests_before": [
+    "tests/test_solace_hub.py::TestScheduleOperations4TabUI::test_schedule_html_uses_four_task_tabs",
+    "tests/test_solace_hub.py::TestScheduleOperations4TabUI::test_schedule_js_never_auto_approves",
+    "tests/test_solace_hub.py::TestScheduleOperations4TabUI::test_schedule_4tab_css_no_hardcoded_hex",
+    "tests/test_yinyang_instructions.py::TestScheduleOperations4Tab::test_upcoming_returns_schedules_and_keepalive",
+    "tests/test_yinyang_instructions.py::TestScheduleOperations4Tab::test_approval_queue_timeout_auto_rejects",
+    "tests/test_yinyang_instructions.py::TestScheduleOperations4Tab::test_esign_pending_list",
+    "tests/test_yinyang_instructions.py::TestScheduleOperations4Tab::test_esign_sign_creates_evidence",
+    "tests/test_yinyang_instructions.py::TestScheduleOperations4Tab::test_approval_queue_never_auto_approves"
+  ],
+  "passing_tests_after": [
+    "tests/test_solace_hub.py::TestScheduleOperations4TabUI",
+    "tests/test_yinyang_instructions.py::TestScheduleOperations4Tab"
+  ],
+  "regressions_introduced": [],
+  "null_checks_performed": true
+}

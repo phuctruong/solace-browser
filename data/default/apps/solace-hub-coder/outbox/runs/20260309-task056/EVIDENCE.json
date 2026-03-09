@@ -1,47 +1,76 @@
 {
-  "task_id": "056",
-  "task_name": "Prime Wiki Snapshots",
-  "status": "green",
+  "schema_version": "1.0.0",
+  "task_id": "20260309-task056",
+  "app": "solace-hub-coder",
+  "target": "solace-browser",
+  "rung_target": 641,
+  "rung_achieved": 641,
+  "northstar_metric": "Evidence by Default",
+  "status": "PASS",
   "files_changed": [
     "yinyang_server.py",
     "tests/test_prime_wiki_snapshots.py"
   ],
-  "artifacts": [
-    "PATCH_DIFF.md",
-    "RED_GATE.md",
-    "GREEN_GATE.md",
-    "ORACLE_SWEEP.md"
-  ],
   "implementation": {
-    "snapshot_post_route": "/api/v1/prime-wiki/snapshot",
-    "snapshot_get_route": "/api/v1/prime-wiki/snapshot/{snapshot_id}",
-    "snapshot_content_route": "/api/v1/prime-wiki/snapshot/{snapshot_id}/content",
-    "diff_route": "/api/v1/prime-wiki/diff",
-    "stats_route": "/api/v1/prime-wiki/stats",
-    "storage_root": "~/.solace/prime-wiki/<url_hash[:16]>/",
-    "cloud_push_async": true,
-    "llm_used": false
-  },
-  "validation": {
-    "commands": [
-      "python -m py_compile yinyang_server.py tests/test_prime_wiki_snapshots.py",
-      "pytest -q tests/test_prime_wiki_snapshots.py"
+    "compression_binaries": [
+      "/home/phuc/projects/pzip/native/pzip_web_cpp/build/pzweb",
+      "/home/phuc/projects/pzip/native/pzip_logs_cpp/build/pzlog"
     ],
-    "pytest": {
-      "passed": 8,
-      "failed": 0
+    "codec_selection": "auto: pzweb for non-empty HTML, pzlog for empty content",
+    "rtc_enforced": true,
+    "content_field": "content_pzip_b64",
+    "cloud_sync_mode": "async_for_paid_tiers"
+  },
+  "red_gate": {
+    "command": "pytest -q tests/test_prime_wiki_snapshots.py",
+    "exit_code": 1,
+    "failing_test": "tests/test_prime_wiki_snapshots.py::test_snapshot_compresses_html",
+    "artifact": "RED_GATE.md",
+    "sha256": "b2af33a8f484d9c4e1fc3de6b4b03d3b708654dcd54a3d14984d4fc8b968146e"
+  },
+  "green_gate": {
+    "commands": [
+      "pytest -q tests/test_prime_wiki_snapshots.py",
+      "pytest -q tests/test_prime_wiki_snapshots.py tests/test_prime_wiki_ui.py"
+    ],
+    "exit_code": 0,
+    "artifact": "GREEN_GATE.md",
+    "sha256": "65afa49851994594ee0acdd0dbc85052c7fff6e3b44644092ff26334ff5292f8"
+  },
+  "artifacts": {
+    "patch_diff": {
+      "path": "PATCH_DIFF.md",
+      "sha256": "24bfe179452fb2a8ff0e85aa0a0a4b3947d007cf58ce958e21a1226c5e71c563"
+    },
+    "oracle_sweep": {
+      "path": "ORACLE_SWEEP.md",
+      "sha256": "6fbb5fc25589d5564c120be101ef9dd5e6cd2083743c03c93ef73dbd4f83a552"
     }
   },
-  "guardrails": {
-    "port_9222_used": false,
-    "except_exception_added": false,
-    "snapshot_metadata_exposes_content": false
+  "tests": {
+    "targeted": {
+      "total": 9,
+      "pass": 9,
+      "fail": 0
+    },
+    "broader": {
+      "total": 19,
+      "pass": 19,
+      "fail": 0
+    },
+    "regressions_introduced": []
   },
-  "file_refs": {
-    "constants": "yinyang_server.py:131",
-    "extractors": "yinyang_server.py:613",
-    "snapshot_routes": "yinyang_server.py:2483",
-    "snapshot_handlers": "yinyang_server.py:3043",
-    "tests": "tests/test_prime_wiki_snapshots.py:1"
-  }
+  "oracle_ids_checked": [
+    "HQ-001",
+    "HQ-002",
+    "HQ-004",
+    "HQ-007",
+    "HQ-010",
+    "HQ-020",
+    "HQ-029",
+    "HQ-030",
+    "HQ-031",
+    "HQ-032",
+    "HQ-043"
+  ]
 }

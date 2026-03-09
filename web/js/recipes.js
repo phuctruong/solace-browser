@@ -120,7 +120,7 @@ async function apiPost(path, payload) {
 // Load recipes
 // ---------------------------------------------------------------------------
 async function loadRecipes() {
-  let url = "/api/v1/recipes/community";
+  let url = "/api/v1/recipes";
   const params = [];
   if (_activeCategory) params.push("category=" + encodeURIComponent(_activeCategory));
   if (_sortBy) params.push("sort=" + encodeURIComponent(_sortBy));

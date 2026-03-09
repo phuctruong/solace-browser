@@ -1,0 +1,201 @@
+F.FF.FFFFF.                                                              [100%]
+=================================== FAILURES ===================================
+_____ TestScheduleOperations4TabUI.test_schedule_html_uses_four_task_tabs ______
+
+self = <tests.test_solace_hub.TestScheduleOperations4TabUI object at 0x7ec113429360>
+
+    def test_schedule_html_uses_four_task_tabs(self):
+        html = (REPO_ROOT / "web" / "schedule.html").read_text()
+        assert "Upcoming" in html
+>       assert "Approval Queue" in html
+E       assert 'Approval Queue' in '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <title>Schedule — Solace Hub</title>\n  <link ...  <div id="signoff-list"></div>\n  </section>\n</div>\n<script src="/web/js/schedule.js"></script>\n</body>\n</html>\n'
+
+tests/test_solace_hub.py:1192: AssertionError
+______ TestScheduleOperations4TabUI.test_schedule_js_never_auto_approves _______
+
+self = <tests.test_solace_hub.TestScheduleOperations4TabUI object at 0x7ec113429cc0>
+
+    def test_schedule_js_never_auto_approves(self):
+        js = (REPO_ROOT / "web" / "js" / "schedule.js").read_text()
+        assert "auto-REJECT" in js
+>       assert "countdown_expired" in js
+E       assert 'countdown_expired' in "/**\n * schedule.js — Schedule 4-Tab Redesign for Solace Hub\n * Laws:\n *   - No CDN dependencies. No jQuery. No Boo...% 3600) / 60) + 'm';\n}\n\n// --- Init ---\nloadUpcoming();\nloadApprovalQueue();\nsetInterval(loadUpcoming, 30000);\n"
+
+tests/test_solace_hub.py:1212: AssertionError
+_____ TestScheduleOperations4TabUI.test_schedule_4tab_css_no_hardcoded_hex _____
+
+self = <tests.test_solace_hub.TestScheduleOperations4TabUI object at 0x7ec11342a170>
+
+    def test_schedule_4tab_css_no_hardcoded_hex(self):
+        css_lines = (REPO_ROOT / "web" / "css" / "schedule.css").read_text().splitlines()
+        for line_number, line in enumerate(css_lines, start=1):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("/*"):
+                continue
+            if stripped.startswith("--hub-"):
+                continue
+>           assert "#" not in line, f"Hardcoded hex outside token table at line {line_number}"
+E           AssertionError: Hardcoded hex outside token table at line 294
+E           assert '#' not in '#kanban-board {'
+E             
+E             '#' is contained here:
+E               #kanban-board {
+E             ? +
+
+tests/test_solace_hub.py:1227: AssertionError
+___ TestScheduleOperations4Tab.test_upcoming_returns_schedules_and_keepalive ___
+
+self = <tests.test_yinyang_instructions.TestScheduleOperations4Tab object at 0x7ec1134d64a0>
+auth_server = {'base_url': 'http://localhost:18889', 'httpd': <yinyang_server.ReusableThreadingHTTPServer object at 0x7ec1137e6440>, 'token_sha256': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}
+schedule_ops_state = <module 'yinyang_server' from '/home/phuc/projects/solace-browser/yinyang_server.py'>
+
+    def test_upcoming_returns_schedules_and_keepalive(self, auth_server, schedule_ops_state):
+        ys = schedule_ops_state
+        ys.SCHEDULES_PATH.parent.mkdir(parents=True, exist_ok=True)
+        ys.SCHEDULES_PATH.write_text(json.dumps([
+            {
+                "id": "sched-1",
+                "app_id": "gmail",
+                "label": "Gmail Inbox",
+                "cron": "0 7 * * *",
+                "next_run_iso": "2026-03-09T07:00:00Z",
+                "countdown_seconds": 120,
+                "enabled": True,
+            }
+        ]))
+        _write_schedule_settings(ys, {
+            "esign_pending": [
+                {
+                    "esign_id": "es-1",
+                    "action_type": "release_signoff",
+                    "requested_by": "qa@solace.local",
+                    "requested_at": "2026-03-09T06:50:00Z",
+                    "expires_at": "2026-03-09T07:20:00Z",
+                    "preview_text": "Approve release package",
+                }
+            ]
+        })
+        _seed_schedule_action(ys, "run-pending", 25)
+        with ys._SESSIONS_LOCK:
+            ys._SESSIONS["sess-1"] = {
+                "url": "https://mail.google.com",
+                "profile": "default",
+                "pid": os.getpid(),
+                "started_at": "2026-03-09T06:40:00Z",
+            }
+    
+        status, data = _get_json_with_auth("/api/v1/schedule/upcoming")
+    
+        assert status == 200
+        assert data["schedules"][0]["app_id"] == "gmail"
+        assert data["schedules"][0]["cron_human"] == "Every day at 7:00 AM"
+>       assert data["keepalive"]["active_count"] == 1
+E       assert 0 == 1
+
+tests/test_yinyang_instructions.py:3508: AssertionError
+_____ TestScheduleOperations4Tab.test_approval_queue_timeout_auto_rejects ______
+
+self = <tests.test_yinyang_instructions.TestScheduleOperations4Tab object at 0x7ec1134d69e0>
+auth_server = {'base_url': 'http://localhost:18889', 'httpd': <yinyang_server.ReusableThreadingHTTPServer object at 0x7ec1137e6440>, 'token_sha256': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}
+schedule_ops_state = <module 'yinyang_server' from '/home/phuc/projects/solace-browser/yinyang_server.py'>
+
+    def test_approval_queue_timeout_auto_rejects(self, auth_server, schedule_ops_state):
+        ys = schedule_ops_state
+        _seed_schedule_action(ys, "run-expired", -1)
+    
+        status, data = _get_json_with_auth("/api/v1/schedule/queue")
+    
+        assert status == 200
+>       assert data["count"] == 0
+E       assert 1 == 0
+
+tests/test_yinyang_instructions.py:3519: AssertionError
+______________ TestScheduleOperations4Tab.test_esign_pending_list ______________
+
+self = <tests.test_yinyang_instructions.TestScheduleOperations4Tab object at 0x7ec1134d6f20>
+auth_server = {'base_url': 'http://localhost:18889', 'httpd': <yinyang_server.ReusableThreadingHTTPServer object at 0x7ec1137e6440>, 'token_sha256': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}
+schedule_ops_state = <module 'yinyang_server' from '/home/phuc/projects/solace-browser/yinyang_server.py'>
+
+    def test_esign_pending_list(self, auth_server, schedule_ops_state):
+        ys = schedule_ops_state
+        _write_schedule_settings(ys, {
+            "esign_pending": [
+                {
+                    "esign_id": "es-42",
+                    "action_type": "attest_record",
+                    "requested_by": "ops@solace.local",
+                    "requested_at": "2026-03-09T07:00:00Z",
+                    "expires_at": "2026-03-09T07:30:00Z",
+                    "preview_text": "Attest that the run output is accurate",
+                }
+            ]
+        })
+    
+        status, data = _get_json_with_auth("/api/v1/esign/pending")
+    
+        assert status == 200
+>       assert isinstance(data, list)
+E       AssertionError: assert False
+E        +  where False = isinstance({'pending': []}, list)
+
+tests/test_yinyang_instructions.py:3544: AssertionError
+_________ TestScheduleOperations4Tab.test_esign_sign_creates_evidence __________
+
+self = <tests.test_yinyang_instructions.TestScheduleOperations4Tab object at 0x7ec1134d7460>
+auth_server = {'base_url': 'http://localhost:18889', 'httpd': <yinyang_server.ReusableThreadingHTTPServer object at 0x7ec1137e6440>, 'token_sha256': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}
+schedule_ops_state = <module 'yinyang_server' from '/home/phuc/projects/solace-browser/yinyang_server.py'>
+
+    def test_esign_sign_creates_evidence(self, auth_server, schedule_ops_state):
+        ys = schedule_ops_state
+        _write_schedule_settings(ys, {
+            "esign_pending": [
+                {
+                    "esign_id": "es-77",
+                    "action_type": "release_signoff",
+                    "requested_by": "ops@solace.local",
+                    "requested_at": "2026-03-09T07:00:00Z",
+                    "expires_at": "2026-03-09T07:30:00Z",
+                    "preview_text": "Sign release evidence bundle",
+                }
+            ],
+            "esign_history": [],
+        })
+    
+        status, data = _post_with_auth("/api/v1/esign/es-77/sign", {"signature_token": "token-123", "reason": "approved"})
+        history_status, history = _get_json_with_auth("/api/v1/esign/history")
+    
+        assert status == 200
+        assert data["signed"] is True
+        assert data["esign_id"] == "es-77"
+        assert history_status == 200
+>       assert isinstance(history, list)
+E       AssertionError: assert False
+E        +  where False = isinstance({'history': []}, list)
+
+tests/test_yinyang_instructions.py:3571: AssertionError
+______ TestScheduleOperations4Tab.test_approval_queue_never_auto_approves ______
+
+self = <tests.test_yinyang_instructions.TestScheduleOperations4Tab object at 0x7ec1134d79a0>
+auth_server = {'base_url': 'http://localhost:18889', 'httpd': <yinyang_server.ReusableThreadingHTTPServer object at 0x7ec1137e6440>, 'token_sha256': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}
+schedule_ops_state = <module 'yinyang_server' from '/home/phuc/projects/solace-browser/yinyang_server.py'>
+
+    def test_approval_queue_never_auto_approves(self, auth_server, schedule_ops_state):
+        ys = schedule_ops_state
+        _seed_schedule_action(ys, "run-never-approve", -1)
+    
+        status, data = _post_with_auth("/api/v1/schedule/approve/run-never-approve", {})
+    
+>       assert status in (400, 409)
+E       assert 200 in (400, 409)
+
+tests/test_yinyang_instructions.py:3582: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_solace_hub.py::TestScheduleOperations4TabUI::test_schedule_html_uses_four_task_tabs
+FAILED tests/test_solace_hub.py::TestScheduleOperations4TabUI::test_schedule_js_never_auto_approves
+FAILED tests/test_solace_hub.py::TestScheduleOperations4TabUI::test_schedule_4tab_css_no_hardcoded_hex
+FAILED tests/test_yinyang_instructions.py::TestScheduleOperations4Tab::test_upcoming_returns_schedules_and_keepalive
+FAILED tests/test_yinyang_instructions.py::TestScheduleOperations4Tab::test_approval_queue_timeout_auto_rejects
+FAILED tests/test_yinyang_instructions.py::TestScheduleOperations4Tab::test_esign_pending_list
+FAILED tests/test_yinyang_instructions.py::TestScheduleOperations4Tab::test_esign_sign_creates_evidence
+FAILED tests/test_yinyang_instructions.py::TestScheduleOperations4Tab::test_approval_queue_never_auto_approves
+8 failed, 3 passed, 512 deselected in 1.59s

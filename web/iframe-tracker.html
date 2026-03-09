@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iFrame Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/iframe-tracker.css">
+</head>
+<body>
+<main class="ifr-shell">
+  <header class="ifr-header">
+    <h1>iFrame Tracker</h1>
+    <p>Track embedded frames with hashed page and source URLs.</p>
+  </header>
+
+  <section class="ifr-card">
+    <h2>Record Frame</h2>
+    <form id="ifr-form" class="ifr-form">
+      <select id="ifr-frame-type" class="ifr-input" aria-label="Frame type"></select>
+      <input id="ifr-page-url" class="ifr-input" type="url" placeholder="Parent page URL" aria-label="Parent page URL">
+      <input id="ifr-src-url" class="ifr-input" type="url" placeholder="Frame source URL" aria-label="Frame source URL">
+      <input id="ifr-load-time" class="ifr-input" type="number" min="0" value="0" aria-label="Load time in milliseconds">
+      <label class="ifr-check"><input id="ifr-cross-origin" type="checkbox"> Cross origin</label>
+      <div id="ifr-sandbox-list" class="ifr-check-grid"></div>
+      <button class="ifr-btn" type="submit">Record</button>
+    </form>
+  </section>
+
+  <section class="ifr-card">
+    <h2>Stats</h2>
+    <div id="ifr-stats" class="ifr-stats"></div>
+  </section>
+
+  <section class="ifr-card">
+    <h2>Frames</h2>
+    <div id="ifr-frames" class="ifr-list"></div>
+  </section>
+
+  <p id="ifr-status" class="ifr-status" aria-live="polite"></p>
+</main>
+<script src="/web/js/iframe-tracker.js"></script>
+</body>
+</html>

@@ -80,9 +80,25 @@ def test_esign_pending_list(tab_server):
 
 
 def test_esign_sign_creates_evidence(tab_server):
+    import json
+    import yinyang_server as ys
+    # Seed an esign item so the sign endpoint can find it
+    esign_id = "dummy-esign-id"
+    settings_path = ys.SETTINGS_PATH
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    settings_path.write_text(json.dumps({
+        "esign_pending": [{
+            "esign_id": esign_id,
+            "action_type": "release_signoff",
+            "requested_by": "qa@solace.local",
+            "requested_at": "2026-03-09T06:00:00Z",
+            "expires_at": "2026-03-09T07:00:00Z",
+            "preview_text": "Approve release package",
+        }]
+    }))
     status, data = _req(
         tab_server,
-        "/api/v1/esign/dummy-esign-id/sign",
+        f"/api/v1/esign/{esign_id}/sign",
         method="POST",
         payload={"signature_token": "test-sig-token"},
     )

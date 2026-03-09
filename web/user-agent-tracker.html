@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Agent Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/user-agent-tracker.css">
+</head>
+<body>
+<main class="uat-shell">
+  <header class="uat-header">
+    <h1>User Agent Tracker</h1>
+    <p>Store browser fingerprint snapshots using a SHA-256 hash of the user agent string only.</p>
+  </header>
+  <section class="uat-card">
+    <div class="uat-actions">
+      <button id="uat-load-snapshots" type="button">Snapshots</button>
+      <button id="uat-load-stats" type="button">Stats</button>
+      <button id="uat-load-platforms" type="button">Platforms</button>
+    </div>
+    <form id="uat-form" class="uat-form">
+      <label>Platform
+        <select id="uat-platform"></select>
+      </label>
+      <label>Browser
+        <select id="uat-browser">
+          <option value="Chrome">Chrome</option>
+          <option value="Firefox">Firefox</option>
+          <option value="Safari">Safari</option>
+          <option value="Edge">Edge</option>
+          <option value="Opera">Opera</option>
+          <option value="Brave">Brave</option>
+          <option value="unknown">unknown</option>
+        </select>
+      </label>
+      <label>User Agent String
+        <textarea id="uat-user-agent" rows="4" placeholder="Mozilla/5.0 ..."></textarea>
+      </label>
+      <label class="uat-check"><input id="uat-mobile" type="checkbox"> Mobile</label>
+      <label class="uat-check"><input id="uat-spoofed" type="checkbox"> Spoofed</label>
+      <button type="submit">Record Snapshot</button>
+    </form>
+  </section>
+  <section class="uat-card">
+    <div id="uat-status" class="uat-status" aria-live="polite"></div>
+    <div id="uat-results" class="uat-results" aria-live="polite"></div>
+  </section>
+</main>
+<script src="/web/js/user-agent-tracker.js"></script>
+</body>
+</html>

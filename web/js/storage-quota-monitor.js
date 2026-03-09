@@ -1,155 +1,125 @@
-/* Storage Quota Monitor — Task 113 */
 (function () {
   'use strict';
 
-  var panel = document.getElementById('sqm-panel');
+  var results = document.getElementById('sqm-results');
   var status = document.getElementById('sqm-status');
+  var form = document.getElementById('sqm-form');
+  var typeSelect = document.getElementById('sqm-storage-type');
 
-  function escHtml(s) {
-    return String(s)
+  function escHtml(value) {
+    return String(value)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
-  function setStatus(msg) { status.textContent = msg; }
-
-  function apiFetch(method, path, body) {
-    var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
-    if (body) { opts.body = JSON.stringify(body); }
-    return fetch(path, opts).then(function (r) { return r.json(); });
+  function setStatus(message, ok) {
+    status.className = ok ? 'sqm-status sqm-success' : 'sqm-status';
+    status.textContent = message;
   }
 
-  function pctBar(pct) {
-    var n = Math.min(100, Math.max(0, parseFloat(pct) || 0));
-    return '<div class="sqm-bar-wrap"><div class="sqm-bar" style="width:' + escHtml(n) + '%"></div></div>';
+  function api(method, path, body) {
+    var options = { method: method, headers: { 'Content-Type': 'application/json' } };
+    if (body) {
+      options.body = JSON.stringify(body);
+    }
+    return fetch(path, options).then(function (response) {
+      return response.json().then(function (data) {
+        return { ok: response.ok, data: data };
+      });
+    });
   }
 
-  function renderMeasurements(items) {
-    if (!items || items.length === 0) {
-      panel.innerHTML = '<div class="sqm-empty">No measurements recorded yet.</div>';
+  function renderSnapshots(items) {
+    if (!items.length) {
+      results.innerHTML = '<div class="sqm-code">No snapshots recorded yet.</div>';
       return;
     }
-    var html = '';
-    items.forEach(function (m) {
-      html += '<div class="sqm-card">'
-        + '<span class="sqm-card-id">' + escHtml(m.measurement_id) + '</span>'
-        + '<span class="sqm-card-type">' + escHtml(m.storage_type) + '</span>'
-        + pctBar(m.pct_used)
-        + '<span class="sqm-card-pct">' + escHtml(m.pct_used) + '%</span>'
-        + '<button class="sqm-btn sqm-btn-danger" onclick="sqmDelete(\'' + escHtml(m.measurement_id) + '\')">Delete</button>'
-        + '</div>';
-    });
-    panel.innerHTML = html;
-  }
-
-  function renderLatest(latest) {
-    var keys = Object.keys(latest || {});
-    if (keys.length === 0) {
-      panel.innerHTML = '<div class="sqm-empty">No measurements yet.</div>';
-      return;
-    }
-    var html = '<div class="sqm-types-grid">';
-    keys.forEach(function (k) {
-      var m = latest[k];
-      html += '<div class="sqm-type-box">'
-        + '<strong>' + escHtml(k) + '</strong>'
-        + pctBar(m.pct_used)
-        + '<div style="margin-top:6px">' + escHtml(m.pct_used) + '% used</div>'
-        + '</div>';
-    });
-    html += '</div>';
-    panel.innerHTML = html;
-  }
-
-  function renderTypes(types) {
-    var html = '<div class="sqm-types-grid">';
-    types.forEach(function (t) {
-      html += '<div class="sqm-type-box">' + escHtml(t) + '</div>';
-    });
-    html += '</div>';
-    panel.innerHTML = html;
-  }
-
-  function renderAddForm(types) {
-    var opts = types.map(function (t) {
-      return '<option value="' + escHtml(t) + '">' + escHtml(t) + '</option>';
+    results.innerHTML = items.map(function (item) {
+      return '<article class="sqm-item">'
+        + '<strong>' + escHtml(item.snapshot_id) + '</strong>'
+        + '<div class="sqm-meta">'
+        + '<span>' + escHtml(item.storage_type) + '</span>'
+        + '<span>Usage ' + escHtml(item.usage_pct) + '%</span>'
+        + '<span>Used ' + escHtml(item.used_bytes) + ' bytes</span>'
+        + '</div>'
+        + '<div class="sqm-meta">'
+        + '<span>URL hash ' + escHtml(item.url_hash) + '</span>'
+        + '<span>' + escHtml(item.recorded_at) + '</span>'
+        + '</div>'
+        + '<button class="sqm-danger" data-delete-id="' + escHtml(item.snapshot_id) + '" type="button">Delete</button>'
+        + '</article>';
     }).join('');
-    panel.innerHTML = '<div class="sqm-form">'
-      + '<label>Storage Type<select id="sqm-type">' + opts + '</select></label>'
-      + '<label>Used Bytes<input id="sqm-used" type="number" min="0" value="0"></label>'
-      + '<label>Quota Bytes<input id="sqm-quota" type="number" min="1" value="10485760"></label>'
-      + '<label>Site URL<input id="sqm-site" type="url" placeholder="https://example.com"></label>'
-      + '<div class="sqm-form-row">'
-      + '<button class="sqm-btn sqm-btn-secondary" onclick="sqmLoadList()">Cancel</button>'
-      + '<button class="sqm-btn sqm-btn-primary" onclick="sqmSubmit()">Record</button>'
-      + '</div></div>';
   }
 
-  window.sqmLoadList = function () {
-    setStatus('Loading...');
-    apiFetch('GET', '/api/v1/storage-quota/measurements').then(function (d) {
-      renderMeasurements(d.measurements || []);
-      setStatus(d.total + ' measurements.');
-    });
-  };
+  function renderCode(data) {
+    results.innerHTML = '<pre class="sqm-code">' + escHtml(JSON.stringify(data, null, 2)) + '</pre>';
+  }
 
-  window.sqmLoadLatest = function () {
-    setStatus('Loading latest...');
-    apiFetch('GET', '/api/v1/storage-quota/measurements/latest').then(function (d) {
-      renderLatest(d.latest || {});
-      setStatus('Latest per storage type shown.');
+  function loadTypes() {
+    api('GET', '/api/v1/storage-quota/storage-types').then(function (response) {
+      var types = response.data.storage_types || [];
+      typeSelect.innerHTML = types.map(function (item) {
+        return '<option value="' + escHtml(item) + '">' + escHtml(item) + '</option>';
+      }).join('');
+      renderCode(response.data);
+      setStatus('Loaded storage types.', response.ok);
     });
-  };
+  }
 
-  window.sqmLoadTypes = function () {
-    apiFetch('GET', '/api/v1/storage-quota/storage-types').then(function (d) {
-      renderTypes(d.storage_types || []);
-      setStatus(d.storage_types.length + ' storage types.');
+  function loadSnapshots() {
+    api('GET', '/api/v1/storage-quota/snapshots').then(function (response) {
+      renderSnapshots(response.data.snapshots || []);
+      setStatus('Loaded snapshots.', response.ok);
     });
-  };
+  }
 
-  window.sqmShowAddForm = function () {
-    apiFetch('GET', '/api/v1/storage-quota/storage-types').then(function (d) {
-      renderAddForm(d.storage_types || []);
-      setStatus('');
+  function loadStats() {
+    api('GET', '/api/v1/storage-quota/stats').then(function (response) {
+      renderCode(response.data);
+      setStatus('Loaded stats.', response.ok);
     });
-  };
+  }
 
-  window.sqmDelete = function (mid) {
-    apiFetch('DELETE', '/api/v1/storage-quota/measurements/' + mid).then(function (d) {
-      if (d.status === 'deleted') {
-        setStatus('Deleted ' + mid);
-        window.sqmLoadList();
-      } else {
-        setStatus('Error: ' + escHtml(d.error || 'unknown'));
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    api('POST', '/api/v1/storage-quota/snapshots', {
+      storage_type: typeSelect.value,
+      url: document.getElementById('sqm-url').value,
+      used_bytes: Number(document.getElementById('sqm-used-bytes').value),
+      quota_bytes: Number(document.getElementById('sqm-quota-bytes').value)
+    }).then(function (response) {
+      renderCode(response.data);
+      setStatus(response.ok ? 'Snapshot recorded.' : (response.data.error || 'Request failed.'), response.ok);
+      if (response.ok) {
+        loadSnapshots();
       }
     });
-  };
+  });
 
-  window.sqmSubmit = function () {
-    var stype = document.getElementById('sqm-type').value;
-    var used = parseInt(document.getElementById('sqm-used').value, 10);
-    var quota = parseInt(document.getElementById('sqm-quota').value, 10);
-    var site = document.getElementById('sqm-site').value.trim();
-    if (quota <= 0) { setStatus('Quota must be positive.'); return; }
-    apiFetch('POST', '/api/v1/storage-quota/measurements', {
-      storage_type: stype, used_bytes: used, quota_bytes: quota, site_url: site
-    }).then(function (d) {
-      if (d.measurement) {
-        setStatus('Recorded: ' + escHtml(d.measurement.measurement_id));
-        window.sqmLoadList();
-      } else {
-        setStatus('Error: ' + escHtml(d.error || 'unknown'));
+  results.addEventListener('click', function (event) {
+    var target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    var snapshotId = target.getAttribute('data-delete-id');
+    if (!snapshotId) {
+      return;
+    }
+    api('DELETE', '/api/v1/storage-quota/snapshots/' + encodeURIComponent(snapshotId)).then(function (response) {
+      setStatus(response.ok ? 'Snapshot deleted.' : (response.data.error || 'Delete failed.'), response.ok);
+      if (response.ok) {
+        loadSnapshots();
       }
     });
-  };
+  });
 
-  document.getElementById('btn-sqm-list').addEventListener('click', window.sqmLoadList);
-  document.getElementById('btn-sqm-latest').addEventListener('click', window.sqmLoadLatest);
-  document.getElementById('btn-sqm-types').addEventListener('click', window.sqmLoadTypes);
-  document.getElementById('btn-sqm-add').addEventListener('click', window.sqmShowAddForm);
+  document.getElementById('sqm-load-snapshots').addEventListener('click', loadSnapshots);
+  document.getElementById('sqm-load-stats').addEventListener('click', loadStats);
+  document.getElementById('sqm-load-types').addEventListener('click', loadTypes);
 
-  window.sqmLoadList();
+  loadTypes();
+  loadSnapshots();
 })();

@@ -1,7 +1,4 @@
-/* schedule.css — Schedule 4-Tab Redesign for Solace Hub
-   Laws: var(--hub-*) tokens ONLY in component rules. Token definitions in :root may contain hex values.
-   No CDN. No Bootstrap. No Tailwind. No jQuery. No hardcoded hex outside :root.
-*/
+/* schedule.css — Schedule Operations 4-tab redesign for Solace Hub */
 
 :root {
   --hub-bg: #1a1a2e;
@@ -12,6 +9,15 @@
   --hub-text-muted: #a8a8b3;
   --hub-success: #4caf50;
   --hub-warning: #ff9800;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 }
 
 body {
@@ -22,336 +28,246 @@ body {
 }
 
 .schedule-page {
-  padding: 1rem;
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
+  padding: var(--space-xl);
+}
+
+.roi-strip,
+.pending-counters,
+.approval-item__header,
+.approval-item__actions,
+.section-header,
+.history-item__header,
+.esign-item__header {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.roi-strip,
+.pending-counters {
+  flex-wrap: wrap;
+}
+
+.roi-card,
+.summary-card,
+.counter-card,
+.approval-item,
+.history-item,
+.esign-item,
+.empty-state {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius-lg);
+}
+
+.roi-strip {
+  margin-bottom: var(--space-lg);
+}
+
+.roi-card,
+.counter-card {
+  flex: 1 1 180px;
+  padding: var(--space-lg);
+}
+
+.roi-label,
+.muted-copy,
+.approval-item__meta,
+.history-item__meta,
+.history-item__evidence,
+.esign-item__status,
+.schedule-row__cron,
+.schedule-row__countdown,
+.empty-state {
+  color: var(--hub-text-muted);
+  font-size: 14px;
 }
 
 .schedule-tabs {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
   border-bottom: 1px solid var(--hub-border);
-  margin-bottom: 1.5rem;
+  padding-bottom: var(--space-sm);
 }
 
 .tab {
-  background: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
   border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
   color: var(--hub-text-muted);
   cursor: pointer;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.9rem;
-  border-bottom: 2px solid transparent;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  padding: var(--space-md) var(--space-lg);
 }
 
-.tab.active {
-  color: var(--hub-text);
-  border-bottom-color: var(--hub-accent);
-}
-
+.tab.active,
 .tab:hover {
   color: var(--hub-text);
 }
 
-.badge {
+.tab.active {
+  border-bottom-color: var(--hub-accent);
+}
+
+.badge,
+.status-chip,
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 12px;
+}
+
+.badge,
+.risk-badge--C,
+.btn-danger {
   background: var(--hub-accent);
   color: var(--hub-text);
-  font-size: 0.7rem;
-  border-radius: 10px;
-  padding: 0.1rem 0.4rem;
-  min-width: 18px;
-  text-align: center;
+}
+
+.status-chip,
+.risk-badge--B,
+.counter-card--warning {
+  background: var(--hub-warning);
+  color: var(--hub-bg);
 }
 
 .tab-panel {
-  display: none;
-}
-
-.tab-panel.active {
   display: block;
 }
 
 .section {
-  margin-bottom: 2rem;
+  margin-bottom: var(--space-2xl);
 }
 
-.section h3 {
-  color: var(--hub-text);
-  margin-bottom: 1rem;
-  font-size: 1rem;
+.section-header {
+  align-items: center;
+  justify-content: space-between;
 }
 
-/* Approval item */
-.approval-item {
-  background: var(--hub-surface);
-  border: 1px solid var(--hub-border);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+.summary-card,
+.approval-item,
+.history-item,
+.esign-item,
+.empty-state,
+.drawer {
+  padding: var(--space-lg);
 }
 
-.approval-item__countdown {
-  color: var(--hub-warning);
-  font-size: 0.85rem;
-  margin: 0.5rem 0;
-}
-
-.approval-item__actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-}
-
-/* Buttons */
-.btn-approve {
-  background: var(--hub-success);
-  color: var(--hub-text);
-  border: none;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-}
-
-.btn-reject {
-  background: var(--hub-accent);
-  color: var(--hub-text);
-  border: none;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-}
-
-.btn-secondary {
-  background: var(--hub-surface);
-  color: var(--hub-text);
-  border: 1px solid var(--hub-border);
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  margin-top: 1rem;
-}
-
-/* Filter bar */
-.filter-bar {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.filter-bar select {
-  background: var(--hub-surface);
-  color: var(--hub-text);
-  border: 1px solid var(--hub-border);
-  border-radius: 4px;
-  padding: 0.4rem;
-}
-
-/* Schedule rows */
 .schedule-row {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  background: var(--hub-surface);
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-sm);
   border: 1px solid var(--hub-border);
-  border-radius: 6px;
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
+  border-radius: var(--radius-md);
+  background: var(--hub-surface);
+  color: var(--hub-text);
   cursor: pointer;
+  text-align: left;
 }
 
-.schedule-row:hover {
-  border-color: var(--hub-accent);
+.schedule-row__identity,
+.schedule-row__meta,
+.approval-item,
+.history-item,
+.esign-item,
+.drawer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 
-.schedule-row__cron {
-  color: var(--hub-text-muted);
-  font-size: 0.85rem;
+.schedule-row__meta {
+  align-items: flex-end;
 }
 
-/* Drawer */
+.approval-item--rejected {
+  opacity: 0.7;
+}
+
+.filter-bar {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.filter-bar select,
+.drawer select,
+.drawer input {
+  width: 100%;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius-sm);
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  padding: var(--space-md);
+}
+
 .drawer {
   position: fixed;
   top: 0;
   right: 0;
-  width: 320px;
+  width: min(360px, 100%);
   height: 100vh;
   background: var(--hub-surface);
   border-left: 1px solid var(--hub-border);
-  padding: 1.5rem;
-  z-index: 100;
-}
-
-.drawer h3 {
-  color: var(--hub-text);
-  margin-bottom: 1.5rem;
-}
-
-.drawer select,
-.drawer input {
-  width: 100%;
-  background: var(--hub-bg);
-  color: var(--hub-text);
-  border: 1px solid var(--hub-border);
-  border-radius: 4px;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
   box-sizing: border-box;
 }
 
-/* eSign */
-.esign-item {
-  background: var(--hub-surface);
+.drawer-header {
+  margin-bottom: var(--space-md);
+}
+
+.btn-primary,
+.btn-secondary {
   border: 1px solid var(--hub-border);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.esign-item__status {
-  font-size: 0.8rem;
-  color: var(--hub-text-muted);
-}
-
-.roi-strip {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.roi-card,
-.calendar-day,
-.kanban-column,
-.timeline-item,
-.signoff-item {
-  background: var(--hub-surface);
-  border: 1px solid var(--hub-border);
-  border-radius: 8px;
-  padding: 0.75rem;
-}
-
-.roi-label,
-.empty-state,
-.calendar-pill,
-.schedule-table th,
-.schedule-table td {
-  font-size: 0.85rem;
-}
-
-.roi-card strong,
-.calendar-day h4,
-.kanban-column h4,
-.timeline-item strong {
-  font-size: 1rem;
-}
-
-.calendar-pills,
-.kanban-column,
-.signoff-sheet,
-.signoff-sheet__header {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.calendar-pills,
-.signoff-sheet {
-  flex-wrap: wrap;
-}
-
-.calendar-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 999px;
-  background: var(--hub-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-lg);
+  cursor: pointer;
   color: var(--hub-text);
 }
 
-.status-success {
-  border-color: var(--hub-success);
+.btn-primary {
+  background: var(--hub-success);
 }
 
-.status-cancelled,
-.status-failed {
-  border-color: var(--hub-accent);
-}
-
-.status-pending_approval,
-.status-cooldown {
-  border-color: var(--hub-warning);
-}
-
-.status-scheduled,
-.status-queued {
-  border-color: var(--hub-border);
-}
-
-#kanban-board {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.kanban-column {
-  flex-direction: column;
-}
-
-.kanban-card {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  background: var(--hub-bg);
-  border: 1px solid var(--hub-border);
-  border-radius: 8px;
-  padding: 0.5rem;
-}
-
-.timeline-item,
-.signoff-sheet__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.schedule-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.schedule-table th,
-.schedule-table td {
-  text-align: left;
-  padding: 0.5rem;
-  border-bottom: 1px solid var(--hub-border);
-}
-
-.signoff-sheet {
-  position: fixed;
-  left: 1rem;
-  right: 1rem;
-  bottom: 1rem;
-  flex-direction: column;
+.btn-secondary,
+.drawer-close {
   background: var(--hub-surface);
-  border: 1px solid var(--hub-border);
-  border-radius: 12px;
-  padding: 0.75rem;
-  box-shadow: 0 0 0 1px var(--hub-border);
 }
 
-@media (max-width: 375px) {
-  .roi-strip,
-  #kanban-board {
-    grid-template-columns: 1fr;
+.btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 720px) {
+  .schedule-page {
+    padding: var(--space-lg);
   }
 
-  .schedule-tabs {
-    overflow-x: auto;
+  .schedule-tabs,
+  .filter-bar,
+  .schedule-row,
+  .section-header,
+  .approval-item__header,
+  .approval-item__actions,
+  .history-item__header,
+  .esign-item__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .schedule-row__meta {
+    align-items: flex-start;
   }
 }

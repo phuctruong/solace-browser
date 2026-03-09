@@ -1,0 +1,49 @@
+{
+  "task_id": "061",
+  "task_name": "Value Dashboard: Browser Top-Rail Delight Engine",
+  "timestamp": "2026-03-09T17:18:12-04:00",
+  "repo_root": "/home/phuc/projects/solace-browser",
+  "outbox_dir": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task061/",
+  "northstar_metric": "Evidence by Default",
+  "files": {
+    "modified": [
+      "yinyang_server.py",
+      "web/dashboard.html",
+      "web/js/dashboard.js",
+      "web/css/dashboard.css",
+      "tests/test_value_dashboard.py"
+    ]
+  },
+  "red_gate": {
+    "command": "python -m pytest tests/test_value_dashboard.py -q",
+    "status": "failed",
+    "summary": "5 failed, 9 passed in 0.42s"
+  },
+  "green_gate": {
+    "focused_command": "python -m pytest tests/test_value_dashboard.py -q",
+    "focused_status": "passed",
+    "focused_summary": "14 passed in 0.20s",
+    "syntax_command": "python -m py_compile yinyang_server.py",
+    "syntax_status": "passed"
+  },
+  "oracle_sweep": {
+    "session_start_iso8601": true,
+    "cost_usd_decimal_string": true,
+    "reset_clears_counters": true,
+    "passive_rotation_8s": true,
+    "active_state_stats_priority": true,
+    "seven_facts_present": true,
+    "no_cdn": true,
+    "no_jquery": true,
+    "no_component_hex": true,
+    "no_interrupt_dashboard_ui": true
+  },
+  "hashes": {
+    "patch_summary_sha256": "57166b2830730d5ace90549fb33fd83239bce213a7f1c347838d54717479fcc3",
+    "green_output_sha256": "43bdc2f4d6f1151cd12628b4ac4c18f2aa21f8ed3e0f7a2de01268e608d7a04a"
+  },
+  "notes": [
+    "The workspace did not contain papers/ops/11-value-dashboard.md, so the implementation followed the task spec directly.",
+    "A broad instructions suite was intentionally not used as the regression gate for this scoped patch."
+  ]
+}

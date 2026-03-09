@@ -1,0 +1,37 @@
+{
+  "task_id": "20260309-task060",
+  "rung": 641,
+  "northstar_metric": ["Evidence by Default", "Safe Autonomy"],
+  "files_changed": [
+    "yinyang_server.py",
+    "web/schedule.html",
+    "web/js/schedule.js",
+    "web/css/schedule.css",
+    "tests/test_solace_hub.py",
+    "tests/test_yinyang_instructions.py"
+  ],
+  "red_gate": {
+    "command": "pytest -q tests/test_solace_hub.py tests/test_yinyang_instructions.py -k 'ScheduleOperations4Tab'",
+    "exit_code": 1,
+    "sha256": "327a25c4cf9a3f6ea7082b9293d9ff02632e411f91dba3c6b2c6e428b46d1827"
+  },
+  "green_gate": {
+    "command": "pytest -q tests/test_solace_hub.py tests/test_yinyang_instructions.py -k 'ScheduleOperations4Tab'",
+    "exit_code": 0,
+    "sha256": "4df175ae2694449415ff478573ed8061760374b4d5240f5df636b072527ef6cd"
+  },
+  "regression_suite": {
+    "command": "pytest -q tests/test_solace_hub.py tests/test_yinyang_instructions.py",
+    "result": "523 passed"
+  },
+  "artifacts": {
+    "patch_diff_sha256": "dac1dacdd3ad6f03325dc5f4371ba193f93c03559fa023e17e517229d1489781",
+    "patch_diff": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/PATCH_DIFF.md",
+    "red_gate": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/RED_GATE.md",
+    "green_gate": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/GREEN_GATE.md",
+    "oracle_sweep": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/ORACLE_SWEEP.md",
+    "tests_json": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/tests.json",
+    "plan_json": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/evidence/plan.json"
+  },
+  "timestamp": "2026-03-09"
+}

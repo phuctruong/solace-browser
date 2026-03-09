@@ -1,0 +1,42 @@
+{
+  "task_id": "20260309-task062",
+  "rung": 641,
+  "northstar_metrics": [
+    "USER_ACTIVATION",
+    "TIME_TO_VALUE"
+  ],
+  "files_changed": [
+    "yinyang_server.py",
+    "web/js/apps.js",
+    "web/css/apps.css",
+    "tests/test_app_onboarding.py"
+  ],
+  "red_gate": {
+    "command": "pytest -q tests/test_app_onboarding.py",
+    "exit_code": 1,
+    "artifact": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task062/RED_GATE.md",
+    "sha256": "2b66ee749600a0ef81dbab419e03600c567f8fe97f0181ecccd93df920bd97c1"
+  },
+  "green_gate": {
+    "command": "pytest -q tests/test_app_onboarding.py tests/test_app_store.py",
+    "exit_code": 0,
+    "artifact": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task062/GREEN_GATE.md",
+    "sha256": "8c6375a5ff44f6b33927412d0874ca55249613a5afd58813bd386cbf6006120e"
+  },
+  "syntax_gate": {
+    "command": "python -m py_compile yinyang_server.py",
+    "exit_code": 0
+  },
+  "artifacts": {
+    "patch_diff": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task062/PATCH_DIFF.md",
+    "patch_diff_sha256": "905d965fe063be61ef5e93d6c9bead28020418bb2c6637891060116348bbb9bb",
+    "oracle_sweep": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task062/ORACLE_SWEEP.md",
+    "oracle_sweep_sha256": "e33ad348fae40da0d6506cd8f2ef822b944311fe982e845c76ea7c6803ad5f5b",
+    "tests_json": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task062/tests.json",
+    "plan_json": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task062/plan.json"
+  },
+  "paper_reference": {
+    "path": "papers/stakeholders/11-first-time-app-onboarding.md",
+    "status": "missing_in_workspace"
+  }
+}

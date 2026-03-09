@@ -1,154 +1,192 @@
-"""Tests for Task 113 — Storage Quota Monitor."""
-import sys
+import hashlib
 import json
+import pathlib
+import sys
+from io import BytesIO
 
-sys.path.insert(0, "/home/phuc/projects/solace-browser")
+REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+
 import yinyang_server as ys
 
 
+VALID_TOKEN = "a" * 64
+
+
 class FakeHandler(ys.YinyangHandler):
-    def __init__(self):
-        self._responses = []
-        self._body = b""
-        self.headers = {"content-length": "0", "Authorization": "Bearer valid"}
-
-    def _read_json_body(self):
-        return json.loads(self._body) if self._body else {}
-
-    def _send_json(self, data, code=200):
-        self._responses.append((code, data))
-
-    def _check_auth(self):
-        return True
-
-    def log_message(self, *a):
-        pass
+    def __init__(self, method="GET", path="/", body=None, auth=True):
+        self.command = method
+        self.path = path
+        raw_body = json.dumps(body).encode("utf-8") if body is not None else b""
+        self.headers = {
+            "Content-Length": str(len(raw_body)),
+            "Authorization": f"Bearer {VALID_TOKEN}" if auth else "",
+        }
+        self.rfile = BytesIO(raw_body)
+        self.wfile = BytesIO()
+        self.server = type("Server", (), {"session_token_sha256": VALID_TOKEN})()
+        self._response_code = None
+        self._response_body = None
 
     def send_response(self, code):
-        self._responses.append((code, {}))
+        self._response_code = code
+
+    def send_header(self, *_args):
+        pass
 
     def end_headers(self):
         pass
 
+    def _send_json(self, data, status=200):
+        self._response_code = status
+        self._response_body = data
 
-def make_handler(body=None):
-    h = FakeHandler()
-    if body:
-        h._body = json.dumps(body).encode()
-    return h
+    def log_message(self, *_args):
+        pass
 
 
 def setup_function():
-    with ys._QUOTA_LOCK:
-        ys._QUOTA_MEASUREMENTS.clear()
+    with ys._SQM_STORAGE_LOCK:
+        ys._SQM_STORAGE_SNAPSHOTS.clear()
 
 
-def test_measurement_create():
-    h = make_handler({"storage_type": "localstorage", "used_bytes": 1024,
-                      "quota_bytes": 10240, "site_url": "https://example.com"})
-    h._handle_quota_create()
-    code, data = h._responses[0]
-    assert code == 201
-    assert data["measurement"]["measurement_id"].startswith("sqm_")
+def test_snapshot_create():
+    h = FakeHandler(body={
+        "storage_type": "localStorage",
+        "url": "https://ex.com",
+        "used_bytes": 1024,
+        "quota_bytes": 10000000,
+    })
+    h._handle_storage_quota_create({
+        "storage_type": "localStorage",
+        "url": "https://ex.com",
+        "used_bytes": 1024,
+        "quota_bytes": 10000000,
+    })
+    assert h._response_code == 201
+    assert h._response_body["snapshot_id"].startswith("sqm_")
 
 
-def test_measurement_pct_used():
-    h = make_handler({"storage_type": "indexeddb", "used_bytes": 5000,
-                      "quota_bytes": 10000, "site_url": "https://example.com"})
-    h._handle_quota_create()
-    code, data = h._responses[0]
-    assert code == 201
-    pct = data["measurement"]["pct_used"]
-    # 5000/10000 * 100 = 50.00
-    assert pct == "50.00"
-    # Must be a string (Decimal string)
-    assert isinstance(pct, str)
-
-
-def test_measurement_invalid_type():
-    h = make_handler({"storage_type": "unknowntype", "used_bytes": 100,
-                      "quota_bytes": 1000, "site_url": "https://x.com"})
-    h._handle_quota_create()
-    code, data = h._responses[0]
-    assert code == 400
-    assert "storage_type" in data["error"]
-
-
-def test_measurement_negative_used():
-    h = make_handler({"storage_type": "cache", "used_bytes": -1,
-                      "quota_bytes": 1000, "site_url": "https://x.com"})
-    h._handle_quota_create()
-    code, data = h._responses[0]
-    assert code == 400
-    assert "used_bytes" in data["error"]
-
-
-def test_measurement_zero_quota():
-    h = make_handler({"storage_type": "cookies", "used_bytes": 0,
-                      "quota_bytes": 0, "site_url": "https://x.com"})
-    h._handle_quota_create()
-    code, data = h._responses[0]
-    assert code == 400
-    assert "quota_bytes" in data["error"]
-
-
-def test_measurement_list():
-    h = make_handler({"storage_type": "sessionstorage", "used_bytes": 200,
-                      "quota_bytes": 2000, "site_url": "https://list.com"})
-    h._handle_quota_create()
-    h2 = FakeHandler()
-    h2._handle_quota_list()
-    code, data = h2._responses[0]
-    assert code == 200
-    assert isinstance(data["measurements"], list)
-    assert data["total"] >= 1
-
-
-def test_measurement_latest():
-    # Create two measurements of different types
-    h1 = make_handler({"storage_type": "localstorage", "used_bytes": 100,
-                       "quota_bytes": 1000, "site_url": "https://a.com"})
-    h1._handle_quota_create()
-    h2 = make_handler({"storage_type": "indexeddb", "used_bytes": 500,
-                       "quota_bytes": 5000, "site_url": "https://b.com"})
-    h2._handle_quota_create()
-    h3 = FakeHandler()
-    h3._handle_quota_latest()
-    code, data = h3._responses[0]
-    assert code == 200
-    assert "latest" in data
-    assert "localstorage" in data["latest"]
-    assert "indexeddb" in data["latest"]
-
-
-def test_measurement_delete():
-    h = make_handler({"storage_type": "serviceworker", "used_bytes": 300,
-                      "quota_bytes": 3000, "site_url": "https://del.com"})
-    h._handle_quota_create()
-    mid = h._responses[0][1]["measurement"]["measurement_id"]
-    h2 = FakeHandler()
-    h2._handle_quota_delete(mid)
-    code, data = h2._responses[0]
-    assert code == 200
-    assert data["measurement_id"] == mid
-    with ys._QUOTA_LOCK:
-        ids = [m["measurement_id"] for m in ys._QUOTA_MEASUREMENTS]
-    assert mid not in ids
-
-
-def test_storage_types_list():
+def test_snapshot_url_hashed():
+    url = "https://example.com/app"
     h = FakeHandler()
-    h._handle_quota_storage_types()
-    code, data = h._responses[0]
-    assert code == 200
-    types = data["storage_types"]
-    assert len(types) == 6
-    assert "localstorage" in types
-    assert "indexeddb" in types
-    assert "serviceworker" in types
+    h._handle_storage_quota_create({
+        "storage_type": "indexedDB",
+        "url": url,
+        "used_bytes": 500,
+        "quota_bytes": 2000,
+    })
+    assert h._response_body["url_hash"] == hashlib.sha256(url.encode("utf-8")).hexdigest()
+    assert "url" not in h._response_body
 
 
-def test_no_port_9222_in_quota():
-    with open("/home/phuc/projects/solace-browser/yinyang_server.py") as f:
-        content = f.read()
-    assert "922" + "2" not in content, "Port 9222 found in yinyang_server.py — BANNED"
+def test_snapshot_invalid_type():
+    h = FakeHandler()
+    h._handle_storage_quota_create({
+        "storage_type": "bad-type",
+        "url": "https://ex.com",
+        "used_bytes": 1,
+        "quota_bytes": 10,
+    })
+    assert h._response_code == 400
+    assert "storage_type" in h._response_body["error"]
+
+
+def test_snapshot_negative_used():
+    h = FakeHandler()
+    h._handle_storage_quota_create({
+        "storage_type": "cacheAPI",
+        "url": "https://ex.com",
+        "used_bytes": -1,
+        "quota_bytes": 10,
+    })
+    assert h._response_code == 400
+    assert "used_bytes" in h._response_body["error"]
+
+
+def test_snapshot_zero_quota():
+    h = FakeHandler()
+    h._handle_storage_quota_create({
+        "storage_type": "cookies",
+        "url": "https://ex.com",
+        "used_bytes": 1,
+        "quota_bytes": 0,
+    })
+    assert h._response_code == 400
+    assert "quota_bytes" in h._response_body["error"]
+
+
+def test_snapshot_usage_pct_computed():
+    h = FakeHandler()
+    h._handle_storage_quota_create({
+        "storage_type": "serviceWorker",
+        "url": "https://ex.com",
+        "used_bytes": 125,
+        "quota_bytes": 1000,
+    })
+    assert h._response_code == 201
+    assert h._response_body["usage_pct"] == "12.50"
+
+
+def test_snapshot_list_route():
+    creator = FakeHandler(method="POST", path="/api/v1/storage-quota/snapshots", body={
+        "storage_type": "other",
+        "url": "https://example.com",
+        "used_bytes": 25,
+        "quota_bytes": 100,
+    })
+    creator.do_POST()
+    reader = FakeHandler(method="GET", path="/api/v1/storage-quota/snapshots")
+    reader.do_GET()
+    assert reader._response_code == 200
+    assert reader._response_body["total"] == 1
+    assert reader._response_body["snapshots"][0]["snapshot_id"].startswith("sqm_")
+
+
+def test_snapshot_delete_route():
+    creator = FakeHandler()
+    creator._handle_storage_quota_create({
+        "storage_type": "sessionStorage",
+        "url": "https://delete.example",
+        "used_bytes": 10,
+        "quota_bytes": 100,
+    })
+    snapshot_id = creator._response_body["snapshot_id"]
+    deleter = FakeHandler(method="DELETE", path=f"/api/v1/storage-quota/snapshots/{snapshot_id}")
+    deleter.do_DELETE()
+    assert deleter._response_code == 200
+    assert deleter._response_body["snapshot_id"] == snapshot_id
+
+
+def test_storage_stats():
+    first = FakeHandler()
+    first._handle_storage_quota_create({
+        "storage_type": "localStorage",
+        "url": "https://one.example",
+        "used_bytes": 25,
+        "quota_bytes": 100,
+    })
+    second = FakeHandler()
+    second._handle_storage_quota_create({
+        "storage_type": "indexedDB",
+        "url": "https://two.example",
+        "used_bytes": 50,
+        "quota_bytes": 100,
+    })
+    stats = FakeHandler(method="GET", path="/api/v1/storage-quota/stats")
+    stats.do_GET()
+    assert stats._response_code == 200
+    assert stats._response_body["avg_usage_pct"] == "37.50"
+    assert stats._response_body["max_usage_pct"] == "50.00"
+
+
+def test_banned_debug_port_absent_in_storage_quota_files():
+    banned = "922" + "2"
+    for rel_path in [
+        "yinyang_server.py",
+        "web/storage-quota-monitor.html",
+        "web/css/storage-quota-monitor.css",
+        "web/js/storage-quota-monitor.js",
+    ]:
+        content = (REPO_ROOT / rel_path).read_text(encoding="utf-8")
+        assert banned not in content

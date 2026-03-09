@@ -1,0 +1,99 @@
+:root {
+  --hub-bg: #020617;
+  --hub-surface: #111827;
+  --hub-surface-alt: #1e293b;
+  --hub-border: #334155;
+  --hub-text: #e2e8f0;
+  --hub-muted: #94a3b8;
+  --hub-primary: #a78bfa;
+  --hub-danger: #ef4444;
+  --hub-success: #22c55e;
+}
+
+body {
+  margin: 0;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+}
+
+.ppe-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.ppe-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.ppe-header p,
+.ppe-status {
+  color: var(--hub-muted);
+}
+
+.ppe-actions,
+.ppe-form,
+.ppe-results {
+  display: grid;
+  gap: 12px;
+}
+
+.ppe-actions,
+.ppe-form {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.ppe-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.ppe-check {
+  align-items: center;
+}
+
+button,
+input,
+select {
+  border-radius: 10px;
+  border: 1px solid var(--hub-border);
+  background: var(--hub-surface-alt);
+  color: var(--hub-text);
+  padding: 10px 12px;
+}
+
+button {
+  cursor: pointer;
+  background: var(--hub-primary);
+  color: var(--hub-bg);
+  font-weight: 700;
+}
+
+.ppe-item,
+.ppe-code {
+  background: var(--hub-surface-alt);
+  border: 1px solid var(--hub-border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.ppe-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--hub-muted);
+}
+
+.ppe-danger {
+  background: var(--hub-danger);
+  color: var(--hub-text);
+}
+
+.ppe-success {
+  color: var(--hub-success);
+}

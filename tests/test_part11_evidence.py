@@ -174,3 +174,26 @@ def test_rung_274177_in_every_bundle(part11_env):
     stored_bundles = ys._load_part11_evidence_bundles()
     assert stored_bundles
     assert all(bundle["rung_achieved"] == RUNG_ACHIEVED for bundle in stored_bundles)
+
+
+def test_record_evidence_uses_active_evidence_root_for_part11_storage(tmp_path, monkeypatch):
+    evidence_path = tmp_path / "evidence.jsonl"
+    monkeypatch.setattr(ys, "EVIDENCE_PATH", evidence_path)
+    monkeypatch.setattr(ys, "PART11_EVIDENCE_DIR", ys.DEFAULT_PART11_EVIDENCE_DIR)
+    monkeypatch.setattr(ys, "PART11_EVIDENCE_PATH", ys.DEFAULT_PART11_EVIDENCE_PATH)
+    monkeypatch.setattr(ys, "PART11_CHAIN_LOCK_PATH", ys.DEFAULT_PART11_CHAIN_LOCK_PATH)
+
+    ys.record_evidence(
+        "session_check",
+        {
+            "app": "gmail",
+            "status": "unknown",
+            "oauth3_token_id": "token-1",
+            "user_id": "user-1",
+        },
+    )
+
+    part11_dir = evidence_path.parent / "evidence"
+    assert evidence_path.exists() is True
+    assert (part11_dir / "evidence.jsonl").exists() is True
+    assert (part11_dir / "chain.lock").exists() is True

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Vitals Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/web-vitals-tracker.css">
+</head>
+<body>
+<main class="wvm-shell">
+  <header class="wvm-header">
+    <h1>Web Vitals Tracker</h1>
+    <p>Capture Web Vitals measurements with page hashes instead of raw URLs.</p>
+  </header>
+  <section class="wvm-card">
+    <div class="wvm-actions">
+      <button id="wvm-load-measurements" type="button">Measurements</button>
+      <button id="wvm-load-stats" type="button">Stats</button>
+      <button id="wvm-load-metadata" type="button">Metric Types</button>
+    </div>
+    <form id="wvm-form" class="wvm-form">
+      <label>Metric Type
+        <select id="wvm-metric-type"></select>
+      </label>
+      <label>Rating
+        <select id="wvm-rating">
+          <option value="good">good</option>
+          <option value="needs_improvement">needs_improvement</option>
+          <option value="poor">poor</option>
+        </select>
+      </label>
+      <label>Navigation Type
+        <select id="wvm-navigation-type">
+          <option value="navigate">navigate</option>
+          <option value="reload">reload</option>
+          <option value="back_forward">back_forward</option>
+          <option value="prerender">prerender</option>
+        </select>
+      </label>
+      <label>Page URL
+        <input id="wvm-url" type="url" placeholder="https://example.com/page">
+      </label>
+      <label>Value
+        <input id="wvm-value-ms" type="number" min="0" step="0.01" value="0">
+      </label>
+      <button type="submit">Record Measurement</button>
+    </form>
+  </section>
+  <section class="wvm-card">
+    <div id="wvm-status" class="wvm-status" aria-live="polite"></div>
+    <div id="wvm-results" class="wvm-results" aria-live="polite"></div>
+  </section>
+</main>
+<script src="/web/js/web-vitals-tracker.js"></script>
+</body>
+</html>

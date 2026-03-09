@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resource Timing Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/resource-timing-tracker.css">
+</head>
+<body>
+<main class="rte-shell">
+  <header class="rte-header">
+    <h1>Resource Timing Tracker</h1>
+    <p>Track resource timing entries while hashing both page and resource URLs before storage.</p>
+  </header>
+  <section class="rte-card">
+    <div class="rte-actions">
+      <button id="rte-load-entries" type="button">Entries</button>
+      <button id="rte-load-stats" type="button">Stats</button>
+      <button id="rte-load-types" type="button">Resource Types</button>
+    </div>
+    <form id="rte-form" class="rte-form">
+      <label>Resource Type
+        <select id="rte-resource-type"></select>
+      </label>
+      <label>Resource URL
+        <input id="rte-url" type="url" placeholder="https://cdn.example.com/app.js">
+      </label>
+      <label>Page URL
+        <input id="rte-page-url" type="url" placeholder="https://example.com/dashboard">
+      </label>
+      <label>Duration
+        <input id="rte-duration-ms" type="number" min="0" step="0.01" value="0">
+      </label>
+      <label>Transfer Size Bytes
+        <input id="rte-transfer-size" type="number" min="0" value="0">
+      </label>
+      <label class="rte-check"><input id="rte-cache-hit" type="checkbox"> Cache Hit</label>
+      <button type="submit">Record Entry</button>
+    </form>
+  </section>
+  <section class="rte-card">
+    <div id="rte-status" class="rte-status" aria-live="polite"></div>
+    <div id="rte-results" class="rte-results" aria-live="polite"></div>
+  </section>
+</main>
+<script src="/web/js/resource-timing-tracker.js"></script>
+</body>
+</html>

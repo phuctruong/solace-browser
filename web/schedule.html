@@ -12,39 +12,41 @@
     <div class="roi-card"><span class="roi-label">Time Saved</span><strong id="roi-hours-saved">0.00h</strong></div>
     <div class="roi-card"><span class="roi-label">Value</span><strong id="roi-value-usd">$0.00</strong></div>
   </section>
-  <!-- 4-tab layout -->
-  <nav class="schedule-tabs">
-    <button class="tab active" data-tab="upcoming">Calendar</button>
-    <button class="tab" data-tab="approval">
-      Kanban
+
+  <nav class="schedule-tabs" aria-label="Schedule operations tabs">
+    <button class="tab active" data-tab="upcoming" type="button">Upcoming</button>
+    <button class="tab" data-tab="approval" type="button">
+      Approval Queue
       <span class="badge" id="approval-badge" hidden>0</span>
     </button>
-    <button class="tab" data-tab="history">Timeline</button>
-    <button class="tab" data-tab="esign">List</button>
+    <button class="tab" data-tab="history" type="button">History</button>
+    <button class="tab" data-tab="esign" type="button">eSign</button>
   </nav>
 
-  <!-- Tab 1: Calendar -->
   <div id="tab-upcoming" class="tab-panel active">
     <section class="section">
-      <h3>Agent Activity Calendar</h3>
-      <div id="calendar-view"></div>
-      <div id="schedules-list" hidden></div>
-      <button class="btn-secondary" id="add-schedule-btn">+ Add Schedule</button>
+      <div class="section-header">
+        <h3>App Schedules</h3>
+        <button class="btn-secondary" id="add-schedule-btn" type="button">+ Add Schedule</button>
+      </div>
+      <div id="schedules-list"></div>
     </section>
+
     <section class="section">
-      <h3>Upcoming Runs</h3>
+      <h3>Keep-Alive Sessions</h3>
       <div id="keepalive-summary"></div>
-      <div id="pending-counters"></div>
+    </section>
+
+    <section class="section pending-counters-section">
+      <h3>Needs Attention</h3>
+      <div class="pending-counters" id="pending-counters"></div>
     </section>
   </div>
 
-  <!-- Tab 2: Kanban -->
   <div id="tab-approval" class="tab-panel" hidden>
-    <div id="kanban-board"></div>
     <div id="approval-list"></div>
   </div>
 
-  <!-- Tab 3: Timeline -->
   <div id="tab-history" class="tab-panel" hidden>
     <div class="filter-bar">
       <select id="history-status-filter">
@@ -52,43 +54,43 @@
         <option value="success">Success</option>
         <option value="cancelled">Cancelled</option>
       </select>
-      <select id="history-app-filter"><option value="">All Apps</option></select>
+      <select id="history-app-filter">
+        <option value="">All Apps</option>
+      </select>
     </div>
-    <div id="timeline-view"></div>
     <div id="history-list"></div>
     <div id="roi-display"></div>
   </div>
 
-  <!-- Tab 4: List -->
   <div id="tab-esign" class="tab-panel" hidden>
-    <div id="list-view"></div>
-    <div id="esign-pending"></div>
-    <div id="esign-history"></div>
+    <section class="section">
+      <h3>Pending Signatures</h3>
+      <div id="esign-pending"></div>
+    </section>
+    <section class="section">
+      <h3>Signature History</h3>
+      <div id="esign-history"></div>
+    </section>
+    <button class="btn-secondary" id="request-signature-btn" type="button">Request Signature</button>
   </div>
 
-  <!-- Schedule Editor Drawer -->
-  <div id="schedule-drawer" class="drawer" hidden>
-    <h3>Schedule Editor</h3>
+  <aside id="schedule-drawer" class="drawer" hidden>
+    <div class="section-header drawer-header">
+      <h3>Schedule Editor</h3>
+      <button class="btn-secondary drawer-close" id="cancel-schedule-btn" type="button">Cancel</button>
+    </div>
+    <p class="muted-copy" id="drawer-app-label">Choose an app to schedule.</p>
     <select id="cron-preset">
       <option value="daily_7am">Every day at 7:00 AM</option>
       <option value="weekdays_9am">Weekdays at 9:00 AM</option>
       <option value="hourly">Every hour</option>
       <option value="every_2h">Every 2 hours</option>
-      <option value="weekly_monday">Every Monday at 9:00 AM</option>
+      <option value="weekly_monday">Every Monday</option>
       <option value="custom">Custom (advanced)</option>
     </select>
     <input id="cron-raw" type="text" placeholder="0 7 * * *" hidden>
-    <button id="save-schedule-btn">Save</button>
-    <button id="cancel-schedule-btn">Cancel</button>
-  </div>
-
-  <section id="signoff-sheet" class="signoff-sheet" hidden>
-    <div class="signoff-sheet__header">
-      <strong>I paused and waited for you</strong>
-      <button class="btn-secondary" id="bulk-approve-a">Approve Class A</button>
-    </div>
-    <div id="signoff-list"></div>
-  </section>
+    <button id="save-schedule-btn" class="btn-primary" type="button">Save</button>
+  </aside>
 </div>
 <script src="/web/js/schedule.js"></script>
 </body>

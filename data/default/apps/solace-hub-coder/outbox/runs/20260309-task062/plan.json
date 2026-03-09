@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "skill_version": "prime-coder-2.0.2",
+  "profile": "strict",
+  "stop_reason": "PASS",
+  "last_known_state": "FINAL_SEAL",
+  "loop_budgets": {
+    "max_iterations": 6,
+    "iterations_used": 2,
+    "max_tool_calls": 80,
+    "tool_calls_used": 18
+  },
+  "localization_summary": {
+    "files_read": [
+      "papers/stakeholders/11-first-time-app-onboarding.md",
+      "tests/test_app_onboarding.py",
+      "web/apps.html",
+      "web/js/apps.js",
+      "web/css/apps.css",
+      "yinyang_server.py"
+    ],
+    "witness_lines_used": 0
+  },
+  "verification_rung_target": 641,
+  "verification_rung": 641,
+  "seed_agreement": true,
+  "null_checks_performed": true,
+  "forecast_summary": "Tighten onboarding acceptance tests, then add required-field validation, encrypted config persistence, and class-driven state rendering.",
+  "env_snapshot_pointer": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task062/tests.json",
+  "evidence_manifest_pointer": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task062/EVIDENCE.json"
+}

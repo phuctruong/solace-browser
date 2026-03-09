@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Worker Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/service-worker-tracker.css">
+</head>
+<body>
+<main class="swr-shell">
+  <header class="swr-header">
+    <h1>Service Worker Tracker</h1>
+    <p>Track registration lifecycle events with hashed scope and script URLs.</p>
+  </header>
+
+  <section class="swr-card">
+    <h2>Record Registration</h2>
+    <form id="swr-form" class="swr-form">
+      <select id="swr-event-type" class="swr-input" aria-label="Event type"></select>
+      <select id="swr-state" class="swr-input" aria-label="State"></select>
+      <input id="swr-scope-url" class="swr-input" type="url" placeholder="Scope URL" aria-label="Scope URL">
+      <input id="swr-script-url" class="swr-input" type="url" placeholder="Script URL" aria-label="Script URL">
+      <label class="swr-check"><input id="swr-https" type="checkbox" checked> HTTPS</label>
+      <button class="swr-btn" type="submit">Record</button>
+    </form>
+  </section>
+
+  <section class="swr-card">
+    <h2>Stats</h2>
+    <div id="swr-stats" class="swr-stats"></div>
+  </section>
+
+  <section class="swr-card">
+    <h2>Registrations</h2>
+    <div id="swr-registrations" class="swr-list"></div>
+  </section>
+
+  <p id="swr-status" class="swr-status" aria-live="polite"></p>
+</main>
+<script src="/web/js/service-worker-tracker.js"></script>
+</body>
+</html>

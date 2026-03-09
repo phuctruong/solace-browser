@@ -1,5 +1,6 @@
 """tests/test_app_onboarding.py — App Onboarding 4-State Lifecycle acceptance gate."""
 import json
+import re
 import sys
 import threading
 import time
@@ -40,6 +41,7 @@ def onboard_server(tmp_path, monkeypatch):
     for attr in ["EVIDENCE_PATH", "PORT_LOCK_PATH", "SETTINGS_PATH"]:
         monkeypatch.setattr(ys, attr, tmp_path / f"{attr.lower()}.json", raising=False)
     httpd = ys.build_server(0, str(tmp_path), session_token_sha256=VALID_TOKEN)
+    httpd.apps = ["gmail", "slack-triage"]
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)
     thread.start()
     base = f"http://localhost:{httpd.server_port}"
@@ -61,6 +63,9 @@ def test_lifecycle_returns_state_for_all_apps(onboard_server):
         assert "app_id" in app
         assert "state" in app
         assert app["state"] in ("installed", "setup", "activated", "running")
+        assert "config_required" in app
+        assert isinstance(app["config_required"], list)
+        assert "config_complete" in app
 
 
 def test_activate_requires_auth(onboard_server):
@@ -77,7 +82,7 @@ def test_activate_requires_auth(onboard_server):
         assert e.code == 401
 
 
-def test_activate_returns_activated_state(onboard_server, tmp_path, monkeypatch):
+def test_activate_requires_all_required_fields(onboard_server, tmp_path, monkeypatch):
     monkeypatch.setattr(
         "pathlib.Path.home", lambda: tmp_path, raising=False
     )
@@ -87,9 +92,54 @@ def test_activate_returns_activated_state(onboard_server, tmp_path, monkeypatch)
         method="POST",
         payload={"config": {}},
     )
+    assert status == 400
+    assert data.get("error") == "missing required config fields"
+    assert data.get("missing_fields") == ["oauth_token"]
+
+
+def test_activate_returns_activated_state(onboard_server, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "pathlib.Path.home", lambda: tmp_path, raising=False
+    )
+    status, data = _req(
+        onboard_server,
+        "/api/v1/apps/gmail/activate",
+        method="POST",
+        payload={"config": {"oauth_token": "gmail-oauth-token"}},
+    )
     assert status == 200
     assert data.get("activated") is True
+    assert data.get("app_id") == "gmail"
     assert data.get("state") == "activated"
+    assert data.get("local_storage") == {
+        "key": "app:gmail:state",
+        "value": "activated",
+    }
+
+
+def test_activate_stores_config_encrypted(onboard_server, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "pathlib.Path.home", lambda: tmp_path, raising=False
+    )
+    secret = "gmail-oauth-token"
+    status, _ = _req(
+        onboard_server,
+        "/api/v1/apps/gmail/activate",
+        method="POST",
+        payload={"config": {"oauth_token": secret}},
+    )
+    assert status == 200
+
+    config_path = tmp_path / ".solace" / "app-configs" / "gmail.json"
+    stored = config_path.read_text()
+    assert secret not in stored
+    assert "oauth_token" not in stored
+
+    envelope = json.loads(stored)
+    assert envelope["cipher"] == "AES-256-GCM"
+    assert envelope["app_id"] == "gmail"
+    assert "nonce_b64" in envelope
+    assert "ciphertext_b64" in envelope
 
 
 def test_deactivate_resets_to_installed(onboard_server, tmp_path, monkeypatch):
@@ -101,7 +151,7 @@ def test_deactivate_resets_to_installed(onboard_server, tmp_path, monkeypatch):
         onboard_server,
         "/api/v1/apps/gmail-test/activate",
         method="POST",
-        payload={"config": {}},
+        payload={"config": {"oauth_token": "token"}},
     )
     # Then deactivate
     status, data = _req(
@@ -115,14 +165,26 @@ def test_deactivate_resets_to_installed(onboard_server, tmp_path, monkeypatch):
 def test_setup_requirements_has_config_fields(onboard_server):
     status, data = _req(onboard_server, "/api/v1/apps/gmail/setup-requirements")
     assert status == 200
-    assert "app_id" in data
+    assert data["app_id"] == "gmail"
     assert "fields" in data
     assert isinstance(data["fields"], list)
+    assert data["fields"] == [
+        {
+            "name": "oauth_token",
+            "type": "oauth",
+            "required": True,
+            "description": "Gmail OAuth token",
+            "placeholder": "Paste Gmail OAuth token",
+        }
+    ]
+    assert data["vault_key"] == "oauth3:gmail"
 
 
 def test_apps_css_no_hardcoded_hex():
     css = (PROJECT_ROOT / "web" / "css" / "apps.css").read_text()
     assert "var(--hub-" in css
+    state_blocks = "\n".join(line for line in css.splitlines() if ".app-state--" in line or "@keyframes" in line or "box-shadow" in line)
+    assert re.search(r"#[0-9a-fA-F]{3,6}", state_blocks) is None
 
 
 def test_apps_html_no_cdn():
@@ -135,12 +197,15 @@ def test_state_classes_are_4_valid_values():
     js = (PROJECT_ROOT / "web" / "js" / "apps.js").read_text()
     for state in ["installed", "setup", "activated", "running"]:
         assert f"app-state--{state}" in js
+    assert "onclick=" not in js
+    assert ".style." not in js
 
 
 def test_setup_banner_shows_when_apps_not_activated():
     html = (PROJECT_ROOT / "web" / "apps.html").read_text()
     assert "setup-banner" in html
     assert "setup-count" in html
+    assert "setup-all-btn" in html
 
 
 def test_lifecycle_requires_auth(onboard_server):

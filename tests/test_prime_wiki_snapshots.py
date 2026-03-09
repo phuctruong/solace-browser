@@ -1,10 +1,10 @@
 """Prime Wiki snapshot tests for Yinyang Server."""
 
 import base64
-import gzip
 import hashlib
 import json
 import pathlib
+import subprocess
 import sys
 import threading
 import time
@@ -14,7 +14,26 @@ import urllib.request
 import pytest
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
+PZWEB_BIN = pathlib.Path("/home/phuc/projects/pzip/native/pzip_web_cpp/build/pzweb")
+PZLOG_BIN = pathlib.Path("/home/phuc/projects/pzip/native/pzip_logs_cpp/build/pzlog")
 sys.path.insert(0, str(REPO_ROOT))
+
+
+def _pzip_decompress_content(content_pzip_b64: str, codec: str) -> str:
+    if codec == "pzweb":
+        binary_path = PZWEB_BIN
+    else:
+        assert codec == "pzlog"
+        binary_path = PZLOG_BIN
+    result = subprocess.run(
+        [str(binary_path), "decompress", "-"],
+        input=base64.b64decode(content_pzip_b64),
+        capture_output=True,
+        check=False,
+        timeout=5,
+    )
+    assert result.returncode == 0, result.stderr.decode()
+    return result.stdout.decode()
 
 
 @pytest.fixture
@@ -100,21 +119,25 @@ def test_snapshot_compresses_html(prime_wiki_server):
     )
 
     assert status == 201
+    assert created["rtc_verified"] is True
     assert created["compression_ratio"] > 1
+    assert created["codec"] == "pzweb"
 
     detail_status, detail = _request_json(
         prime_wiki_server,
         f"/api/v1/prime-wiki/snapshot/{created['snapshot_id']}",
     )
     assert detail_status == 200
-    assert "content_gzip_b64" not in detail
+    assert "content_pzip_b64" not in detail
 
     content_status, content = _request_json(
         prime_wiki_server,
         f"/api/v1/prime-wiki/snapshot/{created['snapshot_id']}/content",
     )
     assert content_status == 200
-    restored = gzip.decompress(base64.b64decode(content["content_gzip_b64"])).decode()
+    assert content["rtc_verified"] is True
+    assert content["codec"] == "pzweb"
+    restored = _pzip_decompress_content(content["content_pzip_b64"], content["codec"])
     assert restored == html
 
 
@@ -137,6 +160,35 @@ def test_snapshot_sha256_matches_uncompressed(prime_wiki_server):
     )
     assert content_status == 200
     assert content["sha256"] == expected_sha256
+
+
+def test_snapshot_allows_missing_content_html(prime_wiki_server):
+    payload = {
+        "url": "https://docs.example.com/empty",
+        "snapshot_type": "periodic",
+        "app_id": "docs",
+        "action_id": "action-empty",
+    }
+
+    status, created = _request_json(
+        prime_wiki_server,
+        "/api/v1/prime-wiki/snapshot",
+        method="POST",
+        payload=payload,
+    )
+
+    assert status == 201
+    assert created["sha256"] == hashlib.sha256(b"").hexdigest()
+    assert created["rtc_verified"] is True
+    assert created["codec"] == "pzlog"
+
+    content_status, content = _request_json(
+        prime_wiki_server,
+        f"/api/v1/prime-wiki/snapshot/{created['snapshot_id']}/content",
+    )
+
+    assert content_status == 200
+    assert _pzip_decompress_content(content["content_pzip_b64"], content["codec"]) == ""
 
 
 def test_key_elements_extract_title_and_headings():
@@ -274,9 +326,8 @@ def test_local_storage_structure_correct(prime_wiki_server):
     )
 
     assert status == 201
-    snapshot_dir = prime_wiki_server["prime_wiki_root"] / created["url_hash"][:16]
+    snapshot_dir = prime_wiki_server["prime_wiki_root"] / created["url_hash"]
     files = list(snapshot_dir.glob("before_action_*.json"))
 
     assert snapshot_dir.is_dir()
     assert len(files) == 1
-

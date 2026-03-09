@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Push Notification Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/push-notification-tracker.css">
+</head>
+<body>
+<main class="pnt-shell">
+  <header class="pnt-header">
+    <h1>Push Notification Tracker</h1>
+    <p>Audit push permissions and delivery events with hashed origins and endpoints.</p>
+  </header>
+
+  <section class="pnt-card">
+    <h2>Record Event</h2>
+    <form id="pnt-form" class="pnt-form">
+      <select id="pnt-event-type" class="pnt-input" aria-label="Event type"></select>
+      <input id="pnt-origin" class="pnt-input" type="url" placeholder="Origin URL" aria-label="Origin URL">
+      <input id="pnt-endpoint" class="pnt-input" type="text" placeholder="Push endpoint (optional)" aria-label="Push endpoint">
+      <label class="pnt-check"><input id="pnt-https" type="checkbox" checked> HTTPS</label>
+      <button class="pnt-btn" type="submit">Record</button>
+    </form>
+  </section>
+
+  <section class="pnt-card">
+    <h2>Stats</h2>
+    <div id="pnt-stats" class="pnt-stats"></div>
+  </section>
+
+  <section class="pnt-card">
+    <h2>Events</h2>
+    <div id="pnt-events" class="pnt-list"></div>
+  </section>
+
+  <p id="pnt-status" class="pnt-status" aria-live="polite"></p>
+</main>
+<script src="/web/js/push-notification-tracker.js"></script>
+</body>
+</html>

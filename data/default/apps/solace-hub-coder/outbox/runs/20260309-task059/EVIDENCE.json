@@ -1,0 +1,33 @@
+{
+  "task_id": "20260309-task059",
+  "northstar_alignment": [
+    "Local-First",
+    "Evidence by Default"
+  ],
+  "rung_target": 641,
+  "status": "PASS",
+  "files_changed": [
+    "yinyang_server.py",
+    "tests/test_community_recipes.py",
+    "web/js/recipes.js"
+  ],
+  "tests": {
+    "command": "python -m pytest tests/test_community_recipes.py tests/test_recipe_detail.py tests/test_recipe_store.py -q",
+    "exit_code": 0,
+    "passed_summary": "45 passed"
+  },
+  "red_gate": {
+    "kind": "sandbox-safe test harness correction",
+    "witness": "Original socket-based Task 059 fixture failed with PermissionError during build_server(...) before feature validation could proceed."
+  },
+  "green_gate": {
+    "diff_sha256": "f1ca0b2367a58b031fecf911ef3b30bb85283fbb4db7fe721f1a569744693afc",
+    "test_output_sha256": "12e5331e4520a7082478b46c2e6eb889405d7a5d20130df49f2f7752bf109514"
+  },
+  "artifacts": {
+    "patch_diff": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task059/PATCH_DIFF.md",
+    "red_gate": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task059/RED_GATE.md",
+    "green_gate": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task059/GREEN_GATE.md",
+    "oracle_sweep": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task059/ORACLE_SWEEP.md"
+  }
+}

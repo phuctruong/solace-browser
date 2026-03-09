@@ -1,22 +1,19 @@
-# GREEN_GATE
+Post-validation commands:
 
-Command:
-```bash
-pytest -q tests/test_oauth3_vault.py
-```
-
-Result:
 ```text
-........                                                                 [100%]
-8 passed in 5.84s
+$ pytest -q tests/test_oauth3_vault.py tests/test_oauth3_consent.py
+..................                                                       [100%]
+18 passed in 6.36s
+
+$ pytest -q tests/test_oauth3_vault.py tests/test_oauth3_consent.py tests/test_yinyang_instructions.py
+........................................................................ [ 20%]
+........................................................................ [ 41%]
+........................................................................ [ 61%]
+........................................................................ [ 82%]
+.............................................................            [100%]
+349 passed in 7.85s
 ```
 
-Regression command:
-```bash
-pytest -q tests/test_yinyang_instructions.py tests/test_oauth3_vault.py
-```
-
-Regression result:
-```text
-339 passed in 7.21s
-```
+Outcome:
+- OAuth3 vault routes validate successfully.
+- Adjacent OAuth3 consent and server instruction coverage stay green.

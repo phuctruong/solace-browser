@@ -1,0 +1,8 @@
+{
+  "patch_diff": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/PATCH_DIFF.md",
+  "red_gate": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/RED_GATE.md",
+  "green_gate": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/GREEN_GATE.md",
+  "oracle_sweep": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/ORACLE_SWEEP.md",
+  "tests_json": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/tests.json",
+  "plan_json": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task060/evidence/plan.json"
+}
