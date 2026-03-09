@@ -1,0 +1,12 @@
+id: whatsapp-unread
+name: WhatsApp — Unread Checker
+description: Checks WhatsApp unread count every 5 minutes. Reports to morning-brief.
+category: messaging
+status: available
+safety: B
+tier: pro
+site: web.whatsapp.com
+type: standard
+scopes:
+  - whatsapp.read.messages
+  - local.evidence

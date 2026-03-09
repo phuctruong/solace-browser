@@ -1,0 +1,25 @@
+app: github-issue-triage
+display_name: "GitHub — Issue Triage"
+version: "1.0.0"
+category: developer
+site: github.com
+login_url: "https://github.com/login"
+check_url: "https://github.com/notifications"
+success_signals:
+  - "Notifications"
+  - "All activity"
+  - "Inbox"
+failure_signals:
+  - "Sign in to GitHub"
+  - "Username or email address"
+keep_alive:
+  interval_minutes: 30
+  action: "navigate"
+  url: "https://github.com/notifications"
+oauth3_scope: "github.read.issues"
+tier_required: "free"
+evidence_on_check: true
+description: "Triage GitHub issues, surface urgent PRs, label and assign."
+produces_for:
+  - morning-brief
+  - slack-triage

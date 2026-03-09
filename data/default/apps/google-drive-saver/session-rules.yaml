@@ -1,0 +1,24 @@
+app: google-drive-saver
+display_name: "Google Drive — File Saver"
+version: "1.0.0"
+category: productivity
+site: drive.google.com
+login_url: "https://accounts.google.com/signin"
+check_url: "https://drive.google.com/drive/my-drive"
+success_signals:
+  - "My Drive"
+  - "New folder"
+  - "Storage"
+failure_signals:
+  - "Sign in"
+  - "Choose an account"
+keep_alive:
+  interval_minutes: 30
+  action: "navigate"
+  url: "https://drive.google.com/drive/my-drive"
+oauth3_scope: "drive.write.files"
+tier_required: "free"
+evidence_on_check: true
+description: "Save evidence bundles and artifacts to Google Drive."
+consumes_from:
+  - gmail-inbox-triage

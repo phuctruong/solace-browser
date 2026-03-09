@@ -1,0 +1,28 @@
+id: amazon-price-tracker
+name: Amazon Price Tracker
+description: Monitor wishlist prices through the consumer web UI.
+category: shopping
+status: installed
+safety: A
+tier: starter
+tier_reason: "Managed LLM needed for price alert intelligence"
+site: amazon.com
+type: standard
+orchestrates: []
+scopes:
+- amazon.read.product
+- local.evidence
+partners:
+  produces_for:
+  - weekly-digest
+  consumes_from: []
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

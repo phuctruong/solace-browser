@@ -1,0 +1,12 @@
+id: discord-notifications
+name: Discord — Notification Checker
+description: Checks Discord server mentions and DM notifications.
+category: messaging
+status: available
+safety: B
+tier: pro
+site: discord.com
+type: standard
+scopes:
+  - discord.read.notifications
+  - local.evidence

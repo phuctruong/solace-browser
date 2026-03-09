@@ -1,0 +1,12 @@
+id: messenger-unread
+name: Messenger — Unread Checker
+description: Extracts unread message count from Messenger.
+category: messaging
+status: available
+safety: B
+tier: pro
+site: messenger.com
+type: standard
+scopes:
+  - messenger.read.unread
+  - local.evidence

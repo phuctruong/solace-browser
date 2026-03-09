@@ -1,0 +1,34 @@
+id: weekly-digest
+name: Weekly Digest
+description: Collect five days of reports and synthesize one weekly view.
+category: productivity
+status: installed
+safety: A
+tier: free
+tier_reason: "Read-only weekly summary aggregation"
+site: multi-site
+type: orchestrator
+orchestrates:
+- morning-brief
+- focus-timer
+- amazon-price-tracker
+- youtube-script-writer
+scopes:
+- local.evidence
+partners:
+  produces_for: []
+  consumes_from:
+  - morning-brief
+  - focus-timer
+  - amazon-price-tracker
+  - youtube-script-writer
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

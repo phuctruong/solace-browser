@@ -1,0 +1,12 @@
+id: whatsapp-web
+name: WhatsApp Web — Keep-Alive
+description: Keeps WhatsApp Web session alive. Login once, Hub monitors forever.
+category: messaging
+status: available
+safety: B
+tier: pro
+site: web.whatsapp.com
+type: standard
+scopes:
+  - whatsapp.read.messages
+  - local.evidence

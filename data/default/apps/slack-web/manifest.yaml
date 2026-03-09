@@ -1,0 +1,12 @@
+id: slack-web
+name: Slack Web — Keep-Alive
+description: Keeps Slack session alive. Login once — Hub monitors channel activity.
+category: messaging
+status: available
+safety: A
+tier: free
+site: app.slack.com
+type: standard
+scopes:
+  - slack.read.channels
+  - local.evidence

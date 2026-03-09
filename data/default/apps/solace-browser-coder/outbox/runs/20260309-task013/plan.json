@@ -1,0 +1,11 @@
+{
+  "task_id": "20260309-task013",
+  "rung": 641,
+  "steps": [
+    {"step": "Inspect repo and test setup", "status": "completed"},
+    {"step": "Add failing CLI tests", "status": "completed"},
+    {"step": "Implement CLI and shim", "status": "completed"},
+    {"step": "Update installer symlink", "status": "completed"},
+    {"step": "Run tests and seal evidence", "status": "completed"}
+  ]
+}

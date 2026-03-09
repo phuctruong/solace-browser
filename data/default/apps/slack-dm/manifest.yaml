@@ -1,0 +1,12 @@
+id: slack-dm
+name: Slack — DM Checker
+description: Checks Slack DMs for unread messages. Routes urgent DMs to morning-brief.
+category: messaging
+status: available
+safety: B
+tier: pro
+site: app.slack.com
+type: standard
+scopes:
+  - slack.read.messages
+  - local.evidence

@@ -1,0 +1,28 @@
+id: reddit-scanner
+name: Reddit Scanner
+description: Scan communities and surface relevant discussions.
+category: engineering
+status: installed
+safety: A
+tier: starter
+tier_reason: "Read-only but requires managed LLM for relevance scoring"
+site: reddit.com
+type: standard
+orchestrates: []
+scopes:
+- reddit.read.posts
+- local.evidence
+partners:
+  produces_for:
+  - morning-brief
+  consumes_from: []
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

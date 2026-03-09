@@ -1,0 +1,31 @@
+id: linkedin-outreach
+name: LinkedIn Outreach
+description: Draft outreach sequences and manage lead handoff safely.
+category: sales
+status: installed
+safety: C
+tier: pro
+tier_reason: "Write + outreach actions on LinkedIn require cloud sync + evidence"
+site: linkedin.com
+type: standard
+orchestrates: []
+scopes:
+- linkedin.read.profile
+- linkedin.write.drafts
+- local.evidence
+partners:
+  produces_for:
+  - gmail-inbox-triage
+  - lead-pipeline
+  consumes_from:
+  - lead-pipeline
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

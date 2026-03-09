@@ -1,0 +1,12 @@
+id: facebook-messenger
+name: Facebook Messenger — Keep-Alive
+description: Keeps Facebook Messenger session alive at messenger.com. No Facebook API needed.
+category: messaging
+status: available
+safety: B
+tier: pro
+site: messenger.com
+type: standard
+scopes:
+  - messenger.read.messages
+  - local.evidence

@@ -1,0 +1,30 @@
+id: linkedin-poster
+name: LinkedIn Poster
+description: Draft and publish LinkedIn posts through the native web UI.
+category: social
+status: installed
+safety: C
+tier: pro
+tier_reason: "Write to LinkedIn requires cloud sync + evidence chain"
+site: linkedin.com
+type: standard
+orchestrates: []
+scopes:
+- linkedin.read.profile
+- linkedin.write.posts
+- local.evidence
+partners:
+  produces_for: []
+  consumes_from:
+  - weekly-digest
+  - lead-pipeline
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

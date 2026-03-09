@@ -1,0 +1,12 @@
+id: telegram-web
+name: Telegram Web — Keep-Alive
+description: Keeps Telegram Web session alive. Login once — Hub keeps chat list available.
+category: messaging
+status: available
+safety: A
+tier: free
+site: web.telegram.org
+type: standard
+scopes:
+  - telegram.read.messages
+  - local.evidence

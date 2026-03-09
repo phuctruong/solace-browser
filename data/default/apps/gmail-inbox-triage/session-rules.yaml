@@ -1,0 +1,31 @@
+app: gmail-inbox-triage
+display_name: "Gmail — Inbox Triage"
+version: "1.0.0"
+category: productivity
+site: mail.google.com
+login_url: "https://accounts.google.com/signin"
+check_url: "https://mail.google.com/mail/u/0/#inbox"
+success_signals:
+  - "Inbox"
+  - "Compose"
+  - "Search mail"
+failure_signals:
+  - "Sign in"
+  - "accounts.google.com/v3/signin"
+  - "Choose an account"
+keep_alive:
+  interval_minutes: 15
+  action: "navigate"
+  url: "https://mail.google.com/mail/u/0/#inbox"
+oauth3_scope: "gmail.read.inbox"
+tier_required: "free"
+evidence_on_check: true
+description: "Scan Gmail, prioritize messages, and draft safe replies."
+produces_for:
+  - morning-brief
+  - google-drive-saver
+  - slack-triage
+  - calendar-brief
+consumes_from:
+  - morning-brief
+  - linkedin-outreach

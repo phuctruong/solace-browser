@@ -1,0 +1,28 @@
+id: focus-timer
+name: Focus Timer
+description: Run local focus sessions and produce lightweight reports.
+category: productivity
+status: installed
+safety: A
+tier: free
+tier_reason: "Local-only timer, no cloud or LLM dependency"
+site: local-machine
+type: standard
+orchestrates: []
+scopes:
+- machine.read.clock
+- local.evidence
+partners:
+  produces_for:
+  - weekly-digest
+  consumes_from: []
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

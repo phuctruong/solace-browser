@@ -1,0 +1,12 @@
+id: telegram-unread
+name: Telegram — Unread Checker
+description: Checks Telegram unread badge counts. Reports to morning-brief.
+category: messaging
+status: available
+safety: A
+tier: free
+site: web.telegram.org
+type: standard
+scopes:
+  - telegram.read.unread
+  - local.evidence

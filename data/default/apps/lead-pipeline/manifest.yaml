@@ -1,0 +1,32 @@
+id: lead-pipeline
+name: Lead Pipeline
+description: Coordinate outreach, email follow-up, and schedule matching.
+category: sales
+status: installed
+safety: A
+tier: team
+tier_reason: "Multi-seat team workflow orchestrating outreach + email + calendar"
+site: multi-site
+type: orchestrator
+orchestrates:
+- linkedin-outreach
+- gmail-inbox-triage
+- calendar-brief
+scopes:
+- local.evidence
+partners:
+  produces_for: []
+  consumes_from:
+  - linkedin-outreach
+  - gmail-inbox-triage
+  - calendar-brief
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

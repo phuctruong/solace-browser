@@ -1,0 +1,30 @@
+id: twitter-poster
+name: Twitter Poster
+description: Queue tweets and threads without relying on the paid API.
+category: social
+status: installed
+safety: C
+tier: enterprise
+tier_reason: "Social media automation at scale requires SSO + SOC2 audit trail"
+site: x.com
+type: standard
+orchestrates: []
+scopes:
+- twitter.read.timeline
+- twitter.write.posts
+- local.evidence
+partners:
+  produces_for: []
+  consumes_from:
+  - youtube-script-writer
+  - weekly-digest
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml
