@@ -831,6 +831,61 @@ _HISTORY_ENTRIES: list[dict] = []
 _HISTORY_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
+# Task 064 — Media Downloader
+# ---------------------------------------------------------------------------
+MEDIA_TYPES = ["image", "audio", "video", "document", "archive", "other"]
+MEDIA_STATUSES = ["queued", "downloading", "completed", "failed", "cancelled"]
+MAX_QUEUE_SIZE = 100
+
+_MEDIA_QUEUE: list[dict] = []
+_MEDIA_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 065 — Site Blocker
+# ---------------------------------------------------------------------------
+BLOCK_RULE_TYPES = ["domain", "keyword", "category", "regex"]
+BLOCK_CATEGORIES = ["social-media", "news", "entertainment", "gambling", "adult", "ads", "custom"]
+MAX_RULES = 500
+
+_BLOCKER_RULES: list[dict] = []
+_BLOCKER_LOG: list[dict] = []
+_BLOCKER_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 066 — Shortcut Manager
+# ---------------------------------------------------------------------------
+SHORTCUT_ACTIONS = [
+    "open-recipe", "open-notes", "open-focus", "open-history",
+    "open-bookmarks", "open-downloads", "open-screenshot",
+    "toggle-sidebar", "clear-data", "custom"
+]
+MODIFIER_KEYS = ["Ctrl", "Alt", "Shift", "Meta"]
+MAX_CUSTOM_SHORTCUTS = 50
+
+DEFAULT_SHORTCUTS = [
+    {"shortcut_id": "sys-001", "keys": "Ctrl+K", "action": "open-recipe",
+     "description": "Open recipe palette", "is_default": True, "trigger_count": 0},
+    {"shortcut_id": "sys-002", "keys": "Ctrl+Shift+N", "action": "open-notes",
+     "description": "Open session notes", "is_default": True, "trigger_count": 0},
+    {"shortcut_id": "sys-003", "keys": "Ctrl+Shift+F", "action": "open-focus",
+     "description": "Toggle focus mode", "is_default": True, "trigger_count": 0},
+]
+
+_CUSTOM_SHORTCUTS: list[dict] = []
+_SHORTCUT_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 067 — Voice Notes
+# ---------------------------------------------------------------------------
+VOICE_NOTE_STATUSES = ["recorded", "transcribed", "archived"]
+AUDIO_FORMATS = ["webm", "mp4", "ogg", "wav"]
+MAX_VOICE_NOTES = 500
+MAX_DURATION_SECONDS = 3600  # 1 hour
+
+_VOICE_NOTES: list[dict] = []
+_VOICE_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
 # Task 039 — Command Palette
 # ---------------------------------------------------------------------------
 DEFAULT_COMMANDS: tuple[dict, ...] = (
@@ -973,6 +1028,38 @@ _DEFAULT_PROXY: dict = {
 }
 _PROXY_SETTINGS: dict = dict(_DEFAULT_PROXY)
 _PROXY_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 068 — Spell Checker
+# ---------------------------------------------------------------------------
+SUPPORTED_LANGUAGES: list[str] = ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "pt-BR", "ja-JP", "zh-CN"]
+COMMON_MISSPELLINGS: dict[str, str] = {
+    "teh": "the", "adn": "and", "taht": "that", "wiht": "with",
+    "recieve": "receive", "seperate": "separate", "occured": "occurred",
+    "definately": "definitely", "accomodate": "accommodate",
+}
+MAX_SPELLCHECK_TEXT = 50_000
+_CUSTOM_DICTIONARY: dict[str, dict] = {}   # word_hash → {word_hash, label, added_at}
+_SPELLCHECK_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 069 — Link Analyzer
+# ---------------------------------------------------------------------------
+LINK_TYPES: list[str] = ["internal", "external", "anchor", "mailto", "tel", "javascript", "data"]
+LINK_STATUSES: list[str] = ["ok", "broken", "redirect", "blocked", "unknown"]
+_LINK_RESULTS: list[dict] = []
+_LINKS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 070 — Performance Profiler
+# ---------------------------------------------------------------------------
+PROFILER_METRIC_TYPES: list[str] = [
+    "cpu", "memory", "network", "render", "script", "layout", "paint", "composite"
+]
+PROFILER_UNITS: list[str] = ["ms", "bytes", "percent", "count"]
+_PROFILER_SESSIONS: list[dict] = []
+_PROFILER_METRICS: dict[str, list[dict]] = {}  # session_id → list[metric]
+_PROFILER_LOCK = threading.Lock()
 
 
 def _triage_single_email(email: dict[str, Any], config: dict[str, bool]) -> dict[str, Any]:
@@ -4957,6 +5044,95 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/history-search.js", "application/javascript")
         elif path == "/web/css/history-search.css":
             self._handle_static_file("web/css/history-search.css", "text/css")
+        # --- Task 064: Media Downloader ---
+        elif path == "/api/v1/media/queue":
+            self._handle_media_queue_list()
+        elif path == "/api/v1/media/stats":
+            self._handle_media_stats()
+        elif path == "/api/v1/media/types":
+            self._handle_media_types()
+        elif path == "/web/media-downloader.html":
+            self._handle_static_file("web/media-downloader.html", "text/html; charset=utf-8")
+        elif path == "/web/js/media-downloader.js":
+            self._handle_static_file("web/js/media-downloader.js", "application/javascript")
+        elif path == "/web/css/media-downloader.css":
+            self._handle_static_file("web/css/media-downloader.css", "text/css")
+        # --- Task 065: Site Blocker ---
+        elif path == "/api/v1/blocker/rules":
+            self._handle_blocker_rules_list()
+        elif path == "/api/v1/blocker/log":
+            self._handle_blocker_log_list()
+        elif path == "/web/site-blocker.html":
+            self._handle_static_file("web/site-blocker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/site-blocker.js":
+            self._handle_static_file("web/js/site-blocker.js", "application/javascript")
+        elif path == "/web/css/site-blocker.css":
+            self._handle_static_file("web/css/site-blocker.css", "text/css")
+        # --- Task 066: Shortcut Manager ---
+        elif path == "/api/v1/shortcuts":
+            self._handle_shortcuts_list()
+        elif path == "/api/v1/shortcuts/stats":
+            self._handle_shortcuts_stats()
+        elif path == "/web/shortcut-manager.html":
+            self._handle_static_file("web/shortcut-manager.html", "text/html; charset=utf-8")
+        elif path == "/web/js/shortcut-manager.js":
+            self._handle_static_file("web/js/shortcut-manager.js", "application/javascript")
+        elif path == "/web/css/shortcut-manager.css":
+            self._handle_static_file("web/css/shortcut-manager.css", "text/css")
+        # --- Task 067: Voice Notes ---
+        elif path == "/api/v1/voice-notes":
+            self._handle_voice_notes_list()
+        elif path == "/api/v1/voice-notes/stats":
+            self._handle_voice_notes_stats()
+        elif re.match(r"^/api/v1/voice-notes/[^/]+$", path):
+            note_id = path.split("/")[-1]
+            self._handle_voice_note_get(note_id)
+        elif path == "/web/voice-notes.html":
+            self._handle_static_file("web/voice-notes.html", "text/html; charset=utf-8")
+        elif path == "/web/js/voice-notes.js":
+            self._handle_static_file("web/js/voice-notes.js", "application/javascript")
+        elif path == "/web/css/voice-notes.css":
+            self._handle_static_file("web/css/voice-notes.css", "text/css")
+        # --- Task 068: Spell Checker ---
+        elif path == "/api/v1/spellcheck/check":
+            self._handle_spellcheck_check()
+        elif path == "/api/v1/spellcheck/dictionary":
+            self._handle_spellcheck_dictionary_list()
+        elif path == "/api/v1/spellcheck/languages":
+            self._handle_spellcheck_languages()
+        elif path == "/web/spell-checker.html":
+            self._handle_static_file("web/spell-checker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/spell-checker.js":
+            self._handle_static_file("web/js/spell-checker.js", "application/javascript")
+        elif path == "/web/css/spell-checker.css":
+            self._handle_static_file("web/css/spell-checker.css", "text/css")
+        # --- Task 069: Link Analyzer ---
+        elif path == "/api/v1/links/results":
+            self._handle_links_results_list()
+        elif path == "/api/v1/links/stats":
+            self._handle_links_stats()
+        elif path == "/api/v1/links/types":
+            self._handle_links_types()
+        elif path == "/web/link-analyzer.html":
+            self._handle_static_file("web/link-analyzer.html", "text/html; charset=utf-8")
+        elif path == "/web/js/link-analyzer.js":
+            self._handle_static_file("web/js/link-analyzer.js", "application/javascript")
+        elif path == "/web/css/link-analyzer.css":
+            self._handle_static_file("web/css/link-analyzer.css", "text/css")
+        # --- Task 070: Performance Profiler ---
+        elif path == "/api/v1/profiler/sessions":
+            self._handle_profiler_sessions_list()
+        elif path == "/api/v1/profiler/aggregates":
+            self._handle_profiler_aggregates()
+        elif re.match(r"^/api/v1/profiler/sessions/[^/]+$", path):
+            session_id = path.split("/")[-1]
+            self._handle_profiler_session_get(session_id)
+        elif path == "/web/performance-profiler.html":
+            self._handle_static_file("web/performance-profiler.html", "text/html; charset=utf-8")
+        elif path == "/web/js/performance-profiler.js":
+            self._handle_static_file("web/js/performance-profiler.js", "application/javascript")
+        elif path == "/web/css/performance-profiler.css":
+            self._handle_static_file("web/css/performance-profiler.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -5364,6 +5540,43 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_history_add()
         elif path == "/api/v1/history/search":
             self._handle_history_search()
+        # --- Task 064: Media Downloader ---
+        elif path == "/api/v1/media/queue":
+            self._handle_media_queue_add()
+        elif re.match(r"^/api/v1/media/queue/[^/]+/complete$", path):
+            item_id = path.split("/")[5]
+            self._handle_media_queue_complete(item_id)
+        # --- Task 065: Site Blocker ---
+        elif path == "/api/v1/blocker/rules":
+            self._handle_blocker_rule_add()
+        elif path == "/api/v1/blocker/check":
+            self._handle_blocker_check()
+        # --- Task 066: Shortcut Manager ---
+        elif path == "/api/v1/shortcuts":
+            self._handle_shortcut_create()
+        elif re.match(r"^/api/v1/shortcuts/[^/]+/trigger$", path):
+            shortcut_id = path.split("/")[4]
+            self._handle_shortcut_trigger(shortcut_id)
+        # --- Task 067: Voice Notes ---
+        elif path == "/api/v1/voice-notes":
+            self._handle_voice_note_create()
+        elif re.match(r"^/api/v1/voice-notes/[^/]+/transcribe$", path):
+            note_id = path.split("/")[4]
+            self._handle_voice_note_transcribe(note_id)
+        # --- Task 068: Spell Checker ---
+        elif path == "/api/v1/spellcheck/check":
+            self._handle_spellcheck_check()
+        elif path == "/api/v1/spellcheck/dictionary":
+            self._handle_spellcheck_dictionary_add()
+        # --- Task 069: Link Analyzer ---
+        elif path == "/api/v1/links/analyze":
+            self._handle_links_analyze()
+        # --- Task 070: Performance Profiler ---
+        elif path == "/api/v1/profiler/sessions":
+            self._handle_profiler_session_create()
+        elif re.match(r"^/api/v1/profiler/sessions/[^/]+/metrics$", path):
+            session_id = path.split("/")[-2]
+            self._handle_profiler_metric_add(session_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -5518,6 +5731,35 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 063: History Search ---
         elif path == "/api/v1/history/entries":
             self._handle_history_clear()
+        # --- Task 064: Media Downloader ---
+        elif re.match(r"^/api/v1/media/queue/[^/]+$", path):
+            item_id = path.split("/")[-1]
+            self._handle_media_queue_remove(item_id)
+        # --- Task 065: Site Blocker ---
+        elif re.match(r"^/api/v1/blocker/rules/[^/]+$", path):
+            rule_id = path.split("/")[-1]
+            self._handle_blocker_rule_delete(rule_id)
+        elif path == "/api/v1/blocker/log":
+            self._handle_blocker_log_clear()
+        # --- Task 066: Shortcut Manager ---
+        elif re.match(r"^/api/v1/shortcuts/[^/]+$", path):
+            shortcut_id = path.split("/")[-1]
+            self._handle_shortcut_delete(shortcut_id)
+        # --- Task 067: Voice Notes ---
+        elif re.match(r"^/api/v1/voice-notes/[^/]+$", path):
+            note_id = path.split("/")[-1]
+            self._handle_voice_note_delete(note_id)
+        # --- Task 068: Spell Checker ---
+        elif re.match(r"^/api/v1/spellcheck/dictionary/[^/]+$", path):
+            word_hash = path.split("/")[-1]
+            self._handle_spellcheck_dictionary_delete(word_hash)
+        # --- Task 069: Link Analyzer ---
+        elif path == "/api/v1/links/results":
+            self._handle_links_results_clear()
+        # --- Task 070: Performance Profiler ---
+        elif re.match(r"^/api/v1/profiler/sessions/[^/]+$", path):
+            session_id = path.split("/")[-1]
+            self._handle_profiler_session_delete(session_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -16865,6 +17107,706 @@ function choose(mode) {
             _CURRENT_THEME_CUSTOMIZER["custom"] = False
             theme = dict(_CURRENT_THEME_CUSTOMIZER)
         self._send_json({"status": "applied", "theme": theme})
+
+    # ---------------------------------------------------------------------------
+    # Task 064 — Media Downloader handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_media_queue_list(self) -> None:
+        """GET /api/v1/media/queue — list download queue."""
+        with _MEDIA_LOCK:
+            queue = [dict(item) for item in _MEDIA_QUEUE]
+        self._send_json({"queue": queue, "total": len(queue)})
+
+    def _handle_media_queue_add(self) -> None:
+        """POST /api/v1/media/queue — add to download queue (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url = str(body.get("url", "")).strip()
+        if not url:
+            self._send_json({"error": "url is required"}, 400)
+            return
+        url_hash = hashlib.sha256(url.encode()).hexdigest()
+        media_type = str(body.get("media_type", "")).strip()
+        if media_type not in MEDIA_TYPES:
+            self._send_json({"error": f"media_type must be one of {MEDIA_TYPES}"}, 400)
+            return
+        filename = str(body.get("filename", "")).strip()
+        if len(filename) > 256:
+            self._send_json({"error": "filename max 256 chars"}, 400)
+            return
+        file_size_bytes = body.get("file_size_bytes", 0)
+        try:
+            file_size_bytes = int(file_size_bytes)
+        except (TypeError, ValueError):
+            file_size_bytes = 0
+        with _MEDIA_LOCK:
+            if len(_MEDIA_QUEUE) >= MAX_QUEUE_SIZE:
+                self._send_json({"error": f"queue full (max {MAX_QUEUE_SIZE})"}, 400)
+                return
+            item = {
+                "item_id": "med_" + uuid.uuid4().hex,
+                "url_hash": url_hash,
+                "media_type": media_type,
+                "filename": filename,
+                "file_size_bytes": file_size_bytes,
+                "status": "queued",
+                "queued_at": datetime.now(timezone.utc).isoformat(),
+                "completed_at": None,
+            }
+            _MEDIA_QUEUE.append(item)
+        self._send_json({"status": "queued", "item": dict(item)}, 201)
+
+    def _handle_media_queue_remove(self, item_id: str) -> None:
+        """DELETE /api/v1/media/queue/{item_id} — remove from queue (auth required)."""
+        if not self._check_auth():
+            return
+        with _MEDIA_LOCK:
+            idx = next((i for i, it in enumerate(_MEDIA_QUEUE) if it["item_id"] == item_id), None)
+            if idx is None:
+                self._send_json({"error": "item not found"}, 404)
+                return
+            _MEDIA_QUEUE.pop(idx)
+        self._send_json({"status": "removed", "item_id": item_id})
+
+    def _handle_media_queue_complete(self, item_id: str) -> None:
+        """POST /api/v1/media/queue/{item_id}/complete — mark as completed (auth required)."""
+        if not self._check_auth():
+            return
+        with _MEDIA_LOCK:
+            item = next((it for it in _MEDIA_QUEUE if it["item_id"] == item_id), None)
+            if item is None:
+                self._send_json({"error": "item not found"}, 404)
+                return
+            item["status"] = "completed"
+            item["completed_at"] = datetime.now(timezone.utc).isoformat()
+            result = dict(item)
+        self._send_json({"status": "completed", "item": result})
+
+    def _handle_media_stats(self) -> None:
+        """GET /api/v1/media/stats — download statistics."""
+        with _MEDIA_LOCK:
+            total = len(_MEDIA_QUEUE)
+            queued = sum(1 for it in _MEDIA_QUEUE if it["status"] == "queued")
+            completed = sum(1 for it in _MEDIA_QUEUE if it["status"] == "completed")
+            failed = sum(1 for it in _MEDIA_QUEUE if it["status"] == "failed")
+            total_bytes = sum(it.get("file_size_bytes", 0) for it in _MEDIA_QUEUE)
+        self._send_json({"total": total, "queued": queued, "completed": completed,
+                         "failed": failed, "total_bytes": total_bytes})
+
+    def _handle_media_types(self) -> None:
+        """GET /api/v1/media/types — list supported media types."""
+        self._send_json({"types": list(MEDIA_TYPES), "statuses": list(MEDIA_STATUSES)})
+
+    # ---------------------------------------------------------------------------
+    # Task 065 — Site Blocker handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_blocker_rules_list(self) -> None:
+        """GET /api/v1/blocker/rules — list blocking rules."""
+        with _BLOCKER_LOCK:
+            rules = [dict(r) for r in _BLOCKER_RULES]
+        self._send_json({"rules": rules, "total": len(rules)})
+
+    def _handle_blocker_rule_add(self) -> None:
+        """POST /api/v1/blocker/rules — add blocking rule (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        rule_type = str(body.get("rule_type", "")).strip()
+        if rule_type not in BLOCK_RULE_TYPES:
+            self._send_json({"error": f"rule_type must be one of {BLOCK_RULE_TYPES}"}, 400)
+            return
+        category = str(body.get("category", "")).strip()
+        if category not in BLOCK_CATEGORIES:
+            self._send_json({"error": f"category must be one of {BLOCK_CATEGORIES}"}, 400)
+            return
+        pattern = str(body.get("pattern", "")).strip()
+        if len(pattern) > 256:
+            self._send_json({"error": "pattern max 256 chars"}, 400)
+            return
+        is_enabled = bool(body.get("is_enabled", True))
+        with _BLOCKER_LOCK:
+            if len(_BLOCKER_RULES) >= MAX_RULES:
+                self._send_json({"error": f"max rules reached ({MAX_RULES})"}, 400)
+                return
+            rule = {
+                "rule_id": "blk_" + uuid.uuid4().hex,
+                "rule_type": rule_type,
+                "pattern": pattern,
+                "category": category,
+                "is_enabled": is_enabled,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+            _BLOCKER_RULES.append(rule)
+        self._send_json({"status": "created", "rule": dict(rule)}, 201)
+
+    def _handle_blocker_rule_delete(self, rule_id: str) -> None:
+        """DELETE /api/v1/blocker/rules/{rule_id} — remove rule (auth required)."""
+        if not self._check_auth():
+            return
+        with _BLOCKER_LOCK:
+            idx = next((i for i, r in enumerate(_BLOCKER_RULES) if r["rule_id"] == rule_id), None)
+            if idx is None:
+                self._send_json({"error": "rule not found"}, 404)
+                return
+            _BLOCKER_RULES.pop(idx)
+        self._send_json({"status": "deleted", "rule_id": rule_id})
+
+    def _handle_blocker_check(self) -> None:
+        """POST /api/v1/blocker/check — check if URL is blocked."""
+        body = self._read_json_body()
+        if body is None:
+            return
+        url_hash = str(body.get("url_hash", "")).strip()
+        if not url_hash:
+            self._send_json({"error": "url_hash is required"}, 400)
+            return
+        with _BLOCKER_LOCK:
+            matched_rule_id = None
+            for rule in _BLOCKER_RULES:
+                if rule.get("is_enabled") and rule.get("pattern") and rule["pattern"] in url_hash:
+                    matched_rule_id = rule["rule_id"]
+                    break
+            blocked = matched_rule_id is not None
+            if blocked:
+                log_entry = {
+                    "log_id": "blog_" + uuid.uuid4().hex,
+                    "url_hash": url_hash,
+                    "matched_rule_id": matched_rule_id,
+                    "blocked_at": datetime.now(timezone.utc).isoformat(),
+                }
+                _BLOCKER_LOG.append(log_entry)
+        self._send_json({"blocked": blocked, "matched_rule_id": matched_rule_id})
+
+    def _handle_blocker_log_list(self) -> None:
+        """GET /api/v1/blocker/log — blocked request log."""
+        with _BLOCKER_LOCK:
+            log = [dict(entry) for entry in _BLOCKER_LOG]
+        self._send_json({"log": log, "total": len(log)})
+
+    def _handle_blocker_log_clear(self) -> None:
+        """DELETE /api/v1/blocker/log — clear log (auth required)."""
+        if not self._check_auth():
+            return
+        with _BLOCKER_LOCK:
+            count = len(_BLOCKER_LOG)
+            _BLOCKER_LOG.clear()
+        self._send_json({"status": "cleared", "count": count})
+
+    # ---------------------------------------------------------------------------
+    # Task 066 — Shortcut Manager handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_shortcuts_list(self) -> None:
+        """GET /api/v1/shortcuts — list all shortcuts."""
+        with _SHORTCUT_LOCK:
+            custom = [dict(s) for s in _CUSTOM_SHORTCUTS]
+        defaults = [dict(s) for s in DEFAULT_SHORTCUTS]
+        all_shortcuts = defaults + custom
+        self._send_json({"shortcuts": all_shortcuts, "total": len(all_shortcuts)})
+
+    def _handle_shortcut_create(self) -> None:
+        """POST /api/v1/shortcuts — create custom shortcut (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        keys = str(body.get("keys", "")).strip()
+        if len(keys) > 64:
+            self._send_json({"error": "keys max 64 chars"}, 400)
+            return
+        if not any(mod in keys for mod in MODIFIER_KEYS):
+            self._send_json({"error": f"keys must contain at least one modifier: {MODIFIER_KEYS}"}, 400)
+            return
+        action = str(body.get("action", "")).strip()
+        if action not in SHORTCUT_ACTIONS:
+            self._send_json({"error": f"action must be one of {SHORTCUT_ACTIONS}"}, 400)
+            return
+        description = str(body.get("description", "")).strip()
+        if len(description) > 256:
+            self._send_json({"error": "description max 256 chars"}, 400)
+            return
+        with _SHORTCUT_LOCK:
+            if len(_CUSTOM_SHORTCUTS) >= MAX_CUSTOM_SHORTCUTS:
+                self._send_json({"error": f"max custom shortcuts reached ({MAX_CUSTOM_SHORTCUTS})"}, 400)
+                return
+            shortcut = {
+                "shortcut_id": "sc_" + uuid.uuid4().hex,
+                "keys": keys,
+                "action": action,
+                "description": description,
+                "is_default": False,
+                "trigger_count": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+            _CUSTOM_SHORTCUTS.append(shortcut)
+        self._send_json({"status": "created", "shortcut": dict(shortcut)}, 201)
+
+    def _handle_shortcut_delete(self, shortcut_id: str) -> None:
+        """DELETE /api/v1/shortcuts/{shortcut_id} — delete custom shortcut (auth required)."""
+        if not self._check_auth():
+            return
+        with _SHORTCUT_LOCK:
+            idx = next((i for i, s in enumerate(_CUSTOM_SHORTCUTS) if s["shortcut_id"] == shortcut_id), None)
+            if idx is None:
+                self._send_json({"error": "shortcut not found"}, 404)
+                return
+            _CUSTOM_SHORTCUTS.pop(idx)
+        self._send_json({"status": "deleted", "shortcut_id": shortcut_id})
+
+    def _handle_shortcut_trigger(self, shortcut_id: str) -> None:
+        """POST /api/v1/shortcuts/{shortcut_id}/trigger — record trigger event (auth required)."""
+        if not self._check_auth():
+            return
+        for s in DEFAULT_SHORTCUTS:
+            if s["shortcut_id"] == shortcut_id:
+                s["trigger_count"] += 1
+                self._send_json({"status": "triggered", "shortcut_id": shortcut_id,
+                                 "trigger_count": s["trigger_count"]})
+                return
+        with _SHORTCUT_LOCK:
+            s = next((sc for sc in _CUSTOM_SHORTCUTS if sc["shortcut_id"] == shortcut_id), None)
+            if s is None:
+                self._send_json({"error": "shortcut not found"}, 404)
+                return
+            s["trigger_count"] += 1
+            count = s["trigger_count"]
+        self._send_json({"status": "triggered", "shortcut_id": shortcut_id, "trigger_count": count})
+
+    def _handle_shortcuts_stats(self) -> None:
+        """GET /api/v1/shortcuts/stats — shortcut usage stats."""
+        with _SHORTCUT_LOCK:
+            custom = list(_CUSTOM_SHORTCUTS)
+        all_shortcuts = list(DEFAULT_SHORTCUTS) + custom
+        total_shortcuts = len(all_shortcuts)
+        total_triggers = sum(s.get("trigger_count", 0) for s in all_shortcuts)
+        most_used = max(all_shortcuts, key=lambda s: s.get("trigger_count", 0), default=None)
+        most_used_id = most_used["shortcut_id"] if most_used else None
+        most_used_keys = most_used["keys"] if most_used else None
+        self._send_json({
+            "total_shortcuts": total_shortcuts,
+            "total_triggers": total_triggers,
+            "most_used_shortcut_id": most_used_id,
+            "most_used_keys": most_used_keys,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 067 — Voice Notes handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_voice_notes_list(self) -> None:
+        """GET /api/v1/voice-notes — list voice notes."""
+        with _VOICE_LOCK:
+            notes = [dict(n) for n in _VOICE_NOTES]
+        self._send_json({"notes": notes, "total": len(notes)})
+
+    def _handle_voice_note_create(self) -> None:
+        """POST /api/v1/voice-notes — create voice note record (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        audio_data = str(body.get("audio_data", "")).strip()
+        if not audio_data:
+            self._send_json({"error": "audio_data is required"}, 400)
+            return
+        audio_hash = hashlib.sha256(audio_data.encode()).hexdigest()
+        fmt = str(body.get("format", "")).strip()
+        if fmt not in AUDIO_FORMATS:
+            self._send_json({"error": f"format must be one of {AUDIO_FORMATS}"}, 400)
+            return
+        duration_seconds = body.get("duration_seconds", 0)
+        try:
+            duration_seconds = int(duration_seconds)
+        except (TypeError, ValueError):
+            duration_seconds = 0
+        if not (1 <= duration_seconds <= MAX_DURATION_SECONDS):
+            self._send_json({"error": f"duration_seconds must be between 1 and {MAX_DURATION_SECONDS}"}, 400)
+            return
+        title = str(body.get("title", "")).strip()
+        if len(title) > 256:
+            self._send_json({"error": "title max 256 chars"}, 400)
+            return
+        with _VOICE_LOCK:
+            if len(_VOICE_NOTES) >= MAX_VOICE_NOTES:
+                self._send_json({"error": f"max voice notes reached ({MAX_VOICE_NOTES})"}, 400)
+                return
+            note = {
+                "note_id": "vn_" + uuid.uuid4().hex,
+                "audio_hash": audio_hash,
+                "format": fmt,
+                "duration_seconds": duration_seconds,
+                "title": title,
+                "transcript_hash": None,
+                "status": "recorded",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+            _VOICE_NOTES.append(note)
+        self._send_json({"status": "created", "note": dict(note)}, 201)
+
+    def _handle_voice_note_get(self, note_id: str) -> None:
+        """GET /api/v1/voice-notes/{note_id} — get note details."""
+        with _VOICE_LOCK:
+            note = next((n for n in _VOICE_NOTES if n["note_id"] == note_id), None)
+        if note is None:
+            self._send_json({"error": "note not found"}, 404)
+            return
+        self._send_json({"note": dict(note)})
+
+    def _handle_voice_note_delete(self, note_id: str) -> None:
+        """DELETE /api/v1/voice-notes/{note_id} — delete note (auth required)."""
+        if not self._check_auth():
+            return
+        with _VOICE_LOCK:
+            idx = next((i for i, n in enumerate(_VOICE_NOTES) if n["note_id"] == note_id), None)
+            if idx is None:
+                self._send_json({"error": "note not found"}, 404)
+                return
+            _VOICE_NOTES.pop(idx)
+        self._send_json({"status": "deleted", "note_id": note_id})
+
+    def _handle_voice_note_transcribe(self, note_id: str) -> None:
+        """POST /api/v1/voice-notes/{note_id}/transcribe — mark as transcribed (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        transcript_hash = str(body.get("transcript_hash", "")).strip()
+        if not transcript_hash:
+            self._send_json({"error": "transcript_hash is required"}, 400)
+            return
+        with _VOICE_LOCK:
+            note = next((n for n in _VOICE_NOTES if n["note_id"] == note_id), None)
+            if note is None:
+                self._send_json({"error": "note not found"}, 404)
+                return
+            note["status"] = "transcribed"
+            note["transcript_hash"] = transcript_hash
+            result = dict(note)
+        self._send_json({"status": "transcribed", "note": result})
+
+    def _handle_voice_notes_stats(self) -> None:
+        """GET /api/v1/voice-notes/stats — voice note statistics."""
+        with _VOICE_LOCK:
+            total = len(_VOICE_NOTES)
+            recorded = sum(1 for n in _VOICE_NOTES if n["status"] == "recorded")
+            transcribed = sum(1 for n in _VOICE_NOTES if n["status"] == "transcribed")
+            archived = sum(1 for n in _VOICE_NOTES if n["status"] == "archived")
+            total_duration = sum(n.get("duration_seconds", 0) for n in _VOICE_NOTES)
+        self._send_json({
+            "total": total,
+            "recorded": recorded,
+            "transcribed": transcribed,
+            "archived": archived,
+            "total_duration_seconds": total_duration,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 068 — Spell Checker handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_spellcheck_check(self) -> None:
+        """POST /api/v1/spellcheck/check — check text for spelling errors (public)."""
+        body = self._read_json_body()
+        if body is None:
+            return
+        text = body.get("text", "")
+        if not isinstance(text, str):
+            self._send_json({"error": "text must be a string"}, 400)
+            return
+        if len(text) > MAX_SPELLCHECK_TEXT:
+            self._send_json({"error": f"text max {MAX_SPELLCHECK_TEXT} chars"}, 400)
+            return
+        language = body.get("language", "en-US")
+        if language not in SUPPORTED_LANGUAGES:
+            self._send_json({"error": f"language must be one of {SUPPORTED_LANGUAGES}"}, 400)
+            return
+        words = re.findall(r"[a-zA-Z]+", text)
+        errors = []
+        with _SPELLCHECK_LOCK:
+            custom_hashes = set(_CUSTOM_DICTIONARY.keys())
+        for position, word in enumerate(words):
+            lower = word.lower()
+            word_hash = hashlib.sha256(lower.encode()).hexdigest()
+            if word_hash in custom_hashes:
+                continue
+            if lower in COMMON_MISSPELLINGS:
+                errors.append({
+                    "word_hash": word_hash,
+                    "suggestion": COMMON_MISSPELLINGS[lower],
+                    "position": position,
+                })
+        self._send_json({
+            "errors": errors,
+            "word_count": len(words),
+            "error_count": len(errors),
+            "language": language,
+        })
+
+    def _handle_spellcheck_dictionary_list(self) -> None:
+        """GET /api/v1/spellcheck/dictionary — list custom dictionary entries (public)."""
+        with _SPELLCHECK_LOCK:
+            entries = [dict(v) for v in _CUSTOM_DICTIONARY.values()]
+        self._send_json({"entries": entries, "total": len(entries)})
+
+    def _handle_spellcheck_dictionary_add(self) -> None:
+        """POST /api/v1/spellcheck/dictionary — add word hash to dictionary (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        word_hash = str(body.get("word_hash", "")).strip()
+        if not word_hash or len(word_hash) != 64:
+            self._send_json({"error": "word_hash must be SHA-256 (64 hex chars)"}, 400)
+            return
+        label = str(body.get("label", "")).strip()
+        if len(label) > 64:
+            self._send_json({"error": "label max 64 chars"}, 400)
+            return
+        with _SPELLCHECK_LOCK:
+            if word_hash in _CUSTOM_DICTIONARY:
+                self._send_json({"error": "word_hash already in dictionary"}, 409)
+                return
+            entry = {
+                "word_hash": word_hash,
+                "label": label,
+                "added_at": datetime.now(timezone.utc).isoformat(),
+            }
+            _CUSTOM_DICTIONARY[word_hash] = entry
+        self._send_json({"status": "added", "entry": dict(entry)}, 201)
+
+    def _handle_spellcheck_dictionary_delete(self, word_hash: str) -> None:
+        """DELETE /api/v1/spellcheck/dictionary/{word_hash} — remove word (auth required)."""
+        if not self._check_auth():
+            return
+        with _SPELLCHECK_LOCK:
+            if word_hash not in _CUSTOM_DICTIONARY:
+                self._send_json({"error": "word_hash not found"}, 404)
+                return
+            del _CUSTOM_DICTIONARY[word_hash]
+        self._send_json({"status": "deleted", "word_hash": word_hash})
+
+    def _handle_spellcheck_languages(self) -> None:
+        """GET /api/v1/spellcheck/languages — list supported languages (public)."""
+        self._send_json({"languages": SUPPORTED_LANGUAGES, "total": len(SUPPORTED_LANGUAGES)})
+
+    # ---------------------------------------------------------------------------
+    # Task 069 — Link Analyzer handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_links_results_list(self) -> None:
+        """GET /api/v1/links/results — list link analysis results (public)."""
+        with _LINKS_LOCK:
+            results = [dict(r) for r in _LINK_RESULTS]
+        self._send_json({"results": results, "total": len(results)})
+
+    def _handle_links_analyze(self) -> None:
+        """POST /api/v1/links/analyze — submit page for link analysis (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        page_hash = str(body.get("page_hash", "")).strip()
+        if not page_hash or len(page_hash) != 64:
+            self._send_json({"error": "page_hash must be SHA-256 (64 hex chars)"}, 400)
+            return
+        links_raw = body.get("links", [])
+        if not isinstance(links_raw, list):
+            self._send_json({"error": "links must be a list"}, 400)
+            return
+        links = []
+        for lnk in links_raw:
+            lt = lnk.get("link_type", "")
+            if lt not in LINK_TYPES:
+                self._send_json({"error": f"link_type must be one of {LINK_TYPES}"}, 400)
+                return
+            st = lnk.get("status", "")
+            if st not in LINK_STATUSES:
+                self._send_json({"error": f"status must be one of {LINK_STATUSES}"}, 400)
+                return
+            url_hash = str(lnk.get("url_hash", "")).strip()
+            links.append({"url_hash": url_hash, "link_type": lt, "status": st})
+        broken_count = sum(1 for l in links if l["status"] == "broken")
+        external_count = sum(1 for l in links if l["link_type"] == "external")
+        result = {
+            "result_id": "lnk_" + uuid.uuid4().hex,
+            "page_hash": page_hash,
+            "links": links,
+            "total_links": len(links),
+            "broken_count": broken_count,
+            "external_count": external_count,
+            "analyzed_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _LINKS_LOCK:
+            _LINK_RESULTS.append(result)
+        self._send_json({"status": "analyzed", "result": dict(result)}, 201)
+
+    def _handle_links_results_clear(self) -> None:
+        """DELETE /api/v1/links/results — clear all results (auth required)."""
+        if not self._check_auth():
+            return
+        with _LINKS_LOCK:
+            count = len(_LINK_RESULTS)
+            _LINK_RESULTS.clear()
+        self._send_json({"status": "cleared", "deleted_count": count})
+
+    def _handle_links_stats(self) -> None:
+        """GET /api/v1/links/stats — link analysis statistics (public)."""
+        with _LINKS_LOCK:
+            results = list(_LINK_RESULTS)
+        total_analyses = len(results)
+        total_links = sum(r["total_links"] for r in results)
+        broken_links = sum(r["broken_count"] for r in results)
+        broken_rate = str(round(broken_links / total_links, 4)) if total_links > 0 else "0"
+        self._send_json({
+            "total_analyses": total_analyses,
+            "total_links": total_links,
+            "broken_links": broken_links,
+            "broken_rate": broken_rate,
+        })
+
+    def _handle_links_types(self) -> None:
+        """GET /api/v1/links/types — list link types (public)."""
+        self._send_json({"link_types": LINK_TYPES, "link_statuses": LINK_STATUSES})
+
+    # ---------------------------------------------------------------------------
+    # Task 070 — Performance Profiler handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_profiler_sessions_list(self) -> None:
+        """GET /api/v1/profiler/sessions — list profiling sessions (public)."""
+        with _PROFILER_LOCK:
+            sessions = [dict(s) for s in _PROFILER_SESSIONS]
+        self._send_json({"sessions": sessions, "total": len(sessions)})
+
+    def _handle_profiler_session_create(self) -> None:
+        """POST /api/v1/profiler/sessions — start profiling session (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        page_hash = str(body.get("page_hash", "")).strip()
+        if not page_hash or len(page_hash) != 64:
+            self._send_json({"error": "page_hash must be SHA-256 (64 hex chars)"}, 400)
+            return
+        session_id = "prf_" + uuid.uuid4().hex
+        session = {
+            "session_id": session_id,
+            "page_hash": page_hash,
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "metric_count": 0,
+            "total_duration_ms": 0.0,
+        }
+        with _PROFILER_LOCK:
+            _PROFILER_SESSIONS.append(session)
+            _PROFILER_METRICS[session_id] = []
+        self._send_json({"status": "created", "session": dict(session)}, 201)
+
+    def _handle_profiler_session_get(self, session_id: str) -> None:
+        """GET /api/v1/profiler/sessions/{session_id} — get session detail (public)."""
+        with _PROFILER_LOCK:
+            session = next((s for s in _PROFILER_SESSIONS if s["session_id"] == session_id), None)
+            metrics = list(_PROFILER_METRICS.get(session_id, []))
+        if session is None:
+            self._send_json({"error": "session not found"}, 404)
+            return
+        self._send_json({"session": dict(session), "metrics": metrics})
+
+    def _handle_profiler_session_delete(self, session_id: str) -> None:
+        """DELETE /api/v1/profiler/sessions/{session_id} — delete session (auth required)."""
+        if not self._check_auth():
+            return
+        with _PROFILER_LOCK:
+            idx = next((i for i, s in enumerate(_PROFILER_SESSIONS) if s["session_id"] == session_id), None)
+            if idx is None:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            _PROFILER_SESSIONS.pop(idx)
+            _PROFILER_METRICS.pop(session_id, None)
+        self._send_json({"status": "deleted", "session_id": session_id})
+
+    def _handle_profiler_metric_add(self, session_id: str) -> None:
+        """POST /api/v1/profiler/sessions/{session_id}/metrics — add metric (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        metric_type = body.get("metric_type", "")
+        if metric_type not in PROFILER_METRIC_TYPES:
+            self._send_json({"error": f"metric_type must be one of {PROFILER_METRIC_TYPES}"}, 400)
+            return
+        unit = body.get("unit", "")
+        if unit not in PROFILER_UNITS:
+            self._send_json({"error": f"unit must be one of {PROFILER_UNITS}"}, 400)
+            return
+        value = body.get("value", None)
+        if value is None or not isinstance(value, (int, float)) or float(value) < 0:
+            self._send_json({"error": "value must be a float >= 0"}, 400)
+            return
+        timestamp_ms = body.get("timestamp_ms", None)
+        if timestamp_ms is None or not isinstance(timestamp_ms, (int, float)) or float(timestamp_ms) < 0:
+            self._send_json({"error": "timestamp_ms must be >= 0"}, 400)
+            return
+        metric_id = "mtr_" + uuid.uuid4().hex
+        metric = {
+            "metric_id": metric_id,
+            "metric_type": metric_type,
+            "value": float(value),
+            "unit": unit,
+            "timestamp_ms": float(timestamp_ms),
+        }
+        with _PROFILER_LOCK:
+            if session_id not in _PROFILER_METRICS:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            _PROFILER_METRICS[session_id].append(metric)
+            session = next((s for s in _PROFILER_SESSIONS if s["session_id"] == session_id), None)
+            if session is not None:
+                session["metric_count"] = len(_PROFILER_METRICS[session_id])
+                if unit == "ms":
+                    session["total_duration_ms"] = session.get("total_duration_ms", 0.0) + float(value)
+        self._send_json({"status": "added", "metric": dict(metric)}, 201)
+
+    def _handle_profiler_aggregates(self) -> None:
+        """GET /api/v1/profiler/aggregates — aggregated metrics across sessions (public)."""
+        with _PROFILER_LOCK:
+            all_metrics: list[dict] = []
+            for metrics in _PROFILER_METRICS.values():
+                all_metrics.extend(metrics)
+        aggregates: dict[str, dict] = {}
+        for m in all_metrics:
+            mt = m["metric_type"]
+            if mt not in aggregates:
+                aggregates[mt] = {"count": 0, "sum": 0.0, "max_value": None, "min_value": None}
+            aggregates[mt]["count"] += 1
+            aggregates[mt]["sum"] += m["value"]
+            if aggregates[mt]["max_value"] is None or m["value"] > aggregates[mt]["max_value"]:
+                aggregates[mt]["max_value"] = m["value"]
+            if aggregates[mt]["min_value"] is None or m["value"] < aggregates[mt]["min_value"]:
+                aggregates[mt]["min_value"] = m["value"]
+        result: dict[str, dict] = {}
+        for mt, agg in aggregates.items():
+            count = agg["count"]
+            result[mt] = {
+                "count": count,
+                "avg_value": round(agg["sum"] / count, 4) if count > 0 else 0.0,
+                "max_value": agg["max_value"] if agg["max_value"] is not None else 0.0,
+                "min_value": agg["min_value"] if agg["min_value"] is not None else 0.0,
+            }
+        self._send_json({"aggregates": result, "metric_types": PROFILER_METRIC_TYPES})
 
 
 # ---------------------------------------------------------------------------

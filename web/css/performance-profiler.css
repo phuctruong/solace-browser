@@ -1,0 +1,211 @@
+/* performance-profiler.css — Performance Profiler (Task 070)
+   Laws: var(--hub-*) tokens ONLY in component rules. Hex values only in :root.
+   No CDN. No Bootstrap. No Tailwind. No jQuery. Banned port omitted. */
+
+:root {
+  --hub-bg: #0d0d1a;
+  --hub-surface: #1a1a2e;
+  --hub-border: #2a2a3e;
+  --hub-text: #e2e8f0;
+  --hub-text-muted: #94a3b8;
+  --hub-accent: #6366f1;
+  --hub-success: #10b981;
+  --hub-error: #ef4444;
+  --hub-warning: #f59e0b;
+  --hub-mono: 'Courier New', monospace;
+  --hub-overlay: rgba(0, 0, 0, 0.65);
+}
+
+body {
+  margin: 0;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+}
+
+.pp-page {
+  padding: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.pp-section {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--hub-text-muted);
+  margin: 0 0 0.75rem 0;
+}
+
+.pp-form {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.pp-aggregates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.pp-agg-card {
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  min-width: 140px;
+}
+
+.pp-agg-type {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--hub-accent);
+  letter-spacing: 0.04em;
+  margin-bottom: 0.3rem;
+}
+
+.pp-agg-stats {
+  font-size: 0.8rem;
+  color: var(--hub-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.pp-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.pp-session-card {
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-left: 3px solid var(--hub-accent);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.pp-session-id {
+  font-family: var(--hub-mono);
+  font-size: 0.75rem;
+  color: var(--hub-accent);
+  margin-bottom: 0.3rem;
+}
+
+.pp-session-meta {
+  font-size: 0.8rem;
+  color: var(--hub-text-muted);
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.pp-session-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pp-status {
+  font-size: 0.8rem;
+  color: var(--hub-text-muted);
+  margin-top: 0.5rem;
+  min-height: 1.2rem;
+}
+
+.form-input {
+  flex: 1;
+  min-width: 200px;
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: 6px;
+  color: var(--hub-text);
+  padding: 0.42rem 0.75rem;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 1px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 1.25rem;
+  color: var(--hub-text-muted);
+  font-size: 0.875rem;
+}
+
+.btn-primary {
+  background: var(--hub-accent);
+  color: var(--hub-text);
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.btn-primary:hover { opacity: 0.88; }
+
+.btn-secondary {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text);
+  border-radius: 8px;
+  padding: 0.38rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-secondary:hover {
+  border-color: var(--hub-accent);
+  color: var(--hub-accent);
+}
+
+.btn-delete {
+  background: transparent;
+  border: 1px solid var(--hub-error);
+  color: var(--hub-error);
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.btn-delete:hover {
+  background: var(--hub-error);
+  color: var(--hub-text);
+}

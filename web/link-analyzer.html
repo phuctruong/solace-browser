@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Link Analyzer — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/link-analyzer.css">
+</head>
+<body>
+<div class="la-page">
+  <div class="page-header">
+    <h1 class="page-title">Link Analyzer</h1>
+    <div class="la-header-actions">
+      <button id="btn-la-refresh" class="btn-secondary">Refresh</button>
+      <button id="btn-la-clear" class="btn-danger">Clear Results</button>
+    </div>
+  </div>
+  <div class="la-stats" id="la-stats" aria-live="polite"></div>
+  <div class="la-section">
+    <h2 class="section-title">Submit Page for Analysis</h2>
+    <div class="la-form">
+      <input id="la-page-hash" class="form-input" placeholder="Page SHA-256 hash (64 chars)" maxlength="64">
+      <div id="la-links-input" class="la-links-input">
+        <div class="la-link-row" data-index="0">
+          <input class="form-input la-url-hash" placeholder="url_hash (64 chars)" maxlength="64">
+          <select class="form-input la-link-type"></select>
+          <select class="form-input la-link-status"></select>
+          <button class="btn-delete la-remove-link">X</button>
+        </div>
+      </div>
+      <div class="la-form-actions">
+        <button id="btn-la-add-link" class="btn-secondary">+ Add Link</button>
+        <button id="btn-la-analyze" class="btn-primary">Analyze</button>
+      </div>
+    </div>
+  </div>
+  <div class="la-section">
+    <h2 class="section-title">Results</h2>
+    <div id="la-results" class="la-results" aria-live="polite"></div>
+  </div>
+  <div id="la-status" class="la-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/link-analyzer.js"></script>
+</body>
+</html>

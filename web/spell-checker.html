@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spell Checker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/spell-checker.css">
+</head>
+<body>
+<div class="sc-page">
+  <div class="page-header">
+    <h1 class="page-title">Spell Checker</h1>
+    <button id="btn-sc-refresh" class="btn-secondary">Refresh Dictionary</button>
+  </div>
+  <div class="sc-panel">
+    <label class="form-label" for="sc-language">Language</label>
+    <select id="sc-language" class="form-input sc-select"></select>
+    <label class="form-label" for="sc-text">Text to Check</label>
+    <textarea id="sc-text" class="form-input sc-textarea" rows="6" placeholder="Paste text here..."></textarea>
+    <div class="sc-actions">
+      <button id="btn-sc-check" class="btn-primary">Check Spelling</button>
+      <span id="sc-counter" class="sc-counter"></span>
+    </div>
+    <div id="sc-errors" class="sc-errors" aria-live="polite"></div>
+  </div>
+  <div class="sc-section">
+    <h2 class="section-title">Custom Dictionary</h2>
+    <div class="sc-dict-toolbar">
+      <input id="sc-word-hash" class="form-input sc-dict-input" placeholder="SHA-256 word hash (64 chars)" maxlength="64">
+      <input id="sc-word-label" class="form-input sc-dict-input" placeholder="Label (optional, max 64 chars)" maxlength="64">
+      <button id="btn-sc-add-word" class="btn-primary">Add</button>
+    </div>
+    <div id="sc-dict-list" class="sc-dict-list" aria-live="polite"></div>
+  </div>
+  <div id="sc-status" class="sc-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/spell-checker.js"></script>
+</body>
+</html>
