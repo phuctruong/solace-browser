@@ -1,0 +1,59 @@
+{
+  "task_id": "20260309-task057",
+  "northstar_metric": [
+    "Safe Autonomy",
+    "Evidence by Default"
+  ],
+  "rung_target": 274177,
+  "rung_achieved": 274177,
+  "paper_reference": {
+    "path": "papers/platform/24-preview-mode-signoff.md",
+    "status": "missing_in_workspace"
+  },
+  "files_changed": [
+    "yinyang_server.py",
+    "tests/test_preview_cooldown_signoff.py"
+  ],
+  "commands": {
+    "red_gate": "python -m pytest tests/test_preview_cooldown_signoff.py -q",
+    "green_gate": "python -m pytest tests/test_preview_cooldown_signoff.py tests/test_part11_evidence.py -q",
+    "stability_runs": [
+      "python -m pytest tests/test_preview_cooldown_signoff.py -q",
+      "python -m pytest tests/test_preview_cooldown_signoff.py -q",
+      "python -m pytest tests/test_preview_cooldown_signoff.py -q"
+    ],
+    "syntax": "python -m py_compile yinyang_server.py tests/test_preview_cooldown_signoff.py"
+  },
+  "results": {
+    "syntax_exit_code": 0,
+    "red_gate": {
+      "status": "fail",
+      "observed_errors": 8,
+      "sha256": "ab85495974639f28d78e9ded8eb4d06383f6fdf59e6f417be142c990cdc7492d"
+    },
+    "green_gate": {
+      "status": "pass",
+      "tests_passed": 16,
+      "sha256": "dba147114f275ae0f2e9c99e2ca6e034b73a99d3a3f72cbac85fef6cb2d486e1"
+    },
+    "stability": {
+      "runs": 3,
+      "all_passed": true,
+      "sha256": [
+        "3dac977b410a8f9c78c094a7d8e2d7367983a80c024a98ee9aca2b6feb0351ec",
+        "2258da9311f6395f328963456cede3d56523ef15c0585df78fd82e95fa259756",
+        "3e581f92c5a63354a9091ee51e37e73e779045ac4069a73a069db9dd6f0cfef2"
+      ]
+    },
+    "cargo_check": {
+      "status": "not_applicable",
+      "reason": "Python-only change"
+    }
+  },
+  "artifacts": {
+    "diff_sha256": "25563941809787eb28ce3fa7f1188068b0ed1f0bd6f3493024a863ea5e1c22f3",
+    "red_log": "/tmp/solace-hub-coder/20260309-task057/repro_red.log",
+    "green_log": "/tmp/solace-hub-coder/20260309-task057/repro_green.log"
+  },
+  "timestamp_utc": "2026-03-09T14:47:39Z"
+}

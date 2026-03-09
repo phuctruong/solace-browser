@@ -1,0 +1,35 @@
+{
+  "task_id": "20260309-task058",
+  "rung": 641,
+  "northstar_metric": ["Evidence by Default", "User Trust"],
+  "files_changed": [
+    "yinyang_server.py",
+    "web/schedule.html",
+    "web/js/schedule.js",
+    "web/css/schedule.css"
+  ],
+  "validation": {
+    "python_compile": {"command": "python -m py_compile yinyang_server.py", "exit_code": 0},
+    "schedule_static_pytest": {
+      "command": "pytest -q tests/test_schedule_viewer.py -k 'test_schedule_css_no_hardcoded_hex or test_schedule_html_no_cdn_dependencies or test_no_port_9222_in_schedule_files or test_no_companion_app_in_schedule_files or test_no_bare_except_in_schedule_handlers or test_schedule_js_auto_reject_not_approve_on_timeout or test_schedule_server_routes_registered or test_signoff_sheet_exists_in_html or test_four_views_in_html or test_bulk_approve_class_bc_banned'",
+      "exit_code": 0,
+      "passed": 10,
+      "failed": 0
+    },
+    "direct_backend_exercise": {
+      "command": "python inline no-socket schedule handler exercise",
+      "exit_code": 0
+    },
+    "full_schedule_pytest": {
+      "command": "pytest -q tests/test_schedule_viewer.py",
+      "exit_code": 1,
+      "blocked_by": "sandbox socket creation PermissionError"
+    }
+  },
+  "artifact_hashes": {
+    "patch_diff_sha256": "90500bf9607ba8f2a902b4b777f78717a89034ba589d4cb454a8da8405236790",
+    "red_gate_log_sha256": "5ded51f816438c22f0b8f31659c30d632add01e73edcc350f7a2d4c4396c88dd",
+    "green_static_log_sha256": "fc64842f817543f8659e7af35dd99327ae5f862f0d8cb3a6d37213a4a988744d",
+    "green_backend_log_sha256": "856b7606d0f631b7cdd5a1c279b3ebf4bacf73698189a500f5f098b7307c3cdc"
+  }
+}
