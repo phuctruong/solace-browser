@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Optimizer — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/image-optimizer.css">
+</head>
+<body>
+<div class="io-container">
+  <h1 class="io-title">Image Optimizer</h1>
+  <p class="io-subtitle">Record image optimization reports with privacy-preserving URL hashing</p>
+
+  <section class="io-section">
+    <h2 class="io-section-title">Record Optimization Report</h2>
+    <form id="io-report-form" class="io-form">
+      <input id="io-page-url" class="io-input" type="url" placeholder="Page URL" aria-label="Page URL">
+      <input id="io-image-url" class="io-input" type="url" placeholder="Image URL" aria-label="Image URL">
+      <select id="io-format" class="io-input" aria-label="Image format"></select>
+      <input id="io-original-size" class="io-input" type="number" placeholder="Original size (bytes)" min="1" aria-label="Original size bytes">
+      <input id="io-optimized-size" class="io-input" type="number" placeholder="Optimized size (bytes)" min="0" aria-label="Optimized size bytes">
+      <button type="submit" class="io-btn io-btn-primary">Record</button>
+    </form>
+  </section>
+
+  <section class="io-section">
+    <h2 class="io-section-title">Formats</h2>
+    <div id="io-formats-row" class="io-badges" aria-live="polite"></div>
+  </section>
+
+  <section class="io-section">
+    <h2 class="io-section-title">Stats</h2>
+    <div id="io-stats" class="io-stats-grid" aria-live="polite"></div>
+  </section>
+
+  <section class="io-section">
+    <h2 class="io-section-title">Reports</h2>
+    <div id="io-reports-list" class="io-list" aria-live="polite"></div>
+  </section>
+
+  <div id="io-status" class="io-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/image-optimizer.js"></script>
+</body>
+</html>
