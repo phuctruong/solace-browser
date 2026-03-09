@@ -1,4 +1,4 @@
-/* Accessibility Checker — Task 087 */
+/* Accessibility Checker — Task 159. IIFE. No eval(). escHtml required. */
 (function () {
   'use strict';
 
@@ -10,53 +10,92 @@
       .replace(/"/g, '&quot;');
   }
 
-  var panel = document.getElementById('ac-panel');
-  var status = document.getElementById('ac-status');
+  function msg(text) {
+    var el = document.getElementById('a11c-msg');
+    if (el) el.textContent = text;
+  }
 
-  function setStatus(msg) { status.textContent = msg; }
+  function loadStats() {
+    fetch('/api/v1/accessibility/stats', { headers: { 'Authorization': 'Bearer ' + (window._solaceToken || '') } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var el = document.getElementById('a11c-stats');
+        if (!el) return;
+        el.innerHTML = '<div class="a11c-stats-grid">' +
+          '<div class="a11c-stat"><div class="a11c-stat-val">' + escHtml(d.total_checks) + '</div><div class="a11c-stat-lbl">Total Checks</div></div>' +
+          '<div class="a11c-stat"><div class="a11c-stat-val">' + escHtml(d.avg_score) + '</div><div class="a11c-stat-lbl">Avg Score</div></div>' +
+          '<div class="a11c-stat"><div class="a11c-stat-val">' + escHtml(d.avg_issues) + '</div><div class="a11c-stat-lbl">Avg Issues</div></div>' +
+          '<div class="a11c-stat"><div class="a11c-stat-val">' + escHtml(d.perfect_score_count) + '</div><div class="a11c-stat-lbl">Perfect Scores</div></div>' +
+          '</div>';
+      })
+      .catch(function (e) { msg('Stats error: ' + e.message); });
+  }
 
-  function renderScans(scans) {
-    if (!scans.length) {
-      panel.innerHTML = '<p style="color:var(--hub-muted)">No scans recorded.</p>';
-      return;
+  function loadChecks() {
+    fetch('/api/v1/accessibility/checks', { headers: { 'Authorization': 'Bearer ' + (window._solaceToken || '') } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var panel = document.getElementById('a11c-panel');
+        if (!panel) return;
+        if (!d.checks || d.checks.length === 0) { panel.innerHTML = '<p>No checks recorded.</p>'; return; }
+        panel.innerHTML = d.checks.map(function (c) {
+          var scoreClass = c.score >= 80 ? 'a11c-score-high' : 'a11c-score-low';
+          return '<div class="a11c-item">' +
+            '<div><div class="a11c-item-meta"><span class="a11c-badge">' + escHtml(c.wcag_level) + '</span> ' +
+            'Score: <span class="' + scoreClass + '">' + escHtml(c.score) + '</span> | Issues: ' + escHtml(c.total_issues) + '</div>' +
+            '<div class="a11c-item-id">' + escHtml(c.check_id) + '</div></div>' +
+            '<div class="a11c-actions"><button class="a11c-btn a11c-btn-del" data-id="' + escHtml(c.check_id) + '">Delete</button></div>' +
+            '</div>';
+        }).join('');
+        panel.querySelectorAll('[data-id]').forEach(function (btn) {
+          btn.addEventListener('click', function () { deleteCheck(btn.dataset.id); });
+        });
+      })
+      .catch(function (e) { msg('Load error: ' + e.message); });
+  }
+
+  function deleteCheck(id) {
+    fetch('/api/v1/accessibility/checks/' + encodeURIComponent(id), {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + (window._solaceToken || '') }
+    })
+      .then(function (r) { return r.json(); })
+      .then(function () { loadChecks(); loadStats(); })
+      .catch(function (e) { msg('Delete error: ' + e.message); });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    loadStats();
+    loadChecks();
+
+    var form = document.getElementById('a11c-form');
+    if (form) {
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var issueType = document.getElementById('a11c-issue-type').value;
+        var payload = {
+          url: document.getElementById('a11c-url').value,
+          wcag_level: document.getElementById('a11c-wcag').value,
+          total_issues: parseInt(document.getElementById('a11c-total').value, 10),
+          critical_issues: parseInt(document.getElementById('a11c-critical').value, 10),
+          score: parseInt(document.getElementById('a11c-score').value, 10),
+          top_issue_type: issueType || null,
+        };
+        fetch('/api/v1/accessibility/checks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + (window._solaceToken || '')
+          },
+          body: JSON.stringify(payload)
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d.check) { msg('Recorded: ' + d.check.check_id); loadChecks(); loadStats(); }
+            else { msg('Error: ' + (d.error || 'unknown')); }
+          })
+          .catch(function (e) { msg('Submit error: ' + e.message); });
+      });
     }
-    panel.innerHTML = scans.map(function (s) {
-      return '<div class="ac-item">'
-        + '<div class="ac-item-id">' + escHtml(s.scan_id) + '</div>'
-        + '<div class="ac-item-meta">WCAG: ' + escHtml(s.wcag_level)
-        + ' | Pass: ' + escHtml(s.pass_count)
-        + ' | Fail: ' + escHtml(s.fail_count)
-        + ' | Score: <span class="ac-score">' + escHtml(s.score) + '%</span></div>'
-        + '</div>';
-    }).join('');
-  }
-
-  function renderLevels(levels) {
-    panel.innerHTML = '<p class="ac-item-meta">WCAG levels: ' + escHtml(levels.join(', ')) + '</p>';
-  }
-
-  function loadScans() {
-    fetch('/api/v1/accessibility/scans')
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        renderScans(data.scans || []);
-        setStatus('Scans loaded: ' + (data.total || 0));
-      })
-      .catch(function (e) { setStatus('Error: ' + escHtml(String(e))); });
-  }
-
-  function loadLevels() {
-    fetch('/api/v1/accessibility/wcag-levels')
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        renderLevels(data.wcag_levels || []);
-        setStatus('Levels loaded');
-      })
-      .catch(function (e) { setStatus('Error: ' + escHtml(String(e))); });
-  }
-
-  document.getElementById('btn-ac-scans').addEventListener('click', loadScans);
-  document.getElementById('btn-ac-levels').addEventListener('click', loadLevels);
-
-  loadScans();
-})();
+  });
+}());

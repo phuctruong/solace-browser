@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browser Shortcuts Manager — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/browser-shortcuts-manager.css" />
+</head>
+<body>
+  <div class="shc-container">
+    <header class="shc-header">
+      <h1 class="shc-title">Browser Shortcuts Manager</h1>
+      <p class="shc-subtitle">Manage custom browser keyboard shortcuts</p>
+    </header>
+
+    <section class="shc-section">
+      <h2 class="shc-section-title">Stats</h2>
+      <div id="shc-stats" class="shc-stats-grid"></div>
+    </section>
+
+    <section class="shc-section">
+      <h2 class="shc-section-title">Create Shortcut</h2>
+      <form id="shc-form" class="shc-form">
+        <select id="shc-action-type" required>
+          <option value="">Select action type…</option>
+        </select>
+        <input type="text" id="shc-key-combo" placeholder="Key combo (e.g. ctrl+shift+s)" required />
+        <input type="text" id="shc-description" placeholder="Description (max 200 chars)" maxlength="200" />
+        <label class="shc-checkbox-label">
+          <input type="checkbox" id="shc-is-enabled" checked />
+          Enabled
+        </label>
+        <button type="submit">Create Shortcut</button>
+      </form>
+    </section>
+
+    <section class="shc-section">
+      <h2 class="shc-section-title">Action Types</h2>
+      <div id="shc-action-types" class="shc-badges"></div>
+    </section>
+
+    <section class="shc-section">
+      <h2 class="shc-section-title">Shortcuts</h2>
+      <div id="shc-list" class="shc-list"></div>
+    </section>
+  </div>
+  <script src="/web/js/browser-shortcuts-manager.js"></script>
+</body>
+</html>

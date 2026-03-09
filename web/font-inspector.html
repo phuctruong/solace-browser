@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Font Inspector</title>
+  <link rel="stylesheet" href="/web/css/font-inspector.css">
+</head>
+<body>
+<div class="fns-container">
+  <h1 class="fns-title">Font Inspector</h1>
+  <p class="fns-subtitle">Catalog and inspect fonts used on web pages.</p>
+
+  <div class="fns-stats" id="fns-stats"><p>Loading stats...</p></div>
+
+  <form class="fns-form" id="fns-form">
+    <input type="text" id="fns-url" placeholder="Page URL" value="https://example.com">
+    <input type="text" id="fns-font-name" placeholder="Font Name" value="Arial">
+    <select id="fns-category">
+      <option value="serif">serif</option>
+      <option value="sans_serif" selected>sans_serif</option>
+      <option value="monospace">monospace</option>
+      <option value="cursive">cursive</option>
+      <option value="fantasy">fantasy</option>
+      <option value="display">display</option>
+      <option value="handwriting">handwriting</option>
+      <option value="system">system</option>
+      <option value="web_font">web_font</option>
+      <option value="unknown">unknown</option>
+    </select>
+    <input type="number" id="fns-font-count" placeholder="Font Count" min="1" value="3">
+    <input type="number" id="fns-load-time" placeholder="Load ms" min="0" value="100">
+    <label><input type="checkbox" id="fns-variable"> Variable</label>
+    <label><input type="checkbox" id="fns-webfont"> WebFont</label>
+    <button type="submit" class="fns-btn fns-btn-primary">Record Scan</button>
+  </form>
+
+  <div class="fns-panel" id="fns-panel">Loading scans...</div>
+  <div class="fns-msg" id="fns-msg"></div>
+</div>
+<script src="/web/js/font-inspector.js"></script>
+</body>
+</html>

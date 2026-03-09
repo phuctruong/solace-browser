@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clipboard History — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/clipboard-history.css" />
+</head>
+<body>
+  <div class="clp-container">
+    <header class="clp-header">
+      <h1 class="clp-title">Clipboard History</h1>
+      <p class="clp-subtitle">Track clipboard entries with smart categorization</p>
+    </header>
+
+    <section class="clp-section">
+      <h2 class="clp-section-title">Stats</h2>
+      <div id="clp-stats" class="clp-stats-grid"></div>
+    </section>
+
+    <section class="clp-section">
+      <h2 class="clp-section-title">Add Entry</h2>
+      <form id="clp-form" class="clp-form">
+        <select id="clp-content-type" required>
+          <option value="">Select content type…</option>
+        </select>
+        <input type="number" id="clp-char-count" placeholder="Character count" min="0" value="0" />
+        <input type="text" id="clp-content" placeholder="Content (will be hashed)" />
+        <input type="url" id="clp-source-url" placeholder="Source URL (optional, will be hashed)" />
+        <button type="submit">Add Entry</button>
+        <button type="button" id="clp-clear-btn" class="clp-btn-danger">Clear All</button>
+      </form>
+    </section>
+
+    <section class="clp-section">
+      <h2 class="clp-section-title">Entries</h2>
+      <div id="clp-list" class="clp-list"></div>
+    </section>
+  </div>
+  <script src="/web/js/clipboard-history.js"></script>
+</body>
+</html>

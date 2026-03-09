@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Annotation — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/page-annotation.css" />
+</head>
+<body>
+  <div class="ann-container">
+    <header class="ann-header">
+      <h1 class="ann-title">Page Annotation</h1>
+      <p class="ann-subtitle">Add persistent annotations and comments to web pages</p>
+    </header>
+
+    <section class="ann-section">
+      <h2 class="ann-section-title">Stats</h2>
+      <div id="ann-stats" class="ann-stats-grid"></div>
+    </section>
+
+    <section class="ann-section">
+      <h2 class="ann-section-title">Create Annotation</h2>
+      <form id="ann-form" class="ann-form">
+        <select id="ann-type" required>
+          <option value="">Select annotation type…</option>
+        </select>
+        <select id="ann-color" required>
+          <option value="">Select color…</option>
+          <option value="yellow">Yellow</option>
+          <option value="green">Green</option>
+          <option value="blue">Blue</option>
+          <option value="red">Red</option>
+          <option value="purple">Purple</option>
+        </select>
+        <input type="url" id="ann-url" placeholder="Page URL (will be hashed)" />
+        <input type="text" id="ann-selected-text" placeholder="Selected text (will be hashed)" />
+        <input type="number" id="ann-text-length" placeholder="Selected text length" min="0" value="0" />
+        <textarea id="ann-note" placeholder="Note (max 500 chars)" maxlength="500"></textarea>
+        <button type="submit">Create Annotation</button>
+      </form>
+    </section>
+
+    <section class="ann-section">
+      <h2 class="ann-section-title">Annotations</h2>
+      <div id="ann-list" class="ann-list"></div>
+    </section>
+  </div>
+  <script src="/web/js/page-annotation.js"></script>
+</body>
+</html>

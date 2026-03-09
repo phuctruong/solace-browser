@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extension API Blocker</title>
+  <link rel="stylesheet" href="/web/css/extension-api-blocker.css">
+</head>
+<body>
+<div class="abr-container">
+  <h1 class="abr-title">Extension API Blocker</h1>
+  <p class="abr-subtitle">Create rules to block suspicious API calls from web pages.</p>
+
+  <div class="abr-stats" id="abr-stats"><p>Loading stats...</p></div>
+
+  <section class="abr-section">
+    <h2 class="abr-section-title">Add Block Rule</h2>
+    <form class="abr-form" id="abr-rule-form">
+      <select id="abr-rule-type">
+        <option value="exact_match">exact_match</option>
+        <option value="prefix_match">prefix_match</option>
+        <option value="regex_pattern">regex_pattern</option>
+        <option value="domain_wildcard">domain_wildcard</option>
+      </select>
+      <input type="text" id="abr-pattern" placeholder="API pattern (will be hashed)" style="width:260px">
+      <label class="abr-check-label">
+        <input type="checkbox" id="abr-enabled" checked> Enabled
+      </label>
+      <button type="submit" class="abr-btn abr-btn-primary">Add Rule</button>
+    </form>
+  </section>
+
+  <section class="abr-section">
+    <h2 class="abr-section-title">Rules</h2>
+    <div class="abr-panel" id="abr-rules-panel">Loading rules...</div>
+  </section>
+
+  <section class="abr-section">
+    <h2 class="abr-section-title">Log Blocked Call</h2>
+    <form class="abr-form" id="abr-log-form">
+      <input type="text" id="abr-api-call" placeholder="API call (will be hashed)" style="width:300px">
+      <input type="text" id="abr-rule-matched" placeholder="Matched rule_id (or no_rule)" value="no_rule" style="width:200px">
+      <button type="submit" class="abr-btn abr-btn-primary">Log</button>
+    </form>
+  </section>
+
+  <section class="abr-section">
+    <h2 class="abr-section-title">Blocked Calls Log</h2>
+    <div class="abr-panel" id="abr-log-panel">Loading log...</div>
+  </section>
+
+  <div class="abr-msg" id="abr-msg"></div>
+</div>
+<script src="/web/js/extension-api-blocker.js"></script>
+</body>
+</html>

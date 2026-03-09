@@ -1,0 +1,150 @@
+:root {
+  --hub-bg: #f8f9fa;
+  --hub-surface: #ffffff;
+  --hub-border: #dee2e6;
+  --hub-text: #212529;
+  --hub-text-muted: #6c757d;
+  --hub-primary: #0d6efd;
+  --hub-danger: #dc3545;
+  --hub-radius: 8px;
+  --hub-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.sgt-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.sgt-header { margin-bottom: 24px; }
+
+.sgt-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.sgt-subtitle {
+  color: var(--hub-text-muted);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.sgt-section {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--hub-shadow);
+}
+
+.sgt-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.sgt-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.sgt-stat-card {
+  background: var(--hub-bg);
+  border-radius: var(--hub-radius);
+  padding: 12px;
+  text-align: center;
+}
+
+.sgt-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--hub-primary);
+}
+
+.sgt-stat-label {
+  font-size: 0.8rem;
+  color: var(--hub-text-muted);
+  margin-top: 4px;
+}
+
+.sgt-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.sgt-form select,
+.sgt-form input {
+  padding: 8px 10px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  font-size: 0.9rem;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  flex: 1;
+  min-width: 120px;
+}
+
+.sgt-form button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--hub-radius);
+  background: var(--hub-primary);
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.sgt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sgt-item {
+  background: var(--hub-bg);
+  border-radius: var(--hub-radius);
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sgt-item-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sgt-badge {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.sgt-delete-btn {
+  background: none;
+  border: 1px solid var(--hub-danger);
+  color: var(--hub-danger);
+  border-radius: var(--hub-radius);
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}

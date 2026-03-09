@@ -1,73 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Request Interceptor — Solace Hub</title>
-  <link rel="stylesheet" href="/web/css/request-interceptor.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Interceptor</title>
+  <link rel="stylesheet" href="/web/css/request-interceptor.css">
 </head>
 <body>
-  <div class="ri-container">
-    <header class="ri-header">
-      <h1 class="ri-title">Request Interceptor</h1>
-      <p class="ri-subtitle">Intercept and control browser requests with rules</p>
-    </header>
+<div class="ric-container">
+  <h1 class="ric-title">Request Interceptor</h1>
+  <p class="ric-subtitle">Intercept and audit outbound HTTP requests for privacy analysis.</p>
 
-    <section class="ri-section">
-      <h2 class="ri-section-title">Add Rule</h2>
-      <div class="ri-form">
-        <label for="ri-rule-type">Rule Type</label>
-        <select id="ri-rule-type" class="ri-select">
-          <option value="block">block</option>
-          <option value="redirect">redirect</option>
-          <option value="modify_headers">modify_headers</option>
-          <option value="inject_script">inject_script</option>
-          <option value="log_only">log_only</option>
-        </select>
-        <label for="ri-action">Action</label>
-        <select id="ri-action" class="ri-select">
-          <option value="allow">allow</option>
-          <option value="block">block</option>
-          <option value="redirect">redirect</option>
-          <option value="modify">modify</option>
-        </select>
-        <label for="ri-method">HTTP Method</label>
-        <select id="ri-method" class="ri-select">
-          <option value="ALL">ALL</option>
-          <option value="GET">GET</option>
-          <option value="POST">POST</option>
-          <option value="PUT">PUT</option>
-          <option value="DELETE">DELETE</option>
-          <option value="PATCH">PATCH</option>
-        </select>
-        <label for="ri-pattern">URL Pattern (hashed on submit)</label>
-        <input type="text" id="ri-pattern" class="ri-input" placeholder="*.example.com/api/*" />
-        <button id="ri-add-btn" class="ri-btn ri-btn-primary">Add Rule</button>
-        <p id="ri-rule-msg" class="ri-msg" hidden></p>
-      </div>
-    </section>
+  <div class="ric-stats" id="ric-stats"><p>Loading stats...</p></div>
 
-    <section class="ri-section">
-      <h2 class="ri-section-title">Rules</h2>
-      <div id="ri-rules-list" class="ri-list" aria-live="polite">
-        <p class="ri-loading">Loading…</p>
-      </div>
-    </section>
+  <form class="ric-form" id="ric-form">
+    <input type="text" id="ric-url" placeholder="Request URL" value="https://api.example.com">
+    <input type="text" id="ric-origin" placeholder="Origin" value="https://example.com">
+    <select id="ric-method">
+      <option value="GET" selected>GET</option>
+      <option value="POST">POST</option>
+      <option value="PUT">PUT</option>
+      <option value="DELETE">DELETE</option>
+      <option value="PATCH">PATCH</option>
+      <option value="HEAD">HEAD</option>
+      <option value="OPTIONS">OPTIONS</option>
+    </select>
+    <input type="number" id="ric-status" placeholder="Status" min="100" max="599" value="200">
+    <input type="number" id="ric-response-ms" placeholder="Response ms" min="0" value="50">
+    <input type="number" id="ric-req-size" placeholder="Req bytes" min="0" value="0">
+    <input type="number" id="ric-res-size" placeholder="Res bytes" min="0" value="512">
+    <button type="submit" class="ric-btn ric-btn-primary">Log Request</button>
+  </form>
 
-    <section class="ri-section">
-      <h2 class="ri-section-title">Intercepted Requests Log</h2>
-      <div id="ri-log-list" class="ri-list" aria-live="polite">
-        <p class="ri-loading">Loading…</p>
-      </div>
-    </section>
-
-    <section class="ri-section">
-      <h2 class="ri-section-title">Rule Types Reference</h2>
-      <div id="ri-types-list" class="ri-types" aria-live="polite">
-        <p class="ri-loading">Loading…</p>
-      </div>
-    </section>
-  </div>
-  <script src="/web/js/request-interceptor.js"></script>
+  <div class="ric-panel" id="ric-panel">Loading logs...</div>
+  <div class="ric-msg" id="ric-msg"></div>
+</div>
+<script src="/web/js/request-interceptor.js"></script>
 </body>
 </html>

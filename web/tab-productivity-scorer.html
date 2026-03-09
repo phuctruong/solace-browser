@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tab Productivity Scorer</title>
+  <link rel="stylesheet" href="/web/css/tab-productivity-scorer.css">
+</head>
+<body>
+<div class="tps-container">
+  <h1 class="tps-title">Tab Productivity Scorer</h1>
+  <p class="tps-subtitle">Score tab usage by productivity category and track time investment.</p>
+
+  <div class="tps-stats" id="tps-stats"><p>Loading stats...</p></div>
+
+  <form class="tps-form" id="tps-form">
+    <select id="tps-category">
+      <option value="work">work</option>
+      <option value="research">research</option>
+      <option value="entertainment">entertainment</option>
+      <option value="social_media">social_media</option>
+      <option value="news">news</option>
+      <option value="shopping">shopping</option>
+      <option value="communication">communication</option>
+      <option value="development">development</option>
+      <option value="learning">learning</option>
+      <option value="other">other</option>
+    </select>
+    <input type="url" id="tps-url" placeholder="Tab URL (hashed)" value="https://example.com" style="width:200px">
+    <input type="number" id="tps-time" placeholder="Minutes" min="0" value="30" style="width:100px">
+    <input type="number" id="tps-score" placeholder="Score 0-10" min="0" max="10" value="7" style="width:110px">
+    <input type="number" id="tps-tabs" placeholder="Tab count" min="1" value="1" style="width:100px">
+    <button type="submit" class="tps-btn tps-btn-primary">Record Score</button>
+  </form>
+
+  <div class="tps-panel" id="tps-panel">Loading scores...</div>
+  <div class="tps-msg" id="tps-msg"></div>
+</div>
+<script src="/web/js/tab-productivity-scorer.js"></script>
+</body>
+</html>

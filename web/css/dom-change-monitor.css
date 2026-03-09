@@ -1,0 +1,33 @@
+/* DOM Change Monitor — Task 160 */
+:root {
+  --hub-bg: #f5f6fa;
+  --hub-surface: #ffffff;
+  --hub-primary: #4A90E2;
+  --hub-secondary: #e8e8e8;
+  --hub-text: #222;
+  --hub-muted: #666;
+  --hub-border: #ddd;
+  --hub-success: #27ae60;
+  --hub-danger: #e74c3c;
+  --hub-warn: #f39c12;
+}
+.dcm-container { max-width: 900px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; background: var(--hub-bg); min-height: 100vh; }
+.dcm-title { font-size: 1.6rem; font-weight: 700; color: var(--hub-text); margin-bottom: 4px; }
+.dcm-subtitle { color: var(--hub-muted); margin-bottom: 20px; }
+.dcm-form { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.dcm-form select, .dcm-form input { padding: 8px 12px; border: 1px solid var(--hub-border); border-radius: 6px; font-size: 0.9rem; width: 140px; }
+.dcm-btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.dcm-btn-primary { background: var(--hub-primary); color: var(--hub-surface); }
+.dcm-btn-del { background: var(--hub-secondary); color: var(--hub-text); }
+.dcm-stats { padding: 16px; background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 8px; margin-bottom: 16px; }
+.dcm-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.dcm-stat { text-align: center; }
+.dcm-stat-val { font-size: 1.3rem; font-weight: 700; color: var(--hub-primary); }
+.dcm-stat-lbl { font-size: 0.75rem; color: var(--hub-muted); }
+.dcm-panel { display: flex; flex-direction: column; gap: 8px; }
+.dcm-item { padding: 12px 16px; background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+.dcm-item-meta { font-size: 0.85rem; color: var(--hub-text); }
+.dcm-item-id { font-size: 0.75rem; color: var(--hub-muted); font-family: monospace; }
+.dcm-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: var(--hub-secondary); color: var(--hub-text); }
+.dcm-actions { display: flex; gap: 4px; }
+.dcm-msg { margin-top: 12px; font-size: 0.85rem; color: var(--hub-muted); }

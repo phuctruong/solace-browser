@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOM Change Monitor</title>
+  <link rel="stylesheet" href="/web/css/dom-change-monitor.css">
+</head>
+<body>
+<div class="dcm-container">
+  <h1 class="dcm-title">DOM Change Monitor</h1>
+  <p class="dcm-subtitle">Track DOM mutations on web pages for change detection.</p>
+
+  <div class="dcm-stats" id="dcm-stats"><p>Loading stats...</p></div>
+
+  <form class="dcm-form" id="dcm-form">
+    <input type="text" id="dcm-url" placeholder="Page URL" value="https://example.com">
+    <input type="text" id="dcm-selector" placeholder="CSS Selector" value="#main">
+    <select id="dcm-mutation-type">
+      <option value="childList" selected>childList</option>
+      <option value="attributes">attributes</option>
+      <option value="characterData">characterData</option>
+      <option value="subtree">subtree</option>
+      <option value="class_change">class_change</option>
+      <option value="style_change">style_change</option>
+      <option value="text_change">text_change</option>
+      <option value="other">other</option>
+    </select>
+    <input type="number" id="dcm-change-count" placeholder="Changes" min="1" value="1">
+    <input type="number" id="dcm-nodes-added" placeholder="Nodes Added" min="0" value="0">
+    <input type="number" id="dcm-nodes-removed" placeholder="Nodes Removed" min="0" value="0">
+    <button type="submit" class="dcm-btn dcm-btn-primary">Record Event</button>
+  </form>
+
+  <div class="dcm-panel" id="dcm-panel">Loading events...</div>
+  <div class="dcm-msg" id="dcm-msg"></div>
+</div>
+<script src="/web/js/dom-change-monitor.js"></script>
+</body>
+</html>

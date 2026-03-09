@@ -1,192 +1,165 @@
-"""Tests for Task 084 — Request Interceptor."""
+"""Tests for Task 161 — Request Interceptor."""
 import sys
-import json
-import hashlib
-
-sys.path.insert(0, "/home/phuc/projects/solace-browser")
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import yinyang_server as ys
-
-VALID_TOKEN = "d" * 64
 
 
 class FakeHandler(ys.YinyangHandler):
     def __init__(self):
-        self._responses = []
-        self._body = b""
-        self.headers = {"content-length": "0", "Authorization": f"Bearer {VALID_TOKEN}"}
+        self._response_code = None
+        self._response_body = None
 
-    def _read_json_body(self):
-        return json.loads(self._body) if self._body else {}
-
-    def _send_json(self, data, code=200):
-        self._responses.append((code, data))
+    def _send_json(self, data, status=200):
+        self._response_code = status
+        self._response_body = data
 
     def _check_auth(self):
         return True
 
-    def log_message(self, *a):
+    def _require_auth(self):
         pass
 
 
-def make_handler(body=None):
-    h = FakeHandler()
-    if body is not None:
-        h._body = json.dumps(body).encode()
-        h.headers = {
-            "content-length": str(len(h._body)),
-            "Authorization": f"Bearer {VALID_TOKEN}",
-        }
+def make_handler():
+    return FakeHandler()
+
+
+def _create_log(extra=None):
+    h = make_handler()
+    ys._INTERCEPTOR_LOGS.clear()
+    payload = {
+        "url": "https://api.example.com/data",
+        "origin": "https://example.com",
+        "method": "GET",
+        "status_code": 200,
+        "response_ms": 45,
+        "request_size_bytes": 128,
+        "response_size_bytes": 1024,
+    }
+    if extra:
+        payload.update(extra)
+    h._read_json_body = lambda: payload
+    h._handle_ric_create()
     return h
 
 
-def clear_state():
-    with ys._INTERCEPT_LOCK:
-        ys._INTERCEPT_RULES.clear()
-        ys._INTERCEPT_LOG.clear()
+def test_log_create():
+    h = _create_log()
+    assert h._response_code == 201
+    assert h._response_body["log"]["log_id"].startswith("ric_")
 
 
-def test_rule_create():
-    """POST → irl_ prefix returned."""
-    clear_state()
-    h = make_handler({
-        "rule_type": "block",
-        "action": "block",
-        "method": "GET",
-        "pattern": "*.ads.example.com/*",
-    })
-    h._handle_interceptor_rule_create()
-    code, data = h._responses[0]
-    assert code == 201
-    assert data["rule"]["rule_id"].startswith("irl_")
+def test_log_url_hashed():
+    h = _create_log()
+    log = h._response_body["log"]
+    assert "url_hash" in log
+    assert len(log["url_hash"]) == 64
+    assert "url" not in log
+    assert "origin_hash" in log
+    assert len(log["origin_hash"]) == 64
 
 
-def test_rule_pattern_hashed():
-    """pattern_hash present, no raw pattern stored."""
-    clear_state()
-    pattern = "https://tracking.example.com/pixel"
-    h = make_handler({
-        "rule_type": "log_only",
-        "action": "allow",
-        "method": "ALL",
-        "pattern": pattern,
-    })
-    h._handle_interceptor_rule_create()
-    code, data = h._responses[0]
-    assert code == 201
-    rule = data["rule"]
-    assert "pattern_hash" in rule
-    assert "pattern" not in rule
-    expected = hashlib.sha256(pattern.encode()).hexdigest()
-    assert rule["pattern_hash"] == expected
-
-
-def test_rule_invalid_type():
-    """Unknown rule_type → 400."""
-    clear_state()
-    h = make_handler({
-        "rule_type": "invalid_type_xyz",
-        "action": "block",
-        "method": "GET",
-        "pattern": "*.example.com",
-    })
-    h._handle_interceptor_rule_create()
-    code, data = h._responses[0]
-    assert code == 400
-    assert "error" in data
-
-
-def test_rule_invalid_action():
-    """Unknown action → 400."""
-    clear_state()
-    h = make_handler({
-        "rule_type": "block",
-        "action": "teleport",
-        "method": "GET",
-        "pattern": "*.example.com",
-    })
-    h._handle_interceptor_rule_create()
-    code, data = h._responses[0]
-    assert code == 400
-    assert "error" in data
-
-
-def test_rule_list():
-    """GET /rules → list returned."""
-    clear_state()
-    save = make_handler({
-        "rule_type": "redirect",
-        "action": "redirect",
-        "method": "GET",
-        "pattern": "*.old-domain.com/*",
-    })
-    save._handle_interceptor_rule_create()
+def test_log_invalid_method():
     h = make_handler()
-    h._handle_interceptor_rules_list()
-    code, data = h._responses[0]
-    assert code == 200
-    assert "rules" in data
-    assert len(data["rules"]) >= 1
+    ys._INTERCEPTOR_LOGS.clear()
+    payload = {
+        "url": "https://example.com",
+        "origin": "https://example.com",
+        "method": "BREW",
+        "status_code": 200,
+        "response_ms": 10,
+        "request_size_bytes": 0,
+        "response_size_bytes": 0,
+    }
+    h._read_json_body = lambda: payload
+    h._handle_ric_create()
+    assert h._response_code == 400
 
 
-def test_rule_delete():
-    """DELETE → removed."""
-    clear_state()
-    save = make_handler({
-        "rule_type": "block",
-        "action": "block",
+def test_log_invalid_status():
+    h = make_handler()
+    ys._INTERCEPTOR_LOGS.clear()
+    payload = {
+        "url": "https://example.com",
+        "origin": "https://example.com",
+        "method": "GET",
+        "status_code": 99,
+        "response_ms": 10,
+        "request_size_bytes": 0,
+        "response_size_bytes": 0,
+    }
+    h._read_json_body = lambda: payload
+    h._handle_ric_create()
+    assert h._response_code == 400
+
+
+def test_log_negative_response():
+    h = make_handler()
+    ys._INTERCEPTOR_LOGS.clear()
+    payload = {
+        "url": "https://example.com",
+        "origin": "https://example.com",
         "method": "POST",
-        "pattern": "api.spam.com/track",
-    })
-    save._handle_interceptor_rule_create()
-    rule_id = save._responses[0][1]["rule"]["rule_id"]
+        "status_code": 201,
+        "response_ms": -1,
+        "request_size_bytes": 0,
+        "response_size_bytes": 0,
+    }
+    h._read_json_body = lambda: payload
+    h._handle_ric_create()
+    assert h._response_code == 400
+
+
+def test_log_status_classification():
+    ys._INTERCEPTOR_LOGS.clear()
+    _create_log({"status_code": 404, "method": "GET"})
     h = make_handler()
-    h._handle_interceptor_rule_delete(rule_id)
-    code, data = h._responses[0]
-    assert code == 200
-    assert data["status"] == "deleted"
-    with ys._INTERCEPT_LOCK:
-        ids = [r["rule_id"] for r in ys._INTERCEPT_RULES]
-    assert rule_id not in ids
+    h._handle_ric_stats()
+    assert h._response_code == 200
+    by_class = h._response_body["by_status_class"]
+    assert by_class["4xx"] == 1
+    assert by_class["2xx"] == 0
 
 
-def test_rule_delete_not_found():
-    """DELETE irl_notexist → 404."""
-    clear_state()
+def test_log_list():
+    _create_log()
     h = make_handler()
-    h._handle_interceptor_rule_delete("irl_doesnotexist")
-    code, data = h._responses[0]
-    assert code == 404
-    assert "error" in data
+    h._handle_ric_list()
+    assert h._response_code == 200
+    assert "logs" in h._response_body
+    assert h._response_body["total"] >= 1
 
 
-def test_intercept_log_record():
-    """POST /log → ilog_ prefix."""
-    clear_state()
-    h = make_handler({
-        "url": "https://tracking.example.com/pixel.gif",
-        "action_taken": "block",
-    })
-    h._handle_interceptor_log_record()
-    code, data = h._responses[0]
-    assert code == 201
-    assert data["log_id"].startswith("ilog_")
-
-
-def test_intercept_log_list():
-    """GET /log → list returned."""
-    clear_state()
-    rec = make_handler({"url": "https://ads.example.com/banner.js", "action_taken": "log_only"})
-    rec._handle_interceptor_log_record()
+def test_log_delete():
+    create_h = _create_log()
+    log_id = create_h._response_body["log"]["log_id"]
     h = make_handler()
-    h._handle_interceptor_log_list()
-    code, data = h._responses[0]
-    assert code == 200
-    assert "log" in data
-    assert len(data["log"]) >= 1
+    h._handle_ric_delete(log_id)
+    assert h._response_code == 200
+    assert h._response_body["status"] == "deleted"
+    h2 = make_handler()
+    h2._handle_ric_delete(log_id)
+    assert h2._response_code == 404
+
+
+def test_interceptor_stats():
+    ys._INTERCEPTOR_LOGS.clear()
+    _create_log({"status_code": 200, "response_ms": 100})
+    _create_log({"status_code": 500, "method": "POST", "response_ms": 200})
+    h = make_handler()
+    h._handle_ric_stats()
+    assert h._response_code == 200
+    body = h._response_body
+    assert "by_status_class" in body
+    assert "2xx" in body["by_status_class"]
+    assert "5xx" in body["by_status_class"]
+    assert "avg_response_ms" in body
+    float(body["avg_response_ms"])
 
 
 def test_no_port_9222_in_interceptor():
-    """No port 9222 in request interceptor code."""
-    with open("/home/phuc/projects/solace-browser/yinyang_server.py") as f:
+    src = "/home/phuc/projects/solace-browser/yinyang_server.py"
+    with open(src) as f:
         content = f.read()
-    assert "9222" not in content, "Port 9222 found — BANNED"
+    assert "9222" not in content, "port 9222 found in yinyang_server.py"

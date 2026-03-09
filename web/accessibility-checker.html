@@ -1,21 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Accessibility Checker — Solace Hub</title>
-<link rel="stylesheet" href="/web/css/accessibility-checker.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accessibility Checker</title>
+  <link rel="stylesheet" href="/web/css/accessibility-checker.css">
 </head>
 <body>
-<div class="ac-container">
-  <h1 class="ac-title">Accessibility Checker</h1>
-  <p class="ac-subtitle">WCAG compliance scan results</p>
-  <div class="ac-toolbar">
-    <button id="btn-ac-scans" class="ac-btn ac-btn-primary">Scans</button>
-    <button id="btn-ac-levels" class="ac-btn ac-btn-secondary">WCAG Levels</button>
-  </div>
-  <div id="ac-panel" class="ac-panel" aria-live="polite"></div>
-  <div id="ac-status" class="ac-status" aria-live="polite"></div>
+<div class="a11c-container">
+  <h1 class="a11c-title">Accessibility Checker</h1>
+  <p class="a11c-subtitle">Track WCAG compliance and accessibility issues across pages.</p>
+
+  <div class="a11c-stats" id="a11c-stats"><p>Loading stats...</p></div>
+
+  <form class="a11c-form" id="a11c-form">
+    <input type="text" id="a11c-url" placeholder="Page URL" value="https://example.com">
+    <select id="a11c-wcag">
+      <option value="A">A</option>
+      <option value="AA" selected>AA</option>
+      <option value="AAA">AAA</option>
+    </select>
+    <input type="number" id="a11c-total" placeholder="Total Issues" min="0" value="5">
+    <input type="number" id="a11c-critical" placeholder="Critical Issues" min="0" value="1">
+    <input type="number" id="a11c-score" placeholder="Score 0-100" min="0" max="100" value="80">
+    <select id="a11c-issue-type">
+      <option value="">No top issue</option>
+      <option value="missing_alt">missing_alt</option>
+      <option value="low_contrast">low_contrast</option>
+      <option value="missing_label">missing_label</option>
+      <option value="keyboard_trap">keyboard_trap</option>
+      <option value="missing_lang">missing_lang</option>
+      <option value="duplicate_id">duplicate_id</option>
+      <option value="empty_heading">empty_heading</option>
+      <option value="link_purpose">link_purpose</option>
+      <option value="other">other</option>
+    </select>
+    <button type="submit" class="a11c-btn a11c-btn-primary">Record Check</button>
+  </form>
+
+  <div class="a11c-panel" id="a11c-panel">Loading checks...</div>
+  <div class="a11c-msg" id="a11c-msg"></div>
 </div>
 <script src="/web/js/accessibility-checker.js"></script>
 </body>

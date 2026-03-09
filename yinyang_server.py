@@ -1886,11 +1886,11 @@ _MEDIA_PLAYBACK_LOCK = threading.Lock()
 # ---------------------------------------------------------------------------
 # Task 151 — Clipboard History
 # ---------------------------------------------------------------------------
-CLIPBOARD_CONTENT_TYPES = [
+CLIPBOARD_HISTORY_CONTENT_TYPES = [
     "text", "code", "url", "email", "phone", "password",
     "image_data", "json", "csv", "html", "other"
 ]
-MAX_CLIPBOARD_ENTRIES = 1000
+MAX_CLIPBOARD_HISTORY_ENTRIES = 1000
 _CLIPBOARD_ENTRIES: list[dict] = []
 _CLIPBOARD_LOCK = threading.Lock()
 
@@ -1907,11 +1907,11 @@ _SUGGESTION_LOCK = threading.Lock()
 # ---------------------------------------------------------------------------
 # Task 153 — Page Annotation
 # ---------------------------------------------------------------------------
-ANNOTATION_TYPES = [
+PAGE_ANNOTATION_TYPES = [
     "highlight", "comment", "bookmark", "question", "important",
     "todo", "disagree", "agree", "cite", "summary"
 ]
-ANNOTATION_COLORS = ["yellow", "green", "blue", "red", "purple"]
+PAGE_ANNOTATION_COLORS = ["yellow", "green", "blue", "red", "purple"]
 MAX_ANNOTATIONS = 100000
 _ANNOTATIONS: list[dict] = []
 _ANNOTATION_LOCK = threading.Lock()
@@ -1960,6 +1960,61 @@ MAX_EXT_API_BLOCK_LOG: int = 100000
 _EXT_API_BLOCK_RULES: list[dict] = []
 _EXT_API_BLOCK_LOG: list[dict] = []
 _EXT_API_BLOCKER_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 158 — Font Inspector
+# ---------------------------------------------------------------------------
+FONT_CATEGORIES: list[str] = [
+    "serif", "sans_serif", "monospace", "cursive", "fantasy",
+    "display", "handwriting", "system", "web_font", "unknown",
+]
+MAX_FONT_SCANS: int = 50000
+_FONT_SCANS: list[dict] = []
+_FONT_SCAN_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 159 — Accessibility Checker
+# ---------------------------------------------------------------------------
+WCAG_LEVELS: list[str] = ["A", "AA", "AAA"]
+ACCESSIBILITY_ISSUE_TYPES: list[str] = [
+    "missing_alt", "low_contrast", "missing_label", "keyboard_trap",
+    "missing_lang", "duplicate_id", "empty_heading", "link_purpose", "other",
+]
+MAX_A11Y_CHECKS: int = 50000
+_A11Y_CHECKS: list[dict] = []
+_A11Y_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 160 — DOM Change Monitor
+# ---------------------------------------------------------------------------
+DOM_MUTATION_TYPES: list[str] = [
+    "childList", "attributes", "characterData",
+    "subtree", "class_change", "style_change", "text_change", "other",
+]
+MAX_DOM_MONITOR_EVENTS: int = 1000000
+_DOM_MONITOR_EVENTS: list[dict] = []
+_DOM_MONITOR_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 161 — Request Interceptor
+# ---------------------------------------------------------------------------
+INTERCEPTOR_HTTP_METHODS: list[str] = [
+    "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT", "TRACE",
+]
+MAX_INTERCEPTOR_LOGS: int = 500000
+_INTERCEPTOR_LOGS: list[dict] = []
+_INTERCEPTOR_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 162 — Geolocation Tracker
+# ---------------------------------------------------------------------------
+GEO_EVENT_TYPES: list[str] = [
+    "permission_requested", "permission_granted", "permission_denied",
+    "position_acquired", "position_error", "position_timeout", "permission_revoked",
+]
+MAX_GEO_EVENTS: int = 100000
+_GEO_EVENTS: list[dict] = []
+_GEO_EVENTS_LOCK = threading.Lock()
 
 
 def _triage_single_email(email: dict[str, Any], config: dict[str, bool]) -> dict[str, Any]:
@@ -7054,6 +7109,71 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/extension-api-blocker.js", "application/javascript")
         elif path == "/web/css/extension-api-blocker.css":
             self._handle_static_file("web/css/extension-api-blocker.css", "text/css")
+        # --- Task 158: Font Inspector ---
+        elif path == "/api/v1/font-inspector/font-categories":
+            self._handle_fns_categories()
+        elif path == "/api/v1/font-inspector/scans":
+            self._handle_fns_list()
+        elif path == "/api/v1/font-inspector/stats":
+            self._handle_fns_stats()
+        elif path == "/web/font-inspector.html":
+            self._handle_static_file("web/font-inspector.html", "text/html; charset=utf-8")
+        elif path == "/web/js/font-inspector.js":
+            self._handle_static_file("web/js/font-inspector.js", "application/javascript")
+        elif path == "/web/css/font-inspector.css":
+            self._handle_static_file("web/css/font-inspector.css", "text/css")
+        # --- Task 159: Accessibility Checker ---
+        elif path == "/api/v1/accessibility/wcag-levels":
+            self._handle_a11y_wcag_levels()
+        elif path == "/api/v1/accessibility/checks":
+            self._handle_a11y_checks_list()
+        elif path == "/api/v1/accessibility/stats":
+            self._handle_a11y_stats()
+        elif path == "/web/accessibility-checker.html":
+            self._handle_static_file("web/accessibility-checker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/accessibility-checker.js":
+            self._handle_static_file("web/js/accessibility-checker.js", "application/javascript")
+        elif path == "/web/css/accessibility-checker.css":
+            self._handle_static_file("web/css/accessibility-checker.css", "text/css")
+        # --- Task 160: DOM Change Monitor ---
+        elif path == "/api/v1/dom-monitor/mutation-types":
+            self._handle_dom_monitor_mutation_types()
+        elif path == "/api/v1/dom-monitor/monitor-events":
+            self._handle_dom_monitor_events_list()
+        elif path == "/api/v1/dom-monitor/monitor-stats":
+            self._handle_dom_monitor_stats()
+        elif path == "/web/dom-change-monitor.html":
+            self._handle_static_file("web/dom-change-monitor.html", "text/html; charset=utf-8")
+        elif path == "/web/js/dom-change-monitor.js":
+            self._handle_static_file("web/js/dom-change-monitor.js", "application/javascript")
+        elif path == "/web/css/dom-change-monitor.css":
+            self._handle_static_file("web/css/dom-change-monitor.css", "text/css")
+        # --- Task 161: Request Interceptor ---
+        elif path == "/api/v1/request-interceptor/methods":
+            self._handle_ric_methods()
+        elif path == "/api/v1/request-interceptor/logs":
+            self._handle_ric_list()
+        elif path == "/api/v1/request-interceptor/stats":
+            self._handle_ric_stats()
+        elif path == "/web/request-interceptor.html":
+            self._handle_static_file("web/request-interceptor.html", "text/html; charset=utf-8")
+        elif path == "/web/js/request-interceptor.js":
+            self._handle_static_file("web/js/request-interceptor.js", "application/javascript")
+        elif path == "/web/css/request-interceptor.css":
+            self._handle_static_file("web/css/request-interceptor.css", "text/css")
+        # --- Task 162: Geolocation Tracker ---
+        elif path == "/api/v1/geo-tracker/event-types":
+            self._handle_geo_event_types()
+        elif path == "/api/v1/geo-tracker/events":
+            self._handle_geo_events_list()
+        elif path == "/api/v1/geo-tracker/geo-stats":
+            self._handle_geo_events_stats()
+        elif path == "/web/geolocation-tracker.html":
+            self._handle_static_file("web/geolocation-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/geolocation-tracker.js":
+            self._handle_static_file("web/js/geolocation-tracker.js", "application/javascript")
+        elif path == "/web/css/geolocation-tracker.css":
+            self._handle_static_file("web/css/geolocation-tracker.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -7844,6 +7964,21 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_abr_create()
         elif path == "/api/v1/api-blocker/log":
             self._handle_abl_create()
+        # --- Task 158: Font Inspector ---
+        elif path == "/api/v1/font-inspector/scans":
+            self._handle_fns_create()
+        # --- Task 159: Accessibility Checker ---
+        elif path == "/api/v1/accessibility/checks":
+            self._handle_a11y_check_create()
+        # --- Task 160: DOM Change Monitor ---
+        elif path == "/api/v1/dom-monitor/monitor-events":
+            self._handle_dom_monitor_event_create()
+        # --- Task 161: Request Interceptor ---
+        elif path == "/api/v1/request-interceptor/logs":
+            self._handle_ric_create()
+        # --- Task 162: Geolocation Tracker ---
+        elif path == "/api/v1/geo-tracker/events":
+            self._handle_geo_event_create()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -8363,6 +8498,26 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/api-blocker/rules/[^/]+$", path):
             rule_id = path.split("/")[-1]
             self._handle_abr_delete(rule_id)
+        # --- Task 158: Font Inspector ---
+        elif re.match(r"^/api/v1/font-inspector/scans/[^/]+$", path):
+            scan_id = path.split("/")[-1]
+            self._handle_fns_delete(scan_id)
+        # --- Task 159: Accessibility Checker ---
+        elif re.match(r"^/api/v1/accessibility/checks/[^/]+$", path):
+            check_id = path.split("/")[-1]
+            self._handle_a11y_check_delete(check_id)
+        # --- Task 160: DOM Change Monitor ---
+        elif re.match(r"^/api/v1/dom-monitor/monitor-events/[^/]+$", path):
+            event_id = path.split("/")[-1]
+            self._handle_dom_monitor_event_delete(event_id)
+        # --- Task 161: Request Interceptor ---
+        elif re.match(r"^/api/v1/request-interceptor/logs/[^/]+$", path):
+            log_id = path.split("/")[-1]
+            self._handle_ric_delete(log_id)
+        # --- Task 162: Geolocation Tracker ---
+        elif re.match(r"^/api/v1/geo-tracker/events/[^/]+$", path):
+            event_id = path.split("/")[-1]
+            self._handle_geo_event_delete(event_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -23756,8 +23911,8 @@ function choose(mode) {
             return
         body = self._read_json_body()
         content_type = body.get("content_type", "")
-        if content_type not in CLIPBOARD_CONTENT_TYPES:
-            self._send_json({"error": f"content_type must be one of {CLIPBOARD_CONTENT_TYPES}"}, 400)
+        if content_type not in CLIPBOARD_HISTORY_CONTENT_TYPES:
+            self._send_json({"error": f"content_type must be one of {CLIPBOARD_HISTORY_CONTENT_TYPES}"}, 400)
             return
         content_hash = body.get("content_hash", "")
         source_url_hash = body.get("source_url_hash", "")
@@ -28282,8 +28437,8 @@ function choose(mode) {
         if body is None:
             return
         content_type = body.get("content_type", "")
-        if content_type not in CLIPBOARD_CONTENT_TYPES:
-            self._send_json({"error": f"content_type must be one of {CLIPBOARD_CONTENT_TYPES}"}, 400)
+        if content_type not in CLIPBOARD_HISTORY_CONTENT_TYPES:
+            self._send_json({"error": f"content_type must be one of {CLIPBOARD_HISTORY_CONTENT_TYPES}"}, 400)
             return
         char_count = body.get("char_count", 0)
         if not isinstance(char_count, int) or char_count < 0:
@@ -28305,7 +28460,7 @@ function choose(mode) {
             "copied_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
         with _CLIPBOARD_LOCK:
-            if len(_CLIPBOARD_ENTRIES) >= MAX_CLIPBOARD_ENTRIES:
+            if len(_CLIPBOARD_ENTRIES) >= MAX_CLIPBOARD_HISTORY_ENTRIES:
                 _CLIPBOARD_ENTRIES.pop(0)
             _CLIPBOARD_ENTRIES.append(entry)
         self._send_json({"status": "added", "entry_id": entry_id}, 201)
@@ -28459,7 +28614,7 @@ function choose(mode) {
 
     def _handle_ann_annotation_types(self) -> None:
         """GET /api/v1/annotations/annotation-types — list annotation types (public)."""
-        self._send_json({"annotation_types": ANNOTATION_TYPES, "colors": ANNOTATION_COLORS})
+        self._send_json({"annotation_types": PAGE_ANNOTATION_TYPES, "colors": PAGE_ANNOTATION_COLORS})
 
     def _handle_ann_list(self) -> None:
         """GET /api/v1/annotations/annotations — list annotations (auth required)."""
@@ -28477,12 +28632,12 @@ function choose(mode) {
         if body is None:
             return
         annotation_type = body.get("annotation_type", "")
-        if annotation_type not in ANNOTATION_TYPES:
-            self._send_json({"error": f"annotation_type must be one of {ANNOTATION_TYPES}"}, 400)
+        if annotation_type not in PAGE_ANNOTATION_TYPES:
+            self._send_json({"error": f"annotation_type must be one of {PAGE_ANNOTATION_TYPES}"}, 400)
             return
         color = body.get("color", "")
-        if color not in ANNOTATION_COLORS:
-            self._send_json({"error": f"color must be one of {ANNOTATION_COLORS}"}, 400)
+        if color not in PAGE_ANNOTATION_COLORS:
+            self._send_json({"error": f"color must be one of {PAGE_ANNOTATION_COLORS}"}, 400)
             return
         note = body.get("note", None)
         if note is not None:
@@ -28534,8 +28689,8 @@ function choose(mode) {
             return
         with _ANNOTATION_LOCK:
             annotations = list(_ANNOTATIONS)
-        by_type: dict[str, int] = {at: 0 for at in ANNOTATION_TYPES}
-        by_color: dict[str, int] = {c: 0 for c in ANNOTATION_COLORS}
+        by_type: dict[str, int] = {at: 0 for at in PAGE_ANNOTATION_TYPES}
+        by_color: dict[str, int] = {c: 0 for c in PAGE_ANNOTATION_COLORS}
         for a in annotations:
             at = a.get("annotation_type", "")
             by_type[at] = by_type.get(at, 0) + 1
@@ -28635,6 +28790,509 @@ function choose(mode) {
             "by_action_type": by_action_type,
             "most_used": most_used,
         })
+
+
+    # ---------------------------------------------------------------------------
+    # Task 158 — Font Inspector handlers
+    # ---------------------------------------------------------------------------
+    def _handle_fns_create(self) -> None:
+        """POST /api/v1/font-inspector/scans — record font scan (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        from decimal import Decimal
+        category = body.get("category", "")
+        if category not in FONT_CATEGORIES:
+            self._send_json({"error": f"category must be one of {FONT_CATEGORIES}"}, 400)
+            return
+        font_count = body.get("font_count", 0)
+        if not isinstance(font_count, int) or font_count < 1:
+            self._send_json({"error": "font_count must be int >= 1"}, 400)
+            return
+        load_time_ms = body.get("load_time_ms", 0)
+        if not isinstance(load_time_ms, int) or load_time_ms < 0:
+            self._send_json({"error": "load_time_ms must be int >= 0"}, 400)
+            return
+        raw_url = body.get("url", "")
+        url_hash = hashlib.sha256(raw_url.encode()).hexdigest()
+        raw_font_name = body.get("font_name", "")
+        font_name_hash = hashlib.sha256(raw_font_name.encode()).hexdigest()
+        with _FONT_SCAN_LOCK:
+            if len(_FONT_SCANS) >= MAX_FONT_SCANS:
+                _FONT_SCANS.pop(0)
+            scan_id = "fns_" + str(uuid.uuid4())
+            scan: dict[str, Any] = {
+                "scan_id": scan_id,
+                "url_hash": url_hash,
+                "font_name_hash": font_name_hash,
+                "category": category,
+                "font_count": font_count,
+                "is_variable_font": bool(body.get("is_variable_font", False)),
+                "has_web_font": bool(body.get("has_web_font", False)),
+                "load_time_ms": load_time_ms,
+                "scanned_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _FONT_SCANS.append(scan)
+        self._send_json({"status": "created", "scan": scan}, 201)
+
+    def _handle_fns_list(self) -> None:
+        """GET /api/v1/font-inspector/scans — list scans (auth required)."""
+        if not self._check_auth():
+            return
+        with _FONT_SCAN_LOCK:
+            scans = list(_FONT_SCANS)
+        self._send_json({"scans": scans, "total": len(scans)})
+
+    def _handle_fns_delete(self, scan_id: str) -> None:
+        """DELETE /api/v1/font-inspector/scans/{scan_id} — delete scan (auth required)."""
+        if not self._check_auth():
+            return
+        with _FONT_SCAN_LOCK:
+            before = len(_FONT_SCANS)
+            _FONT_SCANS[:] = [s for s in _FONT_SCANS if s["scan_id"] != scan_id]
+            after = len(_FONT_SCANS)
+        if before == after:
+            self._send_json({"error": "scan not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "scan_id": scan_id})
+
+    def _handle_fns_stats(self) -> None:
+        """GET /api/v1/font-inspector/stats — font stats (auth required)."""
+        if not self._check_auth():
+            return
+        from decimal import Decimal
+        with _FONT_SCAN_LOCK:
+            scans = list(_FONT_SCANS)
+        total = len(scans)
+        by_category: dict[str, int] = {c: 0 for c in FONT_CATEGORIES}
+        total_fonts = 0
+        total_load = 0
+        variable_font_count = 0
+        for s in scans:
+            cat = s.get("category", "")
+            by_category[cat] = by_category.get(cat, 0) + 1
+            total_fonts += s.get("font_count", 0)
+            total_load += s.get("load_time_ms", 0)
+            if s.get("is_variable_font"):
+                variable_font_count += 1
+        avg_font_count = str(Decimal(str(total_fonts / (total or 1))).quantize(Decimal("0.01")))
+        avg_load_time_ms = str(Decimal(str(total_load / (total or 1))).quantize(Decimal("0.01")))
+        self._send_json({
+            "total_scans": total,
+            "by_category": by_category,
+            "avg_font_count": avg_font_count,
+            "avg_load_time_ms": avg_load_time_ms,
+            "variable_font_count": variable_font_count,
+        })
+
+    def _handle_fns_categories(self) -> None:
+        """GET /api/v1/font-inspector/font-categories — list categories (public)."""
+        self._send_json({"font_categories": FONT_CATEGORIES})
+
+    # ---------------------------------------------------------------------------
+    # Task 159 — Accessibility Checker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_a11y_check_create(self) -> None:
+        """POST /api/v1/accessibility/checks — record accessibility check (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        wcag_level = body.get("wcag_level", "")
+        if wcag_level not in WCAG_LEVELS:
+            self._send_json({"error": f"wcag_level must be one of {WCAG_LEVELS}"}, 400)
+            return
+        total_issues = body.get("total_issues", 0)
+        if not isinstance(total_issues, int) or total_issues < 0:
+            self._send_json({"error": "total_issues must be int >= 0"}, 400)
+            return
+        critical_issues = body.get("critical_issues", 0)
+        if not isinstance(critical_issues, int) or critical_issues < 0:
+            self._send_json({"error": "critical_issues must be int >= 0"}, 400)
+            return
+        if critical_issues > total_issues:
+            self._send_json({"error": "critical_issues must be <= total_issues"}, 400)
+            return
+        score = body.get("score", 0)
+        if not isinstance(score, int) or score < 0 or score > 100:
+            self._send_json({"error": "score must be int 0-100"}, 400)
+            return
+        top_issue_type = body.get("top_issue_type", None)
+        if top_issue_type is not None and top_issue_type not in ACCESSIBILITY_ISSUE_TYPES:
+            self._send_json({"error": f"top_issue_type must be one of {ACCESSIBILITY_ISSUE_TYPES} or null"}, 400)
+            return
+        raw_url = body.get("url", "")
+        url_hash = hashlib.sha256(raw_url.encode()).hexdigest()
+        with _A11Y_LOCK:
+            if len(_A11Y_CHECKS) >= MAX_A11Y_CHECKS:
+                _A11Y_CHECKS.pop(0)
+            check_id = "a11_" + str(uuid.uuid4())
+            check: dict[str, Any] = {
+                "check_id": check_id,
+                "url_hash": url_hash,
+                "wcag_level": wcag_level,
+                "total_issues": total_issues,
+                "critical_issues": critical_issues,
+                "score": score,
+                "top_issue_type": top_issue_type,
+                "checked_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _A11Y_CHECKS.append(check)
+        self._send_json({"status": "created", "check": check}, 201)
+
+    def _handle_a11y_checks_list(self) -> None:
+        """GET /api/v1/accessibility/checks — list checks (auth required)."""
+        if not self._check_auth():
+            return
+        with _A11Y_LOCK:
+            checks = list(_A11Y_CHECKS)
+        self._send_json({"checks": checks, "total": len(checks)})
+
+    def _handle_a11y_check_delete(self, check_id: str) -> None:
+        """DELETE /api/v1/accessibility/checks/{check_id} — delete check (auth required)."""
+        if not self._check_auth():
+            return
+        with _A11Y_LOCK:
+            before = len(_A11Y_CHECKS)
+            _A11Y_CHECKS[:] = [c for c in _A11Y_CHECKS if c["check_id"] != check_id]
+            after = len(_A11Y_CHECKS)
+        if before == after:
+            self._send_json({"error": "check not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "check_id": check_id})
+
+    def _handle_a11y_stats(self) -> None:
+        """GET /api/v1/accessibility/stats — accessibility stats (auth required)."""
+        if not self._check_auth():
+            return
+        from decimal import Decimal
+        with _A11Y_LOCK:
+            checks = list(_A11Y_CHECKS)
+        total = len(checks)
+        by_wcag_level: dict[str, int] = {lvl: 0 for lvl in WCAG_LEVELS}
+        total_score = 0
+        total_issues_sum = 0
+        perfect_score_count = 0
+        for c in checks:
+            lvl = c.get("wcag_level", "")
+            by_wcag_level[lvl] = by_wcag_level.get(lvl, 0) + 1
+            total_score += c.get("score", 0)
+            total_issues_sum += c.get("total_issues", 0)
+            if c.get("score", 0) == 100:
+                perfect_score_count += 1
+        avg_score = str(Decimal(str(total_score / (total or 1))).quantize(Decimal("0.01")))
+        avg_issues = str(Decimal(str(total_issues_sum / (total or 1))).quantize(Decimal("0.01")))
+        self._send_json({
+            "total_checks": total,
+            "avg_score": avg_score,
+            "by_wcag_level": by_wcag_level,
+            "avg_issues": avg_issues,
+            "perfect_score_count": perfect_score_count,
+        })
+
+    def _handle_a11y_wcag_levels(self) -> None:
+        """GET /api/v1/accessibility/wcag-levels — list WCAG levels (public)."""
+        self._send_json({"wcag_levels": WCAG_LEVELS, "issue_types": ACCESSIBILITY_ISSUE_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 160 — DOM Change Monitor handlers
+    # ---------------------------------------------------------------------------
+    def _handle_dom_monitor_event_create(self) -> None:
+        """POST /api/v1/dom-monitor/monitor-events — record DOM change event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        mutation_type = body.get("mutation_type", "")
+        if mutation_type not in DOM_MUTATION_TYPES:
+            self._send_json({"error": f"mutation_type must be one of {DOM_MUTATION_TYPES}"}, 400)
+            return
+        change_count = body.get("change_count", 0)
+        if not isinstance(change_count, int) or change_count < 1:
+            self._send_json({"error": "change_count must be int >= 1"}, 400)
+            return
+        nodes_added = body.get("nodes_added", 0)
+        if not isinstance(nodes_added, int) or nodes_added < 0:
+            self._send_json({"error": "nodes_added must be int >= 0"}, 400)
+            return
+        nodes_removed = body.get("nodes_removed", 0)
+        if not isinstance(nodes_removed, int) or nodes_removed < 0:
+            self._send_json({"error": "nodes_removed must be int >= 0"}, 400)
+            return
+        raw_url = body.get("url", "")
+        url_hash = hashlib.sha256(raw_url.encode()).hexdigest()
+        raw_selector = body.get("selector", "")
+        selector_hash = hashlib.sha256(raw_selector.encode()).hexdigest()
+        with _DOM_MONITOR_LOCK:
+            if len(_DOM_MONITOR_EVENTS) >= MAX_DOM_MONITOR_EVENTS:
+                _DOM_MONITOR_EVENTS.pop(0)
+            event_id = "dom_" + str(uuid.uuid4())
+            dom_event: dict[str, Any] = {
+                "event_id": event_id,
+                "mutation_type": mutation_type,
+                "url_hash": url_hash,
+                "selector_hash": selector_hash,
+                "change_count": change_count,
+                "nodes_added": nodes_added,
+                "nodes_removed": nodes_removed,
+                "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _DOM_MONITOR_EVENTS.append(dom_event)
+        self._send_json({"status": "recorded", "event": dom_event}, 201)
+
+    def _handle_dom_monitor_events_list(self) -> None:
+        """GET /api/v1/dom-monitor/monitor-events — list events (auth required)."""
+        if not self._check_auth():
+            return
+        with _DOM_MONITOR_LOCK:
+            events = list(_DOM_MONITOR_EVENTS)
+        self._send_json({"events": events, "total": len(events)})
+
+    def _handle_dom_monitor_event_delete(self, event_id: str) -> None:
+        """DELETE /api/v1/dom-monitor/monitor-events/{event_id} — delete event (auth required)."""
+        if not self._check_auth():
+            return
+        with _DOM_MONITOR_LOCK:
+            before = len(_DOM_MONITOR_EVENTS)
+            _DOM_MONITOR_EVENTS[:] = [e for e in _DOM_MONITOR_EVENTS if e["event_id"] != event_id]
+            after = len(_DOM_MONITOR_EVENTS)
+        if before == after:
+            self._send_json({"error": "event not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "event_id": event_id})
+
+    def _handle_dom_monitor_stats(self) -> None:
+        """GET /api/v1/dom-monitor/monitor-stats — DOM change stats (auth required)."""
+        if not self._check_auth():
+            return
+        from decimal import Decimal
+        with _DOM_MONITOR_LOCK:
+            events = list(_DOM_MONITOR_EVENTS)
+        total = len(events)
+        by_mutation_type: dict[str, int] = {mt: 0 for mt in DOM_MUTATION_TYPES}
+        total_changes = 0
+        total_nodes_added = 0
+        total_nodes_removed = 0
+        for e in events:
+            mt = e.get("mutation_type", "")
+            by_mutation_type[mt] = by_mutation_type.get(mt, 0) + 1
+            total_changes += e.get("change_count", 0)
+            total_nodes_added += e.get("nodes_added", 0)
+            total_nodes_removed += e.get("nodes_removed", 0)
+        avg_changes = str(Decimal(str(total_changes / (total or 1))).quantize(Decimal("0.01")))
+        self._send_json({
+            "total_events": total,
+            "by_mutation_type": by_mutation_type,
+            "avg_changes": avg_changes,
+            "total_nodes_added": total_nodes_added,
+            "total_nodes_removed": total_nodes_removed,
+        })
+
+    def _handle_dom_monitor_mutation_types(self) -> None:
+        """GET /api/v1/dom-monitor/mutation-types — list mutation types (public)."""
+        self._send_json({"mutation_types": DOM_MUTATION_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 161 — Request Interceptor handlers
+    # ---------------------------------------------------------------------------
+    def _handle_ric_create(self) -> None:
+        """POST /api/v1/request-interceptor/logs — log an intercepted request (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        method = body.get("method", "")
+        if method not in INTERCEPTOR_HTTP_METHODS:
+            self._send_json({"error": f"method must be one of {INTERCEPTOR_HTTP_METHODS}"}, 400)
+            return
+        status_code = body.get("status_code", 0)
+        if not isinstance(status_code, int) or status_code < 100 or status_code > 599:
+            self._send_json({"error": "status_code must be int 100-599"}, 400)
+            return
+        response_ms = body.get("response_ms", 0)
+        if not isinstance(response_ms, int) or response_ms < 0:
+            self._send_json({"error": "response_ms must be int >= 0"}, 400)
+            return
+        request_size_bytes = body.get("request_size_bytes", 0)
+        if not isinstance(request_size_bytes, int) or request_size_bytes < 0:
+            self._send_json({"error": "request_size_bytes must be int >= 0"}, 400)
+            return
+        response_size_bytes = body.get("response_size_bytes", 0)
+        if not isinstance(response_size_bytes, int) or response_size_bytes < 0:
+            self._send_json({"error": "response_size_bytes must be int >= 0"}, 400)
+            return
+        raw_url = body.get("url", "")
+        url_hash = hashlib.sha256(raw_url.encode()).hexdigest()
+        raw_origin = body.get("origin", "")
+        origin_hash = hashlib.sha256(raw_origin.encode()).hexdigest()
+        with _INTERCEPTOR_LOCK:
+            if len(_INTERCEPTOR_LOGS) >= MAX_INTERCEPTOR_LOGS:
+                _INTERCEPTOR_LOGS.pop(0)
+            log_id = "ric_" + str(uuid.uuid4())
+            log_entry: dict[str, Any] = {
+                "log_id": log_id,
+                "method": method,
+                "url_hash": url_hash,
+                "origin_hash": origin_hash,
+                "status_code": status_code,
+                "response_ms": response_ms,
+                "request_size_bytes": request_size_bytes,
+                "response_size_bytes": response_size_bytes,
+                "intercepted_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _INTERCEPTOR_LOGS.append(log_entry)
+        self._send_json({"status": "logged", "log": log_entry}, 201)
+
+    def _handle_ric_list(self) -> None:
+        """GET /api/v1/request-interceptor/logs — list logs (auth required)."""
+        if not self._check_auth():
+            return
+        with _INTERCEPTOR_LOCK:
+            logs = list(_INTERCEPTOR_LOGS)
+        self._send_json({"logs": logs, "total": len(logs)})
+
+    def _handle_ric_delete(self, log_id: str) -> None:
+        """DELETE /api/v1/request-interceptor/logs/{log_id} — delete log (auth required)."""
+        if not self._check_auth():
+            return
+        with _INTERCEPTOR_LOCK:
+            before = len(_INTERCEPTOR_LOGS)
+            _INTERCEPTOR_LOGS[:] = [lg for lg in _INTERCEPTOR_LOGS if lg["log_id"] != log_id]
+            after = len(_INTERCEPTOR_LOGS)
+        if before == after:
+            self._send_json({"error": "log not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "log_id": log_id})
+
+    def _handle_ric_stats(self) -> None:
+        """GET /api/v1/request-interceptor/stats — interceptor stats (auth required)."""
+        if not self._check_auth():
+            return
+        from decimal import Decimal
+        with _INTERCEPTOR_LOCK:
+            logs = list(_INTERCEPTOR_LOGS)
+        total = len(logs)
+        by_method: dict[str, int] = {m: 0 for m in INTERCEPTOR_HTTP_METHODS}
+        by_status_class: dict[str, int] = {"2xx": 0, "3xx": 0, "4xx": 0, "5xx": 0}
+        total_ms = 0
+        for lg in logs:
+            m = lg.get("method", "")
+            by_method[m] = by_method.get(m, 0) + 1
+            sc = lg.get("status_code", 0)
+            total_ms += lg.get("response_ms", 0)
+            class_key = f"{sc // 100}xx"
+            if class_key in by_status_class:
+                by_status_class[class_key] += 1
+        avg_response_ms = str(Decimal(str(total_ms / (total or 1))).quantize(Decimal("0.01")))
+        self._send_json({
+            "total_logs": total,
+            "by_method": by_method,
+            "avg_response_ms": avg_response_ms,
+            "by_status_class": by_status_class,
+        })
+
+    def _handle_ric_methods(self) -> None:
+        """GET /api/v1/request-interceptor/methods — list HTTP methods (public)."""
+        self._send_json({"http_methods": INTERCEPTOR_HTTP_METHODS})
+
+    # ---------------------------------------------------------------------------
+    # Task 162 — Geolocation Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_geo_event_create(self) -> None:
+        """POST /api/v1/geo-tracker/events — record geolocation event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        event_type = body.get("event_type", "")
+        if event_type not in GEO_EVENT_TYPES:
+            self._send_json({"error": f"event_type must be one of {GEO_EVENT_TYPES}"}, 400)
+            return
+        accuracy_meters = body.get("accuracy_meters", None)
+        if accuracy_meters is not None:
+            if not isinstance(accuracy_meters, int) or accuracy_meters < 0:
+                self._send_json({"error": "accuracy_meters must be int >= 0 or null"}, 400)
+                return
+        raw_url = body.get("url", "")
+        url_hash = hashlib.sha256(raw_url.encode()).hexdigest()
+        with _GEO_EVENTS_LOCK:
+            if len(_GEO_EVENTS) >= MAX_GEO_EVENTS:
+                _GEO_EVENTS.pop(0)
+            event_id = "geo_" + str(uuid.uuid4())
+            geo_event: dict[str, Any] = {
+                "event_id": event_id,
+                "event_type": event_type,
+                "url_hash": url_hash,
+                "accuracy_meters": accuracy_meters,
+                "is_https": bool(body.get("is_https", False)),
+                "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _GEO_EVENTS.append(geo_event)
+        self._send_json({"status": "recorded", "event": geo_event}, 201)
+
+    def _handle_geo_events_list(self) -> None:
+        """GET /api/v1/geo-tracker/events — list events (auth required)."""
+        if not self._check_auth():
+            return
+        with _GEO_EVENTS_LOCK:
+            events = list(_GEO_EVENTS)
+        self._send_json({"events": events, "total": len(events)})
+
+    def _handle_geo_event_delete(self, event_id: str) -> None:
+        """DELETE /api/v1/geo-tracker/events/{event_id} — delete event (auth required)."""
+        if not self._check_auth():
+            return
+        with _GEO_EVENTS_LOCK:
+            before = len(_GEO_EVENTS)
+            _GEO_EVENTS[:] = [e for e in _GEO_EVENTS if e["event_id"] != event_id]
+            after = len(_GEO_EVENTS)
+        if before == after:
+            self._send_json({"error": "event not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "event_id": event_id})
+
+    def _handle_geo_events_stats(self) -> None:
+        """GET /api/v1/geo-tracker/geo-stats — geolocation stats (auth required)."""
+        if not self._check_auth():
+            return
+        from decimal import Decimal
+        with _GEO_EVENTS_LOCK:
+            events = list(_GEO_EVENTS)
+        total = len(events)
+        by_event_type: dict[str, int] = {et: 0 for et in GEO_EVENT_TYPES}
+        requested_count = 0
+        granted_count = 0
+        https_count = 0
+        for e in events:
+            et = e.get("event_type", "")
+            by_event_type[et] = by_event_type.get(et, 0) + 1
+            if et == "permission_requested":
+                requested_count += 1
+            if et == "permission_granted":
+                granted_count += 1
+            if e.get("is_https"):
+                https_count += 1
+        if requested_count > 0:
+            grant_rate = str(Decimal(str(granted_count / requested_count)).quantize(Decimal("0.01")))
+        else:
+            grant_rate = "0.00"
+        self._send_json({
+            "total_events": total,
+            "by_event_type": by_event_type,
+            "grant_rate": grant_rate,
+            "https_count": https_count,
+        })
+
+    def _handle_geo_event_types(self) -> None:
+        """GET /api/v1/geo-tracker/event-types — list event types (public)."""
+        self._send_json({"event_types": GEO_EVENT_TYPES})
+
 
 # ---------------------------------------------------------------------------
 # Server factory — theorem: build_server isolates configuration from startup.

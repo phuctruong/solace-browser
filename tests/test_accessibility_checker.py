@@ -1,145 +1,171 @@
-"""Tests for Task 087 — Accessibility Checker."""
+"""Tests for Task 159 — Accessibility Checker."""
 import sys
-import json
-
-sys.path.insert(0, "/home/phuc/projects/solace-browser")
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import yinyang_server as ys
-
-VALID_TOKEN = "b" * 64
 
 
 class FakeHandler(ys.YinyangHandler):
     def __init__(self):
-        self._responses = []
-        self._body = b""
-        self.headers = {"content-length": "0", "Authorization": f"Bearer {VALID_TOKEN}"}
+        self._response_code = None
+        self._response_body = None
 
-    def _read_json_body(self):
-        return json.loads(self._body) if self._body else {}
-
-    def _send_json(self, data, code=200):
-        self._responses.append((code, data))
+    def _send_json(self, data, status=200):
+        self._response_code = status
+        self._response_body = data
 
     def _check_auth(self):
         return True
 
-    def log_message(self, *a):
-        pass
-
-    def send_response(self, code):
-        self._responses.append((code, {}))
-
-    def end_headers(self):
+    def _require_auth(self):
         pass
 
 
-def make_handler(body=None):
-    h = FakeHandler()
-    if body:
-        h._body = json.dumps(body).encode()
-        h.headers = {
-            "content-length": str(len(h._body)),
-            "Authorization": f"Bearer {VALID_TOKEN}",
-        }
+def make_handler():
+    return FakeHandler()
+
+
+def _create_check(extra=None):
+    h = make_handler()
+    ys._A11Y_CHECKS.clear()
+    payload = {
+        "url": "https://example.com/page",
+        "wcag_level": "AA",
+        "total_issues": 5,
+        "critical_issues": 2,
+        "score": 80,
+        "top_issue_type": "low_contrast",
+    }
+    if extra:
+        payload.update(extra)
+    h._read_json_body = lambda: payload
+    h._handle_a11y_check_create()
     return h
 
 
-def setup_function():
-    with ys._ACCESS_LOCK:
-        ys._ACCESSIBILITY_SCANS.clear()
+def test_check_create():
+    h = _create_check()
+    assert h._response_code == 201
+    assert h._response_body["check"]["check_id"].startswith("a11_")
 
 
-def test_scan_record():
-    h = make_handler({"url_hash": "url1", "wcag_level": "AA", "pass_count": 80, "fail_count": 20})
-    h._handle_accessibility_scan()
-    code, data = h._responses[0]
-    assert code == 201
-    assert data["scan_id"].startswith("acs_")
+def test_check_url_hashed():
+    h = _create_check()
+    check = h._response_body["check"]
+    assert "url_hash" in check
+    assert len(check["url_hash"]) == 64
+    assert "url" not in check
 
 
-def test_scan_invalid_wcag():
-    h = make_handler({"url_hash": "url1", "wcag_level": "B", "pass_count": 10, "fail_count": 5})
-    h._handle_accessibility_scan()
-    code, data = h._responses[0]
-    assert code == 400
-    assert "wcag_level" in data["error"]
+def test_check_invalid_wcag():
+    h = make_handler()
+    ys._A11Y_CHECKS.clear()
+    payload = {
+        "url": "https://example.com",
+        "wcag_level": "B",
+        "total_issues": 0,
+        "critical_issues": 0,
+        "score": 100,
+    }
+    h._read_json_body = lambda: payload
+    h._handle_a11y_check_create()
+    assert h._response_code == 400
 
 
-def test_scan_missing_url_hash():
-    h = make_handler({"wcag_level": "A", "pass_count": 5, "fail_count": 0})
-    h._handle_accessibility_scan()
-    code, data = h._responses[0]
-    assert code == 400
-    assert "url_hash" in data["error"]
+def test_check_negative_issues():
+    h = make_handler()
+    ys._A11Y_CHECKS.clear()
+    payload = {
+        "url": "https://example.com",
+        "wcag_level": "A",
+        "total_issues": -1,
+        "critical_issues": 0,
+        "score": 50,
+    }
+    h._read_json_body = lambda: payload
+    h._handle_a11y_check_create()
+    assert h._response_code == 400
 
 
-def test_scan_score_calculation():
-    h = make_handler({"url_hash": "url2", "wcag_level": "AA", "pass_count": 80, "fail_count": 20})
-    h._handle_accessibility_scan()
-    scan_id = h._responses[0][1]["scan_id"]
-    h2 = FakeHandler()
-    h2._handle_accessibility_get(scan_id)
-    code, data = h2._responses[0]
-    assert code == 200
-    assert data["scan"]["score"] == "80.00"
+def test_check_critical_exceeds_total():
+    h = make_handler()
+    ys._A11Y_CHECKS.clear()
+    payload = {
+        "url": "https://example.com",
+        "wcag_level": "AA",
+        "total_issues": 3,
+        "critical_issues": 5,
+        "score": 50,
+    }
+    h._read_json_body = lambda: payload
+    h._handle_a11y_check_create()
+    assert h._response_code == 400
 
 
-def test_scan_score_both_zero():
-    h = make_handler({"url_hash": "url3", "wcag_level": "A", "pass_count": 0, "fail_count": 0})
-    h._handle_accessibility_scan()
-    scan_id = h._responses[0][1]["scan_id"]
-    h2 = FakeHandler()
-    h2._handle_accessibility_get(scan_id)
-    code, data = h2._responses[0]
-    assert code == 200
-    assert data["scan"]["score"] == "100.00"
+def test_check_score_out_of_range():
+    h = make_handler()
+    ys._A11Y_CHECKS.clear()
+    payload = {
+        "url": "https://example.com",
+        "wcag_level": "AAA",
+        "total_issues": 0,
+        "critical_issues": 0,
+        "score": 101,
+    }
+    h._read_json_body = lambda: payload
+    h._handle_a11y_check_create()
+    assert h._response_code == 400
 
 
-def test_scan_list():
-    h = make_handler({"url_hash": "url4", "wcag_level": "AAA", "pass_count": 50, "fail_count": 50})
-    h._handle_accessibility_scan()
-    h2 = FakeHandler()
-    h2._handle_accessibility_list()
-    code, data = h2._responses[0]
-    assert code == 200
-    assert isinstance(data["scans"], list)
-    assert data["total"] >= 1
+def test_check_list():
+    _create_check()
+    h = make_handler()
+    h._handle_a11y_checks_list()
+    assert h._response_code == 200
+    assert "checks" in h._response_body
+    assert h._response_body["total"] >= 1
 
 
-def test_scan_get_not_found():
-    h = FakeHandler()
-    h._handle_accessibility_get("acs_ghost")
-    code, data = h._responses[0]
-    assert code == 404
+def test_check_delete():
+    create_h = _create_check()
+    check_id = create_h._response_body["check"]["check_id"]
+    h = make_handler()
+    h._handle_a11y_check_delete(check_id)
+    assert h._response_code == 200
+    assert h._response_body["status"] == "deleted"
+    h2 = make_handler()
+    h2._handle_a11y_check_delete(check_id)
+    assert h2._response_code == 404
 
 
-def test_scan_delete():
-    h = make_handler({"url_hash": "url5", "wcag_level": "AA", "pass_count": 10, "fail_count": 0})
-    h._handle_accessibility_scan()
-    scan_id = h._responses[0][1]["scan_id"]
-    h2 = FakeHandler()
-    h2._handle_accessibility_delete(scan_id)
-    code, data = h2._responses[0]
-    assert code == 200
-    assert data["scan_id"] == scan_id
-    with ys._ACCESS_LOCK:
-        ids = [s["scan_id"] for s in ys._ACCESSIBILITY_SCANS]
-    assert scan_id not in ids
+def test_a11y_stats():
+    ys._A11Y_CHECKS.clear()
+    h1 = make_handler()
+    h1._read_json_body = lambda: {
+        "url": "https://a.com", "wcag_level": "AA",
+        "total_issues": 2, "critical_issues": 1, "score": 90,
+    }
+    h1._handle_a11y_check_create()
+    h2 = make_handler()
+    h2._read_json_body = lambda: {
+        "url": "https://b.com", "wcag_level": "A",
+        "total_issues": 0, "critical_issues": 0, "score": 100,
+    }
+    h2._handle_a11y_check_create()
+    h = make_handler()
+    h._handle_a11y_stats()
+    assert h._response_code == 200
+    body = h._response_body
+    assert "avg_score" in body
+    float(body["avg_score"])
+    assert "avg_issues" in body
+    assert "by_wcag_level" in body
+    assert "perfect_score_count" in body
+    assert body["perfect_score_count"] == 1
 
 
-def test_scan_delete_not_found():
-    h = FakeHandler()
-    h._handle_accessibility_delete("acs_notexist")
-    code, data = h._responses[0]
-    assert code == 404
-
-
-def test_wcag_levels():
-    h = FakeHandler()
-    h._handle_accessibility_wcag_levels()
-    code, data = h._responses[0]
-    assert code == 200
-    assert "A" in data["wcag_levels"]
-    assert "AA" in data["wcag_levels"]
-    assert "AAA" in data["wcag_levels"]
-    assert "perceivable" in data["categories"]
+def test_no_port_9222_in_a11y():
+    src = "/home/phuc/projects/solace-browser/yinyang_server.py"
+    with open(src) as f:
+        content = f.read()
+    assert "9222" not in content, "port 9222 found in yinyang_server.py"

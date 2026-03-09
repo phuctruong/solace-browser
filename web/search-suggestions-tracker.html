@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search Suggestions Tracker — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/search-suggestions-tracker.css" />
+</head>
+<body>
+  <div class="sgt-container">
+    <header class="sgt-header">
+      <h1 class="sgt-title">Search Suggestions Tracker</h1>
+      <p class="sgt-subtitle">Track search suggestion usage and click-through rates</p>
+    </header>
+
+    <section class="sgt-section">
+      <h2 class="sgt-section-title">Stats</h2>
+      <div id="sgt-stats" class="sgt-stats-grid"></div>
+    </section>
+
+    <section class="sgt-section">
+      <h2 class="sgt-section-title">Record Event</h2>
+      <form id="sgt-form" class="sgt-form">
+        <select id="sgt-event-type" required>
+          <option value="">Select event type…</option>
+        </select>
+        <input type="text" id="sgt-query" placeholder="Search query (will be hashed)" />
+        <input type="text" id="sgt-suggestion" placeholder="Suggestion text (will be hashed)" />
+        <input type="number" id="sgt-position" placeholder="Position (1-10)" min="1" max="10" value="1" />
+        <input type="text" id="sgt-engine" placeholder="Search engine (max 50 chars)" maxlength="50" />
+        <button type="submit">Record Event</button>
+      </form>
+    </section>
+
+    <section class="sgt-section">
+      <h2 class="sgt-section-title">Events</h2>
+      <div id="sgt-list" class="sgt-list"></div>
+    </section>
+  </div>
+  <script src="/web/js/search-suggestions-tracker.js"></script>
+</body>
+</html>
