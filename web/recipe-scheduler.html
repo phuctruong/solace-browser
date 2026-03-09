@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recipe Scheduler — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/recipe-scheduler.css">
+</head>
+<body>
+<div class="rs-container">
+  <h1 class="rs-title">Recipe Scheduler</h1>
+  <p class="rs-subtitle">Autonomous execution — recipes run without you present</p>
+
+  <section class="rs-section">
+    <h2 class="rs-section-title">Schedule a Recipe</h2>
+    <form id="rs-add-form" class="rs-form">
+      <label class="rs-label" for="rs-name">Job Name</label>
+      <input type="text" id="rs-name" class="rs-input" placeholder="My Gmail Triage" required>
+      <label class="rs-label" for="rs-recipe">Recipe</label>
+      <select id="rs-recipe" class="rs-input">
+        <option value="gmail-triage">gmail-triage</option>
+        <option value="linkedin-daily">linkedin-daily</option>
+        <option value="github-summary">github-summary</option>
+        <option value="calendar-review">calendar-review</option>
+        <option value="news-digest">news-digest</option>
+      </select>
+      <label class="rs-label" for="rs-cron">Schedule</label>
+      <select id="rs-cron" class="rs-input">
+        <option value="hourly">Every hour</option>
+        <option value="daily-9am">Daily at 9am</option>
+        <option value="daily-6pm">Daily at 6pm</option>
+        <option value="weekly-monday">Every Monday 9am</option>
+        <option value="every-30min">Every 30 minutes</option>
+      </select>
+      <button type="submit" class="rs-btn">Add Job</button>
+    </form>
+    <div id="rs-add-status" class="rs-status" aria-live="polite"></div>
+  </section>
+
+  <section class="rs-section">
+    <h2 class="rs-section-title">Scheduled Jobs</h2>
+    <div id="rs-jobs-list" class="rs-jobs-list" aria-live="polite">
+      <p class="rs-empty">No scheduled jobs yet.</p>
+    </div>
+  </section>
+
+  <section class="rs-section">
+    <h2 class="rs-section-title">Run History</h2>
+    <div id="rs-history-panel" class="rs-history-panel">
+      <p class="rs-empty">Select a job to see its history.</p>
+    </div>
+  </section>
+</div>
+<script src="/web/js/recipe-scheduler.js"></script>
+</body>
+</html>

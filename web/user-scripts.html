@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Scripts Manager — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/user-scripts.css">
+</head>
+<body>
+<div class="us-container">
+  <h1 class="us-title">User Scripts Manager</h1>
+  <p class="us-subtitle">Inject safe JS snippets — extensibility without extensions</p>
+
+  <section class="us-section">
+    <h2 class="us-section-title">Scripts</h2>
+    <div id="us-list" class="us-list" aria-live="polite"></div>
+  </section>
+
+  <section class="us-section">
+    <h2 class="us-section-title">Add Script</h2>
+    <div class="us-form">
+      <input type="text" id="us-name" class="us-input" placeholder="Script name">
+      <input type="text" id="us-url-pattern" class="us-input" placeholder="URL pattern (e.g. *.example.com/*)">
+      <select id="us-run-at" class="us-select">
+        <option value="document_idle">document_idle</option>
+        <option value="document_start">document_start</option>
+        <option value="document_end">document_end</option>
+      </select>
+      <textarea id="us-code" class="us-textarea" rows="6" placeholder="JavaScript code (max 10000 chars)"></textarea>
+      <button id="btn-add-script" class="us-btn us-btn-primary">Add Script</button>
+    </div>
+  </section>
+
+  <div id="us-status" class="us-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/user-scripts.js"></script>
+</body>
+</html>

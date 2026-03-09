@@ -644,6 +644,48 @@ _CLIPBOARD: list[dict] = []
 _CLIPBOARD_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
+# Task 045 — Download Manager
+# ---------------------------------------------------------------------------
+DOWNLOAD_STATUS: tuple[str, ...] = ("pending", "downloading", "completed", "failed", "cancelled")
+
+_DOWNLOADS: list[dict] = []
+_DOWNLOAD_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 046 — Extension Firewall
+# ---------------------------------------------------------------------------
+RULE_ACTIONS: tuple[str, ...] = ("allow", "block", "ask")
+
+BUILTIN_RULES: list[dict] = [
+    {
+        "rule_id": "block-all-extensions",
+        "pattern": "*",
+        "action": "block",
+        "is_builtin": True,
+        "description": "Block all extensions by default (Solace Browser Extension-Free Policy)",
+    },
+]
+
+_CUSTOM_RULES: list[dict] = []
+_BLOCKED_LOG: list[dict] = []
+_FIREWALL_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 047 — User Scripts Manager
+# ---------------------------------------------------------------------------
+FORBIDDEN_PATTERNS: tuple[str, ...] = (
+    "eval(",
+    "document.write(",
+    "innerHTML =",
+    "outerHTML =",
+    "execScript(",
+)
+SCRIPT_RUN_CONTEXTS: tuple[str, ...] = ("document_start", "document_end", "document_idle")
+
+_USER_SCRIPTS: list[dict] = []
+_SCRIPTS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
 # Task 039 — Command Palette
 # ---------------------------------------------------------------------------
 DEFAULT_COMMANDS: tuple[dict, ...] = (
@@ -739,6 +781,53 @@ _CHANGELOG: list[dict] = [
 
 _SEEN_ENTRIES: dict = {}  # user_id → set of seen entry_ids
 _CHANGELOG_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 042 — Session Cost Tracker
+# ---------------------------------------------------------------------------
+COST_MODELS: dict = {
+    "claude-haiku":  {"per_1k_in": "0.00025", "per_1k_out": "0.00125"},
+    "claude-sonnet": {"per_1k_in": "0.003",   "per_1k_out": "0.015"},
+    "gpt-4o-mini":   {"per_1k_in": "0.00015", "per_1k_out": "0.0006"},
+    "llama-70b":     {"per_1k_in": "0.0009",  "per_1k_out": "0.0009"},
+}
+_COST_BUDGET_DEFAULT: dict = {"daily_limit": "5.00", "monthly_limit": "50.00"}
+_COST_EVENTS: list = []
+_COST_BUDGET: dict = dict(_COST_BUDGET_DEFAULT)
+_COST_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 043 — Recipe Scheduler
+# ---------------------------------------------------------------------------
+SCHEDULE_RECIPES: list = [
+    "gmail-triage", "linkedin-daily", "github-summary", "calendar-review", "news-digest",
+]
+VALID_CRON_PRESETS: dict = {
+    "hourly":        "0 * * * *",
+    "daily-9am":     "0 9 * * *",
+    "daily-6pm":     "0 18 * * *",
+    "weekly-monday": "0 9 * * 1",
+    "every-30min":   "*/30 * * * *",
+}
+_SCHEDULER_JOBS: list = []
+_JOB_HISTORY: dict = {}
+_SCHED_LOCK_043 = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 044 — Proxy Settings
+# ---------------------------------------------------------------------------
+PROXY_TYPES: list = ["direct", "http", "https", "socks5"]
+PROXY_PRESETS: list = [
+    {"preset_id": "direct",        "name": "Direct (No Proxy)", "type": "direct", "host": None, "port": None},
+    {"preset_id": "tor-local",     "name": "Tor (Local)",       "type": "socks5", "host": "127.0.0.1", "port": 9050},
+    {"preset_id": "privoxy-local", "name": "Privoxy (Local)",   "type": "http",   "host": "127.0.0.1", "port": 8118},
+]
+_DEFAULT_PROXY: dict = {
+    "type": "direct", "host": None, "port": None, "username": None,
+    "password_hash": None, "enabled": False, "test_status": None, "test_latency_ms": None,
+}
+_PROXY_SETTINGS: dict = dict(_DEFAULT_PROXY)
+_PROXY_LOCK = threading.Lock()
 
 
 def _triage_single_email(email: dict[str, Any], config: dict[str, bool]) -> dict[str, Any]:
@@ -3757,6 +3846,15 @@ def _build_full_health_snapshot() -> dict:
 # ---------------------------------------------------------------------------
 # HTTP Handler — theorem: every route returns JSON, every error is specific.
 # ---------------------------------------------------------------------------
+def _parse_ts(ts_str: str) -> float:
+    """Parse ISO8601 UTC string to epoch float. Returns 0.0 on failure."""
+    try:
+        dt = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+        return dt.timestamp()
+    except (ValueError, AttributeError):
+        return 0.0
+
+
 class YinyangHandler(http.server.BaseHTTPRequestHandler):
 
     def _check_auth(self) -> bool:
@@ -4459,6 +4557,77 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_whats_new_js()
         elif path == "/web/css/whats-new.css":
             self._handle_whats_new_css()
+        # --- Task 045: Download Manager ---
+        elif path == "/api/v1/downloads":
+            self._handle_downloads_list()
+        elif path == "/api/v1/downloads/stats":
+            self._handle_downloads_stats()
+        elif path == "/web/download-manager.html":
+            self._handle_static_file("web/download-manager.html", "text/html; charset=utf-8")
+        elif path == "/web/js/download-manager.js":
+            self._handle_static_file("web/js/download-manager.js", "application/javascript")
+        elif path == "/web/css/download-manager.css":
+            self._handle_static_file("web/css/download-manager.css", "text/css")
+        # --- Task 046: Extension Firewall ---
+        elif path == "/api/v1/ext-firewall/rules":
+            self._handle_ext_firewall_rules_list()
+        elif path == "/api/v1/ext-firewall/blocked":
+            self._handle_ext_firewall_blocked_list()
+        elif path == "/web/ext-firewall.html":
+            self._handle_static_file("web/ext-firewall.html", "text/html; charset=utf-8")
+        elif path == "/web/js/ext-firewall.js":
+            self._handle_static_file("web/js/ext-firewall.js", "application/javascript")
+        elif path == "/web/css/ext-firewall.css":
+            self._handle_static_file("web/css/ext-firewall.css", "text/css")
+        # --- Task 047: User Scripts Manager ---
+        elif path == "/api/v1/user-scripts":
+            self._handle_user_scripts_list()
+        elif re.match(r"^/api/v1/user-scripts/[^/]+/validate$", path):
+            script_id = path.split("/")[-2]
+            self._handle_user_scripts_validate(script_id)
+        elif path == "/web/user-scripts.html":
+            self._handle_static_file("web/user-scripts.html", "text/html; charset=utf-8")
+        elif path == "/web/js/user-scripts.js":
+            self._handle_static_file("web/js/user-scripts.js", "application/javascript")
+        elif path == "/web/css/user-scripts.css":
+            self._handle_static_file("web/css/user-scripts.css", "text/css")
+        # --- Task 042: Session Cost Tracker ---
+        elif path == "/api/v1/cost/summary":
+            self._handle_cost_summary()
+        elif path == "/api/v1/cost/budget":
+            self._handle_cost_budget_get()
+        elif re.match(r"^/api/v1/cost/session/[^/]+$", path):
+            session_id = path.split("/")[-1]
+            self._handle_cost_session(session_id)
+        elif path == "/web/cost-tracker.html":
+            self._handle_static_file("web/cost-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/cost-tracker.js":
+            self._handle_static_file("web/js/cost-tracker.js", "application/javascript")
+        elif path == "/web/css/cost-tracker.css":
+            self._handle_static_file("web/css/cost-tracker.css", "text/css")
+        # --- Task 043: Recipe Scheduler ---
+        elif path == "/api/v1/scheduler/jobs":
+            self._handle_scheduler_jobs_list()
+        elif re.match(r"^/api/v1/scheduler/jobs/[^/]+/history$", path):
+            job_id = path.split("/")[-2]
+            self._handle_scheduler_job_history(job_id)
+        elif path == "/web/recipe-scheduler.html":
+            self._handle_static_file("web/recipe-scheduler.html", "text/html; charset=utf-8")
+        elif path == "/web/js/recipe-scheduler.js":
+            self._handle_static_file("web/js/recipe-scheduler.js", "application/javascript")
+        elif path == "/web/css/recipe-scheduler.css":
+            self._handle_static_file("web/css/recipe-scheduler.css", "text/css")
+        # --- Task 044: Proxy Settings ---
+        elif path == "/api/v1/proxy/settings":
+            self._handle_proxy_settings_get()
+        elif path == "/api/v1/proxy/presets":
+            self._handle_proxy_presets()
+        elif path == "/web/proxy-settings.html":
+            self._handle_static_file("web/proxy-settings.html", "text/html; charset=utf-8")
+        elif path == "/web/js/proxy-settings.js":
+            self._handle_static_file("web/js/proxy-settings.js", "application/javascript")
+        elif path == "/web/css/proxy-settings.css":
+            self._handle_static_file("web/css/proxy-settings.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -4770,6 +4939,39 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/whats-new/[^/]+/seen$", path):
             entry_id = path.split("/")[-2]
             self._handle_whats_new_mark_seen(entry_id)
+        # --- Task 045: Download Manager ---
+        elif path == "/api/v1/downloads":
+            self._handle_downloads_register()
+        elif re.match(r"^/api/v1/downloads/[^/]+/retry$", path):
+            dl_id = path.split("/")[-2]
+            self._handle_downloads_retry(dl_id)
+        # --- Task 046: Extension Firewall ---
+        elif path == "/api/v1/ext-firewall/rules":
+            self._handle_ext_firewall_rules_add()
+        elif path == "/api/v1/ext-firewall/check":
+            self._handle_ext_firewall_check()
+        # --- Task 047: User Scripts Manager ---
+        elif path == "/api/v1/user-scripts":
+            self._handle_user_scripts_add()
+        elif re.match(r"^/api/v1/user-scripts/[^/]+/toggle$", path):
+            script_id = path.split("/")[-2]
+            self._handle_user_scripts_toggle(script_id)
+        # --- Task 042: Session Cost Tracker ---
+        elif path == "/api/v1/cost/record":
+            self._handle_cost_record()
+        elif path == "/api/v1/cost/budget":
+            self._handle_cost_budget_set()
+        # --- Task 043: Recipe Scheduler ---
+        elif path == "/api/v1/scheduler/jobs":
+            self._handle_scheduler_job_create()
+        elif re.match(r"^/api/v1/scheduler/jobs/[^/]+/run-now$", path):
+            job_id = path.split("/")[-2]
+            self._handle_scheduler_job_run_now(job_id)
+        # --- Task 044: Proxy Settings ---
+        elif path == "/api/v1/proxy/settings":
+            self._handle_proxy_settings_set()
+        elif path == "/api/v1/proxy/test":
+            self._handle_proxy_test()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -4850,6 +5052,25 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/clipboard/[^/]+$", path):
             entry_id = path.split("/")[-1]
             self._handle_clipboard_delete(entry_id)
+        # --- Task 045: Download Manager ---
+        elif re.match(r"^/api/v1/downloads/[^/]+$", path):
+            dl_id = path.split("/")[-1]
+            self._handle_downloads_delete(dl_id)
+        # --- Task 046: Extension Firewall ---
+        elif re.match(r"^/api/v1/ext-firewall/rules/[^/]+$", path):
+            rule_id = path.split("/")[-1]
+            self._handle_ext_firewall_rules_delete(rule_id)
+        # --- Task 047: User Scripts Manager ---
+        elif re.match(r"^/api/v1/user-scripts/[^/]+$", path):
+            script_id = path.split("/")[-1]
+            self._handle_user_scripts_delete(script_id)
+        # --- Task 043: Recipe Scheduler ---
+        elif re.match(r"^/api/v1/scheduler/jobs/[^/]+$", path):
+            job_id = path.split("/")[-1]
+            self._handle_scheduler_job_delete(job_id)
+        # --- Task 044: Proxy Settings ---
+        elif path == "/api/v1/proxy/settings":
+            self._handle_proxy_settings_reset()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -13554,6 +13775,289 @@ function choose(mode) {
         self.wfile.write(content)
 
     # ---------------------------------------------------------------------------
+    # Task 045 — Download Manager handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_static_file(self, rel_path: str, content_type: str) -> None:
+        """Serve a static file relative to the server's directory."""
+        p = Path(__file__).parent / rel_path
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": f"{rel_path} not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_downloads_list(self) -> None:
+        """GET /api/v1/downloads — list all tracked downloads."""
+        with _DOWNLOAD_LOCK:
+            items = list(reversed(_DOWNLOADS))
+        self._send_json({"downloads": items, "total": len(items)})
+
+    def _handle_downloads_stats(self) -> None:
+        """GET /api/v1/downloads/stats — download statistics."""
+        with _DOWNLOAD_LOCK:
+            total = len(_DOWNLOADS)
+            completed = sum(1 for d in _DOWNLOADS if d["status"] == "completed")
+            failed = sum(1 for d in _DOWNLOADS if d["status"] == "failed")
+            total_size = sum(d.get("size_bytes", 0) for d in _DOWNLOADS)
+        self._send_json({
+            "total": total,
+            "completed": completed,
+            "failed": failed,
+            "total_size_bytes": total_size,
+        })
+
+    def _handle_downloads_register(self) -> None:
+        """POST /api/v1/downloads — register a download (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url = str(body.get("url", "")).strip()
+        if not url:
+            self._send_json({"error": "url is required"}, 400)
+            return
+        url_hash = hashlib.sha256(url.encode()).hexdigest()
+        raw_filename = str(body.get("filename", "unknown")).strip()
+        filename = raw_filename.replace("/", "_").replace("\\", "_").replace("..", "_")
+        size_bytes = int(body.get("size_bytes", 0))
+        download_id = f"dl_{uuid.uuid4().hex}"
+        entry: dict = {
+            "download_id": download_id,
+            "url_hash": url_hash,
+            "filename": filename,
+            "size_bytes": size_bytes,
+            "status": "pending",
+            "progress_pct": "0.00",
+            "created_at": _utc_isoformat(time.time()),
+            "completed_at": None,
+        }
+        with _DOWNLOAD_LOCK:
+            _DOWNLOADS.append(entry)
+        self._send_json({"status": "registered", "download_id": download_id})
+
+    def _handle_downloads_delete(self, download_id: str) -> None:
+        """DELETE /api/v1/downloads/{download_id} — remove from history (auth required)."""
+        if not self._check_auth():
+            return
+        with _DOWNLOAD_LOCK:
+            before = len(_DOWNLOADS)
+            _DOWNLOADS[:] = [d for d in _DOWNLOADS if d["download_id"] != download_id]
+            after = len(_DOWNLOADS)
+        if before == after:
+            self._send_json({"error": "download not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "download_id": download_id})
+
+    def _handle_downloads_retry(self, download_id: str) -> None:
+        """POST /api/v1/downloads/{download_id}/retry — mark for retry (auth required)."""
+        if not self._check_auth():
+            return
+        with _DOWNLOAD_LOCK:
+            target = next((d for d in _DOWNLOADS if d["download_id"] == download_id), None)
+            if target is None:
+                self._send_json({"error": "download not found"}, 404)
+                return
+            if target["status"] not in ("failed", "cancelled"):
+                self._send_json(
+                    {"error": "retry only allowed for failed or cancelled downloads"},
+                    400,
+                )
+                return
+            target["status"] = "pending"
+            target["progress_pct"] = "0.00"
+            target["completed_at"] = None
+        self._send_json({"status": "queued", "download_id": download_id})
+
+    # ---------------------------------------------------------------------------
+    # Task 046 — Extension Firewall handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_ext_firewall_rules_list(self) -> None:
+        """GET /api/v1/ext-firewall/rules — list all firewall rules."""
+        with _FIREWALL_LOCK:
+            all_rules = list(BUILTIN_RULES) + list(_CUSTOM_RULES)
+        self._send_json({"rules": all_rules, "total": len(all_rules)})
+
+    def _handle_ext_firewall_rules_add(self) -> None:
+        """POST /api/v1/ext-firewall/rules — add a firewall rule (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        pattern = str(body.get("pattern", "")).strip()
+        if not pattern or len(pattern) > 128:
+            self._send_json({"error": "pattern required and max 128 chars"}, 400)
+            return
+        action = str(body.get("action", "")).strip()
+        if action not in RULE_ACTIONS:
+            self._send_json({"error": f"action must be one of {list(RULE_ACTIONS)}"}, 400)
+            return
+        rule_id = f"rule_{uuid.uuid4().hex}"
+        rule: dict = {
+            "rule_id": rule_id,
+            "pattern": pattern,
+            "action": action,
+            "is_builtin": False,
+            "description": str(body.get("description", "")).strip(),
+        }
+        with _FIREWALL_LOCK:
+            _CUSTOM_RULES.append(rule)
+        self._send_json({"status": "added", "rule_id": rule_id})
+
+    def _handle_ext_firewall_rules_delete(self, rule_id: str) -> None:
+        """DELETE /api/v1/ext-firewall/rules/{rule_id} — remove a rule (auth required)."""
+        if not self._check_auth():
+            return
+        if any(r["rule_id"] == rule_id for r in BUILTIN_RULES):
+            self._send_json({"error": "cannot delete builtin rule"}, 409)
+            return
+        with _FIREWALL_LOCK:
+            before = len(_CUSTOM_RULES)
+            _CUSTOM_RULES[:] = [r for r in _CUSTOM_RULES if r["rule_id"] != rule_id]
+            after = len(_CUSTOM_RULES)
+        if before == after:
+            self._send_json({"error": "rule not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "rule_id": rule_id})
+
+    def _handle_ext_firewall_blocked_list(self) -> None:
+        """GET /api/v1/ext-firewall/blocked — list blocked extension attempts."""
+        with _FIREWALL_LOCK:
+            log = list(reversed(_BLOCKED_LOG))
+        self._send_json({"blocked": log, "total": len(log)})
+
+    def _handle_ext_firewall_check(self) -> None:
+        """POST /api/v1/ext-firewall/check — check if an extension ID is allowed."""
+        body = self._read_json_body()
+        if body is None:
+            return
+        ext_id = str(body.get("ext_id", "")).strip()
+        if not ext_id:
+            self._send_json({"error": "ext_id is required"}, 400)
+            return
+        ext_id_hash = hashlib.sha256(ext_id.encode()).hexdigest()
+        with _FIREWALL_LOCK:
+            all_rules = list(_CUSTOM_RULES) + list(BUILTIN_RULES)
+        matched_rule_id = None
+        allowed = True
+        for rule in all_rules:
+            pat = rule["pattern"]
+            if pat == "*" or ext_id == pat:
+                matched_rule_id = rule["rule_id"]
+                allowed = (rule["action"] == "allow")
+                break
+        if not allowed:
+            log_entry = {
+                "log_id": f"log_{uuid.uuid4().hex}",
+                "ext_id_hash": ext_id_hash,
+                "blocked_at": _utc_isoformat(time.time()),
+                "reason": f"matched rule {matched_rule_id}",
+            }
+            with _FIREWALL_LOCK:
+                _BLOCKED_LOG.append(log_entry)
+        self._send_json({
+            "allowed": allowed,
+            "rule_matched": matched_rule_id,
+            "ext_id_hash": ext_id_hash,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 047 — User Scripts Manager handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_user_scripts_list(self) -> None:
+        """GET /api/v1/user-scripts — list all user scripts."""
+        with _SCRIPTS_LOCK:
+            scripts = list(_USER_SCRIPTS)
+        self._send_json({"scripts": scripts, "total": len(scripts)})
+
+    def _handle_user_scripts_add(self) -> None:
+        """POST /api/v1/user-scripts — add a user script (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        name = str(body.get("name", "")).strip()
+        if not name or len(name) > 128:
+            self._send_json({"error": "name required and max 128 chars"}, 400)
+            return
+        url_pattern = str(body.get("url_pattern", "")).strip()
+        if not url_pattern or len(url_pattern) > 256:
+            self._send_json({"error": "url_pattern required and max 256 chars"}, 400)
+            return
+        code = str(body.get("code", "")).strip()
+        if len(code) > 10000:
+            self._send_json({"error": "code max 10000 chars"}, 400)
+            return
+        run_at = str(body.get("run_at", "document_idle")).strip()
+        if run_at not in SCRIPT_RUN_CONTEXTS:
+            self._send_json({"error": f"run_at must be one of {list(SCRIPT_RUN_CONTEXTS)}"}, 400)
+            return
+        script_id = f"scr_{uuid.uuid4().hex}"
+        script: dict = {
+            "script_id": script_id,
+            "name": name,
+            "url_pattern": url_pattern,
+            "code": code,
+            "run_at": run_at,
+            "enabled": True,
+            "created_at": _utc_isoformat(time.time()),
+            "last_run_at": None,
+        }
+        with _SCRIPTS_LOCK:
+            _USER_SCRIPTS.append(script)
+        self._send_json({"status": "added", "script_id": script_id})
+
+    def _handle_user_scripts_delete(self, script_id: str) -> None:
+        """DELETE /api/v1/user-scripts/{script_id} — delete a script (auth required)."""
+        if not self._check_auth():
+            return
+        with _SCRIPTS_LOCK:
+            before = len(_USER_SCRIPTS)
+            _USER_SCRIPTS[:] = [s for s in _USER_SCRIPTS if s["script_id"] != script_id]
+            after = len(_USER_SCRIPTS)
+        if before == after:
+            self._send_json({"error": "script not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "script_id": script_id})
+
+    def _handle_user_scripts_toggle(self, script_id: str) -> None:
+        """POST /api/v1/user-scripts/{script_id}/toggle — enable/disable (auth required)."""
+        if not self._check_auth():
+            return
+        with _SCRIPTS_LOCK:
+            target = next((s for s in _USER_SCRIPTS if s["script_id"] == script_id), None)
+            if target is None:
+                self._send_json({"error": "script not found"}, 404)
+                return
+            target["enabled"] = not target["enabled"]
+            new_state = target["enabled"]
+        self._send_json({"status": "toggled", "script_id": script_id, "enabled": new_state})
+
+    def _handle_user_scripts_validate(self, script_id: str) -> None:
+        """GET /api/v1/user-scripts/{script_id}/validate — validate script safety."""
+        with _SCRIPTS_LOCK:
+            target = next((s for s in _USER_SCRIPTS if s["script_id"] == script_id), None)
+        if target is None:
+            self._send_json({"error": "script not found"}, 404)
+            return
+        code = target.get("code", "")
+        warnings: list[str] = []
+        for pat in FORBIDDEN_PATTERNS:
+            if pat in code:
+                warnings.append(f"Forbidden pattern detected: {pat}")
+        self._send_json({"safe": len(warnings) == 0, "warnings": warnings})
+
+    # ---------------------------------------------------------------------------
     # Task 039 — Command Palette handlers
     # ---------------------------------------------------------------------------
 
@@ -14380,6 +14884,276 @@ function choose(mode) {
         self.send_header("Content-Length", str(len(content)))
         self.end_headers()
         self.wfile.write(content)
+
+
+    # ---------------------------------------------------------------------------
+    # Task 042 — Session Cost Tracker handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_cost_record(self) -> None:
+        """POST /api/v1/cost/record — record a cost event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        session_id = str(body.get("session_id", ""))
+        model = str(body.get("model", ""))
+        if model not in COST_MODELS:
+            self._send_json({"error": f"unknown model: {model}"}, 400)
+            return
+        try:
+            tokens_in = int(body.get("tokens_in", 0))
+            tokens_out = int(body.get("tokens_out", 0))
+        except (TypeError, ValueError):
+            self._send_json({"error": "tokens_in and tokens_out must be integers"}, 400)
+            return
+        rates = COST_MODELS[model]
+        cost_usd = str(
+            (
+                Decimal(tokens_in) * Decimal(rates["per_1k_in"]) / 1000
+                + Decimal(tokens_out) * Decimal(rates["per_1k_out"]) / 1000
+            ).quantize(Decimal("0.000001"))
+        )
+        event = {
+            "event_id": f"cost_{uuid.uuid4().hex}",
+            "session_id": session_id,
+            "model": model,
+            "tokens_in": tokens_in,
+            "tokens_out": tokens_out,
+            "cost_usd": cost_usd,
+            "recorded_at": _utc_isoformat(time.time()),
+        }
+        with _COST_LOCK:
+            _COST_EVENTS.append(event)
+        self._send_json({"status": "recorded", "event_id": event["event_id"], "cost_usd": cost_usd})
+
+    def _handle_cost_session(self, session_id: str) -> None:
+        """GET /api/v1/cost/session/{session_id} — get cost breakdown for a session."""
+        with _COST_LOCK:
+            events = [e for e in _COST_EVENTS if e.get("session_id") == session_id]
+        total = str(sum((Decimal(e["cost_usd"]) for e in events), Decimal("0")).quantize(Decimal("0.000001")))
+        self._send_json({"session_id": session_id, "events": events, "total_usd": total})
+
+    def _handle_cost_summary(self) -> None:
+        """GET /api/v1/cost/summary — total cost summary (public)."""
+        now = time.time()
+        today_start = now - (now % 86400)
+        month_day = time.gmtime(now).tm_mday
+        month_start = now - ((month_day - 1) * 86400 + (now % 86400))
+        with _COST_LOCK:
+            events = list(_COST_EVENTS)
+            budget = dict(_COST_BUDGET)
+        daily_total = str(
+            sum(
+                (Decimal(e["cost_usd"]) for e in events
+                 if _parse_ts(e.get("recorded_at", "")) >= today_start),
+                Decimal("0"),
+            ).quantize(Decimal("0.000001"))
+        )
+        monthly_total = str(
+            sum(
+                (Decimal(e["cost_usd"]) for e in events
+                 if _parse_ts(e.get("recorded_at", "")) >= month_start),
+                Decimal("0"),
+            ).quantize(Decimal("0.000001"))
+        )
+        daily_budget = Decimal(budget["daily_limit"])
+        daily_pct = str(
+            (Decimal(daily_total) / daily_budget * 100).quantize(Decimal("0.01"))
+            if daily_budget > 0 else Decimal("0.00")
+        )
+        self._send_json({
+            "daily_total_usd": daily_total,
+            "monthly_total_usd": monthly_total,
+            "daily_limit": budget["daily_limit"],
+            "monthly_limit": budget["monthly_limit"],
+            "daily_pct": daily_pct,
+            "alert": Decimal(daily_pct) >= 80,
+            "event_count": len(events),
+        })
+
+    def _handle_cost_budget_get(self) -> None:
+        """GET /api/v1/cost/budget — get current budget limits (public)."""
+        with _COST_LOCK:
+            budget = dict(_COST_BUDGET)
+        self._send_json(budget)
+
+    def _handle_cost_budget_set(self) -> None:
+        """POST /api/v1/cost/budget — set budget limits (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        with _COST_LOCK:
+            if "daily_limit" in body:
+                _COST_BUDGET["daily_limit"] = str(Decimal(str(body["daily_limit"])).quantize(Decimal("0.01")))
+            if "monthly_limit" in body:
+                _COST_BUDGET["monthly_limit"] = str(Decimal(str(body["monthly_limit"])).quantize(Decimal("0.01")))
+            budget = dict(_COST_BUDGET)
+        self._send_json({"status": "updated", "budget": budget})
+
+    # ---------------------------------------------------------------------------
+    # Task 043 — Recipe Scheduler handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_scheduler_jobs_list(self) -> None:
+        """GET /api/v1/scheduler/jobs — list all scheduled jobs."""
+        with _SCHED_LOCK_043:
+            jobs = list(_SCHEDULER_JOBS)
+        self._send_json({"jobs": jobs, "total": len(jobs)})
+
+    def _handle_scheduler_job_create(self) -> None:
+        """POST /api/v1/scheduler/jobs — create a scheduled job (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        recipe_id = str(body.get("recipe_id", ""))
+        cron_preset = str(body.get("cron_preset", ""))
+        if recipe_id not in SCHEDULE_RECIPES:
+            self._send_json({"error": f"unknown recipe_id: {recipe_id}"}, 400)
+            return
+        if cron_preset not in VALID_CRON_PRESETS:
+            self._send_json({"error": f"unknown cron_preset: {cron_preset}"}, 400)
+            return
+        job_id = f"job_{uuid.uuid4()}"
+        job = {
+            "job_id": job_id,
+            "name": str(body.get("name", recipe_id)),
+            "recipe_id": recipe_id,
+            "cron_preset": cron_preset,
+            "cron_expression": VALID_CRON_PRESETS[cron_preset],
+            "enabled": bool(body.get("enabled", True)),
+            "created_at": _utc_isoformat(time.time()),
+            "last_run_at": None,
+            "next_run_at": None,
+        }
+        with _SCHED_LOCK_043:
+            _SCHEDULER_JOBS.append(job)
+            _JOB_HISTORY[job_id] = []
+        self._send_json({"status": "created", "job_id": job_id})
+
+    def _handle_scheduler_job_delete(self, job_id: str) -> None:
+        """DELETE /api/v1/scheduler/jobs/{job_id} — delete a job (auth required)."""
+        if not self._check_auth():
+            return
+        with _SCHED_LOCK_043:
+            before = len(_SCHEDULER_JOBS)
+            _SCHEDULER_JOBS[:] = [j for j in _SCHEDULER_JOBS if j["job_id"] != job_id]
+            after = len(_SCHEDULER_JOBS)
+            _JOB_HISTORY.pop(job_id, None)
+        if before == after:
+            self._send_json({"error": "job not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "job_id": job_id})
+
+    def _handle_scheduler_job_run_now(self, job_id: str) -> None:
+        """POST /api/v1/scheduler/jobs/{job_id}/run-now — trigger immediate run (auth required)."""
+        if not self._check_auth():
+            return
+        with _SCHED_LOCK_043:
+            job = next((j for j in _SCHEDULER_JOBS if j["job_id"] == job_id), None)
+        if job is None:
+            self._send_json({"error": "job not found"}, 404)
+            return
+        now_ts = _utc_isoformat(time.time())
+        run = {
+            "run_id": f"run_{uuid.uuid4().hex}",
+            "started_at": now_ts,
+            "completed_at": now_ts,
+            "status": "completed",
+            "cost_usd": "0.01",
+        }
+        with _SCHED_LOCK_043:
+            _JOB_HISTORY.setdefault(job_id, []).append(run)
+            for j in _SCHEDULER_JOBS:
+                if j["job_id"] == job_id:
+                    j["last_run_at"] = now_ts
+        self._send_json({"status": "triggered", "run_id": run["run_id"]})
+
+    def _handle_scheduler_job_history(self, job_id: str) -> None:
+        """GET /api/v1/scheduler/jobs/{job_id}/history — get run history."""
+        with _SCHED_LOCK_043:
+            history = list(_JOB_HISTORY.get(job_id, []))
+        self._send_json({"job_id": job_id, "history": history, "total": len(history)})
+
+    # ---------------------------------------------------------------------------
+    # Task 044 — Proxy Settings handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_proxy_settings_get(self) -> None:
+        """GET /api/v1/proxy/settings — get current proxy config (public)."""
+        with _PROXY_LOCK:
+            settings = dict(_PROXY_SETTINGS)
+        self._send_json(settings)
+
+    def _handle_proxy_settings_set(self) -> None:
+        """POST /api/v1/proxy/settings — update proxy config (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        proxy_type = str(body.get("type", "direct"))
+        if proxy_type not in PROXY_TYPES:
+            self._send_json({"error": f"invalid type: {proxy_type}"}, 400)
+            return
+        host = body.get("host") or None
+        if proxy_type != "direct" and not host:
+            self._send_json({"error": "host required for non-direct proxy type"}, 400)
+            return
+        port = body.get("port")
+        if port is not None:
+            try:
+                port = int(port)
+                if port < 1 or port > 65535:
+                    self._send_json({"error": "port must be 1-65535"}, 400)
+                    return
+            except (TypeError, ValueError):
+                self._send_json({"error": "port must be integer 1-65535"}, 400)
+                return
+        password = body.get("password")
+        password_hash = None
+        if password:
+            password_hash = hashlib.sha256(str(password).encode()).hexdigest()
+        with _PROXY_LOCK:
+            _PROXY_SETTINGS["type"] = proxy_type
+            _PROXY_SETTINGS["host"] = host
+            _PROXY_SETTINGS["port"] = port
+            _PROXY_SETTINGS["username"] = body.get("username") or None
+            if password_hash is not None:
+                _PROXY_SETTINGS["password_hash"] = password_hash
+            _PROXY_SETTINGS["enabled"] = bool(body.get("enabled", True))
+            _PROXY_SETTINGS["test_status"] = None
+            _PROXY_SETTINGS["test_latency_ms"] = None
+            settings = dict(_PROXY_SETTINGS)
+        self._send_json({"status": "updated", "settings": settings})
+
+    def _handle_proxy_test(self) -> None:
+        """POST /api/v1/proxy/test — test proxy connectivity (auth required, stub)."""
+        if not self._check_auth():
+            return
+        with _PROXY_LOCK:
+            _PROXY_SETTINGS["test_status"] = "ok"
+            _PROXY_SETTINGS["test_latency_ms"] = 42
+        self._send_json({"status": "ok", "latency_ms": 42})
+
+    def _handle_proxy_settings_reset(self) -> None:
+        """DELETE /api/v1/proxy/settings — reset proxy to direct (auth required)."""
+        if not self._check_auth():
+            return
+        with _PROXY_LOCK:
+            _PROXY_SETTINGS.update(_DEFAULT_PROXY)
+            settings = dict(_PROXY_SETTINGS)
+        self._send_json({"status": "reset", "settings": settings})
+
+    def _handle_proxy_presets(self) -> None:
+        """GET /api/v1/proxy/presets — list proxy presets (public)."""
+        self._send_json({"presets": PROXY_PRESETS, "total": len(PROXY_PRESETS)})
+
 
 
 # ---------------------------------------------------------------------------

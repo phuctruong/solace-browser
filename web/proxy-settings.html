@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proxy Settings — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/proxy-settings.css">
+</head>
+<body>
+<div class="ps-container">
+  <h1 class="ps-title">Proxy Settings</h1>
+  <p class="ps-subtitle">Privacy-first browsing — route traffic through trusted proxies</p>
+
+  <section class="ps-section">
+    <h2 class="ps-section-title">Current Status</h2>
+    <div id="ps-status-badge" class="ps-badge ps-badge-disabled">Loading...</div>
+  </section>
+
+  <section class="ps-section">
+    <h2 class="ps-section-title">Proxy Presets</h2>
+    <div id="ps-presets" class="ps-presets"></div>
+  </section>
+
+  <section class="ps-section">
+    <h2 class="ps-section-title">Configure Proxy</h2>
+    <form id="ps-form" class="ps-form">
+      <label class="ps-label" for="ps-type">Proxy Type</label>
+      <select id="ps-type" class="ps-input">
+        <option value="direct">Direct (No Proxy)</option>
+        <option value="http">HTTP</option>
+        <option value="https">HTTPS</option>
+        <option value="socks5">SOCKS5</option>
+      </select>
+      <label class="ps-label" for="ps-host">Host</label>
+      <input type="text" id="ps-host" class="ps-input" placeholder="127.0.0.1">
+      <label class="ps-label" for="ps-port">Port (1-65535)</label>
+      <input type="number" id="ps-port" class="ps-input" min="1" max="65535" placeholder="8080">
+      <label class="ps-label" for="ps-username">Username (optional)</label>
+      <input type="text" id="ps-username" class="ps-input" placeholder="username">
+      <label class="ps-label" for="ps-password">Password (optional, stored as hash only)</label>
+      <input type="password" id="ps-password" class="ps-input" placeholder="••••••••" autocomplete="new-password">
+      <div class="ps-btn-row">
+        <button type="submit" class="ps-btn">Save Settings</button>
+        <button type="button" id="ps-test-btn" class="ps-btn ps-btn-secondary">Test Connection</button>
+        <button type="button" id="ps-reset-btn" class="ps-btn ps-btn-danger">Reset to Direct</button>
+      </div>
+    </form>
+    <div id="ps-form-status" class="ps-status" aria-live="polite"></div>
+  </section>
+</div>
+<script src="/web/js/proxy-settings.js"></script>
+</body>
+</html>

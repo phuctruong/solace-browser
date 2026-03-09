@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extension Firewall — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/ext-firewall.css">
+</head>
+<body>
+<div class="ef-container">
+  <h1 class="ef-title">Extension Firewall</h1>
+  <p class="ef-subtitle">Block unauthorized extensions — Solace Browser Extension-Free Policy</p>
+
+  <section class="ef-section">
+    <h2 class="ef-section-title">Firewall Rules</h2>
+    <div id="ef-rules-list" class="ef-list" aria-live="polite"></div>
+
+    <div class="ef-add-form">
+      <h3 class="ef-form-title">Add Rule</h3>
+      <div class="ef-form-row">
+        <input type="text" id="ef-pattern" class="ef-input" placeholder="Pattern (e.g. *.example.com)">
+        <select id="ef-action" class="ef-select">
+          <option value="block">block</option>
+          <option value="allow">allow</option>
+          <option value="ask">ask</option>
+        </select>
+        <button id="btn-add-rule" class="ef-btn ef-btn-primary">Add Rule</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="ef-section">
+    <h2 class="ef-section-title">Check Extension</h2>
+    <div class="ef-form-row">
+      <input type="text" id="ef-check-id" class="ef-input" placeholder="Extension ID">
+      <button id="btn-check" class="ef-btn ef-btn-primary">Check</button>
+    </div>
+    <div id="ef-check-result" class="ef-check-result" aria-live="polite"></div>
+  </section>
+
+  <section class="ef-section">
+    <h2 class="ef-section-title">Blocked Attempts Log</h2>
+    <div id="ef-blocked-list" class="ef-list" aria-live="polite"></div>
+  </section>
+
+  <div id="ef-status" class="ef-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/ext-firewall.js"></script>
+</body>
+</html>
