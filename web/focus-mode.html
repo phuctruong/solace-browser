@@ -1,22 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Focus Mode — Solace Hub</title>
-<link rel="stylesheet" href="/web/css/focus-mode.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus Mode</title>
+  <link rel="stylesheet" href="/web/css/focus-mode.css">
 </head>
 <body>
-<div class="fm-container">
-  <h1 class="fm-title">Focus Mode</h1>
-  <p class="fm-subtitle">Block distractions and track deep-work sessions</p>
-  <div class="fm-toolbar">
-    <button id="btn-fm-status" class="fm-btn fm-btn-primary">Status</button>
-    <button id="btn-fm-blocklist" class="fm-btn fm-btn-secondary">Blocklist</button>
-    <button id="btn-fm-history" class="fm-btn fm-btn-secondary">History</button>
-  </div>
-  <div id="fm-session" class="fm-session" aria-live="polite"></div>
-  <div id="fm-status" class="fm-status" aria-live="polite"></div>
+<div class="fcs-container">
+  <h1 class="fcs-title">Focus Mode</h1>
+  <p class="fcs-subtitle">Start timed focus sessions to block distractions and track deep work.</p>
+
+  <div class="fcs-stats" id="fcs-stats"><p>Loading stats...</p></div>
+
+  <form class="fcs-form" id="fcs-form">
+    <select id="fcs-session-type">
+      <option value="deep_work">deep_work</option>
+      <option value="reading">reading</option>
+      <option value="writing">writing</option>
+      <option value="coding">coding</option>
+      <option value="research">research</option>
+      <option value="planning">planning</option>
+      <option value="review">review</option>
+      <option value="break">break</option>
+      <option value="custom">custom</option>
+    </select>
+    <input type="number" id="fcs-target-minutes" placeholder="Target minutes" min="1" value="25" style="width:140px">
+    <button type="submit" class="fcs-btn fcs-btn-primary">Start Session</button>
+  </form>
+
+  <div class="fcs-panel" id="fcs-panel">Loading sessions...</div>
+  <div class="fcs-msg" id="fcs-msg"></div>
 </div>
 <script src="/web/js/focus-mode.js"></script>
 </body>

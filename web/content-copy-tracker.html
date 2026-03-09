@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Copy Tracker</title>
+  <link rel="stylesheet" href="/web/css/content-copy-tracker.css">
+</head>
+<body>
+<div class="cct-container">
+  <h1 class="cct-title">Content Copy Tracker</h1>
+  <p class="cct-subtitle">Track what content you copy from web pages. Content stored as SHA-256 hash only.</p>
+
+  <div class="cct-stats" id="cct-stats"><p>Loading stats...</p></div>
+
+  <form class="cct-form" id="cct-form">
+    <select id="cct-content-type">
+      <option value="text">text</option>
+      <option value="code">code</option>
+      <option value="url">url</option>
+      <option value="email">email</option>
+      <option value="phone">phone</option>
+      <option value="address">address</option>
+      <option value="quote">quote</option>
+      <option value="data_table">data_table</option>
+      <option value="image_alt">image_alt</option>
+      <option value="other">other</option>
+    </select>
+    <input type="url" id="cct-url" placeholder="Page URL">
+    <input type="text" id="cct-content" placeholder="Copied content">
+    <input type="number" id="cct-chars" placeholder="Char count" min="0" style="width:100px">
+    <input type="number" id="cct-words" placeholder="Word count" min="0" style="width:100px">
+    <button type="submit" class="cct-btn cct-btn-primary">Record</button>
+  </form>
+
+  <div class="cct-panel" id="cct-panel">Loading copies...</div>
+  <div class="cct-status" id="cct-status"></div>
+</div>
+<script src="/web/js/content-copy-tracker.js"></script>
+</body>
+</html>

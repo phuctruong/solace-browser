@@ -1,0 +1,31 @@
+/* Content Copy Tracker — Task 145 */
+:root {
+  --hub-bg: #f5f6fa;
+  --hub-surface: #ffffff;
+  --hub-primary: #4A90E2;
+  --hub-secondary: #e8e8e8;
+  --hub-text: #222;
+  --hub-muted: #666;
+  --hub-border: #ddd;
+  --hub-success: #27ae60;
+  --hub-danger: #e74c3c;
+}
+.cct-container { max-width: 900px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; background: var(--hub-bg); min-height: 100vh; }
+.cct-title { font-size: 1.6rem; font-weight: 700; color: var(--hub-text); margin-bottom: 4px; }
+.cct-subtitle { color: var(--hub-muted); margin-bottom: 20px; }
+.cct-form { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.cct-form select, .cct-form input { padding: 8px 12px; border: 1px solid var(--hub-border); border-radius: 6px; font-size: 0.9rem; }
+.cct-btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.cct-btn-primary { background: var(--hub-primary); color: var(--hub-surface); }
+.cct-btn-secondary { background: var(--hub-secondary); color: var(--hub-text); }
+.cct-stats { padding: 16px; background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 8px; margin-bottom: 16px; }
+.cct-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.cct-stat { text-align: center; }
+.cct-stat-val { font-size: 1.3rem; font-weight: 700; color: var(--hub-primary); }
+.cct-stat-lbl { font-size: 0.75rem; color: var(--hub-muted); }
+.cct-panel { display: flex; flex-direction: column; gap: 8px; }
+.cct-item { padding: 12px 16px; background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+.cct-item-meta { font-size: 0.85rem; color: var(--hub-text); }
+.cct-item-id { font-size: 0.75rem; color: var(--hub-muted); font-family: monospace; }
+.cct-type-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; background: var(--hub-secondary); color: var(--hub-text); font-size: 0.75rem; }
+.cct-status { margin-top: 12px; font-size: 0.85rem; color: var(--hub-muted); }

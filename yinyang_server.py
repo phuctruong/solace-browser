@@ -1883,6 +1883,84 @@ MAX_MEDIA_PLAYBACK_SESSIONS: int = 200000
 _MEDIA_PLAYBACK_SESSIONS: list[dict] = []
 _MEDIA_PLAYBACK_LOCK = threading.Lock()
 
+# ---------------------------------------------------------------------------
+# Task 151 — Clipboard History
+# ---------------------------------------------------------------------------
+CLIPBOARD_CONTENT_TYPES = [
+    "text", "code", "url", "email", "phone", "password",
+    "image_data", "json", "csv", "html", "other"
+]
+MAX_CLIPBOARD_ENTRIES = 1000
+_CLIPBOARD_ENTRIES: list[dict] = []
+_CLIPBOARD_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 152 — Search Suggestions Tracker
+# ---------------------------------------------------------------------------
+SUGGESTION_EVENT_TYPES = [
+    "shown", "clicked", "dismissed", "typed_over", "selected_by_keyboard"
+]
+MAX_SUGGESTION_EVENTS = 500000
+_SUGGESTION_EVENTS: list[dict] = []
+_SUGGESTION_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 153 — Page Annotation
+# ---------------------------------------------------------------------------
+ANNOTATION_TYPES = [
+    "highlight", "comment", "bookmark", "question", "important",
+    "todo", "disagree", "agree", "cite", "summary"
+]
+ANNOTATION_COLORS = ["yellow", "green", "blue", "red", "purple"]
+MAX_ANNOTATIONS = 100000
+_ANNOTATIONS: list[dict] = []
+_ANNOTATION_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 154 — Browser Shortcuts Manager
+# ---------------------------------------------------------------------------
+SHORTCUT_ACTION_TYPES = [
+    "navigate_url", "open_tab", "close_tab", "search", "scroll_top",
+    "scroll_bottom", "toggle_dark_mode", "focus_address_bar",
+    "open_dev_tools", "screenshot", "save_page", "custom"
+]
+MAX_SHORTCUTS = 200
+_SHORTCUTS: list[dict] = []
+_SHORTCUTS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 155 — Network Speed Monitor
+# ---------------------------------------------------------------------------
+NETWORK_CONNECTION_TYPES: list[str] = [
+    "wifi", "ethernet", "4g", "5g", "3g", "2g", "slow_2g", "bluetooth", "other", "unknown"
+]
+MAX_SPEED_MEASUREMENTS: int = 100000
+_SPEED_MEASUREMENTS: list[dict] = []
+_NSM_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 156 — Tab Productivity Scorer
+# ---------------------------------------------------------------------------
+TAB_PRODUCTIVITY_CATEGORIES: list[str] = [
+    "work", "research", "entertainment", "social_media", "news",
+    "shopping", "communication", "development", "learning", "other"
+]
+MAX_TAB_SCORES: int = 500000
+_TAB_SCORES: list[dict] = []
+_TAB_SCORE_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 157 — Extension API Blocker
+# ---------------------------------------------------------------------------
+API_BLOCK_RULE_TYPES: list[str] = [
+    "exact_match", "prefix_match", "regex_pattern", "domain_wildcard"
+]
+MAX_EXT_API_BLOCK_RULES: int = 500
+MAX_EXT_API_BLOCK_LOG: int = 100000
+_EXT_API_BLOCK_RULES: list[dict] = []
+_EXT_API_BLOCK_LOG: list[dict] = []
+_EXT_API_BLOCKER_LOCK = threading.Lock()
+
 
 def _triage_single_email(email: dict[str, Any], config: dict[str, bool]) -> dict[str, Any]:
     """Deterministic triage — no LLM required. Returns action + confidence."""
@@ -6883,6 +6961,58 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/media-playback-tracker.js", "application/javascript")
         elif path == "/web/css/media-playback-tracker.css":
             self._handle_static_file("web/css/media-playback-tracker.css", "text/css")
+        # --- Task 151: Clipboard History ---
+        elif path == "/api/v1/clipboard/content-types":
+            self._handle_clp_content_types()
+        elif path == "/api/v1/clipboard/entries":
+            self._handle_clp_list()
+        elif path == "/api/v1/clipboard/stats":
+            self._handle_clp_stats()
+        elif path == "/web/clipboard-history.html":
+            self._handle_static_file("web/clipboard-history.html", "text/html; charset=utf-8")
+        elif path == "/web/js/clipboard-history.js":
+            self._handle_static_file("web/js/clipboard-history.js", "application/javascript")
+        elif path == "/web/css/clipboard-history.css":
+            self._handle_static_file("web/css/clipboard-history.css", "text/css")
+        # --- Task 152: Search Suggestions Tracker ---
+        elif path == "/api/v1/search-suggestions/event-types":
+            self._handle_sgt_event_types()
+        elif path == "/api/v1/search-suggestions/events":
+            self._handle_sgt_list()
+        elif path == "/api/v1/search-suggestions/stats":
+            self._handle_sgt_stats()
+        elif path == "/web/search-suggestions-tracker.html":
+            self._handle_static_file("web/search-suggestions-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/search-suggestions-tracker.js":
+            self._handle_static_file("web/js/search-suggestions-tracker.js", "application/javascript")
+        elif path == "/web/css/search-suggestions-tracker.css":
+            self._handle_static_file("web/css/search-suggestions-tracker.css", "text/css")
+        # --- Task 153: Page Annotation ---
+        elif path == "/api/v1/annotations/annotation-types":
+            self._handle_ann_annotation_types()
+        elif path == "/api/v1/annotations/annotations":
+            self._handle_ann_list()
+        elif path == "/api/v1/annotations/stats":
+            self._handle_ann_stats()
+        elif path == "/web/page-annotation.html":
+            self._handle_static_file("web/page-annotation.html", "text/html; charset=utf-8")
+        elif path == "/web/js/page-annotation.js":
+            self._handle_static_file("web/js/page-annotation.js", "application/javascript")
+        elif path == "/web/css/page-annotation.css":
+            self._handle_static_file("web/css/page-annotation.css", "text/css")
+        # --- Task 154: Browser Shortcuts Manager ---
+        elif path == "/api/v1/shortcuts/action-types":
+            self._handle_shc_action_types()
+        elif path == "/api/v1/shortcuts/shortcuts":
+            self._handle_shc_list()
+        elif path == "/api/v1/shortcuts/stats":
+            self._handle_shc_stats()
+        elif path == "/web/browser-shortcuts-manager.html":
+            self._handle_static_file("web/browser-shortcuts-manager.html", "text/html; charset=utf-8")
+        elif path == "/web/js/browser-shortcuts-manager.js":
+            self._handle_static_file("web/js/browser-shortcuts-manager.js", "application/javascript")
+        elif path == "/web/css/browser-shortcuts-manager.css":
+            self._handle_static_file("web/css/browser-shortcuts-manager.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -7650,6 +7780,18 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 150: Media Playback Tracker ---
         elif path == "/api/v1/media-tracker/sessions":
             self._handle_mpt_create()
+        # --- Task 151: Clipboard History ---
+        elif path == "/api/v1/clipboard/entries":
+            self._handle_clp_create()
+        # --- Task 152: Search Suggestions Tracker ---
+        elif path == "/api/v1/search-suggestions/events":
+            self._handle_sgt_create()
+        # --- Task 153: Page Annotation ---
+        elif path == "/api/v1/annotations/annotations":
+            self._handle_ann_create()
+        # --- Task 154: Browser Shortcuts Manager ---
+        elif path == "/api/v1/shortcuts/shortcuts":
+            self._handle_shc_create()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -8139,6 +8281,24 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/media-tracker/sessions/[^/]+$", path):
             session_id = path.split("/")[-1]
             self._handle_mpt_delete(session_id)
+        # --- Task 151: Clipboard History ---
+        elif path == "/api/v1/clipboard/entries":
+            self._handle_clp_clear_all()
+        elif re.match(r"^/api/v1/clipboard/entries/[^/]+$", path):
+            entry_id = path.split("/")[-1]
+            self._handle_clp_delete(entry_id)
+        # --- Task 152: Search Suggestions Tracker ---
+        elif re.match(r"^/api/v1/search-suggestions/events/[^/]+$", path):
+            event_id = path.split("/")[-1]
+            self._handle_sgt_delete(event_id)
+        # --- Task 153: Page Annotation ---
+        elif re.match(r"^/api/v1/annotations/annotations/[^/]+$", path):
+            annotation_id = path.split("/")[-1]
+            self._handle_ann_delete(annotation_id)
+        # --- Task 154: Browser Shortcuts Manager ---
+        elif re.match(r"^/api/v1/shortcuts/shortcuts/[^/]+$", path):
+            shortcut_id = path.split("/")[-1]
+            self._handle_shc_delete(shortcut_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
