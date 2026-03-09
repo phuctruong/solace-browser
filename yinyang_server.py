@@ -252,6 +252,42 @@ _OAUTH3_PENDING: list[dict] = []   # pending consent requests
 _OAUTH3_GRANTS: list[dict] = []    # approved grants
 _OAUTH3_CONSENT_LOCK = threading.Lock()
 
+# ---------------------------------------------------------------------------
+# Task 025 — Browser Profile Manager
+# ---------------------------------------------------------------------------
+BROWSER_PROFILES_PATH: Path = Path.home() / ".solace" / "browser_profiles.json"
+_BROWSER_PROFILES_LOCK = threading.Lock()
+MAX_BROWSER_PROFILES = 10
+AVATAR_COLORS: frozenset = frozenset(["blue", "green", "red", "purple", "orange", "teal"])
+
+# ---------------------------------------------------------------------------
+# Task 026 — Evidence Chain Viewer (data stored via evidence_bundle; in-memory index)
+# ---------------------------------------------------------------------------
+EVIDENCE_CHAIN_PATH: Path = Path.home() / ".solace" / "evidence_chain.jsonl"
+_EVIDENCE_CHAIN_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 027 — Session Replay Viewer
+# ---------------------------------------------------------------------------
+REPLAY_SESSIONS_PATH: Path = Path.home() / ".solace" / "replay_sessions.json"
+_REPLAY_LOCK = threading.Lock()
+REPLAY_ACTION_TYPES: frozenset = frozenset(["click", "navigate", "type", "scroll", "screenshot"])
+
+# ---------------------------------------------------------------------------
+# Task 028 — Keyboard Shortcuts Panel
+# ---------------------------------------------------------------------------
+KEYBOARD_SHORTCUTS_PATH: Path = Path.home() / ".solace" / "keyboard_shortcuts.json"
+_SHORTCUTS_LOCK = threading.Lock()
+DEFAULT_SHORTCUTS: tuple[dict, ...] = (
+    {"key": "?", "description": "Show/hide keyboard shortcuts panel"},
+    {"key": "h", "description": "Go to top of page"},
+    {"key": "r", "description": "Refresh all panels"},
+    {"key": "d", "description": "Toggle dark mode"},
+    {"key": "Escape", "description": "Close open panels"},
+    {"key": "j", "description": "Scroll down"},
+    {"key": "k", "description": "Scroll up"},
+)
+
 PROFILES_PATH: Path = Path.home() / ".solace" / "profiles.json"
 ACTIVE_PROFILE_PATH: Path = Path.home() / ".solace" / "active_profile.json"
 _PROFILES_LOCK = threading.Lock()
@@ -269,6 +305,74 @@ PINNED_SECTIONS_PATH: Path = Path.home() / ".solace" / "pinned_sections.json"
 _PINNED_LOCK = threading.Lock()
 FAVORITES_PATH: Path = Path.home() / ".solace" / "favorites.json"
 _FAVORITES_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 029 — Dark Mode Theme System
+# ---------------------------------------------------------------------------
+DARK_MODE_PATH: Path = Path.home() / ".solace" / "dark-mode.json"
+_DARK_MODE_LOCK = threading.Lock()
+ACCENT_COLORS: frozenset = frozenset([
+    "blue", "purple", "green", "orange", "red", "pink", "teal", "yellow",
+])
+_DARK_MODE_STATE: dict = {
+    "mode": "system",          # "light" | "dark" | "system"
+    "accent": "blue",
+    "font_size": "medium",     # "small" | "medium" | "large"
+    "contrast": "normal",      # "normal" | "high"
+}
+
+# ---------------------------------------------------------------------------
+# Task 030 — App Store Browser
+# ---------------------------------------------------------------------------
+_APP_STORE_LOCK = threading.Lock()
+APP_STORE_CATALOG: list[dict] = [
+    {"id": "gmail-inbox-triage", "name": "Gmail Inbox Triage", "category": "email",
+     "description": "AI-powered inbox zero with OAuth3 consent", "author": "solace",
+     "version": "1.0", "rating": 4.8, "installs": 3210, "builtin": True},
+    {"id": "linkedin-pm", "name": "LinkedIn PM Digest", "category": "social",
+     "description": "Extract PM job posts matching your criteria", "author": "solace",
+     "version": "1.2", "rating": 4.5, "installs": 1890, "builtin": True},
+    {"id": "github-pr-review", "name": "GitHub PR Review", "category": "dev",
+     "description": "Summarise open PRs and flag stale reviews", "author": "solace",
+     "version": "2.0", "rating": 4.9, "installs": 978, "builtin": True},
+    {"id": "hackernews-digest", "name": "HackerNews Digest", "category": "news",
+     "description": "Daily top-10 HN digest delivered to your inbox", "author": "community",
+     "version": "1.0", "rating": 4.3, "installs": 512, "builtin": True},
+    {"id": "expense-filler", "name": "Expense Report Filler", "category": "productivity",
+     "description": "Auto-fill expense reports from receipts", "author": "solace",
+     "version": "1.1", "rating": 4.7, "installs": 764, "builtin": True},
+    {"id": "calendar-sync", "name": "Calendar Sync", "category": "productivity",
+     "description": "Sync tasks to Google Calendar with evidence", "author": "community",
+     "version": "1.0", "rating": 4.2, "installs": 334, "builtin": True},
+]
+_APP_STORE_INSTALLED: set = set()   # ids of installed apps (in-memory)
+
+# ---------------------------------------------------------------------------
+# Task 031 — Live Metrics Dashboard
+# ---------------------------------------------------------------------------
+_LIVE_METRICS_LOCK = threading.Lock()
+LIVE_METRICS_HISTORY_MAX = 60   # keep last 60 samples per metric
+_LIVE_METRICS_CPU: list[float] = []
+_LIVE_METRICS_MEM: list[float] = []
+_LIVE_METRICS_RPS: list[float] = []
+
+# ---------------------------------------------------------------------------
+# Task 032 — Quick Actions Menu
+# ---------------------------------------------------------------------------
+_QUICK_ACTIONS_LOCK = threading.Lock()
+DEFAULT_ACTIONS: list[dict] = [
+    {"id": "qa-open-dashboard",    "label": "Open Dashboard",        "icon": "grid",     "url": "/web/dashboard.html",      "builtin": True},
+    {"id": "qa-open-budget",       "label": "Budget Controls",       "icon": "wallet",   "url": "/web/budget.html",         "builtin": True},
+    {"id": "qa-open-evidence",     "label": "Evidence Viewer",       "icon": "shield",   "url": "/web/evidence-viewer.html","builtin": True},
+    {"id": "qa-open-schedule",     "label": "Schedules",             "icon": "clock",    "url": "/web/schedule.html",       "builtin": True},
+    {"id": "qa-open-recipes",      "label": "Recipes",               "icon": "book",     "url": "/web/recipes.html",        "builtin": True},
+    {"id": "qa-open-apps",         "label": "App Store",             "icon": "store",    "url": "/web/app-store.html",      "builtin": True},
+    {"id": "qa-open-metrics",      "label": "Live Metrics",          "icon": "chart",    "url": "/web/live-metrics.html",   "builtin": True},
+    {"id": "qa-open-oauth3",       "label": "OAuth3 Consent",        "icon": "key",      "url": "/web/oauth3-consent.html", "builtin": True},
+]
+_CUSTOM_ACTIONS: list[dict] = []   # user-added custom actions (in-memory)
+_RECENT_ACTIONS: list[dict] = []   # FIFO last-20 actions (in-memory)
+RECENT_ACTIONS_MAX = 20
 SUPPORTED_CLI_TOOLS: frozenset = frozenset(["claude", "openai", "ollama", "aider", "continue"])
 CLI_AGENT_CANDIDATES: dict[str, str] = {
     "claude": "claude",
@@ -3562,6 +3666,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/prime-wiki/snapshot/[^/]+$", path):
             snapshot_id = path.split("/")[-1]
             self._handle_prime_wiki_snapshot_detail(snapshot_id)
+        # --- Evidence Chain Viewer — Task 026 (must precede generic evidence/{id} match) ---
+        elif path == "/api/v1/evidence/chain":
+            self._handle_evidence_chain_list(query)
+        elif re.match(r"^/api/v1/evidence/chain/[^/]+$", path):
+            ev_id = path.split("/")[-1]
+            self._handle_evidence_chain_entry(ev_id)
         elif re.match(r"^/api/v1/evidence/[^/]+$", path):
             entry_id = path.split("/")[-1]
             self._handle_evidence_detail(entry_id)
@@ -3979,6 +4089,102 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_oauth3_consent_js()
         elif path == "/web/css/oauth3-consent.css":
             self._handle_oauth3_consent_css()
+        # --- Task 029: Dark Mode Theme System ---
+        elif path == "/api/v1/dark-mode":
+            self._handle_dark_mode_get()
+        elif path == "/api/v1/dark-mode/presets":
+            self._handle_dark_mode_presets()
+        elif path == "/web/dark-mode.html":
+            self._handle_dark_mode_html()
+        elif path == "/web/js/dark-mode.js":
+            self._handle_dark_mode_js()
+        elif path == "/web/css/dark-mode.css":
+            self._handle_dark_mode_css()
+        # --- Task 030: App Store Browser ---
+        elif path == "/api/v1/app-store/catalog":
+            self._handle_app_store_catalog(query)
+        elif path == "/api/v1/app-store/installed":
+            self._handle_app_store_installed()
+        elif path == "/api/v1/app-store/categories":
+            self._handle_app_store_categories()
+        elif path == "/web/app-store.html":
+            self._handle_app_store_html()
+        elif path == "/web/js/app-store.js":
+            self._handle_app_store_js()
+        elif path == "/web/css/app-store.css":
+            self._handle_app_store_css()
+        # --- Task 031: Live Metrics Dashboard ---
+        elif path == "/api/v1/live-metrics":
+            self._handle_live_metrics_get()
+        elif path == "/api/v1/live-metrics/history":
+            self._handle_live_metrics_history()
+        elif path == "/web/live-metrics.html":
+            self._handle_live_metrics_html()
+        elif path == "/web/js/live-metrics.js":
+            self._handle_live_metrics_js()
+        elif path == "/web/css/live-metrics.css":
+            self._handle_live_metrics_css()
+        # --- Task 032: Quick Actions Menu ---
+        elif path == "/api/v1/quick-actions":
+            self._handle_quick_actions_list()
+        elif path == "/api/v1/quick-actions/recent":
+            self._handle_quick_actions_recent()
+        elif path == "/web/quick-actions.html":
+            self._handle_quick_actions_html()
+        elif path == "/web/js/quick-actions.js":
+            self._handle_quick_actions_js()
+        elif path == "/web/css/quick-actions.css":
+            self._handle_quick_actions_css()
+        # --- Browser Profile Manager — Task 025 ---
+        elif path == "/api/v1/browser/profiles":
+            self._handle_browser_profiles_list()
+        elif path == "/api/v1/browser/profiles/active":
+            self._handle_browser_profiles_active()
+        elif re.match(r"^/api/v1/browser/profiles/[^/]+$", path):
+            profile_id = path.split("/")[-1]
+            self._handle_browser_profiles_detail(profile_id)
+        elif path == "/web/browser-profiles.html":
+            self._handle_browser_profiles_html()
+        elif path == "/web/js/browser-profiles.js":
+            self._handle_browser_profiles_js()
+        elif path == "/web/css/browser-profiles.css":
+            self._handle_browser_profiles_css()
+        # --- Evidence Chain Viewer — Task 026 ---
+        elif path == "/api/v1/evidence/chain":
+            self._handle_evidence_chain_list(query)
+        elif re.match(r"^/api/v1/evidence/chain/[^/]+$", path):
+            ev_id = path.split("/")[-1]
+            self._handle_evidence_chain_entry(ev_id)
+        elif path == "/web/evidence-chain.html":
+            self._handle_evidence_chain_html()
+        elif path == "/web/js/evidence-chain.js":
+            self._handle_evidence_chain_js()
+        elif path == "/web/css/evidence-chain.css":
+            self._handle_evidence_chain_css()
+        # --- Session Replay Viewer — Task 027 ---
+        elif path == "/api/v1/replay/sessions":
+            self._handle_replay_sessions_list()
+        elif re.match(r"^/api/v1/replay/sessions/[^/]+$", path):
+            replay_id = path.split("/")[-1]
+            self._handle_replay_session_detail(replay_id)
+        elif path == "/web/session-replay.html":
+            self._handle_session_replay_html()
+        elif path == "/web/js/session-replay.js":
+            self._handle_session_replay_js()
+        elif path == "/web/css/session-replay.css":
+            self._handle_session_replay_css()
+        # --- Keyboard Shortcuts Panel — Task 028 ---
+        elif path == "/api/v1/keyboard-shortcuts":
+            self._handle_keyboard_shortcuts_list()
+        elif re.match(r"^/api/v1/keyboard-shortcuts/[^/]+$", path):
+            shortcut_id = path.split("/")[-1]
+            self._handle_keyboard_shortcut_detail(shortcut_id)
+        elif path == "/web/keyboard-shortcuts.html":
+            self._handle_keyboard_shortcuts_html()
+        elif path == "/web/js/keyboard-shortcuts.js":
+            self._handle_keyboard_shortcuts_js()
+        elif path == "/web/css/keyboard-shortcuts.css":
+            self._handle_keyboard_shortcuts_css()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -4213,6 +4419,39 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/oauth3/consent/[^/]+/reject$", path):
             request_id = path.split("/")[-2]
             self._handle_oauth3_consent_reject(request_id)
+        # --- Task 029: Dark Mode Theme System ---
+        elif path == "/api/v1/dark-mode":
+            self._handle_dark_mode_set()
+        elif path == "/api/v1/dark-mode/reset":
+            self._handle_dark_mode_reset()
+        # --- Task 030: App Store Browser ---
+        elif path == "/api/v1/app-store/install":
+            self._handle_app_store_install()
+        elif path == "/api/v1/app-store/uninstall":
+            self._handle_app_store_uninstall()
+        # --- Task 032: Quick Actions Menu ---
+        elif path == "/api/v1/quick-actions":
+            self._handle_quick_actions_add()
+        elif path == "/api/v1/quick-actions/recent":
+            self._handle_quick_actions_record_recent()
+        # --- Browser Profile Manager — Task 025 ---
+        elif path == "/api/v1/browser/profiles":
+            self._handle_browser_profiles_create()
+        elif re.match(r"^/api/v1/browser/profiles/[^/]+/activate$", path):
+            profile_id = path.split("/")[-2]
+            self._handle_browser_profiles_activate(profile_id)
+        # --- Evidence Chain Viewer — Task 026 ---
+        elif path == "/api/v1/evidence/chain":
+            self._handle_evidence_chain_record()
+        # --- Session Replay Viewer — Task 027 ---
+        elif path == "/api/v1/replay/sessions":
+            self._handle_replay_sessions_create()
+        elif re.match(r"^/api/v1/replay/sessions/[^/]+/actions$", path):
+            replay_id = path.split("/")[-2]
+            self._handle_replay_session_add_action(replay_id)
+        # --- Keyboard Shortcuts Panel — Task 028 ---
+        elif path == "/api/v1/keyboard-shortcuts":
+            self._handle_keyboard_shortcuts_add()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -4259,6 +4498,22 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/oauth3/consented/[^/]+$", path):
             grant_id = path.split("/")[-1]
             self._handle_oauth3_consent_revoke(grant_id)
+        # --- Task 032: Quick Actions Menu — DELETE custom action ---
+        elif re.match(r"^/api/v1/quick-actions/[^/]+$", path):
+            action_id = path.split("/")[-1]
+            self._handle_quick_actions_delete(action_id)
+        # --- Browser Profile Manager — Task 025 ---
+        elif re.match(r"^/api/v1/browser/profiles/[^/]+$", path):
+            profile_id = path.split("/")[-1]
+            self._handle_browser_profiles_delete(profile_id)
+        # --- Session Replay Viewer — Task 027 ---
+        elif re.match(r"^/api/v1/replay/sessions/[^/]+$", path):
+            replay_id = path.split("/")[-1]
+            self._handle_replay_session_delete(replay_id)
+        # --- Keyboard Shortcuts Panel — Task 028 ---
+        elif re.match(r"^/api/v1/keyboard-shortcuts/[^/]+$", path):
+            shortcut_id = path.split("/")[-1]
+            self._handle_keyboard_shortcut_delete(shortcut_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -11717,6 +11972,1026 @@ function choose(mode) {
             content = css_path.read_bytes()
         except FileNotFoundError:
             self._send_json({"error": "reports.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+
+    # =========================================================================
+    # Task 029 — Dark Mode Theme System handlers
+    # =========================================================================
+
+    def _handle_dark_mode_get(self) -> None:
+        """GET /api/v1/dark-mode — return current dark-mode settings (public)."""
+        with _DARK_MODE_LOCK:
+            state = dict(_DARK_MODE_STATE)
+            if DARK_MODE_PATH.exists():
+                try:
+                    stored = json.loads(DARK_MODE_PATH.read_text())
+                    state.update({k: stored[k] for k in ("mode", "accent", "font_size", "contrast") if k in stored})
+                except (json.JSONDecodeError, OSError):
+                    pass
+        self._send_json(state)
+
+    def _handle_dark_mode_presets(self) -> None:
+        """GET /api/v1/dark-mode/presets — list accent color presets."""
+        presets = [{"id": c, "name": c.capitalize()} for c in sorted(ACCENT_COLORS)]
+        self._send_json({"presets": presets, "total": len(presets)})
+
+    def _handle_dark_mode_set(self) -> None:
+        """POST /api/v1/dark-mode — update dark-mode settings (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        with _DARK_MODE_LOCK:
+            state: dict = dict(_DARK_MODE_STATE)
+            if DARK_MODE_PATH.exists():
+                try:
+                    state.update(json.loads(DARK_MODE_PATH.read_text()))
+                except (json.JSONDecodeError, OSError):
+                    pass
+            if "mode" in body:
+                if body["mode"] not in ("light", "dark", "system"):
+                    self._send_json({"error": "mode must be light, dark, or system"}, 400)
+                    return
+                state["mode"] = body["mode"]
+            if "accent" in body:
+                if body["accent"] not in ACCENT_COLORS:
+                    self._send_json({"error": f"accent must be one of {sorted(ACCENT_COLORS)}"}, 400)
+                    return
+                state["accent"] = body["accent"]
+            if "font_size" in body:
+                if body["font_size"] not in ("small", "medium", "large"):
+                    self._send_json({"error": "font_size must be small, medium, or large"}, 400)
+                    return
+                state["font_size"] = body["font_size"]
+            if "contrast" in body:
+                if body["contrast"] not in ("normal", "high"):
+                    self._send_json({"error": "contrast must be normal or high"}, 400)
+                    return
+                state["contrast"] = body["contrast"]
+            DARK_MODE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            DARK_MODE_PATH.write_text(json.dumps(state))
+            _DARK_MODE_STATE.update(state)
+        self._send_json({"status": "ok", **state})
+
+    def _handle_dark_mode_reset(self) -> None:
+        """POST /api/v1/dark-mode/reset — reset to defaults (auth required)."""
+        if not self._check_auth():
+            return
+        defaults = {"mode": "system", "accent": "blue", "font_size": "medium", "contrast": "normal"}
+        with _DARK_MODE_LOCK:
+            _DARK_MODE_STATE.update(defaults)
+            if DARK_MODE_PATH.exists():
+                try:
+                    DARK_MODE_PATH.unlink()
+                except OSError:
+                    pass
+        self._send_json({"status": "reset", **defaults})
+
+    def _handle_dark_mode_html(self) -> None:
+        """GET /web/dark-mode.html — serve Dark Mode settings page."""
+        p = Path(__file__).parent / "web" / "dark-mode.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "dark-mode.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_dark_mode_js(self) -> None:
+        """GET /web/js/dark-mode.js — serve Dark Mode JS."""
+        p = Path(__file__).parent / "web" / "js" / "dark-mode.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "dark-mode.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_dark_mode_css(self) -> None:
+        """GET /web/css/dark-mode.css — serve Dark Mode CSS."""
+        p = Path(__file__).parent / "web" / "css" / "dark-mode.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "dark-mode.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # =========================================================================
+    # Task 030 — App Store Browser handlers
+    # =========================================================================
+
+    def _handle_app_store_catalog(self, query: str) -> None:
+        """GET /api/v1/app-store/catalog — list catalog apps with optional ?category= filter."""
+        params = self._parse_query(query)
+        category = params.get("category", "")
+        apps = list(APP_STORE_CATALOG)
+        if category:
+            apps = [a for a in apps if a.get("category") == category]
+        with _APP_STORE_LOCK:
+            installed = set(_APP_STORE_INSTALLED)
+        for a in apps:
+            a = dict(a)
+        result = [{**a, "installed": a["id"] in installed} for a in apps]
+        self._send_json({"apps": result, "total": len(result)})
+
+    def _handle_app_store_installed(self) -> None:
+        """GET /api/v1/app-store/installed — list installed apps."""
+        with _APP_STORE_LOCK:
+            installed_ids = set(_APP_STORE_INSTALLED)
+        catalog_map = {a["id"]: a for a in APP_STORE_CATALOG}
+        result = [
+            {**catalog_map[i], "installed": True}
+            for i in installed_ids
+            if i in catalog_map
+        ]
+        self._send_json({"apps": result, "total": len(result)})
+
+    def _handle_app_store_categories(self) -> None:
+        """GET /api/v1/app-store/categories — list unique categories."""
+        cats = sorted({a["category"] for a in APP_STORE_CATALOG})
+        self._send_json({"categories": cats, "total": len(cats)})
+
+    def _handle_app_store_install(self) -> None:
+        """POST /api/v1/app-store/install — install an app (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        app_id = body.get("app_id", "").strip()
+        if not app_id:
+            self._send_json({"error": "missing app_id"}, 400)
+            return
+        catalog_ids = {a["id"] for a in APP_STORE_CATALOG}
+        if app_id not in catalog_ids:
+            self._send_json({"error": "app not found in catalog"}, 404)
+            return
+        with _APP_STORE_LOCK:
+            _APP_STORE_INSTALLED.add(app_id)
+        self._send_json({"status": "installed", "app_id": app_id})
+
+    def _handle_app_store_uninstall(self) -> None:
+        """POST /api/v1/app-store/uninstall — uninstall an app (auth required, builtin → 409)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        app_id = body.get("app_id", "").strip()
+        if not app_id:
+            self._send_json({"error": "missing app_id"}, 400)
+            return
+        catalog_map = {a["id"]: a for a in APP_STORE_CATALOG}
+        if app_id in catalog_map and catalog_map[app_id].get("builtin"):
+            self._send_json({"error": "builtin apps cannot be uninstalled"}, 409)
+            return
+        with _APP_STORE_LOCK:
+            _APP_STORE_INSTALLED.discard(app_id)
+        self._send_json({"status": "uninstalled", "app_id": app_id})
+
+    def _handle_app_store_html(self) -> None:
+        """GET /web/app-store.html — serve App Store page."""
+        p = Path(__file__).parent / "web" / "app-store.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "app-store.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_app_store_js(self) -> None:
+        """GET /web/js/app-store.js — serve App Store JS."""
+        p = Path(__file__).parent / "web" / "js" / "app-store.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "app-store.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_app_store_css(self) -> None:
+        """GET /web/css/app-store.css — serve App Store CSS."""
+        p = Path(__file__).parent / "web" / "css" / "app-store.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "app-store.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # =========================================================================
+    # Task 031 — Live Metrics Dashboard handlers
+    # =========================================================================
+
+    def _handle_live_metrics_get(self) -> None:
+        """GET /api/v1/live-metrics — current snapshot with SVG sparkline data."""
+        with _METRICS_LOCK:
+            uptime = int(time.time() - _SERVER_START_TIME)
+            total_req = sum(_REQUEST_COUNTS.values())
+            total_err = sum(_ERROR_COUNTS.values())
+        cpu_pct: float = 0.0
+        mem_mb: float = 0.0
+        if _HAS_PSUTIL:
+            try:
+                cpu_pct = float(_psutil.cpu_percent(interval=None))
+                mem_mb = float(_psutil.Process().memory_info().rss) / 1_048_576
+            except (OSError, AttributeError):
+                pass
+        cpu_pct = max(0.0, min(100.0, cpu_pct))
+        rps = round(total_req / max(1, uptime), 4)
+        with _LIVE_METRICS_LOCK:
+            _LIVE_METRICS_CPU.append(cpu_pct)
+            _LIVE_METRICS_MEM.append(round(mem_mb, 2))
+            _LIVE_METRICS_RPS.append(rps)
+            if len(_LIVE_METRICS_CPU) > LIVE_METRICS_HISTORY_MAX:
+                _LIVE_METRICS_CPU.pop(0)
+            if len(_LIVE_METRICS_MEM) > LIVE_METRICS_HISTORY_MAX:
+                _LIVE_METRICS_MEM.pop(0)
+            if len(_LIVE_METRICS_RPS) > LIVE_METRICS_HISTORY_MAX:
+                _LIVE_METRICS_RPS.pop(0)
+            cpu_series = list(_LIVE_METRICS_CPU)
+            mem_series = list(_LIVE_METRICS_MEM)
+            rps_series = list(_LIVE_METRICS_RPS)
+        self._send_json({
+            "uptime_s": uptime,
+            "cpu_pct": cpu_pct,
+            "mem_mb": round(mem_mb, 2),
+            "req_total": total_req,
+            "error_total": total_err,
+            "rps": rps,
+            "cpu_sparkline": cpu_series,
+            "mem_sparkline": mem_series,
+            "rps_sparkline": rps_series,
+            "timestamp": _utc_isoformat(time.time()),
+        })
+
+    def _handle_live_metrics_history(self) -> None:
+        """GET /api/v1/live-metrics/history — historical sparkline arrays."""
+        with _LIVE_METRICS_LOCK:
+            cpu_series = list(_LIVE_METRICS_CPU)
+            mem_series = list(_LIVE_METRICS_MEM)
+            rps_series = list(_LIVE_METRICS_RPS)
+        self._send_json({
+            "cpu_pct": cpu_series,
+            "mem_mb": mem_series,
+            "rps": rps_series,
+            "samples": len(cpu_series),
+        })
+
+    def _handle_live_metrics_html(self) -> None:
+        """GET /web/live-metrics.html — serve Live Metrics page."""
+        p = Path(__file__).parent / "web" / "live-metrics.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "live-metrics.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_live_metrics_js(self) -> None:
+        """GET /web/js/live-metrics.js — serve Live Metrics JS."""
+        p = Path(__file__).parent / "web" / "js" / "live-metrics.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "live-metrics.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_live_metrics_css(self) -> None:
+        """GET /web/css/live-metrics.css — serve Live Metrics CSS."""
+        p = Path(__file__).parent / "web" / "css" / "live-metrics.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "live-metrics.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # =========================================================================
+    # Task 032 — Quick Actions Menu handlers
+    # =========================================================================
+
+    def _handle_quick_actions_list(self) -> None:
+        """GET /api/v1/quick-actions — list all actions (default + custom)."""
+        with _QUICK_ACTIONS_LOCK:
+            custom = list(_CUSTOM_ACTIONS)
+        all_actions = list(DEFAULT_ACTIONS) + custom
+        self._send_json({"actions": all_actions, "total": len(all_actions)})
+
+    def _handle_quick_actions_recent(self) -> None:
+        """GET /api/v1/quick-actions/recent — list recent actions (FIFO last 20)."""
+        with _QUICK_ACTIONS_LOCK:
+            recent = list(_RECENT_ACTIONS)
+        self._send_json({"recent": recent, "total": len(recent)})
+
+    def _handle_quick_actions_add(self) -> None:
+        """POST /api/v1/quick-actions — add a custom action (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        label = str(body.get("label", "")).strip()
+        url = str(body.get("url", "")).strip()
+        if not label:
+            self._send_json({"error": "missing label"}, 400)
+            return
+        if not url:
+            self._send_json({"error": "missing url"}, 400)
+            return
+        icon = str(body.get("icon", "link")).strip()
+        action_id = f"qa-custom-{uuid.uuid4().hex[:8]}"
+        action = {"id": action_id, "label": label, "icon": icon, "url": url, "builtin": False}
+        with _QUICK_ACTIONS_LOCK:
+            _CUSTOM_ACTIONS.append(action)
+        self._send_json({"status": "added", "action": action})
+
+    def _handle_quick_actions_record_recent(self) -> None:
+        """POST /api/v1/quick-actions/recent — record a recently used action."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        action_id = str(body.get("action_id", "")).strip()
+        if not action_id:
+            self._send_json({"error": "missing action_id"}, 400)
+            return
+        # Find action in default or custom list
+        all_actions = list(DEFAULT_ACTIONS)
+        with _QUICK_ACTIONS_LOCK:
+            all_actions += list(_CUSTOM_ACTIONS)
+        match = next((a for a in all_actions if a["id"] == action_id), None)
+        if match is None:
+            self._send_json({"error": "action not found"}, 404)
+            return
+        record = {**match, "used_at": _utc_isoformat(time.time())}
+        with _QUICK_ACTIONS_LOCK:
+            # Remove existing entry for same id, then prepend
+            global _RECENT_ACTIONS
+            _RECENT_ACTIONS = [r for r in _RECENT_ACTIONS if r["id"] != action_id]
+            _RECENT_ACTIONS.insert(0, record)
+            if len(_RECENT_ACTIONS) > RECENT_ACTIONS_MAX:
+                _RECENT_ACTIONS = _RECENT_ACTIONS[:RECENT_ACTIONS_MAX]
+        self._send_json({"status": "recorded", "action_id": action_id})
+
+    def _handle_quick_actions_delete(self, action_id: str) -> None:
+        """DELETE /api/v1/quick-actions/{id} — delete custom action (builtin → 409)."""
+        if not self._check_auth():
+            return
+        default_ids = {a["id"] for a in DEFAULT_ACTIONS}
+        if action_id in default_ids:
+            self._send_json({"error": "builtin actions cannot be deleted"}, 409)
+            return
+        with _QUICK_ACTIONS_LOCK:
+            before = len(_CUSTOM_ACTIONS)
+            _CUSTOM_ACTIONS[:] = [a for a in _CUSTOM_ACTIONS if a["id"] != action_id]
+            after = len(_CUSTOM_ACTIONS)
+        if before == after:
+            self._send_json({"error": "action not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "action_id": action_id})
+
+    def _handle_quick_actions_html(self) -> None:
+        """GET /web/quick-actions.html — serve Quick Actions page."""
+        p = Path(__file__).parent / "web" / "quick-actions.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "quick-actions.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_quick_actions_js(self) -> None:
+        """GET /web/js/quick-actions.js — serve Quick Actions JS."""
+        p = Path(__file__).parent / "web" / "js" / "quick-actions.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "quick-actions.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_quick_actions_css(self) -> None:
+        """GET /web/css/quick-actions.css — serve Quick Actions CSS."""
+        p = Path(__file__).parent / "web" / "css" / "quick-actions.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "quick-actions.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # ==========================================================================
+    # Task 025 — Browser Profile Manager
+    # ==========================================================================
+
+    def _load_browser_profiles(self) -> list:
+        if not BROWSER_PROFILES_PATH.exists():
+            return []
+        try:
+            data = json.loads(BROWSER_PROFILES_PATH.read_text())
+            return data if isinstance(data, list) else []
+        except json.JSONDecodeError:
+            return []
+
+    def _save_browser_profiles(self, profiles: list) -> None:
+        BROWSER_PROFILES_PATH.parent.mkdir(parents=True, exist_ok=True)
+        BROWSER_PROFILES_PATH.write_text(json.dumps(profiles, indent=2))
+
+    def _handle_browser_profiles_list(self) -> None:
+        """GET /api/v1/browser/profiles — list all browser profiles."""
+        with _BROWSER_PROFILES_LOCK:
+            profiles = self._load_browser_profiles()
+        self._send_json({"profiles": profiles, "total": len(profiles)})
+
+    def _handle_browser_profiles_active(self) -> None:
+        """GET /api/v1/browser/profiles/active — get active browser profile."""
+        if not ACTIVE_PROFILE_PATH.exists():
+            self._send_json({"active_profile": None})
+            return
+        try:
+            data = json.loads(ACTIVE_PROFILE_PATH.read_text())
+            self._send_json({"active_profile": data})
+        except json.JSONDecodeError:
+            self._send_json({"active_profile": None})
+
+    def _handle_browser_profiles_detail(self, profile_id: str) -> None:
+        """GET /api/v1/browser/profiles/{id} — get single browser profile."""
+        with _BROWSER_PROFILES_LOCK:
+            profiles = self._load_browser_profiles()
+        profile = next((p for p in profiles if p.get("profile_id") == profile_id or p.get("id") == profile_id), None)
+        if not profile:
+            self._send_json({"error": "profile not found"}, 404)
+            return
+        self._send_json({"profile": profile})
+
+    def _handle_browser_profiles_create(self) -> None:
+        """POST /api/v1/browser/profiles — create browser profile. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        name = str(body.get("name", "")).strip()
+        if not name or len(name) > 64:
+            self._send_json({"error": "name must be 1-64 characters"}, 400)
+            return
+        avatar_color = str(body.get("avatar_color", "blue")).lower()
+        if avatar_color not in AVATAR_COLORS:
+            self._send_json({"error": f"avatar_color must be one of: {', '.join(sorted(AVATAR_COLORS))}"}, 400)
+            return
+        with _BROWSER_PROFILES_LOCK:
+            profiles = self._load_browser_profiles()
+            if len(profiles) >= MAX_BROWSER_PROFILES:
+                self._send_json({"error": f"max {MAX_BROWSER_PROFILES} profiles allowed"}, 400)
+                return
+            if any(p.get("name") == name for p in profiles):
+                self._send_json({"error": f"profile '{name}' already exists"}, 400)
+                return
+            profile_id = "prof_" + str(uuid.uuid4())
+            profile: dict[str, Any] = {
+                "profile_id": profile_id,
+                "name": name,
+                "avatar_color": avatar_color,
+                "created_at": int(time.time()),
+                "data_dir": str(Path.home() / ".solace" / "browser-profiles" / profile_id),
+            }
+            profiles.append(profile)
+            self._save_browser_profiles(profiles)
+        self._send_json({"profile": profile, "status": "created"}, 201)
+
+    def _handle_browser_profiles_activate(self, profile_id: str) -> None:
+        """POST /api/v1/browser/profiles/{id}/activate — activate profile. Requires auth."""
+        if not self._check_auth():
+            return
+        with _BROWSER_PROFILES_LOCK:
+            profiles = self._load_browser_profiles()
+            profile = next((p for p in profiles if p.get("profile_id") == profile_id or p.get("id") == profile_id), None)
+            if not profile:
+                self._send_json({"error": "profile not found"}, 404)
+                return
+            ACTIVE_PROFILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            ACTIVE_PROFILE_PATH.write_text(json.dumps(profile, indent=2))
+        self._send_json({"status": "activated", "profile": profile})
+
+    def _handle_browser_profiles_delete(self, profile_id: str) -> None:
+        """DELETE /api/v1/browser/profiles/{id} — delete profile. Requires auth."""
+        if not self._check_auth():
+            return
+        with _BROWSER_PROFILES_LOCK:
+            profiles = self._load_browser_profiles()
+            before = len(profiles)
+            profiles = [p for p in profiles if p.get("profile_id") != profile_id and p.get("id") != profile_id]
+            if len(profiles) == before:
+                self._send_json({"error": "profile not found"}, 404)
+                return
+            self._save_browser_profiles(profiles)
+        self._send_json({"status": "deleted", "profile_id": profile_id})
+
+    def _handle_browser_profiles_html(self) -> None:
+        """GET /web/browser-profiles.html"""
+        p = Path(__file__).parent / "web" / "browser-profiles.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "browser-profiles.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_browser_profiles_js(self) -> None:
+        """GET /web/js/browser-profiles.js"""
+        p = Path(__file__).parent / "web" / "js" / "browser-profiles.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "browser-profiles.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_browser_profiles_css(self) -> None:
+        """GET /web/css/browser-profiles.css"""
+        p = Path(__file__).parent / "web" / "css" / "browser-profiles.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "browser-profiles.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # ==========================================================================
+    # Task 026 — Evidence Chain Viewer
+    # ==========================================================================
+
+    def _load_evidence_chain(self) -> list:
+        """Load evidence chain entries from JSONL file."""
+        if not EVIDENCE_CHAIN_PATH.exists():
+            return []
+        entries = []
+        try:
+            for line in EVIDENCE_CHAIN_PATH.read_text().splitlines():
+                line = line.strip()
+                if line:
+                    try:
+                        entries.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        pass
+        except OSError:
+            pass
+        return entries
+
+    def _handle_evidence_chain_list(self, query: str) -> None:
+        """GET /api/v1/evidence/chain — list evidence chain entries."""
+        from urllib.parse import parse_qs
+        params = parse_qs(query.lstrip("?"))
+        limit = min(int(params.get("limit", [100])[0]), 500)
+        offset = max(int(params.get("offset", [0])[0]), 0)
+        event_type = params.get("type", [None])[0]
+        with _EVIDENCE_CHAIN_LOCK:
+            entries = self._load_evidence_chain()
+        if event_type:
+            entries = [e for e in entries if e.get("type") == event_type or e.get("event_type") == event_type]
+        total = len(entries)
+        entries = entries[offset:offset + limit]
+        self._send_json({"entries": entries, "total": total, "limit": limit, "offset": offset})
+
+    def _handle_evidence_chain_entry(self, ev_id: str) -> None:
+        """GET /api/v1/evidence/chain/{id} — get single chain entry."""
+        with _EVIDENCE_CHAIN_LOCK:
+            entries = self._load_evidence_chain()
+        entry = next((e for e in entries if e.get("evidence_id") == ev_id), None)
+        if not entry:
+            self._send_json({"error": "entry not found"}, 404)
+            return
+        self._send_json({"entry": entry})
+
+    def _handle_evidence_chain_record(self) -> None:
+        """POST /api/v1/evidence/chain — record new evidence chain entry. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        ev_type = str(body.get("type", "")).strip()
+        if not ev_type or len(ev_type) > 256:
+            self._send_json({"error": "type must be 1-256 chars"}, 400)
+            return
+        data = body.get("data", {})
+        if not isinstance(data, dict):
+            self._send_json({"error": "data must be an object"}, 400)
+            return
+        description = str(body.get("description", "")).strip()
+        evidence_id = "ev_" + str(uuid.uuid4())
+        ts = int(time.time())
+        # build sha256 hash chain: hash of (prev_hash + current_payload)
+        with _EVIDENCE_CHAIN_LOCK:
+            entries = self._load_evidence_chain()
+            prev_hash = entries[-1].get("sha256", "") if entries else ""
+            payload_str = json.dumps({"type": ev_type, "ts": ts, "data": data}, sort_keys=True)
+            sha256 = hashlib.sha256((prev_hash + payload_str).encode()).hexdigest()
+            entry: dict[str, Any] = {
+                "evidence_id": evidence_id,
+                "type": ev_type,
+                "description": description,
+                "data": data,
+                "ts": ts,
+                "sha256": sha256,
+                "prev_sha256": prev_hash,
+            }
+            EVIDENCE_CHAIN_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with EVIDENCE_CHAIN_PATH.open("a") as f:
+                f.write(json.dumps(entry) + "\n")
+        self._send_json({"entry": entry, "status": "recorded"}, 201)
+
+    def _handle_evidence_chain_html(self) -> None:
+        """GET /web/evidence-chain.html"""
+        p = Path(__file__).parent / "web" / "evidence-chain.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "evidence-chain.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_evidence_chain_js(self) -> None:
+        """GET /web/js/evidence-chain.js"""
+        p = Path(__file__).parent / "web" / "js" / "evidence-chain.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "evidence-chain.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_evidence_chain_css(self) -> None:
+        """GET /web/css/evidence-chain.css"""
+        p = Path(__file__).parent / "web" / "css" / "evidence-chain.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "evidence-chain.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # ==========================================================================
+    # Task 027 — Session Replay Viewer
+    # ==========================================================================
+
+    def _load_replay_sessions(self) -> list:
+        if not REPLAY_SESSIONS_PATH.exists():
+            return []
+        try:
+            data = json.loads(REPLAY_SESSIONS_PATH.read_text())
+            return data if isinstance(data, list) else []
+        except json.JSONDecodeError:
+            return []
+
+    def _save_replay_sessions(self, sessions: list) -> None:
+        REPLAY_SESSIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        REPLAY_SESSIONS_PATH.write_text(json.dumps(sessions, indent=2))
+
+    def _handle_replay_sessions_list(self) -> None:
+        """GET /api/v1/replay/sessions — list recorded replay sessions."""
+        with _REPLAY_LOCK:
+            sessions = self._load_replay_sessions()
+        # return summary (no actions inline)
+        summaries = [
+            {k: v for k, v in s.items() if k != "actions"}
+            for s in sessions
+        ]
+        for i, s in enumerate(sessions):
+            summaries[i]["action_count"] = len(s.get("actions", []))
+        self._send_json({"sessions": summaries, "total": len(summaries)})
+
+    def _handle_replay_session_detail(self, replay_id: str) -> None:
+        """GET /api/v1/replay/sessions/{id} — get session with full action timeline."""
+        with _REPLAY_LOCK:
+            sessions = self._load_replay_sessions()
+        session = next((s for s in sessions if s.get("replay_id") == replay_id), None)
+        if not session:
+            self._send_json({"error": "replay session not found"}, 404)
+            return
+        self._send_json({"session": session})
+
+    def _handle_replay_sessions_create(self) -> None:
+        """POST /api/v1/replay/sessions — create new replay session. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        name = str(body.get("name", "")).strip()
+        if not name or len(name) > 128:
+            self._send_json({"error": "name must be 1-128 characters"}, 400)
+            return
+        start_url = str(body.get("start_url", "")).strip()
+        replay_id = "replay_" + str(uuid.uuid4())
+        ts = int(time.time())
+        session: dict[str, Any] = {
+            "replay_id": replay_id,
+            "name": name,
+            "start_url": start_url,
+            "created_at": ts,
+            "actions": [],
+        }
+        with _REPLAY_LOCK:
+            sessions = self._load_replay_sessions()
+            sessions.append(session)
+            self._save_replay_sessions(sessions)
+        self._send_json({"session": session, "status": "created"}, 201)
+
+    def _handle_replay_session_add_action(self, replay_id: str) -> None:
+        """POST /api/v1/replay/sessions/{id}/actions — append action to timeline. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        action_type = str(body.get("action", body.get("type", ""))).lower()
+        if action_type not in REPLAY_ACTION_TYPES:
+            self._send_json({"error": f"action must be one of: {', '.join(sorted(REPLAY_ACTION_TYPES))}"}, 400)
+            return
+        action: dict[str, Any] = {
+            "action": action_type,
+            "ts": int(time.time()),
+            "selector": str(body.get("selector", "")),
+            "url": str(body.get("url", "")),
+            "value": str(body.get("value", "")),
+            "text": str(body.get("text", "")),
+        }
+        with _REPLAY_LOCK:
+            sessions = self._load_replay_sessions()
+            session = next((s for s in sessions if s.get("replay_id") == replay_id), None)
+            if not session:
+                self._send_json({"error": "replay session not found"}, 404)
+                return
+            session.setdefault("actions", []).append(action)
+            self._save_replay_sessions(sessions)
+        self._send_json({"status": "added", "action": action})
+
+    def _handle_replay_session_delete(self, replay_id: str) -> None:
+        """DELETE /api/v1/replay/sessions/{id} — delete replay session. Requires auth."""
+        if not self._check_auth():
+            return
+        with _REPLAY_LOCK:
+            sessions = self._load_replay_sessions()
+            before = len(sessions)
+            sessions = [s for s in sessions if s.get("replay_id") != replay_id]
+            if len(sessions) == before:
+                self._send_json({"error": "replay session not found"}, 404)
+                return
+            self._save_replay_sessions(sessions)
+        self._send_json({"status": "deleted", "replay_id": replay_id})
+
+    def _handle_session_replay_html(self) -> None:
+        """GET /web/session-replay.html"""
+        p = Path(__file__).parent / "web" / "session-replay.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "session-replay.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_session_replay_js(self) -> None:
+        """GET /web/js/session-replay.js"""
+        p = Path(__file__).parent / "web" / "js" / "session-replay.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "session-replay.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_session_replay_css(self) -> None:
+        """GET /web/css/session-replay.css"""
+        p = Path(__file__).parent / "web" / "css" / "session-replay.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "session-replay.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # ==========================================================================
+    # Task 028 — Keyboard Shortcuts Panel
+    # ==========================================================================
+
+    def _load_custom_shortcuts(self) -> list:
+        if not KEYBOARD_SHORTCUTS_PATH.exists():
+            return []
+        try:
+            data = json.loads(KEYBOARD_SHORTCUTS_PATH.read_text())
+            return data if isinstance(data, list) else []
+        except json.JSONDecodeError:
+            return []
+
+    def _save_custom_shortcuts(self, shortcuts: list) -> None:
+        KEYBOARD_SHORTCUTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        KEYBOARD_SHORTCUTS_PATH.write_text(json.dumps(shortcuts, indent=2))
+
+    def _handle_keyboard_shortcuts_list(self) -> None:
+        """GET /api/v1/keyboard-shortcuts — list default + custom shortcuts."""
+        with _SHORTCUTS_LOCK:
+            custom = self._load_custom_shortcuts()
+        defaults = [dict(s) for s in DEFAULT_SHORTCUTS]
+        self._send_json({
+            "defaults": defaults,
+            "custom": custom,
+            "total": len(defaults) + len(custom),
+        })
+
+    def _handle_keyboard_shortcut_detail(self, shortcut_id: str) -> None:
+        """GET /api/v1/keyboard-shortcuts/{id} — get single custom shortcut."""
+        with _SHORTCUTS_LOCK:
+            shortcuts = self._load_custom_shortcuts()
+        shortcut = next((s for s in shortcuts if s.get("shortcut_id") == shortcut_id or s.get("id") == shortcut_id), None)
+        if not shortcut:
+            self._send_json({"error": "shortcut not found"}, 404)
+            return
+        self._send_json({"shortcut": shortcut})
+
+    def _handle_keyboard_shortcuts_add(self) -> None:
+        """POST /api/v1/keyboard-shortcuts — add custom shortcut. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        key = str(body.get("key", "")).strip()
+        if not key or len(key) > 32:
+            self._send_json({"error": "key must be 1-32 characters"}, 400)
+            return
+        description = str(body.get("description", "")).strip()
+        if not description or len(description) > 128:
+            self._send_json({"error": "description must be 1-128 characters"}, 400)
+            return
+        action = str(body.get("action", "")).strip()
+        # Default shortcuts cannot be duplicated
+        if any(s["key"] == key for s in DEFAULT_SHORTCUTS):
+            self._send_json({"error": f"key '{key}' is a reserved default shortcut"}, 409)
+            return
+        with _SHORTCUTS_LOCK:
+            customs = self._load_custom_shortcuts()
+            if any(s.get("key") == key for s in customs):
+                self._send_json({"error": f"key '{key}' already exists in custom shortcuts"}, 409)
+                return
+            shortcut_id = "sc_" + str(uuid.uuid4())
+            shortcut: dict[str, Any] = {
+                "shortcut_id": shortcut_id,
+                "key": key,
+                "description": description,
+                "created_at": int(time.time()),
+            }
+            if action:
+                shortcut["action"] = action
+            customs.append(shortcut)
+            self._save_custom_shortcuts(customs)
+        self._send_json({"shortcut": shortcut, "status": "added"}, 201)
+
+    def _handle_keyboard_shortcut_delete(self, shortcut_id: str) -> None:
+        """DELETE /api/v1/keyboard-shortcuts/{id} — delete custom shortcut. Requires auth."""
+        if not self._check_auth():
+            return
+        # Default shortcuts cannot be deleted
+        with _SHORTCUTS_LOCK:
+            shortcuts = self._load_custom_shortcuts()
+            before = len(shortcuts)
+            shortcuts = [s for s in shortcuts if s.get("shortcut_id") != shortcut_id and s.get("id") != shortcut_id]
+            if len(shortcuts) == before:
+                self._send_json({"error": "shortcut not found"}, 404)
+                return
+            self._save_custom_shortcuts(shortcuts)
+        self._send_json({"status": "deleted", "shortcut_id": shortcut_id})
+
+    def _handle_keyboard_shortcuts_html(self) -> None:
+        """GET /web/keyboard-shortcuts.html"""
+        p = Path(__file__).parent / "web" / "keyboard-shortcuts.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "keyboard-shortcuts.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_keyboard_shortcuts_js(self) -> None:
+        """GET /web/js/keyboard-shortcuts.js"""
+        p = Path(__file__).parent / "web" / "js" / "keyboard-shortcuts.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "keyboard-shortcuts.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_keyboard_shortcuts_css(self) -> None:
+        """GET /web/css/keyboard-shortcuts.css"""
+        p = Path(__file__).parent / "web" / "css" / "keyboard-shortcuts.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "keyboard-shortcuts.css not found"}, 404)
             return
         self.send_response(200)
         self.send_header("Content-Type", "text/css")

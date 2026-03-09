@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Replay — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/session-replay.css">
+</head>
+<body>
+<div class="sr-page">
+  <div class="page-header">
+    <h1 class="page-title">Session Replay</h1>
+    <button class="btn-secondary" id="btn-new-replay">+ New Replay Session</button>
+  </div>
+
+  <div class="replays-layout">
+    <!-- Replay list -->
+    <div class="replay-list-panel">
+      <div class="panel-title">Recorded Sessions</div>
+      <div id="replay-list" class="replay-list">
+        <div class="empty-state">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Timeline panel -->
+    <div class="replay-detail-panel" id="replay-detail-panel">
+      <div class="panel-title" id="replay-detail-title">Select a session</div>
+      <div class="playback-controls" id="playback-controls" style="display:none">
+        <button class="btn-play" id="btn-play">Play</button>
+        <button class="btn-secondary-sm" id="btn-reset">Reset</button>
+        <span class="playback-status" id="playback-status">Stopped</span>
+      </div>
+      <div id="action-timeline" class="action-timeline">
+        <div class="empty-state">No session selected.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New replay modal -->
+  <div id="modal-new-replay" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="New Replay Session">
+    <div class="modal-box">
+      <h2 class="modal-title">New Replay Session</h2>
+      <label class="form-label" for="input-replay-name">Session name</label>
+      <input id="input-replay-name" class="form-input" type="text" maxlength="128" placeholder="e.g. LinkedIn outreach run">
+      <label class="form-label" for="input-replay-url">Start URL</label>
+      <input id="input-replay-url" class="form-input" type="text" maxlength="512" placeholder="https://...">
+      <div id="modal-replay-error" class="form-error" style="display:none"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-cancel-replay">Cancel</button>
+        <button class="btn-primary" id="btn-confirm-replay">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/web/js/session-replay.js"></script>
+</body>
+</html>

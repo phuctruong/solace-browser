@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keyboard Shortcuts — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/keyboard-shortcuts.css">
+</head>
+<body>
+<div class="ks-page">
+  <div class="page-header">
+    <h1 class="page-title">Keyboard Shortcuts</h1>
+    <button class="btn-primary" id="btn-add-shortcut">+ Add Shortcut</button>
+  </div>
+
+  <div class="shortcut-hint">Press <kbd>?</kbd> anywhere to toggle this panel. Default shortcuts cannot be deleted.</div>
+
+  <div class="section-title">Default Shortcuts</div>
+  <div id="default-shortcuts" class="shortcuts-list">
+    <div class="empty-state">Loading...</div>
+  </div>
+
+  <div class="section-title" style="margin-top:1.25rem">Custom Shortcuts</div>
+  <div id="custom-shortcuts" class="shortcuts-list">
+    <div class="empty-state">No custom shortcuts yet.</div>
+  </div>
+
+  <!-- Add shortcut modal -->
+  <div id="modal-add-shortcut" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Add Keyboard Shortcut">
+    <div class="modal-box">
+      <h2 class="modal-title">Add Custom Shortcut</h2>
+      <label class="form-label" for="input-key">Key combination</label>
+      <input id="input-key" class="form-input" type="text" maxlength="32" placeholder="e.g. Ctrl+K, Alt+Shift+R">
+      <label class="form-label" for="input-desc">Description</label>
+      <input id="input-desc" class="form-input" type="text" maxlength="128" placeholder="What does this shortcut do?">
+      <label class="form-label" for="input-action">Action ID (optional)</label>
+      <input id="input-action" class="form-input" type="text" maxlength="64" placeholder="e.g. open_recipes">
+      <div id="modal-ks-error" class="form-error" style="display:none"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-cancel-shortcut">Cancel</button>
+        <button class="btn-primary" id="btn-confirm-shortcut">Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/web/js/keyboard-shortcuts.js"></script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+/* session-replay.css — Session Replay Viewer (Task 027)
+   Laws: var(--hub-*) tokens ONLY in component rules. Hex values only in :root.
+   No CDN. No Bootstrap. No Tailwind. No jQuery. Banned port omitted. */
+
+:root {
+  --hub-bg: #0d0d1a;
+  --hub-surface: #1a1a2e;
+  --hub-border: #2a2a3e;
+  --hub-text: #e2e8f0;
+  --hub-text-muted: #94a3b8;
+  --hub-accent: #6366f1;
+  --hub-success: #10b981;
+  --hub-error: #ef4444;
+  --hub-warning: #f59e0b;
+  --hub-click: #3b82f6;
+  --hub-navigate: #8b5cf6;
+  --hub-type-color: #10b981;
+  --hub-scroll: #94a3b8;
+  --hub-screenshot: #f59e0b;
+  --hub-mono: 'Courier New', monospace;
+  --hub-overlay: rgba(0, 0, 0, 0.65);
+}
+
+body {
+  margin: 0;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+}
+
+.sr-page {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* --- Page header --- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* --- Layout --- */
+.replays-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 700px) {
+  .replays-layout { grid-template-columns: 1fr; }
+}
+
+/* --- Panel --- */
+.replay-list-panel,
+.replay-detail-panel {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.panel-title {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--hub-border);
+  color: var(--hub-text-muted);
+}
+
+/* --- Replay list --- */
+.replay-list {
+  padding: 0.5rem;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.replay-item {
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 0.25rem;
+  border: 1px solid transparent;
+}
+
+.replay-item:hover {
+  background: var(--hub-bg);
+  border-color: var(--hub-border);
+}
+
+.replay-item--active {
+  background: var(--hub-bg);
+  border-color: var(--hub-accent);
+}
+
+.replay-item-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.replay-item-meta {
+  font-size: 0.75rem;
+  color: var(--hub-text-muted);
+  margin-top: 2px;
+}
+
+/* --- Playback controls --- */
+.playback-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--hub-border);
+}
+
+.btn-play {
+  background: var(--hub-accent);
+  color: var(--hub-text);
+  border: none;
+  border-radius: 6px;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.btn-play:hover { opacity: 0.88; }
+
+.btn-secondary-sm {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text);
+  border-radius: 6px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.btn-secondary-sm:hover {
+  border-color: var(--hub-accent);
+  color: var(--hub-accent);
+}
+
+.playback-status {
+  font-size: 0.8rem;
+  color: var(--hub-text-muted);
+  margin-left: auto;
+}
+
+/* --- Action timeline --- */
+.action-timeline {
+  padding: 1rem;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.action-step {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--hub-border);
+  background: var(--hub-bg);
+  transition: border-color 0.15s;
+}
+
+.action-step--active {
+  border-color: var(--hub-accent);
+  background: var(--hub-surface);
+}
+
+.action-step--played {
+  opacity: 0.55;
+}
+
+.step-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--hub-text);
+}
+
+.step-icon--click      { background: var(--hub-click); }
+.step-icon--navigate   { background: var(--hub-navigate); }
+.step-icon--type       { background: var(--hub-type-color); }
+.step-icon--scroll     { background: var(--hub-scroll); }
+.step-icon--screenshot { background: var(--hub-screenshot); }
+.step-icon--other      { background: var(--hub-border); }
+
+.step-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.step-action {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.step-detail {
+  font-size: 0.78rem;
+  color: var(--hub-text-muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.step-ts {
+  font-size: 0.72rem;
+  color: var(--hub-text-muted);
+  white-space: nowrap;
+  margin-top: 4px;
+}
+
+/* --- Buttons --- */
+.btn-primary {
+  background: var(--hub-accent);
+  color: var(--hub-text);
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.btn-primary:hover { opacity: 0.88; }
+
+.btn-secondary {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text);
+  border-radius: 8px;
+  padding: 0.38rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-secondary:hover {
+  border-color: var(--hub-accent);
+  color: var(--hub-accent);
+}
+
+/* --- Modal --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--hub-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-box {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.form-label {
+  font-size: 0.8rem;
+  color: var(--hub-text-muted);
+  display: block;
+  margin-bottom: 0.1rem;
+}
+
+.form-input {
+  width: 100%;
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: 6px;
+  color: var(--hub-text);
+  padding: 0.42rem 0.75rem;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 1px;
+}
+
+.form-error {
+  color: var(--hub-error);
+  font-size: 0.8rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+/* --- Empty state --- */
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--hub-text-muted);
+}

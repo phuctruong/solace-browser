@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Actions — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/quick-actions.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Quick Actions</h1>
+    <span class="page-subtitle">One-click shortcuts to your most-used pages</span>
+  </div>
+
+  <div class="qa-page">
+
+    <div id="status-banner" class="status-banner hidden"></div>
+
+    <!-- All actions -->
+    <div class="card">
+      <div class="card-title">All Actions</div>
+      <div id="actions-grid" class="actions-grid"></div>
+    </div>
+
+    <!-- Recent actions -->
+    <div class="card">
+      <div class="card-title">Recently Used</div>
+      <div id="recent-list" class="recent-list"></div>
+    </div>
+
+    <!-- Add custom action -->
+    <div class="card">
+      <div class="card-title">Add Custom Action</div>
+      <form id="add-form" class="add-form" autocomplete="off">
+        <input type="text" id="input-label" class="form-input" placeholder="Label (required)" required>
+        <input type="text" id="input-url"   class="form-input" placeholder="URL, e.g. /web/recipes.html (required)" required>
+        <input type="text" id="input-icon"  class="form-input" placeholder="Icon name (optional, e.g. star)">
+        <button type="submit" class="btn-add">Add Action</button>
+      </form>
+    </div>
+
+  </div>
+
+  <script src="/web/js/quick-actions.js"></script>
+</body>
+</html>

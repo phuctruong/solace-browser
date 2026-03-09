@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Metrics — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/live-metrics.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Live Metrics</h1>
+    <span class="page-subtitle">Real-time server performance — refreshes every 5s</span>
+    <span id="last-updated" class="last-updated"></span>
+  </div>
+
+  <div class="metrics-page">
+
+    <!-- KPI row -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">Uptime</div>
+        <div class="kpi-value" id="kpi-uptime">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">CPU</div>
+        <div class="kpi-value" id="kpi-cpu">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Memory</div>
+        <div class="kpi-value" id="kpi-mem">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Requests/s</div>
+        <div class="kpi-value" id="kpi-rps">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Requests</div>
+        <div class="kpi-value" id="kpi-total-req">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Errors</div>
+        <div class="kpi-value" id="kpi-total-err">—</div>
+      </div>
+    </div>
+
+    <!-- CPU Sparkline -->
+    <div class="card">
+      <div class="card-title">CPU % (last 60 samples)</div>
+      <div class="sparkline-container">
+        <svg id="svg-cpu" class="sparkline" viewBox="0 0 600 80" preserveAspectRatio="none" aria-label="CPU sparkline">
+          <polyline id="line-cpu" points="" fill="none" stroke="var(--hub-accent)" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Memory Sparkline -->
+    <div class="card">
+      <div class="card-title">Memory MB (last 60 samples)</div>
+      <div class="sparkline-container">
+        <svg id="svg-mem" class="sparkline" viewBox="0 0 600 80" preserveAspectRatio="none" aria-label="Memory sparkline">
+          <polyline id="line-mem" points="" fill="none" stroke="var(--hub-success)" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- RPS Sparkline -->
+    <div class="card">
+      <div class="card-title">Requests/s (last 60 samples)</div>
+      <div class="sparkline-container">
+        <svg id="svg-rps" class="sparkline" viewBox="0 0 600 80" preserveAspectRatio="none" aria-label="RPS sparkline">
+          <polyline id="line-rps" points="" fill="none" stroke="var(--hub-warning)" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/web/js/live-metrics.js"></script>
+</body>
+</html>

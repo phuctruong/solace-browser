@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evidence Chain — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/evidence-chain.css">
+</head>
+<body>
+<div class="ec-page">
+  <div class="page-header">
+    <h1 class="page-title">Evidence Chain</h1>
+    <div class="header-actions">
+      <span id="chain-integrity" class="integrity-badge integrity-badge--unknown">Chain: unchecked</span>
+      <button class="btn-verify" id="btn-verify">Verify Integrity</button>
+      <button class="btn-secondary" id="btn-add">+ Add Entry</button>
+    </div>
+  </div>
+
+  <div class="stats-bar" id="stats-bar">
+    <span id="stat-total">-- entries</span>
+    <span id="stat-types">-- types</span>
+    <span id="stat-first">First: --</span>
+    <span id="stat-last">Last: --</span>
+  </div>
+
+  <div class="search-row">
+    <input id="search-input" class="search-input" type="text" placeholder="Search entries...">
+  </div>
+
+  <div id="chain-list" class="chain-list">
+    <div class="empty-state">Loading evidence chain...</div>
+  </div>
+
+  <!-- Add entry modal -->
+  <div id="modal-add" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Add Evidence Entry">
+    <div class="modal-box">
+      <h2 class="modal-title">Add Evidence Entry</h2>
+      <label class="form-label" for="input-ev-type">Event type</label>
+      <input id="input-ev-type" class="form-input" type="text" maxlength="128" placeholder="e.g. action_taken">
+      <label class="form-label" for="input-ev-desc">Description</label>
+      <input id="input-ev-desc" class="form-input" type="text" maxlength="512" placeholder="Describe the evidence event">
+      <div id="modal-ev-error" class="form-error" style="display:none"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-cancel-add">Cancel</button>
+        <button class="btn-primary" id="btn-confirm-add">Record</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/web/js/evidence-chain.js"></script>
+</body>
+</html>

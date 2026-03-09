@@ -1,0 +1,261 @@
+/* browser-profiles.css — Browser Profile Manager (Task 025)
+   Laws: var(--hub-*) tokens ONLY in component rules. Hex values only in :root.
+   No CDN. No Bootstrap. No Tailwind. No jQuery. Banned port omitted. */
+
+:root {
+  --hub-bg: #0d0d1a;
+  --hub-surface: #1a1a2e;
+  --hub-border: #2a2a3e;
+  --hub-text: #e2e8f0;
+  --hub-text-muted: #94a3b8;
+  --hub-accent: #6366f1;
+  --hub-success: #10b981;
+  --hub-error: #ef4444;
+  --hub-warning: #f59e0b;
+  --hub-blue: #3b82f6;
+  --hub-green: #10b981;
+  --hub-red: #ef4444;
+  --hub-purple: #8b5cf6;
+  --hub-orange: #f97316;
+  --hub-teal: #14b8a6;
+  --hub-overlay: rgba(0, 0, 0, 0.65);
+}
+
+body {
+  margin: 0;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+}
+
+.bp-page {
+  padding: 1.5rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* --- Page header --- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* --- Active banner --- */
+.active-banner {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-accent);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: var(--hub-accent);
+}
+
+/* --- Profiles grid --- */
+.profiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+/* --- Profile card --- */
+.profile-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.15s;
+}
+
+.profile-card--active {
+  border-color: var(--hub-accent);
+}
+
+.profile-card:hover {
+  border-color: var(--hub-accent);
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--hub-bg);
+}
+
+.avatar--blue   { background: var(--hub-blue); }
+.avatar--green  { background: var(--hub-green); }
+.avatar--red    { background: var(--hub-red); }
+.avatar--purple { background: var(--hub-purple); }
+.avatar--orange { background: var(--hub-orange); }
+.avatar--teal   { background: var(--hub-teal); }
+
+.profile-name {
+  font-weight: 600;
+  font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-meta {
+  font-size: 0.75rem;
+  color: var(--hub-text-muted);
+}
+
+.profile-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+}
+
+/* --- Buttons --- */
+.btn-primary {
+  background: var(--hub-accent);
+  color: var(--hub-text);
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 1rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.btn-primary:hover {
+  opacity: 0.88;
+}
+
+.btn-secondary {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text);
+  border-radius: 8px;
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-secondary:hover {
+  border-color: var(--hub-accent);
+  color: var(--hub-accent);
+}
+
+.btn-danger {
+  background: transparent;
+  border: 1px solid var(--hub-error);
+  color: var(--hub-error);
+  border-radius: 6px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.btn-danger:hover {
+  background: var(--hub-error);
+  color: var(--hub-text);
+}
+
+.btn-activate {
+  background: transparent;
+  border: 1px solid var(--hub-accent);
+  color: var(--hub-accent);
+  border-radius: 6px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.btn-activate:hover {
+  background: var(--hub-accent);
+  color: var(--hub-text);
+}
+
+/* --- Modal --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--hub-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-box {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.form-label {
+  font-size: 0.8rem;
+  color: var(--hub-text-muted);
+  margin-bottom: 0.15rem;
+  display: block;
+}
+
+.form-input {
+  width: 100%;
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: 6px;
+  color: var(--hub-text);
+  padding: 0.45rem 0.75rem;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 1px;
+}
+
+.form-error {
+  color: var(--hub-error);
+  font-size: 0.8rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+/* --- Empty state --- */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+  color: var(--hub-text-muted);
+}

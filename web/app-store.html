@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App Store — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/app-store.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>App Store</h1>
+    <span class="page-subtitle">Browse and install automation apps</span>
+  </div>
+
+  <div class="store-page">
+
+    <div id="status-banner" class="status-banner hidden"></div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <button class="cat-btn active" data-cat="">All</button>
+      <span id="cat-buttons"></span>
+      <input type="search" id="search-input" class="search-input" placeholder="Search apps…">
+    </div>
+
+    <!-- Installed tab -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-catalog" data-tab="catalog">Catalog</button>
+      <button class="tab-btn" id="tab-installed" data-tab="installed">Installed</button>
+    </div>
+
+    <!-- App grid -->
+    <div id="app-grid" class="app-grid"></div>
+
+    <div id="empty-msg" class="empty-msg hidden">No apps match your filter.</div>
+
+  </div>
+
+  <script src="/web/js/app-store.js"></script>
+</body>
+</html>

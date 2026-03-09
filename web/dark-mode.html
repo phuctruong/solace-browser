@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark Mode — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/dark-mode.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Dark Mode &amp; Theme</h1>
+    <span class="page-subtitle">Personalise your Solace Hub appearance</span>
+  </div>
+
+  <div class="theme-page">
+
+    <div id="status-banner" class="status-banner hidden"></div>
+
+    <!-- Appearance Mode -->
+    <div class="card">
+      <div class="card-title">Appearance Mode</div>
+      <div class="mode-grid">
+        <button class="mode-btn" data-mode="light" id="btn-light">
+          <span class="mode-icon">☀️</span>
+          <span class="mode-label">Light</span>
+        </button>
+        <button class="mode-btn" data-mode="dark" id="btn-dark">
+          <span class="mode-icon">🌙</span>
+          <span class="mode-label">Dark</span>
+        </button>
+        <button class="mode-btn" data-mode="system" id="btn-system">
+          <span class="mode-icon">💻</span>
+          <span class="mode-label">System</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Accent Color -->
+    <div class="card">
+      <div class="card-title">Accent Color</div>
+      <div id="accent-grid" class="accent-grid"></div>
+    </div>
+
+    <!-- Font Size -->
+    <div class="card">
+      <div class="card-title">Font Size</div>
+      <div class="font-size-row">
+        <button class="size-btn" data-size="small">Small</button>
+        <button class="size-btn" data-size="medium">Medium</button>
+        <button class="size-btn" data-size="large">Large</button>
+      </div>
+    </div>
+
+    <!-- Contrast -->
+    <div class="card">
+      <div class="card-title">Contrast</div>
+      <div class="contrast-row">
+        <button class="contrast-btn" data-contrast="normal">Normal</button>
+        <button class="contrast-btn" data-contrast="high">High Contrast</button>
+      </div>
+    </div>
+
+    <!-- Reset -->
+    <div class="card">
+      <div class="card-title">Reset</div>
+      <button id="btn-reset" class="btn-danger">Reset to Defaults</button>
+    </div>
+
+  </div>
+
+  <script src="/web/js/dark-mode.js"></script>
+</body>
+</html>

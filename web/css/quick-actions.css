@@ -1,0 +1,248 @@
+/* quick-actions.css — Quick Actions Menu for Solace Hub
+   Task 032 | Rung 641
+   Laws:
+     - var(--hub-*) tokens ONLY. No hex values outside :root.
+     - No CDN. No Bootstrap. No Tailwind. No jQuery.
+     - 8px minimum gap between all elements.
+     - Port 8888 ONLY. Debug port BANNED.
+*/
+
+:root {
+  --hub-bg: #1a1a2e;
+  --hub-surface: #16213e;
+  --hub-border: #0f3460;
+  --hub-accent: #e94560;
+  --hub-text: #f5f5f5;
+  --hub-text-muted: #a8a8b3;
+  --hub-success: #4caf50;
+  --hub-warning: #ff9800;
+  --hub-danger: #e94560;
+  --hub-ghost: #2a2a4a;
+  --gap: 8px;
+  --radius: 6px;
+  --transition: 0.2s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Page header ── */
+.page-header {
+  background: var(--hub-surface);
+  border-bottom: 1px solid var(--hub-border);
+  padding: calc(var(--gap) * 2);
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap);
+}
+
+.page-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.page-subtitle {
+  color: var(--hub-text-muted);
+  font-size: 13px;
+}
+
+/* ── Layout ── */
+.qa-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: calc(var(--gap) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 2);
+}
+
+/* ── Status banner ── */
+.status-banner {
+  padding: var(--gap) calc(var(--gap) * 2);
+  border-radius: var(--radius);
+  font-size: 13px;
+  background: var(--hub-ghost);
+  color: var(--hub-text-muted);
+  border-left: 3px solid var(--hub-accent);
+}
+
+.status-banner.hidden { display: none; }
+.status-banner.success { border-left-color: var(--hub-success); color: var(--hub-success); }
+.status-banner.error   { border-left-color: var(--hub-danger); color: var(--hub-danger); }
+
+/* ── Card ── */
+.card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  padding: calc(var(--gap) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--hub-border);
+  padding-bottom: var(--gap);
+}
+
+/* ── Actions grid ── */
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--gap);
+}
+
+.action-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--gap) / 2);
+  padding: calc(var(--gap) * 1.5);
+  background: var(--hub-ghost);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--hub-text);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+  position: relative;
+}
+
+.action-tile:hover {
+  border-color: var(--hub-accent);
+  background: var(--hub-surface);
+}
+
+.action-icon {
+  font-size: 22px;
+  color: var(--hub-text-muted);
+}
+
+.action-label {
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.action-badge-builtin {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 9px;
+  background: var(--hub-border);
+  color: var(--hub-text-muted);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.btn-delete-action {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: none;
+  border: none;
+  color: var(--hub-danger);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  line-height: 1;
+  display: none;
+}
+
+.action-tile:hover .btn-delete-action {
+  display: block;
+}
+
+/* ── Recent list ── */
+.recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) / 2);
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  padding: calc(var(--gap) / 2) var(--gap);
+  background: var(--hub-ghost);
+  border-radius: var(--radius);
+  border: 1px solid var(--hub-border);
+  text-decoration: none;
+  color: var(--hub-text);
+  font-size: 13px;
+  transition: border-color var(--transition);
+}
+
+.recent-item:hover {
+  border-color: var(--hub-accent);
+}
+
+.recent-time {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--hub-text-muted);
+}
+
+.empty-recent {
+  color: var(--hub-text-muted);
+  font-size: 13px;
+  text-align: center;
+  padding: var(--gap) 0;
+}
+
+/* ── Add form ── */
+.add-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  align-items: flex-end;
+}
+
+.form-input {
+  flex: 1;
+  min-width: 140px;
+  background: var(--hub-ghost);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  color: var(--hub-text);
+  padding: calc(var(--gap) / 2) var(--gap);
+  font-size: 13px;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: var(--hub-accent);
+}
+
+.btn-add {
+  padding: calc(var(--gap) / 2) calc(var(--gap) * 2);
+  background: var(--hub-accent);
+  border: none;
+  border-radius: var(--radius);
+  color: var(--hub-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition);
+}
+
+.btn-add:hover {
+  opacity: 0.85;
+}

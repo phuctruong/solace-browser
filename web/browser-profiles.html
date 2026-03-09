@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browser Profiles — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/browser-profiles.css">
+</head>
+<body>
+<div class="bp-page">
+  <div class="page-header">
+    <h1 class="page-title">Browser Profiles</h1>
+    <button class="btn-primary" id="btn-new-profile">+ New Profile</button>
+  </div>
+
+  <div id="active-profile-banner" class="active-banner" style="display:none"></div>
+
+  <div id="profiles-list" class="profiles-grid">
+    <div class="empty-state">Loading profiles...</div>
+  </div>
+
+  <!-- New profile modal -->
+  <div id="modal-new" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="New Profile">
+    <div class="modal-box">
+      <h2 class="modal-title">New Profile</h2>
+      <label class="form-label" for="input-name">Profile name</label>
+      <input id="input-name" class="form-input" type="text" maxlength="64" placeholder="Work, Personal, Research...">
+      <label class="form-label" for="select-avatar">Avatar colour</label>
+      <select id="select-avatar" class="form-input">
+        <option value="blue">Blue</option>
+        <option value="green">Green</option>
+        <option value="red">Red</option>
+        <option value="purple">Purple</option>
+        <option value="orange">Orange</option>
+        <option value="teal">Teal</option>
+      </select>
+      <div id="modal-error" class="form-error" style="display:none"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-cancel-new">Cancel</button>
+        <button class="btn-primary" id="btn-confirm-new">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/web/js/browser-profiles.js"></script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+/* live-metrics.css — Live Metrics Dashboard for Solace Hub
+   Task 031 | Rung 641
+   Laws:
+     - var(--hub-*) tokens ONLY. No hex values outside :root.
+     - No CDN. No Bootstrap. No Tailwind. No jQuery.
+     - SVG sparklines INLINE — no canvas, no Chart.js, no D3.
+     - 8px minimum gap between all elements.
+     - Port 8888 ONLY. Debug port BANNED.
+*/
+
+:root {
+  --hub-bg: #1a1a2e;
+  --hub-surface: #16213e;
+  --hub-border: #0f3460;
+  --hub-accent: #e94560;
+  --hub-text: #f5f5f5;
+  --hub-text-muted: #a8a8b3;
+  --hub-success: #4caf50;
+  --hub-warning: #ff9800;
+  --hub-danger: #e94560;
+  --hub-ghost: #2a2a4a;
+  --gap: 8px;
+  --radius: 6px;
+  --transition: 0.2s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Page header ── */
+.page-header {
+  background: var(--hub-surface);
+  border-bottom: 1px solid var(--hub-border);
+  padding: calc(var(--gap) * 2);
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap);
+}
+
+.page-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.page-subtitle {
+  color: var(--hub-text-muted);
+  font-size: 13px;
+}
+
+.last-updated {
+  margin-left: auto;
+  color: var(--hub-text-muted);
+  font-size: 11px;
+}
+
+/* ── Layout ── */
+.metrics-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: calc(var(--gap) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 2);
+}
+
+/* ── KPI row ── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--gap);
+}
+
+.kpi-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  padding: calc(var(--gap) * 1.5);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) / 2);
+}
+
+.kpi-label {
+  font-size: 11px;
+  color: var(--hub-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--hub-text);
+  line-height: 1.1;
+}
+
+/* ── Card ── */
+.card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  padding: calc(var(--gap) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hub-text);
+  border-bottom: 1px solid var(--hub-border);
+  padding-bottom: var(--gap);
+}
+
+/* ── Sparkline ── */
+.sparkline-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.sparkline {
+  width: 100%;
+  height: 80px;
+  display: block;
+  background: var(--hub-ghost);
+  border-radius: var(--radius);
+}

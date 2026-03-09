@@ -1,0 +1,247 @@
+/* keyboard-shortcuts.css — Keyboard Shortcuts Panel (Task 028)
+   Laws: var(--hub-*) tokens ONLY in component rules. Hex values only in :root.
+   No CDN. No Bootstrap. No Tailwind. No jQuery. Banned port omitted. */
+
+:root {
+  --hub-bg: #0d0d1a;
+  --hub-surface: #1a1a2e;
+  --hub-border: #2a2a3e;
+  --hub-text: #e2e8f0;
+  --hub-text-muted: #94a3b8;
+  --hub-accent: #6366f1;
+  --hub-success: #10b981;
+  --hub-error: #ef4444;
+  --hub-warning: #f59e0b;
+  --hub-mono: 'Courier New', monospace;
+  --hub-overlay: rgba(0, 0, 0, 0.65);
+}
+
+body {
+  margin: 0;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+}
+
+.ks-page {
+  padding: 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* --- Page header --- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* --- Hint bar --- */
+.shortcut-hint {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  color: var(--hub-text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.shortcut-hint kbd {
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: var(--hub-mono);
+  font-size: 0.82rem;
+  color: var(--hub-accent);
+}
+
+/* --- Section title --- */
+.section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--hub-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+/* --- Shortcuts list --- */
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+/* --- Shortcut row --- */
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 8px;
+}
+
+.shortcut-row--default {
+  border-left: 3px solid var(--hub-accent);
+}
+
+.shortcut-key {
+  min-width: 120px;
+  font-family: var(--hub-mono);
+  font-size: 0.85rem;
+  color: var(--hub-accent);
+}
+
+.shortcut-key kbd {
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-family: var(--hub-mono);
+  font-size: 0.82rem;
+  color: var(--hub-accent);
+  margin-right: 3px;
+}
+
+.shortcut-desc {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--hub-text);
+}
+
+.shortcut-badge {
+  font-size: 0.7rem;
+  background: color-mix(in srgb, var(--hub-accent) 15%, transparent);
+  color: var(--hub-accent);
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+
+.btn-delete {
+  background: transparent;
+  border: 1px solid var(--hub-error);
+  color: var(--hub-error);
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.btn-delete:hover {
+  background: var(--hub-error);
+  color: var(--hub-text);
+}
+
+/* --- Buttons --- */
+.btn-primary {
+  background: var(--hub-accent);
+  color: var(--hub-text);
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.btn-primary:hover { opacity: 0.88; }
+
+.btn-secondary {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text);
+  border-radius: 8px;
+  padding: 0.38rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-secondary:hover {
+  border-color: var(--hub-accent);
+  color: var(--hub-accent);
+}
+
+/* --- Modal --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--hub-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-box {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.form-label {
+  font-size: 0.8rem;
+  color: var(--hub-text-muted);
+  display: block;
+  margin-bottom: 0.1rem;
+}
+
+.form-input {
+  width: 100%;
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: 6px;
+  color: var(--hub-text);
+  padding: 0.42rem 0.75rem;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: 2px solid var(--hub-accent);
+  outline-offset: 1px;
+}
+
+.form-error {
+  color: var(--hub-error);
+  font-size: 0.8rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+/* --- Empty state --- */
+.empty-state {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--hub-text-muted);
+  font-size: 0.875rem;
+}
