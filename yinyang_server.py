@@ -7013,6 +7013,47 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/browser-shortcuts-manager.js", "application/javascript")
         elif path == "/web/css/browser-shortcuts-manager.css":
             self._handle_static_file("web/css/browser-shortcuts-manager.css", "text/css")
+        # --- Task 155: Network Speed Monitor ---
+        elif path == "/api/v1/network-speed/connection-types":
+            self._handle_nsm_connection_types()
+        elif path == "/api/v1/network-speed/measurements":
+            self._handle_nsm_list()
+        elif path == "/api/v1/network-speed/stats":
+            self._handle_nsm_stats()
+        elif path == "/web/network-speed-monitor.html":
+            self._handle_static_file("web/network-speed-monitor.html", "text/html; charset=utf-8")
+        elif path == "/web/js/network-speed-monitor.js":
+            self._handle_static_file("web/js/network-speed-monitor.js", "application/javascript")
+        elif path == "/web/css/network-speed-monitor.css":
+            self._handle_static_file("web/css/network-speed-monitor.css", "text/css")
+        # --- Task 156: Tab Productivity Scorer ---
+        elif path == "/api/v1/tab-productivity/categories":
+            self._handle_tps_categories()
+        elif path == "/api/v1/tab-productivity/scores":
+            self._handle_tps_list()
+        elif path == "/api/v1/tab-productivity/stats":
+            self._handle_tps_stats()
+        elif path == "/web/tab-productivity-scorer.html":
+            self._handle_static_file("web/tab-productivity-scorer.html", "text/html; charset=utf-8")
+        elif path == "/web/js/tab-productivity-scorer.js":
+            self._handle_static_file("web/js/tab-productivity-scorer.js", "application/javascript")
+        elif path == "/web/css/tab-productivity-scorer.css":
+            self._handle_static_file("web/css/tab-productivity-scorer.css", "text/css")
+        # --- Task 157: Extension API Blocker ---
+        elif path == "/api/v1/api-blocker/rule-types":
+            self._handle_abr_rule_types()
+        elif path == "/api/v1/api-blocker/rules":
+            self._handle_abr_list()
+        elif path == "/api/v1/api-blocker/log":
+            self._handle_abl_list()
+        elif path == "/api/v1/api-blocker/stats":
+            self._handle_abr_stats()
+        elif path == "/web/extension-api-blocker.html":
+            self._handle_static_file("web/extension-api-blocker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/extension-api-blocker.js":
+            self._handle_static_file("web/js/extension-api-blocker.js", "application/javascript")
+        elif path == "/web/css/extension-api-blocker.css":
+            self._handle_static_file("web/css/extension-api-blocker.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -7792,6 +7833,17 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 154: Browser Shortcuts Manager ---
         elif path == "/api/v1/shortcuts/shortcuts":
             self._handle_shc_create()
+        # --- Task 155: Network Speed Monitor ---
+        elif path == "/api/v1/network-speed/measurements":
+            self._handle_nsm_create()
+        # --- Task 156: Tab Productivity Scorer ---
+        elif path == "/api/v1/tab-productivity/scores":
+            self._handle_tps_create()
+        # --- Task 157: Extension API Blocker ---
+        elif path == "/api/v1/api-blocker/rules":
+            self._handle_abr_create()
+        elif path == "/api/v1/api-blocker/log":
+            self._handle_abl_create()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -8299,6 +8351,18 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/shortcuts/shortcuts/[^/]+$", path):
             shortcut_id = path.split("/")[-1]
             self._handle_shc_delete(shortcut_id)
+        # --- Task 155: Network Speed Monitor ---
+        elif re.match(r"^/api/v1/network-speed/measurements/[^/]+$", path):
+            measurement_id = path.split("/")[-1]
+            self._handle_nsm_delete(measurement_id)
+        # --- Task 156: Tab Productivity Scorer ---
+        elif re.match(r"^/api/v1/tab-productivity/scores/[^/]+$", path):
+            score_id = path.split("/")[-1]
+            self._handle_tps_delete(score_id)
+        # --- Task 157: Extension API Blocker ---
+        elif re.match(r"^/api/v1/api-blocker/rules/[^/]+$", path):
+            rule_id = path.split("/")[-1]
+            self._handle_abr_delete(rule_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
