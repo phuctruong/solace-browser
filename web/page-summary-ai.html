@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page Summary AI — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/page-summary-ai.css">
+</head>
+<body>
+<div class="psa-container">
+  <h1 class="psa-title">Page Summary AI</h1>
+  <p class="psa-subtitle">AI-powered page summarization with privacy-preserving hashing</p>
+
+  <section class="psa-section">
+    <h2 class="psa-section-title">Create Summary</h2>
+    <form id="psa-form" class="psa-form">
+      <input id="psa-url" class="psa-input" type="text" placeholder="Page URL (hashed for privacy)" aria-label="Page URL">
+      <input id="psa-title" class="psa-input" type="text" placeholder="Page title" aria-label="Page title">
+      <input id="psa-content" class="psa-input" type="text" placeholder="Content (hashed for privacy)" aria-label="Content">
+      <select id="psa-type" class="psa-input" aria-label="Summary type"></select>
+      <select id="psa-model" class="psa-input" aria-label="Model"></select>
+      <input id="psa-words" class="psa-input" type="number" placeholder="Word count" min="1" aria-label="Word count">
+      <input id="psa-quality" class="psa-input" type="number" placeholder="Quality (1-5, optional)" min="1" max="5" aria-label="Quality score">
+      <input id="psa-cost" class="psa-input" type="text" placeholder="Token cost USD (e.g. 0.001)" aria-label="Token cost USD">
+      <button type="submit" class="psa-btn psa-btn-primary">Save Summary</button>
+    </form>
+  </section>
+
+  <section class="psa-section">
+    <h2 class="psa-section-title">Stats</h2>
+    <div id="psa-stats" class="psa-stats-panel" aria-live="polite"></div>
+  </section>
+
+  <section class="psa-section">
+    <h2 class="psa-section-title">Summaries</h2>
+    <div id="psa-list" class="psa-list" aria-live="polite"></div>
+  </section>
+
+  <div id="psa-status" class="psa-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/page-summary-ai.js"></script>
+</body>
+</html>
