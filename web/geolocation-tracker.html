@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geolocation Tracker</title>
+  <link rel="stylesheet" href="/web/css/geolocation-tracker.css">
+</head>
+<body>
+<div class="geo-container">
+  <h1 class="geo-title">Geolocation Tracker</h1>
+  <p class="geo-subtitle">Track geolocation API requests and consent events for privacy auditing.</p>
+
+  <div class="geo-stats" id="geo-stats"><p>Loading stats...</p></div>
+
+  <form class="geo-form" id="geo-form">
+    <input type="text" id="geo-url" placeholder="Page URL" value="https://maps.example.com">
+    <select id="geo-event-type">
+      <option value="permission_requested" selected>permission_requested</option>
+      <option value="permission_granted">permission_granted</option>
+      <option value="permission_denied">permission_denied</option>
+      <option value="position_acquired">position_acquired</option>
+      <option value="position_error">position_error</option>
+      <option value="position_timeout">position_timeout</option>
+      <option value="permission_revoked">permission_revoked</option>
+    </select>
+    <input type="number" id="geo-accuracy" placeholder="Accuracy (m)" min="0">
+    <label><input type="checkbox" id="geo-https" checked> HTTPS</label>
+    <button type="submit" class="geo-btn geo-btn-primary">Record Event</button>
+  </form>
+
+  <div class="geo-panel" id="geo-panel">Loading events...</div>
+  <div class="geo-msg" id="geo-msg"></div>
+</div>
+<script src="/web/js/geolocation-tracker.js"></script>
+</body>
+</html>
