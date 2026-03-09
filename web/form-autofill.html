@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Form Autofill — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/form-autofill.css">
+</head>
+<body>
+<div class="fa-container">
+  <h1 class="fa-title">Form Autofill</h1>
+  <p class="fa-subtitle">Manage autofill profiles for web forms</p>
+
+  <div class="fa-toolbar">
+    <button id="btn-fa-history" class="fa-btn fa-btn-secondary">Apply History</button>
+    <button id="btn-fa-add" class="fa-btn fa-btn-primary">Add Profile</button>
+  </div>
+
+  <div id="fa-list" class="fa-list" aria-live="polite"></div>
+  <div id="fa-history-panel" class="fa-history-panel" aria-live="polite" hidden></div>
+  <div id="fa-status" class="fa-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/form-autofill.js"></script>
+</body>
+</html>

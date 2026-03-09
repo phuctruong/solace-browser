@@ -1,0 +1,37 @@
+/* Form Autofill — Solace Hub */
+:root {
+  --fa-bg: #0f0f0f;
+  --fa-surface: #1a1a1a;
+  --fa-border: #2a2a2a;
+  --fa-text: #e0e0e0;
+  --fa-accent: #4a9eff;
+  --fa-danger: #e05555;
+  --fa-success: #4caf50;
+}
+
+body { background: var(--fa-bg); color: var(--fa-text); font-family: system-ui, sans-serif; margin: 0; }
+
+.fa-container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+.fa-title { font-size: 1.8rem; margin-bottom: 0.25rem; }
+.fa-subtitle { color: #888; margin-bottom: 1.5rem; }
+
+.fa-toolbar { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
+
+.fa-btn { padding: 0.4rem 0.9rem; border-radius: 6px; border: none; cursor: pointer; font-size: 0.875rem; transition: opacity 0.15s; }
+.fa-btn-primary { background: var(--fa-accent); color: #fff; }
+.fa-btn-secondary { background: var(--fa-surface); color: var(--fa-text); border: 1px solid var(--fa-border); }
+.fa-btn-danger { background: var(--fa-danger); color: #fff; }
+.fa-btn-apply { background: var(--fa-success); color: #fff; }
+.fa-btn:hover { opacity: 0.85; }
+
+.fa-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.fa-profile { background: var(--fa-surface); border: 1px solid var(--fa-border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.fa-profile-name { font-weight: 600; flex: 1; }
+.fa-profile-fields { color: #888; font-size: 0.875rem; }
+
+.fa-history-panel { margin-top: 1.5rem; padding: 1rem; background: var(--fa-surface); border: 1px solid var(--fa-border); border-radius: 8px; }
+.fa-history-entry { padding: 0.4rem 0; border-bottom: 1px solid var(--fa-border); font-size: 0.875rem; color: #888; }
+.fa-history-entry:last-child { border-bottom: none; }
+
+.fa-status { margin-top: 0.5rem; color: var(--fa-success); font-size: 0.875rem; min-height: 1.2em; }
+.fa-empty { color: #888; text-align: center; padding: 2rem; }

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Notes — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/session-notes.css">
+</head>
+<body>
+<div class="sn-container">
+  <h1 class="sn-title">Session Notes</h1>
+  <p class="sn-subtitle">Capture thoughts and observations during browsing sessions</p>
+
+  <div class="sn-toolbar">
+    <input type="text" id="sn-search" class="sn-search" placeholder="Search notes...">
+    <button id="btn-sn-add" class="sn-btn sn-btn-primary">Add Note</button>
+  </div>
+
+  <div id="sn-list" class="sn-list" aria-live="polite"></div>
+  <div id="sn-status" class="sn-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/session-notes.js"></script>
+</body>
+</html>

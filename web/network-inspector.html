@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Inspector — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/network-inspector.css">
+</head>
+<body>
+<div class="ni-container">
+  <h1 class="ni-title">Network Inspector</h1>
+  <p class="ni-subtitle">Capture and analyze network requests</p>
+
+  <div class="ni-toolbar">
+    <button id="btn-ni-stats" class="ni-btn ni-btn-secondary">Stats</button>
+    <button id="btn-ni-blocked" class="ni-btn ni-btn-secondary">Blocked Only</button>
+    <button id="btn-ni-clear" class="ni-btn ni-btn-danger">Clear All</button>
+    <button id="btn-ni-refresh" class="ni-btn ni-btn-primary">Refresh</button>
+  </div>
+
+  <div id="ni-list" class="ni-list" aria-live="polite"></div>
+  <div id="ni-stats-panel" class="ni-stats-panel" aria-live="polite" hidden></div>
+  <div id="ni-status" class="ni-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/network-inspector.js"></script>
+</body>
+</html>

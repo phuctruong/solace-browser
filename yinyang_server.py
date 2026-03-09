@@ -686,6 +686,45 @@ _USER_SCRIPTS: list[dict] = []
 _SCRIPTS_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
+# Task 048 — Password Vault
+# ---------------------------------------------------------------------------
+VAULT_CATEGORIES: tuple[str, ...] = ("login", "api-key", "wifi", "bank", "note", "other")
+
+_VAULT_ENTRIES: list[dict] = []
+_VAULT_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 049 — Network Inspector
+# ---------------------------------------------------------------------------
+HTTP_METHODS: tuple[str, ...] = ("GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS")
+MAX_NETWORK_REQUESTS = 200
+
+_NETWORK_REQUESTS: list[dict] = []
+_NETWORK_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 050 — Form Autofill
+# ---------------------------------------------------------------------------
+AUTOFILL_FIELD_KEYS: tuple[str, ...] = (
+    "first_name", "last_name", "email", "phone", "company",
+    "address_line1", "address_line2", "city", "state", "zip", "country",
+    "job_title", "linkedin_url", "website_url",
+)
+
+_AUTOFILL_PROFILES: list[dict] = []
+_AUTOFILL_HISTORY: list[dict] = []
+_AUTOFILL_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 051 — Session Notes
+# ---------------------------------------------------------------------------
+MAX_NOTE_BODY = 20_000
+MAX_NOTE_TAGS = 10
+
+_NOTES: list[dict] = []
+_NOTES_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
 # Task 039 — Command Palette
 # ---------------------------------------------------------------------------
 DEFAULT_COMMANDS: tuple[dict, ...] = (
@@ -4628,6 +4667,57 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/proxy-settings.js", "application/javascript")
         elif path == "/web/css/proxy-settings.css":
             self._handle_static_file("web/css/proxy-settings.css", "text/css")
+        # --- Task 048: Password Vault ---
+        elif path == "/api/v1/vault/entries":
+            self._handle_vault_list()
+        elif path == "/api/v1/vault/stats":
+            self._handle_vault_stats()
+        elif path == "/web/password-vault.html":
+            self._handle_static_file("web/password-vault.html", "text/html; charset=utf-8")
+        elif path == "/web/js/password-vault.js":
+            self._handle_static_file("web/js/password-vault.js", "application/javascript")
+        elif path == "/web/css/password-vault.css":
+            self._handle_static_file("web/css/password-vault.css", "text/css")
+        # --- Task 049: Network Inspector ---
+        elif path == "/api/v1/network/requests":
+            self._handle_network_list()
+        elif path == "/api/v1/network/stats":
+            self._handle_network_stats()
+        elif path == "/api/v1/network/blocked":
+            self._handle_network_blocked()
+        elif path == "/web/network-inspector.html":
+            self._handle_static_file("web/network-inspector.html", "text/html; charset=utf-8")
+        elif path == "/web/js/network-inspector.js":
+            self._handle_static_file("web/js/network-inspector.js", "application/javascript")
+        elif path == "/web/css/network-inspector.css":
+            self._handle_static_file("web/css/network-inspector.css", "text/css")
+        # --- Task 050: Form Autofill ---
+        elif path == "/api/v1/autofill/history":
+            self._handle_autofill_history()
+        elif path == "/api/v1/autofill/profiles":
+            self._handle_autofill_profiles_list()
+        elif path == "/web/form-autofill.html":
+            self._handle_static_file("web/form-autofill.html", "text/html; charset=utf-8")
+        elif path == "/web/js/form-autofill.js":
+            self._handle_static_file("web/js/form-autofill.js", "application/javascript")
+        elif path == "/web/css/form-autofill.css":
+            self._handle_static_file("web/css/form-autofill.css", "text/css")
+        # --- Task 051: Session Notes ---
+        elif path == "/api/v1/notes/search":
+            _qs = self.path.split("?", 1)[1] if "?" in self.path else ""
+            _qp = dict(p.split("=", 1) for p in _qs.split("&") if "=" in p)
+            self._handle_notes_search(_qp.get("q", ""))
+        elif path == "/api/v1/notes":
+            self._handle_notes_list()
+        elif re.match(r"^/api/v1/notes/[^/]+$", path):
+            note_id = path.split("/")[-1]
+            self._handle_notes_get(note_id)
+        elif path == "/web/session-notes.html":
+            self._handle_static_file("web/session-notes.html", "text/html; charset=utf-8")
+        elif path == "/web/js/session-notes.js":
+            self._handle_static_file("web/js/session-notes.js", "application/javascript")
+        elif path == "/web/css/session-notes.css":
+            self._handle_static_file("web/css/session-notes.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -4972,6 +5062,24 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_proxy_settings_set()
         elif path == "/api/v1/proxy/test":
             self._handle_proxy_test()
+        # --- Task 048: Password Vault ---
+        elif path == "/api/v1/vault/entries":
+            self._handle_vault_add()
+        elif re.match(r"^/api/v1/vault/entries/[^/]+/copy$", path):
+            entry_id = path.split("/")[-2]
+            self._handle_vault_copy(entry_id)
+        # --- Task 049: Network Inspector ---
+        elif path == "/api/v1/network/requests":
+            self._handle_network_record()
+        # --- Task 050: Form Autofill ---
+        elif path == "/api/v1/autofill/profiles":
+            self._handle_autofill_profile_add()
+        elif re.match(r"^/api/v1/autofill/profiles/[^/]+/apply$", path):
+            profile_id = path.split("/")[-2]
+            self._handle_autofill_apply(profile_id)
+        # --- Task 051: Session Notes ---
+        elif path == "/api/v1/notes":
+            self._handle_notes_add()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -5071,6 +5179,21 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 044: Proxy Settings ---
         elif path == "/api/v1/proxy/settings":
             self._handle_proxy_settings_reset()
+        # --- Task 048: Password Vault ---
+        elif re.match(r"^/api/v1/vault/entries/[^/]+$", path):
+            entry_id = path.split("/")[-1]
+            self._handle_vault_delete(entry_id)
+        # --- Task 049: Network Inspector ---
+        elif path == "/api/v1/network/requests":
+            self._handle_network_clear()
+        # --- Task 050: Form Autofill ---
+        elif re.match(r"^/api/v1/autofill/profiles/[^/]+$", path):
+            profile_id = path.split("/")[-1]
+            self._handle_autofill_profile_delete(profile_id)
+        # --- Task 051: Session Notes ---
+        elif re.match(r"^/api/v1/notes/[^/]+$", path):
+            note_id = path.split("/")[-1]
+            self._handle_notes_delete(note_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -14056,6 +14179,350 @@ function choose(mode) {
             if pat in code:
                 warnings.append(f"Forbidden pattern detected: {pat}")
         self._send_json({"safe": len(warnings) == 0, "warnings": warnings})
+
+    # ---------------------------------------------------------------------------
+    # Task 048 — Password Vault handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_vault_list(self) -> None:
+        """GET /api/v1/vault/entries — list vault entries (auth required)."""
+        if not self._check_auth():
+            return
+        with _VAULT_LOCK:
+            entries = list(reversed(_VAULT_ENTRIES))
+        self._send_json({"entries": entries, "total": len(entries)})
+
+    def _handle_vault_add(self) -> None:
+        """POST /api/v1/vault/entries — add vault entry (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        title = str(body.get("title", "")).strip()
+        if not title:
+            self._send_json({"error": "title is required"}, 400)
+            return
+        category = str(body.get("category", "other"))
+        if category not in VAULT_CATEGORIES:
+            self._send_json({"error": f"invalid category: {category}"}, 400)
+            return
+        password = str(body.get("password", ""))
+        domain = str(body.get("domain", ""))
+        username = str(body.get("username", ""))
+        notes = str(body.get("notes", ""))
+        import hashlib as _hl
+        password_hash = _hl.sha256(password.encode()).hexdigest() if password else None
+        domain_hash = _hl.sha256(domain.encode()).hexdigest() if domain else None
+        entry_id = f"vault_{uuid.uuid4().hex}"
+        entry = {
+            "entry_id": entry_id,
+            "title": title,
+            "category": category,
+            "username": username,
+            "password_hash": password_hash,
+            "domain_hash": domain_hash,
+            "notes": notes,
+            "copy_count": 0,
+            "created_at": _utc_isoformat(time.time()),
+        }
+        with _VAULT_LOCK:
+            _VAULT_ENTRIES.append(entry)
+        self._send_json({"status": "added", "entry_id": entry_id})
+
+    def _handle_vault_delete(self, entry_id: str) -> None:
+        """DELETE /api/v1/vault/entries/{entry_id} — delete vault entry (auth required)."""
+        if not self._check_auth():
+            return
+        with _VAULT_LOCK:
+            before = len(_VAULT_ENTRIES)
+            _VAULT_ENTRIES[:] = [e for e in _VAULT_ENTRIES if e["entry_id"] != entry_id]
+            after = len(_VAULT_ENTRIES)
+        if before == after:
+            self._send_json({"error": "entry not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "entry_id": entry_id})
+
+    def _handle_vault_copy(self, entry_id: str) -> None:
+        """POST /api/v1/vault/entries/{entry_id}/copy — increment copy_count (auth required)."""
+        if not self._check_auth():
+            return
+        with _VAULT_LOCK:
+            target = next((e for e in _VAULT_ENTRIES if e["entry_id"] == entry_id), None)
+            if target is None:
+                self._send_json({"error": "entry not found"}, 404)
+                return
+            target["copy_count"] += 1
+            count = target["copy_count"]
+        self._send_json({"status": "copied", "entry_id": entry_id, "copy_count": count})
+
+    def _handle_vault_stats(self) -> None:
+        """GET /api/v1/vault/stats — vault statistics (auth required)."""
+        if not self._check_auth():
+            return
+        with _VAULT_LOCK:
+            total = len(_VAULT_ENTRIES)
+            by_category: dict[str, int] = {}
+            total_copies = 0
+            for e in _VAULT_ENTRIES:
+                cat = e.get("category", "other")
+                by_category[cat] = by_category.get(cat, 0) + 1
+                total_copies += e.get("copy_count", 0)
+        self._send_json({"total": total, "by_category": by_category, "total_copies": total_copies})
+
+    # ---------------------------------------------------------------------------
+    # Task 049 — Network Inspector handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_network_list(self) -> None:
+        """GET /api/v1/network/requests — list captured requests (newest first)."""
+        with _NETWORK_LOCK:
+            reqs = list(reversed(_NETWORK_REQUESTS))
+        self._send_json({"requests": reqs, "total": len(reqs)})
+
+    def _handle_network_record(self) -> None:
+        """POST /api/v1/network/requests — record a network request (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        method = str(body.get("method", "")).upper()
+        if method not in HTTP_METHODS:
+            self._send_json({"error": f"invalid method: {method}"}, 400)
+            return
+        raw_url = str(body.get("url", "")).strip()
+        if not raw_url:
+            self._send_json({"error": "url is required"}, 400)
+            return
+        status_code = body.get("status_code")
+        if status_code is not None:
+            try:
+                status_code = int(status_code)
+            except (TypeError, ValueError):
+                self._send_json({"error": "status_code must be an integer"}, 400)
+                return
+            if not (100 <= status_code <= 599):
+                self._send_json({"error": "status_code must be 100-599"}, 400)
+                return
+        import hashlib as _hl
+        url_hash = _hl.sha256(raw_url.encode()).hexdigest()
+        request_id = f"req_{uuid.uuid4().hex}"
+        duration_ms = body.get("duration_ms")
+        request_type = str(body.get("request_type", "fetch"))
+        blocked = bool(body.get("blocked", False))
+        record = {
+            "request_id": request_id,
+            "method": method,
+            "url_hash": url_hash,
+            "status_code": status_code,
+            "duration_ms": duration_ms,
+            "request_type": request_type,
+            "blocked": blocked,
+            "recorded_at": _utc_isoformat(time.time()),
+        }
+        with _NETWORK_LOCK:
+            _NETWORK_REQUESTS.append(record)
+            if len(_NETWORK_REQUESTS) > MAX_NETWORK_REQUESTS:
+                _NETWORK_REQUESTS.pop(0)
+        self._send_json({"status": "recorded", "request_id": request_id})
+
+    def _handle_network_clear(self) -> None:
+        """DELETE /api/v1/network/requests — clear all captured requests (auth required)."""
+        if not self._check_auth():
+            return
+        with _NETWORK_LOCK:
+            count = len(_NETWORK_REQUESTS)
+            _NETWORK_REQUESTS.clear()
+        self._send_json({"status": "cleared", "removed": count})
+
+    def _handle_network_stats(self) -> None:
+        """GET /api/v1/network/stats — network request statistics."""
+        with _NETWORK_LOCK:
+            total = len(_NETWORK_REQUESTS)
+            blocked_count = sum(1 for r in _NETWORK_REQUESTS if r.get("blocked"))
+            by_method: dict[str, int] = {}
+            by_status: dict[str, int] = {}
+            for r in _NETWORK_REQUESTS:
+                m = r.get("method", "UNKNOWN")
+                by_method[m] = by_method.get(m, 0) + 1
+                sc = r.get("status_code")
+                if sc is not None:
+                    key = str(sc)
+                    by_status[key] = by_status.get(key, 0) + 1
+        self._send_json({
+            "total": total,
+            "blocked": blocked_count,
+            "by_method": by_method,
+            "by_status": by_status,
+        })
+
+    def _handle_network_blocked(self) -> None:
+        """GET /api/v1/network/blocked — list only blocked requests."""
+        with _NETWORK_LOCK:
+            blocked = [r for r in reversed(_NETWORK_REQUESTS) if r.get("blocked")]
+        self._send_json({"requests": blocked, "total": len(blocked)})
+
+    # ---------------------------------------------------------------------------
+    # Task 050 — Form Autofill handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_autofill_profiles_list(self) -> None:
+        """GET /api/v1/autofill/profiles — list profiles (public)."""
+        with _AUTOFILL_LOCK:
+            profiles = list(reversed(_AUTOFILL_PROFILES))
+        self._send_json({"profiles": profiles, "total": len(profiles)})
+
+    def _handle_autofill_profile_add(self) -> None:
+        """POST /api/v1/autofill/profiles — add autofill profile (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        name = str(body.get("name", "")).strip()
+        if not name:
+            self._send_json({"error": "name is required"}, 400)
+            return
+        fields = body.get("fields", {})
+        if not isinstance(fields, dict):
+            self._send_json({"error": "fields must be an object"}, 400)
+            return
+        invalid_keys = [k for k in fields if k not in AUTOFILL_FIELD_KEYS]
+        if invalid_keys:
+            self._send_json({"error": f"invalid field keys: {invalid_keys}"}, 400)
+            return
+        profile_id = f"af_{uuid.uuid4().hex}"
+        profile = {
+            "profile_id": profile_id,
+            "name": name,
+            "fields": fields,
+            "created_at": _utc_isoformat(time.time()),
+        }
+        with _AUTOFILL_LOCK:
+            _AUTOFILL_PROFILES.append(profile)
+        self._send_json({"status": "added", "profile_id": profile_id})
+
+    def _handle_autofill_profile_delete(self, profile_id: str) -> None:
+        """DELETE /api/v1/autofill/profiles/{profile_id} — delete profile (auth required)."""
+        if not self._check_auth():
+            return
+        with _AUTOFILL_LOCK:
+            before = len(_AUTOFILL_PROFILES)
+            _AUTOFILL_PROFILES[:] = [p for p in _AUTOFILL_PROFILES if p["profile_id"] != profile_id]
+            after = len(_AUTOFILL_PROFILES)
+        if before == after:
+            self._send_json({"error": "profile not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "profile_id": profile_id})
+
+    def _handle_autofill_apply(self, profile_id: str) -> None:
+        """POST /api/v1/autofill/profiles/{profile_id}/apply — apply profile (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            body = {}
+        with _AUTOFILL_LOCK:
+            profile = next((p for p in _AUTOFILL_PROFILES if p["profile_id"] == profile_id), None)
+        if profile is None:
+            self._send_json({"error": "profile not found"}, 404)
+            return
+        raw_domain = str(body.get("domain", ""))
+        import hashlib as _hl
+        domain_hash = _hl.sha256(raw_domain.encode()).hexdigest() if raw_domain else None
+        history_entry = {
+            "profile_id": profile_id,
+            "profile_name": profile["name"],
+            "domain_hash": domain_hash,
+            "applied_at": _utc_isoformat(time.time()),
+            "fields_count": len(profile.get("fields", {})),
+        }
+        with _AUTOFILL_LOCK:
+            _AUTOFILL_HISTORY.append(history_entry)
+        self._send_json({"status": "applied", "profile_id": profile_id, "fields_count": history_entry["fields_count"]})
+
+    def _handle_autofill_history(self) -> None:
+        """GET /api/v1/autofill/history — autofill apply history (public)."""
+        with _AUTOFILL_LOCK:
+            history = list(reversed(_AUTOFILL_HISTORY))
+        self._send_json({"history": history, "total": len(history)})
+
+    # ---------------------------------------------------------------------------
+    # Task 051 — Session Notes handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_notes_list(self) -> None:
+        """GET /api/v1/notes — list notes (public, newest first)."""
+        with _NOTES_LOCK:
+            notes = list(reversed(_NOTES))
+        self._send_json({"notes": notes, "total": len(notes)})
+
+    def _handle_notes_get(self, note_id: str) -> None:
+        """GET /api/v1/notes/{note_id} — get a single note (public)."""
+        with _NOTES_LOCK:
+            note = next((n for n in _NOTES if n["note_id"] == note_id), None)
+        if note is None:
+            self._send_json({"error": "note not found"}, 404)
+            return
+        self._send_json(note)
+
+    def _handle_notes_add(self) -> None:
+        """POST /api/v1/notes — add a note (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        title = str(body.get("title", "")).strip()
+        if not title:
+            self._send_json({"error": "title is required"}, 400)
+            return
+        body_text = str(body.get("body", ""))
+        if len(body_text) > MAX_NOTE_BODY:
+            self._send_json({"error": "body exceeds 20000 char limit"}, 400)
+            return
+        tags = body.get("tags", [])
+        if not isinstance(tags, list):
+            self._send_json({"error": "tags must be a list"}, 400)
+            return
+        if len(tags) > MAX_NOTE_TAGS:
+            self._send_json({"error": f"tags exceed max {MAX_NOTE_TAGS}"}, 400)
+            return
+        note_id = f"note_{uuid.uuid4().hex}"
+        note = {
+            "note_id": note_id,
+            "title": title,
+            "body": body_text,
+            "tags": [str(t) for t in tags],
+            "created_at": _utc_isoformat(time.time()),
+        }
+        with _NOTES_LOCK:
+            _NOTES.append(note)
+        self._send_json({"status": "added", "note_id": note_id})
+
+    def _handle_notes_delete(self, note_id: str) -> None:
+        """DELETE /api/v1/notes/{note_id} — delete a note (auth required)."""
+        if not self._check_auth():
+            return
+        with _NOTES_LOCK:
+            before = len(_NOTES)
+            _NOTES[:] = [n for n in _NOTES if n["note_id"] != note_id]
+            after = len(_NOTES)
+        if before == after:
+            self._send_json({"error": "note not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "note_id": note_id})
+
+    def _handle_notes_search(self, query_str: str) -> None:
+        """GET /api/v1/notes/search?q=... — search notes (case-insensitive, public)."""
+        q = query_str.lower()
+        with _NOTES_LOCK:
+            results = [
+                n for n in _NOTES
+                if q in n.get("title", "").lower() or q in n.get("body", "").lower()
+            ]
+        self._send_json({"notes": list(reversed(results)), "total": len(results)})
 
     # ---------------------------------------------------------------------------
     # Task 039 — Command Palette handlers

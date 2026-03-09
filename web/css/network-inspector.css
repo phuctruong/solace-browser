@@ -1,0 +1,43 @@
+/* Network Inspector — Solace Hub */
+:root {
+  --ni-bg: #0f0f0f;
+  --ni-surface: #1a1a1a;
+  --ni-border: #2a2a2a;
+  --ni-text: #e0e0e0;
+  --ni-accent: #4a9eff;
+  --ni-danger: #e05555;
+  --ni-blocked: #3a1a1a;
+  --ni-success: #4caf50;
+}
+
+body { background: var(--ni-bg); color: var(--ni-text); font-family: system-ui, sans-serif; margin: 0; }
+
+.ni-container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+.ni-title { font-size: 1.8rem; margin-bottom: 0.25rem; }
+.ni-subtitle { color: #888; margin-bottom: 1.5rem; }
+
+.ni-toolbar { display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+
+.ni-btn { padding: 0.4rem 0.9rem; border-radius: 6px; border: none; cursor: pointer; font-size: 0.875rem; transition: opacity 0.15s; }
+.ni-btn-primary { background: var(--ni-accent); color: #fff; }
+.ni-btn-secondary { background: var(--ni-surface); color: var(--ni-text); border: 1px solid var(--ni-border); }
+.ni-btn-danger { background: var(--ni-danger); color: #fff; }
+.ni-btn:hover { opacity: 0.85; }
+
+.ni-list { display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem; }
+.ni-request { background: var(--ni-surface); border: 1px solid var(--ni-border); border-radius: 6px; padding: 0.6rem 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.ni-request.ni-blocked { background: var(--ni-blocked); border-color: var(--ni-danger); }
+.ni-method { font-weight: 700; min-width: 60px; }
+.ni-method-get { color: #4caf50; }
+.ni-method-post { color: #4a9eff; }
+.ni-method-delete { color: #e05555; }
+.ni-method-put { color: #ff9800; }
+.ni-hash { font-family: monospace; color: #888; }
+.ni-status-code { min-width: 40px; text-align: center; }
+.ni-duration { color: #888; min-width: 60px; }
+.ni-type { color: #888; font-size: 0.8rem; }
+.ni-badge-blocked { background: var(--ni-danger); color: #fff; border-radius: 4px; padding: 0.1rem 0.4rem; font-size: 0.75rem; font-weight: 700; }
+
+.ni-stats-panel { margin-top: 1rem; padding: 0.75rem 1rem; background: var(--ni-surface); border: 1px solid var(--ni-border); border-radius: 6px; font-size: 0.875rem; }
+.ni-status { margin-top: 0.5rem; color: var(--ni-success); font-size: 0.875rem; min-height: 1.2em; }
+.ni-empty { color: #888; text-align: center; padding: 2rem; }
