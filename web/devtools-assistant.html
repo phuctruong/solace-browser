@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevTools Assistant — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/devtools-assistant.css" />
+</head>
+<body>
+  <div class="dt-container">
+    <header class="dt-header">
+      <h1 class="dt-title">DevTools Assistant</h1>
+      <p class="dt-subtitle">AI-assisted browser devtools integration</p>
+    </header>
+
+    <section class="dt-section">
+      <h2 class="dt-section-title">Save Snippet</h2>
+      <div class="dt-form">
+        <label for="dt-snip-title">Title (max 128 chars)</label>
+        <input type="text" id="dt-snip-title" class="dt-input" placeholder="My helpful snippet" maxlength="128" />
+        <label for="dt-snip-lang">Language</label>
+        <select id="dt-snip-lang" class="dt-select">
+          <option value="javascript">JavaScript</option>
+          <option value="python">Python</option>
+          <option value="bash">Bash</option>
+          <option value="css">CSS</option>
+          <option value="html">HTML</option>
+          <option value="json">JSON</option>
+          <option value="sql">SQL</option>
+        </select>
+        <label for="dt-snip-content">Content (hashed on save)</label>
+        <textarea id="dt-snip-content" class="dt-textarea" rows="5" placeholder="console.log('hello');"></textarea>
+        <button id="dt-snip-save-btn" class="dt-btn dt-btn-primary">Save Snippet</button>
+        <p id="dt-snip-msg" class="dt-msg" hidden></p>
+      </div>
+    </section>
+
+    <section class="dt-section">
+      <h2 class="dt-section-title">Snippets</h2>
+      <div id="dt-snip-list" class="dt-list" aria-live="polite">
+        <p class="dt-loading">Loading…</p>
+      </div>
+    </section>
+
+    <section class="dt-section">
+      <h2 class="dt-section-title">Record Console Log</h2>
+      <div class="dt-form">
+        <label for="dt-log-level">Level</label>
+        <select id="dt-log-level" class="dt-select">
+          <option value="log">log</option>
+          <option value="info">info</option>
+          <option value="warn">warn</option>
+          <option value="error">error</option>
+          <option value="debug">debug</option>
+        </select>
+        <label for="dt-log-msg">Message (hashed on record)</label>
+        <input type="text" id="dt-log-msg" class="dt-input" placeholder="Error: connection refused" />
+        <label for="dt-log-page">Page URL (hashed on record)</label>
+        <input type="text" id="dt-log-page" class="dt-input" placeholder="https://example.com" />
+        <button id="dt-log-record-btn" class="dt-btn dt-btn-primary">Record Log</button>
+        <p id="dt-log-msg-out" class="dt-msg" hidden></p>
+      </div>
+    </section>
+
+    <section class="dt-section">
+      <div class="dt-section-header">
+        <h2 class="dt-section-title">Console Logs</h2>
+        <button id="dt-log-clear-btn" class="dt-btn dt-btn-danger">Clear Logs</button>
+      </div>
+      <div id="dt-log-list" class="dt-list" aria-live="polite">
+        <p class="dt-loading">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script src="/web/js/devtools-assistant.js"></script>
+</body>
+</html>

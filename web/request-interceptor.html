@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Request Interceptor — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/request-interceptor.css" />
+</head>
+<body>
+  <div class="ri-container">
+    <header class="ri-header">
+      <h1 class="ri-title">Request Interceptor</h1>
+      <p class="ri-subtitle">Intercept and control browser requests with rules</p>
+    </header>
+
+    <section class="ri-section">
+      <h2 class="ri-section-title">Add Rule</h2>
+      <div class="ri-form">
+        <label for="ri-rule-type">Rule Type</label>
+        <select id="ri-rule-type" class="ri-select">
+          <option value="block">block</option>
+          <option value="redirect">redirect</option>
+          <option value="modify_headers">modify_headers</option>
+          <option value="inject_script">inject_script</option>
+          <option value="log_only">log_only</option>
+        </select>
+        <label for="ri-action">Action</label>
+        <select id="ri-action" class="ri-select">
+          <option value="allow">allow</option>
+          <option value="block">block</option>
+          <option value="redirect">redirect</option>
+          <option value="modify">modify</option>
+        </select>
+        <label for="ri-method">HTTP Method</label>
+        <select id="ri-method" class="ri-select">
+          <option value="ALL">ALL</option>
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+          <option value="PUT">PUT</option>
+          <option value="DELETE">DELETE</option>
+          <option value="PATCH">PATCH</option>
+        </select>
+        <label for="ri-pattern">URL Pattern (hashed on submit)</label>
+        <input type="text" id="ri-pattern" class="ri-input" placeholder="*.example.com/api/*" />
+        <button id="ri-add-btn" class="ri-btn ri-btn-primary">Add Rule</button>
+        <p id="ri-rule-msg" class="ri-msg" hidden></p>
+      </div>
+    </section>
+
+    <section class="ri-section">
+      <h2 class="ri-section-title">Rules</h2>
+      <div id="ri-rules-list" class="ri-list" aria-live="polite">
+        <p class="ri-loading">Loading…</p>
+      </div>
+    </section>
+
+    <section class="ri-section">
+      <h2 class="ri-section-title">Intercepted Requests Log</h2>
+      <div id="ri-log-list" class="ri-list" aria-live="polite">
+        <p class="ri-loading">Loading…</p>
+      </div>
+    </section>
+
+    <section class="ri-section">
+      <h2 class="ri-section-title">Rule Types Reference</h2>
+      <div id="ri-types-list" class="ri-types" aria-live="polite">
+        <p class="ri-loading">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script src="/web/js/request-interceptor.js"></script>
+</body>
+</html>

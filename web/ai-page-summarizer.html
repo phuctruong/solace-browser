@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Page Summarizer — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/ai-page-summarizer.css" />
+</head>
+<body>
+  <div class="aps-container">
+    <header class="aps-header">
+      <h1 class="aps-title">AI Page Summarizer</h1>
+      <p class="aps-subtitle">AI-generated page summaries with evidence chain</p>
+    </header>
+
+    <section class="aps-section">
+      <h2 class="aps-section-title">Record Summary</h2>
+      <div class="aps-form">
+        <label for="aps-model">Model</label>
+        <select id="aps-model" class="aps-select">
+          <option value="haiku">haiku</option>
+          <option value="sonnet" selected>sonnet</option>
+          <option value="opus">opus</option>
+          <option value="gpt-4o">gpt-4o</option>
+          <option value="gpt-4o-mini">gpt-4o-mini</option>
+          <option value="local">local</option>
+        </select>
+        <label for="aps-length-type">Length Type</label>
+        <select id="aps-length-type" class="aps-select">
+          <option value="brief">brief</option>
+          <option value="standard" selected>standard</option>
+          <option value="detailed">detailed</option>
+        </select>
+        <label for="aps-page-url">Page URL (hashed on submit)</label>
+        <input type="text" id="aps-page-url" class="aps-input" placeholder="https://example.com/article" />
+        <label for="aps-page-title">Page Title (hashed on submit)</label>
+        <input type="text" id="aps-page-title" class="aps-input" placeholder="Article Title" />
+        <label for="aps-summary">Summary (hashed on submit)</label>
+        <textarea id="aps-summary" class="aps-textarea" rows="4" placeholder="The article discusses..."></textarea>
+        <label for="aps-word-count">Word Count</label>
+        <input type="number" id="aps-word-count" class="aps-input" min="0" value="0" />
+        <button id="aps-record-btn" class="aps-btn aps-btn-primary">Record Summary</button>
+        <p id="aps-record-msg" class="aps-msg" hidden></p>
+      </div>
+    </section>
+
+    <section class="aps-section">
+      <div class="aps-section-header">
+        <h2 class="aps-section-title">Summary History</h2>
+      </div>
+      <div id="aps-history" class="aps-list" aria-live="polite">
+        <p class="aps-loading">Loading…</p>
+      </div>
+    </section>
+
+    <section class="aps-section">
+      <h2 class="aps-section-title">Stats</h2>
+      <div id="aps-stats" class="aps-stats" aria-live="polite">
+        <p class="aps-loading">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script src="/web/js/ai-page-summarizer.js"></script>
+</body>
+</html>

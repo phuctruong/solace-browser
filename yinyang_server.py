@@ -20014,6 +20014,767 @@ function choose(mode) {
         """GET /api/v1/page-summarizer/models — list supported summary models (public)."""
         self._send_json({"models": SUMMARY_MODELS, "length_types": SUMMARY_LENGTH_TYPES})
 
+    # ---------------------------------------------------------------------------
+    # Task 086 — Download Manager v2 handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_downloads_v2_add(self) -> None:
+        """POST /api/v1/downloads/queue — add download to queue (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url_hash = str(body.get("url_hash", "")).strip()
+        if not url_hash:
+            self._send_json({"error": "url_hash required"}, 400)
+            return
+        filename_hash = str(body.get("filename_hash", "")).strip()
+        if not filename_hash:
+            self._send_json({"error": "filename_hash required"}, 400)
+            return
+        file_type = str(body.get("file_type", "")).strip()
+        if file_type not in DOWNLOAD_FILE_TYPES:
+            self._send_json({"error": f"file_type must be one of {DOWNLOAD_FILE_TYPES}"}, 400)
+            return
+        size_bytes_raw = body.get("size_bytes", 0)
+        try:
+            size_bytes = max(0, int(size_bytes_raw))
+        except (TypeError, ValueError):
+            size_bytes = 0
+        entry = {
+            "download_id": "dl_" + uuid.uuid4().hex,
+            "url_hash": url_hash,
+            "filename_hash": filename_hash,
+            "file_type": file_type,
+            "size_bytes": size_bytes,
+            "status": "queued",
+            "progress_pct": 0,
+            "queued_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _DOWNLOAD_LOCK:
+            if len(_DOWNLOAD_QUEUE) >= MAX_DOWNLOAD_QUEUE_SIZE:
+                self._send_json({"error": "queue full (max 50)"}, 400)
+                return
+            _DOWNLOAD_QUEUE.append(entry)
+        self._send_json({"status": "queued", "download_id": entry["download_id"]})
+
+    def _handle_downloads_v2_queue_list(self) -> None:
+        """GET /api/v1/downloads/queue — list download queue (auth required)."""
+        if not self._check_auth():
+            return
+        with _DOWNLOAD_LOCK:
+            items = [dict(d) for d in _DOWNLOAD_QUEUE]
+        self._send_json({"queue": items, "total": len(items)})
+
+    def _handle_downloads_v2_remove(self, download_id: str) -> None:
+        """DELETE /api/v1/downloads/queue/{id} — remove from queue (auth required)."""
+        if not self._check_auth():
+            return
+        with _DOWNLOAD_LOCK:
+            idx = next((i for i, d in enumerate(_DOWNLOAD_QUEUE) if d["download_id"] == download_id), None)
+            if idx is None:
+                self._send_json({"error": "download not found"}, 404)
+                return
+            _DOWNLOAD_QUEUE.pop(idx)
+        self._send_json({"status": "removed", "download_id": download_id})
+
+    def _handle_downloads_v2_complete(self, download_id: str) -> None:
+        """POST /api/v1/downloads/queue/{id}/complete — mark completed (auth required)."""
+        if not self._check_auth():
+            return
+        with _DOWNLOAD_LOCK:
+            idx = next((i for i, d in enumerate(_DOWNLOAD_QUEUE) if d["download_id"] == download_id), None)
+            if idx is None:
+                self._send_json({"error": "download not found"}, 404)
+                return
+            entry = _DOWNLOAD_QUEUE.pop(idx)
+            entry["status"] = "completed"
+            entry["progress_pct"] = 100
+            entry["completed_at"] = datetime.now(timezone.utc).isoformat()
+            if len(_DOWNLOAD_HISTORY) >= MAX_DOWNLOAD_HISTORY:
+                _DOWNLOAD_HISTORY.pop(0)
+            _DOWNLOAD_HISTORY.append(entry)
+        self._send_json({"status": "completed", "download_id": download_id})
+
+    def _handle_downloads_v2_history(self) -> None:
+        """GET /api/v1/downloads/history — list completed downloads (auth required)."""
+        if not self._check_auth():
+            return
+        with _DOWNLOAD_LOCK:
+            items = [dict(d) for d in _DOWNLOAD_HISTORY]
+        self._send_json({"history": items, "total": len(items)})
+
+    def _handle_downloads_v2_file_types(self) -> None:
+        """GET /api/v1/downloads/file-types — list file types (public)."""
+        self._send_json({"file_types": DOWNLOAD_FILE_TYPES, "statuses": DOWNLOAD_STATUSES})
+
+    # ---------------------------------------------------------------------------
+    # Task 087 — Accessibility Checker handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_accessibility_scan(self) -> None:
+        """POST /api/v1/accessibility/scan — record accessibility scan (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url_hash = str(body.get("url_hash", "")).strip()
+        if not url_hash:
+            self._send_json({"error": "url_hash required"}, 400)
+            return
+        wcag_level = str(body.get("wcag_level", "")).strip()
+        if wcag_level not in WCAG_LEVELS:
+            self._send_json({"error": f"wcag_level must be one of {WCAG_LEVELS}"}, 400)
+            return
+        pass_count_raw = body.get("pass_count", 0)
+        fail_count_raw = body.get("fail_count", 0)
+        try:
+            pass_count = max(0, int(pass_count_raw))
+        except (TypeError, ValueError):
+            pass_count = 0
+        try:
+            fail_count = max(0, int(fail_count_raw))
+        except (TypeError, ValueError):
+            fail_count = 0
+        total = pass_count + fail_count
+        if total == 0:
+            score = "100.00"
+        else:
+            score = str(Decimal(pass_count) / Decimal(total) * 100)
+            score = str(Decimal(score).quantize(Decimal("0.01")))
+        issues_by_category = body.get("issues_by_category", {})
+        if not isinstance(issues_by_category, dict):
+            issues_by_category = {}
+        entry = {
+            "scan_id": "acs_" + uuid.uuid4().hex,
+            "url_hash": url_hash,
+            "wcag_level": wcag_level,
+            "pass_count": pass_count,
+            "fail_count": fail_count,
+            "score": score,
+            "issues_by_category": issues_by_category,
+            "scanned_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _ACCESS_LOCK:
+            _ACCESSIBILITY_SCANS.append(entry)
+        self._send_json({"status": "recorded", "scan_id": entry["scan_id"]}, 201)
+
+    def _handle_accessibility_list(self) -> None:
+        """GET /api/v1/accessibility/scans — list scans (auth required)."""
+        if not self._check_auth():
+            return
+        with _ACCESS_LOCK:
+            scans = [dict(s) for s in _ACCESSIBILITY_SCANS]
+        self._send_json({"scans": scans, "total": len(scans)})
+
+    def _handle_accessibility_get(self, scan_id: str) -> None:
+        """GET /api/v1/accessibility/scans/{id} — get scan (auth required)."""
+        if not self._check_auth():
+            return
+        with _ACCESS_LOCK:
+            scan = next((dict(s) for s in _ACCESSIBILITY_SCANS if s["scan_id"] == scan_id), None)
+        if scan is None:
+            self._send_json({"error": "scan not found"}, 404)
+            return
+        self._send_json({"scan": scan})
+
+    def _handle_accessibility_delete(self, scan_id: str) -> None:
+        """DELETE /api/v1/accessibility/scans/{id} — delete scan (auth required)."""
+        if not self._check_auth():
+            return
+        with _ACCESS_LOCK:
+            idx = next((i for i, s in enumerate(_ACCESSIBILITY_SCANS) if s["scan_id"] == scan_id), None)
+            if idx is None:
+                self._send_json({"error": "scan not found"}, 404)
+                return
+            _ACCESSIBILITY_SCANS.pop(idx)
+        self._send_json({"status": "deleted", "scan_id": scan_id})
+
+    def _handle_accessibility_wcag_levels(self) -> None:
+        """GET /api/v1/accessibility/wcag-levels — list WCAG levels (public)."""
+        self._send_json({"wcag_levels": WCAG_LEVELS, "categories": ACCESSIBILITY_CATEGORIES})
+
+    # ---------------------------------------------------------------------------
+    # Task 088 — Session Recorder handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_recorder_start(self) -> None:
+        """POST /api/v1/session-recorder/start — start recording (auth required)."""
+        if not self._check_auth():
+            return
+        token_hash = self.headers.get("Authorization", "").replace("Bearer ", "").strip()
+        recording_id = "rec_" + uuid.uuid4().hex
+        entry = {
+            "recording_id": recording_id,
+            "token_hash": token_hash,
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "stopped_at": None,
+            "duration_seconds": None,
+            "events": [],
+        }
+        with _REC_LOCK:
+            if token_hash in _ACTIVE_RECORDING:
+                self._send_json({"error": "recording already active"}, 409)
+                return
+            _ACTIVE_RECORDING[token_hash] = recording_id
+            _RECORDINGS.append(entry)
+        self._send_json({"status": "started", "recording_id": recording_id})
+
+    def _handle_recorder_stop(self) -> None:
+        """POST /api/v1/session-recorder/stop — stop recording (auth required)."""
+        if not self._check_auth():
+            return
+        token_hash = self.headers.get("Authorization", "").replace("Bearer ", "").strip()
+        with _REC_LOCK:
+            recording_id = _ACTIVE_RECORDING.pop(token_hash, None)
+            if recording_id is None:
+                self._send_json({"error": "no active recording"}, 404)
+                return
+            rec = next((r for r in _RECORDINGS if r["recording_id"] == recording_id), None)
+            if rec is not None:
+                now = datetime.now(timezone.utc)
+                started = datetime.fromisoformat(rec["started_at"])
+                rec["stopped_at"] = now.isoformat()
+                rec["duration_seconds"] = int((now - started).total_seconds())
+        self._send_json({"status": "stopped", "recording_id": recording_id})
+
+    def _handle_recorder_event(self) -> None:
+        """POST /api/v1/session-recorder/events — append event (auth required)."""
+        if not self._check_auth():
+            return
+        token_hash = self.headers.get("Authorization", "").replace("Bearer ", "").strip()
+        body = self._read_json_body()
+        if body is None:
+            return
+        with _REC_LOCK:
+            recording_id = _ACTIVE_RECORDING.get(token_hash)
+            if recording_id is None:
+                self._send_json({"error": "no active recording"}, 404)
+                return
+            rec = next((r for r in _RECORDINGS if r["recording_id"] == recording_id), None)
+            if rec is None:
+                self._send_json({"error": "recording not found"}, 404)
+                return
+            event_type = str(body.get("event_type", "")).strip()
+            if event_type not in RECORDING_EVENT_TYPES:
+                self._send_json({"error": f"event_type must be one of {RECORDING_EVENT_TYPES}"}, 400)
+                return
+            element_hash = str(body.get("element_hash", "")).strip()
+            url_hash = str(body.get("url_hash", "")).strip()
+            payload_hash = str(body.get("payload_hash", "")).strip()
+            if len(rec["events"]) >= MAX_EVENTS_PER_RECORDING:
+                self._send_json({"error": "max events per recording reached"}, 400)
+                return
+            event = {
+                "event_id": "rev_" + uuid.uuid4().hex,
+                "event_type": event_type,
+                "element_hash": element_hash,
+                "url_hash": url_hash,
+                "payload_hash": payload_hash,
+                "recorded_at": datetime.now(timezone.utc).isoformat(),
+            }
+            rec["events"].append(event)
+        self._send_json({"status": "recorded", "event_id": event["event_id"]}, 201)
+
+    def _handle_recorder_list(self) -> None:
+        """GET /api/v1/session-recorder/recordings — list recordings (auth required)."""
+        if not self._check_auth():
+            return
+        with _REC_LOCK:
+            recs = [
+                {k: v for k, v in r.items() if k != "events"}
+                for r in _RECORDINGS
+            ]
+        self._send_json({"recordings": recs, "total": len(recs)})
+
+    def _handle_recorder_delete(self, recording_id: str) -> None:
+        """DELETE /api/v1/session-recorder/recordings/{id} — delete recording (auth required)."""
+        if not self._check_auth():
+            return
+        with _REC_LOCK:
+            idx = next((i for i, r in enumerate(_RECORDINGS) if r["recording_id"] == recording_id), None)
+            if idx is None:
+                self._send_json({"error": "recording not found"}, 404)
+                return
+            _RECORDINGS.pop(idx)
+            keys_to_remove = [k for k, v in _ACTIVE_RECORDING.items() if v == recording_id]
+            for k in keys_to_remove:
+                del _ACTIVE_RECORDING[k]
+        self._send_json({"status": "deleted", "recording_id": recording_id})
+
+    # ---------------------------------------------------------------------------
+    # Task 089 — Proxy Manager handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_proxy_list(self) -> None:
+        """GET /api/v1/proxy-manager/profiles — list profiles (auth required)."""
+        if not self._check_auth():
+            return
+        with _PROXY_LOCK:
+            profiles = [dict(p) for p in _PROXY_PROFILES]
+        self._send_json({"profiles": profiles, "total": len(profiles)})
+
+    def _handle_proxy_add(self) -> None:
+        """POST /api/v1/proxy-manager/profiles — add proxy profile (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        protocol = str(body.get("protocol", "")).strip()
+        if protocol not in PROXY_PROTOCOLS:
+            self._send_json({"error": f"protocol must be one of {PROXY_PROTOCOLS}"}, 400)
+            return
+        host_hash = str(body.get("host_hash", "")).strip()
+        if not host_hash:
+            self._send_json({"error": "host_hash required"}, 400)
+            return
+        port_raw = body.get("port", 0)
+        try:
+            port = int(port_raw)
+        except (TypeError, ValueError):
+            self._send_json({"error": "port must be integer 1-65535"}, 400)
+            return
+        if port < 1 or port > 65535:
+            self._send_json({"error": "port must be integer 1-65535"}, 400)
+            return
+        username_hash = str(body.get("username_hash", "")).strip() or None
+        entry = {
+            "profile_id": "prx_" + uuid.uuid4().hex,
+            "protocol": protocol,
+            "host_hash": host_hash,
+            "port": port,
+            "username_hash": username_hash,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _PROXY_LOCK:
+            if len(_PROXY_PROFILES) >= MAX_PROXY_PROFILES:
+                self._send_json({"error": "max proxy profiles reached (20)"}, 400)
+                return
+            _PROXY_PROFILES.append(entry)
+        self._send_json({"status": "created", "profile_id": entry["profile_id"]}, 201)
+
+    def _handle_proxy_delete(self, profile_id: str) -> None:
+        """DELETE /api/v1/proxy-manager/profiles/{id} — remove profile (auth required)."""
+        if not self._check_auth():
+            return
+        global _ACTIVE_PROXY
+        with _PROXY_LOCK:
+            idx = next((i for i, p in enumerate(_PROXY_PROFILES) if p["profile_id"] == profile_id), None)
+            if idx is None:
+                self._send_json({"error": "profile not found"}, 404)
+                return
+            _PROXY_PROFILES.pop(idx)
+            if _ACTIVE_PROXY and _ACTIVE_PROXY.get("profile_id") == profile_id:
+                _ACTIVE_PROXY = None
+        self._send_json({"status": "removed", "profile_id": profile_id})
+
+    def _handle_proxy_activate(self, profile_id: str) -> None:
+        """POST /api/v1/proxy-manager/profiles/{id}/activate — activate proxy (auth required)."""
+        if not self._check_auth():
+            return
+        global _ACTIVE_PROXY
+        with _PROXY_LOCK:
+            profile = next((dict(p) for p in _PROXY_PROFILES if p["profile_id"] == profile_id), None)
+            if profile is None:
+                self._send_json({"error": "profile not found"}, 404)
+                return
+            _ACTIVE_PROXY = profile
+        self._send_json({"status": "activated", "profile_id": profile_id})
+
+    def _handle_proxy_active(self) -> None:
+        """GET /api/v1/proxy-manager/active — get active proxy (auth required)."""
+        if not self._check_auth():
+            return
+        with _PROXY_LOCK:
+            active = dict(_ACTIVE_PROXY) if _ACTIVE_PROXY else None
+        self._send_json({"active": active})
+
+    def _handle_proxy_protocols(self) -> None:
+        """GET /api/v1/proxy-manager/protocols — list protocols (public)."""
+        self._send_json({"protocols": PROXY_PROTOCOLS})
+
+    # ---------------------------------------------------------------------------
+    # Task 090 — Automation Recorder handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_automation_start(self) -> None:
+        """POST /api/v1/automation-recorder/start — start automation recording (auth required)."""
+        if not self._check_auth():
+            return
+        token_hash = self.headers.get("Authorization", "").replace("Bearer ", "").strip()
+        automation_id = "aut_" + uuid.uuid4().hex
+        with _AUTOMATION_LOCK:
+            if token_hash in _ACTIVE_AUTOMATION_RECORDING:
+                self._send_json({"error": "automation recording already active"}, 409)
+                return
+            _ACTIVE_AUTOMATION_RECORDING[token_hash] = {
+                "automation_id": automation_id,
+                "actions": [],
+                "started_at": datetime.now(timezone.utc).isoformat(),
+            }
+        self._send_json({"status": "started", "automation_id": automation_id})
+
+    def _handle_automation_action(self) -> None:
+        """POST /api/v1/automation-recorder/action — record action (auth required)."""
+        if not self._check_auth():
+            return
+        token_hash = self.headers.get("Authorization", "").replace("Bearer ", "").strip()
+        body = self._read_json_body()
+        if body is None:
+            return
+        with _AUTOMATION_LOCK:
+            rec = _ACTIVE_AUTOMATION_RECORDING.get(token_hash)
+            if rec is None:
+                self._send_json({"error": "no active automation recording"}, 404)
+                return
+            action_type = str(body.get("action_type", "")).strip()
+            if action_type not in AUTOMATION_ACTION_TYPES:
+                self._send_json({"error": f"action_type must be one of {AUTOMATION_ACTION_TYPES}"}, 400)
+                return
+            if len(rec["actions"]) >= MAX_ACTIONS_PER_AUTOMATION:
+                self._send_json({"error": "max actions per automation reached"}, 400)
+                return
+            element_hash = str(body.get("element_hash", "")).strip()
+            page_hash = str(body.get("page_hash", "")).strip()
+            value_hash = str(body.get("value_hash", "")).strip() or None
+            action = {
+                "action_id": "aact_" + uuid.uuid4().hex,
+                "action_type": action_type,
+                "element_hash": element_hash,
+                "page_hash": page_hash,
+                "value_hash": value_hash,
+                "recorded_at": datetime.now(timezone.utc).isoformat(),
+            }
+            rec["actions"].append(action)
+        self._send_json({"status": "recorded", "action_id": action["action_id"]}, 201)
+
+    def _handle_automation_stop(self) -> None:
+        """POST /api/v1/automation-recorder/stop — stop automation recording (auth required)."""
+        if not self._check_auth():
+            return
+        token_hash = self.headers.get("Authorization", "").replace("Bearer ", "").strip()
+        body = self._read_json_body()
+        if body is None:
+            body = {}
+        with _AUTOMATION_LOCK:
+            rec = _ACTIVE_AUTOMATION_RECORDING.pop(token_hash, None)
+            if rec is None:
+                self._send_json({"error": "no active automation recording"}, 404)
+                return
+            now = datetime.now(timezone.utc)
+            started = datetime.fromisoformat(rec["started_at"])
+            duration_seconds = int((now - started).total_seconds())
+            name = str(body.get("name", "")).strip() or f"Automation {rec['automation_id'][:8]}"
+            entry = {
+                "automation_id": rec["automation_id"],
+                "name": name,
+                "actions": rec["actions"],
+                "action_count": len(rec["actions"]),
+                "started_at": rec["started_at"],
+                "stopped_at": now.isoformat(),
+                "duration_seconds": duration_seconds,
+            }
+            if len(_AUTOMATIONS) >= MAX_AUTOMATIONS:
+                _AUTOMATIONS.pop(0)
+            _AUTOMATIONS.append(entry)
+        self._send_json({"status": "stopped", "automation_id": rec["automation_id"], "action_count": len(rec["actions"])})
+
+    def _handle_automation_list(self) -> None:
+        """GET /api/v1/automation-recorder/automations — list automations (auth required)."""
+        if not self._check_auth():
+            return
+        with _AUTOMATION_LOCK:
+            items = [
+                {k: v for k, v in a.items() if k != "actions"}
+                for a in _AUTOMATIONS
+            ]
+        self._send_json({"automations": items, "total": len(items)})
+
+    def _handle_automation_delete(self, automation_id: str) -> None:
+        """DELETE /api/v1/automation-recorder/automations/{id} — delete automation (auth required)."""
+        if not self._check_auth():
+            return
+        with _AUTOMATION_LOCK:
+            idx = next((i for i, a in enumerate(_AUTOMATIONS) if a["automation_id"] == automation_id), None)
+            if idx is None:
+                self._send_json({"error": "automation not found"}, 404)
+                return
+            _AUTOMATIONS.pop(idx)
+        self._send_json({"status": "deleted", "automation_id": automation_id})
+
+    def _handle_automation_action_types(self) -> None:
+        """GET /api/v1/automation-recorder/action-types — list action types (public)."""
+        self._send_json({"action_types": AUTOMATION_ACTION_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 091 — Font Manager handlers
+    # ---------------------------------------------------------------------------
+    def _handle_font_list(self) -> None:
+        """GET /api/v1/font-manager/fonts — list all fonts (public)."""
+        with _FONT_LOCK:
+            custom = [dict(f) for f in _CUSTOM_FONTS]
+        self._send_json({
+            "builtin": FONT_FAMILIES_BUILTIN,
+            "custom": custom,
+            "weights": FONT_WEIGHTS,
+            "sizes": FONT_SIZES,
+        })
+
+    def _handle_font_add(self) -> None:
+        """POST /api/v1/font-manager/fonts — add custom font (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        family = body.get("family", "")
+        if not family or len(family) > 64:
+            self._send_json({"error": "family required and max 64 chars"}, 400)
+            return
+        weight = body.get("weight", "")
+        if weight not in FONT_WEIGHTS:
+            self._send_json({"error": f"weight must be one of {FONT_WEIGHTS}"}, 400)
+            return
+        size = body.get("size")
+        if size not in FONT_SIZES:
+            self._send_json({"error": f"size must be one of {FONT_SIZES}"}, 400)
+            return
+        source_hash = body.get("source_hash", "")
+        if not re.match(r"^[0-9a-f]{64}$", source_hash):
+            self._send_json({"error": "source_hash must be SHA-256 hex"}, 400)
+            return
+        with _FONT_LOCK:
+            if len(_CUSTOM_FONTS) >= MAX_CUSTOM_FONTS:
+                self._send_json({"error": f"max {MAX_CUSTOM_FONTS} custom fonts"}, 400)
+                return
+            font_id = "fnt_" + str(uuid.uuid4())
+            entry = {
+                "font_id": font_id,
+                "family": family,
+                "weight": weight,
+                "size": size,
+                "source_hash": source_hash,
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _CUSTOM_FONTS.append(entry)
+        self._send_json({"status": "added", "font": entry}, 201)
+
+    def _handle_font_delete(self, font_id: str) -> None:
+        """DELETE /api/v1/font-manager/fonts/{font_id} — remove custom font (auth required)."""
+        if not self._check_auth():
+            return
+        with _FONT_LOCK:
+            idx = next((i for i, f in enumerate(_CUSTOM_FONTS) if f["font_id"] == font_id), None)
+            if idx is None:
+                self._send_json({"error": "font not found"}, 404)
+                return
+            _CUSTOM_FONTS.pop(idx)
+        self._send_json({"status": "deleted", "font_id": font_id})
+
+    def _handle_font_apply(self) -> None:
+        """POST /api/v1/font-manager/apply — apply font config (auth required)."""
+        global _ACTIVE_FONT
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        family = body.get("family", "")
+        if not family:
+            self._send_json({"error": "family required"}, 400)
+            return
+        weight = body.get("weight", "")
+        if weight not in FONT_WEIGHTS:
+            self._send_json({"error": f"weight must be one of {FONT_WEIGHTS}"}, 400)
+            return
+        size = body.get("size")
+        if size not in FONT_SIZES:
+            self._send_json({"error": f"size must be one of {FONT_SIZES}"}, 400)
+            return
+        with _FONT_LOCK:
+            _ACTIVE_FONT = {"family": family, "weight": weight, "size": size}
+        self._send_json({"status": "applied", "active_font": dict(_ACTIVE_FONT)})
+
+    def _handle_font_active(self) -> None:
+        """GET /api/v1/font-manager/active — get active font config (auth required)."""
+        if not self._check_auth():
+            return
+        with _FONT_LOCK:
+            font = dict(_ACTIVE_FONT)
+        self._send_json({"active_font": font})
+
+    # ---------------------------------------------------------------------------
+    # Task 092 — Translation Overlay handlers
+    # ---------------------------------------------------------------------------
+    def _handle_translation_translate(self) -> None:
+        """POST /api/v1/translation/translate — record translation (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        source_lang = body.get("source_lang", "")
+        if source_lang not in SUPPORTED_LANGUAGES:
+            self._send_json({"error": f"source_lang must be one of {list(SUPPORTED_LANGUAGES)}"}, 400)
+            return
+        target_lang = body.get("target_lang", "")
+        if target_lang not in SUPPORTED_LANGUAGES:
+            self._send_json({"error": f"target_lang must be one of {list(SUPPORTED_LANGUAGES)}"}, 400)
+            return
+        if source_lang == target_lang:
+            self._send_json({"error": "source_lang and target_lang must differ"}, 400)
+            return
+        char_count = body.get("char_count", 0)
+        if not isinstance(char_count, int) or char_count < 0 or char_count > MAX_TRANSLATION_CHARS:
+            self._send_json({"error": f"char_count must be 0..{MAX_TRANSLATION_CHARS}"}, 400)
+            return
+        text_hash = body.get("text_hash", "")
+        if not re.match(r"^[0-9a-f]{64}$", text_hash):
+            self._send_json({"error": "text_hash must be SHA-256 hex"}, 400)
+            return
+        result_hash = body.get("result_hash", "")
+        if not re.match(r"^[0-9a-f]{64}$", result_hash):
+            self._send_json({"error": "result_hash must be SHA-256 hex"}, 400)
+            return
+        translation_id = "trn_" + str(uuid.uuid4())
+        entry = {
+            "translation_id": translation_id,
+            "source_lang": source_lang,
+            "target_lang": target_lang,
+            "text_hash": text_hash,
+            "result_hash": result_hash,
+            "char_count": char_count,
+            "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        }
+        with _TRANSLATION_LOCK:
+            if len(_TRANSLATION_HISTORY) >= MAX_TRANSLATION_HISTORY:
+                _TRANSLATION_HISTORY.pop(0)
+            _TRANSLATION_HISTORY.append(entry)
+        self._send_json({"status": "translated", "translation": entry}, 201)
+
+    def _handle_translation_history(self) -> None:
+        """GET /api/v1/translation/history — list history (auth required)."""
+        if not self._check_auth():
+            return
+        with _TRANSLATION_LOCK:
+            history = [dict(t) for t in _TRANSLATION_HISTORY]
+        self._send_json({"history": history, "total": len(history)})
+
+    def _handle_translation_history_clear(self) -> None:
+        """DELETE /api/v1/translation/history — clear history (auth required)."""
+        if not self._check_auth():
+            return
+        with _TRANSLATION_LOCK:
+            _TRANSLATION_HISTORY.clear()
+        self._send_json({"status": "cleared"})
+
+    def _handle_translation_stats(self) -> None:
+        """GET /api/v1/translation/stats — stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _TRANSLATION_LOCK:
+            history = list(_TRANSLATION_HISTORY)
+        by_source: dict[str, int] = {lang: 0 for lang in SUPPORTED_LANGUAGES}
+        by_target: dict[str, int] = {lang: 0 for lang in SUPPORTED_LANGUAGES}
+        for t in history:
+            sl = t.get("source_lang", "")
+            tl = t.get("target_lang", "")
+            if sl in by_source:
+                by_source[sl] += 1
+            if tl in by_target:
+                by_target[tl] += 1
+        self._send_json({
+            "total": len(history),
+            "by_source_lang": by_source,
+            "by_target_lang": by_target,
+        })
+
+    def _handle_translation_languages(self) -> None:
+        """GET /api/v1/translation/languages — list languages (public)."""
+        self._send_json({"languages": SUPPORTED_LANGUAGES})
+
+    # ---------------------------------------------------------------------------
+    # Task 093 — Annotation Tool handlers
+    # ---------------------------------------------------------------------------
+    def _handle_annotation_create(self) -> None:
+        """POST /api/v1/annotations — create annotation (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        annotation_type = body.get("annotation_type", "")
+        if annotation_type not in ANNOTATION_TYPES:
+            self._send_json({"error": f"annotation_type must be one of {ANNOTATION_TYPES}"}, 400)
+            return
+        color = body.get("color", "")
+        if color not in ANNOTATION_COLORS:
+            self._send_json({"error": f"color must be one of {ANNOTATION_COLORS}"}, 400)
+            return
+        page_hash = body.get("page_hash", "")
+        if not re.match(r"^[0-9a-f]{64}$", page_hash):
+            self._send_json({"error": "page_hash must be SHA-256 hex"}, 400)
+            return
+        text_hash = body.get("text_hash", "")
+        if not re.match(r"^[0-9a-f]{64}$", text_hash):
+            self._send_json({"error": "text_hash must be SHA-256 hex"}, 400)
+            return
+        selector_hash = body.get("selector_hash", "")
+        if not re.match(r"^[0-9a-f]{64}$", selector_hash):
+            self._send_json({"error": "selector_hash must be SHA-256 hex"}, 400)
+            return
+        note_hash = body.get("note_hash")
+        if note_hash is not None and not re.match(r"^[0-9a-f]{64}$", note_hash):
+            self._send_json({"error": "note_hash must be SHA-256 hex if provided"}, 400)
+            return
+        with _ANNOTATION_LOCK:
+            if len(_ANNOTATIONS) >= MAX_ANNOTATIONS:
+                self._send_json({"error": f"max {MAX_ANNOTATIONS} annotations"}, 400)
+                return
+            annotation_id = "ann_" + str(uuid.uuid4())
+            entry: dict[str, Any] = {
+                "annotation_id": annotation_id,
+                "annotation_type": annotation_type,
+                "color": color,
+                "page_hash": page_hash,
+                "text_hash": text_hash,
+                "selector_hash": selector_hash,
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            if note_hash is not None:
+                entry["note_hash"] = note_hash
+            _ANNOTATIONS.append(entry)
+        self._send_json({"status": "created", "annotation": entry}, 201)
+
+    def _handle_annotation_list(self) -> None:
+        """GET /api/v1/annotations — list all annotations (auth required)."""
+        if not self._check_auth():
+            return
+        with _ANNOTATION_LOCK:
+            annotations = [dict(a) for a in _ANNOTATIONS]
+        self._send_json({"annotations": annotations, "total": len(annotations)})
+
+    def _handle_annotation_delete(self, annotation_id: str) -> None:
+        """DELETE /api/v1/annotations/{id} — delete annotation (auth required)."""
+        if not self._check_auth():
+            return
+        with _ANNOTATION_LOCK:
+            idx = next((i for i, a in enumerate(_ANNOTATIONS) if a["annotation_id"] == annotation_id), None)
+            if idx is None:
+                self._send_json({"error": "annotation not found"}, 404)
+                return
+            _ANNOTATIONS.pop(idx)
+        self._send_json({"status": "deleted", "annotation_id": annotation_id})
+
+    def _handle_annotation_by_page(self) -> None:
+        """GET /api/v1/annotations/by-page?page_hash=xxx — filter by page (auth required)."""
+        if not self._check_auth():
+            return
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        page_hash = params.get("page_hash", [""])[0]
+        with _ANNOTATION_LOCK:
+            filtered = [dict(a) for a in _ANNOTATIONS if a.get("page_hash") == page_hash]
+        self._send_json({"annotations": filtered, "total": len(filtered)})
+
+    def _handle_annotation_types(self) -> None:
+        """GET /api/v1/annotations/types — list annotation types (public)."""
+        self._send_json({"types": ANNOTATION_TYPES, "colors": ANNOTATION_COLORS})
+
 
 # ---------------------------------------------------------------------------
 # Server factory — theorem: build_server isolates configuration from startup.

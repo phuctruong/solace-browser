@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Preferences — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/user-preferences.css" />
+</head>
+<body>
+  <div class="up-container">
+    <header class="up-header">
+      <h1 class="up-title">User Preferences</h1>
+      <p class="up-subtitle">Persistent preferences across sessions</p>
+    </header>
+
+    <section class="up-section">
+      <div class="up-section-header">
+        <h2 class="up-section-title">Appearance</h2>
+      </div>
+      <div class="up-pref-row">
+        <label class="up-label" for="up-theme">Theme</label>
+        <select id="up-theme" class="up-select" data-key="theme">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="auto" selected>Auto</option>
+        </select>
+      </div>
+      <div class="up-pref-row">
+        <label class="up-label" for="up-compact">Compact View</label>
+        <input type="checkbox" id="up-compact" data-key="compact_view" />
+      </div>
+    </section>
+
+    <section class="up-section">
+      <h2 class="up-section-title">Behavior</h2>
+      <div class="up-pref-row">
+        <label class="up-label" for="up-language">Language</label>
+        <select id="up-language" class="up-select" data-key="language">
+          <option value="en">English</option>
+          <option value="fr">French</option>
+          <option value="de">German</option>
+          <option value="es">Spanish</option>
+          <option value="ja">Japanese</option>
+          <option value="zh">Chinese</option>
+        </select>
+      </div>
+      <div class="up-pref-row">
+        <label class="up-label" for="up-timezone">Timezone</label>
+        <input type="text" id="up-timezone" class="up-input" data-key="timezone" value="UTC" />
+      </div>
+      <div class="up-pref-row">
+        <label class="up-label" for="up-auto-save">Auto Save</label>
+        <input type="checkbox" id="up-auto-save" data-key="auto_save" checked />
+      </div>
+      <div class="up-pref-row">
+        <label class="up-label" for="up-session-timeout">Session Timeout (minutes, 5–480)</label>
+        <input type="number" id="up-session-timeout" class="up-input" data-key="session_timeout_minutes" min="5" max="480" value="60" />
+      </div>
+      <div class="up-pref-row">
+        <label class="up-label" for="up-page-size">Result Page Size (10–100)</label>
+        <input type="number" id="up-page-size" class="up-input" data-key="result_page_size" min="10" max="100" value="20" />
+      </div>
+    </section>
+
+    <section class="up-section">
+      <h2 class="up-section-title">Notifications</h2>
+      <div class="up-pref-row">
+        <label class="up-label" for="up-notifications">Notifications Enabled</label>
+        <input type="checkbox" id="up-notifications" data-key="notifications_enabled" checked />
+      </div>
+    </section>
+
+    <div class="up-actions">
+      <button id="up-save-btn" class="up-btn up-btn-primary">Save Preferences</button>
+      <button id="up-reset-btn" class="up-btn up-btn-danger">Reset All</button>
+    </div>
+    <p id="up-msg" class="up-msg" hidden></p>
+  </div>
+  <script src="/web/js/user-preferences.js"></script>
+</body>
+</html>

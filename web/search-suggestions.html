@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search Suggestions — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/search-suggestions.css" />
+</head>
+<body>
+  <div class="ss-container">
+    <header class="ss-header">
+      <h1 class="ss-title">Search Suggestions</h1>
+      <p class="ss-subtitle">Intelligent search suggestions from history</p>
+    </header>
+
+    <section class="ss-section">
+      <h2 class="ss-section-title">Record Search</h2>
+      <div class="ss-form">
+        <label for="ss-query">Search Query</label>
+        <input type="text" id="ss-query" placeholder="Type your search query..." />
+        <label for="ss-engine">Search Engine URL (hashed on submit)</label>
+        <input type="text" id="ss-engine" placeholder="https://search.example.com" />
+        <label for="ss-result-count">Result Count</label>
+        <input type="number" id="ss-result-count" min="0" value="0" />
+        <button id="ss-record-btn" class="ss-btn ss-btn-primary">Record Search</button>
+      </div>
+      <p id="ss-record-msg" class="ss-msg" hidden></p>
+    </section>
+
+    <section class="ss-section">
+      <h2 class="ss-section-title">Suggestions</h2>
+      <div class="ss-form-row">
+        <input type="text" id="ss-prefix" placeholder="Type prefix to search..." />
+        <button id="ss-suggest-btn" class="ss-btn ss-btn-secondary">Get Suggestions</button>
+      </div>
+      <div id="ss-suggestions" class="ss-list" aria-live="polite">
+        <p class="ss-empty">Enter prefix and click Get Suggestions.</p>
+      </div>
+    </section>
+
+    <section class="ss-section">
+      <div class="ss-section-header">
+        <h2 class="ss-section-title">Popular Searches</h2>
+        <button id="ss-popular-btn" class="ss-btn ss-btn-secondary">Refresh</button>
+      </div>
+      <div id="ss-popular" class="ss-list" aria-live="polite">
+        <p class="ss-loading">Loading…</p>
+      </div>
+    </section>
+
+    <section class="ss-section">
+      <div class="ss-section-header">
+        <h2 class="ss-section-title">Stats</h2>
+        <button id="ss-clear-btn" class="ss-btn ss-btn-danger">Clear History</button>
+      </div>
+      <div id="ss-stats" class="ss-stats-panel" aria-live="polite">
+        <p class="ss-loading">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script src="/web/js/search-suggestions.js"></script>
+</body>
+</html>
