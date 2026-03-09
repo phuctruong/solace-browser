@@ -1,0 +1,37 @@
+/* Browser History Analytics — Task 112 */
+:root {
+  --hub-bg: #f5f6fa;
+  --hub-surface: #ffffff;
+  --hub-primary: #4A90E2;
+  --hub-secondary: #e8e8e8;
+  --hub-accent: #6c5ce7;
+  --hub-text: #222;
+  --hub-muted: #666;
+  --hub-border: #ddd;
+  --hub-success: #27ae60;
+  --hub-danger: #e74c3c;
+}
+.bha-container { max-width: 960px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; background: var(--hub-bg); min-height: 100vh; }
+.bha-title { font-size: 1.6rem; font-weight: 700; color: var(--hub-text); margin-bottom: 4px; }
+.bha-subtitle { color: var(--hub-muted); margin-bottom: 20px; font-size: 0.9rem; }
+.bha-toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.bha-btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.bha-btn-primary { background: var(--hub-primary); color: var(--hub-surface); }
+.bha-btn-secondary { background: var(--hub-secondary); color: var(--hub-text); }
+.bha-btn-accent { background: var(--hub-accent); color: var(--hub-surface); margin-left: auto; }
+.bha-btn-danger { background: var(--hub-danger); color: var(--hub-surface); }
+.bha-panel { display: flex; flex-direction: column; gap: 8px; min-height: 48px; }
+.bha-status { margin-top: 12px; font-size: 0.85rem; color: var(--hub-muted); min-height: 20px; }
+.bha-card { background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 8px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.bha-card-id { font-family: monospace; font-size: 0.8rem; color: var(--hub-muted); }
+.bha-card-cat { font-size: 0.85rem; font-weight: 600; color: var(--hub-primary); }
+.bha-card-dur { font-size: 0.85rem; color: var(--hub-text); }
+.bha-empty { color: var(--hub-muted); font-style: italic; padding: 24px; text-align: center; }
+.bha-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.bha-stat-box { background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 8px; padding: 16px; text-align: center; }
+.bha-stat-val { font-size: 1.8rem; font-weight: 700; color: var(--hub-primary); }
+.bha-stat-lbl { font-size: 0.8rem; color: var(--hub-muted); margin-top: 4px; }
+.bha-form { background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.bha-form label { font-size: 0.85rem; color: var(--hub-text); font-weight: 600; }
+.bha-form input, .bha-form select { width: 100%; padding: 8px; border: 1px solid var(--hub-border); border-radius: 4px; font-size: 0.9rem; box-sizing: border-box; }
+.bha-form-row { display: flex; gap: 8px; justify-content: flex-end; }

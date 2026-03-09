@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF Viewer Notes — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/pdf-viewer-notes.css">
+</head>
+<body>
+<div class="pdn-container">
+  <h1 class="pdn-title">PDF Viewer Notes</h1>
+  <p class="pdn-subtitle">Add privacy-preserving notes to PDF documents</p>
+
+  <section class="pdn-section">
+    <h2 class="pdn-section-title">Add Note</h2>
+    <form id="pdn-note-form" class="pdn-form">
+      <input id="pdn-pdf-url" class="pdn-input" type="url" placeholder="PDF URL" aria-label="PDF URL">
+      <select id="pdn-note-type" class="pdn-input" aria-label="Note type"></select>
+      <input id="pdn-content" class="pdn-input" type="text" placeholder="Note content" aria-label="Note content">
+      <input id="pdn-page" class="pdn-input" type="number" placeholder="Page number" min="1" aria-label="Page number">
+      <input id="pdn-position" class="pdn-input" type="text" placeholder="Position (x,y)" aria-label="Position">
+      <button type="submit" class="pdn-btn pdn-btn-primary">Add Note</button>
+    </form>
+  </section>
+
+  <section class="pdn-section">
+    <h2 class="pdn-section-title">Filter by PDF</h2>
+    <form id="pdn-filter-form" class="pdn-form">
+      <input id="pdn-filter-hash" class="pdn-input" type="text" placeholder="PDF hash" aria-label="PDF hash">
+      <button type="submit" class="pdn-btn pdn-btn-secondary">Filter</button>
+      <button type="button" id="pdn-show-all" class="pdn-btn pdn-btn-secondary">Show All</button>
+    </form>
+  </section>
+
+  <section class="pdn-section">
+    <h2 class="pdn-section-title">Notes</h2>
+    <div id="pdn-stats" class="pdn-stats" aria-live="polite"></div>
+    <div id="pdn-notes-list" class="pdn-list" aria-live="polite"></div>
+  </section>
+
+  <div id="pdn-status" class="pdn-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/pdf-viewer-notes.js"></script>
+</body>
+</html>

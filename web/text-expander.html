@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Text Expander — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/text-expander.css">
+</head>
+<body>
+<div class="txe-container">
+  <h1 class="txe-title">Text Expander</h1>
+  <p class="txe-subtitle">Manage text snippets and track expansions</p>
+  <div class="txe-toolbar">
+    <button id="btn-txe-snippets" class="txe-btn txe-btn-primary">Snippets</button>
+    <button id="btn-txe-stats" class="txe-btn txe-btn-secondary">Stats</button>
+    <button id="btn-txe-categories" class="txe-btn txe-btn-secondary">Categories</button>
+  </div>
+  <form id="txe-form" class="txe-form">
+    <input id="txe-abbrev" class="txe-input" type="text" placeholder="Abbreviation (e.g. brb)" autocomplete="off">
+    <textarea id="txe-content" class="txe-textarea" placeholder="Expanded text" rows="2"></textarea>
+    <select id="txe-category" class="txe-select"></select>
+    <input id="txe-tags" class="txe-input" type="text" placeholder="Tags (comma-separated, max 5)" autocomplete="off">
+    <button type="submit" class="txe-btn txe-btn-primary">Add Snippet</button>
+  </form>
+  <div id="txe-panel" class="txe-panel" aria-live="polite"></div>
+  <div id="txe-status" class="txe-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/text-expander.js"></script>
+</body>
+</html>

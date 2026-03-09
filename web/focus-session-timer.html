@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focus Session Timer — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/focus-session-timer.css">
+</head>
+<body>
+<div class="fst-container">
+  <h1 class="fst-title">Focus Session Timer</h1>
+  <p class="fst-subtitle">Track your focused work sessions</p>
+  <div class="fst-toolbar">
+    <button id="btn-fst-sessions" class="fst-btn fst-btn-primary">Sessions</button>
+    <button id="btn-fst-stats" class="fst-btn fst-btn-secondary">Stats</button>
+    <button id="btn-fst-modes" class="fst-btn fst-btn-secondary">Modes</button>
+  </div>
+  <form id="fst-form" class="fst-form">
+    <select id="fst-mode" class="fst-select"></select>
+    <select id="fst-duration" class="fst-select"></select>
+    <input id="fst-task" class="fst-input" type="text" placeholder="Task description" autocomplete="off">
+    <button type="submit" class="fst-btn fst-btn-primary">Start Session</button>
+    <button type="button" id="btn-fst-end" class="fst-btn fst-btn-warning">End Session</button>
+  </form>
+  <div id="fst-panel" class="fst-panel" aria-live="polite"></div>
+  <div id="fst-status" class="fst-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/focus-session-timer.js"></script>
+</body>
+</html>

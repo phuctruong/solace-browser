@@ -1,0 +1,192 @@
+:root {
+  --hub-bg: #f5f5f5;
+  --hub-surface: #ffffff;
+  --hub-border: #e0e0e0;
+  --hub-text: #212121;
+  --hub-text-secondary: #757575;
+  --hub-primary: #1565c0;
+  --hub-primary-hover: #0d47a1;
+  --hub-danger: #c62828;
+  --hub-danger-hover: #b71c1c;
+  --hub-success: #2e7d32;
+  --hub-warning: #e65100;
+  --hub-radius: 8px;
+  --hub-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  --hub-spacing-sm: 8px;
+  --hub-spacing-md: 16px;
+  --hub-spacing-lg: 24px;
+  --hub-badge-ok: #e8f5e9;
+  --hub-badge-ok-text: #2e7d32;
+  --hub-badge-broken: #ffebee;
+  --hub-badge-broken-text: #c62828;
+  --hub-badge-redirect: #fff8e1;
+  --hub-badge-redirect-text: #e65100;
+  --hub-badge-default: #e3f2fd;
+  --hub-badge-default-text: #1565c0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+  padding: var(--hub-spacing-lg);
+}
+
+.lck-container { max-width: 800px; margin: 0 auto; }
+
+.lck-title { font-size: 1.5rem; margin-bottom: var(--hub-spacing-sm); }
+
+.lck-subtitle {
+  color: var(--hub-text-secondary);
+  margin-bottom: var(--hub-spacing-lg);
+}
+
+.lck-form {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: var(--hub-spacing-md);
+  margin-bottom: var(--hub-spacing-md);
+  box-shadow: var(--hub-shadow);
+}
+
+.lck-row {
+  display: flex;
+  gap: var(--hub-spacing-md);
+  flex-wrap: wrap;
+}
+
+.lck-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 160px;
+  margin-bottom: var(--hub-spacing-md);
+}
+
+.lck-label {
+  font-size: 0.85rem;
+  color: var(--hub-text-secondary);
+  font-weight: 500;
+}
+
+.lck-input,
+.lck-select {
+  padding: 8px 10px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  font-size: 0.9rem;
+  background: var(--hub-surface);
+  color: var(--hub-text);
+}
+
+.lck-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--hub-radius);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.lck-btn-primary {
+  background: var(--hub-primary);
+  color: var(--hub-surface);
+}
+
+.lck-btn-primary:hover { background: var(--hub-primary-hover); }
+
+.lck-btn-danger {
+  background: var(--hub-danger);
+  color: var(--hub-surface);
+  font-size: 0.8rem;
+  padding: 4px 10px;
+}
+
+.lck-btn-danger:hover { background: var(--hub-danger-hover); }
+
+.lck-stats-bar {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: var(--hub-spacing-md);
+  margin-bottom: var(--hub-spacing-md);
+  display: flex;
+  gap: var(--hub-spacing-md);
+  flex-wrap: wrap;
+  box-shadow: var(--hub-shadow);
+}
+
+.lck-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lck-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--hub-text);
+}
+
+.lck-stat-label {
+  font-size: 0.75rem;
+  color: var(--hub-text-secondary);
+}
+
+.lck-section { margin-top: var(--hub-spacing-lg); }
+
+.lck-section-title {
+  font-size: 1.1rem;
+  margin-bottom: var(--hub-spacing-md);
+}
+
+.lck-list { display: flex; flex-direction: column; gap: var(--hub-spacing-sm); }
+
+.lck-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: var(--hub-spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  box-shadow: var(--hub-shadow);
+}
+
+.lck-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.lck-badge-ok { background: var(--hub-badge-ok); color: var(--hub-badge-ok-text); }
+.lck-badge-broken { background: var(--hub-badge-broken); color: var(--hub-badge-broken-text); }
+.lck-badge-redirect { background: var(--hub-badge-redirect); color: var(--hub-badge-redirect-text); }
+.lck-badge-default { background: var(--hub-badge-default); color: var(--hub-badge-default-text); }
+
+.lck-card-meta { display: flex; flex-wrap: wrap; gap: var(--hub-spacing-sm); }
+
+.lck-card-id {
+  font-size: 0.75rem;
+  color: var(--hub-text-secondary);
+  margin-top: 4px;
+  font-family: monospace;
+}
+
+.lck-empty {
+  color: var(--hub-text-secondary);
+  text-align: center;
+  padding: var(--hub-spacing-lg);
+}
+
+.lck-status {
+  margin-top: var(--hub-spacing-md);
+  font-size: 0.85rem;
+  color: var(--hub-text-secondary);
+  min-height: 20px;
+}

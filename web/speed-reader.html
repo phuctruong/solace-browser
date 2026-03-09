@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speed Reader — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/speed-reader.css">
+</head>
+<body>
+<div class="srd-container">
+  <h1 class="srd-title">Speed Reader</h1>
+  <p class="srd-subtitle">Track reading sessions and improve your reading speed</p>
+
+  <section class="srd-section">
+    <h2 class="srd-section-title">Record Reading Session</h2>
+    <form id="srd-session-form" class="srd-form">
+      <input id="srd-text" class="srd-input" type="text" placeholder="Reading text (hashed for privacy)" aria-label="Reading text">
+      <input id="srd-word-count" class="srd-input" type="number" placeholder="Word count" min="1" aria-label="Word count">
+      <input id="srd-wpm" class="srd-input" type="number" placeholder="WPM (50-2000)" min="50" max="2000" aria-label="Words per minute">
+      <input id="srd-comprehension" class="srd-input" type="number" placeholder="Comprehension (0-100)" min="0" max="100" aria-label="Comprehension score">
+      <select id="srd-difficulty" class="srd-input" aria-label="Difficulty level"></select>
+      <input id="srd-duration" class="srd-input" type="number" placeholder="Duration (seconds)" min="1" aria-label="Duration in seconds">
+      <button type="submit" class="srd-btn srd-btn-primary">Record</button>
+    </form>
+  </section>
+
+  <section class="srd-section">
+    <h2 class="srd-section-title">Progress</h2>
+    <div id="srd-progress" class="srd-progress-panel" aria-live="polite"></div>
+  </section>
+
+  <section class="srd-section">
+    <h2 class="srd-section-title">Sessions</h2>
+    <div id="srd-levels" class="srd-badges"></div>
+    <div id="srd-sessions-list" class="srd-list" aria-live="polite"></div>
+  </section>
+
+  <div id="srd-status" class="srd-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/speed-reader.js"></script>
+</body>
+</html>

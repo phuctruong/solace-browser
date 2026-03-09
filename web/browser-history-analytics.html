@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browser History Analytics — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/browser-history-analytics.css">
+</head>
+<body>
+<div class="bha-container">
+  <h1 class="bha-title">Browser History Analytics</h1>
+  <p class="bha-subtitle">Privacy-first visit tracking — URLs stored as SHA-256 hashes only</p>
+  <div class="bha-toolbar">
+    <button id="btn-bha-visits" class="bha-btn bha-btn-primary">Visits</button>
+    <button id="btn-bha-stats" class="bha-btn bha-btn-secondary">Stats</button>
+    <button id="btn-bha-categories" class="bha-btn bha-btn-secondary">Categories</button>
+    <button id="btn-bha-add" class="bha-btn bha-btn-accent">Record Visit</button>
+  </div>
+  <div id="bha-panel" class="bha-panel" aria-live="polite"></div>
+  <div id="bha-status" class="bha-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/browser-history-analytics.js"></script>
+</body>
+</html>

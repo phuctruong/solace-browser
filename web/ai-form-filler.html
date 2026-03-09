@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Form Filler — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/ai-form-filler.css">
+</head>
+<body>
+<div class="aff-container">
+  <h1 class="aff-title">AI Form Filler</h1>
+  <p class="aff-subtitle">Manage form fill profiles and track usage</p>
+
+  <form id="aff-profile-form" class="aff-form" autocomplete="off">
+    <h2 class="aff-form-title">New Profile</h2>
+    <div class="aff-field-group">
+      <label class="aff-label" for="aff-profile-name">Profile Name</label>
+      <input type="text" id="aff-profile-name" class="aff-input" placeholder="e.g. Work Profile">
+    </div>
+    <div class="aff-row">
+      <div class="aff-field-group">
+        <label class="aff-label" for="aff-field-count">Field Count (1–20)</label>
+        <input type="number" id="aff-field-count" class="aff-input" value="3" min="1" max="20">
+      </div>
+    </div>
+    <div class="aff-field-group">
+      <label class="aff-label">Field Types</label>
+      <div id="aff-field-types" class="aff-checkboxes"></div>
+    </div>
+    <button type="submit" class="aff-btn aff-btn-primary">Create Profile</button>
+  </form>
+
+  <div class="aff-section">
+    <h2 class="aff-section-title">Profiles</h2>
+    <div id="aff-profiles" class="aff-list" aria-live="polite"></div>
+  </div>
+
+  <div class="aff-section">
+    <h2 class="aff-section-title">Fill Log</h2>
+    <div id="aff-fill-log" class="aff-list" aria-live="polite"></div>
+  </div>
+
+  <div id="aff-status" class="aff-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/ai-form-filler.js"></script>
+</body>
+</html>

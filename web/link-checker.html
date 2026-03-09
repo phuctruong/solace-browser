@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Link Checker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/link-checker.css">
+</head>
+<body>
+<div class="lck-container">
+  <h1 class="lck-title">Link Checker</h1>
+  <p class="lck-subtitle">Record and track link health across pages</p>
+
+  <form id="lck-form" class="lck-form" autocomplete="off">
+    <div class="lck-row">
+      <div class="lck-field-group">
+        <label class="lck-label" for="lck-url-hash">URL Hash (SHA-256)</label>
+        <input type="text" id="lck-url-hash" class="lck-input" placeholder="SHA-256 of checked URL">
+      </div>
+      <div class="lck-field-group">
+        <label class="lck-label" for="lck-page-hash">Page Hash (SHA-256)</label>
+        <input type="text" id="lck-page-hash" class="lck-input" placeholder="SHA-256 of containing page">
+      </div>
+    </div>
+    <div class="lck-row">
+      <div class="lck-field-group">
+        <label class="lck-label" for="lck-status">Status</label>
+        <select id="lck-status" class="lck-select"></select>
+      </div>
+      <div class="lck-field-group">
+        <label class="lck-label" for="lck-http-code">HTTP Code (optional)</label>
+        <input type="number" id="lck-http-code" class="lck-input" placeholder="200">
+      </div>
+      <div class="lck-field-group">
+        <label class="lck-label" for="lck-response-ms">Response (ms)</label>
+        <input type="number" id="lck-response-ms" class="lck-input" value="0" min="0">
+      </div>
+    </div>
+    <button type="submit" class="lck-btn lck-btn-primary">Record Check</button>
+  </form>
+
+  <div class="lck-stats-bar" id="lck-stats-bar"></div>
+
+  <div class="lck-section">
+    <h2 class="lck-section-title">Checks</h2>
+    <div id="lck-list" class="lck-list" aria-live="polite"></div>
+  </div>
+
+  <div id="lck-status-msg" class="lck-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/link-checker.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Custom Search Engine — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/custom-search-engine.css">
+</head>
+<body>
+<div class="cse-container">
+  <h1 class="cse-title">Custom Search Engine</h1>
+  <p class="cse-subtitle">Manage your search engines</p>
+  <div class="cse-toolbar">
+    <button id="btn-cse-list" class="cse-btn cse-btn-primary">Engines</button>
+    <button id="btn-cse-categories" class="cse-btn cse-btn-secondary">Categories</button>
+    <button id="btn-cse-active" class="cse-btn cse-btn-secondary">Active</button>
+  </div>
+  <form id="cse-form" class="cse-form">
+    <input id="cse-name" class="cse-input" type="text" placeholder="Engine name" autocomplete="off">
+    <input id="cse-url" class="cse-input" type="text" placeholder="URL template (use {query})" autocomplete="off">
+    <select id="cse-category" class="cse-select"></select>
+    <button type="submit" class="cse-btn cse-btn-primary">Add Engine</button>
+  </form>
+  <div id="cse-panel" class="cse-panel" aria-live="polite"></div>
+  <div id="cse-status" class="cse-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/custom-search-engine.js"></script>
+</body>
+</html>

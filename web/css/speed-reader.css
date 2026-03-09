@@ -1,0 +1,54 @@
+/* speed-reader.css — Speed Reader | Task 125 | var(--hub-*) tokens only */
+:root {
+  --hub-bg: #ffffff;
+  --hub-surface: #f8f9fa;
+  --hub-border: #dee2e6;
+  --hub-text: #212529;
+  --hub-text-muted: #6c757d;
+  --hub-accent: #0d6efd;
+  --hub-danger: #dc3545;
+  --hub-success: #198754;
+  --hub-warning: #ffc107;
+  --hub-radius: 0.5rem;
+  --hub-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--hub-bg); color: var(--hub-text); font-family: system-ui, sans-serif; font-size: 1rem; line-height: 1.5; }
+
+.srd-container { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+.srd-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+.srd-subtitle { font-size: 0.875rem; color: var(--hub-text-muted); margin-bottom: 1.5rem; }
+
+.srd-section { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--hub-border); }
+.srd-section-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem; }
+
+.srd-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1rem; }
+.srd-input { border: 1px solid var(--hub-border); border-radius: var(--hub-radius); padding: 0.4rem 0.75rem; font-size: 0.875rem; background: var(--hub-bg); color: var(--hub-text); min-width: 140px; }
+.srd-input:focus { outline: 2px solid var(--hub-accent); outline-offset: 1px; }
+
+.srd-btn { border: none; border-radius: var(--hub-radius); padding: 0.5rem 1rem; font-size: 0.875rem; cursor: pointer; transition: opacity 0.15s; }
+.srd-btn-primary { background: var(--hub-accent); color: var(--hub-bg); }
+.srd-btn-primary:hover { opacity: 0.85; }
+.srd-btn-danger { background: var(--hub-danger); color: var(--hub-bg); font-size: 0.8rem; padding: 0.25rem 0.6rem; }
+
+.srd-progress-panel { background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: var(--hub-radius); padding: 1rem; font-size: 0.875rem; display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.srd-progress-stat { display: flex; flex-direction: column; gap: 0.25rem; }
+.srd-progress-label { font-size: 0.75rem; color: var(--hub-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.srd-progress-value { font-size: 1.25rem; font-weight: 700; color: var(--hub-accent); }
+.srd-trend-improving { color: var(--hub-success); }
+.srd-trend-declining { color: var(--hub-danger); }
+.srd-trend-stable { color: var(--hub-text-muted); }
+
+.srd-badges { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+.srd-badge { background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 999px; padding: 0.25rem 0.75rem; font-size: 0.8125rem; color: var(--hub-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.srd-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.srd-row { background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: var(--hub-radius); padding: 0.75rem 1rem; font-size: 0.875rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.srd-row-meta { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.srd-diff-tag { background: var(--hub-accent); color: var(--hub-bg); border-radius: var(--hub-radius); padding: 0.125rem 0.5rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+.srd-wpm { font-weight: 700; }
+.srd-hash { font-size: 0.75rem; color: var(--hub-text-muted); font-family: monospace; }
+
+.srd-empty { color: var(--hub-text-muted); font-size: 0.875rem; padding: 1rem; text-align: center; }
+.srd-status { margin-top: 1rem; font-size: 0.8125rem; color: var(--hub-text-muted); word-break: break-all; }

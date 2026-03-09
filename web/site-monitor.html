@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Monitor — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/site-monitor.css">
+</head>
+<body>
+<div class="sm-container">
+  <h1 class="sm-title">Site Monitor</h1>
+  <p class="sm-subtitle">Monitor website uptime and response time with privacy-preserving URL hashing</p>
+
+  <section class="sm-section">
+    <h2 class="sm-section-title">Add Monitor</h2>
+    <form id="sm-monitor-form" class="sm-form">
+      <input id="sm-url" class="sm-input" type="url" placeholder="Site URL" aria-label="Site URL">
+      <input id="sm-name" class="sm-input" type="text" placeholder="Monitor name" aria-label="Monitor name">
+      <input id="sm-interval" class="sm-input" type="number" placeholder="Check interval (mins)" min="1" aria-label="Check interval minutes">
+      <button type="submit" class="sm-btn sm-btn-primary">Add Monitor</button>
+    </form>
+  </section>
+
+  <section class="sm-section">
+    <h2 class="sm-section-title">Record Check</h2>
+    <form id="sm-check-form" class="sm-form">
+      <select id="sm-monitor-select" class="sm-input" aria-label="Monitor"></select>
+      <select id="sm-status" class="sm-input" aria-label="Status"></select>
+      <input id="sm-http-code" class="sm-input" type="number" placeholder="HTTP code (0-599)" min="0" max="599" aria-label="HTTP code">
+      <input id="sm-response-ms" class="sm-input" type="number" placeholder="Response ms" min="0" aria-label="Response ms">
+      <button type="submit" class="sm-btn sm-btn-primary">Record</button>
+    </form>
+  </section>
+
+  <section class="sm-section">
+    <h2 class="sm-section-title">Monitors</h2>
+    <div id="sm-monitors-list" class="sm-list" aria-live="polite"></div>
+  </section>
+
+  <section class="sm-section">
+    <h2 class="sm-section-title">Recent Checks</h2>
+    <div id="sm-checks-list" class="sm-list" aria-live="polite"></div>
+  </section>
+
+  <div id="sm-status" class="sm-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/site-monitor.js"></script>
+</body>
+</html>

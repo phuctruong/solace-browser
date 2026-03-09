@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Rating System — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/content-rating-system.css">
+</head>
+<body>
+<div class="crs-container">
+  <h1 class="crs-title">Content Rating System</h1>
+  <p class="crs-subtitle">Rate content quality — URLs and notes stored as SHA-256 hashes only</p>
+  <div class="crs-toolbar">
+    <button id="btn-crs-ratings" class="crs-btn crs-btn-primary">Ratings</button>
+    <button id="btn-crs-stats" class="crs-btn crs-btn-secondary">Stats</button>
+    <button id="btn-crs-criteria" class="crs-btn crs-btn-secondary">Criteria</button>
+    <button id="btn-crs-add" class="crs-btn crs-btn-accent">Submit Rating</button>
+  </div>
+  <div id="crs-panel" class="crs-panel" aria-live="polite"></div>
+  <div id="crs-status" class="crs-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/content-rating-system.js"></script>
+</body>
+</html>

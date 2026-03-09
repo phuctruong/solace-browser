@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Archiver — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/web-archiver.css">
+</head>
+<body>
+<div class="wa-container">
+  <h1 class="wa-title">Web Archiver</h1>
+  <p class="wa-subtitle">Archive web pages in multiple formats with privacy-preserving hashing</p>
+
+  <section class="wa-section">
+    <h2 class="wa-section-title">Archive a Page</h2>
+    <form id="wa-archive-form" class="wa-form">
+      <input id="wa-url" class="wa-input" type="url" placeholder="Page URL" aria-label="Page URL">
+      <input id="wa-title" class="wa-input" type="text" placeholder="Page title" aria-label="Page title">
+      <select id="wa-format" class="wa-input" aria-label="Archive format"></select>
+      <input id="wa-size" class="wa-input" type="number" placeholder="Size bytes" min="0" aria-label="Size bytes">
+      <button type="submit" class="wa-btn wa-btn-primary">Archive</button>
+    </form>
+  </section>
+
+  <section class="wa-section">
+    <h2 class="wa-section-title">Search Archives</h2>
+    <form id="wa-search-form" class="wa-form">
+      <input id="wa-search-q" class="wa-input" type="text" placeholder="Search (archive ID prefix or title hash prefix)" aria-label="Search query">
+      <button type="submit" class="wa-btn wa-btn-secondary">Search</button>
+      <button type="button" id="wa-show-all" class="wa-btn wa-btn-secondary">Show All</button>
+    </form>
+  </section>
+
+  <section class="wa-section">
+    <h2 class="wa-section-title">Archives</h2>
+    <div id="wa-formats-row" class="wa-badges"></div>
+    <div id="wa-archives-list" class="wa-list" aria-live="polite"></div>
+  </section>
+
+  <div id="wa-status" class="wa-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/web-archiver.js"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reader View Settings — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/reader-view-settings.css">
+</head>
+<body>
+<div class="rvs-container">
+  <h1 class="rvs-title">Reader View Settings</h1>
+  <p class="rvs-subtitle">Customize reading experience per site</p>
+
+  <form id="rvs-form" class="rvs-form" autocomplete="off">
+    <div class="rvs-field-group">
+      <label class="rvs-label" for="rvs-site-hash">Site Hash</label>
+      <input type="text" id="rvs-site-hash" class="rvs-input" placeholder="SHA-256 of site URL">
+    </div>
+    <div class="rvs-row">
+      <div class="rvs-field-group">
+        <label class="rvs-label" for="rvs-font">Font</label>
+        <select id="rvs-font" class="rvs-select"></select>
+      </div>
+      <div class="rvs-field-group">
+        <label class="rvs-label" for="rvs-theme">Theme</label>
+        <select id="rvs-theme" class="rvs-select"></select>
+      </div>
+      <div class="rvs-field-group">
+        <label class="rvs-label" for="rvs-spacing">Spacing</label>
+        <select id="rvs-spacing" class="rvs-select"></select>
+      </div>
+    </div>
+    <div class="rvs-row">
+      <div class="rvs-field-group">
+        <label class="rvs-label" for="rvs-font-size">Font Size (px)</label>
+        <input type="number" id="rvs-font-size" class="rvs-input" value="16" min="10" max="40">
+      </div>
+      <div class="rvs-field-group">
+        <label class="rvs-label" for="rvs-line-width">Line Width (chars)</label>
+        <input type="number" id="rvs-line-width" class="rvs-input" value="80" min="40" max="120">
+      </div>
+    </div>
+    <button type="submit" class="rvs-btn rvs-btn-primary">Save Setting</button>
+  </form>
+
+  <div class="rvs-section">
+    <h2 class="rvs-section-title">Saved Settings</h2>
+    <div id="rvs-list" class="rvs-list" aria-live="polite"></div>
+  </div>
+
+  <div id="rvs-status" class="rvs-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/reader-view-settings.js"></script>
+</body>
+</html>

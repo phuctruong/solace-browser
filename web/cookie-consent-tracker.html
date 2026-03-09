@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cookie Consent Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/cookie-consent-tracker.css">
+</head>
+<body>
+<div class="cct-container">
+  <h1 class="cct-title">Cookie Consent Tracker</h1>
+  <p class="cct-subtitle">Record and audit cookie consent decisions with privacy-preserving site hashing</p>
+
+  <section class="cct-section">
+    <h2 class="cct-section-title">Categories</h2>
+    <div id="cct-categories" class="cct-badges" aria-live="polite"></div>
+  </section>
+
+  <section class="cct-section">
+    <h2 class="cct-section-title">Record Decision</h2>
+    <form id="cct-decision-form" class="cct-form">
+      <input id="cct-site-url" class="cct-input" type="url" placeholder="Site URL (will be hashed)" aria-label="Site URL">
+      <select id="cct-decision" class="cct-input" aria-label="Decision type">
+        <option value="accept_all">Accept All</option>
+        <option value="reject_all">Reject All</option>
+        <option value="custom">Custom</option>
+        <option value="withdraw">Withdraw</option>
+        <option value="pending">Pending</option>
+      </select>
+      <div id="cct-cats-checkboxes" class="cct-checkboxes" role="group" aria-label="Accepted categories"></div>
+      <button type="submit" class="cct-btn cct-btn-primary">Record</button>
+    </form>
+  </section>
+
+  <section class="cct-section">
+    <h2 class="cct-section-title">Consent Stats</h2>
+    <div id="cct-stats" class="cct-stats-grid" aria-live="polite"></div>
+  </section>
+
+  <section class="cct-section">
+    <h2 class="cct-section-title">Decision Log</h2>
+    <div id="cct-decisions-list" class="cct-list" aria-live="polite"></div>
+  </section>
+
+  <div id="cct-status" class="cct-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/cookie-consent-tracker.js"></script>
+</body>
+</html>

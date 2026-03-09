@@ -102,7 +102,7 @@ def test_clipboard_list():
         })
         h._handle_clipboard_save()
     h = FakeHandler("GET", "/api/v1/clipboard/entries")
-    h._handle_clipboard_list()
+    h._handle_clipboard_entries_list()
     assert h._status == 200
     assert "entries" in h._response
     assert h._response["total"] == 2
@@ -123,7 +123,7 @@ def test_clipboard_delete():
     entry_id = h._response["entry"]["entry_id"]
 
     dh = FakeHandler("DELETE", f"/api/v1/clipboard/entries/{entry_id}")
-    dh._handle_clipboard_delete(entry_id)
+    dh._handle_clipboard_entries_delete(entry_id)
     assert dh._status == 200
     assert dh._response["status"] == "deleted"
 
@@ -132,7 +132,7 @@ def test_clipboard_delete_not_found():
     """DELETE unknown entry returns 404."""
     _reset()
     h = FakeHandler("DELETE", "/api/v1/clipboard/entries/clp_nonexistent")
-    h._handle_clipboard_delete("clp_nonexistent")
+    h._handle_clipboard_entries_delete("clp_nonexistent")
     assert h._status == 404
 
 
@@ -148,7 +148,7 @@ def test_clipboard_clear():
         })
         h._handle_clipboard_save()
     h = FakeHandler("POST", "/api/v1/clipboard/clear")
-    h._handle_clipboard_clear()
+    h._handle_clipboard_entries_clear()
     assert h._status == 200
     assert h._response["deleted_count"] == 3
     assert len(ys._CLIPBOARD_ENTRIES) == 0
@@ -192,7 +192,7 @@ def test_clipboard_list_empty():
     """GET on empty store returns empty list."""
     _reset()
     h = FakeHandler("GET", "/api/v1/clipboard/entries")
-    h._handle_clipboard_list()
+    h._handle_clipboard_entries_list()
     assert h._status == 200
     assert h._response["entries"] == []
     assert h._response["total"] == 0

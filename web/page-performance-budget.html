@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page Performance Budget — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/page-performance-budget.css">
+</head>
+<body>
+<div class="ppb-container">
+  <h1 class="ppb-title">Page Performance Budget</h1>
+  <p class="ppb-subtitle">Set and track Core Web Vitals budgets per page</p>
+
+  <section class="ppb-section">
+    <h2 class="ppb-section-title">Metrics</h2>
+    <div id="ppb-metrics" class="ppb-badges" aria-live="polite"></div>
+  </section>
+
+  <section class="ppb-section">
+    <h2 class="ppb-section-title">Budget Rules</h2>
+    <form id="ppb-budget-form" class="ppb-form">
+      <select id="ppb-metric" class="ppb-input" aria-label="Metric"></select>
+      <input id="ppb-budget-value" class="ppb-input" type="text" placeholder="Budget value (e.g. 2500)" aria-label="Budget value">
+      <input id="ppb-unit" class="ppb-input" type="text" placeholder="Unit (e.g. ms)" aria-label="Unit">
+      <button type="submit" class="ppb-btn ppb-btn-primary">Add Budget</button>
+    </form>
+    <div id="ppb-budgets-list" class="ppb-list" aria-live="polite"></div>
+  </section>
+
+  <section class="ppb-section">
+    <h2 class="ppb-section-title">Record Measurement</h2>
+    <form id="ppb-measure-form" class="ppb-form">
+      <select id="ppb-msr-metric" class="ppb-input" aria-label="Metric"></select>
+      <input id="ppb-actual" class="ppb-input" type="text" placeholder="Actual value" aria-label="Actual value">
+      <input id="ppb-budget-ref" class="ppb-input" type="text" placeholder="Budget value" aria-label="Budget value">
+      <input id="ppb-msr-unit" class="ppb-input" type="text" placeholder="Unit" aria-label="Unit">
+      <input id="ppb-page-hash" class="ppb-input" type="text" placeholder="Page hash" aria-label="Page hash">
+      <button type="submit" class="ppb-btn ppb-btn-primary">Record</button>
+    </form>
+  </section>
+
+  <section class="ppb-section">
+    <h2 class="ppb-section-title">Measurements</h2>
+    <div id="ppb-measurements-list" class="ppb-list" aria-live="polite"></div>
+  </section>
+
+  <div id="ppb-status" class="ppb-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/page-performance-budget.js"></script>
+</body>
+</html>
