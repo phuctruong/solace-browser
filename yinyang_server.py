@@ -684,6 +684,62 @@ DEFAULT_SETTINGS: dict = {
 _SETTINGS_STORE: dict = dict(DEFAULT_SETTINGS)
 _SETTINGS_STORE_LOCK = threading.Lock()
 
+# ---------------------------------------------------------------------------
+# Task 041 — What's New Panel
+# ---------------------------------------------------------------------------
+CHANGE_TYPES: list[str] = ["feature", "fix", "improvement", "breaking", "security"]
+
+_CHANGELOG: list[dict] = [
+    {
+        "entry_id": "v1.0.0-1",
+        "version": "1.0.0",
+        "type": "feature",
+        "title": "Initial Release",
+        "description": "Solace Hub is now live with 40+ features",
+        "released_at": "2026-01-01T00:00:00Z",
+        "is_builtin": True,
+    },
+    {
+        "entry_id": "v1.1.0-1",
+        "version": "1.1.0",
+        "type": "feature",
+        "title": "Recipe Engine",
+        "description": "Automated recipe execution with cost tracking",
+        "released_at": "2026-02-01T00:00:00Z",
+        "is_builtin": True,
+    },
+    {
+        "entry_id": "v1.2.0-1",
+        "version": "1.2.0",
+        "type": "improvement",
+        "title": "Dark Mode",
+        "description": "Full dark mode support with accent colors",
+        "released_at": "2026-03-01T00:00:00Z",
+        "is_builtin": True,
+    },
+    {
+        "entry_id": "v1.2.0-2",
+        "version": "1.2.0",
+        "type": "fix",
+        "title": "Evidence Chain Fix",
+        "description": "Fixed hash chain verification for long chains",
+        "released_at": "2026-03-05T00:00:00Z",
+        "is_builtin": True,
+    },
+    {
+        "entry_id": "v1.3.0-1",
+        "version": "1.3.0",
+        "type": "feature",
+        "title": "Command Palette",
+        "description": "Ctrl+K to access any action instantly",
+        "released_at": "2026-03-09T00:00:00Z",
+        "is_builtin": True,
+    },
+]
+
+_SEEN_ENTRIES: dict = {}  # user_id → set of seen entry_ids
+_CHANGELOG_LOCK = threading.Lock()
+
 
 def _triage_single_email(email: dict[str, Any], config: dict[str, bool]) -> dict[str, Any]:
     """Deterministic triage — no LLM required. Returns action + confidence."""
@@ -4392,6 +4448,17 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_settings_export_js()
         elif path == "/web/css/settings-export.css":
             self._handle_settings_export_css()
+        # --- Task 041: What's New Panel ---
+        elif path == "/api/v1/whats-new":
+            self._handle_whats_new_list()
+        elif path == "/api/v1/whats-new/unseen-count":
+            self._handle_whats_new_unseen_count()
+        elif path == "/web/whats-new.html":
+            self._handle_whats_new_html()
+        elif path == "/web/js/whats-new.js":
+            self._handle_whats_new_js()
+        elif path == "/web/css/whats-new.css":
+            self._handle_whats_new_css()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -4697,6 +4764,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_settings_store_import()
         elif path == "/api/v1/settings/reset-bundle":
             self._handle_settings_store_reset()
+        # --- Task 041: What's New Panel ---
+        elif path == "/api/v1/whats-new":
+            self._handle_whats_new_add()
+        elif re.match(r"^/api/v1/whats-new/[^/]+/seen$", path):
+            entry_id = path.split("/")[-2]
+            self._handle_whats_new_mark_seen(entry_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -14182,6 +14255,125 @@ function choose(mode) {
             content = p.read_bytes()
         except FileNotFoundError:
             self._send_json({"error": "bookmarks.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # ---------------------------------------------------------------------------
+    # Task 041 — What's New Panel handlers
+    # ---------------------------------------------------------------------------
+
+    def _whats_new_user_id(self) -> str:
+        """Derive a user_id from the Authorization header (or fallback to 'anonymous')."""
+        auth = self.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            return auth[len("Bearer "):]
+        return "anonymous"
+
+    def _handle_whats_new_list(self) -> None:
+        """GET /api/v1/whats-new — list changelog entries (newest first, public)."""
+        user_id = self._whats_new_user_id()
+        with _CHANGELOG_LOCK:
+            entries = sorted(_CHANGELOG, key=lambda e: e["released_at"], reverse=True)
+            seen = _SEEN_ENTRIES.get(user_id, set())
+            result = [dict(e, seen=e["entry_id"] in seen) for e in entries]
+        self._send_json({"entries": result, "total": len(result)})
+
+    def _handle_whats_new_unseen_count(self) -> None:
+        """GET /api/v1/whats-new/unseen-count — count unseen entries for user (public)."""
+        user_id = self._whats_new_user_id()
+        with _CHANGELOG_LOCK:
+            seen = _SEEN_ENTRIES.get(user_id, set())
+            count = sum(1 for e in _CHANGELOG if e["entry_id"] not in seen)
+        self._send_json({"unseen_count": count, "user_id": user_id})
+
+    def _handle_whats_new_mark_seen(self, entry_id: str) -> None:
+        """POST /api/v1/whats-new/{entry_id}/seen — mark entry as seen (auth required)."""
+        if not self._check_auth():
+            return
+        with _CHANGELOG_LOCK:
+            all_ids = {e["entry_id"] for e in _CHANGELOG}
+        if entry_id not in all_ids:
+            self._send_json({"error": f"entry_id not found: {entry_id}"}, 404)
+            return
+        user_id = self._whats_new_user_id()
+        with _CHANGELOG_LOCK:
+            if user_id not in _SEEN_ENTRIES:
+                _SEEN_ENTRIES[user_id] = set()
+            _SEEN_ENTRIES[user_id].add(entry_id)
+        self._send_json({"status": "seen", "entry_id": entry_id, "user_id": user_id})
+
+    def _handle_whats_new_add(self) -> None:
+        """POST /api/v1/whats-new — add changelog entry (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        entry_type = body.get("type", "")
+        if entry_type not in CHANGE_TYPES:
+            self._send_json({"error": f"type must be one of {CHANGE_TYPES}"}, 400)
+            return
+        title = str(body.get("title", "")).strip()
+        if not title:
+            self._send_json({"error": "title is required"}, 400)
+            return
+        version = str(body.get("version", "0.0.0")).strip()
+        description = str(body.get("description", "")).strip()
+        released_at = str(body.get("released_at", _utc_isoformat(time.time()))).strip()
+        import secrets as _secrets
+        entry_id = f"v{version}-{_secrets.token_hex(4)}"
+        entry = {
+            "entry_id": entry_id,
+            "version": version,
+            "type": entry_type,
+            "title": title,
+            "description": description,
+            "released_at": released_at,
+            "is_builtin": False,
+        }
+        with _CHANGELOG_LOCK:
+            _CHANGELOG.append(entry)
+        self._send_json({"status": "added", "entry_id": entry_id})
+
+    def _handle_whats_new_html(self) -> None:
+        """GET /web/whats-new.html"""
+        p = Path(__file__).parent / "web" / "whats-new.html"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "whats-new.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_whats_new_js(self) -> None:
+        """GET /web/js/whats-new.js"""
+        p = Path(__file__).parent / "web" / "js" / "whats-new.js"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "whats-new.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_whats_new_css(self) -> None:
+        """GET /web/css/whats-new.css"""
+        p = Path(__file__).parent / "web" / "css" / "whats-new.css"
+        try:
+            content = p.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "whats-new.css not found"}, 404)
             return
         self.send_response(200)
         self.send_header("Content-Type", "text/css")

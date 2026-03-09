@@ -8,26 +8,40 @@
 </head>
 <body>
   <div class="page-header">
-    <h1>Bookmarks</h1>
-    <span class="page-subtitle">Save and organize your favorite URLs</span>
+    <h1>URL Bookmarks</h1>
+    <span class="page-subtitle">Remember every important URL</span>
   </div>
   <div id="status-banner" class="status-banner hidden"></div>
+
   <div class="card">
     <h2>Add Bookmark</h2>
-    <form id="add-bookmark-form">
-      <input type="text" id="bm-title" placeholder="Title" required>
-      <input type="url" id="bm-url" placeholder="URL" required>
-      <input type="text" id="bm-tags" placeholder="Tags (comma-separated)">
-      <button type="submit" class="btn btn-primary">Save Bookmark</button>
+    <form id="bm-form" class="bm-form">
+      <label>URL
+        <input type="url" id="bm-url" name="url" placeholder="https://example.com" required>
+      </label>
+      <label>Title
+        <input type="text" id="bm-title" name="title" placeholder="Page title">
+      </label>
+      <label>Tags (comma separated)
+        <input type="text" id="bm-tags" name="tags" placeholder="email, work">
+      </label>
+      <button type="submit" class="btn btn-primary">Add Bookmark</button>
     </form>
   </div>
+
   <div class="card">
-    <h2>My Bookmarks</h2>
-    <input type="text" id="search-input" placeholder="Search bookmarks...">
-    <table id="bookmarks-table">
-      <thead><tr><th>Title</th><th>URL</th><th>Tags</th><th>Actions</th></tr></thead>
-      <tbody id="bookmarks-body"></tbody>
-    </table>
+    <h2>Search</h2>
+    <input type="text" id="bm-search" placeholder="Search by title or URL..." class="bm-search-input">
+  </div>
+
+  <div class="card">
+    <h2>Tags</h2>
+    <div id="tag-chips" class="tag-chips"></div>
+  </div>
+
+  <div class="card">
+    <h2>Bookmarks</h2>
+    <ul id="bm-list" class="bm-list"></ul>
   </div>
   <script src="/web/js/bookmarks.js"></script>
 </body>

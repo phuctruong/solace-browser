@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What's New — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/whats-new.css" />
+</head>
+<body>
+  <div class="wn-container">
+    <header class="wn-header">
+      <h1 class="wn-title">What's New</h1>
+      <span class="wn-badge" id="wn-unseen-badge" hidden>0</span>
+      <div class="wn-filter-row">
+        <label for="wn-filter-type">Filter by type:</label>
+        <select id="wn-filter-type">
+          <option value="">All</option>
+          <option value="feature">Feature</option>
+          <option value="fix">Fix</option>
+          <option value="improvement">Improvement</option>
+          <option value="breaking">Breaking</option>
+          <option value="security">Security</option>
+        </select>
+      </div>
+    </header>
+
+    <main id="wn-entries" class="wn-entries" aria-live="polite">
+      <p class="wn-loading">Loading…</p>
+    </main>
+  </div>
+  <script src="/web/js/whats-new.js"></script>
+</body>
+</html>
