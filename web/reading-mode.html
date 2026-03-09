@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reading Mode — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/reading-mode.css" />
+</head>
+<body>
+  <div class="rm-container">
+    <header class="rm-header">
+      <h1 class="rm-title">Reading Mode</h1>
+      <p class="rm-subtitle">Track reading sessions with distraction-free settings</p>
+    </header>
+
+    <section class="rm-section">
+      <h2 class="rm-section-title">Reading Settings</h2>
+      <div class="rm-form">
+        <label for="rm-theme">Theme</label>
+        <select id="rm-theme" class="rm-select">
+          <option value="light">light</option>
+          <option value="dark">dark</option>
+          <option value="sepia">sepia</option>
+          <option value="high-contrast">high-contrast</option>
+          <option value="paper">paper</option>
+        </select>
+        <label for="rm-font-size">Font Size (px)</label>
+        <select id="rm-font-size" class="rm-select">
+          <option value="14">14</option>
+          <option value="16">16</option>
+          <option value="18" selected>18</option>
+          <option value="20">20</option>
+          <option value="22">22</option>
+          <option value="24">24</option>
+          <option value="26">26</option>
+          <option value="28">28</option>
+        </select>
+        <label for="rm-column-width">Column Width</label>
+        <select id="rm-column-width" class="rm-select">
+          <option value="narrow">narrow</option>
+          <option value="medium" selected>medium</option>
+          <option value="wide">wide</option>
+          <option value="full">full</option>
+        </select>
+        <button id="rm-save-settings-btn" class="rm-btn rm-btn-primary">Save Settings</button>
+        <p id="rm-settings-msg" class="rm-msg" hidden></p>
+      </div>
+    </section>
+
+    <section class="rm-section">
+      <h2 class="rm-section-title">New Reading Session</h2>
+      <div class="rm-form">
+        <label for="rm-url">Page URL (hashed on submit)</label>
+        <input type="text" id="rm-url" class="rm-input" placeholder="https://example.com/article" />
+        <label for="rm-title">Page Title (hashed on submit)</label>
+        <input type="text" id="rm-title" class="rm-input" placeholder="Article title..." />
+        <label for="rm-word-count">Word Count</label>
+        <input type="number" id="rm-word-count" class="rm-input" placeholder="0" min="0" value="0" />
+        <button id="rm-create-btn" class="rm-btn rm-btn-primary">Start Session</button>
+        <p id="rm-create-msg" class="rm-msg" hidden></p>
+      </div>
+    </section>
+
+    <section class="rm-section">
+      <h2 class="rm-section-title">Reading Sessions</h2>
+      <div id="rm-list" class="rm-list" aria-live="polite">
+        <p class="rm-loading">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script src="/web/js/reading-mode.js"></script>
+</body>
+</html>

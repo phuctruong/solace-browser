@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Form Validator — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/form-validator.css" />
+</head>
+<body>
+  <div class="fv-container">
+    <header class="fv-header">
+      <h1 class="fv-title">Form Validator</h1>
+      <p class="fv-subtitle">Create validation rule sets and validate form submissions</p>
+    </header>
+
+    <section class="fv-section">
+      <h2 class="fv-section-title">Create Rule Set</h2>
+      <div class="fv-form">
+        <label for="fv-name">Rule Set Name (hashed on submit)</label>
+        <input type="text" id="fv-name" class="fv-input" placeholder="Login form rules" />
+        <label for="fv-form">Form ID (hashed on submit)</label>
+        <input type="text" id="fv-form" class="fv-input" placeholder="login-form" />
+        <p class="fv-help">Fields: add via JSON below (field_name_hash, validation_type, params_hash)</p>
+        <label for="fv-fields">Fields JSON (optional)</label>
+        <textarea id="fv-fields" class="fv-textarea" rows="4" placeholder='[{"field_name_hash": "abc...", "validation_type": "required", "params_hash": ""}]'></textarea>
+        <button id="fv-create-btn" class="fv-btn fv-btn-primary">Create Rule Set</button>
+        <p id="fv-create-msg" class="fv-msg" hidden></p>
+      </div>
+    </section>
+
+    <section class="fv-section">
+      <h2 class="fv-section-title">Validate Submission</h2>
+      <div class="fv-form">
+        <label for="fv-rule-id">Rule ID</label>
+        <input type="text" id="fv-rule-id" class="fv-input" placeholder="fvr_..." />
+        <label for="fv-submission">Submission (hashed on submit)</label>
+        <input type="text" id="fv-submission" class="fv-input" placeholder="form data..." />
+        <button id="fv-validate-btn" class="fv-btn fv-btn-primary">Validate</button>
+        <p id="fv-validate-msg" class="fv-msg" hidden></p>
+        <div id="fv-result" class="fv-result" hidden></div>
+      </div>
+    </section>
+
+    <section class="fv-section">
+      <h2 class="fv-section-title">Rule Sets</h2>
+      <div id="fv-list" class="fv-list" aria-live="polite">
+        <p class="fv-loading">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script src="/web/js/form-validator.js"></script>
+</body>
+</html>

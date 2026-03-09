@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Code Snippet Saver — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/code-snippet-saver.css" />
+</head>
+<body>
+  <div class="cs-container">
+    <header class="cs-header">
+      <h1 class="cs-title">Code Snippet Saver</h1>
+      <p class="cs-subtitle">Save and organize code snippets with SHA-256 hashing</p>
+    </header>
+
+    <section class="cs-section">
+      <h2 class="cs-section-title">Save Snippet</h2>
+      <div class="cs-form">
+        <label for="cs-language">Language</label>
+        <select id="cs-language" class="cs-select">
+          <option value="python">python</option>
+          <option value="javascript">javascript</option>
+          <option value="typescript">typescript</option>
+          <option value="rust">rust</option>
+          <option value="go">go</option>
+          <option value="java">java</option>
+          <option value="cpp">cpp</option>
+          <option value="c">c</option>
+          <option value="bash">bash</option>
+          <option value="sql">sql</option>
+          <option value="html">html</option>
+          <option value="css">css</option>
+          <option value="json">json</option>
+          <option value="yaml">yaml</option>
+          <option value="markdown">markdown</option>
+          <option value="other">other</option>
+        </select>
+        <label for="cs-code">Code (hashed on submit)</label>
+        <textarea id="cs-code" class="cs-textarea" rows="6" placeholder="Paste code here..."></textarea>
+        <label for="cs-desc">Description (hashed on submit)</label>
+        <input type="text" id="cs-desc" class="cs-input" placeholder="What does this snippet do?" />
+        <label for="cs-source-url">Source URL (hashed on submit)</label>
+        <input type="text" id="cs-source-url" class="cs-input" placeholder="https://example.com/source" />
+        <label for="cs-tags">Tags (comma-separated, max 10)</label>
+        <input type="text" id="cs-tags" class="cs-input" placeholder="utility, parsing, async" />
+        <button id="cs-save-btn" class="cs-btn cs-btn-primary">Save Snippet</button>
+        <p id="cs-save-msg" class="cs-msg" hidden></p>
+      </div>
+    </section>
+
+    <section class="cs-section">
+      <h2 class="cs-section-title">Filter by Language</h2>
+      <div class="cs-filter-row">
+        <select id="cs-filter-lang" class="cs-select cs-select-inline">
+          <option value="">All languages</option>
+          <option value="python">python</option>
+          <option value="javascript">javascript</option>
+          <option value="typescript">typescript</option>
+          <option value="rust">rust</option>
+          <option value="go">go</option>
+          <option value="bash">bash</option>
+        </select>
+        <button id="cs-filter-btn" class="cs-btn cs-btn-primary">Filter</button>
+      </div>
+    </section>
+
+    <section class="cs-section">
+      <h2 class="cs-section-title">Saved Snippets</h2>
+      <div id="cs-list" class="cs-list" aria-live="polite">
+        <p class="cs-loading">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script src="/web/js/code-snippet-saver.js"></script>
+</body>
+</html>

@@ -755,7 +755,7 @@ _STORAGE_LOCK = threading.Lock()
 # ---------------------------------------------------------------------------
 # Task 057 — Theme Customizer
 # ---------------------------------------------------------------------------
-FONT_SIZES: tuple[str, ...] = ("sm", "md", "lg", "xl")
+FONT_SIZES_PX: tuple[str, ...] = ("sm", "md", "lg", "xl")
 THEME_PRESETS: list[dict] = [
     {"preset_id": "solace-light", "name": "Solace Light", "is_default": True,
      "accent": "#4A90E2", "bg": "#FFFFFF", "text": "#1A1A1A", "font_size": "md"},
@@ -1273,7 +1273,7 @@ _SUMMARIZER_LOCK = threading.Lock()
 # ---------------------------------------------------------------------------
 FONT_FAMILIES_BUILTIN: list[str] = ["Arial", "Georgia", "Verdana", "Courier New", "Times New Roman", "system-ui"]
 FONT_WEIGHTS: list[str] = ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
-FONT_SIZES: list[int] = [10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32]
+FONT_SIZES_PX: list[int] = [10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32]
 MAX_CUSTOM_FONTS: int = 20
 _CUSTOM_FONTS: list[dict] = []
 _ACTIVE_FONT: dict = {"family": "system-ui", "size": 16, "weight": "400"}
@@ -6639,6 +6639,23 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/form-validator/rules/[^/]+$", path):
             rule_id = path.split("/")[-1]
             self._handle_form_rule_delete(rule_id)
+        # --- Task 097: Color Picker Tool ---
+        elif re.match(r"^/api/v1/color-picker/colors/[^/]+$", path):
+            color_id = path.split("/")[-1]
+            self._handle_color_delete(color_id)
+        # --- Task 098: Page Diff Tracker ---
+        elif re.match(r"^/api/v1/page-diff/snapshots/[^/]+$", path):
+            snapshot_id = path.split("/")[-1]
+            self._handle_diff_snapshot_delete(snapshot_id)
+        # --- Task 099: Tab Organizer ---
+        elif re.match(r"^/api/v1/tab-organizer/workspaces/[^/]+/tabs/[^/]+$", path):
+            parts = path.split("/")
+            workspace_id = parts[5]
+            tab_id = parts[7]
+            self._handle_workspace_tab_remove(workspace_id, tab_id)
+        elif re.match(r"^/api/v1/tab-organizer/workspaces/[^/]+$", path):
+            workspace_id = path.split("/")[-1]
+            self._handle_workspace_delete(workspace_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -17329,8 +17346,8 @@ function choose(mode) {
         if body is None:
             return
         font_size = body.get("font_size")
-        if font_size is not None and font_size not in FONT_SIZES:
-            self._send_json({"error": f"font_size must be one of {list(FONT_SIZES)}"}, 400)
+        if font_size is not None and font_size not in FONT_SIZES_PX:
+            self._send_json({"error": f"font_size must be one of {list(FONT_SIZES_PX)}"}, 400)
             return
         with _THEME_CUSTOMIZER_LOCK:
             if font_size is not None:
@@ -20680,7 +20697,7 @@ function choose(mode) {
             "builtin": FONT_FAMILIES_BUILTIN,
             "custom": custom,
             "weights": FONT_WEIGHTS,
-            "sizes": FONT_SIZES,
+            "sizes": FONT_SIZES_PX,
         })
 
     def _handle_font_add(self) -> None:
@@ -20697,8 +20714,8 @@ function choose(mode) {
             self._send_json({"error": f"weight must be one of {FONT_WEIGHTS}"}, 400)
             return
         size = body.get("size")
-        if size not in FONT_SIZES:
-            self._send_json({"error": f"size must be one of {FONT_SIZES}"}, 400)
+        if size not in FONT_SIZES_PX:
+            self._send_json({"error": f"size must be one of {FONT_SIZES_PX}"}, 400)
             return
         source_hash = body.get("source_hash", "")
         if not re.match(r"^[0-9a-f]{64}$", source_hash):
@@ -20747,8 +20764,8 @@ function choose(mode) {
             self._send_json({"error": f"weight must be one of {FONT_WEIGHTS}"}, 400)
             return
         size = body.get("size")
-        if size not in FONT_SIZES:
-            self._send_json({"error": f"size must be one of {FONT_SIZES}"}, 400)
+        if size not in FONT_SIZES_PX:
+            self._send_json({"error": f"size must be one of {FONT_SIZES_PX}"}, 400)
             return
         with _FONT_LOCK:
             _ACTIVE_FONT = {"family": family, "weight": weight, "size": size}
