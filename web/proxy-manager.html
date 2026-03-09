@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proxy Manager — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/proxy-manager.css">
+</head>
+<body>
+<div class="pm-container">
+  <h1 class="pm-title">Proxy Manager</h1>
+  <p class="pm-subtitle">Manage proxy profiles for browser traffic routing</p>
+  <div class="pm-toolbar">
+    <button id="btn-pm-profiles" class="pm-btn pm-btn-primary">Profiles</button>
+    <button id="btn-pm-active" class="pm-btn pm-btn-secondary">Active Proxy</button>
+    <button id="btn-pm-protocols" class="pm-btn pm-btn-secondary">Protocols</button>
+  </div>
+  <div id="pm-panel" class="pm-panel" aria-live="polite"></div>
+  <div id="pm-status" class="pm-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/proxy-manager.js"></script>
+</body>
+</html>

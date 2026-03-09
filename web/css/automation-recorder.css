@@ -1,0 +1,27 @@
+/* Automation Recorder — Task 090 */
+:root {
+  --hub-bg: #f5f6fa;
+  --hub-surface: #ffffff;
+  --hub-primary: #4A90E2;
+  --hub-secondary: #e8e8e8;
+  --hub-text: #222;
+  --hub-muted: #666;
+  --hub-border: #ddd;
+  --hub-success: #27ae60;
+  --hub-danger: #e74c3c;
+  --hub-recording: #e74c3c;
+}
+.ar-container { max-width: 900px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; background: var(--hub-bg); min-height: 100vh; }
+.ar-title { font-size: 1.6rem; font-weight: 700; color: var(--hub-text); margin-bottom: 4px; }
+.ar-subtitle { color: var(--hub-muted); margin-bottom: 20px; }
+.ar-toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.ar-btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.ar-btn-primary { background: var(--hub-primary); color: var(--hub-surface); }
+.ar-btn-secondary { background: var(--hub-secondary); color: var(--hub-text); }
+.ar-panel { display: flex; flex-direction: column; gap: 8px; min-height: 48px; }
+.ar-item { padding: 12px 16px; background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 8px; }
+.ar-item-id { font-size: 0.75rem; color: var(--hub-muted); font-family: monospace; }
+.ar-item-name { font-size: 0.95rem; font-weight: 600; color: var(--hub-text); }
+.ar-item-meta { font-size: 0.85rem; color: var(--hub-muted); margin-top: 4px; }
+.ar-status { margin-top: 12px; font-size: 0.85rem; color: var(--hub-muted); }
+.ar-recording-badge { color: var(--hub-recording); font-weight: 700; font-size: 0.8rem; }

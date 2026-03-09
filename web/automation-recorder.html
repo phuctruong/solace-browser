@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automation Recorder — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/automation-recorder.css">
+</head>
+<body>
+<div class="ar-container">
+  <h1 class="ar-title">Automation Recorder</h1>
+  <p class="ar-subtitle">Record browser actions into replayable automations</p>
+  <div class="ar-toolbar">
+    <button id="btn-ar-start" class="ar-btn ar-btn-primary">Start Recording</button>
+    <button id="btn-ar-stop" class="ar-btn ar-btn-secondary">Stop</button>
+    <button id="btn-ar-list" class="ar-btn ar-btn-secondary">Automations</button>
+    <button id="btn-ar-types" class="ar-btn ar-btn-secondary">Action Types</button>
+  </div>
+  <div id="ar-panel" class="ar-panel" aria-live="polite"></div>
+  <div id="ar-status" class="ar-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/automation-recorder.js"></script>
+</body>
+</html>

@@ -21191,6 +21191,287 @@ function choose(mode) {
         """GET /api/v1/form-validator/types — list validation types (public)."""
         self._send_json({"types": VALIDATION_TYPES})
 
+    # ---------------------------------------------------------------------------
+    # Task 097 — Color Picker Tool handlers
+    # ---------------------------------------------------------------------------
+    def _handle_color_save(self) -> None:
+        """POST /api/v1/color-picker/colors — save color (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        fmt = body.get("format", "")
+        if fmt not in COLOR_FORMATS:
+            self._send_json({"error": f"format must be one of {COLOR_FORMATS}"}, 400)
+            return
+        value_hash = body.get("value_hash", "")
+        source_url_hash = body.get("source_url_hash", "")
+        label_hash = body.get("label_hash")
+        with _COLOR_LOCK:
+            if len(_SAVED_COLORS) >= MAX_SAVED_COLORS:
+                self._send_json({"error": f"max {MAX_SAVED_COLORS} colors"}, 400)
+                return
+            color_id = "clr_" + str(uuid.uuid4())
+            color_entry: dict[str, Any] = {
+                "color_id": color_id,
+                "format": fmt,
+                "value_hash": value_hash,
+                "source_url_hash": source_url_hash,
+                "saved_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            if label_hash is not None:
+                color_entry["label_hash"] = label_hash
+            _SAVED_COLORS.append(color_entry)
+        self._send_json({"status": "saved", "color": color_entry}, 201)
+
+    def _handle_color_list(self) -> None:
+        """GET /api/v1/color-picker/colors — list saved colors (auth required)."""
+        if not self._check_auth():
+            return
+        with _COLOR_LOCK:
+            colors = [dict(c) for c in _SAVED_COLORS]
+        self._send_json({"colors": colors, "total": len(colors)})
+
+    def _handle_color_delete(self, color_id: str) -> None:
+        """DELETE /api/v1/color-picker/colors/{color_id} — delete color (auth required)."""
+        if not self._check_auth():
+            return
+        with _COLOR_LOCK:
+            idx = next((i for i, c in enumerate(_SAVED_COLORS) if c["color_id"] == color_id), None)
+            if idx is None:
+                self._send_json({"error": "color not found"}, 404)
+                return
+            _SAVED_COLORS.pop(idx)
+        self._send_json({"status": "deleted", "color_id": color_id})
+
+    def _handle_palette_create(self) -> None:
+        """POST /api/v1/color-picker/palettes — create palette (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        name_hash = body.get("name_hash", "")
+        color_ids = body.get("color_ids", [])
+        if len(color_ids) > MAX_PALETTE_SIZE:
+            self._send_json({"error": f"max {MAX_PALETTE_SIZE} colors per palette"}, 400)
+            return
+        with _COLOR_LOCK:
+            existing_ids = {c["color_id"] for c in _SAVED_COLORS}
+            for cid in color_ids:
+                if cid not in existing_ids:
+                    self._send_json({"error": f"color_id not found: {cid}"}, 400)
+                    return
+            if len(_COLOR_PALETTES) >= MAX_PALETTES:
+                self._send_json({"error": f"max {MAX_PALETTES} palettes"}, 400)
+                return
+            palette_id = "pal_" + str(uuid.uuid4())
+            palette: dict[str, Any] = {
+                "palette_id": palette_id,
+                "name_hash": name_hash,
+                "color_ids": list(color_ids),
+                "size": len(color_ids),
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _COLOR_PALETTES.append(palette)
+        self._send_json({"status": "created", "palette": palette}, 201)
+
+    def _handle_palette_list(self) -> None:
+        """GET /api/v1/color-picker/palettes — list palettes (auth required)."""
+        if not self._check_auth():
+            return
+        with _COLOR_LOCK:
+            palettes = [dict(p) for p in _COLOR_PALETTES]
+        self._send_json({"palettes": palettes, "total": len(palettes)})
+
+    def _handle_color_formats(self) -> None:
+        """GET /api/v1/color-picker/formats — list formats (public)."""
+        self._send_json({"formats": COLOR_FORMATS})
+
+    # ---------------------------------------------------------------------------
+    # Task 098 — Page Diff Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_diff_snapshot_create(self) -> None:
+        """POST /api/v1/page-diff/snapshots — create snapshot (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        page_hash = body.get("page_hash", "")
+        content_hash = body.get("content_hash", "")
+        title_hash = body.get("title_hash", "")
+        word_count = body.get("word_count", 0)
+        if not isinstance(word_count, int) or word_count < 0:
+            self._send_json({"error": "word_count must be a non-negative integer"}, 400)
+            return
+        with _DIFF_LOCK:
+            if len(_PAGE_SNAPSHOTS) >= MAX_SNAPSHOTS:
+                self._send_json({"error": f"max {MAX_SNAPSHOTS} snapshots"}, 400)
+                return
+            snapshot_id = "pss_" + str(uuid.uuid4())
+            snap_entry: dict[str, Any] = {
+                "snapshot_id": snapshot_id,
+                "page_hash": page_hash,
+                "content_hash": content_hash,
+                "title_hash": title_hash,
+                "word_count": word_count,
+                "captured_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _PAGE_SNAPSHOTS.append(snap_entry)
+        self._send_json({"status": "created", "snapshot": snap_entry}, 201)
+
+    def _handle_diff_snapshot_list(self) -> None:
+        """GET /api/v1/page-diff/snapshots — list all snapshots (auth required)."""
+        if not self._check_auth():
+            return
+        with _DIFF_LOCK:
+            snapshots = [dict(s) for s in _PAGE_SNAPSHOTS]
+        self._send_json({"snapshots": snapshots, "total": len(snapshots)})
+
+    def _handle_diff_snapshot_by_page(self) -> None:
+        """GET /api/v1/page-diff/snapshots/by-page?page_hash=xxx — filter by page (auth required)."""
+        if not self._check_auth():
+            return
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        page_hash = params.get("page_hash", [""])[0]
+        with _DIFF_LOCK:
+            filtered = [dict(s) for s in _PAGE_SNAPSHOTS if s.get("page_hash") == page_hash]
+        self._send_json({"snapshots": filtered, "total": len(filtered)})
+
+    def _handle_diff_snapshot_delete(self, snapshot_id: str) -> None:
+        """DELETE /api/v1/page-diff/snapshots/{snapshot_id} — delete snapshot (auth required)."""
+        if not self._check_auth():
+            return
+        with _DIFF_LOCK:
+            idx = next((i for i, s in enumerate(_PAGE_SNAPSHOTS) if s["snapshot_id"] == snapshot_id), None)
+            if idx is None:
+                self._send_json({"error": "snapshot not found"}, 404)
+                return
+            _PAGE_SNAPSHOTS.pop(idx)
+        self._send_json({"status": "deleted", "snapshot_id": snapshot_id})
+
+    def _handle_diff_compare(self) -> None:
+        """POST /api/v1/page-diff/compare — compare two snapshots (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        snapshot_id_a = body.get("snapshot_id_a", "")
+        snapshot_id_b = body.get("snapshot_id_b", "")
+        with _DIFF_LOCK:
+            snap_a = next((s for s in _PAGE_SNAPSHOTS if s["snapshot_id"] == snapshot_id_a), None)
+            snap_b = next((s for s in _PAGE_SNAPSHOTS if s["snapshot_id"] == snapshot_id_b), None)
+        if snap_a is None or snap_b is None:
+            self._send_json({"error": "snapshot not found"}, 404)
+            return
+        if snap_a["content_hash"] == snap_b["content_hash"]:
+            change_type = "unchanged"
+            change_count = 0
+        else:
+            change_type = "modified"
+            change_count = abs(snap_a["word_count"] - snap_b["word_count"])
+        change_summary_hash = hashlib.sha256(b"compare").hexdigest()
+        self._send_json({
+            "change_type": change_type,
+            "change_summary_hash": change_summary_hash,
+            "change_count": change_count,
+        })
+
+    def _handle_diff_change_types(self) -> None:
+        """GET /api/v1/page-diff/change-types — list change types (public)."""
+        self._send_json({"change_types": PAGE_CHANGE_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 099 — Tab Organizer handlers
+    # ---------------------------------------------------------------------------
+    def _handle_workspace_create(self) -> None:
+        """POST /api/v1/tab-organizer/workspaces — create workspace (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        name_hash = body.get("name_hash", "")
+        with _WORKSPACE_LOCK:
+            if len(_WORKSPACES) >= MAX_WORKSPACES:
+                self._send_json({"error": f"max {MAX_WORKSPACES} workspaces"}, 400)
+                return
+            workspace_id = "wsp_" + str(uuid.uuid4())
+            workspace: dict[str, Any] = {
+                "workspace_id": workspace_id,
+                "name_hash": name_hash,
+                "tab_count": 0,
+                "tabs": [],
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _WORKSPACES.append(workspace)
+        self._send_json({"status": "created", "workspace": workspace}, 201)
+
+    def _handle_workspace_list(self) -> None:
+        """GET /api/v1/tab-organizer/workspaces — list workspaces (auth required)."""
+        if not self._check_auth():
+            return
+        with _WORKSPACE_LOCK:
+            workspaces = [dict(w) for w in _WORKSPACES]
+        self._send_json({"workspaces": workspaces, "total": len(workspaces)})
+
+    def _handle_workspace_delete(self, workspace_id: str) -> None:
+        """DELETE /api/v1/tab-organizer/workspaces/{workspace_id} — delete workspace (auth required)."""
+        if not self._check_auth():
+            return
+        with _WORKSPACE_LOCK:
+            idx = next((i for i, w in enumerate(_WORKSPACES) if w["workspace_id"] == workspace_id), None)
+            if idx is None:
+                self._send_json({"error": "workspace not found"}, 404)
+                return
+            _WORKSPACES.pop(idx)
+        self._send_json({"status": "deleted", "workspace_id": workspace_id})
+
+    def _handle_workspace_tab_add(self, workspace_id: str) -> None:
+        """POST /api/v1/tab-organizer/workspaces/{workspace_id}/tabs — add tab (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        url_hash = body.get("url_hash", "")
+        title_hash = body.get("title_hash", "")
+        status = body.get("status", "")
+        if status not in TAB_STATUSES:
+            self._send_json({"error": f"status must be one of {TAB_STATUSES}"}, 400)
+            return
+        with _WORKSPACE_LOCK:
+            workspace = next((w for w in _WORKSPACES if w["workspace_id"] == workspace_id), None)
+            if workspace is None:
+                self._send_json({"error": "workspace not found"}, 404)
+                return
+            if len(workspace["tabs"]) >= MAX_TABS_PER_WORKSPACE:
+                self._send_json({"error": f"max {MAX_TABS_PER_WORKSPACE} tabs per workspace"}, 400)
+                return
+            tab_id = "tab_" + str(uuid.uuid4())
+            tab: dict[str, Any] = {
+                "tab_id": tab_id,
+                "url_hash": url_hash,
+                "title_hash": title_hash,
+                "status": status,
+                "added_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            workspace["tabs"].append(tab)
+            workspace["tab_count"] = len(workspace["tabs"])
+        self._send_json({"status": "added", "tab": tab}, 201)
+
+    def _handle_workspace_tab_remove(self, workspace_id: str, tab_id: str) -> None:
+        """DELETE /api/v1/tab-organizer/workspaces/{workspace_id}/tabs/{tab_id} — remove tab (auth required)."""
+        if not self._check_auth():
+            return
+        with _WORKSPACE_LOCK:
+            workspace = next((w for w in _WORKSPACES if w["workspace_id"] == workspace_id), None)
+            if workspace is None:
+                self._send_json({"error": "workspace not found"}, 404)
+                return
+            tab_idx = next((i for i, t in enumerate(workspace["tabs"]) if t["tab_id"] == tab_id), None)
+            if tab_idx is None:
+                self._send_json({"error": "tab not found"}, 404)
+                return
+            workspace["tabs"].pop(tab_idx)
+            workspace["tab_count"] = len(workspace["tabs"])
+        self._send_json({"status": "removed", "tab_id": tab_id})
+
+    def _handle_tab_statuses_list(self) -> None:
+        """GET /api/v1/tab-organizer/tab-statuses — list tab statuses (public)."""
+        self._send_json({"statuses": TAB_STATUSES})
+
 
 # ---------------------------------------------------------------------------
 # Server factory — theorem: build_server isolates configuration from startup.
