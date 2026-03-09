@@ -2141,6 +2141,144 @@ UAT_MAX_SNAPSHOTS: int = 100000
 _UAT_SNAPSHOTS: list[dict] = []
 _UAT_LOCK = threading.Lock()
 
+# ---------------------------------------------------------------------------
+# Task 163v2 — Storage Quota Monitor (/records variant)
+# ---------------------------------------------------------------------------
+STORAGE_QUOTA_STORAGE_TYPES: list[str] = [
+    "indexeddb", "localstorage", "sessionstorage", "cache_api",
+    "opfs", "cookies", "websql", "file_system",
+]
+MAX_STORAGE_QUOTA_RECORDS: int = 500000
+_STORAGE_QUOTA_RECORDS: list[dict] = []
+_STORAGE_QUOTA_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 164v2 — Permission Policy Tracker (/records variant)
+# ---------------------------------------------------------------------------
+PERMISSION_POLICY_FEATURES: list[str] = [
+    "camera", "microphone", "geolocation", "notifications",
+    "payment", "usb", "bluetooth", "accelerometer",
+]
+MAX_PERMISSION_POLICY_RECORDS: int = 500000
+_PERMISSION_POLICY_RECORDS: list[dict] = []
+_PERMISSION_POLICY_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 165v2 — Web Vitals Tracker (/records variant)
+# ---------------------------------------------------------------------------
+WEB_VITALS_METRIC_NAMES: list[str] = [
+    "lcp", "fid", "cls", "ttfb", "fcp", "tti", "tbt", "inp",
+]
+MAX_WEB_VITALS_RECORDS: int = 500000
+_WEB_VITALS_RECORDS: list[dict] = []
+_WEB_VITALS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 166v2 — Resource Timing Tracker (/records variant)
+# ---------------------------------------------------------------------------
+RESOURCE_TIMING_TYPES: list[str] = [
+    "script", "stylesheet", "image", "font", "fetch",
+    "xhr", "document", "other",
+]
+MAX_RESOURCE_TIMING_RECORDS: int = 500000
+_RESOURCE_TIMING_RECORDS: list[dict] = []
+_RESOURCE_TIMING_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 167v2 — User Agent Tracker (/records variant)
+# ---------------------------------------------------------------------------
+USER_AGENT_PLATFORMS: list[str] = [
+    "windows", "macos", "linux", "android", "ios", "chromeos", "unknown",
+]
+USER_AGENT_BROWSERS: list[str] = [
+    "chrome", "firefox", "safari", "edge", "opera", "brave", "samsung", "unknown",
+]
+MAX_USER_AGENT_RECORDS: int = 500000
+_USER_AGENT_RECORDS: list[dict] = []
+_USER_AGENT_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 172 — WebRTC Connection Tracker
+# ---------------------------------------------------------------------------
+WEBRTC_CONNECTION_TYPES: list[str] = [
+    "peer", "data_channel", "media", "screen_share",
+    "audio_only", "video_only", "bidirectional", "unknown",
+]
+MAX_WEBRTC_RECORDS: int = 500000
+_WEBRTC_RECORDS: list[dict] = []
+_WEBRTC_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 173 — History Cleaner
+# ---------------------------------------------------------------------------
+HISTORY_CLEAN_REASONS: list[str] = [
+    "user_request", "privacy", "session_end", "expired",
+    "policy", "security", "duplicate", "scheduled",
+]
+MAX_HISTORY_CLEAN_RECORDS: int = 100000
+_HISTORY_CLEAN_RECORDS: list[dict] = []
+_HISTORY_CLEAN_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 174 — CSP Violation Reporter
+# ---------------------------------------------------------------------------
+CSP_DIRECTIVE_TYPES: list[str] = [
+    "script-src", "style-src", "img-src", "connect-src",
+    "font-src", "frame-src", "media-src", "default-src",
+]
+MAX_CSP_VIOLATIONS: int = 500000
+_CSP_VIOLATIONS: list[dict] = []
+_CSP_LOCK = threading.Lock()
+
+# --- Task 175: Media Query Tracker ---
+MQT_BREAKPOINTS: list[str] = ["xs", "sm", "md", "lg", "xl", "xxl", "custom", "unknown"]
+MAX_MQT_RECORDS: int = 500000
+_MQT_RECORDS: list[dict] = []
+_MQT_LOCK = threading.Lock()
+
+# --- Task 176: Battery Status Tracker ---
+BST_CHARGING_STATES: list[str] = ["charging", "discharging", "full", "unknown"]
+MAX_BST_RECORDS: int = 500000
+_BST_RECORDS: list[dict] = []
+_BST_LOCK = threading.Lock()
+
+# --- Task 177: Scroll Depth Tracker ---
+SDS_CONTENT_TYPES: list[str] = [
+    "article", "product_page", "landing", "documentation",
+    "blog", "ecommerce", "social", "other",
+]
+MAX_SDS_SESSIONS: int = 500000
+_SDS_SESSIONS: list[dict] = []
+_SDS_LOCK = threading.Lock()
+
+# --- Task 178: Lazy Load Tracker ---
+LZL_ELEMENT_TYPES: list[str] = [
+    "image", "video", "iframe", "component", "script", "font", "data", "background",
+]
+LZL_LOAD_TRIGGERS: list[str] = [
+    "intersection", "scroll", "click", "timeout", "manual", "import", "preload", "unknown",
+]
+MAX_LZL_RECORDS: int = 500000
+_LZL_RECORDS: list[dict] = []
+_LZL_LOCK = threading.Lock()
+
+# --- Task 179: Mouse Heatmap Tracker ---
+MHE_INTERACTION_TYPES: list[str] = [
+    "click", "hover", "move", "scroll", "drag", "rightclick", "middleclick", "touch", "unknown",
+]
+MAX_MHE_RECORDS: int = 500000
+_MHE_RECORDS: list[dict] = []
+_MHE_LOCK = threading.Lock()
+
+# --- Task 180: Keyboard Shortcut Analytics ---
+KBD_EVENT_TYPES: list[str] = [
+    "keydown", "keyup", "keypress", "shortcut_triggered",
+    "shortcut_missed", "custom_binding", "native", "unknown",
+]
+MAX_KBD_EVENTS: int = 500000
+_KBD_EVENTS: list[dict] = []
+_KBD_LOCK = threading.Lock()
+
 
 def _triage_single_email(email: dict[str, Any], config: dict[str, bool]) -> dict[str, Any]:
     """Deterministic triage — no LLM required. Returns action + confidence."""
@@ -7606,6 +7744,188 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/user-agent-tracker.js", "application/javascript")
         elif path == "/web/css/user-agent-tracker.css":
             self._handle_static_file("web/css/user-agent-tracker.css", "text/css")
+        # --- Task 163v2: Storage Quota Monitor (/records) ---
+        elif path == "/api/v1/storage-quota/storage-types":
+            self._handle_sqm2_storage_types()
+        elif path == "/api/v1/storage-quota/records":
+            self._handle_sqm2_list()
+        elif path == "/api/v1/storage-quota/stats":
+            self._handle_sqm2_stats()
+        elif path == "/web/storage-quota-monitor.html":
+            self._handle_static_file("web/storage-quota-monitor.html", "text/html; charset=utf-8")
+        elif path == "/web/js/storage-quota-monitor.js":
+            self._handle_static_file("web/js/storage-quota-monitor.js", "application/javascript")
+        elif path == "/web/css/storage-quota-monitor.css":
+            self._handle_static_file("web/css/storage-quota-monitor.css", "text/css")
+        # --- Task 164v2: Permission Policy Tracker (/records) ---
+        elif path == "/api/v1/permission-policy/policy-features":
+            self._handle_ppt2_policy_features()
+        elif path == "/api/v1/permission-policy/records":
+            self._handle_ppt2_list()
+        elif path == "/api/v1/permission-policy/stats":
+            self._handle_ppt2_stats()
+        elif path == "/web/permission-policy-tracker.html":
+            self._handle_static_file("web/permission-policy-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/permission-policy-tracker.js":
+            self._handle_static_file("web/js/permission-policy-tracker.js", "application/javascript")
+        elif path == "/web/css/permission-policy-tracker.css":
+            self._handle_static_file("web/css/permission-policy-tracker.css", "text/css")
+        # --- Task 165v2: Web Vitals Tracker (/records) ---
+        elif path == "/api/v1/web-vitals/metric-names":
+            self._handle_wvt2_metric_names()
+        elif path == "/api/v1/web-vitals/records":
+            self._handle_wvt2_list()
+        elif path == "/api/v1/web-vitals/stats":
+            self._handle_wvt2_stats()
+        elif path == "/web/web-vitals-tracker.html":
+            self._handle_static_file("web/web-vitals-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/web-vitals-tracker.js":
+            self._handle_static_file("web/js/web-vitals-tracker.js", "application/javascript")
+        elif path == "/web/css/web-vitals-tracker.css":
+            self._handle_static_file("web/css/web-vitals-tracker.css", "text/css")
+        # --- Task 166v2: Resource Timing Tracker (/records) ---
+        elif path == "/api/v1/resource-timing/resource-types":
+            self._handle_rtt2_resource_types()
+        elif path == "/api/v1/resource-timing/records":
+            self._handle_rtt2_list()
+        elif path == "/api/v1/resource-timing/stats":
+            self._handle_rtt2_stats()
+        elif path == "/web/resource-timing-tracker.html":
+            self._handle_static_file("web/resource-timing-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/resource-timing-tracker.js":
+            self._handle_static_file("web/js/resource-timing-tracker.js", "application/javascript")
+        elif path == "/web/css/resource-timing-tracker.css":
+            self._handle_static_file("web/css/resource-timing-tracker.css", "text/css")
+        # --- Task 167v2: User Agent Tracker (/records) ---
+        elif path == "/api/v1/user-agent/platforms":
+            self._handle_uat2_platforms()
+        elif path == "/api/v1/user-agent/records":
+            self._handle_uat2_list()
+        elif path == "/api/v1/user-agent/stats":
+            self._handle_uat2_stats()
+        elif path == "/web/user-agent-tracker.html":
+            self._handle_static_file("web/user-agent-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/user-agent-tracker.js":
+            self._handle_static_file("web/js/user-agent-tracker.js", "application/javascript")
+        elif path == "/web/css/user-agent-tracker.css":
+            self._handle_static_file("web/css/user-agent-tracker.css", "text/css")
+        # --- Task 172: WebRTC Connection Tracker ---
+        elif path == "/api/v1/webrtc/connection-types":
+            self._handle_webrtc_connection_types()
+        elif path == "/api/v1/webrtc/connections":
+            self._handle_webrtc_list()
+        elif path == "/api/v1/webrtc/stats":
+            self._handle_webrtc_stats()
+        elif path == "/web/webrtc-connection-tracker.html":
+            self._handle_static_file("web/webrtc-connection-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/webrtc-connection-tracker.js":
+            self._handle_static_file("web/js/webrtc-connection-tracker.js", "application/javascript")
+        elif path == "/web/css/webrtc-connection-tracker.css":
+            self._handle_static_file("web/css/webrtc-connection-tracker.css", "text/css")
+        # --- Task 173: History Cleaner ---
+        elif path == "/api/v1/history-cleaner/clean-reasons":
+            self._handle_history_cleaner_reasons()
+        elif path == "/api/v1/history-cleaner/records":
+            self._handle_history_cleaner_list()
+        elif path == "/api/v1/history-cleaner/stats":
+            self._handle_history_cleaner_stats()
+        elif path == "/web/history-cleaner.html":
+            self._handle_static_file("web/history-cleaner.html", "text/html; charset=utf-8")
+        elif path == "/web/js/history-cleaner.js":
+            self._handle_static_file("web/js/history-cleaner.js", "application/javascript")
+        elif path == "/web/css/history-cleaner.css":
+            self._handle_static_file("web/css/history-cleaner.css", "text/css")
+        # --- Task 174: CSP Violation Reporter ---
+        elif path == "/api/v1/csp-violations/directive-types":
+            self._handle_csp_directive_types()
+        elif path == "/api/v1/csp-violations/reports":
+            self._handle_csp_list()
+        elif path == "/api/v1/csp-violations/stats":
+            self._handle_csp_stats()
+        elif path == "/web/csp-violation-reporter.html":
+            self._handle_static_file("web/csp-violation-reporter.html", "text/html; charset=utf-8")
+        elif path == "/web/js/csp-violation-reporter.js":
+            self._handle_static_file("web/js/csp-violation-reporter.js", "application/javascript")
+        elif path == "/web/css/csp-violation-reporter.css":
+            self._handle_static_file("web/css/csp-violation-reporter.css", "text/css")
+        # --- Task 175: Media Query Tracker ---
+        elif path == "/api/v1/media-query/breakpoints":
+            self._handle_mqt_breakpoints()
+        elif path == "/api/v1/media-query/records":
+            self._handle_mqt_list()
+        elif path == "/api/v1/media-query/stats":
+            self._handle_mqt_stats()
+        elif path == "/web/media-query-tracker.html":
+            self._handle_static_file("web/media-query-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/media-query-tracker.js":
+            self._handle_static_file("web/js/media-query-tracker.js", "application/javascript")
+        elif path == "/web/css/media-query-tracker.css":
+            self._handle_static_file("web/css/media-query-tracker.css", "text/css")
+        # --- Task 176: Battery Status Tracker ---
+        elif path == "/api/v1/battery-status/charging-states":
+            self._handle_bst_charging_states()
+        elif path == "/api/v1/battery-status/records":
+            self._handle_bst_list()
+        elif path == "/api/v1/battery-status/stats":
+            self._handle_bst_stats()
+        elif path == "/web/battery-status-tracker.html":
+            self._handle_static_file("web/battery-status-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/battery-status-tracker.js":
+            self._handle_static_file("web/js/battery-status-tracker.js", "application/javascript")
+        elif path == "/web/css/battery-status-tracker.css":
+            self._handle_static_file("web/css/battery-status-tracker.css", "text/css")
+        # --- Task 177: Scroll Depth Tracker ---
+        elif path == "/api/v1/scroll-depth/content-types":
+            self._handle_sds_content_types()
+        elif path == "/api/v1/scroll-depth/sessions":
+            self._handle_sds_list()
+        elif path == "/api/v1/scroll-depth/stats":
+            self._handle_sds_stats()
+        elif path == "/web/scroll-depth-tracker.html":
+            self._handle_static_file("web/scroll-depth-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/scroll-depth-tracker.js":
+            self._handle_static_file("web/js/scroll-depth-tracker.js", "application/javascript")
+        elif path == "/web/css/scroll-depth-tracker.css":
+            self._handle_static_file("web/css/scroll-depth-tracker.css", "text/css")
+        # --- Task 178: Lazy Load Tracker ---
+        elif path == "/api/v1/lazy-load/element-types":
+            self._handle_lzl_element_types()
+        elif path == "/api/v1/lazy-load/records":
+            self._handle_lzl_list()
+        elif path == "/api/v1/lazy-load/stats":
+            self._handle_lzl_stats()
+        elif path == "/web/lazy-load-tracker.html":
+            self._handle_static_file("web/lazy-load-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/lazy-load-tracker.js":
+            self._handle_static_file("web/js/lazy-load-tracker.js", "application/javascript")
+        elif path == "/web/css/lazy-load-tracker.css":
+            self._handle_static_file("web/css/lazy-load-tracker.css", "text/css")
+        # --- Task 179: Mouse Heatmap Tracker ---
+        elif path == "/api/v1/mouse-heatmap/interaction-types":
+            self._handle_mhe_interaction_types()
+        elif path == "/api/v1/mouse-heatmap/records":
+            self._handle_mhe_list()
+        elif path == "/api/v1/mouse-heatmap/stats":
+            self._handle_mhe_stats()
+        elif path == "/web/mouse-heatmap-tracker.html":
+            self._handle_static_file("web/mouse-heatmap-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/mouse-heatmap-tracker.js":
+            self._handle_static_file("web/js/mouse-heatmap-tracker.js", "application/javascript")
+        elif path == "/web/css/mouse-heatmap-tracker.css":
+            self._handle_static_file("web/css/mouse-heatmap-tracker.css", "text/css")
+        # --- Task 180: Keyboard Shortcut Analytics ---
+        elif path == "/api/v1/keyboard-shortcuts/event-types":
+            self._handle_kbd_event_types()
+        elif path == "/api/v1/keyboard-shortcuts/events":
+            self._handle_kbd_list()
+        elif path == "/api/v1/keyboard-shortcuts/stats":
+            self._handle_kbd_stats()
+        elif path == "/web/keyboard-shortcut-analytics.html":
+            self._handle_static_file("web/keyboard-shortcut-analytics.html", "text/html; charset=utf-8")
+        elif path == "/web/js/keyboard-shortcut-analytics.js":
+            self._handle_static_file("web/js/keyboard-shortcut-analytics.js", "application/javascript")
+        elif path == "/web/css/keyboard-shortcut-analytics.css":
+            self._handle_static_file("web/css/keyboard-shortcut-analytics.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -8438,6 +8758,48 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 167: User Agent Tracker ---
         elif path == "/api/v1/user-agent/snapshots":
             self._handle_user_agent_create()
+        # --- Task 163v2: Storage Quota Monitor (/records) ---
+        elif path == "/api/v1/storage-quota/records":
+            self._handle_sqm2_create()
+        # --- Task 164v2: Permission Policy Tracker (/records) ---
+        elif path == "/api/v1/permission-policy/records":
+            self._handle_ppt2_create()
+        # --- Task 165v2: Web Vitals Tracker (/records) ---
+        elif path == "/api/v1/web-vitals/records":
+            self._handle_wvt2_create()
+        # --- Task 166v2: Resource Timing Tracker (/records) ---
+        elif path == "/api/v1/resource-timing/records":
+            self._handle_rtt2_create()
+        # --- Task 167v2: User Agent Tracker (/records) ---
+        elif path == "/api/v1/user-agent/records":
+            self._handle_uat2_create()
+        # --- Task 172: WebRTC Connection Tracker ---
+        elif path == "/api/v1/webrtc/connections":
+            self._handle_webrtc_create()
+        # --- Task 173: History Cleaner ---
+        elif path == "/api/v1/history-cleaner/records":
+            self._handle_history_cleaner_create()
+        # --- Task 174: CSP Violation Reporter ---
+        elif path == "/api/v1/csp-violations/reports":
+            self._handle_csp_create()
+        # --- Task 175: Media Query Tracker ---
+        elif path == "/api/v1/media-query/records":
+            self._handle_mqt_create()
+        # --- Task 176: Battery Status Tracker ---
+        elif path == "/api/v1/battery-status/records":
+            self._handle_bst_create()
+        # --- Task 177: Scroll Depth Tracker ---
+        elif path == "/api/v1/scroll-depth/sessions":
+            self._handle_sds_create()
+        # --- Task 178: Lazy Load Tracker ---
+        elif path == "/api/v1/lazy-load/records":
+            self._handle_lzl_create()
+        # --- Task 179: Mouse Heatmap Tracker ---
+        elif path == "/api/v1/mouse-heatmap/records":
+            self._handle_mhe_create()
+        # --- Task 180: Keyboard Shortcut Analytics ---
+        elif path == "/api/v1/keyboard-shortcuts/events":
+            self._handle_kbd_create()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -9013,6 +9375,56 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/user-agent/snapshots/[^/]+$", path):
             snapshot_id = path.split("/")[-1]
             self._handle_user_agent_delete(snapshot_id)
+        # --- Task 163v2: Storage Quota Monitor (/records) ---
+        elif re.match(r"^/api/v1/storage-quota/records/[^/]+$", path):
+            record_id = path.split("/")[-1]
+            self._handle_sqm2_delete(record_id)
+        # --- Task 164v2: Permission Policy Tracker (/records) ---
+        elif re.match(r"^/api/v1/permission-policy/records/[^/]+$", path):
+            record_id = path.split("/")[-1]
+            self._handle_ppt2_delete(record_id)
+        # --- Task 165v2: Web Vitals Tracker (/records) ---
+        elif re.match(r"^/api/v1/web-vitals/records/[^/]+$", path):
+            record_id = path.split("/")[-1]
+            self._handle_wvt2_delete(record_id)
+        # --- Task 166v2: Resource Timing Tracker (/records) ---
+        elif re.match(r"^/api/v1/resource-timing/records/[^/]+$", path):
+            record_id = path.split("/")[-1]
+            self._handle_rtt2_delete(record_id)
+        # --- Task 167v2: User Agent Tracker (/records) ---
+        elif re.match(r"^/api/v1/user-agent/records/[^/]+$", path):
+            record_id = path.split("/")[-1]
+            self._handle_uat2_delete(record_id)
+        # --- Task 172: WebRTC Connection Tracker ---
+        elif re.match(r"^/api/v1/webrtc/connections/[^/]+$", path):
+            conn_id = path.split("/")[-1]
+            self._handle_webrtc_delete(conn_id)
+        # --- Task 173: History Cleaner ---
+        elif re.match(r"^/api/v1/history-cleaner/records/[^/]+$", path):
+            clean_id = path.split("/")[-1]
+            self._handle_history_cleaner_delete(clean_id)
+        # --- Task 174: CSP Violation Reporter ---
+        elif re.match(r"^/api/v1/csp-violations/reports/[^/]+$", path):
+            violation_id = path.split("/")[-1]
+            self._handle_csp_delete(violation_id)
+        # --- Task 175: Media Query Tracker ---
+        elif re.match(r"^/api/v1/media-query/records/[^/]+$", path):
+            self._handle_mqt_delete(path.split("/")[-1])
+        # --- Task 176: Battery Status Tracker ---
+        elif re.match(r"^/api/v1/battery-status/records/[^/]+$", path):
+            self._handle_bst_delete(path.split("/")[-1])
+        # --- Task 177: Scroll Depth Tracker ---
+        elif re.match(r"^/api/v1/scroll-depth/sessions/[^/]+$", path):
+            self._handle_sds_delete(path.split("/")[-1])
+        # --- Task 178: Lazy Load Tracker ---
+        elif re.match(r"^/api/v1/lazy-load/records/[^/]+$", path):
+            self._handle_lzl_delete(path.split("/")[-1])
+        # --- Task 179: Mouse Heatmap Tracker ---
+        elif re.match(r"^/api/v1/mouse-heatmap/records/[^/]+$", path):
+            self._handle_mhe_delete(path.split("/")[-1])
+        # --- Task 180: Keyboard Shortcut Analytics ---
+        elif re.match(r"^/api/v1/keyboard-shortcuts/events/[^/]+$", path):
+            self._handle_kbd_delete(path.split("/")[-1])
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -30908,6 +31320,1303 @@ function choose(mode) {
 
     def _handle_user_agent_platforms(self) -> None:
         self._send_json({"platforms": UAT_UA_PLATFORMS, "browsers": UAT_UA_BROWSERS})
+
+    # ---------------------------------------------------------------------------
+    # Task 172 — WebRTC Connection Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_webrtc_create(self, payload: Optional[dict[str, Any]] = None) -> None:
+        """POST /api/v1/webrtc/connections — record WebRTC connection (auth required)."""
+        if self._require_auth() is False:
+            return
+        body = self._tracker_body(payload)
+        if body is None:
+            return
+        connection_type = str(body.get("connection_type", "")).strip()
+        if connection_type not in WEBRTC_CONNECTION_TYPES:
+            self._send_json_compat(400, {"error": f"connection_type must be one of {WEBRTC_CONNECTION_TYPES}"})
+            return
+        page_url = body.get("page_url", "")
+        if not isinstance(page_url, str) or not page_url.strip():
+            self._send_json_compat(400, {"error": "page_url is required"})
+            return
+        remote_ip = body.get("remote_ip", "")
+        if not isinstance(remote_ip, str) or not remote_ip.strip():
+            self._send_json_compat(400, {"error": "remote_ip is required"})
+            return
+        try:
+            duration_val = Decimal(str(body.get("duration_ms", "")))
+        except (InvalidOperation, TypeError, ValueError):
+            self._send_json_compat(400, {"error": "duration_ms must be a non-negative decimal"})
+            return
+        if duration_val < Decimal("0"):
+            self._send_json_compat(400, {"error": "duration_ms must be >= 0"})
+            return
+        bytes_sent = body.get("bytes_sent")
+        if not isinstance(bytes_sent, int) or isinstance(bytes_sent, bool) or bytes_sent < 0:
+            self._send_json_compat(400, {"error": "bytes_sent must be int >= 0"})
+            return
+        bytes_received = body.get("bytes_received")
+        if not isinstance(bytes_received, int) or isinstance(bytes_received, bool) or bytes_received < 0:
+            self._send_json_compat(400, {"error": "bytes_received must be int >= 0"})
+            return
+        is_ice_connected = body.get("is_ice_connected")
+        if not isinstance(is_ice_connected, bool):
+            self._send_json_compat(400, {"error": "is_ice_connected must be a boolean"})
+            return
+        conn = {
+            "conn_id": "wrc_" + str(uuid.uuid4()),
+            "connection_type": connection_type,
+            "page_url_hash": _sha256_text(page_url),
+            "remote_ip_hash": _sha256_text(remote_ip),
+            "duration_ms": str(duration_val.quantize(Decimal("0.00"))),
+            "bytes_sent": bytes_sent,
+            "bytes_received": bytes_received,
+            "is_ice_connected": is_ice_connected,
+            "recorded_at": _utc_isoformat(time.time()),
+        }
+        with _WEBRTC_LOCK:
+            if len(_WEBRTC_RECORDS) >= MAX_WEBRTC_RECORDS:
+                _WEBRTC_RECORDS.pop(0)
+            _WEBRTC_RECORDS.append(conn)
+        self._send_json_compat(201, conn)
+
+    def _handle_webrtc_list(self) -> None:
+        """GET /api/v1/webrtc/connections — list connections (auth required)."""
+        if self._require_auth() is False:
+            return
+        with _WEBRTC_LOCK:
+            connections = [dict(c) for c in _WEBRTC_RECORDS]
+        self._send_json_compat(200, {"connections": connections, "total": len(connections)})
+
+    def _handle_webrtc_delete(self, conn_id: str) -> None:
+        """DELETE /api/v1/webrtc/connections/{conn_id} — delete connection (auth required)."""
+        if self._require_auth() is False:
+            return
+        with _WEBRTC_LOCK:
+            index = next((i for i, c in enumerate(_WEBRTC_RECORDS) if c["conn_id"] == conn_id), None)
+            if index is None:
+                self._send_json_compat(404, {"error": "connection not found"})
+                return
+            _WEBRTC_RECORDS.pop(index)
+        self._send_json_compat(200, {"status": "deleted", "conn_id": conn_id})
+
+    def _handle_webrtc_stats(self) -> None:
+        """GET /api/v1/webrtc/stats — WebRTC connection stats (auth required)."""
+        if self._require_auth() is False:
+            return
+        with _WEBRTC_LOCK:
+            connections = list(_WEBRTC_RECORDS)
+        total = len(connections)
+        by_type: dict[str, int] = {t: 0 for t in WEBRTC_CONNECTION_TYPES}
+        ice_connected_count = 0
+        total_duration = Decimal("0")
+        total_bytes = 0
+        for conn in connections:
+            ct = conn.get("connection_type", "")
+            by_type[ct] = by_type.get(ct, 0) + 1
+            if conn.get("is_ice_connected"):
+                ice_connected_count += 1
+            try:
+                total_duration += Decimal(str(conn.get("duration_ms", "0")))
+            except InvalidOperation:
+                pass
+            total_bytes += int(conn.get("bytes_sent", 0)) + int(conn.get("bytes_received", 0))
+        avg_duration_ms = str((total_duration / total).quantize(Decimal("0.00"))) if total > 0 else "0.00"
+        self._send_json_compat(200, {
+            "total": total,
+            "ice_connected_count": ice_connected_count,
+            "avg_duration_ms": avg_duration_ms,
+            "by_type": by_type,
+            "total_bytes": total_bytes,
+        })
+
+    def _handle_webrtc_connection_types(self) -> None:
+        """GET /api/v1/webrtc/connection-types — list connection types (public)."""
+        self._send_json_compat(200, {"connection_types": WEBRTC_CONNECTION_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 173 — History Cleaner handlers
+    # ---------------------------------------------------------------------------
+    def _handle_history_cleaner_create(self, payload: Optional[dict[str, Any]] = None) -> None:
+        """POST /api/v1/history-cleaner/records — record a history clean event (auth required)."""
+        if self._require_auth() is False:
+            return
+        body = self._tracker_body(payload)
+        if body is None:
+            return
+        reason = str(body.get("reason", "")).strip()
+        if reason not in HISTORY_CLEAN_REASONS:
+            self._send_json_compat(400, {"error": f"reason must be one of {HISTORY_CLEAN_REASONS}"})
+            return
+        url_pattern = body.get("url_pattern", "")
+        if not isinstance(url_pattern, str) or not url_pattern.strip():
+            self._send_json_compat(400, {"error": "url_pattern is required"})
+            return
+        entries_removed = body.get("entries_removed")
+        if not isinstance(entries_removed, int) or isinstance(entries_removed, bool) or entries_removed < 0:
+            self._send_json_compat(400, {"error": "entries_removed must be int >= 0"})
+            return
+        time_range_hours = body.get("time_range_hours")
+        if not isinstance(time_range_hours, int) or isinstance(time_range_hours, bool) or time_range_hours < 0:
+            self._send_json_compat(400, {"error": "time_range_hours must be int >= 0"})
+            return
+        record = {
+            "clean_id": "hcl_" + str(uuid.uuid4()),
+            "reason": reason,
+            "url_hash": _sha256_text(url_pattern),
+            "entries_removed": entries_removed,
+            "time_range_hours": time_range_hours,
+            "recorded_at": _utc_isoformat(time.time()),
+        }
+        with _HISTORY_CLEAN_LOCK:
+            if len(_HISTORY_CLEAN_RECORDS) >= MAX_HISTORY_CLEAN_RECORDS:
+                _HISTORY_CLEAN_RECORDS.pop(0)
+            _HISTORY_CLEAN_RECORDS.append(record)
+        self._send_json_compat(201, record)
+
+    def _handle_history_cleaner_list(self) -> None:
+        """GET /api/v1/history-cleaner/records — list clean records (auth required)."""
+        if self._require_auth() is False:
+            return
+        with _HISTORY_CLEAN_LOCK:
+            records = [dict(r) for r in _HISTORY_CLEAN_RECORDS]
+        self._send_json_compat(200, {"records": records, "total": len(records)})
+
+    def _handle_history_cleaner_delete(self, clean_id: str) -> None:
+        """DELETE /api/v1/history-cleaner/records/{clean_id} — delete record (auth required)."""
+        if self._require_auth() is False:
+            return
+        with _HISTORY_CLEAN_LOCK:
+            index = next((i for i, r in enumerate(_HISTORY_CLEAN_RECORDS) if r["clean_id"] == clean_id), None)
+            if index is None:
+                self._send_json_compat(404, {"error": "record not found"})
+                return
+            _HISTORY_CLEAN_RECORDS.pop(index)
+        self._send_json_compat(200, {"status": "deleted", "clean_id": clean_id})
+
+    def _handle_history_cleaner_stats(self) -> None:
+        """GET /api/v1/history-cleaner/stats — history clean stats (auth required)."""
+        if self._require_auth() is False:
+            return
+        with _HISTORY_CLEAN_LOCK:
+            records = list(_HISTORY_CLEAN_RECORDS)
+        total_cleanups = len(records)
+        by_reason: dict[str, int] = {r: 0 for r in HISTORY_CLEAN_REASONS}
+        total_entries_removed = 0
+        for record in records:
+            r = record.get("reason", "")
+            by_reason[r] = by_reason.get(r, 0) + 1
+            total_entries_removed += int(record.get("entries_removed", 0))
+        avg_entries = str(
+            (Decimal(str(total_entries_removed)) / total_cleanups).quantize(Decimal("0.00"))
+        ) if total_cleanups > 0 else "0.00"
+        self._send_json_compat(200, {
+            "total_cleanups": total_cleanups,
+            "total_entries_removed": total_entries_removed,
+            "by_reason": by_reason,
+            "avg_entries": avg_entries,
+        })
+
+    def _handle_history_cleaner_reasons(self) -> None:
+        """GET /api/v1/history-cleaner/clean-reasons — list clean reasons (public)."""
+        self._send_json_compat(200, {"clean_reasons": HISTORY_CLEAN_REASONS})
+
+    # ---------------------------------------------------------------------------
+    # Task 174 — CSP Violation Reporter handlers
+    # ---------------------------------------------------------------------------
+    def _handle_csp_create(self, payload: Optional[dict[str, Any]] = None) -> None:
+        """POST /api/v1/csp-violations/reports — record CSP violation (auth required)."""
+        if self._require_auth() is False:
+            return
+        body = self._tracker_body(payload)
+        if body is None:
+            return
+        directive = str(body.get("directive", "")).strip()
+        if directive not in CSP_DIRECTIVE_TYPES:
+            self._send_json_compat(400, {"error": f"directive must be one of {CSP_DIRECTIVE_TYPES}"})
+            return
+        page_url = body.get("page_url", "")
+        if not isinstance(page_url, str) or not page_url.strip():
+            self._send_json_compat(400, {"error": "page_url is required"})
+            return
+        blocked_url = body.get("blocked_url", "")
+        if not isinstance(blocked_url, str) or not blocked_url.strip():
+            self._send_json_compat(400, {"error": "blocked_url is required"})
+            return
+        is_report_only = body.get("is_report_only")
+        if not isinstance(is_report_only, bool):
+            self._send_json_compat(400, {"error": "is_report_only must be a boolean"})
+            return
+        violation = {
+            "violation_id": "csp_" + str(uuid.uuid4()),
+            "directive": directive,
+            "page_url_hash": _sha256_text(page_url),
+            "blocked_url_hash": _sha256_text(blocked_url),
+            "is_report_only": is_report_only,
+            "recorded_at": _utc_isoformat(time.time()),
+        }
+        with _CSP_LOCK:
+            if len(_CSP_VIOLATIONS) >= MAX_CSP_VIOLATIONS:
+                _CSP_VIOLATIONS.pop(0)
+            _CSP_VIOLATIONS.append(violation)
+        self._send_json_compat(201, violation)
+
+    def _handle_csp_list(self) -> None:
+        """GET /api/v1/csp-violations/reports — list violations (auth required)."""
+        if self._require_auth() is False:
+            return
+        with _CSP_LOCK:
+            violations = [dict(v) for v in _CSP_VIOLATIONS]
+        self._send_json_compat(200, {"reports": violations, "total": len(violations)})
+
+    def _handle_csp_delete(self, violation_id: str) -> None:
+        """DELETE /api/v1/csp-violations/reports/{violation_id} — delete violation (auth required)."""
+        if self._require_auth() is False:
+            return
+        with _CSP_LOCK:
+            index = next((i for i, v in enumerate(_CSP_VIOLATIONS) if v["violation_id"] == violation_id), None)
+            if index is None:
+                self._send_json_compat(404, {"error": "violation not found"})
+                return
+            _CSP_VIOLATIONS.pop(index)
+        self._send_json_compat(200, {"status": "deleted", "violation_id": violation_id})
+
+    def _handle_csp_stats(self) -> None:
+        """GET /api/v1/csp-violations/stats — CSP violation stats (auth required)."""
+        if self._require_auth() is False:
+            return
+        with _CSP_LOCK:
+            violations = list(_CSP_VIOLATIONS)
+        total = len(violations)
+        by_directive: dict[str, int] = {d: 0 for d in CSP_DIRECTIVE_TYPES}
+        report_only_count = 0
+        for v in violations:
+            d = v.get("directive", "")
+            by_directive[d] = by_directive.get(d, 0) + 1
+            if v.get("is_report_only"):
+                report_only_count += 1
+        report_only_rate = str(
+            (Decimal(str(report_only_count)) / total).quantize(Decimal("0.00"))
+        ) if total > 0 else "0.00"
+        self._send_json_compat(200, {
+            "total": total,
+            "by_directive": by_directive,
+            "report_only_count": report_only_count,
+            "report_only_rate": report_only_rate,
+        })
+
+    def _handle_csp_directive_types(self) -> None:
+        """GET /api/v1/csp-violations/directive-types — list directive types (public)."""
+        self._send_json_compat(200, {"directive_types": CSP_DIRECTIVE_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 175 — Media Query Tracker
+    # ---------------------------------------------------------------------------
+    def _handle_mqt_create(self, payload: Optional[dict[str, Any]] = None) -> None:
+        """POST /api/v1/media-query/records — record media query event (auth required)."""
+        if not self._check_auth():
+            return
+        body = payload if payload is not None else self._read_json_body()
+        if body is None:
+            return
+        breakpoint_val = str(body.get("breakpoint", "")).strip()
+        if breakpoint_val not in MQT_BREAKPOINTS:
+            self._send_json({"error": f"breakpoint must be one of {MQT_BREAKPOINTS}"}, 400)
+            return
+        url_hash = _tracker_sha256(body.get("url", ""))
+        orientation = str(body.get("orientation", "")).strip()
+        if orientation not in ["portrait", "landscape", "unknown"]:
+            self._send_json({"error": "orientation must be one of ['portrait', 'landscape', 'unknown']"}, 400)
+            return
+        width_px, w_err = _tracker_parse_int(body.get("width_px", -1), "width_px", 0)
+        if w_err:
+            self._send_json({"error": w_err}, 400)
+            return
+        height_px, h_err = _tracker_parse_int(body.get("height_px", -1), "height_px", 0)
+        if h_err:
+            self._send_json({"error": h_err}, 400)
+            return
+        dpr_val, dpr_err = _tracker_parse_non_negative_decimal(body.get("device_pixel_ratio", -1), "device_pixel_ratio")
+        if dpr_err:
+            self._send_json({"error": dpr_err}, 400)
+            return
+        record = {
+            "record_id": "mqt_" + str(uuid.uuid4()),
+            "breakpoint": breakpoint_val,
+            "url_hash": url_hash,
+            "orientation": orientation,
+            "width_px": width_px,
+            "height_px": height_px,
+            "device_pixel_ratio": _tracker_decimal_str(dpr_val),
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _MQT_LOCK:
+            if len(_MQT_RECORDS) >= MAX_MQT_RECORDS:
+                _MQT_RECORDS.pop(0)
+            _MQT_RECORDS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_mqt_list(self) -> None:
+        """GET /api/v1/media-query/records — list records (auth required)."""
+        if not self._check_auth():
+            return
+        with _MQT_LOCK:
+            records = [dict(r) for r in _MQT_RECORDS]
+        self._send_json({"records": records, "total": len(records)})
+
+    def _handle_mqt_delete(self, record_id: str) -> None:
+        """DELETE /api/v1/media-query/records/{id} — delete record (auth required)."""
+        if not self._check_auth():
+            return
+        with _MQT_LOCK:
+            idx = next((i for i, r in enumerate(_MQT_RECORDS) if r["record_id"] == record_id), None)
+            if idx is None:
+                self._send_json({"error": "record not found"}, 404)
+                return
+            _MQT_RECORDS.pop(idx)
+        self._send_json({"status": "deleted", "record_id": record_id})
+
+    def _handle_mqt_stats(self) -> None:
+        """GET /api/v1/media-query/stats — stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _MQT_LOCK:
+            records = list(_MQT_RECORDS)
+        total = len(records)
+        by_breakpoint: dict[str, int] = {b: 0 for b in MQT_BREAKPOINTS}
+        landscape_count = 0
+        width_sum = Decimal("0")
+        for r in records:
+            bp = r.get("breakpoint", "")
+            if bp in by_breakpoint:
+                by_breakpoint[bp] += 1
+            if r.get("orientation") == "landscape":
+                landscape_count += 1
+            width_sum += Decimal(str(r.get("width_px", 0)))
+        landscape_rate = _tracker_decimal_str(
+            Decimal(str(landscape_count)) / Decimal(str(total))
+        ) if total > 0 else "0.00"
+        avg_width = _tracker_decimal_str(width_sum / Decimal(str(total))) if total > 0 else "0.00"
+        self._send_json({
+            "total": total,
+            "by_breakpoint": by_breakpoint,
+            "landscape_count": landscape_count,
+            "landscape_rate": landscape_rate,
+            "avg_width": avg_width,
+        })
+
+    def _handle_mqt_breakpoints(self) -> None:
+        """GET /api/v1/media-query/breakpoints — list breakpoints (public)."""
+        self._send_json({"breakpoints": MQT_BREAKPOINTS})
+
+    # ---------------------------------------------------------------------------
+    # Task 176 — Battery Status Tracker
+    # ---------------------------------------------------------------------------
+    def _handle_bst_create(self, payload: Optional[dict[str, Any]] = None) -> None:
+        """POST /api/v1/battery-status/records — record battery status (auth required)."""
+        if not self._check_auth():
+            return
+        body = payload if payload is not None else self._read_json_body()
+        if body is None:
+            return
+        charging_state = str(body.get("charging_state", "")).strip()
+        if charging_state not in BST_CHARGING_STATES:
+            self._send_json({"error": f"charging_state must be one of {BST_CHARGING_STATES}"}, 400)
+            return
+        url_hash = _tracker_sha256(body.get("url", ""))
+        level_pct_val, level_err = _tracker_parse_non_negative_decimal(body.get("level_pct", -1), "level_pct")
+        if level_err or level_pct_val is None or level_pct_val > Decimal("100"):
+            self._send_json({"error": "level_pct must be a decimal 0.00-100.00"}, 400)
+            return
+        # charging_time_seconds: int >= 0 or null
+        raw_ct = body.get("charging_time_seconds", None)
+        if raw_ct is not None:
+            if not isinstance(raw_ct, int) or isinstance(raw_ct, bool) or raw_ct < 0:
+                self._send_json({"error": "charging_time_seconds must be a non-negative integer or null"}, 400)
+                return
+        # discharging_time_seconds: int >= 0 or null
+        raw_dt = body.get("discharging_time_seconds", None)
+        if raw_dt is not None:
+            if not isinstance(raw_dt, int) or isinstance(raw_dt, bool) or raw_dt < 0:
+                self._send_json({"error": "discharging_time_seconds must be a non-negative integer or null"}, 400)
+                return
+        record = {
+            "record_id": "bst_" + str(uuid.uuid4()),
+            "charging_state": charging_state,
+            "url_hash": url_hash,
+            "level_pct": _tracker_decimal_str(level_pct_val),
+            "charging_time_seconds": raw_ct,
+            "discharging_time_seconds": raw_dt,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _BST_LOCK:
+            if len(_BST_RECORDS) >= MAX_BST_RECORDS:
+                _BST_RECORDS.pop(0)
+            _BST_RECORDS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_bst_list(self) -> None:
+        """GET /api/v1/battery-status/records — list records (auth required)."""
+        if not self._check_auth():
+            return
+        with _BST_LOCK:
+            records = [dict(r) for r in _BST_RECORDS]
+        self._send_json({"records": records, "total": len(records)})
+
+    def _handle_bst_delete(self, record_id: str) -> None:
+        """DELETE /api/v1/battery-status/records/{id} — delete record (auth required)."""
+        if not self._check_auth():
+            return
+        with _BST_LOCK:
+            idx = next((i for i, r in enumerate(_BST_RECORDS) if r["record_id"] == record_id), None)
+            if idx is None:
+                self._send_json({"error": "record not found"}, 404)
+                return
+            _BST_RECORDS.pop(idx)
+        self._send_json({"status": "deleted", "record_id": record_id})
+
+    def _handle_bst_stats(self) -> None:
+        """GET /api/v1/battery-status/stats — stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _BST_LOCK:
+            records = list(_BST_RECORDS)
+        total = len(records)
+        charging_count = 0
+        low_battery_count = 0
+        level_sum = Decimal("0")
+        by_state: dict[str, int] = {s: 0 for s in BST_CHARGING_STATES}
+        for r in records:
+            st = r.get("charging_state", "")
+            if st in by_state:
+                by_state[st] += 1
+            if st == "charging":
+                charging_count += 1
+            lvl = Decimal(str(r.get("level_pct", "0")))
+            level_sum += lvl
+            if lvl < Decimal("20"):
+                low_battery_count += 1
+        avg_level = _tracker_decimal_str(level_sum / Decimal(str(total))) if total > 0 else "0.00"
+        self._send_json({
+            "total": total,
+            "charging_count": charging_count,
+            "avg_level": avg_level,
+            "by_state": by_state,
+            "low_battery_count": low_battery_count,
+        })
+
+    def _handle_bst_charging_states(self) -> None:
+        """GET /api/v1/battery-status/charging-states — list charging states (public)."""
+        self._send_json({"charging_states": BST_CHARGING_STATES})
+
+    # ---------------------------------------------------------------------------
+    # Task 177 — Scroll Depth Tracker
+    # ---------------------------------------------------------------------------
+    def _handle_sds_create(self, payload: Optional[dict[str, Any]] = None) -> None:
+        """POST /api/v1/scroll-depth/sessions — record scroll depth session (auth required)."""
+        if not self._check_auth():
+            return
+        body = payload if payload is not None else self._read_json_body()
+        if body is None:
+            return
+        content_type = str(body.get("content_type", "")).strip()
+        if content_type not in SDS_CONTENT_TYPES:
+            self._send_json({"error": f"content_type must be one of {SDS_CONTENT_TYPES}"}, 400)
+            return
+        url_hash = _tracker_sha256(body.get("url", ""))
+        depth_val, depth_err = _tracker_parse_non_negative_decimal(body.get("max_depth_pct", -1), "max_depth_pct")
+        if depth_err or depth_val is None or depth_val > Decimal("100"):
+            self._send_json({"error": "max_depth_pct must be a decimal 0.00-100.00"}, 400)
+            return
+        time_val, time_err = _tracker_parse_non_negative_decimal(body.get("time_on_page_seconds", -1), "time_on_page_seconds")
+        if time_err:
+            self._send_json({"error": time_err}, 400)
+            return
+        reached_bottom = depth_val >= Decimal("95")
+        session = {
+            "session_id": "sds_" + str(uuid.uuid4()),
+            "content_type": content_type,
+            "url_hash": url_hash,
+            "max_depth_pct": _tracker_decimal_str(depth_val),
+            "reached_bottom": reached_bottom,
+            "time_on_page_seconds": _tracker_decimal_str(time_val),
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _SDS_LOCK:
+            if len(_SDS_SESSIONS) >= MAX_SDS_SESSIONS:
+                _SDS_SESSIONS.pop(0)
+            _SDS_SESSIONS.append(session)
+        self._send_json(session, 201)
+
+    def _handle_sds_list(self) -> None:
+        """GET /api/v1/scroll-depth/sessions — list sessions (auth required)."""
+        if not self._check_auth():
+            return
+        with _SDS_LOCK:
+            sessions = [dict(s) for s in _SDS_SESSIONS]
+        self._send_json({"sessions": sessions, "total": len(sessions)})
+
+    def _handle_sds_delete(self, session_id: str) -> None:
+        """DELETE /api/v1/scroll-depth/sessions/{id} — delete session (auth required)."""
+        if not self._check_auth():
+            return
+        with _SDS_LOCK:
+            idx = next((i for i, s in enumerate(_SDS_SESSIONS) if s["session_id"] == session_id), None)
+            if idx is None:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            _SDS_SESSIONS.pop(idx)
+        self._send_json({"status": "deleted", "session_id": session_id})
+
+    def _handle_sds_stats(self) -> None:
+        """GET /api/v1/scroll-depth/stats — stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _SDS_LOCK:
+            sessions = list(_SDS_SESSIONS)
+        total = len(sessions)
+        bottom_reach_count = 0
+        depth_sum = Decimal("0")
+        by_type: dict[str, int] = {t: 0 for t in SDS_CONTENT_TYPES}
+        for s in sessions:
+            ct = s.get("content_type", "")
+            if ct in by_type:
+                by_type[ct] += 1
+            if s.get("reached_bottom"):
+                bottom_reach_count += 1
+            depth_sum += Decimal(str(s.get("max_depth_pct", "0")))
+        bottom_rate = _tracker_decimal_str(
+            Decimal(str(bottom_reach_count)) / Decimal(str(total))
+        ) if total > 0 else "0.00"
+        avg_depth = _tracker_decimal_str(depth_sum / Decimal(str(total))) if total > 0 else "0.00"
+        self._send_json({
+            "total": total,
+            "bottom_reach_count": bottom_reach_count,
+            "bottom_rate": bottom_rate,
+            "avg_depth": avg_depth,
+            "by_type": by_type,
+        })
+
+    def _handle_sds_content_types(self) -> None:
+        """GET /api/v1/scroll-depth/content-types — list content types (public)."""
+        self._send_json({"content_types": SDS_CONTENT_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 178 — Lazy Load Tracker
+    # ---------------------------------------------------------------------------
+    def _handle_lzl_create(self, payload: Optional[dict[str, Any]] = None) -> None:
+        """POST /api/v1/lazy-load/records — record lazy load event (auth required)."""
+        if not self._check_auth():
+            return
+        body = payload if payload is not None else self._read_json_body()
+        if body is None:
+            return
+        element_type = str(body.get("element_type", "")).strip()
+        if element_type not in LZL_ELEMENT_TYPES:
+            self._send_json({"error": f"element_type must be one of {LZL_ELEMENT_TYPES}"}, 400)
+            return
+        url_hash = _tracker_sha256(body.get("url", ""))
+        element_url_hash = _tracker_sha256(body.get("element_url", ""))
+        load_trigger = str(body.get("load_trigger", "")).strip()
+        if load_trigger not in LZL_LOAD_TRIGGERS:
+            self._send_json({"error": f"load_trigger must be one of {LZL_LOAD_TRIGGERS}"}, 400)
+            return
+        load_time_val, lt_err = _tracker_parse_non_negative_decimal(body.get("load_time_ms", -1), "load_time_ms")
+        if lt_err:
+            self._send_json({"error": lt_err}, 400)
+            return
+        was_visible, vis_err = _tracker_parse_bool(body.get("was_visible_on_load", None), "was_visible_on_load")
+        if vis_err:
+            self._send_json({"error": vis_err}, 400)
+            return
+        record = {
+            "record_id": "lzl_" + str(uuid.uuid4()),
+            "element_type": element_type,
+            "url_hash": url_hash,
+            "element_url_hash": element_url_hash,
+            "load_trigger": load_trigger,
+            "load_time_ms": _tracker_decimal_str(load_time_val),
+            "was_visible_on_load": was_visible,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _LZL_LOCK:
+            if len(_LZL_RECORDS) >= MAX_LZL_RECORDS:
+                _LZL_RECORDS.pop(0)
+            _LZL_RECORDS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_lzl_list(self) -> None:
+        """GET /api/v1/lazy-load/records — list records (auth required)."""
+        if not self._check_auth():
+            return
+        with _LZL_LOCK:
+            records = [dict(r) for r in _LZL_RECORDS]
+        self._send_json({"records": records, "total": len(records)})
+
+    def _handle_lzl_delete(self, record_id: str) -> None:
+        """DELETE /api/v1/lazy-load/records/{id} — delete record (auth required)."""
+        if not self._check_auth():
+            return
+        with _LZL_LOCK:
+            idx = next((i for i, r in enumerate(_LZL_RECORDS) if r["record_id"] == record_id), None)
+            if idx is None:
+                self._send_json({"error": "record not found"}, 404)
+                return
+            _LZL_RECORDS.pop(idx)
+        self._send_json({"status": "deleted", "record_id": record_id})
+
+    def _handle_lzl_stats(self) -> None:
+        """GET /api/v1/lazy-load/stats — stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _LZL_LOCK:
+            records = list(_LZL_RECORDS)
+        total = len(records)
+        visible_count = 0
+        ms_sum = Decimal("0")
+        by_type: dict[str, int] = {t: 0 for t in LZL_ELEMENT_TYPES}
+        for r in records:
+            et = r.get("element_type", "")
+            if et in by_type:
+                by_type[et] += 1
+            if r.get("was_visible_on_load"):
+                visible_count += 1
+            ms_sum += Decimal(str(r.get("load_time_ms", "0")))
+        visible_rate = _tracker_decimal_str(
+            Decimal(str(visible_count)) / Decimal(str(total))
+        ) if total > 0 else "0.00"
+        avg_load_ms = _tracker_decimal_str(ms_sum / Decimal(str(total))) if total > 0 else "0.00"
+        self._send_json({
+            "total": total,
+            "visible_on_load_count": visible_count,
+            "visible_rate": visible_rate,
+            "avg_load_ms": avg_load_ms,
+            "by_type": by_type,
+        })
+
+    def _handle_lzl_element_types(self) -> None:
+        """GET /api/v1/lazy-load/element-types — list element types (public)."""
+        self._send_json({"element_types": LZL_ELEMENT_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 179 — Mouse Heatmap Tracker
+    # ---------------------------------------------------------------------------
+    def _handle_mhe_create(self, payload: Optional[dict[str, Any]] = None) -> None:
+        """POST /api/v1/mouse-heatmap/records — record mouse interaction (auth required)."""
+        if not self._check_auth():
+            return
+        body = payload if payload is not None else self._read_json_body()
+        if body is None:
+            return
+        interaction_type = str(body.get("interaction_type", "")).strip()
+        if interaction_type not in MHE_INTERACTION_TYPES:
+            self._send_json({"error": f"interaction_type must be one of {MHE_INTERACTION_TYPES}"}, 400)
+            return
+        url_hash = _tracker_sha256(body.get("url", ""))
+        x_val, x_err = _tracker_parse_non_negative_decimal(body.get("x_pct", -1), "x_pct")
+        if x_err or x_val is None or x_val > Decimal("100"):
+            self._send_json({"error": "x_pct must be a decimal 0.00-100.00"}, 400)
+            return
+        y_val, y_err = _tracker_parse_non_negative_decimal(body.get("y_pct", -1), "y_pct")
+        if y_err or y_val is None or y_val > Decimal("100"):
+            self._send_json({"error": "y_pct must be a decimal 0.00-100.00"}, 400)
+            return
+        session_hash = _tracker_sha256(body.get("session_id", ""))
+        record = {
+            "record_id": "mhe_" + str(uuid.uuid4()),
+            "interaction_type": interaction_type,
+            "url_hash": url_hash,
+            "x_pct": _tracker_decimal_str(x_val),
+            "y_pct": _tracker_decimal_str(y_val),
+            "session_hash": session_hash,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _MHE_LOCK:
+            if len(_MHE_RECORDS) >= MAX_MHE_RECORDS:
+                _MHE_RECORDS.pop(0)
+            _MHE_RECORDS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_mhe_list(self) -> None:
+        """GET /api/v1/mouse-heatmap/records — list records (auth required)."""
+        if not self._check_auth():
+            return
+        with _MHE_LOCK:
+            records = [dict(r) for r in _MHE_RECORDS]
+        self._send_json({"records": records, "total": len(records)})
+
+    def _handle_mhe_delete(self, record_id: str) -> None:
+        """DELETE /api/v1/mouse-heatmap/records/{id} — delete record (auth required)."""
+        if not self._check_auth():
+            return
+        with _MHE_LOCK:
+            idx = next((i for i, r in enumerate(_MHE_RECORDS) if r["record_id"] == record_id), None)
+            if idx is None:
+                self._send_json({"error": "record not found"}, 404)
+                return
+            _MHE_RECORDS.pop(idx)
+        self._send_json({"status": "deleted", "record_id": record_id})
+
+    def _handle_mhe_stats(self) -> None:
+        """GET /api/v1/mouse-heatmap/stats — stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _MHE_LOCK:
+            records = list(_MHE_RECORDS)
+        total = len(records)
+        by_type: dict[str, int] = {t: 0 for t in MHE_INTERACTION_TYPES}
+        x_sum = Decimal("0")
+        y_sum = Decimal("0")
+        unique_sessions: set[str] = set()
+        for r in records:
+            it = r.get("interaction_type", "")
+            if it in by_type:
+                by_type[it] += 1
+            x_sum += Decimal(str(r.get("x_pct", "0")))
+            y_sum += Decimal(str(r.get("y_pct", "0")))
+            sh = r.get("session_hash", "")
+            if sh:
+                unique_sessions.add(sh)
+        avg_x = _tracker_decimal_str(x_sum / Decimal(str(total))) if total > 0 else "0.00"
+        avg_y = _tracker_decimal_str(y_sum / Decimal(str(total))) if total > 0 else "0.00"
+        self._send_json({
+            "total": total,
+            "by_type": by_type,
+            "avg_x": avg_x,
+            "avg_y": avg_y,
+            "unique_sessions": len(unique_sessions),
+        })
+
+    def _handle_mhe_interaction_types(self) -> None:
+        """GET /api/v1/mouse-heatmap/interaction-types — list interaction types (public)."""
+        self._send_json({"interaction_types": MHE_INTERACTION_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 180 — Keyboard Shortcut Analytics
+    # ---------------------------------------------------------------------------
+    def _handle_kbd_create(self, payload: Optional[dict[str, Any]] = None) -> None:
+        """POST /api/v1/keyboard-shortcuts/events — record keyboard event (auth required)."""
+        if not self._check_auth():
+            return
+        body = payload if payload is not None else self._read_json_body()
+        if body is None:
+            return
+        event_type = str(body.get("event_type", "")).strip()
+        if event_type not in KBD_EVENT_TYPES:
+            self._send_json({"error": f"event_type must be one of {KBD_EVENT_TYPES}"}, 400)
+            return
+        url_hash = _tracker_sha256(body.get("url", ""))
+        key_combo_hash = _tracker_sha256(body.get("key_combo", ""))
+        was_successful, suc_err = _tracker_parse_bool(body.get("was_successful", None), "was_successful")
+        if suc_err:
+            self._send_json({"error": suc_err}, 400)
+            return
+        context_hash = _tracker_sha256(body.get("ui_context", ""))
+        event = {
+            "event_id": "kbd_" + str(uuid.uuid4()),
+            "event_type": event_type,
+            "url_hash": url_hash,
+            "key_combo_hash": key_combo_hash,
+            "was_successful": was_successful,
+            "context_hash": context_hash,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _KBD_LOCK:
+            if len(_KBD_EVENTS) >= MAX_KBD_EVENTS:
+                _KBD_EVENTS.pop(0)
+            _KBD_EVENTS.append(event)
+        self._send_json(event, 201)
+
+    def _handle_kbd_list(self) -> None:
+        """GET /api/v1/keyboard-shortcuts/events — list events (auth required)."""
+        if not self._check_auth():
+            return
+        with _KBD_LOCK:
+            events = [dict(e) for e in _KBD_EVENTS]
+        self._send_json({"events": events, "total": len(events)})
+
+    def _handle_kbd_delete(self, event_id: str) -> None:
+        """DELETE /api/v1/keyboard-shortcuts/events/{id} — delete event (auth required)."""
+        if not self._check_auth():
+            return
+        with _KBD_LOCK:
+            idx = next((i for i, e in enumerate(_KBD_EVENTS) if e["event_id"] == event_id), None)
+            if idx is None:
+                self._send_json({"error": "event not found"}, 404)
+                return
+            _KBD_EVENTS.pop(idx)
+        self._send_json({"status": "deleted", "event_id": event_id})
+
+    def _handle_kbd_stats(self) -> None:
+        """GET /api/v1/keyboard-shortcuts/stats — stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _KBD_LOCK:
+            events = list(_KBD_EVENTS)
+        total = len(events)
+        by_type: dict[str, int] = {t: 0 for t in KBD_EVENT_TYPES}
+        success_count = 0
+        unique_combos: set[str] = set()
+        for e in events:
+            et = e.get("event_type", "")
+            if et in by_type:
+                by_type[et] += 1
+            if e.get("was_successful"):
+                success_count += 1
+            kh = e.get("key_combo_hash", "")
+            if kh:
+                unique_combos.add(kh)
+        success_rate = _tracker_decimal_str(
+            Decimal(str(success_count)) / Decimal(str(total))
+        ) if total > 0 else "0.00"
+        self._send_json({
+            "total": total,
+            "by_type": by_type,
+            "success_count": success_count,
+            "success_rate": success_rate,
+            "unique_combos": len(unique_combos),
+        })
+
+    def _handle_kbd_event_types(self) -> None:
+        """GET /api/v1/keyboard-shortcuts/event-types — list event types (public)."""
+        self._send_json({"event_types": KBD_EVENT_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 163v2 — Storage Quota Monitor handlers (/records variant)
+    # ---------------------------------------------------------------------------
+    def _handle_sqm2_create(self, body: Optional[dict] = None) -> None:
+        if not self._check_auth():
+            return
+        if body is None:
+            body = self._read_json_body()
+        if body is None:
+            return
+        storage_type = str(body.get("storage_type", "")).strip()
+        if storage_type not in STORAGE_QUOTA_STORAGE_TYPES:
+            self._send_json({"error": f"storage_type must be one of {STORAGE_QUOTA_STORAGE_TYPES}"}, 400)
+            return
+        used_bytes, used_err = _tracker_parse_int(body.get("used_bytes", -1), "used_bytes", 0)
+        if used_err:
+            self._send_json({"error": used_err}, 400)
+            return
+        quota_bytes, quota_err = _tracker_parse_int(body.get("quota_bytes", 0), "quota_bytes", 1)
+        if quota_err:
+            self._send_json({"error": quota_err}, 400)
+            return
+        usage_pct = _tracker_decimal_str(used_bytes / quota_bytes * 100)
+        is_near_limit = Decimal(usage_pct) >= Decimal("90")
+        record = {
+            "record_id": "sqm_" + str(uuid.uuid4()),
+            "storage_type": storage_type,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "used_bytes": used_bytes,
+            "quota_bytes": quota_bytes,
+            "usage_pct": usage_pct,
+            "is_near_limit": is_near_limit,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _STORAGE_QUOTA_LOCK:
+            if len(_STORAGE_QUOTA_RECORDS) >= MAX_STORAGE_QUOTA_RECORDS:
+                _STORAGE_QUOTA_RECORDS.pop(0)
+            _STORAGE_QUOTA_RECORDS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_sqm2_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _STORAGE_QUOTA_LOCK:
+            records = [dict(r) for r in _STORAGE_QUOTA_RECORDS]
+        self._send_json({"records": records, "total": len(records)})
+
+    def _handle_sqm2_delete(self, record_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _STORAGE_QUOTA_LOCK:
+            idx = next((i for i, r in enumerate(_STORAGE_QUOTA_RECORDS) if r["record_id"] == record_id), None)
+            if idx is None:
+                self._send_json({"error": "record not found"}, 404)
+                return
+            _STORAGE_QUOTA_RECORDS.pop(idx)
+        self._send_json({"status": "deleted", "record_id": record_id})
+
+    def _handle_sqm2_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _STORAGE_QUOTA_LOCK:
+            records = [dict(r) for r in _STORAGE_QUOTA_RECORDS]
+        near_limit_count = sum(1 for r in records if r.get("is_near_limit"))
+        by_type = {t: 0 for t in STORAGE_QUOTA_STORAGE_TYPES}
+        for r in records:
+            st = r.get("storage_type", "")
+            by_type[st] = by_type.get(st, 0) + 1
+        if records:
+            avg_usage = sum(Decimal(r["usage_pct"]) for r in records) / len(records)
+            avg_usage_pct = str(avg_usage.quantize(Decimal("0.00")))
+            avg_quota_mb = str(
+                (sum(Decimal(r["quota_bytes"]) for r in records) / len(records) / Decimal("1048576")).quantize(Decimal("0.00"))
+            )
+        else:
+            avg_usage_pct = "0.00"
+            avg_quota_mb = "0.00"
+        self._send_json({
+            "total_records": len(records),
+            "near_limit_count": near_limit_count,
+            "avg_usage_pct": avg_usage_pct,
+            "by_type": by_type,
+            "avg_quota_mb": avg_quota_mb,
+        })
+
+    def _handle_sqm2_storage_types(self) -> None:
+        self._send_json({"storage_types": STORAGE_QUOTA_STORAGE_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 164v2 — Permission Policy Tracker handlers (/records variant)
+    # ---------------------------------------------------------------------------
+    def _handle_ppt2_create(self, body: Optional[dict] = None) -> None:
+        if not self._check_auth():
+            return
+        if body is None:
+            body = self._read_json_body()
+        if body is None:
+            return
+        feature = str(body.get("feature", "")).strip()
+        if feature not in PERMISSION_POLICY_FEATURES:
+            self._send_json({"error": f"feature must be one of {PERMISSION_POLICY_FEATURES}"}, 400)
+            return
+        policy_value = str(body.get("policy_value", "")).strip()
+        if policy_value not in ["allowed", "blocked", "ask"]:
+            self._send_json({"error": "policy_value must be one of ['allowed', 'blocked', 'ask']"}, 400)
+            return
+        is_blocked_by_header, hdr_err = _tracker_parse_bool(body.get("is_blocked_by_header", False), "is_blocked_by_header")
+        if hdr_err:
+            self._send_json({"error": hdr_err}, 400)
+            return
+        record = {
+            "record_id": "ppt_" + str(uuid.uuid4()),
+            "feature": feature,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "policy_value": policy_value,
+            "is_blocked_by_header": is_blocked_by_header,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _PERMISSION_POLICY_LOCK:
+            if len(_PERMISSION_POLICY_RECORDS) >= MAX_PERMISSION_POLICY_RECORDS:
+                _PERMISSION_POLICY_RECORDS.pop(0)
+            _PERMISSION_POLICY_RECORDS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_ppt2_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _PERMISSION_POLICY_LOCK:
+            records = [dict(r) for r in _PERMISSION_POLICY_RECORDS]
+        self._send_json({"records": records, "total": len(records)})
+
+    def _handle_ppt2_delete(self, record_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _PERMISSION_POLICY_LOCK:
+            idx = next((i for i, r in enumerate(_PERMISSION_POLICY_RECORDS) if r["record_id"] == record_id), None)
+            if idx is None:
+                self._send_json({"error": "record not found"}, 404)
+                return
+            _PERMISSION_POLICY_RECORDS.pop(idx)
+        self._send_json({"status": "deleted", "record_id": record_id})
+
+    def _handle_ppt2_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _PERMISSION_POLICY_LOCK:
+            records = [dict(r) for r in _PERMISSION_POLICY_RECORDS]
+        blocked_count = sum(1 for r in records if r.get("policy_value") == "blocked")
+        header_blocked_count = sum(1 for r in records if r.get("is_blocked_by_header"))
+        total = len(records)
+        block_rate = str(
+            (Decimal(blocked_count) / Decimal(total) * 100).quantize(Decimal("0.00"))
+        ) if total else "0.00"
+        header_block_rate = str(
+            (Decimal(header_blocked_count) / Decimal(total) * 100).quantize(Decimal("0.00"))
+        ) if total else "0.00"
+        by_feature = {f: 0 for f in PERMISSION_POLICY_FEATURES}
+        for r in records:
+            feat = r.get("feature", "")
+            by_feature[feat] = by_feature.get(feat, 0) + 1
+        self._send_json({
+            "total_records": total,
+            "blocked_count": blocked_count,
+            "block_rate": block_rate,
+            "by_feature": by_feature,
+            "header_block_rate": header_block_rate,
+        })
+
+    def _handle_ppt2_policy_features(self) -> None:
+        self._send_json({"policy_features": PERMISSION_POLICY_FEATURES})
+
+    # ---------------------------------------------------------------------------
+    # Task 165v2 — Web Vitals Tracker handlers (/records variant)
+    # ---------------------------------------------------------------------------
+    def _handle_wvt2_create(self, body: Optional[dict] = None) -> None:
+        if not self._check_auth():
+            return
+        if body is None:
+            body = self._read_json_body()
+        if body is None:
+            return
+        metric_name = str(body.get("metric_name", "")).strip()
+        if metric_name not in WEB_VITALS_METRIC_NAMES:
+            self._send_json({"error": f"metric_name must be one of {WEB_VITALS_METRIC_NAMES}"}, 400)
+            return
+        rating = str(body.get("rating", "")).strip()
+        if rating not in ["good", "needs_improvement", "poor"]:
+            self._send_json({"error": "rating must be one of ['good', 'needs_improvement', 'poor']"}, 400)
+            return
+        value_raw = body.get("value", -1)
+        value_decimal, value_err = _tracker_parse_non_negative_decimal(value_raw, "value")
+        if value_err:
+            self._send_json({"error": value_err}, 400)
+            return
+        record = {
+            "record_id": "wvt_" + str(uuid.uuid4()),
+            "metric_name": metric_name,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "value": _tracker_decimal_str(value_decimal),
+            "rating": rating,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _WEB_VITALS_LOCK:
+            if len(_WEB_VITALS_RECORDS) >= MAX_WEB_VITALS_RECORDS:
+                _WEB_VITALS_RECORDS.pop(0)
+            _WEB_VITALS_RECORDS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_wvt2_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _WEB_VITALS_LOCK:
+            records = [dict(r) for r in _WEB_VITALS_RECORDS]
+        self._send_json({"records": records, "total": len(records)})
+
+    def _handle_wvt2_delete(self, record_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _WEB_VITALS_LOCK:
+            idx = next((i for i, r in enumerate(_WEB_VITALS_RECORDS) if r["record_id"] == record_id), None)
+            if idx is None:
+                self._send_json({"error": "record not found"}, 404)
+                return
+            _WEB_VITALS_RECORDS.pop(idx)
+        self._send_json({"status": "deleted", "record_id": record_id})
+
+    def _handle_wvt2_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _WEB_VITALS_LOCK:
+            records = [dict(r) for r in _WEB_VITALS_RECORDS]
+        good_count = sum(1 for r in records if r.get("rating") == "good")
+        poor_count = sum(1 for r in records if r.get("rating") == "poor")
+        total = len(records)
+        good_rate = str(
+            (Decimal(good_count) / Decimal(total) * 100).quantize(Decimal("0.00"))
+        ) if total else "0.00"
+        if records:
+            avg_value = str((sum(Decimal(r["value"]) for r in records) / total).quantize(Decimal("0.00")))
+        else:
+            avg_value = "0.00"
+        by_metric = {m: 0 for m in WEB_VITALS_METRIC_NAMES}
+        for r in records:
+            mn = r.get("metric_name", "")
+            by_metric[mn] = by_metric.get(mn, 0) + 1
+        self._send_json({
+            "total_records": total,
+            "good_count": good_count,
+            "poor_count": poor_count,
+            "good_rate": good_rate,
+            "avg_value": avg_value,
+            "by_metric": by_metric,
+        })
+
+    def _handle_wvt2_metric_names(self) -> None:
+        self._send_json({"metric_names": WEB_VITALS_METRIC_NAMES})
+
+    # ---------------------------------------------------------------------------
+    # Task 166v2 — Resource Timing Tracker handlers (/records variant)
+    # ---------------------------------------------------------------------------
+    def _handle_rtt2_create(self, body: Optional[dict] = None) -> None:
+        if not self._check_auth():
+            return
+        if body is None:
+            body = self._read_json_body()
+        if body is None:
+            return
+        resource_type = str(body.get("resource_type", "")).strip()
+        if resource_type not in RESOURCE_TIMING_TYPES:
+            self._send_json({"error": f"resource_type must be one of {RESOURCE_TIMING_TYPES}"}, 400)
+            return
+        duration_raw = body.get("duration_ms", -1)
+        duration_decimal, dur_err = _tracker_parse_non_negative_decimal(duration_raw, "duration_ms")
+        if dur_err:
+            self._send_json({"error": dur_err}, 400)
+            return
+        transfer_size_bytes, tsz_err = _tracker_parse_int(body.get("transfer_size_bytes", -1), "transfer_size_bytes", 0)
+        if tsz_err:
+            self._send_json({"error": tsz_err}, 400)
+            return
+        is_cached, cached_err = _tracker_parse_bool(body.get("is_cached", False), "is_cached")
+        if cached_err:
+            self._send_json({"error": cached_err}, 400)
+            return
+        record = {
+            "record_id": "rtt_" + str(uuid.uuid4()),
+            "resource_type": resource_type,
+            "page_url_hash": _tracker_sha256(body.get("page_url", "")),
+            "resource_url_hash": _tracker_sha256(body.get("resource_url", "")),
+            "duration_ms": _tracker_decimal_str(duration_decimal),
+            "transfer_size_bytes": transfer_size_bytes,
+            "is_cached": is_cached,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _RESOURCE_TIMING_LOCK:
+            if len(_RESOURCE_TIMING_RECORDS) >= MAX_RESOURCE_TIMING_RECORDS:
+                _RESOURCE_TIMING_RECORDS.pop(0)
+            _RESOURCE_TIMING_RECORDS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_rtt2_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _RESOURCE_TIMING_LOCK:
+            records = [dict(r) for r in _RESOURCE_TIMING_RECORDS]
+        self._send_json({"records": records, "total": len(records)})
+
+    def _handle_rtt2_delete(self, record_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _RESOURCE_TIMING_LOCK:
+            idx = next((i for i, r in enumerate(_RESOURCE_TIMING_RECORDS) if r["record_id"] == record_id), None)
+            if idx is None:
+                self._send_json({"error": "record not found"}, 404)
+                return
+            _RESOURCE_TIMING_RECORDS.pop(idx)
+        self._send_json({"status": "deleted", "record_id": record_id})
+
+    def _handle_rtt2_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _RESOURCE_TIMING_LOCK:
+            records = [dict(r) for r in _RESOURCE_TIMING_RECORDS]
+        cached_count = sum(1 for r in records if r.get("is_cached"))
+        total = len(records)
+        cache_rate = str(
+            (Decimal(cached_count) / Decimal(total) * 100).quantize(Decimal("0.00"))
+        ) if total else "0.00"
+        if records:
+            avg_duration_ms = str((sum(Decimal(r["duration_ms"]) for r in records) / total).quantize(Decimal("0.00")))
+        else:
+            avg_duration_ms = "0.00"
+        by_type = {t: 0 for t in RESOURCE_TIMING_TYPES}
+        for r in records:
+            rt = r.get("resource_type", "")
+            by_type[rt] = by_type.get(rt, 0) + 1
+        self._send_json({
+            "total_records": total,
+            "cached_count": cached_count,
+            "cache_rate": cache_rate,
+            "avg_duration_ms": avg_duration_ms,
+            "by_type": by_type,
+        })
+
+    def _handle_rtt2_resource_types(self) -> None:
+        self._send_json({"resource_types": RESOURCE_TIMING_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 167v2 — User Agent Tracker handlers (/records variant)
+    # ---------------------------------------------------------------------------
+    def _handle_uat2_create(self, body: Optional[dict] = None) -> None:
+        if not self._check_auth():
+            return
+        if body is None:
+            body = self._read_json_body()
+        if body is None:
+            return
+        platform = str(body.get("platform", "")).strip()
+        if platform not in USER_AGENT_PLATFORMS:
+            self._send_json({"error": f"platform must be one of {USER_AGENT_PLATFORMS}"}, 400)
+            return
+        browser = str(body.get("browser", "")).strip()
+        if browser not in USER_AGENT_BROWSERS:
+            self._send_json({"error": f"browser must be one of {USER_AGENT_BROWSERS}"}, 400)
+            return
+        is_mobile, mob_err = _tracker_parse_bool(body.get("is_mobile", False), "is_mobile")
+        if mob_err:
+            self._send_json({"error": mob_err}, 400)
+            return
+        is_bot, bot_err = _tracker_parse_bool(body.get("is_bot", False), "is_bot")
+        if bot_err:
+            self._send_json({"error": bot_err}, 400)
+            return
+        record = {
+            "record_id": "uat_" + str(uuid.uuid4()),
+            "platform": platform,
+            "browser": browser,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "ua_hash": _tracker_sha256(body.get("user_agent", "")),
+            "is_mobile": is_mobile,
+            "is_bot": is_bot,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _USER_AGENT_LOCK:
+            if len(_USER_AGENT_RECORDS) >= MAX_USER_AGENT_RECORDS:
+                _USER_AGENT_RECORDS.pop(0)
+            _USER_AGENT_RECORDS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_uat2_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _USER_AGENT_LOCK:
+            records = [dict(r) for r in _USER_AGENT_RECORDS]
+        self._send_json({"records": records, "total": len(records)})
+
+    def _handle_uat2_delete(self, record_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _USER_AGENT_LOCK:
+            idx = next((i for i, r in enumerate(_USER_AGENT_RECORDS) if r["record_id"] == record_id), None)
+            if idx is None:
+                self._send_json({"error": "record not found"}, 404)
+                return
+            _USER_AGENT_RECORDS.pop(idx)
+        self._send_json({"status": "deleted", "record_id": record_id})
+
+    def _handle_uat2_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _USER_AGENT_LOCK:
+            records = [dict(r) for r in _USER_AGENT_RECORDS]
+        mobile_count = sum(1 for r in records if r.get("is_mobile"))
+        bot_count = sum(1 for r in records if r.get("is_bot"))
+        total = len(records)
+        mobile_rate = str(
+            (Decimal(mobile_count) / Decimal(total) * 100).quantize(Decimal("0.00"))
+        ) if total else "0.00"
+        by_platform = {p: 0 for p in USER_AGENT_PLATFORMS}
+        by_browser = {b: 0 for b in USER_AGENT_BROWSERS}
+        for r in records:
+            p = r.get("platform", "")
+            b = r.get("browser", "")
+            by_platform[p] = by_platform.get(p, 0) + 1
+            by_browser[b] = by_browser.get(b, 0) + 1
+        self._send_json({
+            "total_records": total,
+            "mobile_count": mobile_count,
+            "bot_count": bot_count,
+            "mobile_rate": mobile_rate,
+            "by_platform": by_platform,
+            "by_browser": by_browser,
+        })
+
+    def _handle_uat2_platforms(self) -> None:
+        self._send_json({"platforms": USER_AGENT_PLATFORMS, "browsers": USER_AGENT_BROWSERS})
 
 
 # ---------------------------------------------------------------------------

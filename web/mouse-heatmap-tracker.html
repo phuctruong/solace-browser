@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mouse Heatmap Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/mouse-heatmap-tracker.css">
+</head>
+<body>
+<main class="mhe-shell">
+  <header class="mhe-header">
+    <h1>Mouse Heatmap Tracker</h1>
+    <p>Track mouse interactions with hashed URLs and session IDs for privacy.</p>
+  </header>
+
+  <section class="mhe-card">
+    <h2>Record Interaction</h2>
+    <form id="mhe-form" class="mhe-form">
+      <select id="mhe-type" class="mhe-input" aria-label="Interaction type"></select>
+      <input id="mhe-url" class="mhe-input" type="url" placeholder="Page URL (will be hashed)" aria-label="Page URL">
+      <input id="mhe-x" class="mhe-input" type="number" min="0" max="100" step="0.01" placeholder="X position % (0-100)" aria-label="X pct">
+      <input id="mhe-y" class="mhe-input" type="number" min="0" max="100" step="0.01" placeholder="Y position % (0-100)" aria-label="Y pct">
+      <input id="mhe-session" class="mhe-input" type="text" placeholder="Session ID (will be hashed)" aria-label="Session ID">
+      <button class="mhe-btn" type="submit">Record</button>
+    </form>
+  </section>
+
+  <section class="mhe-card">
+    <h2>Stats</h2>
+    <div id="mhe-stats" class="mhe-stats-grid"></div>
+  </section>
+
+  <section class="mhe-card">
+    <h2>Records</h2>
+    <ul id="mhe-list" class="mhe-list"></ul>
+  </section>
+</main>
+<script src="/web/js/mouse-heatmap-tracker.js"></script>
+</body>
+</html>

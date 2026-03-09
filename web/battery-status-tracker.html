@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Battery Status Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/battery-status-tracker.css">
+</head>
+<body>
+<main class="bst-shell">
+  <header class="bst-header">
+    <h1>Battery Status Tracker</h1>
+    <p>Track battery charging state and level with hashed URLs for privacy.</p>
+  </header>
+
+  <section class="bst-card">
+    <h2>Record Status</h2>
+    <form id="bst-form" class="bst-form">
+      <select id="bst-state" class="bst-input" aria-label="Charging state"></select>
+      <input id="bst-url" class="bst-input" type="url" placeholder="Page URL (will be hashed)" aria-label="Page URL">
+      <input id="bst-level" class="bst-input" type="number" min="0" max="100" step="0.01" placeholder="Battery level % (0-100)" aria-label="Battery level">
+      <input id="bst-ct" class="bst-input" type="number" min="0" placeholder="Charging time (seconds, optional)" aria-label="Charging time seconds">
+      <input id="bst-dt" class="bst-input" type="number" min="0" placeholder="Discharging time (seconds, optional)" aria-label="Discharging time seconds">
+      <button class="bst-btn" type="submit">Record</button>
+    </form>
+  </section>
+
+  <section class="bst-card">
+    <h2>Stats</h2>
+    <div id="bst-stats" class="bst-stats-grid"></div>
+  </section>
+
+  <section class="bst-card">
+    <h2>Records</h2>
+    <ul id="bst-list" class="bst-list"></ul>
+  </section>
+</main>
+<script src="/web/js/battery-status-tracker.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+/* csp-violation-reporter.css — Task 174 */
+/* ONLY var(--hub-*) tokens */
+.csp-shell { max-width: 800px; margin: 0 auto; padding: var(--hub-space-4, 1rem); }
+.csp-header { margin-bottom: var(--hub-space-4, 1rem); }
+.csp-header h1 { font-size: var(--hub-font-size-xl, 1.5rem); color: var(--hub-color-text, #1a1a1a); margin: 0; }
+.csp-card { background: var(--hub-color-surface, #fff); border: 1px solid var(--hub-color-border, #e0e0e0); border-radius: var(--hub-radius-md, 8px); padding: var(--hub-space-4, 1rem); margin-bottom: var(--hub-space-4, 1rem); }
+.csp-form { display: flex; flex-direction: column; gap: var(--hub-space-2, 0.5rem); }
+.csp-input { padding: var(--hub-space-2, 0.5rem); border: 1px solid var(--hub-color-border, #ccc); border-radius: var(--hub-radius-sm, 4px); font-size: var(--hub-font-size-sm, 0.875rem); }
+.csp-btn { padding: var(--hub-space-2, 0.5rem) var(--hub-space-4, 1rem); background: var(--hub-color-primary, #4a90e2); color: var(--hub-color-on-primary, #fff); border: none; border-radius: var(--hub-radius-sm, 4px); cursor: pointer; }
+.csp-btn-sm { margin-left: var(--hub-space-2, 0.5rem); padding: 2px var(--hub-space-2, 0.5rem); background: var(--hub-color-danger, #e24a4a); color: var(--hub-color-on-primary, #fff); border: none; border-radius: var(--hub-radius-sm, 4px); cursor: pointer; font-size: var(--hub-font-size-xs, 0.75rem); }
+.csp-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--hub-space-2, 0.5rem); }
+.csp-list { list-style: none; padding: 0; margin: 0; }
+.csp-item { padding: var(--hub-space-2, 0.5rem); border-bottom: 1px solid var(--hub-color-border, #e0e0e0); display: flex; align-items: center; }
+.csp-check { display: flex; align-items: center; gap: var(--hub-space-1, 0.25rem); }

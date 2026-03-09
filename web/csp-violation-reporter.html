@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSP Violation Reporter — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/csp-violation-reporter.css">
+</head>
+<body>
+<main class="csp-shell">
+  <header class="csp-header">
+    <h1>CSP Violation Reporter</h1>
+    <p>Track Content Security Policy violations with hashed URLs for privacy.</p>
+  </header>
+
+  <section class="csp-card">
+    <h2>Report Violation</h2>
+    <form id="csp-form" class="csp-form">
+      <select id="csp-directive" class="csp-input" aria-label="CSP directive"></select>
+      <input id="csp-page-url" class="csp-input" type="url" placeholder="Page URL (will be hashed)" aria-label="Page URL">
+      <input id="csp-blocked-url" class="csp-input" type="url" placeholder="Blocked URL (will be hashed)" aria-label="Blocked URL">
+      <label class="csp-check"><input id="csp-report-only" type="checkbox"> Report-Only mode</label>
+      <button class="csp-btn" type="submit">Report</button>
+    </form>
+  </section>
+
+  <section class="csp-card">
+    <h2>Stats</h2>
+    <div id="csp-stats" class="csp-stats-grid"></div>
+  </section>
+
+  <section class="csp-card">
+    <h2>Violations</h2>
+    <ul id="csp-list" class="csp-list"></ul>
+  </section>
+</main>
+<script src="/web/js/csp-violation-reporter.js"></script>
+</body>
+</html>

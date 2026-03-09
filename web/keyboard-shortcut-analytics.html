@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keyboard Shortcut Analytics — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/keyboard-shortcut-analytics.css">
+</head>
+<body>
+<main class="kbd-shell">
+  <header class="kbd-header">
+    <h1>Keyboard Shortcut Analytics</h1>
+    <p>Track keyboard shortcut usage with hashed combos for privacy — raw keys never stored.</p>
+  </header>
+
+  <section class="kbd-card">
+    <h2>Record Event</h2>
+    <form id="kbd-form" class="kbd-form">
+      <select id="kbd-type" class="kbd-input" aria-label="Event type"></select>
+      <input id="kbd-url" class="kbd-input" type="url" placeholder="Page URL (will be hashed)" aria-label="Page URL">
+      <input id="kbd-combo" class="kbd-input" type="text" placeholder="Key combo (will be hashed — never stored raw)" aria-label="Key combo">
+      <input id="kbd-context" class="kbd-input" type="text" placeholder="UI context (will be hashed)" aria-label="UI context">
+      <label class="kbd-check"><input id="kbd-success" type="checkbox"> Was successful</label>
+      <button class="kbd-btn" type="submit">Record</button>
+    </form>
+  </section>
+
+  <section class="kbd-card">
+    <h2>Stats</h2>
+    <div id="kbd-stats" class="kbd-stats-grid"></div>
+  </section>
+
+  <section class="kbd-card">
+    <h2>Events</h2>
+    <ul id="kbd-list" class="kbd-list"></ul>
+  </section>
+</main>
+<script src="/web/js/keyboard-shortcut-analytics.js"></script>
+</body>
+</html>

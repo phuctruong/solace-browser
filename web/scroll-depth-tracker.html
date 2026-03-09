@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scroll Depth Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/scroll-depth-tracker.css">
+</head>
+<body>
+<main class="sds-shell">
+  <header class="sds-header">
+    <h1>Scroll Depth Tracker</h1>
+    <p>Track how far users scroll on each page type with hashed URLs for privacy.</p>
+  </header>
+
+  <section class="sds-card">
+    <h2>Record Session</h2>
+    <form id="sds-form" class="sds-form">
+      <select id="sds-type" class="sds-input" aria-label="Content type"></select>
+      <input id="sds-url" class="sds-input" type="url" placeholder="Page URL (will be hashed)" aria-label="Page URL">
+      <input id="sds-depth" class="sds-input" type="number" min="0" max="100" step="0.01" placeholder="Max scroll depth % (0-100)" aria-label="Max depth pct">
+      <input id="sds-time" class="sds-input" type="number" min="0" step="0.01" placeholder="Time on page (seconds)" aria-label="Time on page seconds">
+      <button class="sds-btn" type="submit">Record</button>
+    </form>
+  </section>
+
+  <section class="sds-card">
+    <h2>Stats</h2>
+    <div id="sds-stats" class="sds-stats-grid"></div>
+  </section>
+
+  <section class="sds-card">
+    <h2>Sessions</h2>
+    <ul id="sds-list" class="sds-list"></ul>
+  </section>
+</main>
+<script src="/web/js/scroll-depth-tracker.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lazy Load Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/lazy-load-tracker.css">
+</head>
+<body>
+<main class="lzl-shell">
+  <header class="lzl-header">
+    <h1>Lazy Load Tracker</h1>
+    <p>Track lazy-loaded element performance with hashed URLs for privacy.</p>
+  </header>
+
+  <section class="lzl-card">
+    <h2>Record Event</h2>
+    <form id="lzl-form" class="lzl-form">
+      <select id="lzl-type" class="lzl-input" aria-label="Element type"></select>
+      <input id="lzl-url" class="lzl-input" type="url" placeholder="Page URL (will be hashed)" aria-label="Page URL">
+      <input id="lzl-el-url" class="lzl-input" type="url" placeholder="Element URL (will be hashed)" aria-label="Element URL">
+      <select id="lzl-trigger" class="lzl-input" aria-label="Load trigger"></select>
+      <input id="lzl-ms" class="lzl-input" type="number" min="0" step="0.01" placeholder="Load time (ms)" aria-label="Load time ms">
+      <label class="lzl-check"><input id="lzl-visible" type="checkbox"> Was visible on load</label>
+      <button class="lzl-btn" type="submit">Record</button>
+    </form>
+  </section>
+
+  <section class="lzl-card">
+    <h2>Stats</h2>
+    <div id="lzl-stats" class="lzl-stats-grid"></div>
+  </section>
+
+  <section class="lzl-card">
+    <h2>Records</h2>
+    <ul id="lzl-list" class="lzl-list"></ul>
+  </section>
+</main>
+<script src="/web/js/lazy-load-tracker.js"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>History Cleaner — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/history-cleaner.css">
+</head>
+<body>
+<main class="hcl-shell">
+  <header class="hcl-header">
+    <h1>History Cleaner</h1>
+    <p>Record and audit browser history clean events with privacy-preserving URL hashing.</p>
+  </header>
+
+  <section class="hcl-card">
+    <h2>Record Clean Event</h2>
+    <form id="hcl-form" class="hcl-form">
+      <select id="hcl-reason" class="hcl-input" aria-label="Clean reason"></select>
+      <input id="hcl-url-pattern" class="hcl-input" type="text" placeholder="URL pattern (will be hashed)" aria-label="URL pattern">
+      <input id="hcl-entries" class="hcl-input" type="number" min="0" value="0" aria-label="Entries removed">
+      <input id="hcl-time-range" class="hcl-input" type="number" min="0" value="0" aria-label="Time range (hours, 0=all)">
+      <button class="hcl-btn" type="submit">Record</button>
+    </form>
+  </section>
+
+  <section class="hcl-card">
+    <h2>Stats</h2>
+    <div id="hcl-stats" class="hcl-stats-grid"></div>
+  </section>
+
+  <section class="hcl-card">
+    <h2>Clean Records</h2>
+    <ul id="hcl-list" class="hcl-list"></ul>
+  </section>
+</main>
+<script src="/web/js/history-cleaner.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Media Query Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/media-query-tracker.css">
+</head>
+<body>
+<main class="mqt-shell">
+  <header class="mqt-header">
+    <h1>Media Query Tracker</h1>
+    <p>Track viewport breakpoints and orientation with hashed URLs for privacy.</p>
+  </header>
+
+  <section class="mqt-card">
+    <h2>Record Event</h2>
+    <form id="mqt-form" class="mqt-form">
+      <select id="mqt-breakpoint" class="mqt-input" aria-label="Breakpoint"></select>
+      <input id="mqt-url" class="mqt-input" type="url" placeholder="Page URL (will be hashed)" aria-label="Page URL">
+      <select id="mqt-orientation" class="mqt-input" aria-label="Orientation">
+        <option value="portrait">portrait</option>
+        <option value="landscape">landscape</option>
+        <option value="unknown">unknown</option>
+      </select>
+      <input id="mqt-width" class="mqt-input" type="number" min="0" placeholder="Width (px)" aria-label="Width px">
+      <input id="mqt-height" class="mqt-input" type="number" min="0" placeholder="Height (px)" aria-label="Height px">
+      <input id="mqt-dpr" class="mqt-input" type="number" min="0" step="0.01" placeholder="Device pixel ratio" aria-label="Device pixel ratio">
+      <button class="mqt-btn" type="submit">Record</button>
+    </form>
+  </section>
+
+  <section class="mqt-card">
+    <h2>Stats</h2>
+    <div id="mqt-stats" class="mqt-stats-grid"></div>
+  </section>
+
+  <section class="mqt-card">
+    <h2>Records</h2>
+    <ul id="mqt-list" class="mqt-list"></ul>
+  </section>
+</main>
+<script src="/web/js/media-query-tracker.js"></script>
+</body>
+</html>

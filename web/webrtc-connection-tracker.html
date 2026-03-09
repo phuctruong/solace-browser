@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebRTC Connection Tracker — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/webrtc-connection-tracker.css">
+</head>
+<body>
+<main class="wrc-shell">
+  <header class="wrc-header">
+    <h1>WebRTC Connection Tracker</h1>
+    <p>Track WebRTC peer connections with hashed IP addresses for privacy.</p>
+  </header>
+
+  <section class="wrc-card">
+    <h2>Record Connection</h2>
+    <form id="wrc-form" class="wrc-form">
+      <select id="wrc-type" class="wrc-input" aria-label="Connection type"></select>
+      <input id="wrc-page-url" class="wrc-input" type="url" placeholder="Page URL" aria-label="Page URL">
+      <input id="wrc-remote-ip" class="wrc-input" type="text" placeholder="Remote IP (will be hashed)" aria-label="Remote IP">
+      <input id="wrc-duration" class="wrc-input" type="number" min="0" step="0.01" value="0" aria-label="Duration ms">
+      <input id="wrc-bytes-sent" class="wrc-input" type="number" min="0" value="0" aria-label="Bytes sent">
+      <input id="wrc-bytes-received" class="wrc-input" type="number" min="0" value="0" aria-label="Bytes received">
+      <label class="wrc-check"><input id="wrc-ice" type="checkbox"> ICE connected</label>
+      <button class="wrc-btn" type="submit">Record</button>
+    </form>
+  </section>
+
+  <section class="wrc-card">
+    <h2>Stats</h2>
+    <div id="wrc-stats" class="wrc-stats-grid"></div>
+  </section>
+
+  <section class="wrc-card">
+    <h2>Connections</h2>
+    <ul id="wrc-list" class="wrc-list"></ul>
+  </section>
+</main>
+<script src="/web/js/webrtc-connection-tracker.js"></script>
+</body>
+</html>
