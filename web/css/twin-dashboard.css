@@ -1,0 +1,299 @@
+/* twin-dashboard.css — Twin Browser Dashboard for Solace Hub
+   Task 022 | Rung 641
+   Laws:
+     - var(--hub-*) tokens ONLY. No hex values outside :root.
+     - No CDN. No Bootstrap. No Tailwind. No jQuery.
+     - Jony Ive rule: 8px minimum gap between all elements.
+     - Port 8888 ONLY. Debug port BANNED.
+*/
+
+:root {
+  --hub-bg: #1a1a2e;
+  --hub-surface: #16213e;
+  --hub-border: #0f3460;
+  --hub-accent: #e94560;
+  --hub-text: #f5f5f5;
+  --hub-text-muted: #a8a8b3;
+  --hub-success: #4caf50;
+  --hub-warning: #ff9800;
+  --hub-danger: #e94560;
+  --hub-ghost: #2a2a4a;
+  --hub-connected: #4caf50;
+  --hub-running: #ff9800;
+  --hub-idle: #a8a8b3;
+  --hub-error: #e94560;
+  --gap: 8px;
+  --radius: 6px;
+  --transition: 0.2s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Page header ── */
+.page-header {
+  background: var(--hub-surface);
+  border-bottom: 1px solid var(--hub-border);
+  padding: calc(var(--gap) * 2);
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.page-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.page-subtitle {
+  color: var(--hub-text-muted);
+  font-size: 13px;
+  margin-left: auto;
+}
+
+/* ── Status indicator ── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--gap) / 2);
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hub-idle);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.status-dot--idle {
+  background: var(--hub-idle);
+}
+
+.status-dot--running {
+  background: var(--hub-running);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.status-dot--active {
+  background: var(--hub-connected);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.status-dot--error {
+  background: var(--hub-error);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+/* ── Layout ── */
+.twin-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: calc(var(--gap) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 2);
+}
+
+/* ── Card ── */
+.card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  padding: calc(var(--gap) * 2);
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: var(--gap);
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+
+/* ── Status card ── */
+.status-card {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gap) * 2);
+  flex-wrap: wrap;
+}
+
+.status-meta {
+  color: var(--hub-text-muted);
+  font-size: 13px;
+}
+
+/* ── Add task form ── */
+.add-task-form {
+  display: flex;
+  gap: var(--gap);
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) / 2);
+  flex: 1;
+  min-width: 160px;
+}
+
+label {
+  font-size: 12px;
+  color: var(--hub-text-muted);
+  font-weight: 500;
+}
+
+select,
+textarea,
+input[type="text"] {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  padding: calc(var(--gap)) calc(var(--gap));
+  font-size: 13px;
+  font-family: inherit;
+  width: 100%;
+}
+
+select:focus,
+textarea:focus,
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--hub-accent);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* ── Buttons ── */
+.btn {
+  padding: calc(var(--gap)) calc(var(--gap) * 2);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition);
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.btn--primary {
+  background: var(--hub-accent);
+  color: var(--hub-text);
+}
+
+.btn--danger {
+  background: var(--hub-danger);
+  color: var(--hub-text);
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.btn--ghost {
+  background: var(--hub-ghost);
+  color: var(--hub-text);
+}
+
+/* ── Table ── */
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.task-table th {
+  text-align: left;
+  padding: calc(var(--gap)) calc(var(--gap));
+  border-bottom: 1px solid var(--hub-border);
+  color: var(--hub-text-muted);
+  font-weight: 500;
+}
+
+.task-table td {
+  padding: calc(var(--gap)) calc(var(--gap));
+  border-bottom: 1px solid var(--hub-border);
+  vertical-align: middle;
+}
+
+.task-table tr:last-child td {
+  border-bottom: none;
+}
+
+.task-table tbody tr:hover {
+  background: var(--hub-ghost);
+}
+
+/* ── Status chip in table ── */
+.status-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-chip--ok { background: var(--hub-success); color: var(--hub-bg); }
+.status-chip--error { background: var(--hub-error); color: var(--hub-text); }
+.status-chip--pending { background: var(--hub-warning); color: var(--hub-bg); }
+
+/* ── Empty state ── */
+.empty-state {
+  color: var(--hub-text-muted);
+  text-align: center;
+  padding: calc(var(--gap) * 3);
+  font-size: 13px;
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: calc(var(--gap) * 2);
+  right: calc(var(--gap) * 2);
+  padding: var(--gap) calc(var(--gap) * 2);
+  border-radius: var(--radius);
+  background: var(--hub-ghost);
+  color: var(--hub-text);
+  font-size: 13px;
+  display: none;
+  z-index: 1000;
+  max-width: 320px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.toast.show { display: block; }
+.toast--success { background: var(--hub-success); color: var(--hub-bg); }
+.toast--error { background: var(--hub-danger); color: var(--hub-text); }

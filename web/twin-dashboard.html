@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Twin Browser Dashboard — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/twin-dashboard.css" />
+</head>
+<body>
+
+  <header class="page-header">
+    <h1>Twin Browser Dashboard</h1>
+    <span class="page-subtitle">Cloud twin visibility — real-time task queue and history</span>
+  </header>
+
+  <main class="twin-page">
+
+    <!-- Status card -->
+    <section class="card">
+      <div class="card-title">Cloud Twin Status</div>
+      <div class="status-card">
+        <div class="status-badge" id="twin-status">
+          <span class="status-dot status-dot--idle"></span>
+          <span class="status-text">IDLE</span>
+        </div>
+        <span class="status-meta" id="twin-status-meta">Never active</span>
+      </div>
+    </section>
+
+    <!-- Add to Queue form -->
+    <section class="card">
+      <div class="card-title">Add Task to Queue</div>
+      <form class="add-task-form" id="add-task-form">
+        <div class="form-group">
+          <label for="task-action">Action</label>
+          <select id="task-action" required>
+            <option value="">— select action —</option>
+            <option value="navigate">navigate</option>
+            <option value="screenshot">screenshot</option>
+            <option value="run_recipe">run_recipe</option>
+            <option value="scrape">scrape</option>
+            <option value="submit_form">submit_form</option>
+            <option value="click">click</option>
+            <option value="scroll">scroll</option>
+            <option value="wait">wait</option>
+            <option value="extract">extract</option>
+            <option value="export">export</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="task-payload">Payload (optional JSON)</label>
+          <textarea id="task-payload" placeholder='{"url": "https://example.com"}'></textarea>
+        </div>
+        <button type="submit" class="btn btn--primary">Add to Queue</button>
+      </form>
+    </section>
+
+    <!-- Queue panel -->
+    <section class="card">
+      <div class="card-title">Pending Queue</div>
+      <table class="task-table">
+        <thead>
+          <tr>
+            <th>Task ID</th>
+            <th>Action</th>
+            <th>Created At</th>
+            <th>Cancel</th>
+          </tr>
+        </thead>
+        <tbody id="queue-tbody">
+          <tr><td colspan="4" class="empty-state">Loading…</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- History panel -->
+    <section class="card">
+      <div class="card-title">Completed Tasks (last 50)</div>
+      <table class="task-table">
+        <thead>
+          <tr>
+            <th>Task ID</th>
+            <th>Action</th>
+            <th>Status</th>
+            <th>Duration</th>
+            <th>Cost</th>
+          </tr>
+        </thead>
+        <tbody id="history-tbody">
+          <tr><td colspan="5" class="empty-state">Loading…</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="/web/js/twin-dashboard.js"></script>
+</body>
+</html>

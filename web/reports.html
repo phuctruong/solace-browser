@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scheduled Reports — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/reports.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Scheduled Reports</h1>
+    <span class="page-subtitle">Automation that reports on itself — weekly summary every Monday</span>
+  </div>
+
+  <div class="reports-page">
+
+    <!-- Report Templates -->
+    <div class="card">
+      <div class="card-title">Report Templates</div>
+      <div id="templates-list" class="templates-list">
+        <div class="loading-msg">Loading templates...</div>
+      </div>
+    </div>
+
+    <!-- Schedule a Report -->
+    <div class="card">
+      <div class="card-title">Schedule a Report</div>
+      <form id="schedule-form" class="schedule-form" novalidate>
+        <div class="form-group">
+          <label for="template-select">Template</label>
+          <select id="template-select" name="template_id" required>
+            <option value="">— select a template —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="cron-input">Cron Expression</label>
+          <input
+            id="cron-input"
+            type="text"
+            name="cron"
+            placeholder="0 9 * * 1  (every Monday 09:00)"
+            maxlength="64"
+            required
+          >
+          <div class="field-hint">5 fields: minute hour day month weekday</div>
+        </div>
+        <div class="form-group">
+          <label for="delivery-select">Delivery</label>
+          <select id="delivery-select" name="delivery">
+            <option value="download">Download (JSON)</option>
+            <option value="email_stub">Email (stub)</option>
+          </select>
+        </div>
+        <div id="schedule-error" class="form-error" hidden></div>
+        <button type="submit" class="btn-primary">Schedule Report</button>
+      </form>
+    </div>
+
+    <!-- Scheduled Reports List -->
+    <div class="card">
+      <div class="card-title">Scheduled Reports</div>
+      <div id="scheduled-list" class="scheduled-list">
+        <div class="empty-msg">No scheduled reports yet.</div>
+      </div>
+    </div>
+
+    <!-- Generate Now (Ad-hoc) -->
+    <div class="card">
+      <div class="card-title">Generate Now</div>
+      <div class="generate-row">
+        <select id="generate-template-select">
+          <option value="">— select a template —</option>
+        </select>
+        <button id="generate-btn" class="btn-secondary">Generate Now</button>
+      </div>
+      <div id="generate-error" class="form-error" hidden></div>
+      <div id="report-preview" hidden>
+        <div class="preview-title">Report Preview</div>
+        <pre id="report-json" class="report-json"></pre>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/web/js/reports.js"></script>
+</body>
+</html>

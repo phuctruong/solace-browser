@@ -165,9 +165,9 @@ BYOK_PATH: Path = Path.home() / ".solace" / "byok_keys.json"
 NOTIFICATIONS_PATH: Path = Path.home() / ".solace" / "notifications.json"
 SUPPORTED_PROVIDERS: frozenset = frozenset(["anthropic", "openai", "together", "openrouter"])
 DEFAULT_BUDGET: dict = {
-    "daily_limit_usd": 1.00,
-    "monthly_limit_usd": 20.00,
-    "alert_threshold": 0.80,
+    "daily_limit_usd": "1.00",
+    "monthly_limit_usd": "20.00",
+    "alert_threshold": "0.80",
     "pause_on_exceeded": True,
 }
 DEFAULT_CLOUD_TWIN_SETTINGS: dict = {
@@ -329,6 +329,20 @@ _PENDING_ACTIONS: dict[str, dict] = {}
 _PENDING_ACTIONS_LOCK = threading.Lock()
 _ACTIONS_HISTORY: list[dict] = []
 _ACTIONS_HISTORY_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Twin Browser Dashboard — Task 022
+# NORTHSTAR: Cloud twin visibility — see what your cloud twin is doing in real-time
+# ---------------------------------------------------------------------------
+_TWIN_QUEUE: list[dict] = []
+_TWIN_HISTORY: list[dict] = []
+_TWIN_LOCK = threading.Lock()
+_TWIN_STATUS: dict[str, Any] = {"status": "idle", "last_active": None}
+TWIN_VALID_ACTIONS: frozenset = frozenset([
+    "navigate", "screenshot", "run_recipe", "scrape", "submit_form",
+    "click", "scroll", "wait", "extract", "export",
+])
+TWIN_MAX_HISTORY = 50
 
 # ---------------------------------------------------------------------------
 # Gmail Inbox Triage — Task 014
@@ -591,6 +605,32 @@ _METRICS_LOCK = threading.Lock()
 _REQUEST_HISTORY: list = []
 _HISTORY_LOCK = threading.Lock()
 MAX_HISTORY = 100
+
+# ---------------------------------------------------------------------------
+# Scheduled Reports state — Task 021 (Scheduled Reports)
+# ---------------------------------------------------------------------------
+REPORT_TEMPLATES: list[dict] = [
+    {
+        "template_id": "weekly-activity",
+        "name": "Weekly Activity Summary",
+        "description": "Tasks run, cost spent, hit rate for the week",
+        "estimated_ms": 500,
+    },
+    {
+        "template_id": "evidence-digest",
+        "name": "Evidence Chain Digest",
+        "description": "All actions from the evidence chain, grouped by day",
+        "estimated_ms": 200,
+    },
+    {
+        "template_id": "budget-report",
+        "name": "Budget & Cost Report",
+        "description": "Spend vs limits, top cost drivers, projections",
+        "estimated_ms": 300,
+    },
+]
+_SCHEDULED_REPORTS: list[dict] = []
+_REPORTS_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
 # Session stats globals — Task 061 (Value Dashboard)
@@ -3535,6 +3575,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_recipe_detail(recipe_id)
         elif path == "/api/v1/budget":
             self._handle_budget_get()
+        elif path == "/api/v1/budget/usage":
+            self._handle_budget_usage()
         elif path == "/api/v1/budget/status":
             self._handle_budget_status()
         elif path == "/api/v1/budget/history":
@@ -3666,6 +3708,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_recipe_store_js()
         elif path == "/web/css/recipe-store.css":
             self._handle_recipe_store_css()
+        elif path == "/web/budget.html":
+            self._handle_budget_html()
+        elif path == "/web/js/budget.js":
+            self._handle_budget_js()
+        elif path == "/web/css/budget.css":
+            self._handle_budget_css()
         elif path == "/api/v1/chat/history":
             self._handle_chat_history(query)
         elif path == "/api/v1/chat/suggestions":
@@ -3678,6 +3726,11 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_chat_css()
         elif path == "/api/v1/apps":
             self._handle_apps_list()
+        elif path == "/api/v1/apps/permissions":
+            self._handle_app_permissions_list()
+        elif re.match(r"^/api/v1/apps/[^/]+/permissions$", path):
+            app_id = path.split("/")[-2]
+            self._handle_app_permissions_get(app_id)
         elif re.match(r"^/api/v1/apps/[^/]+$", path):
             app_id = path.split("/")[-1]
             self._handle_app_detail(app_id)
@@ -3742,6 +3795,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_notifications_html()
         elif path == "/web/js/notifications.js":
             self._handle_notifications_js()
+        elif path == "/web/css/notifications-center.css":
+            self._handle_notifications_center_css()
         elif path == "/web/tutorial.html":
             self._handle_tutorial_html()
         elif path == "/web/js/tutorial.js":
@@ -3750,17 +3805,35 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_tutorial_css()
         elif path == "/api/v1/tutorial/reset":
             self._handle_tutorial_reset()
-        elif path == "/api/v1/apps/permissions":
-            self._handle_app_permissions_list()
-        elif re.match(r"^/api/v1/apps/[^/]+/permissions$", path):
-            app_id = path.split("/")[-2]
-            self._handle_app_permissions_get(app_id)
         elif path == "/web/app-permissions.html":
             self._handle_app_permissions_html()
         elif path == "/web/js/app-permissions.js":
             self._handle_app_permissions_js()
         elif path == "/web/css/app-permissions.css":
             self._handle_app_permissions_css()
+        elif path == "/api/v1/reports/templates":
+            self._handle_reports_templates()
+        elif path == "/api/v1/reports/scheduled":
+            self._handle_reports_scheduled_list()
+        elif path == "/web/reports.html":
+            self._handle_reports_html()
+        elif path == "/web/js/reports.js":
+            self._handle_reports_js()
+        elif path == "/web/css/reports.css":
+            self._handle_reports_css()
+        # --- Twin Browser Dashboard — Task 022 ---
+        elif path == "/api/v1/twin/status":
+            self._handle_twin_status()
+        elif path == "/api/v1/twin/queue":
+            self._handle_twin_queue_list()
+        elif path == "/api/v1/twin/history":
+            self._handle_twin_history()
+        elif path == "/web/twin-dashboard.html":
+            self._handle_twin_dashboard_html()
+        elif path == "/web/js/twin-dashboard.js":
+            self._handle_twin_dashboard_js()
+        elif path == "/web/css/twin-dashboard.css":
+            self._handle_twin_dashboard_css()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -3975,6 +4048,13 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/apps/[^/]+/permissions/revoke$", path):
             app_id = path.split("/")[-3]
             self._handle_app_permissions_revoke(app_id)
+        elif path == "/api/v1/reports/schedule":
+            self._handle_reports_schedule_create()
+        elif path == "/api/v1/reports/generate":
+            self._handle_reports_generate()
+        # --- Twin Browser Dashboard — Task 022 ---
+        elif path == "/api/v1/twin/queue":
+            self._handle_twin_queue_add()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -4011,6 +4091,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/notifications/[^/]+$", path):
             notif_id = path.split("/")[-1]
             self._handle_notification_dismiss(notif_id)
+        elif re.match(r"^/api/v1/reports/scheduled/[^/]+$", path):
+            report_id = path.split("/")[-1]
+            self._handle_reports_scheduled_delete(report_id)
+        # --- Twin Browser Dashboard — Task 022 ---
+        elif m := re.match(r"^/api/v1/twin/queue/([^/]+)$", path):
+            self._handle_twin_queue_cancel(m.group(1))
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -7127,32 +7213,38 @@ function choose(mode) {
         return round(total, 6)
 
     def _handle_budget_get(self) -> None:
-        self._send_json(self._load_budget())
+        budget = self._load_budget()
+        # Normalise monetary fields to string Decimals (Task 020 law)
+        for key in ("daily_limit_usd", "monthly_limit_usd", "alert_threshold"):
+            if key in budget and not isinstance(budget[key], str):
+                budget[key] = str(budget[key])
+        self._send_json(budget)
 
     def _handle_budget_status(self) -> None:
+        from decimal import Decimal
         budget = self._load_budget()
-        daily_spend = self._calculate_spend("day")
-        monthly_spend = self._calculate_spend("month")
-        daily_limit = budget.get("daily_limit_usd", 1.00)
-        monthly_limit = budget.get("monthly_limit_usd", 20.00)
-        threshold = budget.get("alert_threshold", 0.80)
-        daily_pct = daily_spend / daily_limit if daily_limit > 0 else 0.0
-        monthly_pct = monthly_spend / monthly_limit if monthly_limit > 0 else 0.0
+        daily_spend = Decimal(str(round(self._calculate_spend("day"), 6)))
+        monthly_spend = Decimal(str(round(self._calculate_spend("month"), 6)))
+        daily_limit = Decimal(str(budget.get("daily_limit_usd", "1.00")))
+        monthly_limit = Decimal(str(budget.get("monthly_limit_usd", "20.00")))
+        threshold = Decimal(str(budget.get("alert_threshold", "0.80")))
+        daily_pct = (daily_spend / daily_limit) if daily_limit > 0 else Decimal("0")
+        monthly_pct = (monthly_spend / monthly_limit) if monthly_limit > 0 else Decimal("0")
         self._send_json({
-            "daily_spend_usd": daily_spend,
-            "daily_limit_usd": daily_limit,
-            "daily_pct": round(daily_pct, 4),
+            "daily_spend_usd": str(daily_spend),
+            "daily_limit_usd": str(daily_limit),
+            "daily_pct": str(round(daily_pct, 4)),
             "daily_alert": daily_pct >= threshold,
             "daily_exceeded": daily_spend >= daily_limit,
-            "monthly_spend_usd": monthly_spend,
-            "monthly_limit_usd": monthly_limit,
-            "monthly_pct": round(monthly_pct, 4),
+            "monthly_spend_usd": str(monthly_spend),
+            "monthly_limit_usd": str(monthly_limit),
+            "monthly_pct": str(round(monthly_pct, 4)),
             "monthly_alert": monthly_pct >= threshold,
             "monthly_exceeded": monthly_spend >= monthly_limit,
-            "pause_on_exceeded": budget.get("pause_on_exceeded", True),
+            "pause_on_exceeded": bool(budget.get("pause_on_exceeded", True)),
             "paused": (
                 (daily_spend >= daily_limit or monthly_spend >= monthly_limit)
-                and budget.get("pause_on_exceeded", True)
+                and bool(budget.get("pause_on_exceeded", True))
             ),
         })
 
@@ -7165,22 +7257,38 @@ function choose(mode) {
         budget = self._load_budget()
         if "daily_limit_usd" in body:
             v = body["daily_limit_usd"]
-            if not isinstance(v, (int, float)) or v < 0:
-                self._send_json({"error": "daily_limit_usd must be non-negative number"}, 400)
+            # Accept string Decimal or numeric — store as string Decimal (Task 020 law)
+            try:
+                from decimal import Decimal, InvalidOperation
+                parsed = Decimal(str(v))
+                if parsed < 0:
+                    raise ValueError
+            except (ValueError, Exception):
+                self._send_json({"error": "daily_limit_usd must be non-negative"}, 400)
                 return
-            budget["daily_limit_usd"] = float(v)
+            budget["daily_limit_usd"] = str(parsed)
         if "monthly_limit_usd" in body:
             v = body["monthly_limit_usd"]
-            if not isinstance(v, (int, float)) or v < 0:
-                self._send_json({"error": "monthly_limit_usd must be non-negative number"}, 400)
+            try:
+                from decimal import Decimal, InvalidOperation
+                parsed = Decimal(str(v))
+                if parsed < 0:
+                    raise ValueError
+            except (ValueError, Exception):
+                self._send_json({"error": "monthly_limit_usd must be non-negative"}, 400)
                 return
-            budget["monthly_limit_usd"] = float(v)
+            budget["monthly_limit_usd"] = str(parsed)
         if "alert_threshold" in body:
             v = body["alert_threshold"]
-            if not isinstance(v, (int, float)) or not (0.0 <= v <= 1.0):
+            try:
+                from decimal import Decimal
+                parsed = Decimal(str(v))
+                if not (Decimal("0.0") <= parsed <= Decimal("1.0")):
+                    raise ValueError
+            except (ValueError, Exception):
                 self._send_json({"error": "alert_threshold must be 0.0-1.0"}, 400)
                 return
-            budget["alert_threshold"] = float(v)
+            budget["alert_threshold"] = str(parsed)
         if "pause_on_exceeded" in body:
             budget["pause_on_exceeded"] = bool(body["pause_on_exceeded"])
         budget["updated_at"] = int(time.time())
@@ -7194,6 +7302,73 @@ function choose(mode) {
         BUDGET_PATH.parent.mkdir(parents=True, exist_ok=True)
         BUDGET_PATH.write_text(json.dumps(DEFAULT_BUDGET, indent=2))
         self._send_json({"status": "reset", "budget": DEFAULT_BUDGET})
+
+    def _handle_budget_usage(self) -> None:
+        """GET /api/v1/budget/usage — current spend today/month as string Decimals. Task 020."""
+        from decimal import Decimal
+        budget = self._load_budget()
+        today_spend = Decimal(str(round(self._calculate_spend("day"), 6)))
+        month_spend = Decimal(str(round(self._calculate_spend("month"), 6)))
+        daily_limit = Decimal(str(budget.get("daily_limit_usd", "1.00")))
+        monthly_limit = Decimal(str(budget.get("monthly_limit_usd", "20.00")))
+        threshold = Decimal(str(budget.get("alert_threshold", "0.80")))
+        daily_pct = (today_spend / daily_limit) if daily_limit > 0 else Decimal("0")
+        monthly_pct = (month_spend / monthly_limit) if monthly_limit > 0 else Decimal("0")
+        self._send_json({
+            "today_spend_usd": str(today_spend),
+            "month_spend_usd": str(month_spend),
+            "daily_limit_usd": str(daily_limit),
+            "monthly_limit_usd": str(monthly_limit),
+            "daily_pct": str(round(daily_pct, 4)),
+            "monthly_pct": str(round(monthly_pct, 4)),
+            "daily_alert": daily_pct >= threshold,
+            "monthly_alert": monthly_pct >= threshold,
+            "daily_exceeded": today_spend >= daily_limit,
+            "monthly_exceeded": month_spend >= monthly_limit,
+            "pause_on_exceeded": bool(budget.get("pause_on_exceeded", True)),
+        })
+
+    def _handle_budget_html(self) -> None:
+        """GET /web/budget.html — serve Budget Controls frontend. Task 020."""
+        html_path = Path(__file__).parent / "web" / "budget.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "budget.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_budget_js(self) -> None:
+        """GET /web/js/budget.js — serve Budget Controls JS. Task 020."""
+        js_path = Path(__file__).parent / "web" / "js" / "budget.js"
+        try:
+            content = js_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "budget.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_budget_css(self) -> None:
+        """GET /web/css/budget.css — serve Budget Controls CSS. Task 020."""
+        css_path = Path(__file__).parent / "web" / "css" / "budget.css"
+        try:
+            content = css_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "budget.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
 
     def _load_budget_config(self) -> dict:
         """Alias for _load_budget — used by alert handlers."""
@@ -10178,6 +10353,20 @@ function choose(mode) {
         self.end_headers()
         self.wfile.write(content)
 
+    def _handle_notifications_center_css(self) -> None:
+        """GET /web/css/notifications-center.css — serve the Notifications Center CSS. Task 018."""
+        css_path = Path(__file__).parent / "web" / "css" / "notifications-center.css"
+        try:
+            content = css_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "notifications-center.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
     # ---------------------------------------------------------------------------
     # Task 062 — App Onboarding: Grey-to-Green 4-State Lifecycle UI
     # ---------------------------------------------------------------------------
@@ -10604,6 +10793,118 @@ function choose(mode) {
             if len(_REQUEST_HISTORY) > MAX_HISTORY:
                 _REQUEST_HISTORY.pop(0)
 
+    # ---------------------------------------------------------------------------
+    # Task 022 — Twin Browser Dashboard handlers
+    # NORTHSTAR: Cloud twin visibility — see what your cloud twin is doing in real-time
+    # ---------------------------------------------------------------------------
+
+    def _handle_twin_status(self) -> None:
+        """GET /api/v1/twin/status — cloud twin status (active/idle/running/error)."""
+        with _TWIN_LOCK:
+            status_copy = dict(_TWIN_STATUS)
+        self._send_json(status_copy)
+
+    def _handle_twin_queue_list(self) -> None:
+        """GET /api/v1/twin/queue — pending tasks in twin queue."""
+        with _TWIN_LOCK:
+            queue_copy = list(_TWIN_QUEUE)
+        self._send_json({"queue": queue_copy, "count": len(queue_copy)})
+
+    def _handle_twin_queue_add(self) -> None:
+        """POST /api/v1/twin/queue — add task to twin queue. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        action = body.get("action", "")
+        if not action or action not in TWIN_VALID_ACTIONS:
+            self._send_json(
+                {"error": f"action must be one of: {sorted(TWIN_VALID_ACTIONS)}"},
+                400,
+            )
+            return
+        payload = body.get("payload")
+        if payload is not None and not isinstance(payload, dict):
+            self._send_json({"error": "payload must be an object if provided"}, 400)
+            return
+        task: dict[str, Any] = {
+            "task_id": str(uuid.uuid4()),
+            "action": action,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "payload": payload or {},
+        }
+        with _TWIN_LOCK:
+            _TWIN_QUEUE.append(task)
+            _TWIN_STATUS["status"] = "running"
+            _TWIN_STATUS["last_active"] = datetime.now(timezone.utc).isoformat()
+        self._send_json({"task_id": task["task_id"], "status": "queued"}, 201)
+
+    def _handle_twin_queue_cancel(self, task_id: str) -> None:
+        """DELETE /api/v1/twin/queue/{task_id} — remove task from queue. Requires auth."""
+        if not self._check_auth():
+            return
+        with _TWIN_LOCK:
+            idx = next(
+                (i for i, t in enumerate(_TWIN_QUEUE) if t["task_id"] == task_id),
+                None,
+            )
+            if idx is None:
+                self._send_json({"error": "task not found"}, 404)
+                return
+            _TWIN_QUEUE.pop(idx)
+            if not _TWIN_QUEUE:
+                _TWIN_STATUS["status"] = "idle"
+        self._send_json({"cancelled": True, "task_id": task_id})
+
+    def _handle_twin_history(self) -> None:
+        """GET /api/v1/twin/history — completed twin tasks (last 50)."""
+        with _TWIN_LOCK:
+            history_copy = list(_TWIN_HISTORY)
+        self._send_json({"history": history_copy, "count": len(history_copy)})
+
+    def _handle_twin_dashboard_html(self) -> None:
+        """GET /web/twin-dashboard.html — serve the twin dashboard page."""
+        html_path = Path(__file__).parent / "web" / "twin-dashboard.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "twin-dashboard.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_twin_dashboard_js(self) -> None:
+        """GET /web/js/twin-dashboard.js — serve the twin dashboard JS."""
+        js_path = Path(__file__).parent / "web" / "js" / "twin-dashboard.js"
+        try:
+            content = js_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "twin-dashboard.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_twin_dashboard_css(self) -> None:
+        """GET /web/css/twin-dashboard.css — serve the twin dashboard CSS."""
+        css_path = Path(__file__).parent / "web" / "css" / "twin-dashboard.css"
+        try:
+            content = css_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "twin-dashboard.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
     def _send_json(self, data: dict, status: int = 200) -> None:
         _record_request(self.path.split("?")[0], status)
         self._record_history_entry(status)
@@ -10670,6 +10971,299 @@ function choose(mode) {
         if not self._check_auth():
             return
         self._send_json({"reset": True, "storage_key": "sb_tutorial_v1"})
+
+    # ---------------------------------------------------------------------------
+    # Task 019 — App Permissions Manager
+    # ---------------------------------------------------------------------------
+
+    def _handle_app_permissions_list(self) -> None:
+        """GET /api/v1/apps/permissions — list all app permissions."""
+        if not self._check_auth():
+            return
+        with _PERMISSIONS_LOCK:
+            result = {
+                app_id: sorted(scopes)
+                for app_id, scopes in _APP_PERMISSIONS.items()
+            }
+        self._send_json({
+            "permissions": result,
+            "known_scopes": KNOWN_SCOPES,
+            "total_apps": len(result),
+        })
+
+    def _handle_app_permissions_get(self, app_id: str) -> None:
+        """GET /api/v1/apps/{app_id}/permissions — get permissions for a specific app."""
+        if not self._check_auth():
+            return
+        with _PERMISSIONS_LOCK:
+            granted = sorted(_APP_PERMISSIONS.get(app_id, set()))
+        self._send_json({
+            "app_id": app_id,
+            "granted_scopes": granted,
+            "known_scopes": KNOWN_SCOPES,
+        })
+
+    def _handle_app_permissions_grant(self, app_id: str) -> None:
+        """POST /api/v1/apps/{app_id}/permissions/grant — grant a scope to an app."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        if not isinstance(body, dict):
+            self._send_json({"error": "body must be a JSON object"}, 400)
+            return
+        scope = body.get("scope", "")
+        if not isinstance(scope, str) or not scope:
+            self._send_json({"error": "scope is required"}, 400)
+            return
+        if scope not in KNOWN_SCOPES:
+            self._send_json({"error": f"unknown scope: {scope}"}, 400)
+            return
+        with _PERMISSIONS_LOCK:
+            if app_id not in _APP_PERMISSIONS:
+                _APP_PERMISSIONS[app_id] = set()
+            _APP_PERMISSIONS[app_id].add(scope)
+            granted = sorted(_APP_PERMISSIONS[app_id])
+        self._send_json({
+            "status": "granted",
+            "app_id": app_id,
+            "scope": scope,
+            "granted_scopes": granted,
+        })
+
+    def _handle_app_permissions_revoke(self, app_id: str) -> None:
+        """POST /api/v1/apps/{app_id}/permissions/revoke — revoke a scope from an app."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        if not isinstance(body, dict):
+            self._send_json({"error": "body must be a JSON object"}, 400)
+            return
+        scope = body.get("scope", "")
+        if not isinstance(scope, str) or not scope:
+            self._send_json({"error": "scope is required"}, 400)
+            return
+        if scope not in KNOWN_SCOPES:
+            self._send_json({"error": f"unknown scope: {scope}"}, 400)
+            return
+        with _PERMISSIONS_LOCK:
+            if app_id in _APP_PERMISSIONS:
+                _APP_PERMISSIONS[app_id].discard(scope)
+            granted = sorted(_APP_PERMISSIONS.get(app_id, set()))
+        self._send_json({
+            "status": "revoked",
+            "app_id": app_id,
+            "scope": scope,
+            "granted_scopes": granted,
+        })
+
+    def _handle_app_permissions_html(self) -> None:
+        """GET /web/app-permissions.html — serve App Permissions Manager frontend."""
+        html_path = Path(__file__).parent / "web" / "app-permissions.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "app-permissions.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_app_permissions_js(self) -> None:
+        """GET /web/js/app-permissions.js — serve App Permissions Manager JS."""
+        js_path = Path(__file__).parent / "web" / "js" / "app-permissions.js"
+        try:
+            content = js_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "app-permissions.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_app_permissions_css(self) -> None:
+        """GET /web/css/app-permissions.css — serve App Permissions Manager CSS."""
+        css_path = Path(__file__).parent / "web" / "css" / "app-permissions.css"
+        try:
+            content = css_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "app-permissions.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # ---------------------------------------------------------------------------
+    # Task 021 — Scheduled Reports
+    # NORTHSTAR: Automation that reports on itself — weekly summary every Monday
+    # ---------------------------------------------------------------------------
+
+    def _handle_reports_templates(self) -> None:
+        """GET /api/v1/reports/templates — list available report templates."""
+        self._send_json({"templates": REPORT_TEMPLATES})
+
+    def _handle_reports_scheduled_list(self) -> None:
+        """GET /api/v1/reports/scheduled — list scheduled reports (requires auth)."""
+        if not self._check_auth():
+            return
+        with _REPORTS_LOCK:
+            reports = list(_SCHEDULED_REPORTS)
+        self._send_json({"scheduled": reports})
+
+    def _handle_reports_schedule_create(self) -> None:
+        """POST /api/v1/reports/schedule — schedule a report (requires auth)."""
+        if not self._check_auth():
+            return
+        payload = self._read_json_body()
+        if payload is None:
+            return
+        template_id = payload.get("template_id")
+        cron = payload.get("cron")
+        delivery = payload.get("delivery", "download")
+        if not template_id or not isinstance(template_id, str):
+            self._send_json({"error": "missing 'template_id'"}, 400)
+            return
+        known_ids = {t["template_id"] for t in REPORT_TEMPLATES}
+        if template_id not in known_ids:
+            self._send_json({"error": "unknown template_id"}, 400)
+            return
+        if not cron or not isinstance(cron, str):
+            self._send_json({"error": "missing 'cron'"}, 400)
+            return
+        if len(cron) > 64:
+            self._send_json({"error": "'cron' exceeds 64 chars"}, 400)
+            return
+        if not _CRON_RE.match(cron):
+            self._send_json({"error": "'cron' must be 5 whitespace-separated fields"}, 400)
+            return
+        if delivery not in ("download", "email_stub"):
+            self._send_json({"error": "'delivery' must be 'download' or 'email_stub'"}, 400)
+            return
+        now = time.time()
+        record: dict[str, Any] = {
+            "id": str(uuid.uuid4()),
+            "template_id": template_id,
+            "cron": cron,
+            "delivery": delivery,
+            "created_at": _utc_isoformat(now),
+            "next_run": None,
+        }
+        with _REPORTS_LOCK:
+            _SCHEDULED_REPORTS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_reports_scheduled_delete(self, report_id: str) -> None:
+        """DELETE /api/v1/reports/scheduled/{id} — cancel scheduled report (requires auth)."""
+        if not self._check_auth():
+            return
+        if not report_id:
+            self._send_json({"error": "missing report id"}, 400)
+            return
+        with _REPORTS_LOCK:
+            before = len(_SCHEDULED_REPORTS)
+            to_remove = [r for r in _SCHEDULED_REPORTS if r["id"] == report_id]
+            for r in to_remove:
+                _SCHEDULED_REPORTS.remove(r)
+            after = len(_SCHEDULED_REPORTS)
+        if after < before:
+            self._send_json({"deleted": report_id})
+        else:
+            self._send_json({"error": "scheduled report not found"}, 404)
+
+    def _handle_reports_generate(self) -> None:
+        """POST /api/v1/reports/generate — generate report ad-hoc (requires auth)."""
+        if not self._check_auth():
+            return
+        payload = self._read_json_body()
+        if payload is None:
+            return
+        template_id = payload.get("template_id")
+        if not template_id or not isinstance(template_id, str):
+            self._send_json({"error": "missing 'template_id'"}, 400)
+            return
+        known_ids = {t["template_id"] for t in REPORT_TEMPLATES}
+        if template_id not in known_ids:
+            self._send_json({"error": "unknown template_id"}, 400)
+            return
+        now = time.time()
+        report_data: dict[str, Any]
+        if template_id == "weekly-activity":
+            report_data = {
+                "template_id": "weekly-activity",
+                "generated_at": _utc_isoformat(now),
+                "tasks_run": 0,
+                "cost_usd": str(Decimal("0.000")),
+                "hit_rate_pct": "0.0",
+                "period": "last_7_days",
+            }
+        elif template_id == "evidence-digest":
+            report_data = {
+                "template_id": "evidence-digest",
+                "generated_at": _utc_isoformat(now),
+                "entries_by_day": {},
+                "total_entries": 0,
+            }
+        else:  # budget-report
+            report_data = {
+                "template_id": "budget-report",
+                "generated_at": _utc_isoformat(now),
+                "daily_spend_usd": str(Decimal("0.000")),
+                "monthly_spend_usd": str(Decimal("0.000")),
+                "top_cost_drivers": [],
+                "projection_usd": str(Decimal("0.000")),
+            }
+        self._send_json({"report_data": report_data})
+
+    def _handle_reports_html(self) -> None:
+        """GET /web/reports.html — serve the Scheduled Reports page."""
+        html_path = Path(__file__).parent / "web" / "reports.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "reports.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_reports_js(self) -> None:
+        """GET /web/js/reports.js — serve the Scheduled Reports JS."""
+        js_path = Path(__file__).parent / "web" / "js" / "reports.js"
+        try:
+            content = js_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "reports.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_reports_css(self) -> None:
+        """GET /web/css/reports.css — serve the Scheduled Reports CSS."""
+        css_path = Path(__file__).parent / "web" / "css" / "reports.css"
+        try:
+            content = css_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "reports.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
 
 
 # ---------------------------------------------------------------------------

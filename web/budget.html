@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Controls — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/budget.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Budget Controls</h1>
+    <span class="page-subtitle">Fail-closed spending limits — autonomy only within your explicit limits</span>
+  </div>
+
+  <div class="budget-page">
+
+    <!-- Warning/danger banners -->
+    <div id="warning-banner" class="warning-banner">
+      Warning: You have consumed more than 80% of your daily or monthly budget limit.
+    </div>
+    <div id="danger-banner" class="danger-banner">
+      Budget exceeded. Automated tasks are paused until you reset or raise the limit.
+    </div>
+
+    <!-- Current spend -->
+    <div class="card">
+      <div class="card-title">Current Spend</div>
+      <div class="spend-grid">
+
+        <div>
+          <div class="spend-label">Today</div>
+          <div class="spend-amount">
+            $<span id="today-spend">—</span>
+          </div>
+          <div class="spend-limit">
+            limit: $<span id="daily-limit-display">—</span>
+            &nbsp;<span id="daily-badge" class="status-badge"></span>
+          </div>
+          <div class="progress-track">
+            <div id="daily-bar" class="progress-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="spend-label">This Month</div>
+          <div class="spend-amount">
+            $<span id="month-spend">—</span>
+          </div>
+          <div class="spend-limit">
+            limit: $<span id="monthly-limit-display">—</span>
+            &nbsp;<span id="monthly-badge" class="status-badge"></span>
+          </div>
+          <div class="progress-track">
+            <div id="monthly-bar" class="progress-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Budget settings -->
+    <div class="card">
+      <div class="card-title">Budget Settings</div>
+
+      <div class="form-group">
+        <label class="form-label" for="input-daily">Daily Limit (USD)</label>
+        <input
+          type="text"
+          id="input-daily"
+          class="form-input"
+          placeholder="e.g. 10.00"
+          autocomplete="off"
+          inputmode="decimal"
+          aria-label="Daily budget limit in USD"
+        >
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="input-monthly">Monthly Limit (USD)</label>
+        <input
+          type="text"
+          id="input-monthly"
+          class="form-input"
+          placeholder="e.g. 100.00"
+          autocomplete="off"
+          inputmode="decimal"
+          aria-label="Monthly budget limit in USD"
+        >
+      </div>
+
+      <div class="form-checkbox-row">
+        <input type="checkbox" id="input-pause" aria-label="Pause tasks when budget exceeded">
+        <label class="form-checkbox-label" for="input-pause">
+          Pause automated tasks when budget is exceeded
+        </label>
+      </div>
+
+      <div class="btn-row">
+        <button id="btn-save" class="btn btn--primary" aria-label="Save budget settings">
+          Save Settings
+        </button>
+      </div>
+    </div>
+
+    <!-- Reset daily counter -->
+    <div class="card">
+      <div class="card-title">Reset Daily Counter</div>
+      <p style="color: var(--hub-text-muted); font-size: 13px; margin-bottom: calc(var(--gap) * 1.5);">
+        Resets today's spend counter and restores all budget limits to defaults.
+        Use this when a billing period resets or to unblock paused tasks.
+      </p>
+      <div class="btn-row">
+        <button id="btn-reset" class="btn btn--danger" aria-label="Reset daily counter">
+          Reset to Defaults
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Confirmation dialog -->
+  <div id="confirm-dialog" class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+    <div class="dialog">
+      <div class="dialog-title" id="dialog-title">Confirm Reset</div>
+      <div class="dialog-body">
+        This will reset all budget settings to defaults and clear today's spend counter.
+        Paused tasks will resume. Are you sure?
+      </div>
+      <div class="dialog-actions">
+        <button id="btn-cancel" class="btn btn--ghost">Cancel</button>
+        <button id="btn-confirm-reset" class="btn btn--danger">Yes, Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="/web/js/budget.js"></script>
+</body>
+</html>

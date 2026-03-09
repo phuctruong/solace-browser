@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App Permissions — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/app-permissions.css">
+</head>
+<body>
+
+  <header class="page-header">
+    <h1>App Permissions</h1>
+    <span class="page-subtitle">OAuth3 consent — every app has explicit scopes you control</span>
+  </header>
+
+  <main class="permissions-page">
+
+    <!-- Status message -->
+    <p id="status-msg" class="status-msg">Loading...</p>
+
+    <!-- App permissions grid -->
+    <section class="card">
+      <h2 class="card-title">Installed Apps</h2>
+      <p class="card-hint">
+        Green badges are granted. Grey badges are not granted.
+        Click any badge to grant or revoke that scope for the app.
+      </p>
+      <div id="app-grid" class="app-grid"></div>
+    </section>
+
+    <!-- Scope descriptions -->
+    <section class="card">
+      <h2 class="card-title">Scope Reference</h2>
+      <p class="card-hint">What each scope allows an app to do.</p>
+      <div class="scope-desc-panel">
+        <div class="scope-desc-row">
+          <span class="scope-desc-name">gmail:read</span>
+          <span class="scope-desc-text">Read Gmail messages</span>
+        </div>
+        <div class="scope-desc-row">
+          <span class="scope-desc-name">gmail:write</span>
+          <span class="scope-desc-text">Send and modify Gmail</span>
+        </div>
+        <div class="scope-desc-row">
+          <span class="scope-desc-name">calendar:read</span>
+          <span class="scope-desc-text">Read calendar events</span>
+        </div>
+        <div class="scope-desc-row">
+          <span class="scope-desc-name">calendar:write</span>
+          <span class="scope-desc-text">Create calendar events</span>
+        </div>
+        <div class="scope-desc-row">
+          <span class="scope-desc-name">drive:read</span>
+          <span class="scope-desc-text">Read Google Drive files</span>
+        </div>
+        <div class="scope-desc-row">
+          <span class="scope-desc-name">browser:navigate</span>
+          <span class="scope-desc-text">Navigate browser tabs</span>
+        </div>
+        <div class="scope-desc-row">
+          <span class="scope-desc-name">browser:screenshot</span>
+          <span class="scope-desc-text">Capture screenshots</span>
+        </div>
+        <div class="scope-desc-row">
+          <span class="scope-desc-name">evidence:read</span>
+          <span class="scope-desc-text">Read evidence chain</span>
+        </div>
+        <div class="scope-desc-row">
+          <span class="scope-desc-name">evidence:write</span>
+          <span class="scope-desc-text">Write to evidence chain</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Confirmation dialog -->
+  <div id="dialog-overlay" class="dialog-overlay" hidden>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+      <h3 id="dialog-title" class="dialog-title">Confirm</h3>
+      <p id="dialog-body" class="dialog-body"></p>
+      <div class="dialog-actions">
+        <button id="btn-cancel" class="btn btn--ghost" type="button">Cancel</button>
+        <button id="btn-confirm" class="btn btn--success" type="button">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="/web/js/app-permissions.js"></script>
+</body>
+</html>

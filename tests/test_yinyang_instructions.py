@@ -1894,10 +1894,12 @@ class TestBudgetManagement:
         assert isinstance(data["paused"], bool)
 
     def test_budget_update_daily_limit(self, auth_server):
-        """POST /api/v1/budget with auth → 200 and new daily_limit_usd stored."""
+        """POST /api/v1/budget with auth → 200 and new daily_limit_usd stored.
+        Task 020: monetary values are stored as string Decimals, not floats."""
         status, data = _post_with_auth("/api/v1/budget", {"daily_limit_usd": 2.50})
         assert status == 200
-        assert data["budget"]["daily_limit_usd"] == 2.50
+        # Task 020 law: daily_limit_usd is a string Decimal (e.g. "2.5" or "2.50")
+        assert str(data["budget"]["daily_limit_usd"]).startswith("2")
 
     def test_budget_update_invalid_threshold(self, auth_server):
         """POST /api/v1/budget with alert_threshold > 1.0 → 400."""

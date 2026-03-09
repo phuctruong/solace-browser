@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/notifications-center.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Notifications
+      <span class="notif-badge" id="unread-badge" hidden></span>
+    </h1>
+    <span class="page-subtitle">Every action surfaces a notification</span>
+  </div>
+
+  <div class="notifications-page">
+
+    <!-- Controls -->
+    <div class="card" id="controls-card">
+      <div class="controls-row">
+        <button class="btn btn--primary" id="btn-mark-all-read" type="button">Mark all read</button>
+        <span class="notif-count-label" id="count-label">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Notification List -->
+    <div class="card" id="list-card">
+      <div class="card-title">Recent Notifications</div>
+      <div id="notif-list" aria-live="polite" aria-label="Notification list">
+        <div class="empty-state" id="empty-state" hidden>
+          <span class="empty-icon">&#128276;</span>
+          <p>No notifications yet</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast for status messages -->
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  </div>
+
+  <script src="/web/js/notifications.js"></script>
+</body>
+</html>
