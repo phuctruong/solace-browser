@@ -1,0 +1,11 @@
+/* Focus Mode — Task 060 */
+.fm-container { max-width: 900px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; }
+.fm-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+.fm-subtitle { color: #666; margin-bottom: 20px; }
+.fm-toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
+.fm-btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.fm-btn-primary { background: #27ae60; color: #fff; }
+.fm-btn-secondary { background: #e8e8e8; color: #333; }
+.fm-session { padding: 16px; border-radius: 8px; background: #f9f9f9; min-height: 48px; }
+.fm-active { font-size: 1rem; color: #27ae60; }
+.fm-status { margin-top: 12px; font-size: 0.85rem; color: #555; }

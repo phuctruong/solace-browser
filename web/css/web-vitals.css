@@ -1,0 +1,11 @@
+/* Web Vitals Monitor — Task 061 */
+.wv-container { max-width: 900px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; }
+.wv-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+.wv-subtitle { color: #666; margin-bottom: 20px; }
+.wv-toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
+.wv-btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.wv-btn-primary { background: #4A90E2; color: #fff; }
+.wv-btn-secondary { background: #e8e8e8; color: #333; }
+.wv-summary { display: flex; flex-direction: column; gap: 8px; min-height: 48px; }
+.wv-metric { padding: 10px 14px; background: #f9f9f9; border-radius: 6px; }
+.wv-status { margin-top: 12px; font-size: 0.85rem; color: #555; word-break: break-all; }

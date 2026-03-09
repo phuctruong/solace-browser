@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tab Group Manager — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/tab-group-manager.css">
+</head>
+<body>
+<div class="tgm-container">
+  <h1 class="tgm-title">Tab Group Manager</h1>
+  <p class="tgm-subtitle">Organise browser tabs into named, color-coded groups</p>
+  <div class="tgm-toolbar">
+    <button id="btn-tgm-refresh" class="tgm-btn tgm-btn-primary">Refresh</button>
+    <button id="btn-tgm-create" class="tgm-btn tgm-btn-secondary">New Group</button>
+  </div>
+  <div id="tgm-groups" class="tgm-groups" aria-live="polite"></div>
+  <div id="tgm-status" class="tgm-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/tab-group-manager.js"></script>
+</body>
+</html>

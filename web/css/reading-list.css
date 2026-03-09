@@ -1,0 +1,18 @@
+/* Reading List — Task 059 */
+.rl-container { max-width: 900px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; }
+.rl-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+.rl-subtitle { color: #666; margin-bottom: 20px; }
+.rl-toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
+.rl-btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.rl-btn-primary { background: #4A90E2; color: #fff; }
+.rl-btn-secondary { background: #e8e8e8; color: #333; }
+.rl-items { display: flex; flex-direction: column; gap: 8px; }
+.rl-item { padding: 12px 16px; border-radius: 8px; background: #f9f9f9; display: flex; align-items: center; gap: 8px; }
+.rl-title-text { flex: 1; font-weight: 500; }
+.rl-progress { font-size: 0.85rem; color: #555; }
+.rl-badge { padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; background: #ddd; }
+.rl-status-unread .rl-badge { background: #dbeafe; color: #1d4ed8; }
+.rl-status-reading .rl-badge { background: #fef3c7; color: #b45309; }
+.rl-status-completed .rl-badge { background: #d1fae5; color: #065f46; }
+.rl-status-archived .rl-badge { background: #e5e7eb; color: #6b7280; }
+.rl-status { margin-top: 12px; font-size: 0.85rem; color: #555; }

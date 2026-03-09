@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Vitals Monitor — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/web-vitals.css">
+</head>
+<body>
+<div class="wv-container">
+  <h1 class="wv-title">Web Vitals Monitor</h1>
+  <p class="wv-subtitle">Track Core Web Vitals performance across pages</p>
+  <div class="wv-toolbar">
+    <button id="btn-wv-summary" class="wv-btn wv-btn-primary">Summary</button>
+    <button id="btn-wv-thresholds" class="wv-btn wv-btn-secondary">Thresholds</button>
+    <button id="btn-wv-by-page" class="wv-btn wv-btn-secondary">By Page</button>
+  </div>
+  <div id="wv-summary" class="wv-summary" aria-live="polite"></div>
+  <div id="wv-status" class="wv-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/web-vitals.js"></script>
+</body>
+</html>

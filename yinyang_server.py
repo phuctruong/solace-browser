@@ -772,6 +772,65 @@ _CURRENT_THEME_CUSTOMIZER: dict = dict(DEFAULT_THEME_CUSTOMIZER)
 _THEME_CUSTOMIZER_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
+# Task 058 — Tab Group Manager
+# ---------------------------------------------------------------------------
+TAB_GROUP_COLORS = ["red", "orange", "yellow", "green", "blue", "purple", "gray"]
+MAX_TABS_PER_GROUP = 50
+MAX_GROUPS = 20
+_TAB_GROUPS: list[dict] = []
+_TAB_GROUPS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 059 — Reading List
+# ---------------------------------------------------------------------------
+READING_STATUS = ["unread", "reading", "completed", "archived"]
+_READING_LIST: list[dict] = []
+_READING_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 060 — Focus Mode
+# ---------------------------------------------------------------------------
+FOCUS_TYPES = ["deep-work", "reading", "writing", "coding", "custom"]
+MAX_SESSION_MINUTES = 480
+MAX_BLOCKLIST_ENTRIES = 100
+_FOCUS_SESSION: dict | None = None
+_FOCUS_BLOCKLIST: list[dict] = []
+_FOCUS_HISTORY: list[dict] = []
+_FOCUS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 061 — Web Vitals Monitor
+# ---------------------------------------------------------------------------
+VITAL_METRICS = ["LCP", "FID", "CLS", "TTFB", "FCP", "INP"]
+VITAL_RATINGS = ["good", "needs-improvement", "poor"]
+VITAL_THRESHOLDS = {
+    "LCP":  {"good": 2500,  "poor": 4000,  "unit": "ms"},
+    "FID":  {"good": 100,   "poor": 300,   "unit": "ms"},
+    "CLS":  {"good": 0.1,   "poor": 0.25,  "unit": "score"},
+    "TTFB": {"good": 800,   "poor": 1800,  "unit": "ms"},
+    "FCP":  {"good": 1800,  "poor": 3000,  "unit": "ms"},
+    "INP":  {"good": 200,   "poor": 500,   "unit": "ms"},
+}
+_VITALS_DATA: list[dict] = []
+_VITALS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 062 — Cookie Manager
+# ---------------------------------------------------------------------------
+COOKIE_CATEGORIES = ["essential", "analytics", "marketing", "preferences", "social", "unknown"]
+COOKIE_SAME_SITE = ["Strict", "Lax", "None", ""]
+_COOKIE_RECORDS: list[dict] = []
+_COOKIES_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 063 — History Search
+# ---------------------------------------------------------------------------
+MAX_HISTORY_ENTRIES = 50000
+HISTORY_CONTENT_TYPES = ["page", "download", "form-submit", "redirect", "prefetch"]
+_HISTORY_ENTRIES: list[dict] = []
+_HISTORY_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
 # Task 039 — Command Palette
 # ---------------------------------------------------------------------------
 DEFAULT_COMMANDS: tuple[dict, ...] = (
@@ -4817,6 +4876,87 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/theme-customizer.js", "application/javascript")
         elif path == "/web/css/theme-customizer.css":
             self._handle_static_file("web/css/theme-customizer.css", "text/css")
+        # --- Task 058: Tab Group Manager ---
+        elif path == "/api/v1/tab-groups":
+            self._handle_tab_groups_list()
+        elif re.match(r"^/api/v1/tab-groups/[^/]+/tabs$", path):
+            group_id = path.split("/")[-2]
+            self._handle_tab_group_get(group_id)
+        elif re.match(r"^/api/v1/tab-groups/[^/]+$", path):
+            group_id = path.split("/")[-1]
+            self._handle_tab_group_get(group_id)
+        elif path == "/web/tab-group-manager.html":
+            self._handle_static_file("web/tab-group-manager.html", "text/html; charset=utf-8")
+        elif path == "/web/js/tab-group-manager.js":
+            self._handle_static_file("web/js/tab-group-manager.js", "application/javascript")
+        elif path == "/web/css/tab-group-manager.css":
+            self._handle_static_file("web/css/tab-group-manager.css", "text/css")
+        # --- Task 059: Reading List ---
+        elif path == "/api/v1/reading-list/stats":
+            self._handle_reading_list_stats()
+        elif path == "/api/v1/reading-list":
+            self._handle_reading_list_get()
+        elif re.match(r"^/api/v1/reading-list/[^/]+$", path):
+            item_id = path.split("/")[-1]
+            self._handle_reading_list_item_get(item_id)
+        elif path == "/web/reading-list.html":
+            self._handle_static_file("web/reading-list.html", "text/html; charset=utf-8")
+        elif path == "/web/js/reading-list.js":
+            self._handle_static_file("web/js/reading-list.js", "application/javascript")
+        elif path == "/web/css/reading-list.css":
+            self._handle_static_file("web/css/reading-list.css", "text/css")
+        # --- Task 060: Focus Mode ---
+        elif path == "/api/v1/focus/status":
+            self._handle_focus_status()
+        elif path == "/api/v1/focus/blocklist":
+            self._handle_focus_blocklist_get()
+        elif path == "/api/v1/focus/history":
+            self._handle_focus_history()
+        elif path == "/web/focus-mode.html":
+            self._handle_static_file("web/focus-mode.html", "text/html; charset=utf-8")
+        elif path == "/web/js/focus-mode.js":
+            self._handle_static_file("web/js/focus-mode.js", "application/javascript")
+        elif path == "/web/css/focus-mode.css":
+            self._handle_static_file("web/css/focus-mode.css", "text/css")
+        # --- Task 061: Web Vitals Monitor ---
+        elif path == "/api/v1/vitals/summary":
+            self._handle_vitals_summary()
+        elif path == "/api/v1/vitals/by-page":
+            self._handle_vitals_by_page()
+        elif path == "/api/v1/vitals/thresholds":
+            self._handle_vitals_thresholds()
+        elif path == "/web/web-vitals.html":
+            self._handle_static_file("web/web-vitals.html", "text/html; charset=utf-8")
+        elif path == "/web/js/web-vitals.js":
+            self._handle_static_file("web/js/web-vitals.js", "application/javascript")
+        elif path == "/web/css/web-vitals.css":
+            self._handle_static_file("web/css/web-vitals.css", "text/css")
+        # --- Task 062: Cookie Manager ---
+        elif path == "/api/v1/cookies/summary":
+            self._handle_cookies_summary()
+        elif path == "/api/v1/cookies/by-domain":
+            self._handle_cookies_by_domain()
+        elif path == "/api/v1/cookies/categories":
+            self._handle_cookie_categories()
+        elif path == "/web/cookie-manager.html":
+            self._handle_static_file("web/cookie-manager.html", "text/html; charset=utf-8")
+        elif path == "/web/js/cookie-manager.js":
+            self._handle_static_file("web/js/cookie-manager.js", "application/javascript")
+        elif path == "/web/css/cookie-manager.css":
+            self._handle_static_file("web/css/cookie-manager.css", "text/css")
+        # --- Task 063: History Search ---
+        elif path == "/api/v1/history/entries":
+            self._handle_history_list()
+        elif path == "/api/v1/history/stats":
+            self._handle_history_stats()
+        elif path == "/api/v1/history/top-domains":
+            self._handle_history_top_domains()
+        elif path == "/web/history-search.html":
+            self._handle_static_file("web/history-search.html", "text/html; charset=utf-8")
+        elif path == "/web/js/history-search.js":
+            self._handle_static_file("web/js/history-search.js", "application/javascript")
+        elif path == "/web/css/history-search.css":
+            self._handle_static_file("web/css/history-search.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -5194,6 +5334,36 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/theme/customizer/preset/[^/]+$", path):
             preset_id = path.split("/")[-1]
             self._handle_theme_customizer_apply_preset(preset_id)
+        # --- Task 058: Tab Group Manager ---
+        elif path == "/api/v1/tab-groups":
+            self._handle_tab_group_create()
+        elif re.match(r"^/api/v1/tab-groups/[^/]+/tabs$", path):
+            group_id = path.split("/")[-2]
+            self._handle_tab_group_add_tab(group_id)
+        # --- Task 059: Reading List ---
+        elif path == "/api/v1/reading-list":
+            self._handle_reading_list_add()
+        elif re.match(r"^/api/v1/reading-list/[^/]+/progress$", path):
+            item_id = path.split("/")[-2]
+            self._handle_reading_list_progress(item_id)
+        # --- Task 060: Focus Mode ---
+        elif path == "/api/v1/focus/start":
+            self._handle_focus_start()
+        elif path == "/api/v1/focus/stop":
+            self._handle_focus_stop()
+        elif path == "/api/v1/focus/blocklist":
+            self._handle_focus_blocklist_add()
+        # --- Task 061: Web Vitals Monitor ---
+        elif path == "/api/v1/vitals/record":
+            self._handle_vitals_record()
+        # --- Task 062: Cookie Manager ---
+        elif path == "/api/v1/cookies/record":
+            self._handle_cookie_record()
+        # --- Task 063: History Search ---
+        elif path == "/api/v1/history/entries":
+            self._handle_history_add()
+        elif path == "/api/v1/history/search":
+            self._handle_history_search()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -5322,6 +5492,32 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 057: Theme Customizer ---
         elif path == "/api/v1/theme/customizer":
             self._handle_theme_customizer_reset()
+        # --- Task 058: Tab Group Manager ---
+        elif re.match(r"^/api/v1/tab-groups/[^/]+/tabs/[^/]+$", path):
+            parts = path.split("/")
+            group_id = parts[-3]
+            tab_hash = parts[-1]
+            self._handle_tab_group_remove_tab(group_id, tab_hash)
+        elif re.match(r"^/api/v1/tab-groups/[^/]+$", path):
+            group_id = path.split("/")[-1]
+            self._handle_tab_group_delete(group_id)
+        # --- Task 059: Reading List ---
+        elif re.match(r"^/api/v1/reading-list/[^/]+$", path):
+            item_id = path.split("/")[-1]
+            self._handle_reading_list_delete(item_id)
+        # --- Task 060: Focus Mode ---
+        elif re.match(r"^/api/v1/focus/blocklist/[^/]+$", path):
+            pattern_id = path.split("/")[-1]
+            self._handle_focus_blocklist_delete(pattern_id)
+        # --- Task 061: Web Vitals Monitor ---
+        elif path == "/api/v1/vitals/clear":
+            self._handle_vitals_clear()
+        # --- Task 062: Cookie Manager ---
+        elif path == "/api/v1/cookies/clear":
+            self._handle_cookies_clear()
+        # --- Task 063: History Search ---
+        elif path == "/api/v1/history/entries":
+            self._handle_history_clear()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -16041,6 +16237,616 @@ function choose(mode) {
     def _handle_theme_customizer_presets(self) -> None:
         """GET /api/v1/theme/customizer/presets — list presets (public)."""
         self._send_json({"presets": THEME_PRESETS, "total": len(THEME_PRESETS)})
+
+    # ---------------------------------------------------------------------------
+    # Task 058 — Tab Group Manager handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_tab_groups_list(self) -> None:
+        """GET /api/v1/tab-groups — list all tab groups."""
+        with _TAB_GROUPS_LOCK:
+            groups = [dict(g) for g in _TAB_GROUPS]
+        self._send_json({"groups": groups, "total": len(groups)})
+
+    def _handle_tab_group_create(self) -> None:
+        """POST /api/v1/tab-groups — create a new tab group (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        name = str(body.get("name", "")).strip()
+        if not name or len(name) > 128:
+            self._send_json({"error": "name required and max 128 chars"}, 400)
+            return
+        color = body.get("color", "blue")
+        if color not in TAB_GROUP_COLORS:
+            self._send_json({"error": f"color must be one of {TAB_GROUP_COLORS}"}, 400)
+            return
+        with _TAB_GROUPS_LOCK:
+            if len(_TAB_GROUPS) >= MAX_GROUPS:
+                self._send_json({"error": f"max {MAX_GROUPS} groups allowed"}, 400)
+                return
+            group = {
+                "group_id": "tg_" + uuid.uuid4().hex,
+                "name": name,
+                "color": color,
+                "tab_hashes": [],
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "tab_count": 0,
+            }
+            _TAB_GROUPS.append(group)
+        self._send_json({"status": "created", "group": dict(group)}, 201)
+
+    def _handle_tab_group_get(self, group_id: str) -> None:
+        """GET /api/v1/tab-groups/{id} — get group detail."""
+        with _TAB_GROUPS_LOCK:
+            group = next((g for g in _TAB_GROUPS if g["group_id"] == group_id), None)
+        if group is None:
+            self._send_json({"error": "group not found"}, 404)
+            return
+        self._send_json(dict(group))
+
+    def _handle_tab_group_delete(self, group_id: str) -> None:
+        """DELETE /api/v1/tab-groups/{id} — delete a group (auth required)."""
+        if not self._check_auth():
+            return
+        with _TAB_GROUPS_LOCK:
+            idx = next((i for i, g in enumerate(_TAB_GROUPS) if g["group_id"] == group_id), None)
+            if idx is None:
+                self._send_json({"error": "group not found"}, 404)
+                return
+            _TAB_GROUPS.pop(idx)
+        self._send_json({"status": "deleted", "group_id": group_id})
+
+    def _handle_tab_group_add_tab(self, group_id: str) -> None:
+        """POST /api/v1/tab-groups/{id}/tabs — add a tab to a group (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        tab_hash = str(body.get("tab_hash", "")).strip()
+        title_hash = str(body.get("title_hash", "")).strip()
+        if not tab_hash or len(tab_hash) != 64:
+            self._send_json({"error": "tab_hash must be SHA-256 (64 hex chars)"}, 400)
+            return
+        with _TAB_GROUPS_LOCK:
+            group = next((g for g in _TAB_GROUPS if g["group_id"] == group_id), None)
+            if group is None:
+                self._send_json({"error": "group not found"}, 404)
+                return
+            if len(group["tab_hashes"]) >= MAX_TABS_PER_GROUP:
+                self._send_json({"error": f"max {MAX_TABS_PER_GROUP} tabs per group"}, 400)
+                return
+            if tab_hash in group["tab_hashes"]:
+                self._send_json({"error": "tab already in group"}, 409)
+                return
+            group["tab_hashes"].append(tab_hash)
+            group["tab_count"] = len(group["tab_hashes"])
+        self._send_json({"status": "added", "group_id": group_id, "tab_hash": tab_hash})
+
+    def _handle_tab_group_remove_tab(self, group_id: str, tab_hash: str) -> None:
+        """DELETE /api/v1/tab-groups/{id}/tabs/{hash} — remove a tab from a group (auth required)."""
+        if not self._check_auth():
+            return
+        with _TAB_GROUPS_LOCK:
+            group = next((g for g in _TAB_GROUPS if g["group_id"] == group_id), None)
+            if group is None:
+                self._send_json({"error": "group not found"}, 404)
+                return
+            if tab_hash not in group["tab_hashes"]:
+                self._send_json({"error": "tab not in group"}, 404)
+                return
+            group["tab_hashes"].remove(tab_hash)
+            group["tab_count"] = len(group["tab_hashes"])
+        self._send_json({"status": "removed", "group_id": group_id, "tab_hash": tab_hash})
+
+    # ---------------------------------------------------------------------------
+    # Task 059 — Reading List handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_reading_list_get(self) -> None:
+        """GET /api/v1/reading-list — list all reading list items."""
+        with _READING_LOCK:
+            items = [dict(i) for i in _READING_LIST]
+        self._send_json({"items": items, "total": len(items)})
+
+    def _handle_reading_list_add(self) -> None:
+        """POST /api/v1/reading-list — add item (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url_hash = str(body.get("url_hash", "")).strip()
+        if not url_hash or len(url_hash) != 64:
+            self._send_json({"error": "url_hash must be SHA-256 (64 hex chars)"}, 400)
+            return
+        title = str(body.get("title", "")).strip()
+        if len(title) > 512:
+            self._send_json({"error": "title max 512 chars"}, 400)
+            return
+        est = body.get("estimated_read_time_min", 0)
+        try:
+            est = int(est)
+        except (TypeError, ValueError):
+            est = 0
+        if est < 0:
+            self._send_json({"error": "estimated_read_time_min must be >= 0"}, 400)
+            return
+        item = {
+            "item_id": "rl_" + uuid.uuid4().hex,
+            "url_hash": url_hash,
+            "title": title,
+            "estimated_read_time_min": est,
+            "progress_pct": 0,
+            "status": "unread",
+            "saved_at": datetime.now(timezone.utc).isoformat(),
+            "last_read_at": None,
+        }
+        with _READING_LOCK:
+            _READING_LIST.append(item)
+        self._send_json({"status": "added", "item": dict(item)}, 201)
+
+    def _handle_reading_list_item_get(self, item_id: str) -> None:
+        """GET /api/v1/reading-list/{id} — get item detail."""
+        with _READING_LOCK:
+            item = next((i for i in _READING_LIST if i["item_id"] == item_id), None)
+        if item is None:
+            self._send_json({"error": "item not found"}, 404)
+            return
+        self._send_json(dict(item))
+
+    def _handle_reading_list_delete(self, item_id: str) -> None:
+        """DELETE /api/v1/reading-list/{id} — delete item (auth required)."""
+        if not self._check_auth():
+            return
+        with _READING_LOCK:
+            idx = next((i for i, x in enumerate(_READING_LIST) if x["item_id"] == item_id), None)
+            if idx is None:
+                self._send_json({"error": "item not found"}, 404)
+                return
+            _READING_LIST.pop(idx)
+        self._send_json({"status": "deleted", "item_id": item_id})
+
+    def _handle_reading_list_progress(self, item_id: str) -> None:
+        """POST /api/v1/reading-list/{id}/progress — update reading progress (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        pct = body.get("progress_pct")
+        if pct is None:
+            self._send_json({"error": "progress_pct required"}, 400)
+            return
+        try:
+            pct = int(pct)
+        except (TypeError, ValueError):
+            self._send_json({"error": "progress_pct must be integer"}, 400)
+            return
+        if not 0 <= pct <= 100:
+            self._send_json({"error": "progress_pct must be 0-100"}, 400)
+            return
+        with _READING_LOCK:
+            item = next((i for i in _READING_LIST if i["item_id"] == item_id), None)
+            if item is None:
+                self._send_json({"error": "item not found"}, 404)
+                return
+            item["progress_pct"] = pct
+            item["last_read_at"] = datetime.now(timezone.utc).isoformat()
+            if pct > 0 and item["status"] == "unread":
+                item["status"] = "reading"
+            if pct == 100:
+                item["status"] = "completed"
+        self._send_json({"status": "updated", "item": dict(item)})
+
+    def _handle_reading_list_stats(self) -> None:
+        """GET /api/v1/reading-list/stats — reading list statistics."""
+        with _READING_LOCK:
+            total = len(_READING_LIST)
+            by_status: dict[str, int] = {s: 0 for s in READING_STATUS}
+            for item in _READING_LIST:
+                s = item.get("status", "unread")
+                if s in by_status:
+                    by_status[s] += 1
+        self._send_json({"total": total, "by_status": by_status})
+
+    # ---------------------------------------------------------------------------
+    # Task 060 — Focus Mode handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_focus_status(self) -> None:
+        """GET /api/v1/focus/status — current focus session status."""
+        with _FOCUS_LOCK:
+            session = dict(_FOCUS_SESSION) if _FOCUS_SESSION is not None else None
+        self._send_json({"active": session is not None, "session": session})
+
+    def _handle_focus_start(self) -> None:
+        """POST /api/v1/focus/start — start a focus session (auth required)."""
+        global _FOCUS_SESSION
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        focus_type = str(body.get("focus_type", "")).strip()
+        if focus_type not in FOCUS_TYPES:
+            self._send_json({"error": f"focus_type must be one of {FOCUS_TYPES}"}, 400)
+            return
+        duration = body.get("duration_minutes")
+        try:
+            duration = int(duration)
+        except (TypeError, ValueError):
+            self._send_json({"error": "duration_minutes must be integer"}, 400)
+            return
+        if not 1 <= duration <= MAX_SESSION_MINUTES:
+            self._send_json({"error": f"duration_minutes must be 1-{MAX_SESSION_MINUTES}"}, 400)
+            return
+        with _FOCUS_LOCK:
+            if _FOCUS_SESSION is not None:
+                self._send_json({"error": "focus session already active"}, 409)
+                return
+            _FOCUS_SESSION = {
+                "session_id": "fs_" + uuid.uuid4().hex,
+                "focus_type": focus_type,
+                "duration_minutes": duration,
+                "started_at": datetime.now(timezone.utc).isoformat(),
+            }
+            session = dict(_FOCUS_SESSION)
+        self._send_json({"status": "started", "session": session}, 201)
+
+    def _handle_focus_stop(self) -> None:
+        """POST /api/v1/focus/stop — stop active focus session (auth required)."""
+        global _FOCUS_SESSION
+        if not self._check_auth():
+            return
+        with _FOCUS_LOCK:
+            if _FOCUS_SESSION is None:
+                self._send_json({"error": "no active focus session"}, 404)
+                return
+            ended = dict(_FOCUS_SESSION)
+            ended["ended_at"] = datetime.now(timezone.utc).isoformat()
+            _FOCUS_HISTORY.append(ended)
+            _FOCUS_SESSION = None
+        self._send_json({"status": "stopped", "session": ended})
+
+    def _handle_focus_blocklist_get(self) -> None:
+        """GET /api/v1/focus/blocklist — list blocklist entries."""
+        with _FOCUS_LOCK:
+            entries = [dict(e) for e in _FOCUS_BLOCKLIST]
+        self._send_json({"entries": entries, "total": len(entries)})
+
+    def _handle_focus_blocklist_add(self) -> None:
+        """POST /api/v1/focus/blocklist — add blocklist entry (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        pattern = str(body.get("pattern", "")).strip()
+        if not pattern:
+            self._send_json({"error": "pattern required"}, 400)
+            return
+        with _FOCUS_LOCK:
+            if len(_FOCUS_BLOCKLIST) >= MAX_BLOCKLIST_ENTRIES:
+                self._send_json({"error": f"max {MAX_BLOCKLIST_ENTRIES} blocklist entries"}, 400)
+                return
+            entry = {
+                "pattern_id": "bl_" + uuid.uuid4().hex,
+                "pattern": pattern,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+            _FOCUS_BLOCKLIST.append(entry)
+        self._send_json({"status": "added", "entry": dict(entry)}, 201)
+
+    def _handle_focus_blocklist_delete(self, pattern_id: str) -> None:
+        """DELETE /api/v1/focus/blocklist/{id} — remove blocklist entry (auth required)."""
+        if not self._check_auth():
+            return
+        with _FOCUS_LOCK:
+            idx = next((i for i, e in enumerate(_FOCUS_BLOCKLIST) if e["pattern_id"] == pattern_id), None)
+            if idx is None:
+                self._send_json({"error": "entry not found"}, 404)
+                return
+            _FOCUS_BLOCKLIST.pop(idx)
+        self._send_json({"status": "deleted", "pattern_id": pattern_id})
+
+    def _handle_focus_history(self) -> None:
+        """GET /api/v1/focus/history — list past focus sessions."""
+        with _FOCUS_LOCK:
+            history = [dict(s) for s in _FOCUS_HISTORY]
+        self._send_json({"history": history, "total": len(history)})
+
+    # ---------------------------------------------------------------------------
+    # Task 061 — Web Vitals Monitor handlers
+    # ---------------------------------------------------------------------------
+
+    def _compute_vital_rating(self, metric: str, value: float) -> str:
+        """Compute rating for a vital metric value."""
+        thresholds = VITAL_THRESHOLDS[metric]
+        if value <= thresholds["good"]:
+            return "good"
+        if value <= thresholds["poor"]:
+            return "needs-improvement"
+        return "poor"
+
+    def _handle_vitals_summary(self) -> None:
+        """GET /api/v1/vitals/summary — aggregate vitals by metric."""
+        with _VITALS_LOCK:
+            data = list(_VITALS_DATA)
+        summary: dict[str, dict] = {m: {"count": 0, "avg": 0.0, "ratings": {"good": 0, "needs-improvement": 0, "poor": 0}} for m in VITAL_METRICS}
+        for entry in data:
+            m = entry["metric"]
+            if m not in summary:
+                continue
+            summary[m]["count"] += 1
+            summary[m]["avg"] += entry["value"]
+            r = entry["rating"]
+            if r in summary[m]["ratings"]:
+                summary[m]["ratings"][r] += 1
+        for m in summary:
+            if summary[m]["count"] > 0:
+                summary[m]["avg"] = round(summary[m]["avg"] / summary[m]["count"], 3)
+        self._send_json({"summary": summary, "total_measurements": len(data)})
+
+    def _handle_vitals_record(self) -> None:
+        """POST /api/v1/vitals/record — record a vital measurement (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        page_hash = str(body.get("page_hash", "")).strip()
+        if not page_hash or len(page_hash) != 64:
+            self._send_json({"error": "page_hash must be SHA-256 (64 hex chars)"}, 400)
+            return
+        metric = str(body.get("metric", "")).strip()
+        if metric not in VITAL_METRICS:
+            self._send_json({"error": f"metric must be one of {VITAL_METRICS}"}, 400)
+            return
+        value = body.get("value")
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            self._send_json({"error": "value must be a number"}, 400)
+            return
+        if value < 0:
+            self._send_json({"error": "value must be >= 0"}, 400)
+            return
+        rating = self._compute_vital_rating(metric, value)
+        measurement = {
+            "measurement_id": "vit_" + uuid.uuid4().hex,
+            "page_hash": page_hash,
+            "metric": metric,
+            "value": value,
+            "rating": rating,
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _VITALS_LOCK:
+            _VITALS_DATA.append(measurement)
+        self._send_json({"status": "recorded", "measurement": dict(measurement)}, 201)
+
+    def _handle_vitals_clear(self) -> None:
+        """DELETE /api/v1/vitals/clear — clear all vitals data (auth required)."""
+        if not self._check_auth():
+            return
+        with _VITALS_LOCK:
+            count = len(_VITALS_DATA)
+            _VITALS_DATA.clear()
+        self._send_json({"status": "cleared", "count": count})
+
+    def _handle_vitals_by_page(self) -> None:
+        """GET /api/v1/vitals/by-page — vitals grouped by page_hash."""
+        with _VITALS_LOCK:
+            data = list(_VITALS_DATA)
+        by_page: dict[str, list] = {}
+        for entry in data:
+            ph = entry["page_hash"]
+            if ph not in by_page:
+                by_page[ph] = []
+            by_page[ph].append(dict(entry))
+        pages = [{"page_hash": ph, "measurements": ms, "count": len(ms)} for ph, ms in by_page.items()]
+        self._send_json({"pages": pages, "total_pages": len(pages)})
+
+    def _handle_vitals_thresholds(self) -> None:
+        """GET /api/v1/vitals/thresholds — return threshold configuration."""
+        self._send_json({"thresholds": VITAL_THRESHOLDS})
+
+    # ---------------------------------------------------------------------------
+    # Task 062 — Cookie Manager handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_cookies_summary(self) -> None:
+        """GET /api/v1/cookies/summary — cookie count summary."""
+        with _COOKIES_LOCK:
+            records = list(_COOKIE_RECORDS)
+        by_category: dict[str, int] = {c: 0 for c in COOKIE_CATEGORIES}
+        for r in records:
+            cat = r.get("category", "unknown")
+            if cat in by_category:
+                by_category[cat] += 1
+        self._send_json({"total": len(records), "by_category": by_category})
+
+    def _handle_cookie_record(self) -> None:
+        """POST /api/v1/cookies/record — record a cookie observation (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        domain_hash = str(body.get("domain_hash", "")).strip()
+        if not domain_hash or len(domain_hash) != 64:
+            self._send_json({"error": "domain_hash must be SHA-256 (64 hex chars)"}, 400)
+            return
+        name_hash = str(body.get("name_hash", "")).strip()
+        if not name_hash or len(name_hash) != 64:
+            self._send_json({"error": "name_hash must be SHA-256 (64 hex chars)"}, 400)
+            return
+        category = str(body.get("category", "")).strip()
+        if category not in COOKIE_CATEGORIES:
+            self._send_json({"error": f"category must be one of {COOKIE_CATEGORIES}"}, 400)
+            return
+        same_site = body.get("same_site", "")
+        if same_site not in COOKIE_SAME_SITE:
+            self._send_json({"error": f"same_site must be one of {COOKIE_SAME_SITE}"}, 400)
+            return
+        record = {
+            "record_id": "ck_" + uuid.uuid4().hex,
+            "domain_hash": domain_hash,
+            "name_hash": name_hash,
+            "category": category,
+            "same_site": same_site,
+            "is_secure": bool(body.get("is_secure", False)),
+            "is_httponly": bool(body.get("is_httponly", False)),
+            "expires_at": body.get("expires_at"),
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+        }
+        with _COOKIES_LOCK:
+            _COOKIE_RECORDS.append(record)
+        self._send_json({"status": "recorded", "record": dict(record)}, 201)
+
+    def _handle_cookies_clear(self) -> None:
+        """DELETE /api/v1/cookies/clear — clear all cookie records (auth required)."""
+        if not self._check_auth():
+            return
+        with _COOKIES_LOCK:
+            count = len(_COOKIE_RECORDS)
+            _COOKIE_RECORDS.clear()
+        self._send_json({"status": "cleared", "count": count})
+
+    def _handle_cookies_by_domain(self) -> None:
+        """GET /api/v1/cookies/by-domain — cookies grouped by domain_hash."""
+        with _COOKIES_LOCK:
+            records = list(_COOKIE_RECORDS)
+        by_domain: dict[str, list] = {}
+        for r in records:
+            dh = r["domain_hash"]
+            if dh not in by_domain:
+                by_domain[dh] = []
+            by_domain[dh].append(dict(r))
+        domains = [{"domain_hash": dh, "records": rs, "count": len(rs)} for dh, rs in by_domain.items()]
+        self._send_json({"domains": domains, "total_domains": len(domains)})
+
+    def _handle_cookie_categories(self) -> None:
+        """GET /api/v1/cookies/categories — list known categories."""
+        self._send_json({"categories": COOKIE_CATEGORIES})
+
+    # ---------------------------------------------------------------------------
+    # Task 063 — History Search handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_history_list(self) -> None:
+        """GET /api/v1/history/entries — list history entries."""
+        with _HISTORY_LOCK:
+            entries = [dict(e) for e in _HISTORY_ENTRIES]
+        self._send_json({"entries": entries, "total": len(entries)})
+
+    def _handle_history_add(self) -> None:
+        """POST /api/v1/history/entries — add or update history entry (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url_hash = str(body.get("url_hash", "")).strip()
+        if not url_hash or len(url_hash) != 64:
+            self._send_json({"error": "url_hash must be SHA-256 (64 hex chars)"}, 400)
+            return
+        title = str(body.get("title", "")).strip()
+        if len(title) > 512:
+            self._send_json({"error": "title max 512 chars"}, 400)
+            return
+        content_type = str(body.get("content_type", "page")).strip()
+        if content_type not in HISTORY_CONTENT_TYPES:
+            self._send_json({"error": f"content_type must be one of {HISTORY_CONTENT_TYPES}"}, 400)
+            return
+        duration_ms = body.get("duration_ms", 0)
+        try:
+            duration_ms = int(duration_ms)
+        except (TypeError, ValueError):
+            duration_ms = 0
+        if duration_ms < 0:
+            self._send_json({"error": "duration_ms must be >= 0"}, 400)
+            return
+        now = datetime.now(timezone.utc).isoformat()
+        with _HISTORY_LOCK:
+            existing = next((e for e in _HISTORY_ENTRIES if e["url_hash"] == url_hash), None)
+            if existing is not None:
+                existing["visit_count"] += 1
+                existing["visited_at"] = now
+                entry = dict(existing)
+            else:
+                if len(_HISTORY_ENTRIES) >= MAX_HISTORY_ENTRIES:
+                    _HISTORY_ENTRIES.pop(0)
+                entry = {
+                    "entry_id": "hist_" + uuid.uuid4().hex,
+                    "url_hash": url_hash,
+                    "title": title,
+                    "content_type": content_type,
+                    "visit_count": 1,
+                    "visited_at": now,
+                    "duration_ms": duration_ms,
+                }
+                _HISTORY_ENTRIES.append(entry)
+        self._send_json({"status": "recorded", "entry": entry}, 201)
+
+    def _handle_history_clear(self) -> None:
+        """DELETE /api/v1/history/entries — clear all history (auth required)."""
+        if not self._check_auth():
+            return
+        with _HISTORY_LOCK:
+            count = len(_HISTORY_ENTRIES)
+            _HISTORY_ENTRIES.clear()
+        self._send_json({"status": "cleared", "count": count})
+
+    def _handle_history_search(self) -> None:
+        """POST /api/v1/history/search — search history by title/hash (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        query = str(body.get("query", "")).strip().lower()
+        limit = body.get("limit", 50)
+        try:
+            limit = int(limit)
+        except (TypeError, ValueError):
+            limit = 50
+        limit = min(max(limit, 1), 500)
+        with _HISTORY_LOCK:
+            if query:
+                results = [dict(e) for e in _HISTORY_ENTRIES if query in e.get("title", "").lower() or query in e["url_hash"]]
+            else:
+                results = [dict(e) for e in _HISTORY_ENTRIES]
+        results = results[:limit]
+        self._send_json({"results": results, "total": len(results), "query": query})
+
+    def _handle_history_stats(self) -> None:
+        """GET /api/v1/history/stats — history statistics."""
+        with _HISTORY_LOCK:
+            total = len(_HISTORY_ENTRIES)
+            by_type: dict[str, int] = {t: 0 for t in HISTORY_CONTENT_TYPES}
+            total_visits = 0
+            for e in _HISTORY_ENTRIES:
+                ct = e.get("content_type", "page")
+                if ct in by_type:
+                    by_type[ct] += 1
+                total_visits += e.get("visit_count", 1)
+        self._send_json({"total_entries": total, "total_visits": total_visits, "by_content_type": by_type})
+
+    def _handle_history_top_domains(self) -> None:
+        """GET /api/v1/history/top-domains — top domains by visit count."""
+        with _HISTORY_LOCK:
+            entries = list(_HISTORY_ENTRIES)
+        domain_counts: dict[str, int] = {}
+        for e in entries:
+            dh = e["url_hash"][:16]
+            domain_counts[dh] = domain_counts.get(dh, 0) + e.get("visit_count", 1)
+        sorted_domains = sorted(domain_counts.items(), key=lambda x: x[1], reverse=True)[:20]
+        result = [{"domain_hash": dh, "visit_count": vc} for dh, vc in sorted_domains]
+        self._send_json({"domains": result, "total": len(result)})
 
     def _handle_theme_customizer_apply_preset(self, preset_id: str) -> None:
         """POST /api/v1/theme/customizer/preset/{preset_id} — apply preset (auth required)."""

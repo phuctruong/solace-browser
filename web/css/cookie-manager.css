@@ -1,0 +1,14 @@
+/* Cookie Manager — Task 062 */
+.cm-container { max-width: 900px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; }
+.cm-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+.cm-subtitle { color: #666; margin-bottom: 20px; }
+.cm-toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
+.cm-btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.cm-btn-primary { background: #4A90E2; color: #fff; }
+.cm-btn-secondary { background: #e8e8e8; color: #333; }
+.cm-summary { padding: 12px; background: #f9f9f9; border-radius: 8px; min-height: 48px; }
+.cm-total { font-weight: 600; margin-bottom: 8px; }
+.cm-cat { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee; }
+.cm-cat-name { text-transform: capitalize; }
+.cm-cat-count { font-weight: 600; }
+.cm-status { margin-top: 12px; font-size: 0.85rem; color: #555; }

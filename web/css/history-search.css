@@ -1,0 +1,14 @@
+/* History Search — Task 063 */
+.hs-container { max-width: 900px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; }
+.hs-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+.hs-subtitle { color: #666; margin-bottom: 20px; }
+.hs-toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
+.hs-btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.hs-btn-primary { background: #4A90E2; color: #fff; }
+.hs-btn-secondary { background: #e8e8e8; color: #333; }
+.hs-entries { display: flex; flex-direction: column; gap: 4px; min-height: 48px; }
+.hs-entry { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9f9f9; border-radius: 6px; }
+.hs-entry-title { flex: 1; font-size: 0.9rem; }
+.hs-entry-visits { font-size: 0.8rem; color: #555; }
+.hs-entry-type { font-size: 0.75rem; padding: 2px 6px; background: #ddd; border-radius: 10px; }
+.hs-status { margin-top: 12px; font-size: 0.85rem; color: #555; }

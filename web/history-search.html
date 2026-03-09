@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>History Search — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/history-search.css">
+</head>
+<body>
+<div class="hs-container">
+  <h1 class="hs-title">History Search</h1>
+  <p class="hs-subtitle">Search and analyse your browsing history</p>
+  <div class="hs-toolbar">
+    <button id="btn-hs-list" class="hs-btn hs-btn-primary">All Entries</button>
+    <button id="btn-hs-stats" class="hs-btn hs-btn-secondary">Stats</button>
+    <button id="btn-hs-top" class="hs-btn hs-btn-secondary">Top Domains</button>
+  </div>
+  <div id="hs-entries" class="hs-entries" aria-live="polite"></div>
+  <div id="hs-status" class="hs-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/history-search.js"></script>
+</body>
+</html>

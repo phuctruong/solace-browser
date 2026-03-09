@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focus Mode — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/focus-mode.css">
+</head>
+<body>
+<div class="fm-container">
+  <h1 class="fm-title">Focus Mode</h1>
+  <p class="fm-subtitle">Block distractions and track deep-work sessions</p>
+  <div class="fm-toolbar">
+    <button id="btn-fm-status" class="fm-btn fm-btn-primary">Status</button>
+    <button id="btn-fm-blocklist" class="fm-btn fm-btn-secondary">Blocklist</button>
+    <button id="btn-fm-history" class="fm-btn fm-btn-secondary">History</button>
+  </div>
+  <div id="fm-session" class="fm-session" aria-live="polite"></div>
+  <div id="fm-status" class="fm-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/focus-mode.js"></script>
+</body>
+</html>

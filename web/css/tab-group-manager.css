@@ -1,0 +1,20 @@
+/* Tab Group Manager — Task 058 */
+.tgm-container { max-width: 900px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; }
+.tgm-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+.tgm-subtitle { color: #666; margin-bottom: 20px; }
+.tgm-toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
+.tgm-btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.tgm-btn-primary { background: #4A90E2; color: #fff; }
+.tgm-btn-secondary { background: #e8e8e8; color: #333; }
+.tgm-groups { display: flex; flex-direction: column; gap: 8px; }
+.tgm-group { padding: 12px 16px; border-radius: 8px; border-left: 4px solid currentColor; background: #f9f9f9; display: flex; align-items: center; gap: 8px; }
+.tgm-badge { background: #eee; border-radius: 12px; padding: 2px 8px; font-size: 0.8rem; }
+.tgm-id { color: #aaa; font-size: 0.75rem; margin-left: auto; }
+.tgm-color-red { border-color: #e74c3c; }
+.tgm-color-orange { border-color: #e67e22; }
+.tgm-color-yellow { border-color: #f1c40f; }
+.tgm-color-green { border-color: #27ae60; }
+.tgm-color-blue { border-color: #2980b9; }
+.tgm-color-purple { border-color: #8e44ad; }
+.tgm-color-gray { border-color: #7f8c8d; }
+.tgm-status { margin-top: 12px; font-size: 0.85rem; color: #555; }

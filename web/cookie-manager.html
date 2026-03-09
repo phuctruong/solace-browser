@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cookie Manager — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/cookie-manager.css">
+</head>
+<body>
+<div class="cm-container">
+  <h1 class="cm-title">Cookie Manager</h1>
+  <p class="cm-subtitle">Audit browser cookies by category and domain</p>
+  <div class="cm-toolbar">
+    <button id="btn-cm-summary" class="cm-btn cm-btn-primary">Summary</button>
+    <button id="btn-cm-categories" class="cm-btn cm-btn-secondary">Categories</button>
+    <button id="btn-cm-by-domain" class="cm-btn cm-btn-secondary">By Domain</button>
+  </div>
+  <div id="cm-summary" class="cm-summary" aria-live="polite"></div>
+  <div id="cm-status" class="cm-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/cookie-manager.js"></script>
+</body>
+</html>
