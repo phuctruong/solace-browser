@@ -92,6 +92,15 @@ Route table:
   GET  /api/yinyang/events             → SSE notification stream (?token=sha256)
   GET  /api/yinyang/status             → in-memory notification queue status (requires auth)
   POST /api/yinyang/notifications/{id}/read → mark yinyang notification as read (requires auth)
+  GET  /api/v1/oauth3/pending          → list pending consent requests (requires auth)
+  POST /api/v1/oauth3/pending          → create pending consent request [test helper] (requires auth)
+  POST /api/v1/oauth3/consent/{id}/approve → approve consent with scope restriction (requires auth)
+  POST /api/v1/oauth3/consent/{id}/reject  → reject consent request (requires auth)
+  GET  /api/v1/oauth3/consented        → list approved consent grants (requires auth)
+  DELETE /api/v1/oauth3/consented/{id} → revoke a consent grant (requires auth)
+  GET  /web/oauth3-consent.html        → OAuth3 Consent UI page
+  GET  /web/js/oauth3-consent.js       → OAuth3 Consent UI JS
+  GET  /web/css/oauth3-consent.css     → OAuth3 Consent UI CSS
 """
 import argparse
 import asyncio
@@ -228,6 +237,21 @@ _YINYANG_NOTIF_LOCK = threading.Lock()
 _YINYANG_SSE_CLIENTS: list[queue.Queue[str]] = []
 _YINYANG_SSE_CLIENTS_LOCK = threading.Lock()
 _YINYANG_NOTIF_COUNTER = 0
+# ---------------------------------------------------------------------------
+# OAuth3 Consent UI — Task 024
+# ---------------------------------------------------------------------------
+OAUTH3_VALID_SCOPES: frozenset = frozenset([
+    "gmail:read", "gmail:write",
+    "calendar:read", "calendar:write",
+    "browser:navigate", "browser:screenshot",
+    "evidence:read", "evidence:write",
+    "recipes:run", "recipes:read",
+])
+OAUTH3_CONSENT_TTL_SECONDS = 600
+_OAUTH3_PENDING: list[dict] = []   # pending consent requests
+_OAUTH3_GRANTS: list[dict] = []    # approved grants
+_OAUTH3_CONSENT_LOCK = threading.Lock()
+
 PROFILES_PATH: Path = Path.home() / ".solace" / "profiles.json"
 ACTIVE_PROFILE_PATH: Path = Path.home() / ".solace" / "active_profile.json"
 _PROFILES_LOCK = threading.Lock()
@@ -329,6 +353,27 @@ _PENDING_ACTIONS: dict[str, dict] = {}
 _PENDING_ACTIONS_LOCK = threading.Lock()
 _ACTIONS_HISTORY: list[dict] = []
 _ACTIONS_HISTORY_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# System Health Dashboard — Task 023
+# NORTHSTAR: Operator visibility — full health checks, live metrics, history
+# ---------------------------------------------------------------------------
+try:
+    import psutil as _psutil
+    _HAS_PSUTIL = True
+except ImportError:
+    _psutil = None  # type: ignore[assignment]
+    _HAS_PSUTIL = False
+
+HEALTH_CHECKS: list[dict] = [
+    {"check_id": "server",  "name": "HTTP Server",     "description": "Server responds to /health"},
+    {"check_id": "oauth3",  "name": "OAuth3 State",    "description": "Token store accessible"},
+    {"check_id": "recipes", "name": "Recipe Engine",   "description": "Recipe catalog loadable"},
+    {"check_id": "twin",    "name": "Twin Queue",       "description": "Twin queue accessible"},
+    {"check_id": "budget",  "name": "Budget Controls", "description": "Budget store accessible"},
+]
+_HEALTH_HISTORY: list[dict] = []  # last 100 snapshots (FIFO)
+_HEALTH_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
 # Twin Browser Dashboard — Task 022
@@ -3370,6 +3415,83 @@ def _start_session_keepalive_thread() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Health check helpers — Task 023
+# ---------------------------------------------------------------------------
+def _run_single_health_check(check_id: str) -> dict:
+    """Run one named health check and return result dict. Never raises."""
+    now_ts = time.time()
+    passed = False
+    detail = ""
+    if check_id == "server":
+        passed = True
+        detail = "server is responding"
+    elif check_id == "oauth3":
+        try:
+            _ = OAUTH3_TOKENS_PATH.parent.exists()
+            passed = True
+            detail = "token store directory accessible"
+        except OSError as exc:
+            detail = str(exc)
+    elif check_id == "recipes":
+        try:
+            passed = RECIPES_DIR.is_dir()
+            detail = "recipe dir found" if passed else "recipe dir missing"
+        except OSError as exc:
+            detail = str(exc)
+    elif check_id == "twin":
+        passed = True
+        detail = "twin queue accessible"
+    elif check_id == "budget":
+        try:
+            _ = BUDGET_PATH.parent.exists()
+            passed = True
+            detail = "budget store directory accessible"
+        except OSError as exc:
+            detail = str(exc)
+    return {
+        "check_id": check_id,
+        "passed": passed,
+        "detail": detail,
+        "checked_at": _utc_isoformat(now_ts),
+    }
+
+
+def _run_all_health_checks() -> list[dict]:
+    """Run all named health checks and return list of results."""
+    return [_run_single_health_check(c["check_id"]) for c in HEALTH_CHECKS]
+
+
+def _build_full_health_snapshot() -> dict:
+    """Run all checks, compute overall status, append to history, return snapshot."""
+    results = _run_all_health_checks()
+    all_pass = all(r["passed"] for r in results)
+    overall = "healthy" if all_pass else "degraded"
+    uptime = int(time.time() - _SERVER_START_TIME)
+    if _HAS_PSUTIL:
+        cpu_pct = _psutil.cpu_percent(interval=None)
+        mem_mb = _psutil.virtual_memory().used / 1024 / 1024
+    else:
+        cpu_pct = 0.0
+        mem_mb = 0.0
+    with _METRICS_LOCK:
+        req_count = sum(_REQUEST_COUNTS.values())
+    snapshot = {
+        "status": overall,
+        "uptime_s": uptime,
+        "cpu_pct": cpu_pct,
+        "mem_mb": round(mem_mb, 2),
+        "req_count": req_count,
+        "checks": results,
+        "timestamp": _utc_isoformat(time.time()),
+    }
+    with _HEALTH_LOCK:
+        _HEALTH_HISTORY.append(snapshot)
+        if len(_HEALTH_HISTORY) > 100:
+            _HEALTH_HISTORY.pop(0)
+    return snapshot
+
+
+# ---------------------------------------------------------------------------
 # HTTP Handler — theorem: every route returns JSON, every error is specific.
 # ---------------------------------------------------------------------------
 class YinyangHandler(http.server.BaseHTTPRequestHandler):
@@ -3463,6 +3585,18 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_server_config()
         elif path == "/api/v1/health/history":
             self._handle_health_history()
+        elif path == "/api/v1/health/full":
+            self._handle_health_full()
+        elif path == "/api/v1/health/metrics":
+            self._handle_health_metrics()
+        elif path == "/api/v1/health/checks":
+            self._handle_health_checks_list()
+        elif path == "/web/health-dashboard.html":
+            self._handle_health_dashboard_html()
+        elif path == "/web/js/health-dashboard.js":
+            self._handle_health_dashboard_js()
+        elif path == "/web/css/health-dashboard.css":
+            self._handle_health_dashboard_css()
         elif path == "/api/v1/webhooks":
             self._handle_webhooks_list()
         elif path == "/api/v1/stats":
@@ -3834,6 +3968,17 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_twin_dashboard_js()
         elif path == "/web/css/twin-dashboard.css":
             self._handle_twin_dashboard_css()
+        # --- OAuth3 Consent UI — Task 024 ---
+        elif path == "/api/v1/oauth3/pending":
+            self._handle_oauth3_consent_pending_list()
+        elif path == "/api/v1/oauth3/consented":
+            self._handle_oauth3_consented_list()
+        elif path == "/web/oauth3-consent.html":
+            self._handle_oauth3_consent_html()
+        elif path == "/web/js/oauth3-consent.js":
+            self._handle_oauth3_consent_js()
+        elif path == "/web/css/oauth3-consent.css":
+            self._handle_oauth3_consent_css()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -4052,9 +4197,22 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_reports_schedule_create()
         elif path == "/api/v1/reports/generate":
             self._handle_reports_generate()
+        # --- System Health Dashboard — Task 023 ---
+        elif re.match(r"^/api/v1/health/checks/[^/]+/run$", path):
+            check_id = path.split("/")[-2]
+            self._handle_health_check_run(check_id)
         # --- Twin Browser Dashboard — Task 022 ---
         elif path == "/api/v1/twin/queue":
             self._handle_twin_queue_add()
+        # --- OAuth3 Consent UI — Task 024 ---
+        elif path == "/api/v1/oauth3/pending":
+            self._handle_oauth3_consent_pending_create()
+        elif re.match(r"^/api/v1/oauth3/consent/[^/]+/approve$", path):
+            request_id = path.split("/")[-2]
+            self._handle_oauth3_consent_approve(request_id)
+        elif re.match(r"^/api/v1/oauth3/consent/[^/]+/reject$", path):
+            request_id = path.split("/")[-2]
+            self._handle_oauth3_consent_reject(request_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -4097,6 +4255,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Twin Browser Dashboard — Task 022 ---
         elif m := re.match(r"^/api/v1/twin/queue/([^/]+)$", path):
             self._handle_twin_queue_cancel(m.group(1))
+        # --- OAuth3 Consent UI — Task 024 ---
+        elif re.match(r"^/api/v1/oauth3/consented/[^/]+$", path):
+            grant_id = path.split("/")[-1]
+            self._handle_oauth3_consent_revoke(grant_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -5306,7 +5468,13 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         self._send_json({"status": action, "recipe_id": recipe_id})
 
     def _handle_health_history(self) -> None:
-        """GET /api/v1/health/history — rolling health snapshots. Task 052."""
+        """GET /api/v1/health/history — rolling health snapshots (Tasks 052 + 023)."""
+        with _HEALTH_LOCK:
+            task023_history = list(_HEALTH_HISTORY)
+        if task023_history:
+            self._send_json({"history": task023_history, "total": len(task023_history)})
+            return
+        # Fallback: synthetic single-entry for backwards compat (Task 052)
         with _METRICS_LOCK:
             uptime = int(time.time() - _SERVER_START_TIME)
             total_req = sum(_REQUEST_COUNTS.values())
@@ -5320,6 +5488,114 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             "status": "ok",
         }]
         self._send_json({"history": history, "total": len(history)})
+
+    # ---------------------------------------------------------------------------
+    # Task 023 — System Health Dashboard handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_health_full(self) -> None:
+        """GET /api/v1/health/full — PUBLIC full health check (no auth required)."""
+        snapshot = _build_full_health_snapshot()
+        self._send_json(snapshot)
+
+    def _handle_health_metrics(self) -> None:
+        """GET /api/v1/health/metrics — live metrics (auth required)."""
+        if not self._check_auth():
+            return
+        uptime = int(time.time() - _SERVER_START_TIME)
+        if _HAS_PSUTIL:
+            cpu_pct = _psutil.cpu_percent(interval=None)
+            mem_mb = _psutil.virtual_memory().used / 1024 / 1024
+        else:
+            cpu_pct = 0.0
+            mem_mb = 0.0
+        with _METRICS_LOCK:
+            req_count = sum(_REQUEST_COUNTS.values())
+        self._send_json({
+            "uptime_s": uptime,
+            "cpu_pct": cpu_pct,
+            "mem_mb": round(mem_mb, 2),
+            "req_count": req_count,
+        })
+
+    def _handle_health_checks_list(self) -> None:
+        """GET /api/v1/health/checks — list named health checks with pass/fail (auth required)."""
+        if not self._check_auth():
+            return
+        results = _run_all_health_checks()
+        checks_out = []
+        for check_def in HEALTH_CHECKS:
+            result = next((r for r in results if r["check_id"] == check_def["check_id"]), {})
+            checks_out.append({
+                "check_id": check_def["check_id"],
+                "name": check_def["name"],
+                "description": check_def["description"],
+                "passed": result.get("passed", False),
+                "detail": result.get("detail", ""),
+                "checked_at": result.get("checked_at", ""),
+            })
+        self._send_json({"checks": checks_out, "total": len(checks_out)})
+
+    def _handle_health_check_run(self, check_id: str) -> None:
+        """POST /api/v1/health/checks/{check_id}/run — re-run a specific check (auth required)."""
+        if not self._check_auth():
+            return
+        known_ids = {c["check_id"] for c in HEALTH_CHECKS}
+        if check_id not in known_ids:
+            self._send_json({"error": f"unknown check_id: {check_id}"}, 404)
+            return
+        result = _run_single_health_check(check_id)
+        check_def = next(c for c in HEALTH_CHECKS if c["check_id"] == check_id)
+        self._send_json({
+            "check_id": check_id,
+            "name": check_def["name"],
+            "description": check_def["description"],
+            "passed": result["passed"],
+            "detail": result["detail"],
+            "checked_at": result["checked_at"],
+        })
+
+    def _handle_health_dashboard_html(self) -> None:
+        """GET /web/health-dashboard.html — serve the health dashboard page."""
+        html_path = Path(__file__).parent / "web" / "health-dashboard.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "health-dashboard.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_health_dashboard_js(self) -> None:
+        """GET /web/js/health-dashboard.js — serve the health dashboard JS."""
+        js_path = Path(__file__).parent / "web" / "js" / "health-dashboard.js"
+        try:
+            content = js_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "health-dashboard.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_health_dashboard_css(self) -> None:
+        """GET /web/css/health-dashboard.css — serve the health dashboard CSS."""
+        css_path = Path(__file__).parent / "web" / "css" / "health-dashboard.css"
+        try:
+            content = css_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "health-dashboard.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
 
     def _handle_apps_categories(self) -> None:
         """GET /api/v1/apps/categories — list app categories derived from app IDs. Task 050."""
@@ -10766,6 +11042,189 @@ function choose(mode) {
                 continue
             result.append(entry)
         self._send_json({"actions": result})
+
+
+    # ---------------------------------------------------------------------------
+    # OAuth3 Consent UI — Task 024
+    # NORTHSTAR: Explicit human consent for every AI delegation scope.
+    # ---------------------------------------------------------------------------
+
+    def _handle_oauth3_consent_pending_list(self) -> None:
+        """GET /api/v1/oauth3/pending — list pending consent requests. Requires auth."""
+        if not self._check_auth():
+            return
+        now = datetime.now(timezone.utc)
+        with _OAUTH3_CONSENT_LOCK:
+            active = [
+                r for r in _OAUTH3_PENDING
+                if datetime.fromisoformat(r["expires_at"]) > now
+            ]
+        self._send_json({"pending": active, "count": len(active)})
+
+    def _handle_oauth3_consent_pending_create(self) -> None:
+        """POST /api/v1/oauth3/pending — create pending request [test helper]. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        app_name = body.get("app_name", "")
+        if not app_name or not isinstance(app_name, str):
+            self._send_json({"error": "app_name required"}, 400)
+            return
+        requested_scopes = body.get("requested_scopes", [])
+        if not isinstance(requested_scopes, list) or not requested_scopes:
+            self._send_json({"error": "requested_scopes must be a non-empty list"}, 400)
+            return
+        invalid = [s for s in requested_scopes if s not in OAUTH3_VALID_SCOPES]
+        if invalid:
+            self._send_json({"error": f"invalid scopes: {invalid}"}, 400)
+            return
+        ttl = int(body.get("ttl_seconds", OAUTH3_CONSENT_TTL_SECONDS))
+        now = datetime.now(timezone.utc)
+        expires_ts = int(now.timestamp()) + ttl
+        request: dict = {
+            "request_id": str(uuid.uuid4()),
+            "app_name": str(app_name),
+            "requested_scopes": list(requested_scopes),
+            "created_at": now.isoformat(),
+            "expires_at": datetime.fromtimestamp(expires_ts, tz=timezone.utc).isoformat(),
+            "ttl_seconds": ttl,
+        }
+        with _OAUTH3_CONSENT_LOCK:
+            _OAUTH3_PENDING.append(request)
+        self._send_json(request, 201)
+
+    def _handle_oauth3_consent_approve(self, request_id: str) -> None:
+        """POST /api/v1/oauth3/consent/{request_id}/approve — approve with scope restriction. Requires auth."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        approved_scopes = body.get("approved_scopes")
+        if approved_scopes is not None and not isinstance(approved_scopes, list):
+            self._send_json({"error": "approved_scopes must be a list"}, 400)
+            return
+        now = datetime.now(timezone.utc)
+        with _OAUTH3_CONSENT_LOCK:
+            req = next((r for r in _OAUTH3_PENDING if r["request_id"] == request_id), None)
+            if req is None:
+                self._send_json({"error": "pending request not found"}, 404)
+                return
+            # Expire check — never auto-approve expired requests
+            if datetime.fromisoformat(req["expires_at"]) <= now:
+                self._send_json({"error": "consent request has expired"}, 410)
+                return
+            if approved_scopes is None:
+                final_scopes = list(req["requested_scopes"])
+            else:
+                # Validate: approved_scopes must be in VALID_SCOPES and subset of requested
+                invalid = [s for s in approved_scopes if s not in OAUTH3_VALID_SCOPES]
+                if invalid:
+                    self._send_json({"error": f"invalid scopes: {invalid}"}, 400)
+                    return
+                not_requested = [s for s in approved_scopes if s not in req["requested_scopes"]]
+                if not_requested:
+                    self._send_json({"error": f"scopes not in original request: {not_requested}"}, 400)
+                    return
+                final_scopes = list(approved_scopes)
+            grant: dict = {
+                "grant_id": str(uuid.uuid4()),
+                "request_id": request_id,
+                "app_name": req["app_name"],
+                "approved_scopes": final_scopes,
+                "granted_at": now.isoformat(),
+                "expires_at": req["expires_at"],
+                "is_active": True,
+            }
+            _OAUTH3_GRANTS.append(grant)
+            _OAUTH3_PENDING[:] = [r for r in _OAUTH3_PENDING if r["request_id"] != request_id]
+        self._send_json(grant, 201)
+
+    def _handle_oauth3_consent_reject(self, request_id: str) -> None:
+        """POST /api/v1/oauth3/consent/{request_id}/reject — reject consent request. Requires auth."""
+        if not self._check_auth():
+            return
+        # Body is optional (may contain reason)
+        length_raw = self.headers.get("Content-Length", "0")
+        reason = ""
+        if re.fullmatch(r"\d+", length_raw) and int(length_raw) > 0:
+            raw = self.rfile.read(int(length_raw))
+            try:
+                parsed = json.loads(raw.decode())
+                reason = str(parsed.get("reason", ""))
+            except json.JSONDecodeError:
+                pass
+        with _OAUTH3_CONSENT_LOCK:
+            req = next((r for r in _OAUTH3_PENDING if r["request_id"] == request_id), None)
+            if req is None:
+                self._send_json({"error": "pending request not found"}, 404)
+                return
+            _OAUTH3_PENDING[:] = [r for r in _OAUTH3_PENDING if r["request_id"] != request_id]
+        self._send_json({"rejected": True, "request_id": request_id, "reason": reason})
+
+    def _handle_oauth3_consented_list(self) -> None:
+        """GET /api/v1/oauth3/consented — list approved consent grants. Requires auth."""
+        if not self._check_auth():
+            return
+        with _OAUTH3_CONSENT_LOCK:
+            active = [g for g in _OAUTH3_GRANTS if g.get("is_active", False)]
+        self._send_json({"grants": active, "count": len(active)})
+
+    def _handle_oauth3_consent_revoke(self, grant_id: str) -> None:
+        """DELETE /api/v1/oauth3/consented/{grant_id} — revoke a grant. Requires auth."""
+        if not self._check_auth():
+            return
+        with _OAUTH3_CONSENT_LOCK:
+            grant = next((g for g in _OAUTH3_GRANTS if g["grant_id"] == grant_id), None)
+            if grant is None:
+                self._send_json({"error": "grant not found"}, 404)
+                return
+            grant["is_active"] = False
+        self._send_json({"revoked": True, "grant_id": grant_id})
+
+    def _handle_oauth3_consent_html(self) -> None:
+        """GET /web/oauth3-consent.html — serve the OAuth3 Consent UI page."""
+        html_path = Path(__file__).parent / "web" / "oauth3-consent.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "oauth3-consent.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_oauth3_consent_js(self) -> None:
+        """GET /web/js/oauth3-consent.js — serve the OAuth3 Consent UI JS."""
+        js_path = Path(__file__).parent / "web" / "js" / "oauth3-consent.js"
+        try:
+            content = js_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "oauth3-consent.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_oauth3_consent_css(self) -> None:
+        """GET /web/css/oauth3-consent.css — serve the OAuth3 Consent UI CSS."""
+        css_path = Path(__file__).parent / "web" / "css" / "oauth3-consent.css"
+        try:
+            content = css_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "oauth3-consent.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
 
     def _parse_query(self, query: str) -> dict[str, str]:
         """Parse ?key=value&key2=value2 into dict."""

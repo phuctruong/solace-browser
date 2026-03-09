@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OAuth3 Consent — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/oauth3-consent.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>OAuth3 Consent</h1>
+    <span class="page-subtitle">Review and manage AI delegation permissions</span>
+  </div>
+
+  <div class="consent-page">
+
+    <!-- Pending Requests -->
+    <div class="card">
+      <div class="card-title">Pending Consent Requests</div>
+      <div id="pending-empty" class="empty-state">No pending consent requests.</div>
+      <ul id="pending-list" class="consent-list" aria-label="Pending consent requests"></ul>
+    </div>
+
+    <!-- Active Grants -->
+    <div class="card">
+      <div class="card-title">Active Consent Grants</div>
+      <div id="grants-empty" class="empty-state">No active consent grants.</div>
+      <ul id="grants-list" class="consent-list" aria-label="Active consent grants"></ul>
+    </div>
+
+    <!-- Status banner -->
+    <div id="status-banner" class="status-banner" aria-live="polite"></div>
+
+  </div>
+
+  <script src="/web/js/oauth3-consent.js"></script>
+</body>
+</html>

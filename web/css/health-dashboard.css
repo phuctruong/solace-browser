@@ -1,0 +1,251 @@
+/* health-dashboard.css — System Health Dashboard for Solace Hub
+   Task 023 | Rung 641
+   Laws:
+     - var(--hub-*) tokens ONLY. No hex values outside :root.
+     - No CDN. No Bootstrap. No Tailwind. No jQuery.
+     - Jony Ive rule: 8px minimum gap between all elements.
+     - Port 8888 ONLY. Debug port BANNED.
+*/
+
+:root {
+  --hub-bg: #1a1a2e;
+  --hub-surface: #16213e;
+  --hub-border: #0f3460;
+  --hub-accent: #e94560;
+  --hub-text: #f5f5f5;
+  --hub-text-muted: #a8a8b3;
+  --hub-success: #4caf50;
+  --hub-warning: #ff9800;
+  --hub-danger: #e94560;
+  --hub-ghost: #2a2a4a;
+  --hub-healthy: #4caf50;
+  --hub-degraded: #ff9800;
+  --hub-down: #e94560;
+  --hub-idle: #a8a8b3;
+  --gap: 8px;
+  --radius: 6px;
+  --transition: 0.2s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Page header ── */
+.page-header {
+  background: var(--hub-surface);
+  border-bottom: 1px solid var(--hub-border);
+  padding: calc(var(--gap) * 2);
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.page-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.page-subtitle {
+  color: var(--hub-text-muted);
+  font-size: 13px;
+}
+
+/* ── Main layout ── */
+.health-page {
+  padding: calc(var(--gap) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 2);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ── Card ── */
+.card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  padding: calc(var(--gap) * 2);
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hub-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: calc(var(--gap) * 1.5);
+}
+
+/* ── Status card ── */
+.status-card {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gap) * 2);
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--hub-idle);
+  flex-shrink: 0;
+}
+
+.status-dot--healthy { background: var(--hub-healthy); }
+.status-dot--degraded { background: var(--hub-degraded); }
+.status-dot--down { background: var(--hub-down); }
+
+.status-meta {
+  color: var(--hub-text-muted);
+  font-size: 12px;
+}
+
+/* ── Metrics grid ── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gap);
+}
+
+@media (max-width: 600px) {
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.metric-tile {
+  background: var(--hub-ghost);
+  border-radius: var(--radius);
+  padding: var(--gap) calc(var(--gap) * 1.5);
+  text-align: center;
+}
+
+.metric-label {
+  font-size: 11px;
+  color: var(--hub-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.metric-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--hub-accent);
+}
+
+/* ── Check table ── */
+.check-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.check-table th {
+  text-align: left;
+  padding: var(--gap) calc(var(--gap) * 1.5);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--hub-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--hub-border);
+}
+
+.check-table td {
+  padding: var(--gap) calc(var(--gap) * 1.5);
+  border-bottom: 1px solid var(--hub-border);
+  vertical-align: middle;
+}
+
+.check-table tr:last-child td {
+  border-bottom: none;
+}
+
+.check-table tr:hover td {
+  background: var(--hub-ghost);
+}
+
+.empty-state {
+  color: var(--hub-text-muted);
+  font-style: italic;
+  text-align: center;
+  padding: calc(var(--gap) * 2);
+}
+
+/* ── Pass/Fail badge ── */
+.badge-pass {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--hub-success);
+  color: var(--hub-bg);
+}
+
+.badge-fail {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--hub-danger);
+  color: var(--hub-text);
+}
+
+/* ── Run button ── */
+.btn-run {
+  background: transparent;
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text-muted);
+  border-radius: var(--radius);
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.btn-run:hover {
+  background: var(--hub-ghost);
+  color: var(--hub-text);
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: calc(var(--gap) * 2);
+  right: calc(var(--gap) * 2);
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  padding: var(--gap) calc(var(--gap) * 2);
+  color: var(--hub-text);
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition);
+  z-index: 999;
+}
+
+.toast--visible {
+  opacity: 1;
+}
