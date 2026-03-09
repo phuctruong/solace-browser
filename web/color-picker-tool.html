@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Picker Tool — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/color-picker-tool.css" />
+</head>
+<body>
+  <div class="cp-container">
+    <header class="cp-header">
+      <h1 class="cp-title">Color Picker Tool</h1>
+      <p class="cp-subtitle">Save and organize colors with SHA-256 hashed values</p>
+    </header>
+
+    <section class="cp-section">
+      <h2 class="cp-section-title">Save Color</h2>
+      <div class="cp-form">
+        <label for="cp-format">Format</label>
+        <select id="cp-format" class="cp-select">
+          <option value="hex">hex</option>
+          <option value="rgb">rgb</option>
+          <option value="rgba">rgba</option>
+          <option value="hsl">hsl</option>
+          <option value="hsla">hsla</option>
+          <option value="oklch">oklch</option>
+          <option value="named">named</option>
+        </select>
+        <button id="cp-save-btn" class="cp-btn">Save Color</button>
+      </div>
+    </section>
+
+    <section class="cp-section">
+      <h2 class="cp-section-title">Saved Colors</h2>
+      <div id="cp-colors-list" class="cp-list"></div>
+    </section>
+
+    <section class="cp-section">
+      <h2 class="cp-section-title">Palettes</h2>
+      <div id="cp-palettes-list" class="cp-list"></div>
+    </section>
+  </div>
+  <script src="/web/js/color-picker-tool.js"></script>
+</body>
+</html>

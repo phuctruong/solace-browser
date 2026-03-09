@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Diff Tracker — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/page-diff-tracker.css" />
+</head>
+<body>
+  <div class="pd-container">
+    <header class="pd-header">
+      <h1 class="pd-title">Page Diff Tracker</h1>
+      <p class="pd-subtitle">Track changes between page snapshots with SHA-256 hashing</p>
+    </header>
+
+    <section class="pd-section">
+      <h2 class="pd-section-title">Snapshots</h2>
+      <div id="pd-snapshots-list" class="pd-list"></div>
+    </section>
+
+    <section class="pd-section">
+      <h2 class="pd-section-title">Compare Snapshots</h2>
+      <div class="pd-form">
+        <label for="pd-snap-a">Snapshot A ID</label>
+        <input id="pd-snap-a" class="pd-input" type="text" placeholder="pss_..." />
+        <label for="pd-snap-b">Snapshot B ID</label>
+        <input id="pd-snap-b" class="pd-input" type="text" placeholder="pss_..." />
+        <button id="pd-compare-btn" class="pd-btn">Compare</button>
+      </div>
+      <div id="pd-compare-result" class="pd-result"></div>
+    </section>
+  </div>
+  <script src="/web/js/page-diff-tracker.js"></script>
+</body>
+</html>

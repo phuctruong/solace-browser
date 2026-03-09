@@ -1,0 +1,103 @@
+/* page-diff-tracker.css — Page Diff Tracker | Task 098 | var(--hub-*) tokens only */
+:root {
+  --hub-bg: #ffffff;
+  --hub-surface: #f8f9fa;
+  --hub-border: #dee2e6;
+  --hub-text: #212529;
+  --hub-text-muted: #6c757d;
+  --hub-accent: #0d6efd;
+  --hub-accent-hover: #0b5ed7;
+  --hub-success: #198754;
+  --hub-danger: #dc3545;
+  --hub-radius: 0.5rem;
+  --hub-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  padding: 1rem;
+}
+
+.pd-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.pd-header {
+  margin-bottom: 1.5rem;
+}
+
+.pd-title {
+  font-size: 1.5rem;
+  color: var(--hub-text);
+}
+
+.pd-subtitle {
+  color: var(--hub-text-muted);
+  font-size: 0.9rem;
+}
+
+.pd-section {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pd-section-title {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  color: var(--hub-text);
+}
+
+.pd-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pd-input {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background: var(--hub-bg);
+  color: var(--hub-text);
+}
+
+.pd-btn {
+  padding: 0.4rem 1rem;
+  background: var(--hub-accent);
+  color: var(--hub-bg);
+  border: none;
+  border-radius: var(--hub-radius);
+  cursor: pointer;
+}
+
+.pd-btn:hover {
+  background: var(--hub-accent-hover);
+}
+
+.pd-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pd-result {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  border-radius: var(--hub-radius);
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+}

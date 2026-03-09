@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tab Organizer — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/tab-organizer.css" />
+</head>
+<body>
+  <div class="to-container">
+    <header class="to-header">
+      <h1 class="to-title">Tab Organizer</h1>
+      <p class="to-subtitle">Organize tabs into workspaces with SHA-256 hashed URLs</p>
+    </header>
+
+    <section class="to-section">
+      <h2 class="to-section-title">Workspaces</h2>
+      <div id="to-workspaces-list" class="to-list"></div>
+      <div class="to-form">
+        <button id="to-create-ws-btn" class="to-btn">Create Workspace</button>
+      </div>
+    </section>
+
+    <section class="to-section">
+      <h2 class="to-section-title">Tab Statuses</h2>
+      <div id="to-statuses" class="to-badges"></div>
+    </section>
+  </div>
+  <script src="/web/js/tab-organizer.js"></script>
+</body>
+</html>

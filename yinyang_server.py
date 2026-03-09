@@ -755,7 +755,7 @@ _STORAGE_LOCK = threading.Lock()
 # ---------------------------------------------------------------------------
 # Task 057 — Theme Customizer
 # ---------------------------------------------------------------------------
-FONT_SIZES_PX: tuple[str, ...] = ("sm", "md", "lg", "xl")
+FONT_SIZES: tuple[str, ...] = ("sm", "md", "lg", "xl")
 THEME_PRESETS: list[dict] = [
     {"preset_id": "solace-light", "name": "Solace Light", "is_default": True,
      "accent": "#4A90E2", "bg": "#FFFFFF", "text": "#1A1A1A", "font_size": "md"},
