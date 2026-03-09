@@ -27936,6 +27936,706 @@ function choose(mode) {
             "by_type": by_type,
         })
 
+    # ---------------------------------------------------------------------------
+    # Task 155 — Network Speed Monitor handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_nsm_connection_types(self) -> None:
+        """GET /api/v1/network-speed/connection-types — list connection types (public)."""
+        self._send_json({"connection_types": NETWORK_CONNECTION_TYPES})
+
+    def _handle_nsm_create(self) -> None:
+        """POST /api/v1/network-speed/measurements — record measurement (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        connection_type = body.get("connection_type", "")
+        if connection_type not in NETWORK_CONNECTION_TYPES:
+            self._send_json({"error": f"connection_type must be one of {NETWORK_CONNECTION_TYPES}"}, 400)
+            return
+        # validate download_mbps
+        download_raw = body.get("download_mbps", "0")
+        try:
+            download_mbps = Decimal(str(download_raw))
+            if download_mbps < 0:
+                raise ValueError("negative")
+        except (InvalidOperation, ValueError):
+            self._send_json({"error": "download_mbps must be a non-negative decimal"}, 400)
+            return
+        # validate upload_mbps
+        upload_raw = body.get("upload_mbps", "0")
+        try:
+            upload_mbps = Decimal(str(upload_raw))
+            if upload_mbps < 0:
+                raise ValueError("negative")
+        except (InvalidOperation, ValueError):
+            self._send_json({"error": "upload_mbps must be a non-negative decimal"}, 400)
+            return
+        # validate latency_ms
+        latency_ms = body.get("latency_ms", 0)
+        if not isinstance(latency_ms, int) or latency_ms < 0:
+            self._send_json({"error": "latency_ms must be a non-negative integer"}, 400)
+            return
+        # validate jitter_ms
+        jitter_ms = body.get("jitter_ms", 0)
+        if not isinstance(jitter_ms, int) or jitter_ms < 0:
+            self._send_json({"error": "jitter_ms must be a non-negative integer"}, 400)
+            return
+        # validate packet_loss_pct
+        pkt_raw = body.get("packet_loss_pct", "0")
+        try:
+            packet_loss_pct = Decimal(str(pkt_raw))
+            if packet_loss_pct < 0 or packet_loss_pct > 100:
+                raise ValueError("out_of_range")
+        except (InvalidOperation, ValueError):
+            self._send_json({"error": "packet_loss_pct must be a decimal between 0 and 100"}, 400)
+            return
+        with _NSM_LOCK:
+            if len(_SPEED_MEASUREMENTS) >= MAX_SPEED_MEASUREMENTS:
+                _SPEED_MEASUREMENTS.pop(0)
+            measurement_id = "nsm_" + str(uuid.uuid4())
+            record: dict = {
+                "measurement_id": measurement_id,
+                "connection_type": connection_type,
+                "download_mbps": str(download_mbps),
+                "upload_mbps": str(upload_mbps),
+                "latency_ms": latency_ms,
+                "jitter_ms": jitter_ms,
+                "packet_loss_pct": str(packet_loss_pct),
+                "measured_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _SPEED_MEASUREMENTS.append(record)
+        self._send_json({"status": "recorded", "measurement": record}, 201)
+
+    def _handle_nsm_list(self) -> None:
+        """GET /api/v1/network-speed/measurements — list measurements (auth required)."""
+        if not self._check_auth():
+            return
+        with _NSM_LOCK:
+            measurements = list(_SPEED_MEASUREMENTS)
+        self._send_json({"measurements": measurements, "total": len(measurements)})
+
+    def _handle_nsm_delete(self, measurement_id: str) -> None:
+        """DELETE /api/v1/network-speed/measurements/{measurement_id} — delete (auth required)."""
+        if not self._check_auth():
+            return
+        with _NSM_LOCK:
+            idx = next((i for i, m in enumerate(_SPEED_MEASUREMENTS) if m["measurement_id"] == measurement_id), None)
+            if idx is None:
+                self._send_json({"error": "measurement not found"}, 404)
+                return
+            _SPEED_MEASUREMENTS.pop(idx)
+        self._send_json({"status": "deleted", "measurement_id": measurement_id})
+
+    def _handle_nsm_stats(self) -> None:
+        """GET /api/v1/network-speed/stats — speed stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _NSM_LOCK:
+            measurements = list(_SPEED_MEASUREMENTS)
+        total = len(measurements)
+        if total > 0:
+            avg_dl = str(Decimal(str(sum(Decimal(m["download_mbps"]) for m in measurements) / total)).quantize(Decimal("0.01")))
+            avg_ul = str(Decimal(str(sum(Decimal(m["upload_mbps"]) for m in measurements) / total)).quantize(Decimal("0.01")))
+            avg_lat = str(Decimal(str(sum(m["latency_ms"] for m in measurements) / total)).quantize(Decimal("0.01")))
+        else:
+            avg_dl = "0.00"
+            avg_ul = "0.00"
+            avg_lat = "0.00"
+        by_connection_type: dict[str, int] = {ct: 0 for ct in NETWORK_CONNECTION_TYPES}
+        for m in measurements:
+            ct = m.get("connection_type", "unknown")
+            by_connection_type[ct] = by_connection_type.get(ct, 0) + 1
+        self._send_json({
+            "total_measurements": total,
+            "avg_download_mbps": avg_dl,
+            "avg_upload_mbps": avg_ul,
+            "avg_latency_ms": avg_lat,
+            "by_connection_type": by_connection_type,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 156 — Tab Productivity Scorer handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_tps_categories(self) -> None:
+        """GET /api/v1/tab-productivity/categories — list tab categories (public)."""
+        self._send_json({"categories": TAB_PRODUCTIVITY_CATEGORIES})
+
+    def _handle_tps_create(self) -> None:
+        """POST /api/v1/tab-productivity/scores — record tab score (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        category = body.get("category", "")
+        if category not in TAB_PRODUCTIVITY_CATEGORIES:
+            self._send_json({"error": f"category must be one of {TAB_PRODUCTIVITY_CATEGORIES}"}, 400)
+            return
+        # url_hash: SHA-256 of URL — NEVER store raw URL
+        url = body.get("url", "")
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else body.get("url_hash", "")
+        # time_spent_minutes
+        time_spent_minutes = body.get("time_spent_minutes", 0)
+        if not isinstance(time_spent_minutes, int) or time_spent_minutes < 0:
+            self._send_json({"error": "time_spent_minutes must be a non-negative integer"}, 400)
+            return
+        # productivity_score: int 0-10
+        productivity_score = body.get("productivity_score", 0)
+        if not isinstance(productivity_score, int) or productivity_score < 0 or productivity_score > 10:
+            self._send_json({"error": "productivity_score must be an integer between 0 and 10"}, 400)
+            return
+        # tab_count: int >= 1
+        tab_count = body.get("tab_count", 1)
+        if not isinstance(tab_count, int) or tab_count < 1:
+            self._send_json({"error": "tab_count must be an integer >= 1"}, 400)
+            return
+        is_productive = productivity_score >= 6
+        with _TAB_SCORE_LOCK:
+            if len(_TAB_SCORES) >= MAX_TAB_SCORES:
+                _TAB_SCORES.pop(0)
+            score_id = "tps_" + str(uuid.uuid4())
+            record: dict = {
+                "score_id": score_id,
+                "category": category,
+                "url_hash": url_hash,
+                "time_spent_minutes": time_spent_minutes,
+                "productivity_score": productivity_score,
+                "is_productive": is_productive,
+                "tab_count": tab_count,
+                "scored_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _TAB_SCORES.append(record)
+        self._send_json({"status": "recorded", "score": record}, 201)
+
+    def _handle_tps_list(self) -> None:
+        """GET /api/v1/tab-productivity/scores — list scores (auth required)."""
+        if not self._check_auth():
+            return
+        with _TAB_SCORE_LOCK:
+            scores = list(_TAB_SCORES)
+        self._send_json({"scores": scores, "total": len(scores)})
+
+    def _handle_tps_delete(self, score_id: str) -> None:
+        """DELETE /api/v1/tab-productivity/scores/{score_id} — delete score (auth required)."""
+        if not self._check_auth():
+            return
+        with _TAB_SCORE_LOCK:
+            idx = next((i for i, s in enumerate(_TAB_SCORES) if s["score_id"] == score_id), None)
+            if idx is None:
+                self._send_json({"error": "score not found"}, 404)
+                return
+            _TAB_SCORES.pop(idx)
+        self._send_json({"status": "deleted", "score_id": score_id})
+
+    def _handle_tps_stats(self) -> None:
+        """GET /api/v1/tab-productivity/stats — productivity stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _TAB_SCORE_LOCK:
+            scores = list(_TAB_SCORES)
+        total = len(scores)
+        productive_count = sum(1 for s in scores if s.get("is_productive"))
+        unproductive_count = total - productive_count
+        total_time_minutes = sum(s.get("time_spent_minutes", 0) for s in scores)
+        avg_score = str(Decimal(str(sum(s["productivity_score"] for s in scores) / total)).quantize(Decimal("0.01"))) if total > 0 else "0.00"
+        by_category: dict[str, int] = {cat: 0 for cat in TAB_PRODUCTIVITY_CATEGORIES}
+        for s in scores:
+            cat = s.get("category", "other")
+            by_category[cat] = by_category.get(cat, 0) + 1
+        self._send_json({
+            "total_scores": total,
+            "productive_count": productive_count,
+            "unproductive_count": unproductive_count,
+            "avg_productivity_score": avg_score,
+            "total_time_minutes": total_time_minutes,
+            "by_category": by_category,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 157 — Extension API Blocker handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_abr_rule_types(self) -> None:
+        """GET /api/v1/api-blocker/rule-types — list rule types (public)."""
+        self._send_json({"rule_types": API_BLOCK_RULE_TYPES})
+
+    def _handle_abr_create(self) -> None:
+        """POST /api/v1/api-blocker/rules — create blocking rule (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        rule_type = body.get("rule_type", "")
+        if rule_type not in API_BLOCK_RULE_TYPES:
+            self._send_json({"error": f"rule_type must be one of {API_BLOCK_RULE_TYPES}"}, 400)
+            return
+        # pattern_hash: SHA-256 of the API pattern — NEVER store raw pattern
+        pattern = body.get("pattern", "")
+        pattern_hash = hashlib.sha256(pattern.encode()).hexdigest() if pattern else body.get("pattern_hash", "")
+        is_enabled = body.get("is_enabled", True)
+        with _EXT_API_BLOCKER_LOCK:
+            if len(_EXT_API_BLOCK_RULES) >= MAX_EXT_API_BLOCK_RULES:
+                self._send_json({"error": "rule limit reached"}, 429)
+                return
+            rule_id = "abr_" + str(uuid.uuid4())
+            record: dict = {
+                "rule_id": rule_id,
+                "rule_type": rule_type,
+                "pattern_hash": pattern_hash,
+                "is_enabled": bool(is_enabled),
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _EXT_API_BLOCK_RULES.append(record)
+        self._send_json({"status": "created", "rule": record}, 201)
+
+    def _handle_abr_list(self) -> None:
+        """GET /api/v1/api-blocker/rules — list rules (auth required)."""
+        if not self._check_auth():
+            return
+        with _EXT_API_BLOCKER_LOCK:
+            rules = list(_EXT_API_BLOCK_RULES)
+        self._send_json({"rules": rules, "total": len(rules)})
+
+    def _handle_abr_delete(self, rule_id: str) -> None:
+        """DELETE /api/v1/api-blocker/rules/{rule_id} — delete rule (auth required)."""
+        if not self._check_auth():
+            return
+        with _EXT_API_BLOCKER_LOCK:
+            idx = next((i for i, r in enumerate(_EXT_API_BLOCK_RULES) if r["rule_id"] == rule_id), None)
+            if idx is None:
+                self._send_json({"error": "rule not found"}, 404)
+                return
+            _EXT_API_BLOCK_RULES.pop(idx)
+        self._send_json({"status": "deleted", "rule_id": rule_id})
+
+    def _handle_abl_create(self) -> None:
+        """POST /api/v1/api-blocker/log — log a blocked call (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        # api_hash: SHA-256 of blocked API call — NEVER store raw
+        api_call = body.get("api_call", "")
+        api_hash = hashlib.sha256(api_call.encode()).hexdigest() if api_call else body.get("api_hash", "")
+        rule_id_matched = body.get("rule_id_matched", "no_rule")
+        with _EXT_API_BLOCKER_LOCK:
+            if len(_EXT_API_BLOCK_LOG) >= MAX_EXT_API_BLOCK_LOG:
+                _EXT_API_BLOCK_LOG.pop(0)
+            log_id = "abl_" + str(uuid.uuid4())
+            entry: dict = {
+                "log_id": log_id,
+                "api_hash": api_hash,
+                "rule_id_matched": rule_id_matched,
+                "blocked_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _EXT_API_BLOCK_LOG.append(entry)
+        self._send_json({"status": "logged", "entry": entry}, 201)
+
+    def _handle_abl_list(self) -> None:
+        """GET /api/v1/api-blocker/log — list blocked calls (auth required)."""
+        if not self._check_auth():
+            return
+        with _EXT_API_BLOCKER_LOCK:
+            log = list(_EXT_API_BLOCK_LOG)
+        self._send_json({"log": log, "total": len(log)})
+
+    def _handle_abr_stats(self) -> None:
+        """GET /api/v1/api-blocker/stats — blocking stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _EXT_API_BLOCKER_LOCK:
+            rules = list(_EXT_API_BLOCK_RULES)
+            log = list(_EXT_API_BLOCK_LOG)
+        total_rules = len(rules)
+        enabled_rules = sum(1 for r in rules if r.get("is_enabled"))
+        total_blocked = len(log)
+        by_rule_type: dict[str, int] = {rt: 0 for rt in API_BLOCK_RULE_TYPES}
+        for r in rules:
+            rt = r.get("rule_type", "")
+            by_rule_type[rt] = by_rule_type.get(rt, 0) + 1
+        self._send_json({
+            "total_rules": total_rules,
+            "enabled_rules": enabled_rules,
+            "total_blocked": total_blocked,
+            "by_rule_type": by_rule_type,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 151 — Clipboard History handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_clp_content_types(self) -> None:
+        """GET /api/v1/clipboard/content-types — list content types (public)."""
+        self._send_json({"content_types": CLIPBOARD_CONTENT_TYPES})
+
+    def _handle_clp_list(self) -> None:
+        """GET /api/v1/clipboard/entries — list entries (auth required)."""
+        if not self._check_auth():
+            return
+        with _CLIPBOARD_LOCK:
+            entries = list(reversed(_CLIPBOARD_ENTRIES))
+        self._send_json({"entries": entries, "total": len(entries)})
+
+    def _handle_clp_create(self) -> None:
+        """POST /api/v1/clipboard/entries — add clipboard entry (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        content_type = body.get("content_type", "")
+        if content_type not in CLIPBOARD_CONTENT_TYPES:
+            self._send_json({"error": f"content_type must be one of {CLIPBOARD_CONTENT_TYPES}"}, 400)
+            return
+        char_count = body.get("char_count", 0)
+        if not isinstance(char_count, int) or char_count < 0:
+            self._send_json({"error": "char_count must be a non-negative integer"}, 400)
+            return
+        content = body.get("content", "")
+        content_hash = hashlib.sha256(str(content).encode()).hexdigest()
+        source_url = body.get("source_url", None)
+        source_url_hash = hashlib.sha256(str(source_url).encode()).hexdigest() if source_url else None
+        is_sensitive = content_type in ("password", "email", "phone")
+        entry_id = "clp_" + str(uuid.uuid4())
+        entry = {
+            "entry_id": entry_id,
+            "content_type": content_type,
+            "content_hash": content_hash,
+            "char_count": char_count,
+            "is_sensitive": is_sensitive,
+            "source_url_hash": source_url_hash,
+            "copied_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        }
+        with _CLIPBOARD_LOCK:
+            if len(_CLIPBOARD_ENTRIES) >= MAX_CLIPBOARD_ENTRIES:
+                _CLIPBOARD_ENTRIES.pop(0)
+            _CLIPBOARD_ENTRIES.append(entry)
+        self._send_json({"status": "added", "entry_id": entry_id}, 201)
+
+    def _handle_clp_delete(self, entry_id: str) -> None:
+        """DELETE /api/v1/clipboard/entries/{entry_id} — delete entry (auth required)."""
+        if not self._check_auth():
+            return
+        with _CLIPBOARD_LOCK:
+            before = len(_CLIPBOARD_ENTRIES)
+            _CLIPBOARD_ENTRIES[:] = [e for e in _CLIPBOARD_ENTRIES if e["entry_id"] != entry_id]
+            after = len(_CLIPBOARD_ENTRIES)
+        if before == after:
+            self._send_json({"error": "entry not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "entry_id": entry_id})
+
+    def _handle_clp_clear_all(self) -> None:
+        """DELETE /api/v1/clipboard/entries — clear all entries (auth required)."""
+        if not self._check_auth():
+            return
+        with _CLIPBOARD_LOCK:
+            count = len(_CLIPBOARD_ENTRIES)
+            _CLIPBOARD_ENTRIES.clear()
+        self._send_json({"status": "cleared", "deleted_count": count})
+
+    def _handle_clp_stats(self) -> None:
+        """GET /api/v1/clipboard/stats — clipboard stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _CLIPBOARD_LOCK:
+            entries = list(_CLIPBOARD_ENTRIES)
+        by_content_type: dict[str, int] = {ct: 0 for ct in CLIPBOARD_CONTENT_TYPES}
+        sensitive_count = 0
+        total_chars = 0
+        for e in entries:
+            ct = e.get("content_type", "other")
+            by_content_type[ct] = by_content_type.get(ct, 0) + 1
+            if e.get("is_sensitive"):
+                sensitive_count += 1
+            total_chars += e.get("char_count", 0)
+        self._send_json({
+            "total_entries": len(entries),
+            "by_content_type": by_content_type,
+            "sensitive_count": sensitive_count,
+            "total_chars": total_chars,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 152 — Search Suggestions Tracker handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_sgt_event_types(self) -> None:
+        """GET /api/v1/search-suggestions/event-types — list event types (public)."""
+        self._send_json({"event_types": SUGGESTION_EVENT_TYPES})
+
+    def _handle_sgt_list(self) -> None:
+        """GET /api/v1/search-suggestions/events — list events (auth required)."""
+        if not self._check_auth():
+            return
+        with _SUGGESTION_LOCK:
+            events = list(reversed(_SUGGESTION_EVENTS))
+        self._send_json({"events": events, "total": len(events)})
+
+    def _handle_sgt_create(self) -> None:
+        """POST /api/v1/search-suggestions/events — record suggestion event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        event_type = body.get("event_type", "")
+        if event_type not in SUGGESTION_EVENT_TYPES:
+            self._send_json({"error": f"event_type must be one of {SUGGESTION_EVENT_TYPES}"}, 400)
+            return
+        position = body.get("position", 1)
+        if not isinstance(position, int) or position < 1 or position > 10:
+            self._send_json({"error": "position must be an integer between 1 and 10"}, 400)
+            return
+        engine = str(body.get("engine", ""))
+        if len(engine) > 50:
+            self._send_json({"error": "engine max 50 chars"}, 400)
+            return
+        query = body.get("query", "")
+        query_hash = hashlib.sha256(str(query).encode()).hexdigest()
+        suggestion = body.get("suggestion", "")
+        suggestion_hash = hashlib.sha256(str(suggestion).encode()).hexdigest()
+        event_id = "sgt_" + str(uuid.uuid4())
+        event = {
+            "event_id": event_id,
+            "event_type": event_type,
+            "query_hash": query_hash,
+            "suggestion_hash": suggestion_hash,
+            "position": position,
+            "engine": engine,
+            "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        }
+        with _SUGGESTION_LOCK:
+            if len(_SUGGESTION_EVENTS) >= MAX_SUGGESTION_EVENTS:
+                _SUGGESTION_EVENTS.pop(0)
+            _SUGGESTION_EVENTS.append(event)
+        self._send_json({"status": "recorded", "event_id": event_id}, 201)
+
+    def _handle_sgt_delete(self, event_id: str) -> None:
+        """DELETE /api/v1/search-suggestions/events/{event_id} — delete event (auth required)."""
+        if not self._check_auth():
+            return
+        with _SUGGESTION_LOCK:
+            before = len(_SUGGESTION_EVENTS)
+            _SUGGESTION_EVENTS[:] = [e for e in _SUGGESTION_EVENTS if e["event_id"] != event_id]
+            after = len(_SUGGESTION_EVENTS)
+        if before == after:
+            self._send_json({"error": "event not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "event_id": event_id})
+
+    def _handle_sgt_stats(self) -> None:
+        """GET /api/v1/search-suggestions/stats — suggestion stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _SUGGESTION_LOCK:
+            events = list(_SUGGESTION_EVENTS)
+        total = len(events)
+        by_event_type: dict[str, int] = {et: 0 for et in SUGGESTION_EVENT_TYPES}
+        shown_count = 0
+        clicked_count = 0
+        position_sum = Decimal("0")
+        for e in events:
+            et = e.get("event_type", "")
+            by_event_type[et] = by_event_type.get(et, 0) + 1
+            if et == "shown":
+                shown_count += 1
+            if et == "clicked":
+                clicked_count += 1
+            try:
+                position_sum += Decimal(str(e.get("position", 1)))
+            except InvalidOperation:
+                pass
+        ctr = str((Decimal(str(clicked_count)) / Decimal(str(shown_count))).quantize(Decimal("0.01"))) if shown_count > 0 else "0.00"
+        avg_position = str((position_sum / Decimal(str(total))).quantize(Decimal("0.01"))) if total > 0 else "0.00"
+        self._send_json({
+            "total_events": total,
+            "click_through_rate": ctr,
+            "by_event_type": by_event_type,
+            "avg_position": avg_position,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 153 — Page Annotation handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_ann_annotation_types(self) -> None:
+        """GET /api/v1/annotations/annotation-types — list annotation types (public)."""
+        self._send_json({"annotation_types": ANNOTATION_TYPES, "colors": ANNOTATION_COLORS})
+
+    def _handle_ann_list(self) -> None:
+        """GET /api/v1/annotations/annotations — list annotations (auth required)."""
+        if not self._check_auth():
+            return
+        with _ANNOTATION_LOCK:
+            annotations = list(reversed(_ANNOTATIONS))
+        self._send_json({"annotations": annotations, "total": len(annotations)})
+
+    def _handle_ann_create(self) -> None:
+        """POST /api/v1/annotations/annotations — create annotation (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        annotation_type = body.get("annotation_type", "")
+        if annotation_type not in ANNOTATION_TYPES:
+            self._send_json({"error": f"annotation_type must be one of {ANNOTATION_TYPES}"}, 400)
+            return
+        color = body.get("color", "")
+        if color not in ANNOTATION_COLORS:
+            self._send_json({"error": f"color must be one of {ANNOTATION_COLORS}"}, 400)
+            return
+        note = body.get("note", None)
+        if note is not None:
+            note = str(note)
+            if len(note) > 500:
+                self._send_json({"error": "note must be 500 chars or fewer"}, 400)
+                return
+        selected_text_length = body.get("selected_text_length", 0)
+        if not isinstance(selected_text_length, int) or selected_text_length < 0:
+            self._send_json({"error": "selected_text_length must be a non-negative integer"}, 400)
+            return
+        url = body.get("url", "")
+        url_hash = hashlib.sha256(str(url).encode()).hexdigest()
+        selected_text = body.get("selected_text", "")
+        selected_text_hash = hashlib.sha256(str(selected_text).encode()).hexdigest()
+        annotation_id = "ann_" + str(uuid.uuid4())
+        annotation = {
+            "annotation_id": annotation_id,
+            "annotation_type": annotation_type,
+            "url_hash": url_hash,
+            "selected_text_hash": selected_text_hash,
+            "selected_text_length": selected_text_length,
+            "note": note,
+            "color": color,
+            "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        }
+        with _ANNOTATION_LOCK:
+            if len(_ANNOTATIONS) >= MAX_ANNOTATIONS:
+                _ANNOTATIONS.pop(0)
+            _ANNOTATIONS.append(annotation)
+        self._send_json({"status": "created", "annotation_id": annotation_id}, 201)
+
+    def _handle_ann_delete(self, annotation_id: str) -> None:
+        """DELETE /api/v1/annotations/annotations/{annotation_id} — delete annotation (auth required)."""
+        if not self._check_auth():
+            return
+        with _ANNOTATION_LOCK:
+            before = len(_ANNOTATIONS)
+            _ANNOTATIONS[:] = [a for a in _ANNOTATIONS if a["annotation_id"] != annotation_id]
+            after = len(_ANNOTATIONS)
+        if before == after:
+            self._send_json({"error": "annotation not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "annotation_id": annotation_id})
+
+    def _handle_ann_stats(self) -> None:
+        """GET /api/v1/annotations/stats — annotation stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _ANNOTATION_LOCK:
+            annotations = list(_ANNOTATIONS)
+        by_type: dict[str, int] = {at: 0 for at in ANNOTATION_TYPES}
+        by_color: dict[str, int] = {c: 0 for c in ANNOTATION_COLORS}
+        for a in annotations:
+            at = a.get("annotation_type", "")
+            by_type[at] = by_type.get(at, 0) + 1
+            c = a.get("color", "")
+            by_color[c] = by_color.get(c, 0) + 1
+        self._send_json({
+            "total_annotations": len(annotations),
+            "by_type": by_type,
+            "by_color": by_color,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 154 — Browser Shortcuts Manager handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_shc_action_types(self) -> None:
+        """GET /api/v1/shortcuts/action-types — list action types (public)."""
+        self._send_json({"action_types": SHORTCUT_ACTION_TYPES})
+
+    def _handle_shc_list(self) -> None:
+        """GET /api/v1/shortcuts/shortcuts — list shortcuts (auth required)."""
+        if not self._check_auth():
+            return
+        with _SHORTCUTS_LOCK:
+            shortcuts = list(_SHORTCUTS)
+        self._send_json({"shortcuts": shortcuts, "total": len(shortcuts)})
+
+    def _handle_shc_create(self) -> None:
+        """POST /api/v1/shortcuts/shortcuts — create shortcut (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        action_type = body.get("action_type", "")
+        if action_type not in SHORTCUT_ACTION_TYPES:
+            self._send_json({"error": f"action_type must be one of {SHORTCUT_ACTION_TYPES}"}, 400)
+            return
+        key_combo = str(body.get("key_combo", ""))
+        if "+" not in key_combo:
+            self._send_json({"error": "key_combo must contain '+' (e.g. ctrl+shift+s)"}, 400)
+            return
+        description = str(body.get("description", ""))
+        if len(description) > 200:
+            self._send_json({"error": "description must be 200 chars or fewer"}, 400)
+            return
+        is_enabled = bool(body.get("is_enabled", True))
+        with _SHORTCUTS_LOCK:
+            if len(_SHORTCUTS) >= MAX_SHORTCUTS:
+                self._send_json({"error": f"shortcut limit of {MAX_SHORTCUTS} reached"}, 400)
+                return
+            shortcut_id = "shc_" + str(uuid.uuid4())
+            shortcut = {
+                "shortcut_id": shortcut_id,
+                "action_type": action_type,
+                "key_combo": key_combo,
+                "description": description,
+                "is_enabled": is_enabled,
+                "use_count": 0,
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _SHORTCUTS.append(shortcut)
+        self._send_json({"status": "created", "shortcut_id": shortcut_id}, 201)
+
+    def _handle_shc_delete(self, shortcut_id: str) -> None:
+        """DELETE /api/v1/shortcuts/shortcuts/{shortcut_id} — delete shortcut (auth required)."""
+        if not self._check_auth():
+            return
+        with _SHORTCUTS_LOCK:
+            before = len(_SHORTCUTS)
+            _SHORTCUTS[:] = [s for s in _SHORTCUTS if s["shortcut_id"] != shortcut_id]
+            after = len(_SHORTCUTS)
+        if before == after:
+            self._send_json({"error": "shortcut not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "shortcut_id": shortcut_id})
+
+    def _handle_shc_stats(self) -> None:
+        """GET /api/v1/shortcuts/stats — shortcut stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _SHORTCUTS_LOCK:
+            shortcuts = list(_SHORTCUTS)
+        total = len(shortcuts)
+        enabled_count = sum(1 for s in shortcuts if s.get("is_enabled"))
+        by_action_type: dict[str, int] = {at: 0 for at in SHORTCUT_ACTION_TYPES}
+        for s in shortcuts:
+            at = s.get("action_type", "")
+            by_action_type[at] = by_action_type.get(at, 0) + 1
+        most_used = None
+        if shortcuts:
+            top = max(shortcuts, key=lambda s: s.get("use_count", 0))
+            most_used = top["shortcut_id"]
+        self._send_json({
+            "total_shortcuts": total,
+            "enabled_count": enabled_count,
+            "by_action_type": by_action_type,
+            "most_used": most_used,
+        })
+
 # ---------------------------------------------------------------------------
 # Server factory — theorem: build_server isolates configuration from startup.
 # ---------------------------------------------------------------------------

@@ -1,0 +1,33 @@
+/* Network Speed Monitor — Task 155 */
+:root {
+  --hub-bg: #f5f6fa;
+  --hub-surface: #ffffff;
+  --hub-primary: #4A90E2;
+  --hub-secondary: #e8e8e8;
+  --hub-text: #222;
+  --hub-muted: #666;
+  --hub-border: #ddd;
+  --hub-success: #27ae60;
+  --hub-danger: #e74c3c;
+  --hub-warn: #f39c12;
+}
+.nsm-container { max-width: 900px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; background: var(--hub-bg); min-height: 100vh; }
+.nsm-title { font-size: 1.6rem; font-weight: 700; color: var(--hub-text); margin-bottom: 4px; }
+.nsm-subtitle { color: var(--hub-muted); margin-bottom: 20px; }
+.nsm-form { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.nsm-form select, .nsm-form input { padding: 8px 12px; border: 1px solid var(--hub-border); border-radius: 6px; font-size: 0.9rem; width: 130px; }
+.nsm-btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.nsm-btn-primary { background: var(--hub-primary); color: var(--hub-surface); }
+.nsm-btn-del { background: var(--hub-secondary); color: var(--hub-text); }
+.nsm-stats { padding: 16px; background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 8px; margin-bottom: 16px; }
+.nsm-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.nsm-stat { text-align: center; }
+.nsm-stat-val { font-size: 1.3rem; font-weight: 700; color: var(--hub-primary); }
+.nsm-stat-lbl { font-size: 0.75rem; color: var(--hub-muted); }
+.nsm-panel { display: flex; flex-direction: column; gap: 8px; }
+.nsm-item { padding: 12px 16px; background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+.nsm-item-meta { font-size: 0.85rem; color: var(--hub-text); }
+.nsm-item-id { font-size: 0.75rem; color: var(--hub-muted); font-family: monospace; }
+.nsm-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: var(--hub-secondary); color: var(--hub-text); }
+.nsm-actions { display: flex; gap: 4px; }
+.nsm-msg { margin-top: 12px; font-size: 0.85rem; color: var(--hub-muted); }

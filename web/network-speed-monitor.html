@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Speed Monitor</title>
+  <link rel="stylesheet" href="/web/css/network-speed-monitor.css">
+</head>
+<body>
+<div class="nsm-container">
+  <h1 class="nsm-title">Network Speed Monitor</h1>
+  <p class="nsm-subtitle">Record and track network performance measurements.</p>
+
+  <div class="nsm-stats" id="nsm-stats"><p>Loading stats...</p></div>
+
+  <form class="nsm-form" id="nsm-form">
+    <select id="nsm-connection-type">
+      <option value="wifi">wifi</option>
+      <option value="ethernet">ethernet</option>
+      <option value="4g">4g</option>
+      <option value="5g">5g</option>
+      <option value="3g">3g</option>
+      <option value="2g">2g</option>
+      <option value="slow_2g">slow_2g</option>
+      <option value="bluetooth">bluetooth</option>
+      <option value="other">other</option>
+      <option value="unknown">unknown</option>
+    </select>
+    <input type="text" id="nsm-download" placeholder="Download Mbps" value="100">
+    <input type="text" id="nsm-upload" placeholder="Upload Mbps" value="50">
+    <input type="number" id="nsm-latency" placeholder="Latency ms" min="0" value="10">
+    <input type="number" id="nsm-jitter" placeholder="Jitter ms" min="0" value="2">
+    <input type="text" id="nsm-packet-loss" placeholder="Packet loss %" value="0">
+    <button type="submit" class="nsm-btn nsm-btn-primary">Record</button>
+  </form>
+
+  <div class="nsm-panel" id="nsm-panel">Loading measurements...</div>
+  <div class="nsm-msg" id="nsm-msg"></div>
+</div>
+<script src="/web/js/network-speed-monitor.js"></script>
+</body>
+</html>
