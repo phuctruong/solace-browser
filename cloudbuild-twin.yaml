@@ -1,0 +1,7 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/solace-461818/solace-browser-twin:latest', '-f', 'Dockerfile.cloud-twin', '.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/solace-461818/solace-browser-twin:latest']
+images:
+  - 'gcr.io/solace-461818/solace-browser-twin:latest'

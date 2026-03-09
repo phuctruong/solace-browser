@@ -1,0 +1,37 @@
+FROM ubuntu:22.04
+
+LABEL org.opencontainers.image.title="Solace Browser Cloud Twin"
+LABEL org.opencontainers.image.version="1.0.0"
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DISPLAY=:99
+ENV SOLACE_CLOUD_TWIN=true
+ENV SOLACE_HEAD_HIDDEN=true
+
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    xvfb \
+    x11-utils \
+    chromium-browser \
+    fonts-liberation \
+    libnspr4 \
+    libnss3 \
+    libasound2 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt ./
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+COPY yinyang_server.py ./
+COPY hub_tunnel_client.py ./
+COPY data/ ./data/
+COPY scripts/start-cloud-twin.sh /start.sh
+
+RUN chmod +x /start.sh
+
+EXPOSE 8888
+
+CMD ["/start.sh"]
