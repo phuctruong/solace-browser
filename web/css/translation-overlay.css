@@ -1,0 +1,154 @@
+/* translation-overlay.css — Translation Overlay | Task 092 | var(--hub-*) tokens only */
+:root {
+  --hub-bg: #ffffff;
+  --hub-surface: #f8f9fa;
+  --hub-border: #dee2e6;
+  --hub-text: #212529;
+  --hub-text-muted: #6c757d;
+  --hub-accent: #0d6efd;
+  --hub-accent-hover: #0b5ed7;
+  --hub-success: #198754;
+  --hub-danger: #dc3545;
+  --hub-radius: 0.5rem;
+  --hub-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.to-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.to-header {
+  border-bottom: 1px solid var(--hub-border);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+.to-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.to-subtitle {
+  color: var(--hub-text-muted);
+  font-size: 0.875rem;
+}
+
+.to-section {
+  margin-bottom: 2rem;
+}
+
+.to-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.to-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--hub-text);
+}
+
+.to-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 420px;
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 1rem;
+}
+
+.to-input,
+.to-select {
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.9rem;
+  color: var(--hub-text);
+  background: var(--hub-bg);
+}
+
+.to-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--hub-radius);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.to-btn-primary {
+  background: var(--hub-accent);
+  color: var(--hub-bg);
+}
+
+.to-btn-primary:hover {
+  background: var(--hub-accent-hover);
+}
+
+.to-btn-danger {
+  background: var(--hub-danger);
+  color: var(--hub-bg);
+}
+
+.to-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.to-item {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+}
+
+.to-item-langs {
+  font-weight: 600;
+}
+
+.to-item-meta {
+  color: var(--hub-text-muted);
+  font-size: 0.8rem;
+}
+
+.to-stats {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 1rem;
+  font-size: 0.875rem;
+}
+
+.to-msg {
+  color: var(--hub-success);
+  font-size: 0.85rem;
+}
+
+.to-loading {
+  color: var(--hub-text-muted);
+  font-style: italic;
+}

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Font Manager — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/font-manager.css" />
+</head>
+<body>
+  <div class="fm-container">
+    <header class="fm-header">
+      <h1 class="fm-title">Font Manager</h1>
+      <p class="fm-subtitle">Manage custom fonts and active font configuration</p>
+    </header>
+
+    <section class="fm-section">
+      <h2 class="fm-section-title">Active Font</h2>
+      <div id="fm-active" class="fm-active-panel" aria-live="polite">
+        <p class="fm-loading">Loading…</p>
+      </div>
+    </section>
+
+    <section class="fm-section">
+      <h2 class="fm-section-title">Apply Font</h2>
+      <div class="fm-form">
+        <label for="fm-family">Font Family</label>
+        <input type="text" id="fm-family" class="fm-input" placeholder="system-ui" />
+        <label for="fm-weight">Weight</label>
+        <select id="fm-weight" class="fm-select">
+          <option value="400" selected>400 (Regular)</option>
+          <option value="700">700 (Bold)</option>
+          <option value="300">300 (Light)</option>
+        </select>
+        <label for="fm-size">Size (px)</label>
+        <select id="fm-size" class="fm-select">
+          <option value="14">14</option>
+          <option value="16" selected>16</option>
+          <option value="18">18</option>
+        </select>
+        <button id="fm-apply-btn" class="fm-btn fm-btn-primary">Apply Font</button>
+        <p id="fm-apply-msg" class="fm-msg" hidden></p>
+      </div>
+    </section>
+
+    <section class="fm-section">
+      <h2 class="fm-section-title">Font Library</h2>
+      <div id="fm-fonts" class="fm-list" aria-live="polite">
+        <p class="fm-loading">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script src="/web/js/font-manager.js"></script>
+</body>
+</html>

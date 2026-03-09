@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Annotation Tool — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/annotation-tool.css" />
+</head>
+<body>
+  <div class="at-container">
+    <header class="at-header">
+      <h1 class="at-title">Annotation Tool</h1>
+      <p class="at-subtitle">Create and manage page annotations with evidence hashing</p>
+    </header>
+
+    <section class="at-section">
+      <h2 class="at-section-title">Create Annotation</h2>
+      <div class="at-form">
+        <label for="at-type">Annotation Type</label>
+        <select id="at-type" class="at-select">
+          <option value="highlight">highlight</option>
+          <option value="note">note</option>
+          <option value="bookmark_note">bookmark_note</option>
+          <option value="question">question</option>
+          <option value="todo">todo</option>
+          <option value="correction">correction</option>
+        </select>
+        <label for="at-color">Color</label>
+        <select id="at-color" class="at-select">
+          <option value="yellow">yellow</option>
+          <option value="green">green</option>
+          <option value="blue">blue</option>
+          <option value="red">red</option>
+          <option value="purple">purple</option>
+          <option value="orange">orange</option>
+        </select>
+        <label for="at-page-url">Page URL (hashed on submit)</label>
+        <input type="text" id="at-page-url" class="at-input" placeholder="https://example.com/page" />
+        <label for="at-text">Selected Text (hashed on submit)</label>
+        <input type="text" id="at-text" class="at-input" placeholder="Selected text..." />
+        <label for="at-selector">CSS Selector (hashed on submit)</label>
+        <input type="text" id="at-selector" class="at-input" placeholder="#main > p" />
+        <button id="at-create-btn" class="at-btn at-btn-primary">Create Annotation</button>
+        <p id="at-create-msg" class="at-msg" hidden></p>
+      </div>
+    </section>
+
+    <section class="at-section">
+      <h2 class="at-section-title">All Annotations</h2>
+      <div id="at-list" class="at-list" aria-live="polite">
+        <p class="at-loading">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script src="/web/js/annotation-tool.js"></script>
+</body>
+</html>
