@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YinYang Chat — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/chat.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>YinYang Chat</h1>
+    <span class="page-subtitle">AI assistant — advisory only, never auto-executes</span>
+  </div>
+
+  <div class="chat-page">
+
+    <!-- Model / status bar -->
+    <div class="chat-meta-bar" id="chat-meta-bar">
+      <span class="model-badge" id="model-badge">stub</span>
+      <span class="cost-display" id="cost-display">cost: $0.000</span>
+      <button class="btn btn--ghost btn--sm" id="btn-clear" type="button" aria-label="Clear chat history">
+        Clear history
+      </button>
+    </div>
+
+    <!-- Message list -->
+    <div class="chat-messages" id="chat-messages" role="log" aria-live="polite" aria-label="Chat messages">
+      <div class="chat-empty" id="chat-empty">Ask YinYang anything about Solace Hub...</div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div class="chat-loading" id="chat-loading" hidden aria-live="assertive">
+      <span class="spinner" aria-label="Waiting for reply"></span>
+      <span>YinYang is thinking...</span>
+    </div>
+
+    <!-- Suggestion chips -->
+    <div class="chat-suggestions" id="chat-suggestions" role="group" aria-label="Suggested actions">
+    </div>
+
+    <!-- Input area -->
+    <div class="chat-input-area">
+      <textarea
+        id="chat-input"
+        class="chat-input"
+        rows="2"
+        maxlength="2000"
+        placeholder="Type a message (Enter to send, Shift+Enter for newline)..."
+        aria-label="Chat message input"
+      ></textarea>
+      <button class="btn btn--accent" id="btn-send" type="button" aria-label="Send message">
+        Send
+      </button>
+    </div>
+    <div class="chat-char-count" id="chat-char-count">0 / 2000</div>
+
+  </div>
+
+  <script src="/web/js/chat.js"></script>
+</body>
+</html>

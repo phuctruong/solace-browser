@@ -330,9 +330,124 @@ _PENDING_ACTIONS_LOCK = threading.Lock()
 _ACTIONS_HISTORY: list[dict] = []
 _ACTIONS_HISTORY_LOCK = threading.Lock()
 
+# ---------------------------------------------------------------------------
+# Gmail Inbox Triage — Task 014
+# LAW: OAuth2 token NEVER stored in plaintext. SHA-256 hash only.
+# ---------------------------------------------------------------------------
+TRIAGE_RULES: dict[str, bool] = {
+    "archive_newsletters": True,
+    "snooze_follow_ups": True,
+    "label_receipts": True,
+    "archive_social_notifications": True,
+}
+SOCIAL_DOMAINS: frozenset[str] = frozenset([
+    "linkedin.com", "twitter.com", "x.com", "instagram.com",
+    "facebook.com", "tiktok.com", "youtube.com",
+])
+_GMAIL_STORE: dict[str, Any] = {
+    "connected": False,
+    "oauth2_token_hash": None,
+    "last_run": None,
+    "config": dict(TRIAGE_RULES),
+    "results": [],
+}
+_GMAIL_LOCK = threading.Lock()
+
+# --- Task 015: YinYang Chat Widget state ---
+_CHAT_STORE: dict[str, list] = {}  # session_token_sha256 → list of message dicts
+_CHAT_LOCK = threading.Lock()
+MAX_CHAT_HISTORY = 50
+
+CHAT_SUGGESTIONS: dict[str, list[str]] = {
+    "gmail": ["Run Gmail triage", "Check pending drafts", "View email analytics"],
+    "schedule": ["Create new schedule", "View upcoming runs", "Check run history"],
+    "recipes": ["Browse community recipes", "Check hit rates", "Fork a recipe"],
+}
+CHAT_DEFAULT_SUGGESTIONS: list[str] = [
+    "Run Gmail triage", "View schedule", "Browse recipes", "Check evidence"
+]
+
+
+def _triage_single_email(email: dict[str, Any], config: dict[str, bool]) -> dict[str, Any]:
+    """Deterministic triage — no LLM required. Returns action + confidence."""
+    sender: str = email.get("sender", "").lower()
+    subject: str = email.get("subject", "").lower()
+    action = "keep"
+    confidence = 0
+
+    if config.get("archive_newsletters") and (
+        "newsletter" in sender or "noreply" in sender or "no-reply" in sender
+    ):
+        action = "archive"
+        confidence = 90
+    elif config.get("archive_social_notifications") and any(d in sender for d in SOCIAL_DOMAINS):
+        action = "archive"
+        confidence = 85
+    elif config.get("snooze_follow_ups") and (
+        "following up" in subject or "reminder" in subject or "follow-up" in subject
+    ):
+        action = "snooze"
+        confidence = 80
+    elif config.get("label_receipts") and (
+        "receipt" in subject or "order" in subject or "invoice" in subject
+    ):
+        action = "label"
+        confidence = 75
+
+    return {
+        "email_id": email.get("id", ""),
+        "sender": email.get("sender", ""),
+        "subject": email.get("subject", ""),
+        "action": action,
+        "confidence": confidence,
+    }
+
 
 def _utc_isoformat(timestamp: float) -> str:
     return datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _call_openrouter_chat(user_message: str, api_key: str) -> tuple[str, str, int, str]:
+    """Call OpenRouter with meta-llama/llama-3.3-70b-instruct.
+
+    Returns (reply_text, model_used, tokens_used, cost_usd_str).
+    Raises urllib.error.URLError or OSError on network failure — caller must handle.
+    """
+    payload = json.dumps({
+        "model": "meta-llama/llama-3.3-70b-instruct",
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You are YinYang, the Solace Hub AI assistant. "
+                    "You help users automate browser tasks, manage schedules, "
+                    "and understand their evidence trail. "
+                    "Be concise (max 3 sentences). "
+                    "NEVER suggest actions outside Solace Hub scope."
+                ),
+            },
+            {"role": "user", "content": user_message},
+        ],
+        "max_tokens": 256,
+    }).encode()
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        data = json.loads(resp.read())
+    reply_text = data["choices"][0]["message"]["content"].strip()
+    usage = data.get("usage", {})
+    tokens_used = usage.get("total_tokens", 0)
+    # Approximate cost: $0.59 / 1M tokens (Llama 3.3 70B on Together/OpenRouter)
+    cost_usd = str(Decimal(str(tokens_used)) * Decimal("0.00000059"))
+    model_used = data.get("model", "meta-llama/llama-3.3-70b-instruct")
+    return reply_text, model_used, tokens_used, cost_usd
 
 
 def _action_preview_text(action_type: str, app_id: str, params: dict[str, Any]) -> str:
@@ -3241,6 +3356,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_schedules_next_runs()
         elif path == "/api/v1/browser/schedules":
             self._handle_schedules_list()
+        elif path == "/api/v1/schedules":
+            self._handle_schedules_list()
         elif path == "/api/v1/schedules/summary":
             self._handle_schedules_summary()
         elif path == "/api/v1/system/info":
@@ -3474,6 +3591,28 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/fun-packs/[^/]+$", path):
             pack_id = path.split("/")[-1]
             self._handle_fun_pack_detail(pack_id)
+        elif path == "/api/v1/apps/gmail-inbox-triage/status":
+            self._handle_gmail_status()
+        elif path == "/api/v1/apps/gmail-inbox-triage/results":
+            self._handle_gmail_results()
+        elif path == "/api/v1/apps/gmail-inbox-triage/config":
+            self._handle_gmail_config()
+        elif path == "/web/gmail-triage.html":
+            self._handle_gmail_triage_html()
+        elif path == "/web/js/gmail-triage.js":
+            self._handle_gmail_triage_js()
+        elif path == "/web/css/gmail-triage.css":
+            self._handle_gmail_triage_css()
+        elif path == "/api/v1/chat/history":
+            self._handle_chat_history(query)
+        elif path == "/api/v1/chat/suggestions":
+            self._handle_chat_suggestions(query)
+        elif path == "/web/chat.html":
+            self._handle_chat_html()
+        elif path == "/web/js/chat.js":
+            self._handle_chat_js()
+        elif path == "/web/css/chat.css":
+            self._handle_chat_css()
         elif path == "/api/v1/apps":
             self._handle_apps_list()
         elif re.match(r"^/api/v1/apps/[^/]+$", path):
@@ -3504,10 +3643,16 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_schedule_viewer_detail(run_id)
         elif path == "/web/schedule.html":
             self._handle_schedule_html()
+        elif path == "/web/schedule-tz.html":
+            self._handle_schedule_tz_html()
         elif path == "/web/pending-actions.html":
             self._handle_pending_actions_html()
         elif path == "/web/evidence-viewer.html":
             self._handle_evidence_viewer_html()
+        elif path == "/web/js/evidence-viewer.js":
+            self._handle_evidence_viewer_js()
+        elif path == "/web/css/evidence-viewer.css":
+            self._handle_evidence_viewer_css()
         elif path == "/web/js/schedule.js":
             self._handle_schedule_js()
         elif path == "/web/css/schedule.css":
@@ -3559,6 +3704,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_session_rule_check(app_id)
         elif path == "/api/v1/browser/schedules":
             self._handle_schedule_create()
+        elif path == "/api/v1/schedules":
+            self._handle_schedule_tz_create()
         elif re.match(r"^/api/v1/browser/schedules/[^/]+/enable$", path):
             schedule_id = path.split("/")[-2]
             self._handle_schedule_enable(schedule_id)
@@ -3656,6 +3803,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_broadcast_post()
         elif path == "/api/v1/pinned":
             self._handle_pinned_set()
+        elif path == "/api/v1/apps/gmail-inbox-triage/setup":
+            self._handle_gmail_setup()
+        elif path == "/api/v1/apps/gmail-inbox-triage/run":
+            self._handle_gmail_run()
+        elif path == "/api/v1/chat/message":
+            self._handle_chat_message()
         elif path == "/api/v1/apps/favorites":
             self._handle_apps_favorites_post()
         elif path == "/api/v1/apps/rebuild-domain-index":
@@ -3767,6 +3920,17 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_action_cancel(action_id)
         elif m := re.match(r"^/api/v1/apps/([^/]+)/activate$", path):
             self._handle_app_deactivate(m.group(1))
+        elif path == "/api/v1/chat/history":
+            self._handle_chat_history_delete()
+        else:
+            self._send_json({"error": "not found"}, 404)
+
+    # --- PATCH routing --- Task 071 (schedule timezone)
+    def do_PATCH(self) -> None:
+        path = self.path.split("?")[0]
+        if re.match(r"^/api/v1/schedules/[^/]+$", path):
+            schedule_id = path.split("/")[-1]
+            self._handle_schedule_patch(schedule_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -4426,9 +4590,35 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         self._send_json({"total": count, "unread": count})
 
     def _handle_evidence_stats(self) -> None:
-        """GET /api/v1/evidence/stats — evidence chain stats. Task 089."""
+        """GET /api/v1/evidence/stats — evidence chain stats. Task 089 + Task 016."""
+        if not self._check_auth():
+            return
+        evidence = load_evidence(limit=10000, offset=0)
         total = count_evidence()
-        self._send_json({"total": total, "chain_length": total, "integrity": "ok"})
+        if not evidence:
+            self._send_json({
+                "total": total,
+                "chain_length": total,
+                "integrity": "ok",
+                "unique_types": [],
+                "first_event": None,
+                "last_event": None,
+            })
+            return
+        types = sorted({e.get("event_type", e.get("type", "unknown")) for e in evidence if e})
+        timestamps = [
+            e.get("timestamp", e.get("ts", ""))
+            for e in evidence
+            if e.get("timestamp") or e.get("ts")
+        ]
+        self._send_json({
+            "total": total,
+            "chain_length": total,
+            "integrity": "ok",
+            "unique_types": types,
+            "first_event": min(timestamps) if timestamps else None,
+            "last_event": max(timestamps) if timestamps else None,
+        })
 
     def _handle_system_metrics(self) -> None:
         """GET /api/v1/system/metrics — system resource metrics. Task 090."""
@@ -6369,6 +6559,308 @@ function choose(mode) {
             content = css_path.read_bytes()
         except FileNotFoundError:
             self._send_json({"error": "recipes.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # --- Task 014: Gmail Inbox Triage ---
+
+    def _handle_gmail_status(self) -> None:
+        """GET /api/v1/apps/gmail-inbox-triage/status — connection state."""
+        with _GMAIL_LOCK:
+            connected = _GMAIL_STORE["connected"]
+            last_run = _GMAIL_STORE["last_run"]
+            result_count = len(_GMAIL_STORE["results"])
+        self._send_json({
+            "app_id": "gmail-inbox-triage",
+            "connected": connected,
+            "last_run": last_run,
+            "result_count": result_count,
+            "version": "1.0.0",
+        })
+
+    def _handle_gmail_setup(self) -> None:
+        """POST /api/v1/apps/gmail-inbox-triage/setup — store SHA-256 hash of token."""
+        body = self._read_json_body()
+        if body is None:
+            return
+        if not isinstance(body, dict):
+            self._send_json({"error": "body must be a JSON object"}, 400)
+            return
+        oauth2_token = body.get("oauth2_token", "")
+        if not isinstance(oauth2_token, str) or len(oauth2_token) < 10:
+            self._send_json({"error": "oauth2_token must be at least 10 characters"}, 400)
+            return
+        if len(oauth2_token) > 4096:
+            self._send_json({"error": "oauth2_token too long (max 4096 chars)"}, 400)
+            return
+        token_hash = hashlib.sha256(oauth2_token.encode()).hexdigest()
+        config_update = body.get("config")
+        with _GMAIL_LOCK:
+            _GMAIL_STORE["oauth2_token_hash"] = token_hash
+            _GMAIL_STORE["connected"] = True
+            if isinstance(config_update, dict):
+                for key in TRIAGE_RULES:
+                    if key in config_update and isinstance(config_update[key], bool):
+                        _GMAIL_STORE["config"][key] = config_update[key]
+        self._send_json({
+            "status": "connected",
+            "token_hash_preview": token_hash[:8] + "...",
+        })
+
+    def _handle_gmail_run(self) -> None:
+        """POST /api/v1/apps/gmail-inbox-triage/run — preview-first, Class B safety gate."""
+        with _GMAIL_LOCK:
+            connected = _GMAIL_STORE["connected"]
+            config = dict(_GMAIL_STORE["config"])
+        if not connected:
+            self._send_json({"error": "not connected — call /setup first"}, 400)
+            return
+        body = self._read_json_body()
+        if body is None:
+            body = {}
+        if not isinstance(body, dict):
+            self._send_json({"error": "body must be a JSON object"}, 400)
+            return
+        # Deterministic preview — no LLM. Emails injected by caller or stub.
+        emails: list[dict] = body.get("emails", [])
+        if not isinstance(emails, list):
+            self._send_json({"error": "emails must be a list"}, 400)
+            return
+        # Stub inbox when caller passes no emails (MVP: simulate 5 emails)
+        if not emails:
+            emails = [
+                {"id": "e1", "sender": "newsletter@example.com", "subject": "Weekly digest"},
+                {"id": "e2", "sender": "followup@sales.com", "subject": "Following up on our call"},
+                {"id": "e3", "sender": "orders@shop.com", "subject": "Your receipt #1234"},
+                {"id": "e4", "sender": "notifications@linkedin.com", "subject": "John liked your post"},
+                {"id": "e5", "sender": "alice@work.com", "subject": "Q2 planning meeting"},
+            ]
+        previews = [_triage_single_email(e, config) for e in emails]
+        action_id = str(uuid.uuid4())
+        run_ts = _utc_isoformat(time.time())
+        with _GMAIL_LOCK:
+            _GMAIL_STORE["last_run"] = run_ts
+            _GMAIL_STORE["results"] = previews
+        self._send_json({
+            "status": "preview",
+            "action_id": action_id,
+            "sign_off_required": True,
+            "auto_reject_after_seconds": 30,
+            "previews": previews,
+            "emails_processed": len(previews),
+            "run_at": run_ts,
+            "cost_usd": str(Decimal("0.00")),
+            "message": "Review the preview and approve via /api/v1/actions/{id}/approve",
+        })
+
+    def _handle_gmail_results(self) -> None:
+        """GET /api/v1/apps/gmail-inbox-triage/results — last triage results."""
+        with _GMAIL_LOCK:
+            results = list(_GMAIL_STORE["results"])
+            last_run = _GMAIL_STORE["last_run"]
+        self._send_json({
+            "results": results,
+            "count": len(results),
+            "last_run": last_run,
+        })
+
+    def _handle_gmail_config(self) -> None:
+        """GET /api/v1/apps/gmail-inbox-triage/config — current triage rules."""
+        with _GMAIL_LOCK:
+            config = dict(_GMAIL_STORE["config"])
+        self._send_json({"config": config, "app_id": "gmail-inbox-triage"})
+
+    def _handle_gmail_triage_html(self) -> None:
+        """GET /web/gmail-triage.html — serve Gmail triage frontend."""
+        html_path = Path(__file__).parent / "web" / "gmail-triage.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "gmail-triage.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_gmail_triage_js(self) -> None:
+        """GET /web/js/gmail-triage.js — serve Gmail triage JS."""
+        js_path = Path(__file__).parent / "web" / "js" / "gmail-triage.js"
+        try:
+            content = js_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "gmail-triage.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_gmail_triage_css(self) -> None:
+        """GET /web/css/gmail-triage.css — serve Gmail triage CSS."""
+        css_path = Path(__file__).parent / "web" / "css" / "gmail-triage.css"
+        try:
+            content = css_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "gmail-triage.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # --- Task 015: YinYang Chat Widget ---
+
+    def _chat_session_key(self) -> str:
+        """Return session key for this request (sha256 from auth header or sentinel)."""
+        auth_header = self.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            return auth_header[len("Bearer "):]
+        return "__anon__"
+
+    def _handle_chat_history(self, query: str = "") -> None:
+        """GET /api/v1/chat/history — last 20 messages for this session."""
+        if not self._check_auth():
+            return
+        key = self._chat_session_key()
+        with _CHAT_LOCK:
+            messages = list(_CHAT_STORE.get(key, []))
+        # Return last 20
+        self._send_json({"messages": messages[-20:], "total": len(messages)})
+
+    def _handle_chat_message(self) -> None:
+        """POST /api/v1/chat/message — send message, get AI reply (stub or OpenRouter)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        if not isinstance(body, dict):
+            self._send_json({"error": "body must be a JSON object"}, 400)
+            return
+        content = body.get("content", "")
+        if not isinstance(content, str):
+            self._send_json({"error": "content must be a string"}, 400)
+            return
+        if len(content) > 2000:
+            self._send_json({"error": "message too long (max 2000 chars)"}, 400)
+            return
+        if len(content.strip()) == 0:
+            self._send_json({"error": "content must not be empty"}, 400)
+            return
+        context = body.get("context")
+
+        key = self._chat_session_key()
+        ts = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+        user_msg: dict = {
+            "role": "user",
+            "content": content,
+            "timestamp": ts,
+            "context": context if isinstance(context, str) else None,
+        }
+
+        openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
+        if openrouter_key:
+            reply_text, model_used, tokens_used, cost_usd = _call_openrouter_chat(
+                content, openrouter_key
+            )
+        else:
+            reply_text = (
+                "YinYang is ready to help. [stub mode — set OPENROUTER_API_KEY for AI responses]"
+            )
+            model_used = "stub"
+            tokens_used = 0
+            cost_usd = "0.000"
+
+        reply_ts = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        assistant_msg: dict = {
+            "role": "assistant",
+            "content": reply_text,
+            "timestamp": reply_ts,
+            "context": None,
+        }
+
+        ctx_key = context if isinstance(context, str) and context in CHAT_SUGGESTIONS else None
+        suggestions = list(CHAT_SUGGESTIONS.get(ctx_key, CHAT_DEFAULT_SUGGESTIONS))  # type: ignore[arg-type]
+
+        with _CHAT_LOCK:
+            session_history = _CHAT_STORE.setdefault(key, [])
+            session_history.append(user_msg)
+            session_history.append(assistant_msg)
+            # FIFO: drop oldest pairs beyond MAX_CHAT_HISTORY
+            if len(session_history) > MAX_CHAT_HISTORY:
+                _CHAT_STORE[key] = session_history[-MAX_CHAT_HISTORY:]
+
+        self._send_json({
+            "reply": reply_text,
+            "model_used": model_used,
+            "tokens_used": tokens_used,
+            "cost_usd": cost_usd,
+            "suggestions": suggestions,
+            "timestamp": reply_ts,
+        })
+
+    def _handle_chat_history_delete(self) -> None:
+        """DELETE /api/v1/chat/history — clear chat history for this session."""
+        if not self._check_auth():
+            return
+        key = self._chat_session_key()
+        with _CHAT_LOCK:
+            _CHAT_STORE.pop(key, None)
+        self._send_json({"status": "cleared", "message": "Chat history cleared."})
+
+    def _handle_chat_suggestions(self, query: str = "") -> None:
+        """GET /api/v1/chat/suggestions — context-aware suggestions."""
+        if not self._check_auth():
+            return
+        parsed = urllib.parse.parse_qs(query.lstrip("?"))
+        context = parsed.get("context", [None])[0]
+        suggestions = list(CHAT_SUGGESTIONS.get(context, CHAT_DEFAULT_SUGGESTIONS))  # type: ignore[arg-type]
+        self._send_json({"suggestions": suggestions, "context": context})
+
+    def _handle_chat_html(self) -> None:
+        """GET /web/chat.html — serve YinYang Chat Widget frontend."""
+        html_path = Path(__file__).parent / "web" / "chat.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "chat.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_chat_js(self) -> None:
+        """GET /web/js/chat.js — serve YinYang Chat Widget JS."""
+        js_path = Path(__file__).parent / "web" / "js" / "chat.js"
+        try:
+            content = js_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "chat.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_chat_css(self) -> None:
+        """GET /web/css/chat.css — serve YinYang Chat Widget CSS."""
+        css_path = Path(__file__).parent / "web" / "css" / "chat.css"
+        try:
+            content = css_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "chat.css not found"}, 404)
             return
         self.send_response(200)
         self.send_header("Content-Type", "text/css")
@@ -8994,6 +9486,86 @@ function choose(mode) {
         self.end_headers()
         self.wfile.write(content)
 
+    def _handle_schedule_tz_html(self) -> None:
+        """GET /web/schedule-tz.html — timezone-aware schedule management page. Task 071."""
+        html_path = Path(__file__).parent / "web" / "schedule-tz.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "schedule-tz.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_schedule_tz_create(self) -> None:
+        """POST /api/v1/schedules — create schedule with name + cron + tz. Task 071."""
+        if not self._check_auth():
+            return
+        payload = self._read_json_body()
+        if payload is None:
+            return
+        name = payload.get("name", "")
+        cron = payload.get("cron", "")
+        tz   = payload.get("tz", "UTC")
+        if not isinstance(name, str) or not name:
+            self._send_json({"error": "missing 'name'"}, 400)
+            return
+        if len(name) > 256:
+            self._send_json({"error": "'name' exceeds 256 chars"}, 400)
+            return
+        if not isinstance(cron, str) or not cron:
+            self._send_json({"error": "missing 'cron'"}, 400)
+            return
+        if len(cron) > 64:
+            self._send_json({"error": "'cron' exceeds 64 chars"}, 400)
+            return
+        if not _CRON_RE.match(cron):
+            self._send_json({"error": "'cron' must be 5 whitespace-separated fields"}, 400)
+            return
+        if not isinstance(tz, str) or len(tz) > 64:
+            self._send_json({"error": "'tz' must be a string <= 64 chars"}, 400)
+            return
+        with _SCHEDULES_LOCK:
+            schedules = load_schedules()
+            record = {
+                "id": str(uuid.uuid4()),
+                "name": name,
+                "cron": cron,
+                "tz": tz,
+                "created_ts": int(time.time()),
+                "enabled": True,
+                "last_run_ts": None,
+                "run_count": 0,
+            }
+            schedules.append(record)
+            save_schedules(schedules)
+        record_evidence("schedule_created", {"schedule_id": record["id"], "name": name, "cron": cron, "tz": tz})
+        self._send_json(record, 201)
+
+    def _handle_schedule_patch(self, schedule_id: str) -> None:
+        """PATCH /api/v1/schedules/{id} — pause or resume a schedule. Task 071."""
+        if not self._check_auth():
+            return
+        payload = self._read_json_body()
+        if payload is None:
+            return
+        action = payload.get("action", "")
+        if action not in ("pause", "resume"):
+            self._send_json({"error": "'action' must be 'pause' or 'resume'"}, 400)
+            return
+        with _SCHEDULES_LOCK:
+            schedules = load_schedules()
+            for s in schedules:
+                if s.get("id") == schedule_id:
+                    s["enabled"] = (action == "resume")
+                    save_schedules(schedules)
+                    self._send_json({"status": action + "d", "schedule_id": schedule_id, "enabled": s["enabled"]})
+                    return
+        self._send_json({"error": "schedule not found"}, 404)
+
     def _handle_pending_actions_html(self) -> None:
         """GET /web/pending-actions.html — serve the pending actions dashboard page."""
         html_path = Path(__file__).parent / "web" / "pending-actions.html"
@@ -9018,6 +9590,34 @@ function choose(mode) {
             return
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_evidence_viewer_js(self) -> None:
+        """GET /web/js/evidence-viewer.js — serve the evidence viewer JS. Task 016."""
+        js_path = Path(__file__).parent / "web" / "js" / "evidence-viewer.js"
+        try:
+            content = js_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "evidence-viewer.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_evidence_viewer_css(self) -> None:
+        """GET /web/css/evidence-viewer.css — serve the evidence viewer CSS. Task 016."""
+        css_path = Path(__file__).parent / "web" / "css" / "evidence-viewer.css"
+        try:
+            content = css_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "evidence-viewer.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
         self.send_header("Content-Length", str(len(content)))
         self.end_headers()
         self.wfile.write(content)

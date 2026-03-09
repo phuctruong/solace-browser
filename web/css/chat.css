@@ -1,0 +1,285 @@
+/* chat.css — YinYang AI Chat Widget for Solace Hub
+   Laws:
+     - var(--hub-*) tokens ONLY. No hex values outside :root.
+     - No CDN. No Bootstrap. No Tailwind. No jQuery.
+     - Jony Ive rule: 8px minimum gap between all elements.
+     - Port 8888 ONLY. Port 9222 BANNED.
+     - Advisory only — never auto-executes.
+*/
+
+:root {
+  --hub-bg: #1a1a2e;
+  --hub-surface: #16213e;
+  --hub-border: #0f3460;
+  --hub-accent: #e94560;
+  --hub-text: #f5f5f5;
+  --hub-text-muted: #a8a8b3;
+  --hub-success: #4caf50;
+  --hub-warning: #ff9800;
+  --hub-danger: #e94560;
+  --hub-ghost: #2a2a4a;
+  --hub-user-bubble: #0f3460;
+  --hub-assistant-bubble: #1e2a40;
+  --gap: 8px;
+  --radius: 6px;
+  --transition: 0.2s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Page header ── */
+.page-header {
+  background: var(--hub-surface);
+  border-bottom: 1px solid var(--hub-border);
+  padding: calc(var(--gap) * 2);
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap);
+  flex-shrink: 0;
+}
+
+.page-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--hub-text);
+}
+
+.page-subtitle {
+  font-size: 12px;
+  color: var(--hub-text-muted);
+}
+
+/* ── Chat page layout ── */
+.chat-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  padding: calc(var(--gap) * 2);
+  gap: var(--gap);
+  min-height: 0;
+}
+
+/* ── Meta bar ── */
+.chat-meta-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  padding: calc(var(--gap) * 0.75) calc(var(--gap) * 1.5);
+}
+
+.model-badge {
+  background: var(--hub-border);
+  border-radius: 4px;
+  color: var(--hub-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  text-transform: uppercase;
+}
+
+.cost-display {
+  font-size: 12px;
+  color: var(--hub-text-muted);
+  flex: 1;
+}
+
+/* ── Message list ── */
+.chat-messages {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  flex: 1;
+  overflow-y: auto;
+  padding: calc(var(--gap) * 1.5);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 1.5);
+  min-height: 240px;
+  max-height: 480px;
+}
+
+.chat-empty {
+  color: var(--hub-text-muted);
+  font-size: 13px;
+  text-align: center;
+  margin: auto;
+}
+
+/* ── Message bubbles ── */
+.chat-bubble {
+  border-radius: var(--radius);
+  max-width: 80%;
+  padding: calc(var(--gap) * 0.75) var(--gap);
+  word-break: break-word;
+}
+
+.chat-bubble--user {
+  align-self: flex-end;
+  background: var(--hub-user-bubble);
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text);
+}
+
+.chat-bubble--assistant {
+  align-self: flex-start;
+  background: var(--hub-assistant-bubble);
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text);
+}
+
+.bubble-role {
+  color: var(--hub-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: calc(var(--gap) / 2);
+  text-transform: uppercase;
+}
+
+.bubble-content {
+  font-size: 13px;
+}
+
+.bubble-ts {
+  color: var(--hub-text-muted);
+  font-size: 10px;
+  margin-top: calc(var(--gap) / 2);
+  text-align: right;
+}
+
+/* ── Loading indicator ── */
+.chat-loading {
+  align-items: center;
+  color: var(--hub-text-muted);
+  display: flex;
+  font-size: 12px;
+  gap: calc(var(--gap) / 2);
+  padding: calc(var(--gap) / 2) 0;
+}
+
+.spinner {
+  border: 2px solid var(--hub-border);
+  border-top-color: var(--hub-accent);
+  border-radius: 50%;
+  display: inline-block;
+  height: 14px;
+  width: 14px;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Suggestion chips ── */
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--gap) / 2);
+  min-height: calc(var(--gap) * 2);
+}
+
+.suggestion-chip {
+  background: var(--hub-ghost);
+  border: 1px solid var(--hub-border);
+  border-radius: 20px;
+  color: var(--hub-text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: calc(var(--gap) / 2) var(--gap);
+  transition: background var(--transition), color var(--transition);
+}
+
+.suggestion-chip:hover {
+  background: var(--hub-border);
+  color: var(--hub-text);
+}
+
+/* ── Input area ── */
+.chat-input-area {
+  display: flex;
+  gap: var(--gap);
+  align-items: flex-end;
+}
+
+.chat-input {
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  color: var(--hub-text);
+  flex: 1;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: calc(var(--gap) * 0.75) var(--gap);
+  resize: none;
+  transition: border-color var(--transition);
+}
+
+.chat-input:focus {
+  border-color: var(--hub-accent);
+  outline: none;
+}
+
+.chat-char-count {
+  color: var(--hub-text-muted);
+  font-size: 11px;
+  text-align: right;
+}
+
+/* ── Buttons ── */
+.btn {
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  padding: calc(var(--gap) * 0.75) calc(var(--gap) * 1.5);
+  transition: opacity var(--transition);
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.btn:not(:disabled):hover {
+  opacity: 0.85;
+}
+
+.btn--accent {
+  background: var(--hub-accent);
+  color: var(--hub-text);
+}
+
+.btn--ghost {
+  background: var(--hub-ghost);
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text-muted);
+}
+
+.btn--sm {
+  font-size: 12px;
+  padding: calc(var(--gap) / 2) var(--gap);
+}
