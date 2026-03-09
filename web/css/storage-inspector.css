@@ -1,0 +1,32 @@
+/* Storage Inspector — Solace Hub */
+:root {
+  --si-bg: #0f0f0f;
+  --si-surface: #1a1a1a;
+  --si-border: #2a2a2a;
+  --si-text: #e0e0e0;
+  --si-accent: #4a9eff;
+  --si-danger: #e05555;
+  --si-success: #4caf50;
+}
+
+body { background: var(--si-bg); color: var(--si-text); font-family: system-ui, sans-serif; margin: 0; }
+
+.si-container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+.si-title { font-size: 1.8rem; margin-bottom: 0.25rem; }
+.si-subtitle { color: #888; margin-bottom: 1.5rem; }
+
+.si-toolbar { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+
+.si-btn { padding: 0.4rem 0.9rem; border-radius: 6px; border: none; cursor: pointer; font-size: 0.875rem; transition: opacity 0.15s; }
+.si-btn-primary { background: var(--si-accent); color: #fff; }
+.si-btn-secondary { background: var(--si-surface); color: var(--si-text); border: 1px solid var(--si-border); }
+.si-btn-danger { background: var(--si-danger); color: #fff; }
+.si-btn:hover { opacity: 0.85; }
+
+.si-summary { display: flex; flex-direction: column; gap: 0.75rem; }
+.si-type-row { background: var(--si-surface); border: 1px solid var(--si-border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; }
+.si-type-name { font-weight: 600; }
+.si-type-stats { color: #aaa; font-size: 0.85rem; display: flex; gap: 1rem; }
+
+.si-status { margin-top: 0.5rem; color: var(--si-success); font-size: 0.875rem; min-height: 1.2em; }
+.si-empty { color: #888; text-align: center; padding: 2rem; }

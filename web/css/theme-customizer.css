@@ -1,0 +1,39 @@
+/* Theme Customizer — Solace Hub */
+:root {
+  --hub-bg: #0f0f0f;
+  --hub-surface: #1a1a1a;
+  --hub-border: #2a2a2a;
+  --hub-text: #e0e0e0;
+  --hub-accent: #4a9eff;
+  --hub-danger: #e05555;
+  --hub-success: #4caf50;
+  --hub-muted: #888;
+}
+
+body { background: var(--hub-bg); color: var(--hub-text); font-family: system-ui, sans-serif; margin: 0; }
+
+.tc-container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+.tc-title { font-size: 1.8rem; margin-bottom: 0.25rem; }
+.tc-subtitle { color: var(--hub-muted); margin-bottom: 1.5rem; }
+
+.tc-section { margin-bottom: 2rem; }
+.tc-section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; border-bottom: 1px solid var(--hub-border); padding-bottom: 0.4rem; }
+
+.tc-presets { display: flex; gap: 1rem; flex-wrap: wrap; }
+.tc-preset { background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 8px; padding: 0.75rem 1.25rem; cursor: pointer; transition: border-color 0.15s; min-width: 140px; }
+.tc-preset:hover { border-color: var(--hub-accent); }
+.tc-preset-name { font-weight: 600; font-size: 0.9rem; }
+.tc-preset-meta { font-size: 0.75rem; color: var(--hub-muted); margin-top: 0.25rem; }
+
+.tc-form { display: flex; flex-direction: column; gap: 1rem; }
+.tc-label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.875rem; color: var(--hub-muted); }
+.tc-color-input { width: 60px; height: 32px; border: none; border-radius: 4px; cursor: pointer; background: none; }
+.tc-select { background: var(--hub-surface); color: var(--hub-text); border: 1px solid var(--hub-border); border-radius: 6px; padding: 0.4rem 0.6rem; font-size: 0.875rem; width: 200px; }
+
+.tc-toolbar { display: flex; gap: 1rem; margin-top: 0.5rem; }
+.tc-btn { padding: 0.4rem 0.9rem; border-radius: 6px; border: none; cursor: pointer; font-size: 0.875rem; transition: opacity 0.15s; }
+.tc-btn-primary { background: var(--hub-accent); color: #fff; }
+.tc-btn-secondary { background: var(--hub-surface); color: var(--hub-text); border: 1px solid var(--hub-border); }
+.tc-btn:hover { opacity: 0.85; }
+
+.tc-status { margin-top: 0.5rem; color: var(--hub-success); font-size: 0.875rem; min-height: 1.2em; }

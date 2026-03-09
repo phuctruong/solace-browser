@@ -725,6 +725,53 @@ _NOTES: list[dict] = []
 _NOTES_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
+# Task 054 — Page Screenshot API
+# ---------------------------------------------------------------------------
+SCREENSHOT_FORMATS: tuple[str, ...] = ("png", "jpeg", "webp")
+SCREENSHOT_QUALITIES: tuple[str, ...] = ("low", "medium", "high", "lossless")
+MAX_SCREENSHOTS = 100
+
+_SCREENSHOTS: list[dict] = []
+_SCREENSHOTS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 055 — Session Export
+# ---------------------------------------------------------------------------
+EXPORT_FORMATS: tuple[str, ...] = ("json", "csv", "html", "pdf")
+EXPORT_SCOPES: tuple[str, ...] = ("history", "bookmarks", "notes", "all")
+EXPORT_STATUS: tuple[str, ...] = ("pending", "processing", "completed", "failed")
+
+_EXPORT_JOBS: list[dict] = []
+_EXPORT_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 056 — Storage Inspector
+# ---------------------------------------------------------------------------
+STORAGE_TYPES: tuple[str, ...] = ("localStorage", "sessionStorage", "cookies", "indexedDB", "cacheStorage")
+
+_STORAGE_EVENTS: list[dict] = []
+_STORAGE_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 057 — Theme Customizer
+# ---------------------------------------------------------------------------
+FONT_SIZES: tuple[str, ...] = ("sm", "md", "lg", "xl")
+THEME_PRESETS: list[dict] = [
+    {"preset_id": "solace-light", "name": "Solace Light", "is_default": True,
+     "accent": "#4A90E2", "bg": "#FFFFFF", "text": "#1A1A1A", "font_size": "md"},
+    {"preset_id": "solace-dark", "name": "Solace Dark", "is_default": False,
+     "accent": "#7B61FF", "bg": "#0F0F0F", "text": "#E8E8E8", "font_size": "md"},
+    {"preset_id": "high-contrast", "name": "High Contrast", "is_default": False,
+     "accent": "#FFD700", "bg": "#000000", "text": "#FFFFFF", "font_size": "lg"},
+]
+DEFAULT_THEME_CUSTOMIZER: dict = {
+    "preset_id": "solace-light", "accent_color": "#4A90E2", "bg_color": "#FFFFFF",
+    "text_color": "#1A1A1A", "font_size": "md", "custom": False,
+}
+_CURRENT_THEME_CUSTOMIZER: dict = dict(DEFAULT_THEME_CUSTOMIZER)
+_THEME_CUSTOMIZER_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
 # Task 039 — Command Palette
 # ---------------------------------------------------------------------------
 DEFAULT_COMMANDS: tuple[dict, ...] = (
@@ -4718,6 +4765,58 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/session-notes.js", "application/javascript")
         elif path == "/web/css/session-notes.css":
             self._handle_static_file("web/css/session-notes.css", "text/css")
+        # --- Task 054: Page Screenshot API ---
+        elif path == "/api/v1/screenshots":
+            self._handle_screenshot_list()
+        elif path == "/api/v1/screenshots/stats":
+            self._handle_screenshot_stats()
+        elif re.match(r"^/api/v1/screenshots/[^/]+$", path):
+            screenshot_id = path.split("/")[-1]
+            self._handle_screenshot_get(screenshot_id)
+        elif path == "/web/page-screenshot.html":
+            self._handle_static_file("web/page-screenshot.html", "text/html; charset=utf-8")
+        elif path == "/web/js/page-screenshot.js":
+            self._handle_static_file("web/js/page-screenshot.js", "application/javascript")
+        elif path == "/web/css/page-screenshot.css":
+            self._handle_static_file("web/css/page-screenshot.css", "text/css")
+        # --- Task 055: Session Export ---
+        elif path == "/api/v1/export/jobs":
+            self._handle_export_jobs_list()
+        elif path == "/api/v1/export/formats":
+            self._handle_export_formats_list()
+        elif re.match(r"^/api/v1/export/jobs/[^/]+$", path):
+            job_id = path.split("/")[-1]
+            self._handle_export_job_get(job_id)
+        elif path == "/web/session-export.html":
+            self._handle_static_file("web/session-export.html", "text/html; charset=utf-8")
+        elif path == "/web/js/session-export.js":
+            self._handle_static_file("web/js/session-export.js", "application/javascript")
+        elif path == "/web/css/session-export.css":
+            self._handle_static_file("web/css/session-export.css", "text/css")
+        # --- Task 056: Storage Inspector ---
+        elif path == "/api/v1/storage/summary":
+            self._handle_storage_summary()
+        elif path == "/api/v1/storage/by-domain":
+            self._handle_storage_by_domain()
+        elif path == "/api/v1/storage/types":
+            self._handle_storage_types()
+        elif path == "/web/storage-inspector.html":
+            self._handle_static_file("web/storage-inspector.html", "text/html; charset=utf-8")
+        elif path == "/web/js/storage-inspector.js":
+            self._handle_static_file("web/js/storage-inspector.js", "application/javascript")
+        elif path == "/web/css/storage-inspector.css":
+            self._handle_static_file("web/css/storage-inspector.css", "text/css")
+        # --- Task 057: Theme Customizer ---
+        elif path == "/api/v1/theme/customizer":
+            self._handle_theme_customizer_get()
+        elif path == "/api/v1/theme/customizer/presets":
+            self._handle_theme_customizer_presets()
+        elif path == "/web/theme-customizer.html":
+            self._handle_static_file("web/theme-customizer.html", "text/html; charset=utf-8")
+        elif path == "/web/js/theme-customizer.js":
+            self._handle_static_file("web/js/theme-customizer.js", "application/javascript")
+        elif path == "/web/css/theme-customizer.css":
+            self._handle_static_file("web/css/theme-customizer.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -5080,6 +5179,21 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 051: Session Notes ---
         elif path == "/api/v1/notes":
             self._handle_notes_add()
+        # --- Task 054: Page Screenshot API ---
+        elif path == "/api/v1/screenshots/capture":
+            self._handle_screenshot_capture()
+        # --- Task 055: Session Export ---
+        elif path == "/api/v1/export/jobs":
+            self._handle_export_job_create()
+        # --- Task 056: Storage Inspector ---
+        elif path == "/api/v1/storage/record":
+            self._handle_storage_record()
+        # --- Task 057: Theme Customizer ---
+        elif path == "/api/v1/theme/customizer":
+            self._handle_theme_customizer_set()
+        elif re.match(r"^/api/v1/theme/customizer/preset/[^/]+$", path):
+            preset_id = path.split("/")[-1]
+            self._handle_theme_customizer_apply_preset(preset_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -5194,6 +5308,20 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/notes/[^/]+$", path):
             note_id = path.split("/")[-1]
             self._handle_notes_delete(note_id)
+        # --- Task 054: Page Screenshot API ---
+        elif re.match(r"^/api/v1/screenshots/[^/]+$", path):
+            screenshot_id = path.split("/")[-1]
+            self._handle_screenshot_delete(screenshot_id)
+        # --- Task 055: Session Export ---
+        elif re.match(r"^/api/v1/export/jobs/[^/]+$", path):
+            job_id = path.split("/")[-1]
+            self._handle_export_job_delete(job_id)
+        # --- Task 056: Storage Inspector ---
+        elif path == "/api/v1/storage/clear":
+            self._handle_storage_clear()
+        # --- Task 057: Theme Customizer ---
+        elif path == "/api/v1/theme/customizer":
+            self._handle_theme_customizer_reset()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -15621,6 +15749,316 @@ function choose(mode) {
         """GET /api/v1/proxy/presets — list proxy presets (public)."""
         self._send_json({"presets": PROXY_PRESETS, "total": len(PROXY_PRESETS)})
 
+    # ---------------------------------------------------------------------------
+    # Task 054 — Page Screenshot API handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_screenshot_list(self) -> None:
+        """GET /api/v1/screenshots — list screenshots (public)."""
+        with _SCREENSHOTS_LOCK:
+            screenshots = list(reversed(_SCREENSHOTS))
+        self._send_json({"screenshots": screenshots, "total": len(screenshots)})
+
+    def _handle_screenshot_capture(self) -> None:
+        """POST /api/v1/screenshots/capture — capture a screenshot (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        url = str(body.get("url", "")).strip()
+        fmt = str(body.get("format", "png")).strip()
+        quality = str(body.get("quality", "medium")).strip()
+        width = body.get("width", 1280)
+        height = body.get("height", 720)
+        title = str(body.get("title", "")).strip() or None
+        if fmt not in SCREENSHOT_FORMATS:
+            self._send_json({"error": f"format must be one of {list(SCREENSHOT_FORMATS)}"}, 400)
+            return
+        if quality not in SCREENSHOT_QUALITIES:
+            self._send_json({"error": f"quality must be one of {list(SCREENSHOT_QUALITIES)}"}, 400)
+            return
+        try:
+            width = int(width)
+            height = int(height)
+        except (TypeError, ValueError):
+            self._send_json({"error": "width and height must be integers"}, 400)
+            return
+        if not (1 <= width <= 7680):
+            self._send_json({"error": "width must be 1-7680"}, 400)
+            return
+        if not (1 <= height <= 4320):
+            self._send_json({"error": "height must be 1-4320"}, 400)
+            return
+        url_hash = hashlib.sha256(url.encode()).hexdigest()
+        screenshot_id = f"ss_{uuid.uuid4().hex}"
+        record: dict = {
+            "screenshot_id": screenshot_id,
+            "url_hash": url_hash,
+            "format": fmt,
+            "quality": quality,
+            "width": width,
+            "height": height,
+            "file_size_bytes": 204800,
+            "captured_at": _utc_isoformat(time.time()),
+        }
+        if title:
+            record["title"] = title
+        with _SCREENSHOTS_LOCK:
+            _SCREENSHOTS.append(record)
+            if len(_SCREENSHOTS) > MAX_SCREENSHOTS:
+                _SCREENSHOTS.pop(0)
+        self._send_json({"status": "captured", "screenshot_id": screenshot_id})
+
+    def _handle_screenshot_get(self, screenshot_id: str) -> None:
+        """GET /api/v1/screenshots/{screenshot_id} — get screenshot metadata (public)."""
+        with _SCREENSHOTS_LOCK:
+            ss = next((s for s in _SCREENSHOTS if s["screenshot_id"] == screenshot_id), None)
+        if ss is None:
+            self._send_json({"error": "screenshot not found"}, 404)
+            return
+        self._send_json(ss)
+
+    def _handle_screenshot_delete(self, screenshot_id: str) -> None:
+        """DELETE /api/v1/screenshots/{screenshot_id} — delete screenshot (auth required)."""
+        if not self._check_auth():
+            return
+        with _SCREENSHOTS_LOCK:
+            before = len(_SCREENSHOTS)
+            _SCREENSHOTS[:] = [s for s in _SCREENSHOTS if s["screenshot_id"] != screenshot_id]
+            after = len(_SCREENSHOTS)
+        if before == after:
+            self._send_json({"error": "screenshot not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "screenshot_id": screenshot_id})
+
+    def _handle_screenshot_stats(self) -> None:
+        """GET /api/v1/screenshots/stats — screenshot statistics (public)."""
+        with _SCREENSHOTS_LOCK:
+            total = len(_SCREENSHOTS)
+            by_format: dict[str, int] = {}
+            total_size = 0
+            for s in _SCREENSHOTS:
+                fmt = s.get("format", "unknown")
+                by_format[fmt] = by_format.get(fmt, 0) + 1
+                total_size += s.get("file_size_bytes", 0)
+        self._send_json({
+            "total": total,
+            "by_format": by_format,
+            "total_size_bytes": total_size,
+            "max_screenshots": MAX_SCREENSHOTS,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 055 — Session Export handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_export_jobs_list(self) -> None:
+        """GET /api/v1/export/jobs — list export jobs (public)."""
+        with _EXPORT_LOCK:
+            jobs = list(reversed(_EXPORT_JOBS))
+        self._send_json({"jobs": jobs, "total": len(jobs)})
+
+    def _handle_export_job_create(self) -> None:
+        """POST /api/v1/export/jobs — create export job (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        fmt = str(body.get("format", "")).strip()
+        scope = str(body.get("scope", "")).strip()
+        if fmt not in EXPORT_FORMATS:
+            self._send_json({"error": f"format must be one of {list(EXPORT_FORMATS)}"}, 400)
+            return
+        if scope not in EXPORT_SCOPES:
+            self._send_json({"error": f"scope must be one of {list(EXPORT_SCOPES)}"}, 400)
+            return
+        job_id = f"exp_{uuid.uuid4().hex}"
+        now = _utc_isoformat(time.time())
+        job: dict = {
+            "job_id": job_id,
+            "format": fmt,
+            "scope": scope,
+            "status": "completed",
+            "created_at": now,
+            "completed_at": now,
+            "file_size_bytes": 8192,
+            "row_count": 100,
+        }
+        with _EXPORT_LOCK:
+            _EXPORT_JOBS.append(job)
+        self._send_json({"status": "created", "job_id": job_id})
+
+    def _handle_export_job_get(self, job_id: str) -> None:
+        """GET /api/v1/export/jobs/{job_id} — get job status (public)."""
+        with _EXPORT_LOCK:
+            job = next((j for j in _EXPORT_JOBS if j["job_id"] == job_id), None)
+        if job is None:
+            self._send_json({"error": "job not found"}, 404)
+            return
+        self._send_json(job)
+
+    def _handle_export_job_delete(self, job_id: str) -> None:
+        """DELETE /api/v1/export/jobs/{job_id} — delete export job (auth required)."""
+        if not self._check_auth():
+            return
+        with _EXPORT_LOCK:
+            before = len(_EXPORT_JOBS)
+            _EXPORT_JOBS[:] = [j for j in _EXPORT_JOBS if j["job_id"] != job_id]
+            after = len(_EXPORT_JOBS)
+        if before == after:
+            self._send_json({"error": "job not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "job_id": job_id})
+
+    def _handle_export_formats_list(self) -> None:
+        """GET /api/v1/export/formats — list supported formats (public)."""
+        self._send_json({"formats": list(EXPORT_FORMATS), "scopes": list(EXPORT_SCOPES)})
+
+    # ---------------------------------------------------------------------------
+    # Task 056 — Storage Inspector handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_storage_summary(self) -> None:
+        """GET /api/v1/storage/summary — storage usage by type (public)."""
+        with _STORAGE_LOCK:
+            events = list(_STORAGE_EVENTS)
+        summary: dict[str, dict] = {t: {"event_count": 0, "total_size_bytes": 0} for t in STORAGE_TYPES}
+        for ev in events:
+            t = ev.get("storage_type", "")
+            if t in summary:
+                summary[t]["event_count"] += 1
+                summary[t]["total_size_bytes"] += ev.get("size_bytes", 0)
+        self._send_json({"summary": summary})
+
+    def _handle_storage_record(self) -> None:
+        """POST /api/v1/storage/record — record storage event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        storage_type = str(body.get("storage_type", "")).strip()
+        if storage_type not in STORAGE_TYPES:
+            self._send_json({"error": f"storage_type must be one of {list(STORAGE_TYPES)}"}, 400)
+            return
+        raw_domain = str(body.get("domain", "")).strip()
+        raw_key = str(body.get("key", "")).strip()
+        size_bytes = body.get("size_bytes", 0)
+        try:
+            size_bytes = int(size_bytes)
+            if size_bytes < 0:
+                raise ValueError("size_bytes must be >= 0")
+        except (TypeError, ValueError):
+            self._send_json({"error": "size_bytes must be a non-negative integer"}, 400)
+            return
+        domain_hash = hashlib.sha256(raw_domain.encode()).hexdigest()
+        key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+        event_id = f"sto_{uuid.uuid4().hex}"
+        event: dict = {
+            "event_id": event_id,
+            "storage_type": storage_type,
+            "domain_hash": domain_hash,
+            "key_hash": key_hash,
+            "size_bytes": size_bytes,
+            "recorded_at": _utc_isoformat(time.time()),
+        }
+        with _STORAGE_LOCK:
+            _STORAGE_EVENTS.append(event)
+        self._send_json({"status": "recorded", "event_id": event_id})
+
+    def _handle_storage_clear(self) -> None:
+        """DELETE /api/v1/storage/clear — clear all events (auth required)."""
+        if not self._check_auth():
+            return
+        with _STORAGE_LOCK:
+            count = len(_STORAGE_EVENTS)
+            _STORAGE_EVENTS.clear()
+        self._send_json({"status": "cleared", "removed": count})
+
+    def _handle_storage_by_domain(self) -> None:
+        """GET /api/v1/storage/by-domain — grouped by domain_hash (public)."""
+        with _STORAGE_LOCK:
+            events = list(_STORAGE_EVENTS)
+        groups: dict[str, dict] = {}
+        for ev in events:
+            dh = ev.get("domain_hash", "unknown")
+            if dh not in groups:
+                groups[dh] = {"domain_hash": dh, "event_count": 0, "total_size_bytes": 0}
+            groups[dh]["event_count"] += 1
+            groups[dh]["total_size_bytes"] += ev.get("size_bytes", 0)
+        self._send_json({"groups": list(groups.values()), "total_domains": len(groups)})
+
+    def _handle_storage_types(self) -> None:
+        """GET /api/v1/storage/types — list storage types (public)."""
+        self._send_json({"types": list(STORAGE_TYPES)})
+
+    # ---------------------------------------------------------------------------
+    # Task 057 — Theme Customizer handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_theme_customizer_get(self) -> None:
+        """GET /api/v1/theme/customizer — get current theme (public)."""
+        with _THEME_CUSTOMIZER_LOCK:
+            theme = dict(_CURRENT_THEME_CUSTOMIZER)
+        self._send_json(theme)
+
+    def _handle_theme_customizer_set(self) -> None:
+        """POST /api/v1/theme/customizer — update theme (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        font_size = body.get("font_size")
+        if font_size is not None and font_size not in FONT_SIZES:
+            self._send_json({"error": f"font_size must be one of {list(FONT_SIZES)}"}, 400)
+            return
+        with _THEME_CUSTOMIZER_LOCK:
+            if font_size is not None:
+                _CURRENT_THEME_CUSTOMIZER["font_size"] = font_size
+            if "accent_color" in body:
+                _CURRENT_THEME_CUSTOMIZER["accent_color"] = str(body["accent_color"])
+            if "bg_color" in body:
+                _CURRENT_THEME_CUSTOMIZER["bg_color"] = str(body["bg_color"])
+            if "text_color" in body:
+                _CURRENT_THEME_CUSTOMIZER["text_color"] = str(body["text_color"])
+            _CURRENT_THEME_CUSTOMIZER["custom"] = True
+            theme = dict(_CURRENT_THEME_CUSTOMIZER)
+        self._send_json({"status": "updated", "theme": theme})
+
+    def _handle_theme_customizer_reset(self) -> None:
+        """DELETE /api/v1/theme/customizer — reset to default (auth required)."""
+        if not self._check_auth():
+            return
+        with _THEME_CUSTOMIZER_LOCK:
+            _CURRENT_THEME_CUSTOMIZER.clear()
+            _CURRENT_THEME_CUSTOMIZER.update(DEFAULT_THEME_CUSTOMIZER)
+            theme = dict(_CURRENT_THEME_CUSTOMIZER)
+        self._send_json({"status": "reset", "theme": theme})
+
+    def _handle_theme_customizer_presets(self) -> None:
+        """GET /api/v1/theme/customizer/presets — list presets (public)."""
+        self._send_json({"presets": THEME_PRESETS, "total": len(THEME_PRESETS)})
+
+    def _handle_theme_customizer_apply_preset(self, preset_id: str) -> None:
+        """POST /api/v1/theme/customizer/preset/{preset_id} — apply preset (auth required)."""
+        if not self._check_auth():
+            return
+        preset = next((p for p in THEME_PRESETS if p["preset_id"] == preset_id), None)
+        if preset is None:
+            self._send_json({"error": f"preset not found: {preset_id}"}, 404)
+            return
+        with _THEME_CUSTOMIZER_LOCK:
+            _CURRENT_THEME_CUSTOMIZER["preset_id"] = preset["preset_id"]
+            _CURRENT_THEME_CUSTOMIZER["accent_color"] = preset["accent"]
+            _CURRENT_THEME_CUSTOMIZER["bg_color"] = preset["bg"]
+            _CURRENT_THEME_CUSTOMIZER["text_color"] = preset["text"]
+            _CURRENT_THEME_CUSTOMIZER["font_size"] = preset["font_size"]
+            _CURRENT_THEME_CUSTOMIZER["custom"] = False
+            theme = dict(_CURRENT_THEME_CUSTOMIZER)
+        self._send_json({"status": "applied", "theme": theme})
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Theme Customizer — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/theme-customizer.css">
+</head>
+<body>
+<div class="tc-container">
+  <h1 class="tc-title">Theme Customizer</h1>
+  <p class="tc-subtitle">Customize your Solace Hub appearance</p>
+
+  <div class="tc-section">
+    <h2 class="tc-section-title">Presets</h2>
+    <div id="tc-presets" class="tc-presets" aria-live="polite"></div>
+  </div>
+
+  <div class="tc-section">
+    <h2 class="tc-section-title">Custom Settings</h2>
+    <div class="tc-form">
+      <label class="tc-label">Accent Color
+        <input type="color" id="tc-accent" class="tc-color-input">
+      </label>
+      <label class="tc-label">Font Size
+        <select id="tc-font-size" class="tc-select">
+          <option value="sm">Small</option>
+          <option value="md" selected>Medium</option>
+          <option value="lg">Large</option>
+          <option value="xl">Extra Large</option>
+        </select>
+      </label>
+      <div class="tc-toolbar">
+        <button id="btn-tc-apply" class="tc-btn tc-btn-primary">Apply</button>
+        <button id="btn-tc-reset" class="tc-btn tc-btn-secondary">Reset to Default</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tc-status" class="tc-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/theme-customizer.js"></script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+/* Session Export — Solace Hub */
+:root {
+  --se-bg: #0f0f0f;
+  --se-surface: #1a1a1a;
+  --se-border: #2a2a2a;
+  --se-text: #e0e0e0;
+  --se-accent: #4a9eff;
+  --se-danger: #e05555;
+  --se-success: #4caf50;
+}
+
+body { background: var(--se-bg); color: var(--se-text); font-family: system-ui, sans-serif; margin: 0; }
+
+.se-container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+.se-title { font-size: 1.8rem; margin-bottom: 0.25rem; }
+.se-subtitle { color: #888; margin-bottom: 1.5rem; }
+
+.se-toolbar { display: flex; gap: 1rem; margin-bottom: 1rem; }
+
+.se-btn { padding: 0.4rem 0.9rem; border-radius: 6px; border: none; cursor: pointer; font-size: 0.875rem; transition: opacity 0.15s; }
+.se-btn-primary { background: var(--se-accent); color: #fff; }
+.se-btn-secondary { background: var(--se-surface); color: var(--se-text); border: 1px solid var(--se-border); }
+.se-btn-danger { background: var(--se-danger); color: #fff; }
+.se-btn:hover { opacity: 0.85; }
+
+.se-list { display: flex; flex-direction: column; gap: 1rem; }
+.se-job { background: var(--se-surface); border: 1px solid var(--se-border); border-radius: 8px; padding: 1rem; }
+.se-job-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+.se-job-id { font-weight: 600; font-size: 0.9rem; font-family: monospace; }
+.se-job-meta { color: #aaa; font-size: 0.8rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+.se-job-status { display: inline-block; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem; background: #1e3a1e; color: var(--se-success); }
+.se-job-date { color: #666; font-size: 0.75rem; margin-top: 0.4rem; }
+
+.se-status { margin-top: 0.5rem; color: var(--se-success); font-size: 0.875rem; min-height: 1.2em; }
+.se-empty { color: #888; text-align: center; padding: 2rem; }

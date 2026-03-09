@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Export — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/session-export.css">
+</head>
+<body>
+<div class="se-container">
+  <h1 class="se-title">Session Export</h1>
+  <p class="se-subtitle">Export your session data in multiple formats</p>
+
+  <div class="se-toolbar">
+    <button id="btn-se-create" class="se-btn se-btn-primary">New Export</button>
+    <button id="btn-se-formats" class="se-btn se-btn-secondary">View Formats</button>
+  </div>
+
+  <div id="se-list" class="se-list" aria-live="polite"></div>
+  <div id="se-status" class="se-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/session-export.js"></script>
+</body>
+</html>

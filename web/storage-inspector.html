@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storage Inspector — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/storage-inspector.css">
+</head>
+<body>
+<div class="si-container">
+  <h1 class="si-title">Storage Inspector</h1>
+  <p class="si-subtitle">Monitor browser storage usage by type and domain</p>
+
+  <div class="si-toolbar">
+    <button id="btn-si-summary" class="si-btn si-btn-primary">Refresh Summary</button>
+    <button id="btn-si-by-domain" class="si-btn si-btn-secondary">By Domain</button>
+    <button id="btn-si-clear" class="si-btn si-btn-danger">Clear All</button>
+  </div>
+
+  <div id="si-summary" class="si-summary" aria-live="polite"></div>
+  <div id="si-status" class="si-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/storage-inspector.js"></script>
+</body>
+</html>
