@@ -12,8 +12,29 @@ Three surfaces:
 ## Quick Start
 
 ```bash
+chmod +x scripts/*.sh && ./scripts/install.sh
+systemctl --user start yinyang
+# Open Solace Browser
+```
+
+## Distribution
+
+```bash
+cat scripts/VERSION
+bash scripts/version.sh
+bash scripts/build-deb.sh
+```
+
+- `scripts/build-deb.sh` reads `scripts/VERSION` and builds `dist/solace-browser_<version>_amd64.deb`.
+- The package tree is assembled under `/tmp/solace-browser-pkg` and includes the browser binary, Yinyang service assets, and desktop entry.
+- Expected browser input binary: `dist/solace-browser-linux-x86_64`.
+- `dpkg-deb` must be installed before running the packager.
+
+## Manual Development
+
+```bash
 # Start Yinyang Server (port 8888)
-python yinyang-server.py
+python3 yinyang-server.py
 
 # Start Solace Hub (Tauri desktop app)
 scripts/start-hub.sh
@@ -44,8 +65,8 @@ Or use the script: `scripts/build-chromium.sh`
 
 ## Key Rules
 
-- Port **8888 ONLY** — 9222 permanently banned
-- **Solace Hub** (never "Companion App")
+- Port **8888 ONLY**
+- Use the name **Solace Hub**
 - No Chrome extensions / MV3 — sidebar is native C++ WebUI
 - Bearer auth required for mutating endpoints (POST/DELETE)
 

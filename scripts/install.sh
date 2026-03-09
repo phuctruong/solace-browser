@@ -4,6 +4,7 @@ set -eu
 
 STATE_DIR="${HOME}/.solace"
 LIB_DIR="${HOME}/.local/lib/solace"
+BIN_DIR="${HOME}/.local/bin"
 SYSTEMD_DIR="${HOME}/.config/systemd/user"
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd)
 
@@ -38,18 +39,20 @@ resolve_repo_root() {
 
 require_cmd cp
 require_cmd chmod
+require_cmd ln
 require_cmd mkdir
 require_cmd systemctl
 
 repo_root=$(resolve_repo_root)
 
-mkdir -p "${STATE_DIR}" "${LIB_DIR}" "${SYSTEMD_DIR}"
+mkdir -p "${STATE_DIR}" "${LIB_DIR}" "${BIN_DIR}" "${SYSTEMD_DIR}"
 
 cp "${SCRIPT_DIR}/launch-yinyang.sh" "${LIB_DIR}/launch-yinyang.sh"
 cp "${SCRIPT_DIR}/stop-yinyang.sh" "${LIB_DIR}/stop-yinyang.sh"
 cp "${SCRIPT_DIR}/install.sh" "${LIB_DIR}/install.sh"
 cp "${SCRIPT_DIR}/yinyang.service" "${LIB_DIR}/yinyang.service"
 chmod 755 "${LIB_DIR}/launch-yinyang.sh" "${LIB_DIR}/stop-yinyang.sh" "${LIB_DIR}/install.sh"
+ln -sf "${repo_root}/scripts/solace" "${BIN_DIR}/solace"
 
 printf '%s\n' "${repo_root}" > "${STATE_DIR}/repo-root"
 cp "${SCRIPT_DIR}/yinyang.service" "${SYSTEMD_DIR}/yinyang.service"
@@ -58,4 +61,5 @@ systemctl --user daemon-reload
 systemctl --user enable yinyang
 
 echo "Installed Yinyang launcher to ${LIB_DIR}"
+echo "Installed solace CLI to ${BIN_DIR}/solace"
 echo "Systemd user unit installed at ${SYSTEMD_DIR}/yinyang.service"

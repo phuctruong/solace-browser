@@ -5,8 +5,19 @@ category: messaging
 status: available
 safety: A
 tier: free
+tier_reason: "Unread badge checks are available on Free tier"
 site: web.telegram.org
 type: standard
+orchestrates: []
 scopes:
   - telegram.read.unread
   - local.evidence
+partners:
+  produces_for:
+    - morning-brief
+    - weekly-digest
+  consumes_from: []
+required_inbox:
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

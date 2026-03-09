@@ -1,0 +1,32 @@
+# ORACLE SWEEP
+
+- BQ-001 PASS — Changes stay within `hub_tunnel_client.py`, `yinyang_server.py`, `tests/test_hub_tunnel_client.py`, and `requirements.txt`.
+- BQ-002 PASS — The diff avoids the banned legacy remote-debugging port entirely.
+- BQ-003 PASS — New Python exception handling uses specific exception types only.
+- BQ-004 PASS — The diff uses `Solace Hub` terminology and does not add the deprecated alias.
+- BQ-005 PASS — The seven new tests cover the new client behavior and cloud route behavior.
+- BQ-006 PASS — The diff adds no remote-debugging flags, extension APIs, or DevTools hooks.
+- BQ-007 PASS — The server port remains centralized via `YINYANG_PORT` and the client constructor default.
+- BQ-008 PASS — N/A for this Python-only task; no Chromium build files changed.
+- BQ-009 FAIL — `pytest tests/ -q --ignore=tests/browser/` cannot pass in this sandbox because existing fixtures are blocked from opening localhost sockets.
+- BQ-010 PASS — This diff does not change Hub startup order, so the existing server-first/browser-second contract remains intact.
+- BQ-011 PASS — This diff does not write any session token or API key plaintext to disk.
+- BQ-012 PASS — The diff avoids extension directories and extension runtime APIs.
+- BQ-013 PASS — The request and response schema for the three cloud routes was specified in the task before implementation.
+- BQ-014 FAIL — This task does not add or revalidate evidence headers on every HTTP response.
+- BQ-015 FAIL — No notebook probe was added for this task.
+- BQ-016 PASS — The implementation compared reusing the old tunnel path versus a dedicated WebSocket relay client, then chose the narrower dedicated client.
+- BQ-017 PASS — No `BLOCKED_IF` section was modified by this diff.
+- BQ-018 FAIL — No explicit dual-persona agreement record was produced.
+- BQ-019 FAIL — Governance is incomplete because the oracle sweep contains known FAIL items and the requested external outbox path is sandbox-blocked.
+- BQ-020 PASS — Evidence for this task is written to the repo-local outbox and remains inspectable.
+- BQ-021 PASS — This Python task stays within the allowed Python and test paths.
+- BQ-022 PASS — N/A for this Python-only task; no `gn gen` step applies.
+- BQ-023 PASS — No oracle prompt was provided for this ID in the task context.
+- BQ-024 PASS — No oracle prompt was provided for this ID in the task context.
+- BQ-025 PASS — N/A for this Python-only task; `sidepanel.js` is untouched.
+- BQ-026 PASS — No oracle prompt was provided for this ID in the task context.
+- BQ-027 PASS — No oracle prompt was provided for this ID in the task context.
+- BQ-028 PASS — The new test file is `tests/test_hub_tunnel_client.py`.
+- BQ-029 FAIL — `python -m pytest tests/ -q --ignore=tests/browser/` exits non-zero in this sandbox due socket-binding permission errors in pre-existing tests.
+- BQ-030 PASS — The diff touches 4 files and the modified content stays within the task’s file-count and practical patch-size limits.

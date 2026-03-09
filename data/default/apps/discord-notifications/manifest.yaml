@@ -5,8 +5,18 @@ category: messaging
 status: available
 safety: B
 tier: pro
+tier_reason: "Notification routing and evidence capture require Pro tier"
 site: discord.com
 type: standard
+orchestrates: []
 scopes:
   - discord.read.notifications
   - local.evidence
+partners:
+  produces_for:
+    - morning-brief
+  consumes_from: []
+required_inbox:
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

@@ -5,8 +5,17 @@ category: messaging
 status: available
 safety: B
 tier: pro
+tier_reason: "Messaging session persistence requires Pro tier"
 site: web.whatsapp.com
 type: standard
+orchestrates: []
 scopes:
   - whatsapp.read.messages
   - local.evidence
+partners:
+  produces_for: []
+  consumes_from: []
+required_inbox:
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

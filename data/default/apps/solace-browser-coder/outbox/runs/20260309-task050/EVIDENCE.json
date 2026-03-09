@@ -1,0 +1,53 @@
+{
+  "task_id": "20260309-task050",
+  "rung": 641,
+  "northstar_gate": true,
+  "files_changed": [
+    "yinyang_server.py",
+    "tests/test_messaging_apps.py",
+    "data/default/apps/whatsapp-web/manifest.yaml",
+    "data/default/apps/whatsapp-unread/manifest.yaml",
+    "data/default/apps/slack-web/manifest.yaml",
+    "data/default/apps/slack-dm/manifest.yaml",
+    "data/default/apps/discord-web/manifest.yaml",
+    "data/default/apps/discord-notifications/manifest.yaml",
+    "data/default/apps/facebook-messenger/manifest.yaml",
+    "data/default/apps/messenger-unread/manifest.yaml",
+    "data/default/apps/telegram-web/manifest.yaml",
+    "data/default/apps/telegram-unread/manifest.yaml"
+  ],
+  "store_verified_no_change": true,
+  "red_gate": {
+    "command": "pytest -q tests/test_messaging_apps.py",
+    "result": "5 failed, 3 passed",
+    "failures": [
+      "test_domain_lookup_whatsapp",
+      "test_domain_lookup_slack",
+      "test_domain_lookup_discord",
+      "test_domain_lookup_no_match",
+      "test_domain_lookup_requires_auth"
+    ]
+  },
+  "green_gate": {
+    "commands": [
+      {
+        "command": "pytest -q tests/test_messaging_apps.py",
+        "result": "8 passed"
+      },
+      {
+        "command": "pytest -q tests/test_yinyang_instructions.py",
+        "result": "331 passed"
+      },
+      {
+        "command": "pytest -q tests/test_solace_hub.py",
+        "result": "181 passed"
+      }
+    ]
+  },
+  "test_results": {
+    "total_passed": 520,
+    "total_failed": 0
+  },
+  "route_added": "/api/v1/apps/by-domain",
+  "timestamp": "2026-03-09T08:41:42-04:00"
+}

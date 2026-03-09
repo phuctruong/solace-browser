@@ -5,8 +5,17 @@ category: messaging
 status: available
 safety: A
 tier: free
+tier_reason: "Read-only Slack session keep-alive is available on Free tier"
 site: app.slack.com
 type: standard
+orchestrates: []
 scopes:
   - slack.read.channels
   - local.evidence
+partners:
+  produces_for: []
+  consumes_from: []
+required_inbox:
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

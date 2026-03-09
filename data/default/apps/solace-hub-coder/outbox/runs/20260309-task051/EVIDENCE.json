@@ -1,0 +1,51 @@
+{
+  "task_id": "20260309-task051",
+  "rung": 641,
+  "timestamp": "2026-03-09T08:44:09-04:00",
+  "files_changed": [
+    "yinyang_server.py",
+    "tests/test_domain_detection.py",
+    "solace-hub/src/sidepanel.html",
+    "solace-hub/src/sidepanel.js"
+  ],
+  "red_gate": {
+    "command": "pytest -q tests/test_domain_detection.py",
+    "result": "8 failed",
+    "witness": [
+      "GET /api/v1/apps/by-domain returned 404 instead of 200",
+      "GET /api/v1/user/tier returned 404 instead of 200",
+      "POST /api/v1/apps/custom/create returned 404 instead of 201",
+      "POST /api/v1/apps/sync returned 404 instead of 403",
+      "solace-hub/src/sidepanel.html was missing"
+    ]
+  },
+  "green_gate": {
+    "focused": {
+      "command": "pytest -q tests/test_domain_detection.py",
+      "result": "8 passed"
+    },
+    "regression": {
+      "command": "pytest -q tests/test_solace_hub.py",
+      "result": "181 passed"
+    }
+  },
+  "oracle_sweep": {
+    "commands": [
+      "pytest -q tests/test_domain_detection.py",
+      "pytest -q tests/test_domain_detection.py",
+      "pytest -q tests/test_domain_detection.py"
+    ],
+    "results": [
+      "8 passed in 0.66s",
+      "8 passed in 0.64s",
+      "8 passed in 0.62s"
+    ]
+  },
+  "artifacts": [
+    "data/default/apps/solace-hub-coder/outbox/runs/20260309-task051/PATCH_DIFF.md",
+    "data/default/apps/solace-hub-coder/outbox/runs/20260309-task051/RED_GATE.md",
+    "data/default/apps/solace-hub-coder/outbox/runs/20260309-task051/GREEN_GATE.md",
+    "data/default/apps/solace-hub-coder/outbox/runs/20260309-task051/ORACLE_SWEEP.md",
+    "data/default/apps/solace-hub-coder/outbox/runs/20260309-task051/EVIDENCE.json"
+  ]
+}

@@ -1,0 +1,18 @@
+app: linkedin-web
+display_name: "LinkedIn Web"
+version: "1.0.0"
+login_url: "https://www.linkedin.com/login"
+check_url: "https://www.linkedin.com/feed/"
+success_signals:
+  - "Start a post"
+  - "Feed"
+failure_signals:
+  - "Sign in"
+  - "Forgot password"
+keep_alive:
+  interval_minutes: 20
+  action: "navigate"
+  url: "https://www.linkedin.com/feed/"
+oauth3_scope: "linkedin.read"
+tier_required: "free"
+evidence_on_check: true

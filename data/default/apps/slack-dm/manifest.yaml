@@ -5,8 +5,20 @@ category: messaging
 status: available
 safety: B
 tier: pro
+tier_reason: "Direct-message monitoring and routing require Pro tier"
 site: app.slack.com
 type: standard
+orchestrates: []
 scopes:
   - slack.read.messages
   - local.evidence
+partners:
+  produces_for:
+    - morning-brief
+    - weekly-digest
+  consumes_from:
+    - slack-triage
+required_inbox:
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

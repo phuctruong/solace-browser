@@ -1,0 +1,18 @@
+app: gmail
+display_name: "Gmail"
+version: "1.0.0"
+login_url: "https://accounts.google.com/signin"
+check_url: "https://mail.google.com/mail/u/0/#inbox"
+success_signals:
+  - "Inbox"
+  - "Compose"
+failure_signals:
+  - "Sign in"
+  - "accounts.google.com/v3/signin"
+keep_alive:
+  interval_minutes: 15
+  action: "navigate"
+  url: "https://mail.google.com/mail/u/0/#inbox"
+oauth3_scope: "gmail.read"
+tier_required: "free"
+evidence_on_check: true

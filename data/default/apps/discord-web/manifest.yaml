@@ -13,6 +13,9 @@ scopes:
   - discord.read.messages
   - local.evidence
 partners:
-  produces_for:
-    - morning-brief
+  produces_for: []
   consumes_from: []
+required_inbox:
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml
