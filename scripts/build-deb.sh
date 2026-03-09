@@ -74,4 +74,7 @@ install -m 644 "$DESKTOP_FILE" "$PKG_ROOT/usr/share/applications/solace-browser.
 mkdir -p "$OUTPUT_DIR"
 dpkg-deb --build "$PKG_ROOT" "$OUTPUT_DEB"
 
+sha256sum "$OUTPUT_DEB" > "${OUTPUT_DEB}.sha256"
+
 echo "$OUTPUT_DEB"
+echo "${OUTPUT_DEB}.sha256"
