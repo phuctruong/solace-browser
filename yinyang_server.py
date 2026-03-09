@@ -353,6 +353,39 @@ _GMAIL_STORE: dict[str, Any] = {
 }
 _GMAIL_LOCK = threading.Lock()
 
+# --- Task 017: Hub Recipe Store state ---
+FEATURED_RECIPES: list[dict] = [
+    {
+        "recipe_id": "gmail-zero-inbox",
+        "name": "Gmail Zero Inbox",
+        "description": "Archive newsletters, snooze follow-ups, label receipts",
+        "installs": 1247,
+        "hit_rate_pct": "78.5",
+        "avg_cost_usd": "0.001",
+        "app_id": "gmail-inbox-triage",
+    },
+    {
+        "recipe_id": "linkedin-pm-digest",
+        "name": "LinkedIn PM Digest",
+        "description": "Extract job posts matching your criteria, export to CSV",
+        "installs": 843,
+        "hit_rate_pct": "71.2",
+        "avg_cost_usd": "0.003",
+        "app_id": "linkedin-pm",
+    },
+    {
+        "recipe_id": "evidence-daily-report",
+        "name": "Daily Evidence Report",
+        "description": "Summarize yesterday's automation actions into email digest",
+        "installs": 562,
+        "hit_rate_pct": "91.0",
+        "avg_cost_usd": "0.002",
+        "app_id": "evidence-chain",
+    },
+]
+_RECIPE_STORE_INSTALLED: list[dict] = []
+_RECIPE_STORE_LOCK = threading.Lock()
+
 # --- Task 015: YinYang Chat Widget state ---
 _CHAT_STORE: dict[str, list] = {}  # session_token_sha256 → list of message dicts
 _CHAT_LOCK = threading.Lock()
@@ -3603,6 +3636,18 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_gmail_triage_js()
         elif path == "/web/css/gmail-triage.css":
             self._handle_gmail_triage_css()
+        elif path == "/api/v1/recipe-store/featured":
+            self._handle_recipe_store_featured()
+        elif path == "/api/v1/recipe-store/search":
+            self._handle_recipe_store_search(query)
+        elif path == "/api/v1/recipe-store/installed":
+            self._handle_recipe_store_installed()
+        elif path == "/web/recipe-store.html":
+            self._handle_recipe_store_html()
+        elif path == "/web/js/recipe-store.js":
+            self._handle_recipe_store_js()
+        elif path == "/web/css/recipe-store.css":
+            self._handle_recipe_store_css()
         elif path == "/api/v1/chat/history":
             self._handle_chat_history(query)
         elif path == "/api/v1/chat/suggestions":
@@ -3807,6 +3852,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_gmail_setup()
         elif path == "/api/v1/apps/gmail-inbox-triage/run":
             self._handle_gmail_run()
+        elif path == "/api/v1/recipe-store/install":
+            self._handle_recipe_store_install()
         elif path == "/api/v1/chat/message":
             self._handle_chat_message()
         elif path == "/api/v1/apps/favorites":
