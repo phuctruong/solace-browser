@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recipe Store — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/recipe-store.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Recipe Store</h1>
+    <span class="page-subtitle">Community recipes — fork, install, run from Solace Hub</span>
+  </div>
+
+  <div class="store-page">
+
+    <!-- Search -->
+    <div class="card">
+      <div class="card-title">Search Recipes</div>
+      <div class="search-row">
+        <input
+          type="search"
+          id="search-input"
+          class="search-input"
+          placeholder="Search by name or description..."
+          autocomplete="off"
+          aria-label="Search recipes"
+        >
+      </div>
+    </div>
+
+    <!-- Search Results (hidden until search) -->
+    <div class="card" id="search-section" hidden>
+      <div class="card-title">Search Results</div>
+      <div class="recipe-grid" id="search-grid">
+        <div class="empty-state">No results yet.</div>
+      </div>
+    </div>
+
+    <!-- Featured Recipes -->
+    <div class="card">
+      <div class="card-title">Featured Recipes</div>
+      <div class="recipe-grid" id="featured-grid">
+        <div class="empty-state">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Installed Recipes -->
+    <div class="card">
+      <div class="card-title">Installed Recipes</div>
+      <div class="installed-list" id="installed-list">
+        <div class="empty-state">No recipes installed yet.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Install Confirmation Dialog -->
+  <div class="dialog-overlay" id="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+    <div class="dialog">
+      <div class="dialog-title" id="dialog-title">Confirm Install</div>
+      <div class="dialog-body">
+        <p>Install <strong id="dialog-recipe-name"></strong>?</p>
+        <p>Scope required: <strong id="dialog-scope"></strong></p>
+        <p>Estimated cost: <strong id="dialog-cost"></strong></p>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn--ghost" id="btn-cancel-install" type="button">Cancel</button>
+        <button class="btn btn--primary" id="btn-confirm-install" type="button">Install</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="/web/js/recipe-store.js"></script>
+</body>
+</html>

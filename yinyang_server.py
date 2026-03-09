@@ -353,6 +353,24 @@ _GMAIL_STORE: dict[str, Any] = {
 }
 _GMAIL_LOCK = threading.Lock()
 
+# ---------------------------------------------------------------------------
+# App Permissions Manager — Task 019
+# LAW: Scopes are enumerated (KNOWN_SCOPES). Unknown scopes → 400 REJECTED.
+# ---------------------------------------------------------------------------
+KNOWN_SCOPES: dict[str, str] = {
+    "gmail:read": "Read Gmail messages",
+    "gmail:write": "Send and modify Gmail",
+    "calendar:read": "Read calendar events",
+    "calendar:write": "Create calendar events",
+    "drive:read": "Read Google Drive files",
+    "browser:navigate": "Navigate browser tabs",
+    "browser:screenshot": "Capture screenshots",
+    "evidence:read": "Read evidence chain",
+    "evidence:write": "Write to evidence chain",
+}
+_APP_PERMISSIONS: dict[str, set] = {}  # app_id → set of granted scopes
+_PERMISSIONS_LOCK = threading.Lock()
+
 # --- Task 017: Hub Recipe Store state ---
 FEATURED_RECIPES: list[dict] = [
     {
@@ -3720,6 +3738,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_notifications_sse_js()
         elif path == "/web/css/notifications.css":
             self._handle_notifications_css()
+        elif path == "/web/notifications.html":
+            self._handle_notifications_html()
+        elif path == "/web/js/notifications.js":
+            self._handle_notifications_js()
         elif path == "/web/tutorial.html":
             self._handle_tutorial_html()
         elif path == "/web/js/tutorial.js":
@@ -3728,6 +3750,17 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_tutorial_css()
         elif path == "/api/v1/tutorial/reset":
             self._handle_tutorial_reset()
+        elif path == "/api/v1/apps/permissions":
+            self._handle_app_permissions_list()
+        elif re.match(r"^/api/v1/apps/[^/]+/permissions$", path):
+            app_id = path.split("/")[-2]
+            self._handle_app_permissions_get(app_id)
+        elif path == "/web/app-permissions.html":
+            self._handle_app_permissions_html()
+        elif path == "/web/js/app-permissions.js":
+            self._handle_app_permissions_js()
+        elif path == "/web/css/app-permissions.css":
+            self._handle_app_permissions_css()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -3936,6 +3969,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_esign_sign(esign_id)
         elif path == "/api/v1/session/stats/reset":
             self._handle_session_stats_reset()
+        elif re.match(r"^/api/v1/apps/[^/]+/permissions/grant$", path):
+            app_id = path.split("/")[-3]
+            self._handle_app_permissions_grant(app_id)
+        elif re.match(r"^/api/v1/apps/[^/]+/permissions/revoke$", path):
+            app_id = path.split("/")[-3]
+            self._handle_app_permissions_revoke(app_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -3969,6 +4008,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_app_deactivate(m.group(1))
         elif path == "/api/v1/chat/history":
             self._handle_chat_history_delete()
+        elif re.match(r"^/api/v1/notifications/[^/]+$", path):
+            notif_id = path.split("/")[-1]
+            self._handle_notification_dismiss(notif_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -4626,15 +4668,18 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         self._send_json({"status": "paused", "count": len(schedules)})
 
     def _handle_notifications_count(self) -> None:
-        """GET /api/v1/notifications/count — total notification count. Task 088."""
-        count = 0
+        """GET /api/v1/notifications/count — total and unread notification counts. Task 088/018."""
+        total = 0
+        unread = 0
         if NOTIFICATIONS_PATH.exists():
             try:
                 notifs = json.loads(NOTIFICATIONS_PATH.read_text())
-                count = len(notifs) if isinstance(notifs, list) else 0
+                if isinstance(notifs, list):
+                    total = len(notifs)
+                    unread = sum(1 for n in notifs if not n.get("read", False))
             except (json.JSONDecodeError, OSError):
                 pass
-        self._send_json({"total": count, "unread": count})
+        self._send_json({"total": total, "unread": unread})
 
     def _handle_evidence_stats(self) -> None:
         """GET /api/v1/evidence/stats — evidence chain stats. Task 089 + Task 016."""
@@ -4959,6 +5004,23 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             except OSError:
                 pass
         self._send_json({"status": "cleared"})
+
+    def _handle_notification_dismiss(self, notif_id: str) -> None:
+        """DELETE /api/v1/notifications/{id} — dismiss (delete) one notification. Task 018."""
+        if not self._check_auth():
+            return
+        with _NOTIF_LOCK:
+            notifs = _load_notifications_raw()
+            original_len = len(notifs)
+            notifs = [n for n in notifs if n.get("id") != notif_id]
+            if len(notifs) == original_len:
+                self._send_json({"error": "notification not found"}, 404)
+                return
+            try:
+                NOTIFICATIONS_PATH.write_text(json.dumps(notifs, indent=2))
+            except OSError:
+                pass
+        self._send_json({"status": "dismissed", "id": notif_id})
 
     def _handle_app_install(self) -> None:
         """POST /api/v1/apps/install — mark app as installed. Task 058."""
@@ -6754,6 +6816,109 @@ function choose(mode) {
             content = css_path.read_bytes()
         except FileNotFoundError:
             self._send_json({"error": "gmail-triage.css not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    # --- Task 017: Hub Recipe Store ---
+
+    def _handle_recipe_store_featured(self) -> None:
+        """GET /api/v1/recipe-store/featured — return 3 featured recipes."""
+        if not self._check_auth():
+            return
+        self._send_json({"recipes": FEATURED_RECIPES, "count": len(FEATURED_RECIPES)})
+
+    def _handle_recipe_store_search(self, query: str) -> None:
+        """GET /api/v1/recipe-store/search?q=... — search by name/description."""
+        if not self._check_auth():
+            return
+        params = self._parse_query(query)
+        q = (params.get("q") or "").strip().lower()
+        if not q:
+            self._send_json({"recipes": [], "count": 0})
+            return
+        results = [
+            r for r in FEATURED_RECIPES
+            if q in r["name"].lower() or q in r["description"].lower()
+        ]
+        self._send_json({"recipes": results, "count": len(results)})
+
+    def _handle_recipe_store_install(self) -> None:
+        """POST /api/v1/recipe-store/install — install recipe into local store."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        if not isinstance(body, dict):
+            self._send_json({"error": "body must be a JSON object"}, 400)
+            return
+        recipe_id = body.get("recipe_id", "")
+        if not isinstance(recipe_id, str) or not recipe_id.strip():
+            self._send_json({"error": "recipe_id is required"}, 400)
+            return
+        recipe_id = recipe_id.strip()
+        # Find in featured
+        source = next((r for r in FEATURED_RECIPES if r["recipe_id"] == recipe_id), None)
+        if source is None:
+            self._send_json({"error": f"recipe '{recipe_id}' not found in store"}, 404)
+            return
+        with _RECIPE_STORE_LOCK:
+            already = any(r["recipe_id"] == recipe_id for r in _RECIPE_STORE_INSTALLED)
+            if already:
+                self._send_json({"status": "already_installed", "recipe_id": recipe_id})
+                return
+            entry = dict(source)
+            entry["installed_at"] = _utc_isoformat(time.time())
+            _RECIPE_STORE_INSTALLED.append(entry)
+        self._send_json({"status": "installed", "recipe_id": recipe_id})
+
+    def _handle_recipe_store_installed(self) -> None:
+        """GET /api/v1/recipe-store/installed — list locally installed community recipes."""
+        if not self._check_auth():
+            return
+        with _RECIPE_STORE_LOCK:
+            recipes = list(_RECIPE_STORE_INSTALLED)
+        self._send_json({"recipes": recipes, "count": len(recipes)})
+
+    def _handle_recipe_store_html(self) -> None:
+        """GET /web/recipe-store.html — serve Recipe Store frontend."""
+        html_path = Path(__file__).parent / "web" / "recipe-store.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "recipe-store.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_recipe_store_js(self) -> None:
+        """GET /web/js/recipe-store.js — serve Recipe Store JS."""
+        js_path = Path(__file__).parent / "web" / "js" / "recipe-store.js"
+        try:
+            content = js_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "recipe-store.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_recipe_store_css(self) -> None:
+        """GET /web/css/recipe-store.css — serve Recipe Store CSS."""
+        css_path = Path(__file__).parent / "web" / "css" / "recipe-store.css"
+        try:
+            content = css_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "recipe-store.css not found"}, 404)
             return
         self.send_response(200)
         self.send_header("Content-Type", "text/css")
@@ -9981,6 +10146,34 @@ function choose(mode) {
             return
         self.send_response(200)
         self.send_header("Content-Type", "text/css; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_notifications_html(self) -> None:
+        """GET /web/notifications.html — serve the Notifications Center page. Task 018."""
+        html_path = Path(__file__).parent / "web" / "notifications.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "notifications.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_notifications_js(self) -> None:
+        """GET /web/js/notifications.js — serve the Notifications Center JS. Task 018."""
+        js_path = Path(__file__).parent / "web" / "js" / "notifications.js"
+        try:
+            content = js_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "notifications.js not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript; charset=utf-8")
         self.send_header("Content-Length", str(len(content)))
         self.end_headers()
         self.wfile.write(content)
