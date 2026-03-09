@@ -1651,12 +1651,12 @@ _ESTIMATES_LOCK = threading.Lock()
 # ---------------------------------------------------------------------------
 # Task 131 — Network Request Blocker
 # ---------------------------------------------------------------------------
-BLOCK_RULE_TYPES = ["domain", "url_pattern", "resource_type", "header_match", "regex"]
+NET_BLOCKER_RULE_TYPES = ["domain", "url_pattern", "resource_type", "header_match", "regex"]
 BLOCK_RESOURCE_TYPES = ["script", "stylesheet", "image", "font", "xhr", "fetch", "websocket", "media", "other"]
 MAX_BLOCK_RULES = 1000
 MAX_BLOCKED_LOG = 100000
-_BLOCK_RULES: list[dict] = []
-_BLOCKED_LOG: list[dict] = []
+_NET_BLOCK_RULES: list[dict] = []
+_NET_BLOCKED_LOG: list[dict] = []
 _BLOCKER_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
@@ -24964,8 +24964,8 @@ function choose(mode) {
             return
         body = self._read_json_body()
         rule_type = body.get("rule_type", "")
-        if rule_type not in BLOCK_RULE_TYPES:
-            self._send_json({"error": f"rule_type must be one of {BLOCK_RULE_TYPES}"}, 400)
+        if rule_type not in NET_BLOCKER_RULE_TYPES:
+            self._send_json({"error": f"rule_type must be one of {NET_BLOCKER_RULE_TYPES}"}, 400)
             return
         resource_type = body.get("resource_type", "")
         if resource_type not in BLOCK_RESOURCE_TYPES:
@@ -24974,8 +24974,8 @@ function choose(mode) {
         pattern = body.get("pattern", "")
         pattern_hash = hashlib.sha256(pattern.encode()).hexdigest() if pattern else body.get("pattern_hash", "")
         with _BLOCKER_LOCK:
-            if len(_BLOCK_RULES) >= MAX_BLOCK_RULES:
-                self._send_json({"error": f"max {MAX_BLOCK_RULES} rules"}, 400)
+            if len(_NET_BLOCK_RULES) >= MAX_NET_BLOCK_RULES:
+                self._send_json({"error": f"max {MAX_NET_BLOCK_RULES} rules"}, 400)
                 return
             rule_id = "blr_" + str(uuid.uuid4())
             record: dict[str, Any] = {
@@ -24987,7 +24987,7 @@ function choose(mode) {
                 "hit_count": 0,
                 "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             }
-            _BLOCK_RULES.append(record)
+            _NET_BLOCK_RULES.append(record)
         self._send_json({"status": "created", "rule": record}, 201)
 
     def _handle_block_rules_list(self) -> None:
@@ -24995,7 +24995,7 @@ function choose(mode) {
         if not self._check_auth():
             return
         with _BLOCKER_LOCK:
-            rules = [dict(r) for r in _BLOCK_RULES]
+            rules = [dict(r) for r in _NET_BLOCK_RULES]
         self._send_json({"rules": rules, "total": len(rules)})
 
     def _handle_block_rule_delete(self, rule_id: str) -> None:
@@ -25003,11 +25003,11 @@ function choose(mode) {
         if not self._check_auth():
             return
         with _BLOCKER_LOCK:
-            idx = next((i for i, r in enumerate(_BLOCK_RULES) if r["rule_id"] == rule_id), None)
+            idx = next((i for i, r in enumerate(_NET_BLOCK_RULES) if r["rule_id"] == rule_id), None)
             if idx is None:
                 self._send_json({"error": "rule not found"}, 404)
                 return
-            _BLOCK_RULES.pop(idx)
+            _NET_BLOCK_RULES.pop(idx)
         self._send_json({"status": "deleted", "rule_id": rule_id})
 
     def _handle_blocked_log_create(self) -> None:
@@ -25017,15 +25017,15 @@ function choose(mode) {
         body = self._read_json_body()
         rule_id = body.get("rule_id", "")
         with _BLOCKER_LOCK:
-            rule = next((r for r in _BLOCK_RULES if r["rule_id"] == rule_id), None)
+            rule = next((r for r in _NET_BLOCK_RULES if r["rule_id"] == rule_id), None)
             if rule is None:
                 self._send_json({"error": "rule not found"}, 404)
                 return
             rule["hit_count"] += 1
             url = body.get("url", "")
             url_hash = hashlib.sha256(url.encode()).hexdigest() if url else body.get("url_hash", "")
-            if len(_BLOCKED_LOG) >= MAX_BLOCKED_LOG:
-                _BLOCKED_LOG.pop(0)
+            if len(_NET_BLOCKED_LOG) >= MAX_NET_BLOCKED_LOG:
+                _NET_BLOCKED_LOG.pop(0)
             blocked_id = "blk_" + str(uuid.uuid4())
             record: dict[str, Any] = {
                 "blocked_id": blocked_id,
@@ -25033,7 +25033,7 @@ function choose(mode) {
                 "url_hash": url_hash,
                 "blocked_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             }
-            _BLOCKED_LOG.append(record)
+            _NET_BLOCKED_LOG.append(record)
         self._send_json({"status": "logged", "blocked": record}, 201)
 
     def _handle_blocked_log_list(self) -> None:
@@ -25041,12 +25041,12 @@ function choose(mode) {
         if not self._check_auth():
             return
         with _BLOCKER_LOCK:
-            log = [dict(e) for e in _BLOCKED_LOG]
+            log = [dict(e) for e in _NET_BLOCKED_LOG]
         self._send_json({"blocked_log": log, "total": len(log)})
 
     def _handle_block_rule_types(self) -> None:
         """GET /api/v1/request-blocker/rule-types — list rule types (public)."""
-        self._send_json({"rule_types": BLOCK_RULE_TYPES, "resource_types": BLOCK_RESOURCE_TYPES})
+        self._send_json({"rule_types": NET_BLOCKER_RULE_TYPES, "resource_types": BLOCK_RESOURCE_TYPES})
 
     # ---------------------------------------------------------------------------
     # Task 132 — Browser Theme Manager handlers

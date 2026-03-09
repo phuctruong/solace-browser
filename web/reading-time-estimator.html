@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reading Time Estimator — Solace Hub</title>
+<link rel="stylesheet" href="/web/css/reading-time-estimator.css">
+</head>
+<body>
+<div class="rte-container">
+  <h1 class="rte-title">Reading Time Estimator</h1>
+  <p class="rte-subtitle">Estimate reading time at 238 WPM average and track accuracy</p>
+
+  <section class="rte-section">
+    <h2 class="rte-section-title">Create Estimate</h2>
+    <form id="rte-form" class="rte-form">
+      <input id="rte-url" class="rte-input" type="text" placeholder="Page URL (hashed)" aria-label="Page URL">
+      <select id="rte-content-type" class="rte-input" aria-label="Content type"></select>
+      <input id="rte-word-count" class="rte-input" type="number" placeholder="Word count" min="1" aria-label="Word count">
+      <input id="rte-actual" class="rte-input" type="text" placeholder="Actual minutes (optional)" aria-label="Actual minutes">
+      <button type="submit" class="rte-btn rte-btn-primary">Estimate</button>
+    </form>
+  </section>
+
+  <section class="rte-section">
+    <h2 class="rte-section-title">Stats</h2>
+    <div id="rte-stats" class="rte-stats-panel" aria-live="polite"></div>
+  </section>
+
+  <section class="rte-section">
+    <h2 class="rte-section-title">Estimates</h2>
+    <div id="rte-list" class="rte-list" aria-live="polite"></div>
+  </section>
+
+  <div id="rte-status" class="rte-status" aria-live="polite"></div>
+</div>
+<script src="/web/js/reading-time-estimator.js"></script>
+</body>
+</html>
