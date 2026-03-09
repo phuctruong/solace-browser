@@ -1,0 +1,57 @@
+{
+  "task_id": "070",
+  "task_name": "Evidence Viewer Page",
+  "timestamp": "2026-03-09T11:32:00-04:00",
+  "repo_root": "/home/phuc/projects/solace-browser",
+  "outbox_dir": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task070/",
+  "files": {
+    "created": [
+      "tests/test_evidence_viewer.py",
+      "web/evidence-viewer.html",
+      "data/default/apps/solace-hub-coder/outbox/runs/20260309-task070/PATCH_DIFF.md",
+      "data/default/apps/solace-hub-coder/outbox/runs/20260309-task070/RED_GATE.md",
+      "data/default/apps/solace-hub-coder/outbox/runs/20260309-task070/GREEN_GATE.md",
+      "data/default/apps/solace-hub-coder/outbox/runs/20260309-task070/ORACLE_SWEEP.md"
+    ],
+    "modified": [
+      "yinyang_server.py"
+    ]
+  },
+  "routes": {
+    "evidence_verify_exists": true,
+    "evidence_list_exists": true,
+    "evidence_log_alias_added": true,
+    "evidence_viewer_html_route_added": true,
+    "matched_pending_actions_pattern": true
+  },
+  "red_gate": {
+    "command": "pytest -q tests/test_evidence_viewer.py",
+    "status": "failed",
+    "summary": "10 failed; page missing and route returned 404"
+  },
+  "green_gate": {
+    "focused_command": "pytest -q tests/test_evidence_viewer.py",
+    "focused_status": "passed",
+    "focused_summary": "11 passed in 0.70s",
+    "broader_command": "pytest -q tests/test_pending_actions_dashboard.py tests/test_evidence_viewer.py",
+    "broader_status": "passed",
+    "broader_summary": "21 passed in 1.24s"
+  },
+  "oracle_sweep": {
+    "no_cdn": true,
+    "no_jquery": true,
+    "no_eval": true,
+    "no_port_9222": true,
+    "uses_existing_evidence_verify_route": true,
+    "uses_existing_evidence_list_handler": true,
+    "evidence_log_alias_verified": true,
+    "hub_tokens_used": true,
+    "token_only_css_normalized": true,
+    "vanilla_js_fetch": true
+  },
+  "notes": [
+    "Task artifacts are scoped to Task 070 files.",
+    "The dispatched frontend path /api/v1/evidence/log required a server alias to the existing evidence list handler.",
+    "Repository contained unrelated pre-existing changes outside this task."
+  ]
+}

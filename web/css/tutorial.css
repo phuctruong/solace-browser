@@ -1,0 +1,49 @@
+:root {
+  --hub-bg: #1a1a2e; --hub-surface: #16213e; --hub-border: #0f3460;
+  --hub-accent: #e94560; --hub-text: #f5f5f5; --hub-text-muted: #a8a8b3;
+  --hub-success: #4caf50;
+}
+
+.tutorial-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center; z-index: 9999;
+}
+.tutorial-overlay[hidden] { display: none; }
+
+.tutorial-modal {
+  background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 12px;
+  width: 480px; max-width: 90vw; padding: 2rem;
+}
+
+.tutorial-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.tutorial-skip {
+  background: none; border: none; color: var(--hub-text-muted); cursor: pointer;
+  font-size: 0.85rem; text-decoration: underline;
+}
+.tutorial-skip:hover { color: var(--hub-text); }
+
+.tutorial-step-counter { font-size: 0.8rem; color: var(--hub-text-muted); }
+
+.tutorial-body { text-align: center; min-height: 160px; }
+.tutorial-body h2 { color: var(--hub-text); font-size: 1.3rem; margin-bottom: 1rem; }
+.tutorial-body p { color: var(--hub-text-muted); line-height: 1.6; }
+.tutorial-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+
+.tutorial-dots {
+  display: flex; justify-content: center; gap: 0.5rem; margin: 1.5rem 0;
+}
+.tutorial-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--hub-border);
+  transition: background 0.2s;
+}
+.tutorial-dot.active { background: var(--hub-accent); }
+
+.tutorial-footer { display: flex; gap: 1rem; justify-content: flex-end; }
+.tutorial-btn { border-radius: 6px; padding: 0.6rem 1.2rem; cursor: pointer; font-size: 0.9rem; border: none; }
+.tutorial-btn--primary { background: var(--hub-accent); color: var(--hub-text); }
+.tutorial-btn--secondary { background: var(--hub-surface); color: var(--hub-text); border: 1px solid var(--hub-border); }
+.tutorial-btn[hidden] { display: none; }

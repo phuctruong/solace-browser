@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pending Actions — Solace Hub</title>
+<style>
+:root {
+  --hub-bg: #0d0d1a;
+  --hub-surface: #1a1a2e;
+  --hub-border: #2a2a3e;
+  --hub-text: #e2e8f0;
+  --hub-text-muted: #94a3b8;
+  --hub-text-inverse: #ffffff;
+  --hub-accent: #6366f1;
+  --hub-success: #10b981;
+  --hub-success-soft: #083d31;
+  --hub-warning: #f59e0b;
+  --hub-warning-soft: #4a371f;
+  --hub-error: #ef4444;
+  --hub-error-soft: #4a2025;
+  --hub-transparent: #00000000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 1.5rem;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+}
+
+.page {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.header-meta {
+  text-align: right;
+}
+
+.refresh-label,
+.status-banner {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--hub-text-muted);
+}
+
+.status-banner {
+  min-height: 1.2rem;
+  margin-top: 0.25rem;
+}
+
+.action-card {
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--hub-border);
+  border-radius: 0.625rem;
+  background: var(--hub-surface);
+}
+
+.action-card--classB {
+  border-left: 0.25rem solid var(--hub-warning);
+}
+
+.action-card--classC {
+  border-left: 0.25rem solid var(--hub-error);
+}
+
+.action-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.action-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.action-subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--hub-text-muted);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.badge--classB {
+  background: var(--hub-warning-soft);
+  color: var(--hub-warning);
+}
+
+.badge--classC {
+  background: var(--hub-error-soft);
+  color: var(--hub-error);
+}
+
+.action-preview {
+  margin: 0 0 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  background: var(--hub-bg);
+  color: var(--hub-text-muted);
+  font-size: 0.85rem;
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+
+.action-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cooldown {
+  font-size: 0.8rem;
+  color: var(--hub-text-muted);
+}
+
+.cooldown--ready {
+  color: var(--hub-success);
+  font-weight: 600;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn {
+  border-radius: 0.375rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-approve {
+  border: 1px solid var(--hub-success);
+  background: var(--hub-success);
+  color: var(--hub-text-inverse);
+}
+
+.btn-reject {
+  border: 1px solid var(--hub-error);
+  background: var(--hub-transparent);
+  color: var(--hub-error);
+}
+
+.empty-state {
+  padding: 3rem;
+  text-align: center;
+  color: var(--hub-text-muted);
+}
+
+@media (max-width: 42rem) {
+  .page-header,
+  .action-header,
+  .action-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-meta {
+    text-align: left;
+  }
+
+  .action-buttons {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="page-header">
+    <h1 class="page-title">⏳ Pending Actions</h1>
+    <div class="header-meta">
+      <span id="last-refresh" class="refresh-label"></span>
+      <span id="status-banner" class="status-banner" aria-live="polite"></span>
+    </div>
+  </div>
+  <div id="actions-container">
+    <div class="empty-state"><p>Loading...</p></div>
+  </div>
+</main>
+<script>
+'use strict';
+
+const ACTIONS_URL = '/api/v1/actions/pending';
+const ACTIONS_CONTAINER = document.getElementById('actions-container');
+const LAST_REFRESH = document.getElementById('last-refresh');
+const STATUS_BANNER = document.getElementById('status-banner');
+const HASH_RE = /^[a-f0-9]{64}$/;
+const currentActions = new Map();
+const busyActions = new Set();
+
+function setStatus(message) {
+  STATUS_BANNER.textContent = message || '';
+}
+
+function createNode(tagName, className, text) {
+  const node = document.createElement(tagName);
+  if (className) {
+    node.className = className;
+  }
+  if (typeof text === 'string') {
+    node.textContent = text;
+  }
+  return node;
+}
+
+function cooldownEndFor(action) {
+  const value = action.cooldown_ends_at || action.available_at || '';
+  const timestamp = Date.parse(value);
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function isReady(action) {
+  return cooldownEndFor(action) <= Date.now();
+}
+
+function cooldownText(timestamp) {
+  if (!timestamp || timestamp <= Date.now()) {
+    return 'Ready';
+  }
+  const seconds = Math.max(0, Math.ceil((timestamp - Date.now()) / 1000));
+  const minutes = Math.floor(seconds / 60);
+  const remainder = String(seconds % 60).padStart(2, '0');
+  return 'Cooldown: ' + minutes + ':' + remainder;
+}
+
+async function sha256Hex(value) {
+  const encoded = new TextEncoder().encode(value);
+  const digest = await window.crypto.subtle.digest('SHA-256', encoded);
+  const bytes = new Uint8Array(digest);
+  return Array.from(bytes, function (byte) {
+    return byte.toString(16).padStart(2, '0');
+  }).join('');
+}
+
+async function resolveBearerToken() {
+  const storedHash = localStorage.getItem('solace_token_sha256') || '';
+  if (HASH_RE.test(storedHash)) {
+    return storedHash;
+  }
+  const rawToken = localStorage.getItem('solace_token') || '';
+  if (!rawToken) {
+    return '';
+  }
+  if (HASH_RE.test(rawToken)) {
+    return rawToken;
+  }
+  if (!window.crypto || !window.crypto.subtle) {
+    return '';
+  }
+  return sha256Hex(rawToken);
+}
+
+async function apiFetch(path, options) {
+  const requestOptions = options || {};
+  const headers = Object.assign({}, requestOptions.headers || {});
+  const token = await resolveBearerToken();
+  if (token) {
+    headers.Authorization = 'Bearer ' + token;
+  }
+  return fetch(path, Object.assign({}, requestOptions, { headers: headers }));
+}
+
+function badgeText(actionClass) {
+  return actionClass === 'C' ? 'Class C' : 'Class B';
+}
+
+function cardClass(actionClass) {
+  return actionClass === 'C' ? 'classC' : 'classB';
+}
+
+function titleText(action) {
+  if (action.title) {
+    return String(action.title);
+  }
+  if (action.action_type) {
+    return String(action.action_type);
+  }
+  return 'Pending Action';
+}
+
+function subtitleText(action) {
+  const parts = [];
+  if (action.app_id) {
+    parts.push('App: ' + String(action.app_id));
+  }
+  if (action.status) {
+    parts.push('Status: ' + String(action.status));
+  }
+  return parts.join(' • ');
+}
+
+function previewText(action) {
+  if (action.preview) {
+    return String(action.preview);
+  }
+  if (action.preview_summary) {
+    return String(action.preview_summary);
+  }
+  if (action.description) {
+    return String(action.description);
+  }
+  return 'No preview available.';
+}
+
+function renderEmpty(message) {
+  ACTIONS_CONTAINER.replaceChildren(createNode('div', 'empty-state', message));
+}
+
+function updateCooldowns() {
+  document.querySelectorAll('[data-cooldown-at]').forEach(function (node) {
+    const timestamp = Number(node.getAttribute('data-cooldown-at') || '0');
+    const ready = !timestamp || timestamp <= Date.now();
+    node.textContent = cooldownText(timestamp);
+    node.classList.toggle('cooldown--ready', ready);
+  });
+
+  document.querySelectorAll('[data-approve-id]').forEach(function (button) {
+    const actionId = button.getAttribute('data-approve-id') || '';
+    const action = currentActions.get(actionId);
+    const disabled = !action || !isReady(action) || busyActions.has(actionId);
+    button.disabled = disabled;
+  });
+
+  document.querySelectorAll('[data-reject-id]').forEach(function (button) {
+    const actionId = button.getAttribute('data-reject-id') || '';
+    button.disabled = busyActions.has(actionId);
+  });
+}
+
+function renderActions(actions) {
+  currentActions.clear();
+  actions.forEach(function (action) {
+    currentActions.set(String(action.action_id || ''), action);
+  });
+
+  if (!Array.isArray(actions) || actions.length === 0) {
+    renderEmpty('✅ No pending actions');
+    updateCooldowns();
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  actions.forEach(function (action) {
+    const actionId = String(action.action_id || '');
+    const actionClass = String(action.class || 'B').toUpperCase() === 'C' ? 'C' : 'B';
+    const cooldownAt = cooldownEndFor(action);
+
+    const card = createNode('section', 'action-card action-card--' + cardClass(actionClass));
+    card.setAttribute('data-action-id', actionId);
+
+    const header = createNode('div', 'action-header');
+    const headingWrap = createNode('div', '');
+    const heading = createNode('h2', 'action-title', titleText(action));
+    const subtitle = createNode('div', 'action-subtitle', subtitleText(action));
+    const badge = createNode('span', 'badge badge--' + cardClass(actionClass), badgeText(actionClass));
+
+    headingWrap.appendChild(heading);
+    if (subtitle.textContent) {
+      headingWrap.appendChild(subtitle);
+    }
+    header.appendChild(headingWrap);
+    header.appendChild(badge);
+
+    const preview = createNode('pre', 'action-preview', previewText(action));
+
+    const footer = createNode('div', 'action-footer');
+    const cooldown = createNode('span', 'cooldown', cooldownText(cooldownAt));
+    cooldown.setAttribute('data-cooldown-at', String(cooldownAt));
+    cooldown.classList.toggle('cooldown--ready', cooldownAt <= Date.now());
+
+    const buttonRow = createNode('div', 'action-buttons');
+    const approve = createNode('button', 'btn btn-approve', 'Approve');
+    approve.type = 'button';
+    approve.setAttribute('data-approve-id', actionId);
+    approve.disabled = !isReady(action);
+
+    const reject = createNode('button', 'btn btn-reject', 'Reject');
+    reject.type = 'button';
+    reject.setAttribute('data-reject-id', actionId);
+
+    buttonRow.appendChild(approve);
+    buttonRow.appendChild(reject);
+    footer.appendChild(cooldown);
+    footer.appendChild(buttonRow);
+
+    card.appendChild(header);
+    card.appendChild(preview);
+    card.appendChild(footer);
+    fragment.appendChild(card);
+  });
+
+  ACTIONS_CONTAINER.replaceChildren(fragment);
+  updateCooldowns();
+}
+
+async function loadActions() {
+  try {
+    const response = await apiFetch(ACTIONS_URL, { method: 'GET' });
+    if (!response.ok) {
+      setStatus('Pending actions unavailable right now.');
+      return;
+    }
+    const payload = await response.json();
+    const allActions = Array.isArray(payload.pending) ? payload.pending : Array.isArray(payload.actions) ? payload.actions : [];
+    const filtered = allActions.filter(function (action) {
+      const actionClass = String(action.class || action.risk_class || '').toUpperCase();
+      return actionClass === 'B' || actionClass === 'C';
+    });
+    LAST_REFRESH.textContent = 'Updated ' + new Date().toLocaleTimeString();
+    setStatus('');
+    renderActions(filtered);
+  } catch (_error) {
+    setStatus('Failed to refresh pending actions.');
+  }
+}
+
+async function submitDecision(actionId, decisionPath, payload) {
+  busyActions.add(actionId);
+  updateCooldowns();
+  try {
+    const response = await apiFetch(decisionPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      let message = 'Action request failed.';
+      try {
+        const data = await response.json();
+        if (data && typeof data.error === 'string' && data.error) {
+          message = data.error;
+        }
+      } catch (_jsonError) {
+      }
+      setStatus(message);
+      return;
+    }
+    setStatus('Action updated.');
+    await loadActions();
+  } catch (_error) {
+    setStatus('Network error while updating action.');
+  } finally {
+    busyActions.delete(actionId);
+    updateCooldowns();
+  }
+}
+
+async function approveAction(actionId) {
+  const action = currentActions.get(actionId);
+  if (!action) {
+    return;
+  }
+  const payload = {};
+  if (String(action.class || '').toUpperCase() === 'C') {
+    const reason = window.prompt('Class C approval requires a reason. Enter sign-off reason:', 'Reviewed and approved');
+    if (reason === null) {
+      return;
+    }
+    const normalized = reason.trim();
+    if (!normalized) {
+      setStatus('Class C approval needs a reason.');
+      return;
+    }
+    payload.step_up_consent = true;
+    payload.reason = normalized;
+  }
+  await submitDecision(actionId, '/api/v1/actions/' + encodeURIComponent(actionId) + '/approve', payload);
+}
+
+async function rejectAction(actionId) {
+  const reason = window.prompt('Optional rejection reason:', '');
+  if (reason === null) {
+    return;
+  }
+  const payload = {};
+  if (reason.trim()) {
+    payload.reason = reason.trim();
+  }
+  await submitDecision(actionId, '/api/v1/actions/' + encodeURIComponent(actionId) + '/reject', payload);
+}
+
+ACTIONS_CONTAINER.addEventListener('click', function (event) {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+  const approveId = target.getAttribute('data-approve-id');
+  if (approveId) {
+    approveAction(approveId);
+    return;
+  }
+  const rejectId = target.getAttribute('data-reject-id');
+  if (rejectId) {
+    rejectAction(rejectId);
+  }
+});
+
+loadActions();
+window.setInterval(loadActions, 10000);
+window.setInterval(updateCooldowns, 1000);
+</script>
+</body>
+</html>

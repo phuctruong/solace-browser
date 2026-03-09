@@ -1,0 +1,14 @@
+{
+  "task_id": "20260309-task064",
+  "rung": 641,
+  "green_gate_sha256": "9a39f1383e14f09fa322bae13ce590ad6a5fabf6492a61e82629cff34e5ef897",
+  "patch_diff_sha256": "90500bf9607ba8f2a902b4b777f78717a89034ba589d4cb454a8da8405236790",
+  "oracle_sweep_sha256": "85c3cc3f963a2629251fc285f67c16f883b4a6ef3079a7011a9fb871faa748ce",
+  "test_command": "pytest -q tests/test_cli_agent_integration.py",
+  "artifacts": {
+    "patch_diff": "PATCH_DIFF.md",
+    "red_gate": "RED_GATE.md",
+    "green_gate": "GREEN_GATE.md",
+    "oracle_sweep": "ORACLE_SWEEP.md"
+  }
+}

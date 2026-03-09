@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutorial | Solace Browser</title>
+  <link rel="stylesheet" href="/web/css/tutorial.css">
+</head>
+<body>
+<!-- Tutorial modal overlay -->
+<div class="tutorial-overlay" id="tutorial-overlay" hidden aria-modal="true" role="dialog">
+  <div class="tutorial-modal" id="tutorial-modal">
+    <div class="tutorial-header">
+      <button class="tutorial-skip" id="tutorial-skip" aria-label="Skip tutorial">Skip tutorial</button>
+      <span class="tutorial-step-counter" id="step-counter">Step 1 of 5</span>
+    </div>
+
+    <div class="tutorial-body" id="tutorial-body">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- Progress dots -->
+    <div class="tutorial-dots" id="tutorial-dots" aria-label="Tutorial progress"></div>
+
+    <div class="tutorial-footer">
+      <button class="tutorial-btn tutorial-btn--secondary" id="tutorial-back" hidden>← Back</button>
+      <button class="tutorial-btn tutorial-btn--primary" id="tutorial-next">Next →</button>
+    </div>
+  </div>
+</div>
+<script src="/web/js/tutorial.js"></script>
+</body>
+</html>

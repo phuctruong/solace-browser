@@ -1,0 +1,88 @@
+:root {
+  --hub-bg: #1a1a2e;
+  --hub-surface: #16213e;
+  --hub-border: #0f3460;
+  --hub-accent: #e94560;
+  --hub-text: #f5f5f5;
+  --hub-text-muted: #a8a8b3;
+  --hub-success: #4caf50;
+  --hub-warning: #ff9800;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--hub-bg); color: var(--hub-text); font-family: system-ui, sans-serif; }
+
+.apps-page { padding: 1rem; max-width: 1100px; margin: 0 auto; }
+
+/* Setup banner */
+.setup-banner {
+  background: var(--hub-surface); border: 1px solid var(--hub-warning);
+  border-radius: 8px; padding: 0.75rem 1rem; display: flex;
+  align-items: center; justify-content: space-between; margin-bottom: 1.5rem;
+}
+.setup-banner[hidden] { display: none; }
+.setup-banner__text { color: var(--hub-text); font-size: 0.9rem; }
+.setup-banner__cta {
+  background: var(--hub-warning); color: var(--hub-bg); border: none;
+  border-radius: 4px; padding: 0.4rem 0.9rem; cursor: pointer; font-size: 0.85rem;
+}
+
+/* App grid */
+.apps-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;
+}
+
+/* App card base */
+.app-card {
+  background: var(--hub-surface); border-radius: 10px; padding: 1.25rem;
+  border: 2px solid var(--hub-border); cursor: pointer; position: relative;
+  transition: border-color 0.2s;
+}
+.app-card__icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+.app-card__name { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.25rem; }
+.app-card__status { font-size: 0.75rem; color: var(--hub-text-muted); margin-bottom: 0.75rem; }
+.app-card__setup-btn, .app-card__run-btn {
+  width: 100%; border: none; border-radius: 4px; padding: 0.4rem; cursor: pointer;
+  font-size: 0.8rem;
+}
+.app-card__setup-btn { background: var(--hub-warning); color: var(--hub-bg); }
+.app-card__run-btn { background: var(--hub-success); color: var(--hub-bg); }
+
+/* State: installed — grey icon, dotted border */
+.app-state--installed .app-card__icon { filter: grayscale(1); opacity: 0.6; }
+.app-state--installed { border-style: dashed; border-color: var(--hub-border); }
+
+/* State: setup — grey icon, pulsing border */
+.app-state--setup .app-card__icon { filter: grayscale(1); opacity: 0.6; }
+.app-state--setup { border-style: dashed; animation: pulse-border 2s infinite; }
+
+/* State: activated — full color, solid border */
+.app-state--activated .app-card__icon { filter: none; opacity: 1; }
+.app-state--activated { border-style: solid; border-color: var(--hub-success); }
+
+/* State: running — full color, green ring animation */
+.app-state--running { border-style: solid; border-color: var(--hub-success); }
+.app-state--running::after {
+  content: ''; position: absolute; inset: -4px; border-radius: inherit;
+  animation: green-ring 1s infinite; pointer-events: none;
+}
+
+@keyframes pulse-border { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes green-ring { 0% { box-shadow: 0 0 0 0 var(--hub-success); } 100% { box-shadow: 0 0 0 8px transparent; } }
+
+/* Setup drawer */
+.setup-drawer {
+  position: fixed; top: 0; right: 0; width: 340px; height: 100vh;
+  background: var(--hub-surface); border-left: 1px solid var(--hub-border);
+  padding: 1.5rem; z-index: 100; overflow-y: auto;
+}
+.setup-drawer[hidden] { display: none; }
+.setup-drawer__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.setup-drawer__header h3 { color: var(--hub-text); margin: 0; }
+#setup-drawer-close { background: none; border: none; color: var(--hub-text-muted); cursor: pointer; font-size: 1.2rem; }
+.setup-drawer__form { display: flex; flex-direction: column; gap: 1rem; }
+.setup-drawer__form label { display: block; color: var(--hub-text-muted); font-size: 0.85rem; margin-bottom: 0.25rem; }
+.setup-drawer__form input { width: 100%; background: var(--hub-bg); color: var(--hub-text); border: 1px solid var(--hub-border); border-radius: 4px; padding: 0.5rem; }
+.setup-drawer__actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+#activate-btn { background: var(--hub-success); color: var(--hub-bg); border: none; border-radius: 4px; padding: 0.5rem 1rem; cursor: pointer; flex: 1; }
+#cancel-setup-btn { background: var(--hub-surface); color: var(--hub-text); border: 1px solid var(--hub-border); border-radius: 4px; padding: 0.5rem 1rem; cursor: pointer; }

@@ -1,0 +1,51 @@
+{
+  "task_id": "20260309-task055",
+  "rung": 274177,
+  "timestamp": "2026-03-09T13:25:44Z",
+  "files_changed": [
+    "evidence_bundle.py",
+    "yinyang_server.py",
+    "tests/test_part11_evidence.py"
+  ],
+  "red_gate": {
+    "command": "pytest -q tests/test_part11_evidence.py",
+    "workdir": "/tmp/task055-red-1680750",
+    "result": "1 error",
+    "witness": [
+      "ModuleNotFoundError: No module named 'evidence_bundle'"
+    ]
+  },
+  "green_gate": {
+    "focused": {
+      "command": "pytest -q tests/test_part11_evidence.py",
+      "result": "8 passed in 0.14s"
+    },
+    "regression": {
+      "command": "pytest -q tests/test_session_rules.py tests/test_solace_hub.py",
+      "result": "188 passed in 0.38s"
+    },
+    "combined": {
+      "command": "pytest -q tests/test_part11_evidence.py tests/test_session_rules.py tests/test_solace_hub.py",
+      "result": "196 passed in 0.39s"
+    }
+  },
+  "oracle_sweep": {
+    "commands": [
+      "pytest -q tests/test_part11_evidence.py",
+      "pytest -q tests/test_part11_evidence.py",
+      "pytest -q tests/test_part11_evidence.py"
+    ],
+    "results": [
+      "8 passed in 0.14s",
+      "8 passed in 0.15s",
+      "8 passed in 0.14s"
+    ]
+  },
+  "artifacts": [
+    "data/default/apps/solace-hub-coder/outbox/runs/20260309-task055/PATCH_DIFF.md",
+    "data/default/apps/solace-hub-coder/outbox/runs/20260309-task055/RED_GATE.md",
+    "data/default/apps/solace-hub-coder/outbox/runs/20260309-task055/GREEN_GATE.md",
+    "data/default/apps/solace-hub-coder/outbox/runs/20260309-task055/ORACLE_SWEEP.md",
+    "data/default/apps/solace-hub-coder/outbox/runs/20260309-task055/EVIDENCE.json"
+  ]
+}

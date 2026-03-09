@@ -1,0 +1,14 @@
+{
+  "task_id": "20260309-task065",
+  "rung": 641,
+  "green_gate_sha256": "d53dac370508e060e7311730d341b9f44b5fdfae61a89ddc7db1c5abe014b9ce",
+  "patch_diff_sha256": "53eb9ecb69aec7abcfb8a0f2118381abe62617925326e61fdaa877f5e0f1e43a",
+  "oracle_sweep_sha256": "cd1d837d551ae60948c1219a99b115dab411b229a5f0857e5084c5480c6f1275",
+  "test_command": "python -m pytest tests/test_fun_packs.py -q",
+  "artifacts": {
+    "patch_diff": "PATCH_DIFF.md",
+    "red_gate": "RED_GATE.md",
+    "green_gate": "GREEN_GATE.md",
+    "oracle_sweep": "ORACLE_SWEEP.md"
+  }
+}

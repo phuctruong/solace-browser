@@ -1,0 +1,647 @@
+/* recipes.css — Community Recipe Browser for Solace Hub
+   Laws:
+     - var(--hub-*) tokens ONLY. No hex values (token definitions are the exception).
+     - No CDN. No Bootstrap. No Tailwind. No jQuery.
+     - Jony Ive rule: 8px minimum gap between all elements.
+     - Port 8888 ONLY. Port reference BANNED.
+*/
+
+:root {
+  --hub-bg: #1a1a2e;
+  --hub-surface: #16213e;
+  --hub-border: #0f3460;
+  --hub-accent: #e94560;
+  --hub-text: #f5f5f5;
+  --hub-text-muted: #a8a8b3;
+  --hub-success: #4caf50;
+  --hub-warning: #ff9800;
+  --hub-hit-amber: #ff9800;
+  --hub-hit-red: #e94560;
+  --gap: 8px;
+  --radius: 6px;
+  --card-width: 280px;
+  --transition: 0.2s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Page header
+───────────────────────────────────────────────────────────────────────────── */
+.page-header {
+  background: var(--hub-surface);
+  border-bottom: 1px solid var(--hub-border);
+  padding: calc(var(--gap) * 2);
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap);
+}
+
+.page-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--hub-text);
+}
+
+.page-subtitle {
+  font-size: 12px;
+  color: var(--hub-text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Recipes page layout
+───────────────────────────────────────────────────────────────────────────── */
+.recipes-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: calc(var(--gap) * 2);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Search bar + filters
+───────────────────────────────────────────────────────────────────────────── */
+.recipes-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+  margin-bottom: calc(var(--gap) * 2);
+}
+
+.search-input {
+  flex: 1 1 200px;
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  color: var(--hub-text);
+  font-size: 13px;
+  padding: calc(var(--gap) * 0.75) var(--gap);
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.search-input:focus {
+  border-color: var(--hub-accent);
+}
+
+.search-input::placeholder {
+  color: var(--hub-text-muted);
+}
+
+.category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--gap) * 0.5);
+}
+
+.pill {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 99px;
+  color: var(--hub-text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: calc(var(--gap) * 0.5) calc(var(--gap) * 1.25);
+  transition: background var(--transition), color var(--transition);
+}
+
+.pill:hover {
+  background: var(--hub-border);
+  color: var(--hub-text);
+}
+
+.pill.active {
+  background: var(--hub-accent);
+  border-color: var(--hub-accent);
+  color: var(--hub-text);
+}
+
+.sort-select {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  color: var(--hub-text);
+  font-size: 12px;
+  padding: calc(var(--gap) * 0.5) var(--gap);
+  cursor: pointer;
+  outline: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Library tabs
+───────────────────────────────────────────────────────────────────────────── */
+.library-tabs {
+  display: flex;
+  gap: var(--gap);
+  margin-bottom: calc(var(--gap) * 2);
+  border-bottom: 1px solid var(--hub-border);
+  padding-bottom: var(--gap);
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+  color: var(--hub-text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: calc(var(--gap) * 0.75) calc(var(--gap) * 1.5);
+  transition: color var(--transition), background var(--transition);
+}
+
+.tab-btn:hover {
+  background: var(--hub-surface);
+  color: var(--hub-text);
+}
+
+.tab-btn.active {
+  color: var(--hub-accent);
+  border-bottom: 2px solid var(--hub-accent);
+  border-radius: 0;
+}
+
+.tab-btn--create {
+  margin-left: auto;
+  background: var(--hub-accent);
+  color: var(--hub-text);
+  border-radius: var(--radius);
+}
+
+.tab-btn--create:hover {
+  background: var(--hub-warning);
+  color: var(--hub-bg);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Recipe grid
+───────────────────────────────────────────────────────────────────────────── */
+.recipes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 1fr));
+  gap: calc(var(--gap) * 2);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Recipe card
+───────────────────────────────────────────────────────────────────────────── */
+.recipe-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  padding: calc(var(--gap) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  transition: border-color var(--transition), transform var(--transition);
+  cursor: default;
+}
+
+.recipe-card:hover {
+  border-color: var(--hub-accent);
+  transform: translateY(-2px);
+}
+
+.recipe-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.recipe-card__icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.recipe-card__name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--hub-text);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recipe-card__creator {
+  font-size: 11px;
+  color: var(--hub-text-muted);
+}
+
+/* Hit rate badge — three colour states */
+.recipe-card__hit-rate {
+  display: inline-block;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px calc(var(--gap) * 0.75);
+  width: fit-content;
+}
+
+.hit-rate--green {
+  background: color-mix(in srgb, var(--hub-success) 20%, transparent);
+  color: var(--hub-success);
+  border: 1px solid var(--hub-success);
+}
+
+.hit-rate--amber {
+  background: color-mix(in srgb, var(--hub-warning) 20%, transparent);
+  color: var(--hub-warning);
+  border: 1px solid var(--hub-warning);
+}
+
+.hit-rate--red {
+  background: color-mix(in srgb, var(--hub-accent) 20%, transparent);
+  color: var(--hub-accent);
+  border: 1px solid var(--hub-accent);
+}
+
+.recipe-card__stats {
+  font-size: 11px;
+  color: var(--hub-text-muted);
+}
+
+.recipe-card__description {
+  font-size: 12px;
+  color: var(--hub-text-muted);
+  flex: 1;
+}
+
+.recipe-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--gap) * 0.5);
+}
+
+.tag {
+  background: var(--hub-border);
+  border-radius: 99px;
+  font-size: 10px;
+  padding: 1px calc(var(--gap) * 0.75);
+  color: var(--hub-text-muted);
+}
+
+.recipe-card__installed-badge {
+  font-size: 10px;
+  color: var(--hub-success);
+  font-weight: 600;
+}
+
+.recipe-card__actions {
+  display: flex;
+  gap: var(--gap);
+  margin-top: auto;
+  padding-top: var(--gap);
+  border-top: 1px solid var(--hub-border);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Buttons
+───────────────────────────────────────────────────────────────────────────── */
+.btn {
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  padding: calc(var(--gap) * 0.5) var(--gap);
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.btn:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.btn--accent {
+  background: var(--hub-accent);
+  color: var(--hub-text);
+}
+
+.btn--muted {
+  background: var(--hub-border);
+  color: var(--hub-text-muted);
+}
+
+.btn--ghost {
+  background: transparent;
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text-muted);
+}
+
+.btn--ghost:hover {
+  border-color: var(--hub-accent);
+  color: var(--hub-accent);
+}
+
+.btn-install {
+  background: var(--hub-accent);
+  border: none;
+  border-radius: var(--radius);
+  color: var(--hub-text);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  padding: calc(var(--gap) * 0.5) var(--gap);
+  flex: 1;
+  transition: opacity var(--transition);
+}
+
+.btn-install:hover {
+  opacity: 0.85;
+}
+
+.btn-install:disabled {
+  background: var(--hub-border);
+  color: var(--hub-text-muted);
+  cursor: default;
+  opacity: 1;
+}
+
+.btn-preview {
+  background: transparent;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  color: var(--hub-text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  padding: calc(var(--gap) * 0.5) var(--gap);
+  flex: 1;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.btn-preview:hover {
+  border-color: var(--hub-accent);
+  color: var(--hub-accent);
+}
+
+.btn-fork {
+  background: transparent;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  color: var(--hub-text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  padding: calc(var(--gap) * 0.5) var(--gap);
+  flex: 1;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.btn-fork:hover {
+  border-color: var(--hub-warning);
+  color: var(--hub-warning);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Empty state
+───────────────────────────────────────────────────────────────────────────── */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: calc(var(--gap) * 6) 0;
+  color: var(--hub-text-muted);
+}
+
+.empty-state p {
+  margin-bottom: calc(var(--gap) * 2);
+  font-size: 14px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Modals
+───────────────────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.modal-content {
+  position: relative;
+  z-index: 1;
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: calc(var(--radius) * 1.5);
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: calc(var(--gap) * 3);
+  width: 90vw;
+  max-width: 560px;
+}
+
+.modal-content--narrow {
+  max-width: 400px;
+}
+
+.modal-content--wide {
+  max-width: 720px;
+}
+
+.modal-content h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: calc(var(--gap) * 2);
+  color: var(--hub-text);
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--hub-text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: calc(var(--gap) * 0.5);
+  position: absolute;
+  right: calc(var(--gap) * 1.5);
+  top: calc(var(--gap) * 1.5);
+  transition: color var(--transition);
+}
+
+.modal-close:hover {
+  color: var(--hub-accent);
+}
+
+.modal-actions {
+  display: flex;
+  gap: var(--gap);
+  justify-content: flex-end;
+  margin-top: calc(var(--gap) * 2);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Scope confirmation modal internals
+───────────────────────────────────────────────────────────────────────────── */
+.scope-info {
+  color: var(--hub-text-muted);
+  font-size: 13px;
+  margin-bottom: var(--gap);
+}
+
+.scope-details {
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  padding: var(--gap) calc(var(--gap) * 1.5);
+  margin-bottom: calc(var(--gap) * 1.5);
+}
+
+.scope-details ul {
+  list-style: none;
+  padding: 0;
+}
+
+.scope-details li {
+  color: var(--hub-text);
+  font-size: 13px;
+  padding: calc(var(--gap) * 0.25) 0;
+}
+
+.scope-details li::before {
+  content: "✓ ";
+  color: var(--hub-success);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Creator form
+───────────────────────────────────────────────────────────────────────────── */
+.creator-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.creator-form label {
+  color: var(--hub-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: calc(var(--gap) * 0.25);
+}
+
+.form-input {
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  color: var(--hub-text);
+  font-size: 13px;
+  padding: calc(var(--gap) * 0.75) var(--gap);
+  outline: none;
+  transition: border-color var(--transition);
+  width: 100%;
+}
+
+.form-input:focus {
+  border-color: var(--hub-accent);
+}
+
+.form-textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Toast
+───────────────────────────────────────────────────────────────────────────── */
+.toast {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--radius);
+  bottom: calc(var(--gap) * 3);
+  color: var(--hub-text);
+  font-size: 13px;
+  left: 50%;
+  opacity: 0;
+  padding: var(--gap) calc(var(--gap) * 2);
+  pointer-events: none;
+  position: fixed;
+  transform: translateX(-50%) translateY(8px);
+  transition: opacity var(--transition), transform var(--transition);
+  z-index: 200;
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.success {
+  border-color: var(--hub-success);
+  color: var(--hub-success);
+}
+
+.toast.error {
+  border-color: var(--hub-accent);
+  color: var(--hub-accent);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Modal detail body
+───────────────────────────────────────────────────────────────────────────── */
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  margin-bottom: calc(var(--gap) * 1.5);
+}
+
+.detail-icon {
+  font-size: 28px;
+}
+
+.detail-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--hub-text);
+  margin: 0;
+}
+
+.detail-creator {
+  font-size: 12px;
+  color: var(--hub-text-muted);
+}
+
+.detail-section {
+  margin-bottom: calc(var(--gap) * 1.5);
+}
+
+.detail-section h4 {
+  color: var(--hub-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: calc(var(--gap) * 0.5);
+  text-transform: uppercase;
+}
+
+.detail-section p {
+  color: var(--hub-text);
+  font-size: 13px;
+}
+
+.detail-actions {
+  display: flex;
+  gap: var(--gap);
+  margin-top: calc(var(--gap) * 2);
+  flex-wrap: wrap;
+}

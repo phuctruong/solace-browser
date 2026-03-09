@@ -86,24 +86,34 @@ def test_domain_lookup_whatsapp(server):
     status, data = _get_json("/api/v1/apps/by-domain?domain=web.whatsapp.com")
     assert status == 200
     assert data["domain"] == "web.whatsapp.com"
-    assert data["total"] == 2
-    assert [app["app_id"] for app in data["apps"]] == ["whatsapp-unread", "whatsapp-web"]
+    # whatsapp apps require pro/enterprise tier — appear in store_apps for free users
+    store_ids = sorted(app["id"] for app in data["store_apps"])
+    assert "whatsapp-unread" in store_ids
+    assert "whatsapp-web" in store_ids
 
 
 def test_domain_lookup_slack(server):
     status, data = _get_json("/api/v1/apps/by-domain?domain=app.slack.com")
     assert status == 200
     assert data["domain"] == "app.slack.com"
-    assert data["total"] == 3
-    assert [app["app_id"] for app in data["apps"]] == ["slack-dm", "slack-triage", "slack-web"]
+    # slack-web is free (installed_apps); slack-dm + slack-triage require pro (store_apps)
+    all_ids = sorted(
+        [app["id"] for app in data["installed_apps"]]
+        + [app["id"] for app in data["store_apps"]]
+    )
+    assert "slack-web" in all_ids
+    assert "slack-dm" in all_ids
+    assert "slack-triage" in all_ids
 
 
 def test_domain_lookup_discord(server):
     status, data = _get_json("/api/v1/apps/by-domain?domain=discord.com")
     assert status == 200
     assert data["domain"] == "discord.com"
-    assert data["total"] == 2
-    assert [app["app_id"] for app in data["apps"]] == ["discord-notifications", "discord-web"]
+    # discord apps require pro tier — appear in store_apps for free users
+    store_ids = sorted(app["id"] for app in data["store_apps"])
+    assert "discord-notifications" in store_ids
+    assert "discord-web" in store_ids
 
 
 def test_domain_lookup_no_match(server):

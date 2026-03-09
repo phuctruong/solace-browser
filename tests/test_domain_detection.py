@@ -78,10 +78,11 @@ def test_domain_apps_whatsapp(domain_server):
     status, data = _request("GET", "/api/v1/apps/by-domain?domain=web.whatsapp.com")
     assert status == 200
     assert data["domain"] == "web.whatsapp.com"
-    assert data["total"] >= 2
-    app_ids = {app["app_id"] for app in data["apps"]}
-    assert "whatsapp-web" in app_ids
-    assert "whatsapp-unread" in app_ids
+    # store_apps contains tier-gated apps; all whatsapp apps require pro/enterprise
+    store_ids = {app["id"] for app in data["store_apps"]}
+    assert len(store_ids) >= 2
+    assert "whatsapp-web" in store_ids
+    assert "whatsapp-unread" in store_ids
 
 
 def test_domain_apps_requires_auth(domain_server):

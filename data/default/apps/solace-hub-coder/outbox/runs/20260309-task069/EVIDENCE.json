@@ -1,0 +1,53 @@
+{
+  "task_id": "069",
+  "task_name": "Prime Wiki Community UI Panel",
+  "timestamp": "2026-03-09T11:26:32-04:00",
+  "repo_root": "/home/phuc/projects/solace-browser",
+  "outbox_dir": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task069/",
+  "files": {
+    "created": [
+      "tests/test_prime_wiki_ui.py",
+      "web/prime-wiki.html",
+      "data/default/apps/solace-hub-coder/outbox/runs/20260309-task069/PATCH_DIFF.md",
+      "data/default/apps/solace-hub-coder/outbox/runs/20260309-task069/RED_GATE.md",
+      "data/default/apps/solace-hub-coder/outbox/runs/20260309-task069/GREEN_GATE.md",
+      "data/default/apps/solace-hub-coder/outbox/runs/20260309-task069/ORACLE_SWEEP.md"
+    ],
+    "modified": [
+      "yinyang_server.py"
+    ]
+  },
+  "routes": {
+    "prime_wiki_stats_exists": true,
+    "prime_wiki_html_route_added": true,
+    "shared_static_html_helper_exists": false,
+    "matched_fun_packs_pattern": true
+  },
+  "red_gate": {
+    "command": "pytest -q tests/test_prime_wiki_ui.py",
+    "status": "failed",
+    "summary": "10 failed; page missing and route returned 404"
+  },
+  "green_gate": {
+    "focused_command": "pytest -q tests/test_prime_wiki_ui.py",
+    "focused_status": "passed",
+    "focused_summary": "10 passed in 0.69s",
+    "broader_command": "pytest -q tests/test_fun_packs.py tests/test_prime_wiki_snapshots.py tests/test_prime_wiki_ui.py",
+    "broader_status": "passed",
+    "broader_summary": "30 passed in 3.39s"
+  },
+  "oracle_sweep": {
+    "no_cdn": true,
+    "no_jquery": true,
+    "no_eval": true,
+    "no_port_9222": true,
+    "uses_existing_prime_wiki_api_paths": true,
+    "hub_tokens_used": true,
+    "vanilla_js_fetch": true,
+    "exact_dispatch_html_used": true
+  },
+  "notes": [
+    "Task artifacts are scoped to Task 069 files.",
+    "Repository contained unrelated pre-existing changes outside this task."
+  ]
+}

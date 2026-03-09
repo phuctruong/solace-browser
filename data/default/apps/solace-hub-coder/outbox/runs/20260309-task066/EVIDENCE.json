@@ -1,0 +1,74 @@
+{
+  "task_id": "20260309-task066",
+  "task_name": "Agent Notification SSE",
+  "status": "green",
+  "rung": 641,
+  "files_changed": [
+    "yinyang_server.py",
+    "web/js/notifications-sse.js",
+    "web/css/notifications.css",
+    "tests/test_notifications_sse.py"
+  ],
+  "artifacts": {
+    "patch_diff": "PATCH_DIFF.md",
+    "red_gate": "RED_GATE.md",
+    "green_gate": "GREEN_GATE.md",
+    "oracle_sweep": "ORACLE_SWEEP.md"
+  },
+  "hashes": {
+    "patch_diff_sha256": "643aa239f42fcbcd3b551c98cf060cd35d6819f7186485829f856c990199431e",
+    "red_gate_sha256": "512764589aedb21c9864ba02c304ebc72ec596d0d8b269ece9dc708d5e508c27",
+    "green_gate_sha256": "ba903266f4b120bfcf1a32df39ec6dc9d1d0792f6868aa839bc7ac1b9a836e97",
+    "oracle_sweep_sha256": "695ac200e54f0fd16c726fb7dc35bf1aa85a5656072f336a86b6934095f44f10"
+  },
+  "implementation": {
+    "notify_route": "/api/yinyang/notify",
+    "events_route": "/api/yinyang/events",
+    "status_route": "/api/yinyang/status",
+    "mark_read_route": "/api/yinyang/notifications/{notif_id}/read",
+    "sse_transport": "text/event-stream",
+    "sse_auth": "query token sha256",
+    "queue_model": "in-memory list plus per-client queue.Queue(maxsize=50)",
+    "backlog_replay": "last 10 unread on connect",
+    "keepalive_seconds": 15,
+    "persistence_reused": false,
+    "new_dependencies": false
+  },
+  "validation": {
+    "commands": [
+      "pytest -q tests/test_notifications_sse.py",
+      "pytest -q tests/test_yinyang_instructions.py -k 'notifications_list_empty or notifications_unread_count or notifications_mark_all_read_requires_auth or notifications_mark_all_read or notifications_unread_filter or notifications_limit_param or notifications_mark_read'",
+      "python -m py_compile yinyang_server.py"
+    ],
+    "pytest": {
+      "notifications_sse": {
+        "passed": 13,
+        "failed": 0
+      },
+      "notifications_regression_subset": {
+        "passed": 7,
+        "failed": 0,
+        "deselected": 324
+      }
+    }
+  },
+  "guardrails": {
+    "port_9222_used": false,
+    "except_exception_added": false,
+    "existing_api_v1_notifications_routes_modified": false,
+    "shell_true_added": false,
+    "cdn_added": false,
+    "chrome_runtime_added": false,
+    "paper_reference_found_in_repo": false
+  },
+  "file_refs": {
+    "constants": "yinyang_server.py:210",
+    "get_routes": "yinyang_server.py:3423",
+    "post_routes": "yinyang_server.py:3664",
+    "handlers": "yinyang_server.py:7673",
+    "asset_handlers": "yinyang_server.py:9264",
+    "js_client": "web/js/notifications-sse.js:1",
+    "css": "web/css/notifications.css:1",
+    "tests": "tests/test_notifications_sse.py:1"
+  }
+}

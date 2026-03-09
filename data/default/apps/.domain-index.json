@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "generated_at": 1773063420,
+  "domains_indexed": 24,
+  "apps_indexed": 44,
+  "patterns": {
+    "amazon.com": [
+      "amazon-price-tracker"
+    ],
+    "any": [
+      "solace-inspector"
+    ],
+    "app.slack.com": [
+      "slack-dm",
+      "slack-triage",
+      "slack-web"
+    ],
+    "calendar.google.com": [
+      "calendar-brief"
+    ],
+    "chatgpt.com": [
+      "chatgpt",
+      "chatgpt-copilot",
+      "openai-image-gen"
+    ],
+    "claude.ai": [
+      "claude",
+      "claude-copilot"
+    ],
+    "discord.com": [
+      "discord-notifications",
+      "discord-web"
+    ],
+    "drive.google.com": [
+      "google-drive-saver"
+    ],
+    "gemini.google.com": [
+      "gemini",
+      "gemini-copilot",
+      "gemini-creative"
+    ],
+    "github.com": [
+      "github-issue-triage"
+    ],
+    "google.com": [
+      "competitor-monitor",
+      "competitor-watch"
+    ],
+    "instagram.com": [
+      "instagram-poster"
+    ],
+    "linkedin.com": [
+      "linkedin-messenger",
+      "linkedin-outreach",
+      "linkedin-poster",
+      "linkedin-profile-optimizer"
+    ],
+    "local-machine": [
+      "focus-timer"
+    ],
+    "mail.google.com": [
+      "gmail-inbox-triage",
+      "gmail-spam-cleaner"
+    ],
+    "messenger.com": [
+      "facebook-messenger",
+      "messenger-unread"
+    ],
+    "multi-site": [
+      "lead-pipeline",
+      "morning-brief",
+      "weekly-digest"
+    ],
+    "news.google.com": [
+      "google-search-trends"
+    ],
+    "phuc.net": [
+      "phucnet-publisher"
+    ],
+    "reddit.com": [
+      "reddit-scanner"
+    ],
+    "studio.youtube.com": [
+      "youtube-script-writer"
+    ],
+    "web.telegram.org": [
+      "telegram-unread",
+      "telegram-web"
+    ],
+    "web.whatsapp.com": [
+      "whatsapp-responder",
+      "whatsapp-unread",
+      "whatsapp-web"
+    ],
+    "x.com": [
+      "twitter-monitor",
+      "twitter-poster"
+    ]
+  }
+}

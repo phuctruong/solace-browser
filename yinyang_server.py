@@ -18,6 +18,7 @@ Route table:
   GET  /start                          → browser start page HTML
   POST /detect                         → {"url": "..."} → {"apps": [...]}
   GET  /api/v1/evidence                → evidence log (limit/offset/action/session_id/since/until params)
+  GET  /api/v1/evidence/log            → evidence log (alias)
   GET  /api/v1/evidence/verify         → verify sha256 chain integrity
   GET  /api/v1/evidence/{id}           → single evidence entry detail
   POST /api/v1/evidence                → record evidence event
@@ -3199,6 +3200,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_start()
         elif path == "/api/v1/evidence":
             self._handle_evidence_list(query)
+        elif path == "/api/v1/evidence/log":
+            self._handle_evidence_list(query)
         elif path == "/api/v1/evidence/bundles":
             self._handle_part11_evidence_bundles(query)
         elif path == "/api/v1/evidence/verify":
@@ -3462,6 +3465,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_apps_html()
         elif path == "/web/fun-packs.html":
             self._handle_fun_packs_html()
+        elif path == "/web/prime-wiki.html":
+            self._handle_prime_wiki_html()
         elif path == "/web/js/apps.js":
             self._handle_apps_js()
         elif path == "/web/css/apps.css":
@@ -3499,6 +3504,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_schedule_viewer_detail(run_id)
         elif path == "/web/schedule.html":
             self._handle_schedule_html()
+        elif path == "/web/pending-actions.html":
+            self._handle_pending_actions_html()
+        elif path == "/web/evidence-viewer.html":
+            self._handle_evidence_viewer_html()
         elif path == "/web/js/schedule.js":
             self._handle_schedule_js()
         elif path == "/web/css/schedule.css":
@@ -8985,6 +8994,34 @@ function choose(mode) {
         self.end_headers()
         self.wfile.write(content)
 
+    def _handle_pending_actions_html(self) -> None:
+        """GET /web/pending-actions.html — serve the pending actions dashboard page."""
+        html_path = Path(__file__).parent / "web" / "pending-actions.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "pending-actions.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_evidence_viewer_html(self) -> None:
+        """GET /web/evidence-viewer.html — serve the evidence viewer page."""
+        html_path = Path(__file__).parent / "web" / "evidence-viewer.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "evidence-viewer.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
     def _handle_schedule_js(self) -> None:
         """GET /web/js/schedule.js — serve the schedule viewer JS."""
         js_path = Path(__file__).parent / "web" / "js" / "schedule.js"
@@ -9179,6 +9216,20 @@ function choose(mode) {
             content = html_path.read_bytes()
         except FileNotFoundError:
             self._send_json({"error": "fun-packs.html not found"}, 404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _handle_prime_wiki_html(self) -> None:
+        """GET /web/prime-wiki.html — serve the Prime Wiki community page."""
+        html_path = Path(__file__).parent / "web" / "prime-wiki.html"
+        try:
+            content = html_path.read_bytes()
+        except FileNotFoundError:
+            self._send_json({"error": "prime-wiki.html not found"}, 404)
             return
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")

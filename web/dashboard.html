@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/dashboard.css">
+</head>
+<body>
+  <div class="value-rail">
+    <!-- Left zone: state dot + state text + app name -->
+    <div class="rail-left">
+      <span class="state-dot" id="state-dot"></span>
+      <span class="state-text" id="state-text">IDLE</span>
+      <span class="app-label" id="app-label"></span>
+    </div>
+
+    <!-- Center zone: rotating stats / delight -->
+    <div class="rail-center" id="rail-center">
+      <!-- Populated by dashboard.js -->
+    </div>
+
+    <!-- Right zone: status indicator -->
+    <div class="rail-right" id="rail-right">OK</div>
+  </div>
+
+  <!-- Stats cards below the rail -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-value" id="pages-count">0</span>
+      <span class="stat-label">pages visited</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" id="llm-count">0</span>
+      <span class="stat-label">LLM calls</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" id="cost-display">$0.00</span>
+      <span class="stat-label">cost this session</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" id="saved-pct">0%</span>
+      <span class="stat-label">cost saved</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" id="replays-count">0</span>
+      <span class="stat-label">recipe replays</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" id="evidence-count">0</span>
+      <span class="stat-label">evidence captured</span>
+    </div>
+  </div>
+
+  <button class="btn-reset" id="reset-btn">Reset Session Stats</button>
+
+  <script src="/web/js/dashboard.js"></script>
+</body>
+</html>

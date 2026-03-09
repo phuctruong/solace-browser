@@ -1,0 +1,8 @@
+- Implemented the new auth-gated ABCD endpoints in `app/api/v1/routers/abcd.py:1`: `POST /api/v1/abcd/run`, `GET /api/v1/abcd/history`, `GET /api/v1/abcd/aggregate-stats`, `POST /api/v1/inspector/run`, and `GET /api/v1/apps/{app_id}/upgrade-hook`, while preserving the legacy public ABCD report routes.
+- Added the core service in `app/services/abcd_tester.py:1`, with computed quality scoring from oracle checks × persona agreement, persisted run history, aggregate stats, evidence hashing, and optional `UpliftInjector` use when app inbox assets exist.
+- Added contract models in `app/schemas/abcd.py:1` and the task-specific RED/GREEN tests in `tests/app_v1/test_abcd_testing.py:1`.
+- Validation passed: `ruff check ...` plus `pytest ...` → `135 passed`; details are in `outbox/runs/20260309-task010/GREEN_GATE.md:1`, `outbox/runs/20260309-task010/RED_GATE.md:1`, `outbox/runs/20260309-task010/ORACLE_SWEEP.md:1`, `outbox/runs/20260309-task010/EVIDENCE.json:1`, and `outbox/runs/20260309-task010/PATCH_DIFF.md:1`.
+- I attempted to write the bundle to `/home/phuc/projects/solace-browser/data/default/apps/solaceagi-coder/outbox/runs/20260309-task010`, but the sandbox blocked writes there; the repo-local bundle is available under `outbox/runs/20260309-task010/`.
+- The repo already had unrelated uncommitted changes; I kept this work scoped to the ABCD task files above.
+
+If you want, I can next wire `GET /api/v1/apps/{app_id}/upgrade-hook` into the existing frontend/API consumer path.

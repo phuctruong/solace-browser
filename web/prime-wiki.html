@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prime Wiki — Solace Hub</title>
+<style>
+:root {
+  --hub-bg: #0d0d1a;
+  --hub-surface: #1a1a2e;
+  --hub-border: #2a2a3e;
+  --hub-text: #e2e8f0;
+  --hub-text-muted: #94a3b8;
+  --hub-accent: #6366f1;
+  --hub-success: #10b981;
+}
+body { background: var(--hub-bg); color: var(--hub-text); font-family: system-ui, sans-serif; margin: 0; padding: 1.5rem; }
+.page-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+.page-subtitle { color: var(--hub-text-muted); margin-bottom: 2rem; font-size: 0.9rem; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.stat-card { background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 10px; padding: 1.25rem; }
+.stat-value { font-size: 1.8rem; font-weight: 700; color: var(--hub-accent); }
+.stat-label { font-size: 0.8rem; color: var(--hub-text-muted); margin-top: 0.25rem; }
+.search-bar { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+.search-input { flex: 1; background: var(--hub-surface); border: 1px solid var(--hub-border); color: var(--hub-text); border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.9rem; }
+.search-input:focus { outline: none; border-color: var(--hub-accent); }
+.btn-search { background: var(--hub-accent); color: #fff; border: none; border-radius: 8px; padding: 0.5rem 1.25rem; cursor: pointer; font-size: 0.9rem; }
+.snapshot-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.snapshot-item { background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+.snapshot-domain { font-weight: 600; }
+.snapshot-meta { font-size: 0.8rem; color: var(--hub-text-muted); margin-top: 0.2rem; }
+.snapshot-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; background: rgba(99,102,241,0.2); color: var(--hub-accent); }
+.empty-state { text-align: center; padding: 3rem; color: var(--hub-text-muted); }
+</style>
+</head>
+<body>
+<h1 class="page-title">📚 Prime Wiki Community</h1>
+<p class="page-subtitle">Compressed knowledge graph — shared snapshots reduce token costs for everyone.</p>
+<div class="stats-grid">
+  <div class="stat-card"><div class="stat-value" id="stat-snapshots">—</div><div class="stat-label">Snapshots Indexed</div></div>
+  <div class="stat-card"><div class="stat-value" id="stat-urls">—</div><div class="stat-label">URLs Covered</div></div>
+  <div class="stat-card"><div class="stat-value" id="stat-ratio">—</div><div class="stat-label">Avg Compression</div></div>
+  <div class="stat-card"><div class="stat-value" id="stat-size">—</div><div class="stat-label">Total Saved (KB)</div></div>
+</div>
+<div class="search-bar">
+  <input class="search-input" id="search-input" type="text" placeholder="Search by domain or page type..." />
+  <button class="btn-search" onclick="doSearch()">Search</button>
+</div>
+<div id="results-container"><div class="empty-state">Loading index...</div></div>
+<script>
+'use strict';
+const TOKEN = localStorage.getItem('solace_token') || '';
+const AUTH = { headers: { 'Authorization': `Bearer ${TOKEN}` } };
+function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+async function loadStats(){
+  try {
+    const r = await fetch('/api/v1/prime-wiki/stats', AUTH);
+    const d = await r.json();
+    document.getElementById('stat-snapshots').textContent = d.total_snapshots||d.snapshot_count||'0';
+    document.getElementById('stat-urls').textContent = d.total_urls||d.url_count||'0';
+    const ratio=d.avg_compression_ratio||d.avg_ratio||0;
+    document.getElementById('stat-ratio').textContent=ratio?ratio.toFixed(1)+':1':'—';
+    const saved=d.total_original_bytes||d.total_bytes||0;
+    document.getElementById('stat-size').textContent=saved?Math.round(saved/1024)+' KB':'—';
+  } catch(e){}
+}
+function _render(items){
+  const c=document.getElementById('results-container');
+  if(!items||items.length===0){c.innerHTML='<div class="empty-state">No snapshots found</div>';return;}
+  c.innerHTML='<div class="snapshot-list">'+items.map(item=>{
+    const url=item.url||item.source_url||'';
+    let domain='unknown';
+    try{domain=url?new URL(url).hostname:item.domain||'unknown';}catch(e){}
+    const ptype=item.page_type||item.type||'page';
+    const ratio=item.compression_ratio||item.ratio||0;
+    return `<div class="snapshot-item"><div><div class="snapshot-domain">${_esc(domain)}</div>
+    <div class="snapshot-meta">${_esc((url||'').substring(0,60))}${(url||'').length>60?'…':''}</div></div>
+    <div style="text-align:right"><span class="snapshot-badge">${_esc(ptype)}</span>
+    ${ratio?`<div class="snapshot-meta" style="margin-top:4px">${ratio.toFixed(1)}:1</div>`:''}</div></div>`;
+  }).join('')+'</div>';
+}
+async function doSearch(){
+  const q=document.getElementById('search-input').value.trim();
+  try {
+    const r=await fetch(`/api/v1/prime-wiki/search?q=${encodeURIComponent(q||'')}`,AUTH);
+    const d=await r.json();
+    _render(d.results||d.snapshots||d||[]);
+  } catch(e){}
+}
+document.getElementById('search-input').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+loadStats();
+doSearch();
+</script>
+</body>
+</html>

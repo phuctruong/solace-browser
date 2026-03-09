@@ -1,0 +1,52 @@
+{
+  "task_id": "068",
+  "task_name": "Pending Actions Dashboard",
+  "timestamp": "2026-03-09T11:23:26-04:00",
+  "repo_root": "/home/phuc/projects/solace-browser",
+  "outbox_dir": "data/default/apps/solace-hub-coder/outbox/runs/20260309-task068/",
+  "files": {
+    "created": [
+      "tests/test_pending_actions_dashboard.py",
+      "web/pending-actions.html",
+      "data/default/apps/solace-hub-coder/outbox/runs/20260309-task068/PATCH_DIFF.md",
+      "data/default/apps/solace-hub-coder/outbox/runs/20260309-task068/RED_GATE.md",
+      "data/default/apps/solace-hub-coder/outbox/runs/20260309-task068/GREEN_GATE.md",
+      "data/default/apps/solace-hub-coder/outbox/runs/20260309-task068/ORACLE_SWEEP.md"
+    ],
+    "modified": [
+      "yinyang_server.py"
+    ]
+  },
+  "routes": {
+    "existing_actions_pending": true,
+    "existing_actions_approve": true,
+    "existing_actions_reject": true,
+    "pending_actions_html_route_added": true
+  },
+  "red_gate": {
+    "command": "pytest -q tests/test_pending_actions_dashboard.py",
+    "status": "failed",
+    "summary": "10 failed; page missing and route returned 404"
+  },
+  "green_gate": {
+    "command": "pytest -q tests/test_pending_actions_dashboard.py tests/test_preview_cooldown_signoff.py",
+    "status": "passed",
+    "summary": "18 passed in 0.76s"
+  },
+  "oracle_sweep": {
+    "no_cdn": true,
+    "no_jquery": true,
+    "no_eval": true,
+    "no_port_9222": true,
+    "hex_only_in_root": true,
+    "hub_tokens_used": true,
+    "uses_existing_actions_api": true,
+    "class_c_step_up_supported": true,
+    "cooldown_timer_present": true,
+    "auto_refresh_10s": true
+  },
+  "notes": [
+    "Task artifacts are scoped to Task 068 files.",
+    "Repository contained unrelated pre-existing changes outside this task."
+  ]
+}

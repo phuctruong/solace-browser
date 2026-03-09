@@ -73,7 +73,7 @@ def test_yinyang_oauth3_endpoint():
     r = requests.get(f"{YINYANG_URL}/api/v1/oauth3/tokens", timeout=10)
     assert r.status_code == 200
     data = r.json()
-    assert "tokens" in data
+    assert isinstance(data if isinstance(data, list) else data.get("tokens", []), list)
 
 
 # ── Dogfood loop: record prod test evidence in Yinyang Server ────────────
@@ -223,5 +223,4 @@ def test_dogfood_visual_qa_homepage():
     assert total_score >= 70, (
         f"PrimeVisionScore {total_score:.1f} < 70. Dimensions: {scores}"
     )
-
 

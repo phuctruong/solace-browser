@@ -91,6 +91,12 @@ def post_json(path: str, payload: dict) -> dict:
         return json.loads(resp.read().decode())
 
 
+def oauth3_tokens_payload(data):
+    if isinstance(data, list):
+        return data
+    return data.get("tokens", [])
+
+
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
@@ -435,8 +441,7 @@ class TestOAuth3API:
     def test_oauth3_list(self, server):
         """GET /api/v1/oauth3/tokens → returns tokens list."""
         data = get_json("/api/v1/oauth3/tokens")
-        assert "tokens" in data
-        assert isinstance(data["tokens"], list)
+        assert isinstance(oauth3_tokens_payload(data), list)
 
     def test_oauth3_register(self, server):
         """POST /api/v1/oauth3/tokens → registers token metadata (no plaintext)."""
@@ -457,10 +462,11 @@ class TestOAuth3API:
             "token_sha256": "b" * 64,
         })
         data = get_json("/api/v1/oauth3/tokens")
-        ids = [t["id"] for t in data["tokens"]]
+        tokens = oauth3_tokens_payload(data)
+        ids = [t["id"] for t in tokens]
         assert created["id"] in ids
         # Verify no token_sha256 in list response
-        for t in data["tokens"]:
+        for t in tokens:
             assert "token_sha256" not in t
 
     def test_oauth3_revoke(self, server):

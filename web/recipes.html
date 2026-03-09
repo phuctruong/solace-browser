@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recipes — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/recipes.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Recipe Library</h1>
+    <span class="page-subtitle">Community-powered automations — replay at near-zero cost</span>
+  </div>
+
+  <div class="recipes-page">
+    <!-- Search + Filter -->
+    <div class="recipes-search">
+      <input type="text" placeholder="Search recipes..." class="search-input" id="recipe-search" autocomplete="off">
+      <div class="category-pills">
+        <button class="pill active" data-category="">All</button>
+        <button class="pill" data-category="email">Gmail</button>
+        <button class="pill" data-category="social">LinkedIn</button>
+        <button class="pill" data-category="development">GitHub</button>
+        <button class="pill" data-category="messaging">Slack</button>
+      </div>
+      <select class="sort-select" id="sort-select" aria-label="Sort recipes">
+        <option value="popular">Most Popular</option>
+        <option value="recent">Most Recent</option>
+        <option value="best_hit_rate">Best Hit Rate</option>
+      </select>
+    </div>
+
+    <!-- My Library toggle -->
+    <div class="library-tabs">
+      <button class="tab-btn active" data-tab="community" id="tab-community">Community</button>
+      <button class="tab-btn" data-tab="my-library" id="tab-my-library">My Library</button>
+      <button class="tab-btn tab-btn--create" id="btn-open-creator">+ Create Recipe</button>
+    </div>
+
+    <!-- Recipe Grid -->
+    <div class="recipes-grid" id="recipes-grid" role="list" aria-label="Recipe cards">
+      <div class="empty-state" id="empty-state" hidden>
+        <p>Your recipe library is empty — explore the community</p>
+        <button class="btn btn--accent" id="btn-explore-community">Explore Community</button>
+      </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <!-- Recipe Detail Modal -->
+  <div class="modal-overlay" id="recipe-modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-recipe-name">
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+    <div class="modal-content" id="modal-content">
+      <button class="modal-close" id="modal-close" aria-label="Close">&#x2715;</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Scope Confirmation Modal (shows BEFORE install — SILENT_INSTALL is BANNED) -->
+  <div class="modal-overlay" id="scope-modal" hidden role="dialog" aria-modal="true" aria-labelledby="scope-modal-title">
+    <div class="modal-backdrop" id="scope-backdrop"></div>
+    <div class="modal-content modal-content--narrow">
+      <h3 id="scope-modal-title">Install Recipe</h3>
+      <p class="scope-info">This recipe will be installed with the following scope:</p>
+      <div id="scope-details" class="scope-details"></div>
+      <div class="modal-actions">
+        <button class="btn btn--accent" id="scope-confirm-btn">Install</button>
+        <button class="btn btn--muted" id="scope-cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recipe Creator Modal -->
+  <div class="modal-overlay" id="creator-modal" hidden role="dialog" aria-modal="true" aria-labelledby="creator-modal-title">
+    <div class="modal-backdrop" id="creator-backdrop"></div>
+    <div class="modal-content modal-content--wide">
+      <button class="modal-close" id="creator-close" aria-label="Close">&#x2715;</button>
+      <h3 id="creator-modal-title">Create Recipe</h3>
+      <form id="creator-form" class="creator-form">
+        <label for="creator-name">Name</label>
+        <input type="text" id="creator-name" class="form-input" placeholder="e.g. Gmail Daily Digest" required>
+
+        <label for="creator-app-id">App ID</label>
+        <input type="text" id="creator-app-id" class="form-input" placeholder="e.g. gmail">
+
+        <label for="creator-desc">Description</label>
+        <textarea id="creator-desc" class="form-input form-textarea" placeholder="What does this recipe do?"></textarea>
+
+        <label for="creator-tags">Tags (comma-separated)</label>
+        <input type="text" id="creator-tags" class="form-input" placeholder="e.g. email, productivity">
+
+        <div class="modal-actions">
+          <button type="submit" class="btn btn--accent">Save Private</button>
+          <button type="button" class="btn btn--muted" id="creator-cancel-btn">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/web/js/recipes.js"></script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+:root {
+  --hub-toast-warning: #f59e0b;
+  --hub-toast-critical: #ef4444;
+  --hub-toast-success: #10b981;
+  --hub-toast-shadow: rgba(0, 0, 0, 0.4);
+  --hub-toast-badge-text: #ffffff;
+}
+
+#toast-container {
+  position: fixed;
+  bottom: calc(var(--hub-rail-height, 60px) + 12px);
+  right: 12px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  z-index: 9000;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  max-width: 360px;
+  box-shadow: 0 4px 16px var(--hub-toast-shadow);
+  animation: toast-in 0.2s ease-out;
+  pointer-events: auto;
+}
+
+.toast--high {
+  border-left: 3px solid var(--hub-toast-warning);
+}
+
+.toast--critical {
+  border-left: 3px solid var(--hub-toast-critical);
+}
+
+.toast--normal,
+.toast--low {
+  border-left: 3px solid var(--hub-accent);
+}
+
+.toast__icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.toast__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast__message {
+  color: var(--hub-text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.toast__actions {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.toast__action {
+  background: transparent;
+  border: 1px solid var(--hub-border);
+  color: var(--hub-accent);
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.toast__close {
+  background: none;
+  border: none;
+  color: var(--hub-text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.notif-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--hub-accent);
+  color: var(--hub-toast-badge-text);
+  border-radius: 999px;
+  min-width: 18px;
+  height: 18px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 3px;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

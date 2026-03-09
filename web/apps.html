@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Apps — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/apps.css">
+</head>
+<body>
+<div class="apps-page">
+  <!-- Setup needed banner (shows when any app is not activated) -->
+  <div class="setup-banner" id="setup-banner" hidden>
+    <span class="setup-banner__text">
+      <strong id="setup-count">0</strong> apps need setup before they can run
+    </span>
+    <button class="setup-banner__cta" id="setup-all-btn">Set up now</button>
+  </div>
+
+  <!-- App grid -->
+  <div class="apps-grid" id="apps-grid">
+    <!-- Populated by JS -->
+  </div>
+
+  <!-- Setup drawer (slides in from right) -->
+  <div class="setup-drawer" id="setup-drawer" hidden>
+    <div class="setup-drawer__header">
+      <h3 id="setup-drawer-title">Set up app</h3>
+      <button id="setup-drawer-close">&#x2715;</button>
+    </div>
+    <form class="setup-drawer__form" id="setup-form">
+      <!-- Fields injected by JS from /api/v1/apps/{id}/setup-requirements -->
+    </form>
+    <div class="setup-drawer__actions">
+      <button type="submit" form="setup-form" id="activate-btn">Activate</button>
+      <button type="button" id="cancel-setup-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+<script src="/web/js/apps.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Schedule — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/schedule.css">
+</head>
+<body>
+<div class="schedule-page">
+  <section class="roi-strip" id="roi-strip">
+    <div class="roi-card"><span class="roi-label">Week Runs</span><strong id="roi-week-runs">0</strong></div>
+    <div class="roi-card"><span class="roi-label">Time Saved</span><strong id="roi-hours-saved">0.00h</strong></div>
+    <div class="roi-card"><span class="roi-label">Value</span><strong id="roi-value-usd">$0.00</strong></div>
+  </section>
+  <!-- 4-tab layout -->
+  <nav class="schedule-tabs">
+    <button class="tab active" data-tab="upcoming">Calendar</button>
+    <button class="tab" data-tab="approval">
+      Kanban
+      <span class="badge" id="approval-badge" hidden>0</span>
+    </button>
+    <button class="tab" data-tab="history">Timeline</button>
+    <button class="tab" data-tab="esign">List</button>
+  </nav>
+
+  <!-- Tab 1: Calendar -->
+  <div id="tab-upcoming" class="tab-panel active">
+    <section class="section">
+      <h3>Agent Activity Calendar</h3>
+      <div id="calendar-view"></div>
+      <div id="schedules-list" hidden></div>
+      <button class="btn-secondary" id="add-schedule-btn">+ Add Schedule</button>
+    </section>
+    <section class="section">
+      <h3>Upcoming Runs</h3>
+      <div id="keepalive-summary"></div>
+      <div id="pending-counters"></div>
+    </section>
+  </div>
+
+  <!-- Tab 2: Kanban -->
+  <div id="tab-approval" class="tab-panel" hidden>
+    <div id="kanban-board"></div>
+    <div id="approval-list"></div>
+  </div>
+
+  <!-- Tab 3: Timeline -->
+  <div id="tab-history" class="tab-panel" hidden>
+    <div class="filter-bar">
+      <select id="history-status-filter">
+        <option value="">All</option>
+        <option value="success">Success</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <select id="history-app-filter"><option value="">All Apps</option></select>
+    </div>
+    <div id="timeline-view"></div>
+    <div id="history-list"></div>
+    <div id="roi-display"></div>
+  </div>
+
+  <!-- Tab 4: List -->
+  <div id="tab-esign" class="tab-panel" hidden>
+    <div id="list-view"></div>
+    <div id="esign-pending"></div>
+    <div id="esign-history"></div>
+  </div>
+
+  <!-- Schedule Editor Drawer -->
+  <div id="schedule-drawer" class="drawer" hidden>
+    <h3>Schedule Editor</h3>
+    <select id="cron-preset">
+      <option value="daily_7am">Every day at 7:00 AM</option>
+      <option value="weekdays_9am">Weekdays at 9:00 AM</option>
+      <option value="hourly">Every hour</option>
+      <option value="every_2h">Every 2 hours</option>
+      <option value="weekly_monday">Every Monday at 9:00 AM</option>
+      <option value="custom">Custom (advanced)</option>
+    </select>
+    <input id="cron-raw" type="text" placeholder="0 7 * * *" hidden>
+    <button id="save-schedule-btn">Save</button>
+    <button id="cancel-schedule-btn">Cancel</button>
+  </div>
+
+  <section id="signoff-sheet" class="signoff-sheet" hidden>
+    <div class="signoff-sheet__header">
+      <strong>I paused and waited for you</strong>
+      <button class="btn-secondary" id="bulk-approve-a">Approve Class A</button>
+    </div>
+    <div id="signoff-list"></div>
+  </section>
+</div>
+<script src="/web/js/schedule.js"></script>
+</body>
+</html>

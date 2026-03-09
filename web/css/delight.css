@@ -1,0 +1,81 @@
+/* delight.css — celebration + toast styles */
+/* All colors via var(--hub-*) tokens. Hex only in :root. */
+
+:root {
+  --delight-confetti-z: 9999;
+  --delight-toast-z: 9998;
+  --delight-confetti-a: var(--hub-accent);
+  --delight-confetti-b: var(--hub-text);
+  --delight-confetti-c: var(--hub-border);
+  --delight-confetti-d: var(--hub-text-muted);
+  --delight-confetti-e: var(--hub-surface);
+}
+
+.delight-confetti-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: var(--delight-confetti-z);
+}
+
+.delight-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  max-width: min(360px, calc(100vw - 40px));
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: 12px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  color: var(--hub-text);
+  box-shadow: 0 4px 20px var(--hub-border);
+  z-index: var(--delight-toast-z);
+  animation: delight-in 0.3s ease-out, delight-out 0.4s ease-in 3s forwards;
+  pointer-events: none;
+}
+
+.delight-toast__emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.delight-toast__msg {
+  font-weight: 600;
+  color: var(--hub-text);
+}
+
+@keyframes delight-in {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes delight-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .delight-toast {
+    animation: none;
+  }
+}
