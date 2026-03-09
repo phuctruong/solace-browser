@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Downloader Tracker — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/video-downloader-tracker.css">
+</head>
+<body>
+<div class="vdt-container">
+  <h1 class="vdt-title">Video Downloader Tracker</h1>
+  <p class="vdt-subtitle">Track video download requests and their status.</p>
+
+  <div class="vdt-section">
+    <h2 class="vdt-section-title">Record Download</h2>
+    <form id="vdt-form" class="vdt-form">
+      <input id="vdt-url" class="vdt-input" type="url" placeholder="Video URL" required>
+      <input id="vdt-title-input" class="vdt-input" type="text" placeholder="Title">
+      <select id="vdt-quality" class="vdt-select" aria-label="Quality"></select>
+      <select id="vdt-format" class="vdt-select" aria-label="Format"></select>
+      <select id="vdt-status-sel" class="vdt-select" aria-label="Status"></select>
+      <input id="vdt-size" class="vdt-input" type="number" placeholder="Size (bytes)" min="0" value="0">
+      <input id="vdt-duration" class="vdt-input" type="number" placeholder="Duration (s)" min="1" value="1">
+      <button type="submit" class="vdt-btn vdt-btn-primary">Record</button>
+    </form>
+    <div id="vdt-status" class="vdt-status"></div>
+  </div>
+
+  <div class="vdt-section">
+    <h2 class="vdt-section-title">Stats</h2>
+    <div id="vdt-stats" class="vdt-stats-grid"></div>
+  </div>
+
+  <div class="vdt-section">
+    <h2 class="vdt-section-title">Downloads</h2>
+    <div id="vdt-list" class="vdt-list"><p>Loading…</p></div>
+  </div>
+</div>
+<script src="/web/js/video-downloader-tracker.js"></script>
+</body>
+</html>

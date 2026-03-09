@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Link Health Checker — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/link-health-checker.css" />
+</head>
+<body>
+  <div class="lhc-container">
+    <header class="lhc-header">
+      <h1 class="lhc-title">Link Health Checker</h1>
+      <p class="lhc-subtitle">Detect broken links and track link health on visited pages</p>
+    </header>
+
+    <section class="lhc-section">
+      <h2 class="lhc-section-title">Stats</h2>
+      <div id="lhc-stats" class="lhc-stats-grid"></div>
+    </section>
+
+    <section class="lhc-section">
+      <h2 class="lhc-section-title">Checks</h2>
+      <div id="lhc-list" class="lhc-list"></div>
+    </section>
+
+    <section class="lhc-section">
+      <h2 class="lhc-section-title">Status Codes</h2>
+      <div id="lhc-codes" class="lhc-badges"></div>
+    </section>
+  </div>
+  <script src="/web/js/link-health-checker.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookmark Organizer — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/bookmark-organizer.css">
+</head>
+<body>
+<div class="bmk-container">
+  <h1 class="bmk-title">Bookmark Organizer</h1>
+  <p class="bmk-subtitle">Organize bookmarks with folders and tags.</p>
+
+  <div class="bmk-section">
+    <h2 class="bmk-section-title">Save Bookmark</h2>
+    <form id="bmk-form" class="bmk-form">
+      <input id="bmk-url" class="bmk-input" type="url" placeholder="URL" required>
+      <input id="bmk-title" class="bmk-input" type="text" placeholder="Title">
+      <select id="bmk-folder" class="bmk-select" aria-label="Folder"></select>
+      <input id="bmk-tags" class="bmk-input" type="text" placeholder="Tags (comma-separated)">
+      <button type="submit" class="bmk-btn bmk-btn-primary">Save</button>
+    </form>
+    <div id="bmk-status" class="bmk-status"></div>
+  </div>
+
+  <div class="bmk-section">
+    <h2 class="bmk-section-title">Search</h2>
+    <div class="bmk-search-row">
+      <input id="bmk-search-q" class="bmk-input" type="text" placeholder="Search by ID or tag prefix">
+      <button id="bmk-search-btn" class="bmk-btn bmk-btn-primary">Search</button>
+    </div>
+  </div>
+
+  <div class="bmk-section">
+    <h2 class="bmk-section-title">Stats</h2>
+    <div id="bmk-stats" class="bmk-stats-grid"></div>
+  </div>
+
+  <div class="bmk-section">
+    <h2 class="bmk-section-title">Bookmarks</h2>
+    <div id="bmk-list" class="bmk-list"><p>Loading…</p></div>
+  </div>
+</div>
+<script src="/web/js/bookmark-organizer.js"></script>
+</body>
+</html>

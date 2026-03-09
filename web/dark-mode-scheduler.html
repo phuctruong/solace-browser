@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dark Mode Scheduler — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/dark-mode-scheduler.css" />
+</head>
+<body>
+  <div class="dms-container">
+    <h1 class="dms-title">Dark Mode Scheduler</h1>
+    <p class="dms-subtitle">Schedule dark/light mode switching based on time or system conditions.</p>
+
+    <section class="dms-section">
+      <h2 class="dms-section-title">Current Mode</h2>
+      <div class="dms-current-mode">
+        <span class="dms-mode-badge" id="dms-current-badge">—</span>
+        <span id="dms-current-source" class="dms-item-meta">source: —</span>
+      </div>
+      <div class="dms-override-form">
+        <label for="dms-until-hour">Override until hour (0-23):</label>
+        <input id="dms-until-hour" class="dms-input" type="number" min="0" max="23" placeholder="Hour" style="width:80px;" />
+        <button id="dms-override-dark" class="dms-btn dms-btn-dark">Force Dark</button>
+        <button id="dms-override-light" class="dms-btn dms-btn-light">Force Light</button>
+      </div>
+    </section>
+
+    <section class="dms-section">
+      <h2 class="dms-section-title">Add Schedule</h2>
+      <form id="dms-form" class="dms-form">
+        <select id="dms-trigger-type" class="dms-select" aria-label="Trigger type"></select>
+        <label for="dms-start-hour">Dark from:</label>
+        <input id="dms-start-hour" class="dms-input" type="number" min="0" max="23" placeholder="Start hour" style="width:90px;" />
+        <label for="dms-end-hour">to:</label>
+        <input id="dms-end-hour" class="dms-input" type="number" min="0" max="23" placeholder="End hour" style="width:90px;" />
+        <button type="submit" class="dms-btn dms-btn-primary">Add Schedule</button>
+      </form>
+      <div id="dms-status" class="dms-status" aria-live="polite"></div>
+    </section>
+
+    <section class="dms-section">
+      <h2 class="dms-section-title">Active Schedules</h2>
+      <div id="dms-schedules-list" class="dms-list">Loading…</div>
+    </section>
+  </div>
+  <script src="/web/js/dark-mode-scheduler.js"></script>
+</body>
+</html>

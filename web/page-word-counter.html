@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Word Counter — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/page-word-counter.css">
+</head>
+<body>
+<div class="pwc-container">
+  <h1 class="pwc-title">Page Word Counter</h1>
+  <p class="pwc-subtitle">Count words on pages and track writing goals.</p>
+
+  <div class="pwc-section">
+    <h2 class="pwc-section-title">Record Word Count</h2>
+    <form id="pwc-form" class="pwc-form">
+      <input id="pwc-url" class="pwc-input" type="url" placeholder="Page URL" required>
+      <select id="pwc-content-type" class="pwc-select" aria-label="Content Type"></select>
+      <input id="pwc-words" class="pwc-input" type="number" placeholder="Words" min="0" value="0">
+      <input id="pwc-chars" class="pwc-input" type="number" placeholder="Characters" min="0" value="0">
+      <input id="pwc-sentences" class="pwc-input" type="number" placeholder="Sentences" min="0" value="0">
+      <input id="pwc-paragraphs" class="pwc-input" type="number" placeholder="Paragraphs" min="0" value="0">
+      <button type="submit" class="pwc-btn pwc-btn-primary">Record</button>
+    </form>
+    <div id="pwc-status" class="pwc-status"></div>
+  </div>
+
+  <div class="pwc-section">
+    <h2 class="pwc-section-title">Stats</h2>
+    <div id="pwc-stats" class="pwc-stats-grid"></div>
+  </div>
+
+  <div class="pwc-section">
+    <h2 class="pwc-section-title">Counts</h2>
+    <div id="pwc-list" class="pwc-list"><p>Loading…</p></div>
+  </div>
+</div>
+<script src="/web/js/page-word-counter.js"></script>
+</body>
+</html>

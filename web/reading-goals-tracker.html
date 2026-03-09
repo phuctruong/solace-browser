@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reading Goals Tracker — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/reading-goals-tracker.css" />
+</head>
+<body>
+  <div class="rgt-container">
+    <h1 class="rgt-title">Reading Goals Tracker</h1>
+    <p class="rgt-subtitle">Set and track reading goals by time, pages, or articles.</p>
+
+    <section class="rgt-section">
+      <h2 class="rgt-section-title">Create Goal</h2>
+      <form id="rgt-form" class="rgt-form">
+        <select id="rgt-goal-type" class="rgt-select" aria-label="Goal type"></select>
+        <input id="rgt-target-value" class="rgt-input" type="number" min="0.01" step="0.01" placeholder="Target value" required />
+        <input id="rgt-deadline" class="rgt-input" type="date" placeholder="Deadline (YYYY-MM-DD)" />
+        <button type="submit" class="rgt-btn rgt-btn-primary">Create</button>
+      </form>
+      <div id="rgt-status" class="rgt-status" aria-live="polite"></div>
+    </section>
+
+    <section class="rgt-section">
+      <h2 class="rgt-section-title">Stats</h2>
+      <div class="rgt-stats">
+        <div class="rgt-stat-card">
+          <div class="rgt-stat-value" id="rgt-stat-total">—</div>
+          <div class="rgt-stat-label">Total Goals</div>
+        </div>
+        <div class="rgt-stat-card">
+          <div class="rgt-stat-value" id="rgt-stat-done">—</div>
+          <div class="rgt-stat-label">Completed</div>
+        </div>
+        <div class="rgt-stat-card">
+          <div class="rgt-stat-value" id="rgt-stat-rate">—</div>
+          <div class="rgt-stat-label">Completion Rate</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="rgt-section">
+      <h2 class="rgt-section-title">Active Goals</h2>
+      <div id="rgt-goals-list" class="rgt-list">Loading…</div>
+    </section>
+  </div>
+  <script src="/web/js/reading-goals-tracker.js"></script>
+</body>
+</html>

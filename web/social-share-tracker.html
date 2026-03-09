@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Share Tracker — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/social-share-tracker.css">
+</head>
+<body>
+<div class="sst-container">
+  <h1 class="sst-title">Social Share Tracker</h1>
+  <p class="sst-subtitle">Track what content you share on social platforms.</p>
+
+  <div class="sst-section">
+    <h2 class="sst-section-title">Record Share</h2>
+    <form id="sst-form" class="sst-form">
+      <input id="sst-url" class="sst-input" type="url" placeholder="Shared URL" required>
+      <input id="sst-title" class="sst-input" type="text" placeholder="Content Title">
+      <select id="sst-platform" class="sst-select" aria-label="Platform"></select>
+      <input id="sst-message" class="sst-input" type="text" placeholder="Message (optional)">
+      <button type="submit" class="sst-btn sst-btn-primary">Record</button>
+    </form>
+    <div id="sst-status" class="sst-status"></div>
+  </div>
+
+  <div class="sst-section">
+    <h2 class="sst-section-title">Stats</h2>
+    <div id="sst-stats" class="sst-stats-grid"></div>
+  </div>
+
+  <div class="sst-section">
+    <h2 class="sst-section-title">Shares</h2>
+    <div id="sst-list" class="sst-list"><p>Loading…</p></div>
+  </div>
+</div>
+<script src="/web/js/social-share-tracker.js"></script>
+</body>
+</html>

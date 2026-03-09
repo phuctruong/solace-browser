@@ -1668,6 +1668,171 @@ MAX_THEMES = 50
 _THEMES: list[dict] = []
 _THEME_LOCK = threading.Lock()
 
+# ---------------------------------------------------------------------------
+# Task 133 — Video Downloader Tracker
+# ---------------------------------------------------------------------------
+VIDEO_QUALITIES: list[str] = ["144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "2160p", "4320p"]
+VIDEO_FORMATS: list[str] = ["mp4", "webm", "mkv", "avi", "mov", "flv"]
+VIDEO_DL_STATUSES: list[str] = ["queued", "downloading", "completed", "failed", "paused", "cancelled"]
+MAX_VIDEO_DOWNLOADS: int = 10000
+_VIDEO_DOWNLOADS: list[dict] = []
+_VIDEO_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 134 — Page Word Counter
+# ---------------------------------------------------------------------------
+WORD_CONTENT_TYPES: list[str] = ["article", "blog", "news", "document", "social_post", "email", "code", "other"]
+MAX_WORD_COUNTS: int = 100000
+_WORD_COUNTS: list[dict] = []
+_WORD_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 135 — Highlight Extractor
+# ---------------------------------------------------------------------------
+HIGHLIGHT_COLORS: list[str] = ["yellow", "green", "blue", "pink", "orange", "purple", "red", "gray"]
+MAX_HIGHLIGHTS: int = 50000
+_HIGHLIGHTS: list[dict] = []
+_HIGHLIGHT_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 136 — Bookmark Organizer
+# ---------------------------------------------------------------------------
+BOOKMARK_FOLDERS: list[str] = ["work", "research", "reading", "media", "tools", "shopping", "reference", "personal"]
+MAX_BMK_ORG: int = 10000
+_BMK_ORG_BOOKMARKS: list[dict] = []
+_BMK_ORG_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 137 — Social Share Tracker
+# ---------------------------------------------------------------------------
+SOCIAL_PLATFORMS: list[str] = ["twitter", "linkedin", "facebook", "reddit", "hackernews", "mastodon", "bluesky", "telegram", "whatsapp", "discord"]
+MAX_SOCIAL_SHARES: int = 100000
+_SOCIAL_SHARES: list[dict] = []
+_SOCIAL_LOCK = threading.Lock()
+
+# Task 138 — Hover Dictionary
+# ---------------------------------------------------------------------------
+DICT_LANGUAGES = [
+    "en", "es", "fr", "de", "it", "pt", "ru", "zh", "ja", "ko",
+    "ar", "nl", "pl", "sv", "tr"
+]
+MAX_DICT_LOOKUPS = 100000
+_DICT_LOOKUPS: list[dict] = []
+_DICT_LOCK = threading.Lock()
+
+# Task 140 — Page Translator History
+# ---------------------------------------------------------------------------
+TRANSLATOR_LANGUAGES = [
+    "en", "es", "fr", "de", "it", "pt", "ru", "zh", "ja", "ko",
+    "ar", "hi", "tr", "pl", "nl", "sv", "da", "fi", "no", "vi"
+]
+MAX_TRANSLATOR_HISTORY = 100000
+_TRANSLATOR_HISTORY: list[dict] = []
+_TRANSLATOR_LOCK = threading.Lock()
+
+# Task 141 — Reading Goals Tracker
+# ---------------------------------------------------------------------------
+READING_GOAL_TYPES = ["daily_minutes", "weekly_articles", "monthly_books", "total_pages", "custom"]
+MAX_READING_GOALS = 1000
+_READING_GOALS: list[dict] = []
+_GOAL_LOCK = threading.Lock()
+
+# Task 142 — Dark Mode Scheduler
+# ---------------------------------------------------------------------------
+DARK_MODE_TRIGGERS = ["time_based", "sunrise_sunset", "battery_saver", "system_preference", "manual"]
+MAX_DM_SCHEDULES = 50
+_DM_SCHEDULES: list[dict] = []
+_DM_OVERRIDE: dict = {}
+_DM_LOCK = threading.Lock()
+
+# Task 143 — Form Autofill Tracker
+# ---------------------------------------------------------------------------
+AUTOFILL_FIELD_TYPES: list[str] = [
+    "text", "email", "phone", "name", "address", "city",
+    "zip", "country", "credit_card_type", "username", "search", "other"
+]
+MAX_AUTOFILL_ENTRIES: int = 50000
+_AUTOFILL_ENTRIES: list[dict] = []
+_AUTOFILL_ENTRIES_LOCK = threading.Lock()
+
+# Task 144 — Password Strength Checker (new /history API)
+# ---------------------------------------------------------------------------
+PASSWORD144_STRENGTH_LEVELS: list[str] = ["very_weak", "weak", "fair", "strong", "very_strong"]
+MAX_PWD144_HISTORY: int = 10000
+_PWD144_HISTORY: list[dict] = []
+_PWD144_LOCK = threading.Lock()
+
+# Task 145 — Content Copy Tracker
+# ---------------------------------------------------------------------------
+COPY_CONTENT_TYPES: list[str] = [
+    "text", "code", "url", "email", "phone", "address",
+    "quote", "data_table", "image_alt", "other"
+]
+MAX_COPY_EVENTS: int = 100000
+_COPY_EVENTS: list[dict] = []
+_COPY_LOCK = threading.Lock()
+
+# Task 146 — Focus Mode
+# ---------------------------------------------------------------------------
+FOCUS_SESSION_TYPES: list[str] = [
+    "deep_work", "reading", "writing", "coding", "research",
+    "planning", "review", "break", "custom"
+]
+MAX_FOCUS146_SESSIONS: int = 10000
+_FOCUS146_SESSIONS: list[dict] = []
+_FOCUS146_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 133 — Video Downloader Tracker
+# ---------------------------------------------------------------------------
+VIDEO_QUALITIES: list[str] = ["360p", "480p", "720p", "1080p", "1440p", "4K", "audio_only"]
+VIDEO_FORMATS: list[str] = ["mp4", "webm", "mkv", "avi", "mov", "flv", "m4a", "ogg"]
+VIDEO_STATUSES: list[str] = ["queued", "downloading", "paused", "completed", "failed", "cancelled"]
+MAX_VIDEO_DOWNLOADS: int = 10000
+_VIDEO_DOWNLOADS: list[dict] = []
+_VIDEO_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 134 — Page Word Counter
+# ---------------------------------------------------------------------------
+WORD_CONTENT_TYPES: list[str] = [
+    "article", "blog_post", "documentation", "tutorial", "news",
+    "social_media", "product_page", "landing_page"
+]
+MAX_WORD_COUNTS: int = 100000
+_WORD_COUNTS: list[dict] = []
+_WORD_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 135 — Highlight Extractor
+# ---------------------------------------------------------------------------
+HIGHLIGHT_COLORS: list[str] = ["yellow", "green", "blue", "pink", "orange", "red", "purple", "teal"]
+MAX_HIGHLIGHTS: int = 100000
+_HIGHLIGHTS: list[dict] = []
+_HIGHLIGHT_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 136 — Bookmark Organizer
+# ---------------------------------------------------------------------------
+BMK_ORG_FOLDERS: list[str] = [
+    "work", "personal", "research", "shopping", "entertainment",
+    "news", "social", "tools", "education", "archive"
+]
+MAX_BMK_ORG_BOOKMARKS: int = 50000
+_BMK_ORG_BOOKMARKS: list[dict] = []
+_BMK_ORG_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 137 — Social Share Tracker
+# ---------------------------------------------------------------------------
+SOCIAL_PLATFORMS: list[str] = [
+    "twitter", "linkedin", "facebook", "reddit", "instagram",
+    "mastodon", "bluesky", "telegram", "whatsapp", "email"
+]
+MAX_SOCIAL_SHARES: int = 100000
+_SOCIAL_SHARES: list[dict] = []
+_SOCIAL_LOCK = threading.Lock()
+
 # Task 070 — Performance Profiler
 # ---------------------------------------------------------------------------
 PROFILER_METRIC_TYPES: list[str] = [
@@ -1677,6 +1842,46 @@ PROFILER_UNITS: list[str] = ["ms", "bytes", "percent", "count"]
 _PROFILER_SESSIONS: list[dict] = []
 _PROFILER_METRICS: dict[str, list[dict]] = {}  # session_id → list[metric]
 _PROFILER_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 147 — Link Health Checker
+# ---------------------------------------------------------------------------
+LINK_STATUS_CODES: list[int] = [200, 301, 302, 400, 401, 403, 404, 500, 502, 503, 0]
+MAX_LINK_HEALTH_CHECKS: int = 500000
+_LINK_HEALTH_CHECKS: list[dict] = []
+_LINK_HEALTH_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 148 — Cookie Manager
+# ---------------------------------------------------------------------------
+COOKIE_MGR_CATEGORIES: list[str] = [
+    "essential", "functional", "analytics", "advertising",
+    "social", "performance", "unknown"
+]
+COOKIE_MGR_PRIVACY_SCORES: dict[str, int] = {
+    "essential": 10, "functional": 7, "analytics": 5, "performance": 6,
+    "social": 4, "advertising": 2, "unknown": 3,
+}
+MAX_COOKIE_MGR_RECORDS: int = 100000
+_COOKIE_MGR_RECORDS: list[dict] = []
+_COOKIE_MGR_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 149 — Scroll Tracker
+# ---------------------------------------------------------------------------
+SCROLL_DEPTH_LEVELS: list[str] = ["0-25%", "25-50%", "50-75%", "75-100%", "100%"]
+MAX_SCROLL_TRACKER_SESSIONS: int = 500000
+_SCROLL_TRACKER_SESSIONS: list[dict] = []
+_SCROLL_TRACKER_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 150 — Media Playback Tracker
+# ---------------------------------------------------------------------------
+MEDIA_PLAYBACK_TYPES: list[str] = ["video", "audio", "podcast", "livestream", "short_video", "animation", "other"]
+PLAYBACK_EVENTS: list[str] = ["play", "pause", "seek", "complete", "abandon", "skip"]
+MAX_MEDIA_PLAYBACK_SESSIONS: int = 200000
+_MEDIA_PLAYBACK_SESSIONS: list[dict] = []
+_MEDIA_PLAYBACK_LOCK = threading.Lock()
 
 
 def _triage_single_email(email: dict[str, Any], config: dict[str, bool]) -> dict[str, Any]:
@@ -6408,6 +6613,276 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/browser-theme-manager.js", "application/javascript")
         elif path == "/web/css/browser-theme-manager.css":
             self._handle_static_file("web/css/browser-theme-manager.css", "text/css")
+        # --- Task 133: Video Downloader Tracker ---
+        elif path == "/api/v1/video-tracker/qualities":
+            self._handle_vdt_qualities()
+        elif path == "/api/v1/video-tracker/downloads":
+            self._handle_vdt_list()
+        elif path == "/api/v1/video-tracker/stats":
+            self._handle_vdt_stats()
+        elif path == "/web/video-downloader-tracker.html":
+            self._handle_static_file("web/video-downloader-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/video-downloader-tracker.js":
+            self._handle_static_file("web/js/video-downloader-tracker.js", "application/javascript")
+        elif path == "/web/css/video-downloader-tracker.css":
+            self._handle_static_file("web/css/video-downloader-tracker.css", "text/css")
+        # --- Task 134: Page Word Counter ---
+        elif path == "/api/v1/word-counter/content-types":
+            self._handle_wct_content_types()
+        elif path == "/api/v1/word-counter/counts":
+            self._handle_wct_list()
+        elif path == "/api/v1/word-counter/stats":
+            self._handle_wct_stats()
+        elif path == "/web/page-word-counter.html":
+            self._handle_static_file("web/page-word-counter.html", "text/html; charset=utf-8")
+        elif path == "/web/js/page-word-counter.js":
+            self._handle_static_file("web/js/page-word-counter.js", "application/javascript")
+        elif path == "/web/css/page-word-counter.css":
+            self._handle_static_file("web/css/page-word-counter.css", "text/css")
+        # --- Task 135: Highlight Extractor ---
+        elif path == "/api/v1/highlights/colors":
+            self._handle_hlt_colors()
+        elif path == "/api/v1/highlights/highlights/by-page":
+            self._handle_hlt_by_page()
+        elif path == "/api/v1/highlights/highlights":
+            self._handle_hlt_list()
+        elif path == "/api/v1/highlights/stats":
+            self._handle_hlt_stats()
+        elif path == "/web/highlight-extractor.html":
+            self._handle_static_file("web/highlight-extractor.html", "text/html; charset=utf-8")
+        elif path == "/web/js/highlight-extractor.js":
+            self._handle_static_file("web/js/highlight-extractor.js", "application/javascript")
+        elif path == "/web/css/highlight-extractor.css":
+            self._handle_static_file("web/css/highlight-extractor.css", "text/css")
+        # --- Task 136: Bookmark Organizer ---
+        elif path == "/api/v1/bookmarks/folders":
+            self._handle_bmkorg_folders()
+        elif path == "/api/v1/bookmarks/bookmarks/search":
+            self._handle_bmkorg_search()
+        elif path == "/api/v1/bookmarks/bookmarks":
+            self._handle_bmkorg_list()
+        elif path == "/api/v1/bookmarks/stats":
+            self._handle_bmkorg_stats()
+        elif path == "/web/bookmark-organizer.html":
+            self._handle_static_file("web/bookmark-organizer.html", "text/html; charset=utf-8")
+        elif path == "/web/js/bookmark-organizer.js":
+            self._handle_static_file("web/js/bookmark-organizer.js", "application/javascript")
+        elif path == "/web/css/bookmark-organizer.css":
+            self._handle_static_file("web/css/bookmark-organizer.css", "text/css")
+        # --- Task 137: Social Share Tracker ---
+        elif path == "/api/v1/social-share/platforms":
+            self._handle_sst_platforms()
+        elif path == "/api/v1/social-share/shares":
+            self._handle_sst_list()
+        elif path == "/api/v1/social-share/stats":
+            self._handle_sst_stats()
+        elif path == "/web/social-share-tracker.html":
+            self._handle_static_file("web/social-share-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/social-share-tracker.js":
+            self._handle_static_file("web/js/social-share-tracker.js", "application/javascript")
+        elif path == "/web/css/social-share-tracker.css":
+            self._handle_static_file("web/css/social-share-tracker.css", "text/css")
+        # --- Task 138: Hover Dictionary ---
+        elif path == "/api/v1/hover-dict/lookups":
+            self._handle_dict_lookups_list()
+        elif path == "/api/v1/hover-dict/stats":
+            self._handle_dict_stats()
+        elif path == "/api/v1/hover-dict/languages":
+            self._handle_dict_languages()
+        elif path == "/web/hover-dictionary.html":
+            self._handle_static_file("web/hover-dictionary.html", "text/html; charset=utf-8")
+        elif path == "/web/js/hover-dictionary.js":
+            self._handle_static_file("web/js/hover-dictionary.js", "application/javascript")
+        elif path == "/web/css/hover-dictionary.css":
+            self._handle_static_file("web/css/hover-dictionary.css", "text/css")
+        # --- Task 140: Page Translator History ---
+        elif path == "/api/v1/page-translator/translations":
+            self._handle_translator_list()
+        elif path == "/api/v1/page-translator/stats":
+            self._handle_translator_stats()
+        elif path == "/api/v1/page-translator/languages":
+            self._handle_translator_languages()
+        elif path == "/web/page-translator-history.html":
+            self._handle_static_file("web/page-translator-history.html", "text/html; charset=utf-8")
+        elif path == "/web/js/page-translator-history.js":
+            self._handle_static_file("web/js/page-translator-history.js", "application/javascript")
+        elif path == "/web/css/page-translator-history.css":
+            self._handle_static_file("web/css/page-translator-history.css", "text/css")
+        # --- Task 141: Reading Goals Tracker ---
+        elif path == "/api/v1/reading-goals/goals":
+            self._handle_goals_list()
+        elif path == "/api/v1/reading-goals/stats":
+            self._handle_goals_stats()
+        elif path == "/api/v1/reading-goals/goal-types":
+            self._handle_goal_types()
+        elif path == "/web/reading-goals-tracker.html":
+            self._handle_static_file("web/reading-goals-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/reading-goals-tracker.js":
+            self._handle_static_file("web/js/reading-goals-tracker.js", "application/javascript")
+        elif path == "/web/css/reading-goals-tracker.css":
+            self._handle_static_file("web/css/reading-goals-tracker.css", "text/css")
+        # --- Task 142: Dark Mode Scheduler ---
+        elif path == "/api/v1/dark-mode/schedules":
+            self._handle_dm_schedules_list()
+        elif path == "/api/v1/dark-mode/current":
+            self._handle_dm_current()
+        elif path == "/api/v1/dark-mode/trigger-types":
+            self._handle_dm_trigger_types()
+        elif path == "/web/dark-mode-scheduler.html":
+            self._handle_static_file("web/dark-mode-scheduler.html", "text/html; charset=utf-8")
+        elif path == "/web/js/dark-mode-scheduler.js":
+            self._handle_static_file("web/js/dark-mode-scheduler.js", "application/javascript")
+        elif path == "/web/css/dark-mode-scheduler.css":
+            self._handle_static_file("web/css/dark-mode-scheduler.css", "text/css")
+        # --- Task 143: Form Autofill Tracker ---
+        elif path == "/api/v1/autofill/entries":
+            self._handle_autofill_entries_list()
+        elif path == "/api/v1/autofill/stats":
+            self._handle_autofill_entries_stats()
+        elif path == "/api/v1/autofill/field-types":
+            self._handle_autofill_field_types()
+        elif path == "/web/form-autofill-tracker.html":
+            self._handle_static_file("web/form-autofill-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/form-autofill-tracker.js":
+            self._handle_static_file("web/js/form-autofill-tracker.js", "application/javascript")
+        elif path == "/web/css/form-autofill-tracker.css":
+            self._handle_static_file("web/css/form-autofill-tracker.css", "text/css")
+        # --- Task 144: Password Strength Checker ---
+        elif path == "/api/v1/password-checker/history":
+            self._handle_pwd144_history_list()
+        elif path == "/api/v1/password-checker/stats144":
+            self._handle_pwd144_stats()
+        elif path == "/api/v1/password-checker/strength-levels144":
+            self._handle_pwd144_strength_levels()
+        elif path == "/web/password-strength-checker.html":
+            self._handle_static_file("web/password-strength-checker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/password-strength-checker.js":
+            self._handle_static_file("web/js/password-strength-checker.js", "application/javascript")
+        elif path == "/web/css/password-strength-checker.css":
+            self._handle_static_file("web/css/password-strength-checker.css", "text/css")
+        # --- Task 145: Content Copy Tracker ---
+        elif path == "/api/v1/copy-tracker/copies":
+            self._handle_copy_events_list()
+        elif path == "/api/v1/copy-tracker/stats":
+            self._handle_copy_events_stats()
+        elif path == "/api/v1/copy-tracker/content-types":
+            self._handle_copy_content_types()
+        elif path == "/web/content-copy-tracker.html":
+            self._handle_static_file("web/content-copy-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/content-copy-tracker.js":
+            self._handle_static_file("web/js/content-copy-tracker.js", "application/javascript")
+        elif path == "/web/css/content-copy-tracker.css":
+            self._handle_static_file("web/css/content-copy-tracker.css", "text/css")
+        # --- Task 146: Focus Mode ---
+        elif path == "/api/v1/focus/sessions":
+            self._handle_focus146_sessions_list()
+        elif path == "/api/v1/focus/stats":
+            self._handle_focus146_stats()
+        elif path == "/api/v1/focus/session-types":
+            self._handle_focus146_session_types()
+        elif path == "/web/focus-mode.html":
+            self._handle_static_file("web/focus-mode.html", "text/html; charset=utf-8")
+        elif path == "/web/js/focus-mode.js":
+            self._handle_static_file("web/js/focus-mode.js", "application/javascript")
+        elif path == "/web/css/focus-mode.css":
+            self._handle_static_file("web/css/focus-mode.css", "text/css")
+        # --- Task 133: Video Downloader Tracker ---
+        elif path == "/api/v1/video-tracker/downloads":
+            self._handle_vdt_list()
+        elif path == "/api/v1/video-tracker/stats":
+            self._handle_vdt_stats()
+        elif path == "/web/video-downloader-tracker.html":
+            self._handle_static_file("web/video-downloader-tracker.html", "text/html; charset=utf-8")
+        # --- Task 134: Page Word Counter ---
+        elif path == "/api/v1/word-counter/counts":
+            self._handle_wct_list()
+        elif path == "/api/v1/word-counter/stats":
+            self._handle_wct_stats()
+        elif path == "/api/v1/word-counter/content-types":
+            self._handle_wct_content_types()
+        elif path == "/web/page-word-counter.html":
+            self._handle_static_file("web/page-word-counter.html", "text/html; charset=utf-8")
+        # --- Task 135: Highlight Extractor ---
+        elif path == "/api/v1/highlights/highlights":
+            self._handle_hlt_list()
+        elif path == "/api/v1/highlights/highlights/by-page":
+            self._handle_hlt_by_page()
+        elif path == "/api/v1/highlights/stats":
+            self._handle_hlt_stats()
+        elif path == "/api/v1/highlights/colors":
+            self._handle_hlt_colors()
+        elif path == "/web/highlight-extractor.html":
+            self._handle_static_file("web/highlight-extractor.html", "text/html; charset=utf-8")
+        # --- Task 136: Bookmark Organizer ---
+        elif path == "/api/v1/bookmarks/bookmarks":
+            self._handle_bmkorg_list()
+        elif path == "/api/v1/bookmarks/bookmarks/search":
+            self._handle_bmkorg_search()
+        elif path == "/api/v1/bookmarks/stats":
+            self._handle_bmkorg_stats()
+        elif path == "/web/bookmark-organizer.html":
+            self._handle_static_file("web/bookmark-organizer.html", "text/html; charset=utf-8")
+        # --- Task 137: Social Share Tracker ---
+        elif path == "/api/v1/social-share/shares":
+            self._handle_sst_list()
+        elif path == "/api/v1/social-share/stats":
+            self._handle_sst_stats()
+        elif path == "/api/v1/social-share/platforms":
+            self._handle_sst_platforms()
+        elif path == "/web/social-share-tracker.html":
+            self._handle_static_file("web/social-share-tracker.html", "text/html; charset=utf-8")
+        # --- Task 147: Link Health Checker ---
+        elif path == "/api/v1/link-health/status-codes":
+            self._handle_lhc_status_codes()
+        elif path == "/api/v1/link-health/checks":
+            self._handle_lhc_list()
+        elif path == "/api/v1/link-health/stats":
+            self._handle_lhc_stats()
+        elif path == "/web/link-health-checker.html":
+            self._handle_static_file("web/link-health-checker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/link-health-checker.js":
+            self._handle_static_file("web/js/link-health-checker.js", "application/javascript")
+        elif path == "/web/css/link-health-checker.css":
+            self._handle_static_file("web/css/link-health-checker.css", "text/css")
+        # --- Task 148: Cookie Manager ---
+        elif path == "/api/v1/cookie-manager/categories":
+            self._handle_ckm_categories()
+        elif path == "/api/v1/cookie-manager/cookies":
+            self._handle_ckm_list()
+        elif path == "/api/v1/cookie-manager/stats":
+            self._handle_ckm_stats()
+        elif path == "/web/cookie-manager.html":
+            self._handle_static_file("web/cookie-manager.html", "text/html; charset=utf-8")
+        elif path == "/web/js/cookie-manager.js":
+            self._handle_static_file("web/js/cookie-manager.js", "application/javascript")
+        elif path == "/web/css/cookie-manager.css":
+            self._handle_static_file("web/css/cookie-manager.css", "text/css")
+        # --- Task 149: Scroll Tracker ---
+        elif path == "/api/v1/scroll-tracker/depth-levels":
+            self._handle_sct_depth_levels()
+        elif path == "/api/v1/scroll-tracker/sessions":
+            self._handle_sct_list()
+        elif path == "/api/v1/scroll-tracker/stats":
+            self._handle_sct_stats()
+        elif path == "/web/scroll-tracker.html":
+            self._handle_static_file("web/scroll-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/scroll-tracker.js":
+            self._handle_static_file("web/js/scroll-tracker.js", "application/javascript")
+        elif path == "/web/css/scroll-tracker.css":
+            self._handle_static_file("web/css/scroll-tracker.css", "text/css")
+        # --- Task 150: Media Playback Tracker ---
+        elif path == "/api/v1/media-tracker/media-types":
+            self._handle_mpt_media_types()
+        elif path == "/api/v1/media-tracker/sessions":
+            self._handle_mpt_list()
+        elif path == "/api/v1/media-tracker/stats":
+            self._handle_mpt_stats()
+        elif path == "/web/media-playback-tracker.html":
+            self._handle_static_file("web/media-playback-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/media-playback-tracker.js":
+            self._handle_static_file("web/js/media-playback-tracker.js", "application/javascript")
+        elif path == "/web/css/media-playback-tracker.css":
+            self._handle_static_file("web/css/media-playback-tracker.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -7116,6 +7591,65 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/theme-manager/themes/[^/]+/activate$", path):
             theme_id = path.split("/")[-2]
             self._handle_theme_activate(theme_id)
+        # --- Task 138: Hover Dictionary ---
+        elif path == "/api/v1/hover-dict/lookups":
+            self._handle_dict_lookup_create()
+        # --- Task 140: Page Translator History ---
+        elif path == "/api/v1/page-translator/translations":
+            self._handle_translator_create()
+        # --- Task 141: Reading Goals Tracker ---
+        elif path == "/api/v1/reading-goals/goals":
+            self._handle_goal_create()
+        elif re.match(r"^/api/v1/reading-goals/goals/[^/]+/progress$", path):
+            goal_id = path.split("/")[-2]
+            self._handle_goal_progress(goal_id)
+        # --- Task 142: Dark Mode Scheduler ---
+        elif path == "/api/v1/dark-mode/schedules":
+            self._handle_dm_schedule_create()
+        elif path == "/api/v1/dark-mode/override":
+            self._handle_dm_override()
+        # --- Task 143: Form Autofill Tracker ---
+        elif path == "/api/v1/autofill/entries":
+            self._handle_autofill_entry_create()
+        # --- Task 144: Password Strength Checker ---
+        elif path == "/api/v1/password-checker/analyze":
+            self._handle_pwd144_analyze()
+        # --- Task 145: Content Copy Tracker ---
+        elif path == "/api/v1/copy-tracker/copies":
+            self._handle_copy_event_create()
+        # --- Task 146: Focus Mode ---
+        elif path == "/api/v1/focus/sessions":
+            self._handle_focus146_session_create()
+        elif re.match(r"^/api/v1/focus/sessions/[^/]+/end$", path):
+            session_id = path.split("/")[-2]
+            self._handle_focus146_session_end(session_id)
+        # --- Task 133: Video Downloader Tracker ---
+        elif path == "/api/v1/video-tracker/downloads":
+            self._handle_vdt_create()
+        # --- Task 134: Page Word Counter ---
+        elif path == "/api/v1/word-counter/counts":
+            self._handle_wct_create()
+        # --- Task 135: Highlight Extractor ---
+        elif path == "/api/v1/highlights/highlights":
+            self._handle_hlt_create()
+        # --- Task 136: Bookmark Organizer ---
+        elif path == "/api/v1/bookmarks/bookmarks":
+            self._handle_bmkorg_create()
+        # --- Task 137: Social Share Tracker ---
+        elif path == "/api/v1/social-share/shares":
+            self._handle_sst_create()
+        # --- Task 147: Link Health Checker ---
+        elif path == "/api/v1/link-health/checks":
+            self._handle_lhc_create()
+        # --- Task 148: Cookie Manager ---
+        elif path == "/api/v1/cookie-manager/cookies":
+            self._handle_ckm_create()
+        # --- Task 149: Scroll Tracker ---
+        elif path == "/api/v1/scroll-tracker/sessions":
+            self._handle_sct_create()
+        # --- Task 150: Media Playback Tracker ---
+        elif path == "/api/v1/media-tracker/sessions":
+            self._handle_mpt_create()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -7537,6 +8071,74 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/theme-manager/themes/[^/]+$", path):
             theme_id = path.split("/")[-1]
             self._handle_theme_delete(theme_id)
+        # --- Task 138: Hover Dictionary ---
+        elif re.match(r"^/api/v1/hover-dict/lookups/[^/]+$", path):
+            lookup_id = path.split("/")[-1]
+            self._handle_dict_lookup_delete(lookup_id)
+        # --- Task 140: Page Translator History ---
+        elif re.match(r"^/api/v1/page-translator/translations/[^/]+$", path):
+            translation_id = path.split("/")[-1]
+            self._handle_translator_delete(translation_id)
+        # --- Task 141: Reading Goals Tracker ---
+        elif re.match(r"^/api/v1/reading-goals/goals/[^/]+$", path):
+            goal_id = path.split("/")[-1]
+            self._handle_goal_delete(goal_id)
+        # --- Task 142: Dark Mode Scheduler ---
+        elif re.match(r"^/api/v1/dark-mode/schedules/[^/]+$", path):
+            schedule_id = path.split("/")[-1]
+            self._handle_dm_schedule_delete(schedule_id)
+        # --- Task 143: Form Autofill Tracker ---
+        elif re.match(r"^/api/v1/autofill/entries/[^/]+$", path):
+            entry_id = path.split("/")[-1]
+            self._handle_autofill_entry_delete(entry_id)
+        # --- Task 144: Password Strength Checker ---
+        elif re.match(r"^/api/v1/password-checker/history/[^/]+$", path):
+            check_id = path.split("/")[-1]
+            self._handle_pwd144_history_delete(check_id)
+        # --- Task 145: Content Copy Tracker ---
+        elif re.match(r"^/api/v1/copy-tracker/copies/[^/]+$", path):
+            copy_id = path.split("/")[-1]
+            self._handle_copy_event_delete(copy_id)
+        # --- Task 146: Focus Mode ---
+        elif re.match(r"^/api/v1/focus/sessions/[^/]+$", path):
+            session_id = path.split("/")[-1]
+            self._handle_focus146_session_delete(session_id)
+        # --- Task 133: Video Downloader Tracker ---
+        elif re.match(r"^/api/v1/video-tracker/downloads/[^/]+$", path):
+            dl_id = path.split("/")[-1]
+            self._handle_vdt_delete(dl_id)
+        # --- Task 134: Page Word Counter ---
+        elif re.match(r"^/api/v1/word-counter/counts/[^/]+$", path):
+            count_id = path.split("/")[-1]
+            self._handle_wct_delete(count_id)
+        # --- Task 135: Highlight Extractor ---
+        elif re.match(r"^/api/v1/highlights/highlights/[^/]+$", path):
+            hl_id = path.split("/")[-1]
+            self._handle_hlt_delete(hl_id)
+        # --- Task 136: Bookmark Organizer ---
+        elif re.match(r"^/api/v1/bookmarks/bookmarks/[^/]+$", path):
+            bm_id = path.split("/")[-1]
+            self._handle_bmkorg_delete(bm_id)
+        # --- Task 137: Social Share Tracker ---
+        elif re.match(r"^/api/v1/social-share/shares/[^/]+$", path):
+            share_id = path.split("/")[-1]
+            self._handle_sst_delete(share_id)
+        # --- Task 147: Link Health Checker ---
+        elif re.match(r"^/api/v1/link-health/checks/[^/]+$", path):
+            check_id = path.split("/")[-1]
+            self._handle_lhc_delete(check_id)
+        # --- Task 148: Cookie Manager ---
+        elif re.match(r"^/api/v1/cookie-manager/cookies/[^/]+$", path):
+            cookie_id = path.split("/")[-1]
+            self._handle_ckm_delete(cookie_id)
+        # --- Task 149: Scroll Tracker ---
+        elif re.match(r"^/api/v1/scroll-tracker/sessions/[^/]+$", path):
+            session_id = path.split("/")[-1]
+            self._handle_sct_delete(session_id)
+        # --- Task 150: Media Playback Tracker ---
+        elif re.match(r"^/api/v1/media-tracker/sessions/[^/]+$", path):
+            session_id = path.split("/")[-1]
+            self._handle_mpt_delete(session_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -25131,6 +25733,450 @@ function choose(mode) {
         """GET /api/v1/theme-manager/theme-types — list theme types (public)."""
         self._send_json({"theme_types": BROWSER_THEME_TYPES, "accent_colors": THEME_ACCENT_COLORS})
 
+
+    # ---------------------------------------------------------------------------
+    # Task 138 — Hover Dictionary handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_dict_lookup_create(self) -> None:
+        """POST /api/v1/hover-dict/lookups — record lookup (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        source_language = body.get("source_language", "")
+        if source_language not in DICT_LANGUAGES:
+            self._send_json({"error": f"source_language must be one of {DICT_LANGUAGES}"}, 400)
+            return
+        target_language = body.get("target_language", "")
+        if target_language not in DICT_LANGUAGES:
+            self._send_json({"error": f"target_language must be one of {DICT_LANGUAGES}"}, 400)
+            return
+        if source_language == target_language:
+            self._send_json({"error": "source_language and target_language must differ"}, 400)
+            return
+        word = body.get("word", "")
+        word_hash = hashlib.sha256(word.encode()).hexdigest() if word else body.get("word_hash", "")
+        page_url = body.get("page_url", "")
+        page_hash = hashlib.sha256(page_url.encode()).hexdigest() if page_url else body.get("page_hash", "")
+        definition = body.get("definition", "")
+        definition_hash = hashlib.sha256(definition.encode()).hexdigest() if definition else body.get("definition_hash", "")
+        with _DICT_LOCK:
+            if len(_DICT_LOOKUPS) >= MAX_DICT_LOOKUPS:
+                _DICT_LOOKUPS.pop(0)
+            lookup_id = "dkl_" + str(uuid.uuid4())
+            record_dkl: dict[str, Any] = {
+                "lookup_id": lookup_id,
+                "word_hash": word_hash,
+                "page_hash": page_hash,
+                "source_language": source_language,
+                "target_language": target_language,
+                "definition_hash": definition_hash,
+                "looked_up_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _DICT_LOOKUPS.append(record_dkl)
+        self._send_json({"status": "created", "lookup": record_dkl}, 201)
+
+    def _handle_dict_lookups_list(self) -> None:
+        """GET /api/v1/hover-dict/lookups — list lookups (auth required)."""
+        if not self._check_auth():
+            return
+        with _DICT_LOCK:
+            lookups = [dict(lk) for lk in _DICT_LOOKUPS]
+        self._send_json({"lookups": lookups, "total": len(lookups)})
+
+    def _handle_dict_lookup_delete(self, lookup_id: str) -> None:
+        """DELETE /api/v1/hover-dict/lookups/{id} — delete lookup (auth required)."""
+        if not self._check_auth():
+            return
+        with _DICT_LOCK:
+            idx = next((i for i, lk in enumerate(_DICT_LOOKUPS) if lk["lookup_id"] == lookup_id), None)
+            if idx is None:
+                self._send_json({"error": "lookup not found"}, 404)
+                return
+            _DICT_LOOKUPS.pop(idx)
+        self._send_json({"status": "deleted", "lookup_id": lookup_id})
+
+    def _handle_dict_stats(self) -> None:
+        """GET /api/v1/hover-dict/stats — lookup stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _DICT_LOCK:
+            total = len(_DICT_LOOKUPS)
+            unique_words: set[str] = set()
+            by_source: dict[str, int] = {}
+            word_counts: dict[str, int] = {}
+            for lk in _DICT_LOOKUPS:
+                unique_words.add(lk["word_hash"])
+                sl = lk["source_language"]
+                by_source[sl] = by_source.get(sl, 0) + 1
+                wh = lk["word_hash"]
+                word_counts[wh] = word_counts.get(wh, 0) + 1
+        top_word_hash: str | None = max(word_counts, key=lambda k: word_counts[k]) if word_counts else None
+        self._send_json({
+            "total_lookups": total,
+            "unique_words": len(unique_words),
+            "by_source_language": by_source,
+            "top_word_hash": top_word_hash,
+        })
+
+    def _handle_dict_languages(self) -> None:
+        """GET /api/v1/hover-dict/languages — list supported languages (public)."""
+        self._send_json({"languages": DICT_LANGUAGES, "total": len(DICT_LANGUAGES)})
+
+    # ---------------------------------------------------------------------------
+    # Task 140 — Page Translator History handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_translator_create(self) -> None:
+        """POST /api/v1/page-translator/translations — record translation (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        source_lang = body.get("source_lang", "")
+        if source_lang not in TRANSLATOR_LANGUAGES:
+            self._send_json({"error": f"source_lang must be one of {TRANSLATOR_LANGUAGES}"}, 400)
+            return
+        target_lang = body.get("target_lang", "")
+        if target_lang not in TRANSLATOR_LANGUAGES:
+            self._send_json({"error": f"target_lang must be one of {TRANSLATOR_LANGUAGES}"}, 400)
+            return
+        if source_lang == target_lang:
+            self._send_json({"error": "source_lang and target_lang must differ"}, 400)
+            return
+        word_count = body.get("word_count", 0)
+        try:
+            word_count = int(word_count)
+        except (TypeError, ValueError):
+            self._send_json({"error": "word_count must be a non-negative integer"}, 400)
+            return
+        if word_count < 0:
+            self._send_json({"error": "word_count must be >= 0"}, 400)
+            return
+        quality_score_raw = body.get("quality_score")
+        quality_score: str | None = None
+        if quality_score_raw is not None:
+            try:
+                qs = Decimal(str(quality_score_raw))
+                if qs < Decimal("0") or qs > Decimal("1"):
+                    self._send_json({"error": "quality_score must be 0-1"}, 400)
+                    return
+                quality_score = str(qs)
+            except InvalidOperation:
+                self._send_json({"error": "quality_score must be a valid decimal 0-1"}, 400)
+                return
+        page_url = body.get("url", "")
+        url_hash = hashlib.sha256(page_url.encode()).hexdigest() if page_url else body.get("url_hash", "")
+        with _TRANSLATOR_LOCK:
+            if len(_TRANSLATOR_HISTORY) >= MAX_TRANSLATOR_HISTORY:
+                _TRANSLATOR_HISTORY.pop(0)
+            translation_id = "ptr_" + str(uuid.uuid4())
+            record_trans: dict[str, Any] = {
+                "translation_id": translation_id,
+                "url_hash": url_hash,
+                "source_lang": source_lang,
+                "target_lang": target_lang,
+                "word_count": word_count,
+                "quality_score": quality_score,
+                "translated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _TRANSLATOR_HISTORY.append(record_trans)
+        self._send_json({"status": "created", "translation": record_trans}, 201)
+
+    def _handle_translator_list(self) -> None:
+        """GET /api/v1/page-translator/translations — list translations (auth required)."""
+        if not self._check_auth():
+            return
+        with _TRANSLATOR_LOCK:
+            translations = [dict(t) for t in _TRANSLATOR_HISTORY]
+        self._send_json({"translations": translations, "total": len(translations)})
+
+    def _handle_translator_delete(self, translation_id: str) -> None:
+        """DELETE /api/v1/page-translator/translations/{id} — delete translation (auth required)."""
+        if not self._check_auth():
+            return
+        with _TRANSLATOR_LOCK:
+            idx = next((i for i, t in enumerate(_TRANSLATOR_HISTORY) if t["translation_id"] == translation_id), None)
+            if idx is None:
+                self._send_json({"error": "translation not found"}, 404)
+                return
+            _TRANSLATOR_HISTORY.pop(idx)
+        self._send_json({"status": "deleted", "translation_id": translation_id})
+
+    def _handle_translator_stats(self) -> None:
+        """GET /api/v1/page-translator/stats — translation stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _TRANSLATOR_LOCK:
+            total = len(_TRANSLATOR_HISTORY)
+            total_words = sum(t["word_count"] for t in _TRANSLATOR_HISTORY)
+            by_pair: dict[str, int] = {}
+            by_target: dict[str, int] = {}
+            for t in _TRANSLATOR_HISTORY:
+                pair = t["source_lang"] + "\u2192" + t["target_lang"]
+                by_pair[pair] = by_pair.get(pair, 0) + 1
+                tl = t["target_lang"]
+                by_target[tl] = by_target.get(tl, 0) + 1
+        most_translated = max(by_target, key=lambda k: by_target[k]) if by_target else None
+        self._send_json({
+            "total_translations": total,
+            "total_words": total_words,
+            "by_language_pair": by_pair,
+            "most_translated_language": most_translated,
+        })
+
+    def _handle_translator_languages(self) -> None:
+        """GET /api/v1/page-translator/languages — list supported languages (public)."""
+        self._send_json({"languages": TRANSLATOR_LANGUAGES, "total": len(TRANSLATOR_LANGUAGES)})
+
+    # ---------------------------------------------------------------------------
+    # Task 141 — Reading Goals Tracker handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_goal_create(self) -> None:
+        """POST /api/v1/reading-goals/goals — create goal (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        goal_type = body.get("goal_type", "")
+        if goal_type not in READING_GOAL_TYPES:
+            self._send_json({"error": f"goal_type must be one of {READING_GOAL_TYPES}"}, 400)
+            return
+        try:
+            target_value = Decimal(str(body.get("target_value", "")))
+            if target_value <= Decimal("0"):
+                self._send_json({"error": "target_value must be > 0"}, 400)
+                return
+        except InvalidOperation:
+            self._send_json({"error": "target_value must be a valid decimal > 0"}, 400)
+            return
+        deadline = body.get("deadline", "")
+        if deadline:
+            try:
+                datetime.strptime(deadline, "%Y-%m-%d")
+            except ValueError:
+                self._send_json({"error": "deadline must be YYYY-MM-DD"}, 400)
+                return
+        with _GOAL_LOCK:
+            if len(_READING_GOALS) >= MAX_READING_GOALS:
+                self._send_json({"error": f"max {MAX_READING_GOALS} goals"}, 400)
+                return
+            goal_id = "rdg_" + str(uuid.uuid4())
+            record_goal: dict[str, Any] = {
+                "goal_id": goal_id,
+                "goal_type": goal_type,
+                "target_value": str(target_value),
+                "current_value": "0.00",
+                "completed": False,
+                "deadline": deadline or None,
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _READING_GOALS.append(record_goal)
+        self._send_json({"status": "created", "goal": record_goal}, 201)
+
+    def _handle_goals_list(self) -> None:
+        """GET /api/v1/reading-goals/goals — list goals (auth required)."""
+        if not self._check_auth():
+            return
+        with _GOAL_LOCK:
+            goals = [dict(g) for g in _READING_GOALS]
+        self._send_json({"goals": goals, "total": len(goals)})
+
+    def _handle_goal_delete(self, goal_id: str) -> None:
+        """DELETE /api/v1/reading-goals/goals/{id} — delete goal (auth required)."""
+        if not self._check_auth():
+            return
+        with _GOAL_LOCK:
+            idx = next((i for i, g in enumerate(_READING_GOALS) if g["goal_id"] == goal_id), None)
+            if idx is None:
+                self._send_json({"error": "goal not found"}, 404)
+                return
+            _READING_GOALS.pop(idx)
+        self._send_json({"status": "deleted", "goal_id": goal_id})
+
+    def _handle_goal_progress(self, goal_id: str) -> None:
+        """POST /api/v1/reading-goals/goals/{id}/progress — update progress (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        try:
+            increment = Decimal(str(body.get("increment", "")))
+            if increment <= Decimal("0"):
+                self._send_json({"error": "increment must be > 0"}, 400)
+                return
+        except InvalidOperation:
+            self._send_json({"error": "increment must be a valid decimal > 0"}, 400)
+            return
+        with _GOAL_LOCK:
+            goal = next((g for g in _READING_GOALS if g["goal_id"] == goal_id), None)
+            if goal is None:
+                self._send_json({"error": "goal not found"}, 404)
+                return
+            current = Decimal(goal["current_value"])
+            current += increment
+            goal["current_value"] = str(current)
+            if current >= Decimal(goal["target_value"]):
+                goal["completed"] = True
+            updated = dict(goal)
+        self._send_json({"status": "updated", "goal": updated})
+
+    def _handle_goals_stats(self) -> None:
+        """GET /api/v1/reading-goals/stats — goal stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _GOAL_LOCK:
+            total = len(_READING_GOALS)
+            completed = sum(1 for g in _READING_GOALS if g.get("completed"))
+            in_progress = total - completed
+            by_type: dict[str, int] = {}
+            for g in _READING_GOALS:
+                gt = g["goal_type"]
+                by_type[gt] = by_type.get(gt, 0) + 1
+        rate = Decimal(str(completed)) / Decimal(str(total)) if total > 0 else Decimal("0")
+        self._send_json({
+            "total_goals": total,
+            "completed_count": completed,
+            "in_progress_count": in_progress,
+            "by_type": by_type,
+            "completion_rate": str(rate.quantize(Decimal("0.0001"))),
+        })
+
+    def _handle_goal_types(self) -> None:
+        """GET /api/v1/reading-goals/goal-types — list goal types (public)."""
+        self._send_json({"goal_types": READING_GOAL_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 142 — Dark Mode Scheduler handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_dm_schedule_create(self) -> None:
+        """POST /api/v1/dark-mode/schedules — create schedule (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        trigger_type = body.get("trigger_type", "")
+        if trigger_type not in DARK_MODE_TRIGGERS:
+            self._send_json({"error": f"trigger_type must be one of {DARK_MODE_TRIGGERS}"}, 400)
+            return
+        dark_start_hour = body.get("dark_start_hour", None)
+        dark_end_hour = body.get("dark_end_hour", None)
+        if dark_start_hour is not None:
+            try:
+                dark_start_hour = int(dark_start_hour)
+            except (TypeError, ValueError):
+                self._send_json({"error": "dark_start_hour must be an integer 0-23"}, 400)
+                return
+            if dark_start_hour < 0 or dark_start_hour > 23:
+                self._send_json({"error": "dark_start_hour must be 0-23"}, 400)
+                return
+        if dark_end_hour is not None:
+            try:
+                dark_end_hour = int(dark_end_hour)
+            except (TypeError, ValueError):
+                self._send_json({"error": "dark_end_hour must be an integer 0-23"}, 400)
+                return
+            if dark_end_hour < 0 or dark_end_hour > 23:
+                self._send_json({"error": "dark_end_hour must be 0-23"}, 400)
+                return
+        if dark_start_hour is not None and dark_end_hour is not None and dark_start_hour == dark_end_hour:
+            self._send_json({"error": "dark_start_hour and dark_end_hour must differ"}, 400)
+            return
+        with _DM_LOCK:
+            if len(_DM_SCHEDULES) >= MAX_DM_SCHEDULES:
+                self._send_json({"error": f"max {MAX_DM_SCHEDULES} schedules"}, 400)
+                return
+            schedule_id = "dms_" + str(uuid.uuid4())
+            record_dm: dict[str, Any] = {
+                "schedule_id": schedule_id,
+                "trigger_type": trigger_type,
+                "dark_start_hour": dark_start_hour,
+                "dark_end_hour": dark_end_hour,
+                "enabled": bool(body.get("enabled", True)),
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _DM_SCHEDULES.append(record_dm)
+        self._send_json({"status": "created", "schedule": record_dm}, 201)
+
+    def _handle_dm_schedules_list(self) -> None:
+        """GET /api/v1/dark-mode/schedules — list schedules (auth required)."""
+        if not self._check_auth():
+            return
+        with _DM_LOCK:
+            schedules = [dict(s) for s in _DM_SCHEDULES]
+        self._send_json({"schedules": schedules, "total": len(schedules)})
+
+    def _handle_dm_schedule_delete(self, schedule_id: str) -> None:
+        """DELETE /api/v1/dark-mode/schedules/{id} — delete schedule (auth required)."""
+        if not self._check_auth():
+            return
+        with _DM_LOCK:
+            idx = next((i for i, s in enumerate(_DM_SCHEDULES) if s["schedule_id"] == schedule_id), None)
+            if idx is None:
+                self._send_json({"error": "schedule not found"}, 404)
+                return
+            _DM_SCHEDULES.pop(idx)
+        self._send_json({"status": "deleted", "schedule_id": schedule_id})
+
+    def _handle_dm_current(self) -> None:
+        """GET /api/v1/dark-mode/current — get current mode (auth required)."""
+        if not self._check_auth():
+            return
+        with _DM_LOCK:
+            override = dict(_DM_OVERRIDE)
+        if override:
+            self._send_json({
+                "mode": override.get("mode", "light"),
+                "source": "override",
+                "override_until": override.get("override_until"),
+            })
+            return
+        now_hour = datetime.now(timezone.utc).hour
+        with _DM_LOCK:
+            schedules_copy = [dict(s) for s in _DM_SCHEDULES if s.get("enabled")]
+        mode = "light"
+        source = "default"
+        for s in schedules_copy:
+            start = s.get("dark_start_hour")
+            end = s.get("dark_end_hour")
+            if start is not None and end is not None:
+                if start < end:
+                    in_dark = start <= now_hour < end
+                else:
+                    in_dark = now_hour >= start or now_hour < end
+                if in_dark:
+                    mode = "dark"
+                    source = "schedule"
+                    break
+        self._send_json({"mode": mode, "source": source, "override_until": None})
+
+    def _handle_dm_override(self) -> None:
+        """POST /api/v1/dark-mode/override — manually override mode (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        mode = body.get("mode", "")
+        if mode not in ("dark", "light"):
+            self._send_json({"error": "mode must be dark or light"}, 400)
+            return
+        until_hour = body.get("until_hour", None)
+        if until_hour is not None:
+            try:
+                until_hour = int(until_hour)
+            except (TypeError, ValueError):
+                self._send_json({"error": "until_hour must be an integer 0-23"}, 400)
+                return
+            if until_hour < 0 or until_hour > 23:
+                self._send_json({"error": "until_hour must be 0-23"}, 400)
+                return
+        with _DM_LOCK:
+            _DM_OVERRIDE.clear()
+            _DM_OVERRIDE["mode"] = mode
+            _DM_OVERRIDE["override_until"] = until_hour
+        self._send_json({"status": "override_set", "mode": mode, "override_until": until_hour})
+
+    def _handle_dm_trigger_types(self) -> None:
+        """GET /api/v1/dark-mode/trigger-types — list trigger types (public)."""
+        self._send_json({"trigger_types": DARK_MODE_TRIGGERS})
+
     # ---------------------------------------------------------------------------
     # Task 126 — Screenshot Scheduler handlers
     # ---------------------------------------------------------------------------
@@ -25460,7 +26506,1211 @@ function choose(mode) {
         """GET /api/v1/auto-translate/languages — list languages (public)."""
         self._send_json({"languages": TRANSLATE_LANGUAGES})
 
+    # ---------------------------------------------------------------------------
+    # Task 133 — Video Downloader Tracker handlers
+    # ---------------------------------------------------------------------------
 
+    def _handle_vdt_create(self) -> None:
+        """POST /api/v1/video-tracker/downloads — add download (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        quality = body.get("quality", "")
+        if quality not in VIDEO_QUALITIES:
+            self._send_json({"error": f"quality must be one of {VIDEO_QUALITIES}"}, 400)
+            return
+        fmt = body.get("format", "")
+        if fmt not in VIDEO_FORMATS:
+            self._send_json({"error": f"format must be one of {VIDEO_FORMATS}"}, 400)
+            return
+        status = body.get("status", "queued")
+        if status not in VIDEO_STATUSES:
+            self._send_json({"error": f"status must be one of {VIDEO_STATUSES}"}, 400)
+            return
+        file_size_bytes = body.get("file_size_bytes", 0)
+        if not isinstance(file_size_bytes, int) or file_size_bytes < 0:
+            self._send_json({"error": "file_size_bytes must be a non-negative integer"}, 400)
+            return
+        url = body.get("url", "")
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else ""
+        download_id = "vdl_" + str(uuid.uuid4())
+        entry = {
+            "download_id": download_id,
+            "url_hash": url_hash,
+            "title": body.get("title", ""),
+            "quality": quality,
+            "format": fmt,
+            "status": status,
+            "file_size_bytes": file_size_bytes,
+            "duration_seconds": body.get("duration_seconds", 0),
+            "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        }
+        with _VIDEO_LOCK:
+            if len(_VIDEO_DOWNLOADS) >= MAX_VIDEO_DOWNLOADS:
+                _VIDEO_DOWNLOADS.pop(0)
+            _VIDEO_DOWNLOADS.append(entry)
+        self._send_json({"status": "created", "download": entry}, 201)
+
+    def _handle_vdt_list(self) -> None:
+        """GET /api/v1/video-tracker/downloads — list downloads (auth required)."""
+        if not self._check_auth():
+            return
+        with _VIDEO_LOCK:
+            downloads = list(_VIDEO_DOWNLOADS)
+        self._send_json({"downloads": downloads, "total": len(downloads)})
+
+    def _handle_vdt_delete(self, download_id: str) -> None:
+        """DELETE /api/v1/video-tracker/downloads/<id> — remove download (auth required)."""
+        if not self._check_auth():
+            return
+        with _VIDEO_LOCK:
+            before = len(_VIDEO_DOWNLOADS)
+            remaining = [d for d in _VIDEO_DOWNLOADS if d["download_id"] != download_id]
+            _VIDEO_DOWNLOADS.clear()
+            _VIDEO_DOWNLOADS.extend(remaining)
+            removed = before - len(_VIDEO_DOWNLOADS)
+        if removed == 0:
+            self._send_json({"error": "not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "download_id": download_id})
+
+    def _handle_vdt_stats(self) -> None:
+        """GET /api/v1/video-tracker/stats — download stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _VIDEO_LOCK:
+            downloads = list(_VIDEO_DOWNLOADS)
+        total_size_bytes = sum(d.get("file_size_bytes", 0) for d in downloads)
+        by_status: dict = {}
+        by_quality: dict = {}
+        for d in downloads:
+            s = d.get("status", "")
+            by_status[s] = by_status.get(s, 0) + 1
+            q = d.get("quality", "")
+            by_quality[q] = by_quality.get(q, 0) + 1
+        self._send_json({
+            "total_downloads": len(downloads),
+            "total_size_bytes": total_size_bytes,
+            "by_status": by_status,
+            "by_quality": by_quality,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 134 — Page Word Counter handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_wct_create(self) -> None:
+        """POST /api/v1/word-counter/counts — add word count (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        content_type = body.get("content_type", "")
+        if content_type not in WORD_CONTENT_TYPES:
+            self._send_json({"error": f"content_type must be one of {WORD_CONTENT_TYPES}"}, 400)
+            return
+        word_count = body.get("word_count", -1)
+        if not isinstance(word_count, int) or word_count < 0:
+            self._send_json({"error": "word_count must be a non-negative integer"}, 400)
+            return
+        url = body.get("url", "")
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else ""
+        reading_time_mins = f"{word_count / 238:.2f}"
+        count_id = "wct_" + str(uuid.uuid4())
+        entry = {
+            "count_id": count_id,
+            "url_hash": url_hash,
+            "content_type": content_type,
+            "word_count": word_count,
+            "char_count": body.get("char_count", 0),
+            "sentence_count": body.get("sentence_count", 0),
+            "paragraph_count": body.get("paragraph_count", 0),
+            "reading_time_mins": reading_time_mins,
+            "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        }
+        with _WORD_LOCK:
+            if len(_WORD_COUNTS) >= MAX_WORD_COUNTS:
+                _WORD_COUNTS.pop(0)
+            _WORD_COUNTS.append(entry)
+        self._send_json({"status": "created", "count": entry}, 201)
+
+    def _handle_wct_list(self) -> None:
+        """GET /api/v1/word-counter/counts — list counts (auth required)."""
+        if not self._check_auth():
+            return
+        with _WORD_LOCK:
+            counts = list(_WORD_COUNTS)
+        self._send_json({"counts": counts, "total": len(counts)})
+
+    def _handle_wct_delete(self, count_id: str) -> None:
+        """DELETE /api/v1/word-counter/counts/<id> — remove count (auth required)."""
+        if not self._check_auth():
+            return
+        with _WORD_LOCK:
+            before = len(_WORD_COUNTS)
+            remaining = [c for c in _WORD_COUNTS if c["count_id"] != count_id]
+            _WORD_COUNTS.clear()
+            _WORD_COUNTS.extend(remaining)
+            removed = before - len(_WORD_COUNTS)
+        if removed == 0:
+            self._send_json({"error": "not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "count_id": count_id})
+
+    def _handle_wct_stats(self) -> None:
+        """GET /api/v1/word-counter/stats — word count stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _WORD_LOCK:
+            counts = list(_WORD_COUNTS)
+        total = len(counts)
+        if total == 0:
+            avg = "0.00"
+        else:
+            avg = f"{sum(c.get('word_count', 0) for c in counts) / total:.2f}"
+        by_type: dict = {}
+        for c in counts:
+            ct = c.get("content_type", "")
+            by_type[ct] = by_type.get(ct, 0) + 1
+        self._send_json({
+            "total_counts": total,
+            "avg_word_count": avg,
+            "by_content_type": by_type,
+        })
+
+    def _handle_wct_content_types(self) -> None:
+        """GET /api/v1/word-counter/content-types — list content types (public)."""
+        self._send_json({"content_types": WORD_CONTENT_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 135 — Highlight Extractor handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_hlt_create(self) -> None:
+        """POST /api/v1/highlights/highlights — save highlight (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        color = body.get("color", "")
+        if color not in HIGHLIGHT_COLORS:
+            self._send_json({"error": f"color must be one of {HIGHLIGHT_COLORS}"}, 400)
+            return
+        page_url = body.get("page_url", "")
+        page_hash = hashlib.sha256(page_url.encode()).hexdigest() if page_url else ""
+        text = body.get("text", "")
+        text_hash = hashlib.sha256(text.encode()).hexdigest() if text else ""
+        highlight_id = "hlt_" + str(uuid.uuid4())
+        entry = {
+            "highlight_id": highlight_id,
+            "page_hash": page_hash,
+            "text_hash": text_hash,
+            "color": color,
+            "note": body.get("note", ""),
+            "position": body.get("position", ""),
+            "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        }
+        with _HIGHLIGHT_LOCK:
+            if len(_HIGHLIGHTS) >= MAX_HIGHLIGHTS:
+                _HIGHLIGHTS.pop(0)
+            _HIGHLIGHTS.append(entry)
+        self._send_json({"status": "created", "highlight": entry}, 201)
+
+    def _handle_hlt_list(self) -> None:
+        """GET /api/v1/highlights/highlights — list highlights (auth required)."""
+        if not self._check_auth():
+            return
+        with _HIGHLIGHT_LOCK:
+            highlights = list(_HIGHLIGHTS)
+        self._send_json({"highlights": highlights, "total": len(highlights)})
+
+    def _handle_hlt_by_page(self) -> None:
+        """GET /api/v1/highlights/highlights/by-page?page_hash=<hash> — filter by page (auth required)."""
+        if not self._check_auth():
+            return
+        query = self.path[len(self.path.split("?")[0]):]
+        params = self._parse_query(query)
+        page_hash = params.get("page_hash", "")
+        with _HIGHLIGHT_LOCK:
+            filtered = [h for h in _HIGHLIGHTS if h.get("page_hash") == page_hash]
+        self._send_json({"highlights": filtered, "total": len(filtered)})
+
+    def _handle_hlt_delete(self, highlight_id: str) -> None:
+        """DELETE /api/v1/highlights/highlights/<id> — remove highlight (auth required)."""
+        if not self._check_auth():
+            return
+        with _HIGHLIGHT_LOCK:
+            before = len(_HIGHLIGHTS)
+            remaining = [h for h in _HIGHLIGHTS if h["highlight_id"] != highlight_id]
+            _HIGHLIGHTS.clear()
+            _HIGHLIGHTS.extend(remaining)
+            removed = before - len(_HIGHLIGHTS)
+        if removed == 0:
+            self._send_json({"error": "not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "highlight_id": highlight_id})
+
+    def _handle_hlt_stats(self) -> None:
+        """GET /api/v1/highlights/stats — highlight stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _HIGHLIGHT_LOCK:
+            highlights = list(_HIGHLIGHTS)
+        total_pages = len({h.get("page_hash") for h in highlights if h.get("page_hash")})
+        by_color: dict = {}
+        for h in highlights:
+            c = h.get("color", "")
+            by_color[c] = by_color.get(c, 0) + 1
+        self._send_json({
+            "total_highlights": len(highlights),
+            "total_pages": total_pages,
+            "by_color": by_color,
+        })
+
+    def _handle_hlt_colors(self) -> None:
+        """GET /api/v1/highlights/colors — list colors (public)."""
+        self._send_json({"colors": HIGHLIGHT_COLORS})
+
+    # ---------------------------------------------------------------------------
+    # Task 136 — Bookmark Organizer handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_bmkorg_create(self) -> None:
+        """POST /api/v1/bookmarks/bookmarks — add bookmark (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        folder = body.get("folder", "")
+        if folder not in BMK_ORG_FOLDERS:
+            self._send_json({"error": f"folder must be one of {BMK_ORG_FOLDERS}"}, 400)
+            return
+        tags = body.get("tags", [])
+        if not isinstance(tags, list) or len(tags) > 10:
+            self._send_json({"error": "tags must be a list of at most 10 items"}, 400)
+            return
+        url = body.get("url", "")
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else ""
+        bookmark_id = "bmk_" + str(uuid.uuid4())
+        entry = {
+            "bookmark_id": bookmark_id,
+            "url_hash": url_hash,
+            "title": body.get("title", ""),
+            "folder": folder,
+            "tags": tags,
+            "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        }
+        with _BMK_ORG_LOCK:
+            if len(_BMK_ORG_BOOKMARKS) >= MAX_BMK_ORG_BOOKMARKS:
+                _BMK_ORG_BOOKMARKS.pop(0)
+            _BMK_ORG_BOOKMARKS.append(entry)
+        self._send_json({"status": "created", "bookmark": entry}, 201)
+
+    def _handle_bmkorg_list(self) -> None:
+        """GET /api/v1/bookmarks/bookmarks — list bookmarks (auth required)."""
+        if not self._check_auth():
+            return
+        with _BMK_ORG_LOCK:
+            bookmarks = list(_BMK_ORG_BOOKMARKS)
+        self._send_json({"bookmarks": bookmarks, "total": len(bookmarks)})
+
+    def _handle_bmkorg_search(self) -> None:
+        """GET /api/v1/bookmarks/bookmarks/search?q=<query> — search bookmarks (auth required)."""
+        if not self._check_auth():
+            return
+        query = self.path[len(self.path.split("?")[0]):]
+        params = self._parse_query(query)
+        q = params.get("q", "").lower()
+        with _BMK_ORG_LOCK:
+            all_bookmarks = list(_BMK_ORG_BOOKMARKS)
+        if q:
+            results = [
+                b for b in all_bookmarks
+                if q in b.get("bookmark_id", "").lower()
+                or q in b.get("title", "").lower()
+                or q in b.get("folder", "").lower()
+                or any(q in tag.lower() for tag in b.get("tags", []))
+            ]
+        else:
+            results = all_bookmarks
+        self._send_json({"bookmarks": results, "total": len(results)})
+
+    def _handle_bmkorg_delete(self, bookmark_id: str) -> None:
+        """DELETE /api/v1/bookmarks/bookmarks/<id> — remove bookmark (auth required)."""
+        if not self._check_auth():
+            return
+        with _BMK_ORG_LOCK:
+            before = len(_BMK_ORG_BOOKMARKS)
+            remaining = [b for b in _BMK_ORG_BOOKMARKS if b["bookmark_id"] != bookmark_id]
+            _BMK_ORG_BOOKMARKS.clear()
+            _BMK_ORG_BOOKMARKS.extend(remaining)
+            removed = before - len(_BMK_ORG_BOOKMARKS)
+        if removed == 0:
+            self._send_json({"error": "not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "bookmark_id": bookmark_id})
+
+    def _handle_bmkorg_stats(self) -> None:
+        """GET /api/v1/bookmarks/stats — bookmark stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _BMK_ORG_LOCK:
+            bookmarks = list(_BMK_ORG_BOOKMARKS)
+        by_folder: dict = {}
+        for b in bookmarks:
+            f = b.get("folder", "")
+            by_folder[f] = by_folder.get(f, 0) + 1
+        self._send_json({
+            "total_bookmarks": len(bookmarks),
+            "by_folder": by_folder,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 137 — Social Share Tracker handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_sst_create(self) -> None:
+        """POST /api/v1/social-share/shares — add share (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        platform = body.get("platform", "")
+        if platform not in SOCIAL_PLATFORMS:
+            self._send_json({"error": f"platform must be one of {SOCIAL_PLATFORMS}"}, 400)
+            return
+        url = body.get("url", "")
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else ""
+        share_id = "shr_" + str(uuid.uuid4())
+        entry = {
+            "share_id": share_id,
+            "url_hash": url_hash,
+            "title": body.get("title", ""),
+            "platform": platform,
+            "message": body.get("message", ""),
+            "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        }
+        with _SOCIAL_LOCK:
+            if len(_SOCIAL_SHARES) >= MAX_SOCIAL_SHARES:
+                _SOCIAL_SHARES.pop(0)
+            _SOCIAL_SHARES.append(entry)
+        self._send_json({"status": "created", "share": entry}, 201)
+
+    def _handle_sst_list(self) -> None:
+        """GET /api/v1/social-share/shares — list shares (auth required)."""
+        if not self._check_auth():
+            return
+        with _SOCIAL_LOCK:
+            shares = list(_SOCIAL_SHARES)
+        self._send_json({"shares": shares, "total": len(shares)})
+
+    def _handle_sst_delete(self, share_id: str) -> None:
+        """DELETE /api/v1/social-share/shares/<id> — remove share (auth required)."""
+        if not self._check_auth():
+            return
+        with _SOCIAL_LOCK:
+            before = len(_SOCIAL_SHARES)
+            remaining = [s for s in _SOCIAL_SHARES if s["share_id"] != share_id]
+            _SOCIAL_SHARES.clear()
+            _SOCIAL_SHARES.extend(remaining)
+            removed = before - len(_SOCIAL_SHARES)
+        if removed == 0:
+            self._send_json({"error": "not found"}, 404)
+            return
+        self._send_json({"status": "deleted", "share_id": share_id})
+
+    def _handle_sst_stats(self) -> None:
+        """GET /api/v1/social-share/stats — share stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _SOCIAL_LOCK:
+            shares = list(_SOCIAL_SHARES)
+        by_platform: dict = {}
+        for s in shares:
+            p = s.get("platform", "")
+            by_platform[p] = by_platform.get(p, 0) + 1
+        top_platform = max(by_platform, key=lambda k: by_platform[k]) if by_platform else ""
+        self._send_json({
+            "total_shares": len(shares),
+            "by_platform": by_platform,
+            "top_platform": top_platform,
+        })
+
+    def _handle_sst_platforms(self) -> None:
+        """GET /api/v1/social-share/platforms — list platforms (public)."""
+        self._send_json({"platforms": SOCIAL_PLATFORMS})
+
+    # ---------------------------------------------------------------------------
+    # Task 147 — Link Health Checker handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_lhc_status_codes(self) -> None:
+        """GET /api/v1/link-health/status-codes — list tracked status codes (public)."""
+        self._send_json({"status_codes": LINK_STATUS_CODES})
+
+    def _handle_lhc_create(self) -> None:
+        """POST /api/v1/link-health/checks — record link check result (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        url = body.get("url", "")
+        page_url = body.get("page_url", "")
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else body.get("url_hash", "")
+        page_url_hash = hashlib.sha256(page_url.encode()).hexdigest() if page_url else body.get("page_url_hash", "")
+        status_code = body.get("status_code", None)
+        if not isinstance(status_code, int) or status_code not in LINK_STATUS_CODES:
+            self._send_json({"error": f"status_code must be one of {LINK_STATUS_CODES}"}, 400)
+            return
+        response_ms = body.get("response_ms", 0)
+        if not isinstance(response_ms, int) or response_ms < 0:
+            self._send_json({"error": "response_ms must be a non-negative integer"}, 400)
+            return
+        is_broken = status_code in [400, 401, 403, 404, 500, 502, 503, 0]
+        with _LINK_HEALTH_LOCK:
+            if len(_LINK_HEALTH_CHECKS) >= MAX_LINK_HEALTH_CHECKS:
+                _LINK_HEALTH_CHECKS.pop(0)
+            check_id = "lhc_" + str(uuid.uuid4())
+            record = {
+                "check_id": check_id,
+                "url_hash": url_hash,
+                "page_url_hash": page_url_hash,
+                "status_code": status_code,
+                "response_ms": response_ms,
+                "is_broken": is_broken,
+                "checked_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _LINK_HEALTH_CHECKS.append(record)
+        self._send_json({"status": "recorded", "check": record}, 201)
+
+    def _handle_lhc_list(self) -> None:
+        """GET /api/v1/link-health/checks — list checks (auth required)."""
+        if not self._check_auth():
+            return
+        with _LINK_HEALTH_LOCK:
+            checks = list(_LINK_HEALTH_CHECKS)
+        self._send_json({"checks": checks, "total": len(checks)})
+
+    def _handle_lhc_delete(self, check_id: str) -> None:
+        """DELETE /api/v1/link-health/checks/{check_id} — delete check (auth required)."""
+        if not self._check_auth():
+            return
+        with _LINK_HEALTH_LOCK:
+            idx = next((i for i, c in enumerate(_LINK_HEALTH_CHECKS) if c["check_id"] == check_id), None)
+            if idx is None:
+                self._send_json({"error": "check not found"}, 404)
+                return
+            _LINK_HEALTH_CHECKS.pop(idx)
+        self._send_json({"status": "deleted", "check_id": check_id})
+
+    def _handle_lhc_stats(self) -> None:
+        """GET /api/v1/link-health/stats — health stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _LINK_HEALTH_LOCK:
+            checks = list(_LINK_HEALTH_CHECKS)
+        total = len(checks)
+        broken = [c for c in checks if c.get("is_broken")]
+        broken_count = len(broken)
+        healthy_count = total - broken_count
+        broken_rate = str(Decimal(str(broken_count / total * 100)).quantize(Decimal("0.01"))) if total > 0 else "0.00"
+        by_status: dict[str, int] = {}
+        total_ms = 0
+        for c in checks:
+            sc = str(c.get("status_code", 0))
+            by_status[sc] = by_status.get(sc, 0) + 1
+            total_ms += c.get("response_ms", 0)
+        avg_ms = str(Decimal(str(total_ms / total)).quantize(Decimal("0.01"))) if total > 0 else "0.00"
+        self._send_json({
+            "total_checks": total,
+            "broken_count": broken_count,
+            "healthy_count": healthy_count,
+            "broken_rate": broken_rate,
+            "by_status_code": by_status,
+            "avg_response_ms": avg_ms,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 148 — Cookie Manager handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_ckm_categories(self) -> None:
+        """GET /api/v1/cookie-manager/categories — list categories (public)."""
+        self._send_json({"categories": COOKIE_MGR_CATEGORIES})
+
+    def _handle_ckm_create(self) -> None:
+        """POST /api/v1/cookie-manager/cookies — record cookie (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        category = body.get("category", "")
+        if category not in COOKIE_MGR_CATEGORIES:
+            self._send_json({"error": f"category must be one of {COOKIE_MGR_CATEGORIES}"}, 400)
+            return
+        domain = body.get("domain", "")
+        name = body.get("name", "")
+        domain_hash = hashlib.sha256(domain.encode()).hexdigest() if domain else body.get("domain_hash", "")
+        name_hash = hashlib.sha256(name.encode()).hexdigest() if name else body.get("name_hash", "")
+        is_secure = bool(body.get("is_secure", False))
+        is_httponly = bool(body.get("is_httponly", False))
+        is_session = bool(body.get("is_session", False))
+        expires_days = body.get("expires_days", None)
+        if expires_days is not None:
+            if not isinstance(expires_days, int) or expires_days < 0:
+                self._send_json({"error": "expires_days must be a non-negative integer or null"}, 400)
+                return
+        privacy_score = COOKIE_MGR_PRIVACY_SCORES.get(category, 3)
+        with _COOKIE_MGR_LOCK:
+            if len(_COOKIE_MGR_RECORDS) >= MAX_COOKIE_MGR_RECORDS:
+                _COOKIE_MGR_RECORDS.pop(0)
+            cookie_id = "ckm_" + str(uuid.uuid4())
+            record = {
+                "cookie_id": cookie_id,
+                "category": category,
+                "domain_hash": domain_hash,
+                "name_hash": name_hash,
+                "is_secure": is_secure,
+                "is_httponly": is_httponly,
+                "is_session": is_session,
+                "expires_days": expires_days,
+                "privacy_score": privacy_score,
+                "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _COOKIE_MGR_RECORDS.append(record)
+        self._send_json({"status": "recorded", "cookie": record}, 201)
+
+    def _handle_ckm_list(self) -> None:
+        """GET /api/v1/cookie-manager/cookies — list cookies (auth required)."""
+        if not self._check_auth():
+            return
+        with _COOKIE_MGR_LOCK:
+            cookies = list(_COOKIE_MGR_RECORDS)
+        self._send_json({"cookies": cookies, "total": len(cookies)})
+
+    def _handle_ckm_delete(self, cookie_id: str) -> None:
+        """DELETE /api/v1/cookie-manager/cookies/{cookie_id} — delete record (auth required)."""
+        if not self._check_auth():
+            return
+        with _COOKIE_MGR_LOCK:
+            idx = next((i for i, c in enumerate(_COOKIE_MGR_RECORDS) if c["cookie_id"] == cookie_id), None)
+            if idx is None:
+                self._send_json({"error": "cookie not found"}, 404)
+                return
+            _COOKIE_MGR_RECORDS.pop(idx)
+        self._send_json({"status": "deleted", "cookie_id": cookie_id})
+
+    def _handle_ckm_stats(self) -> None:
+        """GET /api/v1/cookie-manager/stats — cookie stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _COOKIE_MGR_LOCK:
+            cookies = list(_COOKIE_MGR_RECORDS)
+        total = len(cookies)
+        by_category: dict[str, int] = {}
+        total_score = 0
+        tracking_count = 0
+        for c in cookies:
+            cat = c.get("category", "")
+            by_category[cat] = by_category.get(cat, 0) + 1
+            total_score += c.get("privacy_score", 0)
+            if cat in ("advertising", "social"):
+                tracking_count += 1
+        avg_score = str(Decimal(str(total_score / total)).quantize(Decimal("0.01"))) if total > 0 else "0.00"
+        self._send_json({
+            "total_cookies": total,
+            "by_category": by_category,
+            "avg_privacy_score": avg_score,
+            "tracking_cookie_count": tracking_count,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 149 — Scroll Tracker handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_sct_depth_levels(self) -> None:
+        """GET /api/v1/scroll-tracker/depth-levels — list depth levels (public)."""
+        self._send_json({"depth_levels": SCROLL_DEPTH_LEVELS})
+
+    def _handle_sct_create(self) -> None:
+        """POST /api/v1/scroll-tracker/sessions — record scroll session (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        url = body.get("url", "")
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else body.get("url_hash", "")
+        max_depth_pct = body.get("max_depth_pct", None)
+        if not isinstance(max_depth_pct, int) or max_depth_pct < 0 or max_depth_pct > 100:
+            self._send_json({"error": "max_depth_pct must be an integer between 0 and 100"}, 400)
+            return
+        scroll_events = body.get("scroll_events", 0)
+        if not isinstance(scroll_events, int) or scroll_events < 0:
+            self._send_json({"error": "scroll_events must be a non-negative integer"}, 400)
+            return
+        time_on_page_ms = body.get("time_on_page_ms", 0)
+        if not isinstance(time_on_page_ms, int) or time_on_page_ms < 0:
+            self._send_json({"error": "time_on_page_ms must be a non-negative integer"}, 400)
+            return
+        if max_depth_pct <= 25:
+            depth_level = "0-25%"
+        elif max_depth_pct <= 50:
+            depth_level = "25-50%"
+        elif max_depth_pct <= 75:
+            depth_level = "50-75%"
+        elif max_depth_pct < 100:
+            depth_level = "75-100%"
+        else:
+            depth_level = "100%"
+        with _SCROLL_TRACKER_LOCK:
+            if len(_SCROLL_TRACKER_SESSIONS) >= MAX_SCROLL_TRACKER_SESSIONS:
+                _SCROLL_TRACKER_SESSIONS.pop(0)
+            scroll_session_id = "sct_" + str(uuid.uuid4())
+            record = {
+                "scroll_session_id": scroll_session_id,
+                "url_hash": url_hash,
+                "max_depth_pct": max_depth_pct,
+                "depth_level": depth_level,
+                "scroll_events": scroll_events,
+                "time_on_page_ms": time_on_page_ms,
+                "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _SCROLL_TRACKER_SESSIONS.append(record)
+        self._send_json({"status": "recorded", "session": record}, 201)
+
+    def _handle_sct_list(self) -> None:
+        """GET /api/v1/scroll-tracker/sessions — list sessions (auth required)."""
+        if not self._check_auth():
+            return
+        with _SCROLL_TRACKER_LOCK:
+            sessions = list(_SCROLL_TRACKER_SESSIONS)
+        self._send_json({"sessions": sessions, "total": len(sessions)})
+
+    def _handle_sct_delete(self, session_id: str) -> None:
+        """DELETE /api/v1/scroll-tracker/sessions/{session_id} — delete session (auth required)."""
+        if not self._check_auth():
+            return
+        with _SCROLL_TRACKER_LOCK:
+            idx = next((i for i, s in enumerate(_SCROLL_TRACKER_SESSIONS) if s["scroll_session_id"] == session_id), None)
+            if idx is None:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            _SCROLL_TRACKER_SESSIONS.pop(idx)
+        self._send_json({"status": "deleted", "scroll_session_id": session_id})
+
+    def _handle_sct_stats(self) -> None:
+        """GET /api/v1/scroll-tracker/stats — scroll stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _SCROLL_TRACKER_LOCK:
+            sessions = list(_SCROLL_TRACKER_SESSIONS)
+        total = len(sessions)
+        total_depth = sum(s.get("max_depth_pct", 0) for s in sessions)
+        total_time = sum(s.get("time_on_page_ms", 0) for s in sessions)
+        avg_depth = str(Decimal(str(total_depth / total)).quantize(Decimal("0.01"))) if total > 0 else "0.00"
+        avg_time = str(Decimal(str(total_time / total)).quantize(Decimal("0.01"))) if total > 0 else "0.00"
+        by_level: dict[str, int] = {}
+        full_read_count = 0
+        for s in sessions:
+            lvl = s.get("depth_level", "")
+            by_level[lvl] = by_level.get(lvl, 0) + 1
+            if s.get("depth_level") == "100%":
+                full_read_count += 1
+        self._send_json({
+            "total_sessions": total,
+            "avg_depth_pct": avg_depth,
+            "avg_time_ms": avg_time,
+            "by_depth_level": by_level,
+            "full_read_count": full_read_count,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 150 — Media Playback Tracker handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_mpt_media_types(self) -> None:
+        """GET /api/v1/media-tracker/media-types — list media types (public)."""
+        self._send_json({"media_types": MEDIA_PLAYBACK_TYPES, "playback_events": PLAYBACK_EVENTS})
+
+    def _handle_mpt_create(self) -> None:
+        """POST /api/v1/media-tracker/sessions — record playback session (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        media_type = body.get("media_type", "")
+        if media_type not in MEDIA_PLAYBACK_TYPES:
+            self._send_json({"error": f"media_type must be one of {MEDIA_PLAYBACK_TYPES}"}, 400)
+            return
+        event_type = body.get("event_type", "")
+        if event_type not in PLAYBACK_EVENTS:
+            self._send_json({"error": f"event_type must be one of {PLAYBACK_EVENTS}"}, 400)
+            return
+        url = body.get("url", "")
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else body.get("url_hash", "")
+        duration_seconds = body.get("duration_seconds", 0)
+        if not isinstance(duration_seconds, int) or duration_seconds < 0:
+            self._send_json({"error": "duration_seconds must be a non-negative integer"}, 400)
+            return
+        watched_seconds = body.get("watched_seconds", 0)
+        if not isinstance(watched_seconds, int) or watched_seconds < 0:
+            self._send_json({"error": "watched_seconds must be a non-negative integer"}, 400)
+            return
+        speed_raw = body.get("playback_speed", "1.0")
+        try:
+            speed_dec = Decimal(str(speed_raw))
+        except InvalidOperation:
+            self._send_json({"error": "playback_speed must be a decimal between 0.25 and 4.0"}, 400)
+            return
+        if speed_dec < Decimal("0.25") or speed_dec > Decimal("4.0"):
+            self._send_json({"error": "playback_speed must be between 0.25 and 4.0"}, 400)
+            return
+        if duration_seconds > 0:
+            watched_pct = str(Decimal(str(watched_seconds / duration_seconds * 100)).quantize(Decimal("0.01")))
+        else:
+            watched_pct = "0.00"
+        with _MEDIA_PLAYBACK_LOCK:
+            if len(_MEDIA_PLAYBACK_SESSIONS) >= MAX_MEDIA_PLAYBACK_SESSIONS:
+                _MEDIA_PLAYBACK_SESSIONS.pop(0)
+            media_session_id = "mpt_" + str(uuid.uuid4())
+            record = {
+                "media_session_id": media_session_id,
+                "media_type": media_type,
+                "event_type": event_type,
+                "url_hash": url_hash,
+                "duration_seconds": duration_seconds,
+                "watched_seconds": watched_seconds,
+                "watched_pct": watched_pct,
+                "playback_speed": str(speed_dec),
+                "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _MEDIA_PLAYBACK_SESSIONS.append(record)
+        self._send_json({"status": "recorded", "session": record}, 201)
+
+    def _handle_mpt_list(self) -> None:
+        """GET /api/v1/media-tracker/sessions — list sessions (auth required)."""
+        if not self._check_auth():
+            return
+        with _MEDIA_PLAYBACK_LOCK:
+            sessions = list(_MEDIA_PLAYBACK_SESSIONS)
+        self._send_json({"sessions": sessions, "total": len(sessions)})
+
+    def _handle_mpt_delete(self, session_id: str) -> None:
+        """DELETE /api/v1/media-tracker/sessions/{session_id} — delete session (auth required)."""
+        if not self._check_auth():
+            return
+        with _MEDIA_PLAYBACK_LOCK:
+            idx = next((i for i, s in enumerate(_MEDIA_PLAYBACK_SESSIONS) if s["media_session_id"] == session_id), None)
+            if idx is None:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            _MEDIA_PLAYBACK_SESSIONS.pop(idx)
+        self._send_json({"status": "deleted", "media_session_id": session_id})
+
+    def _handle_mpt_stats(self) -> None:
+        """GET /api/v1/media-tracker/stats — playback stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _MEDIA_PLAYBACK_LOCK:
+            sessions = list(_MEDIA_PLAYBACK_SESSIONS)
+        total = len(sessions)
+        by_type: dict[str, int] = {}
+        total_pct = Decimal("0")
+        total_watched_secs = 0
+        for s in sessions:
+            mt = s.get("media_type", "")
+            by_type[mt] = by_type.get(mt, 0) + 1
+            try:
+                total_pct += Decimal(s.get("watched_pct", "0"))
+            except InvalidOperation:
+                pass
+            total_watched_secs += s.get("watched_seconds", 0)
+        avg_watched_pct = str((total_pct / total).quantize(Decimal("0.01"))) if total > 0 else "0.00"
+        total_watched_hours = str(Decimal(str(total_watched_secs / 3600)).quantize(Decimal("0.01")))
+        self._send_json({
+            "total_sessions": total,
+            "by_media_type": by_type,
+            "avg_watched_pct": avg_watched_pct,
+            "total_watched_hours": total_watched_hours,
+        })
+
+
+
+    # ---------------------------------------------------------------------------
+    # Task 143 — Form Autofill Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_autofill_entries_list(self) -> None:
+        """GET /api/v1/autofill/entries — list entries (auth required)."""
+        if not self._check_auth():
+            return
+        with _AUTOFILL_ENTRIES_LOCK:
+            entries = list(_AUTOFILL_ENTRIES)
+        self._send_json({"entries": entries, "total": len(entries)})
+
+    def _handle_autofill_field_types(self) -> None:
+        """GET /api/v1/autofill/field-types — list field types (public)."""
+        self._send_json({"field_types": AUTOFILL_FIELD_TYPES})
+
+    def _handle_autofill_entry_create(self) -> None:
+        """POST /api/v1/autofill/entries — record autofill entry (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        field_type = body.get("field_type", "")
+        if field_type not in AUTOFILL_FIELD_TYPES:
+            self._send_json({"error": f"field_type must be one of {AUTOFILL_FIELD_TYPES}"}, 400)
+            return
+        field_name = body.get("field_name", "")
+        if len(field_name) > 100:
+            self._send_json({"error": "field_name must be 100 chars or fewer"}, 400)
+            return
+        url = body.get("url", "")
+        value = body.get("value", "")
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else body.get("url_hash", "")
+        value_hash = hashlib.sha256(value.encode()).hexdigest() if value else body.get("value_hash", "")
+        success = bool(body.get("success", True))
+        with _AUTOFILL_ENTRIES_LOCK:
+            if len(_AUTOFILL_ENTRIES) >= MAX_AUTOFILL_ENTRIES:
+                _AUTOFILL_ENTRIES.pop(0)
+            entry_id = "aft_" + str(uuid.uuid4())
+            record: dict = {
+                "entry_id": entry_id,
+                "field_type": field_type,
+                "field_name": field_name,
+                "url_hash": url_hash,
+                "value_hash": value_hash,
+                "success": success,
+                "filled_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _AUTOFILL_ENTRIES.append(record)
+        self._send_json({"status": "recorded", "entry": record}, 201)
+
+    def _handle_autofill_entries_stats(self) -> None:
+        """GET /api/v1/autofill/stats — autofill stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _AUTOFILL_ENTRIES_LOCK:
+            entries = list(_AUTOFILL_ENTRIES)
+        total = len(entries)
+        success_count = sum(1 for e in entries if e.get("success"))
+        fail_count = total - success_count
+        success_rate = str(Decimal(str(success_count / total)).quantize(Decimal("0.0001"))) if total > 0 else "0.0000"
+        by_field_type: dict[str, int] = {ft: 0 for ft in AUTOFILL_FIELD_TYPES}
+        for e in entries:
+            ft = e.get("field_type", "other")
+            by_field_type[ft] = by_field_type.get(ft, 0) + 1
+        self._send_json({
+            "total_fills": total,
+            "success_count": success_count,
+            "fail_count": fail_count,
+            "success_rate": success_rate,
+            "by_field_type": by_field_type,
+        })
+
+    def _handle_autofill_entry_delete(self, entry_id: str) -> None:
+        """DELETE /api/v1/autofill/entries/{entry_id} — delete entry (auth required)."""
+        if not self._check_auth():
+            return
+        with _AUTOFILL_ENTRIES_LOCK:
+            before = len(_AUTOFILL_ENTRIES)
+            remaining = [e for e in _AUTOFILL_ENTRIES if e.get("entry_id") != entry_id]
+            if len(remaining) == before:
+                self._send_json({"error": "entry not found"}, 404)
+                return
+            _AUTOFILL_ENTRIES.clear()
+            _AUTOFILL_ENTRIES.extend(remaining)
+        self._send_json({"status": "deleted", "entry_id": entry_id})
+
+    # ---------------------------------------------------------------------------
+    # Task 144 — Password Strength Checker handlers (new /history API)
+    # ---------------------------------------------------------------------------
+    @staticmethod
+    def _compute_pwd_strength(password: str) -> tuple:
+        """Compute strength level, score, and character type flags."""
+        length = len(password)
+        has_upper = any(c.isupper() for c in password)
+        has_lower = any(c.islower() for c in password)
+        has_digit = any(c.isdigit() for c in password)
+        has_special = any(not c.isalnum() for c in password)
+        char_types = sum([has_upper, has_lower, has_digit, has_special])
+        score = char_types * 20 + (20 if length >= 16 else 0)
+        if length < 6:
+            strength = "very_weak"
+        elif length <= 7 or char_types == 1:
+            strength = "weak"
+        elif length <= 11 and char_types >= 2:
+            strength = "fair"
+        elif length <= 15 and char_types >= 3:
+            strength = "strong"
+        elif length >= 16 and char_types >= 4:
+            strength = "very_strong"
+        else:
+            strength = "fair"
+        return strength, score, has_upper, has_lower, has_digit, has_special
+
+    def _handle_pwd144_analyze(self) -> None:
+        """POST /api/v1/password-checker/analyze — analyze password strength (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        password = body.get("password", None)
+        if password is None or not isinstance(password, str) or password == "":
+            self._send_json({"error": "password must be a non-empty string"}, 400)
+            return
+        url = body.get("url", "")
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else body.get("url_hash", "")
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        length = len(password)
+        strength, score, has_upper, has_lower, has_digit, has_special = self._compute_pwd_strength(password)
+        with _PWD144_LOCK:
+            if len(_PWD144_HISTORY) >= MAX_PWD144_HISTORY:
+                _PWD144_HISTORY.pop(0)
+            check_id = "psc_" + str(uuid.uuid4())
+            record: dict = {
+                "check_id": check_id,
+                "url_hash": url_hash,
+                "password_hash": password_hash,
+                "strength": strength,
+                "length": length,
+                "has_upper": has_upper,
+                "has_lower": has_lower,
+                "has_digit": has_digit,
+                "has_special": has_special,
+                "score": score,
+                "checked_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _PWD144_HISTORY.append(record)
+        self._send_json({"status": "analyzed", "check": record}, 201)
+
+    def _handle_pwd144_history_list(self) -> None:
+        """GET /api/v1/password-checker/history — list analysis history (auth required)."""
+        if not self._check_auth():
+            return
+        with _PWD144_LOCK:
+            history = list(_PWD144_HISTORY)
+        self._send_json({"history": history, "total": len(history)})
+
+    def _handle_pwd144_history_delete(self, check_id: str) -> None:
+        """DELETE /api/v1/password-checker/history/{check_id} — delete entry (auth required)."""
+        if not self._check_auth():
+            return
+        with _PWD144_LOCK:
+            before = len(_PWD144_HISTORY)
+            remaining = [c for c in _PWD144_HISTORY if c.get("check_id") != check_id]
+            if len(remaining) == before:
+                self._send_json({"error": "check not found"}, 404)
+                return
+            _PWD144_HISTORY.clear()
+            _PWD144_HISTORY.extend(remaining)
+        self._send_json({"status": "deleted", "check_id": check_id})
+
+    def _handle_pwd144_stats(self) -> None:
+        """GET /api/v1/password-checker/stats144 — checker stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _PWD144_LOCK:
+            history = list(_PWD144_HISTORY)
+        by_strength: dict[str, int] = {lvl: 0 for lvl in PASSWORD144_STRENGTH_LEVELS}
+        total_score = 0
+        for c in history:
+            lvl = c.get("strength", "very_weak")
+            by_strength[lvl] = by_strength.get(lvl, 0) + 1
+            total_score += c.get("score", 0)
+        count = len(history)
+        avg_score = str(Decimal(str(total_score / count)).quantize(Decimal("0.01"))) if count > 0 else "0.00"
+        self._send_json({
+            "total_checks": count,
+            "by_strength": by_strength,
+            "avg_score": avg_score,
+        })
+
+    def _handle_pwd144_strength_levels(self) -> None:
+        """GET /api/v1/password-checker/strength-levels144 — list strength levels (public)."""
+        self._send_json({"strength_levels": PASSWORD144_STRENGTH_LEVELS})
+
+    # ---------------------------------------------------------------------------
+    # Task 145 — Content Copy Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_copy_events_list(self) -> None:
+        """GET /api/v1/copy-tracker/copies — list copy events (auth required)."""
+        if not self._check_auth():
+            return
+        with _COPY_LOCK:
+            events = list(_COPY_EVENTS)
+        self._send_json({"copies": events, "total": len(events)})
+
+    def _handle_copy_content_types(self) -> None:
+        """GET /api/v1/copy-tracker/content-types — list content types (public)."""
+        self._send_json({"content_types": COPY_CONTENT_TYPES})
+
+    def _handle_copy_event_create(self) -> None:
+        """POST /api/v1/copy-tracker/copies — record a copy event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        content_type = body.get("content_type", "")
+        if content_type not in COPY_CONTENT_TYPES:
+            self._send_json({"error": f"content_type must be one of {COPY_CONTENT_TYPES}"}, 400)
+            return
+        char_count = body.get("char_count", 0)
+        if not isinstance(char_count, int) or char_count < 0:
+            self._send_json({"error": "char_count must be a non-negative integer"}, 400)
+            return
+        word_count = body.get("word_count", 0)
+        if not isinstance(word_count, int) or word_count < 0:
+            self._send_json({"error": "word_count must be a non-negative integer"}, 400)
+            return
+        url = body.get("url", "")
+        content = body.get("content", "")
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else body.get("url_hash", "")
+        content_hash = hashlib.sha256(content.encode()).hexdigest() if content else body.get("content_hash", "")
+        with _COPY_LOCK:
+            if len(_COPY_EVENTS) >= MAX_COPY_EVENTS:
+                _COPY_EVENTS.pop(0)
+            copy_id = "cct_" + str(uuid.uuid4())
+            record: dict = {
+                "copy_id": copy_id,
+                "content_type": content_type,
+                "url_hash": url_hash,
+                "content_hash": content_hash,
+                "char_count": char_count,
+                "word_count": word_count,
+                "copied_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _COPY_EVENTS.append(record)
+        self._send_json({"status": "recorded", "copy": record}, 201)
+
+    def _handle_copy_events_stats(self) -> None:
+        """GET /api/v1/copy-tracker/stats — copy stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _COPY_LOCK:
+            events = list(_COPY_EVENTS)
+        total_copies = len(events)
+        total_chars = sum(e.get("char_count", 0) for e in events)
+        total_words = sum(e.get("word_count", 0) for e in events)
+        by_content_type: dict[str, int] = {ct: 0 for ct in COPY_CONTENT_TYPES}
+        for e in events:
+            ct = e.get("content_type", "other")
+            by_content_type[ct] = by_content_type.get(ct, 0) + 1
+        most_copied_type = max(by_content_type, key=lambda k: by_content_type[k]) if events else ""
+        self._send_json({
+            "total_copies": total_copies,
+            "total_chars": total_chars,
+            "total_words": total_words,
+            "by_content_type": by_content_type,
+            "most_copied_type": most_copied_type,
+        })
+
+    def _handle_copy_event_delete(self, copy_id: str) -> None:
+        """DELETE /api/v1/copy-tracker/copies/{copy_id} — delete copy event (auth required)."""
+        if not self._check_auth():
+            return
+        with _COPY_LOCK:
+            before = len(_COPY_EVENTS)
+            remaining = [e for e in _COPY_EVENTS if e.get("copy_id") != copy_id]
+            if len(remaining) == before:
+                self._send_json({"error": "copy not found"}, 404)
+                return
+            _COPY_EVENTS.clear()
+            _COPY_EVENTS.extend(remaining)
+        self._send_json({"status": "deleted", "copy_id": copy_id})
+
+    # ---------------------------------------------------------------------------
+    # Task 146 — Focus Mode handlers
+    # ---------------------------------------------------------------------------
+    def _handle_focus146_sessions_list(self) -> None:
+        """GET /api/v1/focus/sessions — list sessions (auth required)."""
+        if not self._check_auth():
+            return
+        with _FOCUS146_LOCK:
+            sessions = list(_FOCUS146_SESSIONS)
+        self._send_json({"sessions": sessions, "total": len(sessions)})
+
+    def _handle_focus146_session_types(self) -> None:
+        """GET /api/v1/focus/session-types — list session types (public)."""
+        self._send_json({"session_types": FOCUS_SESSION_TYPES})
+
+    def _handle_focus146_session_create(self) -> None:
+        """POST /api/v1/focus/sessions — start focus session (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        session_type = body.get("session_type", "")
+        if session_type not in FOCUS_SESSION_TYPES:
+            self._send_json({"error": f"session_type must be one of {FOCUS_SESSION_TYPES}"}, 400)
+            return
+        target_minutes = body.get("target_minutes", 0)
+        if not isinstance(target_minutes, int) or target_minutes <= 0:
+            self._send_json({"error": "target_minutes must be an integer > 0"}, 400)
+            return
+        with _FOCUS146_LOCK:
+            if len(_FOCUS146_SESSIONS) >= MAX_FOCUS146_SESSIONS:
+                _FOCUS146_SESSIONS.pop(0)
+            session_id = "fcs_" + str(uuid.uuid4())
+            record: dict = {
+                "session_id": session_id,
+                "session_type": session_type,
+                "target_minutes": target_minutes,
+                "actual_minutes": None,
+                "status": "active",
+                "started_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "ended_at": None,
+            }
+            _FOCUS146_SESSIONS.append(record)
+        self._send_json({"status": "started", "session": record}, 201)
+
+    def _handle_focus146_session_end(self, session_id: str) -> None:
+        """POST /api/v1/focus/sessions/{session_id}/end — end focus session (auth required)."""
+        if not self._check_auth():
+            return
+        import math
+        with _FOCUS146_LOCK:
+            idx = next((i for i, s in enumerate(_FOCUS146_SESSIONS) if s["session_id"] == session_id), None)
+            if idx is None:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            session = _FOCUS146_SESSIONS[idx]
+            if session.get("status") == "completed":
+                self._send_json({"error": "session already ended"}, 409)
+                return
+            ended_at = datetime.now(timezone.utc)
+            started_at = datetime.fromisoformat(session["started_at"].replace("Z", "+00:00"))
+            elapsed_seconds = (ended_at - started_at).total_seconds()
+            actual_minutes = math.ceil(elapsed_seconds / 60)
+            session["ended_at"] = ended_at.isoformat().replace("+00:00", "Z")
+            session["actual_minutes"] = actual_minutes
+            session["status"] = "completed"
+        self._send_json({"status": "completed", "session": dict(session)})
+
+    def _handle_focus146_session_delete(self, session_id: str) -> None:
+        """DELETE /api/v1/focus/sessions/{session_id} — delete session (auth required)."""
+        if not self._check_auth():
+            return
+        with _FOCUS146_LOCK:
+            before = len(_FOCUS146_SESSIONS)
+            remaining = [s for s in _FOCUS146_SESSIONS if s.get("session_id") != session_id]
+            if len(remaining) == before:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            _FOCUS146_SESSIONS.clear()
+            _FOCUS146_SESSIONS.extend(remaining)
+        self._send_json({"status": "deleted", "session_id": session_id})
+
+    def _handle_focus146_stats(self) -> None:
+        """GET /api/v1/focus/stats — focus stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _FOCUS146_LOCK:
+            sessions = list(_FOCUS146_SESSIONS)
+        completed = [s for s in sessions if s.get("status") == "completed"]
+        completed_count = len(completed)
+        total_minutes_val = sum(s.get("actual_minutes", 0) or 0 for s in completed)
+        total_minutes = str(Decimal(str(total_minutes_val)))
+        avg_minutes = str(Decimal(str(total_minutes_val / completed_count)).quantize(Decimal("0.01"))) if completed_count > 0 else "0.00"
+        by_type: dict[str, int] = {st: 0 for st in FOCUS_SESSION_TYPES}
+        for s in sessions:
+            st = s.get("session_type", "custom")
+            by_type[st] = by_type.get(st, 0) + 1
+        self._send_json({
+            "total_sessions": len(sessions),
+            "completed_count": completed_count,
+            "total_minutes": total_minutes,
+            "avg_minutes": avg_minutes,
+            "by_type": by_type,
+        })
 
 # ---------------------------------------------------------------------------
 # Server factory — theorem: build_server isolates configuration from startup.

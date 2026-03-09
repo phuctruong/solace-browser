@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hover Dictionary — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/hover-dictionary.css" />
+</head>
+<body>
+  <div class="hd-container">
+    <h1 class="hd-title">Hover Dictionary</h1>
+    <p class="hd-subtitle">Track vocabulary lookups across pages. All words stored as SHA-256 hashes — never raw.</p>
+
+    <section class="hd-section">
+      <h2 class="hd-section-title">Record Lookup</h2>
+      <form id="hd-form" class="hd-form">
+        <input id="hd-word" class="hd-input" type="text" placeholder="Word looked up" required />
+        <select id="hd-source-lang" class="hd-select" aria-label="Source language"></select>
+        <select id="hd-target-lang" class="hd-select" aria-label="Target language"></select>
+        <input id="hd-definition" class="hd-input" type="text" placeholder="Definition (optional)" />
+        <input id="hd-page-url" class="hd-input" type="url" placeholder="Page URL (optional)" />
+        <button type="submit" class="hd-btn hd-btn-primary">Record</button>
+      </form>
+      <div id="hd-status" class="hd-status" aria-live="polite"></div>
+    </section>
+
+    <section class="hd-section">
+      <h2 class="hd-section-title">Stats</h2>
+      <div class="hd-stats">
+        <div class="hd-stat-card">
+          <div class="hd-stat-value" id="hd-stat-total">—</div>
+          <div class="hd-stat-label">Total Lookups</div>
+        </div>
+        <div class="hd-stat-card">
+          <div class="hd-stat-value" id="hd-stat-unique">—</div>
+          <div class="hd-stat-label">Unique Words</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hd-section">
+      <h2 class="hd-section-title">Lookup History</h2>
+      <div id="hd-lookups-list" class="hd-list">Loading…</div>
+    </section>
+  </div>
+  <script src="/web/js/hover-dictionary.js"></script>
+</body>
+</html>

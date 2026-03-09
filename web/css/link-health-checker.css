@@ -1,0 +1,119 @@
+:root {
+  --hub-bg: #f8f9fa;
+  --hub-surface: #ffffff;
+  --hub-border: #dee2e6;
+  --hub-text: #212529;
+  --hub-text-muted: #6c757d;
+  --hub-primary: #0d6efd;
+  --hub-danger: #dc3545;
+  --hub-success: #198754;
+  --hub-radius: 8px;
+  --hub-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+body {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.lhc-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.lhc-header {
+  margin-bottom: 24px;
+}
+
+.lhc-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.lhc-subtitle {
+  color: var(--hub-text-muted);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.lhc-section {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--hub-shadow);
+}
+
+.lhc-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.lhc-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.lhc-stat-card {
+  background: var(--hub-bg);
+  border-radius: var(--hub-radius);
+  padding: 12px;
+  text-align: center;
+}
+
+.lhc-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--hub-primary);
+}
+
+.lhc-stat-label {
+  font-size: 0.8rem;
+  color: var(--hub-text-muted);
+  margin-top: 4px;
+}
+
+.lhc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lhc-item {
+  background: var(--hub-bg);
+  border-radius: var(--hub-radius);
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  border-left: 3px solid var(--hub-border);
+}
+
+.lhc-item.broken {
+  border-left-color: var(--hub-danger);
+}
+
+.lhc-item.healthy {
+  border-left-color: var(--hub-success);
+}
+
+.lhc-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lhc-badge {
+  background: var(--hub-bg);
+  border: 1px solid var(--hub-border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Translator History — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/page-translator-history.css" />
+</head>
+<body>
+  <div class="ptr-container">
+    <h1 class="ptr-title">Page Translator History</h1>
+    <p class="ptr-subtitle">Track page translations across sessions. URLs stored as SHA-256 hashes — never raw.</p>
+
+    <section class="ptr-section">
+      <h2 class="ptr-section-title">Record Translation</h2>
+      <form id="ptr-form" class="ptr-form">
+        <input id="ptr-url" class="ptr-input" type="url" placeholder="Page URL (optional)" />
+        <select id="ptr-source-lang" class="ptr-select" aria-label="Source language"></select>
+        <select id="ptr-target-lang" class="ptr-select" aria-label="Target language"></select>
+        <input id="ptr-word-count" class="ptr-input" type="number" min="0" placeholder="Word count" />
+        <input id="ptr-quality" class="ptr-input" type="text" placeholder="Quality 0-1 (optional)" />
+        <button type="submit" class="ptr-btn ptr-btn-primary">Record</button>
+      </form>
+      <div id="ptr-status" class="ptr-status" aria-live="polite"></div>
+    </section>
+
+    <section class="ptr-section">
+      <h2 class="ptr-section-title">Stats</h2>
+      <div class="ptr-stats">
+        <div class="ptr-stat-card">
+          <div class="ptr-stat-value" id="ptr-stat-total">—</div>
+          <div class="ptr-stat-label">Total Translations</div>
+        </div>
+        <div class="ptr-stat-card">
+          <div class="ptr-stat-value" id="ptr-stat-words">—</div>
+          <div class="ptr-stat-label">Total Words</div>
+        </div>
+        <div class="ptr-stat-card">
+          <div class="ptr-stat-value" id="ptr-stat-top">—</div>
+          <div class="ptr-stat-label">Top Target Language</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ptr-section">
+      <h2 class="ptr-section-title">Translation History</h2>
+      <div id="ptr-list" class="ptr-list">Loading…</div>
+    </section>
+  </div>
+  <script src="/web/js/page-translator-history.js"></script>
+</body>
+</html>

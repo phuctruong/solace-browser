@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Highlight Extractor — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/highlight-extractor.css">
+</head>
+<body>
+<div class="hlt-container">
+  <h1 class="hlt-title">Highlight Extractor</h1>
+  <p class="hlt-subtitle">Extract and save text highlights from web pages.</p>
+
+  <div class="hlt-section">
+    <h2 class="hlt-section-title">Save Highlight</h2>
+    <form id="hlt-form" class="hlt-form">
+      <input id="hlt-page-url" class="hlt-input" type="url" placeholder="Page URL" required>
+      <input id="hlt-text" class="hlt-input" type="text" placeholder="Highlighted text" required>
+      <select id="hlt-color" class="hlt-select" aria-label="Color"></select>
+      <input id="hlt-note" class="hlt-input" type="text" placeholder="Note (optional)">
+      <input id="hlt-position" class="hlt-input" type="text" placeholder="Position (e.g. 100-150)">
+      <button type="submit" class="hlt-btn hlt-btn-primary">Save</button>
+    </form>
+    <div id="hlt-status" class="hlt-status"></div>
+  </div>
+
+  <div class="hlt-section">
+    <h2 class="hlt-section-title">Filter by Page</h2>
+    <div class="hlt-search-row">
+      <input id="hlt-filter-hash" class="hlt-input" type="text" placeholder="page_hash (SHA-256)">
+      <button id="hlt-filter-btn" class="hlt-btn hlt-btn-primary">Filter</button>
+    </div>
+  </div>
+
+  <div class="hlt-section">
+    <h2 class="hlt-section-title">Stats</h2>
+    <div id="hlt-stats" class="hlt-stats-grid"></div>
+  </div>
+
+  <div class="hlt-section">
+    <h2 class="hlt-section-title">Highlights</h2>
+    <div id="hlt-list" class="hlt-list"><p>Loading…</p></div>
+  </div>
+</div>
+<script src="/web/js/highlight-extractor.js"></script>
+</body>
+</html>
