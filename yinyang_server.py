@@ -129,7 +129,7 @@ import urllib.parse
 import urllib.request
 import uuid
 from datetime import datetime, timezone
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Optional
 
@@ -1438,6 +1438,30 @@ _DOM_EVENTS: list[dict] = []
 _DOM_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
+# Task 109 — Page Performance Budget
+# ---------------------------------------------------------------------------
+PERF_METRICS: list[str] = ["lcp", "fid", "cls", "fcp", "ttfb", "tti", "tbt", "si", "inp", "dcl"]
+MAX_PERF_BUDGETS: int = 200
+MAX_PERF_MEASUREMENTS: int = 50000
+_PERF_BUDGETS: list[dict] = []
+_PERF_MEASUREMENTS: list[dict] = []
+_PERF_LOCK = threading.Lock()
+
+# Task 110 — Web Archiver
+# ---------------------------------------------------------------------------
+ARCHIVE_FORMATS: list[str] = ["html", "pdf", "screenshot", "mhtml", "warc", "har"]
+MAX_ARCHIVES: int = 10000
+_ARCHIVES: list[dict] = []
+_ARCHIVE_LOCK = threading.Lock()
+
+# Task 111 — Cookie Consent Tracker
+# ---------------------------------------------------------------------------
+COOKIE_CONSENT_CATEGORIES: list[str] = ["necessary", "functional", "analytics", "marketing", "preferences"]
+CONSENT_DECISIONS: list[str] = ["accept_all", "reject_all", "custom", "withdraw", "pending"]
+MAX_COOKIE_DECISIONS: int = 50000
+_COOKIE_DECISIONS: list[dict] = []
+_COOKIE_LOCK = threading.Lock()
+
 # Task 108 — Resource Saver
 # ---------------------------------------------------------------------------
 RESOURCE_TYPES: list[str] = ["script", "stylesheet", "image", "font", "media", "document", "api_response", "other"]
@@ -1445,6 +1469,133 @@ RESOURCE_SOURCES: list[str] = ["page_load", "xhr", "fetch", "service_worker", "m
 MAX_SAVED_RESOURCES: int = 10000
 _SAVED_RESOURCES: list[dict] = []
 _RESOURCE_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 112 — Browser History Analytics
+# ---------------------------------------------------------------------------
+VISIT_CATEGORIES: list[str] = ["social", "news", "shopping", "work", "entertainment", "education", "other"]
+MAX_VISITS: int = 100000
+_VISITS: list[dict] = []
+_VISITS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 113 — Storage Quota Monitor
+# ---------------------------------------------------------------------------
+QUOTA_STORAGE_TYPES: list[str] = ["localstorage", "sessionstorage", "indexeddb", "cache", "cookies", "serviceworker"]
+MAX_QUOTA_MEASUREMENTS: int = 100000
+_QUOTA_MEASUREMENTS: list[dict] = []
+_QUOTA_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 114 — Content Rating System
+# ---------------------------------------------------------------------------
+RATING_CRITERIA: list[str] = ["accuracy", "clarity", "relevance", "depth", "credibility", "originality"]
+CONTENT_QUALITY_LEVELS: list[str] = ["poor", "fair", "good", "excellent", "outstanding"]
+MAX_RATINGS: int = 50000
+_RATINGS: list[dict] = []
+_RATINGS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 115 — Reader View Settings
+# ---------------------------------------------------------------------------
+READER_VIEW_FONTS: list[str] = ["serif", "sans-serif", "monospace", "dyslexic", "newspaper"]
+READER_VIEW_THEMES: list[str] = ["light", "dark", "sepia", "contrast", "night"]
+READER_VIEW_SPACING: list[str] = ["compact", "normal", "relaxed", "wide"]
+MAX_READER_SETTINGS: int = 5000
+_READER_SETTINGS: list[dict] = []
+_READER_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 116 — AI Form Filler
+# ---------------------------------------------------------------------------
+FORM_FIELD_TYPES: list[str] = ["text", "email", "phone", "address", "name", "date", "number", "url", "password", "select", "textarea"]
+MAX_FORM_PROFILES: int = 100
+MAX_FILL_LOG: int = 10000
+_FORM_PROFILES: list[dict] = []
+_FILL_LOG: list[dict] = []
+_FILLER_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 117 — Link Checker
+# ---------------------------------------------------------------------------
+LINK_STATUSES: list[str] = ["ok", "redirect", "broken", "timeout", "blocked", "unknown", "pending"]
+MAX_LINK_CHECKS: int = 100000
+_LINK_CHECKS: list[dict] = []
+_LINK_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 118 — Password Strength Checker
+# ---------------------------------------------------------------------------
+PASSWORD_STRENGTH_LEVELS: list[str] = ["very_weak", "weak", "fair", "strong", "very_strong"]
+MAX_PASSWORD_CHECKS: int = 10000
+_PASSWORD_CHECKS: list[dict] = []
+_PWD_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 119 — Site Monitor
+# ---------------------------------------------------------------------------
+SITE_CHECK_STATUSES: list[str] = ["up", "down", "slow", "timeout", "error", "unknown"]
+MAX_SITE_MONITORS: int = 500
+MAX_SITE_CHECKS: int = 100000
+_SITE_MONITORS: list[dict] = []
+_SITE_CHECKS: list[dict] = []
+_MONITOR_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 120 — Image Optimizer
+# ---------------------------------------------------------------------------
+IMAGE_FORMATS: list[str] = ["jpeg", "png", "gif", "webp", "avif", "svg", "bmp", "tiff"]
+IMAGE_ISSUES: list[str] = ["oversized", "wrong_format", "no_alt", "missing_dimensions", "large_filesize", "unoptimized"]
+MAX_IMAGE_REPORTS: int = 50000
+_IMAGE_REPORTS: list[dict] = []
+_IMAGE_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 121 — Custom Search Engine
+# ---------------------------------------------------------------------------
+SEARCH_ENGINE_CATEGORIES = [
+    "general", "technical", "academic", "news", "shopping",
+    "images", "videos", "code", "maps", "custom"
+]
+MAX_SEARCH_ENGINES = 50
+_SEARCH_ENGINES: list[dict] = []
+_SEARCH_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 122 — Focus Session Timer
+# ---------------------------------------------------------------------------
+FOCUS_MODES = ["pomodoro", "deep_work", "sprint", "flow", "custom"]
+FOCUS_DURATIONS = [15, 20, 25, 30, 45, 60, 90, 120]  # minutes
+MAX_FOCUS_SESSIONS = 10000
+_FOCUS_SESSIONS: list[dict] = []
+_ACTIVE_FOCUS: dict = {}  # token_hash → session_id
+_FOCUS_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 123 — Text Expander
+# ---------------------------------------------------------------------------
+SNIPPET_CATEGORIES = ["greeting", "signature", "code_template", "response", "address", "contact", "legal", "custom"]
+MAX_SNIPPETS = 500
+MAX_EXPANSION_LOG = 10000
+_TEXT_SNIPPETS: list[dict] = []
+_EXPANSION_LOG: list[dict] = []
+_EXPANDER_LOCK = threading.Lock()
+
+# Task 124 — PDF Viewer Notes
+# ---------------------------------------------------------------------------
+NOTE_TYPES: list[str] = ["text", "highlight", "bookmark", "question", "summary"]
+MAX_PDF_NOTES: int = 10000
+_PDF_NOTES: list[dict] = []
+_PDF_NOTES_LOCK = threading.Lock()
+
+# Task 125 — Speed Reader
+# ---------------------------------------------------------------------------
+READING_DIFFICULTY: list[str] = ["beginner", "intermediate", "advanced", "expert"]
+MIN_WPM: int = 50
+MAX_WPM: int = 2000
+MAX_READING_SESSIONS: int = 5000
+_SPEED_SESSIONS: list[dict] = []
+_SPEED_LOCK = threading.Lock()
 
 # Task 070 — Performance Profiler
 # ---------------------------------------------------------------------------
@@ -5911,7 +6062,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_scroll_directions()
         # --- Task 106: Clipboard Manager ---
         elif path == "/api/v1/clipboard/entries":
-            self._handle_clipboard_list()
+            self._handle_clipboard_entries_list()
         elif path == "/api/v1/clipboard/content-types":
             self._handle_clipboard_content_types()
         # --- Task 107: DOM Monitor ---
@@ -5930,6 +6081,134 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_resource_types()
         elif path == "/api/v1/resource-saver/resources":
             self._handle_resource_list()
+        # --- Task 109: Page Performance Budget ---
+        elif path == "/api/v1/perf-budget/metrics":
+            self._handle_perf_metrics_list()
+        elif path == "/api/v1/perf-budget/budgets":
+            self._handle_perf_budget_list()
+        elif path == "/api/v1/perf-budget/measurements":
+            self._handle_perf_measurement_list()
+        # --- Task 110: Web Archiver ---
+        elif path == "/api/v1/web-archiver/formats":
+            self._handle_archive_formats_list()
+        elif path == "/api/v1/web-archiver/archives/search":
+            self._handle_archive_search(query)
+        elif path == "/api/v1/web-archiver/archives":
+            self._handle_archive_list()
+        # --- Task 111: Cookie Consent Tracker ---
+        elif path == "/api/v1/cookie-consent/categories":
+            self._handle_cookie_categories_list()
+        elif path == "/api/v1/cookie-consent/stats":
+            self._handle_cookie_consent_stats()
+        elif path == "/api/v1/cookie-consent/decisions":
+            self._handle_cookie_decision_list()
+        # --- Task 112: Browser History Analytics ---
+        elif path == "/api/v1/history-analytics/categories":
+            self._handle_visit_categories()
+        elif path == "/api/v1/history-analytics/stats":
+            self._handle_visit_stats()
+        elif path == "/api/v1/history-analytics/visits":
+            self._handle_visit_list()
+        # --- Task 113: Storage Quota Monitor ---
+        elif path == "/api/v1/storage-quota/storage-types":
+            self._handle_quota_storage_types()
+        elif path == "/api/v1/storage-quota/measurements/latest":
+            self._handle_quota_latest()
+        elif path == "/api/v1/storage-quota/measurements":
+            self._handle_quota_list()
+        # --- Task 114: Content Rating System ---
+        elif path == "/api/v1/content-rating/criteria":
+            self._handle_rating_criteria()
+        elif path == "/api/v1/content-rating/stats":
+            self._handle_rating_stats()
+        elif path == "/api/v1/content-rating/ratings":
+            self._handle_rating_list()
+        # --- Task 115: Reader View Settings ---
+        elif path == "/api/v1/reader-view/settings/by-site":
+            self._handle_reader_settings_by_site()
+        elif path == "/api/v1/reader-view/settings":
+            self._handle_reader_settings_list()
+        elif path == "/api/v1/reader-view/options":
+            self._handle_reader_options()
+        # --- Task 116: AI Form Filler ---
+        elif path == "/api/v1/form-filler/profiles":
+            self._handle_form_profiles_list()
+        elif path == "/api/v1/form-filler/fill-log":
+            self._handle_fill_log_list()
+        elif path == "/api/v1/form-filler/field-types":
+            self._handle_field_types_list()
+        # --- Task 117: Link Checker ---
+        elif path == "/api/v1/link-checker/checks":
+            self._handle_link_checks_list()
+        elif path == "/api/v1/link-checker/stats":
+            self._handle_link_stats()
+        elif path == "/api/v1/link-checker/statuses":
+            self._handle_link_statuses_list()
+        # --- Task 121: Custom Search Engine ---
+        elif path == "/api/v1/custom-search/categories":
+            self._handle_search_engine_categories()
+        elif path == "/api/v1/custom-search/active":
+            self._handle_search_engine_active()
+        elif path == "/api/v1/custom-search/engines":
+            self._handle_search_engine_list()
+        elif path == "/web/custom-search-engine.html":
+            self._handle_static_file("web/custom-search-engine.html", "text/html; charset=utf-8")
+        elif path == "/web/js/custom-search-engine.js":
+            self._handle_static_file("web/js/custom-search-engine.js", "application/javascript")
+        elif path == "/web/css/custom-search-engine.css":
+            self._handle_static_file("web/css/custom-search-engine.css", "text/css")
+        # --- Task 122: Focus Session Timer ---
+        elif path == "/api/v1/focus-timer/modes":
+            self._handle_focus_modes()
+        elif path == "/api/v1/focus-timer/stats":
+            self._handle_focus_stats()
+        elif path == "/api/v1/focus-timer/sessions":
+            self._handle_focus_session_list()
+        elif path == "/web/focus-session-timer.html":
+            self._handle_static_file("web/focus-session-timer.html", "text/html; charset=utf-8")
+        elif path == "/web/js/focus-session-timer.js":
+            self._handle_static_file("web/js/focus-session-timer.js", "application/javascript")
+        elif path == "/web/css/focus-session-timer.css":
+            self._handle_static_file("web/css/focus-session-timer.css", "text/css")
+        # --- Task 123: Text Expander ---
+        elif path == "/api/v1/text-expander/categories":
+            self._handle_snippet_categories()
+        elif path == "/api/v1/text-expander/stats":
+            self._handle_expander_stats()
+        elif path == "/api/v1/text-expander/snippets":
+            self._handle_snippet_list_expander()
+        elif path == "/web/text-expander.html":
+            self._handle_static_file("web/text-expander.html", "text/html; charset=utf-8")
+        elif path == "/web/js/text-expander.js":
+            self._handle_static_file("web/js/text-expander.js", "application/javascript")
+        elif path == "/web/css/text-expander.css":
+            self._handle_static_file("web/css/text-expander.css", "text/css")
+        # --- Task 124: PDF Viewer Notes ---
+        elif path == "/api/v1/pdf-notes/notes/by-pdf":
+            self._handle_pdf_notes_by_pdf()
+        elif path == "/api/v1/pdf-notes/stats":
+            self._handle_pdf_notes_stats()
+        elif path == "/api/v1/pdf-notes/notes":
+            self._handle_pdf_notes_list()
+        elif path == "/web/pdf-viewer-notes.html":
+            self._handle_static_file("web/pdf-viewer-notes.html", "text/html; charset=utf-8")
+        elif path == "/web/js/pdf-viewer-notes.js":
+            self._handle_static_file("web/js/pdf-viewer-notes.js", "application/javascript")
+        elif path == "/web/css/pdf-viewer-notes.css":
+            self._handle_static_file("web/css/pdf-viewer-notes.css", "text/css")
+        # --- Task 125: Speed Reader ---
+        elif path == "/api/v1/speed-reader/difficulty-levels":
+            self._handle_speed_reader_difficulty_levels()
+        elif path == "/api/v1/speed-reader/progress":
+            self._handle_speed_reader_progress()
+        elif path == "/api/v1/speed-reader/sessions":
+            self._handle_speed_reader_session_list()
+        elif path == "/web/speed-reader.html":
+            self._handle_static_file("web/speed-reader.html", "text/html; charset=utf-8")
+        elif path == "/web/js/speed-reader.js":
+            self._handle_static_file("web/js/speed-reader.js", "application/javascript")
+        elif path == "/web/css/speed-reader.css":
+            self._handle_static_file("web/css/speed-reader.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -6541,6 +6820,59 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 108: Resource Saver ---
         elif path == "/api/v1/resource-saver/resources":
             self._handle_resource_save()
+        # --- Task 109: Page Performance Budget ---
+        elif path == "/api/v1/perf-budget/budgets":
+            self._handle_perf_budget_create()
+        elif path == "/api/v1/perf-budget/measurements":
+            self._handle_perf_measurement_create()
+        # --- Task 110: Web Archiver ---
+        elif path == "/api/v1/web-archiver/archives":
+            self._handle_archive_create()
+        # --- Task 111: Cookie Consent Tracker ---
+        elif path == "/api/v1/cookie-consent/decisions":
+            self._handle_cookie_decision_create()
+        # --- Task 112: Browser History Analytics ---
+        elif path == "/api/v1/history-analytics/visits":
+            self._handle_visit_create()
+        # --- Task 113: Storage Quota Monitor ---
+        elif path == "/api/v1/storage-quota/measurements":
+            self._handle_quota_create()
+        # --- Task 114: Content Rating System ---
+        elif path == "/api/v1/content-rating/ratings":
+            self._handle_rating_create()
+        # --- Task 115: Reader View Settings ---
+        elif path == "/api/v1/reader-view/settings":
+            self._handle_reader_settings_create()
+        # --- Task 116: AI Form Filler ---
+        elif path == "/api/v1/form-filler/profiles":
+            self._handle_form_profile_create()
+        elif path == "/api/v1/form-filler/fill-log":
+            self._handle_fill_log_create()
+        # --- Task 117: Link Checker ---
+        elif path == "/api/v1/link-checker/checks":
+            self._handle_link_check_create()
+        # --- Task 121: Custom Search Engine ---
+        elif path == "/api/v1/custom-search/engines":
+            self._handle_search_engine_create()
+        elif re.match(r"^/api/v1/custom-search/engines/[^/]+/activate$", path):
+            engine_id = path.split("/")[-2]
+            self._handle_search_engine_activate(engine_id)
+        # --- Task 122: Focus Session Timer ---
+        elif path == "/api/v1/focus-timer/sessions/end":
+            self._handle_focus_session_end()
+        elif path == "/api/v1/focus-timer/sessions":
+            self._handle_focus_session_start()
+        # --- Task 123: Text Expander ---
+        elif path == "/api/v1/text-expander/snippets":
+            self._handle_snippet_create()
+        elif path == "/api/v1/text-expander/expand":
+            self._handle_expansion_record()
+        # --- Task 124: PDF Viewer Notes ---
+        elif path == "/api/v1/pdf-notes/notes":
+            self._handle_pdf_note_create()
+        # --- Task 125: Speed Reader ---
+        elif path == "/api/v1/speed-reader/sessions":
+            self._handle_speed_reader_session_create()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -6861,7 +7193,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 106: Clipboard Manager ---
         elif re.match(r"^/api/v1/clipboard/entries/[^/]+$", path):
             entry_id = path.split("/")[-1]
-            self._handle_clipboard_delete(entry_id)
+            self._handle_clipboard_entries_delete(entry_id)
         # --- Task 107: DOM Monitor ---
         elif re.match(r"^/api/v1/dom-monitor/rules/[^/]+$", path):
             rule_id = path.split("/")[-1]
@@ -6870,6 +7202,70 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/resource-saver/resources/[^/]+$", path):
             resource_id = path.split("/")[-1]
             self._handle_resource_delete(resource_id)
+        # --- Task 109: Page Performance Budget ---
+        elif re.match(r"^/api/v1/perf-budget/budgets/[^/]+$", path):
+            budget_id = path.split("/")[-1]
+            self._handle_perf_budget_delete(budget_id)
+        # --- Task 110: Web Archiver ---
+        elif re.match(r"^/api/v1/web-archiver/archives/[^/]+$", path):
+            archive_id = path.split("/")[-1]
+            self._handle_archive_delete(archive_id)
+        # --- Task 111: Cookie Consent Tracker ---
+        elif re.match(r"^/api/v1/cookie-consent/decisions/[^/]+$", path):
+            decision_id = path.split("/")[-1]
+            self._handle_cookie_decision_delete(decision_id)
+        # --- Task 112: Browser History Analytics ---
+        elif re.match(r"^/api/v1/history-analytics/visits/[^/]+$", path):
+            visit_id = path.split("/")[-1]
+            self._handle_visit_delete(visit_id)
+        # --- Task 113: Storage Quota Monitor ---
+        elif re.match(r"^/api/v1/storage-quota/measurements/[^/]+$", path):
+            measurement_id = path.split("/")[-1]
+            self._handle_quota_delete(measurement_id)
+        # --- Task 114: Content Rating System ---
+        elif re.match(r"^/api/v1/content-rating/ratings/[^/]+$", path):
+            rating_id = path.split("/")[-1]
+            self._handle_rating_delete(rating_id)
+        # --- Task 115: Reader View Settings ---
+        elif re.match(r"^/api/v1/reader-view/settings/[^/]+$", path):
+            setting_id = path.split("/")[-1]
+            self._handle_reader_settings_delete(setting_id)
+        # --- Task 116: AI Form Filler ---
+        elif re.match(r"^/api/v1/form-filler/profiles/[^/]+$", path):
+            profile_id = path.split("/")[-1]
+            self._handle_form_profile_delete(profile_id)
+        # --- Task 117: Link Checker ---
+        elif re.match(r"^/api/v1/link-checker/checks/[^/]+$", path):
+            check_id = path.split("/")[-1]
+            self._handle_link_check_delete(check_id)
+        # --- Task 121: Custom Search Engine ---
+        elif re.match(r"^/api/v1/custom-search/engines/[^/]+$", path):
+            engine_id = path.split("/")[-1]
+            self._handle_search_engine_delete(engine_id)
+        # --- Task 123: Text Expander ---
+        elif re.match(r"^/api/v1/text-expander/snippets/[^/]+$", path):
+            snippet_id = path.split("/")[-1]
+            self._handle_snippet_delete_expander(snippet_id)
+        # --- Task 124: PDF Viewer Notes ---
+        elif re.match(r"^/api/v1/pdf-notes/notes/[^/]+$", path):
+            note_id = path.split("/")[-1]
+            self._handle_pdf_note_delete(note_id)
+        # --- Task 125: Speed Reader ---
+        elif re.match(r"^/api/v1/speed-reader/sessions/[^/]+$", path):
+            session_id = path.split("/")[-1]
+            self._handle_speed_reader_session_delete(session_id)
+        # --- Task 118: Password Strength Checker ---
+        elif re.match(r"^/api/v1/password-checker/checks/[^/]+$", path):
+            check_id = path.split("/")[-1]
+            self._handle_password_check_delete(check_id)
+        # --- Task 119: Site Monitor ---
+        elif re.match(r"^/api/v1/site-monitor/monitors/[^/]+$", path):
+            monitor_id = path.split("/")[-1]
+            self._handle_site_monitor_delete(monitor_id)
+        # --- Task 120: Image Optimizer ---
+        elif re.match(r"^/api/v1/image-optimizer/reports/[^/]+$", path):
+            report_id = path.split("/")[-1]
+            self._handle_image_report_delete(report_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -14974,6 +15370,8 @@ function choose(mode) {
         event_type = params.get("type", [None])[0]
         with _EVIDENCE_CHAIN_LOCK:
             entries = self._load_evidence_chain()
+        # newest-first so default limit=100 always includes most recent entries
+        entries = sorted(entries, key=lambda e: e.get("ts", 0), reverse=True)
         if event_type:
             entries = [e for e in entries if e.get("type") == event_type or e.get("event_type") == event_type]
         total = len(entries)
@@ -16520,7 +16918,7 @@ function choose(mode) {
         threshold_raw = body.get("threshold", "")
         try:
             threshold = str(Decimal(str(threshold_raw)))
-        except Exception:
+        except (InvalidOperation, ValueError):
             self._send_json({"error": "threshold must be a valid decimal number"}, 400)
             return
         rule: dict[str, Any] = {
@@ -22285,7 +22683,7 @@ function choose(mode) {
             _CLIPBOARD_ENTRIES.append(entry)
         self._send_json({"status": "saved", "entry": entry}, 201)
 
-    def _handle_clipboard_list(self) -> None:
+    def _handle_clipboard_entries_list(self) -> None:
         """GET /api/v1/clipboard/entries — list clipboard entries newest first (auth required)."""
         if not self._check_auth():
             return
@@ -22293,7 +22691,7 @@ function choose(mode) {
             entries = list(reversed([dict(e) for e in _CLIPBOARD_ENTRIES]))
         self._send_json({"entries": entries, "total": len(entries)})
 
-    def _handle_clipboard_delete(self, entry_id: str) -> None:
+    def _handle_clipboard_entries_delete(self, entry_id: str) -> None:
         """DELETE /api/v1/clipboard/entries/{entry_id} — delete entry (auth required)."""
         if not self._check_auth():
             return
@@ -22305,7 +22703,7 @@ function choose(mode) {
             _CLIPBOARD_ENTRIES.pop(idx)
         self._send_json({"status": "deleted", "entry_id": entry_id})
 
-    def _handle_clipboard_clear(self) -> None:
+    def _handle_clipboard_entries_clear(self) -> None:
         """POST /api/v1/clipboard/clear — clear all entries (auth required)."""
         if not self._check_auth():
             return
@@ -22504,6 +22902,1564 @@ function choose(mode) {
     def _handle_resource_types(self) -> None:
         """GET /api/v1/resource-saver/resource-types — list resource types (public)."""
         self._send_json({"resource_types": RESOURCE_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 112 — Browser History Analytics handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_visit_create(self) -> None:
+        """POST /api/v1/history-analytics/visits — record visit (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        url_raw = body.get("url", "")
+        domain_raw = body.get("domain", "")
+        category = body.get("category", "")
+        if category not in VISIT_CATEGORIES:
+            self._send_json({"error": f"category must be one of {VISIT_CATEGORIES}"}, 400)
+            return
+        duration_seconds = body.get("duration_seconds", 0)
+        if not isinstance(duration_seconds, int) or duration_seconds < 0:
+            self._send_json({"error": "duration_seconds must be a non-negative integer"}, 400)
+            return
+        url_hash = hashlib.sha256(url_raw.encode()).hexdigest() if url_raw else ""
+        domain_hash = hashlib.sha256(domain_raw.encode()).hexdigest() if domain_raw else ""
+        with _VISITS_LOCK:
+            if len(_VISITS) >= MAX_VISITS:
+                _VISITS.pop(0)
+            visit_id = "vis_" + str(uuid.uuid4())
+            visit = {
+                "visit_id": visit_id,
+                "url_hash": url_hash,
+                "domain_hash": domain_hash,
+                "category": category,
+                "duration_seconds": duration_seconds,
+                "visited_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _VISITS.append(visit)
+        self._send_json({"status": "recorded", "visit": visit}, 201)
+
+    def _handle_visit_list(self) -> None:
+        """GET /api/v1/history-analytics/visits — list visits (auth required)."""
+        if not self._check_auth():
+            return
+        with _VISITS_LOCK:
+            visits = [dict(v) for v in _VISITS]
+        self._send_json({"visits": visits, "total": len(visits)})
+
+    def _handle_visit_delete(self, visit_id: str) -> None:
+        """DELETE /api/v1/history-analytics/visits/{visit_id} — delete visit (auth required)."""
+        if not self._check_auth():
+            return
+        with _VISITS_LOCK:
+            idx = next((i for i, v in enumerate(_VISITS) if v["visit_id"] == visit_id), None)
+            if idx is None:
+                self._send_json({"error": "visit not found"}, 404)
+                return
+            _VISITS.pop(idx)
+        self._send_json({"status": "deleted", "visit_id": visit_id})
+
+    def _handle_visit_stats(self) -> None:
+        """GET /api/v1/history-analytics/stats — analytics stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _VISITS_LOCK:
+            visits = list(_VISITS)
+        by_category = {}
+        domain_counts = {}
+        for v in visits:
+            cat = v.get("category", "other")
+            by_category[cat] = by_category.get(cat, 0) + 1
+            dh = v.get("domain_hash", "")
+            if dh:
+                domain_counts[dh] = domain_counts.get(dh, 0) + 1
+        top_domains = sorted(domain_counts, key=lambda k: domain_counts[k], reverse=True)[:5]
+        self._send_json({
+            "total_visits": len(visits),
+            "total_unique_domains": len(domain_counts),
+            "by_category": by_category,
+            "top_domains": top_domains,
+        })
+
+    def _handle_visit_categories(self) -> None:
+        """GET /api/v1/history-analytics/categories — list visit categories (public)."""
+        self._send_json({"categories": VISIT_CATEGORIES})
+
+    # ---------------------------------------------------------------------------
+    # Task 113 — Storage Quota Monitor handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_quota_create(self) -> None:
+        """POST /api/v1/storage-quota/measurements — record measurement (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        storage_type = body.get("storage_type", "")
+        if storage_type not in QUOTA_STORAGE_TYPES:
+            self._send_json({"error": f"storage_type must be one of {QUOTA_STORAGE_TYPES}"}, 400)
+            return
+        used_bytes = body.get("used_bytes", 0)
+        if not isinstance(used_bytes, int) or used_bytes < 0:
+            self._send_json({"error": "used_bytes must be a non-negative integer"}, 400)
+            return
+        quota_bytes = body.get("quota_bytes", 0)
+        if not isinstance(quota_bytes, int) or quota_bytes <= 0:
+            self._send_json({"error": "quota_bytes must be a positive integer"}, 400)
+            return
+        site_raw = body.get("site_url", "")
+        site_hash = hashlib.sha256(site_raw.encode()).hexdigest() if site_raw else ""
+        pct_used = str(Decimal(str(used_bytes * 100 / quota_bytes)).quantize(Decimal("0.01")))
+        with _QUOTA_LOCK:
+            if len(_QUOTA_MEASUREMENTS) >= MAX_QUOTA_MEASUREMENTS:
+                _QUOTA_MEASUREMENTS.pop(0)
+            measurement_id = "sqm_" + str(uuid.uuid4())
+            measurement = {
+                "measurement_id": measurement_id,
+                "storage_type": storage_type,
+                "used_bytes": used_bytes,
+                "quota_bytes": quota_bytes,
+                "pct_used": pct_used,
+                "site_hash": site_hash,
+                "measured_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _QUOTA_MEASUREMENTS.append(measurement)
+        self._send_json({"status": "recorded", "measurement": measurement}, 201)
+
+    def _handle_quota_list(self) -> None:
+        """GET /api/v1/storage-quota/measurements — list measurements (auth required)."""
+        if not self._check_auth():
+            return
+        with _QUOTA_LOCK:
+            measurements = [dict(m) for m in _QUOTA_MEASUREMENTS]
+        self._send_json({"measurements": measurements, "total": len(measurements)})
+
+    def _handle_quota_latest(self) -> None:
+        """GET /api/v1/storage-quota/measurements/latest — latest per storage type (auth required)."""
+        if not self._check_auth():
+            return
+        with _QUOTA_LOCK:
+            measurements = list(_QUOTA_MEASUREMENTS)
+        latest = {}
+        for m in measurements:
+            st = m.get("storage_type", "")
+            if st not in latest or m["measured_at"] > latest[st]["measured_at"]:
+                latest[st] = dict(m)
+        self._send_json({"latest": latest})
+
+    def _handle_quota_delete(self, measurement_id: str) -> None:
+        """DELETE /api/v1/storage-quota/measurements/{id} — delete (auth required)."""
+        if not self._check_auth():
+            return
+        with _QUOTA_LOCK:
+            idx = next((i for i, m in enumerate(_QUOTA_MEASUREMENTS) if m["measurement_id"] == measurement_id), None)
+            if idx is None:
+                self._send_json({"error": "measurement not found"}, 404)
+                return
+            _QUOTA_MEASUREMENTS.pop(idx)
+        self._send_json({"status": "deleted", "measurement_id": measurement_id})
+
+    def _handle_quota_storage_types(self) -> None:
+        """GET /api/v1/storage-quota/storage-types — list storage types (public)."""
+        self._send_json({"storage_types": QUOTA_STORAGE_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 114 — Content Rating System handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_rating_create(self) -> None:
+        """POST /api/v1/content-rating/ratings — submit rating (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        url_raw = body.get("url", "")
+        criterion = body.get("criterion", "")
+        if criterion not in RATING_CRITERIA:
+            self._send_json({"error": f"criterion must be one of {RATING_CRITERIA}"}, 400)
+            return
+        score = body.get("score", 0)
+        if not isinstance(score, int) or score < 1 or score > 5:
+            self._send_json({"error": "score must be an integer between 1 and 5"}, 400)
+            return
+        quality_level = CONTENT_QUALITY_LEVELS[score - 1]
+        url_hash = hashlib.sha256(url_raw.encode()).hexdigest() if url_raw else ""
+        notes_raw = body.get("notes", "")
+        notes_hash = hashlib.sha256(notes_raw.encode()).hexdigest() if notes_raw else ""
+        with _RATINGS_LOCK:
+            if len(_RATINGS) >= MAX_RATINGS:
+                _RATINGS.pop(0)
+            rating_id = "crt_" + str(uuid.uuid4())
+            rating = {
+                "rating_id": rating_id,
+                "url_hash": url_hash,
+                "criterion": criterion,
+                "score": score,
+                "quality_level": quality_level,
+                "notes_hash": notes_hash,
+                "rated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _RATINGS.append(rating)
+        self._send_json({"status": "submitted", "rating": rating}, 201)
+
+    def _handle_rating_list(self) -> None:
+        """GET /api/v1/content-rating/ratings — list ratings (auth required)."""
+        if not self._check_auth():
+            return
+        with _RATINGS_LOCK:
+            ratings = [dict(r) for r in _RATINGS]
+        self._send_json({"ratings": ratings, "total": len(ratings)})
+
+    def _handle_rating_delete(self, rating_id: str) -> None:
+        """DELETE /api/v1/content-rating/ratings/{rating_id} — delete (auth required)."""
+        if not self._check_auth():
+            return
+        with _RATINGS_LOCK:
+            idx = next((i for i, r in enumerate(_RATINGS) if r["rating_id"] == rating_id), None)
+            if idx is None:
+                self._send_json({"error": "rating not found"}, 404)
+                return
+            _RATINGS.pop(idx)
+        self._send_json({"status": "deleted", "rating_id": rating_id})
+
+    def _handle_rating_stats(self) -> None:
+        """GET /api/v1/content-rating/stats — rating stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _RATINGS_LOCK:
+            ratings = list(_RATINGS)
+        if not ratings:
+            avg_score = "0.00"
+        else:
+            avg_score = str(Decimal(str(sum(r["score"] for r in ratings) / len(ratings))).quantize(Decimal("0.01")))
+        criterion_scores = {}
+        for r in ratings:
+            c = r.get("criterion", "")
+            criterion_scores.setdefault(c, []).append(r["score"])
+        by_criterion = {
+            c: str(Decimal(str(sum(scores) / len(scores))).quantize(Decimal("0.01")))
+            for c, scores in criterion_scores.items()
+        }
+        by_quality = {}
+        for r in ratings:
+            ql = r.get("quality_level", "")
+            by_quality[ql] = by_quality.get(ql, 0) + 1
+        self._send_json({
+            "total_ratings": len(ratings),
+            "avg_score": avg_score,
+            "by_criterion": by_criterion,
+            "by_quality": by_quality,
+        })
+
+    def _handle_rating_criteria(self) -> None:
+        """GET /api/v1/content-rating/criteria — list criteria (public)."""
+        self._send_json({"criteria": RATING_CRITERIA, "quality_levels": CONTENT_QUALITY_LEVELS})
+
+
+    # ---------------------------------------------------------------------------
+    # Task 109 — Page Performance Budget handlers
+    # ---------------------------------------------------------------------------
+    def _handle_perf_budget_create(self) -> None:
+        """POST /api/v1/perf-budget/budgets — create budget (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        metric = body.get("metric", "")
+        if metric not in PERF_METRICS:
+            self._send_json({"error": f"metric must be one of {PERF_METRICS}"}, 400)
+            return
+        budget_value_raw = body.get("budget_value", "")
+        try:
+            budget_value = Decimal(str(budget_value_raw))
+            if budget_value <= 0:
+                raise ValueError("budget_value must be > 0")
+        except (InvalidOperation, ValueError):
+            self._send_json({"error": "budget_value must be a positive decimal string"}, 400)
+            return
+        unit = body.get("unit", "")
+        if not unit:
+            self._send_json({"error": "unit is required"}, 400)
+            return
+        with _PERF_LOCK:
+            if len(_PERF_BUDGETS) >= MAX_PERF_BUDGETS:
+                _PERF_BUDGETS.pop(0)
+            budget_id = "pbg_" + str(uuid.uuid4())
+            budget = {
+                "budget_id": budget_id,
+                "metric": metric,
+                "budget_value": str(budget_value),
+                "unit": unit,
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _PERF_BUDGETS.append(budget)
+        self._send_json({"status": "created", "budget": budget}, 201)
+
+    def _handle_perf_budget_list(self) -> None:
+        """GET /api/v1/perf-budget/budgets — list budgets (auth required)."""
+        if not self._check_auth():
+            return
+        with _PERF_LOCK:
+            budgets = [dict(b) for b in _PERF_BUDGETS]
+        self._send_json({"budgets": budgets, "total": len(budgets)})
+
+    def _handle_perf_budget_delete(self, budget_id: str) -> None:
+        """DELETE /api/v1/perf-budget/budgets/{budget_id} — delete budget (auth required)."""
+        if not self._check_auth():
+            return
+        with _PERF_LOCK:
+            idx = next((i for i, b in enumerate(_PERF_BUDGETS) if b["budget_id"] == budget_id), None)
+            if idx is None:
+                self._send_json({"error": "budget not found"}, 404)
+                return
+            _PERF_BUDGETS.pop(idx)
+        self._send_json({"status": "deleted", "budget_id": budget_id})
+
+    def _handle_perf_measurement_create(self) -> None:
+        """POST /api/v1/perf-budget/measurements — record measurement (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        metric = body.get("metric", "")
+        if metric not in PERF_METRICS:
+            self._send_json({"error": f"metric must be one of {PERF_METRICS}"}, 400)
+            return
+        actual_value_raw = body.get("actual_value", "")
+        try:
+            actual_value = Decimal(str(actual_value_raw))
+            if actual_value <= 0:
+                raise ValueError("actual_value must be > 0")
+        except (InvalidOperation, ValueError):
+            self._send_json({"error": "actual_value must be a positive decimal string"}, 400)
+            return
+        budget_value_raw = body.get("budget_value", "")
+        try:
+            budget_value = Decimal(str(budget_value_raw))
+            if budget_value <= 0:
+                raise ValueError("budget_value must be > 0")
+        except (InvalidOperation, ValueError):
+            self._send_json({"error": "budget_value must be a positive decimal string"}, 400)
+            return
+        unit = body.get("unit", "")
+        if not unit:
+            self._send_json({"error": "unit is required"}, 400)
+            return
+        page_url = body.get("page_url", "")
+        page_hash = hashlib.sha256(page_url.encode()).hexdigest() if page_url else body.get("page_hash", "")
+        exceeded = actual_value > budget_value
+        with _PERF_LOCK:
+            if len(_PERF_MEASUREMENTS) >= MAX_PERF_MEASUREMENTS:
+                _PERF_MEASUREMENTS.pop(0)
+            measurement_id = "pms_" + str(uuid.uuid4())
+            measurement = {
+                "measurement_id": measurement_id,
+                "metric": metric,
+                "actual_value": str(actual_value),
+                "budget_value": str(budget_value),
+                "unit": unit,
+                "page_hash": page_hash,
+                "exceeded": exceeded,
+                "measured_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _PERF_MEASUREMENTS.append(measurement)
+        self._send_json({"status": "recorded", "measurement": measurement}, 201)
+
+    def _handle_perf_measurement_list(self) -> None:
+        """GET /api/v1/perf-budget/measurements — list measurements (auth required)."""
+        if not self._check_auth():
+            return
+        with _PERF_LOCK:
+            measurements = [dict(m) for m in _PERF_MEASUREMENTS]
+        self._send_json({"measurements": measurements, "total": len(measurements)})
+
+    def _handle_perf_metrics_list(self) -> None:
+        """GET /api/v1/perf-budget/metrics — list metric types (public)."""
+        self._send_json({"metrics": PERF_METRICS})
+
+    # ---------------------------------------------------------------------------
+    # Task 110 — Web Archiver handlers
+    # ---------------------------------------------------------------------------
+    def _handle_archive_create(self) -> None:
+        """POST /api/v1/web-archiver/archives — create archive (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        fmt = body.get("format", "")
+        if fmt not in ARCHIVE_FORMATS:
+            self._send_json({"error": f"format must be one of {ARCHIVE_FORMATS}"}, 400)
+            return
+        size_bytes = body.get("size_bytes", 0)
+        if not isinstance(size_bytes, int) or size_bytes < 0:
+            self._send_json({"error": "size_bytes must be a non-negative integer"}, 400)
+            return
+        url = body.get("url", "")
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else body.get("url_hash", "")
+        title = body.get("title", "")
+        title_hash = hashlib.sha256(title.encode()).hexdigest() if title else body.get("title_hash", "")
+        content = body.get("content", "")
+        content_hash = hashlib.sha256(content.encode()).hexdigest() if content else body.get("content_hash", "")
+        with _ARCHIVE_LOCK:
+            if len(_ARCHIVES) >= MAX_ARCHIVES:
+                _ARCHIVES.pop(0)
+            archive_id = "war_" + str(uuid.uuid4())
+            archive = {
+                "archive_id": archive_id,
+                "url_hash": url_hash,
+                "title_hash": title_hash,
+                "format": fmt,
+                "size_bytes": size_bytes,
+                "content_hash": content_hash,
+                "archived_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _ARCHIVES.append(archive)
+        self._send_json({"status": "archived", "archive": archive}, 201)
+
+    def _handle_archive_list(self) -> None:
+        """GET /api/v1/web-archiver/archives — list archives (auth required)."""
+        if not self._check_auth():
+            return
+        with _ARCHIVE_LOCK:
+            archives = [dict(a) for a in _ARCHIVES]
+        self._send_json({"archives": archives, "total": len(archives)})
+
+    def _handle_archive_delete(self, archive_id: str) -> None:
+        """DELETE /api/v1/web-archiver/archives/{archive_id} — delete archive (auth required)."""
+        if not self._check_auth():
+            return
+        with _ARCHIVE_LOCK:
+            idx = next((i for i, a in enumerate(_ARCHIVES) if a["archive_id"] == archive_id), None)
+            if idx is None:
+                self._send_json({"error": "archive not found"}, 404)
+                return
+            _ARCHIVES.pop(idx)
+        self._send_json({"status": "deleted", "archive_id": archive_id})
+
+    def _handle_archive_search(self, query: str) -> None:
+        """GET /api/v1/web-archiver/archives/search?q=<query> — search archives (auth required)."""
+        if not self._check_auth():
+            return
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        q = params.get("q", [""])[0]
+        with _ARCHIVE_LOCK:
+            if q:
+                results = [
+                    dict(a) for a in _ARCHIVES
+                    if a["archive_id"].startswith(q) or a.get("title_hash", "").startswith(q)
+                ]
+            else:
+                results = [dict(a) for a in _ARCHIVES]
+        self._send_json({"archives": results, "total": len(results)})
+
+    def _handle_archive_formats_list(self) -> None:
+        """GET /api/v1/web-archiver/formats — list archive formats (public)."""
+        self._send_json({"formats": ARCHIVE_FORMATS})
+
+    # ---------------------------------------------------------------------------
+    # Task 111 — Cookie Consent Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_cookie_decision_create(self) -> None:
+        """POST /api/v1/cookie-consent/decisions — record decision (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        decision = body.get("decision", "")
+        if decision not in CONSENT_DECISIONS:
+            self._send_json({"error": f"decision must be one of {CONSENT_DECISIONS}"}, 400)
+            return
+        categories_accepted = body.get("categories_accepted", [])
+        for cat in categories_accepted:
+            if cat not in COOKIE_CONSENT_CATEGORIES:
+                self._send_json({"error": f"category '{cat}' must be one of {COOKIE_CONSENT_CATEGORIES}"}, 400)
+                return
+        site_url = body.get("site_url", "")
+        site_hash = hashlib.sha256(site_url.encode()).hexdigest() if site_url else body.get("site_hash", "")
+        with _COOKIE_LOCK:
+            if len(_COOKIE_DECISIONS) >= MAX_COOKIE_DECISIONS:
+                _COOKIE_DECISIONS.pop(0)
+            decision_id = "ccd_" + str(uuid.uuid4())
+            record = {
+                "decision_id": decision_id,
+                "site_hash": site_hash,
+                "decision": decision,
+                "categories_accepted": categories_accepted,
+                "decided_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _COOKIE_DECISIONS.append(record)
+        self._send_json({"status": "recorded", "decision": record}, 201)
+
+    def _handle_cookie_decision_list(self) -> None:
+        """GET /api/v1/cookie-consent/decisions — list decisions (auth required)."""
+        if not self._check_auth():
+            return
+        with _COOKIE_LOCK:
+            decisions = [dict(d) for d in _COOKIE_DECISIONS]
+        self._send_json({"decisions": decisions, "total": len(decisions)})
+
+    def _handle_cookie_decision_delete(self, decision_id: str) -> None:
+        """DELETE /api/v1/cookie-consent/decisions/{decision_id} — delete decision (auth required)."""
+        if not self._check_auth():
+            return
+        with _COOKIE_LOCK:
+            idx = next((i for i, d in enumerate(_COOKIE_DECISIONS) if d["decision_id"] == decision_id), None)
+            if idx is None:
+                self._send_json({"error": "decision not found"}, 404)
+                return
+            _COOKIE_DECISIONS.pop(idx)
+        self._send_json({"status": "deleted", "decision_id": decision_id})
+
+    def _handle_cookie_consent_stats(self) -> None:
+        """GET /api/v1/cookie-consent/stats — consent stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _COOKIE_LOCK:
+            decisions = list(_COOKIE_DECISIONS)
+        by_decision = {}
+        by_category = {}
+        for d in decisions:
+            dec = d.get("decision", "")
+            by_decision[dec] = by_decision.get(dec, 0) + 1
+            for cat in d.get("categories_accepted", []):
+                by_category[cat] = by_category.get(cat, 0) + 1
+        most_common_decision = max(by_decision, key=lambda k: by_decision[k]) if by_decision else ""
+        self._send_json({
+            "total_decisions": len(decisions),
+            "by_decision": by_decision,
+            "by_category": by_category,
+            "most_common_decision": most_common_decision,
+        })
+
+    def _handle_cookie_categories_list(self) -> None:
+        """GET /api/v1/cookie-consent/categories — list categories (public)."""
+        self._send_json({"categories": COOKIE_CONSENT_CATEGORIES})
+
+    # ---------------------------------------------------------------------------
+    # Task 115 — Reader View Settings handlers
+    # ---------------------------------------------------------------------------
+    def _handle_reader_settings_create(self) -> None:
+        """POST /api/v1/reader-view/settings — save settings (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        font = body.get("font", "")
+        if font not in READER_VIEW_FONTS:
+            self._send_json({"error": f"font must be one of {READER_VIEW_FONTS}"}, 400)
+            return
+        theme = body.get("theme", "")
+        if theme not in READER_VIEW_THEMES:
+            self._send_json({"error": f"theme must be one of {READER_VIEW_THEMES}"}, 400)
+            return
+        spacing = body.get("spacing", "")
+        if spacing not in READER_VIEW_SPACING:
+            self._send_json({"error": f"spacing must be one of {READER_VIEW_SPACING}"}, 400)
+            return
+        font_size_px = body.get("font_size_px", 16)
+        if not isinstance(font_size_px, int) or font_size_px < 10 or font_size_px > 40:
+            self._send_json({"error": "font_size_px must be an integer between 10 and 40"}, 400)
+            return
+        line_width_chars = body.get("line_width_chars", 80)
+        if not isinstance(line_width_chars, int) or line_width_chars < 40 or line_width_chars > 120:
+            self._send_json({"error": "line_width_chars must be an integer between 40 and 120"}, 400)
+            return
+        site_hash = body.get("site_hash", "")
+        with _READER_LOCK:
+            if len(_READER_SETTINGS) >= MAX_READER_SETTINGS:
+                _READER_SETTINGS.pop(0)
+            setting_id = "rvs_" + str(uuid.uuid4())
+            setting: dict[str, Any] = {
+                "setting_id": setting_id,
+                "site_hash": site_hash,
+                "font": font,
+                "theme": theme,
+                "spacing": spacing,
+                "font_size_px": font_size_px,
+                "line_width_chars": line_width_chars,
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _READER_SETTINGS.append(setting)
+        self._send_json({"status": "saved", "setting": setting}, 201)
+
+    def _handle_reader_settings_list(self) -> None:
+        """GET /api/v1/reader-view/settings — list settings (auth required)."""
+        if not self._check_auth():
+            return
+        with _READER_LOCK:
+            settings = [dict(s) for s in _READER_SETTINGS]
+        self._send_json({"settings": settings, "total": len(settings)})
+
+    def _handle_reader_settings_by_site(self) -> None:
+        """GET /api/v1/reader-view/settings/by-site — settings for specific site (auth required)."""
+        if not self._check_auth():
+            return
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        site_hash = params.get("site_hash", [""])[0]
+        with _READER_LOCK:
+            filtered = [dict(s) for s in _READER_SETTINGS if s.get("site_hash") == site_hash]
+        self._send_json({"settings": filtered, "total": len(filtered)})
+
+    def _handle_reader_settings_delete(self, setting_id: str) -> None:
+        """DELETE /api/v1/reader-view/settings/{setting_id} — delete setting (auth required)."""
+        if not self._check_auth():
+            return
+        with _READER_LOCK:
+            idx = next((i for i, s in enumerate(_READER_SETTINGS) if s["setting_id"] == setting_id), None)
+            if idx is None:
+                self._send_json({"error": "setting not found"}, 404)
+                return
+            _READER_SETTINGS.pop(idx)
+        self._send_json({"status": "deleted", "setting_id": setting_id})
+
+    def _handle_reader_options(self) -> None:
+        """GET /api/v1/reader-view/options — list all font/theme/spacing options (public)."""
+        self._send_json({
+            "fonts": READER_VIEW_FONTS,
+            "themes": READER_VIEW_THEMES,
+            "spacing": READER_VIEW_SPACING,
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 116 — AI Form Filler handlers
+    # ---------------------------------------------------------------------------
+    def _handle_form_profile_create(self) -> None:
+        """POST /api/v1/form-filler/profiles — create profile (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        field_count = body.get("field_count", 0)
+        if not isinstance(field_count, int) or field_count < 1 or field_count > 20:
+            self._send_json({"error": "field_count must be an integer between 1 and 20"}, 400)
+            return
+        field_types = body.get("field_types", [])
+        if not isinstance(field_types, list):
+            self._send_json({"error": "field_types must be a list"}, 400)
+            return
+        for ft in field_types:
+            if ft not in FORM_FIELD_TYPES:
+                self._send_json({"error": f"field_type '{ft}' must be one of {FORM_FIELD_TYPES}"}, 400)
+                return
+        profile_name = body.get("profile_name", "")
+        profile_name_hash = hashlib.sha256(profile_name.encode()).hexdigest()
+        with _FILLER_LOCK:
+            if len(_FORM_PROFILES) >= MAX_FORM_PROFILES:
+                _FORM_PROFILES.pop(0)
+            profile_id = "ffp_" + str(uuid.uuid4())
+            profile: dict[str, Any] = {
+                "profile_id": profile_id,
+                "profile_name_hash": profile_name_hash,
+                "field_count": field_count,
+                "field_types": field_types,
+                "fill_count": 0,
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _FORM_PROFILES.append(profile)
+        self._send_json({"status": "created", "profile": profile}, 201)
+
+    def _handle_form_profiles_list(self) -> None:
+        """GET /api/v1/form-filler/profiles — list profiles (auth required)."""
+        if not self._check_auth():
+            return
+        with _FILLER_LOCK:
+            profiles = [dict(p) for p in _FORM_PROFILES]
+        self._send_json({"profiles": profiles, "total": len(profiles)})
+
+    def _handle_form_profile_delete(self, profile_id: str) -> None:
+        """DELETE /api/v1/form-filler/profiles/{profile_id} — delete profile (auth required)."""
+        if not self._check_auth():
+            return
+        with _FILLER_LOCK:
+            idx = next((i for i, p in enumerate(_FORM_PROFILES) if p["profile_id"] == profile_id), None)
+            if idx is None:
+                self._send_json({"error": "profile not found"}, 404)
+                return
+            _FORM_PROFILES.pop(idx)
+        self._send_json({"status": "deleted", "profile_id": profile_id})
+
+    def _handle_fill_log_create(self) -> None:
+        """POST /api/v1/form-filler/fill-log — log a fill event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        profile_id = body.get("profile_id", "")
+        site_url = body.get("site_url", "")
+        site_hash = hashlib.sha256(site_url.encode()).hexdigest()
+        with _FILLER_LOCK:
+            if len(_FILL_LOG) >= MAX_FILL_LOG:
+                _FILL_LOG.pop(0)
+            fill_id = "ffl_" + str(uuid.uuid4())
+            entry: dict[str, Any] = {
+                "fill_id": fill_id,
+                "profile_id": profile_id,
+                "site_hash": site_hash,
+                "filled_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _FILL_LOG.append(entry)
+            for p in _FORM_PROFILES:
+                if p["profile_id"] == profile_id:
+                    p["fill_count"] = p.get("fill_count", 0) + 1
+                    break
+        self._send_json({"status": "logged", "fill": entry}, 201)
+
+    def _handle_fill_log_list(self) -> None:
+        """GET /api/v1/form-filler/fill-log — list fill log (auth required)."""
+        if not self._check_auth():
+            return
+        with _FILLER_LOCK:
+            log = [dict(e) for e in _FILL_LOG]
+        self._send_json({"fills": log, "total": len(log)})
+
+    def _handle_field_types_list(self) -> None:
+        """GET /api/v1/form-filler/field-types — list field types (public)."""
+        self._send_json({"field_types": FORM_FIELD_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 117 — Link Checker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_link_check_create(self) -> None:
+        """POST /api/v1/link-checker/checks — record link check (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        status = body.get("status", "")
+        if status not in LINK_STATUSES:
+            self._send_json({"error": f"status must be one of {LINK_STATUSES}"}, 400)
+            return
+        http_code = body.get("http_code", None)
+        if http_code is not None:
+            if not isinstance(http_code, int) or http_code < 100 or http_code > 599:
+                self._send_json({"error": "http_code must be an integer between 100 and 599"}, 400)
+                return
+        response_ms = body.get("response_ms", 0)
+        if not isinstance(response_ms, int) or response_ms < 0:
+            self._send_json({"error": "response_ms must be a non-negative integer"}, 400)
+            return
+        url_hash = body.get("url_hash", "")
+        page_hash = body.get("page_hash", "")
+        with _LINK_LOCK:
+            if len(_LINK_CHECKS) >= MAX_LINK_CHECKS:
+                _LINK_CHECKS.pop(0)
+            check_id = "lck_" + str(uuid.uuid4())
+            check: dict[str, Any] = {
+                "check_id": check_id,
+                "url_hash": url_hash,
+                "page_hash": page_hash,
+                "status": status,
+                "http_code": http_code,
+                "response_ms": response_ms,
+                "checked_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _LINK_CHECKS.append(check)
+        self._send_json({"status": "recorded", "check": check}, 201)
+
+    def _handle_link_checks_list(self) -> None:
+        """GET /api/v1/link-checker/checks — list checks (auth required)."""
+        if not self._check_auth():
+            return
+        with _LINK_LOCK:
+            checks = [dict(c) for c in _LINK_CHECKS]
+        self._send_json({"checks": checks, "total": len(checks)})
+
+    def _handle_link_check_delete(self, check_id: str) -> None:
+        """DELETE /api/v1/link-checker/checks/{check_id} — delete check (auth required)."""
+        if not self._check_auth():
+            return
+        with _LINK_LOCK:
+            idx = next((i for i, c in enumerate(_LINK_CHECKS) if c["check_id"] == check_id), None)
+            if idx is None:
+                self._send_json({"error": "check not found"}, 404)
+                return
+            _LINK_CHECKS.pop(idx)
+        self._send_json({"status": "deleted", "check_id": check_id})
+
+    def _handle_link_stats(self) -> None:
+        """GET /api/v1/link-checker/stats — link check stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _LINK_LOCK:
+            checks = list(_LINK_CHECKS)
+        by_status: dict[str, int] = {}
+        total_ms = 0
+        for c in checks:
+            st = c.get("status", "unknown")
+            by_status[st] = by_status.get(st, 0) + 1
+            total_ms += c.get("response_ms", 0)
+        broken_count = by_status.get("broken", 0)
+        avg_ms = Decimal(str(total_ms)) / Decimal(str(len(checks))) if checks else Decimal("0")
+        self._send_json({
+            "total_checks": len(checks),
+            "by_status": by_status,
+            "broken_count": broken_count,
+            "avg_response_ms": str(avg_ms),
+        })
+
+    def _handle_link_statuses_list(self) -> None:
+        """GET /api/v1/link-checker/statuses — list link statuses (public)."""
+        self._send_json({"statuses": LINK_STATUSES})
+
+    # ---------------------------------------------------------------------------
+    # Task 121 — Custom Search Engine handlers
+    # ---------------------------------------------------------------------------
+    def _handle_search_engine_create(self) -> None:
+        """POST /api/v1/custom-search/engines — add search engine (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        category = body.get("category", "")
+        if category not in SEARCH_ENGINE_CATEGORIES:
+            self._send_json({"error": f"category must be one of {SEARCH_ENGINE_CATEGORIES}"}, 400)
+            return
+        name = body.get("name", "")
+        url_template = body.get("url_template", "")
+        with _SEARCH_LOCK:
+            if len(_SEARCH_ENGINES) >= MAX_SEARCH_ENGINES:
+                _SEARCH_ENGINES.pop(0)
+            engine_id = "sce_" + str(uuid.uuid4())
+            engine = {
+                "engine_id": engine_id,
+                "name_hash": hashlib.sha256(name.encode()).hexdigest(),
+                "url_template_hash": hashlib.sha256(url_template.encode()).hexdigest(),
+                "category": category,
+                "is_active": False,
+                "added_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _SEARCH_ENGINES.append(engine)
+        self._send_json({"status": "created", "engine": engine}, 201)
+
+    def _handle_search_engine_list(self) -> None:
+        """GET /api/v1/custom-search/engines — list engines (auth required)."""
+        if not self._check_auth():
+            return
+        with _SEARCH_LOCK:
+            engines = [dict(e) for e in _SEARCH_ENGINES]
+        self._send_json({"engines": engines, "total": len(engines)})
+
+    def _handle_search_engine_delete(self, engine_id: str) -> None:
+        """DELETE /api/v1/custom-search/engines/{engine_id} — delete engine (auth required)."""
+        if not self._check_auth():
+            return
+        with _SEARCH_LOCK:
+            idx = next((i for i, e in enumerate(_SEARCH_ENGINES) if e["engine_id"] == engine_id), None)
+            if idx is None:
+                self._send_json({"error": "engine not found"}, 404)
+                return
+            _SEARCH_ENGINES.pop(idx)
+        self._send_json({"status": "deleted", "engine_id": engine_id})
+
+    def _handle_search_engine_activate(self, engine_id: str) -> None:
+        """POST /api/v1/custom-search/engines/{engine_id}/activate — set active (auth required)."""
+        if not self._check_auth():
+            return
+        with _SEARCH_LOCK:
+            idx = next((i for i, e in enumerate(_SEARCH_ENGINES) if e["engine_id"] == engine_id), None)
+            if idx is None:
+                self._send_json({"error": "engine not found"}, 404)
+                return
+            for e in _SEARCH_ENGINES:
+                e["is_active"] = False
+            _SEARCH_ENGINES[idx]["is_active"] = True
+            engine = dict(_SEARCH_ENGINES[idx])
+        self._send_json({"status": "activated", "engine": engine})
+
+    def _handle_search_engine_active(self) -> None:
+        """GET /api/v1/custom-search/active — get active engine (auth required)."""
+        if not self._check_auth():
+            return
+        with _SEARCH_LOCK:
+            active = next((dict(e) for e in _SEARCH_ENGINES if e["is_active"]), None)
+        if active is None:
+            self._send_json({"error": "no active engine"}, 404)
+            return
+        self._send_json({"engine": active})
+
+    def _handle_search_engine_categories(self) -> None:
+        """GET /api/v1/custom-search/categories — list engine categories (public)."""
+        self._send_json({"categories": SEARCH_ENGINE_CATEGORIES})
+
+    # ---------------------------------------------------------------------------
+    # Task 122 — Focus Session Timer handlers
+    # ---------------------------------------------------------------------------
+    def _handle_focus_session_start(self) -> None:
+        """POST /api/v1/focus-timer/sessions — start focus session (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        mode = body.get("mode", "")
+        if mode not in FOCUS_MODES:
+            self._send_json({"error": f"mode must be one of {FOCUS_MODES}"}, 400)
+            return
+        planned = body.get("planned_duration_mins", 0)
+        if planned not in FOCUS_DURATIONS:
+            self._send_json({"error": f"planned_duration_mins must be one of {FOCUS_DURATIONS}"}, 400)
+            return
+        task_desc = body.get("task_description", "")
+        auth_header = self.headers.get("Authorization", "")
+        token_raw = auth_header[len("Bearer "):] if auth_header.startswith("Bearer ") else auth_header
+        token_hash_val = hashlib.sha256(token_raw.encode()).hexdigest()
+        with _FOCUS_LOCK:
+            if token_hash_val in _ACTIVE_FOCUS:
+                self._send_json({"error": "session already active"}, 409)
+                return
+            if len(_FOCUS_SESSIONS) >= MAX_FOCUS_SESSIONS:
+                _FOCUS_SESSIONS.pop(0)
+            session_id = "fcs_" + str(uuid.uuid4())
+            session = {
+                "session_id": session_id,
+                "mode": mode,
+                "planned_duration_mins": planned,
+                "task_hash": hashlib.sha256(task_desc.encode()).hexdigest(),
+                "actual_duration_mins": None,
+                "completed": False,
+                "started_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "ended_at": None,
+                "token_hash": token_hash_val,
+            }
+            _FOCUS_SESSIONS.append(session)
+            _ACTIVE_FOCUS[token_hash_val] = session_id
+        self._send_json({"status": "started", "session": session}, 201)
+
+    def _handle_focus_session_end(self) -> None:
+        """POST /api/v1/focus-timer/sessions/end — end active session (auth required)."""
+        if not self._check_auth():
+            return
+        auth_header = self.headers.get("Authorization", "")
+        token_raw = auth_header[len("Bearer "):] if auth_header.startswith("Bearer ") else auth_header
+        token_hash_val = hashlib.sha256(token_raw.encode()).hexdigest()
+        with _FOCUS_LOCK:
+            if token_hash_val not in _ACTIVE_FOCUS:
+                self._send_json({"error": "no active session"}, 404)
+                return
+            session_id = _ACTIVE_FOCUS.pop(token_hash_val)
+            idx = next((i for i, s in enumerate(_FOCUS_SESSIONS) if s["session_id"] == session_id), None)
+            if idx is None:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            ended_at = datetime.now(timezone.utc)
+            started_at = datetime.fromisoformat(_FOCUS_SESSIONS[idx]["started_at"].replace("Z", "+00:00"))
+            delta_mins = int((ended_at - started_at).total_seconds() / 60)
+            _FOCUS_SESSIONS[idx]["ended_at"] = ended_at.isoformat().replace("+00:00", "Z")
+            _FOCUS_SESSIONS[idx]["actual_duration_mins"] = delta_mins
+            _FOCUS_SESSIONS[idx]["completed"] = True
+            session = dict(_FOCUS_SESSIONS[idx])
+        self._send_json({"status": "ended", "session": session})
+
+    def _handle_focus_session_list(self) -> None:
+        """GET /api/v1/focus-timer/sessions — list sessions (auth required)."""
+        if not self._check_auth():
+            return
+        with _FOCUS_LOCK:
+            sessions = [dict(s) for s in _FOCUS_SESSIONS]
+        self._send_json({"sessions": sessions, "total": len(sessions)})
+
+    def _handle_focus_stats(self) -> None:
+        """GET /api/v1/focus-timer/stats — focus statistics (auth required)."""
+        if not self._check_auth():
+            return
+        with _FOCUS_LOCK:
+            sessions = list(_FOCUS_SESSIONS)
+        total = len(sessions)
+        completed = [s for s in sessions if s["completed"]]
+        total_mins = sum(s["actual_duration_mins"] or 0 for s in sessions)
+        by_mode: dict[str, int] = {}
+        for s in sessions:
+            m = s["mode"]
+            by_mode[m] = by_mode.get(m, 0) + 1
+        completed_durations = [s["actual_duration_mins"] for s in completed if s["actual_duration_mins"] is not None]
+        if completed_durations:
+            avg = str(Decimal(sum(completed_durations)) / Decimal(len(completed_durations)))
+        else:
+            avg = "0"
+        self._send_json({
+            "total_sessions": total,
+            "total_focus_mins": total_mins,
+            "completed_count": len(completed),
+            "by_mode": by_mode,
+            "avg_duration_mins": avg,
+        })
+
+    def _handle_focus_modes(self) -> None:
+        """GET /api/v1/focus-timer/modes — list focus modes (public)."""
+        self._send_json({"modes": FOCUS_MODES})
+
+    # ---------------------------------------------------------------------------
+    # Task 123 — Text Expander handlers
+    # ---------------------------------------------------------------------------
+    def _handle_snippet_create(self) -> None:
+        """POST /api/v1/text-expander/snippets — create snippet (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        category = body.get("category", "")
+        if category not in SNIPPET_CATEGORIES:
+            self._send_json({"error": f"category must be one of {SNIPPET_CATEGORIES}"}, 400)
+            return
+        tags = body.get("tags", [])
+        if len(tags) > 5:
+            self._send_json({"error": "tags must have at most 5 entries"}, 400)
+            return
+        abbreviation = body.get("abbreviation", "")
+        content = body.get("content", "")
+        with _EXPANDER_LOCK:
+            if len(_TEXT_SNIPPETS) >= MAX_SNIPPETS:
+                _TEXT_SNIPPETS.pop(0)
+            snippet_id = "txs_" + str(uuid.uuid4())
+            snippet = {
+                "snippet_id": snippet_id,
+                "abbreviation_hash": hashlib.sha256(abbreviation.encode()).hexdigest(),
+                "content_hash": hashlib.sha256(content.encode()).hexdigest(),
+                "category": category,
+                "tags": tags,
+                "use_count": 0,
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _TEXT_SNIPPETS.append(snippet)
+        self._send_json({"status": "created", "snippet": snippet}, 201)
+
+    def _handle_snippet_list_expander(self) -> None:
+        """GET /api/v1/text-expander/snippets — list snippets (auth required)."""
+        if not self._check_auth():
+            return
+        with _EXPANDER_LOCK:
+            snippets = [dict(s) for s in _TEXT_SNIPPETS]
+        self._send_json({"snippets": snippets, "total": len(snippets)})
+
+    def _handle_snippet_delete_expander(self, snippet_id: str) -> None:
+        """DELETE /api/v1/text-expander/snippets/{snippet_id} — delete snippet (auth required)."""
+        if not self._check_auth():
+            return
+        with _EXPANDER_LOCK:
+            idx = next((i for i, s in enumerate(_TEXT_SNIPPETS) if s["snippet_id"] == snippet_id), None)
+            if idx is None:
+                self._send_json({"error": "snippet not found"}, 404)
+                return
+            _TEXT_SNIPPETS.pop(idx)
+        self._send_json({"status": "deleted", "snippet_id": snippet_id})
+
+    def _handle_expansion_record(self) -> None:
+        """POST /api/v1/text-expander/expand — record expansion event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        snippet_id = body.get("snippet_id", "")
+        with _EXPANDER_LOCK:
+            idx = next((i for i, s in enumerate(_TEXT_SNIPPETS) if s["snippet_id"] == snippet_id), None)
+            if idx is None:
+                self._send_json({"error": "snippet not found"}, 404)
+                return
+            _TEXT_SNIPPETS[idx]["use_count"] += 1
+            if len(_EXPANSION_LOG) >= MAX_EXPANSION_LOG:
+                _EXPANSION_LOG.pop(0)
+            site = body.get("site", "")
+            expansion_id = "txe_" + str(uuid.uuid4())
+            record = {
+                "expansion_id": expansion_id,
+                "snippet_id": snippet_id,
+                "site_hash": hashlib.sha256(site.encode()).hexdigest(),
+                "expanded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _EXPANSION_LOG.append(record)
+        self._send_json({"status": "recorded", "expansion": record}, 201)
+
+    def _handle_expander_stats(self) -> None:
+        """GET /api/v1/text-expander/stats — expansion stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _EXPANDER_LOCK:
+            snippets = list(_TEXT_SNIPPETS)
+        total_snippets = len(snippets)
+        total_expansions = sum(s["use_count"] for s in snippets)
+        by_category: dict[str, int] = {}
+        for s in snippets:
+            c = s["category"]
+            by_category[c] = by_category.get(c, 0) + 1
+        top = max(snippets, key=lambda s: s["use_count"], default=None)
+        top_snippet_id = top["snippet_id"] if top else None
+        self._send_json({
+            "total_snippets": total_snippets,
+            "total_expansions": total_expansions,
+            "by_category": by_category,
+            "top_snippet_id": top_snippet_id,
+        })
+
+    def _handle_snippet_categories(self) -> None:
+        """GET /api/v1/text-expander/categories — list snippet categories (public)."""
+        self._send_json({"categories": SNIPPET_CATEGORIES})
+
+    # ---------------------------------------------------------------------------
+    # Task 124 — PDF Viewer Notes handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_pdf_note_create(self) -> None:
+        """POST /api/v1/pdf-notes/notes — save note (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        note_type = body.get("note_type", "")
+        if note_type not in NOTE_TYPES:
+            self._send_json({"error": f"note_type must be one of {NOTE_TYPES}"}, 400)
+            return
+        page_number = body.get("page_number", 1)
+        if not isinstance(page_number, int) or page_number < 1:
+            self._send_json({"error": "page_number must be int >= 1"}, 400)
+            return
+        pdf_url = body.get("pdf_url", "")
+        pdf_hash = hashlib.sha256(pdf_url.encode()).hexdigest() if pdf_url else body.get("pdf_hash", "")
+        content = body.get("content", "")
+        content_hash = hashlib.sha256(content.encode()).hexdigest() if content else body.get("content_hash", "")
+        position = body.get("position", "")
+        position_hash = hashlib.sha256(str(position).encode()).hexdigest() if position else body.get("position_hash", "")
+        with _PDF_NOTES_LOCK:
+            if len(_PDF_NOTES) >= MAX_PDF_NOTES:
+                _PDF_NOTES.pop(0)
+            note_id = "pdn_" + str(uuid.uuid4())
+            record = {
+                "note_id": note_id,
+                "pdf_hash": pdf_hash,
+                "note_type": note_type,
+                "content_hash": content_hash,
+                "page_number": page_number,
+                "position_hash": position_hash,
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _PDF_NOTES.append(record)
+        self._send_json({"status": "saved", "note": record}, 201)
+
+    def _handle_pdf_notes_list(self) -> None:
+        """GET /api/v1/pdf-notes/notes — list notes (auth required)."""
+        if not self._check_auth():
+            return
+        with _PDF_NOTES_LOCK:
+            notes = [dict(n) for n in _PDF_NOTES]
+        self._send_json({"notes": notes, "total": len(notes)})
+
+    def _handle_pdf_note_delete(self, note_id: str) -> None:
+        """DELETE /api/v1/pdf-notes/notes/{note_id} — delete note (auth required)."""
+        if not self._check_auth():
+            return
+        with _PDF_NOTES_LOCK:
+            idx = next((i for i, n in enumerate(_PDF_NOTES) if n["note_id"] == note_id), None)
+            if idx is None:
+                self._send_json({"error": "note not found"}, 404)
+                return
+            _PDF_NOTES.pop(idx)
+        self._send_json({"status": "deleted", "note_id": note_id})
+
+    def _handle_pdf_notes_by_pdf(self) -> None:
+        """GET /api/v1/pdf-notes/notes/by-pdf?pdf_hash=xxx — notes for specific PDF (auth required)."""
+        if not self._check_auth():
+            return
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        pdf_hash = params.get("pdf_hash", [""])[0]
+        with _PDF_NOTES_LOCK:
+            notes = [dict(n) for n in _PDF_NOTES if n.get("pdf_hash") == pdf_hash]
+        self._send_json({"notes": notes, "total": len(notes), "pdf_hash": pdf_hash})
+
+    def _handle_pdf_notes_stats(self) -> None:
+        """GET /api/v1/pdf-notes/stats — notes stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _PDF_NOTES_LOCK:
+            notes = list(_PDF_NOTES)
+        by_type: dict[str, int] = {}
+        pdf_hashes: set[str] = set()
+        for n in notes:
+            nt = n.get("note_type", "")
+            by_type[nt] = by_type.get(nt, 0) + 1
+            if n.get("pdf_hash"):
+                pdf_hashes.add(n["pdf_hash"])
+        self._send_json({
+            "total_notes": len(notes),
+            "by_type": by_type,
+            "total_pdfs": len(pdf_hashes),
+        })
+
+    # ---------------------------------------------------------------------------
+    # Task 125 — Speed Reader handlers
+    # ---------------------------------------------------------------------------
+
+    def _handle_speed_reader_session_create(self) -> None:
+        """POST /api/v1/speed-reader/sessions — start reading session (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        difficulty = body.get("difficulty", "")
+        if difficulty not in READING_DIFFICULTY:
+            self._send_json({"error": f"difficulty must be one of {READING_DIFFICULTY}"}, 400)
+            return
+        wpm = body.get("wpm", 0)
+        if not isinstance(wpm, int) or wpm < MIN_WPM or wpm > MAX_WPM:
+            self._send_json({"error": f"wpm must be int between {MIN_WPM} and {MAX_WPM}"}, 400)
+            return
+        word_count = body.get("word_count", 0)
+        if not isinstance(word_count, int) or word_count < 1:
+            self._send_json({"error": "word_count must be int >= 1"}, 400)
+            return
+        comprehension_score = body.get("comprehension_score", 0)
+        if not isinstance(comprehension_score, int) or comprehension_score < 0 or comprehension_score > 100:
+            self._send_json({"error": "comprehension_score must be int 0-100"}, 400)
+            return
+        duration_seconds = body.get("duration_seconds", 0)
+        if not isinstance(duration_seconds, int) or duration_seconds < 1:
+            self._send_json({"error": "duration_seconds must be int >= 1"}, 400)
+            return
+        text = body.get("text", "")
+        text_hash = hashlib.sha256(text.encode()).hexdigest() if text else body.get("text_hash", "")
+        with _SPEED_LOCK:
+            if len(_SPEED_SESSIONS) >= MAX_READING_SESSIONS:
+                _SPEED_SESSIONS.pop(0)
+            session_id = "srd_" + str(uuid.uuid4())
+            record = {
+                "session_id": session_id,
+                "text_hash": text_hash,
+                "word_count": word_count,
+                "wpm": wpm,
+                "comprehension_score": comprehension_score,
+                "difficulty": difficulty,
+                "duration_seconds": duration_seconds,
+                "read_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _SPEED_SESSIONS.append(record)
+        self._send_json({"status": "recorded", "session": record}, 201)
+
+    def _handle_speed_reader_session_list(self) -> None:
+        """GET /api/v1/speed-reader/sessions — list sessions (auth required)."""
+        if not self._check_auth():
+            return
+        with _SPEED_LOCK:
+            sessions = [dict(s) for s in _SPEED_SESSIONS]
+        self._send_json({"sessions": sessions, "total": len(sessions)})
+
+    def _handle_speed_reader_session_delete(self, session_id: str) -> None:
+        """DELETE /api/v1/speed-reader/sessions/{session_id} — delete session (auth required)."""
+        if not self._check_auth():
+            return
+        with _SPEED_LOCK:
+            idx = next((i for i, s in enumerate(_SPEED_SESSIONS) if s["session_id"] == session_id), None)
+            if idx is None:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            _SPEED_SESSIONS.pop(idx)
+        self._send_json({"status": "deleted", "session_id": session_id})
+
+    def _handle_speed_reader_progress(self) -> None:
+        """GET /api/v1/speed-reader/progress — reading progress over time (auth required)."""
+        if not self._check_auth():
+            return
+        with _SPEED_LOCK:
+            sessions = list(_SPEED_SESSIONS)
+        total = len(sessions)
+        if total == 0:
+            self._send_json({
+                "total_sessions": 0,
+                "avg_wpm": "0",
+                "avg_comprehension": "0",
+                "wpm_trend": "stable",
+            })
+            return
+        avg_wpm = sum(s["wpm"] for s in sessions) / total
+        avg_comp = sum(s["comprehension_score"] for s in sessions) / total
+        if total < 10:
+            wpm_trend = "stable"
+        else:
+            last5 = sessions[-5:]
+            prev5 = sessions[-10:-5]
+            avg_last = sum(s["wpm"] for s in last5) / 5
+            avg_prev = sum(s["wpm"] for s in prev5) / 5
+            if avg_prev == 0:
+                wpm_trend = "stable"
+            elif (avg_last - avg_prev) / avg_prev > 0.10:
+                wpm_trend = "improving"
+            elif (avg_prev - avg_last) / avg_prev > 0.10:
+                wpm_trend = "declining"
+            else:
+                wpm_trend = "stable"
+        self._send_json({
+            "total_sessions": total,
+            "avg_wpm": str(round(avg_wpm, 2)),
+            "avg_comprehension": str(round(avg_comp, 2)),
+            "wpm_trend": wpm_trend,
+        })
+
+    def _handle_speed_reader_difficulty_levels(self) -> None:
+        """GET /api/v1/speed-reader/difficulty-levels — list difficulty levels (public)."""
+        self._send_json({"difficulty_levels": READING_DIFFICULTY})
+
+    # ---------------------------------------------------------------------------
+    # Task 118 — Password Strength Checker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_password_check_create(self) -> None:
+        """POST /api/v1/password-checker/checks — check password (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        score = body.get("score", None)
+        if score is None or not isinstance(score, int) or score < 0 or score > 5:
+            self._send_json({"error": "score must be an integer 0-5"}, 400)
+            return
+        # Derive strength_level from score
+        level_map = {0: "very_weak", 1: "weak", 2: "fair", 3: "fair", 4: "strong", 5: "very_strong"}
+        strength_level = level_map[score]
+        password = body.get("password", "")
+        password_hash = hashlib.sha256(password.encode()).hexdigest() if password else body.get("password_hash", "")
+        length = body.get("length", 0)
+        has_uppercase = bool(body.get("has_uppercase", False))
+        has_numbers = bool(body.get("has_numbers", False))
+        has_symbols = bool(body.get("has_symbols", False))
+        with _PWD_LOCK:
+            if len(_PASSWORD_CHECKS) >= MAX_PASSWORD_CHECKS:
+                _PASSWORD_CHECKS.pop(0)
+            check_id = "psc_" + str(uuid.uuid4())
+            record: dict[str, Any] = {
+                "check_id": check_id,
+                "password_hash": password_hash,
+                "score": score,
+                "strength_level": strength_level,
+                "length": length,
+                "has_uppercase": has_uppercase,
+                "has_numbers": has_numbers,
+                "has_symbols": has_symbols,
+                "checked_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _PASSWORD_CHECKS.append(record)
+        self._send_json({"status": "checked", "check": record}, 201)
+
+    def _handle_password_checks_list(self) -> None:
+        """GET /api/v1/password-checker/checks — list checks (auth required)."""
+        if not self._check_auth():
+            return
+        with _PWD_LOCK:
+            checks = [dict(c) for c in _PASSWORD_CHECKS]
+        self._send_json({"checks": checks, "total": len(checks)})
+
+    def _handle_password_check_delete(self, check_id: str) -> None:
+        """DELETE /api/v1/password-checker/checks/{check_id} — delete check (auth required)."""
+        if not self._check_auth():
+            return
+        with _PWD_LOCK:
+            idx = next((i for i, c in enumerate(_PASSWORD_CHECKS) if c["check_id"] == check_id), None)
+            if idx is None:
+                self._send_json({"error": "check not found"}, 404)
+                return
+            _PASSWORD_CHECKS.pop(idx)
+        self._send_json({"status": "deleted", "check_id": check_id})
+
+    def _handle_password_stats(self) -> None:
+        """GET /api/v1/password-checker/stats — checking stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _PWD_LOCK:
+            checks = list(_PASSWORD_CHECKS)
+        by_strength: dict[str, int] = {lvl: 0 for lvl in PASSWORD_STRENGTH_LEVELS}
+        total_score = 0
+        for c in checks:
+            lvl = c.get("strength_level", "very_weak")
+            by_strength[lvl] = by_strength.get(lvl, 0) + 1
+            total_score += c.get("score", 0)
+        count = len(checks)
+        avg_score = str(Decimal(str(total_score / count)).quantize(Decimal("0.01"))) if count > 0 else "0.00"
+        self._send_json({
+            "total_checks": count,
+            "by_strength": by_strength,
+            "avg_score": avg_score,
+        })
+
+    def _handle_password_strength_levels(self) -> None:
+        """GET /api/v1/password-checker/strength-levels — list strength levels (public)."""
+        self._send_json({"strength_levels": PASSWORD_STRENGTH_LEVELS})
+
+    # ---------------------------------------------------------------------------
+    # Task 119 — Site Monitor handlers
+    # ---------------------------------------------------------------------------
+    def _handle_site_monitor_create(self) -> None:
+        """POST /api/v1/site-monitor/monitors — create monitor (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        check_interval_mins = body.get("check_interval_mins", 0)
+        if not isinstance(check_interval_mins, int) or check_interval_mins < 1:
+            self._send_json({"error": "check_interval_mins must be an integer >= 1"}, 400)
+            return
+        url = body.get("url", "")
+        url_hash = hashlib.sha256(url.encode()).hexdigest() if url else body.get("url_hash", "")
+        name = body.get("name", "")
+        with _MONITOR_LOCK:
+            if len(_SITE_MONITORS) >= MAX_SITE_MONITORS:
+                _SITE_MONITORS.pop(0)
+            monitor_id = "smt_" + str(uuid.uuid4())
+            monitor: dict[str, Any] = {
+                "monitor_id": monitor_id,
+                "url_hash": url_hash,
+                "name": name,
+                "check_interval_mins": check_interval_mins,
+                "check_count": 0,
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _SITE_MONITORS.append(monitor)
+        self._send_json({"status": "created", "monitor": monitor}, 201)
+
+    def _handle_site_monitors_list(self) -> None:
+        """GET /api/v1/site-monitor/monitors — list monitors (auth required)."""
+        if not self._check_auth():
+            return
+        with _MONITOR_LOCK:
+            monitors = [dict(m) for m in _SITE_MONITORS]
+        self._send_json({"monitors": monitors, "total": len(monitors)})
+
+    def _handle_site_monitor_delete(self, monitor_id: str) -> None:
+        """DELETE /api/v1/site-monitor/monitors/{monitor_id} — delete monitor (auth required)."""
+        if not self._check_auth():
+            return
+        with _MONITOR_LOCK:
+            idx = next((i for i, m in enumerate(_SITE_MONITORS) if m["monitor_id"] == monitor_id), None)
+            if idx is None:
+                self._send_json({"error": "monitor not found"}, 404)
+                return
+            _SITE_MONITORS.pop(idx)
+        self._send_json({"status": "deleted", "monitor_id": monitor_id})
+
+    def _handle_site_check_create(self) -> None:
+        """POST /api/v1/site-monitor/checks — record check result (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        status = body.get("status", "")
+        if status not in SITE_CHECK_STATUSES:
+            self._send_json({"error": f"status must be one of {SITE_CHECK_STATUSES}"}, 400)
+            return
+        http_code = body.get("http_code", 0)
+        if not isinstance(http_code, int) or http_code < 0 or http_code > 599:
+            self._send_json({"error": "http_code must be an integer 0-599"}, 400)
+            return
+        response_ms = body.get("response_ms", 0)
+        if not isinstance(response_ms, int) or response_ms < 0:
+            self._send_json({"error": "response_ms must be a non-negative integer"}, 400)
+            return
+        monitor_id = body.get("monitor_id", "")
+        with _MONITOR_LOCK:
+            monitor_idx = next((i for i, m in enumerate(_SITE_MONITORS) if m["monitor_id"] == monitor_id), None)
+            if monitor_idx is None:
+                self._send_json({"error": "monitor not found"}, 404)
+                return
+            _SITE_MONITORS[monitor_idx]["check_count"] += 1
+            check_id = "sck_" + str(uuid.uuid4())
+            check: dict[str, Any] = {
+                "check_id": check_id,
+                "monitor_id": monitor_id,
+                "status": status,
+                "http_code": http_code,
+                "response_ms": response_ms,
+                "checked_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            if len(_SITE_CHECKS) >= MAX_SITE_CHECKS:
+                _SITE_CHECKS.pop(0)
+            _SITE_CHECKS.append(check)
+        self._send_json({"status": "recorded", "check": check}, 201)
+
+    def _handle_site_checks_list(self) -> None:
+        """GET /api/v1/site-monitor/checks — list check results (auth required)."""
+        if not self._check_auth():
+            return
+        with _MONITOR_LOCK:
+            checks = [dict(c) for c in _SITE_CHECKS]
+        self._send_json({"checks": checks, "total": len(checks)})
+
+    def _handle_site_check_statuses(self) -> None:
+        """GET /api/v1/site-monitor/statuses — list site check statuses (public)."""
+        self._send_json({"statuses": SITE_CHECK_STATUSES})
+
+    # ---------------------------------------------------------------------------
+    # Task 120 — Image Optimizer handlers
+    # ---------------------------------------------------------------------------
+    def _handle_image_report_create(self) -> None:
+        """POST /api/v1/image-optimizer/reports — record optimization report (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        fmt = body.get("format", "")
+        if fmt not in IMAGE_FORMATS:
+            self._send_json({"error": f"format must be one of {IMAGE_FORMATS}"}, 400)
+            return
+        issues = body.get("issues", [])
+        for issue in issues:
+            if issue not in IMAGE_ISSUES:
+                self._send_json({"error": f"issue '{issue}' must be one of {IMAGE_ISSUES}"}, 400)
+                return
+        original_size_bytes = body.get("original_size_bytes", 0)
+        if not isinstance(original_size_bytes, int) or original_size_bytes <= 0:
+            self._send_json({"error": "original_size_bytes must be a positive integer"}, 400)
+            return
+        optimized_size_bytes = body.get("optimized_size_bytes", 0)
+        if not isinstance(optimized_size_bytes, int) or optimized_size_bytes < 0:
+            self._send_json({"error": "optimized_size_bytes must be a non-negative integer"}, 400)
+            return
+        page_url = body.get("page_url", "")
+        page_hash = hashlib.sha256(page_url.encode()).hexdigest() if page_url else body.get("page_hash", "")
+        image_url = body.get("image_url", "")
+        image_hash = hashlib.sha256(image_url.encode()).hexdigest() if image_url else body.get("image_hash", "")
+        savings = (original_size_bytes - optimized_size_bytes) / original_size_bytes * 100
+        savings_pct = str(Decimal(str(savings)).quantize(Decimal("0.01")))
+        with _IMAGE_LOCK:
+            if len(_IMAGE_REPORTS) >= MAX_IMAGE_REPORTS:
+                _IMAGE_REPORTS.pop(0)
+            report_id = "img_" + str(uuid.uuid4())
+            report: dict[str, Any] = {
+                "report_id": report_id,
+                "page_hash": page_hash,
+                "image_hash": image_hash,
+                "format": fmt,
+                "issues": issues,
+                "original_size_bytes": original_size_bytes,
+                "optimized_size_bytes": optimized_size_bytes,
+                "savings_pct": savings_pct,
+                "reported_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _IMAGE_REPORTS.append(report)
+        self._send_json({"status": "reported", "report": report}, 201)
+
+    def _handle_image_reports_list(self) -> None:
+        """GET /api/v1/image-optimizer/reports — list reports (auth required)."""
+        if not self._check_auth():
+            return
+        with _IMAGE_LOCK:
+            reports = [dict(r) for r in _IMAGE_REPORTS]
+        self._send_json({"reports": reports, "total": len(reports)})
+
+    def _handle_image_report_delete(self, report_id: str) -> None:
+        """DELETE /api/v1/image-optimizer/reports/{report_id} — delete report (auth required)."""
+        if not self._check_auth():
+            return
+        with _IMAGE_LOCK:
+            idx = next((i for i, r in enumerate(_IMAGE_REPORTS) if r["report_id"] == report_id), None)
+            if idx is None:
+                self._send_json({"error": "report not found"}, 404)
+                return
+            _IMAGE_REPORTS.pop(idx)
+        self._send_json({"status": "deleted", "report_id": report_id})
+
+    def _handle_image_stats(self) -> None:
+        """GET /api/v1/image-optimizer/stats — optimization stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _IMAGE_LOCK:
+            reports = list(_IMAGE_REPORTS)
+        total_savings_bytes = sum(r["original_size_bytes"] - r["optimized_size_bytes"] for r in reports)
+        by_format: dict[str, int] = {}
+        by_issue: dict[str, int] = {}
+        total_savings_pct = Decimal("0")
+        for r in reports:
+            fmt = r.get("format", "")
+            by_format[fmt] = by_format.get(fmt, 0) + 1
+            for issue in r.get("issues", []):
+                by_issue[issue] = by_issue.get(issue, 0) + 1
+            total_savings_pct += Decimal(r.get("savings_pct", "0"))
+        count = len(reports)
+        avg_savings_pct = str((total_savings_pct / count).quantize(Decimal("0.01"))) if count > 0 else "0.00"
+        self._send_json({
+            "total_reports": count,
+            "total_savings_bytes": total_savings_bytes,
+            "avg_savings_pct": avg_savings_pct,
+            "by_format": by_format,
+            "by_issue": by_issue,
+        })
+
+    def _handle_image_formats(self) -> None:
+        """GET /api/v1/image-optimizer/formats — list image formats (public)."""
+        self._send_json({"formats": IMAGE_FORMATS})
+
 
 # ---------------------------------------------------------------------------
 # Server factory — theorem: build_server isolates configuration from startup.
