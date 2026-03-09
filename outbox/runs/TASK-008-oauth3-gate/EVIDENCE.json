@@ -1,0 +1,11 @@
+{
+  "task_id": "TASK-008-oauth3-gate",
+  "status": "green",
+  "kill_checks": {
+    "port_9222": "CLEAN",
+    "companion_app": "CLEAN",
+    "consent_in_js": "FOUND",
+    "gn_gen": "PASS"
+  },
+  "rung": 641
+}
