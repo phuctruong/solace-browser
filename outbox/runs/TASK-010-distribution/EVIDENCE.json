@@ -1,0 +1,32 @@
+{
+  "task_id": "TASK-010-distribution",
+  "status": "green",
+  "files_changed": [
+    "README.md",
+    "scripts/VERSION",
+    "scripts/build-deb.sh",
+    "scripts/solace-browser.desktop",
+    "scripts/version.sh"
+  ],
+  "acceptance": {
+    "bash_n_build_deb": "PASS",
+    "bash_n_version_sh": "PASS",
+    "scripts_version_semver": "PASS",
+    "version_sh_output": "PASS",
+    "desktop_file_validate": "PASS",
+    "default_pkg_root_control": "PASS",
+    "real_deb_build": "PASS",
+    "banned_term_scan": "PASS"
+  },
+  "artifacts": {
+    "package_root": "/tmp/solace-browser-pkg",
+    "control_file": "/tmp/solace-browser-pkg/DEBIAN/control",
+    "deb_path": "dist/solace-browser_0.9.0_amd64.deb",
+    "desktop_file": "scripts/solace-browser.desktop"
+  },
+  "notes": [
+    "scripts/build-deb.sh reads scripts/VERSION and defaults the package tree to /tmp/solace-browser-pkg.",
+    "The built package includes the browser binary, packaged Yinyang launcher, packaged yinyang-server.py, user service unit, and desktop entry.",
+    "The packaged launcher sets SOLACE_REPO_ROOT=/usr/lib/solace-browser so the installed service resolves yinyang-server.py without repo-local state."
+  ]
+}
