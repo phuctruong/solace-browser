@@ -5768,6 +5768,25 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/form-validator.js", "application/javascript")
         elif path == "/web/css/form-validator.css":
             self._handle_static_file("web/css/form-validator.css", "text/css")
+        # --- Task 097: Color Picker Tool ---
+        elif path == "/api/v1/color-picker/colors":
+            self._handle_color_list()
+        elif path == "/api/v1/color-picker/palettes":
+            self._handle_palette_list()
+        elif path == "/api/v1/color-picker/formats":
+            self._handle_color_formats()
+        # --- Task 098: Page Diff Tracker ---
+        elif path == "/api/v1/page-diff/snapshots/by-page":
+            self._handle_diff_snapshot_by_page()
+        elif path == "/api/v1/page-diff/snapshots":
+            self._handle_diff_snapshot_list()
+        elif path == "/api/v1/page-diff/change-types":
+            self._handle_diff_change_types()
+        # --- Task 099: Tab Organizer ---
+        elif path == "/api/v1/tab-organizer/workspaces":
+            self._handle_workspace_list()
+        elif path == "/api/v1/tab-organizer/tab-statuses":
+            self._handle_tab_statuses_list()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -6325,6 +6344,22 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_form_rule_create()
         elif path == "/api/v1/form-validator/validate":
             self._handle_form_validate()
+        # --- Task 097: Color Picker Tool ---
+        elif path == "/api/v1/color-picker/colors":
+            self._handle_color_save()
+        elif path == "/api/v1/color-picker/palettes":
+            self._handle_palette_create()
+        # --- Task 098: Page Diff Tracker ---
+        elif path == "/api/v1/page-diff/snapshots":
+            self._handle_diff_snapshot_create()
+        elif path == "/api/v1/page-diff/compare":
+            self._handle_diff_compare()
+        # --- Task 099: Tab Organizer ---
+        elif path == "/api/v1/tab-organizer/workspaces":
+            self._handle_workspace_create()
+        elif re.match(r"^/api/v1/tab-organizer/workspaces/[^/]+/tabs$", path):
+            workspace_id = path.split("/")[5]
+            self._handle_workspace_tab_add(workspace_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
