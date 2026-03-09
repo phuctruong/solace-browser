@@ -1282,7 +1282,7 @@ _FONT_LOCK = threading.Lock()
 # ---------------------------------------------------------------------------
 # Task 092 — Translation Overlay
 # ---------------------------------------------------------------------------
-SUPPORTED_LANGUAGES: dict[str, str] = {
+TRANSLATION_LANGUAGES: dict[str, str] = {
     "en": "English", "fr": "French", "de": "German", "es": "Spanish",
     "ja": "Japanese", "zh": "Chinese", "ar": "Arabic", "pt": "Portuguese",
     "ru": "Russian", "ko": "Korean",
@@ -1358,11 +1358,93 @@ _DIFF_LOCK = threading.Lock()
 # ---------------------------------------------------------------------------
 # Task 099 — Tab Organizer
 # ---------------------------------------------------------------------------
-TAB_STATUSES: list[str] = ["active", "pinned", "sleeping", "loading", "error", "closed"]
+TAB_ORGANIZER_STATUSES: list[str] = ["active", "pinned", "sleeping", "loading", "error", "closed"]
 MAX_WORKSPACES: int = 20
 MAX_TABS_PER_WORKSPACE: int = 100
 _WORKSPACES: list[dict] = []
 _WORKSPACE_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 100 — Media Player Tracker
+# ---------------------------------------------------------------------------
+MEDIA_EVENT_TYPES: list[str] = ["play", "pause", "seek", "ended", "buffering", "error", "volume_change", "fullscreen"]
+MEDIA_PLAYER_TYPES: list[str] = ["video", "audio", "live_stream", "podcast"]
+MAX_MEDIA_EVENTS: int = 10000
+_MEDIA_EVENTS: list[dict] = []
+_MEDIA_PLAYER_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 101 — Link Preview Cache
+# ---------------------------------------------------------------------------
+MAX_PREVIEW_CACHE: int = 5000
+_PREVIEW_CACHE: list[dict] = []
+_PREVIEW_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 102 — Keyboard Macro Manager
+# ---------------------------------------------------------------------------
+MACRO_TRIGGER_TYPES: list[str] = ["hotkey", "voice_command", "gesture", "timer", "event"]
+MACRO_ACTION_TYPES: list[str] = ["type_text", "click_element", "navigate", "scroll", "wait", "copy", "paste"]
+MAX_MACROS: int = 100
+MAX_ACTIONS_PER_MACRO: int = 20
+_MACROS: list[dict] = []
+_MACRO_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 103 — Geo Location Tracker
+# ---------------------------------------------------------------------------
+GEO_PERMISSION_DECISIONS: list[str] = ["granted", "denied", "dismissed", "revoked", "timed_out"]
+GEO_ACCURACY_LEVELS: list[str] = ["exact", "approximate", "city_level", "country_level"]
+MAX_GEO_RECORDS: int = 5000
+_GEO_PERMISSIONS: list[dict] = []
+_GEO_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 104 — Notification Filter
+# ---------------------------------------------------------------------------
+FILTER_ACTIONS: list[str] = ["allow", "block", "mute", "delay", "redirect"]
+NOTIFICATION_PRIORITIES: list[str] = ["low", "normal", "high", "urgent"]
+MAX_FILTER_RULES: int = 200
+MAX_NOTIFICATION_LOG: int = 5000
+_FILTER_RULES: list[dict] = []
+_NOTIFICATION_LOG: list[dict] = []
+_NOTIF_FILTER_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 105 — Scroll Tracker
+# ---------------------------------------------------------------------------
+SCROLL_DIRECTIONS: list[str] = ["down", "up", "left", "right"]
+MAX_SCROLL_EVENTS: int = 50000
+_SCROLL_EVENTS: list[dict] = []
+_SCROLL_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 106 — Clipboard Manager
+# ---------------------------------------------------------------------------
+CLIPBOARD_CONTENT_TYPES: list[str] = ["text", "url", "image", "code", "email", "phone", "other"]
+MAX_CLIPBOARD_HISTORY: int = 500
+_CLIPBOARD_ENTRIES: list[dict] = []
+_CLIPBOARD_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 107 — DOM Monitor
+# ---------------------------------------------------------------------------
+DOM_CHANGE_TYPES: list[str] = ["added", "removed", "modified", "attribute", "text", "style"]
+DOM_SELECTOR_TYPES: list[str] = ["css", "xpath", "id", "class", "tag"]
+MAX_MONITOR_RULES: int = 200
+MAX_DOM_EVENTS: int = 50000
+_DOM_RULES: list[dict] = []
+_DOM_EVENTS: list[dict] = []
+_DOM_LOCK = threading.Lock()
+
+# ---------------------------------------------------------------------------
+# Task 108 — Resource Saver
+# ---------------------------------------------------------------------------
+RESOURCE_TYPES: list[str] = ["script", "stylesheet", "image", "font", "media", "document", "api_response", "other"]
+RESOURCE_SOURCES: list[str] = ["page_load", "xhr", "fetch", "service_worker", "manual"]
+MAX_SAVED_RESOURCES: int = 10000
+_SAVED_RESOURCES: list[dict] = []
+_RESOURCE_LOCK = threading.Lock()
 
 # Task 070 — Performance Profiler
 # ---------------------------------------------------------------------------
@@ -5787,6 +5869,67 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_workspace_list()
         elif path == "/api/v1/tab-organizer/tab-statuses":
             self._handle_tab_statuses_list()
+        # --- Task 100: Media Player Tracker ---
+        elif path == "/api/v1/media-tracker/events":
+            self._handle_media_event_list()
+        elif path == "/api/v1/media-tracker/stats":
+            self._handle_media_tracker_stats()
+        elif path == "/api/v1/media-tracker/event-types":
+            self._handle_media_event_types()
+        # --- Task 101: Link Preview Cache ---
+        elif path == "/api/v1/link-preview/cache":
+            self._handle_preview_cache_get()
+        elif path == "/api/v1/link-preview/list":
+            self._handle_preview_list()
+        elif path == "/api/v1/link-preview/stats":
+            self._handle_preview_stats()
+        # --- Task 102: Keyboard Macro Manager ---
+        elif path == "/api/v1/macros":
+            self._handle_macro_list()
+        elif path == "/api/v1/macros/triggers":
+            self._handle_macro_triggers()
+        # --- Task 103: Geo Location Tracker ---
+        elif path == "/api/v1/geo-tracker/permissions":
+            self._handle_geo_permission_list()
+        elif path == "/api/v1/geo-tracker/stats":
+            self._handle_geo_stats()
+        elif path == "/api/v1/geo-tracker/decisions":
+            self._handle_geo_decisions()
+        # --- Task 104: Notification Filter ---
+        elif path == "/api/v1/notification-filter/rules":
+            self._handle_notif_filter_rule_list()
+        elif path == "/api/v1/notification-filter/log":
+            self._handle_notif_filter_log_list()
+        elif path == "/api/v1/notification-filter/actions":
+            self._handle_notif_filter_actions()
+        # --- Task 105: Scroll Tracker ---
+        elif path == "/api/v1/scroll-tracker/events":
+            self._handle_scroll_event_list()
+        elif path == "/api/v1/scroll-tracker/stats":
+            self._handle_scroll_stats()
+        elif path == "/api/v1/scroll-tracker/directions":
+            self._handle_scroll_directions()
+        # --- Task 106: Clipboard Manager ---
+        elif path == "/api/v1/clipboard/entries":
+            self._handle_clipboard_list()
+        elif path == "/api/v1/clipboard/content-types":
+            self._handle_clipboard_content_types()
+        # --- Task 107: DOM Monitor ---
+        elif path == "/api/v1/dom-monitor/rules":
+            self._handle_dom_rule_list()
+        elif path == "/api/v1/dom-monitor/events":
+            self._handle_dom_event_list()
+        elif path == "/api/v1/dom-monitor/change-types":
+            self._handle_dom_change_types()
+        # --- Task 108: Resource Saver ---
+        elif path == "/api/v1/resource-saver/by-type":
+            self._handle_resource_by_type(query)
+        elif path == "/api/v1/resource-saver/stats":
+            self._handle_resource_stats()
+        elif path == "/api/v1/resource-saver/resource-types":
+            self._handle_resource_types()
+        elif path == "/api/v1/resource-saver/resources":
+            self._handle_resource_list()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -6360,6 +6503,44 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/tab-organizer/workspaces/[^/]+/tabs$", path):
             workspace_id = path.split("/")[5]
             self._handle_workspace_tab_add(workspace_id)
+        # --- Task 100: Media Player Tracker ---
+        elif path == "/api/v1/media-tracker/events":
+            self._handle_media_event_record()
+        # --- Task 101: Link Preview Cache ---
+        elif path == "/api/v1/link-preview/cache":
+            self._handle_preview_cache_store()
+        elif path == "/api/v1/link-preview/flush":
+            self._handle_preview_flush()
+        # --- Task 102: Keyboard Macro Manager ---
+        elif path == "/api/v1/macros":
+            self._handle_macro_create()
+        elif re.match(r"^/api/v1/macros/[^/]+/execute$", path):
+            macro_id = path.split("/")[4]
+            self._handle_macro_execute(macro_id)
+        # --- Task 103: Geo Location Tracker ---
+        elif path == "/api/v1/geo-tracker/permissions":
+            self._handle_geo_permission_record()
+        # --- Task 104: Notification Filter ---
+        elif path == "/api/v1/notification-filter/rules":
+            self._handle_notif_filter_rule_create()
+        elif path == "/api/v1/notification-filter/log":
+            self._handle_notif_filter_log_add()
+        # --- Task 105: Scroll Tracker ---
+        elif path == "/api/v1/scroll-tracker/events":
+            self._handle_scroll_event_record()
+        # --- Task 106: Clipboard Manager ---
+        elif path == "/api/v1/clipboard/entries":
+            self._handle_clipboard_save()
+        elif path == "/api/v1/clipboard/clear":
+            self._handle_clipboard_clear()
+        # --- Task 107: DOM Monitor ---
+        elif path == "/api/v1/dom-monitor/rules":
+            self._handle_dom_rule_create()
+        elif path == "/api/v1/dom-monitor/events":
+            self._handle_dom_event_record()
+        # --- Task 108: Resource Saver ---
+        elif path == "/api/v1/resource-saver/resources":
+            self._handle_resource_save()
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -6656,6 +6837,39 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/tab-organizer/workspaces/[^/]+$", path):
             workspace_id = path.split("/")[-1]
             self._handle_workspace_delete(workspace_id)
+        # --- Task 100: Media Player Tracker ---
+        elif path == "/api/v1/media-tracker/events":
+            self._handle_media_event_clear()
+        # --- Task 101: Link Preview Cache ---
+        elif path == "/api/v1/link-preview/cache":
+            self._handle_preview_cache_delete()
+        # --- Task 102: Keyboard Macro Manager ---
+        elif re.match(r"^/api/v1/macros/[^/]+$", path):
+            macro_id = path.split("/")[-1]
+            self._handle_macro_delete(macro_id)
+        # --- Task 103: Geo Location Tracker ---
+        elif re.match(r"^/api/v1/geo-tracker/permissions/[^/]+$", path):
+            perm_id = path.split("/")[-1]
+            self._handle_geo_permission_delete(perm_id)
+        # --- Task 104: Notification Filter ---
+        elif re.match(r"^/api/v1/notification-filter/rules/[^/]+$", path):
+            rule_id = path.split("/")[-1]
+            self._handle_notif_filter_rule_delete(rule_id)
+        # --- Task 105: Scroll Tracker ---
+        elif path == "/api/v1/scroll-tracker/events":
+            self._handle_scroll_event_clear()
+        # --- Task 106: Clipboard Manager ---
+        elif re.match(r"^/api/v1/clipboard/entries/[^/]+$", path):
+            entry_id = path.split("/")[-1]
+            self._handle_clipboard_delete(entry_id)
+        # --- Task 107: DOM Monitor ---
+        elif re.match(r"^/api/v1/dom-monitor/rules/[^/]+$", path):
+            rule_id = path.split("/")[-1]
+            self._handle_dom_rule_delete(rule_id)
+        # --- Task 108: Resource Saver ---
+        elif re.match(r"^/api/v1/resource-saver/resources/[^/]+$", path):
+            resource_id = path.split("/")[-1]
+            self._handle_resource_delete(resource_id)
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -17346,8 +17560,8 @@ function choose(mode) {
         if body is None:
             return
         font_size = body.get("font_size")
-        if font_size is not None and font_size not in FONT_SIZES_PX:
-            self._send_json({"error": f"font_size must be one of {list(FONT_SIZES_PX)}"}, 400)
+        if font_size is not None and font_size not in FONT_SIZES:
+            self._send_json({"error": f"font_size must be one of {list(FONT_SIZES)}"}, 400)
             return
         with _THEME_CUSTOMIZER_LOCK:
             if font_size is not None:
@@ -20788,12 +21002,12 @@ function choose(mode) {
             return
         body = self._read_json_body()
         source_lang = body.get("source_lang", "")
-        if source_lang not in SUPPORTED_LANGUAGES:
-            self._send_json({"error": f"source_lang must be one of {list(SUPPORTED_LANGUAGES)}"}, 400)
+        if source_lang not in TRANSLATION_LANGUAGES:
+            self._send_json({"error": f"source_lang must be one of {list(TRANSLATION_LANGUAGES)}"}, 400)
             return
         target_lang = body.get("target_lang", "")
-        if target_lang not in SUPPORTED_LANGUAGES:
-            self._send_json({"error": f"target_lang must be one of {list(SUPPORTED_LANGUAGES)}"}, 400)
+        if target_lang not in TRANSLATION_LANGUAGES:
+            self._send_json({"error": f"target_lang must be one of {list(TRANSLATION_LANGUAGES)}"}, 400)
             return
         if source_lang == target_lang:
             self._send_json({"error": "source_lang and target_lang must differ"}, 400)
@@ -20848,8 +21062,8 @@ function choose(mode) {
             return
         with _TRANSLATION_LOCK:
             history = list(_TRANSLATION_HISTORY)
-        by_source: dict[str, int] = {lang: 0 for lang in SUPPORTED_LANGUAGES}
-        by_target: dict[str, int] = {lang: 0 for lang in SUPPORTED_LANGUAGES}
+        by_source: dict[str, int] = {lang: 0 for lang in TRANSLATION_LANGUAGES}
+        by_target: dict[str, int] = {lang: 0 for lang in TRANSLATION_LANGUAGES}
         for t in history:
             sl = t.get("source_lang", "")
             tl = t.get("target_lang", "")
@@ -20865,7 +21079,7 @@ function choose(mode) {
 
     def _handle_translation_languages(self) -> None:
         """GET /api/v1/translation/languages — list languages (public)."""
-        self._send_json({"languages": SUPPORTED_LANGUAGES})
+        self._send_json({"languages": TRANSLATION_LANGUAGES})
 
     # ---------------------------------------------------------------------------
     # Task 093 — Annotation Tool handlers
@@ -21480,8 +21694,8 @@ function choose(mode) {
         url_hash = body.get("url_hash", "")
         title_hash = body.get("title_hash", "")
         status = body.get("status", "")
-        if status not in TAB_STATUSES:
-            self._send_json({"error": f"status must be one of {TAB_STATUSES}"}, 400)
+        if status not in TAB_ORGANIZER_STATUSES:
+            self._send_json({"error": f"status must be one of {TAB_ORGANIZER_STATUSES}"}, 400)
             return
         with _WORKSPACE_LOCK:
             workspace = next((w for w in _WORKSPACES if w["workspace_id"] == workspace_id), None)
@@ -21522,8 +21736,774 @@ function choose(mode) {
 
     def _handle_tab_statuses_list(self) -> None:
         """GET /api/v1/tab-organizer/tab-statuses — list tab statuses (public)."""
-        self._send_json({"statuses": TAB_STATUSES})
+        self._send_json({"statuses": TAB_ORGANIZER_STATUSES})
 
+
+
+
+    # ---------------------------------------------------------------------------
+    # Task 100 — Media Player Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_media_event_record(self) -> None:
+        """POST /api/v1/media-tracker/events — record media event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        event_type = body.get("event_type", "")
+        media_type = body.get("media_type", "")
+        if event_type not in MEDIA_EVENT_TYPES:
+            self._send_json({"error": f"event_type must be one of {MEDIA_EVENT_TYPES}"}, 400)
+            return
+        if media_type not in MEDIA_PLAYER_TYPES:
+            self._send_json({"error": f"media_type must be one of {MEDIA_PLAYER_TYPES}"}, 400)
+            return
+        url_hash = body.get("url_hash", "")
+        title_hash = body.get("title_hash", "")
+        position_seconds = body.get("position_seconds", 0)
+        duration_seconds = body.get("duration_seconds", 0)
+        if not isinstance(position_seconds, (int, float)) or position_seconds < 0:
+            self._send_json({"error": "position_seconds must be >= 0"}, 400)
+            return
+        if not isinstance(duration_seconds, (int, float)) or duration_seconds < 0:
+            self._send_json({"error": "duration_seconds must be >= 0"}, 400)
+            return
+        with _MEDIA_PLAYER_LOCK:
+            if len(_MEDIA_EVENTS) >= MAX_MEDIA_EVENTS:
+                _MEDIA_EVENTS.pop(0)
+            event_id = "mev_" + str(uuid.uuid4())
+            event: dict[str, Any] = {
+                "event_id": event_id,
+                "event_type": event_type,
+                "media_type": media_type,
+                "url_hash": url_hash,
+                "title_hash": title_hash,
+                "position_seconds": position_seconds,
+                "duration_seconds": duration_seconds,
+                "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _MEDIA_EVENTS.append(event)
+        self._send_json({"status": "recorded", "event": event}, 201)
+
+    def _handle_media_event_list(self) -> None:
+        """GET /api/v1/media-tracker/events — list media events (auth required)."""
+        if not self._check_auth():
+            return
+        with _MEDIA_PLAYER_LOCK:
+            events = list(_MEDIA_EVENTS)
+        self._send_json({"events": events, "total": len(events)})
+
+    def _handle_media_tracker_stats(self) -> None:
+        """GET /api/v1/media-tracker/stats — media event stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _MEDIA_PLAYER_LOCK:
+            events = list(_MEDIA_EVENTS)
+        by_type: dict[str, int] = {t: 0 for t in MEDIA_EVENT_TYPES}
+        by_media_type: dict[str, int] = {t: 0 for t in MEDIA_PLAYER_TYPES}
+        total_play_seconds = 0.0
+        for ev in events:
+            by_type[ev["event_type"]] = by_type.get(ev["event_type"], 0) + 1
+            by_media_type[ev["media_type"]] = by_media_type.get(ev["media_type"], 0) + 1
+            if ev["event_type"] == "play":
+                total_play_seconds += ev.get("position_seconds", 0)
+        self._send_json({
+            "total_events": len(events),
+            "by_type": by_type,
+            "by_media_type": by_media_type,
+            "total_play_seconds": total_play_seconds,
+        })
+
+    def _handle_media_event_clear(self) -> None:
+        """DELETE /api/v1/media-tracker/events — clear all events (auth required)."""
+        if not self._check_auth():
+            return
+        with _MEDIA_PLAYER_LOCK:
+            count = len(_MEDIA_EVENTS)
+            _MEDIA_EVENTS.clear()
+        self._send_json({"status": "cleared", "count": count})
+
+    def _handle_media_event_types(self) -> None:
+        """GET /api/v1/media-tracker/event-types — list event types (public)."""
+        self._send_json({"event_types": MEDIA_EVENT_TYPES, "media_types": MEDIA_PLAYER_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 101 — Link Preview Cache handlers
+    # ---------------------------------------------------------------------------
+    def _handle_preview_cache_store(self) -> None:
+        """POST /api/v1/link-preview/cache — store preview (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        url_hash = body.get("url_hash", "")
+        if not isinstance(url_hash, str) or len(url_hash) != 64:
+            self._send_json({"error": "url_hash must be 64-char hex"}, 400)
+            return
+        title_hash = body.get("title_hash", "")
+        description_hash = body.get("description_hash", "")
+        image_hash = body.get("image_hash", "")
+        domain_hash = body.get("domain_hash", "")
+        with _PREVIEW_LOCK:
+            if len(_PREVIEW_CACHE) >= MAX_PREVIEW_CACHE:
+                _PREVIEW_CACHE.pop(0)
+            preview_id = "prv_" + str(uuid.uuid4())
+            preview: dict[str, Any] = {
+                "preview_id": preview_id,
+                "url_hash": url_hash,
+                "title_hash": title_hash,
+                "description_hash": description_hash,
+                "image_hash": image_hash,
+                "domain_hash": domain_hash,
+                "hit_count": 0,
+                "cached_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _PREVIEW_CACHE.append(preview)
+        self._send_json({"status": "cached", "preview": preview}, 201)
+
+    def _handle_preview_cache_get(self) -> None:
+        """GET /api/v1/link-preview/cache?url_hash=xxx — get preview (auth required)."""
+        if not self._check_auth():
+            return
+        from urllib.parse import parse_qs, urlparse
+        qs = parse_qs(urlparse(self.path).query)
+        url_hash = qs.get("url_hash", [""])[0]
+        with _PREVIEW_LOCK:
+            entry = next((p for p in _PREVIEW_CACHE if p["url_hash"] == url_hash), None)
+            if entry is None:
+                self._send_json({"error": "preview not found"}, 404)
+                return
+            entry["hit_count"] += 1
+            result = dict(entry)
+        self._send_json({"preview": result})
+
+    def _handle_preview_cache_delete(self) -> None:
+        """DELETE /api/v1/link-preview/cache?url_hash=xxx — delete preview (auth required)."""
+        if not self._check_auth():
+            return
+        from urllib.parse import parse_qs, urlparse
+        qs = parse_qs(urlparse(self.path).query)
+        url_hash = qs.get("url_hash", [""])[0]
+        with _PREVIEW_LOCK:
+            idx = next((i for i, p in enumerate(_PREVIEW_CACHE) if p["url_hash"] == url_hash), None)
+            if idx is None:
+                self._send_json({"error": "preview not found"}, 404)
+                return
+            _PREVIEW_CACHE.pop(idx)
+        self._send_json({"status": "deleted", "url_hash": url_hash})
+
+    def _handle_preview_list(self) -> None:
+        """GET /api/v1/link-preview/list — list all cached previews (auth required)."""
+        if not self._check_auth():
+            return
+        with _PREVIEW_LOCK:
+            previews = list(_PREVIEW_CACHE)
+        self._send_json({"previews": previews, "total": len(previews)})
+
+    def _handle_preview_flush(self) -> None:
+        """POST /api/v1/link-preview/flush — flush all (auth required)."""
+        if not self._check_auth():
+            return
+        with _PREVIEW_LOCK:
+            count = len(_PREVIEW_CACHE)
+            _PREVIEW_CACHE.clear()
+        self._send_json({"status": "flushed", "count": count})
+
+    def _handle_preview_stats(self) -> None:
+        """GET /api/v1/link-preview/stats — preview stats (auth required)."""
+        if not self._check_auth():
+            return
+        from decimal import Decimal
+        with _PREVIEW_LOCK:
+            previews = list(_PREVIEW_CACHE)
+        total_entries = len(previews)
+        total_hits = sum(p["hit_count"] for p in previews)
+        if total_entries > 0:
+            avg_hits = str(Decimal(str(total_hits / total_entries)).quantize(Decimal("0.01")))
+        else:
+            avg_hits = "0.00"
+        self._send_json({"total_entries": total_entries, "total_hits": total_hits, "avg_hits": avg_hits})
+
+    # ---------------------------------------------------------------------------
+    # Task 102 — Keyboard Macro Manager handlers
+    # ---------------------------------------------------------------------------
+    def _handle_macro_create(self) -> None:
+        """POST /api/v1/macros — create macro (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        trigger_type = body.get("trigger_type", "")
+        if trigger_type not in MACRO_TRIGGER_TYPES:
+            self._send_json({"error": f"trigger_type must be one of {MACRO_TRIGGER_TYPES}"}, 400)
+            return
+        actions = body.get("actions", [])
+        if not isinstance(actions, list) or len(actions) > MAX_ACTIONS_PER_MACRO:
+            self._send_json({"error": f"actions must be a list with max {MAX_ACTIONS_PER_MACRO} items"}, 400)
+            return
+        for act in actions:
+            if act.get("action_type", "") not in MACRO_ACTION_TYPES:
+                self._send_json({"error": f"action_type must be one of {MACRO_ACTION_TYPES}"}, 400)
+                return
+        name_hash = body.get("name_hash", "")
+        trigger_hash = body.get("trigger_hash", "")
+        with _MACRO_LOCK:
+            if len(_MACROS) >= MAX_MACROS:
+                self._send_json({"error": f"max {MAX_MACROS} macros"}, 400)
+                return
+            macro_id = "mac_" + str(uuid.uuid4())
+            macro: dict[str, Any] = {
+                "macro_id": macro_id,
+                "name_hash": name_hash,
+                "trigger_type": trigger_type,
+                "trigger_hash": trigger_hash,
+                "actions": actions,
+                "execute_count": 0,
+                "last_executed_at": None,
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _MACROS.append(macro)
+        self._send_json({"status": "created", "macro": macro}, 201)
+
+    def _handle_macro_list(self) -> None:
+        """GET /api/v1/macros — list macros (auth required)."""
+        if not self._check_auth():
+            return
+        with _MACRO_LOCK:
+            macros = list(_MACROS)
+        self._send_json({"macros": macros, "total": len(macros)})
+
+    def _handle_macro_delete(self, macro_id: str) -> None:
+        """DELETE /api/v1/macros/{macro_id} — delete macro (auth required)."""
+        if not self._check_auth():
+            return
+        with _MACRO_LOCK:
+            idx = next((i for i, m in enumerate(_MACROS) if m["macro_id"] == macro_id), None)
+            if idx is None:
+                self._send_json({"error": "macro not found"}, 404)
+                return
+            _MACROS.pop(idx)
+        self._send_json({"status": "deleted", "macro_id": macro_id})
+
+    def _handle_macro_execute(self, macro_id: str) -> None:
+        """POST /api/v1/macros/{macro_id}/execute — record execution (auth required)."""
+        if not self._check_auth():
+            return
+        with _MACRO_LOCK:
+            macro = next((m for m in _MACROS if m["macro_id"] == macro_id), None)
+            if macro is None:
+                self._send_json({"error": "macro not found"}, 404)
+                return
+            macro["execute_count"] += 1
+            macro["last_executed_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            result = dict(macro)
+        self._send_json({"status": "executed", "macro": result})
+
+    def _handle_macro_triggers(self) -> None:
+        """GET /api/v1/macros/triggers — list trigger types (public)."""
+        self._send_json({"trigger_types": MACRO_TRIGGER_TYPES, "action_types": MACRO_ACTION_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 103 — Geo Location Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_geo_permission_record(self) -> None:
+        """POST /api/v1/geo-tracker/permissions — record geo permission event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        decision = body.get("decision", "")
+        accuracy_level = body.get("accuracy_level", "")
+        if decision not in GEO_PERMISSION_DECISIONS:
+            self._send_json({"error": f"decision must be one of {GEO_PERMISSION_DECISIONS}"}, 400)
+            return
+        if accuracy_level not in GEO_ACCURACY_LEVELS:
+            self._send_json({"error": f"accuracy_level must be one of {GEO_ACCURACY_LEVELS}"}, 400)
+            return
+        site_hash = body.get("site_hash", "")
+        with _GEO_LOCK:
+            if len(_GEO_PERMISSIONS) >= MAX_GEO_RECORDS:
+                _GEO_PERMISSIONS.pop(0)
+            perm_id = "gpr_" + str(uuid.uuid4())
+            record: dict[str, Any] = {
+                "perm_id": perm_id,
+                "site_hash": site_hash,
+                "decision": decision,
+                "accuracy_level": accuracy_level,
+                "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _GEO_PERMISSIONS.append(record)
+        self._send_json({"status": "recorded", "record": record}, 201)
+
+    def _handle_geo_permission_list(self) -> None:
+        """GET /api/v1/geo-tracker/permissions — list geo permission events (auth required)."""
+        if not self._check_auth():
+            return
+        with _GEO_LOCK:
+            records = list(_GEO_PERMISSIONS)
+        self._send_json({"permissions": records, "total": len(records)})
+
+    def _handle_geo_permission_delete(self, perm_id: str) -> None:
+        """DELETE /api/v1/geo-tracker/permissions/{perm_id} — delete record (auth required)."""
+        if not self._check_auth():
+            return
+        with _GEO_LOCK:
+            idx = next((i for i, r in enumerate(_GEO_PERMISSIONS) if r["perm_id"] == perm_id), None)
+            if idx is None:
+                self._send_json({"error": "permission record not found"}, 404)
+                return
+            _GEO_PERMISSIONS.pop(idx)
+        self._send_json({"status": "deleted", "perm_id": perm_id})
+
+    def _handle_geo_stats(self) -> None:
+        """GET /api/v1/geo-tracker/stats — geo stats (auth required)."""
+        if not self._check_auth():
+            return
+        from decimal import Decimal
+        with _GEO_LOCK:
+            records = list(_GEO_PERMISSIONS)
+        total = len(records)
+        by_decision: dict[str, int] = {d: 0 for d in GEO_PERMISSION_DECISIONS}
+        by_accuracy: dict[str, int] = {a: 0 for a in GEO_ACCURACY_LEVELS}
+        granted_count = 0
+        for r in records:
+            by_decision[r["decision"]] = by_decision.get(r["decision"], 0) + 1
+            by_accuracy[r["accuracy_level"]] = by_accuracy.get(r["accuracy_level"], 0) + 1
+            if r["decision"] == "granted":
+                granted_count += 1
+        grant_rate = str(Decimal(str(granted_count * 100 / (total or 1))).quantize(Decimal("0.01")))
+        self._send_json({
+            "total_events": total,
+            "by_decision": by_decision,
+            "by_accuracy": by_accuracy,
+            "grant_rate": grant_rate,
+        })
+
+    def _handle_geo_decisions(self) -> None:
+        """GET /api/v1/geo-tracker/decisions — list decisions (public)."""
+        self._send_json({"decisions": GEO_PERMISSION_DECISIONS, "accuracy_levels": GEO_ACCURACY_LEVELS})
+
+    # ---------------------------------------------------------------------------
+    # Task 104 — Notification Filter handlers
+    # ---------------------------------------------------------------------------
+    def _handle_notif_filter_rule_create(self) -> None:
+        """POST /api/v1/notification-filter/rules — create filter rule (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        action = body.get("action", "")
+        if action not in FILTER_ACTIONS:
+            self._send_json({"error": f"action must be one of {FILTER_ACTIONS}"}, 400)
+            return
+        site_hash = body.get("site_hash", "")
+        title_hash = body.get("title_hash", "")
+        with _NOTIF_FILTER_LOCK:
+            if len(_FILTER_RULES) >= MAX_FILTER_RULES:
+                self._send_json({"error": f"max {MAX_FILTER_RULES} rules"}, 400)
+                return
+            rule_id = "nfr_" + str(uuid.uuid4())
+            rule: dict[str, Any] = {
+                "rule_id": rule_id,
+                "site_hash": site_hash,
+                "action": action,
+                "title_hash": title_hash,
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _FILTER_RULES.append(rule)
+        self._send_json({"status": "created", "rule": rule}, 201)
+
+    def _handle_notif_filter_rule_list(self) -> None:
+        """GET /api/v1/notification-filter/rules — list filter rules (auth required)."""
+        if not self._check_auth():
+            return
+        with _NOTIF_FILTER_LOCK:
+            rules = list(_FILTER_RULES)
+        self._send_json({"rules": rules, "total": len(rules)})
+
+    def _handle_notif_filter_rule_delete(self, rule_id: str) -> None:
+        """DELETE /api/v1/notification-filter/rules/{rule_id} — delete rule (auth required)."""
+        if not self._check_auth():
+            return
+        with _NOTIF_FILTER_LOCK:
+            idx = next((i for i, r in enumerate(_FILTER_RULES) if r["rule_id"] == rule_id), None)
+            if idx is None:
+                self._send_json({"error": "rule not found"}, 404)
+                return
+            _FILTER_RULES.pop(idx)
+        self._send_json({"status": "deleted", "rule_id": rule_id})
+
+    def _handle_notif_filter_log_add(self) -> None:
+        """POST /api/v1/notification-filter/log — log a notification event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        priority = body.get("priority", "")
+        action_taken = body.get("action_taken", "")
+        if priority not in NOTIFICATION_PRIORITIES:
+            self._send_json({"error": f"priority must be one of {NOTIFICATION_PRIORITIES}"}, 400)
+            return
+        if action_taken not in FILTER_ACTIONS:
+            self._send_json({"error": f"action_taken must be one of {FILTER_ACTIONS}"}, 400)
+            return
+        site_hash = body.get("site_hash", "")
+        title_hash = body.get("title_hash", "")
+        with _NOTIF_FILTER_LOCK:
+            if len(_NOTIFICATION_LOG) >= MAX_NOTIFICATION_LOG:
+                _NOTIFICATION_LOG.pop(0)
+            log_id = "nfl_" + str(uuid.uuid4())
+            entry: dict[str, Any] = {
+                "log_id": log_id,
+                "site_hash": site_hash,
+                "title_hash": title_hash,
+                "priority": priority,
+                "action_taken": action_taken,
+                "logged_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _NOTIFICATION_LOG.append(entry)
+        self._send_json({"status": "logged", "entry": entry}, 201)
+
+    def _handle_notif_filter_log_list(self) -> None:
+        """GET /api/v1/notification-filter/log — list notification log (auth required)."""
+        if not self._check_auth():
+            return
+        with _NOTIF_FILTER_LOCK:
+            log = list(_NOTIFICATION_LOG)
+        self._send_json({"log": log, "total": len(log)})
+
+    def _handle_notif_filter_actions(self) -> None:
+        """GET /api/v1/notification-filter/actions — list filter actions (public)."""
+        self._send_json({"actions": FILTER_ACTIONS, "priorities": NOTIFICATION_PRIORITIES})
+
+    # ---------------------------------------------------------------------------
+    # Task 105 — Scroll Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_scroll_event_record(self) -> None:
+        """POST /api/v1/scroll-tracker/events — record scroll event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        direction = body.get("direction", "")
+        if direction not in SCROLL_DIRECTIONS:
+            self._send_json({"error": f"direction must be one of {SCROLL_DIRECTIONS}"}, 400)
+            return
+        depth_pct = body.get("depth_pct", -1)
+        if not isinstance(depth_pct, int) or depth_pct < 0 or depth_pct > 100:
+            self._send_json({"error": "depth_pct must be int 0-100"}, 400)
+            return
+        position_px = body.get("position_px", -1)
+        if not isinstance(position_px, (int, float)) or position_px < 0:
+            self._send_json({"error": "position_px must be >= 0"}, 400)
+            return
+        page_hash = body.get("page_hash", "")
+        with _SCROLL_LOCK:
+            if len(_SCROLL_EVENTS) >= MAX_SCROLL_EVENTS:
+                _SCROLL_EVENTS.pop(0)
+            event_id = "scv_" + str(uuid.uuid4())
+            event: dict[str, Any] = {
+                "event_id": event_id,
+                "page_hash": page_hash,
+                "direction": direction,
+                "depth_pct": depth_pct,
+                "position_px": position_px,
+                "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _SCROLL_EVENTS.append(event)
+        self._send_json({"status": "recorded", "event": event}, 201)
+
+    def _handle_scroll_event_list(self) -> None:
+        """GET /api/v1/scroll-tracker/events — list scroll events (auth required)."""
+        if not self._check_auth():
+            return
+        with _SCROLL_LOCK:
+            events = list(_SCROLL_EVENTS)
+        self._send_json({"events": events, "total": len(events)})
+
+    def _handle_scroll_stats(self) -> None:
+        """GET /api/v1/scroll-tracker/stats — scroll stats (auth required)."""
+        if not self._check_auth():
+            return
+        from decimal import Decimal
+        with _SCROLL_LOCK:
+            events = list(_SCROLL_EVENTS)
+        by_page: dict[str, dict] = {}
+        for ev in events:
+            ph = ev["page_hash"]
+            if ph not in by_page:
+                by_page[ph] = {"max_depth_pct": 0, "event_count": 0}
+            by_page[ph]["event_count"] += 1
+            if ev["depth_pct"] > by_page[ph]["max_depth_pct"]:
+                by_page[ph]["max_depth_pct"] = ev["depth_pct"]
+        if events:
+            avg_depth_pct = str(Decimal(str(sum(e["depth_pct"] for e in events) / len(events))).quantize(Decimal("0.01")))
+        else:
+            avg_depth_pct = "0.00"
+        self._send_json({
+            "total_events": len(events),
+            "by_page": by_page,
+            "avg_depth_pct": avg_depth_pct,
+        })
+
+    def _handle_scroll_event_clear(self) -> None:
+        """DELETE /api/v1/scroll-tracker/events — clear all scroll events (auth required)."""
+        if not self._check_auth():
+            return
+        with _SCROLL_LOCK:
+            count = len(_SCROLL_EVENTS)
+            _SCROLL_EVENTS.clear()
+        self._send_json({"status": "cleared", "count": count})
+
+    def _handle_scroll_directions(self) -> None:
+        """GET /api/v1/scroll-tracker/directions — list scroll directions (public)."""
+        self._send_json({"directions": SCROLL_DIRECTIONS})
+
+    # ---------------------------------------------------------------------------
+    # Task 106 — Clipboard Manager handlers
+    # ---------------------------------------------------------------------------
+    def _handle_clipboard_save(self) -> None:
+        """POST /api/v1/clipboard/entries — save clipboard entry (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        content_type = body.get("content_type", "")
+        if content_type not in CLIPBOARD_CONTENT_TYPES:
+            self._send_json({"error": f"content_type must be one of {CLIPBOARD_CONTENT_TYPES}"}, 400)
+            return
+        content_hash = body.get("content_hash", "")
+        source_url_hash = body.get("source_url_hash", "")
+        byte_length = body.get("byte_length", 0)
+        if not isinstance(byte_length, int) or byte_length < 0:
+            self._send_json({"error": "byte_length must be a non-negative integer"}, 400)
+            return
+        with _CLIPBOARD_LOCK:
+            if len(_CLIPBOARD_ENTRIES) >= MAX_CLIPBOARD_HISTORY:
+                _CLIPBOARD_ENTRIES.pop(0)
+            entry_id = "clp_" + str(uuid.uuid4())
+            entry: dict[str, Any] = {
+                "entry_id": entry_id,
+                "content_type": content_type,
+                "content_hash": content_hash,
+                "source_url_hash": source_url_hash,
+                "byte_length": byte_length,
+                "saved_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _CLIPBOARD_ENTRIES.append(entry)
+        self._send_json({"status": "saved", "entry": entry}, 201)
+
+    def _handle_clipboard_list(self) -> None:
+        """GET /api/v1/clipboard/entries — list clipboard entries newest first (auth required)."""
+        if not self._check_auth():
+            return
+        with _CLIPBOARD_LOCK:
+            entries = list(reversed([dict(e) for e in _CLIPBOARD_ENTRIES]))
+        self._send_json({"entries": entries, "total": len(entries)})
+
+    def _handle_clipboard_delete(self, entry_id: str) -> None:
+        """DELETE /api/v1/clipboard/entries/{entry_id} — delete entry (auth required)."""
+        if not self._check_auth():
+            return
+        with _CLIPBOARD_LOCK:
+            idx = next((i for i, e in enumerate(_CLIPBOARD_ENTRIES) if e["entry_id"] == entry_id), None)
+            if idx is None:
+                self._send_json({"error": "entry not found"}, 404)
+                return
+            _CLIPBOARD_ENTRIES.pop(idx)
+        self._send_json({"status": "deleted", "entry_id": entry_id})
+
+    def _handle_clipboard_clear(self) -> None:
+        """POST /api/v1/clipboard/clear — clear all entries (auth required)."""
+        if not self._check_auth():
+            return
+        with _CLIPBOARD_LOCK:
+            count = len(_CLIPBOARD_ENTRIES)
+            _CLIPBOARD_ENTRIES.clear()
+        self._send_json({"status": "cleared", "deleted_count": count})
+
+    def _handle_clipboard_content_types(self) -> None:
+        """GET /api/v1/clipboard/content-types — list content types (public)."""
+        self._send_json({"content_types": CLIPBOARD_CONTENT_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 107 — DOM Monitor handlers
+    # ---------------------------------------------------------------------------
+    def _handle_dom_rule_create(self) -> None:
+        """POST /api/v1/dom-monitor/rules — create monitor rule (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        selector_type = body.get("selector_type", "")
+        if selector_type not in DOM_SELECTOR_TYPES:
+            self._send_json({"error": f"selector_type must be one of {DOM_SELECTOR_TYPES}"}, 400)
+            return
+        page_hash = body.get("page_hash", "")
+        selector_hash = body.get("selector_hash", "")
+        with _DOM_LOCK:
+            if len(_DOM_RULES) >= MAX_MONITOR_RULES:
+                self._send_json({"error": f"max {MAX_MONITOR_RULES} monitor rules"}, 400)
+                return
+            rule_id = "dmr_" + str(uuid.uuid4())
+            rule: dict[str, Any] = {
+                "rule_id": rule_id,
+                "page_hash": page_hash,
+                "selector_hash": selector_hash,
+                "selector_type": selector_type,
+                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _DOM_RULES.append(rule)
+        self._send_json({"status": "created", "rule": rule}, 201)
+
+    def _handle_dom_rule_list(self) -> None:
+        """GET /api/v1/dom-monitor/rules — list monitor rules (auth required)."""
+        if not self._check_auth():
+            return
+        with _DOM_LOCK:
+            rules = [dict(r) for r in _DOM_RULES]
+        self._send_json({"rules": rules, "total": len(rules)})
+
+    def _handle_dom_rule_delete(self, rule_id: str) -> None:
+        """DELETE /api/v1/dom-monitor/rules/{rule_id} — delete rule (auth required)."""
+        if not self._check_auth():
+            return
+        with _DOM_LOCK:
+            idx = next((i for i, r in enumerate(_DOM_RULES) if r["rule_id"] == rule_id), None)
+            if idx is None:
+                self._send_json({"error": "rule not found"}, 404)
+                return
+            _DOM_RULES.pop(idx)
+        self._send_json({"status": "deleted", "rule_id": rule_id})
+
+    def _handle_dom_event_record(self) -> None:
+        """POST /api/v1/dom-monitor/events — record DOM change event (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        change_type = body.get("change_type", "")
+        if change_type not in DOM_CHANGE_TYPES:
+            self._send_json({"error": f"change_type must be one of {DOM_CHANGE_TYPES}"}, 400)
+            return
+        page_hash = body.get("page_hash", "")
+        selector_hash = body.get("selector_hash", "")
+        old_value_hash = body.get("old_value_hash")
+        new_value_hash = body.get("new_value_hash")
+        with _DOM_LOCK:
+            if len(_DOM_EVENTS) >= MAX_DOM_EVENTS:
+                _DOM_EVENTS.pop(0)
+            event_id = "dme_" + str(uuid.uuid4())
+            event: dict[str, Any] = {
+                "event_id": event_id,
+                "page_hash": page_hash,
+                "selector_hash": selector_hash,
+                "change_type": change_type,
+                "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            if old_value_hash is not None:
+                event["old_value_hash"] = old_value_hash
+            if new_value_hash is not None:
+                event["new_value_hash"] = new_value_hash
+            _DOM_EVENTS.append(event)
+        self._send_json({"status": "recorded", "event": event}, 201)
+
+    def _handle_dom_event_list(self) -> None:
+        """GET /api/v1/dom-monitor/events — list DOM events (auth required)."""
+        if not self._check_auth():
+            return
+        with _DOM_LOCK:
+            events = [dict(e) for e in _DOM_EVENTS]
+        self._send_json({"events": events, "total": len(events)})
+
+    def _handle_dom_change_types(self) -> None:
+        """GET /api/v1/dom-monitor/change-types — list change types (public)."""
+        self._send_json({"change_types": DOM_CHANGE_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 108 — Resource Saver handlers
+    # ---------------------------------------------------------------------------
+    def _handle_resource_save(self) -> None:
+        """POST /api/v1/resource-saver/resources — save resource (auth required)."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        resource_type = body.get("resource_type", "")
+        if resource_type not in RESOURCE_TYPES:
+            self._send_json({"error": f"resource_type must be one of {RESOURCE_TYPES}"}, 400)
+            return
+        source = body.get("source", "")
+        if source not in RESOURCE_SOURCES:
+            self._send_json({"error": f"source must be one of {RESOURCE_SOURCES}"}, 400)
+            return
+        url_hash = body.get("url_hash", "")
+        content_hash = body.get("content_hash", "")
+        page_hash = body.get("page_hash", "")
+        size_bytes = body.get("size_bytes", 0)
+        if not isinstance(size_bytes, int) or size_bytes < 0:
+            self._send_json({"error": "size_bytes must be a non-negative integer"}, 400)
+            return
+        with _RESOURCE_LOCK:
+            if len(_SAVED_RESOURCES) >= MAX_SAVED_RESOURCES:
+                _SAVED_RESOURCES.pop(0)
+            resource_id = "rsc_" + str(uuid.uuid4())
+            resource: dict[str, Any] = {
+                "resource_id": resource_id,
+                "resource_type": resource_type,
+                "source": source,
+                "url_hash": url_hash,
+                "content_hash": content_hash,
+                "page_hash": page_hash,
+                "size_bytes": size_bytes,
+                "saved_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            _SAVED_RESOURCES.append(resource)
+        self._send_json({"status": "saved", "resource": resource}, 201)
+
+    def _handle_resource_list(self) -> None:
+        """GET /api/v1/resource-saver/resources — list saved resources (auth required)."""
+        if not self._check_auth():
+            return
+        with _RESOURCE_LOCK:
+            resources = [dict(r) for r in _SAVED_RESOURCES]
+        self._send_json({"resources": resources, "total": len(resources)})
+
+    def _handle_resource_delete(self, resource_id: str) -> None:
+        """DELETE /api/v1/resource-saver/resources/{resource_id} — delete resource (auth required)."""
+        if not self._check_auth():
+            return
+        with _RESOURCE_LOCK:
+            idx = next((i for i, r in enumerate(_SAVED_RESOURCES) if r["resource_id"] == resource_id), None)
+            if idx is None:
+                self._send_json({"error": "resource not found"}, 404)
+                return
+            _SAVED_RESOURCES.pop(idx)
+        self._send_json({"status": "deleted", "resource_id": resource_id})
+
+    def _handle_resource_by_type(self, query: str) -> None:
+        """GET /api/v1/resource-saver/by-type?resource_type=script — filter by type (auth required)."""
+        if not self._check_auth():
+            return
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        resource_type = params.get("resource_type", [""])[0]
+        with _RESOURCE_LOCK:
+            if resource_type:
+                filtered = [dict(r) for r in _SAVED_RESOURCES if r.get("resource_type") == resource_type]
+            else:
+                filtered = [dict(r) for r in _SAVED_RESOURCES]
+        self._send_json({"resources": filtered, "total": len(filtered)})
+
+    def _handle_resource_stats(self) -> None:
+        """GET /api/v1/resource-saver/stats — resource stats (auth required)."""
+        if not self._check_auth():
+            return
+        with _RESOURCE_LOCK:
+            resources = list(_SAVED_RESOURCES)
+        by_type: dict[str, int] = {}
+        total_size = 0
+        for r in resources:
+            rt = r.get("resource_type", "other")
+            by_type[rt] = by_type.get(rt, 0) + 1
+            total_size += r.get("size_bytes", 0)
+        self._send_json({
+            "total_resources": len(resources),
+            "by_type": by_type,
+            "total_size_bytes": total_size,
+        })
+
+    def _handle_resource_types(self) -> None:
+        """GET /api/v1/resource-saver/resource-types — list resource types (public)."""
+        self._send_json({"resource_types": RESOURCE_TYPES})
 
 # ---------------------------------------------------------------------------
 # Server factory — theorem: build_server isolates configuration from startup.

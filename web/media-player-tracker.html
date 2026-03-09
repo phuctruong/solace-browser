@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Media Player Tracker — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/media-player-tracker.css" />
+</head>
+<body>
+  <div class="mpt-container">
+    <header class="mpt-header">
+      <h1 class="mpt-title">Media Player Tracker</h1>
+      <p class="mpt-subtitle">Track media playback events with SHA-256 hashed URLs</p>
+    </header>
+
+    <section class="mpt-section">
+      <h2 class="mpt-section-title">Stats</h2>
+      <div id="mpt-stats" class="mpt-stats-grid"></div>
+    </section>
+
+    <section class="mpt-section">
+      <h2 class="mpt-section-title">Events</h2>
+      <div id="mpt-events-list" class="mpt-list"></div>
+      <button id="mpt-clear-btn" class="mpt-btn mpt-btn-danger">Clear All Events</button>
+    </section>
+
+    <section class="mpt-section">
+      <h2 class="mpt-section-title">Event Types</h2>
+      <div id="mpt-event-types" class="mpt-badges"></div>
+    </section>
+  </div>
+  <script src="/web/js/media-player-tracker.js"></script>
+</body>
+</html>

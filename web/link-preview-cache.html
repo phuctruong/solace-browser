@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Link Preview Cache — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/link-preview-cache.css" />
+</head>
+<body>
+  <div class="lpc-container">
+    <header class="lpc-header">
+      <h1 class="lpc-title">Link Preview Cache</h1>
+      <p class="lpc-subtitle">Cached link previews with SHA-256 hashed content</p>
+    </header>
+
+    <section class="lpc-section">
+      <h2 class="lpc-section-title">Stats</h2>
+      <div id="lpc-stats" class="lpc-stats-grid"></div>
+    </section>
+
+    <section class="lpc-section">
+      <h2 class="lpc-section-title">Cached Previews</h2>
+      <div id="lpc-list" class="lpc-list"></div>
+      <button id="lpc-flush-btn" class="lpc-btn lpc-btn-danger">Flush All</button>
+    </section>
+  </div>
+  <script src="/web/js/link-preview-cache.js"></script>
+</body>
+</html>

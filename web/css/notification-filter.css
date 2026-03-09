@@ -1,0 +1,43 @@
+/* notification-filter.css — Notification Filter | Task 104 | var(--hub-*) tokens only */
+:root {
+  --hub-bg: #ffffff;
+  --hub-surface: #f8f9fa;
+  --hub-border: #dee2e6;
+  --hub-text: #212529;
+  --hub-text-muted: #6c757d;
+  --hub-accent: #0d6efd;
+  --hub-success: #198754;
+  --hub-warning: #ffc107;
+  --hub-danger: #dc3545;
+  --hub-radius: 0.5rem;
+  --hub-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--hub-bg); color: var(--hub-text); font-family: system-ui, sans-serif; font-size: 1rem; line-height: 1.5; }
+
+.nf-container { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
+.nf-header { margin-bottom: 1.5rem; border-bottom: 1px solid var(--hub-border); padding-bottom: 1rem; }
+.nf-title { font-size: 1.5rem; font-weight: 700; }
+.nf-subtitle { font-size: 0.875rem; color: var(--hub-text-muted); margin-top: 0.25rem; }
+
+.nf-section { margin-bottom: 2rem; }
+.nf-section-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem; }
+
+.nf-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.nf-row { background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: var(--hub-radius); padding: 0.75rem 1rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.75rem; }
+
+.nf-action-badge { border-radius: var(--hub-radius); padding: 0.125rem 0.5rem; font-size: 0.75rem; font-weight: 600; color: var(--hub-bg); }
+.nf-action-allow { background: var(--hub-success); }
+.nf-action-block { background: var(--hub-danger); }
+.nf-action-mute { background: var(--hub-text-muted); }
+.nf-action-delay { background: var(--hub-warning); color: var(--hub-text); }
+.nf-action-redirect { background: var(--hub-accent); }
+
+.nf-priority-urgent { color: var(--hub-danger); font-weight: 600; }
+.nf-priority-high { color: var(--hub-warning); font-weight: 600; }
+
+.nf-badges { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.nf-badge { background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: 999px; padding: 0.25rem 0.75rem; font-size: 0.8125rem; color: var(--hub-text-muted); }
+
+.nf-empty { color: var(--hub-text-muted); font-size: 0.875rem; padding: 1rem; text-align: center; }

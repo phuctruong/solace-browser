@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scroll Tracker — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/scroll-tracker.css" />
+</head>
+<body>
+  <div class="st-container">
+    <header class="st-header">
+      <h1 class="st-title">Scroll Tracker</h1>
+      <p class="st-subtitle">Track user scroll depth and direction by page</p>
+    </header>
+
+    <section class="st-section">
+      <h2 class="st-section-title">Stats</h2>
+      <div id="st-stats" class="st-stats-grid"></div>
+    </section>
+
+    <section class="st-section">
+      <h2 class="st-section-title">Events</h2>
+      <div id="st-events-list" class="st-list"></div>
+      <button id="st-clear-btn" class="st-btn st-btn-danger">Clear All Events</button>
+    </section>
+
+    <section class="st-section">
+      <h2 class="st-section-title">Directions</h2>
+      <div id="st-directions" class="st-badges"></div>
+    </section>
+  </div>
+  <script src="/web/js/scroll-tracker.js"></script>
+</body>
+</html>

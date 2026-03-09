@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Geo Location Tracker — Solace Hub</title>
+  <link rel="stylesheet" href="/web/css/geo-location-tracker.css" />
+</head>
+<body>
+  <div class="glt-container">
+    <header class="glt-header">
+      <h1 class="glt-title">Geo Location Tracker</h1>
+      <p class="glt-subtitle">Track geolocation permission decisions per site</p>
+    </header>
+
+    <section class="glt-section">
+      <h2 class="glt-section-title">Stats</h2>
+      <div id="glt-stats" class="glt-stats-grid"></div>
+    </section>
+
+    <section class="glt-section">
+      <h2 class="glt-section-title">Permission Records</h2>
+      <div id="glt-list" class="glt-list"></div>
+    </section>
+
+    <section class="glt-section">
+      <h2 class="glt-section-title">Decision Types</h2>
+      <div id="glt-decisions" class="glt-badges"></div>
+    </section>
+  </div>
+  <script src="/web/js/geo-location-tracker.js"></script>
+</body>
+</html>

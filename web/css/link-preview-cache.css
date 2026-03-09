@@ -1,0 +1,43 @@
+/* link-preview-cache.css — Link Preview Cache | Task 101 | var(--hub-*) tokens only */
+:root {
+  --hub-bg: #ffffff;
+  --hub-surface: #f8f9fa;
+  --hub-border: #dee2e6;
+  --hub-text: #212529;
+  --hub-text-muted: #6c757d;
+  --hub-accent: #0d6efd;
+  --hub-accent-hover: #0b5ed7;
+  --hub-success: #198754;
+  --hub-danger: #dc3545;
+  --hub-radius: 0.5rem;
+  --hub-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { background: var(--hub-bg); color: var(--hub-text); font-family: system-ui, sans-serif; font-size: 1rem; line-height: 1.5; }
+
+.lpc-container { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
+
+.lpc-header { margin-bottom: 1.5rem; border-bottom: 1px solid var(--hub-border); padding-bottom: 1rem; }
+.lpc-title { font-size: 1.5rem; font-weight: 700; }
+.lpc-subtitle { font-size: 0.875rem; color: var(--hub-text-muted); margin-top: 0.25rem; }
+
+.lpc-section { margin-bottom: 2rem; }
+.lpc-section-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem; }
+
+.lpc-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+.lpc-stat-card { background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: var(--hub-radius); padding: 1rem; box-shadow: var(--hub-shadow); }
+.lpc-stat-label { font-size: 0.75rem; color: var(--hub-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.lpc-stat-value { font-size: 1.5rem; font-weight: 700; color: var(--hub-accent); margin-top: 0.25rem; }
+
+.lpc-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+.lpc-row { background: var(--hub-surface); border: 1px solid var(--hub-border); border-radius: var(--hub-radius); padding: 0.75rem 1rem; font-size: 0.875rem; }
+.lpc-row-label { font-size: 0.7rem; color: var(--hub-text-muted); text-transform: uppercase; }
+.lpc-row-value { color: var(--hub-text); word-break: break-all; }
+
+.lpc-btn { border: none; border-radius: var(--hub-radius); padding: 0.5rem 1rem; font-size: 0.875rem; cursor: pointer; transition: background 0.15s; }
+.lpc-btn-danger { background: var(--hub-danger); color: var(--hub-bg); }
+.lpc-btn-danger:hover { background: #b02a37; }
+
+.lpc-empty, .lpc-loading { color: var(--hub-text-muted); font-size: 0.875rem; padding: 1rem; text-align: center; }
