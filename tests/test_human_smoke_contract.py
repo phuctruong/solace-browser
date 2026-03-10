@@ -25,3 +25,4 @@ def test_hub_docs_keep_hub_first_8888_contract() -> None:
     assert "Solace Hub starts first" in hub_readme
     assert "9222" not in hub_readme
     assert "Solace Hub starts first" in start_script
+    assert "env -i" in start_script

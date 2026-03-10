@@ -22,4 +22,10 @@ echo "After the Hub window appears, verify the runtime with: curl http://127.0.0
 
 # 2. Launch via tauri dev (spawns yinyang-server via Hub lifecycle)
 cd "${HUB_DIR}"
-cargo tauri dev 2>&1
+env -i \
+  HOME="${HOME}" \
+  USER="${USER:-phuc}" \
+  DISPLAY="${DISPLAY:-}" \
+  XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" \
+  PATH="${PATH}" \
+  cargo tauri dev 2>&1
