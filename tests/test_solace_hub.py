@@ -144,6 +144,14 @@ def test_browser_launch_function_takes_url():
     assert "fn launch_solace_browser(browser_path: &str, url: &str)" in source
 
 
+def test_hub_resolves_server_script_from_repo_ancestors():
+    """Hub must search ancestor directories for yinyang-server.py in dev builds."""
+    source = main_rs_source()
+    assert "fn resolve_server_script" in source
+    assert 'join("yinyang-server.py")' in source
+    assert "for candidate_root in exe_dir.ancestors()" in source
+
+
 # ── Task 004: Bearer Auth + Token Flow Redesign ─────────────────────────────
 
 def test_no_cmd_get_token_hash():

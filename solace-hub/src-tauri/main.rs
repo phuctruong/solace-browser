@@ -187,6 +187,25 @@ fn python_executable() -> &'static str {
     }
 }
 
+fn resolve_server_script() -> Result<PathBuf, String> {
+    let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
+    let exe_dir = exe_path
+        .parent()
+        .ok_or_else(|| "Executable must have a parent directory".to_string())?;
+
+    for candidate_root in exe_dir.ancestors() {
+        let server_script = candidate_root.join("yinyang-server.py");
+        if server_script.exists() {
+            return Ok(server_script);
+        }
+    }
+
+    Err(format!(
+        "Could not locate yinyang-server.py from executable path {}",
+        exe_path.display()
+    ))
+}
+
 /// Poll GET /health on the given URL until 200 OK or timeout.
 /// Returns true if server became healthy within timeout_secs.
 fn wait_for_server(url: &str, timeout_secs: u64) -> bool {
@@ -473,15 +492,11 @@ fn cmd_kill_all_sessions(state: State<HubState>) -> Result<String, String> {
 // ────────────────────────────────────────────────────────────────────────────
 
 fn main() {
-    // ── Step 1: Find yinyang-server.py (sibling to this binary) ──────────────
-    let exe_dir = std::env::current_exe()
-        .expect("Cannot determine executable path")
-        .parent()
-        .expect("Executable must have a parent directory")
-        .to_path_buf();
-
-    let server_script = exe_dir.join("yinyang-server.py");
-    let server_path = server_script.to_string_lossy().to_string();
+    // ── Step 1: Find yinyang-server.py from the repo tree or bundled layout ─
+    let server_path = resolve_server_script()
+        .expect("Cannot determine yinyang-server.py path")
+        .to_string_lossy()
+        .to_string();
 
     // ── Step 2: Generate session token ───────────────────────────────────────
     let session_token = generate_session_token();

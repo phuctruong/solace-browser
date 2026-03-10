@@ -107,6 +107,17 @@ class TestHealthEndpoint:
         data = get_json("/health")
         assert data["status"] == "ok"
 
+    def test_api_status_endpoint(self, server):
+        """GET /api/status → status == 'ok'."""
+        data = get_json("/api/status")
+        assert data["status"] == "ok"
+
+    def test_api_status_has_port_8888_contract(self, server):
+        """GET /api/status → port key present and numeric."""
+        data = get_json("/api/status")
+        assert "port" in data
+        assert isinstance(data["port"], int)
+
     def test_health_has_version(self, server):
         """GET /health → 'version' key present."""
         data = get_json("/health")

@@ -39,6 +39,20 @@ Solace Hub (Tauri binary)
 
 ---
 
+## Human Smoke Path
+
+Solace Hub starts first.
+
+```bash
+cd /home/phuc/projects/solace-browser
+./scripts/start-hub.sh
+curl http://127.0.0.1:8888/api/status
+```
+
+If `api/status` responds, Hub has brought Yinyang Server up on `localhost:8888` and the Browser can be launched safely.
+
+---
+
 ## Prerequisites
 
 - **Rust + Cargo**: see `../scripts/install-rust.sh`
@@ -141,6 +155,6 @@ solace-hub/
 ## Naming Laws (ABSOLUTE — never violate)
 
 - App name: **Solace Hub** — "Companion App" is permanently banned
-- Port: **8888** — 9222 is permanently banned
+- Port: **8888** — this is the only runtime control port
 - Sidebar: **Yinyang** (native C++ WebUI, NOT an extension)
 - Backend: **Yinyang Server** (`yinyang-server.py`, localhost:8888)

@@ -63,3 +63,5 @@ systemctl --user enable yinyang
 echo "Installed Yinyang launcher to ${LIB_DIR}"
 echo "Installed solace CLI to ${BIN_DIR}/solace"
 echo "Systemd user unit installed at ${SYSTEMD_DIR}/yinyang.service"
+echo "Next step: start Solace Hub first via ./scripts/start-hub.sh"
+echo "Then verify the runtime with: curl http://127.0.0.1:8888/api/status"

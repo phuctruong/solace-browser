@@ -13,9 +13,23 @@ Three surfaces:
 
 ```bash
 chmod +x scripts/*.sh && ./scripts/install.sh
-systemctl --user start yinyang
-# Open Solace Browser
+./scripts/start-hub.sh
+curl http://127.0.0.1:8888/api/status
+# Then open Solace Browser after Hub is healthy
 ```
+
+Solace Hub starts first. It launches Yinyang Server on `localhost:8888`, verifies the runtime, and then controls the Browser lifecycle.
+
+## Human Smoke Path
+
+1. Install the local scripts and service assets:
+   `chmod +x scripts/*.sh && ./scripts/install.sh`
+2. Start Solace Hub:
+   `./scripts/start-hub.sh`
+3. Verify Yinyang Server health separately from the Browser:
+   `curl http://127.0.0.1:8888/api/status`
+4. Launch the Browser and confirm the native Yinyang sidebar attaches.
+5. Optionally verify agent control through `webservices` or `MCP` once the sidebar is live.
 
 ## Distribution
 
@@ -33,11 +47,14 @@ bash scripts/build-deb.sh
 ## Manual Development
 
 ```bash
-# Start Yinyang Server (port 8888)
-python3 yinyang-server.py
-
-# Start Solace Hub (Tauri desktop app)
+# Preferred: start Solace Hub first. It spawns Yinyang Server on 8888.
 scripts/start-hub.sh
+
+# Verify Yinyang Server on 8888
+curl http://127.0.0.1:8888/api/status
+
+# Low-level server debugging only (not the default onboarding path)
+python3 yinyang-server.py
 
 # Run tests
 pytest tests/ -q

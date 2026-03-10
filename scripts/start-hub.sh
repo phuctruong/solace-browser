@@ -17,6 +17,9 @@ if ! command -v cargo &>/dev/null; then
   exit 1
 fi
 
+echo "Solace Hub starts first and will launch Yinyang Server on localhost:8888."
+echo "After the Hub window appears, verify the runtime with: curl http://127.0.0.1:8888/api/status"
+
 # 2. Launch via tauri dev (spawns yinyang-server via Hub lifecycle)
 cd "${HUB_DIR}"
 cargo tauri dev 2>&1

@@ -5521,6 +5521,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         query = self.path[len(path):]  # includes leading ?
         if path == "/health":
             self._handle_health()
+        elif path == "/api/status":
+            self._handle_health()
         elif path == "/instructions":
             self._handle_instructions()
         elif path == "/credits":
