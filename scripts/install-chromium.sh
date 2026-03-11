@@ -1,5 +1,5 @@
 #!/bin/sh
-# install-chromium.sh — One-shot installer for Solace Browser v1.2.0 (Chromium Edition)
+# install-chromium.sh — One-shot installer for the Solace Browser portable release
 # Auth: 65537 | Port 8888 ONLY | No extensions | No port 9222
 # Usage: curl -sSL https://github.com/phuctruong/solace-browser/releases/download/v1.2.0/install-chromium.sh | sh
 
@@ -33,7 +33,7 @@ require_cmd python3
 mkdir -p "${INSTALL_DIR}" "${BIN_DIR}"
 
 # Download and verify tarball
-echo "[1/4] Downloading Chromium build..."
+echo "[1/4] Downloading portable release..."
 curl -sSL --progress-bar "${BASE_URL}/${TARBALL}" -o "/tmp/${TARBALL}"
 curl -sSL "${BASE_URL}/${TARBALL}.sha256" -o "/tmp/${TARBALL}.sha256"
 
@@ -47,32 +47,16 @@ echo "    Checksum OK (sha256: ${ACTUAL})"
 
 # Extract
 echo "[3/4] Extracting to ${INSTALL_DIR}..."
-tar -xzf "/tmp/${TARBALL}" -C "${INSTALL_DIR}" --strip-components=1
+rm -rf "${INSTALL_DIR}/solace-browser-release"
+tar -xzf "/tmp/${TARBALL}" -C "${INSTALL_DIR}"
 rm -f "/tmp/${TARBALL}" "/tmp/${TARBALL}.sha256"
-
-# Download Yinyang Server (pure Python, no pip needed)
-curl -sSL "${BASE_URL}/yinyang_server.py" -o "${INSTALL_DIR}/yinyang_server.py"
-curl -sSL "${BASE_URL}/yinyang-server.py" -o "${INSTALL_DIR}/yinyang-server.py"
-chmod +x "${INSTALL_DIR}/chrome"
 
 # Create launcher
 cat > "${BIN_DIR}/solace-browser" << 'LAUNCHER'
 #!/bin/sh
-# Solace Browser launcher — starts Yinyang Server then Chrome
-INSTALL_DIR="${HOME}/.local/lib/solace-browser"
-
-# Start Yinyang Server in background (port 8888)
-if ! curl -sf http://localhost:8888/api/v1/system/status >/dev/null 2>&1; then
-  python3 "${INSTALL_DIR}/yinyang-server.py" &
-  YINYANG_PID=$!
-  sleep 1
-  echo "Yinyang Server started (PID ${YINYANG_PID})"
-fi
-
-# Launch Solace Browser
-exec "${INSTALL_DIR}/chrome" \
-  --user-data-dir="${HOME}/.config/solace-browser" \
-  "$@"
+# Solace Browser launcher — Hub first, Browser second
+INSTALL_DIR="${HOME}/.local/lib/solace-browser/solace-browser-release"
+exec "${INSTALL_DIR}/solace-hub" "$@"
 LAUNCHER
 chmod +x "${BIN_DIR}/solace-browser"
 
@@ -84,7 +68,7 @@ Version=1.0
 Name=Solace Browser
 Comment=AI Browser with Yinyang Sidebar — Local-First, Evidence-Proven
 Exec=${BIN_DIR}/solace-browser %U
-Icon=${INSTALL_DIR}/resources/accessibility/solace.png
+Icon=${INSTALL_DIR}/solace-browser-release/yinyang-logo.png
 Terminal=false
 Type=Application
 Categories=Network;WebBrowser;
@@ -97,8 +81,9 @@ echo ""
 echo "Launch: ${BIN_DIR}/solace-browser"
 echo "  (or search 'Solace Browser' in your app launcher)"
 echo ""
-echo "Yinyang sidebar: Click the panel icon in browser toolbar → select Yinyang"
-echo "Yinyang Server:  ws://localhost:8888/ws/yinyang (starts automatically)"
+echo "Solace Hub starts first and owns localhost:8888."
+echo "Then use the Open Solace Browser action inside Hub."
 echo ""
-echo "Onboard at: https://solaceagi.com/register"
+echo "Agent guide: http://localhost:8888/agents"
+echo "Account setup: https://solaceagi.com/register"
 echo "Auth: 65537 | FSL-1.1-Apache-2.0"
