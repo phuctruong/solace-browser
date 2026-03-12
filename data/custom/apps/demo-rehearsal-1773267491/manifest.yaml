@@ -1,0 +1,13 @@
+id: demo-rehearsal-1773267491
+name: "Demo Rehearsal 1773267491"
+description: "Create a custom local research app for the investor demo."
+category: "custom"
+status: "installed"
+safety: "B"
+tier: "free"
+domains:
+  - "google.com"
+site: google.com
+type: "custom"
+custom: true
+local_only: true

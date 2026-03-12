@@ -1,0 +1,13 @@
+{
+  "id": "google-search-trends",
+  "platform": "google",
+  "version": "1.0.0",
+  "description": "Scan Google Search and Google News for trend shifts relevant to the user and Morning Brief.",
+  "author": "Solace AGI",
+  "local_only": true,
+  "steps": [
+    { "step": 1, "action": "navigate", "target": "https://news.google.com/", "description": "Open Google News." },
+    { "step": 2, "action": "research", "description": "Extract the strongest trend changes, repeated names, and urgent signals." },
+    { "step": 3, "action": "generate_report", "format": "html", "description": "Write a trends report for Morning Brief and the local outbox." }
+  ]
+}

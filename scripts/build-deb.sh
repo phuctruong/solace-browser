@@ -4,16 +4,13 @@ set -eu
 
 SOURCE_DIR=$(dirname "$(readlink -f "$0")")
 REPO_ROOT=$(dirname "$SOURCE_DIR")
-version=$(cat "$SOURCE_DIR/VERSION")
+version=$(cat "$REPO_ROOT/VERSION")
 
 PKG_ROOT=${PKG_ROOT:-/tmp/solace-browser-pkg}
 OUTPUT_DIR=${OUTPUT_DIR:-$REPO_ROOT/dist}
 OUTPUT_DEB=${OUTPUT_DEB:-$OUTPUT_DIR/solace-browser_${version}_amd64.deb}
-
-BROWSER_BINARY=${BROWSER_BINARY:-$REPO_ROOT/dist/solace-browser-linux-x86_64}
-SERVER_SCRIPT=${SERVER_SCRIPT:-$REPO_ROOT/yinyang-server.py}
-LAUNCH_SCRIPT=${LAUNCH_SCRIPT:-$SOURCE_DIR/launch-yinyang.sh}
-SERVICE_FILE=${SERVICE_FILE:-$SOURCE_DIR/yinyang.service}
+BUNDLE_SCRIPT=${BUNDLE_SCRIPT:-$SOURCE_DIR/build-linux-release.sh}
+BUNDLE_DIR=${BUNDLE_DIR:-$REPO_ROOT/dist/solace-browser-release}
 DESKTOP_FILE=${DESKTOP_FILE:-$SOURCE_DIR/solace-browser.desktop}
 
 fail() {
@@ -31,18 +28,20 @@ if ! command -v dpkg-deb >/dev/null 2>&1; then
   fail "dpkg-deb not found"
 fi
 
-require_file "$BROWSER_BINARY"
-require_file "$SERVER_SCRIPT"
-require_file "$LAUNCH_SCRIPT"
-require_file "$SERVICE_FILE"
+require_file "$BUNDLE_SCRIPT"
 require_file "$DESKTOP_FILE"
+
+if [ ! -f "$BUNDLE_DIR/chrome" ] || [ ! -f "$BUNDLE_DIR/solace-hub" ]; then
+  "$BUNDLE_SCRIPT" >/dev/null
+fi
+require_file "$BUNDLE_DIR/chrome"
+require_file "$BUNDLE_DIR/solace-hub"
 
 rm -rf "$PKG_ROOT"
 mkdir -p \
   "$PKG_ROOT/DEBIAN" \
   "$PKG_ROOT/usr/bin" \
   "$PKG_ROOT/usr/lib/solace-browser" \
-  "$PKG_ROOT/usr/lib/systemd/user" \
   "$PKG_ROOT/usr/share/applications"
 
 cat > "$PKG_ROOT/DEBIAN/control" <<EOF
@@ -51,28 +50,34 @@ Version: ${version}
 Section: web
 Priority: optional
 Architecture: amd64
-Depends: python3 (>=3.10), libgtk-3-0, libx11-xcb1
+Depends: python3 (>=3.10), libgtk-3-0, libx11-xcb1, libwebkit2gtk-4.0-37
 Maintainer: Solace AI <hello@solaceagi.com>
-Description: AI-Native browser with Yinyang sidebar
- AI-Native browser with Yinyang sidebar.
+Description: Solace Browser + Solace Hub portable runtime
+ Solace Browser ships the real Chromium runtime together with Solace Hub.
+ Hub starts first, owns localhost:8888, launches the Browser second, and
+ keeps the Yinyang assistant local-first.
 EOF
 
-install -m 755 "$BROWSER_BINARY" "$PKG_ROOT/usr/bin/solace-browser"
-install -m 755 "$SERVER_SCRIPT" "$PKG_ROOT/usr/lib/solace-browser/yinyang-server.py"
+cp -a "$BUNDLE_DIR" "$PKG_ROOT/usr/lib/solace-browser/"
 
-sed '2i\
-SOLACE_REPO_ROOT=${SOLACE_REPO_ROOT:-/usr/lib/solace-browser}
-' "$LAUNCH_SCRIPT" > "$PKG_ROOT/usr/lib/solace-browser/launch-yinyang.sh"
-chmod 755 "$PKG_ROOT/usr/lib/solace-browser/launch-yinyang.sh"
+cat > "$PKG_ROOT/usr/bin/solace-browser" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+exec /usr/lib/solace-browser/solace-browser-release/solace-hub "$@"
+EOF
+chmod 755 "$PKG_ROOT/usr/bin/solace-browser"
 
-sed 's#ExecStart=/bin/sh %h/.local/lib/solace/launch-yinyang.sh#ExecStart=/bin/sh /usr/lib/solace-browser/launch-yinyang.sh#' \
-  "$SERVICE_FILE" > "$PKG_ROOT/usr/lib/systemd/user/yinyang.service"
-chmod 644 "$PKG_ROOT/usr/lib/systemd/user/yinyang.service"
+cat > "$PKG_ROOT/usr/bin/solace-hub" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+exec /usr/lib/solace-browser/solace-browser-release/solace-hub "$@"
+EOF
+chmod 755 "$PKG_ROOT/usr/bin/solace-hub"
 
 install -m 644 "$DESKTOP_FILE" "$PKG_ROOT/usr/share/applications/solace-browser.desktop"
 
 mkdir -p "$OUTPUT_DIR"
-dpkg-deb --build "$PKG_ROOT" "$OUTPUT_DEB"
+dpkg-deb -Zgzip -z1 --build "$PKG_ROOT" "$OUTPUT_DEB"
 
 sha256sum "$OUTPUT_DEB" > "${OUTPUT_DEB}.sha256"
 

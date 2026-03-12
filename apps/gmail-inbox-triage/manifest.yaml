@@ -1,0 +1,62 @@
+id: gmail-inbox-triage
+name: Gmail Inbox Triage
+version: "1.0.0"
+title: "Gmail Inbox Triage"
+description: "AI-powered email categorization, priority sorting, and draft replies"
+author: "Solace AGI"
+category: productivity
+status: installed
+safety: B
+tier: free
+tier_reason: "Read-only inbox extraction + LLM classification, no managed LLM required (BYOK)"
+site: mail.google.com
+type: standard
+orchestrates: []
+oauth3_scopes:
+  - gmail.read
+  - gmail.modify
+  - gmail.send
+  - local.evidence
+budget:
+  max_llm_calls_per_run: 50
+  max_cost_per_run_usd: 0.10
+  max_runtime_seconds: 300
+  max_actions_per_run: 50
+  cooldown_seconds: 5
+evidence:
+  capture: true
+  hash_chain: true
+  retention_days: 90
+  screenshots: true
+  html_snapshots: true
+  esign_required: true
+partners:
+  produces_for:
+    - google-drive-saver
+    - slack-triage
+    - calendar-brief
+    - weekly-digest
+  consumes_from:
+    - morning-brief
+    - linkedin-outreach
+required_inbox:
+  prompts:
+    - triage-prompt.md
+  templates: []
+  assets: []
+  policies:
+    - budget-policy.yaml
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml
+
+domains:
+  - "mail.google.com"
+  - "gmail.com"
+oauth3_scopes:
+  - "gmail.read"
+  - "gmail.archive"
+  - "gmail.label"
+tier_required: free

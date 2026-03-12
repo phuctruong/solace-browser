@@ -13,7 +13,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write   # for Workload Identity Federation GCS upload
 
 jobs:
   build:
@@ -26,18 +25,33 @@ jobs:
           - os: ubuntu-22.04
             platform: linux
             artifact_name: native-linux
-            binary: solace-browser-linux-x86_64
+            tarball: solace-browser-chromium-linux-x86_64.tar.gz
+            deb: solace-browser_1.0.0_amd64.deb
+            artifact_paths: |
+              dist/solace-browser-chromium-linux-x86_64.tar.gz
+              dist/solace-browser-chromium-linux-x86_64.tar.gz.sha256
+              dist/solace-browser_1.0.0_amd64.deb
+              dist/solace-browser_1.0.0_amd64.deb.sha256
           - os: macos-latest
             platform: macos
             artifact_name: native-macos
-            binary: solace-browser-macos-universal
+            tarball: solace-browser-macos-universal.tar.gz
+            artifact_paths: |
+              dist/solace-browser-macos-universal.tar.gz
+              dist/solace-browser-macos-universal.tar.gz.sha256
           - os: windows-latest
             platform: windows
             artifact_name: native-windows
-            binary: solace-browser-windows-x86_64.msi
+            msi: solace-browser-windows-x86_64.msi
+            artifact_paths: |
+              dist/solace-browser-windows-x86_64.msi
+              dist/solace-browser-windows-x86_64.msi.sha256
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -47,203 +61,75 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller fastapi uvicorn cryptography websockets httpx pydantic
+          pip install fastapi uvicorn cryptography websockets httpx pydantic
 
-      - name: Install WiX Toolset (Windows only)
-        if: matrix.platform == 'windows'
-        run: |
-          dotnet tool install --global wix
-          wix --version
-
-      - name: Build binary — Linux
+      - name: Install Linux runtime dependencies
         if: matrix.platform == 'linux'
-        env:
-          TARGET_OS: linux
-          UPLOAD_ENABLED: '0'
-        run: bash scripts/release_browser_cycle.sh
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.0-dev \
+            build-essential \
+            curl \
+            wget \
+            libssl-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            dpkg-dev
 
-      - name: Build binary — macOS (universal2)
-        if: matrix.platform == 'macos'
-        env:
-          TARGET_OS: macos
-          UPLOAD_ENABLED: '0'
-        run: bash scripts/release_browser_cycle.sh
+      - name: Build native release
+        if: matrix.platform != 'windows'
+        run: |
+          export TARGET_OS=${{ matrix.platform }}
+          bash scripts/release_browser_cycle.sh
 
-      - name: Build binary — Windows + MSI
+      - name: Build native Windows release
         if: matrix.platform == 'windows'
-        env:
-          TARGET_OS: windows
-          UPLOAD_ENABLED: '0'
-        shell: bash
-        run: bash scripts/release_browser_cycle.sh
-
-      # ---------------------------------------------------------------
-      # CODE SIGNING — activated when secrets are present
-      # Windows: requires WINDOWS_SIGNING_CERT (base64 PFX) +
-      #          WINDOWS_SIGNING_PASSWORD secrets in repo settings
-      # macOS:   requires MACOS_SIGNING_CERT (base64 .p12) +
-      #          MACOS_SIGNING_PASSWORD + MACOS_NOTARIZATION_APPLE_ID +
-      #          MACOS_NOTARIZATION_TEAM_ID + MACOS_NOTARIZATION_PASSWORD
-      # ---------------------------------------------------------------
-
-      - name: Sign MSI — Windows (runs only when cert secret is present)
-        if: matrix.platform == 'windows' && env.WINDOWS_SIGNING_CERT != ''
-        env:
-          WINDOWS_SIGNING_CERT: ${{ secrets.WINDOWS_SIGNING_CERT }}
-          WINDOWS_SIGNING_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PASSWORD }}
         shell: pwsh
         run: |
-          # Decode PFX from base64 secret
-          $certBytes = [Convert]::FromBase64String($env:WINDOWS_SIGNING_CERT)
-          $certPath  = Join-Path $env:TEMP "solace-signing.pfx"
-          [IO.File]::WriteAllBytes($certPath, $certBytes)
-
-          # Sign the MSI with SHA-256 + trusted timestamp
-          $msi = "dist\solace-browser-windows-x86_64.msi"
-          & signtool sign `
-            /fd  sha256 `
-            /td  sha256 `
-            /tr  "http://timestamp.digicert.com" `
-            /f   $certPath `
-            /p   $env:WINDOWS_SIGNING_PASSWORD `
-            $msi
-
-          # Verify signature
-          & signtool verify /pa $msi
-          Write-Host "MSI signed and verified."
-
-          # Clean up cert file immediately
-          Remove-Item $certPath -Force
-
-      - name: Sign + Notarize — macOS (runs only when cert secret is present)
-        if: matrix.platform == 'macos' && env.MACOS_SIGNING_CERT != ''
-        env:
-          MACOS_SIGNING_CERT: ${{ secrets.MACOS_SIGNING_CERT }}
-          MACOS_SIGNING_PASSWORD: ${{ secrets.MACOS_SIGNING_PASSWORD }}
-          MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.MACOS_NOTARIZATION_APPLE_ID }}
-          MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.MACOS_NOTARIZATION_TEAM_ID }}
-          MACOS_NOTARIZATION_PASSWORD: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
-        run: |
-          # Import .p12 into a temporary keychain
-          KEYCHAIN="build-$(date +%s).keychain"
-          KEYCHAIN_PASSWORD="$(openssl rand -hex 16)"
-          BINARY="dist/solace-browser-macos-universal"
-
-          echo "$MACOS_SIGNING_CERT" | base64 --decode > /tmp/solace-signing.p12
-
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
-          security set-keychain-settings -lut 900 "$KEYCHAIN"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
-          security import /tmp/solace-signing.p12 \
-            -k "$KEYCHAIN" -P "$MACOS_SIGNING_PASSWORD" \
-            -T /usr/bin/codesign -T /usr/bin/security
-          security list-keychain -d user -s "$KEYCHAIN"
-          security set-key-partition-list -S apple-tool:,apple: \
-            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
-
-          # Sign the binary
-          codesign --force --options runtime \
-            --sign "Developer ID Application: Solace AI ($MACOS_NOTARIZATION_TEAM_ID)" \
-            --keychain "$KEYCHAIN" \
-            "$BINARY"
-          codesign --verify --strict "$BINARY"
-          echo "Binary signed."
-
-          # Notarize (submit to Apple, wait for approval)
-          xcrun notarytool submit "$BINARY" \
-            --apple-id "$MACOS_NOTARIZATION_APPLE_ID" \
-            --team-id  "$MACOS_NOTARIZATION_TEAM_ID" \
-            --password "$MACOS_NOTARIZATION_PASSWORD" \
-            --wait
-
-          # Staple (embed notarization ticket so it works offline)
-          xcrun stapler staple "$BINARY"
-          echo "Notarization stapled."
-
-          # Clean up
-          rm -f /tmp/solace-signing.p12
-          security delete-keychain "$KEYCHAIN"
+          $env:TARGET_OS = "${{ matrix.platform }}"
+          ./scripts/release_browser_cycle.sh
 
       - name: Verify binary headers
         shell: python
         run: |
-          import struct, sys
           from pathlib import Path
+          import tarfile
 
-          platform = "${{ matrix.platform }}"
-          binary = "${{ matrix.binary }}"
           dist = Path("dist")
-
+          platform = "${{ matrix.platform }}"
           if platform == "linux":
-              b = (dist / binary).read_bytes()
-              assert b[:4] == b'\x7fELF', f"Not ELF: {binary}"
-              print(f"OK Linux ELF: {binary}")
-
+              tarball = dist / "${{ matrix.tarball }}"
+              deb = dist / "${{ matrix.deb }}"
+              assert tarball.is_file(), f"Missing tarball: {tarball}"
+              assert deb.is_file(), f"Missing deb: {deb}"
+              with tarfile.open(tarball, "r:gz") as archive:
+                  names = archive.getnames()
+              assert "solace-browser-release/chrome" in names
+              assert "solace-browser-release/solace-hub" in names
+              print(f"OK Linux bundle: {tarball}")
+              print(f"OK Debian package: {deb}")
           elif platform == "macos":
-              b = (dist / binary).read_bytes()
-              macho = {b'\xfe\xed\xfa\xce', b'\xce\xfa\xed\xfe', b'\xfe\xed\xfa\xcf',
-                       b'\xcf\xfa\xed\xfe', b'\xca\xfe\xba\xbe', b'\xbe\xba\xfe\xca',
-                       b'\xca\xfe\xba\xbf', b'\xbf\xba\xfe\xca'}
-              assert b[:4] in macho, f"Not Mach-O: {binary}"
-              print(f"OK macOS Mach-O: {binary}")
-
+              tarball = dist / "${{ matrix.tarball }}"
+              assert tarball.is_file(), f"Missing tarball: {tarball}"
+              with tarfile.open(tarball, "r:gz") as archive:
+                  names = archive.getnames()
+              assert "solace-browser-release-macos/chrome" in names
+              assert "solace-browser-release-macos/solace-hub" in names
+              print(f"OK macOS bundle: {tarball}")
           elif platform == "windows":
-              b = (dist / binary).read_bytes()
-              ole2 = b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'
-              assert b[:8] == ole2, f"Not MSI (OLE2 header missing): {binary}"
-              print(f"OK Windows MSI: {binary} ({len(b):,} bytes)")
-
-      - name: Generate sha256
-        shell: python
-        run: |
-          import hashlib
-          from pathlib import Path
-
-          binary = Path("dist") / "${{ matrix.binary }}"
-          data = binary.read_bytes()
-          digest = hashlib.sha256(data).hexdigest()
-          sha_file = Path("dist") / f"${{ matrix.binary }}.sha256"
-          sha_file.write_text(f"{digest}  ${{ matrix.binary }}\n", encoding="utf-8")
-          print(f"sha256: {digest}")
-          print(f"size:   {len(data):,} bytes")
+              msi = dist / "${{ matrix.msi }}"
+              assert msi.is_file(), f"Missing MSI: {msi}"
+              assert msi.read_bytes().startswith(b\"\\xd0\\xcf\\x11\\xe0\\xa1\\xb1\\x1a\\xe1\")
+              print(f"OK Windows MSI: {msi}")
+          else:
+              raise SystemExit(f"Unexpected platform: {platform}")
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          path: |
-            dist/${{ matrix.binary }}
-            dist/${{ matrix.binary }}.sha256
+          path: ${{ matrix.artifact_paths }}
           if-no-files-found: error
           retention-days: 30
-
-  promote:
-    name: promote-to-gcs
-    needs: build
-    runs-on: ubuntu-22.04
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: scratch/github-artifacts
-
-      - name: Promote to GCS
-        run: |
-          python scripts/promote_native_builds_to_gcs.py \
-            --tag "${GITHUB_REF_NAME}" \
-            --artifacts-dir scratch/github-artifacts \
-            --bucket solace-downloads

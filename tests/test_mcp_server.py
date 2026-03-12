@@ -30,7 +30,7 @@ def _call(method: str, params: dict = None, req_id: int = 1) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# 8 MCP tool tests
+# MCP tool tests
 # ---------------------------------------------------------------------------
 class TestMCPInitialize:
     def test_initialize_returns_protocol_version(self):
@@ -52,11 +52,11 @@ class TestMCPInitialize:
 
 
 class TestMCPToolsList:
-    def test_tools_list_returns_8_tools(self):
-        """tools/list → exactly 8 tools defined."""
+    def test_tools_list_returns_16_tools(self):
+        """tools/list → exactly 16 tools defined."""
         resp = _call("tools/list")
         tools = resp["result"]["tools"]
-        assert len(tools) == 8
+        assert len(tools) == 16
 
     def test_tools_list_tool_names(self):
         """tools/list → all expected tool names present."""
@@ -65,6 +65,8 @@ class TestMCPToolsList:
         expected = {
             "detect_apps", "list_apps", "create_schedule", "list_schedules",
             "delete_schedule", "record_evidence", "list_evidence", "get_hub_status",
+            "browser_status", "browser_open", "browser_close", "browser_navigate",
+            "browser_click", "browser_fill", "browser_evaluate", "browser_screenshot",
         }
         assert names == expected
 
@@ -178,6 +180,131 @@ class TestMCPToolsCall:
         mock_get.assert_called_once_with("/health", "")
         content = json.loads(resp["result"]["content"][0]["text"])
         assert content["status"] == "ok"
+
+    def test_browser_status_dispatches_correctly(self):
+        with unittest.mock.patch.object(mcp, "_http_get") as mock_get:
+            mock_get.return_value = {"tracked_session_count": 1, "browser_visible": True}
+            resp = _call("tools/call", {"name": "browser_status", "arguments": {}})
+        mock_get.assert_called_once_with("/api/v1/browser/status", "")
+        content = json.loads(resp["result"]["content"][0]["text"])
+        assert content["tracked_session_count"] == 1
+
+    def test_browser_open_dispatches_correctly(self):
+        with unittest.mock.patch.object(mcp, "_http_post") as mock_post:
+            mock_post.return_value = (201, {"session_id": "sess-1"})
+            resp = _call(
+                "tools/call",
+                {
+                    "name": "browser_open",
+                    "arguments": {
+                        "url": "http://127.0.0.1:8888/agents",
+                        "profile": "default",
+                        "mode": "standard",
+                        "session_name": "QA",
+                        "head_hidden": False,
+                    },
+                },
+            )
+        mock_post.assert_called_once_with(
+            "/api/v1/hub/browser/open",
+            {
+                "url": "http://127.0.0.1:8888/agents",
+                "profile": "default",
+                "mode": "standard",
+                "session_name": "QA",
+                "head_hidden": False,
+            },
+            "",
+        )
+        content = json.loads(resp["result"]["content"][0]["text"])
+        assert content["session_id"] == "sess-1"
+
+    def test_browser_close_dispatches_correctly(self):
+        with unittest.mock.patch.object(mcp, "_http_post") as mock_post:
+            mock_post.return_value = (200, {"status": "terminated"})
+            resp = _call("tools/call", {"name": "browser_close", "arguments": {"session_id": "sess-1"}})
+        mock_post.assert_called_once_with(
+            "/api/v1/hub/browser/close",
+            {"session_id": "sess-1", "all": False},
+            "",
+        )
+        content = json.loads(resp["result"]["content"][0]["text"])
+        assert content["status"] == "terminated"
+
+    def test_browser_navigate_dispatches_correctly(self):
+        with unittest.mock.patch.object(mcp, "_http_post") as mock_post:
+            mock_post.return_value = (200, {"success": True, "url": "http://127.0.0.1:8888/agents"})
+            resp = _call(
+                "tools/call",
+                {"name": "browser_navigate", "arguments": {"session_id": "sess-1", "url": "http://127.0.0.1:8888/agents"}},
+            )
+        mock_post.assert_called_once_with(
+            "/api/navigate",
+            {"session_id": "sess-1", "url": "http://127.0.0.1:8888/agents"},
+            "",
+        )
+        content = json.loads(resp["result"]["content"][0]["text"])
+        assert content["success"] is True
+
+    def test_browser_click_dispatches_correctly(self):
+        with unittest.mock.patch.object(mcp, "_http_post") as mock_post:
+            mock_post.return_value = (200, {"success": True, "selector": "#confirm"})
+            resp = _call("tools/call", {"name": "browser_click", "arguments": {"session_id": "sess-1", "selector": "#confirm"}})
+        mock_post.assert_called_once_with(
+            "/api/click",
+            {"session_id": "sess-1", "selector": "#confirm"},
+            "",
+        )
+        content = json.loads(resp["result"]["content"][0]["text"])
+        assert content["selector"] == "#confirm"
+
+    def test_browser_fill_dispatches_correctly(self):
+        with unittest.mock.patch.object(mcp, "_http_post") as mock_post:
+            mock_post.return_value = (200, {"success": True, "text": "user@example.com"})
+            resp = _call(
+                "tools/call",
+                {"name": "browser_fill", "arguments": {"session_id": "sess-1", "selector": "#email", "text": "user@example.com"}},
+            )
+        mock_post.assert_called_once_with(
+            "/api/fill",
+            {"session_id": "sess-1", "selector": "#email", "text": "user@example.com"},
+            "",
+        )
+        content = json.loads(resp["result"]["content"][0]["text"])
+        assert content["text"] == "user@example.com"
+
+    def test_browser_evaluate_dispatches_correctly(self):
+        with unittest.mock.patch.object(mcp, "_http_post") as mock_post:
+            mock_post.return_value = (200, {"success": True, "result": "Solace Agents"})
+            resp = _call(
+                "tools/call",
+                {"name": "browser_evaluate", "arguments": {"session_id": "sess-1", "expression": "document.title"}},
+            )
+        mock_post.assert_called_once_with(
+            "/api/evaluate",
+            {"session_id": "sess-1", "expression": "document.title"},
+            "",
+        )
+        content = json.loads(resp["result"]["content"][0]["text"])
+        assert content["result"] == "Solace Agents"
+
+    def test_browser_screenshot_dispatches_correctly(self):
+        with unittest.mock.patch.object(mcp, "_http_post") as mock_post:
+            mock_post.return_value = (200, {"capture": {"filepath": "/tmp/proof.png"}})
+            resp = _call(
+                "tools/call",
+                {
+                    "name": "browser_screenshot",
+                    "arguments": {"session_id": "sess-1", "filename": "proof.png", "full_page": True},
+                },
+            )
+        mock_post.assert_called_once_with(
+            "/api/screenshot",
+            {"session_id": "sess-1", "filename": "proof.png", "full_page": True},
+            "",
+        )
+        content = json.loads(resp["result"]["content"][0]["text"])
+        assert content["capture"]["filepath"] == "/tmp/proof.png"
 
 
 class TestMCPResourcesList:

@@ -1,0 +1,23 @@
+id: morning-brief
+name: Morning Brief
+version: "1.0.0"
+title: "Morning Brief"
+description: "Use Solace AGI as the central place to review app outboxes, daily research, schedules, and the best next actions."
+author: "Solace AGI"
+category: assistant
+status: installed
+safety: A
+tier: free
+site: solaceagi.com
+type: orchestrator
+orchestrates:
+  - google-search-mission
+  - competitor-watch
+  - google-search-trends
+  - gmail-inbox-triage
+  - calendar-brief
+domains:
+  - "solaceagi.com"
+  - "www.solaceagi.com"
+tier_required: free
+local_only: true

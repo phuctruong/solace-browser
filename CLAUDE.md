@@ -39,15 +39,16 @@ data/default/recipes/      — 56 recipes (deterministic CPU replay)
 tests/                     — 534 tests (3 files: instructions/hub/mcp)
 scripts/                   — Build + release scripts
   build-chromium.sh        — Chromium source build (Linux, ~3 hours)
-  release_browser_cycle.sh — PyInstaller build (all 3 platforms)
-  build-deb.sh             — Debian .deb package builder
+  build-linux-release.sh   — portable Linux bundle builder (real Chromium + Hub)
+  release_browser_cycle.sh — honest release entrypoint (Linux real, macOS/Windows fail closed)
+  build-deb.sh             — Debian .deb package builder from portable release root
   promote_native_builds_to_gcs.py — GCS promotion (fail-closed gate)
-  homebrew/solace-browser.rb      — Homebrew formula
-  winget/                  — winget manifests (BLOCKED on eSign)
-  windows/solace-browser.wxs      — WiX v4 MSI installer
-snap/snapcraft.yaml        — Snap Store package (core22, strict)
-.github/workflows/         — CI/CD (native matrix linux+macos+windows, signing stubs)
-source/src/out/Solace/     — Chromium build output (gitignored)
+  homebrew/solace-browser.rb      — Homebrew formula (blocked on real macOS browser bundle)
+  winget/                  — winget manifests (blocked on real Windows browser bundle)
+  windows/solace-browser.wxs      — WiX v4 MSI installer (blocked on real Windows browser bundle)
+  snap/snapcraft.yaml        — Snap Store package from Linux portable release
+  .github/workflows/         — CI/CD (real Linux bundle; macOS/Windows remain blocked)
+source/src/out/Solace/     — Chromium build output for LOCAL DEV mode (gitignored)
 ```
 
 ## Architecture Decisions (LOCKED)
@@ -58,8 +59,17 @@ source/src/out/Solace/     — Chromium build output (gitignored)
 | Auth | OAuth3 scopes + TTL + revocable. No long-lived tokens. |
 | Evidence | Hash-chained SHA-256. Append-only. Part 11 compliant. |
 | Sidebar | Native C++ WebUI (Mojo IPC) — never an extension. |
-| Builds | PyInstaller for server binary. Tauri for desktop. Chromium fork for browser. |
+| Builds | Tauri for desktop. Chromium fork for browser. Python server stays separate from browser artifacts. |
 | Distribution | Snap + apt + Homebrew + winget. Sign on every platform before ship. |
+
+## Browser Launch Modes
+
+| Mode | Intended artifact | Owner |
+|------|-------------------|-------|
+| `local-dev` | `source/src/out/Solace/chrome-wrapper` → `chrome` fallback | repo checkout + Chromium build tree |
+| `production-bundle` | extracted `solace-browser-release/chrome` bundle | downloadable Browser package |
+
+The Hub must never treat a packaged `yinyang_server.py` executable as the Browser.
 
 ## FALLBACK BAN (Software 5.0 Law — ABSOLUTE)
 
@@ -82,14 +92,12 @@ cargo check               # solace-hub/src-tauri/ must compile
 ninja -C source/src/out/Solace chrome  # Chromium fork must link
 ```
 
-## Distribution Checklist (when eSign cert arrives)
+## Distribution Checklist
 
-1. Add `WINDOWS_SIGNING_CERT` + `WINDOWS_SIGNING_PASSWORD` secrets → MSI auto-signed in CI
-2. Add `MACOS_SIGNING_CERT` + notarization secrets → binary auto-notarized in CI
-3. Run `scripts/winget/submit.sh` → PR to microsoft/winget-pkgs
-4. Run Notebook 06 → snap uploaded to edge channel
-5. Update `scripts/homebrew/solace-browser.rb` sha256 after first macOS CI build
-6. `apt-get install solace-browser` via Cloudsmith repo
+1. Build Linux portable release with `scripts/build-linux-release.sh`
+2. Build `.deb` with `scripts/build-deb.sh`
+3. Upload Linux artifacts to GitHub release or GCS only after smoke verification
+4. macOS/Windows stay blocked until real native Browser bundles exist
 
 ## Reference
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-promote_native_builds_to_gcs.py — Promote verified GitHub artifacts to GCS.
+promote_native_builds_to_gcs.py — Promote verified native/browser artifacts to GCS.
 Auth: 65537 | Port 9222: PERMANENTLY BANNED
 
 Usage:
@@ -22,12 +22,10 @@ Artifacts uploaded to GCS under:
 import argparse
 import hashlib
 import json
-import os
 import shutil
-import struct
 import subprocess
 import sys
-import tempfile
+import tarfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -57,16 +55,49 @@ def _verify_linux(path: Path) -> None:
         raise ValueError(f"Linux artifact is not ELF: {path}")
 
 
-def _verify_macos(path: Path) -> None:
-    b = path.read_bytes()
-    macho_headers = {
-        b"\xfe\xed\xfa\xce", b"\xce\xfa\xed\xfe",
-        b"\xfe\xed\xfa\xcf", b"\xcf\xfa\xed\xfe",
-        b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca",
-        b"\xca\xfe\xba\xbf", b"\xbf\xba\xfe\xca",
+def _verify_linux_tarball(path: Path) -> None:
+    try:
+        with tarfile.open(path, "r:gz") as bundle:
+            members = set(bundle.getnames())
+    except tarfile.TarError as exc:
+        raise ValueError(f"Linux tarball is invalid: {path}") from exc
+
+    required = {
+        "solace-browser-release/chrome",
+        "solace-browser-release/solace-hub",
+        "solace-browser-release/manifest.json",
     }
-    if b[:4] not in macho_headers:
-        raise ValueError(f"macOS artifact is not Mach-O: {path}")
+    missing = sorted(required - members)
+    if missing:
+        raise ValueError(
+            f"Linux tarball missing required members for current Hub-first bundle: {missing}"
+        )
+
+
+def _verify_deb(path: Path) -> None:
+    if path.suffix != ".deb":
+        raise ValueError(f"Debian artifact must end with .deb: {path}")
+    if not path.read_bytes().startswith(b"!<arch>\n"):
+        raise ValueError(f"Debian artifact is not an ar archive: {path}")
+
+
+def _verify_macos_tarball(path: Path) -> None:
+    try:
+        with tarfile.open(path, "r:gz") as bundle:
+            members = set(bundle.getnames())
+    except tarfile.TarError as exc:
+        raise ValueError(f"macOS tarball is invalid: {path}") from exc
+
+    required = {
+        "solace-browser-release-macos/chrome",
+        "solace-browser-release-macos/solace-hub",
+        "solace-browser-release-macos/manifest.json",
+    }
+    missing = sorted(required - members)
+    if missing:
+        raise ValueError(
+            f"macOS tarball missing required members for current Hub-first bundle: {missing}"
+        )
 
 
 def _verify_windows(path: Path) -> None:
@@ -76,12 +107,29 @@ def _verify_windows(path: Path) -> None:
         raise ValueError(f"Windows artifact is not MSI (OLE2 header missing): {path}")
 
 
-# Artifact spec: (filename, verifier_fn)
-ARTIFACTS: list[tuple[str, object]] = [
-    ("solace-browser-linux-x86_64", _verify_linux),
-    ("solace-browser-macos-universal", _verify_macos),
-    ("solace-browser-windows-x86_64.msi", _verify_windows),
-]
+class ArtifactSpec(tuple):
+    __slots__ = ()
+
+    @property
+    def filename(self) -> str:
+        return self[0]
+
+    @property
+    def verifier(self):
+        return self[1]
+
+    @property
+    def required(self) -> bool:
+        return self[2]
+
+
+def _artifact_specs(version: str) -> list[ArtifactSpec]:
+    return [
+        ArtifactSpec(("solace-browser-chromium-linux-x86_64.tar.gz", _verify_linux_tarball, True)),
+        ArtifactSpec((f"solace-browser_{version}_amd64.deb", _verify_deb, True)),
+        ArtifactSpec(("solace-browser-macos-universal.tar.gz", _verify_macos_tarball, False)),
+        ArtifactSpec(("solace-browser-windows-x86_64.msi", _verify_windows, False)),
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -94,6 +142,12 @@ def _gcs_upload(local_path: Path, gcs_uri: str, gcloud: str) -> None:
         check=True,
     )
     print(f"  uploaded: {gcs_uri}")
+
+
+def _write_sha256_file(path: Path) -> Path:
+    sha_path = path.with_name(f"{path.name}.sha256")
+    sha_path.write_text(f"{_sha256(path)}  {path.name}\n", encoding="utf-8")
+    return sha_path
 
 
 # ---------------------------------------------------------------------------
@@ -132,19 +186,31 @@ def main(argv: list[str] | None = None) -> int:
     else:
         raise ValueError("Must specify --artifacts-dir or --run-id")
 
+    specs = _artifact_specs(version)
+    ancillary_files = [
+        Path("scripts/install-chromium.sh"),
+    ]
+
     # Collect artifact files
     collected: dict[str, Path] = {}
-    for filename, _ in ARTIFACTS:
+    for spec in specs:
+        filename = spec.filename
         found = list(artifacts_base.rglob(filename))
         if not found:
-            raise FileNotFoundError(f"Artifact not found in {artifacts_base}: {filename}")
+            if spec.required:
+                raise FileNotFoundError(f"Artifact not found in {artifacts_base}: {filename}")
+            print(f"  skip optional artifact (not present): {filename}")
+            continue
         collected[filename] = found[0]
 
     # Verify all artifacts before ANY upload (fail-closed gate)
     print("=== Verifying artifacts (fail-closed gate) ===")
-    for filename, verifier in ARTIFACTS:
-        path = collected[filename]
-        verifier(path)
+    for spec in specs:
+        filename = spec.filename
+        path = collected.get(filename)
+        if path is None:
+            continue
+        spec.verifier(path)
 
         sha_file = path.parent / f"{filename}.sha256"
         if sha_file.is_file():
@@ -164,8 +230,11 @@ def main(argv: list[str] | None = None) -> int:
     versioned_prefix = f"gs://{bucket}/solace-browser/v{version}"
     latest_prefix = f"gs://{bucket}/solace-browser/latest"
 
-    for filename, _ in ARTIFACTS:
-        path = collected[filename]
+    for spec in specs:
+        filename = spec.filename
+        path = collected.get(filename)
+        if path is None:
+            continue
         sha_file = path.parent / f"{filename}.sha256"
 
         # Upload binary to versioned + latest
@@ -176,6 +245,18 @@ def main(argv: list[str] | None = None) -> int:
         if sha_file.is_file():
             _gcs_upload(sha_file, f"{versioned_prefix}/{filename}.sha256", gcloud)
             _gcs_upload(sha_file, f"{latest_prefix}/{filename}.sha256", gcloud)
+
+    for rel_path in ancillary_files:
+        path = Path(rel_path)
+        if not path.is_absolute():
+            path = Path.cwd() / path
+        if not path.is_file():
+            continue
+        sha_path = _write_sha256_file(path)
+        _gcs_upload(path, f"{versioned_prefix}/{path.name}", gcloud)
+        _gcs_upload(path, f"{latest_prefix}/{path.name}", gcloud)
+        _gcs_upload(sha_path, f"{versioned_prefix}/{sha_path.name}", gcloud)
+        _gcs_upload(sha_path, f"{latest_prefix}/{sha_path.name}", gcloud)
 
     # Write promotion summary
     summary_dir = Path(f"scratch/native-promotion/{timestamp.replace(':', '-')}")
@@ -191,7 +272,16 @@ def main(argv: list[str] | None = None) -> int:
                 "sha256": _sha256(collected[filename]),
                 "size_bytes": collected[filename].stat().st_size,
             }
-            for filename, _ in ARTIFACTS
+            for filename in collected
+        ]
+        + [
+            {
+                "filename": rel_path.name,
+                "sha256": _sha256(Path.cwd() / rel_path),
+                "size_bytes": (Path.cwd() / rel_path).stat().st_size,
+            }
+            for rel_path in ancillary_files
+            if (Path.cwd() / rel_path).is_file()
         ],
         "gcs_versioned_prefix": versioned_prefix,
         "gcs_latest_prefix": latest_prefix,

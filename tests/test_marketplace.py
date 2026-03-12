@@ -270,3 +270,69 @@ def test_marketplace_serves_cache_when_offline(marketplace_server, monkeypatch):
     assert status == 200
     assert data["source"] == "cache"
     assert data["apps"][0]["app_id"] == "slack-dm"
+
+
+def test_marketplace_serves_local_bundle_when_remote_unavailable(marketplace_server, monkeypatch):
+    import yinyang_server as ys
+
+    store_path = marketplace_server["repo_root"] / "data" / "default" / "app-store" / "official-store.json"
+    store_path.parent.mkdir(parents=True, exist_ok=True)
+    store_path.write_text(json.dumps({
+        "apps": [
+            {
+                "id": "solace-yinyang",
+                "name": "Solace Yinyang",
+                "description": "Local-first assistant",
+                "category": "solace",
+                "tier_required": "free",
+                "site": "solaceagi.com",
+            }
+        ]
+    }))
+
+    def offline_urlopen(url, timeout=5):
+        raise urllib.error.URLError("offline")
+
+    monkeypatch.setattr(ys, "_marketplace_urlopen", offline_urlopen, raising=False)
+
+    status, data = _request_json(marketplace_server, "/api/v1/marketplace/apps")
+
+    assert status == 200
+    assert data["source"] == "local_bundle"
+    assert data["apps"][0]["app_id"] == "solace-yinyang"
+
+
+def test_app_install_route_by_id_updates_install_state(marketplace_server):
+    app_dir = marketplace_server["repo_root"] / "data" / "default" / "apps" / "solace-yinyang"
+    app_dir.mkdir(parents=True, exist_ok=True)
+    (app_dir / "manifest.yaml").write_text(
+        "id: solace-yinyang\n"
+        "name: Solace Yinyang\n"
+        "description: Local-first assistant\n"
+        "site: solaceagi.com\n"
+    )
+
+    status, data = _request_json(
+        marketplace_server,
+        "/api/v1/apps/solace-yinyang/install",
+        method="POST",
+        payload={},
+    )
+    assert status == 200
+    assert data["status"] == "installed"
+
+    status, data = _request_json(
+        marketplace_server,
+        "/api/v1/apps/by-domain?domain=solaceagi.com",
+    )
+    assert status == 200
+    assert any(app["id"] == "solace-yinyang" for app in data["installed_apps"])
+
+    status, data = _request_json(
+        marketplace_server,
+        "/api/v1/apps/solace-yinyang/install",
+        method="DELETE",
+        payload={},
+    )
+    assert status == 200
+    assert data["status"] == "uninstalled"

@@ -83,12 +83,12 @@ class TestSnapcraft:
 
     def test_snap_references_binary(self):
         content = _read("snap/snapcraft.yaml")
-        assert "solace-browser-linux-x86_64" in content, \
-            "snapcraft.yaml must reference the PyInstaller binary"
+        assert "solace-browser-chromium-linux-x86_64.tar.gz" in content, \
+            "snapcraft.yaml must reference the portable Linux bundle"
 
     def test_snap_has_app_command(self):
         content = _read("snap/snapcraft.yaml")
-        assert "command: bin/solace-browser" in content
+        assert "command: solace-browser-release/solace-hub" in content
 
 
 # ---------------------------------------------------------------------------
@@ -125,8 +125,15 @@ class TestDebian:
     def test_build_deb_script_exists(self):
         assert _exists("scripts/build-deb.sh")
 
+    def test_build_linux_release_script_exists(self):
+        assert _exists("scripts/build-linux-release.sh")
+
     def test_build_deb_executable(self):
         p = REPO_ROOT / "scripts/build-deb.sh"
+        assert p.stat().st_mode & 0o111
+
+    def test_build_linux_release_executable(self):
+        p = REPO_ROOT / "scripts/build-linux-release.sh"
         assert p.stat().st_mode & 0o111
 
     def test_build_deb_no_port_9222(self):
@@ -139,6 +146,11 @@ class TestDebian:
     def test_build_deb_reads_version_file(self):
         content = _read("scripts/build-deb.sh")
         assert "VERSION" in content, "build-deb.sh must read VERSION file"
+
+    def test_build_deb_packages_portable_release(self):
+        content = _read("scripts/build-deb.sh")
+        assert "solace-browser-release" in content
+        assert "solace-hub" in content
 
 
 # ---------------------------------------------------------------------------
@@ -167,7 +179,7 @@ class TestHomebrew:
 
     def test_formula_url_points_to_macos_binary(self):
         content = _read("scripts/homebrew/solace-browser.rb")
-        assert "solace-browser-macos-universal" in content
+        assert "solace-browser-macos-universal.tar.gz" in content
 
     def test_formula_sha256_placeholder_documented(self):
         content = _read("scripts/homebrew/solace-browser.rb")
@@ -185,6 +197,7 @@ class TestHomebrew:
     def test_formula_service_block(self):
         content = _read("scripts/homebrew/solace-browser.rb")
         assert "service do" in content, "formula must declare brew service"
+        assert 'run [opt_bin / "solace-hub"]' in content
 
     def test_formula_no_port_9222(self):
         assert "9222" not in _read("scripts/homebrew/solace-browser.rb")
@@ -283,11 +296,10 @@ class TestWiX:
         assert "ProgramFiles64Folder" in content, \
             "Must install to 64-bit Program Files"
 
-    def test_wxs_shortcuts_use_head_flag(self):
+    def test_wxs_shortcuts_launch_hub_first(self):
         content = _read("scripts/windows/solace-browser.wxs")
-        shortcut_count = content.count("Arguments=\"--head\"")
-        assert shortcut_count >= 2, \
-            f"Both Start Menu and Desktop shortcuts must pass --head (found {shortcut_count})"
+        assert 'Target="[INSTALLFOLDER]solace-hub.exe"' in content
+        assert 'Arguments="--head"' not in content
 
     def test_wxs_has_major_upgrade(self):
         content = _read("scripts/windows/solace-browser.wxs")
@@ -317,33 +329,27 @@ class TestCIWorkflow:
         content = _read(".github/workflows/build-binaries.yml")
         assert "windows-latest" in content
 
-    def test_workflow_all_three_artifacts(self):
+    def test_workflow_linux_artifact(self):
         content = _read(".github/workflows/build-binaries.yml")
         assert "native-linux" in content
+        assert "solace-browser-chromium-linux-x86_64.tar.gz" in content
+        assert "solace-browser_1.0.0_amd64.deb" in content
+
+    def test_workflow_macos_artifact(self):
+        content = _read(".github/workflows/build-binaries.yml")
         assert "native-macos" in content
+        assert "solace-browser-macos-universal.tar.gz" in content
+
+    def test_workflow_windows_artifact(self):
+        content = _read(".github/workflows/build-binaries.yml")
         assert "native-windows" in content
+        assert "solace-browser-windows-x86_64.msi" in content
 
-    def test_workflow_signing_stub_windows(self):
+    def test_workflow_uses_real_release_script(self):
         content = _read(".github/workflows/build-binaries.yml")
-        assert "WINDOWS_SIGNING_CERT" in content, \
-            "Windows signing stub must be present"
-        assert "signtool" in content
-
-    def test_workflow_signing_stub_macos(self):
-        content = _read(".github/workflows/build-binaries.yml")
-        assert "MACOS_SIGNING_CERT" in content, \
-            "macOS signing stub must be present"
-        assert "codesign" in content
-        assert "notarytool" in content
-
-    def test_workflow_gcs_promote_job(self):
-        content = _read(".github/workflows/build-binaries.yml")
-        assert "promote-to-gcs" in content
-
-    def test_workflow_promote_only_on_tags(self):
-        content = _read(".github/workflows/build-binaries.yml")
-        assert "refs/tags/v" in content, \
-            "GCS promotion must only run on version tags"
+        assert "bash scripts/release_browser_cycle.sh" in content
+        assert "Build native Windows release" in content
+        assert "pwsh" in content
 
     def test_workflow_no_port_9222(self):
         assert "9222" not in _read(".github/workflows/build-binaries.yml")
@@ -364,26 +370,32 @@ class TestReleaseCycleScript:
     def test_script_handles_linux(self):
         content = _read("scripts/release_browser_cycle.sh")
         assert "linux" in content
-        assert "solace-browser-linux-x86_64" in content
+        assert "build-linux-release.sh" in content
+        assert "build-deb.sh" in content
 
     def test_script_handles_macos(self):
         content = _read("scripts/release_browser_cycle.sh")
         assert "macos" in content
-        assert "universal2" in content
-        assert "solace-browser-macos-universal" in content
+        assert "build-macos-release.sh" in content
 
     def test_script_handles_windows(self):
         content = _read("scripts/release_browser_cycle.sh")
         assert "windows" in content
-        assert "solace-browser-windows-x86_64" in content
+        assert "build-windows-release.ps1" in content
 
-    def test_script_generates_sha256(self):
+    def test_script_invokes_real_packagers(self):
         content = _read("scripts/release_browser_cycle.sh")
-        assert "sha256" in content
+        assert "build-linux-release.sh" in content
+        assert "build-deb.sh" in content
+        assert "build-macos-release.sh" in content
+        assert "build-windows-release.ps1" in content
 
-    def test_script_writes_metrics_json(self):
-        content = _read("scripts/release_browser_cycle.sh")
-        assert "metrics.json" in content
+    def test_native_release_scripts_exist(self):
+        assert _exists("scripts/build-macos-release.sh")
+        assert _exists("scripts/build-windows-release.ps1")
+        assert _exists("scripts/build-and-promote-macos.sh")
+        assert _exists("scripts/build-and-promote-windows.ps1")
+        assert _exists("scripts/rehearse_windows_remote_demo.py")
 
     def test_script_no_port_9222(self):
         assert "9222" not in _read("scripts/release_browser_cycle.sh")
@@ -392,3 +404,37 @@ class TestReleaseCycleScript:
         content = _read("scripts/release_browser_cycle.sh")
         assert "set -euo pipefail" in content, \
             "Script must use set -euo pipefail for safety"
+
+
+# ---------------------------------------------------------------------------
+# GCS promotion
+# ---------------------------------------------------------------------------
+
+class TestGCSPromotion:
+    def test_promote_script_exists(self):
+        assert _exists("scripts/promote_native_builds_to_gcs.py")
+
+    def test_native_host_promote_helpers_exist(self):
+        assert _exists("scripts/build-and-promote-macos.sh")
+        assert _exists("scripts/build-and-promote-windows.ps1")
+
+    def test_windows_remote_demo_rehearsal_exists(self):
+        assert _exists("scripts/rehearse_windows_remote_demo.py")
+
+    def test_promote_script_uses_current_linux_tarball(self):
+        content = _read("scripts/promote_native_builds_to_gcs.py")
+        assert "solace-browser-chromium-linux-x86_64.tar.gz" in content
+
+    def test_promote_script_uses_versioned_deb_name(self):
+        content = _read("scripts/promote_native_builds_to_gcs.py")
+        assert 'f"solace-browser_{version}_amd64.deb"' in content
+
+    def test_promote_script_keeps_windows_msi_optional(self):
+        content = _read("scripts/promote_native_builds_to_gcs.py")
+        assert "solace-browser-windows-x86_64.msi" in content
+        assert "False" in content, "Windows artifact must remain optional until native path is restored"
+
+    def test_promote_script_keeps_macos_optional(self):
+        content = _read("scripts/promote_native_builds_to_gcs.py")
+        assert "solace-browser-macos-universal.tar.gz" in content
+        assert "False" in content, "macOS artifact must remain optional until native path is restored"

@@ -1,0 +1,18 @@
+app: perplexity-deep-research
+display_name: "Perplexity Deep Research"
+version: "1.0.0"
+category: "custom"
+site: perplexity.ai
+login_url: "https://perplexity.ai/"
+check_url: "https://perplexity.ai/"
+success_signals:
+  - "TODO: add success signal"
+failure_signals:
+  - "TODO: add failure signal"
+keep_alive:
+  interval_minutes: 15
+  action: "navigate"
+  url: "https://perplexity.ai/"
+tier_required: "free"
+evidence_on_check: true
+description: "Research assistant for Perplexity sessions"

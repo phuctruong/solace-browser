@@ -7,11 +7,13 @@ Port: 18888 (test-only, avoids conflict with production 8888)
 import json
 import os
 import pathlib
+import shutil
 import sys
 import threading
 import time
 import urllib.error
 import urllib.request
+import uuid
 
 import pytest
 
@@ -60,7 +62,7 @@ def server(tmp_path_factory, monkeypatch_module):
         except urllib.error.URLError:
             time.sleep(0.1)
 
-    yield {"lock_path": lock_path, "httpd": httpd}
+    yield {"lock_path": lock_path, "httpd": httpd, "token_hash": t_hash}
 
     httpd.shutdown()
     ys.PORT_LOCK_PATH = original_lock
@@ -92,6 +94,15 @@ def post_json(path: str, payload: dict) -> dict:
         return json.loads(resp.read().decode())
 
 
+def open_request(path: str, method: str = "GET", headers: dict[str, str] | None = None):
+    req = urllib.request.Request(f"{BASE_URL}{path}", headers=headers or {}, method=method)
+    return urllib.request.urlopen(req, timeout=5)
+
+
+def auth_headers(server) -> dict[str, str]:
+    return {"Authorization": f"Bearer {server['token_hash']}"}
+
+
 def oauth3_tokens_payload(data):
     if isinstance(data, list):
         return data
@@ -112,6 +123,11 @@ class TestHealthEndpoint:
         data = get_json("/api/status")
         assert data["status"] == "ok"
 
+    def test_api_health_endpoint(self, server):
+        """GET /api/health → canonical health alias returns status ok."""
+        data = get_json("/api/health")
+        assert data["status"] == "ok"
+
     def test_api_status_has_port_8888_contract(self, server):
         """GET /api/status → port key present and numeric."""
         data = get_json("/api/status")
@@ -127,6 +143,534 @@ class TestHealthEndpoint:
         """GET /health → 'apps' key is an integer."""
         data = get_json("/health")
         assert isinstance(data["apps"], int)
+
+    def test_agents_json_exists(self, server):
+        """GET /agents.json → machine-readable local contract exists."""
+        data = get_json("/agents.json")
+        assert data["api_base"] == BASE_URL
+        assert data["hub"]["starts_first"] is True
+        assert data["mcp"]["tool_count"] == 16
+        assert data["endpoints"]["browser_control"]["click"] == "POST /api/click"
+        assert data["endpoints"]["browser_control"]["fill"] == "POST /api/fill"
+        assert data["endpoints"]["browser_control"]["evaluate"] == "POST /api/evaluate"
+        assert data["endpoints"]["knowledge_and_evidence"]["prime_wiki_assets"] == "GET /api/v1/prime-wiki/assets"
+        assert data["endpoints"]["knowledge_and_evidence"]["history"] == "GET /api/v1/history?limit=20"
+        assert data["endpoints"]["auth_and_signing"]["esign_token"] == "POST /api/v1/esign/token"
+        assert data["endpoints"]["auth_and_signing"]["local_oauth3_token"] == "POST /oauth3/token"
+        assert "yinyang_chat" in data["capabilities"]
+
+    def test_local_mcp_manifest_exists(self, server):
+        """GET /mcp/manifest.json → local MCP manifest exposes native browser-control tools."""
+        data = get_json("/mcp/manifest.json")
+        assert data["transport"] == "stdio"
+        assert len(data["tools"]) == 16
+        tool_names = {tool["name"] for tool in data["tools"]}
+        assert "browser_open" in tool_names
+        assert "browser_click" in tool_names
+        assert "browser_fill" in tool_names
+        assert "browser_evaluate" in tool_names
+        assert "browser_screenshot" in tool_names
+
+    def test_runtime_snapshot_routes_exist(self, server):
+        """GET runtime snapshot compatibility routes → 200 with explicit compatibility marker."""
+        for path in ("/api/aria-snapshot", "/api/dom-snapshot", "/api/page-snapshot"):
+            data = get_json(path)
+            assert data["status"] == "ok"
+            assert data["compatibility_mode"] is True
+            assert "limitations" in data
+
+    def test_agents_page_documents_live_local_contract(self, server):
+        """GET /agents → human-readable guide lists the live local runtime routes."""
+        with urllib.request.urlopen(f"{BASE_URL}/agents", timeout=5) as resp:
+            html = resp.read().decode()
+        assert "Solace Agents" in html
+        for route in (
+            "GET /api/status",
+            "GET /api/health",
+            "GET /api/part11/status",
+            "POST /api/click",
+            "POST /api/fill",
+            "POST /api/evaluate",
+            "POST /api/screenshot",
+            "POST /api/snapshot",
+            "GET /api/v1/prime-wiki/assets",
+            "GET /api/v1/prime-wiki/search?q=gmail",
+            "POST /api/v1/prime-wiki/push",
+            "GET /api/v1/inbox",
+            "GET /api/v1/outbox",
+            "GET /api/v1/history?limit=20",
+            "GET /api/v1/schedule",
+            "POST /api/v1/esign/token",
+            "POST /oauth3/token",
+            "POST /api/yinyang/chat",
+        ):
+            assert route in html
+
+    def test_extension_era_routes_are_retired(self, server):
+        """Legacy extension-era routes must fail closed for the native-sidebar product."""
+        for path in (
+            "/api/v1/extension-store/listings",
+            "/api/v1/extension-conflicts/stats",
+            "/api/v1/ext-firewall/blocked",
+            "/web/extension-store.html",
+        ):
+            with pytest.raises(urllib.error.HTTPError) as excinfo:
+                urllib.request.urlopen(f"{BASE_URL}{path}", timeout=5)
+            assert excinfo.value.code == 410
+            body = json.loads(excinfo.value.read().decode())
+            assert body["error"] == "extension_era_routes_retired"
+
+    @pytest.mark.skipif(shutil.which("Xvfb") is None, reason="Xvfb not installed")
+    def test_head_hidden_launch_uses_hidden_display(self, server):
+        """POST /api/v1/browser/launch with head_hidden → tracked hidden session uses Xvfb display."""
+        request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/browser/launch",
+            data=json.dumps(
+                {
+                    "url": f"{BASE_URL}/agents",
+                    "head_hidden": True,
+                    "session_name": "Head Hidden Test",
+                }
+            ).encode(),
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=20) as resp:
+            data = json.loads(resp.read().decode())
+        assert resp.status == 201
+        assert data["head_hidden"] is True
+        assert data["hidden_display"].startswith(":")
+        session_id = data["session_id"]
+
+        status = get_json("/api/v1/browser/status")
+        tracked = next(item for item in status["tracked_sessions"] if item["session_id"] == session_id)
+        assert tracked["head_hidden"] is True
+        assert tracked["hidden_display"] == data["hidden_display"]
+        assert status["visible_window_count"] == 0
+
+        close_request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/browser/close",
+            data=json.dumps({"session_id": session_id}).encode(),
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(close_request, timeout=20) as resp:
+            close_data = json.loads(resp.read().decode())
+        assert close_data["status"] == "terminated"
+
+
+class TestAgentContractCompatibility:
+    def test_schedule_viewer_no_longer_disconnects(self, server):
+        data = get_json("/api/v1/schedule")
+        assert "items" in data
+        assert "total" in data
+
+    def test_part11_status_and_config_routes_exist(self, server):
+        config_body = json.dumps({"enabled": True, "mode": "archive"}).encode()
+        config_request = urllib.request.Request(
+            f"{BASE_URL}/api/part11/config",
+            data=config_body,
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(config_request, timeout=5) as resp:
+            config_data = json.loads(resp.read().decode())
+        assert config_data["success"] is True
+        status_data = get_json("/api/part11/status")
+        assert status_data["status"] == "ok"
+        assert status_data["mode"] == "archive"
+        assert status_data["chain_valid"] is True
+
+    def test_esign_token_route_exists(self, server):
+        request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/esign/token",
+            data=json.dumps(
+                {
+                    "subject": "tester@solace.test",
+                    "record_id": "run_001",
+                    "meaning": "reviewed_and_approved",
+                    "reason": "Approve Gmail triage run",
+                }
+            ).encode(),
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+            assert resp.status == 201
+        assert data["verifiable"] is True
+        assert data["run_id"] == "run_001"
+
+    def test_oauth3_token_route_exists(self, server):
+        request = urllib.request.Request(
+            f"{BASE_URL}/oauth3/token",
+            data=json.dumps({"subject": "tester@solace.test", "scopes": ["browser.navigate"]}).encode(),
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+            assert resp.status == 201
+        assert data["scopes"] == ["browser.navigate"]
+
+    def test_prime_wiki_search_assets_and_render_routes_exist(self, server):
+        search_data = get_json("/api/v1/prime-wiki/search?q=gmail")
+        assert "results" in search_data
+        assets_data = get_json("/api/v1/prime-wiki/assets")
+        assert "assets" in assets_data
+
+        render_request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/prime-wiki/render?id=missing",
+            method="GET",
+        )
+        with pytest.raises(urllib.error.HTTPError) as excinfo:
+            urllib.request.urlopen(render_request, timeout=5)
+        assert excinfo.value.code == 404
+
+    def test_prime_wiki_asset_create_and_push_routes_exist(self, server):
+        asset_request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/prime-wiki/assets",
+            data=json.dumps({"name": "Gmail Asset", "url": "https://mail.google.com/", "type": "note"}).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(asset_request, timeout=5) as resp:
+            asset_data = json.loads(resp.read().decode())
+            assert resp.status == 201
+        push_request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/prime-wiki/push",
+            data=json.dumps({"title": "QA Snapshot", "content": "rendered markdown"}).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(push_request, timeout=5) as resp:
+            push_data = json.loads(resp.read().decode())
+            assert resp.status == 202
+        assert asset_data["title"] == "Gmail Asset"
+        assert push_data["cloud_sync_started"] in {True, False}
+
+    def test_inbox_outbox_listing_routes_exist(self, server):
+        inbox = get_json("/api/v1/inbox")
+        outbox = get_json("/api/v1/outbox")
+        assert "apps" in inbox
+        assert "apps_root" in inbox
+        assert "apps" in outbox
+        assert "apps_root" in outbox
+
+    def test_history_compat_route_exists(self, server):
+        data = get_json("/api/v1/history?limit=20")
+        assert data["limit"] == 20
+        assert "entries" in data
+
+    def test_google_search_domain_has_bundled_apps(self, server):
+        request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/apps/by-domain?domain=google.com",
+            headers=auth_headers(server),
+        )
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+        installed_ids = {app["id"] for app in data["installed_apps"]}
+        assert "google-search-mission" in installed_ids
+        assert "competitor-watch" in installed_ids
+        assert "google-search-trends" in installed_ids
+
+    def test_app_outbox_html_route_serves_reports(self, server):
+        with urllib.request.urlopen(
+            urllib.request.Request(
+                f"{BASE_URL}/apps/morning-brief/outbox/reports/today.html",
+                headers=auth_headers(server),
+            ),
+            timeout=5,
+        ) as resp:
+            body = resp.read().decode()
+        assert resp.status == 200
+        assert "Morning Brief" in body
+
+    def test_app_detail_includes_report_links(self, server):
+        with urllib.request.urlopen(
+            urllib.request.Request(
+                f"{BASE_URL}/api/v1/apps/morning-brief",
+                headers=auth_headers(server),
+            ),
+            timeout=5,
+        ) as resp:
+            data = json.loads(resp.read().decode())
+        assert resp.status == 200
+        assert any(report["url"].endswith("/apps/morning-brief/outbox/reports/today.html") for report in data["reports"])
+
+    def test_launching_morning_brief_returns_report_url(self, server):
+        request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/apps/morning-brief/launch",
+            data=b"{}",
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+        assert resp.status == 200
+        assert data["report_url"] == "/apps/morning-brief/outbox/reports/today.html"
+        assert "outbox_artifact" in data
+
+    def test_launching_google_search_mission_returns_report_url(self, server):
+        request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/apps/google-search-mission/launch",
+            data=b"{}",
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+        assert resp.status == 200
+        assert data["report_url"] == "/apps/google-search-mission/outbox/reports/google-search-mission-demo.html"
+
+    def test_app_config_roundtrip_for_custom_app(self, server):
+        app_name = f"Config Roundtrip Search {uuid.uuid4().hex[:8]}"
+        create_request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/apps/custom/create",
+            data=json.dumps(
+                {
+                    "domain": "google.com",
+                    "app_name": app_name,
+                    "description": "Track a custom research mission.",
+                }
+            ).encode(),
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(create_request, timeout=5) as resp:
+            created = json.loads(resp.read().decode())
+        app_id = created["app_id"]
+
+        update_request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/apps/{app_id}/config",
+            data=json.dumps(
+                {
+                    "objective": "Watch investor and startup signals for Solace.",
+                    "target_url": "https://www.google.com/search?q=solace+agi",
+                    "cron": "0 6 * * *",
+                    "keepalive_minutes": 30,
+                }
+            ).encode(),
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(update_request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+        assert data["status"] == "saved"
+        assert data["config"]["cron"] == "0 6 * * *"
+
+        with urllib.request.urlopen(
+            urllib.request.Request(
+                f"{BASE_URL}/api/v1/apps/{app_id}/config",
+                headers=auth_headers(server),
+            ),
+            timeout=5,
+        ) as resp:
+            config_payload = json.loads(resp.read().decode())
+        assert config_payload["config"]["objective"] == "Watch investor and startup signals for Solace."
+        assert config_payload["config"]["target_url"] == "https://www.google.com/search?q=solace+agi"
+
+    def test_custom_app_launch_generates_latest_report(self, server):
+        app_name = f"Launch Report Search {uuid.uuid4().hex[:8]}"
+        create_request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/apps/custom/create",
+            data=json.dumps(
+                {
+                    "domain": "google.com",
+                    "app_name": app_name,
+                    "description": "Create a local report from a custom app.",
+                }
+            ).encode(),
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(create_request, timeout=5) as resp:
+            created = json.loads(resp.read().decode())
+        app_id = created["app_id"]
+
+        launch_request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/apps/{app_id}/launch",
+            data=b"{}",
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(launch_request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+        assert data["report_url"] == f"/apps/{app_id}/outbox/reports/latest.html"
+
+        with urllib.request.urlopen(
+            urllib.request.Request(
+                f"{BASE_URL}{data['report_url']}",
+                headers=auth_headers(server),
+            ),
+            timeout=5,
+        ) as resp:
+            body = resp.read().decode()
+        assert app_name in body
+        assert "Next Step" in body
+        assert "outbox_artifact" in data
+
+    def test_morning_brief_aggregates_launched_search_reports(self, server):
+        launch_search = urllib.request.Request(
+            f"{BASE_URL}/api/v1/apps/google-search-mission/launch",
+            data=b"{}",
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(launch_search, timeout=5):
+            pass
+
+        launch_brief = urllib.request.Request(
+            f"{BASE_URL}/api/v1/apps/morning-brief/launch",
+            data=b"{}",
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(launch_brief, timeout=5):
+            pass
+
+        with urllib.request.urlopen(
+            urllib.request.Request(
+                f"{BASE_URL}/apps/morning-brief/outbox/reports/today.html",
+                headers=auth_headers(server),
+            ),
+            timeout=5,
+        ) as resp:
+            body = resp.read().decode()
+        assert "Google Search Mission" in body
+        assert "/apps/google-search-mission/outbox/reports/google-search-mission-demo.html" in body
+
+    def test_morning_brief_includes_custom_app_reports(self, server):
+        app_name = f"Morning Brief Custom {uuid.uuid4().hex[:8]}"
+        create_request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/apps/custom/create",
+            data=json.dumps(
+                {
+                    "domain": "google.com",
+                    "app_name": app_name,
+                    "description": "A custom report that should appear in Morning Brief.",
+                }
+            ).encode(),
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(create_request, timeout=5) as resp:
+            created = json.loads(resp.read().decode())
+        app_id = created["app_id"]
+
+        launch_request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/apps/{app_id}/launch",
+            data=b"{}",
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(launch_request, timeout=5) as resp:
+            launch_data = json.loads(resp.read().decode())
+        assert launch_data["report_url"] == f"/apps/{app_id}/outbox/reports/latest.html"
+
+        launch_brief = urllib.request.Request(
+            f"{BASE_URL}/api/v1/apps/morning-brief/launch",
+            data=b"{}",
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(launch_brief, timeout=5):
+            pass
+
+        with urllib.request.urlopen(
+            urllib.request.Request(
+                f"{BASE_URL}/apps/morning-brief/outbox/reports/today.html",
+                headers=auth_headers(server),
+            ),
+            timeout=5,
+        ) as resp:
+            body = resp.read().decode()
+        assert app_name in body
+        assert f"/apps/{app_id}/outbox/reports/latest.html" in body
+
+    def test_yinyang_chat_route_exists(self, server, monkeypatch):
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+        request = urllib.request.Request(
+            f"{BASE_URL}/api/yinyang/chat",
+            data=json.dumps({"message": "hello"}).encode(),
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+        assert "reply" in data
+
+    def test_yinyang_chat_includes_grounded_domain_context(self, server, monkeypatch):
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        captured = {}
+
+        def fake_chat(prompt: str, api_key: str):
+            captured["prompt"] = prompt
+            return ("grounded", "fake-model", 12, "0.0001")
+
+        import yinyang_server as ys
+        monkeypatch.setattr(ys, "_call_openrouter_chat", fake_chat)
+
+        request = urllib.request.Request(
+            f"{BASE_URL}/api/yinyang/chat",
+            data=json.dumps({"message": "List apps on solaceagi.com and perplexity.ai"}).encode(),
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+        assert data["reply"] == "grounded"
+        assert "domain=solaceagi.com" in captured["prompt"]
+        assert "domain=perplexity.ai" in captured["prompt"]
+        assert "installed_apps=" in captured["prompt"]
+
+    def test_browser_control_routes_are_no_longer_404(self, server):
+        matrix = [
+            ("/api/navigate", {"url": "http://127.0.0.1:18888/start", "launch": False}, {200}),
+            ("/api/click", {"selector": "#cta"}, {202}),
+            ("/api/fill", {"selector": "#email", "text": "user@example.com"}, {202}),
+            ("/api/screenshot", {"filename": "compat.png"}, {200, 202}),
+            ("/api/evaluate", {"expression": "window.location.href"}, {200}),
+            ("/api/snapshot", {}, {200}),
+        ]
+        for path, payload, expected_codes in matrix:
+            request = urllib.request.Request(
+                f"{BASE_URL}{path}",
+                data=json.dumps(payload).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(request, timeout=5) as resp:
+                assert resp.status in expected_codes, (path, resp.status)
+
+
+class TestCorsHeaders:
+    @pytest.mark.parametrize(
+        "origin",
+        [
+            "tauri://localhost",
+            "http://tauri.localhost",
+            "app://localhost",
+            f"http://localhost:{TEST_PORT}",
+        ],
+    )
+    def test_health_reflects_allowed_webview_origins(self, server, origin):
+        with open_request("/health", headers={"Origin": origin}) as resp:
+            assert resp.status == 200
+            assert resp.headers["Access-Control-Allow-Origin"] == origin
+
+    def test_options_preflight_returns_cors_headers(self, server):
+        with open_request(
+            "/health",
+            method="OPTIONS",
+            headers={
+                "Origin": "tauri://localhost",
+                "Access-Control-Request-Method": "GET",
+            },
+        ) as resp:
+            assert resp.status == 204
+            assert resp.headers["Access-Control-Allow-Origin"] == "tauri://localhost"
+            assert "Authorization" in resp.headers["Access-Control-Allow-Headers"]
 
 
 class TestInstructionsEndpoint:
@@ -504,6 +1048,36 @@ class TestOAuth3API:
             assert resp.status == 200
             content = resp.read().decode()
             assert "html" in content.lower()
+            assert "Go from setup to a real workflow in one move." in content
+            assert "Open Gmail" in content
+            assert "/web/apps.html" in content
+            assert "/start.css" in content
+            assert "/start.js" in content
+            assert "/branding/yinyang-logo.png" in content
+            assert "/health" not in content
+
+    def test_start_assets_and_branding_routes(self, server):
+        """GET /start.css, /start.js, and branding routes → 200."""
+        with urllib.request.urlopen(f"{BASE_URL}/start.css", timeout=5) as resp:
+            assert resp.status == 200
+            assert "text/css" in resp.headers["Content-Type"]
+
+        with urllib.request.urlopen(f"{BASE_URL}/start.js", timeout=5) as resp:
+            assert resp.status == 200
+            assert "application/javascript" in resp.headers["Content-Type"]
+
+        with urllib.request.urlopen(f"{BASE_URL}/branding/yinyang-logo.png", timeout=5) as resp:
+            assert resp.status == 200
+            assert "image/png" in resp.headers["Content-Type"]
+
+    def test_browser_control_qa_page(self, server):
+        """GET /qa/browser-control.html → deterministic selector QA page exists."""
+        with urllib.request.urlopen(f"{BASE_URL}/qa/browser-control.html", timeout=5) as resp:
+            assert resp.status == 200
+            content = resp.read().decode()
+            assert "Browser Control QA" in content
+            assert 'id="email"' in content
+            assert 'id="confirm"' in content
 
     def test_health_includes_evidence_count(self, server):
         """GET /health → includes evidence_count and schedule_count."""
@@ -529,6 +1103,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     evidence_path = tmp / "evidence.jsonl"
     schedules_path = tmp / "schedules.json"
     oauth3_tokens_path = tmp / "oauth3-tokens.json"
+    oauth3_vault_path = tmp / "oauth3-vault.json"
     budget_path = tmp / "budget.json"
     recipe_runs_path = tmp / "recipe_runs.json"
 
@@ -548,6 +1123,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     original_evidence = ys.EVIDENCE_PATH
     original_schedules = ys.SCHEDULES_PATH
     original_oauth3_tokens = ys.OAUTH3_TOKENS_PATH
+    original_oauth3_vault = ys.OAUTH3_VAULT_PATH
     original_budget = ys.BUDGET_PATH
     original_recipe_runs = ys.RECIPE_RUNS_PATH
     original_byok = ys.BYOK_PATH
@@ -566,6 +1142,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.EVIDENCE_PATH = evidence_path
     ys.SCHEDULES_PATH = schedules_path
     ys.OAUTH3_TOKENS_PATH = oauth3_tokens_path
+    ys.OAUTH3_VAULT_PATH = oauth3_vault_path
     ys.BUDGET_PATH = budget_path
     ys.RECIPE_RUNS_PATH = recipe_runs_path
     ys.BYOK_PATH = byok_path
@@ -598,6 +1175,7 @@ def auth_server(tmp_path_factory, monkeypatch_module):
     ys.EVIDENCE_PATH = original_evidence
     ys.SCHEDULES_PATH = original_schedules
     ys.OAUTH3_TOKENS_PATH = original_oauth3_tokens
+    ys.OAUTH3_VAULT_PATH = original_oauth3_vault
     ys.BUDGET_PATH = original_budget
     ys.RECIPE_RUNS_PATH = original_recipe_runs
     ys.BYOK_PATH = original_byok
@@ -1526,8 +2104,8 @@ class TestSessionManager:
         assert status == 404
         assert "not found" in data.get("error", "").lower()
 
-    def test_session_list_shows_dead_session(self, auth_server):
-        """A session with a dead PID shows alive=False in list response."""
+    def test_session_list_prunes_dead_session(self, auth_server):
+        """A session with a dead PID is pruned from tracked-session responses."""
         import yinyang_server as ys
         dead_session_id = "dead-test-session-0001"
         with ys._SESSIONS_LOCK:
@@ -1542,11 +2120,134 @@ class TestSessionManager:
             assert status == 200
             sessions = data["sessions"]
             dead = [s for s in sessions if s["session_id"] == dead_session_id]
-            assert dead, "Dead session must appear in list"
-            assert dead[0]["alive"] is False
+            assert dead == []
+            with ys._SESSIONS_LOCK:
+                assert dead_session_id not in ys._SESSIONS
         finally:
             with ys._SESSIONS_LOCK:
                 ys._SESSIONS.pop(dead_session_id, None)
+
+    def test_browser_status_endpoint(self, auth_server):
+        """GET /api/v1/browser/status exposes browser control-plane state."""
+        status, data = _get_json_auth("/api/v1/browser/status")
+        assert status == 200
+        assert data["status"] == "ok"
+        assert "tracked_sessions" in data
+        assert "visible_windows" in data
+        assert data["control_plane"]["launch"] is True
+
+    def test_browser_launch_incognito_and_close(self, auth_server, monkeypatch):
+        """POST /api/v1/browser/launch can create and close an incognito session."""
+        import os as _os
+        import sys as _sys
+        import yinyang_server as ys
+
+        class FakeProcess:
+            pid = 22334
+
+            def poll(self):
+                return None
+
+        monkeypatch.setattr(ys.subprocess, "Popen", lambda *a, **kw: FakeProcess())
+        original_env = _os.environ.get("SOLACE_BROWSER", "")
+        _os.environ["SOLACE_BROWSER"] = _sys.executable
+        try:
+            status, data = _post_with_auth(
+                "/api/v1/browser/launch",
+                {
+                    "url": "https://mail.google.com/",
+                    "profile": "default",
+                    "mode": "incognito",
+                    "session_name": "Gmail QA",
+                },
+            )
+            assert status == 201
+            session_id = data["session_id"]
+            assert data["mode"] == "incognito"
+            detail_status, detail = _get_json_auth(f"/api/v1/browser/sessions/{session_id}")
+            assert detail_status == 200
+            assert detail["mode"] == "incognito"
+            assert detail["session_name"] == "Gmail QA"
+            close_status, close_data = _post_with_auth("/api/v1/browser/close", {"session_id": session_id})
+            assert close_status == 200
+            assert close_data["session_id"] == session_id
+        finally:
+            if original_env:
+                _os.environ["SOLACE_BROWSER"] = original_env
+            else:
+                _os.environ.pop("SOLACE_BROWSER", None)
+            with ys._SESSIONS_LOCK:
+                ys._SESSIONS.clear()
+
+    def test_browser_launch_defaults_to_dashboard(self, auth_server, monkeypatch):
+        """POST /api/v1/browser/launch defaults to the Solace AGI dashboard when url is omitted."""
+        import os as _os
+        import sys as _sys
+        import yinyang_server as ys
+
+        class FakeProcess:
+            pid = 32345
+
+            def poll(self):
+                return None
+
+        monkeypatch.setattr(ys.subprocess, "Popen", lambda *a, **kw: FakeProcess())
+        original_env = _os.environ.get("SOLACE_BROWSER", "")
+        _os.environ["SOLACE_BROWSER"] = _sys.executable
+        try:
+            status, data = _post_with_auth(
+                "/api/v1/browser/launch",
+                {"profile": "default"},
+            )
+            assert status == 201
+            assert data["url"] == "https://solaceagi.com/dashboard"
+        finally:
+            if original_env:
+                _os.environ["SOLACE_BROWSER"] = original_env
+            else:
+                _os.environ.pop("SOLACE_BROWSER", None)
+            with ys._SESSIONS_LOCK:
+                ys._SESSIONS.clear()
+
+    def test_browser_close_all(self, auth_server, monkeypatch):
+        """POST /api/v1/browser/close all=true terminates all tracked sessions."""
+        import os as _os
+        import sys as _sys
+        import yinyang_server as ys
+
+        class FakeProcess:
+            next_pid = 30000
+
+            def __init__(self):
+                type(self).next_pid += 1
+                self.pid = type(self).next_pid
+
+            def poll(self):
+                return None
+
+        monkeypatch.setattr(ys.subprocess, "Popen", lambda *a, **kw: FakeProcess())
+        original_env = _os.environ.get("SOLACE_BROWSER", "")
+        _os.environ["SOLACE_BROWSER"] = _sys.executable
+        try:
+            for url in ("https://mail.google.com/", "https://github.com/"):
+                status, _data = _post_with_auth(
+                    "/api/v1/browser/launch",
+                    {"url": url, "profile": "default"},
+                )
+                assert status == 201
+            close_status, close_data = _post_with_auth("/api/v1/browser/close", {"all": True})
+            assert close_status == 200
+            assert close_data["count"] == 2
+            list_status, list_data = _get_json_auth("/api/v1/browser/sessions")
+            assert list_status == 200
+            assert list_data["sessions"] == []
+        finally:
+            if original_env:
+                _os.environ["SOLACE_BROWSER"] = original_env
+            else:
+                _os.environ.pop("SOLACE_BROWSER", None)
+            with ys._SESSIONS_LOCK:
+                ys._SESSIONS.clear()
 
 
 # ── Task 012: Tunnel + Vault Sync Management ─────────────────────────────────

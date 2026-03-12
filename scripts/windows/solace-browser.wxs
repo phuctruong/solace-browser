@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  solace-browser.wxs — WiX v4 MSI installer for Solace Browser (Windows)
+  solace-browser.wxs — WiX v4 MSI installer for Solace Browser + Solace Hub (Windows)
   Auth: 65537 | Legacy debug port permanently banned
 
   Build:
-    wix build -src scripts/windows/solace-browser.wxs \
+    wix build -src scripts/windows/solace-browser.wxs -src dist/windows-bundle-files.wxs \
               -out dist/solace-browser-windows-x86_64.msi \
-              -d ExeDir=dist
+              -d BundleDir=dist/solace-browser-release-windows
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package
@@ -27,6 +27,7 @@
 
     <Feature Id="ProductFeature" Title="Solace Browser" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="BundleFiles" />
       <ComponentGroupRef Id="ShortcutComponents" />
     </Feature>
   </Package>
@@ -47,11 +48,10 @@
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
       <Component Id="MainExecutable" Guid="B7D3E2A1-9C4F-4D81-A0B5-3E8C6F2D1A94">
         <File
-          Id="SolaceBrowserExe"
-          Source="!(bind.Variable.ExeDir)/solace-browser-windows-x86_64.exe"
-          Name="solace-browser.exe"
+          Id="SolaceHubExe"
+          Source="!(bind.Variable.BundleDir)\solace-hub.exe"
+          Name="solace-hub.exe"
           KeyPath="yes" />
-        <!-- Auto-launch headed after interactive install -->
         <RegistryValue
           Root="HKLM"
           Key="SOFTWARE\Solace Browser"
@@ -64,22 +64,18 @@
 
     <ComponentGroup Id="ShortcutComponents" Directory="ApplicationProgramsFolder">
       <Component Id="StartMenuShortcut" Guid="C8E4F3B2-0D5A-4E92-B1C6-4F9D7A3E2B05">
-        <!-- Start Menu shortcut — always uses --head flag -->
         <Shortcut
           Id="StartMenuShortcutEntry"
           Name="Solace Browser"
-          Description="Yinyang Server for Solace Browser"
-          Target="[INSTALLFOLDER]solace-browser.exe"
-          Arguments="--head"
+          Description="Hub-first Browser runtime for Solace"
+          Target="[INSTALLFOLDER]solace-hub.exe"
           WorkingDirectory="INSTALLFOLDER" />
-        <!-- Desktop shortcut — also uses --head flag -->
         <Shortcut
           Id="DesktopShortcutEntry"
           Directory="DesktopFolder"
           Name="Solace Browser"
-          Description="Yinyang Server for Solace Browser"
-          Target="[INSTALLFOLDER]solace-browser.exe"
-          Arguments="--head"
+          Description="Hub-first Browser runtime for Solace"
+          Target="[INSTALLFOLDER]solace-hub.exe"
           WorkingDirectory="INSTALLFOLDER" />
         <RemoveFolder Id="CleanupStartMenu" On="uninstall" />
         <RegistryValue

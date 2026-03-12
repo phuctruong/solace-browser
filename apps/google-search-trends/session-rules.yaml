@@ -1,0 +1,18 @@
+app: google-search-trends
+display_name: "Google Search Trends"
+version: "1.0.0"
+category: "research"
+site: google.com
+login_url: "https://www.google.com/"
+check_url: "https://www.google.com/"
+success_signals:
+  - "Google"
+failure_signals:
+  - "Access denied"
+keep_alive:
+  interval_minutes: 45
+  action: "navigate"
+  url: "https://news.google.com/"
+tier_required: "free"
+evidence_on_check: true
+description: "Watch Google Search and Google News trends and feed signal summaries into Morning Brief."

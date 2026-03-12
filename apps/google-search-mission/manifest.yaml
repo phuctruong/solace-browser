@@ -1,0 +1,18 @@
+id: google-search-mission
+name: Google Search Mission
+version: "1.0.0"
+title: "Google Search Mission"
+description: "Run ad hoc or scheduled Google research missions, then deliver a clean HTML brief into the local outbox."
+author: "Solace AGI"
+category: research
+status: installed
+safety: A
+tier: free
+site: google.com
+type: standard
+orchestrates: []
+domains:
+  - "google.com"
+  - "www.google.com"
+tier_required: free
+local_only: true

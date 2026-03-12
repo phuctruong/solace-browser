@@ -1,0 +1,13 @@
+id: launch-report-search-90e88206
+name: "Launch Report Search 90e88206"
+description: "Create a local report from a custom app."
+category: "custom"
+status: "installed"
+safety: "B"
+tier: "free"
+domains:
+  - "google.com"
+site: google.com
+type: "custom"
+custom: true
+local_only: true

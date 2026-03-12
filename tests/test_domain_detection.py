@@ -5,6 +5,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import uuid
 from pathlib import Path
 
 import pytest
@@ -128,6 +129,85 @@ def test_custom_app_create(domain_server):
     contents = session_rules_path.read_text()
     assert "web.whatsapp.com" in contents
     assert "my-whatsapp-monitor" in contents
+
+    status, payload = _request("GET", "/api/v1/apps/by-domain?domain=web.whatsapp.com")
+    assert status == 200
+    installed_ids = {app["id"] for app in payload["installed_apps"]}
+    assert "my-whatsapp-monitor" in installed_ids
+
+    status, payload = _request("DELETE", "/api/v1/apps/my-whatsapp-monitor/install")
+    assert status == 200
+    assert payload["state"] == "available"
+
+    status, payload = _request("GET", "/api/v1/apps/by-domain?domain=web.whatsapp.com")
+    assert status == 200
+    installed_ids = {app["id"] for app in payload["installed_apps"]}
+    store_ids = {app["id"] for app in payload["store_apps"]}
+    assert "my-whatsapp-monitor" not in installed_ids
+    assert "my-whatsapp-monitor" in store_ids
+
+
+def test_custom_app_delete_removes_all_local_state(domain_server):
+    app_name = f"Transient Custom App {uuid.uuid4().hex[:8]}"
+    status, data = _request(
+        "POST",
+        "/api/v1/apps/custom/create",
+        {
+            "domain": "web.whatsapp.com",
+            "name": app_name,
+            "description": "Delete me completely",
+        },
+    )
+    assert status == 201
+    app_id = data["app_id"]
+
+    status, payload = _request(
+        "POST",
+        f"/api/v1/apps/{app_id}/config",
+        {
+            "objective": "Track messages",
+            "target_url": "https://web.whatsapp.com/",
+            "cron": "0 7 * * *",
+            "keepalive_minutes": 15,
+        },
+    )
+    assert status == 200
+    assert payload["status"] == "saved"
+    assert payload["config"]["objective"] == "Track messages"
+
+    status, payload = _request(
+        "POST",
+        "/api/v1/browser/schedules",
+        {
+            "app_id": app_id,
+            "cron": "0 7 * * *",
+            "url": "https://web.whatsapp.com/",
+        },
+    )
+    assert status == 201
+    schedule_id = payload["id"]
+
+    status, payload = _request("DELETE", f"/api/v1/apps/{app_id}")
+    assert status == 200
+    assert payload["status"] == "deleted"
+    assert payload["app_id"] == app_id
+    assert payload["removed_schedules"] == 1
+
+    status, payload = _request("GET", "/api/v1/apps/by-domain?domain=web.whatsapp.com")
+    assert status == 200
+    installed_ids = {app["id"] for app in payload["installed_apps"]}
+    store_ids = {app["id"] for app in payload["store_apps"]}
+    assert app_id not in installed_ids
+    assert app_id not in store_ids
+
+    status, payload = _request("GET", f"/api/v1/apps/{app_id}/config")
+    assert status == 404
+    assert payload["error"] == "app not found"
+
+    status, payload = _request("GET", "/api/v1/browser/schedules")
+    assert status == 200
+    schedule_ids = {schedule["id"] for schedule in payload["schedules"]}
+    assert schedule_id not in schedule_ids
 
 
 def test_custom_app_name_sanitized(domain_server):

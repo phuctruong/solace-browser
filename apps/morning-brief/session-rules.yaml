@@ -1,0 +1,18 @@
+app: morning-brief
+display_name: "Morning Brief"
+version: "1.0.0"
+category: "assistant"
+site: solaceagi.com
+login_url: "https://solaceagi.com/dashboard"
+check_url: "https://solaceagi.com/dashboard"
+success_signals:
+  - "Dashboard"
+failure_signals:
+  - "Sign in"
+keep_alive:
+  interval_minutes: 120
+  action: "navigate"
+  url: "https://solaceagi.com/dashboard"
+tier_required: "free"
+evidence_on_check: true
+description: "Central place to review research, app outboxes, and the best next actions."

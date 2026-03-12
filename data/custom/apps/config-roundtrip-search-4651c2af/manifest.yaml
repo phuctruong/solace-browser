@@ -1,0 +1,13 @@
+id: config-roundtrip-search-4651c2af
+name: "Config Roundtrip Search 4651c2af"
+description: "Track a custom research mission."
+category: "custom"
+status: "installed"
+safety: "B"
+tier: "free"
+domains:
+  - "google.com"
+site: google.com
+type: "custom"
+custom: true
+local_only: true

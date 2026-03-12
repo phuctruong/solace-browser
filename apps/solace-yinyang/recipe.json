@@ -1,0 +1,33 @@
+{
+  "id": "solace-yinyang",
+  "platform": "solace",
+  "version": "1.0.0",
+  "description": "Guide users through Solace Hub, Solace Browser, and Solace AGI, then help them create, run, schedule, and review domain apps.",
+  "author": "Solace AGI",
+  "rung": 65537,
+  "created": "2026-03-11",
+  "updated": "2026-03-11",
+  "local_only": true,
+  "steps": [
+    {
+      "step": 1,
+      "action": "inspect_runtime",
+      "description": "Read Hub, OAuth3, sync, tunnel, and Browser status from localhost:8888."
+    },
+    {
+      "step": 2,
+      "action": "guide_user",
+      "description": "Explain free local mode, BYOK, local CLI wrapper mode, and paid managed services without exposing trade-secret cloud prompts."
+    },
+    {
+      "step": 3,
+      "action": "create_or_route",
+      "description": "Create a custom app scaffold, open the app store, schedule an existing app, or route the user to support."
+    },
+    {
+      "step": 4,
+      "action": "seal_evidence",
+      "description": "Keep actions reviewable with local evidence and cloud sync only when explicitly enabled."
+    }
+  ]
+}

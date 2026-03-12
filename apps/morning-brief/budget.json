@@ -1,0 +1,6 @@
+{
+  "cooldown_seconds": 0,
+  "daily_max_runs": 3,
+  "max_cost_per_run_usd": 0.03,
+  "pages_per_run": 6
+}

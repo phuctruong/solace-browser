@@ -1,0 +1,13 @@
+id: morning-brief-custom-b663efdb
+name: "Morning Brief Custom b663efdb"
+description: "A custom report that should appear in Morning Brief."
+category: "custom"
+status: "installed"
+safety: "B"
+tier: "free"
+domains:
+  - "google.com"
+site: google.com
+type: "custom"
+custom: true
+local_only: true

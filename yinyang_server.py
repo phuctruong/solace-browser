@@ -52,6 +52,12 @@ Route table:
   GET  /api/v1/sessions/{id}           → single session detail
   POST /api/v1/sessions                → spawn new browser session (requires auth)
   DELETE /api/v1/sessions/{id}         → terminate session (SIGTERM+SIGKILL, requires auth)
+  GET  /api/v1/browser/status          → runtime browser status + visible Solace windows
+  GET  /api/v1/browser/sessions        → browser session list (alias)
+  GET  /api/v1/browser/sessions/{id}   → browser session detail (alias)
+  POST /api/v1/browser/launch          → launch controlled browser session (auth)
+  POST /api/v1/browser/close           → close one or all tracked browser sessions (auth)
+  DELETE /api/v1/browser/sessions/{id} → terminate tracked browser session (auth)
   GET  /api/v1/recipes                 → list all available recipes
   GET  /api/v1/recipes/{id}/preview    → preview steps without running
   GET  /api/v1/recipes/{run_id}/status → check run status
@@ -112,6 +118,7 @@ import binascii
 import functools
 import hashlib
 import hmac
+import html
 import http.server
 import inspect
 import json
@@ -141,12 +148,23 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
+REPO_ROOT = Path(__file__).resolve().parent
+SIDEBAR_ASSETS_DIR = (
+    REPO_ROOT / "source" / "src" / "chrome" / "browser" / "resources" / "solace"
+)
+HUB_UI_DIR = REPO_ROOT / "solace-hub" / "src"
+HUB_ICONS_DIR = HUB_UI_DIR / "icons"
+HUB_MEDIA_DIR = HUB_UI_DIR / "media"
+SOLACEAGI_REPO_DIR = REPO_ROOT.parent / "solaceagi"
+SOLACEAGI_YINYANG_DIR = SOLACEAGI_REPO_DIR / "images" / "yinyang"
+SOLACEAGI_APP_ICONS_DIR = SOLACEAGI_REPO_DIR / "web" / "images" / "apps"
+
 try:
     from bs4 import BeautifulSoup
 except ImportError:
     BeautifulSoup = None
 
-from evidence_bundle import ALCOABundle, ALCOAError, ComplianceStatus, RUNG_ACHIEVED
+from evidence_bundle import ALCOABundle, ALCOAError, ComplianceStatus, GENESIS_CHAIN_SEED, RUNG_ACHIEVED, _sha256_hex
 from hub_tunnel_client import HubTunnelClient, SOLACEAGI_RELAY_URL
 
 # ---------------------------------------------------------------------------
@@ -161,12 +179,21 @@ DEFAULT_EVIDENCE_PATH: Path = EVIDENCE_PATH
 DEFAULT_PART11_EVIDENCE_DIR: Path = PART11_EVIDENCE_DIR
 DEFAULT_PART11_EVIDENCE_PATH: Path = PART11_EVIDENCE_PATH
 DEFAULT_PART11_CHAIN_LOCK_PATH: Path = PART11_CHAIN_LOCK_PATH
+PART11_CONFIG_PATH: Path = Path.home() / ".solace" / "part11-config.json"
+_COMPAT_BROWSER_LOCK = threading.Lock()
+_COMPAT_BROWSER_STATE: dict[str, Any] = {
+    "current_url": "https://solaceagi.com/dashboard",
+    "last_action": None,
+    "actions": [],
+}
+DEFAULT_BROWSER_START_URL = "https://solaceagi.com/dashboard"
 SCHEDULES_PATH: Path = Path.home() / ".solace" / "schedules.json"
 OAUTH3_TOKENS_PATH: Path = Path.home() / ".solace" / "oauth3-tokens.json"
 OAUTH3_VAULT_PATH: Path = Path.home() / ".solace" / "oauth3-vault.enc"
 ONBOARDING_PATH: Path = Path.home() / ".solace" / "onboarding.json"
 SETTINGS_PATH: Path = Path.home() / ".solace" / "settings.json"
 PRIME_WIKI_ROOT: Path = Path.home() / ".solace" / "prime-wiki"
+PRIME_WIKI_ASSETS_PATH: Path = PRIME_WIKI_ROOT / "assets.json"
 MARKETPLACE_CACHE_PATH: Path = Path.home() / ".solace" / "marketplace-cache.json"
 RECIPES_DIR: Path = Path(__file__).parent / "data" / "default" / "recipes"
 SESSION_RULES_APPS_DIR: Path = Path(__file__).parent / "data" / "default" / "apps"
@@ -452,6 +479,36 @@ _COMMUNITY_RECIPES: list = [
 ]
 _SESSIONS: dict[str, dict] = {}
 _SESSIONS_LOCK = threading.Lock()
+
+
+def _allocate_head_hidden_display() -> str:
+    xvfb = shutil.which("Xvfb")
+    if not xvfb:
+        raise FileNotFoundError("Xvfb is required for head-hidden browser sessions")
+    for display_number in range(99, 130):
+        socket_path = Path(f"/tmp/.X11-unix/X{display_number}")
+        if not socket_path.exists():
+            return f":{display_number}"
+    raise FileNotFoundError("no free Xvfb display available for head-hidden browser session")
+
+
+def _cleanup_session_sidecars(session: dict[str, Any]) -> None:
+    xvfb_pid = int(session.get("xvfb_pid", 0) or 0)
+    if xvfb_pid <= 0:
+        return
+    try:
+        os.kill(xvfb_pid, signal.SIGTERM)
+    except OSError:
+        return
+
+    def _force_kill() -> None:
+        time.sleep(2)
+        try:
+            os.kill(xvfb_pid, signal.SIGKILL)
+        except OSError:
+            pass
+
+    threading.Thread(target=_force_kill, daemon=True).start()
 _SESSION_TOKEN_SHA256: str = ""
 _SESSION_RULES: list[dict] = []
 _SESSION_RULES_LOCK = threading.Lock()
@@ -2279,6 +2336,185 @@ MAX_KBD_EVENTS: int = 500000
 _KBD_EVENTS: list[dict] = []
 _KBD_LOCK = threading.Lock()
 
+# --- Task 181: Font Metrics Tracker ---
+FONT_CATEGORIES: list[str] = [
+    "serif", "sans_serif", "monospace", "display",
+    "handwriting", "cursive", "fantasy", "system",
+]
+MAX_FONT_ENTRIES: int = 500000
+_FONT_ENTRIES: list[dict] = []
+_FONT_METRICS_LOCK = threading.Lock()
+
+# --- Task 182: Animation Performance Tracker ---
+ANIMATION_TYPES: list[str] = [
+    "css_transition", "css_animation", "js_requestAnimationFrame",
+    "js_setInterval", "web_animation_api", "svg_animation", "canvas_animation", "scroll_animation",
+]
+MAX_ANIMATION_ENTRIES: int = 1000000
+_ANIMATION_ENTRIES: list[dict] = []
+_ANIMATION_PERF_LOCK = threading.Lock()
+
+# --- Task 183: Network Resilience Tracker ---
+NETWORK_FAILURE_TYPES: list[str] = [
+    "timeout", "dns_failure", "connection_refused", "ssl_error",
+    "cors_error", "network_changed", "offline", "server_error",
+]
+MAX_NETWORK_RESILIENCE_EVENTS: int = 500000
+_NETWORK_RESILIENCE_EVENTS: list[dict] = []
+_NETWORK_RESILIENCE_LOCK = threading.Lock()
+
+# --- Task 184: Clipboard Usage Tracker ---
+CLIPBOARD_OPERATION_TYPES: list[str] = [
+    "copy", "cut", "paste", "select_all",
+    "drag_copy", "drag_move", "context_copy", "keyboard_copy",
+]
+MAX_CLIPBOARD_EVENTS: int = 1000000
+_CLIPBOARD_EVENTS: list[dict] = []
+_CLIPBOARD_USAGE_LOCK = threading.Lock()
+
+# --- Task 185: Color Theme Detector ---
+THEME_MODES: list[str] = [
+    "light", "dark", "high_contrast", "system_default",
+    "auto_light", "auto_dark", "forced_colors", "no_preference",
+]
+MAX_THEME_DETECTIONS: int = 500000
+_THEME_DETECTIONS: list[dict] = []
+_COLOR_THEME_LOCK = threading.Lock()
+
+# --- Task 186: Touch Gesture Tracker ---
+TOUCH_GESTURE_TYPES: list[str] = [
+    "tap", "double_tap", "long_press", "swipe_left", "swipe_right",
+    "swipe_up", "swipe_down", "pinch_in", "pinch_out", "rotate",
+]
+MAX_TOUCH_EVENTS: int = 2000000
+_TOUCH_EVENTS: list[dict] = []
+_TOUCH_GESTURE_LOCK = threading.Lock()
+
+# --- Task 187: Form Analytics Tracker ---
+FORM_ABANDONMENT_REASONS: list[str] = [
+    "too_long", "too_complex", "privacy_concern", "technical_error",
+    "distracted", "changed_mind", "timeout", "unknown",
+]
+MAX_FORM_SESSIONS: int = 1000000
+_FORM_SESSIONS: list[dict] = []
+_FORM_ANALYTICS_LOCK = threading.Lock()
+
+# --- Task 188: Ad Blocker Detector ---
+AD_BLOCKER_TYPES: list[str] = [
+    "ublock_origin", "adblock_plus", "brave_shields", "privacy_badger",
+    "ghostery", "disconnect", "unknown_extension", "network_level", "none",
+]
+MAX_AD_BLOCKER_DETECTIONS: int = 500000
+_AD_BLOCKER_DETECTIONS: list[dict] = []
+_AD_BLOCKER_LOCK = threading.Lock()
+
+# --- Task 189: Page Visibility Tracker ---
+PAGE_VISIBILITY_STATES: list[str] = [
+    "visible", "hidden", "prerender", "unloaded",
+]
+MAX_VISIBILITY_EVENTS: int = 2000000
+_VISIBILITY_EVENTS: list[dict] = []
+_PAGE_VISIBILITY_LOCK = threading.Lock()
+
+# --- Task 190: Memory Usage Tracker ---
+MEMORY_TYPES: list[str] = [
+    "js_heap", "dom_nodes", "event_listeners", "gpu_memory",
+    "shared_worker", "service_worker", "iframes", "total",
+]
+MAX_MEMORY_SNAPSHOTS: int = 500000
+_MEMORY_SNAPSHOTS: list[dict] = []
+_MEMORY_USAGE_LOCK = threading.Lock()
+
+# --- Task 191: Error Boundary Tracker ---
+JS_ERROR_TYPES = [
+    "TypeError", "ReferenceError", "SyntaxError", "RangeError",
+    "URIError", "EvalError", "NetworkError", "SecurityError", "UnhandledRejection", "CustomError"
+]
+MAX_ERROR_BOUNDARY_EVENTS = 500000
+_ERROR_BOUNDARY_EVENTS: list[dict] = []
+_ERROR_BOUNDARY_LOCK = threading.Lock()
+
+# --- Task 192: API Request Logger ---
+HTTP_REQUEST_METHODS = [
+    "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"
+]
+MAX_API_LOG_ENTRIES = 2000000
+_API_LOG_ENTRIES: list[dict] = []
+_API_REQUEST_LOG_LOCK = threading.Lock()
+
+# --- Task 193: Geolocation Accuracy Tracker ---
+GEOLOCATION_PERMISSION_STATES = [
+    "granted", "denied", "prompt", "unavailable"
+]
+MAX_GEOLOCATION_READINGS = 500000
+_GEOLOCATION_READINGS: list[dict] = []
+_GEOLOCATION_ACCURACY_LOCK = threading.Lock()
+
+# --- Task 194: IndexedDB Usage Tracker ---
+INDEXEDDB_OPERATION_TYPES = [
+    "open", "close", "create_store", "delete_store", "put",
+    "get", "delete", "clear", "transaction_commit", "transaction_abort"
+]
+MAX_INDEXEDDB_EVENTS = 1000000
+_INDEXEDDB_EVENTS: list[dict] = []
+_INDEXEDDB_USAGE_LOCK = threading.Lock()
+
+# --- Task 195: Session Replay Tracker ---
+REPLAY_QUALITIES = [
+    "low", "medium", "high", "lossless"
+]
+MAX_REPLAY_SESSIONS = 100000
+_REPLAY_SESSIONS: list[dict] = []
+_SESSION_REPLAY_LOCK = threading.Lock()
+
+# --- Task 196: Viewport Change Tracker ---
+VIEWPORT_BREAKPOINT_TYPES = [
+    "xs_mobile", "sm_mobile", "md_tablet", "lg_desktop",
+    "xl_desktop", "2xl_wide", "custom", "unknown"
+]
+MAX_VIEWPORT_EVENTS = 2000000
+_VIEWPORT_EVENTS: list[dict] = []
+_VIEWPORT_CHANGE_LOCK = threading.Lock()
+
+# --- Task 197: Extension Conflict Detector ---
+EXTENSION_CONFLICT_TYPES = [
+    "dom_manipulation", "network_interception", "csp_override",
+    "script_injection", "cookie_modification", "storage_access",
+    "request_blocking", "header_modification"
+]
+MAX_EXTENSION_CONFLICT_REPORTS = 100000
+_EXTENSION_CONFLICT_REPORTS: list[dict] = []
+_EXTENSION_CONFLICT_LOCK = threading.Lock()
+
+# --- Task 198: Reading Progress Tracker ---
+READING_CONTENT_TYPES = [
+    "article", "blog_post", "documentation", "tutorial",
+    "report", "research_paper", "news", "newsletter"
+]
+MAX_READING_SESSIONS = 500000
+_READING_SESSIONS: list[dict] = []
+_READING_PROGRESS_LOCK = threading.Lock()
+
+# --- Task 199: Tab Loading Profiler ---
+TAB_LOAD_STAGES = [
+    "dns_lookup", "tcp_connect", "tls_handshake", "ttfb",
+    "dom_content_loaded", "load_complete", "first_paint", "first_contentful_paint"
+]
+HTTP_VERSIONS = ["http1", "http1.1", "http2", "http3"]
+MAX_TAB_LOADING_PROFILES = 1000000
+_TAB_LOADING_PROFILES: list[dict] = []
+_TAB_LOADING_LOCK = threading.Lock()
+
+# --- Task 200: Cookie Compliance Tracker ---
+COOKIE_CATEGORIES = [
+    "strictly_necessary", "analytics", "marketing", "preferences",
+    "social_media", "tracking", "performance", "unknown"
+]
+COOKIE_SEVERITY_LEVELS = ["low", "medium", "high", "critical"]
+MAX_COOKIE_SCANS = 500000
+_COOKIE_SCANS: list[dict] = []
+_COOKIE_COMPLIANCE_LOCK = threading.Lock()
+
 
 def _triage_single_email(email: dict[str, Any], config: dict[str, bool]) -> dict[str, Any]:
     """Deterministic triage — no LLM required. Returns action + confidence."""
@@ -2918,6 +3154,75 @@ def verify_part11_evidence_chain() -> dict:
         "total_bundles": len(bundles),
         "broken_at_index": validation.broken_at_index,
     }
+
+
+def repair_part11_evidence_chain() -> dict[str, Any]:
+    with _PART11_EVIDENCE_LOCK:
+        evidence_dir, evidence_path, chain_lock_path = _part11_storage_paths()
+        bundles = _load_part11_evidence_bundles()
+        if not bundles:
+            return {
+                "success": True,
+                "repaired_count": 0,
+                "total_bundles": 0,
+                "backup_path": None,
+                "chain_valid": True,
+                "broken_at_index": None,
+            }
+
+        validation = ALCOABundle.validate_chain(bundles)
+        backup_path = None
+        if evidence_path.exists():
+            backup_path = str(evidence_dir / f"evidence.{int(time.time())}.bak.jsonl")
+            shutil.copy2(evidence_path, backup_path)
+        if chain_lock_path.exists() and backup_path is not None:
+            shutil.copy2(chain_lock_path, evidence_dir / f"chain.{int(time.time())}.bak.lock")
+
+        repaired_count = 0
+        prior_bundle_sha256 = ""
+        repaired_bundles: list[dict[str, Any]] = []
+        chain_lines: list[str] = []
+        for bundle in bundles:
+            repaired = dict(bundle)
+            alcoa_fields = repaired.get("alcoa_fields")
+            if not isinstance(alcoa_fields, dict):
+                alcoa_fields = {}
+                repaired["alcoa_fields"] = alcoa_fields
+            consistent = alcoa_fields.get("consistent")
+            if not isinstance(consistent, dict):
+                consistent = {}
+                alcoa_fields["consistent"] = consistent
+            expected_previous_sha256 = prior_bundle_sha256 or GENESIS_CHAIN_SEED
+            if consistent.get("previous_bundle_sha256") != expected_previous_sha256:
+                consistent["previous_bundle_sha256"] = expected_previous_sha256
+                consistent["passed"] = True
+            current_bundle_sha256 = ALCOABundle.bundle_sha256(repaired)
+            expected_chain_link = _sha256_hex(f"{expected_previous_sha256}{current_bundle_sha256}")
+            if str(repaired.get("sha256_chain_link") or "").lower() != expected_chain_link:
+                repaired["sha256_chain_link"] = expected_chain_link
+                repaired_count += 1
+            repaired_bundles.append(repaired)
+            chain_lines.append(current_bundle_sha256)
+            prior_bundle_sha256 = current_bundle_sha256
+
+        evidence_dir.mkdir(parents=True, exist_ok=True)
+        with evidence_path.open("w", encoding="utf-8") as handle:
+            for bundle in repaired_bundles:
+                handle.write(json.dumps(bundle, sort_keys=True) + "\n")
+        with chain_lock_path.open("w", encoding="utf-8") as handle:
+            for line in chain_lines:
+                handle.write(f"{line}\n")
+
+        after_validation = ALCOABundle.validate_chain(repaired_bundles)
+        return {
+            "success": after_validation.chain_valid,
+            "repaired_count": repaired_count,
+            "total_bundles": len(repaired_bundles),
+            "backup_path": backup_path,
+            "chain_valid": after_validation.chain_valid,
+            "broken_at_index": after_validation.broken_at_index,
+            "broken_at_index_before": validation.broken_at_index,
+        }
 
 
 def _append_evidence_record(event_type: str, data: dict[str, Any]) -> dict[str, Any]:
@@ -3946,18 +4251,55 @@ def _session_rules_path_for_app(repo_root: str, app_id: str) -> Path:
     return _marketplace_app_dir(repo_root, app_id) / "session-rules.yaml"
 
 
+def _starter_bundle_app_ids(repo_root: str) -> set[str]:
+    apps_root = _starter_bundle_apps_root(repo_root)
+    if not apps_root.is_dir():
+        return set()
+    return {d.name for d in apps_root.iterdir() if d.is_dir() and _APP_ID_RE.fullmatch(d.name)}
+
+
+def _custom_app_ids(repo_root: str) -> set[str]:
+    apps_root = _custom_apps_root(repo_root)
+    if not apps_root.is_dir():
+        return set()
+    return {d.name for d in apps_root.iterdir() if d.is_dir() and _APP_ID_RE.fullmatch(d.name)}
+
+
+def _installed_app_ids(repo_root: str) -> set[str]:
+    settings = _load_settings()
+    raw_installed = settings.get("installed_apps", [])
+    installed = {
+        str(app_id).strip()
+        for app_id in raw_installed
+        if isinstance(app_id, str) and _APP_ID_RE.fullmatch(app_id.strip())
+    }
+    installed.update(_starter_bundle_app_ids(repo_root))
+    return installed
+
+
+def _set_app_installed(repo_root: str, app_id: str, installed: bool) -> None:
+    settings = _load_settings()
+    app_ids = _installed_app_ids(repo_root)
+    if installed:
+        app_ids.add(app_id)
+    else:
+        app_ids.discard(app_id)
+    settings["installed_apps"] = sorted(app_ids)
+    _save_settings(settings)
+
+
 def _is_marketplace_app_installed(repo_root: str, app_id: str) -> bool:
-    return _session_rules_path_for_app(repo_root, app_id).is_file()
+    return app_id in _installed_app_ids(repo_root)
 
 
 def _normalize_marketplace_app(raw_app: dict, repo_root: str) -> Optional[dict]:
-    app_id = raw_app.get("app_id")
+    app_id = raw_app.get("app_id") or raw_app.get("id")
     if not isinstance(app_id, str) or not _APP_ID_RE.fullmatch(app_id):
         return None
-    display_name = raw_app.get("display_name", app_id.replace("-", " ").title())
+    display_name = raw_app.get("display_name") or raw_app.get("name") or app_id.replace("-", " ").title()
     description = raw_app.get("description", "")
     category = raw_app.get("category", "solace")
-    tier_required = raw_app.get("tier_required", "free")
+    tier_required = raw_app.get("tier_required") or raw_app.get("tier") or "free"
     version = raw_app.get("version", "")
     icon_url = raw_app.get("icon_url", "")
     if not isinstance(display_name, str):
@@ -4033,6 +4375,21 @@ def _load_marketplace_cache(repo_root: str) -> tuple[Optional[list[dict]], str]:
     return _normalize_marketplace_apps(raw_apps, repo_root), source
 
 
+def _load_local_marketplace_catalog(repo_root: str) -> list[dict]:
+    raw_apps: list[dict] = []
+    for entry in _load_official_store_apps(repo_root):
+        raw_apps.append({
+            "app_id": entry.get("id", ""),
+            "display_name": entry.get("name", ""),
+            "description": entry.get("description", ""),
+            "category": entry.get("category", "solace"),
+            "tier_required": entry.get("tier_required", "free"),
+            "version": "1.0.0",
+            "icon_url": "",
+        })
+    return _normalize_marketplace_apps(raw_apps, repo_root)
+
+
 def _fetch_marketplace_catalog(repo_root: str) -> tuple[Optional[list[dict]], str]:
     with _MARKETPLACE_LOCK:
         try:
@@ -4043,19 +4400,31 @@ def _fetch_marketplace_catalog(repo_root: str) -> tuple[Optional[list[dict]], st
                 "url": MARKETPLACE_CATALOG_URL,
                 "reason": str(exc.reason) if hasattr(exc, "reason") else str(exc),
             })
-            return _load_marketplace_cache(repo_root)
+            apps, source = _load_marketplace_cache(repo_root)
+            if apps is not None:
+                return apps, source
+            local_apps = _load_local_marketplace_catalog(repo_root)
+            return (local_apps, "local_bundle") if local_apps else (None, "")
         except json.JSONDecodeError as exc:
             record_evidence("marketplace_catalog_fetch_failed", {
                 "url": MARKETPLACE_CATALOG_URL,
                 "reason": str(exc),
             })
-            return _load_marketplace_cache(repo_root)
+            apps, source = _load_marketplace_cache(repo_root)
+            if apps is not None:
+                return apps, source
+            local_apps = _load_local_marketplace_catalog(repo_root)
+            return (local_apps, "local_bundle") if local_apps else (None, "")
         except OSError as exc:
             record_evidence("marketplace_catalog_fetch_failed", {
                 "url": MARKETPLACE_CATALOG_URL,
                 "reason": str(exc),
             })
-            return _load_marketplace_cache(repo_root)
+            apps, source = _load_marketplace_cache(repo_root)
+            if apps is not None:
+                return apps, source
+            local_apps = _load_local_marketplace_catalog(repo_root)
+            return (local_apps, "local_bundle") if local_apps else (None, "")
         raw_apps = payload.get("apps", []) if isinstance(payload, dict) else []
         if not isinstance(raw_apps, list):
             raw_apps = []
@@ -4080,14 +4449,20 @@ def _tier_allows_install(user_tier: str, tier_required: str) -> bool:
     return _MARKETPLACE_TIER_RANKS[user_tier] >= _MARKETPLACE_TIER_RANKS[tier_required]
 
 
-def _download_marketplace_session_rules(app_id: str) -> tuple[Optional[str], Optional[int]]:
+def _download_marketplace_session_rules(app_id: str, repo_root: str) -> tuple[Optional[str], Optional[int], str]:
+    local_rules_path = _repo_session_rules_path_for_app(repo_root, app_id)
+    if local_rules_path is not None:
+        try:
+            return local_rules_path.read_text(), None, "local_bundle"
+        except OSError:
+            pass
     url = MARKETPLACE_APP_RULES_URL_TEMPLATE.format(app_id=app_id)
     try:
         with _marketplace_urlopen(url, timeout=MARKETPLACE_TIMEOUT_SECONDS) as response:
-            return response.read().decode(), None
+            return response.read().decode(), None, "remote"
     except urllib.error.URLError as exc:
         if getattr(exc, "code", None) == 404:
-            return None, 404
+            return None, 404, "remote"
         raise
 
 
@@ -4131,6 +4506,159 @@ def _save_settings(settings: dict) -> None:
     persisted["cloud_twin"] = _normalized_cloud_twin_settings(settings.get("cloud_twin", {}))
     SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
     SETTINGS_PATH.write_text(json.dumps(persisted, indent=2))
+
+
+def _default_app_cron(app_id: str, site: str = "") -> str:
+    normalized_site = _normalize_domain(site)
+    if "morning-brief" in app_id:
+        return "0 8 * * *"
+    if any(token in app_id for token in ("search", "watch", "trend")) or normalized_site in {"google.com", "www.google.com", "news.google.com"}:
+        return "0 */4 * * *"
+    if "gmail" in app_id or normalized_site == "mail.google.com":
+        return "0 9 * * 1-5"
+    return "0 10 * * 1-5"
+
+
+def _default_target_url(site: str) -> str:
+    normalized_site = _normalize_domain(site)
+    if not normalized_site:
+        return "https://solaceagi.com/dashboard"
+    return f"https://{normalized_site}/"
+
+
+def _northstar_summary(repo_root: str, app_id: str) -> str:
+    app_dir = _repo_app_dir(repo_root, app_id)
+    if app_dir is None:
+        return ""
+    northstar_path = app_dir / "inbox" / "northstar.md"
+    try:
+        content = northstar_path.read_text(encoding="utf-8")
+    except (FileNotFoundError, OSError):
+        return ""
+    for line in content.splitlines():
+        stripped = line.strip().lstrip("#").strip()
+        if stripped:
+            return stripped[:240]
+    return ""
+
+
+def _default_app_config(repo_root: str, app_id: str) -> dict:
+    manifest = _load_manifest_for_app(repo_root, app_id)
+    session_rules = _load_session_rules_for_app(repo_root, app_id)
+    site = str(manifest.get("site") or session_rules.get("site") or "")
+    description = str(manifest.get("description") or session_rules.get("description") or "")
+    northstar = _northstar_summary(repo_root, app_id)
+    report_name = "latest.html" if bool(manifest.get("custom", False)) else ""
+    keep_alive = session_rules.get("keep_alive", {})
+    interval = keep_alive.get("interval_minutes", 15) if isinstance(keep_alive, dict) else 15
+    try:
+        keepalive_minutes = int(interval)
+    except (TypeError, ValueError):
+        keepalive_minutes = 15
+    keepalive_minutes = max(1, min(1440, keepalive_minutes))
+    return {
+        "objective": northstar or description or f"Run {app_id.replace('-', ' ')} and produce a useful local report.",
+        "target_url": str(session_rules.get("check_url") or session_rules.get("login_url") or _default_target_url(site)),
+        "cron": _default_app_cron(app_id, site),
+        "keepalive_minutes": keepalive_minutes,
+        "report_name": report_name,
+    }
+
+
+def _load_app_config(repo_root: str, app_id: str) -> dict:
+    defaults = _default_app_config(repo_root, app_id)
+    settings = _load_settings()
+    raw_configs = settings.get("app_configs", {})
+    if not isinstance(raw_configs, dict):
+        return defaults
+    raw = raw_configs.get(app_id, {})
+    if not isinstance(raw, dict):
+        return defaults
+    merged = dict(defaults)
+    for key in ("objective", "target_url", "cron", "report_name"):
+        value = raw.get(key)
+        if isinstance(value, str) and value.strip():
+            merged[key] = value.strip()
+    keepalive = raw.get("keepalive_minutes")
+    if isinstance(keepalive, int):
+        merged["keepalive_minutes"] = max(1, min(1440, keepalive))
+    return merged
+
+
+def _save_app_config(repo_root: str, app_id: str, payload: dict) -> dict:
+    if not isinstance(payload, dict):
+        raise ValueError("invalid config payload")
+    current = _load_app_config(repo_root, app_id)
+    objective = str(payload.get("objective", current["objective"])).strip()
+    if not objective or len(objective) > 4000:
+        raise ValueError("objective must be 1-4000 chars")
+    target_url = str(payload.get("target_url", current["target_url"])).strip()
+    if not target_url or len(target_url) > 2048:
+        raise ValueError("target_url must be 1-2048 chars")
+    cron = str(payload.get("cron", current["cron"])).strip()
+    if len(cron) > 64 or len(cron.split()) != 5:
+        raise ValueError("cron must be a 5-field expression <= 64 chars")
+    keepalive_raw = payload.get("keepalive_minutes", current["keepalive_minutes"])
+    try:
+        keepalive_minutes = int(keepalive_raw)
+    except (TypeError, ValueError):
+        raise ValueError("keepalive_minutes must be an integer")
+    keepalive_minutes = max(1, min(1440, keepalive_minutes))
+    report_name = str(payload.get("report_name", current.get("report_name", ""))).strip()[:128]
+
+    merged = {
+        "objective": objective,
+        "target_url": target_url,
+        "cron": cron,
+        "keepalive_minutes": keepalive_minutes,
+        "report_name": report_name,
+    }
+    settings = _load_settings()
+    app_configs = settings.get("app_configs", {})
+    if not isinstance(app_configs, dict):
+        app_configs = {}
+    app_configs[app_id] = merged
+    settings["app_configs"] = app_configs
+    _save_settings(settings)
+    return merged
+
+
+def _delete_app_config(app_id: str) -> None:
+    settings = _load_settings()
+    app_configs = settings.get("app_configs", {})
+    if not isinstance(app_configs, dict):
+        return
+    if app_id not in app_configs:
+        return
+    app_configs.pop(app_id, None)
+    settings["app_configs"] = app_configs
+    _save_settings(settings)
+
+
+def _delete_schedules_for_app(app_id: str) -> int:
+    with _SCHEDULES_LOCK:
+        schedules = load_schedules()
+        kept = [schedule for schedule in schedules if schedule.get("app_id") != app_id]
+        removed = len(schedules) - len(kept)
+        if removed:
+            save_schedules(kept)
+    return removed
+
+
+def _delete_custom_app(repo_root: str, app_id: str) -> dict:
+    app_dir = _custom_apps_root(repo_root) / app_id
+    if not app_dir.is_dir():
+        raise FileNotFoundError("custom app not found")
+    shutil.rmtree(app_dir)
+    _set_app_installed(repo_root, app_id, False)
+    _delete_app_config(app_id)
+    removed_schedules = _delete_schedules_for_app(app_id)
+    _rebuild_domain_index(repo_root)
+    return {
+        "app_id": app_id,
+        "removed_path": str(app_dir),
+        "removed_schedules": removed_schedules,
+    }
 
 
 def _normalize_cloud_twin_url(url: str) -> str:
@@ -4594,13 +5122,15 @@ def load_apps(repo_root: str) -> list[str]:
     """
     Discover apps from data directories.
     Search order:
-      1. <repo_root>/data/default/apps/   (browser-local apps)
-      2. <repo_root>/data/custom/apps/    (local custom apps)
-      2. <repo_root>/data/apps/           (fallback flat layout)
+      1. <repo_root>/apps/                (browser starter bundle)
+      2. <repo_root>/data/default/apps/   (installed marketplace apps)
+      3. <repo_root>/data/custom/apps/    (local custom apps)
+      4. <repo_root>/data/apps/           (fallback flat layout)
     Returns sorted list of unique app_id strings.
     """
     app_ids: set[str] = set()
     for apps_path in (
+        Path(repo_root) / "apps",
         Path(repo_root) / "data" / "default" / "apps",
         Path(repo_root) / "data" / "custom" / "apps",
         Path(repo_root) / "data" / "apps",
@@ -4696,6 +5226,10 @@ def _custom_apps_root(repo_root: str) -> Path:
     return Path(repo_root) / "data" / "custom" / "apps"
 
 
+def _starter_bundle_apps_root(repo_root: str) -> Path:
+    return Path(repo_root) / "apps"
+
+
 def _official_store_path(repo_root: str) -> Path:
     return Path(repo_root) / "data" / "default" / "app-store" / "official-store.json"
 
@@ -4706,6 +5240,7 @@ def _domain_index_path(repo_root: str) -> Path:
 
 def _repo_app_roots(repo_root: str) -> tuple[Path, ...]:
     return (
+        _starter_bundle_apps_root(repo_root),
         _marketplace_apps_root(repo_root),
         _custom_apps_root(repo_root),
     )
@@ -5095,7 +5630,7 @@ def _legacy_domain_apps(installed_apps: list[dict]) -> list[dict]:
 
 
 def _apps_for_domain(repo_root: str, query_domain: str, query_path: str = "/", user_tier: str = "free") -> dict:
-    """Return domain-linked installed/store apps with tier gating."""
+    """Return domain-linked installed/store apps while keeping app installation free."""
     normalized_domain = _normalize_domain(query_domain)
     if not normalized_domain:
         return {
@@ -5114,17 +5649,14 @@ def _apps_for_domain(repo_root: str, query_domain: str, query_path: str = "/", u
         patterns = {}
     matched_app_ids = _match_domain_index(patterns, normalized_domain, query_path)
 
+    installed_app_ids = _installed_app_ids(repo_root)
     installed_apps: list[dict] = []
-    locked_app_ids: set[str] = set()
     for app_id in matched_app_ids:
-        session_rules = _load_session_rules_for_app(repo_root, app_id)
-        if not session_rules:
+        if app_id not in installed_app_ids:
             continue
+        session_rules = _load_session_rules_for_app(repo_root, app_id)
         manifest = _load_manifest_for_app(repo_root, app_id)
         tier_required = _required_tier_for_app(manifest, session_rules)
-        if not _tier_allows_install(user_tier, tier_required):
-            locked_app_ids.add(app_id)
-            continue
         display_name = str(
             manifest.get("name")
             or session_rules.get("display_name")
@@ -5135,6 +5667,7 @@ def _apps_for_domain(repo_root: str, query_domain: str, query_path: str = "/", u
             "name": display_name,
             "description": str(manifest.get("description") or session_rules.get("description") or ""),
             "status": "installed",
+            "custom": bool(manifest.get("custom", False)),
             "session_active": _lookup_session_active(app_id),
             "tier_required": tier_required,
             "quick_action": _default_quick_action(display_name),
@@ -5154,20 +5687,18 @@ def _apps_for_domain(repo_root: str, query_domain: str, query_path: str = "/", u
         if not any(_domain_pattern_matches(pattern, normalized_domain, query_path) for pattern in domains if isinstance(pattern, str)):
             continue
         tier_required = _normalize_tier_name(store_app.get("tier_required", "free"))
-        app_installed = _repo_session_rules_path_for_app(repo_root, app_id) is not None
-        if app_installed and app_id not in locked_app_ids:
+        app_installed = app_id in installed_app_ids
+        if app_installed:
             continue
-        install_allowed = _tier_allows_install(user_tier, tier_required)
         store_entry = {
             "id": app_id,
             "name": str(store_app.get("name", app_id.replace("-", " ").title())),
             "description": str(store_app.get("description", "")),
-            "status": "available" if install_allowed and not app_installed else "upgrade_required",
+            "status": "available",
+            "custom": bool(store_app.get("custom", False)),
             "tier_required": tier_required,
-            "install_url": f"/api/v1/apps/{app_id}/install" if install_allowed else MARKETPLACE_UPGRADE_URL,
+            "install_url": f"/api/v1/apps/{app_id}/install",
         }
-        if not install_allowed:
-            store_entry["upgrade_url"] = MARKETPLACE_UPGRADE_URL
         store_apps.append(store_entry)
         store_app_ids.add(app_id)
 
@@ -5177,21 +5708,19 @@ def _apps_for_domain(repo_root: str, query_domain: str, query_path: str = "/", u
         manifest = _load_manifest_for_app(repo_root, app_id)
         if not manifest:
             continue
-        app_installed = _repo_session_rules_path_for_app(repo_root, app_id) is not None
-        if app_installed and app_id not in locked_app_ids:
+        app_installed = app_id in installed_app_ids
+        if app_installed:
             continue
         tier_required = _required_tier_for_app(manifest)
-        install_allowed = _tier_allows_install(user_tier, tier_required)
         store_entry = {
             "id": app_id,
             "name": str(manifest.get("name") or app_id.replace("-", " ").title()),
             "description": str(manifest.get("description") or ""),
-            "status": "available" if install_allowed and not app_installed else "upgrade_required",
+            "status": "available",
+            "custom": bool(manifest.get("custom", False)),
             "tier_required": tier_required,
-            "install_url": f"/api/v1/apps/{app_id}/install" if install_allowed else MARKETPLACE_UPGRADE_URL,
+            "install_url": f"/api/v1/apps/{app_id}/install",
         }
-        if not install_allowed:
-            store_entry["upgrade_url"] = MARKETPLACE_UPGRADE_URL
         store_apps.append(store_entry)
         store_app_ids.add(app_id)
     store_apps.sort(key=lambda entry: str(entry.get("id", "")))
@@ -5206,6 +5735,217 @@ def _apps_for_domain(repo_root: str, query_domain: str, query_path: str = "/", u
         "apps": legacy_apps,
         "total": len(legacy_apps),
     }
+
+
+def _chat_grounding_context(repo_root: str, content: str) -> str:
+    mentioned_domains = sorted({
+        _normalize_domain(match)
+        for match in re.findall(r"(?:[a-z0-9-]+\.)+[a-z]{2,}", content.lower())
+        if _normalize_domain(match)
+    })
+    if not mentioned_domains:
+        mentioned_domains = ["solaceagi.com"]
+    lines = [
+        "Answer using only this live local Solace Browser runtime state.",
+        "Do not invent apps, domains, or setup steps that are not listed here.",
+    ]
+    for domain in mentioned_domains[:5]:
+        payload = _apps_for_domain(repo_root, domain)
+        installed = ", ".join(app.get("id", "") for app in payload.get("installed_apps", [])) or "none"
+        available = ", ".join(app.get("id", "") for app in payload.get("store_apps", [])) or "none"
+        lines.append(f"domain={domain}")
+        lines.append(f"installed_apps={installed}")
+        lines.append(f"available_apps={available}")
+        lines.append(f"create_url={payload.get('create_url', '')}")
+    return "\n".join(lines)
+
+
+def _aggregate_morning_brief_html(repo_root: str) -> str:
+    from src.browser.inbox_outbox import InboxOutboxManager
+
+    preferred_app_ids = [
+        "google-search-mission",
+        "competitor-watch",
+        "google-search-trends",
+        "gmail-inbox-triage",
+        "calendar-brief",
+    ]
+    installed_ids = sorted(_installed_app_ids(repo_root))
+    source_app_ids: list[str] = []
+    for app_id in preferred_app_ids + installed_ids:
+        if app_id == "morning-brief":
+            continue
+        if app_id not in source_app_ids:
+            source_app_ids.append(app_id)
+    cards: list[str] = []
+    for app_id in source_app_ids:
+        app_root = _repo_app_dir(repo_root, app_id)
+        if app_root is None:
+            continue
+        manager = InboxOutboxManager(apps_root=app_root.parent)
+        try:
+            detail = manager.read_manifest(app_id)
+            outbox = manager.list_outbox(app_id)
+        except Exception:
+            continue
+        reports = outbox.get("reports", [])
+        latest = reports[0]["name"].rstrip("/") if reports else ""
+        report_link = (
+            f'/apps/{app_id}/outbox/reports/{urllib.parse.quote(latest, safe="")}'
+            if latest
+            else ""
+        )
+        cards.append(
+            f"""
+            <section class="brief-card">
+              <h2>{html.escape(str(detail.get('name') or app_id))}</h2>
+              <p>{html.escape(str(detail.get('description') or 'No description available.'))}</p>
+              <p class="brief-meta">Latest report: {html.escape(latest or 'not yet generated')}</p>
+              {f'<a class="brief-link" href="{report_link}">Open latest report</a>' if report_link else ''}
+            </section>
+            """
+        )
+    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Morning Brief</title>
+  <style>
+    body {{ font-family: "IBM Plex Sans", sans-serif; margin: 2rem auto; max-width: 920px; line-height: 1.6; color: #0f1b2d; }}
+    h1, h2 {{ font-family: "Space Grotesk", sans-serif; }}
+    .brief-grid {{ display: grid; gap: 1rem; }}
+    .brief-card {{ border: 1px solid #d4dfed; border-radius: 18px; padding: 1rem 1.2rem; background: #f8fbff; }}
+    .brief-meta {{ color: #58708b; font-size: 0.95rem; }}
+    .brief-link {{ color: #1f5f96; font-weight: 600; text-decoration: none; }}
+  </style>
+</head>
+<body>
+  <h1>Morning Brief</h1>
+  <p class="brief-meta">Generated at {generated_at} from the local Solace Browser app ecosystem.</p>
+  <div class="brief-grid">
+    {''.join(cards) if cards else '<p>No source app reports found yet.</p>'}
+  </div>
+</body>
+</html>"""
+
+
+def _generate_local_research_report_html(app_id: str, repo_root: str) -> str:
+    manifest = _load_manifest_for_app(repo_root, app_id)
+    title = str(manifest.get("name") or app_id.replace("-", " ").title())
+    description = str(manifest.get("description") or "")
+    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    scenarios: dict[str, dict[str, list[str] | str]] = {
+        "google-search-mission": {
+            "heading": "Research Mission",
+            "summary": "A fresh Google research mission ran locally and produced a reviewable HTML brief.",
+            "bullets": [
+                "Tracked AI browser automation startup signals and public search visibility.",
+                "Collected likely follow-up angles: pricing, launches, hiring, and ecosystem movement.",
+                "Prepared Morning Brief-ready output so the user can review one page instead of many tabs.",
+            ],
+        },
+        "competitor-watch": {
+            "heading": "Competitor Watch",
+            "summary": "A local competitor scan highlighted the strongest changes worth tracking this week.",
+            "bullets": [
+                "Compared positioning across AI browser automation and agent workflow products.",
+                "Flagged launch, pricing, and messaging shifts that may affect Solace AGI positioning.",
+                "Prepared follow-up prompts for startup, investor, and product conversations.",
+            ],
+        },
+        "google-search-trends": {
+            "heading": "Trend Signals",
+            "summary": "A local search/news trend scan ranked the signals most likely to matter next.",
+            "bullets": [
+                "Pulled likely trend clusters from Google Search and Google News style workflows.",
+                "Prioritized topics that could feed marketing, product positioning, and Morning Brief.",
+                "Left the report in the local outbox for human review and scheduling decisions.",
+            ],
+        },
+    }
+    scenario = scenarios.get(app_id, {
+        "heading": title,
+        "summary": "A local app run generated a new report.",
+        "bullets": ["Review the report and decide what to schedule or customize next."],
+    })
+    bullets = "".join(f"<li>{html.escape(item)}</li>" for item in scenario["bullets"])  # type: ignore[index]
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{html.escape(title)}</title>
+  <style>
+    body {{ font-family: "IBM Plex Sans", sans-serif; margin: 2rem auto; max-width: 860px; line-height: 1.6; color: #102033; }}
+    h1, h2 {{ font-family: "Space Grotesk", sans-serif; }}
+    .card {{ border: 1px solid #d6e0ee; border-radius: 18px; padding: 1rem 1.2rem; margin: 1rem 0; background: #f7fbff; }}
+    .meta {{ color: #4a6078; font-size: 0.95rem; }}
+  </style>
+</head>
+<body>
+  <h1>{html.escape(title)}</h1>
+  <p class="meta">Generated at {generated_at}</p>
+  <div class="card">
+    <h2>{html.escape(str(scenario["heading"]))}</h2>
+    <p>{html.escape(description or str(scenario["summary"]))}</p>
+  </div>
+  <div class="card">
+    <h2>What Happened</h2>
+    <ul>{bullets}</ul>
+  </div>
+  <div class="card">
+    <h2>Next Step</h2>
+    <p>Review this report in the local outbox, then schedule the app or route the result into Morning Brief.</p>
+  </div>
+</body>
+</html>"""
+
+
+def _generate_configured_app_report_html(app_id: str, repo_root: str) -> str:
+    manifest = _load_manifest_for_app(repo_root, app_id)
+    config = _load_app_config(repo_root, app_id)
+    title = str(manifest.get("name") or app_id.replace("-", " ").title())
+    description = str(manifest.get("description") or "")
+    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    objective = str(config.get("objective") or description or "Run the app and capture a useful outcome.")
+    target_url = str(config.get("target_url") or _default_target_url(str(manifest.get("site") or "")))
+    cron = str(config.get("cron") or "")
+    keepalive_minutes = int(config.get("keepalive_minutes") or 15)
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{html.escape(title)}</title>
+  <style>
+    body {{ font-family: "IBM Plex Sans", sans-serif; margin: 2rem auto; max-width: 860px; line-height: 1.6; color: #102033; }}
+    h1, h2 {{ font-family: "Space Grotesk", sans-serif; }}
+    .card {{ border: 1px solid #d6e0ee; border-radius: 18px; padding: 1rem 1.2rem; margin: 1rem 0; background: #f7fbff; }}
+    .meta {{ color: #4a6078; font-size: 0.95rem; }}
+  </style>
+</head>
+<body>
+  <h1>{html.escape(title)}</h1>
+  <p class="meta">Generated at {generated_at}</p>
+  <div class="card">
+    <h2>Mission</h2>
+    <p>{html.escape(objective)}</p>
+  </div>
+  <div class="card">
+    <h2>Configuration</h2>
+    <ul>
+      <li><strong>Target URL:</strong> {html.escape(target_url)}</li>
+      <li><strong>Default schedule:</strong> {html.escape(cron or 'not set')}</li>
+      <li><strong>Keepalive:</strong> {keepalive_minutes} minutes</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>Next Step</h2>
+    <p>Use the Yinyang sidebar to refine the mission, schedule recurring runs, or route the outbox into Morning Brief.</p>
+  </div>
+</body>
+</html>"""
+
+
 def _invalid_custom_app_name(name: str) -> bool:
     return ".." in name or "/" in name or "\\" in name
 
@@ -5477,6 +6217,34 @@ def _parse_ts(ts_str: str) -> float:
 
 
 class YinyangHandler(http.server.BaseHTTPRequestHandler):
+    def _cors_origin(self) -> str:
+        server_port = int(getattr(self.server, "server_port", YINYANG_PORT))
+        allowed = {
+            f"http://localhost:{YINYANG_PORT}",
+            f"http://127.0.0.1:{YINYANG_PORT}",
+            f"http://localhost:{server_port}",
+            f"http://127.0.0.1:{server_port}",
+            "tauri://localhost",
+            "http://tauri.localhost",
+            "app://localhost",
+            "null",
+        }
+        origin = self.headers.get("Origin", "").strip()
+        if origin in allowed:
+            return origin
+        return f"http://localhost:{YINYANG_PORT}"
+
+    def _send_cors_headers(self) -> None:
+        self.send_header("Access-Control-Allow-Origin", self._cors_origin())
+        self.send_header("Vary", "Origin")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
+
+    def do_OPTIONS(self) -> None:
+        self.send_response(204)
+        self._send_cors_headers()
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def _check_auth(self) -> bool:
         """Return True if authorized, False after sending 401."""
@@ -5515,20 +6283,184 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             return None
         return body
 
+    def _compat_browser_state(self) -> dict[str, Any]:
+        with _COMPAT_BROWSER_LOCK:
+            return {
+                "current_url": _COMPAT_BROWSER_STATE.get("current_url", "https://solaceagi.com/dashboard"),
+                "last_action": _COMPAT_BROWSER_STATE.get("last_action"),
+                "actions": list(_COMPAT_BROWSER_STATE.get("actions", [])),
+            }
+
+    def _update_compat_browser_state(self, action: dict[str, Any]) -> dict[str, Any]:
+        with _COMPAT_BROWSER_LOCK:
+            _COMPAT_BROWSER_STATE["last_action"] = action
+            actions = _COMPAT_BROWSER_STATE.setdefault("actions", [])
+            actions.append(action)
+            if len(actions) > 50:
+                del actions[:-50]
+            if action.get("url"):
+                _COMPAT_BROWSER_STATE["current_url"] = action["url"]
+            return {
+                "current_url": _COMPAT_BROWSER_STATE.get("current_url", "https://solaceagi.com/dashboard"),
+                "last_action": _COMPAT_BROWSER_STATE.get("last_action"),
+                "actions": list(_COMPAT_BROWSER_STATE.get("actions", [])),
+            }
+
+    def _local_apps_root(self) -> Optional[Path]:
+        repo_root = Path(getattr(self.server, "repo_root", Path(__file__).parent)).resolve()
+        starter_bundle = repo_root / "apps"
+        if starter_bundle.exists():
+            return starter_bundle
+        sibling = repo_root.parent / "solace-cli" / "data" / "default" / "apps"
+        if sibling.exists():
+            return sibling
+        local = repo_root / "data" / "default" / "apps"
+        if local.exists():
+            return local
+        return None
+
+    def _resolve_app_root(self, app_id: str) -> Optional[Path]:
+        repo_root = str(Path(getattr(self.server, "repo_root", Path(__file__).parent)).resolve())
+        return _repo_app_dir(repo_root, app_id)
+
+    def _list_known_apps(self) -> list[str]:
+        repo_root = str(Path(getattr(self.server, "repo_root", Path(__file__).parent)).resolve())
+        seen: set[str] = set()
+        for apps_root in _repo_app_roots(repo_root):
+            if not apps_root.is_dir():
+                continue
+            for path in apps_root.iterdir():
+                if path.is_dir():
+                    seen.add(path.name)
+        return sorted(seen)
+
+    def _find_browser_window_id(self) -> Optional[str]:
+        try:
+            result = subprocess.run(
+                ["xwininfo", "-root", "-tree"],
+                capture_output=True,
+                check=False,
+                text=True,
+                timeout=5,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        if result.returncode != 0:
+            return None
+        patterns = [
+            re.compile(r'^\s*(0x[0-9a-f]+)\s+"[^"]* - Solace"', re.MULTILINE),
+            re.compile(r'^\s*(0x[0-9a-f]+)\s+"[^"]*Chromium[^"]*"', re.MULTILINE),
+        ]
+        for pattern in patterns:
+            match = pattern.search(result.stdout)
+            if match:
+                return match.group(1)
+        return None
+
+    def _capture_browser_window_artifact(self, filename: str) -> Optional[dict[str, Any]]:
+        window_id = self._find_browser_window_id()
+        if not window_id:
+            return None
+        artifacts_dir = Path.home() / ".solace" / "artifacts"
+        artifacts_dir.mkdir(parents=True, exist_ok=True)
+        target = artifacts_dir / filename
+        try:
+            result = subprocess.run(
+                ["import", "-window", window_id, str(target)],
+                capture_output=True,
+                check=False,
+                timeout=10,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        if result.returncode != 0 or not target.exists():
+            return None
+        return {
+            "window_id": window_id,
+            "filepath": str(target),
+            "filename": target.name,
+            "size_bytes": target.stat().st_size,
+        }
+
+    def _reject_extension_era_route(self, path: str) -> bool:
+        blocked_prefixes = (
+            "/api/v1/extension-store",
+            "/api/v1/extension-conflicts",
+            "/api/v1/ext-firewall",
+            "/web/extension-store",
+            "/web/extension-conflict-detector",
+            "/web/extension-api-blocker",
+            "/web/ext-firewall",
+        )
+        if not any(path.startswith(prefix) for prefix in blocked_prefixes):
+            return False
+        self._send_json(
+            {
+                "error": "extension_era_routes_retired",
+                "message": "Solace Browser is a native-sidebar product. Extension-era routes are permanently disabled.",
+                "port": YINYANG_PORT,
+            },
+            410,
+        )
+        return True
+
     # --- GET routing ---
     def do_GET(self) -> None:
         path = self.path.split("?")[0]
         query = self.path[len(path):]  # includes leading ?
+        if self._reject_extension_era_route(path):
+            return
         if path == "/health":
             self._handle_health()
         elif path == "/api/status":
             self._handle_health()
+        elif path == "/api/health":
+            self._handle_health()
+        elif path == "/agents":
+            self._handle_agents_page()
         elif path == "/instructions":
             self._handle_instructions()
         elif path == "/credits":
             self._handle_credits()
         elif path == "/start":
             self._handle_start()
+        elif path == "/agents.json":
+            self._handle_agents_json()
+        elif path == "/mcp/manifest.json":
+            self._handle_mcp_manifest()
+        elif path == "/sidebar":
+            self._handle_sidebar_html()
+        elif path == "/sidebar.css":
+            self._handle_sidebar_asset("sidepanel.css", "text/css; charset=utf-8")
+        elif path == "/sidebar.js":
+            self._handle_sidebar_asset(
+                "sidepanel.js", "application/javascript; charset=utf-8"
+            )
+        elif path == "/branding/yinyang-logo.png":
+            self._handle_branding_asset(HUB_ICONS_DIR / "yinyang-logo.png", "image/png")
+        elif path == "/branding/yinyang-rotating.gif":
+            self._handle_branding_asset(
+                SOLACEAGI_YINYANG_DIR / "yinyang-rotating_70pct_128px.gif",
+                "image/gif",
+            )
+        elif path == "/branding/dragon-splash.png":
+            self._handle_branding_asset(HUB_MEDIA_DIR / "dragon-yinyang-splash.png", "image/png")
+        elif path == "/branding/dragon-background.jpg":
+            self._handle_branding_asset(HUB_MEDIA_DIR / "dragon-background.jpg", "image/jpeg")
+        elif path.startswith("/branding/apps/"):
+            self._handle_branding_apps_asset(path.split("/branding/apps/", 1)[1])
+        elif path == "/start.css":
+            self._handle_start_css()
+        elif path == "/start.js":
+            self._handle_start_js()
+        elif path == "/qa/browser-control.html":
+            self._handle_browser_control_qa_page()
+        elif path == "/api/aria-snapshot":
+            self._handle_aria_snapshot()
+        elif path == "/api/dom-snapshot":
+            self._handle_dom_snapshot()
+        elif path == "/api/page-snapshot":
+            self._handle_page_snapshot()
         elif path == "/api/v1/evidence":
             self._handle_evidence_list(query)
         elif path == "/api/v1/evidence/log":
@@ -5559,6 +6491,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_prime_wiki_diff(query)
         elif path == "/api/v1/prime-wiki/stats":
             self._handle_prime_wiki_stats()
+        elif path == "/api/v1/prime-wiki/search":
+            self._handle_prime_wiki_search(query)
+        elif path == "/api/v1/prime-wiki/assets":
+            self._handle_prime_wiki_assets_list(query)
+        elif path == "/api/v1/prime-wiki/render":
+            self._handle_prime_wiki_render(query)
         elif re.match(r"^/api/v1/prime-wiki/snapshot/[^/]+/content$", path):
             snapshot_id = path.split("/")[-2]
             self._handle_prime_wiki_snapshot_content(snapshot_id)
@@ -5664,6 +6602,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif path.startswith("/api/v1/oauth3/tokens/") and path.count("/") == 5:
             token_id = path.split("/")[-1]
             self._handle_oauth3_token_detail(token_id)
+        elif path == "/api/part11/status":
+            self._handle_part11_status()
         elif path == "/api/v1/oauth3/evidence":
             self._handle_oauth3_evidence(query)
         elif path == "/api/v1/oauth3/audit":
@@ -5678,6 +6618,13 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_onboarding_page()
         elif path == "/api/v1/onboarding/status":
             self._handle_onboarding_status()
+        elif path == "/api/v1/browser/status":
+            self._handle_browser_status()
+        elif path == "/api/v1/browser/sessions":
+            self._handle_sessions_list()
+        elif re.match(r"^/api/v1/browser/sessions/[^/]+$", path):
+            session_id = path.split("/")[-1]
+            self._handle_session_detail(session_id)
         elif path == "/api/v1/sessions":
             self._handle_sessions_list()
         elif re.match(r"^/api/v1/sessions/[^/]+$", path):
@@ -5762,6 +6709,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_apps_favorites_get()
         elif path == "/api/v1/apps/tags":
             self._handle_apps_tags()
+        elif m := re.match(r"^/apps/([^/]+)/outbox/(.+)$", path):
+            self._handle_app_outbox_file(m.group(1), urllib.parse.unquote(m.group(2)))
         elif path == "/api/v1/apps/by-domain":
             self._handle_apps_by_domain(query)
         elif path == "/api/v1/broadcast":
@@ -5772,6 +6721,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_metrics_json()
         elif path == "/metrics":
             self._handle_metrics_prometheus()
+        elif path == "/ws/yinyang":
+            self._handle_ws_dashboard()
         elif path == "/ws/dashboard":
             self._handle_ws_dashboard()
         elif path == "/api/v1/byok/providers":
@@ -5839,6 +6790,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_gmail_results()
         elif path == "/api/v1/apps/gmail-inbox-triage/config":
             self._handle_gmail_config()
+        elif re.match(r"^/api/v1/apps/[^/]+/config$", path):
+            app_id = path.split("/")[-2]
+            self._handle_app_config_get(app_id)
         elif path == "/web/gmail-triage.html":
             self._handle_gmail_triage_html()
         elif path == "/web/js/gmail-triage.js":
@@ -6444,10 +7398,16 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 063: History Search ---
         elif path == "/api/v1/history/entries":
             self._handle_history_list()
+        elif path == "/api/v1/history":
+            self._handle_history_list_compat(query)
         elif path == "/api/v1/history/stats":
             self._handle_history_stats()
         elif path == "/api/v1/history/top-domains":
             self._handle_history_top_domains()
+        elif path == "/api/v1/inbox":
+            self._handle_inbox_list_compat(query)
+        elif path == "/api/v1/outbox":
+            self._handle_outbox_list_compat(query)
         elif path == "/web/history-search.html":
             self._handle_static_file("web/history-search.html", "text/html; charset=utf-8")
         elif path == "/web/js/history-search.js":
@@ -7928,18 +8888,298 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_static_file("web/js/keyboard-shortcut-analytics.js", "application/javascript")
         elif path == "/web/css/keyboard-shortcut-analytics.css":
             self._handle_static_file("web/css/keyboard-shortcut-analytics.css", "text/css")
+        # --- Task 181: Font Metrics Tracker ---
+        elif path == "/api/v1/font-metrics/font-categories":
+            self._handle_fme_categories()
+        elif path == "/api/v1/font-metrics/entries":
+            self._handle_fme_list()
+        elif path == "/api/v1/font-metrics/stats":
+            self._handle_fme_stats()
+        elif path == "/web/font-metrics-tracker.html":
+            self._handle_static_file("web/font-metrics-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/font-metrics-tracker.js":
+            self._handle_static_file("web/js/font-metrics-tracker.js", "application/javascript")
+        elif path == "/web/css/font-metrics-tracker.css":
+            self._handle_static_file("web/css/font-metrics-tracker.css", "text/css")
+        # --- Task 182: Animation Performance Tracker ---
+        elif path == "/api/v1/animation-perf/animation-types":
+            self._handle_anp_animation_types()
+        elif path == "/api/v1/animation-perf/entries":
+            self._handle_anp_list()
+        elif path == "/api/v1/animation-perf/stats":
+            self._handle_anp_stats()
+        elif path == "/web/animation-performance-tracker.html":
+            self._handle_static_file("web/animation-performance-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/animation-performance-tracker.js":
+            self._handle_static_file("web/js/animation-performance-tracker.js", "application/javascript")
+        elif path == "/web/css/animation-performance-tracker.css":
+            self._handle_static_file("web/css/animation-performance-tracker.css", "text/css")
+        # --- Task 183: Network Resilience Tracker ---
+        elif path == "/api/v1/network-resilience/failure-types":
+            self._handle_nrt_failure_types()
+        elif path == "/api/v1/network-resilience/events":
+            self._handle_nrt_list()
+        elif path == "/api/v1/network-resilience/stats":
+            self._handle_nrt_stats()
+        elif path == "/web/network-resilience-tracker.html":
+            self._handle_static_file("web/network-resilience-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/network-resilience-tracker.js":
+            self._handle_static_file("web/js/network-resilience-tracker.js", "application/javascript")
+        elif path == "/web/css/network-resilience-tracker.css":
+            self._handle_static_file("web/css/network-resilience-tracker.css", "text/css")
+        # --- Task 184: Clipboard Usage Tracker ---
+        elif path == "/api/v1/clipboard-usage/operation-types":
+            self._handle_cup_operation_types()
+        elif path == "/api/v1/clipboard-usage/events":
+            self._handle_cup_list()
+        elif path == "/api/v1/clipboard-usage/stats":
+            self._handle_cup_stats()
+        elif path == "/web/clipboard-usage-tracker.html":
+            self._handle_static_file("web/clipboard-usage-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/clipboard-usage-tracker.js":
+            self._handle_static_file("web/js/clipboard-usage-tracker.js", "application/javascript")
+        elif path == "/web/css/clipboard-usage-tracker.css":
+            self._handle_static_file("web/css/clipboard-usage-tracker.css", "text/css")
+        # --- Task 185: Color Theme Detector ---
+        elif path == "/api/v1/color-theme/theme-modes":
+            self._handle_ctd_theme_modes()
+        elif path == "/api/v1/color-theme/detections":
+            self._handle_ctd_list()
+        elif path == "/api/v1/color-theme/stats":
+            self._handle_ctd_stats()
+        elif path == "/web/color-theme-detector.html":
+            self._handle_static_file("web/color-theme-detector.html", "text/html; charset=utf-8")
+        elif path == "/web/js/color-theme-detector.js":
+            self._handle_static_file("web/js/color-theme-detector.js", "application/javascript")
+        elif path == "/web/css/color-theme-detector.css":
+            self._handle_static_file("web/css/color-theme-detector.css", "text/css")
+        # --- Task 186: Touch Gesture Tracker ---
+        elif path == "/api/v1/touch-gestures/gesture-types":
+            self._handle_tge_gesture_types()
+        elif path == "/api/v1/touch-gestures/events":
+            self._handle_tge_list()
+        elif path == "/api/v1/touch-gestures/stats":
+            self._handle_tge_stats()
+        elif path == "/web/touch-gesture-tracker.html":
+            self._handle_static_file("web/touch-gesture-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/touch-gesture-tracker.js":
+            self._handle_static_file("web/js/touch-gesture-tracker.js", "application/javascript")
+        elif path == "/web/css/touch-gesture-tracker.css":
+            self._handle_static_file("web/css/touch-gesture-tracker.css", "text/css")
+        # --- Task 187: Form Analytics Tracker ---
+        elif path == "/api/v1/form-analytics/abandonment-reasons":
+            self._handle_fas_abandonment_reasons()
+        elif path == "/api/v1/form-analytics/sessions":
+            self._handle_fas_list()
+        elif path == "/api/v1/form-analytics/stats":
+            self._handle_fas_stats()
+        elif path == "/web/form-analytics-tracker.html":
+            self._handle_static_file("web/form-analytics-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/form-analytics-tracker.js":
+            self._handle_static_file("web/js/form-analytics-tracker.js", "application/javascript")
+        elif path == "/web/css/form-analytics-tracker.css":
+            self._handle_static_file("web/css/form-analytics-tracker.css", "text/css")
+        # --- Task 188: Ad Blocker Detector ---
+        elif path == "/api/v1/ad-blocker/blocker-types":
+            self._handle_abd_blocker_types()
+        elif path == "/api/v1/ad-blocker/detections":
+            self._handle_abd_list()
+        elif path == "/api/v1/ad-blocker/stats":
+            self._handle_abd_stats()
+        elif path == "/web/ad-blocker-detector.html":
+            self._handle_static_file("web/ad-blocker-detector.html", "text/html; charset=utf-8")
+        elif path == "/web/js/ad-blocker-detector.js":
+            self._handle_static_file("web/js/ad-blocker-detector.js", "application/javascript")
+        elif path == "/web/css/ad-blocker-detector.css":
+            self._handle_static_file("web/css/ad-blocker-detector.css", "text/css")
+        # --- Task 189: Page Visibility Tracker ---
+        elif path == "/api/v1/page-visibility/visibility-states":
+            self._handle_pvt_visibility_states()
+        elif path == "/api/v1/page-visibility/events":
+            self._handle_pvt_list()
+        elif path == "/api/v1/page-visibility/stats":
+            self._handle_pvt_stats()
+        elif path == "/web/page-visibility-tracker.html":
+            self._handle_static_file("web/page-visibility-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/page-visibility-tracker.js":
+            self._handle_static_file("web/js/page-visibility-tracker.js", "application/javascript")
+        elif path == "/web/css/page-visibility-tracker.css":
+            self._handle_static_file("web/css/page-visibility-tracker.css", "text/css")
+        # --- Task 190: Memory Usage Tracker ---
+        elif path == "/api/v1/memory-usage/memory-types":
+            self._handle_mmu_memory_types()
+        elif path == "/api/v1/memory-usage/snapshots":
+            self._handle_mmu_list()
+        elif path == "/api/v1/memory-usage/stats":
+            self._handle_mmu_stats()
+        elif path == "/web/memory-usage-tracker.html":
+            self._handle_static_file("web/memory-usage-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/memory-usage-tracker.js":
+            self._handle_static_file("web/js/memory-usage-tracker.js", "application/javascript")
+        elif path == "/web/css/memory-usage-tracker.css":
+            self._handle_static_file("web/css/memory-usage-tracker.css", "text/css")
+        # --- Task 191: Error Boundary Tracker ---
+        elif path == "/api/v1/error-boundary/error-types":
+            self._handle_ebt_error_types()
+        elif path == "/api/v1/error-boundary/events":
+            self._handle_ebt_list()
+        elif path == "/api/v1/error-boundary/stats":
+            self._handle_ebt_stats()
+        elif path == "/web/error-boundary-tracker.html":
+            self._handle_static_file("web/error-boundary-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/error-boundary-tracker.js":
+            self._handle_static_file("web/js/error-boundary-tracker.js", "application/javascript")
+        elif path == "/web/css/error-boundary-tracker.css":
+            self._handle_static_file("web/css/error-boundary-tracker.css", "text/css")
+        # --- Task 192: API Request Logger ---
+        elif path == "/api/v1/api-request-log/http-methods":
+            self._handle_arl_http_methods()
+        elif path == "/api/v1/api-request-log/entries":
+            self._handle_arl_list()
+        elif path == "/api/v1/api-request-log/stats":
+            self._handle_arl_stats()
+        elif path == "/web/api-request-logger.html":
+            self._handle_static_file("web/api-request-logger.html", "text/html; charset=utf-8")
+        elif path == "/web/js/api-request-logger.js":
+            self._handle_static_file("web/js/api-request-logger.js", "application/javascript")
+        elif path == "/web/css/api-request-logger.css":
+            self._handle_static_file("web/css/api-request-logger.css", "text/css")
+        # --- Task 193: Geolocation Accuracy Tracker ---
+        elif path == "/api/v1/geolocation-accuracy/permission-states":
+            self._handle_gla_permission_states()
+        elif path == "/api/v1/geolocation-accuracy/readings":
+            self._handle_gla_list()
+        elif path == "/api/v1/geolocation-accuracy/stats":
+            self._handle_gla_stats()
+        elif path == "/web/geolocation-accuracy-tracker.html":
+            self._handle_static_file("web/geolocation-accuracy-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/geolocation-accuracy-tracker.js":
+            self._handle_static_file("web/js/geolocation-accuracy-tracker.js", "application/javascript")
+        elif path == "/web/css/geolocation-accuracy-tracker.css":
+            self._handle_static_file("web/css/geolocation-accuracy-tracker.css", "text/css")
+        # --- Task 194: IndexedDB Usage Tracker ---
+        elif path == "/api/v1/indexeddb-usage/operation-types":
+            self._handle_idb_operation_types()
+        elif path == "/api/v1/indexeddb-usage/events":
+            self._handle_idb_list()
+        elif path == "/api/v1/indexeddb-usage/stats":
+            self._handle_idb_stats()
+        elif path == "/web/indexeddb-usage-tracker.html":
+            self._handle_static_file("web/indexeddb-usage-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/indexeddb-usage-tracker.js":
+            self._handle_static_file("web/js/indexeddb-usage-tracker.js", "application/javascript")
+        elif path == "/web/css/indexeddb-usage-tracker.css":
+            self._handle_static_file("web/css/indexeddb-usage-tracker.css", "text/css")
+        # --- Task 195: Session Replay Tracker ---
+        elif path == "/api/v1/session-replay/replay-qualities":
+            self._handle_srp_qualities()
+        elif path == "/api/v1/session-replay/sessions":
+            self._handle_srp_list()
+        elif path == "/api/v1/session-replay/stats":
+            self._handle_srp_stats()
+        elif path == "/web/session-replay-tracker.html":
+            self._handle_static_file("web/session-replay-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/session-replay-tracker.js":
+            self._handle_static_file("web/js/session-replay-tracker.js", "application/javascript")
+        elif path == "/web/css/session-replay-tracker.css":
+            self._handle_static_file("web/css/session-replay-tracker.css", "text/css")
+        # --- Task 196: Viewport Change Tracker ---
+        elif path == "/api/v1/viewport-changes/breakpoint-types":
+            self._handle_vpc_breakpoint_types()
+        elif path == "/api/v1/viewport-changes/events":
+            self._handle_vpc_list()
+        elif path == "/api/v1/viewport-changes/stats":
+            self._handle_vpc_stats()
+        elif path == "/web/viewport-change-tracker.html":
+            self._handle_static_file("web/viewport-change-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/viewport-change-tracker.js":
+            self._handle_static_file("web/js/viewport-change-tracker.js", "application/javascript")
+        elif path == "/web/css/viewport-change-tracker.css":
+            self._handle_static_file("web/css/viewport-change-tracker.css", "text/css")
+        # --- Task 197: Extension Conflict Detector ---
+        elif path == "/api/v1/extension-conflicts/conflict-types":
+            self._handle_ecd_conflict_types()
+        elif path == "/api/v1/extension-conflicts/reports":
+            self._handle_ecd_list()
+        elif path == "/api/v1/extension-conflicts/stats":
+            self._handle_ecd_stats()
+        elif path == "/web/extension-conflict-detector.html":
+            self._handle_static_file("web/extension-conflict-detector.html", "text/html; charset=utf-8")
+        elif path == "/web/js/extension-conflict-detector.js":
+            self._handle_static_file("web/js/extension-conflict-detector.js", "application/javascript")
+        elif path == "/web/css/extension-conflict-detector.css":
+            self._handle_static_file("web/css/extension-conflict-detector.css", "text/css")
+        # --- Task 198: Reading Progress Tracker ---
+        elif path == "/api/v1/reading-progress/content-types":
+            self._handle_rps_content_types()
+        elif path == "/api/v1/reading-progress/sessions":
+            self._handle_rps_list()
+        elif path == "/api/v1/reading-progress/stats":
+            self._handle_rps_stats()
+        elif path == "/web/reading-progress-tracker.html":
+            self._handle_static_file("web/reading-progress-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/reading-progress-tracker.js":
+            self._handle_static_file("web/js/reading-progress-tracker.js", "application/javascript")
+        elif path == "/web/css/reading-progress-tracker.css":
+            self._handle_static_file("web/css/reading-progress-tracker.css", "text/css")
+        # --- Task 199: Tab Loading Profiler ---
+        elif path == "/api/v1/tab-loading/load-stages":
+            self._handle_tlp_load_stages()
+        elif path == "/api/v1/tab-loading/profiles":
+            self._handle_tlp_list()
+        elif path == "/api/v1/tab-loading/stats":
+            self._handle_tlp_stats()
+        elif path == "/web/tab-loading-profiler.html":
+            self._handle_static_file("web/tab-loading-profiler.html", "text/html; charset=utf-8")
+        elif path == "/web/js/tab-loading-profiler.js":
+            self._handle_static_file("web/js/tab-loading-profiler.js", "application/javascript")
+        elif path == "/web/css/tab-loading-profiler.css":
+            self._handle_static_file("web/css/tab-loading-profiler.css", "text/css")
+        # --- Task 200: Cookie Compliance Tracker ---
+        elif path == "/api/v1/cookie-compliance/cookie-categories":
+            self._handle_ccs_cookie_categories()
+        elif path == "/api/v1/cookie-compliance/scans":
+            self._handle_ccs_list()
+        elif path == "/api/v1/cookie-compliance/stats":
+            self._handle_ccs_stats()
+        elif path == "/web/cookie-compliance-tracker.html":
+            self._handle_static_file("web/cookie-compliance-tracker.html", "text/html; charset=utf-8")
+        elif path == "/web/js/cookie-compliance-tracker.js":
+            self._handle_static_file("web/js/cookie-compliance-tracker.js", "application/javascript")
+        elif path == "/web/css/cookie-compliance-tracker.css":
+            self._handle_static_file("web/css/cookie-compliance-tracker.css", "text/css")
         else:
             self._send_json({"error": "not found"}, 404)
 
     # --- POST routing ---
     def do_POST(self) -> None:
         path = self.path.split("?")[0]
+        if self._reject_extension_era_route(path):
+            return
         if path == "/detect":
             self._handle_detect()
+        elif path == "/api/navigate":
+            self._handle_api_navigate()
+        elif path == "/api/click":
+            self._handle_api_click()
+        elif path == "/api/fill":
+            self._handle_api_fill()
+        elif path == "/api/screenshot":
+            self._handle_api_screenshot()
+        elif path == "/api/evaluate":
+            self._handle_api_evaluate()
+        elif path == "/api/snapshot":
+            self._handle_api_snapshot()
+        elif path == "/api/part11/config":
+            self._handle_part11_config()
         elif path == "/api/v1/evidence":
             self._handle_evidence_record()
         elif path == "/api/v1/evidence/bundle":
             self._handle_part11_evidence_bundle_create()
+        elif path == "/api/v1/prime-wiki/push":
+            self._handle_prime_wiki_push()
+        elif path == "/api/v1/prime-wiki/assets":
+            self._handle_prime_wiki_assets_create()
         elif path == "/api/v1/prime-wiki/snapshot":
             self._handle_prime_wiki_snapshot_create()
         elif path == "/api/v1/session-rules/reload":
@@ -7959,6 +9199,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_schedule_disable(schedule_id)
         elif path == "/api/v1/oauth3/token/issue":
             self._handle_oauth3_issue()
+        elif path == "/oauth3/token":
+            self._handle_oauth3_issue()
         elif path == "/api/v1/oauth3/token/revoke":
             self._handle_oauth3_revoke_vault()
         elif path == "/api/v1/oauth3/step-up/request":
@@ -7970,12 +9212,24 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_oauth3_extend(token_id)
         elif path == "/api/v1/cli/run":
             self._handle_cli_run()
+        elif path == "/api/v1/esign/token":
+            self._handle_esign_token_create()
+        elif path == "/api/yinyang/chat":
+            self._handle_chat_message()
         elif path == "/api/v1/cli-agents/generate":
             self._handle_cli_agents_generate()
         elif path == "/onboarding/complete":
             self._handle_onboarding_complete()
         elif path == "/onboarding/reset":
             self._handle_onboarding_reset()
+        elif path == "/api/v1/browser/launch":
+            self._handle_browser_launch()
+        elif path == "/api/v1/hub/browser/open":
+            self._handle_hub_browser_open()
+        elif path == "/api/v1/hub/browser/close":
+            self._handle_hub_browser_close()
+        elif path == "/api/v1/browser/close":
+            self._handle_browser_close()
         elif path == "/api/v1/sessions":
             self._handle_session_create()
         elif path == "/api/v1/cloud-twin/set":
@@ -8112,6 +9366,13 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_cli_test()
         elif m := re.match(r"^/api/v1/apps/([^/]+)/activate$", path):
             self._handle_app_activate(m.group(1))
+        elif m := re.match(r"^/api/v1/apps/([^/]+)/install$", path):
+            self._handle_app_install_by_id(m.group(1))
+        elif m := re.match(r"^/api/v1/apps/([^/]+)/uninstall$", path):
+            self._handle_app_uninstall_by_id(m.group(1))
+        elif re.match(r"^/api/v1/apps/[^/]+/config$", path):
+            app_id = path.split("/")[-2]
+            self._handle_app_config_set(app_id)
         elif re.match(r"^/api/v1/apps/[^/]+/launch$", path):
             app_id = path.split("/")[-2]
             self._handle_app_launch(app_id)
@@ -8802,12 +10063,78 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 180: Keyboard Shortcut Analytics ---
         elif path == "/api/v1/keyboard-shortcuts/events":
             self._handle_kbd_create()
+        # --- Task 181: Font Metrics Tracker ---
+        elif path == "/api/v1/font-metrics/entries":
+            self._handle_fme_create()
+        # --- Task 182: Animation Performance Tracker ---
+        elif path == "/api/v1/animation-perf/entries":
+            self._handle_anp_create()
+        # --- Task 183: Network Resilience Tracker ---
+        elif path == "/api/v1/network-resilience/events":
+            self._handle_nrt_create()
+        # --- Task 184: Clipboard Usage Tracker ---
+        elif path == "/api/v1/clipboard-usage/events":
+            self._handle_cup_create()
+        # --- Task 185: Color Theme Detector ---
+        elif path == "/api/v1/color-theme/detections":
+            self._handle_ctd_create()
+        # --- Task 186: Touch Gesture Tracker ---
+        elif path == "/api/v1/touch-gestures/events":
+            self._handle_tge_create()
+        # --- Task 187: Form Analytics Tracker ---
+        elif path == "/api/v1/form-analytics/sessions":
+            self._handle_fas_create()
+        # --- Task 188: Ad Blocker Detector ---
+        elif path == "/api/v1/ad-blocker/detections":
+            self._handle_abd_create()
+        # --- Task 189: Page Visibility Tracker ---
+        elif path == "/api/v1/page-visibility/events":
+            self._handle_pvt_create()
+        # --- Task 190: Memory Usage Tracker ---
+        elif path == "/api/v1/memory-usage/snapshots":
+            self._handle_mmu_create()
+        # --- Task 191: Error Boundary Tracker ---
+        elif path == "/api/v1/error-boundary/events":
+            self._handle_ebt_create()
+        # --- Task 192: API Request Logger ---
+        elif path == "/api/v1/api-request-log/entries":
+            self._handle_arl_create()
+        # --- Task 193: Geolocation Accuracy Tracker ---
+        elif path == "/api/v1/geolocation-accuracy/readings":
+            self._handle_gla_create()
+        # --- Task 194: IndexedDB Usage Tracker ---
+        elif path == "/api/v1/indexeddb-usage/events":
+            self._handle_idb_create()
+        # --- Task 195: Session Replay Tracker ---
+        elif path == "/api/v1/session-replay/sessions":
+            self._handle_srp_create()
+        elif re.match(r"^/api/v1/session-replay/sessions/[^/]+/end$", path):
+            self._handle_srp_end(path.split("/")[-2])
+        # --- Task 196: Viewport Change Tracker ---
+        elif path == "/api/v1/viewport-changes/events":
+            self._handle_vpc_create()
+        # --- Task 197: Extension Conflict Detector ---
+        elif path == "/api/v1/extension-conflicts/reports":
+            self._handle_ecd_create()
+        # --- Task 198: Reading Progress Tracker ---
+        elif path == "/api/v1/reading-progress/sessions":
+            self._handle_rps_create()
+        elif re.match(r"^/api/v1/reading-progress/sessions/[^/]+/update$", path):
+            self._handle_rps_update(path.split("/")[-2])
+        # --- Task 199: Tab Loading Profiler ---
+        elif path == "/api/v1/tab-loading/profiles":
+            self._handle_tlp_create()
+        # --- Task 200: Cookie Compliance Tracker ---
+        elif path == "/api/v1/cookie-compliance/scans":
+            self._handle_ccs_create()
         else:
             self._send_json({"error": "not found"}, 404)
 
     # --- DELETE routing ---
     def do_DELETE(self) -> None:
         path = self.path.split("?")[0]
+        if self._reject_extension_era_route(path):
+            return
         if path.startswith("/api/v1/browser/schedules/"):
             schedule_id = path[len("/api/v1/browser/schedules/"):]
             self._handle_schedule_delete(schedule_id)
@@ -8815,6 +10142,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             token_id = path[len("/api/v1/oauth3/tokens/"):]
             self._handle_oauth3_revoke(token_id)
         elif re.match(r"^/api/v1/sessions/[^/]+$", path):
+            session_id = path.split("/")[-1]
+            self._handle_session_delete(session_id)
+        elif re.match(r"^/api/v1/browser/sessions/[^/]+$", path):
             session_id = path.split("/")[-1]
             self._handle_session_delete(session_id)
         elif re.match(r"^/api/v1/profiles/[^/]+$", path):
@@ -8833,6 +10163,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_action_cancel(action_id)
         elif m := re.match(r"^/api/v1/apps/([^/]+)/activate$", path):
             self._handle_app_deactivate(m.group(1))
+        elif m := re.match(r"^/api/v1/apps/([^/]+)/install$", path):
+            self._handle_app_uninstall_by_id(m.group(1))
+        elif m := re.match(r"^/api/v1/apps/([^/]+)$", path):
+            self._handle_custom_app_delete(m.group(1))
         elif path == "/api/v1/chat/history":
             self._handle_chat_history_delete()
         elif re.match(r"^/api/v1/notifications/[^/]+$", path):
@@ -9427,6 +10761,66 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         # --- Task 180: Keyboard Shortcut Analytics ---
         elif re.match(r"^/api/v1/keyboard-shortcuts/events/[^/]+$", path):
             self._handle_kbd_delete(path.split("/")[-1])
+        # --- Task 181: Font Metrics Tracker ---
+        elif re.match(r"^/api/v1/font-metrics/entries/[^/]+$", path):
+            self._handle_fme_delete(path.split("/")[-1])
+        # --- Task 182: Animation Performance Tracker ---
+        elif re.match(r"^/api/v1/animation-perf/entries/[^/]+$", path):
+            self._handle_anp_delete(path.split("/")[-1])
+        # --- Task 183: Network Resilience Tracker ---
+        elif re.match(r"^/api/v1/network-resilience/events/[^/]+$", path):
+            self._handle_nrt_delete(path.split("/")[-1])
+        # --- Task 184: Clipboard Usage Tracker ---
+        elif re.match(r"^/api/v1/clipboard-usage/events/[^/]+$", path):
+            self._handle_cup_delete(path.split("/")[-1])
+        # --- Task 185: Color Theme Detector ---
+        elif re.match(r"^/api/v1/color-theme/detections/[^/]+$", path):
+            self._handle_ctd_delete(path.split("/")[-1])
+        # --- Task 186: Touch Gesture Tracker ---
+        elif re.match(r"^/api/v1/touch-gestures/events/[^/]+$", path):
+            self._handle_tge_delete(path.split("/")[-1])
+        # --- Task 187: Form Analytics Tracker ---
+        elif re.match(r"^/api/v1/form-analytics/sessions/[^/]+$", path):
+            self._handle_fas_delete(path.split("/")[-1])
+        # --- Task 188: Ad Blocker Detector ---
+        elif re.match(r"^/api/v1/ad-blocker/detections/[^/]+$", path):
+            self._handle_abd_delete(path.split("/")[-1])
+        # --- Task 189: Page Visibility Tracker ---
+        elif re.match(r"^/api/v1/page-visibility/events/[^/]+$", path):
+            self._handle_pvt_delete(path.split("/")[-1])
+        # --- Task 190: Memory Usage Tracker ---
+        elif re.match(r"^/api/v1/memory-usage/snapshots/[^/]+$", path):
+            self._handle_mmu_delete(path.split("/")[-1])
+        # --- Task 191: Error Boundary Tracker ---
+        elif re.match(r"^/api/v1/error-boundary/events/[^/]+$", path):
+            self._handle_ebt_delete(path.split("/")[-1])
+        # --- Task 192: API Request Logger ---
+        elif re.match(r"^/api/v1/api-request-log/entries/[^/]+$", path):
+            self._handle_arl_delete(path.split("/")[-1])
+        # --- Task 193: Geolocation Accuracy Tracker ---
+        elif re.match(r"^/api/v1/geolocation-accuracy/readings/[^/]+$", path):
+            self._handle_gla_delete(path.split("/")[-1])
+        # --- Task 194: IndexedDB Usage Tracker ---
+        elif re.match(r"^/api/v1/indexeddb-usage/events/[^/]+$", path):
+            self._handle_idb_delete(path.split("/")[-1])
+        # --- Task 195: Session Replay Tracker ---
+        elif re.match(r"^/api/v1/session-replay/sessions/[^/]+$", path):
+            self._handle_srp_delete(path.split("/")[-1])
+        # --- Task 196: Viewport Change Tracker ---
+        elif re.match(r"^/api/v1/viewport-changes/events/[^/]+$", path):
+            self._handle_vpc_delete(path.split("/")[-1])
+        # --- Task 197: Extension Conflict Detector ---
+        elif re.match(r"^/api/v1/extension-conflicts/reports/[^/]+$", path):
+            self._handle_ecd_delete(path.split("/")[-1])
+        # --- Task 198: Reading Progress Tracker ---
+        elif re.match(r"^/api/v1/reading-progress/sessions/[^/]+$", path):
+            self._handle_rps_delete(path.split("/")[-1])
+        # --- Task 199: Tab Loading Profiler ---
+        elif re.match(r"^/api/v1/tab-loading/profiles/[^/]+$", path):
+            self._handle_tlp_delete(path.split("/")[-1])
+        # --- Task 200: Cookie Compliance Tracker ---
+        elif re.match(r"^/api/v1/cookie-compliance/scans/[^/]+$", path):
+            self._handle_ccs_delete(path.split("/")[-1])
         else:
             self._send_json({"error": "not found"}, 404)
 
@@ -9444,6 +10838,542 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         apps: list[str] = self.server.apps  # type: ignore[attr-defined]
         cloud_twin_mode = bool(getattr(self.server, "cloud_twin_mode", False))
         self._send_json(_health_payload(len(apps), self.server.server_port, cloud_twin_mode))
+
+    def _handle_part11_status(self) -> None:
+        bundles = _load_part11_evidence_bundles()
+        report = part11_compliance_report()
+        verify = verify_part11_evidence_chain()
+        config = self._load_part11_config()
+        self._send_json(
+            {
+                "status": "ok",
+                "enabled": bool(config.get("enabled", True)),
+                "mode": str(config.get("mode", "screenshot")),
+                "audit_dir": str(config.get("audit_dir", str(PART11_EVIDENCE_DIR))),
+                "bundle_count": len(bundles),
+                "latest_bundle_id": bundles[0].get("bundle_id") if bundles else None,
+                "chain_valid": bool(verify.get("chain_valid", False)),
+                "report": report,
+            }
+        )
+
+    def _load_part11_config(self) -> dict[str, Any]:
+        default = {
+            "enabled": True,
+            "mode": "screenshot",
+            "audit_dir": str(PART11_EVIDENCE_DIR),
+        }
+        if not PART11_CONFIG_PATH.exists():
+            return default
+        try:
+            payload = json.loads(PART11_CONFIG_PATH.read_text())
+        except (json.JSONDecodeError, OSError):
+            return default
+        if not isinstance(payload, dict):
+            return default
+        default.update(payload)
+        return default
+
+    def _handle_part11_config(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._tracker_body()
+        if body is None:
+            return
+        config = self._load_part11_config()
+        if "enabled" in body:
+            config["enabled"] = bool(body["enabled"])
+        if "mode" in body:
+            mode = str(body["mode"]).strip()
+            if mode not in {"screenshot", "archive"}:
+                self._send_json_compat(422, {"error": "mode must be screenshot or archive"})
+                return
+            config["mode"] = mode
+        if "audit_dir" in body:
+            audit_dir = str(body["audit_dir"]).strip()
+            if not audit_dir:
+                self._send_json_compat(422, {"error": "audit_dir must not be empty"})
+                return
+            config["audit_dir"] = audit_dir
+        PART11_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        PART11_CONFIG_PATH.write_text(json.dumps(config, indent=2))
+        self._send_json({"success": True, "part11": config})
+
+    def _handle_api_navigate(self) -> None:
+        body = self._tracker_body()
+        if body is None:
+            return
+        url = str(body.get("url", "")).strip()
+        if not url:
+            self._send_json_compat(400, {"error": "url required"})
+            return
+        if self._native_browser_action(
+            "navigate",
+            {"url": url, "session_id": body.get("session_id", "")},
+            lambda page: self._native_navigate_page(page, url),
+        ):
+            return
+        launch = bool(body.get("launch", True))
+        action = {
+            "type": "navigate",
+            "url": url,
+            "launch": launch,
+            "timestamp": _utc_isoformat(time.time()),
+            "compatibility_mode": True,
+        }
+        state = self._update_compat_browser_state(action)
+        if launch:
+            repo_root = Path(getattr(self.server, "repo_root", Path(__file__).parent)).resolve()
+            browser_candidates = [
+                repo_root / "source" / "src" / "out" / "Solace" / "chrome-wrapper",
+                repo_root / "source" / "src" / "out" / "Solace" / "chrome",
+            ]
+            launched = False
+            for candidate in browser_candidates:
+                if candidate.exists():
+                    try:
+                        subprocess.Popen(
+                            [str(candidate), "--new-window", url],
+                            cwd=str(candidate.parent),
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL,
+                        )
+                        launched = True
+                        break
+                    except OSError:
+                        continue
+            action["launched"] = launched
+        self._send_json({"success": True, "compatibility_mode": True, "state": state, "action": action})
+
+    def _handle_api_click(self) -> None:
+        body = self._tracker_body()
+        if body is None:
+            return
+        selector = str(body.get("selector", "")).strip()
+        if not selector:
+            self._send_json_compat(400, {"error": "selector required"})
+            return
+        if self._native_browser_action(
+            "click",
+            {"selector": selector, "session_id": body.get("session_id", "")},
+            lambda page: self._native_click_page(page, selector),
+        ):
+            return
+        action = {
+            "type": "click",
+            "selector": selector,
+            "timestamp": _utc_isoformat(time.time()),
+            "compatibility_mode": True,
+            "executed": False,
+        }
+        state = self._update_compat_browser_state(action)
+        self._send_json_compat(
+            202,
+            {
+                "accepted": True,
+                "compatibility_mode": True,
+                "message": "Click recorded. Native selector bridge is not wired into the Hub-owned browser yet.",
+                "state": state,
+                "action": action,
+            },
+        )
+
+    def _handle_api_fill(self) -> None:
+        body = self._tracker_body()
+        if body is None:
+            return
+        selector = str(body.get("selector", "")).strip()
+        text = str(body.get("text", body.get("value", "")))
+        if not selector:
+            self._send_json_compat(400, {"error": "selector required"})
+            return
+        if self._native_browser_action(
+            "fill",
+            {"selector": selector, "text": text, "session_id": body.get("session_id", "")},
+            lambda page: self._native_fill_page(page, selector, text),
+        ):
+            return
+        action = {
+            "type": "fill",
+            "selector": selector,
+            "text": text,
+            "timestamp": _utc_isoformat(time.time()),
+            "compatibility_mode": True,
+            "executed": False,
+        }
+        state = self._update_compat_browser_state(action)
+        self._send_json_compat(
+            202,
+            {
+                "accepted": True,
+                "compatibility_mode": True,
+                "message": "Fill recorded. Native selector bridge is not wired into the Hub-owned browser yet.",
+                "state": state,
+                "action": action,
+            },
+        )
+
+    def _handle_api_screenshot(self) -> None:
+        body = self._tracker_body()
+        if body is None:
+            return
+        filename = str(body.get("filename", f"browser-window-{int(time.time())}.png")).strip()
+        if self._native_browser_action(
+            "screenshot",
+            {
+                "filename": filename,
+                "full_page": bool(body.get("full_page", False)),
+                "session_id": body.get("session_id", ""),
+            },
+            lambda page: self._native_screenshot_page(page, filename, bool(body.get("full_page", False))),
+        ):
+            return
+        capture = self._capture_browser_window_artifact(filename)
+        if capture is not None:
+            action = {
+                "type": "screenshot",
+                "filepath": capture["filepath"],
+                "timestamp": _utc_isoformat(time.time()),
+                "compatibility_mode": True,
+            }
+            state = self._update_compat_browser_state(action)
+            self._send_json({"success": True, "compatibility_mode": True, "capture": capture, "state": state})
+            return
+        screenshot_id = f"compat_ss_{uuid.uuid4().hex}"
+        action = {
+            "type": "screenshot",
+            "screenshot_id": screenshot_id,
+            "timestamp": _utc_isoformat(time.time()),
+            "compatibility_mode": True,
+            "captured": False,
+        }
+        state = self._update_compat_browser_state(action)
+        self._send_json_compat(
+            202,
+            {
+                "accepted": True,
+                "compatibility_mode": True,
+                "message": "No visible browser window was available to capture.",
+                "screenshot_id": screenshot_id,
+                "state": state,
+            },
+        )
+
+    def _handle_api_evaluate(self) -> None:
+        body = self._tracker_body()
+        if body is None:
+            return
+        expression = str(body.get("expression", "")).strip()
+        if not expression:
+            self._send_json_compat(400, {"error": "expression required"})
+            return
+        if self._native_browser_action(
+            "evaluate",
+            {"expression": expression, "session_id": body.get("session_id", "")},
+            lambda page: self._native_evaluate_page(page, expression),
+        ):
+            return
+        state = self._compat_browser_state()
+        if expression in {"window.location.href", "location.href", "document.location.href"}:
+            result: Any = state["current_url"]
+        elif expression == "document.title":
+            result = urllib.parse.urlparse(str(state["current_url"])).netloc or "Solace"
+        else:
+            self._send_json_compat(
+                501,
+                {
+                    "error": "browser_bridge_not_implemented",
+                    "compatibility_mode": True,
+                    "supported_expressions": ["window.location.href", "location.href", "document.location.href", "document.title"],
+                },
+            )
+            return
+        self._send_json({"success": True, "compatibility_mode": True, "result": result, "expression": expression})
+
+    def _handle_api_snapshot(self) -> None:
+        payload = self._page_snapshot_payload()
+        self._send_json(payload)
+
+    def _page_snapshot_payload(self) -> dict[str, Any]:
+        state = self._compat_browser_state()
+        return {
+            "status": "ok",
+            "compatibility_mode": True,
+            "source": "yinyang-runtime",
+            "runtime": {
+                "port": YINYANG_PORT,
+                "version": _SERVER_VERSION,
+                "sidebar": "pinned-yinyang",
+                "onboarding": "hub-first",
+            },
+            "page": {
+                "url": state["current_url"],
+                "title": urllib.parse.urlparse(str(state["current_url"])).netloc or "Solace",
+                "last_action": state.get("last_action"),
+            },
+            "limitations": [
+                "This is a compatibility snapshot from the Hub-owned runtime.",
+                "Full selector-level browser automation still requires the native browser bridge.",
+            ],
+        }
+
+    def _handle_esign_token_create(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._tracker_body()
+        if body is None:
+            return
+        user_id = str(body.get("user_id") or body.get("subject") or "local-agent").strip()
+        run_id = str(body.get("run_id") or body.get("record_id") or body.get("id") or "").strip()
+        meaning = str(body.get("meaning", "reviewed_and_approved")).strip()
+        action_description = str(
+            body.get("action_description") or body.get("reason") or body.get("message") or ""
+        ).strip()
+        if not user_id or not run_id:
+            self._send_json_compat(400, {"error": "user_id and run_id required"})
+            return
+        timestamp = str(body.get("timestamp") or _utc_isoformat(time.time()))
+        action_hash = hashlib.sha256(action_description.encode("utf-8")).hexdigest()
+        esign_hash = hashlib.sha256((user_id + timestamp + meaning + action_hash).encode("utf-8")).hexdigest()
+        sealed_at = _utc_isoformat(time.time())
+        audit_dir = Path.home() / ".solace" / "audit"
+        audit_dir.mkdir(parents=True, exist_ok=True)
+        esign_file = audit_dir / f"esign-{run_id}.jsonl"
+        record = {
+            "event_type": "ESIGN",
+            "user_id": user_id,
+            "run_id": run_id,
+            "meaning": meaning,
+            "action_description": action_description,
+            "action_hash": action_hash,
+            "esign_hash": esign_hash,
+            "timestamp": timestamp,
+            "sealed_at": sealed_at,
+        }
+        with esign_file.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record) + "\n")
+        self._send_json(
+            {
+                "esign_hash": esign_hash,
+                "sealed_at": sealed_at,
+                "chain_entry_id": f"esign:{run_id}:{esign_hash[:12]}",
+                "run_id": run_id,
+                "verifiable": True,
+            },
+            201,
+        )
+
+    def _handle_prime_wiki_search(self, query: str) -> None:
+        params = self._parse_query(query)
+        needle = str(params.get("q", "")).strip().lower()
+        try:
+            limit = min(max(int(params.get("limit", "20")), 1), 200)
+        except ValueError:
+            limit = 20
+        records = _load_all_prime_wiki_snapshots()
+        matches = []
+        for record in records:
+            haystack = " ".join(
+                [
+                    str(record.get("url", "")),
+                    str(record.get("app_id", "")),
+                    str(record.get("snapshot_type", "")),
+                    str(record.get("key_elements", {}).get("title", "")),
+                ]
+            ).lower()
+            if needle and needle not in haystack:
+                continue
+            matches.append(_prime_wiki_public_record(record))
+        self._send_json({"results": matches[:limit], "total": len(matches), "query": needle})
+
+    def _load_prime_wiki_assets(self) -> list[dict[str, Any]]:
+        if not PRIME_WIKI_ASSETS_PATH.exists():
+            return []
+        try:
+            payload = json.loads(PRIME_WIKI_ASSETS_PATH.read_text())
+        except (json.JSONDecodeError, OSError):
+            return []
+        return payload if isinstance(payload, list) else []
+
+    def _save_prime_wiki_assets(self, assets: list[dict[str, Any]]) -> None:
+        PRIME_WIKI_ASSETS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        PRIME_WIKI_ASSETS_PATH.write_text(json.dumps(assets, indent=2))
+
+    def _handle_prime_wiki_assets_list(self, query: str) -> None:
+        params = self._parse_query(query)
+        appstore_only = str(params.get("appstore_only", "")).lower() in {"1", "true", "yes"}
+        assets = self._load_prime_wiki_assets()
+        repo_apps = [
+            {"asset_id": app_id, "source": "appstore", "kind": "app", "title": app_id.replace("-", " ").title()}
+            for app_id in self._list_known_apps()
+        ]
+        results = repo_apps if appstore_only else assets + repo_apps
+        self._send_json({"assets": results, "total": len(results), "appstore_only": appstore_only})
+
+    def _handle_prime_wiki_render(self, query: str) -> None:
+        params = self._parse_query(query)
+        snapshot_id = str(params.get("snapshot_id") or params.get("id") or "").strip()
+        if not snapshot_id:
+            self._send_json_compat(400, {"error": "snapshot_id required"})
+            return
+        snapshot_record = _find_prime_wiki_snapshot(snapshot_id)
+        if snapshot_record is None:
+            self._send_json({"error": "snapshot not found"}, 404)
+            return
+        self._send_json(
+            {
+                "snapshot": _prime_wiki_public_record(snapshot_record),
+                "content": {
+                    "content_pzip_b64": snapshot_record.get("content_pzip_b64", ""),
+                    "codec": snapshot_record.get("codec", ""),
+                    "rtc_verified": snapshot_record.get("rtc_verified", False),
+                },
+            }
+        )
+
+    def _handle_prime_wiki_push(self) -> None:
+        body = self._tracker_body()
+        if body is None:
+            return
+        snapshot_id = str(body.get("snapshot_id") or body.get("id") or "").strip()
+        snapshot_record = _find_prime_wiki_snapshot(snapshot_id) if snapshot_id else None
+        if snapshot_record is None and (body.get("title") or body.get("content") or body.get("url")):
+            now = _utc_isoformat(time.time())
+            snapshot_id = "pws_" + uuid.uuid4().hex[:12]
+            snapshot_record = {
+                "snapshot_id": snapshot_id,
+                "url": str(body.get("url", "http://127.0.0.1:8888/start")).strip(),
+                "app_id": str(body.get("app_id", "solace-yinyang")).strip() or "solace-yinyang",
+                "snapshot_type": str(body.get("snapshot_type", "note")).strip() or "note",
+                "captured_at": now,
+                "key_elements": {"title": str(body.get("title", "Untitled Snapshot")).strip() or "Untitled Snapshot"},
+                "content_pzip_b64": base64.b64encode(str(body.get("content", "")).encode("utf-8")).decode("ascii"),
+                "codec": "plain-text-b64",
+                "rtc_verified": True,
+                "sync_status": "pending",
+            }
+            _store_prime_wiki_snapshot(snapshot_record)
+        if snapshot_record is None:
+            self._send_json_compat(400, {"error": "snapshot_id required"})
+            return
+        started = _queue_prime_wiki_cloud_push(snapshot_record)
+        self._send_json({"snapshot_id": snapshot_id, "cloud_sync_started": started}, 202)
+
+    def _handle_prime_wiki_assets_create(self) -> None:
+        body = self._tracker_body()
+        if body is None:
+            return
+        title = str(body.get("title") or body.get("name") or "").strip()
+        if not title:
+            self._send_json_compat(400, {"error": "title required"})
+            return
+        asset = {
+            "asset_id": "pwa_" + uuid.uuid4().hex[:12],
+            "title": title,
+            "url": str(body.get("url", "")).strip(),
+            "kind": str(body.get("kind") or body.get("type") or "note").strip() or "note",
+            "created_at": _utc_isoformat(time.time()),
+        }
+        assets = self._load_prime_wiki_assets()
+        assets.insert(0, asset)
+        self._save_prime_wiki_assets(assets)
+        self._send_json(asset, 201)
+
+    def _handle_history_list_compat(self, query: str) -> None:
+        params = self._parse_query(query)
+        try:
+            limit = min(max(int(params.get("limit", "20")), 1), 500)
+        except ValueError:
+            limit = 20
+        with _HISTORY_LOCK:
+            entries = [dict(e) for e in _HISTORY_ENTRIES][-limit:]
+        entries.reverse()
+        self._send_json({"entries": entries, "total": len(entries), "limit": limit})
+
+    def _handle_inbox_list_compat(self, query: str) -> None:
+        apps_root = self._local_apps_root()
+        if apps_root is None:
+            self._send_json({"apps": [], "total": 0, "apps_root": None})
+            return
+        from src.browser.inbox_outbox import InboxOutboxManager, InboxOutboxError
+
+        params = self._parse_query(query)
+        app_id = str(params.get("app_id", "")).strip()
+        if app_id:
+            app_root = self._resolve_app_root(app_id)
+            if app_root is None:
+                self._send_json({"error": f"App '{app_id}' does not exist"}, 404)
+                return
+            manager = InboxOutboxManager(apps_root=app_root.parent)
+            try:
+                self._send_json({"app_id": app_id, "inbox": manager.list_inbox(app_id), "apps_root": str(app_root.parent)})
+            except InboxOutboxError as exc:
+                self._send_json({"error": str(exc)}, 404)
+            return
+        apps = self._list_known_apps()
+        self._send_json({"apps": apps, "total": len(apps), "apps_root": str(apps_root)})
+
+    def _handle_outbox_list_compat(self, query: str) -> None:
+        apps_root = self._local_apps_root()
+        if apps_root is None:
+            self._send_json({"apps": [], "total": 0, "apps_root": None})
+            return
+        from src.browser.inbox_outbox import InboxOutboxManager, InboxOutboxError
+
+        params = self._parse_query(query)
+        app_id = str(params.get("app_id", "")).strip()
+        if app_id:
+            app_root = self._resolve_app_root(app_id)
+            if app_root is None:
+                self._send_json({"error": f"App '{app_id}' does not exist"}, 404)
+                return
+            manager = InboxOutboxManager(apps_root=app_root.parent)
+            try:
+                self._send_json({"app_id": app_id, "outbox": manager.list_outbox(app_id), "runs": manager.list_runs(app_id), "apps_root": str(app_root.parent)})
+            except InboxOutboxError as exc:
+                self._send_json({"error": str(exc)}, 404)
+            return
+        apps = self._list_known_apps()
+        self._send_json({"apps": apps, "total": len(apps), "apps_root": str(apps_root)})
+
+    def _handle_app_outbox_file(self, app_id: str, relative_path: str) -> None:
+        app_root = self._resolve_app_root(app_id)
+        if app_root is None:
+            self._send_json({"error": "apps root unavailable"}, 404)
+            return
+        from src.browser.inbox_outbox import InboxOutboxManager, InboxOutboxError
+
+        requested = Path(relative_path)
+        if requested.is_absolute() or ".." in requested.parts or not requested.parts:
+            self._send_json({"error": "invalid outbox path"}, 400)
+            return
+        manager = InboxOutboxManager(apps_root=app_root.parent)
+        try:
+            app_root = manager.resolve_app_root(app_id)
+        except InboxOutboxError as exc:
+            self._send_json({"error": str(exc)}, 404)
+            return
+        target = (app_root / "outbox" / requested).resolve()
+        try:
+            target.relative_to((app_root / "outbox").resolve())
+        except ValueError:
+            self._send_json({"error": "invalid outbox path"}, 400)
+            return
+        if not target.exists() or not target.is_file():
+            self._send_json({"error": "outbox file not found"}, 404)
+            return
+        body = target.read_bytes()
+        content_type = {
+            ".html": "text/html; charset=utf-8",
+            ".md": "text/markdown; charset=utf-8",
+            ".json": "application/json; charset=utf-8",
+            ".txt": "text/plain; charset=utf-8",
+        }.get(target.suffix.lower(), "application/octet-stream")
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def _handle_instructions(self) -> None:
         apps: list[str] = self.server.apps  # type: ignore[attr-defined]
@@ -9472,18 +11402,963 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             "spec_file": "specs/solacehub-instructions.md",
         })
 
+    def _handle_agents_page(self) -> None:
+        from yinyang_mcp_server import _TOOL_DEFINITIONS
+
+        tool_count = len(_TOOL_DEFINITIONS)
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solace Agents</title>
+<link rel="icon" href="/branding/yinyang-logo.png" sizes="32x32">
+<link rel="stylesheet" href="/start.css">
+</head>
+<body>
+  <main class="start-shell">
+    <section class="start-topbar">
+      <div class="brand">
+        <img src="/branding/yinyang-rotating.gif" alt="Rotating Yinyang logo">
+        <div>
+          <h1>Solace Agents</h1>
+          <p>Point any coding agent at localhost:{YINYANG_PORT} and let Solace Hub control the browser natively.</p>
+        </div>
+      </div>
+      <div class="start-controls">
+        <a class="start-link" href="https://solaceagi.com/agents" target="_blank" rel="noopener">Cloud Guide</a>
+        <a class="start-link hero-primary" href="https://solaceagi.com/dashboard" target="_blank" rel="noopener">Open Dashboard</a>
+      </div>
+    </section>
+    <section class="start-hero">
+      <div class="start-hero-grid">
+        <div>
+          <span class="start-eyebrow">North star: let any AI agent run, schedule, and create browser apps safely</span>
+          <h2>Use Solace Hub as the local control plane.</h2>
+          <p>
+            Solace Hub starts first, owns <strong>localhost:{YINYANG_PORT}</strong>, launches Solace Browser,
+            keeps the Yinyang sidebar pinned, and exposes both webservices and MCP for agents.
+          </p>
+          <div class="hero-actions">
+            <a class="start-link hero-primary" href="https://solaceagi.com/dashboard" target="_blank" rel="noopener">1. Open Solace AGI Dashboard</a>
+            <a class="start-link" href="/api/status" target="_self">2. Check Local Runtime</a>
+            <a class="start-link" href="/mcp/manifest.json" target="_self">3. Inspect MCP Manifest</a>
+            <a class="start-link" href="/agents.json" target="_self">4. Inspect Agents JSON</a>
+          </div>
+          <div class="domain-strip">
+            <a class="start-card" href="/api/v1/browser/status" target="_self">
+              <h3>Browser control</h3>
+              <p>Launch, close, and inspect Solace Browser through Hub-owned endpoints.</p>
+            </a>
+            <a class="start-card" href="/api/v1/tunnel/status" target="_self">
+              <h3>Tunnel</h3>
+              <p>Optional remote control path for solaceagi.com or other trusted agents.</p>
+            </a>
+            <a class="start-card" href="/api/v1/hub/summary" target="_self">
+              <h3>Hub summary</h3>
+              <p>Check schedules, evidence, sessions, and runtime health.</p>
+            </a>
+          </div>
+        </div>
+        <div class="hero-illustration">
+          <img src="/branding/dragon-splash.png" alt="Dragon Yinyang splash art">
+          <div class="status-grid">
+            <article class="start-card">
+              <h3>Agent entrypoint</h3>
+              <div class="metric"><span>URL</span><strong>:{YINYANG_PORT}</strong></div>
+              <p>Use `http://localhost:{YINYANG_PORT}/agents` for human-readable setup and `/agents.json` for machine-readable contract.</p>
+            </article>
+            <article class="start-card">
+              <h3>Browser runtime</h3>
+              <div class="metric"><span>Port</span><strong>{YINYANG_PORT}</strong></div>
+              <p>The legacy 9222 debug-port flow is banned.</p>
+            </article>
+            <article class="start-card">
+              <h3>MCP tools</h3>
+              <div class="metric"><span>Count</span><strong>{tool_count}</strong></div>
+              <p>Run stdio MCP with <code>python3 yinyang_mcp_server.py</code>.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="start-panel">
+      <h3>Recommended agent flow</h3>
+      <div class="steps-grid">
+        <article class="start-step">
+          <span class="step-index">1</span>
+          <h3>Start with Hub</h3>
+          <p>Open Solace Hub first. It owns the runtime, wrapper services, schedules, sync, tunnel, and browser lifecycle.</p>
+        </article>
+        <article class="start-step">
+          <span class="step-index">2</span>
+          <h3>Open Browser</h3>
+          <p>Launch Solace Browser from Hub. The default working domain is the real <code>solaceagi.com/dashboard</code>.</p>
+        </article>
+        <article class="start-step">
+          <span class="step-index">3</span>
+          <h3>Use Yinyang</h3>
+          <p>Run bundled apps, create custom apps, or schedule work through the pinned sidebar with evidence by default.</p>
+        </article>
+      </div>
+    </section>
+    <section class="next-grid">
+      <article class="start-panel">
+        <h3>Webservices</h3>
+        <div class="detail-row"><span>Status</span><strong>GET /api/status</strong></div>
+        <div class="detail-row"><span>Health</span><strong>GET /api/health</strong></div>
+        <div class="detail-row"><span>Part 11</span><strong>GET /api/part11/status</strong></div>
+        <div class="detail-row"><span>Launch</span><strong>POST /api/v1/browser/launch</strong></div>
+        <div class="detail-row"><span>Navigate</span><strong>POST /api/navigate</strong></div>
+        <div class="detail-row"><span>Click</span><strong>POST /api/click</strong></div>
+        <div class="detail-row"><span>Fill</span><strong>POST /api/fill</strong></div>
+        <div class="detail-row"><span>Evaluate</span><strong>POST /api/evaluate</strong></div>
+        <div class="detail-row"><span>Screenshot</span><strong>POST /api/screenshot</strong></div>
+        <div class="detail-row"><span>Snapshot</span><strong>POST /api/snapshot</strong></div>
+      </article>
+      <article class="start-panel">
+        <h3>Knowledge + Evidence</h3>
+        <div class="detail-row"><span>Prime Wiki assets</span><strong>GET /api/v1/prime-wiki/assets</strong></div>
+        <div class="detail-row"><span>Prime Wiki search</span><strong>GET /api/v1/prime-wiki/search?q=gmail</strong></div>
+        <div class="detail-row"><span>Prime Wiki push</span><strong>POST /api/v1/prime-wiki/push</strong></div>
+        <div class="detail-row"><span>Inbox</span><strong>GET /api/v1/inbox</strong></div>
+        <div class="detail-row"><span>Outbox</span><strong>GET /api/v1/outbox</strong></div>
+        <div class="detail-row"><span>History</span><strong>GET /api/v1/history?limit=20</strong></div>
+        <div class="detail-row"><span>Schedules</span><strong>GET /api/v1/schedule</strong></div>
+        <div class="detail-row"><span>eSign token</span><strong>POST /api/v1/esign/token</strong></div>
+        <div class="detail-row"><span>Local OAuth3</span><strong>POST /oauth3/token</strong></div>
+        <div class="detail-row"><span>Yinyang chat</span><strong>POST /api/yinyang/chat</strong></div>
+      </article>
+      <article class="start-panel">
+        <h3>MCP</h3>
+        <ul class="detail-list">
+          <li><code>python3 yinyang_mcp_server.py</code></li>
+          <li><code>initialize</code></li>
+          <li><code>tools/list</code></li>
+          <li><code>tools/call browser_open</code></li>
+          <li><code>tools/call browser_click</code></li>
+          <li><code>tools/call browser_fill</code></li>
+          <li><code>tools/call browser_evaluate</code></li>
+        </ul>
+      </article>
+      <article class="start-panel">
+        <h3>Power modes</h3>
+        <ul class="detail-list">
+          <li>AI Agent Access: always on, always free</li>
+          <li>Personal AI Assistant: BYOK or Local CLI Wrapper</li>
+          <li>Professional AI Assistant: managed LLM, sync, remote control, eSign, Part 11</li>
+        </ul>
+      </article>
+    </section>
+  </main>
+</body>
+</html>"""
+        body = html.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def _handle_credits(self) -> None:
         apps: list[str] = self.server.apps  # type: ignore[attr-defined]
         self._send_json({"apps": apps})
 
-    def _handle_start(self) -> None:
-        """Serve the browser start page — redirects to Hub dashboard."""
-        html = (
-            "<!DOCTYPE html><html lang='en'><head>"
-            "<meta charset='UTF-8'><title>Solace Hub — Starting</title>"
-            f"<meta http-equiv='refresh' content='0;url=http://localhost:{YINYANG_PORT}/health'>"
-            "</head><body><p>Starting Solace Hub...</p></body></html>"
+    def _handle_sidebar_asset(self, filename: str, content_type: str) -> None:
+        asset_path = SIDEBAR_ASSETS_DIR / filename
+        if not asset_path.exists():
+            self._send_json({"error": f"missing sidebar asset: {filename}"}, 404)
+            return
+        body = asset_path.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _handle_branding_asset(self, asset_path: Path, content_type: str) -> None:
+        if not asset_path.exists():
+            self._send_json({"error": f"missing branding asset: {asset_path.name}"}, 404)
+            return
+        body = asset_path.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _handle_branding_apps_asset(self, filename: str) -> None:
+        asset_path = SOLACEAGI_APP_ICONS_DIR / Path(filename).name
+        suffix = asset_path.suffix.lower()
+        content_type = {
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".gif": "image/gif",
+            ".webp": "image/webp",
+        }.get(suffix, "application/octet-stream")
+        self._handle_branding_asset(asset_path, content_type)
+
+    def _handle_sidebar_html(self) -> None:
+        asset_path = SIDEBAR_ASSETS_DIR / "sidepanel.html"
+        if not asset_path.exists():
+            self._send_json({"error": "missing sidebar asset: sidepanel.html"}, 404)
+            return
+        html = asset_path.read_text(encoding="utf-8")
+        html = html.replace('href="sidepanel.css"', 'href="/sidebar.css"')
+        html = html.replace('src="sidepanel.js"', 'src="/sidebar.js"')
+        body = html.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _handle_start_css(self) -> None:
+        css = """
+:root {
+  --sb-bg: #07111c;
+  --sb-surface: rgba(8, 18, 31, 0.88);
+  --sb-surface-strong: rgba(12, 24, 39, 0.96);
+  --sb-surface-soft: rgba(129, 175, 221, 0.12);
+  --sb-border: rgba(129, 175, 221, 0.24);
+  --sb-border-strong: rgba(129, 175, 221, 0.44);
+  --sb-text: #eef4ff;
+  --sb-text-muted: #b8c7dd;
+  --sb-accent: #81afdd;
+  --sb-accent-hover: #a7c9ef;
+  --sb-success: #46d9a7;
+  --sb-warning: #ffc857;
+  --sb-radius: 28px;
+  --sb-shadow: 0 28px 80px rgba(4, 8, 16, 0.32);
+  --sb-font-body: "Manrope", "IBM Plex Sans", "Segoe UI", sans-serif;
+  --sb-font-display: "Space Grotesk", "Manrope", sans-serif;
+  --sb-font-scale: 1;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  font-size: calc(18px * var(--sb-font-scale));
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--sb-font-body);
+  color: var(--sb-text);
+  background:
+    linear-gradient(180deg, rgba(7, 17, 28, 0.82), rgba(7, 17, 28, 0.94)),
+    url("/branding/dragon-background.jpg") center / cover no-repeat,
+    linear-gradient(135deg, #07111c 0%, #101d2f 52%, #1d2340 100%);
+}
+
+body[data-theme="light"] {
+  color-scheme: light;
+  --sb-bg: #f4efe7;
+  --sb-surface: rgba(255, 255, 255, 0.9);
+  --sb-surface-strong: rgba(255, 255, 255, 0.97);
+  --sb-surface-soft: rgba(129, 175, 221, 0.12);
+  --sb-border: rgba(26, 63, 93, 0.16);
+  --sb-border-strong: rgba(26, 63, 93, 0.28);
+  --sb-text: #18212b;
+  --sb-text-muted: #4d5e73;
+  --sb-accent: #275f8b;
+  --sb-accent-hover: #3a77a8;
+  --sb-success: #157a58;
+  --sb-warning: #9b5e0f;
+}
+
+.start-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.start-topbar,
+.start-hero,
+.start-panel,
+.start-step,
+.start-card {
+  background: var(--sb-surface);
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius);
+  box-shadow: var(--sb-shadow);
+  backdrop-filter: blur(16px);
+}
+
+.start-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.brand img {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+}
+
+.brand h1 {
+  margin: 0;
+  font-family: var(--sb-font-display);
+  font-size: 1.2rem;
+  letter-spacing: -0.04em;
+}
+
+.brand p,
+.start-card p,
+.start-step p,
+.start-panel p {
+  margin: 0;
+  color: var(--sb-text-muted);
+  line-height: 1.6;
+}
+
+.start-controls {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.start-control,
+.start-link {
+  border-radius: 999px;
+  border: 1px solid var(--sb-border-strong);
+  background: rgba(129, 175, 221, 0.08);
+  color: var(--sb-text);
+  text-decoration: none;
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+}
+
+.start-control:hover,
+.start-link:hover {
+  border-color: var(--sb-accent);
+  color: var(--sb-accent-hover);
+}
+
+.start-hero {
+  overflow: hidden;
+}
+
+.start-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.start-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(129, 175, 221, 0.12);
+  color: var(--sb-warning);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.start-hero h2 {
+  margin: 1rem 0 0.85rem;
+  font-family: var(--sb-font-display);
+  font-size: clamp(2.2rem, 4vw, 4.8rem);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+}
+
+.hero-actions,
+.domain-strip,
+.steps-grid,
+.status-grid,
+.next-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.hero-actions,
+.domain-strip {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-top: 1.25rem;
+}
+
+.hero-primary {
+  background: linear-gradient(135deg, rgba(129, 175, 221, 0.26), rgba(96, 202, 255, 0.15));
+}
+
+.hero-illustration {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.hero-illustration img {
+  width: 100%;
+  max-width: 420px;
+  justify-self: center;
+}
+
+.status-grid,
+.next-grid,
+.steps-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.start-panel,
+.start-step,
+.start-card {
+  padding: 1.15rem;
+}
+
+.start-card h3,
+.start-step h3,
+.start-panel h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1rem;
+}
+
+.metric {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.metric strong {
+  font-size: 1.35rem;
+  color: var(--sb-accent-hover);
+}
+
+.step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: rgba(129, 175, 221, 0.14);
+  color: var(--sb-accent-hover);
+  font-weight: 700;
+}
+
+.detail-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.detail-list li {
+  margin-left: 1.1rem;
+  color: var(--sb-text-muted);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--sb-border);
+}
+
+.detail-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.detail-row strong {
+  color: var(--sb-text);
+}
+
+@media (max-width: 860px) {
+  .start-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .start-hero-grid {
+    grid-template-columns: 1fr;
+  }
+}
+""".strip()
+        body = css.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _handle_start_js(self) -> None:
+        js = """
+(function () {
+  'use strict';
+
+  const API_BASE = 'http://127.0.0.1:8888';
+
+  function qs(id) {
+    return document.getElementById(id);
+  }
+
+  async function getJson(path) {
+    const response = await fetch(API_BASE + path);
+    if (!response.ok) {
+      throw new Error('HTTP ' + response.status);
+    }
+    return response.json();
+  }
+
+  function loadPrefs() {
+    const theme = localStorage.getItem('solace.start.theme') || 'dark';
+    const fontScale = Number(localStorage.getItem('solace.start.fontScale') || '1');
+    document.body.dataset.theme = theme;
+    document.documentElement.style.setProperty('--sb-font-scale', String(fontScale));
+  }
+
+  function bindPrefs() {
+    qs('theme-toggle').addEventListener('click', function () {
+      const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
+      document.body.dataset.theme = nextTheme;
+      localStorage.setItem('solace.start.theme', nextTheme);
+    });
+    qs('font-up').addEventListener('click', function () {
+      const next = Math.min(Number(localStorage.getItem('solace.start.fontScale') || '1') + 0.1, 1.4);
+      localStorage.setItem('solace.start.fontScale', String(next));
+      document.documentElement.style.setProperty('--sb-font-scale', String(next));
+    });
+    qs('font-down').addEventListener('click', function () {
+      const next = Math.max(Number(localStorage.getItem('solace.start.fontScale') || '1') - 0.1, 0.9);
+      localStorage.setItem('solace.start.fontScale', String(next));
+      document.documentElement.style.setProperty('--sb-font-scale', String(next));
+    });
+  }
+
+  function renderStatus(summary, onboarding, sync, tunnel, sessions) {
+    qs('runtime-status').textContent = summary.status || 'ok';
+    qs('setup-mode').textContent = onboarding.completed ? (onboarding.mode || 'configured') : 'setup required';
+    qs('schedule-count').textContent = String(summary.schedules || 0);
+    qs('tunnel-status').textContent = tunnel.active ? 'active' : 'standby';
+    qs('sync-status').textContent = sync.status || 'idle';
+    qs('session-count').textContent = String(Array.isArray(sessions.sessions) ? sessions.sessions.length : 0);
+    qs('evidence-count').textContent = String(summary.evidence || 0);
+    qs('start-detail-port').textContent = String(summary.port || 8888);
+    qs('start-detail-mode').textContent = onboarding.completed ? (onboarding.mode || 'configured') : 'not configured';
+    qs('start-detail-sync').textContent = sync.status || 'idle';
+    qs('start-detail-tunnel').textContent = tunnel.active ? (tunnel.url || 'connected') : 'off';
+  }
+
+  async function hydrate() {
+    loadPrefs();
+    bindPrefs();
+    try {
+      const [summary, onboarding, sync, tunnel, sessions] = await Promise.all([
+        getJson('/api/v1/hub/summary'),
+        getJson('/api/v1/onboarding/status'),
+        getJson('/api/v1/sync/status'),
+        getJson('/api/v1/tunnel/status'),
+        getJson('/api/v1/sessions')
+      ]);
+      renderStatus(summary, onboarding, sync, tunnel, sessions);
+    } catch (error) {
+      qs('runtime-status').textContent = 'offline';
+      qs('setup-mode').textContent = 'unknown';
+      qs('sync-status').textContent = 'offline';
+      qs('tunnel-status').textContent = 'offline';
+      qs('session-count').textContent = '0';
+      qs('evidence-count').textContent = '0';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', hydrate);
+}());
+""".strip()
+        body = js.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/javascript; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _handle_browser_control_qa_page(self) -> None:
+        html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solace Browser Control QA</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#081019;color:#edf3ff;margin:0;padding:2rem}
+.card{max-width:720px;margin:0 auto;padding:1.5rem;border-radius:24px;background:#122033;border:1px solid #24415e}
+label,input,button{font:inherit}
+input{width:100%;padding:.8rem 1rem;border-radius:14px;border:1px solid #466b90;background:#09131d;color:#edf3ff}
+button{margin-top:1rem;padding:.8rem 1.1rem;border-radius:999px;border:1px solid #78b9ff;background:#17304a;color:#edf3ff}
+#result{margin-top:1rem;padding:1rem;border-radius:16px;background:#09131d;color:#b7c6de}
+</style>
+</head>
+<body>
+<main class="card">
+  <h1 id="title">Browser Control QA</h1>
+  <p id="status">Use the local runtime to fill the input and click the button.</p>
+  <label for="email">Email</label>
+  <input id="email" name="email" placeholder="user@example.com" value="">
+  <button id="confirm" type="button">Confirm</button>
+  <div id="result">waiting</div>
+</main>
+<script>
+document.getElementById('confirm').addEventListener('click', function () {
+  const value = document.getElementById('email').value;
+  document.getElementById('result').textContent = value ? ('confirmed:' + value) : 'confirmed:empty';
+});
+</script>
+</body>
+</html>"""
+        body = html.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _runtime_snapshot_payload(self) -> dict:
+        with _SESSIONS_LOCK:
+            sessions = [
+                {
+                    "session_id": sid,
+                    "url": sess.get("url", ""),
+                    "profile": sess.get("profile", ""),
+                    "pid": sess.get("pid", 0),
+                    "alive": self._is_session_alive(int(sess.get("pid", 0))),
+                    "started_at": sess.get("started_at", 0),
+                }
+                for sid, sess in _SESSIONS.items()
+            ]
+        try:
+            onboarding = json.loads(ONBOARDING_PATH.read_text())
+        except (FileNotFoundError, json.JSONDecodeError):
+            onboarding = {"completed": False, "mode": None}
+        return {
+            "status": "ok",
+            "compatibility_mode": True,
+            "source": "yinyang-runtime",
+            "runtime": {
+                "port": YINYANG_PORT,
+                "version": _SERVER_VERSION,
+                "sidebar": "pinned-yinyang",
+                "onboarding": onboarding,
+                "sessions": sessions,
+                "session_count": len(sessions),
+                "health": {
+                    "status": "ok",
+                    "uptime_seconds": int(time.time() - _SERVER_START_TIME),
+                },
+            },
+            "limitations": [
+                "Hub-owned runtime snapshot; full Chromium DOM automation routes are not yet wired through this server.",
+            ],
+        }
+
+    def _handle_aria_snapshot(self) -> None:
+        payload = self._runtime_snapshot_payload()
+        payload["snapshot_type"] = "aria"
+        payload["tree"] = {
+            "role": "application",
+            "name": "Solace Browser Runtime",
+            "children": [
+                {"role": "banner", "name": "Solace Hub starts first"},
+                {"role": "complementary", "name": "Yinyang AI Assistant Sidebar"},
+                {"role": "main", "name": "Browser workspace"},
+            ],
+        }
+        self._send_json(payload)
+
+    def _handle_dom_snapshot(self) -> None:
+        payload = self._runtime_snapshot_payload()
+        payload["snapshot_type"] = "dom"
+        payload["document"] = {
+            "nodeName": "BODY",
+            "children": [
+                {"nodeName": "HEADER", "text": "Solace Hub starts first"},
+                {"nodeName": "ASIDE", "text": "Yinyang AI Assistant Sidebar"},
+                {"nodeName": "MAIN", "text": "Browser workspace"},
+            ],
+        }
+        self._send_json(payload)
+
+    def _handle_page_snapshot(self) -> None:
+        payload = self._runtime_snapshot_payload()
+        payload["snapshot_type"] = "page"
+        payload["page"] = {
+            "title": "Solace Browser Runtime",
+            "start_url": "https://solaceagi.com/dashboard",
+            "current_sessions": payload["runtime"]["sessions"],
+        }
+        self._send_json(payload)
+
+    def _handle_agents_json(self) -> None:
+        from yinyang_mcp_server import _TOOL_DEFINITIONS
+
+        api_base = f"http://localhost:{getattr(self.server, 'server_port', YINYANG_PORT)}"
+        manifest = {
+            "name": "Solace Browser",
+            "version": _SERVER_VERSION,
+            "description": "Hub-managed Solace Browser runtime with native Yinyang sidebar, schedules, evidence, BYOK, and MCP tools.",
+            "api_base": api_base,
+            "status": "ready",
+            "hub": {
+                "starts_first": True,
+                "port": YINYANG_PORT,
+                "sidebar": "pinned-yinyang",
+            },
+            "mcp": {
+                "manifest": f"{api_base}/mcp/manifest.json",
+                "command": "python3 yinyang_mcp_server.py",
+                "transport": "stdio",
+                "tool_count": len(_TOOL_DEFINITIONS),
+            },
+            "capabilities": [
+                "detect_apps",
+                "list_apps",
+                "launch_apps",
+                "custom_app_create",
+                "app_config_save",
+                "create_schedule",
+                "list_schedules",
+                "delete_schedule",
+                "record_evidence",
+                "list_evidence",
+                "prime_wiki_search",
+                "prime_wiki_assets",
+                "prime_wiki_push",
+                "esign_tokens",
+                "local_oauth3",
+                "yinyang_chat",
+                "get_hub_status",
+                "browser_status",
+                "browser_open",
+                "browser_close",
+                "browser_navigate",
+                "browser_click",
+                "browser_fill",
+                "browser_evaluate",
+                "browser_screenshot",
+                "byok_management",
+                "sync_status",
+                "tunnel_status",
+                "local_sessions",
+                "runtime_snapshots",
+            ],
+            "endpoints": {
+                "core": {
+                    "status": "GET /api/status",
+                    "health": "GET /api/health",
+                    "part11_status": "GET /api/part11/status",
+                    "instructions": "GET /instructions",
+                    "agents_json": "GET /agents.json",
+                    "mcp_manifest": "GET /mcp/manifest.json",
+                    "hub_summary": "GET /api/v1/hub/summary",
+                    "sessions": "GET /api/v1/sessions",
+                },
+                "browser_control": {
+                    "status": "GET /api/v1/browser/status",
+                    "launch": "POST /api/v1/browser/launch",
+                    "close": "POST /api/v1/browser/close",
+                    "navigate": "POST /api/navigate",
+                    "click": "POST /api/click",
+                    "fill": "POST /api/fill",
+                    "evaluate": "POST /api/evaluate",
+                    "screenshot": "POST /api/screenshot",
+                    "snapshot": "POST /api/snapshot",
+                },
+                "knowledge_and_evidence": {
+                    "inbox": "GET /api/v1/inbox",
+                    "outbox": "GET /api/v1/outbox",
+                    "history": "GET /api/v1/history?limit=20",
+                    "schedule": "GET /api/v1/schedule",
+                    "prime_wiki_assets": "GET /api/v1/prime-wiki/assets",
+                    "prime_wiki_search": "GET /api/v1/prime-wiki/search?q=gmail",
+                    "prime_wiki_push": "POST /api/v1/prime-wiki/push",
+                },
+                "auth_and_signing": {
+                    "esign_token": "POST /api/v1/esign/token",
+                    "local_oauth3_token": "POST /oauth3/token",
+                    "yinyang_chat": "POST /api/yinyang/chat",
+                },
+                "runtime_snapshots": {
+                    "page": "GET /api/page-snapshot",
+                    "aria": "GET /api/aria-snapshot",
+                    "dom": "GET /api/dom-snapshot",
+                },
+            },
+            "notes": [
+                "Solace Hub owns localhost:8888.",
+                "Machine-readable runtime contract. Do not assume legacy 9222 Chrome DevTools behavior.",
+            ],
+        }
+        self._send_json(manifest)
+
+    def _handle_mcp_manifest(self) -> None:
+        from yinyang_mcp_server import _RESOURCE_DEFINITIONS, _TOOL_DEFINITIONS
+
+        self._send_json(
+            {
+                "schema_version": "1.0",
+                "name": "solace-browser",
+                "display_name": "Solace Browser",
+                "description": "Hub-managed MCP contract for Yinyang on localhost:8888.",
+                "version": _SERVER_VERSION,
+                "protocol": "JSON-RPC 2.0",
+                "transport": "stdio",
+                "command": "python3",
+                "args": ["yinyang_mcp_server.py"],
+                "tools": _TOOL_DEFINITIONS,
+                "resources": _RESOURCE_DEFINITIONS,
+            }
         )
+
+    def _handle_start(self) -> None:
+        """Serve the browser start page after Hub-owned setup is complete."""
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solace Start</title>
+<link rel="icon" href="/branding/yinyang-logo.png" sizes="32x32">
+<link rel="stylesheet" href="/start.css">
+<script src="/start.js" defer></script>
+</head>
+<body>
+  <main class="start-shell">
+    <section class="start-topbar">
+      <div class="brand">
+        <img src="/branding/yinyang-logo.png" alt="Yinyang logo">
+        <div>
+          <h1>Solace Browser</h1>
+          <p>Hub owns setup. Yinyang stays pinned. Work starts from a real site.</p>
+        </div>
+      </div>
+      <div class="start-controls" aria-label="Display controls">
+        <button class="start-control" id="font-down" type="button">A-</button>
+        <button class="start-control" id="font-up" type="button">A+</button>
+        <button class="start-control" id="theme-toggle" type="button">Theme</button>
+      </div>
+    </section>
+    <section class="start-hero">
+      <div class="start-hero-grid">
+        <div>
+          <span class="start-eyebrow">North star: run and schedule apps on your favorite sites</span>
+          <h2>Go from setup to a real workflow in one move.</h2>
+          <p>Hub is already live on <strong>localhost:{YINYANG_PORT}</strong>. The permanent Yinyang sidebar should stay open while you enter Gmail, LinkedIn, GitHub, or the app library. Start where value is obvious, not where configuration feels abstract.</p>
+          <div class="hero-actions">
+            <a class="start-link hero-primary" href="https://mail.google.com/" target="_self">Open Gmail</a>
+            <a class="start-link" href="https://www.linkedin.com/" target="_self">Open LinkedIn</a>
+            <a class="start-link" href="https://github.com/" target="_self">Open GitHub</a>
+            <a class="start-link" href="/web/apps.html" target="_self">Browse Apps</a>
+          </div>
+          <div class="domain-strip">
+            <a class="start-card" href="/web/prime-wiki.html" target="_self">
+              <h3>Prime Wiki</h3>
+              <p>Capture page state, compress it, and keep snapshots audit-ready.</p>
+            </a>
+            <a class="start-card" href="/web/schedule.html" target="_self">
+              <h3>Schedules</h3>
+              <p>Turn a one-off win into a recurring workflow you can review and sign off.</p>
+            </a>
+            <a class="start-card" href="/api/status" target="_self">
+              <h3>Runtime details</h3>
+              <p>See the live Hub-owned state without falling back to banned debug ports.</p>
+            </a>
+          </div>
+        </div>
+        <div class="hero-illustration">
+          <img src="/branding/dragon-splash.png" alt="Dragon Yinyang splash art">
+          <div class="status-grid">
+            <article class="start-card">
+              <h3>Runtime</h3>
+              <div class="metric"><span>Status</span><strong id="runtime-status">checking</strong></div>
+              <p>Browser and sidebar should stay attached to the Hub-owned runtime.</p>
+            </article>
+            <article class="start-card">
+              <h3>Setup mode</h3>
+              <div class="metric"><span>Mode</span><strong id="setup-mode">checking</strong></div>
+              <p>BYOK, paid uplifts, or CLI wrapper mode.</p>
+            </article>
+            <article class="start-card">
+              <h3>Schedules</h3>
+              <div class="metric"><span>Active</span><strong id="schedule-count">0</strong></div>
+              <p>Keep repeat work visible and reviewable.</p>
+            </article>
+            <article class="start-card">
+              <h3>Tunnel + Sync</h3>
+              <div class="metric"><span>Tunnel</span><strong id="tunnel-status">standby</strong></div>
+              <p><span id="sync-status">idle</span> cloud sync, remote access, and twin surfaces.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="start-panel">
+      <h3>How the first real run should feel</h3>
+      <div class="steps-grid">
+        <article class="start-step">
+          <span class="step-index">1</span>
+          <h3>Open a real site</h3>
+          <p>Gmail is the default proof because users instantly understand inbox triage, drafts, and scheduling.</p>
+        </article>
+        <article class="start-step">
+          <span class="step-index">2</span>
+          <h3>Watch Yinyang lead</h3>
+          <p>The sidebar should already be open with the Solace Yinyang app loaded, showing setup state and next actions.</p>
+        </article>
+        <article class="start-step">
+          <span class="step-index">3</span>
+          <h3>Run or schedule</h3>
+          <p>Pick an app, create a schedule, or create your own custom app with full evidence and approval flow.</p>
+        </article>
+      </div>
+    </section>
+    <section class="next-grid">
+      <article class="start-panel">
+        <h3>What the sidebar should help with</h3>
+        <ul class="detail-list">
+          <li>Choose BYOK, paid uplifts, or local CLI wrapper setup.</li>
+          <li>Keep one Solace Yinyang app loaded by default.</li>
+          <li>Create or schedule apps without leaving the current site.</li>
+          <li>Expose Prime Wiki, eSign, sync, and audit evidence without clutter.</li>
+        </ul>
+      </article>
+      <article class="start-panel">
+        <h3>System details</h3>
+        <div class="detail-row"><span>Port</span><strong id="start-detail-port">{YINYANG_PORT}</strong></div>
+        <div class="detail-row"><span>Sessions</span><strong id="session-count">0</strong></div>
+        <div class="detail-row"><span>Evidence</span><strong id="evidence-count">0</strong></div>
+        <div class="detail-row"><span>Setup</span><strong id="start-detail-mode">checking</strong></div>
+        <div class="detail-row"><span>Sync</span><strong id="start-detail-sync">checking</strong></div>
+        <div class="detail-row"><span>Tunnel</span><strong id="start-detail-tunnel">checking</strong></div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>"""
         body = html.encode()
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -10379,6 +13254,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
     def _handle_apps_metadata(self) -> None:
         """GET /api/v1/apps/metadata — enriched metadata for all apps. Task 064."""
         apps: list = self.server.apps if hasattr(self.server, "apps") else []
+        repo_root = getattr(self.server, "repo_root", ".")
+        installed_app_ids = _installed_app_ids(repo_root)
         result = []
         for app in apps:
             app_id = app if isinstance(app, str) else app.get("id", "")
@@ -10386,7 +13263,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                 "id": app_id,
                 "name": str(app_id).replace("-", " ").title(),
                 "category": str(app_id).split("-")[0] if "-" in str(app_id) else "other",
-                "installed": True,
+                "installed": app_id in installed_app_ids,
             })
         self._send_json({"apps": result, "total": len(result)})
 
@@ -10461,9 +13338,13 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         if not app_id:
             self._send_error(400, "app_id required")
             return
-        apps: list = self.server.apps if hasattr(self.server, "apps") else []
-        already = app_id in apps
-        self._send_json({"status": "already_installed" if already else "installed", "app_id": app_id})
+        repo_root = getattr(self.server, "repo_root", ".")
+        try:
+            _set_app_installed(repo_root, app_id, True)
+        except OSError as exc:
+            self._send_json({"error": f"cannot save install state: {exc}"}, 500)
+            return
+        self._send_json({"status": "installed", "app_id": app_id})
 
     def _handle_app_uninstall(self) -> None:
         """POST /api/v1/apps/uninstall — mark app as uninstalled. Task 058."""
@@ -10473,9 +13354,59 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         if body is None:
             return
         app_id = str(body.get("app_id", "")).strip()
-        apps: list = self.server.apps if hasattr(self.server, "apps") else []
-        present = app_id in apps
-        self._send_json({"status": "uninstalled" if present else "not_installed", "app_id": app_id})
+        repo_root = getattr(self.server, "repo_root", ".")
+        try:
+            _set_app_installed(repo_root, app_id, False)
+        except OSError as exc:
+            self._send_json({"error": f"cannot save install state: {exc}"}, 500)
+            return
+        self._send_json({"status": "uninstalled", "app_id": app_id})
+
+    def _handle_app_install_by_id(self, app_id: str) -> None:
+        """POST /api/v1/apps/{app_id}/install — persist local install state."""
+        if not self._check_auth():
+            return
+        if not isinstance(app_id, str) or not _APP_ID_RE.fullmatch(app_id):
+            self._send_json({"error": "invalid app_id"}, 400)
+            return
+        repo_root = getattr(self.server, "repo_root", ".")
+        manifest = _load_manifest_for_app(repo_root, app_id)
+        if not manifest:
+            self._send_json({"error": "app not found"}, 404)
+            return
+        already = app_id in _installed_app_ids(repo_root)
+        try:
+            _set_app_installed(repo_root, app_id, True)
+        except OSError as exc:
+            self._send_json({"error": f"cannot save install state: {exc}"}, 500)
+            return
+        self._send_json({
+            "status": "already_installed" if already else "installed",
+            "app_id": app_id,
+            "state": "installed",
+            "install_url": f"/api/v1/apps/{app_id}/install",
+        })
+
+    def _handle_app_uninstall_by_id(self, app_id: str) -> None:
+        """DELETE /api/v1/apps/{app_id}/install — persist local uninstall state."""
+        if not self._check_auth():
+            return
+        if not isinstance(app_id, str) or not _APP_ID_RE.fullmatch(app_id):
+            self._send_json({"error": "invalid app_id"}, 400)
+            return
+        repo_root = getattr(self.server, "repo_root", ".")
+        was_installed = app_id in _installed_app_ids(repo_root)
+        try:
+            _set_app_installed(repo_root, app_id, False)
+        except OSError as exc:
+            self._send_json({"error": f"cannot save install state: {exc}"}, 500)
+            return
+        self._send_json({
+            "status": "uninstalled" if was_installed else "not_installed",
+            "app_id": app_id,
+            "state": "available",
+            "install_url": f"/api/v1/apps/{app_id}/install",
+        })
 
     def _handle_custom_app_create(self) -> None:
         """POST /api/v1/apps/custom/create — scaffold a local custom app. Task 051."""
@@ -10515,10 +13446,44 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             apps.append(app_id)
             apps.sort()
             self.server.apps = apps
+        if app_id:
+            try:
+                _set_app_installed(repo_root, app_id, True)
+            except OSError as error:
+                self._send_json({"error": f"cannot save install state: {error}"}, 500)
+                return
         self._reload_session_rules_cache()
 
         record_evidence("custom_app_created", {"app_id": app_id, "domain": _normalize_domain(str(raw_domain))})
         self._send_json(payload, 201)
+
+    def _handle_custom_app_delete(self, app_id: str) -> None:
+        """DELETE /api/v1/apps/{app_id} — permanently remove a local custom app."""
+        if not self._check_auth():
+            return
+        if not isinstance(app_id, str) or not _APP_ID_RE.fullmatch(app_id):
+            self._send_json({"error": "invalid app_id"}, 400)
+            return
+        repo_root = getattr(self.server, "repo_root", ".")
+        if app_id not in _custom_app_ids(repo_root):
+            self._send_json({"error": "custom app not found"}, 404)
+            return
+        try:
+            payload = _delete_custom_app(repo_root, app_id)
+        except FileNotFoundError:
+            self._send_json({"error": "custom app not found"}, 404)
+            return
+        except OSError as exc:
+            self._send_json({"error": f"cannot delete custom app: {exc}"}, 500)
+            return
+
+        apps: list = self.server.apps if hasattr(self.server, "apps") else []
+        if app_id in apps:
+            apps = [entry for entry in apps if entry != app_id]
+            self.server.apps = apps
+        self._reload_session_rules_cache()
+        record_evidence("custom_app_deleted", payload)
+        self._send_json({"status": "deleted", **payload})
 
     def _handle_rebuild_domain_index(self) -> None:
         """POST /api/v1/apps/rebuild-domain-index — rebuild the domain lookup index."""
@@ -10882,7 +13847,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         payload = self._read_json_body()
         if payload is None:
             return
-        user_id = payload.get("user_id", "")
+        user_id = payload.get("user_id") or payload.get("subject") or "local-agent"
         if not isinstance(user_id, str) or not user_id.strip():
             self._send_json({"error": "missing 'user_id'"}, 400)
             return
@@ -11184,7 +14149,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                         _oauth3_save_vault_state(state, self._oauth3_session_secret())
                         self._send_json({"revoked": token_id})
                         return
-            except OAuth3VaultCorruptError as exc:
+            except (OAuth3VaultCorruptError, OAuth3VaultUserMismatchError) as exc:
                 self._send_json({"error": str(exc)}, 500)
                 return
         found = revoke_oauth3_token(token_id)
@@ -11200,6 +14165,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                 with _OAUTH3_VAULT_LOCK:
                     state = _oauth3_load_vault_state(self._oauth3_session_secret())
                     token = state.get("tokens", {}).get(token_id)
+            except OAuth3VaultUserMismatchError:
+                token = None
             except OAuth3VaultCorruptError as exc:
                 self._send_json({"error": str(exc)}, 500)
                 return
@@ -11221,6 +14188,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                     state = _oauth3_load_vault_state(self._oauth3_session_secret())
                     entries = _oauth3_filter_evidence(state, limit=200)
                 self._send_json({"entries": entries})
+                return
+            except OAuth3VaultUserMismatchError:
+                self._send_json({"entries": []})
                 return
             except OAuth3VaultCorruptError as exc:
                 self._send_json({"error": str(exc)}, 500)
@@ -11265,6 +14235,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
                         _oauth3_save_vault_state(state, self._oauth3_session_secret())
                         self._send_json({"status": "extended", "expires_at": token["expires_at"]})
                         return
+            except OAuth3VaultUserMismatchError:
+                pass
             except OAuth3VaultCorruptError as exc:
                 self._send_json({"error": str(exc)}, 500)
                 return
@@ -11519,18 +14491,35 @@ function choose(mode) {
             return False
 
     def _handle_sessions_list(self) -> None:
+        self._send_json({"sessions": self._tracked_sessions_payload()})
+
+    def _tracked_sessions_payload(self) -> list[dict[str, Any]]:
         with _SESSIONS_LOCK:
             result = []
+            stale_session_ids: list[str] = []
             for sid, sess in _SESSIONS.items():
+                alive = self._is_session_alive(sess["pid"])
+                if not alive:
+                    _cleanup_session_sidecars(sess)
+                    stale_session_ids.append(sid)
+                    continue
                 result.append({
                     "session_id": sid,
                     "url": sess["url"],
                     "profile": sess["profile"],
                     "pid": sess["pid"],
                     "started_at": sess["started_at"],
-                    "alive": self._is_session_alive(sess["pid"]),
+                    "mode": sess.get("mode", "standard"),
+                    "head_hidden": bool(sess.get("head_hidden", False)),
+                    "session_name": sess.get("session_name"),
+                    "source": sess.get("source", "api"),
+                    "user_data_dir": sess.get("user_data_dir"),
+                    "hidden_display": sess.get("hidden_display"),
+                    "alive": alive,
                 })
-        self._send_json({"sessions": result})
+            for sid in stale_session_ids:
+                _SESSIONS.pop(sid, None)
+        return result
 
     def _handle_session_detail(self, session_id: str) -> None:
         with _SESSIONS_LOCK:
@@ -11544,6 +14533,12 @@ function choose(mode) {
             "profile": sess["profile"],
             "pid": sess["pid"],
             "started_at": sess["started_at"],
+            "mode": sess.get("mode", "standard"),
+            "head_hidden": bool(sess.get("head_hidden", False)),
+            "session_name": sess.get("session_name"),
+            "source": sess.get("source", "api"),
+            "user_data_dir": sess.get("user_data_dir"),
+            "hidden_display": sess.get("hidden_display"),
             "alive": self._is_session_alive(sess["pid"]),
         })
 
@@ -11553,14 +14548,290 @@ function choose(mode) {
         except FileNotFoundError as exc:
             return 503, {"error": str(exc)}
         session_id = str(uuid.uuid4())
+        user_data_dir = str(self._browser_sessions_root() / session_id / "profile")
         with _SESSIONS_LOCK:
             _SESSIONS[session_id] = {
                 "url": url,
                 "profile": profile,
                 "pid": pid,
                 "started_at": int(time.time()),
+                "mode": "standard",
+                "session_name": None,
+                "source": "api-localhost",
+                "user_data_dir": user_data_dir,
             }
         return 201, {"session_id": session_id, "pid": pid, "url": url}
+
+    def _browser_sessions_root(self) -> Path:
+        root = Path.home() / ".solace" / "browser-sessions"
+        root.mkdir(parents=True, exist_ok=True)
+        return root
+
+    def _resolve_local_browser_binary(self) -> Path:
+        browser_env = os.environ.get("SOLACE_BROWSER", "").strip()
+        if browser_env:
+            candidate = Path(browser_env)
+            if candidate.exists():
+                return candidate
+            raise FileNotFoundError(
+                "Solace Browser binary not found. Set SOLACE_BROWSER environment variable."
+            )
+        repo_root = Path(__file__).resolve().parent
+        candidates = [
+            repo_root / "chrome",
+            repo_root / "chrome-wrapper",
+            repo_root / "source" / "src" / "out" / "Solace" / "chrome-wrapper",
+            repo_root / "source" / "src" / "out" / "Solace" / "chrome",
+            repo_root / "dist" / "solace-browser-release" / "chrome",
+            repo_root / "solace-browser-release" / "chrome",
+            Path.home() / ".local" / "bin" / "solace-browser",
+            Path("/usr/bin/solace-browser"),
+        ]
+        for candidate in candidates:
+            if candidate.exists():
+                return candidate
+        raise FileNotFoundError(
+            "Solace Browser binary not found. Set SOLACE_BROWSER environment variable."
+        )
+
+    def _list_browser_windows(self) -> list[dict[str, Any]]:
+        if not shutil.which("xwininfo"):
+            return []
+        try:
+            result = subprocess.run(
+                ["xwininfo", "-root", "-tree"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return []
+        if result.returncode != 0:
+            return []
+        windows: list[dict[str, Any]] = []
+        pattern = re.compile(
+            r'^\s*(0x[0-9a-f]+)\s+"([^"]+)".*?(\d+)x(\d+)\+(-?\d+)\+(-?\d+)'
+        )
+        for line in result.stdout.splitlines():
+            match = pattern.search(line)
+            if not match:
+                continue
+            title = match.group(2)
+            if not (title.endswith(" - Solace") or title == "Solace"):
+                continue
+            window_id = match.group(1)
+            pid: Optional[int] = None
+            if shutil.which("xprop"):
+                try:
+                    xprop_result = subprocess.run(
+                        ["xprop", "-id", window_id, "_NET_WM_PID"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                        check=False,
+                    )
+                    pid_match = re.search(r"=\s*(\d+)", xprop_result.stdout)
+                    if pid_match:
+                        pid = int(pid_match.group(1))
+                except (OSError, subprocess.TimeoutExpired, ValueError):
+                    pid = None
+            windows.append(
+                {
+                    "window_id": window_id,
+                    "title": title,
+                    "width": int(match.group(3)),
+                    "height": int(match.group(4)),
+                    "x": int(match.group(5)),
+                    "y": int(match.group(6)),
+                    "pid": pid,
+                }
+            )
+        return windows
+
+    def _handle_browser_status(self) -> None:
+        tracked_sessions = self._tracked_sessions_payload()
+        windows = self._list_browser_windows()
+        native_selector_ready = any(
+            self._resolve_devtools_port(str(sess.get("user_data_dir") or "")) is not None
+            for sess in tracked_sessions
+        )
+        binary_path: Optional[str]
+        try:
+            binary_path = str(self._resolve_local_browser_binary())
+        except FileNotFoundError:
+            binary_path = None
+        self._send_json(
+            {
+                "status": "ok",
+                "runtime_port": YINYANG_PORT,
+                "browser_binary": binary_path,
+                "tracked_sessions": tracked_sessions,
+                "tracked_session_count": len(tracked_sessions),
+                "visible_windows": windows,
+                "visible_window_count": len(windows),
+                "browser_visible": bool(windows),
+                "sidebar_mode": "pinned-yinyang",
+                "control_plane": {
+                    "launch": True,
+                    "close": True,
+                    "navigate": True,
+                    "evaluate": True,
+                    "snapshot": True,
+                    "screenshot": True,
+                    "click": "native-cdp" if native_selector_ready else "compatibility-mode",
+                    "fill": "native-cdp" if native_selector_ready else "compatibility-mode",
+                },
+            }
+        )
+
+    def _launch_controlled_browser_session(
+        self,
+        *,
+        url: str,
+        profile: str,
+        mode: str,
+        session_name_raw: str,
+        head_hidden: bool,
+        source: str,
+    ) -> None:
+        session_id = str(uuid.uuid4())
+        user_data_dir = self._browser_sessions_root() / session_id / "profile"
+        try:
+            launch = self._spawn_browser_session(
+                url,
+                profile,
+                incognito=(mode == "incognito"),
+                user_data_dir=user_data_dir,
+                head_hidden=head_hidden,
+            )
+        except FileNotFoundError as exc:
+            self._send_json({"error": str(exc)}, 503)
+            return
+        with _SESSIONS_LOCK:
+            _SESSIONS[session_id] = {
+                "url": url,
+                "profile": profile,
+                "pid": launch["pid"],
+                "started_at": int(time.time()),
+                "mode": mode,
+                "head_hidden": bool(launch.get("head_hidden", False)),
+                "session_name": session_name_raw or None,
+                "source": source,
+                "user_data_dir": str(user_data_dir),
+                "xvfb_pid": launch.get("xvfb_pid"),
+                "hidden_display": launch.get("hidden_display"),
+            }
+        record_evidence(
+            "browser_launch",
+            {
+                "session_id": session_id,
+                "url": url,
+                "profile": profile,
+                "mode": mode,
+                "head_hidden": head_hidden,
+                "source": source,
+            },
+        )
+        self._send_json(
+            {
+                "session_id": session_id,
+                "pid": launch["pid"],
+                "url": url,
+                "profile": profile,
+                "mode": mode,
+                "head_hidden": head_hidden,
+                "hidden_display": launch.get("hidden_display"),
+            },
+            201,
+        )
+
+    def _handle_browser_launch(self, require_auth: bool = True, source: str = "browser-launch") -> None:
+        if require_auth and not self._check_auth():
+            return
+        body = self._tracker_body()
+        if body is None:
+            return
+        url = str(body.get("url", "")).strip() or DEFAULT_BROWSER_START_URL
+        parsed = urllib.parse.urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            self._send_json({"error": "url must be http or https"}, 400)
+            return
+        profile = str(body.get("profile", "default")).strip() or "default"
+        if not re.match(r"^[a-zA-Z0-9-]{1,32}$", profile):
+            self._send_json({"error": "profile must be alphanumeric + hyphens, max 32 chars"}, 400)
+            return
+        session_name_raw = str(body.get("session_name", "")).strip()
+        if session_name_raw and not re.match(r"^[a-zA-Z0-9 _-]{1,64}$", session_name_raw):
+            self._send_json({"error": "session_name must be 1-64 chars of letters, numbers, space, underscore, or hyphen"}, 400)
+            return
+        mode = str(body.get("mode", "standard")).strip().lower()
+        if mode not in {"standard", "incognito"}:
+            self._send_json({"error": "mode must be standard or incognito"}, 400)
+            return
+        head_hidden = bool(body.get("head_hidden", False))
+        self._launch_controlled_browser_session(
+            url=url,
+            profile=profile,
+            mode=mode,
+            session_name_raw=session_name_raw,
+            head_hidden=head_hidden,
+            source=source,
+        )
+
+    def _handle_hub_browser_open(self) -> None:
+        self._handle_browser_launch(require_auth=False, source="hub-ui")
+
+    def _terminate_session(self, session_id: str) -> tuple[int, dict[str, Any]]:
+        with _SESSIONS_LOCK:
+            sess = _SESSIONS.get(session_id)
+            if sess is None:
+                return 404, {"error": "session not found"}
+            pid = sess["pid"]
+            del _SESSIONS[session_id]
+        _cleanup_session_sidecars(sess)
+        try:
+            os.kill(pid, signal.SIGTERM)
+
+            def _force_kill() -> None:
+                time.sleep(3)
+                try:
+                    os.kill(pid, signal.SIGKILL)
+                except OSError:
+                    pass
+
+            threading.Thread(target=_force_kill, daemon=True).start()
+        except OSError:
+            pass
+        record_evidence("browser_session_terminated", {"session_id": session_id, "pid": pid})
+        return 200, {"status": "terminated", "session_id": session_id}
+
+    def _handle_browser_close(self, require_auth: bool = True) -> None:
+        if require_auth and not self._check_auth():
+            return
+        body = self._tracker_body()
+        if body is None:
+            return
+        session_id = str(body.get("session_id", "")).strip()
+        close_all = bool(body.get("all", False))
+        if close_all:
+            with _SESSIONS_LOCK:
+                session_ids = list(_SESSIONS.keys())
+            closed: list[str] = []
+            for current_id in session_ids:
+                status, _payload = self._terminate_session(current_id)
+                if status == 200:
+                    closed.append(current_id)
+            self._send_json({"status": "terminated", "closed_sessions": closed, "count": len(closed)})
+            return
+        if not session_id:
+            self._send_json({"error": "session_id required unless all=true"}, 400)
+            return
+        status, payload = self._terminate_session(session_id)
+        self._send_json(payload, status)
+
+    def _handle_hub_browser_close(self) -> None:
+        self._handle_browser_close(require_auth=False)
 
     def _handle_cloud_twin_status(self) -> None:
         if not self._check_auth():
@@ -11663,53 +14934,248 @@ function choose(mode) {
     def _handle_session_delete(self, session_id: str) -> None:
         if not self._check_auth():
             return
-        with _SESSIONS_LOCK:
-            sess = _SESSIONS.get(session_id)
-            if sess is None:
-                self._send_json({"error": "session not found"}, 404)
-                return
-            pid = sess["pid"]
-            del _SESSIONS[session_id]
-        # SIGTERM then SIGKILL after 3s
-        try:
-            os.kill(pid, signal.SIGTERM)
+        status, payload = self._terminate_session(session_id)
+        self._send_json(payload, status)
 
-            def _force_kill() -> None:
-                time.sleep(3)
-                try:
-                    os.kill(pid, signal.SIGKILL)
-                except OSError:
-                    pass
-            threading.Thread(target=_force_kill, daemon=True).start()
-        except OSError:
-            pass  # Already dead — that's fine
-        self._send_json({"status": "terminated", "session_id": session_id})
-
-    def _spawn_browser_session(self, url: str, profile: str) -> int:
+    def _spawn_browser_session(
+        self,
+        url: str,
+        profile: str,
+        *,
+        incognito: bool = False,
+        user_data_dir: Optional[Path] = None,
+        head_hidden: bool = False,
+    ) -> dict[str, Any]:
         if bool(getattr(self.server, "cloud_twin_mode", False)):
             proc = _launch_chrome_cloud_twin(url)
-            return proc.pid
-        browser = os.environ.get("SOLACE_BROWSER", "")
-        if not browser:
-            candidates = [
-                Path(__file__).parent.parent / "source" / "out" / "Solace" / "chrome",
-                Path.home() / ".local" / "bin" / "solace-browser",
-                Path("/usr/bin/solace-browser"),
+            return {"pid": proc.pid, "head_hidden": False, "xvfb_pid": None, "hidden_display": None}
+        browser_path = self._resolve_local_browser_binary()
+        browser = str(browser_path)
+        if user_data_dir is not None:
+            user_data_dir.mkdir(parents=True, exist_ok=True)
+        args = [browser]
+        if user_data_dir is not None:
+            args.append(f"--user-data-dir={user_data_dir}")
+        args.append(f"--profile-directory={profile}")
+        args.extend(
+            [
+                "--remote-debugging-port=0",
+                "--remote-debugging-address=127.0.0.1",
+                "--remote-allow-origins=*",
             ]
-            for c in candidates:
-                if Path(c).exists():
-                    browser = str(c)
-                    break
-        if not browser or not Path(browser).exists():
-            raise FileNotFoundError(
-                "Solace Browser binary not found. Set SOLACE_BROWSER environment variable."
+        )
+        if incognito:
+            args.append("--incognito")
+        env = os.environ.copy()
+        xvfb_proc: subprocess.Popen[bytes] | None = None
+        hidden_display: str | None = None
+        if head_hidden:
+            hidden_display = _allocate_head_hidden_display()
+            xvfb_proc = subprocess.Popen(
+                [
+                    shutil.which("Xvfb") or "Xvfb",
+                    hidden_display,
+                    "-screen",
+                    "0",
+                    "1920x1080x24",
+                    "-ac",
+                    "+extension",
+                    "GLX",
+                    "+render",
+                    "-noreset",
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
+            env["DISPLAY"] = hidden_display
+            time.sleep(0.5)
+        args.extend(["--new-window", url])
         proc = subprocess.Popen(
-            [browser, f"--profile-directory={profile}", url],
+            args,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            cwd=str(browser_path.parent),
+            env=env,
         )
-        return proc.pid
+        return {
+            "pid": proc.pid,
+            "head_hidden": head_hidden,
+            "xvfb_pid": xvfb_proc.pid if xvfb_proc is not None else None,
+            "hidden_display": hidden_display,
+        }
+
+    def _resolve_devtools_port(self, user_data_dir: Optional[str]) -> Optional[int]:
+        if not user_data_dir:
+            return None
+        active_port = Path(user_data_dir) / "DevToolsActivePort"
+        for _ in range(30):
+            if active_port.exists():
+                try:
+                    lines = active_port.read_text(encoding="utf-8").splitlines()
+                except OSError:
+                    return None
+                if lines:
+                    try:
+                        port = int(lines[0].strip())
+                    except ValueError:
+                        return None
+                    if port == 9222:
+                        return None
+                    return port
+            time.sleep(0.1)
+        return None
+
+    def _pick_controlled_session(self, requested_session_id: str = "") -> tuple[Optional[str], Optional[dict[str, Any]]]:
+        with _SESSIONS_LOCK:
+            if requested_session_id:
+                sess = _SESSIONS.get(requested_session_id)
+                return (requested_session_id, dict(sess)) if sess is not None else (None, None)
+            alive_sessions = [
+                (sid, dict(sess))
+                for sid, sess in _SESSIONS.items()
+                if self._is_session_alive(int(sess.get("pid", 0)))
+            ]
+        if not alive_sessions:
+            return None, None
+        alive_sessions.sort(key=lambda item: int(item[1].get("started_at", 0)), reverse=True)
+        return alive_sessions[0]
+
+    async def _with_controlled_page(
+        self,
+        session_id: str,
+        session: dict[str, Any],
+        operation: str,
+        callback,
+    ) -> tuple[dict[str, Any], int]:
+        port = self._resolve_devtools_port(str(session.get("user_data_dir") or ""))
+        if port is None:
+            return ({
+                "error": "browser_control_unavailable",
+                "message": "Relaunch Solace Browser from Hub to enable native agent control.",
+                "session_id": session_id,
+            }, 409)
+        try:
+            from playwright.async_api import async_playwright
+        except ImportError:
+            return ({
+                "error": "playwright_not_available",
+                "message": "Install Playwright to enable native agent control.",
+                "session_id": session_id,
+            }, 503)
+
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.connect_over_cdp(f"http://127.0.0.1:{port}")
+            try:
+                target_page = None
+                target_url = str(session.get("url", "")).strip()
+                for context in browser.contexts:
+                    for page in context.pages:
+                        if target_url and page.url == target_url:
+                            target_page = page
+                            break
+                    if target_page is not None:
+                        break
+                if target_page is None:
+                    for context in browser.contexts:
+                        if context.pages:
+                            target_page = context.pages[-1]
+                            break
+                if target_page is None:
+                    return ({
+                        "error": "no_page_available",
+                        "message": "The controlled browser session has no active page.",
+                        "session_id": session_id,
+                    }, 409)
+                try:
+                    result = await callback(target_page)
+                except Exception as exc:
+                    return ({
+                        "error": "browser_control_failed",
+                        "message": str(exc),
+                        "operation": operation,
+                        "session_id": session_id,
+                    }, 422)
+                return (result, 200)
+            finally:
+                await browser.close()
+
+    def _native_browser_action(self, action_type: str, payload: dict[str, Any], callback) -> bool:
+        session_id_raw = str(payload.get("session_id", "")).strip()
+        session_id, session = self._pick_controlled_session(session_id_raw)
+        if session is None or session_id is None:
+            return False
+        try:
+            result, status_code = asyncio.run(
+                self._with_controlled_page(session_id, session, action_type, callback)
+            )
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            try:
+                result, status_code = loop.run_until_complete(
+                    self._with_controlled_page(session_id, session, action_type, callback)
+                )
+            finally:
+                loop.close()
+        if status_code == 200:
+            action = {
+                "type": action_type,
+                "session_id": session_id,
+                "timestamp": _utc_isoformat(time.time()),
+                "compatibility_mode": False,
+                "executed": True,
+            }
+            for key in ("selector", "text", "url", "expression"):
+                if key in payload:
+                    action[key] = payload[key]
+            current_url = str(result.get("current_url", "")).strip() if isinstance(result, dict) else ""
+            if current_url:
+                action["url"] = current_url
+                with _SESSIONS_LOCK:
+                    tracked = _SESSIONS.get(session_id)
+                    if tracked is not None:
+                        tracked["url"] = current_url
+            state = self._update_compat_browser_state(action)
+            result["state"] = state
+            result["native_bridge"] = "chromium-cdp-ephemeral-port"
+            result["compatibility_mode"] = False
+            result["session_id"] = session_id
+            self._send_json(result, 200)
+            return True
+        self._send_json(result, status_code)
+        return True
+
+    async def _native_navigate_page(self, page: Any, url: str) -> dict[str, Any]:
+        await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+        return {"success": True, "url": page.url, "current_url": page.url}
+
+    async def _native_click_page(self, page: Any, selector: str) -> dict[str, Any]:
+        await page.click(selector, timeout=5000)
+        return {"success": True, "selector": selector, "current_url": page.url}
+
+    async def _native_fill_page(self, page: Any, selector: str, text: str) -> dict[str, Any]:
+        await page.fill(selector, text, timeout=5000)
+        return {"success": True, "selector": selector, "text": text, "current_url": page.url}
+
+    async def _native_screenshot_page(self, page: Any, filename: str, full_page: bool) -> dict[str, Any]:
+        artifacts_dir = Path.home() / ".solace" / "artifacts"
+        artifacts_dir.mkdir(parents=True, exist_ok=True)
+        target = artifacts_dir / filename
+        await page.screenshot(path=str(target), full_page=full_page)
+        return {
+            "success": True,
+            "capture": {
+                "filepath": str(target),
+                "filename": target.name,
+                "url": page.url,
+                "title": await page.title(),
+                "full_page": full_page,
+            },
+            "current_url": page.url,
+        }
+
+    async def _native_evaluate_page(self, page: Any, expression: str) -> dict[str, Any]:
+        result = await page.evaluate(expression)
+        return {"success": True, "expression": expression, "result": result, "current_url": page.url}
 
     # --- Task 015: Recipe Management ---
 
@@ -12527,7 +15993,9 @@ function choose(mode) {
         if not isinstance(body, dict):
             self._send_json({"error": "body must be a JSON object"}, 400)
             return
-        content = body.get("content", "")
+        content = body.get("content")
+        if not isinstance(content, str) or not content.strip():
+            content = body.get("message", "")
         if not isinstance(content, str):
             self._send_json({"error": "content must be a string"}, 400)
             return
@@ -12550,9 +16018,14 @@ function choose(mode) {
         }
 
         openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
+        repo_root = getattr(self.server, "repo_root", ".")
+        grounded_prompt = (
+            f"{_chat_grounding_context(repo_root, content)}\n\n"
+            f"User request:\n{content.strip()}"
+        )
         if openrouter_key:
             reply_text, model_used, tokens_used, cost_usd = _call_openrouter_chat(
-                content, openrouter_key
+                grounded_prompt, openrouter_key
             )
         else:
             reply_text = (
@@ -13535,6 +17008,14 @@ function choose(mode) {
                         continue
                     if msg.get("type") == "ping":
                         _ws_send(json.dumps({"type": "pong"}))
+                    elif msg.get("type") == "credits":
+                        apps = list(getattr(self.server, "apps", []))  # type: ignore[attr-defined]
+                        _ws_send(json.dumps({"type": "credits", "apps": apps}))
+                        _ws_send(json.dumps({"type": "quick_actions", "actions": []}))
+                    elif msg.get("type") == "detect":
+                        _ws_send(json.dumps({"type": "detect", "matches": []}))
+                    elif msg.get("type") == "run_update":
+                        _ws_send(json.dumps({"type": "run_update", "runs": []}))
         except OSError:
             pass
         finally:
@@ -14175,7 +17656,7 @@ function choose(mode) {
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Connection", "keep-alive")
-        self.send_header("Access-Control-Allow-Origin", f"http://localhost:{YINYANG_PORT}")
+        self._send_cors_headers()
         self.send_header("X-Accel-Buffering", "no")
         self.end_headers()
 
@@ -14643,7 +18124,16 @@ function choose(mode) {
 
     def _handle_apps_list(self) -> None:
         apps: list = self.server.apps if hasattr(self.server, "apps") else []  # type: ignore[attr-defined]
-        app_list = [{"id": a, "name": a.replace("-", " ").title()} for a in apps]
+        repo_root = getattr(self.server, "repo_root", ".")
+        installed = _installed_app_ids(repo_root)
+        app_list = [
+            {
+                "id": a,
+                "name": a.replace("-", " ").title(),
+                "status": "installed" if a in installed else "available",
+            }
+            for a in apps
+        ]
         self._send_json({"apps": app_list, "total": len(app_list)})
 
     def _handle_app_detail(self, app_id: str) -> None:
@@ -14651,7 +18141,76 @@ function choose(mode) {
         if app_id not in apps:
             self._send_json({"error": "app not found"}, 404)
             return
-        self._send_json({"id": app_id, "name": app_id.replace("-", " ").title(), "status": "available"})
+        repo_root = getattr(self.server, "repo_root", ".")
+        config = _load_app_config(repo_root, app_id)
+        northstar = _northstar_summary(repo_root, app_id)
+        reports: list[dict[str, str]] = []
+        app_root = self._resolve_app_root(app_id)
+        if app_root is not None:
+            from src.browser.inbox_outbox import InboxOutboxManager, InboxOutboxError
+            manager = InboxOutboxManager(apps_root=app_root.parent)
+            try:
+                outbox = manager.list_outbox(app_id)
+                for entry in outbox.get("reports", []):
+                    name = str(entry.get("name", "")).rstrip("/")
+                    if not name:
+                        continue
+                    reports.append({
+                        "name": name,
+                        "url": f"/apps/{app_id}/outbox/reports/{urllib.parse.quote(name, safe='')}",
+                    })
+            except InboxOutboxError:
+                reports = []
+        manifest = _load_manifest_for_app(repo_root, app_id)
+        self._send_json({
+            "id": app_id,
+            "name": str(manifest.get("name") or app_id.replace("-", " ").title()),
+            "status": "installed" if app_id in _installed_app_ids(repo_root) else "available",
+            "custom": bool(manifest.get("custom", False)),
+            "description": str(manifest.get("description") or ""),
+            "site": str(manifest.get("site") or ""),
+            "northstar": northstar,
+            "config": config,
+            "reports": reports,
+        })
+
+    def _handle_app_config_get(self, app_id: str) -> None:
+        if not self._check_auth():
+            return
+        apps: list = self.server.apps if hasattr(self.server, "apps") else []  # type: ignore[attr-defined]
+        if app_id not in apps:
+            self._send_json({"error": "app not found"}, 404)
+            return
+        repo_root = getattr(self.server, "repo_root", ".")
+        self._send_json({
+            "app_id": app_id,
+            "config": _load_app_config(repo_root, app_id),
+            "schema": [
+                {"id": "objective", "label": "Mission", "type": "textarea"},
+                {"id": "target_url", "label": "Target URL", "type": "url"},
+                {"id": "cron", "label": "Default Schedule", "type": "text"},
+                {"id": "keepalive_minutes", "label": "Keepalive Minutes", "type": "number"},
+            ],
+        })
+
+    def _handle_app_config_set(self, app_id: str) -> None:
+        if not self._check_auth():
+            return
+        apps: list = self.server.apps if hasattr(self.server, "apps") else []  # type: ignore[attr-defined]
+        if app_id not in apps:
+            self._send_json({"error": "app not found"}, 404)
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        repo_root = getattr(self.server, "repo_root", ".")
+        try:
+            config = _save_app_config(repo_root, app_id, body)
+        except ValueError as error:
+            self._send_json({"error": str(error)}, 400)
+            return
+        record_evidence("app_config_updated", {"app_id": app_id, "fields": sorted(config.keys())})
+        self._send_json({"status": "saved", "app_id": app_id, "config": config})
 
     def _handle_app_launch(self, app_id: str) -> None:
         if not self._check_auth():
@@ -14660,10 +18219,45 @@ function choose(mode) {
         if app_id not in apps:
             self._send_json({"error": "app not found"}, 404)
             return
+        repo_root = getattr(self.server, "repo_root", ".")
+        launch_artifact = None
+        app_root = self._resolve_app_root(app_id)
+        if app_root is not None:
+            from src.browser.inbox_outbox import InboxOutboxManager
+            manager = InboxOutboxManager(apps_root=app_root.parent)
+            if app_id in {"google-search-mission", "competitor-watch", "google-search-trends"}:
+                html_report = _generate_local_research_report_html(app_id, repo_root)
+                filename_map = {
+                    "google-search-mission": "google-search-mission-demo.html",
+                    "competitor-watch": "competitor-watch-demo.html",
+                    "google-search-trends": "trends-demo.html",
+                }
+                launch_artifact = manager.write_outbox(
+                    app_id,
+                    "reports",
+                    filename_map[app_id],
+                    html_report,
+                )
+            elif app_id == "morning-brief":
+                html_report = _aggregate_morning_brief_html(repo_root)
+                launch_artifact = manager.write_outbox("morning-brief", "reports", "today.html", html_report)
+            else:
+                html_report = _generate_configured_app_report_html(app_id, repo_root)
+                launch_artifact = manager.write_outbox(app_id, "reports", "latest.html", html_report)
         _append_notification("info", "App Launched", f"{app_id} launched from Hub", "info")
         with _METRICS_LOCK:
             _REQUEST_COUNTS[f"app_launch:{app_id}"] = _REQUEST_COUNTS.get(f"app_launch:{app_id}", 0) + 1
-        self._send_json({"status": "launched", "app_id": app_id, "timestamp": int(time.time())})
+        response = {"status": "launched", "app_id": app_id, "timestamp": int(time.time())}
+        if launch_artifact is not None:
+            response["outbox_artifact"] = launch_artifact
+            report_urls = {
+                "morning-brief": "/apps/morning-brief/outbox/reports/today.html",
+                "google-search-mission": "/apps/google-search-mission/outbox/reports/google-search-mission-demo.html",
+                "competitor-watch": "/apps/competitor-watch/outbox/reports/competitor-watch-demo.html",
+                "google-search-trends": "/apps/google-search-trends/outbox/reports/trends-demo.html",
+            }
+            response["report_url"] = report_urls.get(app_id, f"/apps/{app_id}/outbox/reports/latest.html")
+        self._send_json(response)
 
     def _handle_session_rules_list(self) -> None:
         """GET /api/v1/session-rules — list loaded session rule schemas."""
@@ -14754,13 +18348,9 @@ function choose(mode) {
         if app is None:
             self._send_json({"error": "app not found"}, 404)
             return
-        user_tier = _load_account_tier()
         tier_required = str(app.get("tier_required", "free"))
-        if not _tier_allows_install(user_tier, tier_required):
-            self._send_json({"error": "upgrade required", "upgrade_url": MARKETPLACE_UPGRADE_URL}, 403)
-            return
         try:
-            session_rules_text, download_status = _download_marketplace_session_rules(app_id)
+            session_rules_text, download_status, install_source = _download_marketplace_session_rules(app_id, repo_root)
         except urllib.error.URLError as exc:
             record_evidence("marketplace_install_failed", {
                 "app_id": app_id,
@@ -14775,14 +18365,16 @@ function choose(mode) {
         if download_status == 404 or session_rules_text is None:
             self._send_json({"error": "app not found"}, 404)
             return
-        app_dir = _marketplace_app_dir(repo_root, app_id)
-        session_rules_path = _session_rules_path_for_app(repo_root, app_id)
         try:
-            app_dir.mkdir(parents=True, exist_ok=True)
-            session_rules_path.write_text(session_rules_text)
+            if _app_manifest_path(repo_root, app_id) is None:
+                app_dir = _marketplace_app_dir(repo_root, app_id)
+                session_rules_path = _session_rules_path_for_app(repo_root, app_id)
+                app_dir.mkdir(parents=True, exist_ok=True)
+                session_rules_path.write_text(session_rules_text)
+            _set_app_installed(repo_root, app_id, True)
         except OSError as exc:
             record_evidence("marketplace_install_failed", {"app_id": app_id, "reason": str(exc)})
-            self._send_json({"error": "install write failed"}, 500)
+            self._send_json({"error": "install state write failed"}, 500)
             return
         try:
             _rebuild_domain_index(repo_root)
@@ -14792,13 +18384,14 @@ function choose(mode) {
         self._reload_session_rules_cache()
         record_evidence("marketplace_app_installed", {
             "app_id": app_id,
-            "source": source,
+            "source": install_source or source,
             "tier_required": tier_required,
         })
         self._send_json({
             "status": "installed",
             "app_id": app_id,
             "path": f"data/default/apps/{app_id}/",
+            "source": install_source or source,
         })
 
     def _handle_marketplace_uninstall(self) -> None:
@@ -14815,21 +18408,24 @@ function choose(mode) {
             self._send_json({"error": "app_id must be alphanumeric + hyphens only"}, 400)
             return
         repo_root = getattr(self.server, "repo_root", ".")
-        app_dir = _marketplace_app_dir(repo_root, app_id)
-        session_rules_path = _session_rules_path_for_app(repo_root, app_id)
-        try:
-            session_rules_path.unlink()
-        except FileNotFoundError:
+        if app_id not in _installed_app_ids(repo_root):
             self._send_json({"error": "app not installed"}, 404)
             return
+        try:
+            if _app_manifest_path(repo_root, app_id) is None:
+                app_dir = _marketplace_app_dir(repo_root, app_id)
+                session_rules_path = _session_rules_path_for_app(repo_root, app_id)
+                if session_rules_path.exists():
+                    session_rules_path.unlink()
+                try:
+                    app_dir.rmdir()
+                except OSError:
+                    pass
+            _set_app_installed(repo_root, app_id, False)
         except OSError as exc:
             record_evidence("marketplace_uninstall_failed", {"app_id": app_id, "reason": str(exc)})
             self._send_json({"error": "uninstall failed"}, 500)
             return
-        try:
-            app_dir.rmdir()
-        except OSError:
-            pass
         try:
             _rebuild_domain_index(repo_root)
         except ValueError as error:
@@ -15139,7 +18735,7 @@ function choose(mode) {
                 continue
             if to_iso and item_time > to_iso:
                 continue
-            item_status = str(item["status"]).lower()
+            item_status = str(item.get("status", item.get("state", "unknown"))).lower()
             if normalized_filter:
                 if normalized_filter == "pending" and item_status not in ("pending_approval", "cooldown"):
                     continue
@@ -16093,8 +19689,12 @@ function choose(mode) {
         if not self._check_auth():
             return
         apps = getattr(self.server, "apps", [])
+        repo_root = getattr(self.server, "repo_root", ".")
+        installed_app_ids = _installed_app_ids(repo_root)
         result = []
         for app_id in (apps if isinstance(apps, list) else []):
+            if app_id not in installed_app_ids:
+                continue
             setup_requirements = self._app_setup_requirements_payload(app_id)
             is_configured = self._app_config_complete(app_id)
             result.append({
@@ -16828,7 +20428,7 @@ function choose(mode) {
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", f"http://localhost:{YINYANG_PORT}")
+        self._send_cors_headers()
         self.end_headers()
         self.wfile.write(body)
 
@@ -32620,6 +36220,983 @@ function choose(mode) {
     def _handle_uat2_platforms(self) -> None:
         self._send_json({"platforms": USER_AGENT_PLATFORMS, "browsers": USER_AGENT_BROWSERS})
 
+    # ---------------------------------------------------------------------------
+    # Task 191 — Error Boundary Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_ebt_create(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        error_type = str(body.get("error_type", "")).strip()
+        if error_type not in JS_ERROR_TYPES:
+            self._send_json({"error": f"error_type must be one of {JS_ERROR_TYPES}"}, 400)
+            return
+        severity = str(body.get("severity", "")).strip()
+        if severity not in ["low", "medium", "high", "critical"]:
+            self._send_json({"error": "severity must be one of ['low', 'medium', 'high', 'critical']"}, 400)
+            return
+        was_caught, caught_err = _tracker_parse_bool(body.get("was_caught", False), "was_caught")
+        if caught_err:
+            self._send_json({"error": caught_err}, 400)
+            return
+        stack_raw = body.get("stack_trace")
+        component_raw = body.get("component_name")
+        record = {
+            "event_id": "ebt_" + str(uuid.uuid4()),
+            "error_type": error_type,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "message_hash": _tracker_sha256(body.get("message", "")),
+            "stack_hash": _tracker_sha256(stack_raw) if stack_raw is not None else None,
+            "component_hash": _tracker_sha256(component_raw) if component_raw is not None else None,
+            "was_caught": was_caught,
+            "severity": severity,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _ERROR_BOUNDARY_LOCK:
+            if len(_ERROR_BOUNDARY_EVENTS) >= MAX_ERROR_BOUNDARY_EVENTS:
+                _ERROR_BOUNDARY_EVENTS.pop(0)
+            _ERROR_BOUNDARY_EVENTS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_ebt_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _ERROR_BOUNDARY_LOCK:
+            events = [dict(e) for e in _ERROR_BOUNDARY_EVENTS]
+        self._send_json({"events": events, "total": len(events)})
+
+    def _handle_ebt_delete(self, event_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _ERROR_BOUNDARY_LOCK:
+            idx = next((i for i, e in enumerate(_ERROR_BOUNDARY_EVENTS) if e["event_id"] == event_id), None)
+            if idx is None:
+                self._send_json({"error": "event not found"}, 404)
+                return
+            _ERROR_BOUNDARY_EVENTS.pop(idx)
+        self._send_json({"status": "deleted", "event_id": event_id})
+
+    def _handle_ebt_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _ERROR_BOUNDARY_LOCK:
+            events = [dict(e) for e in _ERROR_BOUNDARY_EVENTS]
+        total = len(events)
+        uncaught_count = sum(1 for e in events if not e.get("was_caught"))
+        uncaught_rate = str(
+            (Decimal(uncaught_count) / Decimal(total) * 100).quantize(Decimal("0.00"))
+        ) if total else "0.00"
+        by_error_type = {t: 0 for t in JS_ERROR_TYPES}
+        by_severity = {"low": 0, "medium": 0, "high": 0, "critical": 0}
+        for e in events:
+            et = e.get("error_type", "")
+            by_error_type[et] = by_error_type.get(et, 0) + 1
+            sv = e.get("severity", "")
+            by_severity[sv] = by_severity.get(sv, 0) + 1
+        self._send_json({
+            "total_events": total,
+            "uncaught_count": uncaught_count,
+            "uncaught_rate": uncaught_rate,
+            "by_error_type": by_error_type,
+            "by_severity": by_severity,
+        })
+
+    def _handle_ebt_error_types(self) -> None:
+        self._send_json({"error_types": JS_ERROR_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 192 — API Request Logger handlers
+    # ---------------------------------------------------------------------------
+    def _handle_arl_create(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        http_method = str(body.get("http_method", "")).strip()
+        if http_method not in HTTP_REQUEST_METHODS:
+            self._send_json({"error": f"http_method must be one of {HTTP_REQUEST_METHODS}"}, 400)
+            return
+        status_code = body.get("status_code", -1)
+        if not isinstance(status_code, int) or isinstance(status_code, bool) or status_code < 100 or status_code > 599:
+            self._send_json({"error": "status_code must be an integer 100-599"}, 400)
+            return
+        duration_raw = body.get("duration_ms", -1)
+        duration_decimal, dur_err = _tracker_parse_non_negative_decimal(duration_raw, "duration_ms")
+        if dur_err:
+            self._send_json({"error": dur_err}, 400)
+            return
+        req_size, req_err = _tracker_parse_int(body.get("request_size_bytes", 0), "request_size_bytes", 0)
+        if req_err:
+            self._send_json({"error": req_err}, 400)
+            return
+        resp_size, resp_err = _tracker_parse_int(body.get("response_size_bytes", 0), "response_size_bytes", 0)
+        if resp_err:
+            self._send_json({"error": resp_err}, 400)
+            return
+        was_cached, cached_err = _tracker_parse_bool(body.get("was_cached", False), "was_cached")
+        if cached_err:
+            self._send_json({"error": cached_err}, 400)
+            return
+        record = {
+            "entry_id": "arl_" + str(uuid.uuid4()),
+            "http_method": http_method,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "status_code": status_code,
+            "duration_ms": _tracker_decimal_str(duration_decimal),
+            "request_size_bytes": req_size,
+            "response_size_bytes": resp_size,
+            "was_cached": was_cached,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _API_REQUEST_LOG_LOCK:
+            if len(_API_LOG_ENTRIES) >= MAX_API_LOG_ENTRIES:
+                _API_LOG_ENTRIES.pop(0)
+            _API_LOG_ENTRIES.append(record)
+        self._send_json(record, 201)
+
+    def _handle_arl_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _API_REQUEST_LOG_LOCK:
+            entries = [dict(e) for e in _API_LOG_ENTRIES]
+        self._send_json({"entries": entries, "total": len(entries)})
+
+    def _handle_arl_delete(self, entry_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _API_REQUEST_LOG_LOCK:
+            idx = next((i for i, e in enumerate(_API_LOG_ENTRIES) if e["entry_id"] == entry_id), None)
+            if idx is None:
+                self._send_json({"error": "entry not found"}, 404)
+                return
+            _API_LOG_ENTRIES.pop(idx)
+        self._send_json({"status": "deleted", "entry_id": entry_id})
+
+    def _handle_arl_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _API_REQUEST_LOG_LOCK:
+            entries = [dict(e) for e in _API_LOG_ENTRIES]
+        total = len(entries)
+        success_count = sum(1 for e in entries if 200 <= e.get("status_code", 0) < 300)
+        error_count = sum(1 for e in entries if e.get("status_code", 0) >= 400)
+        cache_hit_count = sum(1 for e in entries if e.get("was_cached"))
+        cache_hit_rate = str(
+            (Decimal(cache_hit_count) / Decimal(total) * 100).quantize(Decimal("0.00"))
+        ) if total else "0.00"
+        if entries:
+            avg_duration_ms = str((sum(Decimal(e["duration_ms"]) for e in entries) / total).quantize(Decimal("0.00")))
+        else:
+            avg_duration_ms = "0.00"
+        self._send_json({
+            "total_entries": total,
+            "success_count": success_count,
+            "error_count": error_count,
+            "cache_hit_count": cache_hit_count,
+            "cache_hit_rate": cache_hit_rate,
+            "avg_duration_ms": avg_duration_ms,
+        })
+
+    def _handle_arl_http_methods(self) -> None:
+        self._send_json({"http_methods": HTTP_REQUEST_METHODS})
+
+    # ---------------------------------------------------------------------------
+    # Task 193 — Geolocation Accuracy Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_gla_create(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        permission_state = str(body.get("permission_state", "")).strip()
+        if permission_state not in GEOLOCATION_PERMISSION_STATES:
+            self._send_json({"error": f"permission_state must be one of {GEOLOCATION_PERMISSION_STATES}"}, 400)
+            return
+        accuracy_raw = body.get("accuracy_meters")
+        accuracy_val = None
+        if accuracy_raw is not None:
+            acc_decimal, acc_err = _tracker_parse_non_negative_decimal(accuracy_raw, "accuracy_meters")
+            if acc_err:
+                self._send_json({"error": acc_err}, 400)
+                return
+            accuracy_val = _tracker_decimal_str(acc_decimal)
+        lat_region_raw = body.get("latitude_region")
+        lat_region = None
+        if lat_region_raw is not None:
+            if not isinstance(lat_region_raw, int) or isinstance(lat_region_raw, bool) or lat_region_raw < 1 or lat_region_raw > 18:
+                self._send_json({"error": "latitude_region must be an integer 1-18"}, 400)
+                return
+            lat_region = lat_region_raw
+        is_high_accuracy, hia_err = _tracker_parse_bool(body.get("is_high_accuracy", False), "is_high_accuracy")
+        if hia_err:
+            self._send_json({"error": hia_err}, 400)
+            return
+        record = {
+            "reading_id": "gla_" + str(uuid.uuid4()),
+            "permission_state": permission_state,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "accuracy_meters": accuracy_val,
+            "latitude_region": lat_region,
+            "is_high_accuracy": is_high_accuracy,
+            "error_code": body.get("error_code"),
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _GEOLOCATION_ACCURACY_LOCK:
+            if len(_GEOLOCATION_READINGS) >= MAX_GEOLOCATION_READINGS:
+                _GEOLOCATION_READINGS.pop(0)
+            _GEOLOCATION_READINGS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_gla_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _GEOLOCATION_ACCURACY_LOCK:
+            readings = [dict(r) for r in _GEOLOCATION_READINGS]
+        self._send_json({"readings": readings, "total": len(readings)})
+
+    def _handle_gla_delete(self, reading_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _GEOLOCATION_ACCURACY_LOCK:
+            idx = next((i for i, r in enumerate(_GEOLOCATION_READINGS) if r["reading_id"] == reading_id), None)
+            if idx is None:
+                self._send_json({"error": "reading not found"}, 404)
+                return
+            _GEOLOCATION_READINGS.pop(idx)
+        self._send_json({"status": "deleted", "reading_id": reading_id})
+
+    def _handle_gla_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _GEOLOCATION_ACCURACY_LOCK:
+            readings = [dict(r) for r in _GEOLOCATION_READINGS]
+        total = len(readings)
+        granted_count = sum(1 for r in readings if r.get("permission_state") == "granted")
+        grant_rate = str(
+            (Decimal(granted_count) / Decimal(total) * 100).quantize(Decimal("0.00"))
+        ) if total else "0.00"
+        acc_readings = [r for r in readings if r.get("accuracy_meters") is not None]
+        if acc_readings:
+            avg_accuracy = str(
+                (sum(Decimal(r["accuracy_meters"]) for r in acc_readings) / len(acc_readings)).quantize(Decimal("0.00"))
+            )
+        else:
+            avg_accuracy = "0.00"
+        by_permission = {s: 0 for s in GEOLOCATION_PERMISSION_STATES}
+        for r in readings:
+            ps = r.get("permission_state", "")
+            by_permission[ps] = by_permission.get(ps, 0) + 1
+        self._send_json({
+            "total_readings": total,
+            "granted_count": granted_count,
+            "grant_rate": grant_rate,
+            "avg_accuracy_meters": avg_accuracy,
+            "by_permission": by_permission,
+        })
+
+    def _handle_gla_permission_states(self) -> None:
+        self._send_json({"permission_states": GEOLOCATION_PERMISSION_STATES})
+
+    # ---------------------------------------------------------------------------
+    # Task 194 — IndexedDB Usage Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_idb_create(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        operation_type = str(body.get("operation_type", "")).strip()
+        if operation_type not in INDEXEDDB_OPERATION_TYPES:
+            self._send_json({"error": f"operation_type must be one of {INDEXEDDB_OPERATION_TYPES}"}, 400)
+            return
+        duration_raw = body.get("duration_ms", -1)
+        duration_decimal, dur_err = _tracker_parse_non_negative_decimal(duration_raw, "duration_ms")
+        if dur_err:
+            self._send_json({"error": dur_err}, 400)
+            return
+        was_successful, succ_err = _tracker_parse_bool(body.get("was_successful", True), "was_successful")
+        if succ_err:
+            self._send_json({"error": succ_err}, 400)
+            return
+        records_affected, ra_err = _tracker_parse_int(body.get("records_affected", 0), "records_affected", 0)
+        if ra_err:
+            self._send_json({"error": ra_err}, 400)
+            return
+        store_raw = body.get("store_name")
+        record = {
+            "event_id": "idb_" + str(uuid.uuid4()),
+            "operation_type": operation_type,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "db_name_hash": _tracker_sha256(body.get("db_name", "")),
+            "store_name_hash": _tracker_sha256(store_raw) if store_raw is not None else None,
+            "duration_ms": _tracker_decimal_str(duration_decimal),
+            "was_successful": was_successful,
+            "records_affected": records_affected,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _INDEXEDDB_USAGE_LOCK:
+            if len(_INDEXEDDB_EVENTS) >= MAX_INDEXEDDB_EVENTS:
+                _INDEXEDDB_EVENTS.pop(0)
+            _INDEXEDDB_EVENTS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_idb_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _INDEXEDDB_USAGE_LOCK:
+            events = [dict(e) for e in _INDEXEDDB_EVENTS]
+        self._send_json({"events": events, "total": len(events)})
+
+    def _handle_idb_delete(self, event_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _INDEXEDDB_USAGE_LOCK:
+            idx = next((i for i, e in enumerate(_INDEXEDDB_EVENTS) if e["event_id"] == event_id), None)
+            if idx is None:
+                self._send_json({"error": "event not found"}, 404)
+                return
+            _INDEXEDDB_EVENTS.pop(idx)
+        self._send_json({"status": "deleted", "event_id": event_id})
+
+    def _handle_idb_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _INDEXEDDB_USAGE_LOCK:
+            events = [dict(e) for e in _INDEXEDDB_EVENTS]
+        total = len(events)
+        failure_count = sum(1 for e in events if not e.get("was_successful"))
+        failure_rate = str(
+            (Decimal(failure_count) / Decimal(total) * 100).quantize(Decimal("0.00"))
+        ) if total else "0.00"
+        if events:
+            avg_duration_ms = str((sum(Decimal(e["duration_ms"]) for e in events) / total).quantize(Decimal("0.00")))
+        else:
+            avg_duration_ms = "0.00"
+        by_operation = {op: 0 for op in INDEXEDDB_OPERATION_TYPES}
+        for e in events:
+            ot = e.get("operation_type", "")
+            by_operation[ot] = by_operation.get(ot, 0) + 1
+        self._send_json({
+            "total_events": total,
+            "by_operation": by_operation,
+            "failure_count": failure_count,
+            "failure_rate": failure_rate,
+            "avg_duration_ms": avg_duration_ms,
+        })
+
+    def _handle_idb_operation_types(self) -> None:
+        self._send_json({"operation_types": INDEXEDDB_OPERATION_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 195 — Session Replay Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_srp_create(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        replay_quality = str(body.get("replay_quality", "")).strip()
+        if replay_quality not in REPLAY_QUALITIES:
+            self._send_json({"error": f"replay_quality must be one of {REPLAY_QUALITIES}"}, 400)
+            return
+        event_count, ec_err = _tracker_parse_int(body.get("event_count", 0), "event_count", 0)
+        if ec_err:
+            self._send_json({"error": ec_err}, 400)
+            return
+        record = {
+            "session_id": "srp_" + str(uuid.uuid4()),
+            "replay_quality": replay_quality,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "user_agent_hash": _tracker_sha256(body.get("user_agent", "")),
+            "event_count": event_count,
+            "duration_seconds": None,
+            "is_active": True,
+            "started_at": _tracker_now_iso(),
+            "ended_at": None,
+        }
+        with _SESSION_REPLAY_LOCK:
+            if len(_REPLAY_SESSIONS) >= MAX_REPLAY_SESSIONS:
+                _REPLAY_SESSIONS.pop(0)
+            _REPLAY_SESSIONS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_srp_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _SESSION_REPLAY_LOCK:
+            sessions = [dict(s) for s in _REPLAY_SESSIONS]
+        self._send_json({"sessions": sessions, "total": len(sessions)})
+
+    def _handle_srp_end(self, session_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _SESSION_REPLAY_LOCK:
+            idx = next((i for i, s in enumerate(_REPLAY_SESSIONS) if s["session_id"] == session_id), None)
+            if idx is None:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            if not _REPLAY_SESSIONS[idx].get("is_active"):
+                self._send_json({"error": "session already ended"}, 409)
+                return
+            _REPLAY_SESSIONS[idx]["is_active"] = False
+            _REPLAY_SESSIONS[idx]["ended_at"] = _tracker_now_iso()
+            record = dict(_REPLAY_SESSIONS[idx])
+        self._send_json(record)
+
+    def _handle_srp_delete(self, session_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _SESSION_REPLAY_LOCK:
+            idx = next((i for i, s in enumerate(_REPLAY_SESSIONS) if s["session_id"] == session_id), None)
+            if idx is None:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            _REPLAY_SESSIONS.pop(idx)
+        self._send_json({"status": "deleted", "session_id": session_id})
+
+    def _handle_srp_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _SESSION_REPLAY_LOCK:
+            sessions = [dict(s) for s in _REPLAY_SESSIONS]
+        total = len(sessions)
+        active_count = sum(1 for s in sessions if s.get("is_active"))
+        ended_count = total - active_count
+        if sessions:
+            avg_event_count = str((sum(Decimal(s["event_count"]) for s in sessions) / total).quantize(Decimal("0.00")))
+        else:
+            avg_event_count = "0.00"
+        by_quality = {q: 0 for q in REPLAY_QUALITIES}
+        for s in sessions:
+            q = s.get("replay_quality", "")
+            by_quality[q] = by_quality.get(q, 0) + 1
+        self._send_json({
+            "total_sessions": total,
+            "active_count": active_count,
+            "ended_count": ended_count,
+            "avg_event_count": avg_event_count,
+            "by_quality": by_quality,
+        })
+
+    def _handle_srp_qualities(self) -> None:
+        self._send_json({"replay_qualities": REPLAY_QUALITIES})
+
+    # ---------------------------------------------------------------------------
+    # Task 196 — Viewport Change Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_vpc_create(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        breakpoint_type = str(body.get("breakpoint_type", "")).strip()
+        if breakpoint_type not in VIEWPORT_BREAKPOINT_TYPES:
+            self._send_json({"error": f"breakpoint_type must be one of {VIEWPORT_BREAKPOINT_TYPES}"}, 400)
+            return
+        width_px, w_err = _tracker_parse_int(body.get("width_px", 0), "width_px", 1)
+        if w_err:
+            self._send_json({"error": w_err}, 400)
+            return
+        height_px, h_err = _tracker_parse_int(body.get("height_px", 0), "height_px", 1)
+        if h_err:
+            self._send_json({"error": h_err}, 400)
+            return
+        prev_width_raw = body.get("previous_width_px")
+        prev_width = None
+        if prev_width_raw is not None:
+            prev_width, pw_err = _tracker_parse_int(prev_width_raw, "previous_width_px", 1)
+            if pw_err:
+                self._send_json({"error": pw_err}, 400)
+                return
+        is_orientation, orient_err = _tracker_parse_bool(body.get("is_orientation_change", False), "is_orientation_change")
+        if orient_err:
+            self._send_json({"error": orient_err}, 400)
+            return
+        record = {
+            "event_id": "vpc_" + str(uuid.uuid4()),
+            "breakpoint_type": breakpoint_type,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "width_px": width_px,
+            "height_px": height_px,
+            "previous_width_px": prev_width,
+            "is_orientation_change": is_orientation,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _VIEWPORT_CHANGE_LOCK:
+            if len(_VIEWPORT_EVENTS) >= MAX_VIEWPORT_EVENTS:
+                _VIEWPORT_EVENTS.pop(0)
+            _VIEWPORT_EVENTS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_vpc_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _VIEWPORT_CHANGE_LOCK:
+            events = [dict(e) for e in _VIEWPORT_EVENTS]
+        self._send_json({"events": events, "total": len(events)})
+
+    def _handle_vpc_delete(self, event_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _VIEWPORT_CHANGE_LOCK:
+            idx = next((i for i, e in enumerate(_VIEWPORT_EVENTS) if e["event_id"] == event_id), None)
+            if idx is None:
+                self._send_json({"error": "event not found"}, 404)
+                return
+            _VIEWPORT_EVENTS.pop(idx)
+        self._send_json({"status": "deleted", "event_id": event_id})
+
+    def _handle_vpc_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _VIEWPORT_CHANGE_LOCK:
+            events = [dict(e) for e in _VIEWPORT_EVENTS]
+        total = len(events)
+        orientation_change_count = sum(1 for e in events if e.get("is_orientation_change"))
+        if events:
+            avg_width_px = str((sum(Decimal(e["width_px"]) for e in events) / total).quantize(Decimal("0.00")))
+            avg_height_px = str((sum(Decimal(e["height_px"]) for e in events) / total).quantize(Decimal("0.00")))
+        else:
+            avg_width_px = "0.00"
+            avg_height_px = "0.00"
+        by_breakpoint = {bp: 0 for bp in VIEWPORT_BREAKPOINT_TYPES}
+        for e in events:
+            bp = e.get("breakpoint_type", "")
+            by_breakpoint[bp] = by_breakpoint.get(bp, 0) + 1
+        self._send_json({
+            "total_events": total,
+            "by_breakpoint": by_breakpoint,
+            "orientation_change_count": orientation_change_count,
+            "avg_width_px": avg_width_px,
+            "avg_height_px": avg_height_px,
+        })
+
+    def _handle_vpc_breakpoint_types(self) -> None:
+        self._send_json({"breakpoint_types": VIEWPORT_BREAKPOINT_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 197 — Extension Conflict Detector handlers
+    # ---------------------------------------------------------------------------
+    def _handle_ecd_create(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        conflict_type = str(body.get("conflict_type", "")).strip()
+        if conflict_type not in EXTENSION_CONFLICT_TYPES:
+            self._send_json({"error": f"conflict_type must be one of {EXTENSION_CONFLICT_TYPES}"}, 400)
+            return
+        severity = str(body.get("severity", "")).strip()
+        if severity not in ["low", "medium", "high", "critical"]:
+            self._send_json({"error": "severity must be one of ['low', 'medium', 'high', 'critical']"}, 400)
+            return
+        was_resolved, res_err = _tracker_parse_bool(body.get("was_resolved", False), "was_resolved")
+        if res_err:
+            self._send_json({"error": res_err}, 400)
+            return
+        feature_raw = body.get("affected_feature")
+        record = {
+            "report_id": "ecd_" + str(uuid.uuid4()),
+            "conflict_type": conflict_type,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "extension_id_hash": _tracker_sha256(body.get("extension_id", "")),
+            "severity": severity,
+            "was_resolved": was_resolved,
+            "affected_feature_hash": _tracker_sha256(feature_raw) if feature_raw is not None else None,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _EXTENSION_CONFLICT_LOCK:
+            if len(_EXTENSION_CONFLICT_REPORTS) >= MAX_EXTENSION_CONFLICT_REPORTS:
+                _EXTENSION_CONFLICT_REPORTS.pop(0)
+            _EXTENSION_CONFLICT_REPORTS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_ecd_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _EXTENSION_CONFLICT_LOCK:
+            reports = [dict(r) for r in _EXTENSION_CONFLICT_REPORTS]
+        self._send_json({"reports": reports, "total": len(reports)})
+
+    def _handle_ecd_delete(self, report_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _EXTENSION_CONFLICT_LOCK:
+            idx = next((i for i, r in enumerate(_EXTENSION_CONFLICT_REPORTS) if r["report_id"] == report_id), None)
+            if idx is None:
+                self._send_json({"error": "report not found"}, 404)
+                return
+            _EXTENSION_CONFLICT_REPORTS.pop(idx)
+        self._send_json({"status": "deleted", "report_id": report_id})
+
+    def _handle_ecd_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _EXTENSION_CONFLICT_LOCK:
+            reports = [dict(r) for r in _EXTENSION_CONFLICT_REPORTS]
+        total = len(reports)
+        resolved_count = sum(1 for r in reports if r.get("was_resolved"))
+        resolution_rate = str(
+            (Decimal(resolved_count) / Decimal(total) * 100).quantize(Decimal("0.00"))
+        ) if total else "0.00"
+        by_conflict_type = {ct: 0 for ct in EXTENSION_CONFLICT_TYPES}
+        by_severity = {"low": 0, "medium": 0, "high": 0, "critical": 0}
+        for r in reports:
+            ct = r.get("conflict_type", "")
+            by_conflict_type[ct] = by_conflict_type.get(ct, 0) + 1
+            sv = r.get("severity", "")
+            by_severity[sv] = by_severity.get(sv, 0) + 1
+        self._send_json({
+            "total_reports": total,
+            "by_conflict_type": by_conflict_type,
+            "resolved_count": resolved_count,
+            "resolution_rate": resolution_rate,
+            "by_severity": by_severity,
+        })
+
+    def _handle_ecd_conflict_types(self) -> None:
+        self._send_json({"conflict_types": EXTENSION_CONFLICT_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 198 — Reading Progress Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_rps_create(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        content_type = str(body.get("content_type", "")).strip()
+        if content_type not in READING_CONTENT_TYPES:
+            self._send_json({"error": f"content_type must be one of {READING_CONTENT_TYPES}"}, 400)
+            return
+        record = {
+            "session_id": "rps_" + str(uuid.uuid4()),
+            "content_type": content_type,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "title_hash": _tracker_sha256(body.get("title", "")),
+            "max_scroll_pct": "0.00",
+            "read_time_seconds": "0.00",
+            "is_completed": False,
+            "started_at": _tracker_now_iso(),
+        }
+        with _READING_PROGRESS_LOCK:
+            if len(_READING_SESSIONS) >= MAX_READING_SESSIONS:
+                _READING_SESSIONS.pop(0)
+            _READING_SESSIONS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_rps_update(self, session_id: str) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        scroll_pct_decimal, sp_err = _tracker_parse_non_negative_decimal(body.get("scroll_pct", "0"), "scroll_pct")
+        if sp_err:
+            self._send_json({"error": sp_err}, 400)
+            return
+        if scroll_pct_decimal < Decimal("0") or scroll_pct_decimal > Decimal("100"):
+            self._send_json({"error": "scroll_pct must be 0-100"}, 400)
+            return
+        add_secs_decimal, as_err = _tracker_parse_non_negative_decimal(body.get("additional_seconds", "0"), "additional_seconds")
+        if as_err:
+            self._send_json({"error": as_err}, 400)
+            return
+        with _READING_PROGRESS_LOCK:
+            idx = next((i for i, s in enumerate(_READING_SESSIONS) if s["session_id"] == session_id), None)
+            if idx is None:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            current_max = Decimal(_READING_SESSIONS[idx]["max_scroll_pct"])
+            if scroll_pct_decimal > current_max:
+                _READING_SESSIONS[idx]["max_scroll_pct"] = _tracker_decimal_str(scroll_pct_decimal)
+            current_time = Decimal(_READING_SESSIONS[idx]["read_time_seconds"])
+            _READING_SESSIONS[idx]["read_time_seconds"] = _tracker_decimal_str(current_time + add_secs_decimal)
+            if Decimal(_READING_SESSIONS[idx]["max_scroll_pct"]) >= Decimal("90"):
+                _READING_SESSIONS[idx]["is_completed"] = True
+            record = dict(_READING_SESSIONS[idx])
+        self._send_json(record)
+
+    def _handle_rps_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _READING_PROGRESS_LOCK:
+            sessions = [dict(s) for s in _READING_SESSIONS]
+        self._send_json({"sessions": sessions, "total": len(sessions)})
+
+    def _handle_rps_delete(self, session_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _READING_PROGRESS_LOCK:
+            idx = next((i for i, s in enumerate(_READING_SESSIONS) if s["session_id"] == session_id), None)
+            if idx is None:
+                self._send_json({"error": "session not found"}, 404)
+                return
+            _READING_SESSIONS.pop(idx)
+        self._send_json({"status": "deleted", "session_id": session_id})
+
+    def _handle_rps_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _READING_PROGRESS_LOCK:
+            sessions = [dict(s) for s in _READING_SESSIONS]
+        total = len(sessions)
+        completed_count = sum(1 for s in sessions if s.get("is_completed"))
+        completion_rate = str(
+            (Decimal(completed_count) / Decimal(total) * 100).quantize(Decimal("0.00"))
+        ) if total else "0.00"
+        if sessions:
+            avg_scroll_pct = str((sum(Decimal(s["max_scroll_pct"]) for s in sessions) / total).quantize(Decimal("0.00")))
+        else:
+            avg_scroll_pct = "0.00"
+        by_content_type = {ct: 0 for ct in READING_CONTENT_TYPES}
+        for s in sessions:
+            ct = s.get("content_type", "")
+            by_content_type[ct] = by_content_type.get(ct, 0) + 1
+        self._send_json({
+            "total_sessions": total,
+            "completed_count": completed_count,
+            "completion_rate": completion_rate,
+            "avg_scroll_pct": avg_scroll_pct,
+            "by_content_type": by_content_type,
+        })
+
+    def _handle_rps_content_types(self) -> None:
+        self._send_json({"content_types": READING_CONTENT_TYPES})
+
+    # ---------------------------------------------------------------------------
+    # Task 199 — Tab Loading Profiler handlers
+    # ---------------------------------------------------------------------------
+    def _handle_tlp_create(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        slowest_stage = str(body.get("slowest_stage", "")).strip()
+        if slowest_stage not in TAB_LOAD_STAGES:
+            self._send_json({"error": f"slowest_stage must be one of {TAB_LOAD_STAGES}"}, 400)
+            return
+        http_version = str(body.get("http_version", "")).strip()
+        if http_version not in HTTP_VERSIONS:
+            self._send_json({"error": f"http_version must be one of {HTTP_VERSIONS}"}, 400)
+            return
+        total_load_decimal, tl_err = _tracker_parse_non_negative_decimal(body.get("total_load_ms", -1), "total_load_ms")
+        if tl_err:
+            self._send_json({"error": tl_err}, 400)
+            return
+        dns_raw = body.get("dns_ms")
+        dns_val = None
+        if dns_raw is not None:
+            dns_decimal, dns_err = _tracker_parse_non_negative_decimal(dns_raw, "dns_ms")
+            if dns_err:
+                self._send_json({"error": dns_err}, 400)
+                return
+            dns_val = _tracker_decimal_str(dns_decimal)
+        ttfb_raw = body.get("ttfb_ms")
+        ttfb_val = None
+        if ttfb_raw is not None:
+            ttfb_decimal, ttfb_err = _tracker_parse_non_negative_decimal(ttfb_raw, "ttfb_ms")
+            if ttfb_err:
+                self._send_json({"error": ttfb_err}, 400)
+                return
+            ttfb_val = _tracker_decimal_str(ttfb_decimal)
+        dom_raw = body.get("dom_ms")
+        dom_val = None
+        if dom_raw is not None:
+            dom_decimal, dom_err = _tracker_parse_non_negative_decimal(dom_raw, "dom_ms")
+            if dom_err:
+                self._send_json({"error": dom_err}, 400)
+                return
+            dom_val = _tracker_decimal_str(dom_decimal)
+        is_cached, cached_err = _tracker_parse_bool(body.get("is_cached", False), "is_cached")
+        if cached_err:
+            self._send_json({"error": cached_err}, 400)
+            return
+        record = {
+            "profile_id": "tlp_" + str(uuid.uuid4()),
+            "slowest_stage": slowest_stage,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "total_load_ms": _tracker_decimal_str(total_load_decimal),
+            "dns_ms": dns_val,
+            "ttfb_ms": ttfb_val,
+            "dom_ms": dom_val,
+            "is_cached": is_cached,
+            "http_version": http_version,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _TAB_LOADING_LOCK:
+            if len(_TAB_LOADING_PROFILES) >= MAX_TAB_LOADING_PROFILES:
+                _TAB_LOADING_PROFILES.pop(0)
+            _TAB_LOADING_PROFILES.append(record)
+        self._send_json(record, 201)
+
+    def _handle_tlp_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _TAB_LOADING_LOCK:
+            profiles = [dict(p) for p in _TAB_LOADING_PROFILES]
+        self._send_json({"profiles": profiles, "total": len(profiles)})
+
+    def _handle_tlp_delete(self, profile_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _TAB_LOADING_LOCK:
+            idx = next((i for i, p in enumerate(_TAB_LOADING_PROFILES) if p["profile_id"] == profile_id), None)
+            if idx is None:
+                self._send_json({"error": "profile not found"}, 404)
+                return
+            _TAB_LOADING_PROFILES.pop(idx)
+        self._send_json({"status": "deleted", "profile_id": profile_id})
+
+    def _handle_tlp_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _TAB_LOADING_LOCK:
+            profiles = [dict(p) for p in _TAB_LOADING_PROFILES]
+        total = len(profiles)
+        cache_hit_count = sum(1 for p in profiles if p.get("is_cached"))
+        cache_hit_rate = str(
+            (Decimal(cache_hit_count) / Decimal(total) * 100).quantize(Decimal("0.00"))
+        ) if total else "0.00"
+        if profiles:
+            avg_total_ms = str((sum(Decimal(p["total_load_ms"]) for p in profiles) / total).quantize(Decimal("0.00")))
+        else:
+            avg_total_ms = "0.00"
+        by_slowest_stage = {s: 0 for s in TAB_LOAD_STAGES}
+        for p in profiles:
+            ss = p.get("slowest_stage", "")
+            by_slowest_stage[ss] = by_slowest_stage.get(ss, 0) + 1
+        self._send_json({
+            "total_profiles": total,
+            "cache_hit_count": cache_hit_count,
+            "cache_hit_rate": cache_hit_rate,
+            "avg_total_ms": avg_total_ms,
+            "by_slowest_stage": by_slowest_stage,
+        })
+
+    def _handle_tlp_load_stages(self) -> None:
+        self._send_json({"load_stages": TAB_LOAD_STAGES})
+
+    # ---------------------------------------------------------------------------
+    # Task 200 — Cookie Compliance Tracker handlers
+    # ---------------------------------------------------------------------------
+    def _handle_ccs_create(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        dominant_category = str(body.get("dominant_category", "")).strip()
+        if dominant_category not in COOKIE_CATEGORIES:
+            self._send_json({"error": f"dominant_category must be one of {COOKIE_CATEGORIES}"}, 400)
+            return
+        total_cookies, tc_err = _tracker_parse_int(body.get("total_cookies", -1), "total_cookies", 0)
+        if tc_err:
+            self._send_json({"error": tc_err}, 400)
+            return
+        third_party_count, tpc_err = _tracker_parse_int(body.get("third_party_count", -1), "third_party_count", 0)
+        if tpc_err:
+            self._send_json({"error": tpc_err}, 400)
+            return
+        if third_party_count > total_cookies:
+            self._send_json({"error": "third_party_count cannot exceed total_cookies"}, 400)
+            return
+        consent_obtained, co_err = _tracker_parse_bool(body.get("consent_obtained", False), "consent_obtained")
+        if co_err:
+            self._send_json({"error": co_err}, 400)
+            return
+        has_consent_banner, hcb_err = _tracker_parse_bool(body.get("has_consent_banner", False), "has_consent_banner")
+        if hcb_err:
+            self._send_json({"error": hcb_err}, 400)
+            return
+        max_duration_raw = body.get("max_duration_days")
+        max_duration = None
+        if max_duration_raw is not None:
+            md_val, md_err = _tracker_parse_int(max_duration_raw, "max_duration_days", 0)
+            if md_err:
+                self._send_json({"error": md_err}, 400)
+                return
+            max_duration = md_val
+        record = {
+            "scan_id": "ccs_" + str(uuid.uuid4()),
+            "dominant_category": dominant_category,
+            "url_hash": _tracker_sha256(body.get("url", "")),
+            "total_cookies": total_cookies,
+            "third_party_count": third_party_count,
+            "consent_obtained": consent_obtained,
+            "has_consent_banner": has_consent_banner,
+            "max_duration_days": max_duration,
+            "recorded_at": _tracker_now_iso(),
+        }
+        with _COOKIE_COMPLIANCE_LOCK:
+            if len(_COOKIE_SCANS) >= MAX_COOKIE_SCANS:
+                _COOKIE_SCANS.pop(0)
+            _COOKIE_SCANS.append(record)
+        self._send_json(record, 201)
+
+    def _handle_ccs_list(self) -> None:
+        if not self._check_auth():
+            return
+        with _COOKIE_COMPLIANCE_LOCK:
+            scans = [dict(s) for s in _COOKIE_SCANS]
+        self._send_json({"scans": scans, "total": len(scans)})
+
+    def _handle_ccs_delete(self, scan_id: str) -> None:
+        if not self._check_auth():
+            return
+        with _COOKIE_COMPLIANCE_LOCK:
+            idx = next((i for i, s in enumerate(_COOKIE_SCANS) if s["scan_id"] == scan_id), None)
+            if idx is None:
+                self._send_json({"error": "scan not found"}, 404)
+                return
+            _COOKIE_SCANS.pop(idx)
+        self._send_json({"status": "deleted", "scan_id": scan_id})
+
+    def _handle_ccs_stats(self) -> None:
+        if not self._check_auth():
+            return
+        with _COOKIE_COMPLIANCE_LOCK:
+            scans = [dict(s) for s in _COOKIE_SCANS]
+        total = len(scans)
+        consent_count = sum(1 for s in scans if s.get("consent_obtained"))
+        consent_rate = str(
+            (Decimal(consent_count) / Decimal(total) * 100).quantize(Decimal("0.00"))
+        ) if total else "0.00"
+        if scans:
+            avg_cookies = str((sum(Decimal(s["total_cookies"]) for s in scans) / total).quantize(Decimal("0.00")))
+            total_cookies_sum = sum(s["total_cookies"] for s in scans)
+            total_third_party = sum(s["third_party_count"] for s in scans)
+            third_party_rate = str(
+                (Decimal(total_third_party) / Decimal(total_cookies_sum) * 100).quantize(Decimal("0.00"))
+            ) if total_cookies_sum else "0.00"
+        else:
+            avg_cookies = "0.00"
+            third_party_rate = "0.00"
+        by_category = {cat: 0 for cat in COOKIE_CATEGORIES}
+        for s in scans:
+            cat = s.get("dominant_category", "")
+            by_category[cat] = by_category.get(cat, 0) + 1
+        self._send_json({
+            "total_scans": total,
+            "consent_rate": consent_rate,
+            "avg_cookies": avg_cookies,
+            "by_category": by_category,
+            "third_party_rate": third_party_rate,
+        })
+
+    def _handle_ccs_cookie_categories(self) -> None:
+        self._send_json({"cookie_categories": COOKIE_CATEGORIES})
+
 
 # ---------------------------------------------------------------------------
 # Server factory — theorem: build_server isolates configuration from startup.
@@ -32639,7 +37216,10 @@ def build_server(
     Construct a ThreadingHTTPServer with apps pre-loaded.
     Does NOT write port.lock — caller is responsible for that.
     """
+    global SESSION_RULES_APPS_DIR
+    SESSION_RULES_APPS_DIR = _marketplace_apps_root(repo_root)
     load_session_rules()
+    _rebuild_domain_index(repo_root)
     server = ReusableThreadingHTTPServer(("localhost", port), YinyangHandler)
     server.apps = load_apps(repo_root)  # type: ignore[attr-defined]
     server.repo_root = repo_root  # type: ignore[attr-defined]

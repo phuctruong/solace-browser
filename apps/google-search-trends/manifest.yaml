@@ -1,0 +1,19 @@
+id: google-search-trends
+name: Google Search Trends
+version: "1.0.0"
+title: "Google Search Trends"
+description: "Scan Google and Google News for trend shifts that should feed your daily brief."
+author: "Solace AGI"
+category: research
+status: installed
+safety: A
+tier: free
+site: google.com
+type: standard
+orchestrates: []
+domains:
+  - "google.com"
+  - "www.google.com"
+  - "news.google.com"
+tier_required: free
+local_only: true

@@ -18,7 +18,8 @@
 
 use std::fs;
 use std::io::{self, Write};
-use std::path::PathBuf;
+use std::net::TcpStream;
+use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
 use std::sync::Mutex;
 use std::thread;
@@ -28,8 +29,8 @@ use keyring::Entry;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tauri::{
-    CustomMenuItem, Manager, RunEvent, State, SystemTray, SystemTrayEvent, SystemTrayMenu,
-    SystemTrayMenuItem,
+    CustomMenuItem, LogicalSize, Manager, RunEvent, Size, State, SystemTray, SystemTrayEvent,
+    SystemTrayMenu, SystemTrayMenuItem, Window,
 };
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -62,6 +63,13 @@ struct PortLock {
 struct HubState {
     server_child: Mutex<Option<Child>>,
     browser_child: Mutex<Option<Child>>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum BrowserLaunchMode {
+    Auto,
+    LocalDev,
+    ProductionBundle,
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -158,18 +166,30 @@ fn clear_token_keychain() -> Result<(), keyring::Error> {
     entry.delete_password()
 }
 
+fn browser_launch_mode() -> BrowserLaunchMode {
+    match std::env::var("SOLACE_BROWSER_MODE").ok().as_deref() {
+        Some("local-dev") => BrowserLaunchMode::LocalDev,
+        Some("production-bundle") => BrowserLaunchMode::ProductionBundle,
+        _ => BrowserLaunchMode::Auto,
+    }
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Process management
 // ────────────────────────────────────────────────────────────────────────────
 
-/// Spawn yinyang-server.py. server_path is absolute path to the script.
+/// Spawn yinyang-server.py with the real Browser repo root.
 /// Returns the Child process; caller must retain it to prevent premature termination.
-fn spawn_yinyang_server(server_path: &str, token_sha256: &str) -> Result<Child, io::Error> {
+fn spawn_yinyang_server(
+    server_path: &Path,
+    repo_root: &Path,
+    token_sha256: &str,
+) -> Result<Child, io::Error> {
     // Locate python3 on PATH
     let python = python_executable();
     Command::new(&python)
         .arg(server_path)
-        .arg(".")
+        .arg(repo_root)
         .arg("--token-sha256")
         .arg(token_sha256)
         .spawn()
@@ -204,6 +224,111 @@ fn resolve_server_script() -> Result<PathBuf, String> {
         "Could not locate yinyang-server.py from executable path {}",
         exe_path.display()
     ))
+}
+
+fn resolve_browser_binary(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let mut candidates: Vec<PathBuf> = Vec::new();
+    let mode = browser_launch_mode();
+
+    if let Some(resource_path) = app.path_resolver().resource_dir() {
+        #[cfg(target_os = "linux")]
+        {
+            push_linux_browser_candidates(&mut candidates, &resource_path, mode);
+            if let Some(parent) = resource_path.parent() {
+                push_linux_browser_candidates(&mut candidates, parent, mode);
+            }
+        }
+        #[cfg(target_os = "macos")]
+        {
+            candidates.push(resource_path.join("../../Solace Browser.app/Contents/MacOS/Solace Browser"));
+        }
+        #[cfg(target_os = "windows")]
+        {
+            candidates.push(resource_path.join("../../solace_browser.exe"));
+        }
+    }
+
+    let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
+    let exe_dir = exe_path
+        .parent()
+        .ok_or_else(|| "Executable must have a parent directory".to_string())?;
+
+    for candidate_root in exe_dir.ancestors() {
+        #[cfg(target_os = "linux")]
+        {
+            push_linux_browser_candidates(&mut candidates, candidate_root, mode);
+        }
+        #[cfg(target_os = "macos")]
+        {
+            candidates.push(
+                candidate_root.join("dist/Solace Browser.app/Contents/MacOS/Solace Browser"),
+            );
+        }
+        #[cfg(target_os = "windows")]
+        {
+            candidates.push(candidate_root.join("dist/solace_browser.exe"));
+        }
+    }
+
+    for candidate in candidates {
+        if candidate.is_file() {
+            return Ok(candidate);
+        }
+    }
+
+    Err(format!(
+        "Could not locate Solace Browser binary from executable path {}",
+        exe_path.display()
+    ))
+}
+
+#[cfg(target_os = "linux")]
+fn push_linux_browser_candidates(
+    candidates: &mut Vec<PathBuf>,
+    candidate_root: &Path,
+    mode: BrowserLaunchMode,
+) {
+    let local_dev = [
+        candidate_root.join("source/src/out/Solace/chrome-wrapper"),
+        candidate_root.join("source/src/out/Solace/chrome"),
+    ];
+    let production_bundle = [
+        candidate_root.join("solace-browser-release/chrome"),
+        candidate_root.join("dist/solace-browser-release/chrome"),
+    ];
+
+    match mode {
+        BrowserLaunchMode::LocalDev => {
+            candidates.extend(local_dev);
+            candidates.extend(production_bundle);
+        }
+        BrowserLaunchMode::ProductionBundle => {
+            candidates.extend(production_bundle);
+            candidates.extend(local_dev);
+        }
+        BrowserLaunchMode::Auto => {
+            candidates.extend(production_bundle);
+            candidates.extend(local_dev);
+        }
+    }
+}
+
+fn ensure_runtime_port_available() -> Result<(), String> {
+    if TcpStream::connect(("127.0.0.1", YINYANG_PORT)).is_ok() {
+        let lock_hint = match read_port_lock() {
+            Ok(lock) => format!(
+                "port.lock pid={}, token_sha256_present={}",
+                lock.pid,
+                !lock.token_sha256.is_empty()
+            ),
+            Err(_) => "port.lock unreadable or missing".to_string(),
+        };
+        return Err(format!(
+            "Refusing to start Solace Hub: localhost:{} is already occupied. {}",
+            YINYANG_PORT, lock_hint
+        ));
+    }
+    Ok(())
 }
 
 /// Poll GET /health on the given URL until 200 OK or timeout.
@@ -332,10 +457,46 @@ fn check_onboarding_complete() -> bool {
     content.contains("\"completed\": true") || content.contains("\"completed\":true")
 }
 
-/// Launch the Solace Browser binary with the authenticated start URL.
-/// url should be "http://localhost:8888/start"
+/// Launch the Solace Browser binary with the authenticated target URL.
 fn launch_solace_browser(browser_path: &str, url: &str) -> Result<Child, io::Error> {
-    Command::new(browser_path).arg(url).spawn()
+    let browser_binary = Path::new(browser_path);
+    let browser_dir = browser_binary.parent().unwrap_or_else(|| Path::new("."));
+
+    Command::new(browser_binary)
+        .current_dir(browser_dir)
+        .arg("--new-window")
+        .arg(url)
+        .spawn()
+}
+
+fn launch_browser_for_hub(
+    state: State<HubState>,
+    app: &tauri::AppHandle,
+    requested_url: Option<&str>,
+    respect_onboarding_gate: bool,
+) -> Result<String, String> {
+    let browser_binary = resolve_browser_binary(app)?;
+    let path_str = browser_binary.to_string_lossy().to_string();
+
+    let target_url = if respect_onboarding_gate && !check_onboarding_complete() {
+        format!("http://localhost:{}/onboarding", YINYANG_PORT)
+    } else if let Some(url) = requested_url {
+        url.to_string()
+    } else {
+        "https://solaceagi.com/dashboard".to_string()
+    };
+
+    if !wait_for_port_lock(SERVER_HEALTH_TIMEOUT_SECS) {
+        return Err("Yinyang Server not ready: port.lock missing after 10s".to_string());
+    }
+
+    let child = launch_solace_browser(&path_str, &target_url)
+        .map_err(|e| format!("Failed to launch browser: {e}"))?;
+
+    let mut guard = state.browser_child.lock().unwrap();
+    *guard = Some(child);
+
+    Ok(format!("Browser launched from {path_str} to {target_url}"))
 }
 
 fn shutdown_server_process(child: &mut Child) -> Result<(), io::Error> {
@@ -395,6 +556,22 @@ fn update_tray_tooltip(app: &tauri::AppHandle) {
         .set_tooltip(&tray_tooltip(server_running, sessions));
 }
 
+fn restore_dashboard_window(win: &Window) {
+    // Force a real dashboard geometry so the tray app cannot get stuck as a tiny shell window.
+    let _ = win.unminimize();
+    let _ = win.set_min_size(Some(Size::Logical(LogicalSize {
+        width: 430.0,
+        height: 760.0,
+    })));
+    let _ = win.set_size(Size::Logical(LogicalSize {
+        width: 980.0,
+        height: 920.0,
+    }));
+    let _ = win.center();
+    let _ = win.show();
+    let _ = win.set_focus();
+}
+
 fn show_status_notification(_app: &tauri::AppHandle) {
     let server_running = cmd_get_server_status().unwrap_or(false);
     let status = if server_running { "running" } else { "stopped" };
@@ -411,49 +588,22 @@ fn show_status_notification(_app: &tauri::AppHandle) {
 
 #[tauri::command]
 fn cmd_open_browser(state: State<HubState>, app: tauri::AppHandle) -> Result<String, String> {
-    // Locate browser binary relative to the app resource dir
-    let resource_path = app
-        .path_resolver()
-        .resource_dir()
-        .ok_or("resource dir unavailable")?;
+    launch_browser_for_hub(state, &app, None, true)
+}
 
-    // Convention: Solace Browser binary lives two levels up from solace-hub resource dir
-    let browser_binary = {
-        #[cfg(target_os = "linux")]
-        {
-            resource_path.join("../../solace-browser")
-        }
-        #[cfg(target_os = "macos")]
-        {
-            resource_path.join("../../Solace Browser.app/Contents/MacOS/Solace Browser")
-        }
-        #[cfg(target_os = "windows")]
-        {
-            resource_path.join("../../solace_browser.exe")
-        }
-    };
-
-    let path_str = browser_binary.to_string_lossy().to_string();
-
-    // Enforce onboarding gate: route to /onboarding until setup is complete
-    let start_url = if check_onboarding_complete() {
-        format!("http://localhost:{}/start", YINYANG_PORT)
-    } else {
-        format!("http://localhost:{}/onboarding", YINYANG_PORT)
-    };
-
-    // Enforce startup order: port.lock must exist before browser launches
-    if !wait_for_port_lock(SERVER_HEALTH_TIMEOUT_SECS) {
-        return Err("Yinyang Server not ready: port.lock missing after 10s".to_string());
-    }
-
-    let child = launch_solace_browser(&path_str, &start_url)
-        .map_err(|e| format!("Failed to launch browser: {e}"))?;
-
-    let mut guard = state.browser_child.lock().unwrap();
-    *guard = Some(child);
-
-    Ok(format!("Browser launched from {path_str}"))
+#[tauri::command]
+fn cmd_open_browser_url(
+    state: State<HubState>,
+    app: tauri::AppHandle,
+    url: String,
+    respect_onboarding_gate: Option<bool>,
+) -> Result<String, String> {
+    launch_browser_for_hub(
+        state,
+        &app,
+        Some(&url),
+        respect_onboarding_gate.unwrap_or(false),
+    )
 }
 
 #[tauri::command]
@@ -492,11 +642,15 @@ fn cmd_kill_all_sessions(state: State<HubState>) -> Result<String, String> {
 // ────────────────────────────────────────────────────────────────────────────
 
 fn main() {
+    ensure_runtime_port_available()
+        .unwrap_or_else(|msg| panic!("{msg}"));
+
     // ── Step 1: Find yinyang-server.py from the repo tree or bundled layout ─
     let server_path = resolve_server_script()
-        .expect("Cannot determine yinyang-server.py path")
-        .to_string_lossy()
-        .to_string();
+        .expect("Cannot determine yinyang-server.py path");
+    let repo_root = server_path
+        .parent()
+        .expect("yinyang-server.py must live inside the Solace Browser repo");
 
     // ── Step 2: Generate session token ───────────────────────────────────────
     let session_token = generate_session_token();
@@ -505,7 +659,7 @@ fn main() {
         .unwrap_or_else(|e| eprintln!("WARN: Could not store token in keychain: {e}"));
 
     // ── Step 3: Spawn Yinyang Server ─────────────────────────────────────────
-    let server_child = spawn_yinyang_server(&server_path, &session_sha256).expect(
+    let server_child = spawn_yinyang_server(&server_path, repo_root, &session_sha256).expect(
         "FATAL: Cannot spawn yinyang-server.py — check that python3 is on PATH and script exists",
     );
 
@@ -563,10 +717,14 @@ fn main() {
         .manage(hub_state)
         .setup(|app| {
             update_tray_tooltip(&app.handle());
+            if let Some(win) = app.get_window("main") {
+                restore_dashboard_window(&win);
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             cmd_open_browser,
+            cmd_open_browser_url,
             cmd_get_server_status,
             cmd_token_is_present,
             cmd_list_sessions,
@@ -578,50 +736,37 @@ fn main() {
                     // Fire-and-forget via Tauri invoke is not available from system tray context.
                     // We dispatch the same logic inline here.
                     let state: State<HubState> = app.state();
-                    let resource_path = app.path_resolver().resource_dir();
-                    if let Some(rp) = resource_path {
-                        let browser_binary = {
-                            #[cfg(target_os = "linux")]
-                            {
-                                rp.join("../../solace-browser")
+                    match resolve_browser_binary(app) {
+                        Ok(browser_binary) => {
+                            let path_str = browser_binary.to_string_lossy().to_string();
+                            // Enforce onboarding gate: route to /onboarding until setup is complete
+                            let start_url = if check_onboarding_complete() {
+                                "https://solaceagi.com/dashboard".to_string()
+                            } else {
+                                format!("http://localhost:{}/onboarding", YINYANG_PORT)
+                            };
+                            if !wait_for_port_lock(SERVER_HEALTH_TIMEOUT_SECS) {
+                                eprintln!("ERROR: Yinyang Server not ready (port.lock missing)");
+                                return;
                             }
-                            #[cfg(target_os = "macos")]
-                            {
-                                rp.join("../../Solace Browser.app/Contents/MacOS/Solace Browser")
-                            }
-                            #[cfg(target_os = "windows")]
-                            {
-                                rp.join("../../solace_browser.exe")
-                            }
-                        };
-                        let path_str = browser_binary.to_string_lossy().to_string();
-                        // Enforce onboarding gate: route to /onboarding until setup is complete
-                        let start_url = if check_onboarding_complete() {
-                            format!("http://localhost:{}/start", YINYANG_PORT)
-                        } else {
-                            format!("http://localhost:{}/onboarding", YINYANG_PORT)
-                        };
-                        if !wait_for_port_lock(SERVER_HEALTH_TIMEOUT_SECS) {
-                            eprintln!("ERROR: Yinyang Server not ready (port.lock missing)");
-                            return;
-                        }
-                        match launch_solace_browser(&path_str, &start_url) {
-                            Ok(child) => {
-                                if let Ok(mut guard) = state.browser_child.lock() {
-                                    *guard = Some(child);
+                            match launch_solace_browser(&path_str, &start_url) {
+                                Ok(child) => {
+                                    if let Ok(mut guard) = state.browser_child.lock() {
+                                        *guard = Some(child);
+                                    }
+                                    update_tray_tooltip(app);
                                 }
-                                update_tray_tooltip(app);
-                            }
-                            Err(e) => {
-                                eprintln!("ERROR: Cannot launch browser from tray: {e}");
+                                Err(e) => {
+                                    eprintln!("ERROR: Cannot launch browser from tray: {e}");
+                                }
                             }
                         }
+                        Err(e) => eprintln!("ERROR: Cannot resolve browser binary: {e}"),
                     }
                 }
                 "show_dashboard" => {
                     if let Some(win) = app.get_window("main") {
-                        let _ = win.show();
-                        let _ = win.set_focus();
+                        restore_dashboard_window(&win);
                     }
                 }
                 "status" => {
@@ -656,8 +801,7 @@ fn main() {
             },
             SystemTrayEvent::LeftClick { .. } => {
                 if let Some(win) = app.get_window("main") {
-                    let _ = win.show();
-                    let _ = win.set_focus();
+                    restore_dashboard_window(&win);
                 }
             }
             _ => {}

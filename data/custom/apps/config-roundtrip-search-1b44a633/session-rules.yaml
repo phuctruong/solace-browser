@@ -1,0 +1,18 @@
+app: config-roundtrip-search-1b44a633
+display_name: "Config Roundtrip Search 1b44a633"
+version: "1.0.0"
+category: "custom"
+site: google.com
+login_url: "https://google.com/"
+check_url: "https://google.com/"
+success_signals:
+  - "TODO: add success signal"
+failure_signals:
+  - "TODO: add failure signal"
+keep_alive:
+  interval_minutes: 15
+  action: "navigate"
+  url: "https://google.com/"
+tier_required: "free"
+evidence_on_check: true
+description: "Track a custom research mission."

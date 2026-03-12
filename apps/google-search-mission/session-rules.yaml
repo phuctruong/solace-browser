@@ -1,0 +1,18 @@
+app: google-search-mission
+display_name: "Google Search Mission"
+version: "1.0.0"
+category: "research"
+site: google.com
+login_url: "https://www.google.com/"
+check_url: "https://www.google.com/"
+success_signals:
+  - "Google"
+failure_signals:
+  - "Access denied"
+keep_alive:
+  interval_minutes: 30
+  action: "navigate"
+  url: "https://www.google.com/"
+tier_required: "free"
+evidence_on_check: true
+description: "Run ad hoc or scheduled Google research missions and write an HTML brief for Morning Brief."

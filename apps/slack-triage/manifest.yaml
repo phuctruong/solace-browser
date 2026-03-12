@@ -1,0 +1,39 @@
+id: slack-triage
+name: Slack Triage
+description: Summarize channels, draft responses, and escalate urgent items.
+category: communications
+status: installed
+safety: B
+tier: pro
+tier_reason: "Write actions on Slack require cloud sync + evidence chain"
+site: app.slack.com
+type: standard
+orchestrates: []
+scopes:
+- slack.read.channels
+- slack.write.drafts
+- local.evidence
+partners:
+  produces_for:
+  - morning-brief
+  consumes_from:
+  - gmail-inbox-triage
+  - github-issue-triage
+required_inbox:
+  prompts: []
+  templates: []
+  assets: []
+  policies: []
+  datasets: []
+  requests: []
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml
+
+domains:
+  - "app.slack.com"
+  - "*.slack.com"
+oauth3_scopes:
+  - "slack.read"
+  - "slack.message.draft"
+tier_required: free

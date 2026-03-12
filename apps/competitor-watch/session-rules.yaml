@@ -1,0 +1,18 @@
+app: competitor-watch
+display_name: "Competitor Watch"
+version: "1.0.0"
+category: "research"
+site: google.com
+login_url: "https://www.google.com/"
+check_url: "https://www.google.com/"
+success_signals:
+  - "Google"
+failure_signals:
+  - "Access denied"
+keep_alive:
+  interval_minutes: 60
+  action: "navigate"
+  url: "https://www.google.com/"
+tier_required: "free"
+evidence_on_check: true
+description: "Track competitor signals from Google Search and feed the best results into Morning Brief."

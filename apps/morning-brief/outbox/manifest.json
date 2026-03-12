@@ -1,0 +1,9 @@
+{
+  "entries": {
+    "outbox/reports/today.html": {
+      "sha256": "2edb1962de468818ea313d201085c693323e8f497b0f3bfc4c875805f0f9b049",
+      "size_bytes": 9006,
+      "updated_at": "2026-03-12T09:10:53.069010+00:00"
+    }
+  }
+}

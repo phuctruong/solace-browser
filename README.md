@@ -20,6 +20,23 @@ curl http://127.0.0.1:8888/api/status
 
 Solace Hub starts first. It launches Yinyang Server on `localhost:8888`, verifies the runtime, and then controls the Browser lifecycle.
 
+## Browser Modes
+
+The Browser now has two explicit modes:
+
+1. `local dev`
+   Uses the real Chromium build tree from `source/src/out/Solace/`.
+   Hub should resolve `chrome-wrapper` first, then `chrome`.
+2. `production bundle`
+   Uses the downloadable Browser bundle layout (`solace-browser-release/chrome`) that is meant to be uploaded to GCS and installed by humans.
+
+Override mode explicitly when needed:
+
+```bash
+SOLACE_BROWSER_MODE=local-dev ./scripts/start-hub.sh
+SOLACE_BROWSER_MODE=production-bundle ./scripts/start-hub.sh
+```
+
 ## Human Smoke Path
 
 1. Install the local scripts and service assets:
@@ -34,14 +51,15 @@ Solace Hub starts first. It launches Yinyang Server on `localhost:8888`, verifie
 ## Distribution
 
 ```bash
-cat scripts/VERSION
-bash scripts/version.sh
+bash scripts/build-linux-release.sh
 bash scripts/build-deb.sh
 ```
 
-- `scripts/build-deb.sh` reads `scripts/VERSION` and builds `dist/solace-browser_<version>_amd64.deb`.
-- The package tree is assembled under `/tmp/solace-browser-pkg` and includes the browser binary, Yinyang service assets, and desktop entry.
-- Expected browser input binary: `dist/solace-browser-linux-x86_64`.
+- `scripts/build-linux-release.sh` assembles `dist/solace-browser-release/` and `dist/solace-browser-chromium-linux-x86_64.tar.gz`.
+- `scripts/build-deb.sh` reads the repo `VERSION`, reuses the portable release root, and builds `dist/solace-browser_<version>_amd64.deb`.
+- The portable release root includes the real Chromium runtime, Solace Hub, Yinyang Server, and runtime assets.
+- Local dev browser input: `source/src/out/Solace/chrome-wrapper` or `source/src/out/Solace/chrome`.
+- Production browser bundle contract: extracted `solace-browser-release/chrome`.
 - `dpkg-deb` must be installed before running the packager.
 
 ## Manual Development

@@ -1,0 +1,13 @@
+{
+  "id": "github-issue-triage",
+  "recipe_ref": "github/github-issue-triage.json",
+  "steps": [
+    {
+      "action": "noop",
+      "description": "Preview GitHub Issue Triage",
+      "id": "preview"
+    }
+  ],
+  "type": "standard",
+  "version": "1.0.0"
+}

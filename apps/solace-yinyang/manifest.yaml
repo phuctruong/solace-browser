@@ -1,0 +1,18 @@
+id: solace-yinyang
+name: Solace Yinyang
+version: "1.0.0"
+title: "Solace Yinyang"
+description: "Local-first AI assistant for Solace Browser: learn the platform, create custom apps, manage app-store installs, and schedule work with evidence."
+author: "Solace AGI"
+category: assistant
+status: installed
+safety: B
+tier: free
+site: solaceagi.com
+type: standard
+orchestrates: []
+domains:
+  - "solaceagi.com"
+  - "localhost"
+tier_required: free
+local_only: true

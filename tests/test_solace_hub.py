@@ -5,12 +5,20 @@ Port note: 18888 remains the reserved test port for Hub-related tests.
 """
 
 from pathlib import Path
+import json
 
 
 TEST_PORT = 18888
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MAIN_RS = REPO_ROOT / "solace-hub" / "src-tauri" / "main.rs"
 ICON_PATH = REPO_ROOT / "solace-hub" / "src-tauri" / "icons" / "yinyang-logo.png"
+WEB_ICON_PATH = REPO_ROOT / "solace-hub" / "src" / "icons" / "yinyang-logo.png"
+DRAGON_BG_PATH = REPO_ROOT / "solace-hub" / "src" / "media" / "dragon-background.jpg"
+DRAGON_SPLASH_PATH = REPO_ROOT / "solace-hub" / "src" / "media" / "dragon-yinyang-splash.png"
+HUB_HTML = REPO_ROOT / "solace-hub" / "src" / "index.html"
+HUB_JS = REPO_ROOT / "solace-hub" / "src" / "solace.js"
+HUB_CSS = REPO_ROOT / "solace-hub" / "src" / "site.css"
+TAURI_CONFIG = REPO_ROOT / "solace-hub" / "src-tauri" / "tauri.conf.json"
 LEGACY_HUB_NAME = "Companion" + " App"
 FORBIDDEN_DEBUG_PORT = "9" + "222"
 
@@ -20,10 +28,40 @@ def main_rs_source() -> str:
     return MAIN_RS.read_text()
 
 
+def hub_html_source() -> str:
+    assert HUB_HTML.exists(), f"index.html not found at {HUB_HTML}"
+    return HUB_HTML.read_text()
+
+
+def hub_js_source() -> str:
+    assert HUB_JS.exists(), f"solace.js not found at {HUB_JS}"
+    return HUB_JS.read_text()
+
+
 def test_tray_icon_exists():
     assert TEST_PORT == 18888
     assert ICON_PATH.exists(), f"yinyang-logo.png missing from {ICON_PATH}"
     assert ICON_PATH.stat().st_size > 0, "yinyang-logo.png is zero bytes"
+
+
+def test_web_logo_asset_exists():
+    assert WEB_ICON_PATH.exists(), f"hub logo missing from {WEB_ICON_PATH}"
+    assert WEB_ICON_PATH.stat().st_size > 0, "web yinyang logo is zero bytes"
+
+
+def test_onboarding_art_assets_exist():
+    assert DRAGON_BG_PATH.exists(), f"dragon background missing from {DRAGON_BG_PATH}"
+    assert DRAGON_SPLASH_PATH.exists(), f"dragon splash missing from {DRAGON_SPLASH_PATH}"
+    assert DRAGON_BG_PATH.stat().st_size > 0
+    assert DRAGON_SPLASH_PATH.stat().st_size > 0
+
+
+def test_main_window_is_visible_by_default():
+    config = json.loads(TAURI_CONFIG.read_text())
+    window = config["tauri"]["windows"][0]
+    assert window["visible"] is True
+    assert window["width"] == 980
+    assert window["height"] == 920
 
 
 def test_tray_menu_has_open_browser():
@@ -39,6 +77,25 @@ def test_tray_menu_has_quit():
 def test_tray_no_legacy_hub_name():
     source = main_rs_source()
     assert LEGACY_HUB_NAME not in source
+
+
+def test_dashboard_restore_helper_exists():
+    source = main_rs_source()
+    assert "fn restore_dashboard_window" in source
+    assert "win.unminimize()" in source
+    assert "win.set_min_size(Some(Size::Logical(LogicalSize" in source
+    assert "win.set_size(Size::Logical(LogicalSize" in source
+    assert "win.center()" in source
+    assert "win.show()" in source
+    assert "win.set_focus()" in source
+
+
+def test_dashboard_restore_uses_real_size():
+    source = main_rs_source()
+    assert "width: 980.0" in source
+    assert "height: 920.0" in source
+    assert "width: 430.0" in source
+    assert "height: 760.0" in source
 
 
 def test_tray_no_forbidden_debug_port():
@@ -64,6 +121,153 @@ def test_quit_clears_keychain():
     source = main_rs_source()
     assert '"quit" => {' in source
     assert "clear_token_keychain()" in source
+
+
+def test_setup_restores_dashboard_window():
+    source = main_rs_source()
+    assert ".setup(|app| {" in source
+    assert "restore_dashboard_window(&win);" in source
+
+
+def test_embedded_hub_page_uses_absolute_localhost_api_calls():
+    js = hub_js_source()
+    assert "const HUB_API_BASE = 'http://localhost:8888';" in js
+    assert "function timeoutSignal(ms)" in js
+    assert js.count("AbortSignal.timeout(") == 1
+    assert "fetch('/api/v1/byok/providers')" not in js
+    assert "fetch('/api/v1/notifications/unread-count')" not in js
+    assert "fetch('/api/v1/notifications?limit=50')" not in js
+    assert "fetch('/api/v1/logs/errors')" not in js
+    assert "fetch('/api/v1/logs/requests?limit=50')" not in js
+
+
+def test_hub_page_has_first_run_onboarding_shell():
+    html = hub_html_source()
+    assert "Solace Hub" in html
+    assert "AI Agent Access:" in html
+    assert "http://localhost:8888/agents" in html
+    assert "free and local-first" in html or "Free forever" in html
+    assert "Personal AI Assistant (Always Free)" in html
+    assert "Professional AI Assistant (Dragon Warrior)" in html
+    assert "Sign In / Create Account" in html
+    assert "dragon-yinyang-splash.png" in html
+    assert "hub-splash-wrap" in html
+    assert "Rotating Yinyang droplet" in html
+    assert "MCP server" in html
+    assert "Webservices :8888" in html
+    assert "Yinyang sidebar" in html
+    assert "Solace AGI sync" in html
+    assert "This screen should stay simple enough for first launch" not in html
+    assert 'id="btn-theme-auto"' in html
+    assert 'id="btn-theme-light"' in html
+    assert 'id="btn-theme-dark"' in html
+    assert 'id="btn-font-down"' in html
+    assert 'id="btn-font-up"' in html
+    assert 'id="btn-language-menu"' in html
+    assert 'id="hub-language-menu"' in html
+
+
+def test_hub_launch_actions_are_buttons_not_external_links():
+    html = hub_html_source()
+    assert 'id="btn-open-account"' in html
+    assert 'id="btn-enable-byok"' in html
+    assert 'id="btn-enable-cli"' in html
+    assert 'id="setup-step-1"' in html
+    assert 'id="setup-step-2"' in html
+    assert 'id="setup-step-3"' in html
+    assert 'id="setup-step-status"' in html
+    assert 'id="setup-step-primary"' in html
+    assert 'id="setup-step-secondary"' in html
+    assert 'id="setup-progress-pill"' in html
+    assert 'id="setup-step-notes"' in html
+    assert 'href="http://127.0.0.1:8888/agents"' not in html
+    assert 'href="https://solaceagi.com/"' not in html
+
+
+def test_hub_css_compacts_free_agent_card_and_setup_rail():
+    css = HUB_CSS.read_text()
+    assert ".hub-card-primary .hub-card-body" in css
+    assert "grid-template-columns: auto 1fr;" in css
+    assert ".hub-setup-rail" in css
+    assert ".hub-setup-step" in css
+    assert ".hub-setup-actions" in css
+    assert ".hub-setup-progress-pill" in css
+    assert ".hub-setup-notes" in css
+
+
+def test_hub_js_persists_theme_and_font_controls():
+    js = hub_js_source()
+    assert "const HUB_THEME_KEY = 'solace-hub-theme';" in js
+    assert "const HUB_FONT_KEY = 'solace-hub-font-scale';" in js
+    assert "applyAppearance(" in js
+    assert "bindAppearanceControls()" in js
+    assert "const HUB_LOCALE_KEY = 'solace-hub-locale';" in js
+    assert "const HUB_LOCALES = [" in js
+    assert "const RTL_LOCALES = ['ar'];" in js
+    assert "const TRANSLATIONS = {" in js
+    assert "const SETUP_STEPS = {" in js
+    assert "'zh-hant'" in js
+    assert "'zu'" in js
+    assert "bindLanguageMenu();" in js
+    assert "function t(" in js
+    assert "function applyTranslations()" in js
+    assert "function bindSetupRail()" in js
+    assert "setSetupStep(" in js
+    assert "setSetupComplete(" in js
+    assert "highestCompletedStep(" in js
+    assert "bindSetupRail();" in js
+    assert "primaryLabel" in js
+    assert "secondaryLabel" in js
+    assert "notes:" in js
+    assert "setup-progress-pill" in js
+    assert "qs('setup-step-primary')" in js
+    assert "qs('setup-step-secondary')" in js
+    assert "setLocale(window.localStorage.getItem(HUB_LOCALE_KEY) || 'en');" in js
+    assert "document.documentElement.dir" in js
+    assert "applyTranslations();" in js
+    assert "new Intl.DisplayNames([locale], { type: 'language' });" in js
+    assert "window.scrollTo(0, 0);" in js
+    assert "window.localStorage.setItem(HUB_THEME_KEY, nextTheme);" in js
+    assert "window.localStorage.setItem(HUB_FONT_KEY, nextFontScale);" in js
+
+
+def test_hub_can_open_arbitrary_urls_in_solace_browser():
+    source = main_rs_source()
+    js = hub_js_source()
+    assert 'fn cmd_open_browser_url(' in source
+    assert 'cmd_open_browser_url,' in source
+    assert "hubFetch('/api/v1/hub/browser/open'" in js
+    assert "JSON.stringify({ url: url, profile: 'default', mode: 'standard' })" in js
+    assert "JSON.stringify({ url: 'https://solaceagi.com/dashboard', profile: 'default', mode: 'standard' })" in js
+    assert "https://solaceagi.com/dashboard" in js
+    assert "https://solaceagi.com/register" in js
+    assert "http://127.0.0.1:8888/agents" in js
+
+
+def test_hub_passes_real_repo_root_to_yinyang_server():
+    source = main_rs_source()
+    assert "let repo_root = server_path" in source
+    assert ".parent()" in source
+    assert '.arg(repo_root)' in source
+    assert '.arg(".")' not in source
+
+
+def test_paid_account_badge_requires_paid_mode():
+    js = hub_js_source()
+    assert "const accountMode = onboarding.completed && onboarding.mode === 'paid';" in js
+    assert "Signed in via " not in js
+
+
+def test_tray_show_dashboard_restores_window():
+    source = main_rs_source()
+    assert '"show_dashboard" => {' in source
+    assert 'restore_dashboard_window(&win);' in source
+
+
+def test_tray_left_click_restores_window():
+    source = main_rs_source()
+    assert "SystemTrayEvent::LeftClick" in source
+    assert 'restore_dashboard_window(&win);' in source
 
 
 # ── Task 002: Token Keychain Storage ──────────────────────────────────────────
@@ -118,9 +322,10 @@ def test_server_starts_before_browser():
 
 
 def test_browser_gets_correct_url():
-    """Browser must be launched with http://localhost:8888/start URL."""
+    """Browser must be launched with the real Solace AGI dashboard URL."""
     source = main_rs_source()
-    assert "localhost:{}/start" in source or "localhost:8888/start" in source
+    assert "https://solaceagi.com/dashboard" in source
+    assert '.arg("--new-window")' in source
     assert FORBIDDEN_DEBUG_PORT not in source
 
 
@@ -150,6 +355,33 @@ def test_hub_resolves_server_script_from_repo_ancestors():
     assert "fn resolve_server_script" in source
     assert 'join("yinyang-server.py")' in source
     assert "for candidate_root in exe_dir.ancestors()" in source
+
+
+def test_hub_resolves_browser_binary_with_local_dev_and_bundle_modes():
+    """Hub must distinguish local Chromium dev builds from production browser bundles."""
+    source = main_rs_source()
+    assert "fn resolve_browser_binary" in source
+    assert "SOLACE_BROWSER_MODE" in source
+    assert 'join("source/src/out/Solace/chrome-wrapper")' in source
+    assert 'join("source/src/out/Solace/chrome")' in source
+    assert 'join("dist/solace-browser-release/chrome")' in source
+    assert 'join("solace-browser-release/chrome")' in source
+    assert 'join("dist/solace-browser-linux-x86_64")' not in source
+    assert "for candidate_root in exe_dir.ancestors()" in source
+
+
+def test_browser_launch_uses_binary_parent_as_working_directory():
+    """Chromium binaries must launch from their own directory so shared libraries resolve."""
+    source = main_rs_source()
+    assert "fn launch_solace_browser(browser_path: &str, url: &str)" in source
+    assert ".current_dir(" in source
+
+
+def test_startup_fails_closed_when_8888_already_occupied():
+    source = main_rs_source()
+    assert "fn ensure_runtime_port_available" in source
+    assert 'TcpStream::connect(("127.0.0.1", YINYANG_PORT))' in source
+    assert "Refusing to start Solace Hub" in source
 
 
 # ── Task 004: Bearer Auth + Token Flow Redesign ─────────────────────────────
@@ -182,17 +414,17 @@ class TestOnboardingGate:
         # The function must be called within cmd_open_browser context
         assert "check_onboarding_complete" in source
         assert "/onboarding" in source
-        assert "/start" in source
+        assert "https://solaceagi.com/dashboard" in source
 
     def test_onboarding_url_in_source(self):
         """main.rs must reference /onboarding URL"""
         source = main_rs_source()
         assert "/onboarding" in source
 
-    def test_start_url_in_source(self):
-        """main.rs must reference /start URL"""
+    def test_dashboard_url_in_source(self):
+        """main.rs must reference the dashboard URL after onboarding."""
         source = main_rs_source()
-        assert "/start" in source
+        assert "https://solaceagi.com/dashboard" in source
 
     def test_dirs_next_in_cargo(self):
         """Cargo.toml must have dirs-next dependency"""
@@ -201,13 +433,20 @@ class TestOnboardingGate:
 
     def test_index_html_onboarding_section(self):
         """index.html must have onboarding status section"""
-        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        html = hub_html_source()
+        js = hub_js_source()
         assert "onboarding" in html.lower() or "setup" in html.lower()
+        assert 'data-mode="agent"' in html
+        assert "completeSetup(mode)" in js
+        assert "hubFetch('/onboarding/complete'" in js
 
     def test_index_html_launch_browser_button(self):
         """index.html must have browser launch button"""
-        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        html = hub_html_source()
+        js = hub_js_source()
         assert "launch" in html.lower() or "open" in html.lower()
+        assert "button.disabled" in js
+        assert 'window.open("http://localhost:8888/onboarding", "_blank")' not in html
 
     def test_tray_open_browser_checks_onboarding(self):
         """Tray open_browser handler must also check onboarding before launch"""
@@ -221,9 +460,9 @@ class TestOnboardingGate:
         assert "/onboarding" in source
 
     def test_start_url_when_complete(self):
-        """Source must route to /start when onboarding is complete"""
+        """Source must route to the dashboard when onboarding is complete"""
         source = main_rs_source()
-        assert "/start" in source
+        assert "https://solaceagi.com/dashboard" in source
 
 
 # ── Task 010: OAuth3 Token Management Dashboard ─────────────────────────────
@@ -251,7 +490,7 @@ class TestSessionCommands:
 class TestOAuth3Dashboard:
     def test_index_html_oauth3_section(self):
         """index.html must contain OAuth3 Tokens section."""
-        html = (REPO_ROOT / "solace-hub" / "src" / "index.html").read_text()
+        html = hub_html_source()
         assert "oauth3" in html.lower() or "OAuth3" in html
 
     def test_index_html_revoke_button(self):

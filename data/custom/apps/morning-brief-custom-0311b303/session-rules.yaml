@@ -1,0 +1,18 @@
+app: morning-brief-custom-0311b303
+display_name: "Morning Brief Custom 0311b303"
+version: "1.0.0"
+category: "custom"
+site: google.com
+login_url: "https://google.com/"
+check_url: "https://google.com/"
+success_signals:
+  - "TODO: add success signal"
+failure_signals:
+  - "TODO: add failure signal"
+keep_alive:
+  interval_minutes: 15
+  action: "navigate"
+  url: "https://google.com/"
+tier_required: "free"
+evidence_on_check: true
+description: "A custom report that should appear in Morning Brief."

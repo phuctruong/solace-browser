@@ -47,17 +47,16 @@ def test_by_domain_gmail_returns_gmail_apps(tmp_path):
     assert any(app["id"] == "gmail-spam-cleaner" for app in data["store_apps"])
 
 
-def test_by_domain_free_user_hides_pro_apps(tmp_path):
+def test_by_domain_free_user_exposes_installed_pro_shells(tmp_path):
     repo_root = _repo_with_apps(tmp_path, "slack-web", "slack-dm")
 
     ys._rebuild_domain_index(str(repo_root))
     data = ys._apps_for_domain(str(repo_root), "app.slack.com", "/client/T123", "free")
 
-    assert [app["id"] for app in data["installed_apps"]] == ["slack-web"]
-    locked = next(app for app in data["store_apps"] if app["id"] == "slack-dm")
-    assert locked["tier_required"] == "pro"
-    assert locked["status"] == "upgrade_required"
-    assert locked["install_url"] == ys.MARKETPLACE_UPGRADE_URL
+    assert [app["id"] for app in data["installed_apps"]] == ["slack-dm", "slack-web"]
+    assert all(app["status"] == "installed" for app in data["installed_apps"])
+    assert all(app["status"] == "available" for app in data["store_apps"])
+    assert all(str(app["install_url"]).startswith("/api/v1/apps/") for app in data["store_apps"])
 
 
 def test_by_domain_unknown_domain_returns_empty(tmp_path):
@@ -160,6 +159,5 @@ def test_by_domain_includes_store_apps(tmp_path):
     data = ys._apps_for_domain(str(repo_root), "mail.google.com", "/mail/u/0/#inbox", "free")
     store_app = next(app for app in data["store_apps"] if app["id"] == "gmail-spam-cleaner")
 
-    assert store_app["status"] == "upgrade_required"
+    assert store_app["status"] == "available"
     assert store_app["tier_required"] == "starter"
-

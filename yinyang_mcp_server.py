@@ -9,7 +9,7 @@ Stdlib only: json, sys, http.client, urllib.request, urllib.error, argparse.
 
 MCP protocol (2024-11-05):
   initialize    → server info + capabilities
-  tools/list    → 8 tool definitions
+  tools/list    → tool definitions for management + native browser control
   tools/call    → dispatch to HTTP endpoint at localhost:8888
   resources/list → 2 resources
   resources/read → resource content from HTTP
@@ -94,7 +94,7 @@ def _http_delete(path: str, token_sha256: str = "") -> tuple[int, dict]:
 
 
 # ---------------------------------------------------------------------------
-# Tool definitions — 8 tools
+# Tool definitions — management + native browser control tools
 # ---------------------------------------------------------------------------
 _TOOL_DEFINITIONS = [
     {
@@ -183,6 +183,104 @@ _TOOL_DEFINITIONS = [
             "required": [],
         },
     },
+    {
+        "name": "browser_status",
+        "description": "Inspect the current Hub-owned Solace Browser session state.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "browser_open",
+        "description": "Open a Hub-owned Solace Browser window for the given URL.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string", "description": "The page URL to open."},
+                "profile": {"type": "string", "description": "Browser profile name."},
+                "mode": {"type": "string", "description": "standard or incognito."},
+                "session_name": {"type": "string", "description": "Optional session label."},
+                "head_hidden": {"type": "boolean", "description": "Launch hidden/headless session."},
+            },
+            "required": ["url"],
+        },
+    },
+    {
+        "name": "browser_close",
+        "description": "Close one Hub-owned Solace Browser session or all tracked sessions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Tracked browser session ID."},
+                "all": {"type": "boolean", "description": "Close all tracked sessions when true."},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "browser_navigate",
+        "description": "Navigate an existing Hub-owned browser session to a new URL.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Tracked browser session ID."},
+                "url": {"type": "string", "description": "Target page URL."},
+            },
+            "required": ["url"],
+        },
+    },
+    {
+        "name": "browser_click",
+        "description": "Click a selector in the Hub-owned browser using the native CDP bridge.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Tracked browser session ID."},
+                "selector": {"type": "string", "description": "CSS selector to click."},
+            },
+            "required": ["selector"],
+        },
+    },
+    {
+        "name": "browser_fill",
+        "description": "Fill a selector in the Hub-owned browser using the native CDP bridge.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Tracked browser session ID."},
+                "selector": {"type": "string", "description": "CSS selector to fill."},
+                "text": {"type": "string", "description": "Text value to write."},
+            },
+            "required": ["selector", "text"],
+        },
+    },
+    {
+        "name": "browser_evaluate",
+        "description": "Evaluate JavaScript in the Hub-owned browser using the native CDP bridge.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Tracked browser session ID."},
+                "expression": {"type": "string", "description": "JavaScript expression to evaluate."},
+            },
+            "required": ["expression"],
+        },
+    },
+    {
+        "name": "browser_screenshot",
+        "description": "Capture a screenshot from the Hub-owned browser using the native CDP bridge.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Tracked browser session ID."},
+                "filename": {"type": "string", "description": "Target artifact filename."},
+                "full_page": {"type": "boolean", "description": "Capture the full page when true."},
+            },
+            "required": [],
+        },
+    },
 ]
 
 # ---------------------------------------------------------------------------
@@ -260,6 +358,70 @@ def _dispatch_tool(name: str, arguments: dict, token_sha256: str) -> Any:
 
     if name == "get_hub_status":
         return _http_get("/health", token_sha256)
+
+    if name == "browser_status":
+        return _http_get("/api/v1/browser/status", token_sha256)
+
+    if name == "browser_open":
+        payload = {
+            "url": arguments.get("url", ""),
+            "profile": arguments.get("profile", "default"),
+            "mode": arguments.get("mode", "standard"),
+            "session_name": arguments.get("session_name", ""),
+            "head_hidden": bool(arguments.get("head_hidden", False)),
+        }
+        _status, data = _http_post("/api/v1/hub/browser/open", payload, token_sha256)
+        return data
+
+    if name == "browser_close":
+        payload = {
+            "session_id": arguments.get("session_id", ""),
+            "all": bool(arguments.get("all", False)),
+        }
+        _status, data = _http_post("/api/v1/hub/browser/close", payload, token_sha256)
+        return data
+
+    if name == "browser_navigate":
+        payload = {
+            "session_id": arguments.get("session_id", ""),
+            "url": arguments.get("url", ""),
+        }
+        _status, data = _http_post("/api/navigate", payload, token_sha256)
+        return data
+
+    if name == "browser_click":
+        payload = {
+            "session_id": arguments.get("session_id", ""),
+            "selector": arguments.get("selector", ""),
+        }
+        _status, data = _http_post("/api/click", payload, token_sha256)
+        return data
+
+    if name == "browser_fill":
+        payload = {
+            "session_id": arguments.get("session_id", ""),
+            "selector": arguments.get("selector", ""),
+            "text": arguments.get("text", arguments.get("value", "")),
+        }
+        _status, data = _http_post("/api/fill", payload, token_sha256)
+        return data
+
+    if name == "browser_evaluate":
+        payload = {
+            "session_id": arguments.get("session_id", ""),
+            "expression": arguments.get("expression", ""),
+        }
+        _status, data = _http_post("/api/evaluate", payload, token_sha256)
+        return data
+
+    if name == "browser_screenshot":
+        payload = {
+            "session_id": arguments.get("session_id", ""),
+            "filename": arguments.get("filename", ""),
+            "full_page": bool(arguments.get("full_page", False)),
+        }
+        _status, data = _http_post("/api/screenshot", payload, token_sha256)
+        return data
 
     return {"error": f"unknown tool: {name}"}
 

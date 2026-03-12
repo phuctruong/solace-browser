@@ -71,14 +71,14 @@
       {
         "label": "main",
         "title": "Solace Hub",
-        "width": 800,
-        "height": 600,
-        "minWidth": 600,
-        "minHeight": 400,
+        "width": 980,
+        "height": 920,
+        "minWidth": 430,
+        "minHeight": 760,
         "resizable": true,
         "fullscreen": false,
         "decorations": true,
-        "visible": false,
+        "visible": true,
         "center": true,
         "url": "index.html"
       }

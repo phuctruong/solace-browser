@@ -6,8 +6,8 @@ import urllib.request
 import websockets
 from websockets.exceptions import ConnectionClosed, InvalidHandshake
 
-SOLACEAGI_WS_URL = "wss://solaceagi-mfjzxmegpq-uc.a.run.app/api/v1/tunnel/connect"
-SOLACEAGI_RELAY_URL = "https://solaceagi-mfjzxmegpq-uc.a.run.app"
+SOLACEAGI_WS_URL = "wss://solaceagi.com/api/v1/tunnel/connect"
+SOLACEAGI_RELAY_URL = "https://solaceagi.com"
 RECONNECT_DELAY_SECONDS = 5
 MAX_RETRIES = 3
 
@@ -28,7 +28,7 @@ class HubTunnelClient:
             try:
                 async with websockets.connect(
                     SOLACEAGI_WS_URL,
-                    extra_headers={"Authorization": f"Bearer {self.api_key}"},
+                    additional_headers={"Authorization": f"Bearer {self.api_key}"},
                 ) as websocket:
                     self._websocket = websocket
                     while self._running:

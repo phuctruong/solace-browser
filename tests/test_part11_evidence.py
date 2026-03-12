@@ -176,6 +176,31 @@ def test_rung_274177_in_every_bundle(part11_env):
     assert all(bundle["rung_achieved"] == RUNG_ACHIEVED for bundle in stored_bundles)
 
 
+def test_repair_part11_evidence_chain_reseals_tampered_link(part11_env):
+    first = ys.create_and_store_evidence_bundle("gmail.archive", {"id": 1}, {"id": 2}, "token-1", "user-1")
+    second = ys.create_and_store_evidence_bundle("linkedin.send", {"id": 3}, {"id": 4}, "token-2", "user-2")
+    lines = ys.PART11_EVIDENCE_PATH.read_text().splitlines()
+    second_bundle = json.loads(lines[1])
+    second_bundle["sha256_chain_link"] = "0" * 64
+    second_bundle["alcoa_fields"]["consistent"]["previous_bundle_sha256"] = "0" * 64
+    lines[1] = json.dumps(second_bundle, sort_keys=True)
+    ys.PART11_EVIDENCE_PATH.write_text("\n".join(lines) + "\n")
+
+    before = ys.verify_part11_evidence_chain()
+    assert before["chain_valid"] is False
+    assert before["broken_at_index"] == 1
+
+    repaired = ys.repair_part11_evidence_chain()
+    assert repaired["success"] is True
+    assert repaired["repaired_count"] == 1
+    assert repaired["broken_at_index_before"] == 1
+
+    after = ys.verify_part11_evidence_chain()
+    assert after["chain_valid"] is True
+    repaired_bundles = ys._load_part11_evidence_bundles()
+    assert repaired_bundles[1]["alcoa_fields"]["consistent"]["previous_bundle_sha256"] == _bundle_sha256(first)
+
+
 def test_record_evidence_uses_active_evidence_root_for_part11_storage(tmp_path, monkeypatch):
     evidence_path = tmp_path / "evidence.jsonl"
     monkeypatch.setattr(ys, "EVIDENCE_PATH", evidence_path)

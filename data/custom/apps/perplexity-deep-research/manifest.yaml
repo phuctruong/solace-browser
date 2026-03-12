@@ -1,0 +1,13 @@
+id: perplexity-deep-research
+name: "Perplexity Deep Research"
+description: "Research assistant for Perplexity sessions"
+category: "custom"
+status: "installed"
+safety: "B"
+tier: "free"
+domains:
+  - "perplexity.ai"
+site: perplexity.ai
+type: "custom"
+custom: true
+local_only: true

@@ -1,0 +1,13 @@
+{
+  "id": "morning-brief",
+  "platform": "solaceagi",
+  "version": "1.0.0",
+  "description": "Collect the most useful outputs from installed apps and present them as one daily HTML brief.",
+  "author": "Solace AGI",
+  "local_only": true,
+  "steps": [
+    { "step": 1, "action": "collect_outboxes", "description": "Read relevant local outboxes from installed apps." },
+    { "step": 2, "action": "prioritize", "description": "Rank the most important updates, actions, and follow-ups." },
+    { "step": 3, "action": "generate_report", "format": "html", "description": "Write a dashboard-friendly morning brief." }
+  ]
+}

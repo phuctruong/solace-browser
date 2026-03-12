@@ -1,0 +1,13 @@
+{
+  "id": "competitor-watch",
+  "platform": "google",
+  "version": "1.0.0",
+  "description": "Run a lightweight competitor scan through Google Search and summarize the strongest signals.",
+  "author": "Solace AGI",
+  "local_only": true,
+  "steps": [
+    { "step": 1, "action": "navigate", "target": "https://www.google.com/", "description": "Open Google Search." },
+    { "step": 2, "action": "research", "description": "Search named competitors and extract pricing, launches, and positioning changes." },
+    { "step": 3, "action": "generate_report", "format": "html", "description": "Write the competitor report into the outbox and hand it to Morning Brief." }
+  ]
+}

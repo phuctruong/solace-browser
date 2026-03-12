@@ -1,0 +1,18 @@
+app: demo-rehearsal-1773267491
+display_name: "Demo Rehearsal 1773267491"
+version: "1.0.0"
+category: "custom"
+site: google.com
+login_url: "https://google.com/"
+check_url: "https://google.com/"
+success_signals:
+  - "TODO: add success signal"
+failure_signals:
+  - "TODO: add failure signal"
+keep_alive:
+  interval_minutes: 15
+  action: "navigate"
+  url: "https://google.com/"
+tier_required: "free"
+evidence_on_check: true
+description: "Create a custom local research app for the investor demo."

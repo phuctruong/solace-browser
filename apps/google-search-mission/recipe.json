@@ -1,0 +1,41 @@
+{
+  "id": "google-search-mission",
+  "platform": "google",
+  "version": "1.0.0",
+  "description": "Search Google for a mission topic, collect the strongest signals, and write a Morning Brief-ready HTML report.",
+  "author": "Solace AGI",
+  "local_only": true,
+  "input_params": {
+    "mission": {
+      "type": "string",
+      "description": "What to research.",
+      "required": false,
+      "default": "AI browser automation startup signals"
+    },
+    "keywords": {
+      "type": "array",
+      "description": "Optional follow-up search terms.",
+      "required": false,
+      "default": ["funding", "launch", "pricing", "team", "roadmap"]
+    }
+  },
+  "steps": [
+    {
+      "step": 1,
+      "action": "navigate",
+      "target": "https://www.google.com/",
+      "description": "Open Google Search."
+    },
+    {
+      "step": 2,
+      "action": "research",
+      "description": "Search for the mission topic and follow-up keywords."
+    },
+    {
+      "step": 3,
+      "action": "generate_report",
+      "format": "html",
+      "description": "Write a clean HTML brief into the app outbox and feed Morning Brief."
+    }
+  ]
+}

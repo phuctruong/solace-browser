@@ -20,7 +20,7 @@ fi
 echo "Solace Hub starts first and will launch Yinyang Server on localhost:8888."
 echo "After the Hub window appears, verify the runtime with: curl http://127.0.0.1:8888/api/status"
 
-# 2. Launch via tauri dev (spawns yinyang-server via Hub lifecycle)
+# 2. Launch via tauri dev when available; otherwise fall back to cargo run.
 cd "${HUB_DIR}"
 env -i \
   HOME="${HOME}" \
@@ -28,4 +28,11 @@ env -i \
   DISPLAY="${DISPLAY:-}" \
   XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" \
   PATH="${PATH}" \
-  cargo tauri dev 2>&1
+  bash -lc '
+    if cargo tauri --version >/dev/null 2>&1; then
+      cargo tauri dev 2>&1
+    else
+      echo "WARN: cargo-tauri not installed; falling back to cargo run"
+      cargo run 2>&1
+    fi
+  '

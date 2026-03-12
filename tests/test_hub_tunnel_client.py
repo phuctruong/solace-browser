@@ -13,7 +13,8 @@ sys.path.insert(0, str(REPO_ROOT))
 TEST_PORT = 18888
 SERVER_PORT = TEST_PORT + 1
 VALID_TOKEN = "a" * 64
-RELAY_URL = "https://solaceagi-mfjzxmegpq-uc.a.run.app"
+RELAY_URL = "https://solaceagi.com"
+WS_URL = "wss://solaceagi.com/api/v1/tunnel/connect"
 def load_hub_tunnel_client():
     return importlib.import_module("hub_tunnel_client")
 class FakeResponse:
@@ -86,13 +87,20 @@ async def test_client_sends_pong_on_ping(monkeypatch):
     hub = load_hub_tunnel_client()
     close_exc = ConnectionClosedOK(None, None)
     websocket = FakeWebSocket([{"type": "ping"}], close_exc)
-    monkeypatch.setattr(hub.websockets, "connect", lambda *args, **kwargs: FakeConnect(websocket=websocket))
+    captured: dict = {}
+    def fake_connect(*args, **kwargs):
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return FakeConnect(websocket=websocket)
+    monkeypatch.setattr(hub.websockets, "connect", fake_connect)
     async def fake_sleep(_delay):
         return None
     monkeypatch.setattr(hub.asyncio, "sleep", fake_sleep)
     client = hub.HubTunnelClient("api-key", VALID_TOKEN, yinyang_port=TEST_PORT)
     client.max_retries = 1
     await client.run()
+    assert captured["args"] == (WS_URL,)
+    assert captured["kwargs"]["additional_headers"] == {"Authorization": "Bearer api-key"}
     assert websocket.sent == [{"type": "pong"}]
 @pytest.mark.asyncio
 async def test_client_proxies_get_request(monkeypatch):
