@@ -173,6 +173,8 @@ except ImportError:
 from evidence_bundle import ALCOABundle, ALCOAError, ComplianceStatus, GENESIS_CHAIN_SEED, RUNG_ACHIEVED, _sha256_hex
 from hub_tunnel_client import HubTunnelClient, SOLACEAGI_RELAY_URL
 
+_sync_urlopen = urllib.request.urlopen
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -198,6 +200,7 @@ OAUTH3_TOKENS_PATH: Path = Path.home() / ".solace" / "oauth3-tokens.json"
 OAUTH3_VAULT_PATH: Path = Path.home() / ".solace" / "oauth3-vault.enc"
 ONBOARDING_PATH: Path = Path.home() / ".solace" / "onboarding.json"
 SETTINGS_PATH: Path = Path.home() / ".solace" / "settings.json"
+DOMAIN_EVENTS_PATH: Path = Path.home() / ".solace" / "domain-events.json"
 PRIME_WIKI_ROOT: Path = Path.home() / ".solace" / "prime-wiki"
 PRIME_WIKI_ASSETS_PATH: Path = PRIME_WIKI_ROOT / "assets.json"
 MARKETPLACE_CACHE_PATH: Path = Path.home() / ".solace" / "marketplace-cache.json"
@@ -224,6 +227,11 @@ DEFAULT_CLOUD_TWIN_SETTINGS: dict = {
     "prefer_cloud": False,
     "fallback_to_local": True,
 }
+DEFAULT_DOMAIN_SESSION_POLICY: dict[str, Any] = {
+    "keepalive_required": True,
+    "sync_to_cloud": False,
+    "success_url": "",
+}
 
 _SERVER_VERSION = "1.1"
 HUB_PORT = 8888
@@ -242,6 +250,7 @@ _PART11_EVIDENCE_LOCK = threading.Lock()
 PRIME_WIKI_PUSH_URL = "https://solaceagi-mfjzxmegpq-uc.a.run.app/api/v1/prime-wiki/push"
 PRIME_WIKI_PULL_URL = "https://solaceagi-mfjzxmegpq-uc.a.run.app/api/v1/prime-wiki/pull"
 PRIME_WIKI_STATS_URL = "https://solaceagi-mfjzxmegpq-uc.a.run.app/api/v1/prime-wiki/stats"
+SYNC_HEARTBEAT_URL = "https://solaceagi.com/api/v1/sync/heartbeat"
 PRIME_WIKI_PUSH_TIMEOUT_SECONDS = 5
 PRIME_WIKI_SNAPSHOT_TYPES: frozenset = frozenset(["before_action", "after_action", "periodic"])
 PRIME_WIKI_CTA_VERBS: tuple[str, ...] = (
@@ -2864,6 +2873,7 @@ _APP_ID_RE = re.compile(r"^[A-Za-z0-9-]+$")
 _ONBOARDING_MODES = frozenset(["agent", "byok", "paid", "cli"])
 _AUTH_STATES = frozenset(["logged_out", "logged_in"])
 _MODEL_SOURCES = frozenset(["byok", "cli", "ollama", "managed"])
+_MODEL_SOURCE_PREFERENCE = ("managed", "byok", "cli", "ollama")
 OAUTH3_HIGH_RISK_ACTIONS = frozenset(["send", "post", "delete", "payment", "connect"])
 OAUTH3_STEP_UP_TTL_SECONDS = 300
 OAUTH3_PBKDF2_ITERATIONS = 100000
@@ -3647,6 +3657,49 @@ def _load_user_tier_payload() -> dict:
         "can_sync": tier_rank >= pro_rank,
         "can_submit": tier_rank >= pro_rank,
         "can_remote_control": tier_rank >= pro_rank,
+    }
+
+
+def _sync_heartbeat_payload(repo_root: str, session_token_sha256: str, tracked_sessions: dict[str, Any]) -> dict[str, Any]:
+    _ensure_default_domain_profiles(repo_root)
+    onboarding = _load_onboarding_state()
+    profiles = _load_domain_profiles()
+    domain_events = _load_domain_events()
+    model_sources = list(_normalize_model_sources(onboarding.get("model_sources", [])))
+    managed_llm_enabled = bool(onboarding.get("managed_llm_enabled", False))
+    if managed_llm_enabled and "managed" not in model_sources:
+        model_sources.append("managed")
+    settings = _load_settings()
+    account = settings.get("account", {}) if isinstance(settings, dict) else {}
+    if not isinstance(account, dict):
+        account = {}
+    domain_count = len(profiles)
+    active_domain_count = sum(1 for profile in profiles.values() if isinstance(profile, dict) and bool(profile.get("active")))
+    oauth3_token_count = len(_oauth3_active_token_rows(session_token_sha256))
+    event_count = len(domain_events)
+    recent_domains: list[str] = []
+    for event in sorted(domain_events, key=lambda row: int(row.get("ts", 0)), reverse=True):
+        normalized = _normalize_domain(event.get("domain"))
+        if not normalized or normalized in recent_domains:
+            continue
+        recent_domains.append(normalized)
+        if len(recent_domains) >= 8:
+            break
+    return {
+        "device_id": str(onboarding.get("device_id") or _default_device_id()),
+        "client_version": _SERVER_VERSION,
+        "apps_enabled": bool(onboarding.get("apps_enabled", False)),
+        "membership_plan": _normalize_membership_tier(onboarding.get("membership_tier", "free")),
+        "membership_status": str(account.get("membership_status") or account.get("status") or "active").strip().lower() or "active",
+        "managed_llm_enabled": managed_llm_enabled,
+        "model_source": onboarding.get("model_source"),
+        "model_sources": model_sources,
+        "queue_depth": len(tracked_sessions) if isinstance(tracked_sessions, dict) else 0,
+        "domain_count": domain_count,
+        "active_domain_count": active_domain_count,
+        "oauth3_token_count": oauth3_token_count,
+        "event_count": event_count,
+        "recent_domains": recent_domains,
     }
 
 
@@ -4570,6 +4623,31 @@ def _normalize_model_source(value: object) -> Optional[str]:
     return None
 
 
+def _normalize_model_sources(value: object) -> list[str]:
+    if isinstance(value, str):
+        normalized = _normalize_model_source(value)
+        return [normalized] if normalized else []
+    if not isinstance(value, list):
+        return []
+    seen: set[str] = set()
+    normalized_values: list[str] = []
+    for entry in value:
+        normalized = _normalize_model_source(entry)
+        if normalized and normalized not in seen:
+            normalized_values.append(normalized)
+            seen.add(normalized)
+    return normalized_values
+
+
+def _primary_model_source(model_sources: list[str], managed_llm_enabled: bool, fallback: Optional[str] = None) -> Optional[str]:
+    if managed_llm_enabled and "managed" in model_sources:
+        return "managed"
+    for candidate in _MODEL_SOURCE_PREFERENCE:
+        if candidate in model_sources:
+            return candidate
+    return _normalize_model_source(fallback)
+
+
 def _default_device_id() -> str:
     return "hub_" + uuid.uuid5(uuid.NAMESPACE_DNS, str(Path.home().resolve())).hex[:16]
 
@@ -4620,26 +4698,249 @@ def _test_ollama_url(url: str) -> dict[str, Any]:
     }
 
 
-def _derive_onboarding_mode(auth_state: str, membership_tier: str, managed_llm_enabled: bool, model_source: Optional[str]) -> Optional[str]:
+def _load_domain_events() -> list[dict[str, Any]]:
+    if not DOMAIN_EVENTS_PATH.exists():
+        return []
+    try:
+        payload = json.loads(DOMAIN_EVENTS_PATH.read_text())
+    except (json.JSONDecodeError, OSError):
+        return []
+    return payload if isinstance(payload, list) else []
+
+
+def _save_domain_events(events: list[dict[str, Any]]) -> None:
+    DOMAIN_EVENTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    DOMAIN_EVENTS_PATH.write_text(json.dumps(events, indent=2))
+
+
+def _append_domain_event(
+    domain: str,
+    event_type: str,
+    title: str,
+    summary: str,
+    *,
+    app_id: str = "",
+    detail_url: str = "",
+    report_url: str = "",
+    requires_signoff: bool = False,
+    metadata: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    event = {
+        "id": "evt_" + uuid.uuid4().hex[:16],
+        "domain": _normalize_domain(domain) or "solaceagi.com",
+        "type": event_type,
+        "title": title[:128],
+        "summary": summary[:512],
+        "app_id": app_id,
+        "detail_url": detail_url,
+        "report_url": report_url,
+        "requires_signoff": bool(requires_signoff),
+        "metadata": dict(metadata or {}),
+        "ts": int(time.time()),
+    }
+    events = _load_domain_events()
+    events.append(event)
+    if len(events) > 500:
+        events = events[-500:]
+    _save_domain_events(events)
+    return event
+
+
+def _load_domain_profiles() -> dict[str, dict[str, Any]]:
+    settings = _load_settings()
+    profiles = settings.get("domains", {})
+    return profiles if isinstance(profiles, dict) else {}
+
+
+def _save_domain_profiles(profiles: dict[str, dict[str, Any]]) -> None:
+    settings = _load_settings()
+    settings["domains"] = profiles
+    _save_settings(settings)
+
+
+def _domain_requires_login(domain: str) -> bool:
+    normalized = _normalize_domain(domain)
+    return normalized in {"mail.google.com", "calendar.google.com", "www.linkedin.com", "app.slack.com"}
+
+
+def _is_keepalive_app(app_id: str, domain: str) -> bool:
+    normalized = _normalize_domain(domain)
+    if app_id in {"morning-brief", "google-search-mission", "solace-yinyang"}:
+        return True
+    if normalized == "mail.google.com":
+        return "gmail" in app_id or "mail" in app_id
+    if normalized == "calendar.google.com":
+        return "calendar" in app_id
+    if normalized == "www.linkedin.com":
+        return "linkedin" in app_id
+    if normalized == "app.slack.com":
+        return "slack" in app_id or "message" in app_id
+    return False
+
+
+def _default_domain_profile(repo_root: str, domain: str) -> dict[str, Any]:
+    normalized = _normalize_domain(domain)
+    payload = _apps_for_domain(repo_root, normalized, "/", _load_account_tier())
+    apps = payload.get("apps", []) if isinstance(payload, dict) else []
+    app_ids = [str(app.get("id") or app.get("app_id") or "") for app in apps if isinstance(app, dict)]
+    app_ids = [app_id for app_id in app_ids if app_id]
+    selected: list[str] = []
+    if normalized in {"www.google.com", "google.com", "news.google.com"}:
+        preferred = ["google-search-mission", "competitor-watch", "google-search-trends"]
+        selected = [app_id for app_id in preferred if app_id in app_ids]
+    elif normalized == "solaceagi.com":
+        preferred = ["morning-brief", "solace-yinyang", "agi-dashboard"]
+        selected = [app_id for app_id in preferred if app_id in app_ids]
+    keepalive = [app_id for app_id in selected if _is_keepalive_app(app_id, normalized)]
+    requires_login = _domain_requires_login(normalized)
+    active = bool(selected) and not requires_login
+    login_url = {
+        "mail.google.com": "https://mail.google.com/",
+        "calendar.google.com": "https://calendar.google.com/",
+        "www.linkedin.com": "https://www.linkedin.com/feed/",
+        "app.slack.com": "https://app.slack.com/",
+    }.get(normalized, "")
+    success_url = login_url or {
+        "solaceagi.com": "https://solaceagi.com/dashboard",
+        "www.google.com": "https://www.google.com/",
+        "google.com": "https://www.google.com/",
+        "news.google.com": "https://news.google.com/",
+    }.get(normalized, "")
+    return {
+        "domain": normalized,
+        "selected_apps": selected,
+        "keepalive_apps": keepalive,
+        "active": active,
+        "requires_login": requires_login,
+        "login_url": login_url,
+        "success_url": success_url,
+        "session_policy": dict(DEFAULT_DOMAIN_SESSION_POLICY, success_url=success_url),
+        "budgets": {},
+        "default_schedule": "",
+        "last_activated_at": int(time.time()) if active else None,
+    }
+
+
+def _ensure_default_domain_profiles(repo_root: str) -> dict[str, dict[str, Any]]:
+    profiles = _load_domain_profiles()
+    changed = False
+    for domain in ("solaceagi.com", "www.google.com"):
+        normalized = _normalize_domain(domain)
+        if normalized not in profiles:
+            profiles[normalized] = _default_domain_profile(repo_root, normalized)
+            changed = True
+    if changed:
+        _save_domain_profiles(profiles)
+    return profiles
+
+
+def _domain_status_payload(repo_root: str, domain: str) -> dict[str, Any]:
+    normalized = _normalize_domain(domain)
+    profiles = _load_domain_profiles()
+    profile = profiles.get(normalized)
+    if not isinstance(profile, dict):
+        profile = _default_domain_profile(repo_root, normalized)
+        profiles[normalized] = profile
+        _save_domain_profiles(profiles)
+    payload = _apps_for_domain(repo_root, normalized, "/", _load_account_tier())
+    apps = payload.get("apps", []) if isinstance(payload, dict) else []
+    selected = set(str(item) for item in profile.get("selected_apps", []))
+    keepalive = set(str(item) for item in profile.get("keepalive_apps", []))
+    events = _load_domain_events()
+    filtered = events if normalized == "solaceagi.com" else [event for event in events if event.get("domain") == normalized]
+    return {
+        "domain": normalized,
+        "active": bool(profile.get("active", False)),
+        "requires_login": bool(profile.get("requires_login", False)),
+        "login_url": str(profile.get("login_url", "")),
+        "success_url": str(profile.get("success_url", "")),
+        "session_policy": dict(profile.get("session_policy", {})),
+        "budgets": dict(profile.get("budgets", {})),
+        "default_schedule": str(profile.get("default_schedule", "")),
+        "selected_apps": list(selected),
+        "keepalive_apps": list(keepalive),
+        "event_count": len(filtered),
+        "events": filtered[:20],
+        "apps": [
+            {
+                **app,
+                "selected": str(app.get("id") or app.get("app_id") or "") in selected,
+                "keepalive": str(app.get("id") or app.get("app_id") or "") in keepalive,
+                "keepalive_capable": _is_keepalive_app(str(app.get("id") or app.get("app_id") or ""), normalized),
+            }
+            for app in apps
+            if isinstance(app, dict)
+        ],
+    }
+
+
+def _bootstrap_starter_domains(repo_root: str) -> dict[str, dict[str, Any]]:
+    profiles = _ensure_default_domain_profiles(repo_root)
+    changed = False
+    for domain, preferred_apps in {
+        "solaceagi.com": ["morning-brief", "solace-yinyang", "agi-dashboard"],
+        "www.google.com": ["google-search-mission", "competitor-watch", "google-search-trends"],
+    }.items():
+        normalized = _normalize_domain(domain)
+        profile = profiles.get(normalized)
+        if not isinstance(profile, dict):
+            profile = _default_domain_profile(repo_root, normalized)
+            profiles[normalized] = profile
+            changed = True
+        selected_apps = list(profile.get("selected_apps", []))
+        keepalive_apps = list(profile.get("keepalive_apps", []))
+        for app_id in preferred_apps:
+            if app_id not in selected_apps:
+                selected_apps.append(app_id)
+                changed = True
+            if _is_keepalive_app(app_id, normalized) and app_id not in keepalive_apps:
+                keepalive_apps.append(app_id)
+                changed = True
+            try:
+                _set_app_installed(repo_root, app_id, True)
+            except OSError:
+                pass
+        profile["selected_apps"] = selected_apps
+        profile["keepalive_apps"] = keepalive_apps
+        profile["active"] = not bool(profile.get("requires_login", False))
+        if profile["active"]:
+            profile["last_activated_at"] = int(time.time())
+        profiles[normalized] = profile
+    if changed:
+        _save_domain_profiles(profiles)
+    return profiles
+
+
+def _derive_onboarding_mode(
+    auth_state: str,
+    membership_tier: str,
+    managed_llm_enabled: bool,
+    model_sources: list[str],
+    fallback: Optional[str],
+) -> Optional[str]:
     if auth_state != "logged_in":
         return None
+    primary = _primary_model_source(model_sources, managed_llm_enabled, fallback)
     if membership_tier != "free":
         return "paid"
-    if managed_llm_enabled:
+    if primary == "managed":
         return "agent"
-    if model_source in {"byok", "cli"}:
-        return model_source
-    if model_source == "ollama":
-        return "cli"
+    if primary in {"byok", "cli"}:
+        return primary
+    if primary == "ollama":
+        return "ollama"
     return "agent"
 
 
-def _compute_apps_enabled(auth_state: str, membership_tier: str, managed_llm_enabled: bool, model_source: Optional[str]) -> bool:
+def _compute_apps_enabled(auth_state: str, membership_tier: str, managed_llm_enabled: bool, model_sources: list[str]) -> bool:
     if auth_state != "logged_in":
         return False
-    if membership_tier != "free":
-        return True
-    return managed_llm_enabled or model_source in {"byok", "cli", "ollama"}
+    normalized_sources = list(_normalize_model_sources(model_sources))
+    if managed_llm_enabled and "managed" not in normalized_sources:
+        normalized_sources.append("managed")
+    if "ollama" in normalized_sources and not _ollama_config_payload()["configured"]:
+        normalized_sources = [source for source in normalized_sources if source != "ollama"]
+    return bool(normalized_sources)
 
 
 def _load_onboarding_state() -> dict[str, Any]:
@@ -4657,41 +4958,52 @@ def _load_onboarding_state() -> dict[str, Any]:
         else:
             auth_state = "logged_out"
     membership_tier = _normalize_membership_tier(raw.get("membership_tier"), legacy_tier)
-    model_source = _normalize_model_source(raw.get("model_source"))
+    model_sources = _normalize_model_sources(raw.get("model_sources"))
+    legacy_model_source = _normalize_model_source(raw.get("model_source"))
     managed_llm_enabled = bool(raw.get("managed_llm_enabled", False))
     legacy_mode = str(raw.get("mode", "")).strip().lower()
-    if auth_state == "logged_in":
+    has_modern_contract = any(
+        key in raw
+        for key in ("auth_state", "membership_tier", "model_sources", "managed_llm_enabled", "device_id", "apps_enabled")
+    )
+    if legacy_model_source and legacy_model_source not in model_sources:
+        model_sources.append(legacy_model_source)
+    if auth_state == "logged_in" and not has_modern_contract:
         if legacy_mode == "paid":
             if membership_tier == "free":
                 membership_tier = "starter"
             managed_llm_enabled = True if not raw.get("managed_llm_enabled") else managed_llm_enabled
+            if "managed" not in model_sources:
+                model_sources.append("managed")
         elif legacy_mode == "agent":
             managed_llm_enabled = True
-            if model_source is None:
-                model_source = "managed"
-        elif legacy_mode in {"byok", "cli"} and model_source is None:
-            model_source = legacy_mode
-    if model_source == "managed":
+            if "managed" not in model_sources:
+                model_sources.append("managed")
+        elif legacy_mode in {"byok", "cli"} and not model_sources:
+            model_sources.append(legacy_mode)
+    if managed_llm_enabled and "managed" not in model_sources:
+        model_sources.append("managed")
+    if legacy_model_source == "managed":
         managed_llm_enabled = True
     if auth_state != "logged_in":
         membership_tier = "free"
-        if not managed_llm_enabled:
-            model_source = None
-    if model_source == "ollama":
+    if "ollama" in model_sources:
         ollama = _ollama_config_payload()
         if not ollama["configured"]:
-            model_source = None
-    apps_enabled = _compute_apps_enabled(auth_state, membership_tier, managed_llm_enabled, model_source)
+            model_sources = [source for source in model_sources if source != "ollama"]
+    model_source = _primary_model_source(model_sources, managed_llm_enabled, legacy_model_source)
+    apps_enabled = _compute_apps_enabled(auth_state, membership_tier, managed_llm_enabled, model_sources)
     device_id = str(raw.get("device_id") or "").strip() or _default_device_id()
     state = {
         "auth_state": auth_state,
         "membership_tier": membership_tier,
         "managed_llm_enabled": managed_llm_enabled,
+        "model_sources": model_sources,
         "model_source": model_source,
         "apps_enabled": apps_enabled,
         "device_id": device_id,
         "completed": auth_state == "logged_in",
-        "mode": _derive_onboarding_mode(auth_state, membership_tier, managed_llm_enabled, model_source),
+        "mode": _derive_onboarding_mode(auth_state, membership_tier, managed_llm_enabled, model_sources, model_source),
         "membership_state": "paid" if membership_tier != "free" else "free",
     }
     return state
@@ -4704,45 +5016,57 @@ def _save_onboarding_state(payload: dict[str, Any]) -> dict[str, Any]:
         raise ValueError(f"auth_state must be one of {sorted(_AUTH_STATES)}")
     membership_tier = _normalize_membership_tier(payload.get("membership_tier"), current["membership_tier"])
     managed_llm_enabled = bool(payload.get("managed_llm_enabled", current["managed_llm_enabled"]))
+    model_sources = list(current.get("model_sources", []))
+    explicit_sources = payload.get("model_sources")
+    if explicit_sources is not None:
+        model_sources = _normalize_model_sources(explicit_sources)
+        if "managed_llm_enabled" not in payload:
+            managed_llm_enabled = "managed" in model_sources
     model_source = _normalize_model_source(payload.get("model_source"))
-    if model_source is None:
-        model_source = current.get("model_source")
+    if explicit_sources is None and model_source:
+        model_sources = [model_source]
+    elif model_source and model_source not in model_sources:
+        model_sources.append(model_source)
     legacy_mode = str(payload.get("mode", "")).strip().lower()
     if legacy_mode in {"byok", "cli"}:
-        model_source = legacy_mode
+        model_sources = [legacy_mode]
         auth_state = "logged_in"
         membership_tier = "free"
         managed_llm_enabled = False
     elif legacy_mode == "agent":
         auth_state = "logged_in"
         membership_tier = "free"
-        managed_llm_enabled = True
-        model_source = "managed"
+        managed_llm_enabled = False
+        model_sources = []
     elif legacy_mode == "paid":
         auth_state = "logged_in"
         membership_tier = membership_tier if membership_tier != "free" else "starter"
         managed_llm_enabled = True
-        model_source = "managed"
+        if "managed" not in model_sources:
+            model_sources.append("managed")
     if auth_state == "logged_out":
         membership_tier = "free"
         managed_llm_enabled = False
-        model_source = None
-    if model_source == "managed":
+        model_sources = []
+    if managed_llm_enabled and "managed" not in model_sources:
+        model_sources.append("managed")
+    if not managed_llm_enabled:
+        model_sources = [source for source in model_sources if source != "managed"]
+    if membership_tier != "free" and not model_sources:
+        model_sources = ["managed"]
         managed_llm_enabled = True
-    if membership_tier != "free" and model_source is None:
-        model_source = "managed"
-    if model_source == "ollama" and not _ollama_config_payload()["configured"]:
-        raise ValueError("configure ollama url before selecting the ollama model source")
     device_id = str(payload.get("device_id") or current["device_id"]).strip() or _default_device_id()
+    primary_source = _primary_model_source(model_sources, managed_llm_enabled, model_source)
     state = {
         "auth_state": auth_state,
         "membership_tier": membership_tier,
         "managed_llm_enabled": managed_llm_enabled,
-        "model_source": model_source,
-        "apps_enabled": _compute_apps_enabled(auth_state, membership_tier, managed_llm_enabled, model_source),
+        "model_sources": model_sources,
+        "model_source": primary_source,
+        "apps_enabled": _compute_apps_enabled(auth_state, membership_tier, managed_llm_enabled, model_sources),
         "device_id": device_id,
         "completed": auth_state == "logged_in",
-        "mode": _derive_onboarding_mode(auth_state, membership_tier, managed_llm_enabled, model_source),
+        "mode": _derive_onboarding_mode(auth_state, membership_tier, managed_llm_enabled, model_sources, primary_source),
         "completed_ts": int(time.time()) if auth_state == "logged_in" else None,
     }
     ONBOARDING_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -7103,6 +7427,14 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_onboarding_page()
         elif path == "/api/v1/onboarding/status":
             self._handle_onboarding_status()
+        elif path == "/api/v1/domains/status":
+            self._handle_domain_status(query)
+        elif path == "/api/v1/events/feed":
+            self._handle_domain_events_feed(query)
+        elif path.startswith("/domains/"):
+            self._handle_domain_management_page(urllib.parse.unquote(path.split("/domains/", 1)[1]))
+        elif path.startswith("/events/"):
+            self._handle_event_detail_page(urllib.parse.unquote(path.split("/events/", 1)[1]))
         elif path == "/api/v1/browser/status":
             self._handle_browser_status()
         elif path == "/api/v1/browser/sessions":
@@ -9709,6 +10041,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_onboarding_complete()
         elif path == "/onboarding/reset":
             self._handle_onboarding_reset()
+        elif path == "/api/v1/domains/setup":
+            self._handle_domain_setup()
         elif path == "/api/v1/browser/launch":
             self._handle_browser_launch()
         elif path == "/api/v1/hub/browser/open":
@@ -9735,6 +10069,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_tunnel_stop()
         elif path == "/api/v1/tunnel/stop-cloud":
             self._handle_tunnel_stop_cloud()
+        elif path == "/api/v1/sync/push-heartbeat":
+            self._handle_sync_push_heartbeat()
         elif path == "/api/v1/sync/export":
             self._handle_sync_export()
         elif path == "/api/v1/sync/import":
@@ -9817,7 +10153,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_byok_clear()
         elif path == "/api/v1/ollama/config":
             self._handle_ollama_config_set()
-        elif path == "/api/v1/ollama/test":
+        elif path in {"/api/v1/ollama/test", "/api/v1/ollama/config/test"}:
             self._handle_ollama_config_test()
         elif path == "/api/yinyang/notify":
             self._handle_yinyang_notify()
@@ -14990,6 +15326,7 @@ document.getElementById('confirm').addEventListener('click', function () {
         onboarding = _load_onboarding_state()
         auth_state = str(onboarding.get("auth_state", "logged_out"))
         membership_tier = _normalize_membership_tier(onboarding.get("membership_tier", "free"))
+        model_sources = list(onboarding.get("model_sources", []))
         model_source = _normalize_model_source(onboarding.get("model_source"))
         managed_llm_enabled = bool(onboarding.get("managed_llm_enabled", False))
         apps_enabled = bool(onboarding.get("apps_enabled", False))
@@ -15020,29 +15357,52 @@ document.getElementById('confirm').addEventListener('click', function () {
   </div>
 """
         else:
+            source_checks = {
+                "byok": "checked" if "byok" in model_sources else "",
+                "cli": "checked" if "cli" in model_sources else "",
+                "ollama": "checked" if "ollama" in model_sources else "",
+                "managed": "checked" if "managed" in model_sources else "",
+            }
             body_html = f"""
   <div class="state-box">
     <div class="state-label">Current state</div>
     <div class="state-value">{html_escape(state_label)} · {html_escape(membership_label)} membership</div>
     <div class="state-detail">Apps are {'on' if apps_enabled else 'off'} on this machine. Device ID: <strong>{device_id}</strong></div>
   </div>
-  <div class="modes">
-    <button class="mode-btn" onclick="setState({{auth_state: 'logged_in', membership_tier: '{membership_tier}', managed_llm_enabled: false, model_source: 'byok'}})">
-      <div class="label">Use BYOK</div>
-      <div class="desc">Save your own provider key locally and turn apps on with your own model account.</div>
-    </button>
-    <button class="mode-btn" onclick="setState({{auth_state: 'logged_in', membership_tier: '{membership_tier}', managed_llm_enabled: false, model_source: 'cli'}})">
-      <div class="label">Use Local CLI Wrapper</div>
-      <div class="desc">Power apps from Codex, Claude Code, Gemini, Aider, or another detected local tool.</div>
-    </button>
-    <button class="mode-btn" onclick="configureOllama()">
-      <div class="label">Use Ollama URL</div>
-      <div class="desc">Point Yinyang at your Ollama server on the local network and keep app runs local-first.</div>
-    </button>
-    <button class="mode-btn" onclick="setState({{auth_state: 'logged_in', membership_tier: '{membership_tier}', managed_llm_enabled: true, model_source: 'managed'}})">
-      <div class="label">Use Managed Solace AGI</div>
-      <div class="desc">Turn on apps with managed AI services. Current model source: <strong>{html_escape(model_label)}</strong>.</div>
-    </button>
+  <div class="source-stack">
+    <div class="state-label">Membership</div>
+    <div class="segmented" role="radiogroup" aria-label="Membership tier">
+      <button id="membership-free" class="segment {'is-active' if membership_tier == 'free' else ''}" type="button" onclick="setMembership('free')">Free</button>
+      <button id="membership-paid" class="segment {'is-active' if membership_tier != 'free' else ''}" type="button" onclick="setMembership('starter')">Paid</button>
+    </div>
+    <div class="state-detail">Pick at least one source. You can combine BYOK, Local CLI, Ollama, and Managed AI on the same machine.</div>
+    <div class="source-grid">
+      <label class="source-card">
+        <input id="source-byok" type="checkbox" {source_checks['byok']}>
+        <div class="label">BYOK</div>
+        <div class="desc">Save your own provider keys locally.</div>
+      </label>
+      <label class="source-card">
+        <input id="source-cli" type="checkbox" {source_checks['cli']}>
+        <div class="label">Local CLI Wrapper</div>
+        <div class="desc">Use Codex, Claude Code, Gemini, or another detected local tool.</div>
+      </label>
+      <label class="source-card">
+        <input id="source-ollama" type="checkbox" {source_checks['ollama']}>
+        <div class="label">Ollama URL</div>
+        <div class="desc">Point Yinyang at your Ollama server on the local network.</div>
+      </label>
+      <label class="source-card">
+        <input id="source-managed" type="checkbox" {source_checks['managed']}>
+        <div class="label">Managed Solace AGI</div>
+        <div class="desc">Use managed AI services when you want them. Current source: <strong>{html_escape(model_label)}</strong>.</div>
+      </label>
+    </div>
+    <div class="source-actions">
+      <button class="mode-btn primary" type="button" onclick="saveSources()">Save sources and turn on apps</button>
+      <button class="mode-btn" type="button" onclick="configureOllama()">Set Ollama URL</button>
+      <button class="mode-btn" type="button" onclick="window.location.href='/domains/solaceagi.com'">Open first domain</button>
+    </div>
   </div>
 """
         html = """<!DOCTYPE html>
@@ -15097,6 +15457,31 @@ document.getElementById('confirm').addEventListener('click', function () {
   .mode-btn:hover { border-color: #7c66ff; background: #2a2a48; }
   .mode-btn .label { font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; }
   .mode-btn .desc { font-size: 0.85rem; color: #888; }
+  .mode-btn.primary { background: #d9ff63; color: #091017; border-color: #d9ff63; }
+  .source-stack { display: grid; gap: 0.85rem; }
+  .segmented { display: inline-flex; gap: 0.5rem; }
+  .segment {
+    border: 1px solid #3a3a58;
+    background: #171726;
+    color: #e0e0e8;
+    border-radius: 999px;
+    padding: 0.65rem 1rem;
+    cursor: pointer;
+    font: inherit;
+  }
+  .segment.is-active { background: #d9ff63; color: #091017; border-color: #d9ff63; }
+  .source-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
+  .source-card {
+    background: #161620;
+    border: 1px solid #2a2a38;
+    border-radius: 10px;
+    padding: 1rem;
+    display: grid;
+    gap: 0.35rem;
+    cursor: pointer;
+  }
+  .source-card input { width: 1rem; height: 1rem; }
+  .source-actions { display: grid; gap: 0.75rem; }
   .status { margin-top: 1.5rem; font-size: 0.9rem; color: #7c66ff; min-height: 1.4em; }
 </style>
 </head>
@@ -15124,6 +15509,35 @@ document.getElementById('confirm').addEventListener('click', function () {
   });
 }
 
+let membershipTier = '__MEMBERSHIP_TIER__';
+
+function setMembership(nextTier) {
+  membershipTier = nextTier;
+  document.getElementById('membership-free')?.classList.toggle('is-active', nextTier === 'free');
+  document.getElementById('membership-paid')?.classList.toggle('is-active', nextTier !== 'free');
+}
+
+function selectedSources() {
+  return ['byok', 'cli', 'ollama', 'managed'].filter((source) => {
+    const node = document.getElementById('source-' + source);
+    return Boolean(node && node.checked);
+  });
+}
+
+function saveSources() {
+  const sources = selectedSources();
+  if (!sources.length) {
+    document.getElementById('status').textContent = 'Pick at least one source first.';
+    return;
+  }
+  setState({
+    auth_state: 'logged_in',
+    membership_tier: membershipTier,
+    model_sources: sources,
+    managed_llm_enabled: sources.includes('managed')
+  });
+}
+
 function configureOllama() {
   const current = prompt('Enter your Ollama server URL', 'http://localhost:11434');
   if (!current) return;
@@ -15134,10 +15548,17 @@ function configureOllama() {
     body: JSON.stringify({url: current})
   }).then(async (r) => {
     if (!r.ok) throw new Error('HTTP ' + r.status);
+    const sources = selectedSources();
+    if (!sources.includes('ollama')) sources.push('ollama');
     return fetch('/onboarding/complete', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({auth_state: 'logged_in', membership_tier: '__MEMBERSHIP_TIER__', model_source: 'ollama'})
+      body: JSON.stringify({
+        auth_state: 'logged_in',
+        membership_tier: membershipTier,
+        model_sources: sources,
+        managed_llm_enabled: sources.includes('managed')
+      })
     });
   }).then((r) => {
     if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -15168,6 +15589,9 @@ function configureOllama() {
         except ValueError as exc:
             self._send_json({"error": str(exc)}, 400)
             return
+        if state.get("auth_state") == "logged_in":
+            repo_root = getattr(self.server, "repo_root", ".")
+            _bootstrap_starter_domains(repo_root)
         self._send_json({"ok": True, **state})
 
     def _handle_onboarding_reset(self) -> None:
@@ -15184,18 +15608,437 @@ function configureOllama() {
         """GET /api/v1/onboarding/status — return normalized onboarding state."""
         self._send_json(_load_onboarding_state())
 
+    def _handle_domain_status(self, query: str) -> None:
+        repo_root = getattr(self.server, "repo_root", ".")
+        params = urllib.parse.parse_qs(query)
+        domain = _normalize_domain((params.get("domain", [""])[0] or "solaceagi.com"))
+        self._send_json(_domain_status_payload(repo_root, domain))
+
+    def _handle_domain_events_feed(self, query: str) -> None:
+        params = urllib.parse.parse_qs(query)
+        requested = _normalize_domain((params.get("domain", [""])[0] or "solaceagi.com"))
+        events = _load_domain_events()
+        if requested != "solaceagi.com":
+            events = [event for event in events if _normalize_domain(event.get("domain")) == requested]
+        items = sorted(events, key=lambda event: int(event.get("ts", 0)), reverse=True)
+        self._send_json({"domain": requested, "items": items[:100], "total": len(items)})
+
+    def _handle_domain_setup(self) -> None:
+        body = self._read_json_body()
+        if body is None:
+            return
+        onboarding = _load_onboarding_state()
+        if onboarding.get("auth_state") != "logged_in":
+            self._send_json({"error": "sign in to turn on apps for domains"}, 409)
+            return
+        if not onboarding.get("apps_enabled", False):
+            self._send_json({"error": "configure at least one model source before saving domain apps"}, 409)
+            return
+        repo_root = getattr(self.server, "repo_root", ".")
+        domain = _normalize_domain(body.get("domain") or "")
+        if not domain:
+            self._send_json({"error": "missing domain"}, 400)
+            return
+        selected_apps_raw = body.get("selected_apps", [])
+        keepalive_apps_raw = body.get("keepalive_apps", [])
+        if not isinstance(selected_apps_raw, list):
+            selected_apps_raw = []
+        if not isinstance(keepalive_apps_raw, list):
+            keepalive_apps_raw = []
+        selected_apps = [str(app_id).strip() for app_id in selected_apps_raw if isinstance(app_id, str) and _APP_ID_RE.fullmatch(app_id.strip())]
+        keepalive_apps = [str(app_id).strip() for app_id in keepalive_apps_raw if isinstance(app_id, str) and _APP_ID_RE.fullmatch(app_id.strip())]
+        if not selected_apps:
+            self._send_json({"error": "select at least one app"}, 400)
+            return
+        if not keepalive_apps:
+            keepalive_apps = [app_id for app_id in selected_apps if _is_keepalive_app(app_id, domain)]
+        if not keepalive_apps:
+            self._send_json({"error": "select at least one keepalive app"}, 400)
+            return
+        session_policy = body.get("session_policy", {})
+        budgets = body.get("budgets", {})
+        default_schedule = str(body.get("default_schedule", "")).strip()
+        login_url = str(body.get("login_url", "")).strip()
+        success_url = str(body.get("success_url", "")).strip()
+        profiles = _load_domain_profiles()
+        profile = profiles.get(domain)
+        if not isinstance(profile, dict):
+            profile = _default_domain_profile(repo_root, domain)
+        profile["selected_apps"] = selected_apps
+        profile["keepalive_apps"] = keepalive_apps
+        profile["session_policy"] = dict(DEFAULT_DOMAIN_SESSION_POLICY, **(session_policy if isinstance(session_policy, dict) else {}))
+        if success_url:
+            profile["success_url"] = success_url
+            profile["session_policy"]["success_url"] = success_url
+        if login_url:
+            profile["login_url"] = login_url
+        profile["budgets"] = budgets if isinstance(budgets, dict) else {}
+        profile["default_schedule"] = default_schedule
+        profile["requires_login"] = _domain_requires_login(domain)
+        profile["active"] = not profile["requires_login"]
+        if profile["active"]:
+            profile["last_activated_at"] = int(time.time())
+        profiles[domain] = profile
+        _save_domain_profiles(profiles)
+        for app_id in selected_apps:
+            try:
+                _set_app_installed(repo_root, app_id, True)
+            except OSError:
+                pass
+        event = _append_domain_event(
+            domain,
+            "domain_setup",
+            f"{domain} setup saved",
+            "Selected apps, keepalive policy, and domain session settings were saved locally.",
+            metadata={
+                "selected_apps": selected_apps,
+                "keepalive_apps": keepalive_apps,
+                "session_policy": profile["session_policy"],
+                "budgets": profile["budgets"],
+                "default_schedule": profile["default_schedule"],
+                "login_url": profile.get("login_url", ""),
+                "success_url": profile.get("success_url", ""),
+            },
+        )
+        self._send_json({
+            "ok": True,
+            "status": "saved",
+            "domain": domain,
+            "active": profile["active"],
+            "requires_login": profile["requires_login"],
+            "login_url": profile.get("login_url", ""),
+            "keepalive_apps": profile["keepalive_apps"],
+            "selected_apps": profile["selected_apps"],
+            "session_policy": profile["session_policy"],
+            "budgets": profile["budgets"],
+            "default_schedule": profile["default_schedule"],
+            "success_url": profile.get("success_url", ""),
+            "domain_status": _domain_status_payload(repo_root, domain),
+            "event": event,
+        })
+
+    def _render_domain_management_html(self, domain: str) -> bytes:
+        repo_root = getattr(self.server, "repo_root", ".")
+        onboarding = _load_onboarding_state()
+        status = _domain_status_payload(repo_root, domain)
+        logged_in = onboarding.get("auth_state") == "logged_in"
+        apps_enabled = bool(onboarding.get("apps_enabled", False))
+        events = _load_domain_events()
+        filtered_events = events if domain == "solaceagi.com" else [event for event in events if _normalize_domain(event.get("domain")) == domain]
+        apps_json = json.dumps(status.get("apps", []))
+        selected_json = json.dumps(status.get("selected_apps", []))
+        keepalive_json = json.dumps(status.get("keepalive_apps", []))
+        session_policy_json = json.dumps(status.get("session_policy", {}))
+        budgets_json = json.dumps(status.get("budgets", {}))
+        default_schedule_json = json.dumps(str(status.get("default_schedule") or ""))
+        login_url_json = json.dumps(str(status.get("login_url") or ""))
+        success_url_json = json.dumps(str(status.get("success_url") or ""))
+        if not logged_in:
+            setup_state_title = "Sign in to turn on apps"
+            setup_state_copy = (
+                "AI agents can already control the Browser and Hub, but app install, schedules, and reports stay off "
+                "until you create or connect an account."
+            )
+        elif not apps_enabled:
+            setup_state_title = "Choose at least one model source first"
+            setup_state_copy = (
+                "You are signed in, but apps stay off until this Browser+Hub pair has at least one real model source: "
+                "BYOK, Local CLI Wrapper, Ollama URL, or Managed Solace AGI."
+            )
+        else:
+            setup_state_title = "Choose domain apps and login policy"
+            setup_state_copy = (
+                "Pick at least one app, pick at least one keepalive app, save the domain session policy, then send "
+                "the Browser to the real domain login."
+            )
+        event_cards = []
+        for event in sorted(filtered_events, key=lambda item: int(item.get("ts", 0)), reverse=True)[:10]:
+            detail_url = str(event.get("detail_url") or f"/events/{event.get('id')}")
+            event_cards.append(
+                f"<li><a href='{html_escape(detail_url)}'><strong>{html_escape(str(event.get('title') or 'Event'))}</strong>"
+                f"<span>{html_escape(str(event.get('summary') or ''))}</span></a></li>"
+            )
+        events_html = "".join(event_cards) or "<li><span>No events yet for this domain.</span></li>"
+        body = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{html_escape(domain)} · Solace Domain</title>
+<style>
+body {{ font-family: system-ui, sans-serif; margin: 0; background: #10141d; color: #f4f7fb; }}
+.shell {{ max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }}
+.hero {{ display: grid; gap: 16px; margin-bottom: 24px; }}
+.muted {{ color: #9eb0c8; }}
+.grid {{ display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }}
+.card {{ background: #161d2b; border: 1px solid #23314a; border-radius: 18px; padding: 20px; }}
+.apps {{ display: grid; gap: 12px; }}
+.app {{ display: grid; gap: 6px; padding: 12px; border: 1px solid #2a3b58; border-radius: 14px; background: #111827; }}
+.app label {{ display: flex; gap: 10px; align-items: start; }}
+.event-list {{ list-style: none; display: grid; gap: 10px; padding: 0; margin: 0; }}
+.event-list a, .event-list span {{ display: grid; gap: 4px; color: inherit; text-decoration: none; padding: 10px 12px; border-radius: 12px; background: #111827; border: 1px solid #25324a; }}
+.actions {{ display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }}
+button, .button-link {{ appearance: none; border: 0; border-radius: 999px; padding: 12px 18px; font: inherit; cursor: pointer; background: #d9ff63; color: #091017; text-decoration: none; }}
+.button-secondary {{ background: #22314a; color: #f4f7fb; }}
+.pill {{ display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; background: #22314a; color: #d6e4ff; font-size: 13px; }}
+.topbar {{ display: flex; gap: 10px; flex-wrap: wrap; }}
+.setup-gate {{ display: grid; gap: 10px; margin-bottom: 16px; padding: 14px; border-radius: 14px; background: #111827; border: 1px solid #25324a; }}
+.form-grid {{ display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 18px; }}
+.field {{ display: grid; gap: 6px; }}
+.field label {{ font-size: 13px; color: #d6e4ff; }}
+.field input, .field select, .field textarea {{ font: inherit; border-radius: 12px; border: 1px solid #2a3b58; background: #0f1420; color: #f4f7fb; padding: 11px 12px; }}
+.field textarea {{ min-height: 88px; resize: vertical; }}
+.checkbox-row {{ display: flex; gap: 10px; align-items: center; color: #d6e4ff; margin-top: 14px; }}
+</style>
+</head>
+<body>
+<main class="shell">
+  <div class="hero">
+    <div class="topbar">
+      <span class="pill">Domain: {html_escape(domain)}</span>
+      <span class="pill">Apps {'on' if onboarding.get('apps_enabled') else 'off'}</span>
+      <span class="pill">Mode: {html_escape(str(onboarding.get('mode') or 'agent-only'))}</span>
+    </div>
+    <h1>{html_escape(domain)}</h1>
+    <p class="muted">Manage the apps, session policy, and recent reports for this domain. This page is served from the local Hub runtime on localhost:8888.</p>
+  </div>
+  <div class="grid">
+    <section class="card">
+      <h2>Setup</h2>
+      <div class="setup-gate">
+        <strong>{html_escape(setup_state_title)}</strong>
+        <p class="muted">{html_escape(setup_state_copy)}</p>
+      </div>
+      <div id="setup-shell">
+        <p class="muted">Keepalive apps preserve the session and OAuth state for domains that require login. The Hub will use these settings when it keeps the domain alive and syncs optional metadata upward later.</p>
+        <div class="apps" id="apps-setup"></div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="session-policy">Session policy</label>
+            <select id="session-policy">
+              <option value="standard">Standard</option>
+              <option value="keepalive">Keepalive first</option>
+              <option value="strict">Strict local-only</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="default-schedule">Default schedule</label>
+            <input id="default-schedule" type="text" placeholder="0 7 * * *">
+          </div>
+          <div class="field">
+            <label for="daily-budget">Daily budget (USD)</label>
+            <input id="daily-budget" type="number" min="0" step="0.01" placeholder="1.00">
+          </div>
+          <div class="field">
+            <label for="weekly-budget">Weekly budget (USD)</label>
+            <input id="weekly-budget" type="number" min="0" step="0.01" placeholder="5.00">
+          </div>
+          <div class="field">
+            <label for="login-url">Login URL</label>
+            <input id="login-url" type="url" placeholder="https://domain.example/login">
+          </div>
+          <div class="field">
+            <label for="success-url">Login success URL</label>
+            <input id="success-url" type="url" placeholder="https://domain.example/app">
+          </div>
+        </div>
+        <div class="field" style="margin-top:14px;">
+          <label for="session-notes">Domain session notes</label>
+          <textarea id="session-notes" placeholder="Describe the session policy, keepalive expectations, login success rule, or any special handling for this domain."></textarea>
+        </div>
+        <label class="checkbox-row">
+          <input id="sync-to-cloud" type="checkbox">
+          <span>Sync session and report metadata to Solace AGI when cloud features are enabled</span>
+        </label>
+        <div class="actions">
+          <button id="save-domain-setup">Save setup</button>
+          <button class="button-secondary" id="login-domain">{'Login to domain' if status.get('requires_login') else 'Open domain'}</button>
+        </div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>Recent events</h2>
+      <ul class="event-list">{events_html}</ul>
+    </section>
+  </div>
+</main>
+<script>
+const API_BASE = 'http://127.0.0.1:8888';
+const DOMAIN = {json.dumps(domain)};
+const APPS = {apps_json};
+const PRESELECTED = new Set({selected_json});
+const KEEPALIVE = new Set({keepalive_json});
+const SESSION_POLICY = {session_policy_json};
+const BUDGETS = {budgets_json};
+const DEFAULT_SCHEDULE = {default_schedule_json};
+const LOGIN_URL = {login_url_json};
+const SUCCESS_URL = {success_url_json};
+const LOGGED_IN = {json.dumps(logged_in)};
+const APPS_ENABLED = {json.dumps(apps_enabled)};
+function hydrateFields() {{
+  document.getElementById('default-schedule').value = DEFAULT_SCHEDULE || '';
+  document.getElementById('login-url').value = LOGIN_URL || '';
+  document.getElementById('success-url').value = SUCCESS_URL || '';
+  document.getElementById('daily-budget').value = String((BUDGETS && BUDGETS.daily_usd) || '');
+  document.getElementById('weekly-budget').value = String((BUDGETS && BUDGETS.weekly_usd) || '');
+  document.getElementById('session-notes').value = String((SESSION_POLICY && SESSION_POLICY.notes) || '');
+  document.getElementById('sync-to-cloud').checked = !!(SESSION_POLICY && SESSION_POLICY.sync_to_cloud);
+  const mode = String((SESSION_POLICY && SESSION_POLICY.mode) || 'standard');
+  document.getElementById('session-policy').value = ['standard', 'keepalive', 'strict'].includes(mode) ? mode : 'standard';
+  const setupShell = document.getElementById('setup-shell');
+  if (!LOGGED_IN || !APPS_ENABLED) {{
+    setupShell.style.opacity = '0.55';
+    setupShell.style.pointerEvents = 'none';
+  }}
+}}
+function renderApps() {{
+  const container = document.getElementById('apps-setup');
+  container.innerHTML = '';
+  APPS.forEach((app) => {{
+    const appId = String(app.id || app.app_id || '');
+    const keepaliveCapable = !!app.keepalive_capable;
+    const article = document.createElement('article');
+    article.className = 'app';
+    article.innerHTML = `
+      <label><input type="checkbox" data-role="selected" data-app-id="${{appId}}" ${{PRESELECTED.has(appId) ? 'checked' : ''}}>
+        <span><strong>${{app.name || appId}}</strong><br><span class="muted">${{app.description || ''}}</span></span>
+      </label>
+      <label><input type="checkbox" data-role="keepalive" data-app-id="${{appId}}" ${{KEEPALIVE.has(appId) ? 'checked' : ''}} ${{keepaliveCapable ? '' : 'disabled'}}>
+        <span>Keep alive ${{keepaliveCapable ? '' : '(not available for this app)'}}</span>
+      </label>
+    `;
+    container.appendChild(article);
+  }});
+}}
+function collect(role) {{
+  return Array.from(document.querySelectorAll(`input[data-role="${{role}}"]:checked`)).map((input) => input.getAttribute('data-app-id')).filter(Boolean);
+}}
+function currentPayload() {{
+  return {{
+    domain: DOMAIN,
+    selected_apps: collect('selected'),
+    keepalive_apps: collect('keepalive'),
+    session_policy: {{
+      mode: document.getElementById('session-policy').value,
+      keepalive_required: true,
+      sync_to_cloud: document.getElementById('sync-to-cloud').checked,
+      success_url: document.getElementById('success-url').value.trim(),
+      notes: document.getElementById('session-notes').value.trim()
+    }},
+    budgets: {{
+      daily_usd: document.getElementById('daily-budget').value.trim(),
+      weekly_usd: document.getElementById('weekly-budget').value.trim()
+    }},
+    default_schedule: document.getElementById('default-schedule').value.trim(),
+    login_url: document.getElementById('login-url').value.trim(),
+    success_url: document.getElementById('success-url').value.trim()
+  }};
+}}
+async function saveSetup() {{
+  if (!LOGGED_IN) {{
+    alert('Sign in first. Apps stay off until you create or connect an account.');
+    return null;
+  }}
+  if (!APPS_ENABLED) {{
+    alert('Configure at least one model source first: BYOK, Local CLI Wrapper, Ollama URL, or Managed Solace AGI.');
+    return null;
+  }}
+  const response = await fetch(API_BASE + '/api/v1/domains/setup', {{
+    method: 'POST',
+    headers: {{'Content-Type': 'application/json'}},
+    body: JSON.stringify(currentPayload())
+  }});
+  if (!response.ok) {{
+    const payload = await response.json().catch(() => ({{error: 'Unknown error'}}));
+    alert(payload.error || 'Could not save setup');
+    return null;
+  }}
+  return response.json();
+}}
+document.getElementById('save-domain-setup').addEventListener('click', async () => {{
+  const result = await saveSetup();
+  if (result) alert('Setup saved for ' + DOMAIN);
+}});
+document.getElementById('login-domain').addEventListener('click', async () => {{
+  const result = await saveSetup();
+  if (!result) return;
+  const loginUrl = document.getElementById('login-url').value.trim() || LOGIN_URL || ('https://' + DOMAIN + '/');
+  window.location.href = loginUrl;
+}});
+renderApps();
+hydrateFields();
+</script>
+</body>
+</html>"""
+        return body.encode("utf-8")
+
+    def _handle_domain_management_page(self, domain: str) -> None:
+        body = self._render_domain_management_html(domain)
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _handle_event_detail_page(self, event_id: str) -> None:
+        event = next((item for item in _load_domain_events() if str(item.get("id")) == event_id), None)
+        if event is None:
+            self._send_json({"error": "event not found"}, 404)
+            return
+        requires_signoff = bool(event.get("requires_signoff", False))
+        report_url = str(event.get("report_url") or "")
+        detail_url = str(event.get("detail_url") or "")
+        preview = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html_escape(str(event.get("title") or "Event"))}</title>
+<style>
+body {{ font-family: system-ui, sans-serif; margin: 0; background: #0f1420; color: #eff4ff; }}
+main {{ max-width: 980px; margin: 0 auto; padding: 32px 24px 56px; display: grid; gap: 20px; }}
+.card {{ background: #161d2b; border: 1px solid #23314a; border-radius: 18px; padding: 20px; }}
+.actions {{ display: flex; gap: 12px; flex-wrap: wrap; }}
+button, a {{ appearance:none; border:0; border-radius:999px; padding:12px 18px; font:inherit; text-decoration:none; cursor:pointer; background:#d9ff63; color:#091017; }}
+.secondary {{ background:#22314a; color:#f4f7fb; }}
+.muted {{ color:#9eb0c8; }}
+iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; background: white; }}
+</style></head>
+<body><main>
+<section class="card">
+  <h1>{html_escape(str(event.get("title") or "Event"))}</h1>
+  <p class="muted">{html_escape(str(event.get("summary") or ""))}</p>
+  <div class="actions">
+    <a href="{html_escape(report_url or detail_url or '/')}">Open source</a>
+    {"<button>Agree & eSign</button><button class='secondary'>Business sign off</button>" if requires_signoff else "<span class='muted'>No sign-off required.</span>"}
+  </div>
+</section>
+<section class="card">
+  <h2>Evidence preview</h2>
+  <p class="muted">Screenshots, Prime Wiki snapshots, and report evidence for this event appear below when available.</p>
+  {f'<iframe src="{html_escape(report_url)}" title="Event report"></iframe>' if report_url else '<p class="muted">No local report was attached to this event yet.</p>'}
+</section>
+</main></body></html>"""
+        body = preview.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def _handle_ollama_config_get(self) -> None:
-        if not self._check_auth():
+        onboarding = _load_onboarding_state()
+        if onboarding.get("auth_state") != "logged_in":
+            self._send_json({"error": "sign in to configure ollama"}, 409)
             return
         self._send_json(_ollama_config_payload())
 
     def _handle_ollama_config_set(self) -> None:
-        if not self._check_auth():
+        onboarding = _load_onboarding_state()
+        if onboarding.get("auth_state") != "logged_in":
+            self._send_json({"error": "sign in to configure ollama"}, 409)
             return
         payload = self._read_json_body()
         if payload is None:
             return
-        raw_url = payload.get("url", "")
+        raw_url = payload.get("url") or payload.get("base_url", "")
         if not isinstance(raw_url, str) or not raw_url.strip():
             self._send_json({"error": "missing 'url'"}, 400)
             return
@@ -15204,15 +16047,17 @@ function configureOllama() {
         except ValueError as exc:
             self._send_json({"error": str(exc)}, 400)
             return
-        self._send_json({"status": "saved", **saved})
+        self._send_json({"status": "configured", **saved, "base_url": saved["url"]})
 
     def _handle_ollama_config_test(self) -> None:
-        if not self._check_auth():
+        onboarding = _load_onboarding_state()
+        if onboarding.get("auth_state") != "logged_in":
+            self._send_json({"error": "sign in to test ollama"}, 409)
             return
         payload = self._read_json_body()
         if payload is None:
             return
-        raw_url = payload.get("url") or _ollama_config_payload().get("url", "")
+        raw_url = payload.get("url") or payload.get("base_url") or _ollama_config_payload().get("url", "")
         if not isinstance(raw_url, str) or not raw_url.strip():
             self._send_json({"error": "missing 'url'"}, 400)
             return
@@ -15221,7 +16066,7 @@ function configureOllama() {
         except ValueError as exc:
             self._send_json({"error": str(exc)}, 400)
             return
-        self._send_json({"status": "ok", **result})
+        self._send_json({"status": "ok", **result, "base_url": result["url"]})
 
     # --- Session manager handlers ---
     def _is_session_alive(self, pid: int) -> bool:
@@ -18007,6 +18852,48 @@ function configureOllama() {
             "last_sync": last_sync,
         })
 
+    def _handle_sync_push_heartbeat(self) -> None:
+        """POST /api/v1/sync/push-heartbeat — publish local device/domain/token state to cloud."""
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        api_key = body.get("api_key", "") if isinstance(body, dict) else ""
+        if not isinstance(api_key, str) or not api_key:
+            api_key = _load_cloud_api_key()
+        if not api_key:
+            self._send_json({"error": "account.api_key required for heartbeat sync"}, 400)
+            return
+        repo_root = getattr(self.server, "repo_root", ".")
+        tracked_sessions = self.server.sessions if hasattr(self.server, "sessions") else {}
+        payload = _sync_heartbeat_payload(repo_root, self._oauth3_session_secret(), tracked_sessions)
+        request = urllib.request.Request(
+            SYNC_HEARTBEAT_URL,
+            data=json.dumps(payload).encode(),
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with _sync_urlopen(request, timeout=10) as response:
+                response_body = response.read().decode()
+        except urllib.error.HTTPError as exc:
+            message = exc.read().decode(errors="replace") if exc.fp is not None else ""
+            self._send_json({"error": "heartbeat sync rejected", "status_code": exc.code, "body": message}, 502)
+            return
+        except urllib.error.URLError:
+            self._send_json({"error": "heartbeat sync unavailable"}, 502)
+            return
+        try:
+            remote = json.loads(response_body) if response_body else {}
+        except json.JSONDecodeError:
+            remote = {}
+        record_evidence("heartbeat_synced", {"device_id": payload["device_id"], "domain_count": payload["domain_count"]})
+        self._send_json({"status": "synced", "payload": payload, "remote": remote})
+
     def _handle_sync_export(self) -> None:
         if not self._check_auth():
             return
@@ -18962,6 +19849,8 @@ function configureOllama() {
             return
         repo_root = getattr(self.server, "repo_root", ".")
         launch_artifact = None
+        manifest = _load_manifest_for_app(repo_root, app_id)
+        domain = _normalize_domain(str(manifest.get("site") or "")) or "solaceagi.com"
         app_root = self._resolve_app_root(app_id)
         if app_root is not None:
             from src.browser.inbox_outbox import InboxOutboxManager
@@ -18998,6 +19887,23 @@ function configureOllama() {
                 "google-search-trends": "/apps/google-search-trends/outbox/reports/trends-demo.html",
             }
             response["report_url"] = report_urls.get(app_id, f"/apps/{app_id}/outbox/reports/latest.html")
+        event = _append_domain_event(
+            domain,
+            "app_run",
+            f"{app_id} ran",
+            f"{app_id} produced a local report and can be reviewed from the domain event feed.",
+            app_id=app_id,
+            detail_url=f"/events/evt_{uuid.uuid4().hex[:16]}",
+            report_url=str(response.get("report_url") or ""),
+            requires_signoff=False,
+            metadata={"app_id": app_id, "report_url": response.get("report_url", "")},
+        )
+        event["detail_url"] = f"/events/{event['id']}"
+        events = _load_domain_events()
+        if events:
+            events[-1] = event
+            _save_domain_events(events)
+        response["event"] = event
         self._send_json(response)
 
     def _handle_session_rules_list(self) -> None:

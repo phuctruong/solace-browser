@@ -1833,6 +1833,21 @@ class TestOnboardingEndpoints:
         assert data.get("membership_tier") == "free"
         assert data.get("mode") == "byok"
 
+    def test_onboarding_complete_accepts_multiple_model_sources(self, server):
+        """POST /onboarding/complete accepts multiple active sources and keeps apps on."""
+        data = post_json(
+            "/onboarding/complete",
+            {
+                "auth_state": "logged_in",
+                "membership_tier": "free",
+                "model_sources": ["byok", "cli"],
+            },
+        )
+        assert data.get("ok") is True
+        assert data.get("auth_state") == "logged_in"
+        assert data.get("apps_enabled") is True
+        assert set(data.get("model_sources", [])) >= {"byok", "cli"}
+
     def test_onboarding_complete_invalid_auth_state_400(self, server):
         """POST /onboarding/complete with invalid auth_state → 400."""
         body = json.dumps({"auth_state": "mystery_state"}).encode()
@@ -1859,6 +1874,128 @@ class TestOnboardingEndpoints:
         assert data["auth_state"] == "logged_in"
         assert data["apps_enabled"] is True
         assert data["mode"] == "cli"
+
+    def test_onboarding_page_logged_in_shows_combination_source_controls(self, server):
+        """GET /onboarding when logged in → shows the new multi-source setup controls."""
+        post_json(
+            "/onboarding/complete",
+            {"auth_state": "logged_in", "membership_tier": "free", "model_sources": ["byok", "cli"]},
+        )
+        req = urllib.request.Request(f"{BASE_URL}/onboarding")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            content = resp.read().decode()
+        assert "Pick at least one source" in content
+        assert "Use Managed Solace AGI" not in content
+        assert "Managed Solace AGI" in content
+        assert "Local CLI Wrapper" in content
+        assert "Ollama URL" in content
+        assert "Save sources and turn on apps" in content
+
+    def test_domain_setup_requires_login(self, server):
+        """POST /api/v1/domains/setup while logged out → 409 sign-in gate."""
+        post_json("/onboarding/complete", {"auth_state": "logged_out"})
+        body = json.dumps(
+            {
+                "domain": "www.google.com",
+                "selected_apps": ["google-search-mission"],
+                "keepalive_apps": ["google-search-mission"],
+            }
+        ).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/domains/setup",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with pytest.raises(urllib.error.HTTPError) as excinfo:
+            urllib.request.urlopen(req, timeout=5)
+        assert excinfo.value.code == 409
+        payload = json.loads(excinfo.value.read().decode())
+        assert payload["error"] == "sign in to turn on apps for domains"
+
+    def test_domain_setup_requires_model_source_after_login(self, server):
+        """POST /api/v1/domains/setup while signed in with apps off → 409 source gate."""
+        post_json(
+            "/onboarding/complete",
+            {"auth_state": "logged_in", "membership_tier": "free", "model_sources": []},
+        )
+        body = json.dumps(
+            {
+                "domain": "www.google.com",
+                "selected_apps": ["google-search-mission"],
+                "keepalive_apps": ["google-search-mission"],
+            }
+        ).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/domains/setup",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with pytest.raises(urllib.error.HTTPError) as excinfo:
+            urllib.request.urlopen(req, timeout=5)
+        assert excinfo.value.code == 409
+        payload = json.loads(excinfo.value.read().decode())
+        assert payload["error"] == "configure at least one model source before saving domain apps"
+
+    def test_domain_setup_persists_keepalive_policy_and_budgets(self, server):
+        """POST /api/v1/domains/setup while apps enabled → persists domain policy detail."""
+        post_json(
+            "/onboarding/complete",
+            {
+                "auth_state": "logged_in",
+                "membership_tier": "free",
+                "model_sources": ["byok", "ollama", "cli"],
+            },
+        )
+        payload = post_json(
+            "/api/v1/domains/setup",
+            {
+                "domain": "mail.google.com",
+                "selected_apps": ["gmail-triage", "gmail-follow-up"],
+                "keepalive_apps": ["gmail-triage"],
+                "session_policy": {
+                    "mode": "keepalive",
+                    "sync_to_cloud": True,
+                    "success_url": "https://mail.google.com/mail/u/0/#inbox",
+                    "notes": "Keep Gmail warm for the morning brief loop.",
+                },
+                "budgets": {"daily_usd": 3, "weekly_usd": 11},
+                "default_schedule": "0 7 * * *",
+                "login_url": "https://accounts.google.com/",
+                "success_url": "https://mail.google.com/mail/u/0/#inbox",
+            },
+        )
+        assert payload["ok"] is True
+        domain = payload["domain_status"]
+        assert domain["active"] is False
+        assert domain["requires_login"] is True
+        assert set(domain["selected_apps"]) == {"gmail-triage", "gmail-follow-up"}
+        assert domain["keepalive_apps"] == ["gmail-triage"]
+        assert domain["session_policy"]["mode"] == "keepalive"
+        assert domain["session_policy"]["keepalive_required"] is True
+        assert domain["session_policy"]["sync_to_cloud"] is True
+        assert domain["session_policy"]["success_url"] == "https://mail.google.com/mail/u/0/#inbox"
+        assert domain["budgets"]["daily_usd"] == 3
+        assert domain["budgets"]["weekly_usd"] == 11
+        assert domain["default_schedule"] == "0 7 * * *"
+        assert domain["login_url"] == "https://accounts.google.com/"
+        assert domain["success_url"] == "https://mail.google.com/mail/u/0/#inbox"
+
+    def test_domain_management_page_shows_setup_fields(self, server):
+        """GET /domains/{domain} → local management page exposes the richer setup wizard fields."""
+        post_json(
+            "/onboarding/complete",
+            {"auth_state": "logged_in", "membership_tier": "free", "model_sources": ["cli"]},
+        )
+        with urllib.request.urlopen(f"{BASE_URL}/domains/www.google.com", timeout=5) as resp:
+            html = resp.read().decode()
+        assert "Session policy" in html
+        assert "Daily budget (USD)" in html
+        assert "Weekly budget (USD)" in html
+        assert "Login URL" in html
+        assert "Login success URL" in html
+        assert "Sync session and report metadata to Solace AGI when cloud features are enabled" in html
 
     def test_onboarding_reset_requires_auth(self, auth_server):
         """POST /onboarding/reset without auth → 401."""
@@ -2434,6 +2571,110 @@ class TestTunnelSync:
         assert "vault_exists" in data
         assert "token_count" in data
         assert isinstance(data["token_count"], int)
+
+    def test_sync_push_heartbeat_exports_local_device_state(self, auth_server, monkeypatch, tmp_path):
+        """POST /api/v1/sync/push-heartbeat → sends the local device/domain/token summary to cloud."""
+        import yinyang_server as ys
+
+        settings_path = tmp_path / "settings.json"
+        onboarding_path = tmp_path / "onboarding.json"
+        domain_events_path = tmp_path / "domain-events.json"
+        oauth3_tokens_path = tmp_path / "oauth3-tokens.json"
+
+        settings_path.write_text(json.dumps({
+            "account": {
+                "api_key": "sw_sk_test_heartbeat_1234567890",
+                "membership_status": "active",
+            },
+            "ollama": {
+                "url": "http://ollama.local:11434",
+            },
+            "domains": {
+                "google.com": {
+                    "active": True,
+                    "selected_apps": ["google-search-mission"],
+                    "keepalive_apps": [],
+                    "requires_login": False,
+                },
+                "gmail.com": {
+                    "active": False,
+                    "selected_apps": ["gmail-inbox-triage"],
+                    "keepalive_apps": ["gmail-inbox-triage"],
+                    "requires_login": True,
+                },
+            },
+        }))
+        onboarding_path.write_text(json.dumps({
+            "auth_state": "logged_in",
+            "membership_tier": "starter",
+            "managed_llm_enabled": False,
+            "model_sources": ["cli", "ollama"],
+            "model_source": "cli",
+            "apps_enabled": True,
+            "device_id": "hub-heartbeat-test",
+        }))
+        domain_events_path.write_text(json.dumps([
+            {"id": "evt-1", "domain": "google.com", "ts": 5},
+            {"id": "evt-2", "domain": "gmail.com", "ts": 10},
+            {"id": "evt-3", "domain": "solaceagi.com", "ts": 15},
+        ]))
+        oauth3_tokens_path.write_text(json.dumps([
+            {"token_id": "tok-1", "scopes": ["mail.read"], "revoked": False},
+            {"token_id": "tok-2", "scopes": ["calendar.read"], "revoked": False},
+        ]))
+
+        original_settings = ys.SETTINGS_PATH
+        original_onboarding = ys.ONBOARDING_PATH
+        original_events = ys.DOMAIN_EVENTS_PATH
+        original_tokens = ys.OAUTH3_TOKENS_PATH
+        ys.SETTINGS_PATH = settings_path
+        ys.ONBOARDING_PATH = onboarding_path
+        ys.DOMAIN_EVENTS_PATH = domain_events_path
+        ys.OAUTH3_TOKENS_PATH = oauth3_tokens_path
+
+        captured: dict[str, object] = {}
+
+        class FakeResponse:
+            status = 200
+            def __enter__(self):
+                return self
+            def __exit__(self, exc_type, exc, tb):
+                return False
+            def read(self):
+                return json.dumps({"ok": True, "device_id": "hub-heartbeat-test"}).encode()
+
+        def fake_urlopen(request, timeout=5):
+            captured["url"] = request.full_url
+            captured["auth"] = request.headers.get("Authorization")
+            captured["body"] = json.loads(request.data.decode())
+            return FakeResponse()
+
+        monkeypatch.setattr(ys, "_sync_urlopen", fake_urlopen)
+        try:
+            status, data = _post_with_auth("/api/v1/sync/push-heartbeat", {})
+        finally:
+            ys.SETTINGS_PATH = original_settings
+            ys.ONBOARDING_PATH = original_onboarding
+            ys.DOMAIN_EVENTS_PATH = original_events
+            ys.OAUTH3_TOKENS_PATH = original_tokens
+
+        assert status == 200
+        assert data["status"] == "synced"
+        assert captured["url"] == ys.SYNC_HEARTBEAT_URL
+        assert captured["auth"] == "Bearer sw_sk_test_heartbeat_1234567890"
+        body = captured["body"]
+        assert body["device_id"] == "hub-heartbeat-test"
+        assert body["membership_plan"] == "starter"
+        assert body["membership_status"] == "active"
+        assert body["model_sources"] == ["cli", "ollama"]
+        assert body["apps_enabled"] is True
+        # The local runtime always materializes the built-in Solace AGI domain
+        # alongside the test domains before exporting device state.
+        assert body["domain_count"] == 3
+        assert body["active_domain_count"] == 2
+        assert body["oauth3_token_count"] == 2
+        assert body["event_count"] == 3
+        assert body["recent_domains"] == ["solaceagi.com", "gmail.com", "google.com"]
 
     def test_sync_export_requires_auth(self, auth_server):
         """POST /api/v1/sync/export without Bearer → 401."""
@@ -3320,6 +3561,42 @@ class TestCLIIntegration:
     def test_cli_config_set_invalid_tool(self, auth_server):
         status, data = _post_with_auth("/api/v1/cli/config", {"tool": "evil-tool"})
         assert status == 400
+
+    def test_ollama_config_requires_login(self, server):
+        """Ollama config endpoints follow the sign-in gate rather than bearer auth."""
+        post_json("/onboarding/complete", {"auth_state": "logged_out"})
+        req = urllib.request.Request(f"{BASE_URL}/api/v1/ollama/config", method="GET")
+        with pytest.raises(urllib.error.HTTPError) as excinfo:
+            urllib.request.urlopen(req, timeout=5)
+        assert excinfo.value.code == 409
+        payload = json.loads(excinfo.value.read().decode())
+        assert payload["error"] == "sign in to configure ollama"
+
+    def test_ollama_config_set_and_test_when_logged_in(self, server, monkeypatch):
+        """Signed-in users can configure and test an Ollama URL without bearer auth."""
+        import yinyang_server as ys
+
+        monkeypatch.setattr(
+            ys,
+            "_test_ollama_url",
+            lambda url: {
+                "status": "reachable",
+                "url": url,
+                "models": 3,
+                "latency_ms": 12,
+            },
+        )
+        post_json(
+            "/onboarding/complete",
+            {"auth_state": "logged_in", "membership_tier": "free", "model_sources": ["ollama"]},
+        )
+        configured = post_json("/api/v1/ollama/config", {"base_url": "http://192.168.1.40:11434"})
+        assert configured["status"] == "configured"
+        assert configured["base_url"] == "http://192.168.1.40:11434"
+        tested = post_json("/api/v1/ollama/config/test", {})
+        assert tested["status"] == "reachable"
+        assert tested["base_url"] == "http://192.168.1.40:11434"
+        assert tested["models"] == 3
 
     def test_cli_test_requires_auth(self, auth_server):
         body = b""
