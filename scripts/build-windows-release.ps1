@@ -138,8 +138,19 @@ if (-not $wix) {
     $wix = Get-Command "wix" -ErrorAction SilentlyContinue
 }
 if (-not $wix) {
-    Write-Host "WiX not found; bundle assembled at $BundleDir"
-    exit 0
+    $candidate = Join-Path $env:USERPROFILE ".dotnet\tools\wix.exe"
+    if (Test-Path -LiteralPath $candidate) {
+        $wix = [pscustomobject]@{ Source = $candidate }
+    }
+}
+if (-not $wix) {
+    $candidate = Join-Path $env:USERPROFILE ".dotnet\tools\wix"
+    if (Test-Path -LiteralPath $candidate) {
+        $wix = [pscustomobject]@{ Source = $candidate }
+    }
+}
+if (-not $wix) {
+    Fail "WiX not found on PATH or dotnet tools path; cannot build MSI"
 }
 
 $componentLines = New-Object System.Collections.Generic.List[string]
@@ -182,6 +193,7 @@ $wixArgs = @(
 if ($LASTEXITCODE -ne 0) {
     Fail "wix build failed with exit code $LASTEXITCODE"
 }
+Require-Path $OutputMsi
 
 $signScript = Join-Path $repoRoot "scripts\sign-windows-msi.ps1"
 if (Test-Path -LiteralPath $signScript) {
