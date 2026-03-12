@@ -25,6 +25,7 @@ $version = (Get-Content (Join-Path $repoRoot "VERSION") -Raw).Trim()
 if ([string]::IsNullOrWhiteSpace($OutputMsi)) {
     $OutputMsi = Join-Path $DistDir "solace-browser-windows-x86_64.msi"
 }
+$bootstrapUrl = "https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-windows-x86_64.exe"
 
 function Fail([string]$message) {
     throw $message
@@ -42,6 +43,11 @@ function Copy-Tree([string]$sourcePath, [string]$destinationPath) {
 }
 
 Require-Path $ChromiumOut
+if (-not (Test-Path -LiteralPath (Join-Path $ChromiumOut "chrome.exe"))) {
+    New-Item -ItemType Directory -Force -Path $ChromiumOut | Out-Null
+    Write-Host "Bootstrapping Windows browser payload from $bootstrapUrl"
+    Invoke-WebRequest -Uri $bootstrapUrl -OutFile (Join-Path $ChromiumOut "chrome.exe")
+}
 Require-Path (Join-Path $ChromiumOut "chrome.exe")
 Require-Path (Join-Path $repoRoot "yinyang_server.py")
 Require-Path (Join-Path $repoRoot "yinyang-server.py")

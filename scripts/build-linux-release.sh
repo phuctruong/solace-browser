@@ -9,6 +9,7 @@ HUB_BINARY="${HUB_BINARY:-${HUB_DIR}/target/release/solace-hub}"
 DIST_DIR="${DIST_DIR:-${REPO_ROOT}/dist}"
 BUNDLE_DIR="${BUNDLE_DIR:-${DIST_DIR}/solace-browser-release}"
 TARBALL="${TARBALL:-${DIST_DIR}/solace-browser-chromium-linux-x86_64.tar.gz}"
+BOOTSTRAP_URL="${BOOTSTRAP_URL:-https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-chromium-linux-x86_64.tar.gz}"
 VERSION="$(cat "${REPO_ROOT}/VERSION")"
 
 fail() {
@@ -28,9 +29,36 @@ require_cmd cargo
 require_cmd python3
 require_cmd tar
 require_cmd sha256sum
+require_cmd curl
+
+bootstrap_chromium_out() {
+  local bootstrap_root="${DIST_DIR}/bootstrap-linux"
+  local bootstrap_tarball="${DIST_DIR}/bootstrap-linux.tar.gz"
+  mkdir -p "${DIST_DIR}"
+  rm -rf "${bootstrap_root}" "${bootstrap_tarball}"
+  echo "Bootstrapping Linux browser payload from ${BOOTSTRAP_URL}..."
+  curl -fsSL "${BOOTSTRAP_URL}" -o "${bootstrap_tarball}"
+  mkdir -p "${bootstrap_root}"
+  tar -xzf "${bootstrap_tarball}" -C "${bootstrap_root}"
+  local extracted="${bootstrap_root}/solace-browser-release"
+  require_file "${extracted}/chrome"
+  CHROMIUM_OUT="${extracted}"
+}
+
+if [ ! -f "${CHROMIUM_OUT}/chrome" ]; then
+  bootstrap_chromium_out
+fi
 
 require_file "${CHROMIUM_OUT}/chrome"
-require_file "${CHROMIUM_OUT}/chrome-wrapper"
+if [ ! -f "${CHROMIUM_OUT}/chrome-wrapper" ]; then
+  cat > "${CHROMIUM_OUT}/chrome-wrapper" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "${SCRIPT_DIR}/chrome" "$@"
+EOF
+  chmod 755 "${CHROMIUM_OUT}/chrome-wrapper"
+fi
 require_file "${REPO_ROOT}/yinyang_server.py"
 require_file "${REPO_ROOT}/yinyang-server.py"
 
@@ -67,7 +95,9 @@ copy_tree() {
 
 copy_runtime_file "${CHROMIUM_OUT}/chrome"
 copy_runtime_file "${CHROMIUM_OUT}/chrome-wrapper"
-copy_runtime_file "${CHROMIUM_OUT}/chrome_crashpad_handler"
+if [ -f "${CHROMIUM_OUT}/chrome_crashpad_handler" ]; then
+  copy_runtime_file "${CHROMIUM_OUT}/chrome_crashpad_handler"
+fi
 
 while IFS= read -r runtime_file; do
   case "$(basename "${runtime_file}")" in

@@ -121,7 +121,7 @@ jobs:
           elif platform == "windows":
               msi = dist / "${{ matrix.msi }}"
               assert msi.is_file(), f"Missing MSI: {msi}"
-              assert msi.read_bytes().startswith(b\"\\xd0\\xcf\\x11\\xe0\\xa1\\xb1\\x1a\\xe1\")
+              assert msi.read_bytes().startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1")
               print(f"OK Windows MSI: {msi}")
           else:
               raise SystemExit(f"Unexpected platform: {platform}")

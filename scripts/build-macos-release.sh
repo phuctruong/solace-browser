@@ -8,6 +8,7 @@ HUB_BINARY="${HUB_BINARY:-${REPO_ROOT}/solace-hub/src-tauri/target/release/solac
 DIST_DIR="${DIST_DIR:-${REPO_ROOT}/dist}"
 BUNDLE_DIR="${BUNDLE_DIR:-${DIST_DIR}/solace-browser-release-macos}"
 TARBALL="${TARBALL:-${DIST_DIR}/solace-browser-macos-universal.tar.gz}"
+BOOTSTRAP_URL="${BOOTSTRAP_URL:-https://storage.googleapis.com/solace-downloads/solace-browser/latest/solace-browser-macos-universal}"
 VERSION="$(cat "${REPO_ROOT}/VERSION")"
 
 fail() {
@@ -26,6 +27,22 @@ require_cmd() {
 require_cmd tar
 require_cmd shasum
 require_cmd cargo
+require_cmd curl
+
+bootstrap_chromium_out() {
+  local bootstrap_root="${DIST_DIR}/bootstrap-macos"
+  mkdir -p "${bootstrap_root}" "${DIST_DIR}"
+  rm -rf "${bootstrap_root}"
+  mkdir -p "${bootstrap_root}"
+  echo "Bootstrapping macOS browser payload from ${BOOTSTRAP_URL}..."
+  curl -fsSL "${BOOTSTRAP_URL}" -o "${bootstrap_root}/chrome"
+  chmod 755 "${bootstrap_root}/chrome"
+  CHROMIUM_OUT="${bootstrap_root}"
+}
+
+if [ ! -f "${CHROMIUM_OUT}/chrome" ]; then
+  bootstrap_chromium_out
+fi
 
 require_file "${CHROMIUM_OUT}"
 require_file "${CHROMIUM_OUT}/chrome"
