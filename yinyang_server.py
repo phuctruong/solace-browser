@@ -7210,7 +7210,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
     # --- GET routing ---
     def do_GET(self) -> None:
         path = self.path.split("?")[0]
-        query = self.path[len(path):]  # includes leading ?
+        query = self.path.split("?", 1)[1] if "?" in self.path else ""
         if self._reject_extension_era_route(path):
             return
         if path == "/health":

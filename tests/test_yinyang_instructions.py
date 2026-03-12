@@ -1997,6 +1997,71 @@ class TestOnboardingEndpoints:
         assert "Login success URL" in html
         assert "Sync session and report metadata to Solace AGI when cloud features are enabled" in html
 
+    def test_domain_status_uses_clean_query_keys(self, server):
+        """GET /api/v1/domains/status?domain=... → dotted domains are parsed correctly."""
+        post_json(
+            "/onboarding/complete",
+            {
+                "auth_state": "logged_in",
+                "membership_tier": "free",
+                "model_sources": ["byok", "cli"],
+            },
+        )
+        post_json(
+            "/api/v1/domains/setup",
+            {
+                "domain": "mail.google.com",
+                "selected_apps": ["gmail-triage", "gmail-follow-up"],
+                "keepalive_apps": ["gmail-triage"],
+                "session_policy": {
+                    "mode": "keepalive",
+                    "sync_to_cloud": True,
+                    "success_url": "https://mail.google.com/mail/u/0/#inbox",
+                },
+                "budgets": {"daily_usd": 3},
+                "default_schedule": "0 7 * * *",
+                "login_url": "https://accounts.google.com/",
+                "success_url": "https://mail.google.com/mail/u/0/#inbox",
+            },
+        )
+        payload = get_json("/api/v1/domains/status?domain=mail.google.com")
+        assert payload["domain"] == "mail.google.com"
+        assert payload["requires_login"] is True
+        assert payload["keepalive_apps"] == ["gmail-triage"]
+
+    def test_domain_events_feed_filters_by_domain(self, server):
+        """GET /api/v1/events/feed?domain=... → event feed is filtered by the requested domain."""
+        post_json(
+            "/onboarding/complete",
+            {
+                "auth_state": "logged_in",
+                "membership_tier": "free",
+                "model_sources": ["byok", "cli"],
+            },
+        )
+        post_json(
+            "/api/v1/domains/setup",
+            {
+                "domain": "google.com",
+                "selected_apps": ["google-search-mission"],
+                "keepalive_apps": ["google-search-mission"],
+            },
+        )
+        post_json(
+            "/api/v1/domains/setup",
+            {
+                "domain": "mail.google.com",
+                "selected_apps": ["gmail-triage"],
+                "keepalive_apps": ["gmail-triage"],
+                "login_url": "https://accounts.google.com/",
+                "success_url": "https://mail.google.com/mail/u/0/#inbox",
+            },
+        )
+        payload = get_json("/api/v1/events/feed?domain=mail.google.com")
+        assert payload["domain"] == "mail.google.com"
+        assert payload["total"] >= 1
+        assert all(item["domain"] == "mail.google.com" for item in payload["items"])
+
     def test_onboarding_reset_requires_auth(self, auth_server):
         """POST /onboarding/reset without auth → 401."""
         status, _ = _post_no_auth("/onboarding/reset", {})
