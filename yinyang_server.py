@@ -17614,6 +17614,13 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
             return auth_header[len("Bearer "):]
         return "__anon__"
 
+    def _request_bearer_token(self) -> str:
+        """Return the raw bearer token for the current request if present."""
+        auth_header = self.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            return auth_header[len("Bearer "):]
+        return ""
+
     def _handle_chat_history(self, query: str = "") -> None:
         """GET /api/v1/chat/history — last 20 messages for this session."""
         if not self._check_auth():
@@ -18817,6 +18824,8 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         api_key = body.get("api_key", "") if isinstance(body, dict) else ""
         if not isinstance(api_key, str) or not api_key:
             api_key = _load_cloud_api_key()
+        if not isinstance(api_key, str) or not api_key:
+            api_key = self._request_bearer_token()
         if not api_key:
             self._send_json({"error": "api_key required"}, 400)
             return
@@ -18917,6 +18926,8 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         api_key = body.get("api_key", "") if isinstance(body, dict) else ""
         if not isinstance(api_key, str) or not api_key:
             api_key = _load_cloud_api_key()
+        if not isinstance(api_key, str) or not api_key:
+            api_key = self._request_bearer_token()
         if not api_key:
             self._send_json({"error": "account.api_key required for heartbeat sync"}, 400)
             return

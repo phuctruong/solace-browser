@@ -2794,6 +2794,84 @@ class TestTunnelSync:
         assert body["event_count"] == 3
         assert body["recent_domains"] == ["solaceagi.com", "gmail.com", "google.com"]
 
+    def test_sync_push_heartbeat_accepts_bearer_api_key_without_body_key(self, server, monkeypatch, tmp_path):
+        """POST /api/v1/sync/push-heartbeat should reuse the caller bearer API key when stored/body keys are absent."""
+        import yinyang_server as ys
+
+        settings_path = tmp_path / "settings.json"
+        onboarding_path = tmp_path / "onboarding.json"
+        domain_events_path = tmp_path / "domain-events.json"
+        oauth3_tokens_path = tmp_path / "oauth3-tokens.json"
+
+        settings_path.write_text(json.dumps({
+            "account": {"membership_status": "active"},
+            "domains": {},
+        }))
+        onboarding_path.write_text(json.dumps({
+            "auth_state": "logged_in",
+            "membership_tier": "starter",
+            "managed_llm_enabled": False,
+            "model_sources": ["cli"],
+            "model_source": "cli",
+            "apps_enabled": True,
+            "device_id": "hub-heartbeat-bearer",
+        }))
+        domain_events_path.write_text("[]")
+        oauth3_tokens_path.write_text("[]")
+
+        original_settings = ys.SETTINGS_PATH
+        original_onboarding = ys.ONBOARDING_PATH
+        original_events = ys.DOMAIN_EVENTS_PATH
+        original_tokens = ys.OAUTH3_TOKENS_PATH
+        ys.SETTINGS_PATH = settings_path
+        ys.ONBOARDING_PATH = onboarding_path
+        ys.DOMAIN_EVENTS_PATH = domain_events_path
+        ys.OAUTH3_TOKENS_PATH = oauth3_tokens_path
+
+        captured: dict[str, object] = {}
+
+        class FakeResponse:
+            status = 200
+            def __enter__(self):
+                return self
+            def __exit__(self, exc_type, exc, tb):
+                return False
+            def read(self):
+                return json.dumps({"ok": True, "device_id": "hub-heartbeat-bearer"}).encode()
+
+        def fake_urlopen(request, timeout=5):
+            captured["auth"] = request.headers.get("Authorization")
+            captured["body"] = json.loads(request.data.decode())
+            return FakeResponse()
+
+        monkeypatch.setattr(ys, "_sync_urlopen", fake_urlopen)
+        try:
+            body = json.dumps({}).encode()
+            req = urllib.request.Request(
+                f"{BASE_URL}/api/v1/sync/push-heartbeat",
+                data=body,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer sw_sk_test_bearer_heartbeat",
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                status = resp.status
+                data = json.loads(resp.read().decode())
+        finally:
+            ys.SETTINGS_PATH = original_settings
+            ys.ONBOARDING_PATH = original_onboarding
+            ys.DOMAIN_EVENTS_PATH = original_events
+            ys.OAUTH3_TOKENS_PATH = original_tokens
+
+        assert status == 200
+        assert data["status"] == "synced"
+        assert captured["auth"] == "Bearer sw_sk_test_bearer_heartbeat"
+        body = captured["body"]
+        assert body["device_id"] == "hub-heartbeat-bearer"
+        assert body["membership_plan"] == "starter"
+
     def test_sync_export_requires_auth(self, auth_server):
         """POST /api/v1/sync/export without Bearer → 401."""
         status, data = _post_no_auth("/api/v1/sync/export", {})
