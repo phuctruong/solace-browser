@@ -16,6 +16,7 @@
           <img src="media/yinyang-rotating_70pct_128px.gif" alt="Rotating Yinyang logo" class="hub-logo">
           <div>
             <h1>Solace Hub</h1>
+            <p class="hub-brand-tag">Start here. Get one workflow working.</p>
           </div>
         </div>
         <div class="hub-toolbar" aria-label="Appearance controls">
@@ -51,7 +52,7 @@
           </div>
         </div>
         <p id="hub-summary-text" class="hub-summary">
-          Solace Hub owns local runtime health, agent access on port 8888, and Browser launch.
+          Hub keeps localhost:8888 alive on this machine. It opens Solace Browser. It stays free and local-first until you choose more.
         </p>
         <div class="hub-splash-wrap">
           <img src="media/dragon-yinyang-splash.png" alt="Dragon splash artwork" class="hub-splash">
@@ -63,37 +64,37 @@
           <div class="hub-setup-header">
             <p id="setup-kicker" class="hub-kicker">Quick setup</p>
             <div class="hub-setup-heading-row">
-              <h3 id="setup-heading">Three steps to a working assistant</h3>
+            <h3 id="setup-heading">Turn on apps in three steps</h3>
               <span id="setup-progress-pill" class="hub-setup-progress-pill">Step 1 of 3</span>
             </div>
           </div>
           <div class="hub-setup-steps" role="tablist" aria-label="Quick setup steps">
-            <button id="setup-step-1" type="button" class="hub-setup-step hub-setup-step-active" role="tab" aria-selected="true">
+            <button id="setup-step-1" type="button" class="hub-setup-step hub-setup-step-active" role="tab" aria-selected="true" aria-controls="hub-setup-panel" tabindex="0">
               <span class="hub-setup-step-index">1</span>
-              <span id="setup-step-1-label">Choose local mode</span>
+              <span id="setup-step-1-label">Sign in</span>
             </button>
-            <button id="setup-step-2" type="button" class="hub-setup-step" role="tab" aria-selected="false">
+            <button id="setup-step-2" type="button" class="hub-setup-step" role="tab" aria-selected="false" aria-controls="hub-setup-panel" tabindex="-1">
               <span class="hub-setup-step-index">2</span>
-              <span id="setup-step-2-label">Connect account</span>
+              <span id="setup-step-2-label">Choose model source</span>
             </button>
-            <button id="setup-step-3" type="button" class="hub-setup-step" role="tab" aria-selected="false">
+            <button id="setup-step-3" type="button" class="hub-setup-step" role="tab" aria-selected="false" aria-controls="hub-setup-panel" tabindex="-1">
               <span class="hub-setup-step-index">3</span>
-              <span id="setup-step-3-label">Launch Yinyang</span>
+              <span id="setup-step-3-label">Launch browser</span>
             </button>
           </div>
-          <div class="hub-setup-panel" role="tabpanel" aria-live="polite">
-            <p id="setup-step-title" class="hub-setup-title">Choose how Yinyang gets its power.</p>
+          <div id="hub-setup-panel" class="hub-setup-panel" role="tabpanel" aria-live="polite" aria-labelledby="setup-step-1">
+            <p id="setup-step-title" class="hub-setup-title">Sign in or create an account.</p>
             <p id="setup-step-copy" class="hub-setup-copy">
-              Start free with BYOK or autodetect a local coding CLI wrapper. Both paths stay local-first.
+              Logged out keeps AI Agent access on. Apps stay off until you sign in.
             </p>
             <ul id="setup-step-notes" class="hub-setup-notes">
-              <li>Use BYOK if you already have your own model provider.</li>
-              <li>Use Local CLI if Codex, Claude Code, Gemini, or Aider already live on this machine.</li>
+              <li>Free and paid both sign in here.</li>
+              <li>Paid turns on managed AI. Free turns on BYOK, Local CLI, or Ollama.</li>
             </ul>
-            <div id="setup-step-status" class="hub-setup-status">Waiting for your setup choice.</div>
+            <div id="setup-step-status" class="hub-setup-status">Stay in agent-only mode until you are ready.</div>
             <div class="hub-setup-actions">
-              <button id="setup-step-primary" type="button" class="hub-button hub-button-secondary">Use BYOK</button>
-              <button id="setup-step-secondary" type="button" class="hub-button hub-button-secondary">Autodetect Local CLI</button>
+              <button id="setup-step-primary" type="button" class="hub-button hub-button-secondary">Sign In / Create Account</button>
+              <button id="setup-step-secondary" type="button" class="hub-button hub-button-secondary">Stay in agent mode</button>
             </div>
           </div>
         </section>
@@ -104,7 +105,7 @@
       <article class="hub-card hub-card-primary">
         <div class="hub-card-header">
           <div>
-            <p id="free-kicker" class="hub-kicker">1. Free forever</p>
+            <p id="free-kicker" class="hub-kicker">1. Default: Free</p>
             <h2><span id="free-heading-text">AI Agent Access:</span> <span id="agent-access-label">ON</span></h2>
           </div>
           <label class="hub-switch">
@@ -122,7 +123,7 @@
             <p id="free-copy">
               Point any AI coding agent to
               <strong>http://localhost:8888/agents</strong>
-              to learn how to control Solace Browser through the local runtime. This mode is free and local-first.
+              to learn how to control Solace Browser through the protected local runtime. Give an agent one URL and it can get to work. This mode is free, local-first, and stays on this machine by default.
             </p>
             <p id="agent-note" class="hub-note">
               Solace Hub keeps AI Agent Access on even before you create an account.
@@ -135,51 +136,50 @@
         <div class="hub-card-header">
           <div>
             <p id="personal-kicker" class="hub-kicker">2. Personal AI Assistant (Always Free)</p>
-            <h2 id="personal-heading">Power Yinyang your way</h2>
+            <h2 id="personal-heading">Start free and get a working assistant today</h2>
           </div>
-          <span id="personal-pill" class="hub-pill hub-pill-on">Free forever</span>
+          <span id="personal-pill" class="hub-pill hub-pill-on">Default</span>
         </div>
         <div class="hub-card-body hub-card-body-stack">
           <p id="personal-copy">
-            Allow setup using BYOK or autodetect a local coding CLI and use the Solace CLI wrapper webservice
-            to power your Yinyang assistant.
+            Use BYOK or autodetect a local coding CLI wrapper to get one useful workflow, one saved report, and one repeatable win without paying first.
           </p>
           <ul class="hub-benefits">
-            <li id="personal-benefit-1">Bring your own key and keep local-first control</li>
-            <li id="personal-benefit-2">Autodetect Codex, Claude Code, Gemini, or Aider wrappers</li>
-            <li id="personal-benefit-3">Use Yinyang for free on supported domains and bundled starter apps</li>
+            <li id="personal-benefit-1">Bring your own key and keep full local-first control</li>
+            <li id="personal-benefit-2">Autodetect Codex, Claude Code, Gemini, or Aider wrappers in minutes</li>
+            <li id="personal-benefit-3">Use Yinyang for free on supported domains and bundled starter apps with saved reports</li>
           </ul>
           <div class="hub-inline-actions">
             <button id="btn-enable-byok" type="button" class="hub-button hub-button-secondary">Use BYOK</button>
             <button id="btn-enable-cli" type="button" class="hub-button hub-button-secondary">Autodetect Local CLI</button>
+            <button id="btn-enable-ollama" type="button" class="hub-button hub-button-secondary">Use Ollama URL</button>
           </div>
-          <p id="personal-note" class="hub-note">Choose a setup path, then open Solace Browser and let Yinyang guide the rest.</p>
+            <p id="personal-note" class="hub-note">This is the no-risk path: get one useful report first, then decide if it is worth carrying to another machine later.</p>
         </div>
       </article>
 
       <article class="hub-card">
         <div class="hub-card-header">
           <div>
-            <p id="pro-kicker" class="hub-kicker">3. Professional AI Assistant (Dragon Warrior)</p>
-            <h2 id="pro-heading">Enterprise-grade Solace AGI</h2>
+            <p id="pro-kicker" class="hub-kicker">3. Managed Solace AGI (Dragon Warrior)</p>
+            <h2 id="pro-heading">Extend the same protected workflow to your team and other machines</h2>
           </div>
-          <span id="account-pill" class="hub-pill hub-pill-off">Not signed in</span>
+          <span id="account-pill" class="hub-pill hub-pill-off">Optional</span>
         </div>
         <div class="hub-card-body hub-card-body-stack">
           <p id="pro-copy">
-            Sign in for enterprise-grade AI with full eSign, FDA Part 11 evidence, team sync, backups, remote control,
-            and managed LLM uplifts for your apps.
+            Sign in only after the local run is useful and you want cloud sync, remote control, eSign, or audit-ready proof on top of it.
           </p>
           <ul class="hub-benefits">
-            <li id="pro-benefit-1">Managed LLM with premium app uplifts and recommendations</li>
-            <li id="pro-benefit-2">Remote access, tunnel relay, sync, backups, and team coordination</li>
-            <li id="pro-benefit-3">Enterprise evidence, approvals, schedules, and audit-ready workflows</li>
+            <li id="pro-benefit-1">Managed AI so teams do not have to wire BYOK or local wrappers on every machine</li>
+            <li id="pro-benefit-2">Remote access, tunnel relay, sync, backups, and shared team access from the same account</li>
+            <li id="pro-benefit-3">Enterprise evidence, approvals, schedules, and audit-ready workflows when proof matters most</li>
           </ul>
           <div class="hub-inline-actions">
             <button id="btn-open-account" type="button" class="hub-button hub-button-primary">Sign In / Create Account</button>
           </div>
           <p id="pro-note" class="hub-note">
-            Learn more at <strong>solaceagi.com</strong> and use the same account across Hub, Browser, and cloud.
+            Start free first. Upgrade when the same local win is worth carrying to more people, more machines, and a shared workflow library.
           </p>
         </div>
       </article>
@@ -191,7 +191,7 @@
           <p id="runtime-kicker" class="hub-kicker">4. Know if the system is healthy</p>
           <h2 id="runtime-heading">Runtime Status</h2>
         </div>
-        <p id="runtime-summary" class="hub-status-copy">Checking localhost:8888…</p>
+        <p id="runtime-summary" class="hub-status-copy" aria-live="polite">Checking localhost:8888 so we can confirm everything is ready…</p>
       </div>
       <div class="hub-status-grid">
         <article class="hub-status-card hub-status-card-on" id="status-mcp">
@@ -212,7 +212,7 @@
         <article class="hub-status-card hub-status-card-off" id="status-yinyang">
           <span class="hub-status-dot"></span>
           <strong id="status-yinyang-label">Yinyang sidebar</strong>
-          <p id="status-yinyang-copy">Waiting for Browser</p>
+          <p id="status-yinyang-copy">Browser not open yet</p>
         </article>
         <article class="hub-status-card hub-status-card-off" id="status-remote">
           <span class="hub-status-dot"></span>
@@ -226,8 +226,8 @@
         </article>
       </div>
       <div class="hub-footer-note">
-        <p id="cli-note">CLI wrappers: checking local coding agents…</p>
-        <p id="runtime-footer-note">Advanced admin stays behind the runtime so first launch stays simple.</p>
+        <p id="cli-note">Checking local coding agents…</p>
+        <p id="runtime-footer-note">Advanced admin stays behind the runtime API so the default surface stays smaller and safer.</p>
       </div>
     </section>
 

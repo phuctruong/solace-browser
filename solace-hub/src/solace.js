@@ -18,29 +18,29 @@
       toolbar_language: 'Language',
       toolbar_theme: 'Theme',
       toolbar_text: 'Text',
-      summary: 'Solace Hub owns local runtime health, agent access on port 8888, and Browser launch.',
+      summary: 'Hub keeps localhost:8888 alive on this machine, opens Solace Browser, and keeps the first choice small and reversible.',
       open_browser: 'Open Solace Browser',
       quick_setup: 'Quick setup',
-      quick_setup_title: 'Three steps to a working assistant',
+      quick_setup_title: 'Get one useful report with a reversible first step',
       step1_label: 'Choose local mode',
       step2_label: 'Connect account',
       step3_label: 'Launch Yinyang',
       progress_step: 'Step {step} of 3',
       progress_complete: 'Completed {count} / 3',
-      step1_title: 'Choose how Yinyang gets its power.',
-      step1_copy: 'Start free with BYOK or autodetect a local coding CLI wrapper. Both paths stay local-first.',
+      step1_title: 'Choose one local mode first.',
+      step1_copy: 'Pick one local mode now. You can change it later without losing the local setup.',
       step1_primary: 'Use BYOK',
       step1_secondary: 'Autodetect Local CLI',
-      step1_notes_1: 'Use BYOK if you already have your own model provider.',
+      step1_notes_1: 'Use BYOK if you already have a model key and want to move fast.',
       step1_notes_2: 'Use Local CLI if Codex, Claude Code, Gemini, or Aider already live on this machine.',
-      step2_title: 'Connect your Solace AGI account when you want more.',
-      step2_copy: 'A free or paid account unlocks cloud sync, remote control, team surfaces, and managed LLM uplifts.',
+      step2_title: 'Connect an account only if it helps.',
+      step2_copy: 'Stay local by default. Add sync, remote control, or shared access only when the extra surface is worth it.',
       step2_primary: 'Sign In / Create Account',
       step2_secondary: 'Stay local-first',
-      step2_notes_1: 'A free account lets the dashboard, Morning Brief, and cloud sync know who you are.',
+      step2_notes_1: 'A free account lets the dashboard, Morning Brief, and optional cloud sync identify this machine only when you ask for that broader shared-state surface.',
       step2_notes_2: 'You can skip this and keep using local-first mode right now.',
-      step3_title: 'Launch Solace Browser and finish inside Yinyang.',
-      step3_copy: 'Once the browser is open, the pinned Yinyang sidebar can install apps, create schedules, and guide the rest.',
+      step3_title: 'Open the Browser and finish in Yinyang.',
+      step3_copy: 'Run one app. Keep one report. Improve it later only if the first result earns the time.',
       step3_primary: 'Open Solace Browser',
       step3_secondary: 'Open Agent Guide',
       step3_notes_1: 'The browser opens on the real Solace AGI dashboard.',
@@ -161,24 +161,44 @@
   };
   const EXTRA_TRANSLATIONS = {
     en: {
-      free_kicker: '1. Free forever',
-      free_pill: 'Free forever',
+      quick_setup_title: 'Turn on apps in three steps',
+      step1_label: 'Sign in',
+      step2_label: 'Choose model source',
+      step3_label: 'Launch browser',
+      step1_title: 'Sign in or create an account.',
+      step1_copy: 'Logged out keeps AI Agent access on. Apps stay off until you sign in.',
+      step1_primary: 'Sign In / Create Account',
+      step1_secondary: 'Stay in agent mode',
+      step1_notes_1: 'Free and paid both start by signing in.',
+      step1_notes_2: 'Apps stay off until you both sign in and choose a model source.',
+      step2_title: 'Choose how free or paid apps run.',
+      step2_copy: 'Free users turn apps on with BYOK, Local CLI, or Ollama. Paid users can turn on managed AI.',
+      step2_primary: 'Use BYOK',
+      step2_secondary: 'Autodetect Local CLI',
+      step2_notes_1: 'Use Ollama if you already have a model server on your network.',
+      step2_notes_2: 'Managed AI is for paid memberships and uses Solace AGI credits.',
+      step3_title: 'Open Browser and finish inside Yinyang.',
+      step3_copy: 'Once Browser opens, Yinyang can run apps, save reports, and schedule work.',
+      step3_primary: 'Open Solace Browser',
+      step3_secondary: 'Open Agent Guide',
+      free_kicker: '1. Default: Free',
+      free_pill: 'Default',
       free_heading: 'AI Agent Access:',
       free_enabled: 'Enabled',
-      free_copy: 'Point any AI coding agent to http://localhost:8888/agents to learn how to control Solace Browser through the local runtime. This mode is free and local-first.',
+      free_copy: 'Point your AI coding agent to http://localhost:8888/agents to learn how to control Solace Browser through the local runtime. Give an agent one URL and it can get to work. Local control stays on this machine unless you choose cloud features later.',
       personal_kicker: '2. Personal AI Assistant (Always Free)',
-      personal_heading: 'Power Yinyang your way',
-      personal_copy: 'Allow setup using BYOK or autodetect a local coding CLI and use the Solace CLI wrapper webservice to power your Yinyang assistant.',
-      personal_benefit_1: 'Bring your own key and keep local-first control',
-      personal_benefit_2: 'Autodetect Codex, Claude Code, Gemini, or Aider wrappers',
-      personal_benefit_3: 'Use Yinyang for free on supported domains and bundled starter apps',
-      pro_kicker: '3. Professional AI Assistant (Dragon Warrior)',
-      pro_heading: 'Enterprise-grade Solace AGI',
-      pro_copy: 'Sign in for enterprise-grade AI with full eSign, FDA Part 11 evidence, team sync, backups, remote control, and managed LLM uplifts for your apps.',
-      pro_benefit_1: 'Managed LLM with premium app uplifts and recommendations',
-      pro_benefit_2: 'Remote access, tunnel relay, sync, backups, and team coordination',
-      pro_benefit_3: 'Enterprise evidence, approvals, schedules, and audit-ready workflows',
-      pro_note: 'Learn more at solaceagi.com and use the same account across Hub, Browser, and cloud.',
+      personal_heading: 'Stay local and start gently',
+      personal_copy: 'Use BYOK or autodetect a local coding CLI wrapper to get one useful workflow and one saved report while keeping keys and runs on this machine.',
+      personal_benefit_1: 'Bring your own key and keep full local-first control',
+      personal_benefit_2: 'Autodetect Codex, Claude Code, Gemini, or Aider wrappers in minutes',
+      personal_benefit_3: 'Use Yinyang for free on supported domains and bundled starter apps with saved reports',
+      pro_kicker: '3. Managed Solace AGI (Dragon Warrior)',
+      pro_heading: 'Extend the same protected workflow to your team and other machines',
+      pro_copy: 'Sign in only after the local run is useful and you want managed AI, cloud sync, remote control, eSign, or audit-ready proof on top of it.',
+      pro_benefit_1: 'Managed AI so teams do not have to wire BYOK or local wrappers on every machine',
+      pro_benefit_2: 'Remote access, tunnel relay, sync, backups, and shared team access when you explicitly decide this workflow should leave the machine',
+      pro_benefit_3: 'Enterprise evidence, approvals, schedules, and audit-ready workflows when proof matters most',
+      pro_note: 'Start free first. Upgrade only when the local win feels steady enough to carry to more people, more machines, and shared workflows you are willing to expose beyond local-only mode.',
       runtime_kicker: '4. Know if the system is healthy',
       runtime_heading: 'Runtime Status',
       status_mcp_label: 'MCP server',
@@ -187,43 +207,43 @@
       status_yinyang_label: 'Yinyang sidebar',
       status_remote_label: 'Remote access',
       status_sync_label: 'Solace AGI sync',
-      runtime_footer_note: 'Advanced admin stays behind the runtime so first launch stays simple.',
+      runtime_footer_note: 'Advanced admin stays behind the runtime API so the default surface stays smaller and safer.',
       launch_in_progress: 'Launching…',
       opened: 'Opened',
       saving: 'Saving…',
       detecting: 'Detecting…',
-      runtime_healthy: 'Local runtime is healthy on localhost:8888.',
-      runtime_offline: 'Local runtime is offline. Start Solace Hub again to restore the free agent runtime.',
-      runtime_unreachable: 'Could not reach localhost:8888: {error}',
-      runtime_summary_mismatch: 'Hub reports {status}, but localhost:8888 is not healthy yet.',
-      agent_access_configured: 'Agent access is configured. Point Codex, Claude Code, Cursor, or Gemini to http://localhost:8888/agents.',
+      runtime_healthy: 'localhost:8888 is healthy. Agent access and Browser launch are ready.',
+      runtime_offline: 'localhost:8888 is offline. Agent access and Browser launch will resume after Hub restarts.',
+      runtime_unreachable: 'Cannot reach localhost:8888: {error}',
+      runtime_summary_mismatch: 'Hub reports {status}, but localhost:8888 is still catching up.',
+      agent_access_configured: 'Agent access is listening on http://localhost:8888/agents. Point Codex, Claude Code, Cursor, or Gemini there when you are ready.',
       agent_access_first_run: 'First launch defaults to AI Agent Access. The Hub will complete setup the first time you open the Browser.',
       account_signed_in: 'Signed in',
-      account_not_signed_in: 'Not signed in',
-      setup_waiting: 'Waiting for BYOK, local CLI, or agent mode.',
-      setup_local_cli_saved: 'Local CLI mode saved. Account connection is optional.',
-      setup_local_mode_saved: 'Local mode saved. Account connection is optional.',
-      setup_account_connected: 'Account is connected. Open Solace Browser to continue in Yinyang.',
-      setup_browser_active: 'Browser session is active. Continue in the pinned Yinyang sidebar.',
+      account_not_signed_in: 'Later',
+      setup_waiting: 'No local mode saved yet. Choose one, then open Solace Browser.',
+      setup_local_cli_saved: 'Local CLI mode saved. Browser can open now.',
+      setup_local_mode_saved: 'Local mode saved. Browser can open now.',
+      setup_account_connected: 'Account connected. Next, open Solace Browser and finish in Yinyang.',
+      setup_browser_active: 'Browser session active. Yinyang is pinned in the Browser.',
       setup_runtime_unavailable: 'Runtime unavailable. Restart Hub first.',
-      status_ready_local_agents: 'Ready for local agents',
-      status_hub_runtime_offline: 'Hub runtime offline',
-      status_listening_8888: 'Listening on 8888',
-      status_server_unavailable: 'Server unavailable',
-      status_agent_access_available: 'Agent access available',
-      status_connected: 'Connected',
+      status_ready_local_agents: 'MCP and agent access ready',
+      status_hub_runtime_offline: 'Runtime offline',
+      status_listening_8888: 'Port 8888 ready',
+      status_server_unavailable: 'Unavailable',
+      status_agent_access_available: 'Agents listening on /agents',
+      status_connected: 'On',
       status_off: 'Off',
       status_waiting_browser: 'Waiting for Browser',
-      cli_wrappers_detected: 'CLI wrappers detected: {tools}.',
-      cli_wrappers_none: 'CLI wrappers: no local coding agents detected yet.',
-      cli_wrappers_unavailable: 'CLI wrappers: runtime unavailable.',
+      cli_wrappers_detected: 'Detected local coding agents: {tools}.',
+      cli_wrappers_none: 'No local coding agents detected yet.',
+      cli_wrappers_unavailable: 'Local coding agent check unavailable until runtime recovers.',
       byok_saved: 'BYOK saved. Open Solace Browser and use Yinyang to finish provider setup.',
       byok_save_failed: 'Could not save BYOK setup: {error}',
-      byok_mode_active: 'BYOK mode is active. You are still local-first and not signed in to Solace AGI.',
+      byok_mode_active: 'BYOK mode is active. Your provider key stays local-first here, and you can add an account later if you want.',
       cli_mode_saved: 'CLI wrapper mode saved. Detected: {tools}.',
       cli_mode_saved_none: 'CLI wrapper mode saved. No supported local CLIs detected yet.',
       cli_mode_failed: 'Could not enable Local CLI Wrapper: {error}',
-      cli_mode_active: 'Local CLI Wrapper mode is active. You are still local-first and not signed in to Solace AGI.',
+      cli_mode_active: 'Local CLI Wrapper mode is active. Local wrappers run here, and you can add an account later if you want.',
       browser_launch_failed: 'Could not launch Solace Browser: {error}',
       browser_open_url_failed: 'Could not open requested page in Solace Browser: {error}'
     },
@@ -500,7 +520,12 @@
       }
       button.classList.toggle('hub-setup-step-active', isActive);
       button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      button.setAttribute('tabindex', isActive ? '0' : '-1');
     });
+    const panel = qs('hub-setup-panel');
+    if (panel) {
+      panel.setAttribute('aria-labelledby', 'setup-step-' + stepNumber);
+    }
     setText('setup-step-title', content.title);
     setText('setup-step-copy', content.copy);
     if (statusText) {
@@ -536,14 +561,14 @@
     button.classList.toggle('hub-setup-step-complete', complete);
   }
 
-  function highestCompletedStep(localSetupComplete, accountMode, browserActive) {
+  function highestCompletedStep(loggedIn, appsOn, browserActive) {
     if (browserActive) {
       return 3;
     }
-    if (accountMode) {
+    if (appsOn) {
       return 2;
     }
-    if (localSetupComplete) {
+    if (loggedIn) {
       return 1;
     }
     return 0;
@@ -620,6 +645,27 @@
       button.addEventListener('click', function () {
         setSetupStep(stepNumber);
       });
+      button.addEventListener('keydown', function (event) {
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') {
+          return;
+        }
+        const tabs = [1, 2, 3]
+          .map(function (step) { return qs('setup-step-' + step); })
+          .filter(Boolean);
+        const currentIndex = tabs.indexOf(button);
+        if (currentIndex === -1 || !tabs.length) {
+          return;
+        }
+        event.preventDefault();
+        const direction = event.key === 'ArrowRight' ? 1 : -1;
+        const nextIndex = (currentIndex + direction + tabs.length) % tabs.length;
+        const nextButton = tabs[nextIndex];
+        if (!nextButton) {
+          return;
+        }
+        nextButton.focus();
+        setSetupStep(Number(nextButton.getAttribute('data-step') || nextIndex + 1));
+      });
     });
 
     const primary = qs('setup-step-primary');
@@ -628,11 +674,11 @@
       primary.addEventListener('click', async function () {
         const step = primary.getAttribute('data-step') || '1';
         if (step === '1') {
-          qs('btn-enable-byok').click();
+          qs('btn-open-account').click();
           return;
         }
         if (step === '2') {
-          qs('btn-open-account').click();
+          qs('btn-enable-byok').click();
           return;
         }
         if (step === '3') {
@@ -644,17 +690,15 @@
       secondary.addEventListener('click', async function () {
         const step = secondary.getAttribute('data-step') || '1';
         if (step === '1') {
-          qs('btn-enable-cli').click();
+          setText('agent-note', 'Agent-only mode stays on. Sign in later to turn on apps.');
           return;
         }
         if (step === '2') {
-          await completeSetup('agent');
-          await refreshHub();
-          setSetupStep(3, 'Local free mode is active. Open Solace Browser whenever you are ready.');
+          qs('btn-enable-cli').click();
           return;
         }
         if (step === '3') {
-          openBrowserUrl('http://127.0.0.1:8888/agents', 'agent', 'setup-step-secondary');
+          openBrowserUrl('http://127.0.0.1:8888/agents', 'setup-step-secondary');
         }
       });
     }
@@ -729,35 +773,117 @@
     return original;
   }
 
-  async function ensureOnboarding(mode) {
+  function normalizeMembershipTier(value) {
+    const tier = String(value || '').trim().toLowerCase();
+    if (['free', 'starter', 'pro', 'team', 'enterprise'].indexOf(tier) >= 0) {
+      return tier;
+    }
+    if (tier === 'paid') {
+      return 'starter';
+    }
+    return 'free';
+  }
+
+  function normalizeOnboardingState(payload) {
+    const source = payload || {};
+    const authState = source.auth_state === 'logged_in' ? 'logged_in' : 'logged_out';
+    const membershipTier = normalizeMembershipTier(source.membership_tier);
+    const modelSource = ['byok', 'cli', 'ollama', 'managed'].indexOf(source.model_source) >= 0
+      ? source.model_source
+      : null;
+    const managedLlmEnabled = Boolean(source.managed_llm_enabled) || modelSource === 'managed' || membershipTier !== 'free';
+    const appsEnabled = Boolean(source.apps_enabled) || (
+      authState === 'logged_in' && (
+        managedLlmEnabled ||
+        modelSource === 'byok' ||
+        modelSource === 'cli' ||
+        modelSource === 'ollama'
+      )
+    );
+
+    return {
+      completed: Boolean(source.completed),
+      mode: source.mode || null,
+      auth_state: authState,
+      membership_tier: membershipTier,
+      model_source: modelSource,
+      managed_llm_enabled: managedLlmEnabled,
+      apps_enabled: appsEnabled,
+      device_id: source.device_id || null
+    };
+  }
+
+  function isLoggedIn(onboarding) {
+    return normalizeOnboardingState(onboarding).auth_state === 'logged_in';
+  }
+
+  function appsEnabled(onboarding) {
+    return normalizeOnboardingState(onboarding).apps_enabled;
+  }
+
+  async function fetchOnboardingState() {
     const statusResponse = await hubFetch('/api/v1/onboarding/status', {
       signal: timeoutSignal(3000)
     });
-    const onboarding = statusResponse.ok ? await statusResponse.json() : { completed: false, mode: null };
-    if (onboarding.completed) {
-      return onboarding;
+    if (!statusResponse.ok) {
+      return normalizeOnboardingState({});
     }
+    return normalizeOnboardingState(await statusResponse.json());
+  }
+
+  async function saveOnboarding(payload) {
     const completeResponse = await hubFetch('/onboarding/complete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: mode }),
+      body: JSON.stringify(payload),
       signal: timeoutSignal(5000)
     });
     if (!completeResponse.ok) {
       throw new Error('HTTP ' + completeResponse.status);
     }
-    return completeResponse.json();
+    return normalizeOnboardingState(await completeResponse.json());
   }
 
-  async function completeSetup(mode) {
-    return ensureOnboarding(mode);
+  async function configureOllamaFromPrompt() {
+    const current = await hubFetch('/api/v1/ollama/config', { signal: timeoutSignal(3000) });
+    let defaultUrl = 'http://192.168.1.1:11434';
+    if (current.ok) {
+      const payload = await current.json();
+      if (payload && payload.url) {
+        defaultUrl = payload.url;
+      }
+    }
+    const url = window.prompt('Enter your Ollama server URL', defaultUrl);
+    if (!url) {
+      return null;
+    }
+    const trimmed = url.trim();
+    if (!trimmed) {
+      return null;
+    }
+    const response = await hubFetch('/api/v1/ollama/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: trimmed }),
+      signal: timeoutSignal(8000)
+    });
+    if (!response.ok) {
+      let detail = 'HTTP ' + response.status;
+      try {
+        const payload = await response.json();
+        detail = payload.error || payload.detail || detail;
+      } catch (error) {
+        // keep HTTP detail
+      }
+      throw new Error(detail);
+    }
+    return response.json();
   }
 
   async function openBrowser() {
     const button = qs('btn-open-browser');
     const original = setButtonBusy(button, 'launch_in_progress');
     try {
-      await completeSetup('agent');
       const response = await hubFetch('/api/v1/hub/browser/open', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -781,11 +907,10 @@
     }, 2500);
   }
 
-  async function openBrowserUrl(url, mode, buttonId) {
+  async function openBrowserUrl(url, buttonId) {
     const button = qs(buttonId);
     const original = setButtonBusy(button, 'launch_in_progress');
     try {
-      await completeSetup(mode);
       const response = await hubFetch('/api/v1/hub/browser/open', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -812,13 +937,18 @@
   function bindActions() {
     qs('btn-open-browser').addEventListener('click', openBrowser);
     qs('btn-open-account').addEventListener('click', function () {
-      openBrowserUrl('https://solaceagi.com/register', 'paid', 'btn-open-account');
+      openBrowserUrl('https://solaceagi.com/register', 'btn-open-account');
     });
     qs('btn-enable-byok').addEventListener('click', async function () {
       const button = this;
       const original = setButtonBusy(button, 'saving');
       try {
-        await completeSetup('byok');
+        await saveOnboarding({
+          auth_state: 'logged_in',
+          membership_tier: 'free',
+          managed_llm_enabled: false,
+          model_source: 'byok'
+        });
         setText('personal-note', t('byok_saved'));
         await refreshHub();
       } catch (error) {
@@ -836,10 +966,15 @@
         if (!cli.ok) {
           throw new Error('HTTP ' + cli.status);
         }
-        await completeSetup('cli');
         const payload = await cli.json();
         const detected = Object.keys(payload.detected || {}).filter(function (tool) {
           return payload.detected[tool] && payload.detected[tool].installed;
+        });
+        await saveOnboarding({
+          auth_state: 'logged_in',
+          membership_tier: 'free',
+          managed_llm_enabled: false,
+          model_source: 'cli'
         });
         setText(
           'personal-note',
@@ -850,6 +985,30 @@
         await refreshHub();
       } catch (error) {
         setText('personal-note', t('cli_mode_failed', { error: error.message }));
+      } finally {
+        button.textContent = original;
+        button.disabled = false;
+      }
+    });
+    qs('btn-enable-ollama').addEventListener('click', async function () {
+      const button = this;
+      const original = setButtonBusy(button, 'saving');
+      try {
+        const payload = await configureOllamaFromPrompt();
+        if (!payload) {
+          setText('personal-note', 'Ollama setup cancelled. Apps stay off until you choose a model source.');
+        } else {
+          await saveOnboarding({
+            auth_state: 'logged_in',
+            membership_tier: 'free',
+            managed_llm_enabled: false,
+            model_source: 'ollama'
+          });
+          setText('personal-note', 'Ollama URL saved. Apps are ready on your remote Ollama server.');
+        }
+        await refreshHub();
+      } catch (error) {
+        setText('personal-note', 'Could not save Ollama URL: ' + error.message);
       } finally {
         button.textContent = original;
         button.disabled = false;
@@ -873,7 +1032,7 @@
       ]);
 
       const status = statusResponse.ok ? await statusResponse.json() : { status: 'offline' };
-      const onboarding = onboardingResponse.ok ? await onboardingResponse.json() : { completed: false, mode: null };
+      const onboarding = onboardingResponse.ok ? normalizeOnboardingState(await onboardingResponse.json()) : normalizeOnboardingState({});
       const summary = summaryResponse.ok ? await summaryResponse.json() : {};
       const tunnel = tunnelResponse.ok ? await tunnelResponse.json() : { active: false };
       const sync = syncResponse.ok ? await syncResponse.json() : { status: 'offline' };
@@ -884,10 +1043,12 @@
       const browserActive = Array.isArray(sessions.sessions) && sessions.sessions.length > 0;
       const syncHealthy = runtimeHealthy && sync.status && sync.status !== 'offline' && sync.status !== 'idle';
       const tunnelHealthy = runtimeHealthy && Boolean(tunnel.active);
-      const accountMode = onboarding.completed && onboarding.mode === 'paid';
-      const setupMode = onboarding.completed ? onboarding.mode : null;
-      const localSetupComplete = setupMode === 'byok' || setupMode === 'cli' || setupMode === 'agent' || setupMode === 'paid';
-      const completedStep = highestCompletedStep(localSetupComplete, accountMode, browserActive);
+      const loggedIn = isLoggedIn(onboarding);
+      const membershipTier = onboarding.membership_tier || 'free';
+      const modelSource = onboarding.model_source || null;
+      const managedLlmEnabled = Boolean(onboarding.managed_llm_enabled);
+      const localSetupComplete = appsEnabled(onboarding);
+      const completedStep = highestCompletedStep(loggedIn, localSetupComplete, browserActive);
 
       setText(
         'runtime-summary',
@@ -898,21 +1059,25 @@
       setText('agent-access-label', runtimeHealthy ? 'ON' : 'WAITING');
       setText(
         'agent-note',
-        onboarding.completed
-          ? t('agent_access_configured')
-          : t('agent_access_first_run')
+        loggedIn
+          ? 'Signed in. Pick BYOK, Local CLI, Ollama, or managed AI to turn apps on.'
+          : 'Logged out. AI Agent Access stays on, but apps stay off until you sign in.'
       );
-      setText('account-pill', accountMode ? t('account_signed_in') : t('account_not_signed_in'));
-      qs('account-pill').className = accountMode ? 'hub-pill hub-pill-on' : 'hub-pill hub-pill-off';
-      setSetupComplete(1, localSetupComplete);
-      setSetupComplete(2, accountMode);
+      setText('account-pill', loggedIn ? (membershipTier === 'free' ? 'Free member' : 'Paid member') : 'Logged out');
+      qs('account-pill').className = loggedIn ? 'hub-pill hub-pill-on' : 'hub-pill hub-pill-off';
+      setSetupComplete(1, loggedIn);
+      setSetupComplete(2, localSetupComplete);
       setSetupComplete(3, browserActive);
-      if (!localSetupComplete) {
+      if (!loggedIn) {
         setSetupStep(1, t('setup_waiting'));
-      } else if (!accountMode) {
-        setSetupStep(2, setupMode === 'cli' ? t('setup_local_cli_saved') : t('setup_local_mode_saved'));
+      } else if (!localSetupComplete) {
+        setSetupStep(2, modelSource === 'managed'
+          ? 'Managed AI is selected. Open the Browser to finish inside Yinyang.'
+          : 'Pick one model source to turn apps on.');
       } else if (!browserActive) {
-        setSetupStep(3, t('setup_account_connected'));
+        setSetupStep(3, managedLlmEnabled
+          ? 'Managed AI is active. Open Solace Browser to finish inside Yinyang.'
+          : 'Apps are on. Open Solace Browser to finish inside Yinyang.');
       } else {
         setSetupStep(3, t('setup_browser_active'));
       }
@@ -939,10 +1104,18 @@
           ? t('cli_wrappers_detected', { tools: detectedTools.join(', ') })
           : t('cli_wrappers_none')
       );
-      if (setupMode === 'byok') {
+      if (!loggedIn) {
+        setText('personal-note', 'Sign in first. Apps stay off while AI Agent Access remains available at /agents.');
+      } else if (modelSource === 'byok') {
         setText('personal-note', t('byok_mode_active'));
-      } else if (setupMode === 'cli') {
+      } else if (modelSource === 'cli') {
         setText('personal-note', t('cli_mode_active'));
+      } else if (modelSource === 'ollama') {
+        setText('personal-note', 'Ollama mode is active. Apps use your saved remote Ollama server.');
+      } else if (modelSource === 'managed') {
+        setText('personal-note', 'Managed AI is active. Open the dashboard for cloud controls and credits.');
+      } else {
+        setText('personal-note', 'Sign in is complete. Pick BYOK, Local CLI, Ollama, or managed AI to turn apps on.');
       }
       if (summary.status && !runtimeHealthy) {
         setText('runtime-summary', t('runtime_summary_mismatch', { status: summary.status }));
@@ -957,7 +1130,7 @@
       setText('cli-note', t('cli_wrappers_unavailable'));
       setText('agent-access-label', 'WAITING');
       setText('agent-note', t('runtime_offline'));
-      setText('account-pill', t('account_not_signed_in'));
+      setText('account-pill', 'Logged out');
       qs('account-pill').className = 'hub-pill hub-pill-off';
       setSetupComplete(1, false);
       setSetupComplete(2, false);

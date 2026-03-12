@@ -119,6 +119,7 @@ import functools
 import hashlib
 import hmac
 import html
+from html import escape as html_escape
 import http.server
 import inspect
 import json
@@ -149,8 +150,13 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 REPO_ROOT = Path(__file__).resolve().parent
-SIDEBAR_ASSETS_DIR = (
-    REPO_ROOT / "source" / "src" / "chrome" / "browser" / "resources" / "solace"
+_SIDEBAR_ASSET_CANDIDATES = (
+    REPO_ROOT / "source" / "src" / "chrome" / "browser" / "resources" / "solace",
+    REPO_ROOT / "resources" / "solace-sidebar",
+)
+SIDEBAR_ASSETS_DIR = next(
+    (candidate for candidate in _SIDEBAR_ASSET_CANDIDATES if candidate.exists()),
+    _SIDEBAR_ASSET_CANDIDATES[0],
 )
 HUB_UI_DIR = REPO_ROOT / "solace-hub" / "src"
 HUB_ICONS_DIR = HUB_UI_DIR / "icons"
@@ -2856,6 +2862,8 @@ _SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
 _CRON_RE = re.compile(r"^\S+\s+\S+\s+\S+\s+\S+\s+\S+$")
 _APP_ID_RE = re.compile(r"^[A-Za-z0-9-]+$")
 _ONBOARDING_MODES = frozenset(["agent", "byok", "paid", "cli"])
+_AUTH_STATES = frozenset(["logged_out", "logged_in"])
+_MODEL_SOURCES = frozenset(["byok", "cli", "ollama", "managed"])
 OAUTH3_HIGH_RISK_ACTIONS = frozenset(["send", "post", "delete", "payment", "connect"])
 OAUTH3_STEP_UP_TTL_SECONDS = 300
 OAUTH3_PBKDF2_ITERATIONS = 100000
@@ -3590,6 +3598,11 @@ def _load_cloud_api_key() -> str:
 
 
 def _load_account_tier() -> str:
+    onboarding = _load_onboarding_state()
+    auth_state = str(onboarding.get("auth_state", "logged_out"))
+    membership_tier = _normalize_membership_tier(onboarding.get("membership_tier", "free"))
+    if auth_state == "logged_in":
+        return membership_tier
     try:
         settings = json.loads(SETTINGS_PATH.read_text())
     except FileNotFoundError:
@@ -3620,13 +3633,20 @@ def _load_account_tier() -> str:
 
 
 def _load_user_tier_payload() -> dict:
-    tier = _load_account_tier()
+    onboarding = _load_onboarding_state()
+    tier = _normalize_membership_tier(onboarding.get("membership_tier", _load_account_tier()))
     tier_rank = _MARKETPLACE_TIER_RANKS.get(tier, 0)
     pro_rank = _MARKETPLACE_TIER_RANKS["pro"]
     return {
         "tier": tier,
+        "auth_state": onboarding.get("auth_state", "logged_out"),
+        "apps_enabled": bool(onboarding.get("apps_enabled", False)),
+        "model_source": onboarding.get("model_source"),
+        "managed_llm_enabled": bool(onboarding.get("managed_llm_enabled", False)),
+        "device_id": onboarding.get("device_id", _default_device_id()),
         "can_sync": tier_rank >= pro_rank,
         "can_submit": tier_rank >= pro_rank,
+        "can_remote_control": tier_rank >= pro_rank,
     }
 
 
@@ -4506,6 +4526,228 @@ def _save_settings(settings: dict) -> None:
     persisted["cloud_twin"] = _normalized_cloud_twin_settings(settings.get("cloud_twin", {}))
     SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
     SETTINGS_PATH.write_text(json.dumps(persisted, indent=2))
+
+
+def _legacy_account_tier_from_settings() -> str:
+    try:
+        settings = json.loads(SETTINGS_PATH.read_text())
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return "free"
+    if not isinstance(settings, dict):
+        return "free"
+    user = settings.get("user", {})
+    if isinstance(user, dict):
+        tier = user.get("tier")
+        if isinstance(tier, str):
+            normalized = tier.strip().lower()
+            if normalized in _MARKETPLACE_TIER_RANKS:
+                return normalized
+    account = settings.get("account", {})
+    if not isinstance(account, dict):
+        return "free"
+    tier = account.get("tier", "free")
+    if not isinstance(tier, str):
+        return "free"
+    normalized = tier.strip().lower()
+    if normalized not in _MARKETPLACE_TIER_RANKS:
+        return "free"
+    return normalized
+
+
+def _normalize_membership_tier(value: object, default: str = "free") -> str:
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in _MARKETPLACE_TIER_RANKS:
+            return normalized
+    return default
+
+
+def _normalize_model_source(value: object) -> Optional[str]:
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in _MODEL_SOURCES:
+            return normalized
+    return None
+
+
+def _default_device_id() -> str:
+    return "hub_" + uuid.uuid5(uuid.NAMESPACE_DNS, str(Path.home().resolve())).hex[:16]
+
+
+def _ollama_config_payload(settings: Optional[dict] = None) -> dict[str, Any]:
+    source = settings if isinstance(settings, dict) else _load_settings()
+    raw = source.get("ollama", {})
+    if not isinstance(raw, dict):
+        raw = {}
+    url = raw.get("url", "")
+    if not isinstance(url, str):
+        url = ""
+    normalized_url = url.strip().rstrip("/")
+    return {
+        "configured": bool(normalized_url),
+        "url": normalized_url,
+    }
+
+
+def _save_ollama_config(url: str) -> dict[str, Any]:
+    candidate = str(url or "").strip().rstrip("/")
+    parsed = urllib.parse.urlparse(candidate)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("ollama url must start with http:// or https:// and include a host")
+    settings = _load_settings()
+    settings["ollama"] = {"url": candidate}
+    _save_settings(settings)
+    return {"configured": True, "url": candidate}
+
+
+def _test_ollama_url(url: str) -> dict[str, Any]:
+    payload = _save_ollama_config(url)
+    request = urllib.request.Request(f"{payload['url']}/api/tags", method="GET")
+    started = time.perf_counter()
+    try:
+        with urllib.request.urlopen(request, timeout=5) as response:
+            body = json.loads(response.read().decode("utf-8") or "{}")
+    except urllib.error.URLError as exc:
+        raise ValueError(f"ollama unreachable: {exc}") from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError("ollama returned invalid json") from exc
+    models = body.get("models", [])
+    return {
+        "status": "reachable",
+        "url": payload["url"],
+        "models": len(models) if isinstance(models, list) else 0,
+        "latency_ms": int((time.perf_counter() - started) * 1000),
+    }
+
+
+def _derive_onboarding_mode(auth_state: str, membership_tier: str, managed_llm_enabled: bool, model_source: Optional[str]) -> Optional[str]:
+    if auth_state != "logged_in":
+        return None
+    if membership_tier != "free":
+        return "paid"
+    if managed_llm_enabled:
+        return "agent"
+    if model_source in {"byok", "cli"}:
+        return model_source
+    if model_source == "ollama":
+        return "cli"
+    return "agent"
+
+
+def _compute_apps_enabled(auth_state: str, membership_tier: str, managed_llm_enabled: bool, model_source: Optional[str]) -> bool:
+    if auth_state != "logged_in":
+        return False
+    if membership_tier != "free":
+        return True
+    return managed_llm_enabled or model_source in {"byok", "cli", "ollama"}
+
+
+def _load_onboarding_state() -> dict[str, Any]:
+    try:
+        raw = json.loads(ONBOARDING_PATH.read_text())
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        raw = {}
+    if not isinstance(raw, dict):
+        raw = {}
+    legacy_tier = _legacy_account_tier_from_settings()
+    auth_state = str(raw.get("auth_state", "")).strip().lower()
+    if auth_state not in _AUTH_STATES:
+        if bool(raw.get("completed")):
+            auth_state = "logged_in"
+        else:
+            auth_state = "logged_out"
+    membership_tier = _normalize_membership_tier(raw.get("membership_tier"), legacy_tier)
+    model_source = _normalize_model_source(raw.get("model_source"))
+    managed_llm_enabled = bool(raw.get("managed_llm_enabled", False))
+    legacy_mode = str(raw.get("mode", "")).strip().lower()
+    if auth_state == "logged_in":
+        if legacy_mode == "paid":
+            if membership_tier == "free":
+                membership_tier = "starter"
+            managed_llm_enabled = True if not raw.get("managed_llm_enabled") else managed_llm_enabled
+        elif legacy_mode == "agent":
+            managed_llm_enabled = True
+            if model_source is None:
+                model_source = "managed"
+        elif legacy_mode in {"byok", "cli"} and model_source is None:
+            model_source = legacy_mode
+    if model_source == "managed":
+        managed_llm_enabled = True
+    if auth_state != "logged_in":
+        membership_tier = "free"
+        if not managed_llm_enabled:
+            model_source = None
+    if model_source == "ollama":
+        ollama = _ollama_config_payload()
+        if not ollama["configured"]:
+            model_source = None
+    apps_enabled = _compute_apps_enabled(auth_state, membership_tier, managed_llm_enabled, model_source)
+    device_id = str(raw.get("device_id") or "").strip() or _default_device_id()
+    state = {
+        "auth_state": auth_state,
+        "membership_tier": membership_tier,
+        "managed_llm_enabled": managed_llm_enabled,
+        "model_source": model_source,
+        "apps_enabled": apps_enabled,
+        "device_id": device_id,
+        "completed": auth_state == "logged_in",
+        "mode": _derive_onboarding_mode(auth_state, membership_tier, managed_llm_enabled, model_source),
+        "membership_state": "paid" if membership_tier != "free" else "free",
+    }
+    return state
+
+
+def _save_onboarding_state(payload: dict[str, Any]) -> dict[str, Any]:
+    current = _load_onboarding_state()
+    auth_state = str(payload.get("auth_state") or current["auth_state"]).strip().lower()
+    if auth_state not in _AUTH_STATES:
+        raise ValueError(f"auth_state must be one of {sorted(_AUTH_STATES)}")
+    membership_tier = _normalize_membership_tier(payload.get("membership_tier"), current["membership_tier"])
+    managed_llm_enabled = bool(payload.get("managed_llm_enabled", current["managed_llm_enabled"]))
+    model_source = _normalize_model_source(payload.get("model_source"))
+    if model_source is None:
+        model_source = current.get("model_source")
+    legacy_mode = str(payload.get("mode", "")).strip().lower()
+    if legacy_mode in {"byok", "cli"}:
+        model_source = legacy_mode
+        auth_state = "logged_in"
+        membership_tier = "free"
+        managed_llm_enabled = False
+    elif legacy_mode == "agent":
+        auth_state = "logged_in"
+        membership_tier = "free"
+        managed_llm_enabled = True
+        model_source = "managed"
+    elif legacy_mode == "paid":
+        auth_state = "logged_in"
+        membership_tier = membership_tier if membership_tier != "free" else "starter"
+        managed_llm_enabled = True
+        model_source = "managed"
+    if auth_state == "logged_out":
+        membership_tier = "free"
+        managed_llm_enabled = False
+        model_source = None
+    if model_source == "managed":
+        managed_llm_enabled = True
+    if membership_tier != "free" and model_source is None:
+        model_source = "managed"
+    if model_source == "ollama" and not _ollama_config_payload()["configured"]:
+        raise ValueError("configure ollama url before selecting the ollama model source")
+    device_id = str(payload.get("device_id") or current["device_id"]).strip() or _default_device_id()
+    state = {
+        "auth_state": auth_state,
+        "membership_tier": membership_tier,
+        "managed_llm_enabled": managed_llm_enabled,
+        "model_source": model_source,
+        "apps_enabled": _compute_apps_enabled(auth_state, membership_tier, managed_llm_enabled, model_source),
+        "device_id": device_id,
+        "completed": auth_state == "logged_in",
+        "mode": _derive_onboarding_mode(auth_state, membership_tier, managed_llm_enabled, model_source),
+        "completed_ts": int(time.time()) if auth_state == "logged_in" else None,
+    }
+    ONBOARDING_PATH.parent.mkdir(parents=True, exist_ok=True)
+    ONBOARDING_PATH.write_text(json.dumps(state, indent=2))
+    return state
 
 
 def _default_app_cron(app_id: str, site: str = "") -> str:
@@ -6382,6 +6624,243 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             "size_bytes": target.stat().st_size,
         }
 
+    def _list_hub_windows(self) -> list[dict[str, Any]]:
+        if not shutil.which("xwininfo"):
+            return []
+        try:
+            result = subprocess.run(
+                ["xwininfo", "-root", "-tree"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return []
+        if result.returncode != 0:
+            return []
+        windows: list[dict[str, Any]] = []
+        pattern = re.compile(
+            r'^\s*(0x[0-9a-f]+)\s+"([^"]+)".*?(\d+)x(\d+)\+(-?\d+)\+(-?\d+)'
+        )
+        for line in result.stdout.splitlines():
+            match = pattern.search(line)
+            if not match:
+                continue
+            title = match.group(2)
+            if title != "Solace Hub":
+                continue
+            window_id = match.group(1)
+            pid: Optional[int] = None
+            if shutil.which("xprop"):
+                try:
+                    xprop_result = subprocess.run(
+                        ["xprop", "-id", window_id, "_NET_WM_PID"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                        check=False,
+                    )
+                    pid_match = re.search(r"=\s*(\d+)", xprop_result.stdout)
+                    if pid_match:
+                        pid = int(pid_match.group(1))
+                except (OSError, subprocess.TimeoutExpired, ValueError):
+                    pid = None
+            windows.append(
+                {
+                    "window_id": window_id,
+                    "title": title,
+                    "width": int(match.group(3)),
+                    "height": int(match.group(4)),
+                    "x": int(match.group(5)),
+                    "y": int(match.group(6)),
+                    "pid": pid,
+                }
+            )
+        return windows
+
+    def _find_hub_window_id(self) -> Optional[str]:
+        windows = self._list_hub_windows()
+        if not windows:
+            return None
+        return windows[0]["window_id"]
+
+    def _capture_hub_window_artifact(self, filename: str) -> Optional[dict[str, Any]]:
+        window_id = self._find_hub_window_id()
+        if not window_id:
+            return None
+        artifacts_dir = Path.home() / ".solace" / "artifacts"
+        artifacts_dir.mkdir(parents=True, exist_ok=True)
+        target = artifacts_dir / filename
+        try:
+            result = subprocess.run(
+                ["import", "-window", window_id, str(target)],
+                capture_output=True,
+                check=False,
+                timeout=10,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        if result.returncode != 0 or not target.exists():
+            return None
+        return {
+            "window_id": window_id,
+            "filepath": str(target),
+            "filename": target.name,
+            "size_bytes": target.stat().st_size,
+        }
+
+    def _hub_accessibility_root(self) -> Optional[Any]:
+        try:
+            import pyatspi  # type: ignore
+        except Exception:
+            return None
+        try:
+            desktop = pyatspi.Registry.getDesktop(0)
+        except Exception:
+            return None
+        for i in range(desktop.childCount):
+            app = desktop.getChildAtIndex(i)
+            if getattr(app, "name", None) != "solace-hub":
+                continue
+            return app
+        return None
+
+    def _hub_accessibility_snapshot(
+        self,
+        node: Any,
+        *,
+        depth: int = 0,
+        max_depth: int = 4,
+        max_children: int = 20,
+    ) -> dict[str, Any]:
+        role_name = ""
+        try:
+            role_name = node.getRoleName()
+        except Exception:
+            role_name = ""
+        snapshot: dict[str, Any] = {
+            "name": getattr(node, "name", "") or "",
+            "role": role_name,
+            "child_count": int(getattr(node, "childCount", 0) or 0),
+        }
+        if depth >= max_depth:
+            return snapshot
+        children: list[dict[str, Any]] = []
+        child_count = int(getattr(node, "childCount", 0) or 0)
+        for idx in range(min(child_count, max_children)):
+            try:
+                child = node.getChildAtIndex(idx)
+            except Exception:
+                continue
+            children.append(
+                self._hub_accessibility_snapshot(
+                    child,
+                    depth=depth + 1,
+                    max_depth=max_depth,
+                    max_children=max_children,
+                )
+            )
+        if children:
+            snapshot["children"] = children
+        return snapshot
+
+    def _hub_find_accessible(
+        self,
+        node: Any,
+        *,
+        name: str,
+        role: Optional[str] = None,
+        max_depth: int = 8,
+        depth: int = 0,
+    ) -> Optional[Any]:
+        node_name = (getattr(node, "name", "") or "").strip()
+        node_role = ""
+        try:
+            node_role = node.getRoleName()
+        except Exception:
+            node_role = ""
+        if node_name == name and (role is None or node_role == role):
+            return node
+        if depth >= max_depth:
+            return None
+        child_count = int(getattr(node, "childCount", 0) or 0)
+        for idx in range(child_count):
+            try:
+                child = node.getChildAtIndex(idx)
+            except Exception:
+                continue
+            found = self._hub_find_accessible(
+                child,
+                name=name,
+                role=role,
+                max_depth=max_depth,
+                depth=depth + 1,
+            )
+            if found is not None:
+                return found
+        return None
+
+    def _hub_invoke_action(
+        self,
+        *,
+        name: str,
+        action_name: str = "click",
+        role: Optional[str] = None,
+    ) -> dict[str, Any]:
+        root = self._hub_accessibility_root()
+        if root is None:
+            return {
+                "status": "unavailable",
+                "error": "hub_accessibility_unavailable",
+            }
+        target = self._hub_find_accessible(root, name=name, role=role)
+        if target is None:
+            return {
+                "status": "not_found",
+                "error": "hub_accessible_not_found",
+                "name": name,
+                "role": role,
+            }
+        try:
+            action_iface = target.queryAction()
+        except Exception:
+            return {
+                "status": "unsupported",
+                "error": "hub_action_not_supported",
+                "name": name,
+                "role": role,
+            }
+        chosen_index: Optional[int] = None
+        chosen_name = action_name
+        for idx in range(action_iface.nActions):
+            candidate = action_iface.getName(idx)
+            if candidate == action_name:
+                chosen_index = idx
+                break
+        if chosen_index is None and action_name == "click":
+            for idx in range(action_iface.nActions):
+                candidate = action_iface.getName(idx)
+                if candidate in {"press", "click", "activate"}:
+                    chosen_index = idx
+                    chosen_name = candidate
+                    break
+        if chosen_index is None:
+            return {
+                "status": "unsupported",
+                "error": "hub_action_not_supported",
+                "name": name,
+                "role": role,
+                "action": action_name,
+            }
+        result = bool(action_iface.doAction(chosen_index))
+        return {
+            "status": "ok" if result else "failed",
+            "name": name,
+            "role": role,
+            "action": chosen_name,
+        }
+
     def _reject_extension_era_route(self, path: str) -> bool:
         blocked_prefixes = (
             "/api/v1/extension-store",
@@ -6594,6 +7073,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_capabilities()
         elif path == "/api/v1/hub/summary":
             self._handle_hub_summary()
+        elif path == "/api/v1/hub/status":
+            self._handle_hub_status()
+        elif path == "/api/v1/hub/windows":
+            self._handle_hub_windows()
+        elif path == "/api/v1/hub/accessibility":
+            self._handle_hub_accessibility()
         elif re.match(r"^/api/v1/apps/[^/]+/versions$", path):
             app_id = path.split("/")[-2]
             self._handle_app_versions(app_id)
@@ -6729,6 +7214,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_byok_providers()
         elif path == "/api/v1/byok/active":
             self._handle_byok_active()
+        elif path == "/api/v1/ollama/config":
+            self._handle_ollama_config_get()
         elif path == "/api/v1/notifications/unread-count":
             self._handle_notifications_unread_count()
         elif path == "/api/v1/notifications":
@@ -9228,6 +9715,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_hub_browser_open()
         elif path == "/api/v1/hub/browser/close":
             self._handle_hub_browser_close()
+        elif path == "/api/v1/hub/screenshot":
+            self._handle_hub_screenshot()
+        elif path == "/api/v1/hub/action":
+            self._handle_hub_action()
         elif path == "/api/v1/browser/close":
             self._handle_browser_close()
         elif path == "/api/v1/sessions":
@@ -9324,6 +9815,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_byok_test()
         elif path == "/api/v1/byok/clear":
             self._handle_byok_clear()
+        elif path == "/api/v1/ollama/config":
+            self._handle_ollama_config_set()
+        elif path == "/api/v1/ollama/test":
+            self._handle_ollama_config_test()
         elif path == "/api/yinyang/notify":
             self._handle_yinyang_notify()
         elif path in ("/api/v1/notifications/mark-all-read", "/api/v1/notifications/read"):
@@ -11508,6 +12003,11 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         <div class="detail-row"><span>Status</span><strong>GET /api/status</strong></div>
         <div class="detail-row"><span>Health</span><strong>GET /api/health</strong></div>
         <div class="detail-row"><span>Part 11</span><strong>GET /api/part11/status</strong></div>
+        <div class="detail-row"><span>Hub status</span><strong>GET /api/v1/hub/status</strong></div>
+        <div class="detail-row"><span>Hub windows</span><strong>GET /api/v1/hub/windows</strong></div>
+        <div class="detail-row"><span>Hub a11y</span><strong>GET /api/v1/hub/accessibility</strong></div>
+        <div class="detail-row"><span>Hub screenshot</span><strong>POST /api/v1/hub/screenshot</strong></div>
+        <div class="detail-row"><span>Hub action</span><strong>POST /api/v1/hub/action</strong></div>
         <div class="detail-row"><span>Launch</span><strong>POST /api/v1/browser/launch</strong></div>
         <div class="detail-row"><span>Navigate</span><strong>POST /api/navigate</strong></div>
         <div class="detail-row"><span>Click</span><strong>POST /api/click</strong></div>
@@ -11535,6 +12035,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
           <li><code>python3 yinyang_mcp_server.py</code></li>
           <li><code>initialize</code></li>
           <li><code>tools/list</code></li>
+          <li><code>tools/call hub_status</code></li>
+          <li><code>tools/call hub_windows</code></li>
+          <li><code>tools/call hub_screenshot</code></li>
+          <li><code>tools/call hub_action</code></li>
           <li><code>tools/call browser_open</code></li>
           <li><code>tools/call browser_click</code></li>
           <li><code>tools/call browser_fill</code></li>
@@ -11953,15 +12457,21 @@ body[data-theme="light"] {
   }
 
   function renderStatus(summary, onboarding, sync, tunnel, sessions) {
+    const authState = onboarding.auth_state || 'logged_out';
+    const appsEnabled = Boolean(onboarding.apps_enabled);
+    const modelSource = onboarding.model_source || 'agent';
+    const modeLabel = authState === 'logged_in'
+      ? (appsEnabled ? modelSource : 'signed in')
+      : 'agent only';
     qs('runtime-status').textContent = summary.status || 'ok';
-    qs('setup-mode').textContent = onboarding.completed ? (onboarding.mode || 'configured') : 'setup required';
+    qs('setup-mode').textContent = modeLabel;
     qs('schedule-count').textContent = String(summary.schedules || 0);
     qs('tunnel-status').textContent = tunnel.active ? 'active' : 'standby';
     qs('sync-status').textContent = sync.status || 'idle';
     qs('session-count').textContent = String(Array.isArray(sessions.sessions) ? sessions.sessions.length : 0);
     qs('evidence-count').textContent = String(summary.evidence || 0);
     qs('start-detail-port').textContent = String(summary.port || 8888);
-    qs('start-detail-mode').textContent = onboarding.completed ? (onboarding.mode || 'configured') : 'not configured';
+    qs('start-detail-mode').textContent = modeLabel;
     qs('start-detail-sync').textContent = sync.status || 'idle';
     qs('start-detail-tunnel').textContent = tunnel.active ? (tunnel.url || 'connected') : 'off';
   }
@@ -12155,6 +12665,11 @@ document.getElementById('confirm').addEventListener('click', function () {
                 "browser_status",
                 "browser_open",
                 "browser_close",
+                "hub_status",
+                "hub_windows",
+                "hub_accessibility",
+                "hub_screenshot",
+                "hub_action",
                 "browser_navigate",
                 "browser_click",
                 "browser_fill",
@@ -12175,7 +12690,14 @@ document.getElementById('confirm').addEventListener('click', function () {
                     "agents_json": "GET /agents.json",
                     "mcp_manifest": "GET /mcp/manifest.json",
                     "hub_summary": "GET /api/v1/hub/summary",
+                    "hub_status": "GET /api/v1/hub/status",
                     "sessions": "GET /api/v1/sessions",
+                },
+                "hub_control": {
+                    "windows": "GET /api/v1/hub/windows",
+                    "accessibility": "GET /api/v1/hub/accessibility",
+                    "screenshot": "POST /api/v1/hub/screenshot",
+                    "action": "POST /api/v1/hub/action",
                 },
                 "browser_control": {
                     "status": "GET /api/v1/browser/status",
@@ -12210,6 +12732,7 @@ document.getElementById('confirm').addEventListener('click', function () {
             },
             "notes": [
                 "Solace Hub owns localhost:8888.",
+                "Hub-native control surfaces require the local runtime bearer token.",
                 "Machine-readable runtime contract. Do not assume legacy 9222 Chrome DevTools behavior.",
             ],
         }
@@ -12911,6 +13434,7 @@ document.getElementById('confirm').addEventListener('click', function () {
         schedules = load_schedules()
         total_evidence = count_evidence()
         uptime = int(time.time() - _SERVER_START_TIME)
+        onboarding = _load_onboarding_state()
         self._send_json({
             "apps": len(apps),
             "schedules": len(schedules),
@@ -12918,7 +13442,110 @@ document.getElementById('confirm').addEventListener('click', function () {
             "uptime_seconds": uptime,
             "version": _SERVER_VERSION,
             "status": "ok",
+            "device_id": onboarding.get("device_id", _default_device_id()),
+            "auth_state": onboarding.get("auth_state", "logged_out"),
+            "membership_tier": onboarding.get("membership_tier", "free"),
+            "apps_enabled": bool(onboarding.get("apps_enabled", False)),
+            "model_source": onboarding.get("model_source"),
+            "managed_llm_enabled": bool(onboarding.get("managed_llm_enabled", False)),
         })
+
+    def _handle_hub_status(self) -> None:
+        apps: list = self.server.apps if hasattr(self.server, "apps") else []
+        schedules = load_schedules()
+        total_evidence = count_evidence()
+        windows = self._list_hub_windows()
+        onboarding = _load_onboarding_state()
+        self._send_json(
+            {
+                "status": "ok",
+                "runtime_port": YINYANG_PORT,
+                "apps": len(apps),
+                "schedules": len(schedules),
+                "evidence": total_evidence,
+                "windows": windows,
+                "window_count": len(windows),
+                "hub_visible": bool(windows),
+                "accessibility_available": self._hub_accessibility_root() is not None,
+                "device_id": onboarding.get("device_id", _default_device_id()),
+                "auth_state": onboarding.get("auth_state", "logged_out"),
+                "membership_tier": onboarding.get("membership_tier", "free"),
+                "apps_enabled": bool(onboarding.get("apps_enabled", False)),
+                "model_source": onboarding.get("model_source"),
+                "managed_llm_enabled": bool(onboarding.get("managed_llm_enabled", False)),
+            }
+        )
+
+    def _handle_hub_windows(self) -> None:
+        if not self._check_auth():
+            return
+        windows = self._list_hub_windows()
+        self._send_json(
+            {
+                "status": "ok",
+                "windows": windows,
+                "total": len(windows),
+            }
+        )
+
+    def _handle_hub_accessibility(self) -> None:
+        if not self._check_auth():
+            return
+        root = self._hub_accessibility_root()
+        if root is None:
+            self._send_json(
+                {
+                    "status": "unavailable",
+                    "error": "hub_accessibility_unavailable",
+                },
+                503,
+            )
+            return
+        snapshot = self._hub_accessibility_snapshot(root)
+        self._send_json(
+            {
+                "status": "ok",
+                "root": snapshot,
+            }
+        )
+
+    def _handle_hub_screenshot(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        filename = str(body.get("filename", "")).strip() or f"hub-window-{int(time.time())}.png"
+        if not filename.endswith(".png"):
+            filename = f"{filename}.png"
+        capture = self._capture_hub_window_artifact(filename)
+        if capture is None:
+            self._send_json(
+                {
+                    "error": "hub_window_not_visible",
+                    "message": "No visible Solace Hub window was available for capture.",
+                },
+                404,
+            )
+            return
+        self._send_json({"status": "ok", **capture})
+
+    def _handle_hub_action(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        name = str(body.get("name", "")).strip()
+        if not name:
+            self._send_json({"error": "name is required"}, 400)
+            return
+        action_name = str(body.get("action", "click")).strip() or "click"
+        role_value = body.get("role")
+        role = str(role_value).strip() if isinstance(role_value, str) and role_value.strip() else None
+        result = self._hub_invoke_action(name=name, action_name=action_name, role=role)
+        status_code = 200 if result.get("status") == "ok" else 404 if result.get("status") == "not_found" else 409
+        self._send_json(result, status_code)
 
     def _handle_app_launch_history(self) -> None:
         """GET /api/v1/apps/launch-history — recent app launch events. Task 081."""
@@ -13757,6 +14384,21 @@ document.getElementById('confirm').addEventListener('click', function () {
         """GET /api/v1/apps/by-domain?domain=X — list apps matching a browser domain."""
         if not self._check_auth():
             return
+        onboarding = _load_onboarding_state()
+        if not bool(onboarding.get("apps_enabled", False)):
+            self._send_json(
+                {
+                    "error": "apps_disabled",
+                    "message": "sign in and choose BYOK, Local CLI, Ollama, or Managed Solace AGI to turn on apps",
+                    "auth_state": onboarding.get("auth_state", "logged_out"),
+                    "membership_tier": onboarding.get("membership_tier", "free"),
+                    "model_source": onboarding.get("model_source"),
+                    "managed_llm_enabled": bool(onboarding.get("managed_llm_enabled", False)),
+                    "apps_enabled": False,
+                },
+                403,
+            )
+            return
         params = self._parse_query(query)
         requested_domain = urllib.parse.unquote_plus(params.get("domain", "")).strip()
         requested_path = urllib.parse.unquote_plus(params.get("path", "/")).strip() or "/"
@@ -14345,6 +14987,64 @@ document.getElementById('confirm').addEventListener('click', function () {
     # --- Onboarding handlers ---
     def _handle_onboarding_page(self) -> None:
         """GET /onboarding — serve inline HTML onboarding page."""
+        onboarding = _load_onboarding_state()
+        auth_state = str(onboarding.get("auth_state", "logged_out"))
+        membership_tier = _normalize_membership_tier(onboarding.get("membership_tier", "free"))
+        model_source = _normalize_model_source(onboarding.get("model_source"))
+        managed_llm_enabled = bool(onboarding.get("managed_llm_enabled", False))
+        apps_enabled = bool(onboarding.get("apps_enabled", False))
+        device_id = html_escape(str(onboarding.get("device_id", _default_device_id())))
+        state_label = "Logged in" if auth_state == "logged_in" else "Logged out"
+        membership_label = membership_tier.capitalize()
+        model_label = "Managed Solace AGI" if managed_llm_enabled else (model_source.capitalize() if model_source else "Not configured")
+        if auth_state != "logged_in":
+            body_html = """
+  <div class="state-box">
+    <div class="state-label">Current state</div>
+    <div class="state-value">Logged out</div>
+    <div class="state-detail">AI agent control already works on this machine through <strong>http://localhost:8888/agents</strong>. Apps stay off until you sign in.</div>
+  </div>
+  <div class="modes">
+    <button class="mode-btn" onclick="setState({auth_state: 'logged_in', membership_tier: 'free', managed_llm_enabled: false})">
+      <div class="label">Sign in for Free Membership</div>
+      <div class="desc">Turn on apps, dashboard access, app store, and free local orchestration. You will pick BYOK, Local CLI, or Ollama next.</div>
+    </button>
+    <button class="mode-btn" onclick="setState({auth_state: 'logged_in', membership_tier: 'starter', managed_llm_enabled: true})">
+      <div class="label">Sign in for Paid Membership</div>
+      <div class="desc">Turn on apps plus cloud controls. Managed LLM stays optional, but this path starts with it enabled.</div>
+    </button>
+    <button class="mode-btn" onclick="window.location.href='/agents'">
+      <div class="label">Stay in Agent Control Only</div>
+      <div class="desc">Keep using MCP and webservices without apps for now.</div>
+    </button>
+  </div>
+"""
+        else:
+            body_html = f"""
+  <div class="state-box">
+    <div class="state-label">Current state</div>
+    <div class="state-value">{html_escape(state_label)} · {html_escape(membership_label)} membership</div>
+    <div class="state-detail">Apps are {'on' if apps_enabled else 'off'} on this machine. Device ID: <strong>{device_id}</strong></div>
+  </div>
+  <div class="modes">
+    <button class="mode-btn" onclick="setState({{auth_state: 'logged_in', membership_tier: '{membership_tier}', managed_llm_enabled: false, model_source: 'byok'}})">
+      <div class="label">Use BYOK</div>
+      <div class="desc">Save your own provider key locally and turn apps on with your own model account.</div>
+    </button>
+    <button class="mode-btn" onclick="setState({{auth_state: 'logged_in', membership_tier: '{membership_tier}', managed_llm_enabled: false, model_source: 'cli'}})">
+      <div class="label">Use Local CLI Wrapper</div>
+      <div class="desc">Power apps from Codex, Claude Code, Gemini, Aider, or another detected local tool.</div>
+    </button>
+    <button class="mode-btn" onclick="configureOllama()">
+      <div class="label">Use Ollama URL</div>
+      <div class="desc">Point Yinyang at your Ollama server on the local network and keep app runs local-first.</div>
+    </button>
+    <button class="mode-btn" onclick="setState({{auth_state: 'logged_in', membership_tier: '{membership_tier}', managed_llm_enabled: true, model_source: 'managed'}})">
+      <div class="label">Use Managed Solace AGI</div>
+      <div class="desc">Turn on apps with managed AI services. Current model source: <strong>{html_escape(model_label)}</strong>.</div>
+    </button>
+  </div>
+"""
         html = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14374,6 +15074,16 @@ document.getElementById('confirm').addEventListener('click', function () {
   h1 { font-size: 1.6rem; margin-bottom: 0.5rem; color: #c8b8ff; }
   .subtitle { color: #888; margin-bottom: 2rem; font-size: 0.95rem; }
   .modes { display: grid; gap: 1rem; }
+  .state-box {
+    background: #161620;
+    border: 1px solid #2a2a38;
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+  }
+  .state-label { color: #8a8aa5; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+  .state-value { font-weight: 700; margin-bottom: 0.35rem; }
+  .state-detail { color: #a7a7bb; font-size: 0.9rem; line-height: 1.45; }
   .mode-btn {
     background: #22223a;
     border: 1px solid #3a3a58;
@@ -14393,46 +15103,54 @@ document.getElementById('confirm').addEventListener('click', function () {
 <body>
 <div class="card">
   <h1>Solace Hub Setup</h1>
-  <p class="subtitle">Choose how you want to use Solace Hub:</p>
-  <div class="modes">
-    <button class="mode-btn" onclick="choose('agent')">
-      <div class="label">AI Agent (Managed LLM)</div>
-      <div class="desc">Solace manages the AI — no API keys needed. $8/mo Starter plan.</div>
-    </button>
-    <button class="mode-btn" onclick="choose('byok')">
-      <div class="label">BYOK (Bring Your Own Key)</div>
-      <div class="desc">Use your own Anthropic or OpenAI API key. Free tier.</div>
-    </button>
-    <button class="mode-btn" onclick="choose('paid')">
-      <div class="label">Pro / Team</div>
-      <div class="desc">Cloud twin + OAuth3 vault + 90-day evidence. $28/mo Pro.</div>
-    </button>
-    <button class="mode-btn" onclick="choose('cli')">
-      <div class="label">Auto CLI</div>
-      <div class="desc">Detected solace CLI — configure automatically from terminal.</div>
-    </button>
-  </div>
+  <p class="subtitle">Hub owns the browser, wrappers, schedules, and localhost:8888 runtime. Pick the smallest useful state first.</p>
+  __BODY_HTML__
   <p class="status" id="status"></p>
 </div>
 <script>
-function choose(mode) {
+ function setState(payload) {
   document.getElementById('status').textContent = 'Saving...';
   fetch('/onboarding/complete', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({mode: mode})
+    body: JSON.stringify(payload)
   }).then(r => {
     if (r.ok) {
-      document.getElementById('status').textContent = 'Setup complete! Redirecting...';
-      setTimeout(() => { window.location.href = '/health'; }, 1000);
+      document.getElementById('status').textContent = 'Saved. Refreshing setup...';
+      setTimeout(() => { window.location.reload(); }, 700);
     } else {
       document.getElementById('status').textContent = 'Error saving. Please retry.';
     }
   });
 }
+
+function configureOllama() {
+  const current = prompt('Enter your Ollama server URL', 'http://localhost:11434');
+  if (!current) return;
+  document.getElementById('status').textContent = 'Saving Ollama URL...';
+  fetch('/api/v1/ollama/config', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({url: current})
+  }).then(async (r) => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return fetch('/onboarding/complete', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({auth_state: 'logged_in', membership_tier: '__MEMBERSHIP_TIER__', model_source: 'ollama'})
+    });
+  }).then((r) => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    document.getElementById('status').textContent = 'Ollama saved. Refreshing setup...';
+    setTimeout(() => { window.location.reload(); }, 700);
+  }).catch((error) => {
+    document.getElementById('status').textContent = 'Could not save Ollama URL: ' + error.message;
+  });
+}
 </script>
 </body>
 </html>"""
+        html = html.replace("__BODY_HTML__", body_html).replace("__MEMBERSHIP_TIER__", membership_tier)
         body = html.encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -14441,25 +15159,16 @@ function choose(mode) {
         self.wfile.write(body)
 
     def _handle_onboarding_complete(self) -> None:
-        """POST /onboarding/complete — write onboarding.json (no API keys)."""
+        """POST /onboarding/complete — write normalized onboarding.json state (no secrets)."""
         payload = self._read_json_body()
         if payload is None:
             return
-        mode = payload.get("mode")
-        if not mode or not isinstance(mode, str):
-            self._send_json({"error": "missing 'mode' field"}, 400)
+        try:
+            state = _save_onboarding_state(payload)
+        except ValueError as exc:
+            self._send_json({"error": str(exc)}, 400)
             return
-        if mode not in _ONBOARDING_MODES:
-            self._send_json({"error": f"invalid mode; must be one of: {sorted(_ONBOARDING_MODES)}"}, 400)
-            return
-        onboarding_data = {
-            "completed": True,
-            "mode": mode,
-            "completed_ts": int(time.time()),
-        }
-        ONBOARDING_PATH.parent.mkdir(parents=True, exist_ok=True)
-        ONBOARDING_PATH.write_text(json.dumps(onboarding_data, indent=2))
-        self._send_json({"ok": True, "mode": mode})
+        self._send_json({"ok": True, **state})
 
     def _handle_onboarding_reset(self) -> None:
         """POST /onboarding/reset — requires auth; delete onboarding.json."""
@@ -14472,15 +15181,47 @@ function choose(mode) {
         self._send_json({"ok": True, "reset": True})
 
     def _handle_onboarding_status(self) -> None:
-        """GET /api/v1/onboarding/status — return onboarding completion status."""
+        """GET /api/v1/onboarding/status — return normalized onboarding state."""
+        self._send_json(_load_onboarding_state())
+
+    def _handle_ollama_config_get(self) -> None:
+        if not self._check_auth():
+            return
+        self._send_json(_ollama_config_payload())
+
+    def _handle_ollama_config_set(self) -> None:
+        if not self._check_auth():
+            return
+        payload = self._read_json_body()
+        if payload is None:
+            return
+        raw_url = payload.get("url", "")
+        if not isinstance(raw_url, str) or not raw_url.strip():
+            self._send_json({"error": "missing 'url'"}, 400)
+            return
         try:
-            data = json.loads(ONBOARDING_PATH.read_text())
-            completed = bool(data.get("completed"))
-            mode: Optional[str] = data.get("mode") if completed else None
-        except (FileNotFoundError, json.JSONDecodeError):
-            completed = False
-            mode = None
-        self._send_json({"completed": completed, "mode": mode})
+            saved = _save_ollama_config(raw_url)
+        except ValueError as exc:
+            self._send_json({"error": str(exc)}, 400)
+            return
+        self._send_json({"status": "saved", **saved})
+
+    def _handle_ollama_config_test(self) -> None:
+        if not self._check_auth():
+            return
+        payload = self._read_json_body()
+        if payload is None:
+            return
+        raw_url = payload.get("url") or _ollama_config_payload().get("url", "")
+        if not isinstance(raw_url, str) or not raw_url.strip():
+            self._send_json({"error": "missing 'url'"}, 400)
+            return
+        try:
+            result = _test_ollama_url(raw_url)
+        except ValueError as exc:
+            self._send_json({"error": str(exc)}, 400)
+            return
+        self._send_json({"status": "ok", **result})
 
     # --- Session manager handlers ---
     def _is_session_alive(self, pid: int) -> bool:

@@ -149,7 +149,11 @@ class TestHealthEndpoint:
         data = get_json("/agents.json")
         assert data["api_base"] == BASE_URL
         assert data["hub"]["starts_first"] is True
-        assert data["mcp"]["tool_count"] == 16
+        assert data["mcp"]["tool_count"] == 21
+        assert data["endpoints"]["hub_control"]["windows"] == "GET /api/v1/hub/windows"
+        assert data["endpoints"]["hub_control"]["accessibility"] == "GET /api/v1/hub/accessibility"
+        assert data["endpoints"]["hub_control"]["screenshot"] == "POST /api/v1/hub/screenshot"
+        assert data["endpoints"]["hub_control"]["action"] == "POST /api/v1/hub/action"
         assert data["endpoints"]["browser_control"]["click"] == "POST /api/click"
         assert data["endpoints"]["browser_control"]["fill"] == "POST /api/fill"
         assert data["endpoints"]["browser_control"]["evaluate"] == "POST /api/evaluate"
@@ -159,12 +163,27 @@ class TestHealthEndpoint:
         assert data["endpoints"]["auth_and_signing"]["local_oauth3_token"] == "POST /oauth3/token"
         assert "yinyang_chat" in data["capabilities"]
 
+    def test_sidebar_route_serves_html_from_runtime_assets(self, server):
+        """GET /sidebar → real Yinyang shell HTML instead of missing-asset fallback."""
+        request = urllib.request.Request(f"{BASE_URL}/sidebar", method="GET")
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            html = resp.read().decode()
+        assert resp.status == 200
+        assert "Yinyang AI Assistant" in html
+        assert "/sidebar.css" in html
+        assert "/sidebar.js" in html
+
     def test_local_mcp_manifest_exists(self, server):
         """GET /mcp/manifest.json → local MCP manifest exposes native browser-control tools."""
         data = get_json("/mcp/manifest.json")
         assert data["transport"] == "stdio"
-        assert len(data["tools"]) == 16
+        assert len(data["tools"]) == 21
         tool_names = {tool["name"] for tool in data["tools"]}
+        assert "hub_status" in tool_names
+        assert "hub_windows" in tool_names
+        assert "hub_accessibility" in tool_names
+        assert "hub_screenshot" in tool_names
+        assert "hub_action" in tool_names
         assert "browser_open" in tool_names
         assert "browser_click" in tool_names
         assert "browser_fill" in tool_names
@@ -188,6 +207,11 @@ class TestHealthEndpoint:
             "GET /api/status",
             "GET /api/health",
             "GET /api/part11/status",
+            "GET /api/v1/hub/status",
+            "GET /api/v1/hub/windows",
+            "GET /api/v1/hub/accessibility",
+            "POST /api/v1/hub/screenshot",
+            "POST /api/v1/hub/action",
             "POST /api/click",
             "POST /api/fill",
             "POST /api/evaluate",
@@ -205,6 +229,89 @@ class TestHealthEndpoint:
             "POST /api/yinyang/chat",
         ):
             assert route in html
+
+    def test_hub_status_exists(self, server):
+        """GET /api/v1/hub/status → native Hub state summary exists."""
+        data = get_json("/api/v1/hub/status")
+        assert data["status"] == "ok"
+        assert "hub_visible" in data
+        assert "runtime_port" in data
+
+    def test_hub_windows_route_exists(self, server):
+        """GET /api/v1/hub/windows → authenticated native Hub window list exists."""
+        request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/hub/windows",
+            headers=auth_headers(server),
+            method="GET",
+        )
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+        assert resp.status == 200
+        assert data["status"] == "ok"
+        assert "windows" in data
+
+    def test_hub_accessibility_route_exists(self, server):
+        """GET /api/v1/hub/accessibility → authenticated Hub accessibility snapshot exists."""
+        request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/hub/accessibility",
+            headers=auth_headers(server),
+            method="GET",
+        )
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+        assert resp.status == 200
+        assert data["status"] == "ok"
+        assert data["root"]["name"] == "solace-hub"
+
+    def test_hub_screenshot_route_exists(self, server, monkeypatch):
+        """POST /api/v1/hub/screenshot → authenticated native Hub screenshot works."""
+        import yinyang_server as ys
+
+        monkeypatch.setattr(
+            ys.YinyangHandler,
+            "_capture_hub_window_artifact",
+            lambda self, filename: {
+                "window_id": "0xhub",
+                "filepath": f"/tmp/{filename}",
+                "filename": filename,
+                "size_bytes": 1234,
+            },
+        )
+        request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/hub/screenshot",
+            data=json.dumps({"filename": "hub-test.png"}).encode(),
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+        assert resp.status == 200
+        assert data["filename"] == "hub-test.png"
+
+    def test_hub_action_route_exists(self, server, monkeypatch):
+        """POST /api/v1/hub/action → authenticated Hub accessibility action works."""
+        import yinyang_server as ys
+
+        monkeypatch.setattr(
+            ys.YinyangHandler,
+            "_hub_invoke_action",
+            lambda self, **kwargs: {
+                "status": "ok",
+                "name": kwargs["name"],
+                "action": kwargs["action_name"],
+                "role": kwargs.get("role"),
+            },
+        )
+        request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/hub/action",
+            data=json.dumps({"name": "Open Solace Browser", "action": "click", "role": "push button"}).encode(),
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+        assert resp.status == 200
+        assert data["name"] == "Open Solace Browser"
 
     def test_extension_era_routes_are_retired(self, server):
         """Legacy extension-era routes must fail closed for the native-sidebar product."""
@@ -1686,37 +1793,49 @@ class TestCLIRunEndpoint:
 class TestOnboardingEndpoints:
     def test_onboarding_page_returns_html(self, server):
         """GET /onboarding → 200 with HTML content."""
+        post_json("/onboarding/complete", {"auth_state": "logged_out"})
         req = urllib.request.Request(f"{BASE_URL}/onboarding")
         with urllib.request.urlopen(req, timeout=5) as resp:
             assert resp.status == 200
             content = resp.read().decode()
             assert "<!DOCTYPE html>" in content or "<!doctype html>" in content.lower()
             assert "Solace Hub" in content
+            assert "AI Agent Access" in content or "agent control" in content.lower()
 
-    def test_onboarding_page_has_4_mode_buttons(self, server):
-        """GET /onboarding → HTML contains all 4 mode choices."""
+    def test_onboarding_page_shows_logged_out_choices(self, server):
+        """GET /onboarding → logged-out state offers agent-only or sign-in paths."""
+        post_json("/onboarding/complete", {"auth_state": "logged_out"})
         req = urllib.request.Request(f"{BASE_URL}/onboarding")
         with urllib.request.urlopen(req, timeout=5) as resp:
             content = resp.read().decode()
-        for mode in ("agent", "byok", "paid", "cli"):
-            assert mode in content, f"Mode '{mode}' not found in onboarding HTML"
+        assert "Sign in for Free Membership" in content
+        assert "Sign in for Paid Membership" in content
+        assert "Stay in Agent Control Only" in content
 
     def test_onboarding_status_returns_json(self, server):
-        """GET /api/v1/onboarding/status → JSON with 'completed' and 'mode'."""
+        """GET /api/v1/onboarding/status → JSON with normalized auth/app state."""
         data = get_json("/api/v1/onboarding/status")
+        assert data["auth_state"] in {"logged_out", "logged_in"}
+        assert isinstance(data["apps_enabled"], bool)
+        assert data["membership_tier"] in {"free", "starter", "pro", "team", "enterprise"}
         assert "completed" in data
         assert isinstance(data["completed"], bool)
         assert "mode" in data
 
-    def test_onboarding_complete_valid_mode(self, server):
-        """POST /onboarding/complete with valid mode → 200."""
-        data = post_json("/onboarding/complete", {"mode": "byok"})
+    def test_onboarding_complete_valid_logged_in_payload(self, server):
+        """POST /onboarding/complete with valid normalized payload → 200."""
+        data = post_json(
+            "/onboarding/complete",
+            {"auth_state": "logged_in", "membership_tier": "free", "model_source": "byok"},
+        )
         assert data.get("ok") is True
+        assert data.get("auth_state") == "logged_in"
+        assert data.get("membership_tier") == "free"
         assert data.get("mode") == "byok"
 
-    def test_onboarding_complete_invalid_mode_400(self, server):
-        """POST /onboarding/complete with unknown mode → 400."""
-        body = json.dumps({"mode": "invalid_mode_xyz"}).encode()
+    def test_onboarding_complete_invalid_auth_state_400(self, server):
+        """POST /onboarding/complete with invalid auth_state → 400."""
+        body = json.dumps({"auth_state": "mystery_state"}).encode()
         req = urllib.request.Request(
             f"{BASE_URL}/onboarding/complete",
             data=body,
@@ -1725,16 +1844,21 @@ class TestOnboardingEndpoints:
         )
         try:
             urllib.request.urlopen(req, timeout=5)
-            pytest.fail("Expected 400 for invalid mode")
+            pytest.fail("Expected 400 for invalid auth_state")
         except urllib.error.URLError as exc:
             assert exc.code == 400
 
     def test_onboarding_status_reflects_completion(self, server):
-        """After POST /onboarding/complete, GET status shows completed=True."""
-        post_json("/onboarding/complete", {"mode": "agent"})
+        """After POST /onboarding/complete, GET status shows logged-in apps-on state."""
+        post_json(
+            "/onboarding/complete",
+            {"auth_state": "logged_in", "membership_tier": "free", "model_source": "cli"},
+        )
         data = get_json("/api/v1/onboarding/status")
         assert data["completed"] is True
-        assert data["mode"] == "agent"
+        assert data["auth_state"] == "logged_in"
+        assert data["apps_enabled"] is True
+        assert data["mode"] == "cli"
 
     def test_onboarding_reset_requires_auth(self, auth_server):
         """POST /onboarding/reset without auth → 401."""

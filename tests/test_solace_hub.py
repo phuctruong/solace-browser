@@ -148,7 +148,7 @@ def test_hub_page_has_first_run_onboarding_shell():
     assert "http://localhost:8888/agents" in html
     assert "free and local-first" in html or "Free forever" in html
     assert "Personal AI Assistant (Always Free)" in html
-    assert "Professional AI Assistant (Dragon Warrior)" in html
+    assert "Managed Solace AGI (Dragon Warrior)" in html
     assert "Sign In / Create Account" in html
     assert "dragon-yinyang-splash.png" in html
     assert "hub-splash-wrap" in html
@@ -172,6 +172,7 @@ def test_hub_launch_actions_are_buttons_not_external_links():
     assert 'id="btn-open-account"' in html
     assert 'id="btn-enable-byok"' in html
     assert 'id="btn-enable-cli"' in html
+    assert 'id="btn-enable-ollama"' in html
     assert 'id="setup-step-1"' in html
     assert 'id="setup-step-2"' in html
     assert 'id="setup-step-3"' in html
@@ -236,6 +237,9 @@ def test_hub_can_open_arbitrary_urls_in_solace_browser():
     js = hub_js_source()
     assert 'fn cmd_open_browser_url(' in source
     assert 'cmd_open_browser_url,' in source
+    assert 'fn launch_browser_via_runtime(' in source
+    assert '/api/v1/browser/launch' in source
+    assert 'Browser launched via runtime' in source
     assert "hubFetch('/api/v1/hub/browser/open'" in js
     assert "JSON.stringify({ url: url, profile: 'default', mode: 'standard' })" in js
     assert "JSON.stringify({ url: 'https://solaceagi.com/dashboard', profile: 'default', mode: 'standard' })" in js
@@ -252,9 +256,12 @@ def test_hub_passes_real_repo_root_to_yinyang_server():
     assert '.arg(".")' not in source
 
 
-def test_paid_account_badge_requires_paid_mode():
+def test_account_badge_uses_normalized_auth_state():
     js = hub_js_source()
-    assert "const accountMode = onboarding.completed && onboarding.mode === 'paid';" in js
+    assert "const loggedIn = isLoggedIn(onboarding);" in js
+    assert "const membershipTier = onboarding.membership_tier || 'free';" in js
+    assert "const modelSource = onboarding.model_source || null;" in js
+    assert "const managedLlmEnabled = Boolean(onboarding.managed_llm_enabled);" in js
     assert "Signed in via " not in js
 
 
@@ -437,7 +444,8 @@ class TestOnboardingGate:
         js = hub_js_source()
         assert "onboarding" in html.lower() or "setup" in html.lower()
         assert 'data-mode="agent"' in html
-        assert "completeSetup(mode)" in js
+        assert "saveOnboarding(payload)" in js
+        assert "normalizeOnboardingState" in js
         assert "hubFetch('/onboarding/complete'" in js
 
     def test_index_html_launch_browser_button(self):
