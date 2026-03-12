@@ -2475,6 +2475,7 @@ class TestSessionManager:
                 return None
 
         monkeypatch.setattr(ys.subprocess, "Popen", lambda *a, **kw: FakeProcess())
+        monkeypatch.setattr(ys.YinyangHandler, "_is_session_alive", lambda self, pid: True)
         original_env = _os.environ.get("SOLACE_BROWSER", "")
         _os.environ["SOLACE_BROWSER"] = _sys.executable
         try:
@@ -2567,6 +2568,58 @@ class TestSessionManager:
             list_status, list_data = _get_json_auth("/api/v1/browser/sessions")
             assert list_status == 200
             assert list_data["sessions"] == []
+        finally:
+            if original_env:
+                _os.environ["SOLACE_BROWSER"] = original_env
+            else:
+                _os.environ.pop("SOLACE_BROWSER", None)
+            with ys._SESSIONS_LOCK:
+                ys._SESSIONS.clear()
+
+    def test_browser_launch_dedupes_repeated_requests(self, auth_server, monkeypatch):
+        """Repeated identical launch requests reuse the live session unless allow_duplicate=true."""
+        import os as _os
+        import sys as _sys
+        import yinyang_server as ys
+
+        class FakeProcess:
+            def __init__(self):
+                self.pid = _os.getpid()
+
+            def poll(self):
+                return None
+
+        monkeypatch.setattr(ys.subprocess, "Popen", lambda *a, **kw: FakeProcess())
+        original_env = _os.environ.get("SOLACE_BROWSER", "")
+        _os.environ["SOLACE_BROWSER"] = _sys.executable
+        try:
+            status1, data1 = _post_with_auth(
+                "/api/v1/browser/launch",
+                {"url": "https://solaceagi.com/dashboard", "profile": "default"},
+            )
+            assert status1 == 201
+            status2, data2 = _post_with_auth(
+                "/api/v1/browser/launch",
+                {"url": "https://solaceagi.com/dashboard", "profile": "default"},
+            )
+            assert status2 == 200
+            assert data2["deduped"] is True
+            assert data2["session_id"] == data1["session_id"]
+            with ys._SESSIONS_LOCK:
+                assert len(ys._SESSIONS) == 1
+
+            status3, data3 = _post_with_auth(
+                "/api/v1/browser/launch",
+                {
+                    "url": "https://solaceagi.com/dashboard",
+                    "profile": "default",
+                    "allow_duplicate": True,
+                },
+            )
+            assert status3 == 201
+            assert data3["session_id"] != data1["session_id"]
+            with ys._SESSIONS_LOCK:
+                assert len(ys._SESSIONS) == 2
         finally:
             if original_env:
                 _os.environ["SOLACE_BROWSER"] = original_env

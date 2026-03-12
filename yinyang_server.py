@@ -494,6 +494,7 @@ _COMMUNITY_RECIPES: list = [
 ]
 _SESSIONS: dict[str, dict] = {}
 _SESSIONS_LOCK = threading.Lock()
+LAUNCH_DEDUP_WINDOW_SECS = 10
 
 
 def _allocate_head_hidden_display() -> str:
@@ -16280,7 +16281,32 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         session_name_raw: str,
         head_hidden: bool,
         source: str,
+        allow_duplicate: bool = False,
     ) -> None:
+        if not allow_duplicate:
+            existing = self._find_existing_controlled_session(
+                url=url,
+                profile=profile,
+                mode=mode,
+                head_hidden=head_hidden,
+                source=source,
+            )
+            if existing is not None:
+                session_id, session = existing
+                self._send_json(
+                    {
+                        "session_id": session_id,
+                        "pid": session["pid"],
+                        "url": session["url"],
+                        "profile": session["profile"],
+                        "mode": session.get("mode", mode),
+                        "head_hidden": bool(session.get("head_hidden", False)),
+                        "hidden_display": session.get("hidden_display"),
+                        "deduped": True,
+                    },
+                    200,
+                )
+                return
         session_id = str(uuid.uuid4())
         user_data_dir = self._browser_sessions_root() / session_id / "profile"
         try:
@@ -16332,6 +16358,33 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
             201,
         )
 
+    def _find_existing_controlled_session(
+        self,
+        *,
+        url: str,
+        profile: str,
+        mode: str,
+        head_hidden: bool,
+        source: str,
+    ) -> Optional[tuple[str, dict[str, Any]]]:
+        cutoff = int(time.time()) - LAUNCH_DEDUP_WINDOW_SECS
+        with _SESSIONS_LOCK:
+            for session_id, session in _SESSIONS.items():
+                if str(session.get("url", "")) != url:
+                    continue
+                if str(session.get("profile", "")) != profile:
+                    continue
+                if str(session.get("mode", "standard")) != mode:
+                    continue
+                if bool(session.get("head_hidden", False)) != head_hidden:
+                    continue
+                if str(session.get("source", "")) != source:
+                    continue
+                if int(session.get("started_at", 0)) < cutoff:
+                    continue
+                return session_id, dict(session)
+        return None
+
     def _handle_browser_launch(self, require_auth: bool = True, source: str = "browser-launch") -> None:
         if require_auth and not self._check_auth():
             return
@@ -16356,6 +16409,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
             self._send_json({"error": "mode must be standard or incognito"}, 400)
             return
         head_hidden = bool(body.get("head_hidden", False))
+        allow_duplicate = bool(body.get("allow_duplicate", False))
         self._launch_controlled_browser_session(
             url=url,
             profile=profile,
@@ -16363,6 +16417,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
             session_name_raw=session_name_raw,
             head_hidden=head_hidden,
             source=source,
+            allow_duplicate=allow_duplicate,
         )
 
     def _handle_hub_browser_open(self) -> None:
