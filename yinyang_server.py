@@ -4422,6 +4422,35 @@ def _source_app_roots(repo_root: str) -> tuple[Path, ...]:
     return tuple(resolved)
 
 
+def _source_domain_roots(repo_root: str) -> tuple[Path, ...]:
+    settings = _load_settings()
+    roots: list[Path] = []
+    configured = settings.get("domain_source_roots")
+    if isinstance(configured, list):
+        for entry in configured:
+            if isinstance(entry, str) and entry.strip():
+                roots.append(Path(entry).expanduser().resolve())
+    env_value = os.environ.get("SOLACE_DOMAIN_SOURCE_ROOTS", "").strip()
+    if env_value:
+        for entry in env_value.split(os.pathsep):
+            if entry.strip():
+                roots.append(Path(entry).expanduser().resolve())
+    defaults = (
+        Path(repo_root).resolve().parent / "solace-cli" / "data" / "default" / "domains",
+        Path(repo_root).resolve() / "data" / "default" / "domains",
+    )
+    roots.extend(defaults)
+    seen: set[Path] = set()
+    resolved: list[Path] = []
+    for root in roots:
+        if root in seen:
+            continue
+        seen.add(root)
+        if root.is_dir():
+            resolved.append(root)
+    return tuple(resolved)
+
+
 def _iter_app_dirs_under(root: Path) -> list[Path]:
     if not root.is_dir():
         return []
@@ -4455,6 +4484,89 @@ def _manifest_records_from_roots(roots: tuple[Path, ...]) -> list[tuple[str, dic
                 seen.add(app_id)
     manifests.sort(key=lambda item: item[0])
     return manifests
+
+
+def _store_suggestions_root() -> Path:
+    env_value = os.environ.get("SOLACE_STORE_SUGGESTIONS_ROOT", "").strip()
+    if env_value:
+        return Path(env_value).expanduser().resolve()
+    return (Path.home() / ".solace" / "store-suggestions").resolve()
+
+
+def _domain_requires_login_flag(manifest: dict[str, Any]) -> bool:
+    return bool(manifest.get("login_required", manifest.get("requires_login", False)))
+
+
+def _scan_apps_in_domain(domain_apps_root: Path) -> list[dict[str, Any]]:
+    apps: list[dict[str, Any]] = []
+    if not domain_apps_root.is_dir():
+        return apps
+    for app_dir in sorted(domain_apps_root.iterdir()):
+        if not app_dir.is_dir():
+            continue
+        manifest_path = app_dir / "manifest.yaml"
+        if not manifest_path.is_file():
+            continue
+        try:
+            raw_manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+        except OSError:
+            continue
+        except yaml.YAMLError:
+            continue
+        if not isinstance(raw_manifest, dict):
+            continue
+        app_payload = dict(raw_manifest)
+        app_payload.setdefault("id", app_dir.name)
+        apps.append(app_payload)
+    return apps
+
+
+def _apps_list_from_domain_manifest(manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    raw_apps = manifest.get("apps", [])
+    if not isinstance(raw_apps, list):
+        return []
+    apps: list[dict[str, Any]] = []
+    for entry in raw_apps:
+        if isinstance(entry, str) and _APP_ID_RE.fullmatch(entry):
+            apps.append({"id": entry})
+    return apps
+
+
+def _scan_domains_dirs(roots: tuple[Path, ...]) -> list[dict[str, Any]]:
+    """Scan domain directories and return merged domain dicts."""
+    domains: dict[str, dict[str, Any]] = {}
+    for root in roots:
+        if not root.is_dir():
+            continue
+        for domain_dir in sorted(root.iterdir()):
+            if not domain_dir.is_dir():
+                continue
+            manifest_path = domain_dir / "manifest.yaml"
+            if not manifest_path.is_file():
+                continue
+            try:
+                raw_manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+            except OSError:
+                continue
+            except yaml.YAMLError:
+                continue
+            if not isinstance(raw_manifest, dict):
+                continue
+            domain_id = _normalize_domain(domain_dir.name)
+            if not domain_id:
+                continue
+            apps = _scan_apps_in_domain(domain_dir / "apps")
+            if not apps:
+                apps = _apps_list_from_domain_manifest(raw_manifest)
+            domain_payload = dict(raw_manifest)
+            domain_payload["id"] = domain_id
+            domain_payload["domain"] = domain_id
+            domain_payload["apps"] = apps
+            domain_payload["app_count"] = len(apps)
+            domain_payload["login_required"] = _domain_requires_login_flag(domain_payload)
+            domain_payload["source_dir"] = str(domain_dir)
+            domains[domain_id] = domain_payload
+    return [domains[key] for key in sorted(domains)]
 
 
 def _marketplace_apps_root(repo_root: str) -> Path:
@@ -7813,6 +7925,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_domains_list()
         elif path == "/api/v1/domains/status":
             self._handle_domain_status(query)
+        elif re.match(r"^/api/v1/domains/[^/]+$", path):
+            domain = urllib.parse.unquote(path.split("/api/v1/domains/", 1)[1])
+            self._handle_domain_detail(domain)
         elif path == "/api/v1/events/feed":
             self._handle_domain_events_feed(query)
         elif re.match(r"^/api/v1/events/[^/]+$", path):
@@ -10434,6 +10549,14 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_model_sources_set()
         elif path == "/api/v1/domains":
             self._handle_domain_create()
+        elif path == "/api/v1/domains/suggest":
+            self._handle_domain_suggest()
+        elif path == "/api/v1/apps/suggest":
+            self._handle_app_suggest()
+        elif path == "/api/v1/domains/bootstrap":
+            self._handle_domains_bootstrap()
+        elif path == "/api/v1/apps/download":
+            self._handle_app_install()
         elif path == "/api/v1/domains/setup":
             self._handle_domain_setup()
         elif path == "/api/v1/domains/activate":
@@ -12664,11 +12787,25 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         tool_count = len(_TOOL_DEFINITIONS)
         repo_root = Path(getattr(self.server, "repo_root", "."))
         local_apps_root = _local_apps_root_path()
-        source_roots = _source_app_roots(repo_root)
+        source_roots = _source_domain_roots(str(repo_root))
+        built_in_domains = _scan_domains_dirs(source_roots)
         local_apps_root_text = html_escape(str(local_apps_root))
         source_root_lines = "\n".join(
             f'          <li><code>{html_escape(str(root))}</code></li>'
             for root in source_roots
+        )
+        domain_cards = "\n".join(
+            (
+                "          <article class=\"start-card\" "
+                "style=\"padding:0.95rem;border:1px solid rgba(129,175,221,0.16);\">"
+                f"<div style=\"display:flex;justify-content:space-between;gap:0.75rem;align-items:flex-start;\">"
+                f"<div><h4 style=\"margin:0;\">{html_escape(str(domain.get('name') or domain.get('domain') or 'Domain'))}</h4>"
+                f"<p style=\"margin:0.35rem 0 0;color:rgba(225,232,241,0.72);\">{html_escape(str(domain.get('domain') or ''))}</p></div>"
+                f"<span style=\"display:inline-flex;align-items:center;gap:0.35rem;padding:0.2rem 0.6rem;border-radius:999px;"
+                f"background:{html_escape(str(domain.get('color') or '#1f2937'))};color:#fff;font-size:0.78rem;\">"
+                f"{'Login required' if bool(domain.get('login_required', False)) else 'No login'}</span></div></article>"
+            )
+            for domain in built_in_domains
         )
         html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -12787,7 +12924,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
       inbox/
       outbox/</code></pre>
       <p class="state-detail" style="margin-top:0.9rem;">
-        The canonical source app tree stays in <code>solace-cli/data/default/apps</code>. AI coding agents can point Solace Browser at that tree or copy finished app directories into the local app root.
+        The canonical source app tree stays in <code>solace-cli/data/default/domains/{{domain}}/apps</code>. AI coding agents can point Solace Browser at that tree or copy finished app directories into the local app root.
       </p>
       <p class="state-detail" style="margin-top:0.9rem;">
         Export public app shells to Firestore collection <code>app_store_apps</code>. Export private managed-LLM uplift metadata to <code>managed_llm_uplifts</code>.
@@ -12796,6 +12933,54 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
       <ul class="detail-list">
 {source_root_lines}
       </ul>
+    </section>
+    <section class="start-panel">
+      <h3>Domains + App Store</h3>
+      <p>Apps are organized by domain. Each domain has its own apps, icon, and login policy.</p>
+      <p class="state-detail" style="margin-top:0.9rem;">Default domains without login: <strong>solaceagi.com</strong>, <strong>google.com</strong>, <strong>news.ycombinator.com</strong>, <strong>reddit.com</strong>.</p>
+      <div class="domain-strip" style="margin-top:1rem;">
+{domain_cards}
+      </div>
+      <pre style="margin-top:0.9rem;background:rgba(9,16,23,0.7);border:1px solid rgba(129,175,221,0.16);border-radius:18px;padding:1rem;overflow:auto;"><code># Create a new domain app (as developer)
+mkdir -p data/default/domains/mysite.com/apps/my-new-app
+cat &gt; data/default/domains/mysite.com/apps/my-new-app/manifest.yaml &lt;&lt; EOF
+id: my-new-app
+name: My New App
+domain: mysite.com
+version: "1.0.0"
+tier_required: free
+EOF
+# Refresh: GET /api/v1/domains → sees new domain immediately</code></pre>
+      <div class="detail-row"><span>List domains</span><strong>GET /api/v1/domains</strong></div>
+      <div class="detail-row"><span>Domain detail</span><strong>GET /api/v1/domains/{{domain}}</strong></div>
+      <div class="detail-row"><span>Install app</span><strong>POST /api/v1/apps/download</strong></div>
+      <div class="detail-row"><span>Bootstrap defaults</span><strong>POST /api/v1/domains/bootstrap</strong></div>
+      <div class="detail-row"><span>Suggest domain</span><strong>POST /api/v1/domains/suggest</strong></div>
+      <div class="detail-row"><span>Suggest app</span><strong>POST /api/v1/apps/suggest</strong></div>
+    </section>
+    <section class="start-panel">
+      <h3>Domains + App Store</h3>
+      <p>Apps are organized by domain. Each domain has its own apps, icon, and login policy.</p>
+      <p class="state-detail" style="margin-top:0.9rem;">Default domains without login: <strong>solaceagi.com</strong>, <strong>google.com</strong>, <strong>news.ycombinator.com</strong>, <strong>reddit.com</strong>.</p>
+      <div class="domain-strip" style="margin-top:1rem;">
+{domain_cards}
+      </div>
+      <pre style="margin-top:0.9rem;background:rgba(9,16,23,0.7);border:1px solid rgba(129,175,221,0.16);border-radius:18px;padding:1rem;overflow:auto;"><code># Create a new domain app (as developer)
+mkdir -p data/default/domains/mysite.com/apps/my-new-app
+cat &gt; data/default/domains/mysite.com/apps/my-new-app/manifest.yaml &lt;&lt; EOF
+id: my-new-app
+name: My New App
+domain: mysite.com
+version: "1.0.0"
+tier_required: free
+EOF
+# Refresh: GET /api/v1/domains → sees new domain immediately</code></pre>
+      <div class="detail-row"><span>List domains</span><strong>GET /api/v1/domains</strong></div>
+      <div class="detail-row"><span>Domain detail</span><strong>GET /api/v1/domains/{{domain}}</strong></div>
+      <div class="detail-row"><span>Install app</span><strong>POST /api/v1/apps/download</strong></div>
+      <div class="detail-row"><span>Bootstrap defaults</span><strong>POST /api/v1/domains/bootstrap</strong></div>
+      <div class="detail-row"><span>Suggest domain</span><strong>POST /api/v1/domains/suggest</strong></div>
+      <div class="detail-row"><span>Suggest app</span><strong>POST /api/v1/apps/suggest</strong></div>
     </section>
     <section class="next-grid">
       <article class="start-panel">
@@ -13592,6 +13777,14 @@ document.getElementById('confirm').addEventListener('click', function () {
                     "esign_token": "POST /api/v1/esign/token",
                     "local_oauth3_token": "POST /oauth3/token",
                     "yinyang_chat": "POST /api/yinyang/chat",
+                },
+                "domains_api": {
+                    "list": "GET /api/v1/domains",
+                    "detail": "GET /api/v1/domains/{domain}",
+                    "suggest_domain": "POST /api/v1/domains/suggest",
+                    "suggest_app": "POST /api/v1/apps/suggest",
+                    "bootstrap": "POST /api/v1/domains/bootstrap",
+                    "install_app": "POST /api/v1/apps/download",
                 },
                 "runtime_snapshots": {
                     "page": "GET /api/page-snapshot",
@@ -16290,11 +16483,39 @@ function configureOllama() {
         domain = _normalize_domain((params.get("domain", [""])[0] or "solaceagi.com"))
         self._send_json(_domain_status_payload(repo_root, domain))
 
+    def _get_domains_roots(self) -> tuple[Path, ...]:
+        repo_root = str(Path(getattr(self.server, "repo_root", ".")).resolve())
+        roots: list[Path] = [*_source_domain_roots(repo_root), _local_apps_root_path()]
+        seen: set[Path] = set()
+        resolved: list[Path] = []
+        for root in roots:
+            if root in seen:
+                continue
+            seen.add(root)
+            resolved.append(root)
+        return tuple(resolved)
+
+    def _public_store_domain(self, entry: dict[str, Any]) -> dict[str, Any]:
+        public = dict(entry)
+        public.pop("source_dir", None)
+        return public
+
+    def _store_domains(self) -> list[dict[str, Any]]:
+        return [self._public_store_domain(entry) for entry in _scan_domains_dirs(self._get_domains_roots())]
+
+    def _store_domain_entry(self, domain: str) -> Optional[dict[str, Any]]:
+        normalized = _normalize_domain(domain)
+        for entry in _scan_domains_dirs(self._get_domains_roots()):
+            if _normalize_domain(str(entry.get("domain", ""))) == normalized:
+                return self._public_store_domain(entry)
+        return None
+
     def _handle_domains_list(self) -> None:
         repo_root = getattr(self.server, "repo_root", ".")
         onboarding = _load_onboarding_state()
         profiles = _load_domain_profiles()
         events = _load_domain_events()
+        store_domains = self._store_domains()
         items = [
             _domain_descriptor(
                 repo_root,
@@ -16313,6 +16534,141 @@ function configureOllama() {
                 "active": active,
                 "apps_enabled": apps_enabled,
                 "auth_state": onboarding.get("auth_state", "logged_out"),
+                "domains": store_domains,
+                "count": len(store_domains),
+            }
+        )
+
+    def _handle_domain_detail(self, domain: str) -> None:
+        entry = self._store_domain_entry(domain)
+        if entry is None:
+            self._send_json({"error": "domain not found"}, 404)
+            return
+        self._send_json({"domain": entry})
+
+    def _handle_domain_suggest(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        domain = _normalize_domain(str(body.get("domain") or body.get("host") or ""))
+        name = str(body.get("name") or "").strip()
+        reason = str(body.get("reason") or "").strip()
+        if not domain:
+            self._send_json({"error": "domain required"}, 400)
+            return
+        if not name:
+            self._send_json({"error": "name required"}, 400)
+            return
+        suggestions_dir = _store_suggestions_root() / "domains"
+        suggestions_dir.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "domain": domain,
+            "name": name,
+            "reason": reason,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        target = suggestions_dir / f"{domain}.json"
+        try:
+            target.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        except OSError as exc:
+            self._send_json({"error": f"cannot store suggestion: {exc}"}, 500)
+            return
+        self._send_json({"status": "stored", "path": str(target), "domain": domain}, 201)
+
+    def _handle_app_suggest(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        domain = _normalize_domain(str(body.get("domain") or ""))
+        app_id = str(body.get("id") or body.get("app_id") or "").strip()
+        name = str(body.get("name") or "").strip()
+        if not domain:
+            self._send_json({"error": "domain required"}, 400)
+            return
+        if self._store_domain_entry(domain) is None:
+            self._send_json({"error": "domain not found"}, 404)
+            return
+        if not app_id or not _APP_ID_RE.fullmatch(app_id):
+            self._send_json({"error": "invalid app_id"}, 400)
+            return
+        if not name:
+            self._send_json({"error": "name required"}, 400)
+            return
+        suggestions_dir = _store_suggestions_root() / "apps"
+        suggestions_dir.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "domain": domain,
+            "id": app_id,
+            "name": name,
+            "reason": str(body.get("reason") or "").strip(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        target = suggestions_dir / f"{domain}--{app_id}.json"
+        try:
+            target.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        except OSError as exc:
+            self._send_json({"error": f"cannot store suggestion: {exc}"}, 500)
+            return
+        self._send_json({"status": "stored", "path": str(target), "app_id": app_id}, 201)
+
+    def _handle_domains_bootstrap(self) -> None:
+        if not self._check_auth():
+            return
+        body = self._read_json_body()
+        if body is None:
+            return
+        del body
+        repo_root = str(Path(getattr(self.server, "repo_root", ".")).resolve())
+        local_root = _local_apps_root_path()
+        copied_domains = 0
+        for entry in _scan_domains_dirs(_source_domain_roots(repo_root)):
+            domain = _normalize_domain(str(entry.get("domain", "")))
+            if not domain:
+                continue
+            source_dir_raw = entry.get("source_dir", "")
+            source_dir = Path(str(source_dir_raw))
+            target_domain_dir = local_root / domain
+            target_domain_dir.mkdir(parents=True, exist_ok=True)
+            source_manifest = source_dir / "manifest.yaml"
+            if source_manifest.is_file():
+                try:
+                    shutil.copy2(source_manifest, target_domain_dir / "manifest.yaml")
+                except OSError:
+                    continue
+            source_apps_dir = source_dir / "apps"
+            if source_apps_dir.is_dir():
+                for app_dir in sorted(source_apps_dir.iterdir()):
+                    if not app_dir.is_dir():
+                        continue
+                    target_app_dir = target_domain_dir / app_dir.name
+                    if target_app_dir.exists():
+                        continue
+                    try:
+                        shutil.copytree(app_dir, target_app_dir)
+                    except OSError:
+                        continue
+            for app in entry.get("apps", []):
+                app_id = str(app.get("id") or "").strip()
+                if not app_id or not _APP_ID_RE.fullmatch(app_id):
+                    continue
+                if (target_domain_dir / app_id).is_dir():
+                    continue
+                try:
+                    _set_app_installed(repo_root, app_id, True)
+                except OSError:
+                    continue
+            copied_domains += 1
+        _rebuild_domain_index(repo_root)
+        self._reload_session_rules_cache()
+        self._send_json(
+            {
+                "status": "ok",
+                "copied_domains": copied_domains,
+                "local_root": str(local_root),
             }
         )
 
