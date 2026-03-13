@@ -318,8 +318,28 @@ class TestHealthEndpoint:
         )
         with urllib.request.urlopen(request, timeout=5) as resp:
             data = json.loads(resp.read().decode())
+        assert resp.status in {200, 201}
+        assert data.get("name", "Open Solace Browser") == "Open Solace Browser"
+
+    def test_hub_action_accepts_target_alias_for_builtin_open_browser(self, server, monkeypatch):
+        """POST /api/v1/hub/action accepts target alias and routes built-in Hub actions through the controlled runtime."""
+        import yinyang_server as ys
+
+        def fake_launch(self, **kwargs):
+            self._send_json({"status": "ok", "url": kwargs["url"], "source": kwargs["source"]}, 200)
+
+        monkeypatch.setattr(ys.YinyangHandler, "_launch_controlled_browser_session", fake_launch)
+        request = urllib.request.Request(
+            f"{BASE_URL}/api/v1/hub/action",
+            data=json.dumps({"target": "open_browser_button", "action": "click"}).encode(),
+            headers={"Content-Type": "application/json", **auth_headers(server)},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
         assert resp.status == 200
-        assert data["name"] == "Open Solace Browser"
+        assert data["url"] == ys.DEFAULT_BROWSER_START_URL
+        assert data["source"] == "hub-ui"
 
     def test_extension_era_routes_are_retired(self, server):
         """Legacy extension-era routes must fail closed for the native-sidebar product."""
@@ -1944,6 +1964,128 @@ class TestOnboardingEndpoints:
         assert data["auth_state"] == "logged_in"
         assert data["apps_enabled"] is True
         assert data["mode"] == "cli"
+
+    def test_model_sources_get_returns_combined_state(self, server, tmp_path):
+        """GET /api/v1/model-sources returns the unified BYOK/CLI/Ollama/managed state."""
+        import yinyang_server as ys
+
+        settings_path = tmp_path / "settings.json"
+        onboarding_path = tmp_path / "onboarding.json"
+        byok_path = tmp_path / "byok_keys.json"
+
+        settings_path.write_text(json.dumps({
+            "ollama": {"url": "http://ollama.local:11434"},
+        }))
+        onboarding_path.write_text(json.dumps({
+            "auth_state": "logged_in",
+            "membership_tier": "starter",
+            "managed_llm_enabled": True,
+            "model_sources": ["cli", "ollama"],
+            "apps_enabled": True,
+            "model_source": "cli",
+            "device_id": "hub-model-sources-get",
+        }))
+        byok_path.write_text(json.dumps({
+            "active_provider": "openrouter",
+            "providers": {
+                "openrouter": {
+                    "configured": True,
+                    "key_hash": "abc123",
+                    "key_preview": "sk-or-***",
+                }
+            },
+        }))
+
+        original_settings = ys.SETTINGS_PATH
+        original_onboarding = ys.ONBOARDING_PATH
+        original_byok = ys.BYOK_PATH
+        ys.SETTINGS_PATH = settings_path
+        ys.ONBOARDING_PATH = onboarding_path
+        ys.BYOK_PATH = byok_path
+        try:
+            data = get_json("/api/v1/model-sources")
+        finally:
+            ys.SETTINGS_PATH = original_settings
+            ys.ONBOARDING_PATH = original_onboarding
+            ys.BYOK_PATH = original_byok
+
+        assert data["auth_state"] == "logged_in"
+        assert data["membership_tier"] == "starter"
+        assert data["apps_enabled"] is True
+        assert data["minimum_required"] == 1
+        assert data["minimum_met"] is True
+        assert data["primary_source"] == "managed"
+        assert data["managed_llm_enabled"] is True
+        assert data["selected_sources"] == ["cli", "ollama", "managed"]
+        assert data["options"]["byok"]["configured"] is True
+        assert data["options"]["byok"]["active_provider"] == "openrouter"
+        assert data["options"]["cli"]["detected_count"] >= 0
+        assert isinstance(data["options"]["cli"]["detected"], dict)
+        assert data["options"]["ollama"]["configured"] is True
+        assert data["options"]["ollama"]["url"] == "http://ollama.local:11434"
+        assert data["options"]["managed"]["selected"] is True
+        assert data["options"]["managed"]["default_credit_usd"] == 5.0
+        assert data["options"]["managed"]["management_fee_percent"] == 20
+
+    def test_model_sources_set_requires_one_source_when_logged_in(self, server):
+        """POST /api/v1/model-sources while logged in requires at least one active source."""
+        body = json.dumps({
+            "auth_state": "logged_in",
+            "membership_tier": "free",
+            "model_sources": [],
+        }).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/model-sources",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with pytest.raises(urllib.error.HTTPError) as excinfo:
+            urllib.request.urlopen(req, timeout=5)
+        assert excinfo.value.code == 409
+        payload = json.loads(excinfo.value.read().decode())
+        assert payload["error"] == "pick at least one model source"
+
+    def test_model_sources_set_logged_out_clears_sources(self, server):
+        """POST /api/v1/model-sources while logged out clears sources and keeps apps off."""
+        data = post_json(
+            "/api/v1/model-sources",
+            {"auth_state": "logged_out", "model_sources": ["byok", "cli", "managed"]},
+        )
+        assert data["ok"] is True
+        assert data["auth_state"] == "logged_out"
+        assert data["apps_enabled"] is False
+        assert data["model_sources"] == []
+        assert data["model_sources_state"]["selected_sources"] == []
+        assert data["model_sources_state"]["minimum_met"] is False
+
+    def test_model_sources_set_rejects_unconfigured_ollama(self, server, tmp_path):
+        """POST /api/v1/model-sources rejects ollama until a URL is configured."""
+        import yinyang_server as ys
+
+        settings_path = tmp_path / "settings.json"
+        settings_path.write_text(json.dumps({}))
+        original_settings = ys.SETTINGS_PATH
+        ys.SETTINGS_PATH = settings_path
+        try:
+            body = json.dumps({
+                "auth_state": "logged_in",
+                "membership_tier": "free",
+                "model_sources": ["ollama"],
+            }).encode()
+            req = urllib.request.Request(
+                f"{BASE_URL}/api/v1/model-sources",
+                data=body,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with pytest.raises(urllib.error.HTTPError) as excinfo:
+                urllib.request.urlopen(req, timeout=5)
+            assert excinfo.value.code == 409
+            payload = json.loads(excinfo.value.read().decode())
+            assert payload["error"] == "configure an Ollama URL before enabling ollama"
+        finally:
+            ys.SETTINGS_PATH = original_settings
 
     def test_onboarding_page_logged_in_shows_combination_source_controls(self, server):
         """GET /onboarding when logged in → shows the new multi-source setup controls."""

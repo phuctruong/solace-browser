@@ -469,15 +469,69 @@ fn launch_solace_browser(browser_path: &str, url: &str) -> Result<Child, io::Err
         .spawn()
 }
 
+fn http_post_json(url: &str, body: &str) -> Result<String, Box<dyn std::error::Error>> {
+    use std::io::{BufRead, BufReader, Read};
+
+    let url_str = url.to_string();
+    let stripped = url_str
+        .strip_prefix("http://")
+        .ok_or("only http:// supported")?;
+    let (host_port, path) = stripped.split_once('/').unwrap_or((stripped, ""));
+    let path = format!("/{}", path);
+    let (host, port_str) = host_port.split_once(':').unwrap_or((host_port, "8888"));
+    let port: u16 = port_str.parse()?;
+
+    let mut stream = TcpStream::connect((host, port))?;
+    stream.set_read_timeout(Some(Duration::from_secs(10)))?;
+
+    let request = format!(
+        "POST {} HTTP/1.0\r\nHost: {}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+        path,
+        host_port,
+        body.len(),
+        body
+    );
+    stream.write_all(request.as_bytes())?;
+
+    let mut reader = BufReader::new(stream);
+    let mut status_line = String::new();
+    reader.read_line(&mut status_line)?;
+    let status_code = status_line
+        .split_whitespace()
+        .nth(1)
+        .ok_or("missing status code")?
+        .parse::<u16>()?;
+    if !(200..300).contains(&status_code) {
+        return Err(format!("request failed with status {}", status_code).into());
+    }
+    loop {
+        let mut line = String::new();
+        reader.read_line(&mut line)?;
+        if line == "\r\n" || line == "\n" || line.is_empty() {
+            break;
+        }
+    }
+    let mut response_body = String::new();
+    reader.read_to_string(&mut response_body)?;
+    Ok(response_body)
+}
+
+fn launch_browser_via_runtime(url: &str) -> Result<String, String> {
+    let payload = serde_json::json!({
+        "url": url,
+        "source": "hub-ui",
+    })
+    .to_string();
+    let endpoint = format!("http://localhost:{}/api/v1/browser/launch", YINYANG_PORT);
+    http_post_json(&endpoint, &payload).map_err(|e| e.to_string())
+}
+
 fn launch_browser_for_hub(
-    state: State<HubState>,
+    _state: State<HubState>,
     app: &tauri::AppHandle,
     requested_url: Option<&str>,
     respect_onboarding_gate: bool,
 ) -> Result<String, String> {
-    let browser_binary = resolve_browser_binary(app)?;
-    let path_str = browser_binary.to_string_lossy().to_string();
-
     let target_url = if respect_onboarding_gate && !check_onboarding_complete() {
         format!("http://localhost:{}/onboarding", YINYANG_PORT)
     } else if let Some(url) = requested_url {
@@ -490,13 +544,15 @@ fn launch_browser_for_hub(
         return Err("Yinyang Server not ready: port.lock missing after 10s".to_string());
     }
 
-    let child = launch_solace_browser(&path_str, &target_url)
-        .map_err(|e| format!("Failed to launch browser: {e}"))?;
+    if let Ok(response_body) = launch_browser_via_runtime(&target_url) {
+        return Ok(format!("Browser launched via runtime to {target_url}: {response_body}"));
+    }
 
-    let mut guard = state.browser_child.lock().unwrap();
-    *guard = Some(child);
-
-    Ok(format!("Browser launched from {path_str} to {target_url}"))
+    let browser_binary = resolve_browser_binary(app)?;
+    let path_str = browser_binary.to_string_lossy().to_string();
+    Err(format!(
+        "Yinyang runtime launch failed for {target_url}. Refusing uncontrolled direct browser launch from {path_str}."
+    ))
 }
 
 fn shutdown_server_process(child: &mut Child) -> Result<(), io::Error> {
@@ -625,6 +681,9 @@ fn cmd_list_sessions() -> Result<String, String> {
 
 #[tauri::command]
 fn cmd_kill_all_sessions(state: State<HubState>) -> Result<String, String> {
+    let endpoint = format!("http://localhost:{}/api/v1/browser/close", YINYANG_PORT);
+    let payload = serde_json::json!({ "all": true }).to_string();
+    let _ = http_post_json(&endpoint, &payload);
     // Kill local browser child if any
     {
         let mut guard = state.browser_child.lock().map_err(|e| e.to_string())?;

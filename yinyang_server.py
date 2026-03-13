@@ -4640,6 +4640,9 @@ def _load_local_marketplace_catalog(repo_root: str) -> list[dict]:
 
 
 def _fetch_marketplace_catalog(repo_root: str) -> tuple[Optional[list[dict]], str]:
+    local_apps = _load_local_marketplace_catalog(repo_root)
+    if local_apps:
+        return local_apps, "local_bundle"
     with _MARKETPLACE_LOCK:
         try:
             with _marketplace_urlopen(MARKETPLACE_CATALOG_URL, timeout=MARKETPLACE_TIMEOUT_SECONDS) as response:
@@ -4848,6 +4851,14 @@ def _ollama_config_payload(settings: Optional[dict] = None) -> dict[str, Any]:
         "configured": bool(normalized_url),
         "url": normalized_url,
     }
+
+
+def _cli_detected_snapshot() -> dict[str, dict[str, Any]]:
+    detected: dict[str, dict[str, Any]] = {}
+    for tool in SUPPORTED_CLI_TOOLS:
+        path = shutil.which(tool)
+        detected[tool] = {"installed": path is not None, "path": path or ""}
+    return detected
 
 
 def _save_ollama_config(url: str) -> dict[str, Any]:
@@ -6024,24 +6035,12 @@ def revoke_oauth3_token(token_id: str) -> bool:
 # ---------------------------------------------------------------------------
 def load_apps(repo_root: str) -> list[str]:
     """
-    Discover apps from data directories.
-    Search order:
-      1. <repo_root>/apps/                (browser starter bundle)
-      2. <repo_root>/data/default/apps/   (installed marketplace apps)
-      3. <repo_root>/data/custom/apps/    (local custom apps)
-      4. <repo_root>/data/apps/           (fallback flat layout)
-    Returns sorted list of unique app_id strings.
+    Return installed runtime apps from the local apps root only.
+
+    Source trees remain authoring/materialization inputs. Installed-state proof
+    lives exclusively under ~/.solace/apps.
     """
-    app_ids: set[str] = set()
-    for apps_path in (
-        Path(repo_root) / "apps",
-        Path(repo_root) / "data" / "default" / "apps",
-        Path(repo_root) / "data" / "custom" / "apps",
-        Path(repo_root) / "data" / "apps",
-    ):
-        if apps_path.is_dir():
-            app_ids.update(d.name for d in apps_path.iterdir() if d.is_dir())
-    return sorted(app_ids)
+    return sorted(_installed_app_ids(repo_root))
 
 
 def _session_rule_paths() -> list[Path]:
@@ -6460,13 +6459,14 @@ def _load_session_rules_for_repo(repo_root: str) -> list[dict]:
 def _load_official_store_apps(repo_root: str) -> list[dict]:
     normalized_apps: list[dict] = []
     for app_id, manifest, _manifest_path in _iter_source_manifest_records(repo_root):
-        if bool(manifest.get("local_only", False)):
-            continue
         site_value = str(manifest.get("site") or "")
         try:
             domains = _manifest_domain_patterns(manifest, site_value)
         except ValueError:
             continue
+        export_policy = manifest.get("export_policy")
+        if not isinstance(export_policy, dict):
+            export_policy = {}
         normalized_apps.append({
             "id": app_id,
             "name": str(manifest.get("name") or app_id.replace("-", " ").title()),
@@ -6478,8 +6478,41 @@ def _load_official_store_apps(repo_root: str) -> list[dict]:
             ),
             "domains": domains,
             "custom": bool(manifest.get("custom", False)),
+            "local_only": bool(manifest.get("local_only", False)),
+            "public_paths": list(export_policy.get("public") or []),
+            "private_paths": list(export_policy.get("private") or []),
         })
     return normalized_apps
+
+
+def _app_store_catalog_entries(repo_root: str, *, category: str = "") -> list[dict]:
+    normalized_category = category.strip().lower()
+    installed_ids = _installed_app_ids(repo_root)
+    entries: list[dict] = []
+    for entry in _load_official_store_apps(repo_root):
+        app_category = str(entry.get("category") or "solace")
+        if normalized_category and app_category.lower() != normalized_category:
+            continue
+        app_id = str(entry.get("id") or "")
+        if not app_id:
+            continue
+        entries.append(
+            {
+                "id": app_id,
+                "app_id": app_id,
+                "name": str(entry.get("name") or app_id.replace("-", " ").title()),
+                "display_name": str(entry.get("name") or app_id.replace("-", " ").title()),
+                "description": str(entry.get("description") or ""),
+                "category": app_category,
+                "tier_required": _normalize_tier_name(entry.get("tier_required", "free")),
+                "domains": list(entry.get("domains") or []),
+                "custom": bool(entry.get("custom", False)),
+                "local_only": bool(entry.get("local_only", False)),
+                "installed": app_id in installed_ids,
+            }
+        )
+    entries.sort(key=lambda item: str(item.get("id", "")))
+    return entries
 
 
 def _lookup_session_active(app_id: str) -> bool:
@@ -7721,6 +7754,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_onboarding_page()
         elif path == "/api/v1/onboarding/status":
             self._handle_onboarding_status()
+        elif path == "/api/v1/model-sources":
+            self._handle_model_sources_get()
         elif path == "/api/v1/domains":
             self._handle_domains_list()
         elif path == "/api/v1/domains/status":
@@ -10340,6 +10375,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_onboarding_complete()
         elif path == "/onboarding/reset":
             self._handle_onboarding_reset()
+        elif path == "/api/v1/model-sources":
+            self._handle_model_sources_set()
         elif path == "/api/v1/domains":
             self._handle_domain_create()
         elif path == "/api/v1/domains/setup":
@@ -12697,6 +12734,10 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
       <p class="state-detail" style="margin-top:0.9rem;">
         The canonical source app tree stays in <code>solace-cli/data/default/apps</code>. AI coding agents can point Solace Browser at that tree or copy finished app directories into the local app root.
       </p>
+      <p class="state-detail" style="margin-top:0.9rem;">
+        Export public app shells to Firestore collection <code>app_store_apps</code>. Export private managed-LLM uplift metadata to <code>managed_llm_uplifts</code>.
+        Use <code>solace-cli/scripts/export_public_apps.py</code> and <code>solace-cli/scripts/export_private_uplifts.py</code> to publish the two layers.
+      </p>
       <ul class="detail-list">
 {source_root_lines}
       </ul>
@@ -13363,6 +13404,12 @@ document.getElementById('confirm').addEventListener('click', function () {
                     "canonical_source": "solace-cli/data/default/apps",
                     "spec_root": "solace-cli/data/default/apps/specs",
                     "install_method": "copy app directory into the local app root or install through runtime routes",
+                    "export": {
+                        "public_collection": "app_store_apps",
+                        "private_collection": "managed_llm_uplifts",
+                        "public_script": "solace-cli/scripts/export_public_apps.py",
+                        "private_script": "solace-cli/scripts/export_private_uplifts.py",
+                    },
                 },
             },
             "capabilities": [
@@ -14257,16 +14304,57 @@ document.getElementById('confirm').addEventListener('click', function () {
         body = self._read_json_body()
         if body is None:
             return
-        name = str(body.get("name", "")).strip()
+        name = str(body.get("name", "")).strip() or str(body.get("target", "")).strip()
         if not name:
-            self._send_json({"error": "name is required"}, 400)
+            self._send_json({"error": "name or target is required"}, 400)
             return
         action_name = str(body.get("action", "click")).strip() or "click"
         role_value = body.get("role")
         role = str(role_value).strip() if isinstance(role_value, str) and role_value.strip() else None
+        if self._handle_hub_builtin_action(name=name, action_name=action_name):
+            return
         result = self._hub_invoke_action(name=name, action_name=action_name, role=role)
         status_code = 200 if result.get("status") == "ok" else 404 if result.get("status") == "not_found" else 409
         self._send_json(result, status_code)
+
+    def _handle_hub_builtin_action(self, *, name: str, action_name: str) -> bool:
+        if action_name != "click":
+            return False
+        normalized = re.sub(r"[^a-z0-9]+", "", name.lower())
+        if normalized in {
+            "openbrowserbutton",
+            "btnopenbrowser",
+            "openbrowser",
+            "opensolacebrowser",
+        }:
+            self._launch_controlled_browser_session(
+                url=DEFAULT_BROWSER_START_URL,
+                profile="default",
+                mode="standard",
+                session_name_raw="",
+                head_hidden=False,
+                source="hub-ui",
+                allow_duplicate=False,
+            )
+            return True
+        if normalized in {
+            "openaccountbutton",
+            "btnopenaccount",
+            "openaccount",
+            "signincreateaccount",
+            "signincreatefreeaccountoptional",
+        }:
+            self._launch_controlled_browser_session(
+                url="https://solaceagi.com/register",
+                profile="default",
+                mode="standard",
+                session_name_raw="",
+                head_hidden=False,
+                source="hub-ui",
+                allow_duplicate=False,
+            )
+            return True
+        return False
 
     def _handle_app_launch_history(self) -> None:
         """GET /api/v1/apps/launch-history — recent app launch events. Task 081."""
@@ -15998,6 +16086,103 @@ function configureOllama() {
         """GET /api/v1/onboarding/status — return normalized onboarding state."""
         self._send_json(_load_onboarding_state())
 
+    def _model_sources_payload(self) -> dict[str, Any]:
+        onboarding = _load_onboarding_state()
+        config = self._load_cli_config()
+        byok = self._load_byok_config()
+        ollama = _ollama_config_payload()
+        detected = _cli_detected_snapshot()
+        model_sources = list(_normalize_model_sources(onboarding.get("model_sources", [])))
+        managed_llm_enabled = bool(onboarding.get("managed_llm_enabled", False))
+        if managed_llm_enabled and "managed" not in model_sources:
+            model_sources.append("managed")
+        selected = set(model_sources)
+        configured_provider_count = sum(
+            1
+            for data in (byok.get("providers", {}) or {}).values()
+            if isinstance(data, dict) and data.get("key_hash")
+        )
+        detected_count = sum(1 for payload in detected.values() if payload.get("installed"))
+        active_tool = str(config.get("active_tool") or "").strip()
+        cli_ready = bool(active_tool and detected.get(active_tool, {}).get("installed"))
+        return {
+            "auth_state": onboarding.get("auth_state", "logged_out"),
+            "membership_tier": onboarding.get("membership_tier", "free"),
+            "apps_enabled": bool(onboarding.get("apps_enabled", False)),
+            "minimum_required": 1 if onboarding.get("auth_state") == "logged_in" else 0,
+            "minimum_met": bool(onboarding.get("apps_enabled", False)),
+            "primary_source": onboarding.get("model_source"),
+            "selected_sources": model_sources,
+            "managed_llm_enabled": managed_llm_enabled,
+            "options": {
+                "byok": {
+                    "selected": "byok" in selected,
+                    "configured": configured_provider_count > 0,
+                    "active_provider": byok.get("active_provider"),
+                    "configured_provider_count": configured_provider_count,
+                },
+                "cli": {
+                    "selected": "cli" in selected,
+                    "configured": cli_ready,
+                    "active_tool": active_tool or None,
+                    "detected_count": detected_count,
+                    "detected": detected,
+                },
+                "ollama": {
+                    "selected": "ollama" in selected,
+                    "configured": bool(ollama.get("configured")),
+                    "url": ollama.get("url", ""),
+                },
+                "managed": {
+                    "selected": "managed" in selected,
+                    "configured": onboarding.get("membership_tier", "free") != "free",
+                    "default_credit_usd": 5.0,
+                    "management_fee_percent": 20,
+                },
+            },
+        }
+
+    def _handle_model_sources_get(self) -> None:
+        """GET /api/v1/model-sources — unified BYOK/CLI/Ollama/managed source state."""
+        self._send_json(self._model_sources_payload())
+
+    def _handle_model_sources_set(self) -> None:
+        """POST /api/v1/model-sources — set the active source combination for the logged-in state."""
+        body = self._read_json_body()
+        if body is None:
+            return
+        auth_state = str(body.get("auth_state") or _load_onboarding_state().get("auth_state", "logged_out")).strip()
+        if auth_state == "logged_out":
+            state = _save_onboarding_state(
+                {
+                    "auth_state": "logged_out",
+                    "membership_tier": "free",
+                    "managed_llm_enabled": False,
+                    "model_sources": [],
+                }
+            )
+            self._send_json({"ok": True, **state, "model_sources_state": self._model_sources_payload()})
+            return
+        model_sources = _normalize_model_sources(body.get("model_sources", []))
+        managed_llm_enabled = bool(body.get("managed_llm_enabled", False))
+        if managed_llm_enabled and "managed" not in model_sources:
+            model_sources.append("managed")
+        if not model_sources:
+            self._send_json({"error": "pick at least one model source"}, 409)
+            return
+        if "ollama" in model_sources and not _ollama_config_payload().get("configured", False):
+            self._send_json({"error": "configure an Ollama URL before enabling ollama"}, 409)
+            return
+        state = _save_onboarding_state(
+            {
+                "auth_state": "logged_in",
+                "membership_tier": body.get("membership_tier", _load_onboarding_state().get("membership_tier", "free")),
+                "managed_llm_enabled": managed_llm_enabled,
+                "model_sources": model_sources,
+            }
+        )
+        self._send_json({"ok": True, **state, "model_sources_state": self._model_sources_payload()})
+
     def _handle_domain_status(self, query: str) -> None:
         repo_root = getattr(self.server, "repo_root", ".")
         params = urllib.parse.parse_qs(query)
@@ -17088,6 +17273,33 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
     def _handle_hub_browser_open(self) -> None:
         self._handle_browser_launch(require_auth=False, source="hub-ui")
 
+    def _wait_for_browser_pids_to_exit(
+        self,
+        pids: set[int],
+        *,
+        timeout_seconds: float = 2.0,
+    ) -> int:
+        active_pids = {int(pid) for pid in pids if int(pid) > 0}
+        if not active_pids:
+            return 0
+        deadline = time.time() + timeout_seconds
+        while time.time() < deadline:
+            remaining = {
+                int(window.get("pid", 0) or 0)
+                for window in self._list_browser_windows()
+                if int(window.get("pid", 0) or 0) in active_pids
+            }
+            if not remaining:
+                return 0
+            time.sleep(0.1)
+        return len(
+            {
+                int(window.get("pid", 0) or 0)
+                for window in self._list_browser_windows()
+                if int(window.get("pid", 0) or 0) in active_pids
+            }
+        )
+
     def _terminate_session(self, session_id: str) -> tuple[int, dict[str, Any]]:
         with _SESSIONS_LOCK:
             sess = _SESSIONS.get(session_id)
@@ -17134,6 +17346,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
                         "browser_orphan_terminated",
                         {"pid": pid, "window_id": window.get("window_id")},
                     )
+            remaining_window_count = self._wait_for_browser_pids_to_exit(tracked_pids.union(orphan_pids))
             self._send_json(
                 {
                     "status": "terminated",
@@ -17141,13 +17354,18 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
                     "closed_orphan_pids": orphan_pids,
                     "count": len(closed),
                     "orphan_count": len(orphan_pids),
+                    "remaining_window_count": remaining_window_count,
                 }
             )
             return
         if not session_id:
             self._send_json({"error": "session_id required unless all=true"}, 400)
             return
+        with _SESSIONS_LOCK:
+            tracked_pid = int((_SESSIONS.get(session_id) or {}).get("pid", 0) or 0)
         status, payload = self._terminate_session(session_id)
+        if status == 200:
+            payload["remaining_window_count"] = self._wait_for_browser_pids_to_exit({tracked_pid})
         self._send_json(payload, status)
 
     def _handle_hub_browser_close(self) -> None:
@@ -23253,39 +23471,29 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
 
     def _handle_app_store_catalog(self, query: str) -> None:
         """GET /api/v1/app-store/catalog — list catalog apps with optional ?category= filter."""
+        repo_root = getattr(self.server, "repo_root", ".")
         params = self._parse_query(query)
         category = params.get("category", "")
-        apps = list(APP_STORE_CATALOG)
-        if category:
-            apps = [a for a in apps if a.get("category") == category]
-        with _APP_STORE_LOCK:
-            installed = set(_APP_STORE_INSTALLED)
-        for a in apps:
-            a = dict(a)
-        result = [{**a, "installed": a["id"] in installed} for a in apps]
+        result = _app_store_catalog_entries(repo_root, category=category)
         self._send_json({"apps": result, "total": len(result)})
 
     def _handle_app_store_installed(self) -> None:
         """GET /api/v1/app-store/installed — list installed apps."""
-        with _APP_STORE_LOCK:
-            installed_ids = set(_APP_STORE_INSTALLED)
-        catalog_map = {a["id"]: a for a in APP_STORE_CATALOG}
-        result = [
-            {**catalog_map[i], "installed": True}
-            for i in installed_ids
-            if i in catalog_map
-        ]
+        repo_root = getattr(self.server, "repo_root", ".")
+        result = [entry for entry in _app_store_catalog_entries(repo_root) if bool(entry.get("installed"))]
         self._send_json({"apps": result, "total": len(result)})
 
     def _handle_app_store_categories(self) -> None:
         """GET /api/v1/app-store/categories — list unique categories."""
-        cats = sorted({a["category"] for a in APP_STORE_CATALOG})
+        repo_root = getattr(self.server, "repo_root", ".")
+        cats = sorted({str(entry.get("category") or "solace") for entry in _app_store_catalog_entries(repo_root)})
         self._send_json({"categories": cats, "total": len(cats)})
 
     def _handle_app_store_install(self) -> None:
         """POST /api/v1/app-store/install — install an app (auth required)."""
         if not self._check_auth():
             return
+        repo_root = getattr(self.server, "repo_root", ".")
         body = self._read_json_body()
         if body is None:
             return
@@ -23293,18 +23501,22 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         if not app_id:
             self._send_json({"error": "missing app_id"}, 400)
             return
-        catalog_ids = {a["id"] for a in APP_STORE_CATALOG}
+        catalog_ids = {entry["id"] for entry in _app_store_catalog_entries(repo_root)}
         if app_id not in catalog_ids:
             self._send_json({"error": "app not found in catalog"}, 404)
             return
-        with _APP_STORE_LOCK:
-            _APP_STORE_INSTALLED.add(app_id)
-        self._send_json({"status": "installed", "app_id": app_id})
+        try:
+            install_path = _materialize_app_from_source(repo_root, app_id)
+        except FileNotFoundError:
+            self._send_json({"error": "app not found in source roots"}, 404)
+            return
+        self._send_json({"status": "installed", "app_id": app_id, "path": str(install_path)})
 
     def _handle_app_store_uninstall(self) -> None:
-        """POST /api/v1/app-store/uninstall — uninstall an app (auth required, builtin → 409)."""
+        """POST /api/v1/app-store/uninstall — uninstall a local app copy (auth required)."""
         if not self._check_auth():
             return
+        repo_root = getattr(self.server, "repo_root", ".")
         body = self._read_json_body()
         if body is None:
             return
@@ -23312,12 +23524,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         if not app_id:
             self._send_json({"error": "missing app_id"}, 400)
             return
-        catalog_map = {a["id"]: a for a in APP_STORE_CATALOG}
-        if app_id in catalog_map and catalog_map[app_id].get("builtin"):
-            self._send_json({"error": "builtin apps cannot be uninstalled"}, 409)
-            return
-        with _APP_STORE_LOCK:
-            _APP_STORE_INSTALLED.discard(app_id)
+        _remove_local_app_materialization(repo_root, app_id)
         self._send_json({"status": "uninstalled", "app_id": app_id})
 
     def _handle_app_store_html(self) -> None:
