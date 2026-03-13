@@ -5148,16 +5148,23 @@ def _known_domains_from_index(repo_root: str) -> set[str]:
 
 
 def _known_domains(repo_root: str) -> list[str]:
-    domains: set[str] = {"solaceagi.com", "www.google.com"}
-    domains.update(_known_domains_from_index(repo_root))
-    domains.update(_normalize_domain(domain) for domain in _load_domain_profiles().keys())
-    domains.update(
-        _normalize_domain(str(event.get("domain", "")))
-        for event in _load_domain_events()
-        if _normalize_domain(str(event.get("domain", "")))
-    )
-    domains.discard("")
-    return sorted(domains, key=lambda item: (_normalize_domain(item) != "solaceagi.com", item))
+    normalized_domains: set[str] = set()
+
+    def _add_domain(value: Any) -> None:
+        normalized = _normalize_domain(str(value or ""))
+        if normalized:
+            normalized_domains.add(normalized)
+
+    _add_domain("solaceagi.com")
+    _add_domain("www.google.com")
+    for domain in _known_domains_from_index(repo_root):
+        _add_domain(domain)
+    for domain in _load_domain_profiles().keys():
+        _add_domain(domain)
+    for event in _load_domain_events():
+        _add_domain(event.get("domain", ""))
+
+    return sorted(normalized_domains, key=lambda item: (item != "solaceagi.com", item))
 
 
 def _domain_setup_state(onboarding: dict[str, Any], status: dict[str, Any]) -> str:
@@ -11997,13 +12004,43 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         if not url:
             self._send_json_compat(400, {"error": "url required"})
             return
+        launch = bool(body.get("launch", True))
+        requested_session_id = str(body.get("session_id", "")).strip()
+        if not launch:
+            current_session_id, current_session = self._pick_controlled_session(requested_session_id)
+            current_url = str((current_session or {}).get("url", "")).strip()
+            if current_session_id and current_url == url:
+                action = {
+                    "type": "navigate",
+                    "url": url,
+                    "launch": False,
+                    "session_id": current_session_id,
+                    "timestamp": _utc_isoformat(time.time()),
+                    "compatibility_mode": False,
+                    "executed": True,
+                    "deduped": True,
+                }
+                state = self._update_compat_browser_state(action)
+                self._send_json(
+                    {
+                        "success": True,
+                        "url": url,
+                        "current_url": url,
+                        "state": state,
+                        "action": action,
+                        "native_bridge": "chromium-cdp-ephemeral-port",
+                        "compatibility_mode": False,
+                        "session_id": current_session_id,
+                    },
+                    200,
+                )
+                return
         if self._native_browser_action(
             "navigate",
-            {"url": url, "session_id": body.get("session_id", "")},
+            {"url": url, "session_id": requested_session_id},
             lambda page: self._native_navigate_page(page, url),
         ):
             return
-        launch = bool(body.get("launch", True))
         action = {
             "type": "navigate",
             "url": url,

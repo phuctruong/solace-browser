@@ -761,6 +761,64 @@ class TestAgentContractCompatibility:
             with urllib.request.urlopen(request, timeout=5) as resp:
                 assert resp.status in expected_codes, (path, resp.status)
 
+    def test_browser_navigate_launch_false_never_spawns_new_window(self, server, monkeypatch):
+        """POST /api/navigate with launch=false must not spawn a new browser window in compatibility mode."""
+        import yinyang_server as ys
+
+        monkeypatch.setattr(ys.YinyangHandler, "_native_browser_action", lambda *_args, **_kwargs: False)
+
+        called = {"count": 0}
+
+        def fail_popen(*_args, **_kwargs):
+            called["count"] += 1
+            raise AssertionError("launch=false should not spawn a browser process")
+
+        monkeypatch.setattr(ys.subprocess, "Popen", fail_popen)
+        request = urllib.request.Request(
+            f"{BASE_URL}/api/navigate",
+            data=json.dumps({"url": "http://127.0.0.1:18888/domains/google.com", "launch": False}).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=5) as resp:
+            payload = json.loads(resp.read().decode())
+        assert resp.status == 200
+        assert payload["action"]["type"] == "navigate"
+        assert payload["action"]["launch"] is False
+        assert called["count"] == 0
+
+    def test_browser_navigate_launch_false_dedupes_same_current_url(self, server, monkeypatch):
+        """Repeated launch=false navigation to the current URL should return immediately without re-driving the browser."""
+        import yinyang_server as ys
+
+        session_id = "sess-live"
+        try:
+            with ys._SESSIONS_LOCK:
+                ys._SESSIONS[session_id] = {
+                    "pid": os.getpid(),
+                    "url": "http://127.0.0.1:18888/domains/google.com",
+                    "started_at": int(time.time()),
+                }
+
+            def fail_native(*_args, **_kwargs):
+                raise AssertionError("same-url launch=false navigation should be deduped before native control")
+
+            monkeypatch.setattr(ys.YinyangHandler, "_native_browser_action", fail_native)
+            request = urllib.request.Request(
+                f"{BASE_URL}/api/navigate",
+                data=json.dumps({"url": "http://127.0.0.1:18888/domains/google.com", "launch": False}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(request, timeout=5) as resp:
+                payload = json.loads(resp.read().decode())
+            assert resp.status == 200
+            assert payload["action"]["deduped"] is True
+            assert payload["session_id"] == session_id
+        finally:
+            with ys._SESSIONS_LOCK:
+                ys._SESSIONS.pop(session_id, None)
+
 
 class TestCorsHeaders:
     @pytest.mark.parametrize(
@@ -2313,6 +2371,32 @@ class TestOnboardingEndpoints:
         assert "any" not in hosts
         assert "github.com" in hosts
         assert "slack.com" in hosts
+
+    def test_domains_list_dedupes_hosts_after_normalization(self, server):
+        """GET /api/v1/domains should not emit duplicate cards for equivalent normalized hosts."""
+        import yinyang_server as ys
+
+        ys._save_domain_profiles(
+            {
+                "www.google.com": ys._default_domain_profile(".", "www.google.com"),
+                "google.com": ys._default_domain_profile(".", "google.com"),
+            }
+        )
+        ys._save_domain_events(
+            [
+                {
+                    "id": "evt-google-1",
+                    "domain": "www.google.com",
+                    "type": "domain_created",
+                    "title": "Google domain",
+                    "summary": "Created from event",
+                    "ts": 1,
+                }
+            ]
+        )
+        payload = get_json("/api/v1/domains")
+        hosts = [item["host"] for item in payload["items"]]
+        assert hosts.count("google.com") == 1
 
     def test_onboarding_reset_requires_auth(self, auth_server):
         """POST /onboarding/reset without auth → 401."""
