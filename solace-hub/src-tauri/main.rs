@@ -457,17 +457,8 @@ fn check_onboarding_complete() -> bool {
     content.contains("\"completed\": true") || content.contains("\"completed\":true")
 }
 
-/// Launch the Solace Browser binary with the authenticated target URL.
-fn launch_solace_browser(browser_path: &str, url: &str) -> Result<Child, io::Error> {
-    let browser_binary = Path::new(browser_path);
-    let browser_dir = browser_binary.parent().unwrap_or_else(|| Path::new("."));
-
-    Command::new(browser_binary)
-        .current_dir(browser_dir)
-        .arg("--new-window")
-        .arg(url)
-        .spawn()
-}
+// launch_solace_browser removed in GLOW 461 — all browser launches now route
+// through launch_browser_via_runtime() → POST /api/v1/browser/launch (dedup-safe).
 
 fn http_post_json(url: &str, body: &str) -> Result<String, Box<dyn std::error::Error>> {
     use std::io::{BufRead, BufReader, Read};
