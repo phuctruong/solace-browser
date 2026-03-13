@@ -173,6 +173,21 @@ def test_sidebar_mobile_launcher_contract() -> None:
     assert "postJson('/api/navigate'" in js
 
 
+def test_domain_event_detail_contract_exists() -> None:
+    server = _read("yinyang_server.py")
+
+    assert 'elif re.match(r"^/api/v1/events/[^/]+$", path):' in server
+    assert "def _handle_event_detail_api" in server
+    assert 'payload["api_url"]' in server
+    assert 'payload["detail_url"]' in server
+    assert 'payload["report_available"]' in server
+    assert 'payload["signoff_required"]' in server
+    assert 'def _handle_event_detail_page' in server
+    assert "Agree & eSign" in server
+    assert "Business sign off" in server
+    assert "Evidence preview" in server
+
+
 def test_browser_starter_bundle_exists() -> None:
     bundle_root = REPO_ROOT / "apps"
 

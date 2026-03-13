@@ -2148,6 +2148,60 @@ class TestOnboardingEndpoints:
         assert payload["total"] >= 1
         assert all(item["domain"] == "mail.google.com" for item in payload["items"])
 
+    def test_event_detail_api_returns_normalized_payload(self, server):
+        """GET /api/v1/events/{id} → normalized event payload includes detail/report/signoff fields."""
+        import yinyang_server as ys
+
+        original_events = ys._load_domain_events()
+        try:
+            event = ys._append_domain_event(
+                "mail.google.com",
+                "review_required",
+                "Review Gmail digest",
+                "A local report is ready for review.",
+                app_id="gmail-triage",
+                report_url="/apps/gmail-triage/outbox/reports/latest.html",
+                requires_signoff=True,
+                metadata={"domain": "mail.google.com"},
+            )
+            payload = get_json(f"/api/v1/events/{event['id']}")
+            assert payload["id"] == event["id"]
+            assert payload["event_type"] == "review_required"
+            assert payload["type"] == "review_required"
+            assert payload["detail_url"] == f"/events/{event['id']}"
+            assert payload["api_url"] == f"/api/v1/events/{event['id']}"
+            assert payload["report_available"] is True
+            assert payload["requires_signoff"] is True
+            assert payload["signoff_required"] is True
+            assert payload["metadata"]["domain"] == "mail.google.com"
+        finally:
+            ys._save_domain_events(original_events)
+
+    def test_event_detail_page_renders_signoff_and_report_preview(self, server):
+        """GET /events/{id} → report preview and signoff controls appear for review-required events."""
+        import yinyang_server as ys
+
+        original_events = ys._load_domain_events()
+        try:
+            event = ys._append_domain_event(
+                "solaceagi.com",
+                "review_required",
+                "Approve morning brief",
+                "The morning brief is ready for signoff.",
+                app_id="morning-brief",
+                report_url="/apps/morning-brief/outbox/reports/today.html",
+                requires_signoff=True,
+            )
+            with urllib.request.urlopen(f"{BASE_URL}/events/{event['id']}", timeout=5) as resp:
+                html = resp.read().decode()
+            assert resp.status == 200
+            assert "Agree & eSign" in html
+            assert "Business sign off" in html
+            assert "/apps/morning-brief/outbox/reports/today.html" in html
+            assert "Event report" in html
+        finally:
+            ys._save_domain_events(original_events)
+
     def test_domain_activate_requires_success_url_match_for_login_domains(self, server):
         """POST /api/v1/domains/activate requires a deterministic observed_url match for login-backed domains."""
         post_json(
@@ -2889,6 +2943,7 @@ class TestSessionManager:
                 return None
 
         monkeypatch.setattr(ys.subprocess, "Popen", lambda *a, **kw: FakeProcess())
+        monkeypatch.setattr(ys.YinyangHandler, "_list_browser_windows", lambda self: [])
         original_env = _os.environ.get("SOLACE_BROWSER", "")
         _os.environ["SOLACE_BROWSER"] = _sys.executable
         try:
@@ -2911,6 +2966,31 @@ class TestSessionManager:
                 _os.environ.pop("SOLACE_BROWSER", None)
             with ys._SESSIONS_LOCK:
                 ys._SESSIONS.clear()
+
+    def test_browser_close_all_terminates_orphan_visible_windows(self, auth_server, monkeypatch):
+        """POST /api/v1/browser/close all=true also terminates orphan Solace Browser pids when tracking drifted."""
+        import yinyang_server as ys
+
+        killed: list[int] = []
+
+        monkeypatch.setattr(
+            ys.YinyangHandler,
+            "_list_browser_windows",
+            lambda self: [
+                {"window_id": "0x1", "title": "Dashboard | Solace AGI - Solace", "pid": 4242},
+                {"window_id": "0x2", "title": "App Store - Solace", "pid": 4242},
+                {"window_id": "0x3", "title": "Untitled - Solace", "pid": None},
+            ],
+        )
+        monkeypatch.setattr(ys, "_terminate_browser_pid", lambda pid: killed.append(pid) or True)
+        with ys._SESSIONS_LOCK:
+            ys._SESSIONS.clear()
+        close_status, close_data = _post_with_auth("/api/v1/browser/close", {"all": True})
+        assert close_status == 200
+        assert close_data["count"] == 0
+        assert close_data["orphan_count"] == 1
+        assert close_data["closed_orphan_pids"] == [4242]
+        assert killed == [4242]
 
     def test_browser_launch_dedupes_repeated_requests(self, auth_server, monkeypatch):
         """Repeated identical launch requests reuse the live session unless allow_duplicate=true."""

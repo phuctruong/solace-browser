@@ -528,6 +528,27 @@ def _cleanup_session_sidecars(session: dict[str, Any]) -> None:
             pass
 
     threading.Thread(target=_force_kill, daemon=True).start()
+
+
+def _terminate_browser_pid(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except OSError:
+        return False
+
+    def _force_kill() -> None:
+        time.sleep(3)
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except OSError:
+            pass
+
+    threading.Thread(target=_force_kill, daemon=True).start()
+    return True
+
+
 _SESSION_TOKEN_SHA256: str = ""
 _SESSION_RULES: list[dict] = []
 _SESSION_RULES_LOCK = threading.Lock()
@@ -4914,7 +4935,20 @@ def _normalize_domain_event_payload(event: dict[str, Any]) -> dict[str, Any]:
     if event_type:
         payload["event_type"] = event_type
         payload["type"] = event_type
+    event_id = str(payload.get("id") or "").strip()
+    if event_id:
+        payload["detail_url"] = str(payload.get("detail_url") or f"/events/{event_id}")
+        payload["api_url"] = str(payload.get("api_url") or f"/api/v1/events/{event_id}")
+    payload["report_available"] = bool(payload.get("report_url"))
+    payload["signoff_required"] = bool(payload.get("requires_signoff", False))
     return payload
+
+
+def _find_domain_event(event_id: str) -> Optional[dict[str, Any]]:
+    wanted = str(event_id or "").strip()
+    if not wanted:
+        return None
+    return next((item for item in _load_domain_events() if str(item.get("id")) == wanted), None)
 
 
 def _load_domain_profiles() -> dict[str, dict[str, Any]]:
@@ -7693,6 +7727,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_domain_status(query)
         elif path == "/api/v1/events/feed":
             self._handle_domain_events_feed(query)
+        elif re.match(r"^/api/v1/events/[^/]+$", path):
+            event_id = urllib.parse.unquote(path.split("/api/v1/events/", 1)[1])
+            self._handle_event_detail_api(event_id)
         elif path.startswith("/domains/"):
             self._handle_domain_management_page(urllib.parse.unquote(path.split("/domains/", 1)[1]))
         elif path.startswith("/events/"):
@@ -16056,6 +16093,18 @@ function configureOllama() {
         ]
         self._send_json({"domain": requested, "items": items[:100], "total": len(items)})
 
+    def _handle_event_detail_api(self, event_id: str) -> None:
+        event = _find_domain_event(event_id)
+        if event is None:
+            self._send_json({"error": "event not found"}, 404)
+            return
+        payload = _normalize_domain_event_payload(event)
+        payload["requires_signoff"] = bool(payload.get("requires_signoff", False))
+        payload["signoff_required"] = bool(payload["requires_signoff"])
+        metadata = payload.get("metadata")
+        payload["metadata"] = metadata if isinstance(metadata, dict) else {}
+        self._send_json(payload)
+
     def _handle_domain_setup(self) -> None:
         body = self._read_json_body()
         if body is None:
@@ -16526,16 +16575,16 @@ hydrateFields();
         self.wfile.write(body)
 
     def _handle_event_detail_page(self, event_id: str) -> None:
-        event = next((item for item in _load_domain_events() if str(item.get("id")) == event_id), None)
-        if event is None:
+        payload = _normalize_domain_event_payload(_find_domain_event(event_id) or {})
+        if not payload:
             self._send_json({"error": "event not found"}, 404)
             return
-        requires_signoff = bool(event.get("requires_signoff", False))
-        report_url = str(event.get("report_url") or "")
-        detail_url = str(event.get("detail_url") or "")
+        requires_signoff = bool(payload.get("signoff_required", False))
+        report_url = str(payload.get("report_url") or "")
+        detail_url = str(payload.get("detail_url") or "")
         preview = f"""<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html_escape(str(event.get("title") or "Event"))}</title>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html_escape(str(payload.get("title") or "Event"))}</title>
 <style>
 body {{ font-family: system-ui, sans-serif; margin: 0; background: #0f1420; color: #eff4ff; }}
 main {{ max-width: 980px; margin: 0 auto; padding: 32px 24px 56px; display: grid; gap: 20px; }}
@@ -16548,8 +16597,8 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
 </style></head>
 <body><main>
 <section class="card">
-  <h1>{html_escape(str(event.get("title") or "Event"))}</h1>
-  <p class="muted">{html_escape(str(event.get("summary") or ""))}</p>
+  <h1>{html_escape(str(payload.get("title") or "Event"))}</h1>
+  <p class="muted">{html_escape(str(payload.get("summary") or ""))}</p>
   <div class="actions">
     <a href="{html_escape(report_url or detail_url or '/')}">Open source</a>
     {"<button>Agree & eSign</button><button class='secondary'>Business sign off</button>" if requires_signoff else "<span class='muted'>No sign-off required.</span>"}
@@ -17047,19 +17096,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
             pid = sess["pid"]
             del _SESSIONS[session_id]
         _cleanup_session_sidecars(sess)
-        try:
-            os.kill(pid, signal.SIGTERM)
-
-            def _force_kill() -> None:
-                time.sleep(3)
-                try:
-                    os.kill(pid, signal.SIGKILL)
-                except OSError:
-                    pass
-
-            threading.Thread(target=_force_kill, daemon=True).start()
-        except OSError:
-            pass
+        _terminate_browser_pid(int(pid))
         record_evidence("browser_session_terminated", {"session_id": session_id, "pid": pid})
         return 200, {"status": "terminated", "session_id": session_id}
 
@@ -17073,13 +17110,39 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         close_all = bool(body.get("all", False))
         if close_all:
             with _SESSIONS_LOCK:
+                tracked_pids = {
+                    int(sess.get("pid", 0) or 0)
+                    for sess in _SESSIONS.values()
+                    if int(sess.get("pid", 0) or 0) > 0
+                }
                 session_ids = list(_SESSIONS.keys())
             closed: list[str] = []
             for current_id in session_ids:
                 status, _payload = self._terminate_session(current_id)
                 if status == 200:
                     closed.append(current_id)
-            self._send_json({"status": "terminated", "closed_sessions": closed, "count": len(closed)})
+            orphan_pids: list[int] = []
+            seen_orphans: set[int] = set()
+            for window in self._list_browser_windows():
+                pid = int(window.get("pid", 0) or 0)
+                if pid <= 0 or pid in tracked_pids or pid in seen_orphans:
+                    continue
+                seen_orphans.add(pid)
+                if _terminate_browser_pid(pid):
+                    orphan_pids.append(pid)
+                    record_evidence(
+                        "browser_orphan_terminated",
+                        {"pid": pid, "window_id": window.get("window_id")},
+                    )
+            self._send_json(
+                {
+                    "status": "terminated",
+                    "closed_sessions": closed,
+                    "closed_orphan_pids": orphan_pids,
+                    "count": len(closed),
+                    "orphan_count": len(orphan_pids),
+                }
+            )
             return
         if not session_id:
             self._send_json({"error": "session_id required unless all=true"}, 400)
