@@ -1,0 +1,13 @@
+id: launch-report-search-19384c8c
+name: "Launch Report Search 19384c8c"
+description: "Create a local report from a custom app."
+category: "custom"
+status: "installed"
+safety: "B"
+tier: "free"
+domains:
+  - "google.com"
+site: google.com
+type: "custom"
+custom: true
+local_only: true

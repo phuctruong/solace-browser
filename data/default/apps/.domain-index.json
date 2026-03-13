@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "generated_at": 1773306653,
+  "generated_at": 1773344786,
   "domains_indexed": 30,
-  "apps_indexed": 60,
+  "apps_indexed": 66,
   "patterns": {
     "*.github.com": [
       "github-issue-triage"
@@ -57,16 +57,22 @@
       "config-roundtrip-search-1b44a633",
       "config-roundtrip-search-2dd47509",
       "config-roundtrip-search-4651c2af",
+      "config-roundtrip-search-79b6aa1a",
       "config-roundtrip-search-8d0b7e88",
+      "config-roundtrip-search-b5afe43e",
       "demo-rehearsal-1773267491",
       "google-search-mission",
       "google-search-trends",
+      "launch-report-search-1860eff2",
+      "launch-report-search-19384c8c",
       "launch-report-search-3a4df1b8",
       "launch-report-search-59bd7abf",
       "launch-report-search-79d43e17",
       "launch-report-search-90e88206",
       "morning-brief-custom-0311b303",
       "morning-brief-custom-03330899",
+      "morning-brief-custom-11e74234",
+      "morning-brief-custom-7aaec6ca",
       "morning-brief-custom-8972d6ec",
       "morning-brief-custom-b663efdb"
     ],

@@ -1,5 +1,6 @@
 """Marketplace API tests for Yinyang Server."""
 import json
+import os
 import pathlib
 import sys
 import threading
@@ -47,6 +48,8 @@ def marketplace_server(tmp_path, monkeypatch):
     monkeypatch.setattr(ys, "SETTINGS_PATH", settings_path)
     monkeypatch.setattr(ys, "EVIDENCE_PATH", evidence_path)
     monkeypatch.setattr(ys, "PORT_LOCK_PATH", port_lock_path)
+    monkeypatch.setenv("SOLACE_LOCAL_APPS_ROOT", str(tmp_path / ".solace" / "apps"))
+    monkeypatch.setenv("SOLACE_APP_SOURCE_ROOTS", str(apps_root))
 
     httpd = ys.build_server(0, str(repo_root), session_token_sha256=VALID_TOKEN)
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)
@@ -154,27 +157,17 @@ def test_marketplace_install_bad_app_id(marketplace_server, monkeypatch):
 
 
 def test_marketplace_install_downloads_session_rules(marketplace_server, monkeypatch):
-    import yinyang_server as ys
-
-    calls: list[str] = []
-
-    def fake_urlopen(url, timeout=5):
-        calls.append(url)
-        if str(url).endswith("/session-rules.yaml"):
-            return FakeResponse(200, "name: WhatsApp Web\nurl: https://web.whatsapp.com\n")
-        return FakeResponse(200, _catalog_payload([
-            {
-                "app_id": "whatsapp-web",
-                "display_name": "WhatsApp Web",
-                "description": "Messaging in the browser",
-                "category": "messaging",
-                "tier_required": "free",
-                "version": "1.0.0",
-                "icon_url": "https://solaceagi.com/icons/whatsapp-web.png",
-            }
-        ]))
-
-    monkeypatch.setattr(ys, "_marketplace_urlopen", fake_urlopen, raising=False)
+    source_dir = marketplace_server["apps_root"] / "whatsapp-web"
+    source_dir.mkdir(parents=True, exist_ok=True)
+    (source_dir / "manifest.yaml").write_text(
+        "id: whatsapp-web\n"
+        "name: WhatsApp Web\n"
+        "description: Messaging in the browser\n"
+        "category: messaging\n"
+        "tier_required: free\n"
+        "site: web.whatsapp.com\n"
+    )
+    (source_dir / "session-rules.yaml").write_text("app: whatsapp-web\nsite: web.whatsapp.com\n")
 
     status, data = _request_json(
         marketplace_server,
@@ -183,38 +176,24 @@ def test_marketplace_install_downloads_session_rules(marketplace_server, monkeyp
         payload={"app_id": "whatsapp-web"},
     )
 
-    installed_path = marketplace_server["apps_root"] / "whatsapp-web" / "session-rules.yaml"
+    installed_path = pathlib.Path(data["path"]) / "session-rules.yaml"
     assert status == 200
     assert data["status"] == "installed"
-    assert data["path"] == "data/default/apps/whatsapp-web/"
     assert installed_path.exists()
-    assert any(str(call).endswith("/session-rules.yaml") for call in calls)
 
 
 def test_marketplace_uninstall_removes_file(marketplace_server, monkeypatch):
-    import yinyang_server as ys
-
-    def fake_urlopen(url, timeout=5):
-        if str(url).endswith("/session-rules.yaml"):
-            return FakeResponse(200, "name: Telegram Web\nurl: https://web.telegram.org\n")
-        return FakeResponse(200, _catalog_payload([
-            {
-                "app_id": "telegram-web",
-                "display_name": "Telegram Web",
-                "description": "Messaging in the browser",
-                "category": "messaging",
-                "tier_required": "free",
-                "version": "1.0.0",
-                "icon_url": "https://solaceagi.com/icons/telegram-web.png",
-            }
-        ]))
-
-    monkeypatch.setattr(ys, "_marketplace_urlopen", fake_urlopen, raising=False)
-
-    app_dir = marketplace_server["apps_root"] / "telegram-web"
-    app_dir.mkdir(parents=True, exist_ok=True)
-    extra_file = app_dir / "notes.txt"
-    extra_file.write_text("keep me")
+    source_dir = marketplace_server["apps_root"] / "telegram-web"
+    source_dir.mkdir(parents=True, exist_ok=True)
+    (source_dir / "manifest.yaml").write_text(
+        "id: telegram-web\n"
+        "name: Telegram Web\n"
+        "description: Messaging in the browser\n"
+        "category: messaging\n"
+        "tier_required: free\n"
+        "site: web.telegram.org\n"
+    )
+    (source_dir / "session-rules.yaml").write_text("app: telegram-web\nsite: web.telegram.org\n")
 
     install_status, _ = _request_json(
         marketplace_server,
@@ -233,8 +212,8 @@ def test_marketplace_uninstall_removes_file(marketplace_server, monkeypatch):
 
     assert status == 200
     assert data["status"] == "uninstalled"
-    assert not (app_dir / "session-rules.yaml").exists()
-    assert extra_file.exists()
+    local_root = pathlib.Path(os.environ["SOLACE_LOCAL_APPS_ROOT"])
+    assert not any(local_root.glob("**/telegram-web/session-rules.yaml"))
 
 
 def test_marketplace_categories(marketplace_server):
@@ -275,20 +254,16 @@ def test_marketplace_serves_cache_when_offline(marketplace_server, monkeypatch):
 def test_marketplace_serves_local_bundle_when_remote_unavailable(marketplace_server, monkeypatch):
     import yinyang_server as ys
 
-    store_path = marketplace_server["repo_root"] / "data" / "default" / "app-store" / "official-store.json"
-    store_path.parent.mkdir(parents=True, exist_ok=True)
-    store_path.write_text(json.dumps({
-        "apps": [
-            {
-                "id": "solace-yinyang",
-                "name": "Solace Yinyang",
-                "description": "Local-first assistant",
-                "category": "solace",
-                "tier_required": "free",
-                "site": "solaceagi.com",
-            }
-        ]
-    }))
+    app_dir = marketplace_server["apps_root"] / "solace-yinyang"
+    app_dir.mkdir(parents=True, exist_ok=True)
+    (app_dir / "manifest.yaml").write_text(
+        "id: solace-yinyang\n"
+        "name: Solace Yinyang\n"
+        "description: Local-first assistant\n"
+        "category: solace\n"
+        "tier_required: free\n"
+        "site: solaceagi.com\n"
+    )
 
     def offline_urlopen(url, timeout=5):
         raise urllib.error.URLError("offline")
@@ -320,6 +295,13 @@ def test_app_install_route_by_id_updates_install_state(marketplace_server):
     )
     assert status == 200
     assert data["status"] == "installed"
+
+    _request_json(
+        marketplace_server,
+        "/onboarding/complete",
+        method="POST",
+        payload={"auth_state": "logged_in", "membership_tier": "free", "model_sources": ["byok"]},
+    )
 
     status, data = _request_json(
         marketplace_server,

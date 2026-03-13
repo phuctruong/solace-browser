@@ -1,0 +1,13 @@
+id: morning-brief-custom-11e74234
+name: "Morning Brief Custom 11e74234"
+description: "A custom report that should appear in Morning Brief."
+category: "custom"
+status: "installed"
+safety: "B"
+tier: "free"
+domains:
+  - "google.com"
+site: google.com
+type: "custom"
+custom: true
+local_only: true

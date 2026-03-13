@@ -52,11 +52,11 @@ class TestMCPInitialize:
 
 
 class TestMCPToolsList:
-    def test_tools_list_returns_16_tools(self):
-        """tools/list → exactly 16 tools defined."""
+    def test_tools_list_returns_21_tools(self):
+        """tools/list → exactly 21 tools defined."""
         resp = _call("tools/list")
         tools = resp["result"]["tools"]
-        assert len(tools) == 16
+        assert len(tools) == 21
 
     def test_tools_list_tool_names(self):
         """tools/list → all expected tool names present."""
@@ -65,6 +65,7 @@ class TestMCPToolsList:
         expected = {
             "detect_apps", "list_apps", "create_schedule", "list_schedules",
             "delete_schedule", "record_evidence", "list_evidence", "get_hub_status",
+            "hub_status", "hub_windows", "hub_accessibility", "hub_screenshot", "hub_action",
             "browser_status", "browser_open", "browser_close", "browser_navigate",
             "browser_click", "browser_fill", "browser_evaluate", "browser_screenshot",
         }
@@ -188,6 +189,57 @@ class TestMCPToolsCall:
         mock_get.assert_called_once_with("/api/v1/browser/status", "")
         content = json.loads(resp["result"]["content"][0]["text"])
         assert content["tracked_session_count"] == 1
+
+    def test_hub_status_dispatches_correctly(self):
+        with unittest.mock.patch.object(mcp, "_http_get") as mock_get:
+            mock_get.return_value = {"status": "ok", "hub_visible": True}
+            resp = _call("tools/call", {"name": "hub_status", "arguments": {}})
+        mock_get.assert_called_once_with("/api/v1/hub/status", "")
+        content = json.loads(resp["result"]["content"][0]["text"])
+        assert content["hub_visible"] is True
+
+    def test_hub_windows_dispatches_correctly(self):
+        with unittest.mock.patch.object(mcp, "_http_get") as mock_get:
+            mock_get.return_value = {"status": "ok", "windows": [{"title": "Solace Hub"}]}
+            resp = _call("tools/call", {"name": "hub_windows", "arguments": {}})
+        mock_get.assert_called_once_with("/api/v1/hub/windows", "")
+        content = json.loads(resp["result"]["content"][0]["text"])
+        assert content["windows"][0]["title"] == "Solace Hub"
+
+    def test_hub_accessibility_dispatches_correctly(self):
+        with unittest.mock.patch.object(mcp, "_http_get") as mock_get:
+            mock_get.return_value = {"status": "ok", "root": {"name": "solace-hub"}}
+            resp = _call("tools/call", {"name": "hub_accessibility", "arguments": {}})
+        mock_get.assert_called_once_with("/api/v1/hub/accessibility", "")
+        content = json.loads(resp["result"]["content"][0]["text"])
+        assert content["root"]["name"] == "solace-hub"
+
+    def test_hub_screenshot_dispatches_correctly(self):
+        with unittest.mock.patch.object(mcp, "_http_post") as mock_post:
+            mock_post.return_value = (200, {"status": "ok", "filename": "hub.png"})
+            resp = _call("tools/call", {"name": "hub_screenshot", "arguments": {"filename": "hub.png"}})
+        mock_post.assert_called_once_with(
+            "/api/v1/hub/screenshot",
+            {"filename": "hub.png"},
+            "",
+        )
+        content = json.loads(resp["result"]["content"][0]["text"])
+        assert content["filename"] == "hub.png"
+
+    def test_hub_action_dispatches_correctly(self):
+        with unittest.mock.patch.object(mcp, "_http_post") as mock_post:
+            mock_post.return_value = (200, {"status": "ok", "name": "Open Solace Browser"})
+            resp = _call(
+                "tools/call",
+                {"name": "hub_action", "arguments": {"name": "Open Solace Browser", "action": "click", "role": "push button"}},
+            )
+        mock_post.assert_called_once_with(
+            "/api/v1/hub/action",
+            {"name": "Open Solace Browser", "action": "click", "role": "push button"},
+            "",
+        )
+        content = json.loads(resp["result"]["content"][0]["text"])
+        assert content["name"] == "Open Solace Browser"
 
     def test_browser_open_dispatches_correctly(self):
         with unittest.mock.patch.object(mcp, "_http_post") as mock_post:

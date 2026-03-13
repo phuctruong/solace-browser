@@ -56,7 +56,39 @@ cat > "${BIN_DIR}/solace-browser" << 'LAUNCHER'
 #!/bin/sh
 # Solace Browser launcher — Hub first, Browser second
 INSTALL_DIR="${HOME}/.local/lib/solace-browser/solace-browser-release"
-exec "${INSTALL_DIR}/solace-hub" "$@"
+clean_ld_library_path=""
+if [ -n "${LD_LIBRARY_PATH:-}" ]; then
+  old_ifs="$IFS"
+  IFS=':'
+  for entry in ${LD_LIBRARY_PATH}; do
+    if [ -n "${entry}" ] && [ "${entry#"/snap/"}" = "${entry}" ]; then
+      if [ -n "${clean_ld_library_path}" ]; then
+        clean_ld_library_path="${clean_ld_library_path}:${entry}"
+      else
+        clean_ld_library_path="${entry}"
+      fi
+    fi
+  done
+  IFS="$old_ifs"
+fi
+runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+path_value="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+if [ -d "${HOME}/.local/bin" ]; then
+  path_value="${HOME}/.local/bin:${path_value}"
+fi
+exec env -i \
+  HOME="${HOME}" \
+  USER="${USER:-$(id -un)}" \
+  LOGNAME="${LOGNAME:-${USER:-$(id -un)}}" \
+  SHELL="${SHELL:-/bin/sh}" \
+  LANG="${LANG:-C.UTF-8}" \
+  DISPLAY="${DISPLAY:-:0}" \
+  XAUTHORITY="${XAUTHORITY:-${HOME}/.Xauthority}" \
+  XDG_RUNTIME_DIR="${runtime_dir}" \
+  DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-}" \
+  PATH="${path_value}" \
+  LD_LIBRARY_PATH="${clean_ld_library_path}" \
+  "${INSTALL_DIR}/solace-hub" "$@"
 LAUNCHER
 chmod +x "${BIN_DIR}/solace-browser"
 

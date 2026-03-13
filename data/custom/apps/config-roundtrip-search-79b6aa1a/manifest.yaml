@@ -1,0 +1,13 @@
+id: config-roundtrip-search-79b6aa1a
+name: "Config Roundtrip Search 79b6aa1a"
+description: "Track a custom research mission."
+category: "custom"
+status: "installed"
+safety: "B"
+tier: "free"
+domains:
+  - "google.com"
+site: google.com
+type: "custom"
+custom: true
+local_only: true

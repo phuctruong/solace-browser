@@ -193,6 +193,57 @@ _TOOL_DEFINITIONS = [
         },
     },
     {
+        "name": "hub_status",
+        "description": "Inspect the native Solace Hub runtime state.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "hub_windows",
+        "description": "List visible native Solace Hub windows. Requires bearer token.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "hub_accessibility",
+        "description": "Read the native Solace Hub accessibility tree. Requires bearer token.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "hub_screenshot",
+        "description": "Capture a screenshot of the native Solace Hub window. Requires bearer token.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "filename": {"type": "string", "description": "Target artifact filename."},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "hub_action",
+        "description": "Invoke a native Solace Hub accessibility action such as clicking a named button. Requires bearer token.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Accessible name to target."},
+                "action": {"type": "string", "description": "Requested action name, defaults to click."},
+                "role": {"type": "string", "description": "Optional accessible role filter."},
+            },
+            "required": ["name"],
+        },
+    },
+    {
         "name": "browser_open",
         "description": "Open a Hub-owned Solace Browser window for the given URL.",
         "inputSchema": {
@@ -361,6 +412,29 @@ def _dispatch_tool(name: str, arguments: dict, token_sha256: str) -> Any:
 
     if name == "browser_status":
         return _http_get("/api/v1/browser/status", token_sha256)
+
+    if name == "hub_status":
+        return _http_get("/api/v1/hub/status", token_sha256)
+
+    if name == "hub_windows":
+        return _http_get("/api/v1/hub/windows", token_sha256)
+
+    if name == "hub_accessibility":
+        return _http_get("/api/v1/hub/accessibility", token_sha256)
+
+    if name == "hub_screenshot":
+        payload = {"filename": arguments.get("filename", "")}
+        _status, data = _http_post("/api/v1/hub/screenshot", payload, token_sha256)
+        return data
+
+    if name == "hub_action":
+        payload = {
+            "name": arguments.get("name", ""),
+            "action": arguments.get("action", "click"),
+            "role": arguments.get("role", ""),
+        }
+        _status, data = _http_post("/api/v1/hub/action", payload, token_sha256)
+        return data
 
     if name == "browser_open":
         payload = {

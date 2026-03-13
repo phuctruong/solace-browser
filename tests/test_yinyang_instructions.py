@@ -208,8 +208,11 @@ class TestHealthEndpoint:
             html = resp.read().decode()
         assert "Solace Agents" in html
         assert "Directory-first app model" in html
+        assert "Domains + App Store" in html
         assert "Agent control only. Apps stay off." in html
-        assert "solace-cli/data/default/apps" in html
+        assert "solace-cli/data/default/domains/{domain}/apps" in html
+        assert "GET /api/v1/domains" in html
+        assert "POST /api/v1/domains/bootstrap" in html
         assert "~/.solace/apps/" in html
         for route in (
             "GET /api/status",

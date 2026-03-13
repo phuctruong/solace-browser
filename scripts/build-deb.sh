@@ -31,9 +31,8 @@ fi
 require_file "$BUNDLE_SCRIPT"
 require_file "$DESKTOP_FILE"
 
-if [ ! -f "$BUNDLE_DIR/chrome" ] || [ ! -f "$BUNDLE_DIR/solace-hub" ]; then
-  "$BUNDLE_SCRIPT" >/dev/null
-fi
+rm -rf "$BUNDLE_DIR"
+"$BUNDLE_SCRIPT" >/dev/null
 require_file "$BUNDLE_DIR/chrome"
 require_file "$BUNDLE_DIR/solace-hub"
 

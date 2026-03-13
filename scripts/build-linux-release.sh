@@ -62,10 +62,8 @@ fi
 require_file "${REPO_ROOT}/yinyang_server.py"
 require_file "${REPO_ROOT}/yinyang-server.py"
 
-if [ ! -x "${HUB_BINARY}" ]; then
-  echo "Building Solace Hub release binary..."
-  (cd "${HUB_DIR}" && cargo build --release)
-fi
+echo "Building Solace Hub release binary..."
+(cd "${HUB_DIR}" && cargo build --release)
 
 require_file "${HUB_BINARY}"
 
@@ -128,12 +126,17 @@ for runtime_root in app apps src web; do
   copy_tree "${REPO_ROOT}/${runtime_root}" "${BUNDLE_DIR}/"
 done
 
+mkdir -p "${BUNDLE_DIR}/source/src/chrome/browser/resources"
+copy_tree "${REPO_ROOT}/source/src/chrome/browser/resources/solace" "${BUNDLE_DIR}/source/src/chrome/browser/resources/"
+mkdir -p "${BUNDLE_DIR}/resources"
+copy_tree "${REPO_ROOT}/source/src/chrome/browser/resources/solace" "${BUNDLE_DIR}/resources/solace-sidebar"
+
 mkdir -p "${BUNDLE_DIR}/data/default"
 copy_tree "${REPO_ROOT}/data/default/apps" "${BUNDLE_DIR}/data/default/"
 copy_tree "${REPO_ROOT}/data/default/app-store" "${BUNDLE_DIR}/data/default/"
 copy_tree "${REPO_ROOT}/data/fun-packs" "${BUNDLE_DIR}/data/"
 
-install -m 755 "${HUB_BINARY}" "${BUNDLE_DIR}/solace-hub"
+install -m 755 "${HUB_BINARY}" "${BUNDLE_DIR}/solace-hub-bin"
 
 for script_name in yinyang_server.py yinyang-server.py yinyang_mcp_server.py hub_tunnel_client.py evidence_bundle.py solace_cli.py; do
   if [ -f "${REPO_ROOT}/${script_name}" ]; then
@@ -148,6 +151,54 @@ fi
 if [ -f "${REPO_ROOT}/solace-hub/src-tauri/icons/yinyang-logo.png" ]; then
   install -m 644 "${REPO_ROOT}/solace-hub/src-tauri/icons/yinyang-logo.png" "${BUNDLE_DIR}/yinyang-logo.png"
 fi
+
+cat > "${BUNDLE_DIR}/solace-hub" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+build_clean_ld_library_path() {
+  if [[ -z "${LD_LIBRARY_PATH:-}" ]]; then
+    return 0
+  fi
+  local cleaned=""
+  local old_ifs="$IFS"
+  IFS=':'
+  for entry in ${LD_LIBRARY_PATH}; do
+    if [[ -n "${entry}" && "${entry}" != /snap/* ]]; then
+      if [[ -n "${cleaned}" ]]; then
+        cleaned="${cleaned}:${entry}"
+      else
+        cleaned="${entry}"
+      fi
+    fi
+  done
+  IFS="${old_ifs}"
+  printf '%s' "${cleaned}"
+}
+
+clean_ld_library_path="$(build_clean_ld_library_path)"
+runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+path_value="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+if [[ -d "${HOME}/.local/bin" ]]; then
+  path_value="${HOME}/.local/bin:${path_value}"
+fi
+
+exec env -i \
+  HOME="${HOME}" \
+  USER="${USER:-$(id -un)}" \
+  LOGNAME="${LOGNAME:-${USER:-$(id -un)}}" \
+  SHELL="${SHELL:-/bin/bash}" \
+  LANG="${LANG:-C.UTF-8}" \
+  DISPLAY="${DISPLAY:-:0}" \
+  XAUTHORITY="${XAUTHORITY:-${HOME}/.Xauthority}" \
+  XDG_RUNTIME_DIR="${runtime_dir}" \
+  DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-}" \
+  PATH="${path_value}" \
+  LD_LIBRARY_PATH="${clean_ld_library_path}" \
+  "${SCRIPT_DIR}/solace-hub-bin" "$@"
+EOF
+chmod 755 "${BUNDLE_DIR}/solace-hub"
 
 cat > "${BUNDLE_DIR}/solace-browser" <<'EOF'
 #!/usr/bin/env bash

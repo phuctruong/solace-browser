@@ -152,6 +152,29 @@ class TestDebian:
         assert "solace-browser-release" in content
         assert "solace-hub" in content
 
+    def test_build_deb_rebuilds_bundle_every_time(self):
+        content = _read("scripts/build-deb.sh")
+        assert 'rm -rf "$BUNDLE_DIR"' in content
+        assert '"$BUNDLE_SCRIPT" >/dev/null' in content
+
+    def test_linux_bundle_uses_hub_wrapper(self):
+        content = _read("scripts/build-linux-release.sh")
+        assert 'solace-hub-bin' in content
+        assert 'exec env -i \\' in content
+        assert 'XDG_RUNTIME_DIR="${runtime_dir}"' in content
+        assert 'DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-}"' in content
+
+    def test_linux_bundle_includes_sidebar_assets(self):
+        content = _read("scripts/build-linux-release.sh")
+        assert 'source/src/chrome/browser/resources/solace' in content
+        assert 'resources/solace-sidebar' in content
+
+    def test_install_script_unsets_snap_environment(self):
+        content = _read("scripts/install-chromium.sh")
+        assert 'exec env -i \\' in content
+        assert 'XDG_RUNTIME_DIR="${runtime_dir}"' in content
+        assert 'DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-}"' in content
+
 
 # ---------------------------------------------------------------------------
 # Homebrew

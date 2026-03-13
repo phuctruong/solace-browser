@@ -1,0 +1,13 @@
+id: config-roundtrip-search-b5afe43e
+name: "Config Roundtrip Search b5afe43e"
+description: "Track a custom research mission."
+category: "custom"
+status: "installed"
+safety: "B"
+tier: "free"
+domains:
+  - "google.com"
+site: google.com
+type: "custom"
+custom: true
+local_only: true
