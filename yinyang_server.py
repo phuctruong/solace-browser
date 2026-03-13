@@ -3704,6 +3704,39 @@ def _sync_heartbeat_payload(repo_root: str, session_token_sha256: str, tracked_s
     }
 
 
+def _push_heartbeat_to_cloud(
+    *,
+    api_key: str,
+    repo_root: str,
+    session_token_sha256: str,
+    tracked_sessions: dict[str, Any],
+) -> tuple[dict[str, Any], Optional[dict[str, Any]], Optional[str]]:
+    payload = _sync_heartbeat_payload(repo_root, session_token_sha256, tracked_sessions)
+    request = urllib.request.Request(
+        SYNC_HEARTBEAT_URL,
+        data=json.dumps(payload).encode(),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with _sync_urlopen(request, timeout=10) as response:
+            response_body = response.read().decode()
+    except urllib.error.HTTPError as exc:
+        message = exc.read().decode(errors="replace") if exc.fp is not None else ""
+        return payload, None, f"heartbeat sync rejected ({exc.code}): {message}"
+    except urllib.error.URLError:
+        return payload, None, "heartbeat sync unavailable"
+    try:
+        remote = json.loads(response_body) if response_body else {}
+    except json.JSONDecodeError:
+        remote = {}
+    record_evidence("heartbeat_synced", {"device_id": payload["device_id"], "domain_count": payload["domain_count"]})
+    return payload, remote, None
+
+
 def _fun_pack_sha256(pack: dict[str, Any]) -> str:
     normalized = json.loads(json.dumps(pack))
     meta = normalized.get("_meta", {})
@@ -4872,6 +4905,15 @@ def _append_domain_event(
     return event
 
 
+def _normalize_domain_event_payload(event: dict[str, Any]) -> dict[str, Any]:
+    payload = dict(event or {})
+    event_type = str(payload.get("event_type") or payload.get("type") or "").strip()
+    if event_type:
+        payload["event_type"] = event_type
+        payload["type"] = event_type
+    return payload
+
+
 def _load_domain_profiles() -> dict[str, dict[str, Any]]:
     settings = _load_settings()
     profiles = settings.get("domains", {})
@@ -4964,6 +5006,7 @@ def _domain_status_payload(repo_root: str, domain: str) -> dict[str, Any]:
     keepalive = set(str(item) for item in profile.get("keepalive_apps", []))
     events = _load_domain_events()
     filtered = events if normalized == "solaceagi.com" else [event for event in events if event.get("domain") == normalized]
+    filtered = [_normalize_domain_event_payload(event) for event in filtered]
     return {
         "domain": normalized,
         "active": bool(profile.get("active", False)),
@@ -10227,6 +10270,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_domain_create()
         elif path == "/api/v1/domains/setup":
             self._handle_domain_setup()
+        elif path == "/api/v1/domains/activate":
+            self._handle_domain_activate()
         elif path == "/api/v1/browser/launch":
             self._handle_browser_launch()
         elif path == "/api/v1/hub/browser/open":
@@ -15928,7 +15973,10 @@ function configureOllama() {
         events = _load_domain_events()
         if requested != "solaceagi.com":
             events = [event for event in events if _normalize_domain(event.get("domain")) == requested]
-        items = sorted(events, key=lambda event: int(event.get("ts", 0)), reverse=True)
+        items = [
+            _normalize_domain_event_payload(event)
+            for event in sorted(events, key=lambda event: int(event.get("ts", 0)), reverse=True)
+        ]
         self._send_json({"domain": requested, "items": items[:100], "total": len(items)})
 
     def _handle_domain_setup(self) -> None:
@@ -16024,6 +16072,118 @@ function configureOllama() {
             "domain_status": _domain_status_payload(repo_root, domain),
             "event": event,
         })
+
+    def _handle_domain_activate(self) -> None:
+        body = self._read_json_body()
+        if body is None:
+            return
+        onboarding = _load_onboarding_state()
+        if onboarding.get("auth_state") != "logged_in":
+            self._send_json({"error": "sign in before activating domains"}, 409)
+            return
+        if not onboarding.get("apps_enabled", False):
+            self._send_json({"error": "configure at least one model source before activating domains"}, 409)
+            return
+        repo_root = getattr(self.server, "repo_root", ".")
+        domain = _normalize_domain(body.get("domain") or "")
+        if not domain:
+            self._send_json({"error": "missing domain"}, 400)
+            return
+        profiles = _load_domain_profiles()
+        profile = profiles.get(domain)
+        if not isinstance(profile, dict):
+            self._send_json({"error": "domain setup not found"}, 404)
+            return
+        selected_apps = [
+            str(app_id).strip()
+            for app_id in profile.get("selected_apps", [])
+            if isinstance(app_id, str) and _APP_ID_RE.fullmatch(app_id.strip())
+        ]
+        keepalive_apps = [
+            str(app_id).strip()
+            for app_id in profile.get("keepalive_apps", [])
+            if isinstance(app_id, str) and _APP_ID_RE.fullmatch(app_id.strip())
+        ]
+        if not selected_apps:
+            self._send_json({"error": "select at least one app before activation"}, 409)
+            return
+        if not keepalive_apps:
+            self._send_json({"error": "select at least one keepalive app before activation"}, 409)
+            return
+        observed_url = str(body.get("observed_url") or body.get("current_url") or "").strip()
+        success_url = str(profile.get("success_url", "")).strip()
+        requires_login = bool(profile.get("requires_login", False))
+        if requires_login:
+            if not observed_url:
+                self._send_json({"error": "observed_url required for login-backed activation"}, 409)
+                return
+            if success_url and not observed_url.startswith(success_url):
+                self._send_json(
+                    {
+                        "error": "observed_url does not match the configured login success URL",
+                        "observed_url": observed_url,
+                        "success_url": success_url,
+                    },
+                    409,
+                )
+                return
+        profile["active"] = True
+        profile["last_activated_at"] = int(time.time())
+        profiles[domain] = profile
+        _save_domain_profiles(profiles)
+        event = _append_domain_event(
+            domain,
+            "domain_activated",
+            f"{domain} activated",
+            "Domain login and keepalive activation were confirmed for this local runtime.",
+            metadata={
+                "selected_apps": selected_apps,
+                "keepalive_apps": keepalive_apps,
+                "observed_url": observed_url,
+                "success_url": success_url,
+            },
+        )
+        sync_result: dict[str, Any] = {"status": "skipped"}
+        session_policy = profile.get("session_policy", {})
+        if (
+            isinstance(session_policy, dict)
+            and bool(session_policy.get("sync_to_cloud"))
+        ):
+            api_key = ""
+            if isinstance(body, dict):
+                raw_key = body.get("api_key", "")
+                if isinstance(raw_key, str):
+                    api_key = raw_key.strip()
+            if not api_key:
+                api_key = _load_cloud_api_key()
+            if not api_key:
+                api_key = self._request_bearer_token()
+            if api_key:
+                tracked_sessions = self.server.sessions if hasattr(self.server, "sessions") else {}
+                payload, remote, error = _push_heartbeat_to_cloud(
+                    api_key=api_key,
+                    repo_root=repo_root,
+                    session_token_sha256=self._oauth3_session_secret(),
+                    tracked_sessions=tracked_sessions,
+                )
+                sync_result = {
+                    "status": "synced" if error is None else "failed",
+                    "payload": payload,
+                    "remote": remote,
+                    "error": error,
+                }
+            else:
+                sync_result = {"status": "skipped", "reason": "no_cloud_api_key"}
+        self._send_json(
+            {
+                "ok": True,
+                "domain": domain,
+                "active": True,
+                "domain_status": _domain_status_payload(repo_root, domain),
+                "event": event,
+                "sync": sync_result,
+            }
+        )
 
     def _render_domain_management_html(self, domain: str) -> bytes:
         repo_root = getattr(self.server, "repo_root", ".")
@@ -19240,31 +19400,15 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
             return
         repo_root = getattr(self.server, "repo_root", ".")
         tracked_sessions = self.server.sessions if hasattr(self.server, "sessions") else {}
-        payload = _sync_heartbeat_payload(repo_root, self._oauth3_session_secret(), tracked_sessions)
-        request = urllib.request.Request(
-            SYNC_HEARTBEAT_URL,
-            data=json.dumps(payload).encode(),
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            method="POST",
+        payload, remote, error = _push_heartbeat_to_cloud(
+            api_key=api_key,
+            repo_root=repo_root,
+            session_token_sha256=self._oauth3_session_secret(),
+            tracked_sessions=tracked_sessions,
         )
-        try:
-            with _sync_urlopen(request, timeout=10) as response:
-                response_body = response.read().decode()
-        except urllib.error.HTTPError as exc:
-            message = exc.read().decode(errors="replace") if exc.fp is not None else ""
-            self._send_json({"error": "heartbeat sync rejected", "status_code": exc.code, "body": message}, 502)
+        if error is not None:
+            self._send_json({"error": error, "payload": payload}, 502)
             return
-        except urllib.error.URLError:
-            self._send_json({"error": "heartbeat sync unavailable"}, 502)
-            return
-        try:
-            remote = json.loads(response_body) if response_body else {}
-        except json.JSONDecodeError:
-            remote = {}
-        record_evidence("heartbeat_synced", {"device_id": payload["device_id"], "domain_count": payload["domain_count"]})
         self._send_json({"status": "synced", "payload": payload, "remote": remote})
 
     def _handle_sync_export(self) -> None:
