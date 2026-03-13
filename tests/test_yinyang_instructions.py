@@ -2897,6 +2897,31 @@ class TestSessionManager:
         finally:
             ys._RECENT_BROWSER_LAUNCHES.clear()
 
+    def test_browser_launch_inflight_guard_dedupes_concurrent_requests(self):
+        """A matching launch already in progress should dedupe before window discovery catches up."""
+        import yinyang_server as ys
+
+        handler = object.__new__(ys.YinyangHandler)
+        launch_key = handler._browser_launch_key(
+            url="https://solaceagi.com/dashboard",
+            profile="default",
+            mode="standard",
+            head_hidden=False,
+        )
+        ys._INFLIGHT_BROWSER_LAUNCHES.clear()
+        try:
+            first = handler._mark_browser_launch_inflight(launch_key)
+            assert first is None
+            second = handler._mark_browser_launch_inflight(launch_key)
+            assert second is not None
+            assert second["deduped"] is True
+            assert second["launch_in_progress"] is True
+            handler._clear_browser_launch_inflight(launch_key)
+            third = handler._mark_browser_launch_inflight(launch_key)
+            assert third is None
+        finally:
+            ys._INFLIGHT_BROWSER_LAUNCHES.clear()
+
 
 # ── Task 012: Tunnel + Vault Sync Management ─────────────────────────────────
 

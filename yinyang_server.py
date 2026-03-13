@@ -496,6 +496,8 @@ _SESSIONS: dict[str, dict] = {}
 _SESSIONS_LOCK = threading.Lock()
 LAUNCH_DEDUP_WINDOW_SECS = 10
 _RECENT_BROWSER_LAUNCHES: dict[str, int] = {}
+_INFLIGHT_BROWSER_LAUNCHES: dict[str, int] = {}
+_BROWSER_LAUNCH_GUARD_LOCK = threading.Lock()
 
 
 def _allocate_head_hidden_display() -> str:
@@ -16780,6 +16782,10 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
                     200,
                 )
                 return
+            inflight_payload = self._mark_browser_launch_inflight(launch_key)
+            if inflight_payload is not None:
+                self._send_json(inflight_payload, 200)
+                return
             storm_guard_payload = self._storm_guard_visible_browser_launch(launch_key)
             if storm_guard_payload is not None:
                 self._send_json(storm_guard_payload, 200)
@@ -16797,44 +16803,48 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         except FileNotFoundError as exc:
             self._send_json({"error": str(exc)}, 503)
             return
-        with _SESSIONS_LOCK:
-            _SESSIONS[session_id] = {
-                "url": url,
-                "profile": profile,
-                "pid": launch["pid"],
-                "started_at": int(time.time()),
-                "mode": mode,
-                "head_hidden": bool(launch.get("head_hidden", False)),
-                "session_name": session_name_raw or None,
-                "source": source,
-                "user_data_dir": str(user_data_dir),
-                "xvfb_pid": launch.get("xvfb_pid"),
-                "hidden_display": launch.get("hidden_display"),
-            }
-            _RECENT_BROWSER_LAUNCHES[launch_key] = int(time.time())
-        record_evidence(
-            "browser_launch",
-            {
-                "session_id": session_id,
-                "url": url,
-                "profile": profile,
-                "mode": mode,
-                "head_hidden": head_hidden,
-                "source": source,
-            },
-        )
-        self._send_json(
-            {
-                "session_id": session_id,
-                "pid": launch["pid"],
-                "url": url,
-                "profile": profile,
-                "mode": mode,
-                "head_hidden": head_hidden,
-                "hidden_display": launch.get("hidden_display"),
-            },
-            201,
-        )
+        try:
+            with _SESSIONS_LOCK:
+                _SESSIONS[session_id] = {
+                    "url": url,
+                    "profile": profile,
+                    "pid": launch["pid"],
+                    "started_at": int(time.time()),
+                    "mode": mode,
+                    "head_hidden": bool(launch.get("head_hidden", False)),
+                    "session_name": session_name_raw or None,
+                    "source": source,
+                    "user_data_dir": str(user_data_dir),
+                    "xvfb_pid": launch.get("xvfb_pid"),
+                    "hidden_display": launch.get("hidden_display"),
+                }
+                _RECENT_BROWSER_LAUNCHES[launch_key] = int(time.time())
+            record_evidence(
+                "browser_launch",
+                {
+                    "session_id": session_id,
+                    "url": url,
+                    "profile": profile,
+                    "mode": mode,
+                    "head_hidden": head_hidden,
+                    "source": source,
+                },
+            )
+            self._send_json(
+                {
+                    "session_id": session_id,
+                    "pid": launch["pid"],
+                    "url": url,
+                    "profile": profile,
+                    "mode": mode,
+                    "head_hidden": head_hidden,
+                    "hidden_display": launch.get("hidden_display"),
+                },
+                201,
+            )
+        finally:
+            if not allow_duplicate:
+                self._clear_browser_launch_inflight(launch_key)
 
     def _find_existing_controlled_session(
         self,
@@ -16894,6 +16904,28 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
             "visible_window_count": len(windows),
             "visible_windows": windows,
         }
+
+    def _mark_browser_launch_inflight(self, launch_key: str) -> Optional[dict[str, Any]]:
+        now = int(time.time())
+        cutoff = now - LAUNCH_DEDUP_WINDOW_SECS
+        with _BROWSER_LAUNCH_GUARD_LOCK:
+            stale = [key for key, started_at in _INFLIGHT_BROWSER_LAUNCHES.items() if int(started_at) < cutoff]
+            for key in stale:
+                _INFLIGHT_BROWSER_LAUNCHES.pop(key, None)
+            started_at = int(_INFLIGHT_BROWSER_LAUNCHES.get(launch_key, 0))
+            if started_at >= cutoff:
+                return {
+                    "status": "ok",
+                    "deduped": True,
+                    "launch_in_progress": True,
+                    "message": "A matching Solace Browser launch is already in progress.",
+                }
+            _INFLIGHT_BROWSER_LAUNCHES[launch_key] = now
+        return None
+
+    def _clear_browser_launch_inflight(self, launch_key: str) -> None:
+        with _BROWSER_LAUNCH_GUARD_LOCK:
+            _INFLIGHT_BROWSER_LAUNCHES.pop(launch_key, None)
 
     def _handle_browser_launch(self, require_auth: bool = True, source: str = "browser-launch") -> None:
         if require_auth and not self._check_auth():
