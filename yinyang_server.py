@@ -4313,11 +4313,93 @@ def _queue_prime_wiki_cloud_push(snapshot_record: dict) -> bool:
     return True
 
 
+def _default_local_apps_root() -> Path:
+    return Path.home() / ".solace" / "apps"
+
+
+def _local_apps_root_path() -> Path:
+    settings = _load_settings()
+    configured = settings.get("local_apps_root")
+    if isinstance(configured, str) and configured.strip():
+        return Path(configured).expanduser().resolve()
+    env_value = os.environ.get("SOLACE_LOCAL_APPS_ROOT", "").strip()
+    if env_value:
+        return Path(env_value).expanduser().resolve()
+    return _default_local_apps_root().resolve()
+
+
+def _source_app_roots(repo_root: str) -> tuple[Path, ...]:
+    settings = _load_settings()
+    roots: list[Path] = []
+    configured = settings.get("app_source_roots")
+    if isinstance(configured, list):
+        for entry in configured:
+            if isinstance(entry, str) and entry.strip():
+                roots.append(Path(entry).expanduser().resolve())
+    env_value = os.environ.get("SOLACE_APP_SOURCE_ROOTS", "").strip()
+    if env_value:
+        for entry in env_value.split(os.pathsep):
+            if entry.strip():
+                roots.append(Path(entry).expanduser().resolve())
+    defaults = (
+        Path(repo_root).resolve().parent / "solace-cli" / "data" / "default" / "apps",
+        Path(repo_root).resolve() / "data" / "default" / "apps",
+    )
+    roots.extend(defaults)
+    seen: set[Path] = set()
+    resolved: list[Path] = []
+    for root in roots:
+        if root in seen:
+            continue
+        seen.add(root)
+        if root.is_dir():
+            resolved.append(root)
+    return tuple(resolved)
+
+
+def _iter_app_dirs_under(root: Path) -> list[Path]:
+    if not root.is_dir():
+        return []
+    found: dict[Path, Path] = {}
+    for manifest_path in root.glob("*/manifest.yaml"):
+        found[manifest_path.parent.resolve()] = manifest_path.parent.resolve()
+    for manifest_path in root.glob("*/*/manifest.yaml"):
+        found[manifest_path.parent.resolve()] = manifest_path.parent.resolve()
+    return sorted(found.values())
+
+
+def _manifest_records_from_roots(roots: tuple[Path, ...]) -> list[tuple[str, dict, Path]]:
+    manifests: list[tuple[str, dict, Path]] = []
+    seen: set[str] = set()
+    for apps_root in roots:
+        for app_dir in _iter_app_dirs_under(apps_root):
+            app_id = app_dir.name
+            if app_id in seen:
+                continue
+            manifest_path = app_dir / "manifest.yaml"
+            try:
+                raw_manifest = yaml.safe_load(manifest_path.read_text())
+            except FileNotFoundError:
+                continue
+            except OSError:
+                continue
+            except yaml.YAMLError:
+                continue
+            if isinstance(raw_manifest, dict):
+                manifests.append((app_id, raw_manifest, manifest_path))
+                seen.add(app_id)
+    manifests.sort(key=lambda item: item[0])
+    return manifests
+
+
 def _marketplace_apps_root(repo_root: str) -> Path:
-    return Path(repo_root) / "data" / "default" / "apps"
+    return _local_apps_root_path()
 
 
 def _marketplace_app_dir(repo_root: str, app_id: str) -> Path:
+    app_dir = _local_app_dir(repo_root, app_id)
+    if app_dir is not None:
+        return app_dir
     return _marketplace_apps_root(repo_root) / app_id
 
 
@@ -4325,41 +4407,77 @@ def _session_rules_path_for_app(repo_root: str, app_id: str) -> Path:
     return _marketplace_app_dir(repo_root, app_id) / "session-rules.yaml"
 
 
-def _starter_bundle_app_ids(repo_root: str) -> set[str]:
-    apps_root = _starter_bundle_apps_root(repo_root)
-    if not apps_root.is_dir():
-        return set()
-    return {d.name for d in apps_root.iterdir() if d.is_dir() and _APP_ID_RE.fullmatch(d.name)}
-
-
 def _custom_app_ids(repo_root: str) -> set[str]:
-    apps_root = _custom_apps_root(repo_root)
-    if not apps_root.is_dir():
-        return set()
-    return {d.name for d in apps_root.iterdir() if d.is_dir() and _APP_ID_RE.fullmatch(d.name)}
+    app_ids: set[str] = set()
+    for app_id, manifest, _manifest_path in _iter_local_manifest_records(repo_root):
+        if bool(manifest.get("custom", False)):
+            app_ids.add(app_id)
+    return app_ids
 
 
 def _installed_app_ids(repo_root: str) -> set[str]:
-    settings = _load_settings()
-    raw_installed = settings.get("installed_apps", [])
-    installed = {
-        str(app_id).strip()
-        for app_id in raw_installed
-        if isinstance(app_id, str) and _APP_ID_RE.fullmatch(app_id.strip())
-    }
-    installed.update(_starter_bundle_app_ids(repo_root))
-    return installed
+    return {app_id for app_id, _manifest, _manifest_path in _iter_local_manifest_records(repo_root)}
+
+
+def _preferred_domain_for_manifest(manifest: dict) -> str:
+    try:
+        patterns = _manifest_domain_patterns(manifest, str(manifest.get("site", "")))
+    except ValueError:
+        patterns = []
+    if patterns:
+        host, _path = _split_domain_pattern(patterns[0])
+        normalized = _normalize_domain(host)
+        if normalized:
+            return normalized
+    fallback = _normalize_domain(str(manifest.get("site") or ""))
+    return fallback or "misc.local"
+
+
+def _local_app_target_dir(app_id: str, manifest: dict) -> Path:
+    return _local_apps_root_path() / _preferred_domain_for_manifest(manifest) / app_id
+
+
+def _local_app_dir(repo_root: str, app_id: str) -> Optional[Path]:
+    for found_app_id, _manifest, manifest_path in _iter_local_manifest_records(repo_root):
+        if found_app_id == app_id:
+            return manifest_path.parent
+    return None
+
+
+def _source_app_dir(repo_root: str, app_id: str) -> Optional[Path]:
+    for found_app_id, _manifest, manifest_path in _iter_source_manifest_records(repo_root):
+        if found_app_id == app_id:
+            return manifest_path.parent
+    return None
+
+
+def _materialize_app_from_source(repo_root: str, app_id: str) -> Path:
+    source_dir = _source_app_dir(repo_root, app_id)
+    if source_dir is None:
+        raise FileNotFoundError("app not found in source roots")
+    manifest = _load_manifest_for_app(repo_root, app_id)
+    if not manifest:
+        raise FileNotFoundError("app manifest not found")
+    target_dir = _local_app_target_dir(app_id, manifest)
+    if target_dir.is_dir():
+        return target_dir
+    target_dir.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source_dir, target_dir)
+    return target_dir
+
+
+def _remove_local_app_materialization(repo_root: str, app_id: str) -> None:
+    app_dir = _local_app_dir(repo_root, app_id)
+    if app_dir is None:
+        return
+    shutil.rmtree(app_dir)
 
 
 def _set_app_installed(repo_root: str, app_id: str, installed: bool) -> None:
-    settings = _load_settings()
-    app_ids = _installed_app_ids(repo_root)
     if installed:
-        app_ids.add(app_id)
+        _materialize_app_from_source(repo_root, app_id)
     else:
-        app_ids.discard(app_id)
-    settings["installed_apps"] = sorted(app_ids)
-    _save_settings(settings)
+        _remove_local_app_materialization(repo_root, app_id)
 
 
 def _is_marketplace_app_installed(repo_root: str, app_id: str) -> bool:
@@ -4619,6 +4737,13 @@ def _normalize_membership_tier(value: object, default: str = "free") -> str:
 def _normalize_model_source(value: object) -> Optional[str]:
     if isinstance(value, str):
         normalized = value.strip().lower()
+        aliases = {
+            "local_cli": "cli",
+            "cli_wrapper": "cli",
+            "managed_llm": "managed",
+            "managed_solace_agi": "managed",
+        }
+        normalized = aliases.get(normalized, normalized)
         if normalized in _MODEL_SOURCES:
             return normalized
     return None
@@ -4781,20 +4906,10 @@ def _is_keepalive_app(app_id: str, domain: str) -> bool:
 
 def _default_domain_profile(repo_root: str, domain: str) -> dict[str, Any]:
     normalized = _normalize_domain(domain)
-    payload = _apps_for_domain(repo_root, normalized, "/", _load_account_tier())
-    apps = payload.get("apps", []) if isinstance(payload, dict) else []
-    app_ids = [str(app.get("id") or app.get("app_id") or "") for app in apps if isinstance(app, dict)]
-    app_ids = [app_id for app_id in app_ids if app_id]
     selected: list[str] = []
-    if normalized in {"www.google.com", "google.com", "news.google.com"}:
-        preferred = ["google-search-mission", "competitor-watch", "google-search-trends"]
-        selected = [app_id for app_id in preferred if app_id in app_ids]
-    elif normalized == "solaceagi.com":
-        preferred = ["morning-brief", "solace-yinyang", "agi-dashboard"]
-        selected = [app_id for app_id in preferred if app_id in app_ids]
-    keepalive = [app_id for app_id in selected if _is_keepalive_app(app_id, normalized)]
+    keepalive: list[str] = []
     requires_login = _domain_requires_login(normalized)
-    active = bool(selected) and not requires_login
+    active = False
     login_url = {
         "mail.google.com": "https://mail.google.com/",
         "calendar.google.com": "https://calendar.google.com/",
@@ -4891,16 +5006,16 @@ def _bootstrap_starter_domains(repo_root: str) -> dict[str, dict[str, Any]]:
         selected_apps = list(profile.get("selected_apps", []))
         keepalive_apps = list(profile.get("keepalive_apps", []))
         for app_id in preferred_apps:
+            try:
+                _set_app_installed(repo_root, app_id, True)
+            except OSError:
+                continue
             if app_id not in selected_apps:
                 selected_apps.append(app_id)
                 changed = True
             if _is_keepalive_app(app_id, normalized) and app_id not in keepalive_apps:
                 keepalive_apps.append(app_id)
                 changed = True
-            try:
-                _set_app_installed(repo_root, app_id, True)
-            except OSError:
-                pass
         profile["selected_apps"] = selected_apps
         profile["keepalive_apps"] = keepalive_apps
         profile["active"] = not bool(profile.get("requires_login", False))
@@ -4910,6 +5025,114 @@ def _bootstrap_starter_domains(repo_root: str) -> dict[str, dict[str, Any]]:
     if changed:
         _save_domain_profiles(profiles)
     return profiles
+
+
+def _domain_label_for_host(domain: str) -> str:
+    normalized = _normalize_domain(domain)
+    labels = {
+        "solaceagi.com": "Solace AGI",
+        "google.com": "Google Search",
+        "mail.google.com": "Gmail",
+        "calendar.google.com": "Calendar",
+        "www.linkedin.com": "LinkedIn",
+        "app.slack.com": "Slack",
+    }
+    if normalized in labels:
+        return labels[normalized]
+    bare = normalized.replace(".com", "").replace(".org", "").replace(".net", "")
+    parts = [part for part in re.split(r"[\.-]+", bare) if part and part not in {"www", "app"}]
+    if not parts:
+        return normalized or "Domain"
+    return " ".join(part.capitalize() for part in parts)
+
+
+def _domain_icon_for_host(domain: str) -> str:
+    normalized = _normalize_domain(domain)
+    icons = {
+        "solaceagi.com": "/branding/yinyang-rotating.gif",
+        "google.com": "/branding/apps/google-search.png",
+        "mail.google.com": "/branding/apps/gmail.jpg",
+        "calendar.google.com": "/branding/apps/google-calendar.png",
+        "www.linkedin.com": "/branding/apps/linkedin.png",
+        "app.slack.com": "/branding/apps/slack.png",
+    }
+    return icons.get(normalized, "/branding/yinyang-rotating.gif")
+
+
+def _known_domains_from_index(repo_root: str) -> set[str]:
+    payload = _load_domain_index(repo_root)
+    patterns = payload.get("patterns", {})
+    domains: set[str] = set()
+    if not isinstance(patterns, dict):
+        return domains
+    for pattern in patterns.keys():
+        if not isinstance(pattern, str):
+            continue
+        host, _path = _split_domain_pattern(pattern)
+        normalized = _normalize_domain(host)
+        if normalized:
+            domains.add(normalized)
+    return domains
+
+
+def _known_domains(repo_root: str) -> list[str]:
+    domains: set[str] = {"solaceagi.com", "www.google.com"}
+    domains.update(_known_domains_from_index(repo_root))
+    domains.update(_normalize_domain(domain) for domain in _load_domain_profiles().keys())
+    domains.update(
+        _normalize_domain(str(event.get("domain", "")))
+        for event in _load_domain_events()
+        if _normalize_domain(str(event.get("domain", "")))
+    )
+    domains.discard("")
+    return sorted(domains, key=lambda item: (_normalize_domain(item) != "solaceagi.com", item))
+
+
+def _domain_setup_state(onboarding: dict[str, Any], status: dict[str, Any]) -> str:
+    if onboarding.get("auth_state") != "logged_in":
+        return "agent-only"
+    if not bool(onboarding.get("apps_enabled", False)):
+        return "pick-source"
+    if bool(status.get("active", False)):
+        return "active"
+    if bool(status.get("requires_login", False)):
+        return "login"
+    if status.get("selected_apps"):
+        return "ready"
+    return "setup"
+
+
+def _domain_descriptor(
+    repo_root: str,
+    domain: str,
+    onboarding: Optional[dict[str, Any]] = None,
+    *,
+    include_app_counts: bool = False,
+) -> dict[str, Any]:
+    normalized = _normalize_domain(domain)
+    status = _domain_status_payload(repo_root, normalized)
+    current_onboarding = onboarding if isinstance(onboarding, dict) else _load_onboarding_state()
+    available_app_count = 0
+    if include_app_counts:
+        apps_payload = _apps_for_domain(repo_root, normalized, "/", _load_account_tier())
+        installed_apps = apps_payload.get("installed_apps", []) if isinstance(apps_payload, dict) else []
+        store_apps = apps_payload.get("store_apps", []) if isinstance(apps_payload, dict) else []
+        available_app_count = len(installed_apps) + len(store_apps)
+    return {
+        "id": normalized.replace(".", "-"),
+        "host": normalized,
+        "label": _domain_label_for_host(normalized),
+        "url": f"http://127.0.0.1:{YINYANG_PORT}/domains/{urllib.parse.quote(normalized, safe='.')}",
+        "icon": _domain_icon_for_host(normalized),
+        "active": bool(status.get("active", False)),
+        "requires_login": bool(status.get("requires_login", False)),
+        "event_count": int(status.get("event_count", 0)),
+        "selected_app_count": len(status.get("selected_apps", [])),
+        "available_app_count": available_app_count,
+        "setup_state": _domain_setup_state(current_onboarding, status),
+        "selected_apps": list(status.get("selected_apps", [])),
+        "keepalive_apps": list(status.get("keepalive_apps", [])),
+    }
 
 
 def _derive_onboarding_mode(
@@ -5213,8 +5436,8 @@ def _delete_schedules_for_app(app_id: str) -> int:
 
 
 def _delete_custom_app(repo_root: str, app_id: str) -> dict:
-    app_dir = _custom_apps_root(repo_root) / app_id
-    if not app_dir.is_dir():
+    app_dir = _local_app_dir(repo_root, app_id)
+    if app_dir is None or not app_dir.is_dir():
         raise FileNotFoundError("custom app not found")
     shutil.rmtree(app_dir)
     _set_app_installed(repo_root, app_id, False)
@@ -5708,15 +5931,11 @@ def load_apps(repo_root: str) -> list[str]:
 
 
 def _session_rule_paths() -> list[Path]:
-    """Return sorted session-rules.yaml paths from the configured app directory."""
-    rule_paths: list[Path] = []
-    for apps_dir in (
-        SESSION_RULES_APPS_DIR,
-        SESSION_RULES_APPS_DIR.parent.parent / "custom" / "apps",
-    ):
-        if apps_dir.is_dir():
-            rule_paths.extend(sorted(apps_dir.glob("*/session-rules.yaml")))
-    return sorted(rule_paths)
+    """Return sorted session-rules.yaml paths from the local installed apps root."""
+    if not SESSION_RULES_APPS_DIR.is_dir():
+        return []
+    rule_paths = [app_dir / "session-rules.yaml" for app_dir in _iter_app_dirs_under(SESSION_RULES_APPS_DIR)]
+    return sorted(path for path in rule_paths if path.is_file())
 
 
 def _session_interval_seconds(rule: dict) -> int:
@@ -5790,11 +6009,11 @@ def _find_session_rule(app_id: str) -> Optional[dict]:
 
 
 def _custom_apps_root(repo_root: str) -> Path:
-    return Path(repo_root) / "data" / "custom" / "apps"
+    return _local_apps_root_path()
 
 
 def _starter_bundle_apps_root(repo_root: str) -> Path:
-    return Path(repo_root) / "apps"
+    return _local_apps_root_path()
 
 
 def _official_store_path(repo_root: str) -> Path:
@@ -5802,22 +6021,33 @@ def _official_store_path(repo_root: str) -> Path:
 
 
 def _domain_index_path(repo_root: str) -> Path:
-    return _marketplace_apps_root(repo_root) / ".domain-index.json"
+    return _local_apps_root_path() / ".domain-index.json"
 
 
 def _repo_app_roots(repo_root: str) -> tuple[Path, ...]:
-    return (
-        _starter_bundle_apps_root(repo_root),
-        _marketplace_apps_root(repo_root),
-        _custom_apps_root(repo_root),
-    )
+    roots: list[Path] = [_local_apps_root_path(), *_source_app_roots(repo_root)]
+    seen: set[Path] = set()
+    ordered: list[Path] = []
+    for root in roots:
+        if root in seen:
+            continue
+        seen.add(root)
+        ordered.append(root)
+    return tuple(ordered)
+
+
+def _iter_local_manifest_records(repo_root: str) -> list[tuple[str, dict, Path]]:
+    return _manifest_records_from_roots((_local_apps_root_path(),))
+
+
+def _iter_source_manifest_records(repo_root: str) -> list[tuple[str, dict, Path]]:
+    return _manifest_records_from_roots(_source_app_roots(repo_root))
 
 
 def _repo_app_dir(repo_root: str, app_id: str) -> Optional[Path]:
-    for apps_root in _repo_app_roots(repo_root):
-        app_dir = apps_root / app_id
-        if app_dir.is_dir():
-            return app_dir
+    for found_app_id, _manifest, manifest_path in _iter_manifest_records(repo_root):
+        if found_app_id == app_id:
+            return manifest_path.parent
     return None
 
 
@@ -5832,8 +6062,9 @@ def _app_manifest_path(repo_root: str, app_id: str) -> Optional[Path]:
 
 
 def _repo_session_rules_path_for_app(repo_root: str, app_id: str) -> Optional[Path]:
-    for apps_root in _repo_app_roots(repo_root):
-        rules_path = apps_root / app_id / "session-rules.yaml"
+    app_dir = _repo_app_dir(repo_root, app_id)
+    if app_dir is not None:
+        rules_path = app_dir / "session-rules.yaml"
         if rules_path.is_file():
             return rules_path
     return None
@@ -5998,24 +6229,7 @@ def _manifest_domain_patterns(manifest: dict, fallback_site: str = "") -> list[s
 
 
 def _iter_manifest_records(repo_root: str) -> list[tuple[str, dict, Path]]:
-    manifests: list[tuple[str, dict, Path]] = []
-    for apps_root in _repo_app_roots(repo_root):
-        if not apps_root.is_dir():
-            continue
-        for manifest_path in sorted(apps_root.glob("*/manifest.yaml")):
-            app_id = manifest_path.parent.name
-            try:
-                raw_manifest = yaml.safe_load(manifest_path.read_text())
-            except FileNotFoundError:
-                continue
-            except OSError:
-                continue
-            except yaml.YAMLError:
-                continue
-            if isinstance(raw_manifest, dict):
-                manifests.append((app_id, raw_manifest, manifest_path))
-    manifests.sort(key=lambda item: item[0])
-    return manifests
+    return _manifest_records_from_roots(_repo_app_roots(repo_root))
 
 
 def _build_domain_index_payload(repo_root: str) -> dict:
@@ -6113,12 +6327,9 @@ def _match_domain_index(patterns: dict[str, list[str]], query_domain: str, query
 
 
 def _load_session_rules_for_repo(repo_root: str) -> list[dict]:
-    """Load session rules from repo-scoped default and custom app directories."""
+    """Load session rules from the local installed apps directory."""
     rules: list[dict] = []
-    for apps_root in _repo_app_roots(repo_root):
-        if not apps_root.is_dir():
-            continue
-        for rule_path in sorted(apps_root.glob("*/session-rules.yaml")):
+    for rule_path in _session_rule_paths():
             try:
                 raw_rule = yaml.safe_load(rule_path.read_text())
             except FileNotFoundError:
@@ -6133,39 +6344,26 @@ def _load_session_rules_for_repo(repo_root: str) -> list[dict]:
 
 
 def _load_official_store_apps(repo_root: str) -> list[dict]:
-    store_path = _official_store_path(repo_root)
-    try:
-        payload = json.loads(store_path.read_text())
-    except FileNotFoundError:
-        return []
-    except json.JSONDecodeError:
-        return []
-    except OSError:
-        return []
-    if not isinstance(payload, dict):
-        return []
-    raw_apps = payload.get("apps", [])
-    if not isinstance(raw_apps, list):
-        return []
     normalized_apps: list[dict] = []
-    for raw_app in raw_apps:
-        if not isinstance(raw_app, dict):
+    for app_id, manifest, _manifest_path in _iter_source_manifest_records(repo_root):
+        if bool(manifest.get("local_only", False)):
             continue
-        app_id = raw_app.get("id")
-        if not isinstance(app_id, str) or not _APP_ID_RE.fullmatch(app_id):
-            continue
-        manifest = _load_manifest_for_app(repo_root, app_id)
-        site_value = str(raw_app.get("site") or manifest.get("site") or "")
+        site_value = str(manifest.get("site") or "")
         try:
-            domains = _manifest_domain_patterns(raw_app, site_value)
+            domains = _manifest_domain_patterns(manifest, site_value)
         except ValueError:
             continue
         normalized_apps.append({
             "id": app_id,
-            "name": str(raw_app.get("name") or manifest.get("name") or app_id.replace("-", " ").title()),
-            "description": str(raw_app.get("description") or manifest.get("description") or ""),
-            "tier_required": _required_tier_for_app(manifest, fallback=raw_app.get("tier_required") or raw_app.get("tier") or "free"),
+            "name": str(manifest.get("name") or app_id.replace("-", " ").title()),
+            "description": str(manifest.get("description") or ""),
+            "category": str(manifest.get("category") or "solace"),
+            "tier_required": _required_tier_for_app(
+                manifest,
+                fallback=manifest.get("tier_required") or manifest.get("tier") or "free",
+            ),
             "domains": domains,
+            "custom": bool(manifest.get("custom", False)),
         })
     return normalized_apps
 
@@ -6575,7 +6773,7 @@ def _create_custom_app_scaffold(repo_root: str, raw_domain: str, raw_name: str, 
     if not app_id:
         raise ValueError("invalid app name")
 
-    app_dir = _custom_apps_root(repo_root) / app_id
+    app_dir = _local_apps_root_path() / domain / app_id
     if app_dir.exists():
         raise FileExistsError("app already exists")
 
@@ -6586,7 +6784,7 @@ def _create_custom_app_scaffold(repo_root: str, raw_domain: str, raw_name: str, 
     (app_dir / "session-rules.yaml").write_text(session_rules_text)
     _rebuild_domain_index(repo_root)
 
-    relative_app_path = Path("data") / "custom" / "apps" / app_id
+    relative_app_path = Path("apps") / domain / app_id
     return {
         "app_id": app_id,
         "path": f"{relative_app_path.as_posix()}/",
@@ -6599,14 +6797,10 @@ def _create_custom_app_scaffold(repo_root: str, raw_domain: str, raw_name: str, 
 
 def _custom_apps_sync_bundle(repo_root: str) -> list[dict]:
     bundle: list[dict] = []
-    apps_root = _marketplace_apps_root(repo_root)
-    if not apps_root.is_dir():
-        return bundle
-    for app_dir in sorted(path for path in apps_root.iterdir() if path.is_dir()):
-        manifest = _load_manifest_for_app(repo_root, app_dir.name)
+    for app_id, manifest, manifest_path in _iter_local_manifest_records(repo_root):
         if not bool(manifest.get("custom", False)):
             continue
-        manifest_path = app_dir / "manifest.yaml"
+        app_dir = manifest_path.parent
         session_rules_path = app_dir / "session-rules.yaml"
         try:
             manifest_yaml = manifest_path.read_text()
@@ -6616,7 +6810,7 @@ def _custom_apps_sync_bundle(repo_root: str) -> list[dict]:
         except OSError:
             continue
         bundle.append({
-            "app_id": app_dir.name,
+            "app_id": app_id,
             "manifest_yaml": manifest_yaml,
             "session_rules_yaml": session_rules_yaml,
         })
@@ -6874,17 +7068,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             }
 
     def _local_apps_root(self) -> Optional[Path]:
-        repo_root = Path(getattr(self.server, "repo_root", Path(__file__).parent)).resolve()
-        starter_bundle = repo_root / "apps"
-        if starter_bundle.exists():
-            return starter_bundle
-        sibling = repo_root.parent / "solace-cli" / "data" / "default" / "apps"
-        if sibling.exists():
-            return sibling
-        local = repo_root / "data" / "default" / "apps"
-        if local.exists():
-            return local
-        return None
+        root = _local_apps_root_path()
+        root.mkdir(parents=True, exist_ok=True)
+        return root
 
     def _resolve_app_root(self, app_id: str) -> Optional[Path]:
         repo_root = str(Path(getattr(self.server, "repo_root", Path(__file__).parent)).resolve())
@@ -6892,14 +7078,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
 
     def _list_known_apps(self) -> list[str]:
         repo_root = str(Path(getattr(self.server, "repo_root", Path(__file__).parent)).resolve())
-        seen: set[str] = set()
-        for apps_root in _repo_app_roots(repo_root):
-            if not apps_root.is_dir():
-                continue
-            for path in apps_root.iterdir():
-                if path.is_dir():
-                    seen.add(path.name)
-        return sorted(seen)
+        return load_apps(repo_root)
 
     def _find_browser_window_id(self) -> Optional[str]:
         try:
@@ -7428,6 +7607,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_onboarding_page()
         elif path == "/api/v1/onboarding/status":
             self._handle_onboarding_status()
+        elif path == "/api/v1/domains":
+            self._handle_domains_list()
         elif path == "/api/v1/domains/status":
             self._handle_domain_status(query)
         elif path == "/api/v1/events/feed":
@@ -10042,6 +10223,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_onboarding_complete()
         elif path == "/onboarding/reset":
             self._handle_onboarding_reset()
+        elif path == "/api/v1/domains":
+            self._handle_domain_create()
         elif path == "/api/v1/domains/setup":
             self._handle_domain_setup()
         elif path == "/api/v1/browser/launch":
@@ -12238,6 +12421,14 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         from yinyang_mcp_server import _TOOL_DEFINITIONS
 
         tool_count = len(_TOOL_DEFINITIONS)
+        repo_root = Path(getattr(self.server, "repo_root", "."))
+        local_apps_root = _local_apps_root_path()
+        source_roots = _source_app_roots(repo_root)
+        local_apps_root_text = html_escape(str(local_apps_root))
+        source_root_lines = "\n".join(
+            f'          <li><code>{html_escape(str(root))}</code></li>'
+            for root in source_roots
+        )
         html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12330,9 +12521,36 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         <article class="start-step">
           <span class="step-index">3</span>
           <h3>Use Yinyang</h3>
-          <p>Run bundled apps, create custom apps, or schedule work through the pinned sidebar with evidence by default.</p>
+          <p>After sign-in, install apps from disk, create custom apps, and schedule work through the pinned sidebar with evidence by default.</p>
         </article>
       </div>
+    </section>
+    <section class="start-panel">
+      <h3>Directory-first app model</h3>
+      <div class="detail-row"><span>Logged out</span><strong>Agent control only. Apps stay off.</strong></div>
+      <div class="detail-row"><span>Logged in</span><strong>Choose at least one source to turn apps on.</strong></div>
+      <div class="detail-row"><span>Local app root</span><strong><code>{local_apps_root_text}</code></strong></div>
+      <p class="state-detail" style="margin-top:0.9rem;">
+        Solace Browser starts with zero default apps before sign-in. Installed apps are plain folders on disk:
+        top-level domain folders with app folders underneath them.
+      </p>
+      <pre style="margin-top:0.9rem;background:rgba(9,16,23,0.7);border:1px solid rgba(129,175,221,0.16);border-radius:18px;padding:1rem;overflow:auto;"><code>~/.solace/apps/
+  google.com/
+    google-search-mission/
+      manifest.yaml
+      inbox/
+      outbox/
+  mail.google.com/
+    gmail-triage/
+      manifest.yaml
+      inbox/
+      outbox/</code></pre>
+      <p class="state-detail" style="margin-top:0.9rem;">
+        The canonical source app tree stays in <code>solace-cli/data/default/apps</code>. AI coding agents can point Solace Browser at that tree or copy finished app directories into the local app root.
+      </p>
+      <ul class="detail-list">
+{source_root_lines}
+      </ul>
     </section>
     <section class="next-grid">
       <article class="start-panel">
@@ -12964,6 +13182,7 @@ document.getElementById('confirm').addEventListener('click', function () {
         from yinyang_mcp_server import _TOOL_DEFINITIONS
 
         api_base = f"http://localhost:{getattr(self.server, 'server_port', YINYANG_PORT)}"
+        repo_root = Path(getattr(self.server, "repo_root", "."))
         manifest = {
             "name": "Solace Browser",
             "version": _SERVER_VERSION,
@@ -12980,6 +13199,22 @@ document.getElementById('confirm').addEventListener('click', function () {
                 "command": "python3 yinyang_mcp_server.py",
                 "transport": "stdio",
                 "tool_count": len(_TOOL_DEFINITIONS),
+            },
+            "apps": {
+                "model": "directory-first",
+                "logged_out_apps_enabled": False,
+                "local_apps_root": str(_local_apps_root_path()),
+                "source_app_roots": [str(root) for root in _source_app_roots(repo_root)],
+                "layout": {
+                    "top_level": "domain folders",
+                    "under_domain": "app folders",
+                    "required_file": "manifest.yaml",
+                },
+                "authoring": {
+                    "canonical_source": "solace-cli/data/default/apps",
+                    "spec_root": "solace-cli/data/default/apps/specs",
+                    "install_method": "copy app directory into the local app root or install through runtime routes",
+                },
             },
             "capabilities": [
                 "detect_apps",
@@ -14308,6 +14543,8 @@ document.getElementById('confirm').addEventListener('click', function () {
         except OSError as exc:
             self._send_json({"error": f"cannot save install state: {exc}"}, 500)
             return
+        _rebuild_domain_index(repo_root)
+        self._reload_session_rules_cache()
         self._send_json({"status": "installed", "app_id": app_id})
 
     def _handle_app_uninstall(self) -> None:
@@ -14324,6 +14561,8 @@ document.getElementById('confirm').addEventListener('click', function () {
         except OSError as exc:
             self._send_json({"error": f"cannot save install state: {exc}"}, 500)
             return
+        _rebuild_domain_index(repo_root)
+        self._reload_session_rules_cache()
         self._send_json({"status": "uninstalled", "app_id": app_id})
 
     def _handle_app_install_by_id(self, app_id: str) -> None:
@@ -14344,6 +14583,8 @@ document.getElementById('confirm').addEventListener('click', function () {
         except OSError as exc:
             self._send_json({"error": f"cannot save install state: {exc}"}, 500)
             return
+        _rebuild_domain_index(repo_root)
+        self._reload_session_rules_cache()
         self._send_json({
             "status": "already_installed" if already else "installed",
             "app_id": app_id,
@@ -14365,6 +14606,8 @@ document.getElementById('confirm').addEventListener('click', function () {
         except OSError as exc:
             self._send_json({"error": f"cannot save install state: {exc}"}, 500)
             return
+        _rebuild_domain_index(repo_root)
+        self._reload_session_rules_cache()
         self._send_json({
             "status": "uninstalled" if was_installed else "not_installed",
             "app_id": app_id,
@@ -15590,9 +15833,6 @@ function configureOllama() {
         except ValueError as exc:
             self._send_json({"error": str(exc)}, 400)
             return
-        if state.get("auth_state") == "logged_in":
-            repo_root = getattr(self.server, "repo_root", ".")
-            _bootstrap_starter_domains(repo_root)
         self._send_json({"ok": True, **state})
 
     def _handle_onboarding_reset(self) -> None:
@@ -15614,6 +15854,73 @@ function configureOllama() {
         params = urllib.parse.parse_qs(query)
         domain = _normalize_domain((params.get("domain", [""])[0] or "solaceagi.com"))
         self._send_json(_domain_status_payload(repo_root, domain))
+
+    def _handle_domains_list(self) -> None:
+        repo_root = getattr(self.server, "repo_root", ".")
+        onboarding = _load_onboarding_state()
+        items = [_domain_descriptor(repo_root, domain, onboarding=onboarding) for domain in _known_domains(repo_root)]
+        active = sum(1 for item in items if item.get("active"))
+        apps_enabled = bool(onboarding.get("apps_enabled", False))
+        self._send_json(
+            {
+                "items": items,
+                "total": len(items),
+                "active": active,
+                "apps_enabled": apps_enabled,
+                "auth_state": onboarding.get("auth_state", "logged_out"),
+            }
+        )
+
+    def _handle_domain_create(self) -> None:
+        body = self._read_json_body()
+        if body is None:
+            return
+        onboarding = _load_onboarding_state()
+        if onboarding.get("auth_state") != "logged_in":
+            self._send_json({"error": "sign in to create domains"}, 409)
+            return
+        repo_root = getattr(self.server, "repo_root", ".")
+        domain = _normalize_domain(body.get("domain") or body.get("host") or body.get("site") or "")
+        if not domain:
+            self._send_json({"error": "missing domain"}, 400)
+            return
+        profiles = _load_domain_profiles()
+        profile = profiles.get(domain)
+        created = False
+        if not isinstance(profile, dict):
+            profile = _default_domain_profile(repo_root, domain)
+            created = True
+        login_url = str(body.get("login_url", "")).strip()
+        success_url = str(body.get("success_url", "")).strip()
+        if login_url:
+            profile["login_url"] = login_url
+        if success_url:
+            profile["success_url"] = success_url
+            session_policy = profile.get("session_policy", {})
+            if not isinstance(session_policy, dict):
+                session_policy = {}
+            session_policy["success_url"] = success_url
+            profile["session_policy"] = dict(DEFAULT_DOMAIN_SESSION_POLICY, **session_policy)
+        profiles[domain] = profile
+        _save_domain_profiles(profiles)
+        event = _append_domain_event(
+            domain,
+            "domain_created",
+            f"{domain} added",
+            "A new domain was added to the local app database.",
+            metadata={"domain": domain, "created": created},
+        )
+        status = _domain_status_payload(repo_root, domain)
+        self._send_json(
+            {
+                "ok": True,
+                "created": created,
+                "domain": _domain_descriptor(repo_root, domain, onboarding=onboarding),
+                "status": status,
+                "event": event,
+            },
+            201 if created else 200,
+        )
 
     def _handle_domain_events_feed(self, query: str) -> None:
         params = urllib.parse.parse_qs(query)
@@ -20014,7 +20321,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
     def _reload_session_rules_cache(self) -> list[dict]:
         global SESSION_RULES_APPS_DIR
         repo_root = getattr(self.server, "repo_root", ".")
-        SESSION_RULES_APPS_DIR = _marketplace_apps_root(repo_root)
+        SESSION_RULES_APPS_DIR = _local_apps_root_path()
         rules = load_session_rules()
         self.server.apps = load_apps(repo_root)  # type: ignore[attr-defined]
         return rules
@@ -20061,33 +20368,14 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         if app is None:
             self._send_json({"error": "app not found"}, 404)
             return
-        tier_required = str(app.get("tier_required", "free"))
         try:
-            session_rules_text, download_status, install_source = _download_marketplace_session_rules(app_id, repo_root)
-        except urllib.error.URLError as exc:
-            record_evidence("marketplace_install_failed", {
-                "app_id": app_id,
-                "reason": str(exc.reason) if hasattr(exc, "reason") else str(exc),
-            })
-            self._send_json({"error": "marketplace download failed"}, 503)
-            return
-        except OSError as exc:
-            record_evidence("marketplace_install_failed", {"app_id": app_id, "reason": str(exc)})
-            self._send_json({"error": "marketplace download failed"}, 503)
-            return
-        if download_status == 404 or session_rules_text is None:
-            self._send_json({"error": "app not found"}, 404)
-            return
-        try:
-            if _app_manifest_path(repo_root, app_id) is None:
-                app_dir = _marketplace_app_dir(repo_root, app_id)
-                session_rules_path = _session_rules_path_for_app(repo_root, app_id)
-                app_dir.mkdir(parents=True, exist_ok=True)
-                session_rules_path.write_text(session_rules_text)
             _set_app_installed(repo_root, app_id, True)
+        except FileNotFoundError:
+            self._send_json({"error": "app source not found"}, 404)
+            return
         except OSError as exc:
             record_evidence("marketplace_install_failed", {"app_id": app_id, "reason": str(exc)})
-            self._send_json({"error": "install state write failed"}, 500)
+            self._send_json({"error": "install failed"}, 500)
             return
         try:
             _rebuild_domain_index(repo_root)
@@ -20097,14 +20385,15 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         self._reload_session_rules_cache()
         record_evidence("marketplace_app_installed", {
             "app_id": app_id,
-            "source": install_source or source,
-            "tier_required": tier_required,
+            "source": source,
+            "tier_required": str(app.get("tier_required", "free")),
         })
+        installed_dir = _local_app_dir(repo_root, app_id)
         self._send_json({
             "status": "installed",
             "app_id": app_id,
-            "path": f"data/default/apps/{app_id}/",
-            "source": install_source or source,
+            "path": str(installed_dir) if installed_dir is not None else "",
+            "source": source,
         })
 
     def _handle_marketplace_uninstall(self) -> None:
@@ -20125,15 +20414,6 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
             self._send_json({"error": "app not installed"}, 404)
             return
         try:
-            if _app_manifest_path(repo_root, app_id) is None:
-                app_dir = _marketplace_app_dir(repo_root, app_id)
-                session_rules_path = _session_rules_path_for_app(repo_root, app_id)
-                if session_rules_path.exists():
-                    session_rules_path.unlink()
-                try:
-                    app_dir.rmdir()
-                except OSError:
-                    pass
             _set_app_installed(repo_root, app_id, False)
         except OSError as exc:
             record_evidence("marketplace_uninstall_failed", {"app_id": app_id, "reason": str(exc)})

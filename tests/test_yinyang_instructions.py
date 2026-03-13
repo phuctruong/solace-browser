@@ -150,6 +150,10 @@ class TestHealthEndpoint:
         assert data["api_base"] == BASE_URL
         assert data["hub"]["starts_first"] is True
         assert data["mcp"]["tool_count"] == 21
+        assert data["apps"]["model"] == "directory-first"
+        assert data["apps"]["logged_out_apps_enabled"] is False
+        assert data["apps"]["authoring"]["canonical_source"] == "solace-cli/data/default/apps"
+        assert data["apps"]["layout"]["top_level"] == "domain folders"
         assert data["endpoints"]["hub_control"]["windows"] == "GET /api/v1/hub/windows"
         assert data["endpoints"]["hub_control"]["accessibility"] == "GET /api/v1/hub/accessibility"
         assert data["endpoints"]["hub_control"]["screenshot"] == "POST /api/v1/hub/screenshot"
@@ -203,6 +207,10 @@ class TestHealthEndpoint:
         with urllib.request.urlopen(f"{BASE_URL}/agents", timeout=5) as resp:
             html = resp.read().decode()
         assert "Solace Agents" in html
+        assert "Directory-first app model" in html
+        assert "Agent control only. Apps stay off." in html
+        assert "solace-cli/data/default/apps" in html
+        assert "~/.solace/apps/" in html
         for route in (
             "GET /api/status",
             "GET /api/health",
@@ -469,7 +477,11 @@ class TestAgentContractCompatibility:
         assert data["limit"] == 20
         assert "entries" in data
 
-    def test_google_search_domain_has_bundled_apps(self, server):
+    def test_google_search_domain_has_materialized_apps_after_login(self, server):
+        post_json(
+            "/onboarding/complete",
+            {"auth_state": "logged_in", "membership_tier": "free", "model_sources": ["byok"]},
+        )
         request = urllib.request.Request(
             f"{BASE_URL}/api/v1/apps/by-domain?domain=google.com",
             headers=auth_headers(server),
@@ -477,9 +489,8 @@ class TestAgentContractCompatibility:
         with urllib.request.urlopen(request, timeout=5) as resp:
             data = json.loads(resp.read().decode())
         installed_ids = {app["id"] for app in data["installed_apps"]}
-        assert "google-search-mission" in installed_ids
-        assert "competitor-watch" in installed_ids
-        assert "google-search-trends" in installed_ids
+        assert installed_ids
+        assert installed_ids.issubset({"google-search-mission", "competitor-watch", "google-search-trends"})
 
     def test_app_outbox_html_route_serves_reports(self, server):
         with urllib.request.urlopen(
@@ -1811,6 +1822,7 @@ class TestOnboardingEndpoints:
         assert "Sign in for Free Membership" in content
         assert "Sign in for Paid Membership" in content
         assert "Stay in Agent Control Only" in content
+        assert "Apps stay off until you sign in" in content
 
     def test_onboarding_status_returns_json(self, server):
         """GET /api/v1/onboarding/status → JSON with normalized auth/app state."""
@@ -1867,7 +1879,7 @@ class TestOnboardingEndpoints:
         """After POST /onboarding/complete, GET status shows logged-in apps-on state."""
         post_json(
             "/onboarding/complete",
-            {"auth_state": "logged_in", "membership_tier": "free", "model_source": "cli"},
+            {"auth_state": "logged_in", "membership_tier": "free", "model_sources": ["cli"]},
         )
         data = get_json("/api/v1/onboarding/status")
         assert data["completed"] is True
@@ -1890,6 +1902,22 @@ class TestOnboardingEndpoints:
         assert "Local CLI Wrapper" in content
         assert "Ollama URL" in content
         assert "Save sources and turn on apps" in content
+
+    def test_logged_out_state_keeps_apps_off_and_blocks_domain_apps(self, server):
+        """Logged out state keeps apps off and returns the explicit sign-in gate for domain apps."""
+        post_json("/onboarding/complete", {"auth_state": "logged_out"})
+        status = get_json("/api/v1/onboarding/status")
+        assert status["apps_enabled"] is False
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/apps/by-domain?domain=google.com",
+            headers=auth_headers(server),
+            method="GET",
+        )
+        with pytest.raises(urllib.error.HTTPError) as exc_info:
+            urllib.request.urlopen(req, timeout=5)
+        assert exc_info.value.code == 403
+        data = json.loads(exc_info.value.read().decode())
+        assert data["error"] == "apps_disabled"
 
     def test_domain_setup_requires_login(self, server):
         """POST /api/v1/domains/setup while logged out → 409 sign-in gate."""
@@ -2061,6 +2089,61 @@ class TestOnboardingEndpoints:
         assert payload["domain"] == "mail.google.com"
         assert payload["total"] >= 1
         assert all(item["domain"] == "mail.google.com" for item in payload["items"])
+
+    def test_onboarding_complete_does_not_bootstrap_starter_apps(self, server):
+        """Signing in must not silently install or activate starter domain apps."""
+        import yinyang_server as ys
+        ys._save_domain_profiles({})
+        ys._save_domain_events([])
+        post_json(
+            "/onboarding/complete",
+            {
+                "auth_state": "logged_in",
+                "membership_tier": "free",
+                "model_sources": ["byok"],
+            },
+        )
+        google_status = get_json("/api/v1/domains/status?domain=www.google.com")
+        solace_status = get_json("/api/v1/domains/status?domain=solaceagi.com")
+        assert google_status["selected_apps"] == []
+        assert google_status["keepalive_apps"] == []
+        assert google_status["active"] is False
+        assert solace_status["selected_apps"] == []
+        assert solace_status["keepalive_apps"] == []
+        assert solace_status["active"] is False
+
+    def test_domains_list_includes_known_and_created_domains(self, server):
+        """GET /api/v1/domains returns a dynamic domain inventory instead of a fixed sidebar list."""
+        import yinyang_server as ys
+        ys._save_domain_profiles({})
+        ys._save_domain_events([])
+        post_json(
+            "/onboarding/complete",
+            {
+                "auth_state": "logged_in",
+                "membership_tier": "free",
+                "model_sources": ["cli"],
+            },
+        )
+        created = post_json(
+            "/api/v1/domains",
+            {
+                "domain": "news.google.com",
+                "login_url": "https://accounts.google.com/",
+                "success_url": "https://news.google.com/home",
+            },
+        )
+        assert created["ok"] is True
+        payload = get_json("/api/v1/domains")
+        hosts = {item["host"] for item in payload["items"]}
+        assert "solaceagi.com" in hosts
+        assert "www.google.com" in hosts or "google.com" in hosts
+        assert "news.google.com" in hosts
+        added = next(item for item in payload["items"] if item["host"] == "news.google.com")
+        assert added["label"]
+        assert added["icon"]
+        assert added["url"].endswith("/domains/news.google.com")
+        assert added["setup_state"] in {"setup", "login", "ready", "active"}
 
     def test_onboarding_reset_requires_auth(self, auth_server):
         """POST /onboarding/reset without auth → 401."""
@@ -2789,7 +2872,7 @@ class TestTunnelSync:
         # The local runtime always materializes the built-in Solace AGI domain
         # alongside the test domains before exporting device state.
         assert body["domain_count"] == 3
-        assert body["active_domain_count"] == 2
+        assert body["active_domain_count"] == 1
         assert body["oauth3_token_count"] == 2
         assert body["event_count"] == 3
         assert body["recent_domains"] == ["solaceagi.com", "gmail.com", "google.com"]
