@@ -792,35 +792,20 @@ fn main() {
         .on_system_tray_event(|app, event| match event {
             SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
                 "open_browser" => {
-                    // Fire-and-forget via Tauri invoke is not available from system tray context.
-                    // We dispatch the same logic inline here.
-                    let state: State<HubState> = app.state();
-                    match resolve_browser_binary(app) {
-                        Ok(browser_binary) => {
-                            let path_str = browser_binary.to_string_lossy().to_string();
-                            // Enforce onboarding gate: route to /onboarding until setup is complete
-                            let start_url = if check_onboarding_complete() {
-                                "https://solaceagi.com/dashboard".to_string()
-                            } else {
-                                format!("http://localhost:{}/onboarding", YINYANG_PORT)
-                            };
-                            if !wait_for_port_lock(SERVER_HEALTH_TIMEOUT_SECS) {
-                                eprintln!("ERROR: Yinyang Server not ready (port.lock missing)");
-                                return;
-                            }
-                            match launch_solace_browser(&path_str, &start_url) {
-                                Ok(child) => {
-                                    if let Ok(mut guard) = state.browser_child.lock() {
-                                        *guard = Some(child);
-                                    }
-                                    update_tray_tooltip(app);
-                                }
-                                Err(e) => {
-                                    eprintln!("ERROR: Cannot launch browser from tray: {e}");
-                                }
-                            }
-                        }
-                        Err(e) => eprintln!("ERROR: Cannot resolve browser binary: {e}"),
+                    // Route through the runtime API so dedup + session tracking apply.
+                    // Direct launch_solace_browser() bypasses all guards → multiple windows.
+                    let start_url = if check_onboarding_complete() {
+                        "https://solaceagi.com/dashboard".to_string()
+                    } else {
+                        format!("http://localhost:{}/onboarding", YINYANG_PORT)
+                    };
+                    if !wait_for_port_lock(SERVER_HEALTH_TIMEOUT_SECS) {
+                        eprintln!("ERROR: Yinyang Server not ready (port.lock missing)");
+                        return;
+                    }
+                    match launch_browser_via_runtime(&start_url) {
+                        Ok(_) => update_tray_tooltip(app),
+                        Err(e) => eprintln!("ERROR: Cannot launch browser via runtime: {e}"),
                     }
                 }
                 "show_dashboard" => {

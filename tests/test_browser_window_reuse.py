@@ -7,6 +7,7 @@ Verifies that:
 4. reuse_window=False falls through to spawn a new window
 5. Dead sessions (PID not alive) are skipped by both finders
 """
+import os
 import sys
 import json
 import time
@@ -277,3 +278,40 @@ class TestReuseWindowIntegration:
             )
 
         assert "https://first-window.com" in spawned
+
+
+class TestSessionPersistence:
+    """Session persistence survives server restart — prevents N-browser spawns."""
+
+    def test_persist_sessions_writes_json(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(ys, "_SESSIONS_PERSIST_PATH", tmp_path / "sessions.json")
+        _clear_sessions()
+        _seed_session("persist-s1", pid=os.getpid(), url="https://x.com")
+        ys._persist_sessions()
+        data = json.loads((tmp_path / "sessions.json").read_text())
+        assert "persist-s1" in data
+
+    def test_load_sessions_from_disk_restores_alive(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(ys, "_SESSIONS_PERSIST_PATH", tmp_path / "sessions.json")
+        alive_pid = os.getpid()
+        snapshot = {
+            "s-alive": {"pid": alive_pid, "url": "https://a.com", "profile": "default",
+                        "mode": "standard", "head_hidden": False, "started_at": 1},
+        }
+        (tmp_path / "sessions.json").write_text(json.dumps(snapshot))
+        _clear_sessions()
+        ys._load_sessions_from_disk()
+        with ys._SESSIONS_LOCK:
+            assert "s-alive" in ys._SESSIONS
+
+    def test_load_sessions_from_disk_drops_dead(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(ys, "_SESSIONS_PERSIST_PATH", tmp_path / "sessions.json")
+        snapshot = {
+            "s-dead": {"pid": 9999999, "url": "https://b.com", "profile": "default",
+                       "mode": "standard", "head_hidden": False, "started_at": 1},
+        }
+        (tmp_path / "sessions.json").write_text(json.dumps(snapshot))
+        _clear_sessions()
+        ys._load_sessions_from_disk()
+        with ys._SESSIONS_LOCK:
+            assert "s-dead" not in ys._SESSIONS

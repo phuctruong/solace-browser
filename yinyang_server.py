@@ -502,10 +502,49 @@ _COMMUNITY_RECIPES: list = [
 ]
 _SESSIONS: dict[str, dict] = {}
 _SESSIONS_LOCK = threading.Lock()
-LAUNCH_DEDUP_WINDOW_SECS = 10
+LAUNCH_DEDUP_WINDOW_SECS = 30  # increased from 10 — browser startup often > 10s
 _RECENT_BROWSER_LAUNCHES: dict[str, int] = {}
 _INFLIGHT_BROWSER_LAUNCHES: dict[str, int] = {}
 _BROWSER_LAUNCH_GUARD_LOCK = threading.Lock()
+_SESSIONS_PERSIST_PATH: Path = Path.home() / ".solace" / "sessions.json"
+
+
+def _persist_sessions() -> None:
+    """Write _SESSIONS to disk so dedup survives server restarts."""
+    try:
+        with _SESSIONS_LOCK:
+            snapshot = dict(_SESSIONS)
+        _SESSIONS_PERSIST_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _SESSIONS_PERSIST_PATH.write_text(
+            json.dumps(snapshot, indent=2), encoding="utf-8"
+        )
+    except OSError:
+        pass
+
+
+def _load_sessions_from_disk() -> None:
+    """Restore persisted sessions on startup; drop any whose process has exited."""
+    try:
+        raw = json.loads(_SESSIONS_PERSIST_PATH.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return
+    if not isinstance(raw, dict):
+        return
+    alive: dict[str, dict] = {}
+    for sid, sess in raw.items():
+        try:
+            pid = int(sess.get("pid", 0) or 0)
+        except (TypeError, ValueError):
+            continue
+        if pid <= 0:
+            continue
+        try:
+            os.kill(pid, 0)  # check if process is still running
+            alive[sid] = sess
+        except OSError:
+            pass  # process gone — drop the stale session
+    with _SESSIONS_LOCK:
+        _SESSIONS.update(alive)
 
 
 def _allocate_head_hidden_display() -> str:
@@ -4567,6 +4606,56 @@ def _scan_domains_dirs(roots: tuple[Path, ...]) -> list[dict[str, Any]]:
             domain_payload["source_dir"] = str(domain_dir)
             domains[domain_id] = domain_payload
     return [domains[key] for key in sorted(domains)]
+
+
+def _handle_domains_bootstrap(default_only: bool = False) -> dict[str, Any]:
+    domains_root = Path("/home/phuc/projects/solace-cli/data/default/domains")
+    target_root = Path.home() / ".solace" / "apps"
+    bootstrapped_domains = 0
+    bootstrapped_apps = 0
+    domain_ids: list[str] = []
+    for domain_dir in sorted(domains_root.iterdir()):
+        if not domain_dir.is_dir():
+            continue
+        manifest_path = domain_dir / "manifest.yaml"
+        try:
+            manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            continue
+        except yaml.YAMLError:
+            continue
+        if not isinstance(manifest, dict):
+            continue
+        if _domain_requires_login_flag(manifest):
+            continue
+        if default_only and not bool(manifest.get("default_install", False)):
+            continue
+        domain_id = str(manifest.get("id") or domain_dir.name).strip()
+        raw_apps = manifest.get("apps", [])
+        domain_apps = raw_apps if isinstance(raw_apps, list) else []
+        domain_target = target_root / domain_id
+        try:
+            domain_target.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(str(manifest_path), str(domain_target / "manifest.yaml"))
+            for app_entry in domain_apps:
+                app_id = app_entry.get("id") if isinstance(app_entry, dict) else app_entry
+                if isinstance(app_id, str) and _APP_ID_RE.fullmatch(app_id):
+                    (domain_target / "apps" / app_id).mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            raise RuntimeError(f"Bootstrap failed for {domain_id}: {exc}") from exc
+        bootstrapped_domains += 1
+        bootstrapped_apps += sum(
+            1
+            for app_entry in domain_apps
+            if isinstance(app_entry.get("id") if isinstance(app_entry, dict) else app_entry, str)
+            and _APP_ID_RE.fullmatch(app_entry.get("id") if isinstance(app_entry, dict) else app_entry)
+        )
+        domain_ids.append(domain_id)
+    return {
+        "bootstrapped_domains": bootstrapped_domains,
+        "bootstrapped_apps": bootstrapped_apps,
+        "domains": domain_ids,
+    }
 
 
 def _marketplace_apps_root(repo_root: str) -> Path:
@@ -10550,6 +10639,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_locale_set()
         elif path == "/onboarding/complete":
             self._handle_onboarding_complete()
+        elif path == "/api/v1/auth/complete":
+            self._handle_auth_complete()
         elif path == "/onboarding/reset":
             self._handle_onboarding_reset()
         elif path == "/api/v1/model-sources":
@@ -16373,6 +16464,32 @@ function configureOllama() {
             return
         self._send_json({"ok": True, **state})
 
+    def _handle_auth_complete(self) -> None:
+        payload = self._read_json_body()
+        if payload is None:
+            return
+        current = _load_onboarding_state()
+        try:
+            _save_onboarding_state(
+                {
+                    "auth_state": "logged_in",
+                    "membership_tier": payload.get("membership_tier", current.get("membership_tier", "free")),
+                    "managed_llm_enabled": payload.get("managed_llm_enabled", current.get("managed_llm_enabled", False)),
+                    "model_sources": payload.get("model_sources", current.get("model_sources", [])),
+                }
+            )
+        except ValueError as exc:
+            self._send_json({"error": str(exc)}, 400)
+            return
+        response_body = {"status": "complete"}
+        try:
+            bootstrap_result = _handle_domains_bootstrap(default_only=True)
+            response_body["bootstrapped_domains"] = bootstrap_result["bootstrapped_domains"]
+            response_body["bootstrapped_apps"] = bootstrap_result["bootstrapped_apps"]
+        except (OSError, RuntimeError) as exc:
+            _append_notification("info", "Bootstrap warning", str(exc), level="warning")
+        self._send_json(response_body)
+
     def _handle_onboarding_reset(self) -> None:
         """POST /onboarding/reset — requires auth; delete onboarding.json."""
         if not self._check_auth():
@@ -16752,7 +16869,17 @@ document.querySelectorAll('.suggest-form').forEach((form)=>form.addEventListener
         body = self._read_json_body()
         if body is None:
             return
-        del body
+        if bool(body.get("default_only", False)):
+            result = _handle_domains_bootstrap(default_only=True)
+            self._send_json(
+                {
+                    "status": "ok",
+                    "copied_domains": result["bootstrapped_domains"],
+                    "bootstrapped_apps": result["bootstrapped_apps"],
+                    "local_root": str(Path.home() / ".solace" / "apps"),
+                }
+            )
+            return
         repo_root = str(Path(getattr(self.server, "repo_root", ".")).resolve())
         local_root = _local_apps_root_path()
         copied_domains = 0
@@ -17497,9 +17624,10 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
 
     def _create_local_session(self, url: str, profile: str) -> tuple[int, dict]:
         try:
-            pid = self._spawn_browser_session(url, profile)
+            launch = self._spawn_browser_session(url, profile)
         except FileNotFoundError as exc:
             return 503, {"error": str(exc)}
+        pid = int(launch["pid"])
         session_id = str(uuid.uuid4())
         user_data_dir = str(self._browser_sessions_root() / session_id / "profile")
         with _SESSIONS_LOCK:
@@ -17509,10 +17637,14 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
                 "pid": pid,
                 "started_at": int(time.time()),
                 "mode": "standard",
+                "head_hidden": bool(launch.get("head_hidden", False)),
                 "session_name": None,
                 "source": "api-localhost",
                 "user_data_dir": user_data_dir,
+                "xvfb_pid": launch.get("xvfb_pid"),
+                "hidden_display": launch.get("hidden_display"),
             }
+        _persist_sessions()
         return 201, {"session_id": session_id, "pid": pid, "url": url}
 
     def _browser_sessions_root(self) -> Path:
@@ -17747,6 +17879,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
                     "hidden_display": launch.get("hidden_display"),
                 }
                 _RECENT_BROWSER_LAUNCHES[launch_key] = int(time.time())
+            _persist_sessions()
             record_evidence(
                 "browser_launch",
                 {
@@ -17983,6 +18116,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
             del _SESSIONS[session_id]
         _cleanup_session_sidecars(sess)
         _terminate_browser_pid(int(pid))
+        _persist_sessions()
         record_evidence("browser_session_terminated", {"session_id": session_id, "pid": pid})
         return 200, {"status": "terminated", "session_id": session_id}
 
@@ -40450,6 +40584,7 @@ def build_server(
     SESSION_RULES_APPS_DIR = _marketplace_apps_root(repo_root)
     load_session_rules()
     _rebuild_domain_index(repo_root)
+    _load_sessions_from_disk()  # restore any still-alive sessions from previous run
     server = ReusableThreadingHTTPServer(("localhost", port), YinyangHandler)
     server.apps = load_apps(repo_root)  # type: ignore[attr-defined]
     server.repo_root = repo_root  # type: ignore[attr-defined]
