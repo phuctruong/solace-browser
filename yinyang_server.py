@@ -7925,6 +7925,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_domains_list()
         elif path == "/api/v1/domains/status":
             self._handle_domain_status(query)
+        elif re.match(r"^/api/v1/domains/[^/]+/icon$", path):
+            domain = urllib.parse.unquote(path.split("/api/v1/domains/", 1)[1].rsplit("/icon", 1)[0])
+            self._handle_domain_icon(domain)
         elif re.match(r"^/api/v1/domains/[^/]+$", path):
             domain = urllib.parse.unquote(path.split("/api/v1/domains/", 1)[1])
             self._handle_domain_detail(domain)
@@ -7933,8 +7936,12 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         elif re.match(r"^/api/v1/events/[^/]+$", path):
             event_id = urllib.parse.unquote(path.split("/api/v1/events/", 1)[1])
             self._handle_event_detail_api(event_id)
+        elif path == "/domains":
+            self._handle_domains_page()
         elif path.startswith("/domains/"):
             self._handle_domain_management_page(urllib.parse.unquote(path.split("/domains/", 1)[1]))
+        elif path == "/store":
+            self._handle_store_page()
         elif path.startswith("/events/"):
             self._handle_event_detail_page(urllib.parse.unquote(path.split("/events/", 1)[1]))
         elif path == "/api/v1/browser/status":
@@ -16546,6 +16553,120 @@ function configureOllama() {
             return
         self._send_json({"domain": entry})
 
+    def _handle_domains_page(self) -> None:
+        if not self._check_auth():
+            return
+        repo_root = str(Path(getattr(self.server, "repo_root", ".")).resolve())
+        cards: list[str] = []
+        for entry in _scan_domains_dirs(_source_domain_roots(repo_root)):
+            domain_id = _normalize_domain(str(entry.get("domain", "")))
+            if not domain_id:
+                continue
+            name = html_escape(str(entry.get("name") or domain_id))
+            badge_class = "badge-login" if bool(entry.get("login_required", False)) else "badge-open"
+            badge_label = "Login required" if bool(entry.get("login_required", False)) else "No login"
+            cards.append(
+                f'<a href="/api/v1/domains/{urllib.parse.quote(domain_id, safe=".")}" class="domain-card">'
+                f'<img src="/api/v1/domains/{urllib.parse.quote(domain_id, safe=".")}/icon" class="domain-icon" alt="{name}">'
+                f'<span class="domain-name">{name}</span>'
+                f'<span class="login-badge {badge_class}">{badge_label}</span>'
+                f"</a>"
+            )
+        body = f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Domains</title><style>
+body{{font-family:system-ui,sans-serif;margin:0;background:#f4efe6;color:#1f1b16}}main{{max-width:1100px;margin:0 auto;padding:32px 20px 48px}}
+.domain-grid{{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}}.domain-card{{display:grid;gap:12px;padding:18px;border-radius:18px;border:1px solid #d9c9b5;background:#fffaf3;color:inherit;text-decoration:none}}
+.domain-icon{{width:48px;height:48px;object-fit:contain}}.domain-name{{font-weight:700}}.login-badge{{display:inline-flex;width:max-content;padding:6px 10px;border-radius:999px;font-size:13px}}
+.badge-open{{background:#dff4d9;color:#1f5e28}}.badge-login{{background:#fde3cf;color:#8a4314}}
+</style></head><body><main><h1>Domains</h1><div class="domain-grid">{"".join(cards)}</div></main></body></html>"""
+        payload = body.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def _handle_store_page(self) -> None:
+        if not self._check_auth():
+            return
+        repo_root = str(Path(getattr(self.server, "repo_root", ".")).resolve())
+        cards: list[str] = []
+        for entry in _scan_domains_dirs(_source_domain_roots(repo_root)):
+            domain_id = _normalize_domain(str(entry.get("domain", "")))
+            if not domain_id:
+                continue
+            app_id = ""
+            apps = entry.get("apps", [])
+            if isinstance(apps, list) and apps and isinstance(apps[0], dict):
+                app_id = str(apps[0].get("id") or "").strip()
+            category = "login" if bool(entry.get("login_required", False)) else "open"
+            name = html_escape(str(entry.get("name") or domain_id))
+            cards.append(
+                f'<article class="domain-card" data-category="{category}" data-domain="{domain_id}"><div class="card-head">'
+                f'<img src="/api/v1/domains/{urllib.parse.quote(domain_id, safe=".")}/icon" class="domain-icon" alt="{name}">'
+                f'<div><strong>{name}</strong><div class="muted">{html_escape(domain_id)}</div></div></div>'
+                f'<div class="card-actions"><button type="button" data-action="install" data-domain="{domain_id}" data-app-id="{html_escape(app_id)}"{" disabled" if not app_id else ""}>Install</button>'
+                f'<button type="button" data-action="suggest-toggle" data-domain="{domain_id}">Suggest</button></div>'
+                f'<form class="suggest-form" data-domain="{domain_id}" hidden><input name="message" type="text" placeholder="Why should this domain be added?" required>'
+                f'<button type="submit" data-action="suggest" data-domain="{domain_id}">Send</button></form></article>'
+            )
+        body = f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App Store</title><style>
+body{{font-family:system-ui,sans-serif;margin:0;background:#fff7ed;color:#1c1917}}main{{max-width:1100px;margin:0 auto;padding:32px 20px 48px;display:grid;gap:18px}}
+.tabs,.card-actions,.card-head{{display:flex;gap:10px;flex-wrap:wrap;align-items:center}}.domain-grid{{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}}
+.domain-card{{border:1px solid #e7d7c2;background:#fff;border-radius:18px;padding:16px;display:grid;gap:14px}}.domain-icon{{width:44px;height:44px;object-fit:contain}}
+button,input{{font:inherit}}button{{border:0;border-radius:999px;padding:10px 14px;background:#1f2937;color:#fff;cursor:pointer}}button[disabled]{{opacity:.45;cursor:not-allowed}}
+input{{border:1px solid #d6c5ae;border-radius:12px;padding:11px 12px}}.muted{{color:#6b645c}}
+</style></head><body><main><h1>App Store</h1><input type="search" id="store-search" placeholder="Search domains..."><div class="tabs">
+<button type="button" data-filter="all">All</button><button type="button" data-filter="open">No Login</button><button type="button" data-filter="login">Login Required</button>
+</div><div class="domain-grid">{"".join(cards)}</div></main><script>
+const cards=[...document.querySelectorAll('.domain-card')];
+const search=document.getElementById('store-search');
+function render(filter='all'){{const term=search.value.trim().toLowerCase();cards.forEach((card)=>{{const text=card.textContent.toLowerCase();const matchFilter=filter==='all'||card.dataset.category===filter;card.hidden=!(matchFilter&&text.includes(term));}});}}
+document.querySelectorAll('[data-filter]').forEach((button)=>button.addEventListener('click',()=>render(button.dataset.filter)));
+search.addEventListener('input',()=>render(document.querySelector('[data-filter].active')?.dataset.filter||'all'));
+document.addEventListener('click',async(event)=>{{const button=event.target.closest('button[data-action]');if(!button)return;if(button.dataset.action==='suggest-toggle'){{const form=document.querySelector(`form[data-domain="${{button.dataset.domain}}"]`);if(form)form.hidden=!form.hidden;return;}}if(button.dataset.action!=='install'||!button.dataset.appId)return;const response=await fetch('/api/v1/apps/download',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{app_id:button.dataset.appId}})}});button.textContent=response.ok?'Installed':'Install failed';}});
+document.querySelectorAll('.suggest-form').forEach((form)=>form.addEventListener('submit',async(event)=>{{event.preventDefault();const message=form.querySelector('input[name="message"]').value.trim();if(!message)return;const response=await fetch('/api/v1/domains/suggest',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{domain:form.dataset.domain,message}})}});if(response.ok)form.reset();}}));
+</script></body></html>"""
+        payload = body.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def _handle_domain_icon(self, domain: str) -> None:
+        normalized = _normalize_domain(domain)
+        if not normalized:
+            self._send_json({"error": "domain not found"}, 404)
+            return
+        repo_root = str(Path(getattr(self.server, "repo_root", ".")).resolve())
+        for base_path in _source_domain_roots(repo_root):
+            try:
+                resolved_base = base_path.resolve()
+                icon_dir = (resolved_base / normalized / "assets" / "icons").resolve()
+                if str(icon_dir) != str(resolved_base) and not str(icon_dir).startswith(f"{resolved_base}{os.sep}"):
+                    continue
+                candidates = [icon_dir / "icon.png", icon_dir / "icon.svg", *sorted(icon_dir.glob("*.png"))]
+                for candidate in candidates:
+                    if not candidate.is_file():
+                        continue
+                    payload = candidate.read_bytes()
+                    content_type = "image/svg+xml" if candidate.suffix.lower() == ".svg" else "image/png"
+                    self.send_response(200)
+                    self.send_header("Content-Type", content_type)
+                    self.send_header("Content-Length", str(len(payload)))
+                    self.end_headers()
+                    self.wfile.write(payload)
+                    return
+            except FileNotFoundError:
+                continue
+            except OSError:
+                continue
+        self._send_json({"error": "icon not found"}, 404)
+
     def _handle_domain_suggest(self) -> None:
         if not self._check_auth():
             return
@@ -16553,29 +16674,39 @@ function configureOllama() {
         if body is None:
             return
         domain = _normalize_domain(str(body.get("domain") or body.get("host") or ""))
-        name = str(body.get("name") or "").strip()
-        reason = str(body.get("reason") or "").strip()
         if not domain:
             self._send_json({"error": "domain required"}, 400)
             return
-        if not name:
-            self._send_json({"error": "name required"}, 400)
+        message = str(body.get("message") or "").strip()
+        legacy_name = str(body.get("name") or "").strip()
+        legacy_reason = str(body.get("reason") or "").strip()
+        if not message and not legacy_name:
+            self._send_json({"error": "message required"}, 400)
             return
-        suggestions_dir = _store_suggestions_root() / "domains"
-        suggestions_dir.mkdir(parents=True, exist_ok=True)
-        payload = {
-            "domain": domain,
-            "name": name,
-            "reason": reason,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        }
-        target = suggestions_dir / f"{domain}.json"
+        timestamp = datetime.now(timezone.utc).isoformat()
         try:
-            target.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-        except OSError as exc:
-            self._send_json({"error": f"cannot store suggestion: {exc}"}, 500)
+            jsonl_path = Path.home() / ".solace" / "domain_suggestions.jsonl"
+            jsonl_path.parent.mkdir(parents=True, exist_ok=True)
+            with jsonl_path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps({"ts": timestamp, "domain": domain, "message": message or legacy_reason or legacy_name}))
+                handle.write("\n")
+            if legacy_name:
+                suggestions_dir = _store_suggestions_root() / "domains"
+                suggestions_dir.mkdir(parents=True, exist_ok=True)
+                (suggestions_dir / f"{domain}.json").write_text(
+                    json.dumps(
+                        {"domain": domain, "name": legacy_name, "reason": legacy_reason, "created_at": timestamp},
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
+        except OSError:
+            self._send_json({"error": "storage_write_failed"}, 500)
             return
-        self._send_json({"status": "stored", "path": str(target), "domain": domain}, 201)
+        if legacy_name and not message:
+            self._send_json({"status": "stored", "path": str(_store_suggestions_root() / 'domains' / f'{domain}.json'), "domain": domain}, 201)
+            return
+        self._send_json({"status": "received", "domain": domain})
 
     def _handle_app_suggest(self) -> None:
         if not self._check_auth():
