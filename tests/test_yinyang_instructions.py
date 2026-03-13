@@ -3006,6 +3006,24 @@ class TestSessionManager:
             def poll(self):
                 return None
 
+            # subprocess.run uses Popen as a context manager internally
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            @property
+            def returncode(self):
+                return 0
+
+            def communicate(self, *args, **kwargs):
+                return b"", b""
+
+            args = []
+            stdout = None
+            stderr = None
+
         monkeypatch.setattr(ys.subprocess, "Popen", lambda *a, **kw: FakeProcess())
         monkeypatch.setattr(ys.YinyangHandler, "_is_session_alive", lambda self, pid: True)
         original_env = _os.environ.get("SOLACE_BROWSER", "")
@@ -3150,6 +3168,12 @@ class TestSessionManager:
         monkeypatch.setattr(ys.subprocess, "Popen", lambda *a, **kw: FakeProcess())
         original_env = _os.environ.get("SOLACE_BROWSER", "")
         _os.environ["SOLACE_BROWSER"] = _sys.executable
+        # clear stale sessions and launch cache so prior tests don't
+        # trigger storm_guard or reuse_window on the first call
+        with ys._SESSIONS_LOCK:
+            ys._SESSIONS.clear()
+        ys._RECENT_BROWSER_LAUNCHES.clear()
+        ys._INFLIGHT_BROWSER_LAUNCHES.clear()
         try:
             status1, data1 = _post_with_auth(
                 "/api/v1/browser/launch",
@@ -3188,6 +3212,7 @@ class TestSessionManager:
 
     def test_browser_launch_dedupes_across_sources(self, monkeypatch):
         """Hub and browser launch surfaces should dedupe the same effective launch."""
+        import os as _os
         import time as _time
         import yinyang_server as ys
 
@@ -3198,7 +3223,7 @@ class TestSessionManager:
             ys._SESSIONS[session_id] = {
                 "url": "https://solaceagi.com/dashboard",
                 "profile": "default",
-                "pid": 12345,
+                "pid": _os.getpid(),  # real alive PID so liveness check passes
                 "started_at": int(_time.time()),
                 "mode": "standard",
                 "head_hidden": False,

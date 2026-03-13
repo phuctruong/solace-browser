@@ -200,6 +200,7 @@ OAUTH3_TOKENS_PATH: Path = Path.home() / ".solace" / "oauth3-tokens.json"
 OAUTH3_VAULT_PATH: Path = Path.home() / ".solace" / "oauth3-vault.enc"
 ONBOARDING_PATH: Path = Path.home() / ".solace" / "onboarding.json"
 SETTINGS_PATH: Path = Path.home() / ".solace" / "settings.json"
+YINYANG_LOCALES_DIR: Path = REPO_ROOT / "app" / "locales" / "yinyang"
 DOMAIN_EVENTS_PATH: Path = Path.home() / ".solace" / "domain-events.json"
 PRIME_WIKI_ROOT: Path = Path.home() / ".solace" / "prime-wiki"
 PRIME_WIKI_ASSETS_PATH: Path = PRIME_WIKI_ROOT / "assets.json"
@@ -232,6 +233,13 @@ DEFAULT_DOMAIN_SESSION_POLICY: dict[str, Any] = {
     "sync_to_cloud": False,
     "success_url": "",
 }
+SUPPORTED_RUNTIME_LOCALES: tuple[str, ...] = (
+    "am", "ar", "bg", "bn", "ca", "cs", "da", "de", "el", "en", "es", "et", "fa",
+    "fi", "fil", "fr", "ha", "he", "hi", "hr", "hu", "id", "it", "ja", "ko", "lt",
+    "lv", "ms", "nl", "no", "pl", "pt", "ro", "ru", "sk", "sl", "sr", "sv", "sw",
+    "th", "tr", "uk", "vi", "yo", "zh-hant", "zh", "zu",
+)
+RTL_RUNTIME_LOCALES: frozenset[str] = frozenset({"ar", "fa", "he"})
 
 _SERVER_VERSION = "1.1"
 HUB_PORT = 8888
@@ -4737,6 +4745,44 @@ def _normalized_cloud_twin_settings(raw_value: object) -> dict:
     return settings
 
 
+def _normalize_runtime_locale(raw_value: object) -> str:
+    if not isinstance(raw_value, str):
+        return "en"
+    normalized = raw_value.strip().lower()
+    if normalized in SUPPORTED_RUNTIME_LOCALES:
+        return normalized
+    return "en"
+
+
+def _runtime_locale_direction(locale: str) -> str:
+    return "rtl" if locale in RTL_RUNTIME_LOCALES else "ltr"
+
+
+def _current_runtime_locale(settings: Optional[dict[str, Any]] = None) -> str:
+    source = settings if isinstance(settings, dict) else _load_settings()
+    return _normalize_runtime_locale(source.get("locale", "en"))
+
+
+def _localized_solaceagi_url(url: str, locale: Optional[str] = None) -> str:
+    trimmed = str(url or "").strip()
+    if not trimmed:
+        return trimmed
+    parsed = urllib.parse.urlparse(trimmed)
+    if parsed.scheme not in ("http", "https"):
+        return trimmed
+    host = parsed.netloc.lower()
+    if host not in {"solaceagi.com", "www.solaceagi.com"}:
+        return trimmed
+    chosen_locale = _normalize_runtime_locale(locale or _current_runtime_locale())
+    if chosen_locale == "en":
+        return trimmed
+    path = parsed.path or "/"
+    if path == f"/{chosen_locale}" or path.startswith(f"/{chosen_locale}/"):
+        return trimmed
+    localized_path = f"/{chosen_locale}" if path == "/" else f"/{chosen_locale}{path}"
+    return urllib.parse.urlunparse(parsed._replace(path=localized_path))
+
+
 def _load_settings() -> dict:
     try:
         settings = json.loads(SETTINGS_PATH.read_text())
@@ -4750,12 +4796,14 @@ def _load_settings() -> dict:
         settings = {}
     merged = dict(settings)
     merged["cloud_twin"] = _normalized_cloud_twin_settings(settings.get("cloud_twin", {}))
+    merged["locale"] = _normalize_runtime_locale(settings.get("locale", "en"))
     return merged
 
 
 def _save_settings(settings: dict) -> None:
     persisted = dict(settings)
     persisted["cloud_twin"] = _normalized_cloud_twin_settings(settings.get("cloud_twin", {}))
+    persisted["locale"] = _normalize_runtime_locale(settings.get("locale", "en"))
     SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
     SETTINGS_PATH.write_text(json.dumps(persisted, indent=2))
 
@@ -7566,6 +7614,9 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_sidebar_asset(
                 "sidepanel.js", "application/javascript; charset=utf-8"
             )
+        elif re.match(r"^/locales/yinyang/[^/]+\.json$", path):
+            locale_name = path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+            self._handle_yinyang_locale_asset(locale_name)
         elif path == "/branding/yinyang-logo.png":
             self._handle_branding_asset(HUB_ICONS_DIR / "yinyang-logo.png", "image/png")
         elif path == "/branding/yinyang-rotating.gif":
@@ -7591,6 +7642,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_dom_snapshot()
         elif path == "/api/page-snapshot":
             self._handle_page_snapshot()
+        elif path == "/api/v1/locale":
+            self._handle_locale_get()
         elif path == "/api/v1/evidence":
             self._handle_evidence_list(query)
         elif path == "/api/v1/evidence/log":
@@ -10371,6 +10424,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             self._handle_chat_message()
         elif path == "/api/v1/cli-agents/generate":
             self._handle_cli_agents_generate()
+        elif path == "/api/v1/locale":
+            self._handle_locale_set()
         elif path == "/onboarding/complete":
             self._handle_onboarding_complete()
         elif path == "/onboarding/reset":
@@ -13363,10 +13418,56 @@ document.getElementById('confirm').addEventListener('click', function () {
         payload["snapshot_type"] = "page"
         payload["page"] = {
             "title": "Solace Browser Runtime",
-            "start_url": "https://solaceagi.com/dashboard",
+            "start_url": _localized_solaceagi_url(DEFAULT_BROWSER_START_URL),
             "current_sessions": payload["runtime"]["sessions"],
         }
         self._send_json(payload)
+
+    def _handle_locale_get(self) -> None:
+        settings = _load_settings()
+        locale = _current_runtime_locale(settings)
+        self._send_json(
+            {
+                "locale": locale,
+                "direction": _runtime_locale_direction(locale),
+                "supported_locales": list(SUPPORTED_RUNTIME_LOCALES),
+                "dashboard_url": _localized_solaceagi_url(DEFAULT_BROWSER_START_URL, locale),
+            }
+        )
+
+    def _handle_locale_set(self) -> None:
+        body = self._tracker_body()
+        if body is None:
+            return
+        settings = _load_settings()
+        locale = _normalize_runtime_locale(body.get("locale", "en"))
+        settings["locale"] = locale
+        _save_settings(settings)
+        self._send_json(
+            {
+                "ok": True,
+                "locale": locale,
+                "direction": _runtime_locale_direction(locale),
+                "dashboard_url": _localized_solaceagi_url(DEFAULT_BROWSER_START_URL, locale),
+            }
+        )
+
+    def _handle_yinyang_locale_asset(self, locale: str) -> None:
+        locale_name = _normalize_runtime_locale(locale)
+        locale_path = YINYANG_LOCALES_DIR / f"{locale_name}.json"
+        if not locale_path.exists():
+            locale_path = YINYANG_LOCALES_DIR / "en.json"
+        try:
+            body = locale_path.read_bytes()
+        except OSError as error:
+            self._send_json({"error": "locale_unavailable", "detail": str(error)}, 500)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def _handle_agents_json(self) -> None:
         from yinyang_mcp_server import _TOOL_DEFINITIONS
@@ -17060,6 +17161,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         head_hidden: bool,
         source: str,
         allow_duplicate: bool = False,
+        reuse_window: bool = True,
     ) -> None:
         launch_key = self._browser_launch_key(
             url=url,
@@ -17090,6 +17192,37 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
                     200,
                 )
                 return
+            # reuse_window: open URL as a new tab in any live session for this
+            # profile instead of spawning a new window process.
+            if reuse_window:
+                live = self._find_live_session_for_profile(
+                    profile, mode=mode, head_hidden=head_hidden
+                )
+                if live is not None:
+                    live_session_id, live_session = live
+                    self._open_url_in_existing_window(live_session, url)
+                    record_evidence(
+                        "browser_tab_opened",
+                        {
+                            "session_id": live_session_id,
+                            "url": url,
+                            "profile": profile,
+                            "source": source,
+                        },
+                    )
+                    self._send_json(
+                        {
+                            "session_id": live_session_id,
+                            "pid": live_session["pid"],
+                            "url": url,
+                            "profile": profile,
+                            "mode": mode,
+                            "head_hidden": head_hidden,
+                            "reused_window": True,
+                        },
+                        200,
+                    )
+                    return
             inflight_payload = self._mark_browser_launch_inflight(launch_key)
             if inflight_payload is not None:
                 self._send_json(inflight_payload, 200)
@@ -17162,7 +17295,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         mode: str,
         head_hidden: bool,
     ) -> Optional[tuple[str, dict[str, Any]]]:
-        cutoff = int(time.time()) - LAUNCH_DEDUP_WINDOW_SECS
+        """Find a live session matching url+profile+mode+head_hidden exactly."""
         with _SESSIONS_LOCK:
             for session_id, session in _SESSIONS.items():
                 if str(session.get("url", "")) != url:
@@ -17173,10 +17306,62 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
                     continue
                 if bool(session.get("head_hidden", False)) != head_hidden:
                     continue
-                if int(session.get("started_at", 0)) < cutoff:
+                pid = int(session.get("pid", 0) or 0)
+                if pid > 0 and not self._is_session_alive(pid):
                     continue
                 return session_id, dict(session)
         return None
+
+    def _find_live_session_for_profile(
+        self,
+        profile: str,
+        *,
+        mode: str = "standard",
+        head_hidden: bool = False,
+    ) -> Optional[tuple[str, dict[str, Any]]]:
+        """Find any live browser session for the given profile (any URL)."""
+        with _SESSIONS_LOCK:
+            for session_id, session in _SESSIONS.items():
+                if str(session.get("profile", "")) != profile:
+                    continue
+                if str(session.get("mode", "standard")) != mode:
+                    continue
+                if bool(session.get("head_hidden", False)) != head_hidden:
+                    continue
+                pid = int(session.get("pid", 0) or 0)
+                if pid > 0 and self._is_session_alive(pid):
+                    return session_id, dict(session)
+        return None
+
+    def _open_url_in_existing_window(
+        self,
+        session: dict[str, Any],
+        url: str,
+    ) -> None:
+        """Open URL as a new tab in an existing browser window.
+
+        Chromium is single-instance aware: launching the binary with the same
+        --user-data-dir and a URL (without --new-window) opens a new tab in
+        the already-running window instead of spawning a second window.
+        """
+        if bool(getattr(self.server, "cloud_twin_mode", False)):
+            _launch_chrome_cloud_twin(url)
+            return
+        browser_path = self._resolve_local_browser_binary()
+        user_data_dir = session.get("user_data_dir")
+        profile = str(session.get("profile", "default"))
+        args = [str(browser_path)]
+        if user_data_dir:
+            args.append(f"--user-data-dir={user_data_dir}")
+        args.append(f"--profile-directory={profile}")
+        # No --new-window: Chromium routes this to an existing instance's tab
+        args.append(url)
+        subprocess.Popen(
+            args,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            cwd=str(browser_path.parent),
+        )
 
     def _browser_launch_key(
         self,
@@ -17260,6 +17445,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
             return
         head_hidden = bool(body.get("head_hidden", False))
         allow_duplicate = bool(body.get("allow_duplicate", False))
+        reuse_window = bool(body.get("reuse_window", True))
         self._launch_controlled_browser_session(
             url=url,
             profile=profile,
@@ -17268,6 +17454,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
             head_hidden=head_hidden,
             source=source,
             allow_duplicate=allow_duplicate,
+            reuse_window=reuse_window,
         )
 
     def _handle_hub_browser_open(self) -> None:
