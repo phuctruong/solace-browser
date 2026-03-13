@@ -5036,6 +5036,30 @@ def _domain_status_payload(repo_root: str, domain: str) -> dict[str, Any]:
     }
 
 
+def _domain_status_summary_payload(
+    repo_root: str,
+    domain: str,
+    *,
+    profiles: Optional[dict[str, Any]] = None,
+    events: Optional[list[dict[str, Any]]] = None,
+) -> dict[str, Any]:
+    normalized = _normalize_domain(domain)
+    profile_map = profiles if isinstance(profiles, dict) else _load_domain_profiles()
+    profile = profile_map.get(normalized)
+    if not isinstance(profile, dict):
+        profile = _default_domain_profile(repo_root, normalized)
+    event_rows = events if isinstance(events, list) else _load_domain_events()
+    filtered = event_rows if normalized == "solaceagi.com" else [event for event in event_rows if event.get("domain") == normalized]
+    return {
+        "domain": normalized,
+        "active": bool(profile.get("active", False)),
+        "requires_login": bool(profile.get("requires_login", False)),
+        "selected_apps": list(profile.get("selected_apps", [])),
+        "keepalive_apps": list(profile.get("keepalive_apps", [])),
+        "event_count": len(filtered),
+    }
+
+
 def _bootstrap_starter_domains(repo_root: str) -> dict[str, dict[str, Any]]:
     profiles = _ensure_default_domain_profiles(repo_root)
     changed = False
@@ -5115,8 +5139,10 @@ def _known_domains_from_index(repo_root: str) -> set[str]:
         if not isinstance(pattern, str):
             continue
         host, _path = _split_domain_pattern(pattern)
+        if isinstance(host, str) and host.startswith("*."):
+            host = host[2:]
         normalized = _normalize_domain(host)
-        if normalized:
+        if normalized and normalized not in {"*", "any"}:
             domains.add(normalized)
     return domains
 
@@ -5154,9 +5180,10 @@ def _domain_descriptor(
     onboarding: Optional[dict[str, Any]] = None,
     *,
     include_app_counts: bool = False,
+    status_override: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     normalized = _normalize_domain(domain)
-    status = _domain_status_payload(repo_root, normalized)
+    status = status_override if isinstance(status_override, dict) else _domain_status_payload(repo_root, normalized)
     current_onboarding = onboarding if isinstance(onboarding, dict) else _load_onboarding_state()
     available_app_count = 0
     if include_app_counts:
@@ -15906,7 +15933,17 @@ function configureOllama() {
     def _handle_domains_list(self) -> None:
         repo_root = getattr(self.server, "repo_root", ".")
         onboarding = _load_onboarding_state()
-        items = [_domain_descriptor(repo_root, domain, onboarding=onboarding) for domain in _known_domains(repo_root)]
+        profiles = _load_domain_profiles()
+        events = _load_domain_events()
+        items = [
+            _domain_descriptor(
+                repo_root,
+                domain,
+                onboarding=onboarding,
+                status_override=_domain_status_summary_payload(repo_root, domain, profiles=profiles, events=events),
+            )
+            for domain in _known_domains(repo_root)
+        ]
         active = sum(1 for item in items if item.get("active"))
         apps_enabled = bool(onboarding.get("apps_enabled", False))
         self._send_json(

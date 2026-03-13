@@ -2272,6 +2272,48 @@ class TestOnboardingEndpoints:
         assert added["url"].endswith("/domains/news.google.com")
         assert added["setup_state"] in {"setup", "login", "ready", "active"}
 
+    def test_domains_list_uses_lightweight_domain_summary(self, server, monkeypatch):
+        """GET /api/v1/domains should not expand full app payloads for every domain card."""
+        import yinyang_server as ys
+
+        ys._save_domain_profiles({})
+        ys._save_domain_events([])
+        post_json(
+            "/onboarding/complete",
+            {
+                "auth_state": "logged_in",
+                "membership_tier": "free",
+                "model_sources": ["cli"],
+            },
+        )
+        post_json(
+            "/api/v1/domains",
+            {
+                "domain": "news.google.com",
+                "login_url": "https://accounts.google.com/",
+                "success_url": "https://news.google.com/home",
+            },
+        )
+
+        def fail_apps_for_domain(*_args, **_kwargs):
+            raise AssertionError("domains list should not load full app payloads")
+
+        monkeypatch.setattr(ys, "_apps_for_domain", fail_apps_for_domain)
+        payload = get_json("/api/v1/domains")
+        hosts = {item["host"] for item in payload["items"]}
+        assert "solaceagi.com" in hosts
+        assert "news.google.com" in hosts
+
+    def test_domains_list_normalizes_wildcard_patterns_to_root_domains(self, server):
+        """GET /api/v1/domains should not leak wildcard pattern hosts into the domain rail."""
+        payload = get_json("/api/v1/domains")
+        hosts = {item["host"] for item in payload["items"]}
+        assert "*.github.com" not in hosts
+        assert "*.slack.com" not in hosts
+        assert "any" not in hosts
+        assert "github.com" in hosts
+        assert "slack.com" in hosts
+
     def test_onboarding_reset_requires_auth(self, auth_server):
         """POST /onboarding/reset without auth → 401."""
         status, _ = _post_no_auth("/onboarding/reset", {})
