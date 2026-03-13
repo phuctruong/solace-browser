@@ -495,6 +495,7 @@ _COMMUNITY_RECIPES: list = [
 _SESSIONS: dict[str, dict] = {}
 _SESSIONS_LOCK = threading.Lock()
 LAUNCH_DEDUP_WINDOW_SECS = 10
+_RECENT_BROWSER_LAUNCHES: dict[str, int] = {}
 
 
 def _allocate_head_hidden_display() -> str:
@@ -16750,13 +16751,18 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         source: str,
         allow_duplicate: bool = False,
     ) -> None:
+        launch_key = self._browser_launch_key(
+            url=url,
+            profile=profile,
+            mode=mode,
+            head_hidden=head_hidden,
+        )
         if not allow_duplicate:
             existing = self._find_existing_controlled_session(
                 url=url,
                 profile=profile,
                 mode=mode,
                 head_hidden=head_hidden,
-                source=source,
             )
             if existing is not None:
                 session_id, session = existing
@@ -16773,6 +16779,10 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
                     },
                     200,
                 )
+                return
+            storm_guard_payload = self._storm_guard_visible_browser_launch(launch_key)
+            if storm_guard_payload is not None:
+                self._send_json(storm_guard_payload, 200)
                 return
         session_id = str(uuid.uuid4())
         user_data_dir = self._browser_sessions_root() / session_id / "profile"
@@ -16801,6 +16811,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
                 "xvfb_pid": launch.get("xvfb_pid"),
                 "hidden_display": launch.get("hidden_display"),
             }
+            _RECENT_BROWSER_LAUNCHES[launch_key] = int(time.time())
         record_evidence(
             "browser_launch",
             {
@@ -16832,7 +16843,6 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         profile: str,
         mode: str,
         head_hidden: bool,
-        source: str,
     ) -> Optional[tuple[str, dict[str, Any]]]:
         cutoff = int(time.time()) - LAUNCH_DEDUP_WINDOW_SECS
         with _SESSIONS_LOCK:
@@ -16845,12 +16855,45 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
                     continue
                 if bool(session.get("head_hidden", False)) != head_hidden:
                     continue
-                if str(session.get("source", "")) != source:
-                    continue
                 if int(session.get("started_at", 0)) < cutoff:
                     continue
                 return session_id, dict(session)
         return None
+
+    def _browser_launch_key(
+        self,
+        *,
+        url: str,
+        profile: str,
+        mode: str,
+        head_hidden: bool,
+    ) -> str:
+        return json.dumps(
+            {
+                "url": url,
+                "profile": profile,
+                "mode": mode,
+                "head_hidden": head_hidden,
+            },
+            sort_keys=True,
+        )
+
+    def _storm_guard_visible_browser_launch(self, launch_key: str) -> Optional[dict[str, Any]]:
+        cutoff = int(time.time()) - LAUNCH_DEDUP_WINDOW_SECS
+        last_launch = int(_RECENT_BROWSER_LAUNCHES.get(launch_key, 0))
+        if last_launch < cutoff:
+            return None
+        windows = self._list_browser_windows()
+        if not windows:
+            return None
+        return {
+            "status": "ok",
+            "deduped": True,
+            "storm_guarded": True,
+            "message": "A matching Solace Browser window is already open.",
+            "visible_window_count": len(windows),
+            "visible_windows": windows,
+        }
 
     def _handle_browser_launch(self, require_auth: bool = True, source: str = "browser-launch") -> None:
         if require_auth and not self._check_auth():

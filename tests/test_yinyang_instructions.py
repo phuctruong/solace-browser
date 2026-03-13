@@ -2090,6 +2090,133 @@ class TestOnboardingEndpoints:
         assert payload["total"] >= 1
         assert all(item["domain"] == "mail.google.com" for item in payload["items"])
 
+    def test_domain_activate_requires_success_url_match_for_login_domains(self, server):
+        """POST /api/v1/domains/activate requires a deterministic observed_url match for login-backed domains."""
+        post_json(
+            "/onboarding/complete",
+            {
+                "auth_state": "logged_in",
+                "membership_tier": "free",
+                "model_sources": ["byok"],
+            },
+        )
+        post_json(
+            "/api/v1/domains/setup",
+            {
+                "domain": "mail.google.com",
+                "selected_apps": ["gmail-triage"],
+                "keepalive_apps": ["gmail-triage"],
+                "login_url": "https://accounts.google.com/",
+                "success_url": "https://mail.google.com/mail/u/0/#inbox",
+            },
+        )
+        body = json.dumps(
+            {
+                "domain": "mail.google.com",
+                "observed_url": "https://mail.google.com/mail/u/0/#drafts",
+            }
+        ).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/api/v1/domains/activate",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with pytest.raises(urllib.error.HTTPError) as excinfo:
+            urllib.request.urlopen(req, timeout=5)
+        assert excinfo.value.code == 409
+        payload = json.loads(excinfo.value.read().decode())
+        assert payload["error"] == "observed_url does not match the configured login success URL"
+
+    def test_domain_activate_marks_domain_active(self, server):
+        """POST /api/v1/domains/activate marks a configured domain active after deterministic success."""
+        post_json(
+            "/onboarding/complete",
+            {
+                "auth_state": "logged_in",
+                "membership_tier": "free",
+                "model_sources": ["byok", "ollama", "cli"],
+            },
+        )
+        post_json(
+            "/api/v1/domains/setup",
+            {
+                "domain": "mail.google.com",
+                "selected_apps": ["gmail-triage"],
+                "keepalive_apps": ["gmail-triage"],
+                "session_policy": {"mode": "keepalive", "sync_to_cloud": False},
+                "login_url": "https://accounts.google.com/",
+                "success_url": "https://mail.google.com/mail/u/0/#inbox",
+            },
+        )
+        payload = post_json(
+            "/api/v1/domains/activate",
+            {
+                "domain": "mail.google.com",
+                "observed_url": "https://mail.google.com/mail/u/0/#inbox",
+            },
+        )
+        assert payload["ok"] is True
+        assert payload["active"] is True
+        assert payload["sync"]["status"] == "skipped"
+        domain = payload["domain_status"]
+        assert domain["active"] is True
+        assert any(item["event_type"] == "domain_activated" for item in domain["events"])
+
+    def test_domain_activate_syncs_when_cloud_sync_enabled(self, server, monkeypatch):
+        """POST /api/v1/domains/activate triggers upward heartbeat sync when the domain policy enables cloud sync."""
+        import yinyang_server as ys
+
+        synced: dict[str, object] = {}
+
+        def fake_push_heartbeat_to_cloud(*, api_key, repo_root, session_token_sha256, tracked_sessions):
+            synced["api_key"] = api_key
+            synced["repo_root"] = repo_root
+            synced["tracked_sessions"] = tracked_sessions
+            return (
+                {
+                    "device_id": "dev-local",
+                    "domain_count": 3,
+                    "active_domain_count": 2,
+                },
+                {"ok": True},
+                None,
+            )
+
+        monkeypatch.setattr(ys, "_push_heartbeat_to_cloud", fake_push_heartbeat_to_cloud)
+
+        post_json(
+            "/onboarding/complete",
+            {
+                "auth_state": "logged_in",
+                "membership_tier": "free",
+                "model_sources": ["cli"],
+            },
+        )
+        post_json(
+            "/api/v1/domains/setup",
+            {
+                "domain": "mail.google.com",
+                "selected_apps": ["gmail-triage"],
+                "keepalive_apps": ["gmail-triage"],
+                "session_policy": {"mode": "keepalive", "sync_to_cloud": True},
+                "login_url": "https://accounts.google.com/",
+                "success_url": "https://mail.google.com/mail/u/0/#inbox",
+            },
+        )
+        payload = post_json(
+            "/api/v1/domains/activate",
+            {
+                "domain": "mail.google.com",
+                "observed_url": "https://mail.google.com/mail/u/0/#inbox",
+                "api_key": "sw_sk_test_cloud_key",
+            },
+        )
+        assert payload["ok"] is True
+        assert payload["sync"]["status"] == "synced"
+        assert payload["sync"]["payload"]["active_domain_count"] == 2
+        assert synced["api_key"] == "sw_sk_test_cloud_key"
+
     def test_onboarding_complete_does_not_bootstrap_starter_apps(self, server):
         """Signing in must not silently install or activate starter domain apps."""
         import yinyang_server as ys
@@ -2710,6 +2837,65 @@ class TestSessionManager:
                 _os.environ.pop("SOLACE_BROWSER", None)
             with ys._SESSIONS_LOCK:
                 ys._SESSIONS.clear()
+
+    def test_browser_launch_dedupes_across_sources(self, monkeypatch):
+        """Hub and browser launch surfaces should dedupe the same effective launch."""
+        import time as _time
+        import yinyang_server as ys
+
+        handler = object.__new__(ys.YinyangHandler)
+        session_id = "existing-session"
+        with ys._SESSIONS_LOCK:
+            ys._SESSIONS.clear()
+            ys._SESSIONS[session_id] = {
+                "url": "https://solaceagi.com/dashboard",
+                "profile": "default",
+                "pid": 12345,
+                "started_at": int(_time.time()),
+                "mode": "standard",
+                "head_hidden": False,
+                "source": "browser-launch",
+            }
+        try:
+            existing = handler._find_existing_controlled_session(
+                url="https://solaceagi.com/dashboard",
+                profile="default",
+                mode="standard",
+                head_hidden=False,
+            )
+            assert existing is not None
+            assert existing[0] == session_id
+        finally:
+            with ys._SESSIONS_LOCK:
+                ys._SESSIONS.clear()
+
+    def test_browser_launch_storm_guard_uses_visible_windows(self, monkeypatch):
+        """A recent matching launch with visible Solace windows should be deduped even if session tracking drifted."""
+        import time as _time
+        import yinyang_server as ys
+
+        handler = object.__new__(ys.YinyangHandler)
+        launch_key = handler._browser_launch_key(
+            url="https://solaceagi.com/dashboard",
+            profile="default",
+            mode="standard",
+            head_hidden=False,
+        )
+        monkeypatch.setattr(
+            ys.YinyangHandler,
+            "_list_browser_windows",
+            lambda self: [{"window_id": "0x1", "title": "Dashboard | Solace AGI - Solace"}],
+        )
+        ys._RECENT_BROWSER_LAUNCHES.clear()
+        ys._RECENT_BROWSER_LAUNCHES[launch_key] = int(_time.time())
+        try:
+            payload = handler._storm_guard_visible_browser_launch(launch_key)
+            assert payload is not None
+            assert payload["deduped"] is True
+            assert payload["storm_guarded"] is True
+            assert payload["visible_window_count"] == 1
+        finally:
+            ys._RECENT_BROWSER_LAUNCHES.clear()
 
 
 # ── Task 012: Tunnel + Vault Sync Management ─────────────────────────────────
