@@ -1,0 +1,37 @@
+[package]
+name = "solace-runtime"
+version = "0.1.0"
+edition = "2021"
+description = "Solace Runtime — local-first AI worker platform (replaces yinyang_server.py)"
+
+[[bin]]
+name = "solace-runtime"
+path = "src/main.rs"
+
+[dependencies]
+axum = { version = "0.7", features = ["ws"] }
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.6", features = ["cors", "trace", "fs"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+minijinja = "2"
+sha2 = "0.10"
+aes-gcm = "0.10"
+base64 = "0.22"
+rand = "0.8"
+flate2 = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+parking_lot = "0.12"
+tokio-tungstenite = "0.24"
+uuid = { version = "1", features = ["v4"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+html-escape = "0.2"
+glob = "0.3"
+
+[profile.release]
+lto = true
+strip = true
+opt-level = "z"
