@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Image Optimizer (Task 120). 10 tests."""
 import sys
 import pathlib

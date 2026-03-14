@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_recipe_detail.py — Task 033: Recipe Detail Panel (10 tests)."""
 import hashlib
 import pathlib

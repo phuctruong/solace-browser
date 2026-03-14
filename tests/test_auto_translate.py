@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_auto_translate.py — Task 128: Auto Translate | 10 tests"""
 import sys
 import json

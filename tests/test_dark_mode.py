@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_dark_mode.py — Dark Mode Theme System acceptance gate.
 Task 029 | Rung 641 | 10 tests minimum
 

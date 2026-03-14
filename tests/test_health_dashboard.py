@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_health_dashboard.py — System Health Dashboard acceptance gate.
 Task 023 | Rung 641 | 10 tests minimum
 """

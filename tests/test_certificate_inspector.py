@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_certificate_inspector.py — Task 078: Certificate Inspector | 10 tests"""
 import sys
 import json

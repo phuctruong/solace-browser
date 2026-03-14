@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for DOM Monitor (Task 107). 10 tests."""
 import sys
 import pathlib

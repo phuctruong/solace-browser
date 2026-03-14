@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 073 — Network Traffic Logger."""
 import sys
 import json

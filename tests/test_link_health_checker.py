@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 147 — Link Health Checker. 10 tests."""
 import sys
 import pathlib

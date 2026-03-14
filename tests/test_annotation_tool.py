@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 093 — Annotation Tool."""
 import sys
 import pathlib

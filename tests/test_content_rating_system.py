@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 114 — Content Rating System."""
 import sys
 import json

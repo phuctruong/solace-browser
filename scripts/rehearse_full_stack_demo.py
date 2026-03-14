@@ -1,3 +1,4 @@
+# Diagram: 29-chromium-build-pipeline
 #!/usr/bin/env python3
 """Run the full Solace presentation rehearsal: Hub first-run, local Browser, and paid cloud."""
 

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """RED → GREEN proofs for session rules and keep-alive endpoints."""
 
 import json

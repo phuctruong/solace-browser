@@ -1,3 +1,4 @@
+# Diagram: 23-mcp-agent-interface
 #!/usr/bin/env python3
 """
 yinyang_mcp_server.py — MCP 2024-11-05 server for Solace Hub.

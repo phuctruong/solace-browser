@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 158 — Font Inspector."""
 import sys
 import os

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_password_vault.py — Password Vault acceptance gate.
 Task 048 | Rung 641 | 10 tests minimum
 

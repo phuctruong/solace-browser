@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_privacy_dashboard.py — Task 077: Privacy Dashboard | 10 tests"""
 import sys
 import json

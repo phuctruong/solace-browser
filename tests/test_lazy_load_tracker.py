@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 178 — Lazy Load Tracker."""
 import os
 import sys

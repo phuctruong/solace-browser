@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 092 — Translation Overlay."""
 import sys
 import pathlib

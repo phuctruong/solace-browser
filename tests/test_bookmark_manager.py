@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 071 — Bookmark Manager."""
 import sys
 import json

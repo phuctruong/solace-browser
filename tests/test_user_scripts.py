@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_user_scripts.py — User Scripts Manager acceptance gate.
 Task 047 | Rung 641 | 10 tests minimum
 

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 Tests for Task 101 — Link Preview Cache
 Browser: yinyang_server.py routes /api/v1/link-preview/*

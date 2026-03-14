@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_twin_dashboard.py — Twin Browser Dashboard acceptance gate.
 Task 022 | Rung 641 | 10 tests minimum
 """

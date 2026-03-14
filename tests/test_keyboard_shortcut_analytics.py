@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 180 — Keyboard Shortcut Analytics."""
 import os
 import sys

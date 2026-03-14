@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 090 — Automation Recorder."""
 import sys
 import json

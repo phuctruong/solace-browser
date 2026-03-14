@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 167v2 — User Agent Tracker /records endpoints."""
 import hashlib
 import json

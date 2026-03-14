@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for CLI Agent Integration — Task 064."""
 
 import hashlib

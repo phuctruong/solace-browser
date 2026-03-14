@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Diagram: 29-chromium-build-pipeline
 set -euo pipefail
 
 PROJECT="solace-461818"

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 165v2 — Web Vitals Tracker /records endpoints."""
 import hashlib
 import json

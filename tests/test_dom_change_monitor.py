@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 160 — DOM Change Monitor."""
 import sys
 import os

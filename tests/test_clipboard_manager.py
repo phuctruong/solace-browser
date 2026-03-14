@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Clipboard Manager (Task 106). 10 tests."""
 import sys
 import pathlib

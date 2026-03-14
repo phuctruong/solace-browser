@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_link_analyzer.py — Task 069: Link Analyzer (10 tests)"""
 import sys
 import json

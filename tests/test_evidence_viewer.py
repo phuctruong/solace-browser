@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_evidence_viewer.py — Task 016: Evidence Viewer UI (stats + export + JS/CSS routes)."""
 import json
 import pathlib

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Diagram: 29-chromium-build-pipeline
 # start-hub.sh — Launch Solace Hub (Tauri desktop app) for development
 # Lifecycle: yinyang-server FIRST → Solace Hub (Tauri) SECOND
 # Port: 8888 ONLY. Extensions: ZERO. Naming: "Solace Hub" ONLY.

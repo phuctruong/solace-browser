@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Acceptance tests for the Solace Hub tray implementation.
 
 These tests are file-based by design so they do not require a live Tauri runtime.

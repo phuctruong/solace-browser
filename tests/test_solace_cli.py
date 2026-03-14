@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 import io
 import json
 from contextlib import redirect_stderr, redirect_stdout

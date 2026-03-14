@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 Tests for Yinyang sidebar UX refactor (GLOW 453).
 Verifies: Domains tab first, registration gate, events tab, chat tab, CSS token compliance.

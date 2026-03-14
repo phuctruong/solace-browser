@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 Dogfood Self-Test: Solace Browser tests Solace AGI using Solace infrastructure.
 

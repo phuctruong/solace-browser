@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_tab_screenshot.py — Task 076: Tab Screenshot | 10 tests"""
 import sys
 import json

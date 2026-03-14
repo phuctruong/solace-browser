@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_command_palette.py — Command Palette acceptance gate.
 Task 039 | Rung 641 | 10 tests minimum
 

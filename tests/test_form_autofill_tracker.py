@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 Tests for Task 143 — Form Autofill Tracker
 Browser: yinyang_server.py routes /api/v1/autofill/*

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Reading Goals Tracker (Task 141). 10 tests."""
 import sys
 import pathlib

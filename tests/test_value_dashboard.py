@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_value_dashboard.py — Value Dashboard Top Rail acceptance gate."""
 
 import re

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_live_metrics.py — Live Metrics Dashboard acceptance gate.
 Task 031 | Rung 641 | 10 tests minimum
 

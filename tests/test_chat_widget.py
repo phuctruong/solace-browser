@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 test_chat_widget.py — YinYang AI Chat Widget tests.
 Task 015 | Rung: 641

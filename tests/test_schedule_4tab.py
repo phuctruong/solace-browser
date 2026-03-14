@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_schedule_4tab.py — Schedule 4-Tab Redesign acceptance gate."""
 import json
 import sys

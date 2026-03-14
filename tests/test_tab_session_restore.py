@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_tab_session_restore.py — Task 127: Tab Session Restore | 10 tests"""
 import sys
 import json

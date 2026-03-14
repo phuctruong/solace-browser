@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Diagram: 29-chromium-build-pipeline
 # release_browser_cycle.sh — Build real downloadable Solace Browser artifacts.
 # Auth: 65537 | Hub first | Port 8888 only
 

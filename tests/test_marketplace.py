@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Marketplace API tests for Yinyang Server."""
 import json
 import os

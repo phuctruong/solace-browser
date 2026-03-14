@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_oauth3_consent.py — OAuth3 Consent UI acceptance gate.
 Task 024 | Rung 641 | 10 tests minimum
 

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 test_budget_controls.py — Budget Controls UI tests.
 Task 020 | Rung: 641

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_budget_alerts.py — Task 034: Budget Alert System (10 tests)."""
 import hashlib
 import pathlib

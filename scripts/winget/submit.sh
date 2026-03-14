@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Diagram: 29-chromium-build-pipeline
 # winget/submit.sh — Submit SolaceAI.SolaceBrowser to microsoft/winget-pkgs
 # Auth: 65537 | BLOCKED ON: Windows code signing certificate
 #

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 yinyang-server.py — Entry point shim for Yinyang Server.
 Run as: python yinyang-server.py [repo_root]

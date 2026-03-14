@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Page Performance Budget (Task 109). 10 tests."""
 import sys
 import pathlib

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Prime Wiki snapshot tests for Yinyang Server."""
 
 import base64

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_schedule_timezone.py — Schedule Timezone (Task 071) acceptance gate."""
 import json
 import sys

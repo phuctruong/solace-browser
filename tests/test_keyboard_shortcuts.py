@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_keyboard_shortcuts.py — Task 028: Keyboard Shortcuts Panel (10 tests)."""
 import json
 import pathlib

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 179 — Mouse Heatmap Tracker."""
 import os
 import sys

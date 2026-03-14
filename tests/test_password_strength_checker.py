@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 Tests for Task 144 — Password Strength Checker
 Browser: yinyang_server.py routes /api/v1/password-checker/*

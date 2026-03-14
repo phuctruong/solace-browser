@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 import pathlib
 import sys
 

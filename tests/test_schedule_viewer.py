@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 test_schedule_viewer.py — Schedule Viewer tests (Task 058)
 Donald Knuth law: every test is a proof. RED → GREEN gate.

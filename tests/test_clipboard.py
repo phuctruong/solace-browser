@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_clipboard.py — Clipboard Manager acceptance gate.
 Task 038 | Rung 641 | 10 tests minimum
 

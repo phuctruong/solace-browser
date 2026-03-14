@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Cookie Consent Tracker (Task 111). 10 tests."""
 import sys
 import pathlib

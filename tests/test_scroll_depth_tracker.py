@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 177 — Scroll Depth Tracker."""
 import os
 import sys

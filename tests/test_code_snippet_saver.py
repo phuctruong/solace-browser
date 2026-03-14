@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 095 — Code Snippet Saver."""
 import sys
 import json

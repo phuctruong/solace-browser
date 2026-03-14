@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_extension_store.py — Task 080: Extension Store | 10 tests"""
 import sys
 import json

@@ -1,4 +1,5 @@
 #!/bin/sh
+# Diagram: 29-chromium-build-pipeline
 # install-chromium.sh — One-shot installer for the Solace Browser portable release
 # Auth: 65537 | Port 8888 ONLY | No extensions | No port 9222
 # Usage: curl -sSL https://github.com/phuctruong/solace-browser/releases/download/v1.2.0/install-chromium.sh | sh

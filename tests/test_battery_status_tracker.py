@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 176 — Battery Status Tracker."""
 import os
 import sys

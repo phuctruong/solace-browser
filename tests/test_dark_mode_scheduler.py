@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Dark Mode Scheduler (Task 142). 10 tests."""
 import sys
 import pathlib

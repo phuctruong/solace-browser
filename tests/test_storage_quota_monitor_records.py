@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 163v2 — Storage Quota Monitor /records endpoints."""
 import hashlib
 import json

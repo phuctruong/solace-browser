@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 162 — Geolocation Tracker."""
 import sys
 import os

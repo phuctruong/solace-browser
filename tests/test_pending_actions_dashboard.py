@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_pending_actions_dashboard.py — Task 068: Pending Actions Dashboard."""
 import pathlib
 import sys

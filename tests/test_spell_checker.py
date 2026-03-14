@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_spell_checker.py — Task 068: Spell Checker (30 tests per feature → 10 here)"""
 import sys
 import json

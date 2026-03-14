@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 test_app_permissions.py — App Permissions Manager tests.
 Task 019 | Rung: 641

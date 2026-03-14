@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for PDF Viewer Notes (Task 124). 10 tests."""
 import sys
 import pathlib

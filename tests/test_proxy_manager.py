@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 089 — Proxy Manager."""
 import sys
 import json

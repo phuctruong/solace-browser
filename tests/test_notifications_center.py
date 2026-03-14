@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 test_notifications_center.py — Notifications Center tests.
 Task 018 | Rung: 641

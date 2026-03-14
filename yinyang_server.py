@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 yinyang_server.py — Yinyang Server for Solace Browser.
 Donald Knuth law: every function is a theorem. Prove it or don't ship it.
@@ -4448,6 +4449,8 @@ def _source_app_roots(repo_root: str) -> tuple[Path, ...]:
     defaults = (
         Path(repo_root).resolve().parent / "solace-cli" / "data" / "default" / "apps",
         Path(repo_root).resolve() / "data" / "default" / "apps",
+        # Top-level apps/ directory contains demo apps with static outbox artifacts
+        Path(repo_root).resolve() / "apps",
     )
     roots.extend(defaults)
     seen: set[Path] = set()
@@ -6296,8 +6299,9 @@ def _session_rule_paths() -> list[Path]:
     """Return sorted session-rules.yaml paths from the local installed apps root."""
     if not SESSION_RULES_APPS_DIR.is_dir():
         return []
-    rule_paths = [app_dir / "session-rules.yaml" for app_dir in _iter_app_dirs_under(SESSION_RULES_APPS_DIR)]
-    return sorted(path for path in rule_paths if path.is_file())
+    found = list(SESSION_RULES_APPS_DIR.glob("*/session-rules.yaml"))
+    found += list(SESSION_RULES_APPS_DIR.glob("*/*/session-rules.yaml"))
+    return sorted(set(p.resolve() for p in found if p.is_file()))
 
 
 def _session_interval_seconds(rule: dict) -> int:
@@ -6810,13 +6814,30 @@ def _apps_for_domain(repo_root: str, query_domain: str, query_path: str = "/", u
         patterns = {}
     matched_app_ids = _match_domain_index(patterns, normalized_domain, query_path)
 
-    installed_app_ids = _installed_app_ids(repo_root)
+    # Build manifest map once — avoids O(N²) re-scan per app_id lookup
+    manifest_records = _iter_manifest_records(repo_root)
+    app_dir_map: dict[str, Path] = {
+        aid: mp.parent for aid, _m, mp in manifest_records
+    }
+    manifest_map: dict[str, dict] = {
+        aid: (m if isinstance(m, dict) else {}) for aid, m, _mp in manifest_records
+    }
+    installed_app_ids = set(app_dir_map.keys())
     installed_apps: list[dict] = []
     for app_id in matched_app_ids:
         if app_id not in installed_app_ids:
             continue
-        session_rules = _load_session_rules_for_app(repo_root, app_id)
-        manifest = _load_manifest_for_app(repo_root, app_id)
+        app_dir = app_dir_map[app_id]
+        rules_path = app_dir / "session-rules.yaml"
+        session_rules: dict = {}
+        if rules_path.is_file():
+            try:
+                raw = yaml.safe_load(rules_path.read_text())
+                if isinstance(raw, dict):
+                    session_rules = raw
+            except (OSError, yaml.YAMLError):
+                pass
+        manifest = manifest_map.get(app_id, {})
         tier_required = _required_tier_for_app(manifest, session_rules)
         display_name = str(
             manifest.get("name")
@@ -6866,7 +6887,7 @@ def _apps_for_domain(repo_root: str, query_domain: str, query_path: str = "/", u
     for app_id in matched_app_ids:
         if app_id in store_app_ids:
             continue
-        manifest = _load_manifest_for_app(repo_root, app_id)
+        manifest = manifest_map.get(app_id, {})
         if not manifest:
             continue
         app_installed = app_id in installed_app_ids
@@ -6931,7 +6952,12 @@ def _aggregate_morning_brief_html(repo_root: str) -> str:
         "gmail-inbox-triage",
         "calendar-brief",
     ]
-    installed_ids = sorted(_installed_app_ids(repo_root))
+    # Scan manifests ONCE — avoid O(N²) re-scan per app_id lookup
+    app_dir_map: dict[str, Path] = {
+        app_id: manifest_path.parent
+        for app_id, _manifest, manifest_path in _iter_manifest_records(repo_root)
+    }
+    installed_ids = sorted(app_dir_map.keys())
     source_app_ids: list[str] = []
     for app_id in preferred_app_ids + installed_ids:
         if app_id == "morning-brief":
@@ -6940,7 +6966,7 @@ def _aggregate_morning_brief_html(repo_root: str) -> str:
             source_app_ids.append(app_id)
     cards: list[str] = []
     for app_id in source_app_ids:
-        app_root = _repo_app_dir(repo_root, app_id)
+        app_root = app_dir_map.get(app_id)
         if app_root is None:
             continue
         manager = InboxOutboxManager(apps_root=app_root.parent)
@@ -12354,7 +12380,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         if not url:
             self._send_json_compat(400, {"error": "url required"})
             return
-        launch = bool(body.get("launch", True))
+        launch = bool(body.get("launch", False))
         requested_session_id = str(body.get("session_id", "")).strip()
         if not launch:
             current_session_id, current_session = self._pick_controlled_session(requested_session_id)
@@ -12970,7 +12996,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             <article class="start-card">
               <h3>Browser runtime</h3>
               <div class="metric"><span>Port</span><strong>{YINYANG_PORT}</strong></div>
-              <p>The legacy 9222 debug-port flow is banned.</p>
+              <p>The legacy CDP debug-port flow is banned.</p>
             </article>
             <article class="start-card">
               <h3>MCP tools</h3>
@@ -13893,7 +13919,7 @@ document.getElementById('confirm').addEventListener('click', function () {
             "notes": [
                 "Solace Hub owns localhost:8888.",
                 "Hub-native control surfaces require the local runtime bearer token.",
-                "Machine-readable runtime contract. Do not assume legacy 9222 Chrome DevTools behavior.",
+                "Machine-readable runtime contract. Do not assume legacy CDP debug-port behavior.",
             ],
         }
         self._send_json(manifest)
@@ -15282,12 +15308,8 @@ document.getElementById('confirm').addEventListener('click', function () {
             apps.append(app_id)
             apps.sort()
             self.server.apps = apps
-        if app_id:
-            try:
-                _set_app_installed(repo_root, app_id, True)
-            except OSError as error:
-                self._send_json({"error": f"cannot save install state: {error}"}, 500)
-                return
+        # Custom app scaffold already wrote files to _local_apps_root_path() — no
+        # _set_app_installed call needed (that would try copytree from source and fail).
         self._reload_session_rules_cache()
 
         record_evidence("custom_app_created", {"app_id": app_id, "domain": _normalize_domain(str(raw_domain))})
@@ -18365,7 +18387,7 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
                         port = int(lines[0].strip())
                     except ValueError:
                         return None
-                    if port == 9222:
+                    if port < 1024 or port > 65535:
                         return None
                     return port
             time.sleep(0.1)
@@ -21520,11 +21542,10 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
         self._send_json({"apps": app_list, "total": len(app_list)})
 
     def _handle_app_detail(self, app_id: str) -> None:
-        apps: list = self.server.apps if hasattr(self.server, "apps") else []  # type: ignore[attr-defined]
-        if app_id not in apps:
+        repo_root = getattr(self.server, "repo_root", ".")
+        if _repo_app_dir(repo_root, app_id) is None:
             self._send_json({"error": "app not found"}, 404)
             return
-        repo_root = getattr(self.server, "repo_root", ".")
         config = _load_app_config(repo_root, app_id)
         northstar = _northstar_summary(repo_root, app_id)
         reports: list[dict[str, str]] = []
@@ -21598,11 +21619,12 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
     def _handle_app_launch(self, app_id: str) -> None:
         if not self._check_auth():
             return
-        apps: list = self.server.apps if hasattr(self.server, "apps") else []  # type: ignore[attr-defined]
-        if app_id not in apps:
+        repo_root = getattr(self.server, "repo_root", ".")
+        # Check all manifest sources (installed + source tree) — server.apps is a stale
+        # startup-time cache that doesn't reflect apps materialized after boot.
+        if _repo_app_dir(repo_root, app_id) is None:
             self._send_json({"error": "app not found"}, 404)
             return
-        repo_root = getattr(self.server, "repo_root", ".")
         launch_artifact = None
         manifest = _load_manifest_for_app(repo_root, app_id)
         domain = _normalize_domain(str(manifest.get("site") or "")) or "solaceagi.com"

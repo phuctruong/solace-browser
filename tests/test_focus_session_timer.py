@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 122 — Focus Session Timer."""
 import sys
 import json

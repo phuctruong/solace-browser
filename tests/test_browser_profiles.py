@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_browser_profiles.py — Task 025: Browser Profile Manager (10 tests)."""
 import json
 import pathlib

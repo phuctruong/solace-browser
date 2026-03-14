@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 137 — Social Share Tracker. 10 tests."""
 import sys
 import pathlib

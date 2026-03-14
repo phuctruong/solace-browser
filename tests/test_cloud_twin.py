@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Cloud twin endpoint tests for Yinyang Server."""
 import json
 import pathlib

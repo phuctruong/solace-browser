@@ -1,3 +1,4 @@
+# Diagram: 29-chromium-build-pipeline
 #!/usr/bin/env python3
 """Rehearse the Hub-first onboarding and sign-in handoff against localhost:8888."""
 

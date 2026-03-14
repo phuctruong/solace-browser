@@ -1,3 +1,4 @@
+# Diagram: 29-chromium-build-pipeline
 #!/usr/bin/env python3
 """
 rehearse_windows_remote_demo.py — Native-host Windows validation for Browser + Hub.

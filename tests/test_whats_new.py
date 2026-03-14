@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_whats_new.py — What's New Panel acceptance gate.
 Task 041 | Rung 641 | 10 tests minimum
 

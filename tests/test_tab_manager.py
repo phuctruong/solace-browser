@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_tab_manager.py — Task 035: Multi-Tab Manager (10 tests)."""
 import hashlib
 import pathlib

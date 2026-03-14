@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 166v2 — Resource Timing Tracker /records endpoints."""
 import hashlib
 import json

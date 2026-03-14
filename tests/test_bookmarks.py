@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_bookmarks.py — Task 036: URL Bookmarks Manager (10 tests)."""
 import hashlib
 import pathlib

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Agent notification SSE tests for Yinyang Server."""
 
 import json

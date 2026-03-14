@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_recipe_scheduler.py — Recipe Scheduler acceptance gate.
 Task 043 | Rung 641 | 10 tests minimum
 

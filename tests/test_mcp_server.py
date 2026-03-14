@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 test_mcp_server.py — Tests for yinyang_mcp_server.py (MCP 2024-11-05).
 Donald Knuth law: every test is a proof. RED → GREEN gate.

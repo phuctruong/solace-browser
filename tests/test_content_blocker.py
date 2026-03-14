@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 074 — Content Blocker."""
 import sys
 import json

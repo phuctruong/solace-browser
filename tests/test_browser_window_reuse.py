@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for browser window reuse (Task: fix duplicate windows bug).
 
 Verifies that:

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 088 — Session Recorder."""
 import sys
 import json

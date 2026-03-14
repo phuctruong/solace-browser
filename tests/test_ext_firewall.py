@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_ext_firewall.py — Extension Firewall acceptance gate.
 Task 046 | Rung 641 | 10 tests minimum
 

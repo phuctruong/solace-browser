@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_download_manager.py — Download Manager acceptance gate.
 Task 045 | Rung 641 | 10 tests minimum
 

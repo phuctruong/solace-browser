@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 test_gmail_triage.py — Gmail Inbox Triage App tests.
 Task 014 | Rung: 641

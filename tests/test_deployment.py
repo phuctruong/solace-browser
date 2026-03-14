@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 test_deployment.py — Static validation of distribution scaffolding.
 Auth: 65537 | Port 9222: PERMANENTLY BANNED

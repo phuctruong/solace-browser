@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_schedule_tz_ui.py — Schedule Timezone UI acceptance gate. Task 071."""
 import hashlib
 import json

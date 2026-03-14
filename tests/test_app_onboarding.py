@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_app_onboarding.py — App Onboarding 4-State Lifecycle acceptance gate."""
 import json
 import re

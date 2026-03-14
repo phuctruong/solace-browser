@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 import pathlib, sys, threading, time, urllib.request
 import pytest
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent

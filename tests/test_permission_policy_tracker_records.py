@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 164v2 — Permission Policy Tracker /records endpoints."""
 import hashlib
 import json

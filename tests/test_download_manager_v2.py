@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 086 — Download Manager v2."""
 import sys
 import json

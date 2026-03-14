@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Diagram: 29-chromium-build-pipeline
 # install-rust.sh — Instructions for setting up Rust to build Solace Hub
 #
 # SAFE: This script only PRINTS instructions.

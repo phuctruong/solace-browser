@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_url_categorizer.py — Task 079: URL Categorizer | 10 tests"""
 import sys
 import json

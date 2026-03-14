@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 import hashlib
 import json
 import pathlib

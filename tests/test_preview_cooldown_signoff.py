@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 test_preview_cooldown_signoff.py — Preview → Cooldown → Sign-Off pipeline tests.
 Donald Knuth law: every test is a proof. RED → GREEN gate.

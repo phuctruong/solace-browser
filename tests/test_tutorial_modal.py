@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_tutorial_modal.py — Task 063: YinYang Tutorial 5-Step First-Run Modal."""
 import json
 import re

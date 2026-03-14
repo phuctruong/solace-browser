@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 148 — Cookie Manager. 10 tests."""
 import sys
 import pathlib

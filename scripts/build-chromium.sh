@@ -1,4 +1,5 @@
 #!/bin/bash
+# Diagram: 29-chromium-build-pipeline
 # build-chromium.sh — Build Solace Browser (Chromium fork)
 # Auth: 65537 | Task 001: Build Verification
 # Port 9222 is PERMANENTLY BANNED. This script never references it.

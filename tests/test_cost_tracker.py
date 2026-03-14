@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_cost_tracker.py — Session Cost Tracker acceptance gate.
 Task 042 | Rung 641 | 10 tests minimum
 

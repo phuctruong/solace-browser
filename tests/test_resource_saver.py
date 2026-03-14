@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Resource Saver (Task 108). 10 tests."""
 import sys
 import pathlib

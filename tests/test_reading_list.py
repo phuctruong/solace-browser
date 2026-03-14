@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 Tests for Task 059 — Reading List
 Browser: yinyang_server.py routes /api/v1/reading-list

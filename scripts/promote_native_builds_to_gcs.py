@@ -1,3 +1,4 @@
+# Diagram: 29-chromium-build-pipeline
 #!/usr/bin/env python3
 """
 promote_native_builds_to_gcs.py — Promote verified native/browser artifacts to GCS.

@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 #!/usr/bin/env python3
 
 from __future__ import annotations

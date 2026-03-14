@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 091 — Font Manager."""
 import sys
 import pathlib

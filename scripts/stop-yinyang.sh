@@ -1,4 +1,5 @@
 #!/bin/sh
+# Diagram: 29-chromium-build-pipeline
 
 set -eu
 

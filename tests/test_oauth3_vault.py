@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """OAuth3 vault API tests for Yinyang Server."""
 
 import json

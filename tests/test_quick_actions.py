@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_quick_actions.py — Quick Actions Menu acceptance gate.
 Task 032 | Rung 641 | 10 tests minimum
 

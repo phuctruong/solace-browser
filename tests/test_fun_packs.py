@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_fun_packs.py — Fun Pack Standard acceptance gate."""
 import io
 import json

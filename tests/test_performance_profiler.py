@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_performance_profiler.py — Task 070: Performance Profiler (10 tests)"""
 import sys
 import json

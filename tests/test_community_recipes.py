@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_community_recipes.py — Community Recipe Browsing + Installation UI.
 
 Task 059 — Acceptance gate.

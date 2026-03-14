@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 test_recipe_store.py — Hub Recipe Store tests.
 Task 017 | Rung: 641

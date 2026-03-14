@@ -1,3 +1,4 @@
+# Diagram: 29-chromium-build-pipeline
 #!/usr/bin/env python3
 """Run a local Solace Hub + Browser rehearsal against localhost:8888."""
 

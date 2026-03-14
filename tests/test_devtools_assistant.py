@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 083 — DevTools Assistant."""
 import sys
 import json

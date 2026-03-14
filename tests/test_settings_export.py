@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_settings_export.py — Settings Export/Import acceptance gate.
 Task 040 | Rung 641 | 10 tests minimum
 

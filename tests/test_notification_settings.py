@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_notification_settings.py — Notification Settings Panel acceptance gate.
 Task 037 | Rung 641 | 10 tests minimum
 

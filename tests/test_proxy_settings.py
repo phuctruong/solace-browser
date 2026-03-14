@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_proxy_settings.py — Proxy Settings acceptance gate.
 Task 044 | Rung 641 | 10 tests minimum
 

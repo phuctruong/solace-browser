@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 085 — AI Page Summarizer."""
 import sys
 import json

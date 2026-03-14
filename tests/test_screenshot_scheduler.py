@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_screenshot_scheduler.py — Task 126: Screenshot Scheduler | 10 tests"""
 import sys
 import json

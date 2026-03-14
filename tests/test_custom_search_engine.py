@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 121 — Custom Search Engine."""
 import sys
 import json

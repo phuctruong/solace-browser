@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Speed Reader (Task 125). 10 tests."""
 import sys
 import pathlib

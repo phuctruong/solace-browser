@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """
 test_scheduled_reports.py — Scheduled Reports tests.
 Task 021 | Rung: 641

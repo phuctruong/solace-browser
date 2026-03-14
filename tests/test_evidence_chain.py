@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """tests/test_evidence_chain.py — Task 026: Evidence Chain Viewer (10 tests)."""
 import json
 import pathlib

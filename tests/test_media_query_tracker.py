@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 175 — Media Query Tracker."""
 import os
 import sys

@@ -1,3 +1,4 @@
+# Diagram: 05-solace-runtime-architecture
 """Tests for Task 081 — Search Suggestions."""
 import sys
 import json
