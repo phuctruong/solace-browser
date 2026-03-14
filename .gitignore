@@ -24,3 +24,4 @@ __pycache__/
 
 # Rust build artifacts
 solace-hub/src-tauri/target/
+solace-runtime/target/

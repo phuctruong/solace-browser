@@ -4,7 +4,7 @@
 //! Lifecycle (enforced, non-negotiable):
 //!   1. generate_session_token() — Hub-owned session secret
 //!   2. store_token_keychain()   — OS keychain; NEVER plaintext in files
-//!   3. spawn_yinyang_server()   — Python backend on port 8888
+//!   3. spawn_backend_server()   — Rust runtime on port 8888 (Python fallback)
 //!   4. wait_for_server()        — polls /health until ready (max 10s)
 //!   5. build system tray
 //!   6. "Open Solace Browser" → launch_solace_browser()
@@ -179,21 +179,33 @@ fn browser_launch_mode() -> BrowserLaunchMode {
 // Process management
 // ────────────────────────────────────────────────────────────────────────────
 
-/// Spawn yinyang-server.py with the real Browser repo root.
+/// Spawn the Solace Runtime backend. Prefers Rust binary; falls back to Python.
 /// Returns the Child process; caller must retain it to prevent premature termination.
-fn spawn_yinyang_server(
+fn spawn_backend_server(
     server_path: &Path,
     repo_root: &Path,
     token_sha256: &str,
 ) -> Result<Child, io::Error> {
-    // Locate python3 on PATH
+    // If server_path points to the Rust binary, spawn it directly (no Python needed)
+    if is_rust_runtime(server_path) {
+        return Command::new(server_path).spawn();
+    }
+    // Legacy fallback: Python yinyang-server.py
     let python = python_executable();
-    Command::new(&python)
+    Command::new(python)
         .arg(server_path)
         .arg(repo_root)
         .arg("--token-sha256")
         .arg(token_sha256)
         .spawn()
+}
+
+/// Check if a path points to the Rust solace-runtime binary (not a .py script).
+fn is_rust_runtime(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .map(|n| n == "solace-runtime")
+        .unwrap_or(false)
 }
 
 /// Returns "python3" on Unix, "python" on Windows.
@@ -208,12 +220,37 @@ fn python_executable() -> &'static str {
     }
 }
 
+/// Locate the backend server binary. Prefers Rust solace-runtime; falls back to Python.
+///
+/// Search order:
+///   1. solace-runtime/target/release/solace-runtime (Rust — preferred)
+///   2. ~/.solace/bin/solace-runtime (installed Rust binary)
+///   3. yinyang-server.py (legacy Python fallback)
 fn resolve_server_script() -> Result<PathBuf, String> {
     let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
     let exe_dir = exe_path
         .parent()
         .ok_or_else(|| "Executable must have a parent directory".to_string())?;
 
+    // Search for Rust binary first
+    for candidate_root in exe_dir.ancestors() {
+        let rust_binary = candidate_root
+            .join("solace-runtime")
+            .join("target")
+            .join("release")
+            .join("solace-runtime");
+        if rust_binary.exists() {
+            return Ok(rust_binary);
+        }
+    }
+
+    // Check ~/.solace/bin/solace-runtime
+    let home_bin = dirs_home().join(".solace").join("bin").join("solace-runtime");
+    if home_bin.exists() {
+        return Ok(home_bin);
+    }
+
+    // Fallback: Python yinyang-server.py
     for candidate_root in exe_dir.ancestors() {
         let server_script = candidate_root.join("yinyang-server.py");
         if server_script.exists() {
@@ -222,7 +259,7 @@ fn resolve_server_script() -> Result<PathBuf, String> {
     }
 
     Err(format!(
-        "Could not locate yinyang-server.py from executable path {}",
+        "Could not locate solace-runtime or yinyang-server.py from {}",
         exe_path.display()
     ))
 }
@@ -696,12 +733,12 @@ fn main() {
     ensure_runtime_port_available()
         .unwrap_or_else(|msg| panic!("{msg}"));
 
-    // ── Step 1: Find yinyang-server.py from the repo tree or bundled layout ─
+    // ── Step 1: Find solace-runtime (Rust) or yinyang-server.py (Python fallback)
     let server_path = resolve_server_script()
-        .expect("Cannot determine yinyang-server.py path");
+        .expect("Cannot locate solace-runtime binary or yinyang-server.py");
     let repo_root = server_path
         .parent()
-        .expect("yinyang-server.py must live inside the Solace Browser repo");
+        .expect("Server binary must have a parent directory");
 
     // ── Step 2: Generate session token ───────────────────────────────────────
     let session_token = generate_session_token();
@@ -709,10 +746,15 @@ fn main() {
     store_token_keychain(&session_token)
         .unwrap_or_else(|e| eprintln!("WARN: Could not store token in keychain: {e}"));
 
-    // ── Step 3: Spawn Yinyang Server ─────────────────────────────────────────
-    let server_child = spawn_yinyang_server(&server_path, repo_root, &session_sha256).expect(
-        "FATAL: Cannot spawn yinyang-server.py — check that python3 is on PATH and script exists",
-    );
+    // ── Step 3: Spawn Backend Server (Rust preferred, Python fallback) ───────
+    let is_rust = is_rust_runtime(&server_path);
+    let server_child = spawn_backend_server(&server_path, repo_root, &session_sha256).unwrap_or_else(|e| {
+        panic!(
+            "FATAL: Cannot spawn {} — {}",
+            if is_rust { "solace-runtime" } else { "yinyang-server.py" },
+            e
+        );
+    });
 
     // ── Step 4: Wait for server to be healthy ────────────────────────────────
     let health_url = format!("http://localhost:{}/health", YINYANG_PORT);
@@ -724,7 +766,11 @@ fn main() {
         );
         std::process::exit(1);
     }
-    eprintln!("INFO: Yinyang Server healthy at {}", health_url);
+    eprintln!(
+        "INFO: {} healthy at {}",
+        if is_rust { "Solace Runtime (Rust)" } else { "Yinyang Server (Python)" },
+        health_url
+    );
 
     // ── Step 5: Read port.lock ────────────────────────────────────────────────
     let lock = read_port_lock().unwrap_or_else(|e| {

@@ -48,6 +48,22 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
     )
     .map_err(|error| error.to_string())?;
 
+    // Stillwater/Ripple decomposition — makes report agent-readable
+    if let Ok(decomp) = crate::pzip::stillwater::extract(
+        html.as_bytes(),
+        "text/html",
+        &format!("app://{app_id}/runs/{run_id}"),
+    ) {
+        let _ = std::fs::write(
+            outbox_dir.join("stillwater.json"),
+            serde_json::to_string_pretty(&decomp.stillwater).unwrap_or_default(),
+        );
+        let _ = std::fs::write(
+            outbox_dir.join("ripple.json"),
+            serde_json::to_string_pretty(&decomp.ripple).unwrap_or_default(),
+        );
+    }
+
     crate::pzip::evidence::seal_run(app_id, &run_id, html.as_bytes())
         .map_err(|error| error.to_string())?;
 

@@ -623,6 +623,106 @@ fn cron_field_matches_supports_lists_and_ranges() {
     assert!(!solace_runtime::cron::field_matches("9-11", 12));
 }
 
+// ─── Stillwater/Ripple Codec Tests ───────────────────────────────────
+
+#[test]
+fn stillwater_detect_all_codecs() {
+    use solace_runtime::pzip::stillwater::{detect_codec, Codec};
+
+    assert_eq!(detect_codec(b"<main>content</main>", "text/html"), Codec::SemanticHtml);
+    assert_eq!(detect_codec(b"<table><tr></tr></table>", "text/html"), Codec::TableHtml);
+    assert_eq!(detect_codec(b"{\"data\":1}", "application/json"), Codec::JsonApi);
+    assert_eq!(detect_codec(b"<rss><channel></channel></rss>", "application/xml"), Codec::RssXml);
+    assert_eq!(detect_codec(b"{% extends \"base.html\" %}", "text/html"), Codec::JinjaTemplate);
+}
+
+#[test]
+fn stillwater_extract_solaceagi_template() {
+    use solace_runtime::pzip::stillwater;
+
+    let template = br#"{% extends "base.html" %}{% block title %}Solace AGI{% endblock %}{% block content %}<main id="main-content"><h1>{{ copy.hero_title }}</h1><p>{{ copy.hero_desc }}</p></main>{% endblock %}"#;
+    let decomp = stillwater::extract(template, "text/html", "https://solaceagi.com/").unwrap();
+    assert_eq!(decomp.codec, stillwater::Codec::JinjaTemplate);
+    assert_eq!(decomp.ripple.title, "base.html");
+    assert!(decomp.stillwater.headings.contains(&"title".to_string()));
+    assert!(decomp.stillwater.headings.contains(&"content".to_string()));
+    assert!(decomp.stillwater.meta.iter().any(|(k, _)| k == "hero_title"));
+}
+
+#[test]
+fn stillwater_roundtrip_compression() {
+    use solace_runtime::pzip::stillwater;
+
+    let html = br#"<html><head><title>RTC</title><meta name="description" content="test page"></head><body><nav><a href="/about">About</a></nav><main><h1>Hello</h1><h2>Sub</h2><p>Body text</p></main></body></html>"#;
+    let decomp = stillwater::extract(html, "text/html", "https://test.com").unwrap();
+    let compressed = stillwater::compress_decomposition(&decomp).unwrap();
+    assert_eq!(&compressed[..4], b"PZSW");
+    let restored = stillwater::decompress_decomposition(&compressed).unwrap();
+    assert_eq!(restored.sha256, decomp.sha256);
+    assert_eq!(restored.ripple.title, "RTC");
+    assert_eq!(restored.ripple.sections.len(), decomp.ripple.sections.len());
+    assert_eq!(restored.stillwater.template_hash, decomp.stillwater.template_hash);
+}
+
+#[test]
+fn stillwater_ripple_only_is_smaller() {
+    use solace_runtime::pzip::stillwater;
+
+    let html = br#"<html><body><main><h1>Title</h1><p>Long content that changes every page visit and contains unique data points and information.</p></main></body></html>"#;
+    let decomp = stillwater::extract(html, "text/html", "https://example.com").unwrap();
+    let full = stillwater::compress_decomposition(&decomp).unwrap();
+    let ripple_only = stillwater::compress_ripple_only(&decomp.ripple).unwrap();
+    // Ripple-only should be smaller than full decomposition
+    assert!(ripple_only.len() < full.len());
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn wiki_extract_returns_decomposition() {
+    let ctx = TestContext::new("wiki_extract_returns_decomposition");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/wiki/extract",
+        json!({
+            "url": "https://news.ycombinator.com",
+            "content": "<html><head><title>Hacker News</title></head><body><table><thead><tr><th>Rank</th><th>Title</th><th>Points</th></tr></thead><tbody><tr><td>1</td><td>Show HN: Solace Browser</td><td>342</td></tr></tbody></table></body></html>",
+            "content_type": "text/html"
+        }),
+    ).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["status"], "extracted");
+    assert_eq!(body["codec"], "table-html");
+    assert!(!body["sha256"].as_str().unwrap().is_empty());
+    assert_eq!(body["ripple"]["data_items_count"], 1);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn wiki_codecs_lists_all_six() {
+    let ctx = TestContext::new("wiki_codecs_lists_all_six");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/wiki/codecs").body(Body::empty()).unwrap(),
+    ).await;
+    let body = parse_body(response).await;
+    assert_eq!(body["codecs"].as_array().unwrap().len(), 6);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn wiki_stats_returns_community_browsing() {
+    let ctx = TestContext::new("wiki_stats_returns_community_browsing");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/wiki/stats").body(Body::empty()).unwrap(),
+    ).await;
+    let body = parse_body(response).await;
+    assert_eq!(body["community_browsing"], true);
+    assert_eq!(body["codecs_available"], 6);
+    assert!(body["snapshot_count"].as_u64().is_some());
+}
+
 mod hex {
     pub fn decode(input: &str) -> Result<Vec<u8>, String> {
         if input.len() % 2 != 0 {

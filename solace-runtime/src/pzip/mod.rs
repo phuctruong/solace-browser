@@ -4,6 +4,7 @@ mod util;
 pub mod evidence;
 pub mod json;
 pub mod jsonl;
+pub mod stillwater;
 pub mod web;
 
 use thiserror::Error;
@@ -39,6 +40,10 @@ pub fn decompress(data: &[u8]) -> Result<Vec<u8>> {
         b"PZJS" => json::decompress(data),
         b"PZJ0" => jsonl::decompress(data),
         b"PZWB" => web::decompress(data),
+        b"PZSW" => {
+            let decomp = stillwater::decompress_decomposition(data)?;
+            Ok(serde_json::to_vec(&decomp)?)
+        }
         _ => Ok(data.to_vec()),
     }
 }
