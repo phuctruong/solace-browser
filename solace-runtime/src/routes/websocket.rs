@@ -1,3 +1,4 @@
+// Diagram: 09-yinyang-fsm
 use axum::{
     extract::{
         ws::{Message, WebSocket, WebSocketUpgrade},

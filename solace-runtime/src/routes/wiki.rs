@@ -1,3 +1,4 @@
+// Diagram: 27-prime-wiki-snapshots
 use std::fs;
 
 use axum::{routing::get, Json, Router};

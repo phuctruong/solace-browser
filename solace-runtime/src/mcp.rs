@@ -1,3 +1,4 @@
+// Diagram: 23-mcp-agent-interface
 use serde_json::{json, Value};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 

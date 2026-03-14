@@ -1,3 +1,4 @@
+// Diagram: 26-heartbeat-cloud-ping
 use std::time::Duration;
 
 use serde_json::json;

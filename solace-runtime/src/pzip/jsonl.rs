@@ -1,3 +1,4 @@
+// Diagram: 16-evidence-chain
 #[path = "jsonl_codec.rs"]
 mod jsonl_codec;
 #[cfg(test)]

@@ -1,3 +1,4 @@
+// Diagram: 13-app-inbox-outbox
 use std::fs;
 use std::path::PathBuf;
 

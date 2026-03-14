@@ -1,3 +1,4 @@
+// Diagram: 11-domain-ecosystem
 use std::collections::BTreeMap;
 
 use axum::{extract::Path, http::StatusCode, routing::get, Json, Router};

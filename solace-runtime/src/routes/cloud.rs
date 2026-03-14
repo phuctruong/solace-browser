@@ -1,3 +1,4 @@
+// Diagram: 26-heartbeat-cloud-ping
 use axum::{
     extract::State,
     routing::{get, post},

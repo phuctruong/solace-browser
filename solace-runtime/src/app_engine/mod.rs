@@ -1,3 +1,4 @@
+// Diagram: 12-app-engine-pipeline
 pub mod inbox;
 pub mod outbox;
 pub mod runner;

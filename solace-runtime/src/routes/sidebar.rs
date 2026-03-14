@@ -1,3 +1,4 @@
+// Diagram: 08-sidebar-auth-gate
 use axum::{
     extract::{
         ws::{Message, WebSocket},

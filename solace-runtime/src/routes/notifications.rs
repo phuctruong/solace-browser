@@ -1,3 +1,4 @@
+// Diagram: 31-notifications-system
 use axum::{
     extract::{Path, State},
     http::StatusCode,

@@ -1,3 +1,4 @@
+// Diagram: 05-solace-runtime-architecture
 use axum::Router;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;

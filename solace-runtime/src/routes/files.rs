@@ -1,3 +1,4 @@
+// Diagram: 05-solace-runtime-architecture
 use axum::{response::Html, routing::get, Router};
 use tower_http::services::ServeDir;
 

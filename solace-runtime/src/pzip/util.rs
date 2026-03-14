@@ -1,3 +1,4 @@
+// Diagram: 16-evidence-chain
 use crate::pzip::{PZipError, Result};
 use brotli::{CompressorWriter, Decompressor};
 use std::io::{Read, Write};

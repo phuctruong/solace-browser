@@ -1,3 +1,4 @@
+// Diagram: 05-solace-runtime-architecture
 use std::fs;
 use std::path::{Path, PathBuf};
 

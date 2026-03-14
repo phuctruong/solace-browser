@@ -1,3 +1,4 @@
+// Diagram: 05-solace-runtime-architecture
 pub mod apps;
 pub mod budget;
 pub mod chat;

@@ -1,3 +1,4 @@
+// Diagram: 05-solace-runtime-architecture
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;

@@ -1,3 +1,4 @@
+// Diagram: 16-evidence-chain
 use super::{compress, decompress};
 
 #[test]

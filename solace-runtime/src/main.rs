@@ -1,3 +1,4 @@
+// Diagram: 05-solace-runtime-architecture
 use std::net::SocketAddr;
 
 use solace_runtime::{cloud, cron, mcp, persistence, server, utils, AppState};

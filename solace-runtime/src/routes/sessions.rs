@@ -1,3 +1,4 @@
+// Diagram: 07-browser-launch-dedup
 use axum::{
     extract::{Path, State},
     http::StatusCode,

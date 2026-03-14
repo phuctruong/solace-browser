@@ -1,3 +1,4 @@
+// Diagram: 05-solace-runtime-architecture
 use axum::{extract::State, routing::get, Json, Router};
 use serde_json::json;
 

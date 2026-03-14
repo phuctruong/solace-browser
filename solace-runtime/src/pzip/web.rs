@@ -1,3 +1,4 @@
+// Diagram: 27-prime-wiki-snapshots
 use crate::pzip::util::{
     brotli_compress, brotli_decompress, dec_uvarint, enc_uvarint, xz_decompress,
 };

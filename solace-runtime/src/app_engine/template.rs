@@ -1,3 +1,4 @@
+// Diagram: 12-app-engine-pipeline
 use std::fs;
 use std::path::Path;
 
