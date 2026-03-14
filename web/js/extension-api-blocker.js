@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Extension API Blocker — Task 157 — IIFE, no eval() */
 (function () {
   'use strict';

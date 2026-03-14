@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* annotation-tool.js — Annotation Tool | Task 093 | IIFE + escHtml */
 (function () {
   'use strict';

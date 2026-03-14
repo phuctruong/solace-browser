@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* cookie-consent-tracker.js — Cookie Consent Tracker | Task 111 | IIFE pattern | no eval */
 (function () {
   'use strict';

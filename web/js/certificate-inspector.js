@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* certificate-inspector.js — Certificate Inspector | Task 078 | IIFE pattern | no dangerous eval */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* scroll-tracker.js — Scroll Tracker | Task 105 | IIFE pattern | no eval */
 (function () {
   'use strict';

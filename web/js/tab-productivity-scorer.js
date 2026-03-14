@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Tab Productivity Scorer — Task 156 — IIFE, no eval() */
 (function () {
   'use strict';

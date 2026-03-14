@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* auto-translate.js — Auto Translate | Task 128 | IIFE, escHtml, no CDN, no eval */
 (function () {
   'use strict';

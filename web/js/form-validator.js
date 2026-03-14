@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* form-validator.js — Form Validator | Task 096 | IIFE + escHtml */
 (function () {
   'use strict';

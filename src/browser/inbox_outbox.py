@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """Inbox/outbox filesystem contract for Solace apps."""
 
 from __future__ import annotations

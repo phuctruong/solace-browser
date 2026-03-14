@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* font-manager.js — Font Manager | Task 091 | IIFE + escHtml */
 (function () {
   'use strict';

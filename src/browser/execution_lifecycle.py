@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """Preview -> approve -> execute lifecycle for Solace day-one apps."""
 
 from __future__ import annotations

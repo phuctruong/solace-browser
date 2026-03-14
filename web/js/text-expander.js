@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Text Expander — Task 123 */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 "use strict";
 /* Site Blocker — Task 065 */
 (function () {

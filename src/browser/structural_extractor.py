@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """
 structural_extractor.py — CPU-only page structure extraction.
 

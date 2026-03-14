@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Proxy Manager — Task 089 */
 (function () {
   'use strict';

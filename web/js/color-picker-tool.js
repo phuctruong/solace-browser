@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* color-picker-tool.js — Color Picker Tool | Task 097 | IIFE + escHtml */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * quick-actions.js — Quick Actions Menu frontend for Solace Hub
  * Task 032 | Rung 641

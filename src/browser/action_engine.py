@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """
 action_engine.py — AI-Driven Action Execution Engine
 Phase 2, BUILD 6: Ref-Based Action Execution

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Focus Mode — Task 146 | IIFE, no eval */
 (function () {
   "use strict";

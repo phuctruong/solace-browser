@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """Fail-closed budget gate checker for Solace execution lifecycle.
 
 Gates B1-B6 run before every execution. If ANY gate fails, execution

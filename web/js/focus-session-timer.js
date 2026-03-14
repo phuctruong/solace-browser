@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Focus Session Timer — Task 122 */
 (function () {
   'use strict';

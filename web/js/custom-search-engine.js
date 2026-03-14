@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Custom Search Engine — Task 121 */
 (function () {
   'use strict';

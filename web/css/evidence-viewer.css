@@ -1,3 +1,4 @@
+<!-- Diagram: 16-evidence-chain -->
 /* evidence-viewer.css — Evidence Viewer for Solace Hub (Task 016)
    Laws: var(--hub-*) tokens ONLY in component rules. Token definitions in :root may contain hex values.
    No CDN. No Bootstrap. No Tailwind. No jQuery. No hardcoded hex outside :root. Banned port omitted.

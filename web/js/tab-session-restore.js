@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* tab-session-restore.js — Tab Session Restore | Task 127 | IIFE, escHtml, no CDN, no eval */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* reading-time-estimator.js — Reading Time Estimator | Task 130 | IIFE pattern | no eval */
 (function () {
   'use strict';

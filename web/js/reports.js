@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* reports.js — Scheduled Reports UI for Solace Hub
    Task 021 | Rung 641
    Laws:

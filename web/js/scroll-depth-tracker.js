@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* scroll-depth-tracker.js — Task 177 */
 /* NO eval(), NO CDN, NO port 9222 */
 "use strict";

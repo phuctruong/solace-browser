@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* network-request-blocker.js — Network Request Blocker | Task 131 | IIFE pattern | no eval */
 (function () {
   'use strict';

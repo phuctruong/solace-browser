@@ -1,3 +1,4 @@
+// Diagram: 04-hub-lifecycle
 (function () {
   'use strict';
 

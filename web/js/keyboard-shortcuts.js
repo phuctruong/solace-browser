@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * keyboard-shortcuts.js — Keyboard Shortcuts Panel for Solace Hub (Task 028)
  * Laws:

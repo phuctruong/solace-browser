@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * budget.js — Budget Controls frontend for Solace Hub
  * Task 020 | Rung 641

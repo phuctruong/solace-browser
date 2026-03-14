@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* web-archiver.js — Web Archiver | Task 110 | IIFE pattern | no eval */
 (function () {
   'use strict';

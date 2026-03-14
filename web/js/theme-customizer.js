@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 'use strict';
 
 const TC_API = '/api/v1/theme/customizer';

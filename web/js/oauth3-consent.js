@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * oauth3-consent.js — OAuth3 Consent UI for Solace Hub
  * Task 024 | Rung 641

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* tab-screenshot.js — Tab Screenshot | Task 076 | IIFE pattern | no dangerous eval */
 (function () {
   'use strict';

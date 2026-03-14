@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Browser History Analytics — Task 112 */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* site-monitor.js — Task 119 | IIFE + escHtml | no eval() | no CDN */
 (function () {
   'use strict';

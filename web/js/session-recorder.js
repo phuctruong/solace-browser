@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Session Recorder — Task 088 */
 (function () {
   'use strict';

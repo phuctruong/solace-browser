@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 "use strict";
 /* Cookie Manager — Task 062 */
 const CM = {

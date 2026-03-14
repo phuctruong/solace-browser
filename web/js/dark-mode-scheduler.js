@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* dark-mode-scheduler.js — Dark Mode Scheduler | Task 142 | IIFE pattern | no eval */
 (function () {
   'use strict';

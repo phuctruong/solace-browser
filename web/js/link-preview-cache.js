@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* link-preview-cache.js — Link Preview Cache | Task 101 | IIFE pattern | no eval */
 (function () {
   'use strict';

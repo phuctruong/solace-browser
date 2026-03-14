@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Password Strength Checker — Task 144 | IIFE, no eval */
 (function () {
   "use strict";

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Diagram: 01-triangle-architecture
 """
 Prime Recipe Replay Engine
 Executes saved recipes automatically - zero manual clicking needed

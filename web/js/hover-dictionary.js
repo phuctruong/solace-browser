@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* hover-dictionary.js — Hover Dictionary | Task 138 | IIFE pattern | no eval */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 (function () {
   "use strict";
 

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Automation Recorder — Task 090 */
 (function () {
   'use strict';

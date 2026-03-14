@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* tab-organizer.js — Tab Organizer | Task 099 | IIFE + escHtml */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 "use strict";
 /* Web Vitals Monitor — Task 061 */
 const WV = {

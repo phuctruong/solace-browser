@@ -1,3 +1,4 @@
+// Diagram: 16-evidence-chain
 /**
  * evidence-chain.js — Evidence Chain Viewer for Solace Hub (Task 026)
  * Laws:

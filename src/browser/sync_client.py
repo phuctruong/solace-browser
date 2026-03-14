@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """
 sync_client.py — Browser-to-Cloud Sync Client
 

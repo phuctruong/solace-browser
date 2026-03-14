@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * chat.js — YinYang AI Chat Widget for Solace Hub
  * Laws:

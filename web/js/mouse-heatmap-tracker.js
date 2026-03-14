@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* mouse-heatmap-tracker.js — Task 179 */
 /* NO eval(), NO CDN, NO port 9222 */
 "use strict";

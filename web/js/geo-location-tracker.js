@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* geo-location-tracker.js — Geo Location Tracker | Task 103 | IIFE pattern | no eval */
 (function () {
   'use strict';

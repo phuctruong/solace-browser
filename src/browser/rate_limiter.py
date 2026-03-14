@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Diagram: 01-triangle-architecture
 """
 RATE LIMITER - Prevent site bans by respecting rate limits
 Implements token bucket algorithm with per-domain rate limit enforcement

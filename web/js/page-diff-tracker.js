@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* page-diff-tracker.js — Page Diff Tracker | Task 098 | IIFE + escHtml */
 (function () {
   'use strict';

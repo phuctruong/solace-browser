@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 'use strict';
 
 const FA_API = '/api/v1/autofill';

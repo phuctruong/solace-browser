@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Request Interceptor — Task 161. IIFE. No eval(). escHtml required. */
 (function () {
   'use strict';

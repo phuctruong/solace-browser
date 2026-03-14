@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Font Inspector — Task 158. IIFE. No eval(). escHtml required. */
 (function () {
   'use strict';

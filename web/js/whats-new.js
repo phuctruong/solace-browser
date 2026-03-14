@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* whats-new.js — What's New Panel | Task 041 | IIFE pattern | no dangerous eval */
 (function () {
   'use strict';

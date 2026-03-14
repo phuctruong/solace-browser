@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* page-performance-budget.js — Page Performance Budget | Task 109 | IIFE pattern | no eval */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * browser-profiles.js — Browser Profile Manager for Solace Hub (Task 025)
  * Laws:

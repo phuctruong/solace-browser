@@ -1,3 +1,4 @@
+// Diagram: 05-solace-runtime-architecture
 'use strict';
 
 const DELIGHT_MILESTONES = Object.freeze({

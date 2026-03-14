@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* page-word-counter.js — Page Word Counter | Task 134 | IIFE pattern | no eval */
 (function () {
   'use strict';

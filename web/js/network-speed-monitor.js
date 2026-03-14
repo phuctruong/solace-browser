@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Network Speed Monitor — Task 155 — IIFE, no eval() */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* screenshot-scheduler.js — Screenshot Scheduler | Task 126 | IIFE, escHtml, no CDN, no eval */
 (function () {
   'use strict';

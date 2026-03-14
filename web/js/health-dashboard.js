@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * health-dashboard.js — System Health Dashboard for Solace Hub
  * Task 023 | Rung 641

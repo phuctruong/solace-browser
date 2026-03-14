@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """
 capture_pipeline.py — PZip Capture Pipeline for Solace Browser
 

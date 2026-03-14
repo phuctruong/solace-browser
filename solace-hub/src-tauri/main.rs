@@ -1,3 +1,4 @@
+// Diagram: 04-hub-lifecycle
 //! Solace Hub — Tauri desktop app for Solace Browser orchestration
 //!
 //! Lifecycle (enforced, non-negotiable):

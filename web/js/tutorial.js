@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 'use strict';
 
 const TUTORIAL_KEY = 'sb_tutorial_v1';

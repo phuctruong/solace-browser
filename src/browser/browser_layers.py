@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """
 Reference browser multi-layer wrapper.
 

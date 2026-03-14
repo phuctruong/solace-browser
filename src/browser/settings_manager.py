@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """SettingsManager — hot-reload watcher for ~/.solace/settings.json.
 
 Watches the settings file for changes using mtime polling (every 5 seconds

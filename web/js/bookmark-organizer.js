@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* bookmark-organizer.js — Bookmark Organizer | Task 136 | IIFE pattern | no eval */
 (function () {
   'use strict';

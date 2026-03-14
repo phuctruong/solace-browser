@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* url-categorizer.js — URL Categorizer | Task 079 | IIFE pattern | no dangerous eval */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * live-metrics.js — Live Metrics Dashboard frontend for Solace Hub
  * Task 031 | Rung 641

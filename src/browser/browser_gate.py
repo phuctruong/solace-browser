@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """
 Browser gate wrapper for the OAuth3 4-gate cascade.
 

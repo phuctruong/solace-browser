@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* keyboard-macro-manager.js — Keyboard Macro Manager | Task 102 | IIFE pattern | no eval */
 (function () {
   'use strict';

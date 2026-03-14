@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* keyboard-shortcut-analytics.js — Task 180 */
 /* NO eval(), NO CDN, NO port 9222 */
 "use strict";

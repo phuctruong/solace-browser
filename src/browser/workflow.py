@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """
 workflow.py — Pausable, Resumable, Approval-Gating Workflow State Machine
 

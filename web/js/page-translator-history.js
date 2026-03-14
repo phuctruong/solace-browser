@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* page-translator-history.js — Page Translator History | Task 140 | IIFE pattern | no eval */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * dark-mode.js — Dark Mode Theme System frontend for Solace Hub
  * Task 029 | Rung 641

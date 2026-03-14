@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Geolocation Tracker — Task 162. IIFE. No eval(). escHtml required. */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* page-summary-ai.js — Page Summary AI | Task 129 | IIFE pattern | no eval */
 (function () {
   'use strict';

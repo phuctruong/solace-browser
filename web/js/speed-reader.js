@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* speed-reader.js — Speed Reader | Task 125 | IIFE pattern | no eval */
 (function () {
   'use strict';

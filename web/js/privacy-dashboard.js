@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* privacy-dashboard.js — Privacy Dashboard | Task 077 | IIFE pattern | no dangerous eval */
 (function () {
   'use strict';

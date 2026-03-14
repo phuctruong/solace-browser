@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* video-downloader-tracker.js — Video Downloader Tracker | Task 133 | IIFE pattern | no eval */
 (function () {
   'use strict';

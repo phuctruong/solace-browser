@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* reading-goals-tracker.js — Reading Goals Tracker | Task 141 | IIFE pattern | no eval */
 (function () {
   'use strict';

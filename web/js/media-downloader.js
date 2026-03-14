@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 "use strict";
 /* Media Downloader — Task 064 */
 (function () {

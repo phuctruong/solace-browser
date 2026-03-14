@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* notification-filter.js — Notification Filter | Task 104 | IIFE pattern | no eval */
 (function () {
   'use strict';

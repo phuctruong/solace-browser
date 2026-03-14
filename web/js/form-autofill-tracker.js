@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Form Autofill Tracker — Task 143 | IIFE, no eval */
 (function () {
   "use strict";

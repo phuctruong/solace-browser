@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * app-store.js — App Store Browser frontend for Solace Hub
  * Task 030 | Rung 641

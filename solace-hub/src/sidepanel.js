@@ -1,3 +1,4 @@
+// Diagram: 04-hub-lifecycle
 /**
  * Yinyang Sidebar — Domain-First UX (GLOW 453)
  * Tabs: Domains | Chat | Events

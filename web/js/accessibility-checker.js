@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Accessibility Checker — Task 159. IIFE. No eval(). escHtml required. */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* code-snippet-saver.js — Code Snippet Saver | Task 095 | IIFE + escHtml */
 (function () {
   'use strict';

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Diagram: 23-mcp-agent-interface
 """
 Solace Browser MCP Server
 Exposes browser automation tools via Model Context Protocol (stdio JSON-RPC 2.0).

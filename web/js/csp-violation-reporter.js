@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* csp-violation-reporter.js — Task 174 */
 /* NO eval(), NO CDN, NO port 9222 */
 "use strict";

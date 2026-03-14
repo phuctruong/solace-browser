@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Diagram: 01-triangle-architecture
 
 """
 SOLACE BROWSER - Custom Headless Browser with CDP Protocol

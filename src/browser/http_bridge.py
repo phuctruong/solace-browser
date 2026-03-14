@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Diagram: 01-triangle-architecture
 
 """
 Solace Browser HTTP Bridge - Python Wrapper for CLI Commands

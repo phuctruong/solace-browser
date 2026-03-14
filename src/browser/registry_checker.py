@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Diagram: 01-triangle-architecture
 """
 REGISTRY CHECKER - Prevent redundant discovery
 Checks if recipes already exist before starting Phase 1 discovery

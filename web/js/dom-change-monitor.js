@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* DOM Change Monitor — Task 160. IIFE. No eval(). escHtml required. */
 (function () {
   'use strict';

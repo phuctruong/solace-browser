@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * recipe-store.js — Hub Recipe Store frontend for Solace Hub
  * Laws:

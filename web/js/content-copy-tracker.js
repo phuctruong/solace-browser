@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Content Copy Tracker — Task 145 | IIFE, no eval */
 (function () {
   "use strict";

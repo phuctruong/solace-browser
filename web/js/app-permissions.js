@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * app-permissions.js — App Permissions Manager frontend for Solace Hub
  * Task 019 | Rung: 641

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * recipes.js — Community Recipe Browser for Solace Hub
  * Laws:

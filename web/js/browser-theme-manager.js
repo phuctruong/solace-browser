@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* browser-theme-manager.js — Browser Theme Manager | Task 132 | IIFE pattern | no eval */
 (function () {
   'use strict';

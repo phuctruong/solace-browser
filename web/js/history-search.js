@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 "use strict";
 /* History Search — Task 063 */
 const HS = {

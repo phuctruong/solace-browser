@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Diagram: 01-triangle-architecture
 """
 SECURE CREDENTIAL MANAGER
 Loads credentials from environment variables (not plaintext files)

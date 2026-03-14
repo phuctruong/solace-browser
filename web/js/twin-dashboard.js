@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * twin-dashboard.js — Twin Browser Dashboard for Solace Hub
  * Task 022 | Rung 641

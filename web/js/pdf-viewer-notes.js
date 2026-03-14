@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* pdf-viewer-notes.js — PDF Viewer Notes | Task 124 | IIFE pattern | no eval */
 (function () {
   'use strict';

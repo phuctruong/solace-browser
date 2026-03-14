@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* image-optimizer.js — Task 120 | IIFE + escHtml | no eval() | no CDN */
 (function () {
   'use strict';

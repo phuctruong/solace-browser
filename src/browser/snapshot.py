@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """
 snapshot.py — HTML Snapshot Capture Module
 Phase 2, BUILD 5: HTML Snapshot Capture

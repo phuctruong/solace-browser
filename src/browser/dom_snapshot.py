@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """
 dom_snapshot.py — Dynamic DOM Snapshot System
 Phase 2, BUILD 6: AI-Driven DOM Snapshot

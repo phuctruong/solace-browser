@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """
 Auth Proxy — 3-Layer Defense for Chrome CDP Access
 

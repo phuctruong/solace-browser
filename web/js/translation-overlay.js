@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* translation-overlay.js — Translation Overlay | Task 092 | IIFE + escHtml */
 (function () {
   'use strict';

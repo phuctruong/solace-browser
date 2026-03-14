@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 'use strict';
 
 const SSE_RECONNECT_DELAY_MS = 3000;

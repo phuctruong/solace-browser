@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """
 Multi-Browser Session Manager — Concurrent Isolated Browser Sessions
 

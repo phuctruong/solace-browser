@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * session-replay.js — Session Replay Viewer for Solace Hub (Task 027)
  * Laws:

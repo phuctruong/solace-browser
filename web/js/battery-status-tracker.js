@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* battery-status-tracker.js — Task 176 */
 /* NO eval(), NO CDN, NO port 9222 */
 "use strict";

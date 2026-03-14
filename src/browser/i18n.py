@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """Yinyang i18n loader.
 
 Single entry point for all locale string lookups. Falls back to English

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* lazy-load-tracker.js — Task 178 */
 /* NO eval(), NO CDN, NO port 9222 */
 "use strict";

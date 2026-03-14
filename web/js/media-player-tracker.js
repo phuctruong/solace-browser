@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* media-player-tracker.js — Media Player Tracker | Task 100 | IIFE pattern | no eval */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Content Rating System — Task 114 */
 (function () {
   'use strict';

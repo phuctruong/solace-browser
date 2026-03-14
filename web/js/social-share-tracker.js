@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* social-share-tracker.js — Social Share Tracker | Task 137 | IIFE pattern | no eval */
 (function () {
   'use strict';

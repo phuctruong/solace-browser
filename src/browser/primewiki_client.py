@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """
 primewiki_client.py — Prime Wiki cloud sync client.
 

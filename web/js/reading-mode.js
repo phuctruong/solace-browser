@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* reading-mode.js — Reading Mode | Task 094 | IIFE + escHtml */
 (function () {
   'use strict';

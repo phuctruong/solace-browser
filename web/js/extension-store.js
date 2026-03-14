@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* extension-store.js — Extension Store | Task 080 | IIFE pattern | no dangerous eval */
 (function () {
   'use strict';

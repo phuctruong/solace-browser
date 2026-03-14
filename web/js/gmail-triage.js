@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * gmail-triage.js — Gmail Inbox Triage frontend for Solace Hub
  * Laws:

@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """auto_update.py — Solace Browser Auto-Update Module
 
 Checks for a newer release on startup, downloads, verifies SHA-256,

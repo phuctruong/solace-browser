@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* highlight-extractor.js — Highlight Extractor | Task 135 | IIFE pattern | no eval */
 (function () {
   'use strict';

@@ -1,3 +1,4 @@
+# Diagram: 01-triangle-architecture
 """
 history.py — Browsing Session History
 Phase 2, BUILD 5: HTML Snapshot Capture

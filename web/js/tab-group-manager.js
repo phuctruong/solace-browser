@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 "use strict";
 /* Tab Group Manager — Task 058 */
 const TGM = {

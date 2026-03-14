@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 "use strict";
 /* Shortcut Manager — Task 066 */
 (function () {

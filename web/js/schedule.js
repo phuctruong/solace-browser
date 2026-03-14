@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /**
  * schedule.js — Schedule Operations 4-tab view for Solace Hub
  * Laws:

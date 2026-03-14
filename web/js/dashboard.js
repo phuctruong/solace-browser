@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 'use strict';
 
 const DEFAULT_TOKEN = localStorage.getItem('solace_token') || '';

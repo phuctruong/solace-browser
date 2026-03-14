@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Diagram: 01-triangle-architecture
 """
 Gmail Automation Library
 Complete automation toolkit based on exploration results

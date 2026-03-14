@@ -1,3 +1,4 @@
+// Diagram: 02-dashboard-login
 /* Download Manager v2 — Task 086 */
 (function () {
   'use strict';
