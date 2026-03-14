@@ -109,7 +109,7 @@ fn field_valid(field: &str, min: u32, max: u32) -> bool {
         .is_some_and(|value| value >= min && value <= max)
 }
 
-fn field_matches(field: &str, value: u32) -> bool {
+pub fn field_matches(field: &str, value: u32) -> bool {
     if field == "*" {
         return true;
     }

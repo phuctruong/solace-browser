@@ -16,7 +16,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_yaml = "0.9"
 reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
-minijinja = "2"
+minijinja = { version = "2", features = ["json"] }
 sha2 = "0.10"
 aes-gcm = "0.10"
 base64 = "0.22"
@@ -35,6 +35,7 @@ thiserror = "2"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
 
 [profile.release]
 lto = true

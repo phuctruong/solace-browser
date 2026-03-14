@@ -1,13 +1,18 @@
 use std::net::SocketAddr;
 
-use solace_runtime::{cloud, cron, mcp, persistence, server, state, utils};
+use solace_runtime::{cloud, cron, mcp, persistence, server, utils, AppState};
 use tokio::signal;
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let state = state::AppState::new();
+    let state = AppState::new();
+    if std::env::args().skip(1).any(|arg| arg == "--mcp") {
+        tracing::info!("starting MCP stdio server");
+        mcp::run_mcp_server(state).await;
+        return;
+    }
     let solace_home = utils::solace_home();
 
     if let Err(error) = persistence::write_port_lock(&solace_home, 8888, &state.token_hash) {
