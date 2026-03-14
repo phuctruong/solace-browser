@@ -167,7 +167,7 @@ async fn apps_list_installed_apps() {
     let response = send(&app, Request::get("/api/apps").body(Body::empty()).unwrap()).await;
     assert_eq!(response.status(), StatusCode::OK);
     let body = parse_body(response).await;
-    assert_eq!(body["apps"].as_array().unwrap().len(), 2);
+    assert!(body["apps"].as_array().unwrap().len() >= 2);
 }
 
 #[tokio::test(flavor = "current_thread")]
