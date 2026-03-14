@@ -1,6 +1,7 @@
 use axum::{
     extract::{Path, State},
     http::StatusCode,
+    response::IntoResponse,
     routing::{get, post},
     Json, Router,
 };
@@ -32,17 +33,13 @@ async fn app_detail(
     Ok(Json(json!({"app": app})))
 }
 
-async fn run_app(
-    State(state): State<AppState>,
-    Path(app_id): Path<String>,
-) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
-    crate::app_engine::runner::run_app(&app_id, &state)
-        .await
-        .map(|result| Json(json!({"ok": true, "result": result})))
-        .map_err(|error| {
-            (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"ok": false, "error": error})),
-            )
-        })
+async fn run_app(State(state): State<AppState>, Path(app_id): Path<String>) -> impl IntoResponse {
+    match crate::app_engine::runner::run_app(&app_id, &state).await {
+        Ok(path) => Json(json!({"ok": true, "report": path.to_string_lossy()})).into_response(),
+        Err(error) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": error})),
+        )
+            .into_response(),
+    }
 }

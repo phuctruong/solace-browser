@@ -62,7 +62,7 @@ impl AppState {
         let settings = crate::config::load_settings(&solace_home);
         let cloud_config = crate::config::load_cloud_config(&solace_home);
         let schedules = crate::persistence::read_json::<Vec<Schedule>>(
-            &solace_home.join("runtime").join("schedules.json"),
+            &solace_home.join("daemon").join("schedules.json"),
         )
         .unwrap_or_default();
 

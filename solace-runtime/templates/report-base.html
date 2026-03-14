@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ app.name }} | {{ generated_at }}</title>
+  <style>
+    body { font-family: system-ui; max-width: 920px; margin: auto; padding: 32px; color: #0f172a; }
+    header, footer { border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px; }
+    footer { border-top: 1px solid #e2e8f0; border-bottom: 0; padding-top: 16px; margin-top: 32px; }
+    section { margin-bottom: 24px; }
+    pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; overflow: auto; }
+    .meta { color: #64748b; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{ app.name|e }}</h1>
+    <p>{{ app.description|e }}</p>
+    <p class="meta">Generated: {{ generated_at }}</p>
+  </header>
+
+  {% if context.items %}
+  <section>
+    <h2>Items</h2>
+    <pre>{{ context.items|tojson(indent=2) }}</pre>
+  </section>
+  {% endif %}
+
+  <section>
+    <h2>Context</h2>
+    <pre>{{ context|tojson(indent=2) }}</pre>
+  </section>
+
+  <footer>
+    <div><strong>Evidence Hash:</strong> {{ context.evidence_hash or "pending" }}</div>
+    <div class="meta">ALCOA: attributable · legible · contemporaneous · original · accurate</div>
+  </footer>
+</body>
+</html>

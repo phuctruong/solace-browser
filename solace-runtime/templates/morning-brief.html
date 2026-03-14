@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ app.name }} | {{ generated_at }}</title>
+  <style>
+    body { font-family: system-ui; max-width: 960px; margin: auto; padding: 32px; background: #fcfcff; color: #1e293b; }
+    h1, h2 { margin-bottom: 8px; }
+    .hero { border-bottom: 2px solid #7c3aed; margin-bottom: 24px; padding-bottom: 16px; }
+    .card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06); }
+    .meta { color: #64748b; font-size: 0.9rem; }
+    .preview { white-space: pre-wrap; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <h1>{{ app.name }}</h1>
+    <p>{{ app.description or "Daily orchestrated intelligence brief" }}</p>
+    <p class="meta">Generated: {{ generated_at }}</p>
+  </section>
+
+  <section>
+    <h2>Fresh Signals</h2>
+    {% if context.items %}
+      {% for item in context.items %}
+      <article class="card">
+        <strong>{{ item.title|e }}</strong>
+        <div class="meta">Source: {{ item.source|e }}</div>
+        {% if item.url %}<div><a href="{{ item.url }}">{{ item.url }}</a></div>{% endif %}
+        {% if item.summary %}<p>{{ item.summary|e }}</p>{% endif %}
+      </article>
+      {% endfor %}
+    {% else %}
+      <article class="card"><p>No remote feeds returned items for this run.</p></article>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Cross-App Synthesis</h2>
+    {% if context.source_reports %}
+      {% for report in context.source_reports %}
+      <article class="card">
+        <strong>{{ report.name|e }}</strong>
+        <div class="meta">{{ report.generated_at or "Unknown time" }}</div>
+        <p class="preview">{{ report.preview|e }}</p>
+      </article>
+      {% endfor %}
+    {% else %}
+      <article class="card"><p>No upstream outbox reports found yet.</p></article>
+    {% endif %}
+  </section>
+</body>
+</html>

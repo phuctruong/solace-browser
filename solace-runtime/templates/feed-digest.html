@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ app.name }} | {{ generated_at }}</title>
+  <style>
+    :root { --color-primary: #7c3aed; }
+    body { font-family: system-ui; max-width: 900px; margin: auto; padding: 32px; }
+    .item { border-bottom: 1px solid #e2e8f0; padding: 12px 0; }
+    .item-title { font-weight: 600; }
+    .item-meta { color: #64748b; font-size: 0.85rem; }
+    .header { border-bottom: 2px solid var(--color-primary); padding-bottom: 16px; margin-bottom: 24px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>{{ app.name }}</h1>
+    <p>Generated: {{ generated_at }}</p>
+  </div>
+  {% for item in context.items %}
+  <div class="item">
+    <div class="item-title">{{ item.title|e }}</div>
+    {% if item.url %}<a href="{{ item.url }}">{{ item.url }}</a>{% endif %}
+    {% if item.score %}<span class="item-meta">Score: {{ item.score }}</span>{% endif %}
+    {% if item.summary %}<p>{{ item.summary|e }}</p>{% endif %}
+  </div>
+  {% endfor %}
+</body>
+</html>

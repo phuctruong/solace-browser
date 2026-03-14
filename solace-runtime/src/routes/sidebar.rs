@@ -19,14 +19,14 @@ pub fn routes() -> Router<AppState> {
 }
 
 async fn sidebar_state(State(state): State<AppState>) -> Json<serde_json::Value> {
-    Json(build_sidebar_payload(&state))
+    Json(compute_sidebar_state(&state))
 }
 
 async fn sidebar_ws(
     ws: WebSocketUpgrade,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let payload = build_sidebar_payload(&state);
+    let payload = compute_sidebar_state(&state);
     if payload["gate"] == "needs_onboarding" {
         return Err((
             StatusCode::FORBIDDEN,
@@ -52,7 +52,7 @@ async fn sidebar_socket(mut socket: WebSocket, initial: serde_json::Value) {
     }
 }
 
-fn build_sidebar_payload(state: &AppState) -> serde_json::Value {
+pub(crate) fn compute_sidebar_state(state: &AppState) -> serde_json::Value {
     let onboarding = crate::config::load_onboarding(&crate::utils::solace_home());
     let cloud = state.cloud_config.read().clone();
     let gate = if !onboarding.completed {

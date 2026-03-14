@@ -101,6 +101,18 @@ impl EvidenceChain {
     }
 }
 
+pub fn seal_run(app_id: &str, run_id: &str, report_bytes: &[u8]) -> Result<()> {
+    let Some(app_dir) = crate::utils::find_app_dir(app_id) else {
+        return Err(crate::pzip::PZipError::Invalid(format!(
+            "app not found: {app_id}"
+        )));
+    };
+    let chain_path = app_dir.join("outbox").join("evidence-chain.json");
+    let mut chain = EvidenceChain::load(&chain_path)?;
+    chain.append(app_id, run_id, report_bytes, "local@solace");
+    chain.save(&chain_path)
+}
+
 fn entry_hash(entry: &EvidenceEntry) -> String {
     #[derive(Serialize)]
     struct Payload<'a> {

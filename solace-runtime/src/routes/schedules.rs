@@ -128,7 +128,7 @@ async fn validate_schedule(Json(payload): Json<SchedulePayload>) -> Json<serde_j
 
 fn persist_schedules(state: &AppState) -> Result<(), (StatusCode, Json<serde_json::Value>)> {
     let path = crate::utils::solace_home()
-        .join("runtime")
+        .join("daemon")
         .join("schedules.json");
     crate::persistence::write_json(&path, &state.schedules.read().clone()).map_err(|error| {
         (

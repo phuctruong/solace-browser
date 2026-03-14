@@ -10,4 +10,5 @@ pub mod notifications;
 pub mod schedules;
 pub mod sessions;
 pub mod sidebar;
+pub mod websocket;
 pub mod wiki;

@@ -91,7 +91,7 @@ fn stream_count(subtype: u8) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use super::{CSS, HTML, JS, compress, decompress};
+    use super::{compress, decompress, CSS, HTML, JS};
 
     #[test]
     fn roundtrips_html() {

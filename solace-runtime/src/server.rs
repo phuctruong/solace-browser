@@ -18,6 +18,7 @@ pub fn build_router(state: crate::state::AppState) -> Router {
         .merge(crate::routes::domains::routes())
         .merge(crate::routes::cloud::routes())
         .merge(crate::routes::sidebar::routes())
+        .merge(crate::routes::websocket::routes())
         .merge(crate::routes::chat::routes())
         .merge(crate::routes::wiki::routes())
         .merge(crate::routes::budget::routes())
