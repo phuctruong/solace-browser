@@ -86,6 +86,24 @@ pub fn save_onboarding(solace_home: &Path, value: &Onboarding) -> Result<(), Str
     crate::persistence::write_json(&solace_home.join("onboarding.json"), value)
 }
 
+/// Check if user has a BYOK (Bring Your Own Key) API key configured.
+/// Looks for ~/.solace/byok.json with at least one non-empty key.
+pub fn has_byok_key(solace_home: &Path) -> bool {
+    let path = solace_home.join("byok.json");
+    if let Ok(content) = std::fs::read_to_string(&path) {
+        if let Ok(value) = serde_json::from_str::<serde_json::Value>(&content) {
+            // Check for any non-empty key field
+            if let Some(obj) = value.as_object() {
+                return obj.values().any(|v| {
+                    v.as_str().is_some_and(|s| !s.is_empty())
+                });
+            }
+        }
+    }
+    // Also check environment variable
+    std::env::var("SOLACE_LLM_API_KEY").is_ok_and(|k| !k.is_empty())
+}
+
 pub fn load_budget_config(solace_home: &Path) -> BudgetConfig {
     crate::persistence::read_json(&solace_home.join("budget.json")).unwrap_or_default()
 }

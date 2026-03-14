@@ -9,6 +9,7 @@ pub mod files;
 pub mod health;
 pub mod notifications;
 pub mod oauth3;
+pub mod recipes;
 pub mod schedules;
 pub mod sessions;
 pub mod sidebar;

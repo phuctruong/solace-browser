@@ -53,24 +53,48 @@ async fn sidebar_socket(mut socket: WebSocket, initial: serde_json::Value) {
     }
 }
 
+/// Sidebar auth gate — 4 states per diagram 08:
+///   unregistered → needs onboarding / no cloud config
+///   no_llm       → registered but no BYOK key and not paid (can't chat)
+///   byok         → user has own LLM API key (chat enabled, user's key)
+///   paid         → managed LLM subscription (chat enabled + uplifts injected)
 pub(crate) fn compute_sidebar_state(state: &AppState) -> serde_json::Value {
-    let onboarding = crate::config::load_onboarding(&crate::utils::solace_home());
+    let solace_home = crate::utils::solace_home();
+    let onboarding = crate::config::load_onboarding(&solace_home);
     let cloud = state.cloud_config.read().clone();
+    let has_byok = crate::config::has_byok_key(&solace_home);
+
     let gate = if !onboarding.completed {
-        "needs_onboarding"
-    } else if cloud.is_none() {
-        "local_ready"
-    } else if cloud.as_ref().is_some_and(|config| !config.paid_user) {
-        "auth_required"
+        "unregistered"
+    } else if let Some(ref config) = cloud {
+        if config.paid_user {
+            "paid"
+        } else if has_byok {
+            "byok"
+        } else {
+            "no_llm"
+        }
+    } else if has_byok {
+        "byok"
     } else {
-        "cloud_ready"
+        "no_llm"
+    };
+
+    let chat_enabled = gate == "byok" || gate == "paid";
+    let llm_mode = match gate {
+        "paid" => "managed",
+        "byok" => "byok",
+        _ => "none",
     };
 
     json!({
         "gate": gate,
+        "chat_enabled": chat_enabled,
+        "llm_mode": llm_mode,
         "theme": state.theme.read().clone(),
         "sessions": state.sessions.read().len(),
         "unread_notifications": state.notifications.read().iter().filter(|note| !note.read).count(),
         "uptime_seconds": state.uptime_seconds(),
+        "apps_installed": crate::utils::scan_app_dirs().len(),
     })
 }

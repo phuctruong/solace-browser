@@ -8,6 +8,7 @@ pub mod evidence;
 pub mod mcp;
 pub mod persistence;
 pub mod pzip;
+pub mod recipe;
 pub mod routes;
 pub mod server;
 pub mod state;

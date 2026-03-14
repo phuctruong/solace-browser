@@ -516,13 +516,14 @@ async fn sidebar_state_reports_local_ready() {
     )
     .await;
     let body = parse_body(response).await;
-    assert_eq!(body["gate"], "local_ready");
+    assert_eq!(body["gate"], "no_llm"); // onboarding complete but no BYOK or paid
+    assert_eq!(body["chat_enabled"], false);
     assert_eq!(body["theme"], "dark");
 }
 
 #[tokio::test(flavor = "current_thread")]
-async fn sidebar_state_reports_onboarding_gate() {
-    let ctx = TestContext::new("sidebar_state_reports_onboarding_gate");
+async fn sidebar_state_reports_unregistered() {
+    let ctx = TestContext::new("sidebar_state_reports_unregistered");
     ctx.set_onboarding(false);
     let app = ctx.app();
     let response = send(
@@ -534,7 +535,8 @@ async fn sidebar_state_reports_onboarding_gate() {
     .await;
     assert_eq!(response.status(), StatusCode::OK);
     let body = parse_body(response).await;
-    assert_eq!(body["gate"], "needs_onboarding");
+    assert_eq!(body["gate"], "unregistered");
+    assert_eq!(body["chat_enabled"], false);
 }
 
 #[tokio::test(flavor = "current_thread")]
