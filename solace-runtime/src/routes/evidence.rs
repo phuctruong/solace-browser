@@ -48,6 +48,7 @@ async fn create_evidence(
     )
     .map_err(|error| (StatusCode::BAD_REQUEST, Json(json!({"error": error}))))?;
     *state.evidence_count.write() += 1;
+    crate::routes::budget::record_budget_event(&state);
     Ok(Json(json!({"record": record})))
 }
 

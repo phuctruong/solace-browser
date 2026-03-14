@@ -117,3 +117,39 @@ fn hex_nibble(value: u8) -> Option<u8> {
         _ => None,
     }
 }
+
+/// Validate that an OAuth3 token is not revoked, not expired, and contains
+/// the required scope. Returns `Ok(())` on success or `Err(reason)` on failure.
+pub fn validate_token(token: &OAuthToken, required_scope: &str) -> Result<(), String> {
+    if token.revoked {
+        return Err("token is revoked".to_string());
+    }
+
+    if let Some(expires_at) = token.expires_at {
+        let now = chrono::Utc::now().timestamp();
+        if now >= expires_at {
+            return Err("token is expired".to_string());
+        }
+    }
+
+    let has_scope = token.scopes.iter().any(|s| s == required_scope)
+        || token.scope.as_deref() == Some(required_scope);
+
+    if !has_scope {
+        return Err(format!("missing required scope: {required_scope}"));
+    }
+
+    Ok(())
+}
+
+/// Revoke a token by its `token_id`. Returns `true` if the token was found
+/// and revoked, `false` if no token with that ID exists.
+pub fn revoke_token(tokens: &mut Vec<OAuthToken>, token_id: &str) -> bool {
+    for token in tokens.iter_mut() {
+        if token.token_id == token_id {
+            token.revoked = true;
+            return true;
+        }
+    }
+    false
+}

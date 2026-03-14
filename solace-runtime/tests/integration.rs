@@ -551,6 +551,188 @@ async fn budget_status_returns_defaults() {
     let body = parse_body(response).await;
     assert_eq!(body["config"]["daily_limit"], 1000);
     assert_eq!(body["blocked"], false);
+    assert_eq!(body["usage"]["daily_count"], 0);
+    assert_eq!(body["usage"]["monthly_count"], 0);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn budget_tracks_evidence_events() {
+    let ctx = TestContext::new("budget_tracks_evidence_events");
+    let app = ctx.app();
+
+    // Create 3 evidence events
+    for i in 0..3 {
+        let (status, _) = send_json(
+            &app,
+            Method::POST,
+            "/api/v1/evidence",
+            json!({"event": format!("test-event-{i}"), "actor": "tester"}),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+    }
+
+    // Budget status should reflect the 3 events
+    let response = send(
+        &app,
+        Request::get("/api/v1/budget/status")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    let body = parse_body(response).await;
+    assert_eq!(body["usage"]["daily_count"], 3);
+    assert_eq!(body["usage"]["monthly_count"], 3);
+    assert_eq!(body["blocked"], false);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn budget_blocks_when_daily_limit_exceeded() {
+    let ctx = TestContext::new("budget_blocks_when_daily_limit_exceeded");
+
+    // Set a very low daily limit
+    config::save_budget_config(
+        &ctx.home,
+        &config::BudgetConfig {
+            daily_limit: 2,
+            monthly_limit: 20_000,
+            enforce: true,
+        },
+    )
+    .unwrap();
+
+    let app = ctx.app();
+
+    // Create 2 evidence events to hit the limit
+    for i in 0..2 {
+        let (status, _) = send_json(
+            &app,
+            Method::POST,
+            "/api/v1/evidence",
+            json!({"event": format!("event-{i}")}),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+    }
+
+    // Budget should now be blocked
+    let response = send(
+        &app,
+        Request::get("/api/v1/budget/status")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    let body = parse_body(response).await;
+    assert_eq!(body["usage"]["daily_count"], 2);
+    assert_eq!(body["blocked"], true);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn budget_blocks_when_monthly_limit_exceeded() {
+    let ctx = TestContext::new("budget_blocks_when_monthly_limit_exceeded");
+
+    // Set a very low monthly limit
+    config::save_budget_config(
+        &ctx.home,
+        &config::BudgetConfig {
+            daily_limit: 1_000,
+            monthly_limit: 3,
+            enforce: true,
+        },
+    )
+    .unwrap();
+
+    let app = ctx.app();
+
+    // Create 3 evidence events to hit the monthly limit
+    for i in 0..3 {
+        let (status, _) = send_json(
+            &app,
+            Method::POST,
+            "/api/v1/evidence",
+            json!({"event": format!("event-{i}")}),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+    }
+
+    let response = send(
+        &app,
+        Request::get("/api/v1/budget/status")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    let body = parse_body(response).await;
+    assert_eq!(body["usage"]["monthly_count"], 3);
+    assert_eq!(body["blocked"], true);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn budget_not_blocked_when_enforce_disabled() {
+    let ctx = TestContext::new("budget_not_blocked_when_enforce_disabled");
+
+    // Set enforce=false with very low limits
+    config::save_budget_config(
+        &ctx.home,
+        &config::BudgetConfig {
+            daily_limit: 1,
+            monthly_limit: 1,
+            enforce: false,
+        },
+    )
+    .unwrap();
+
+    let app = ctx.app();
+
+    // Create 2 evidence events (exceeds both limits)
+    for i in 0..2 {
+        let (status, _) = send_json(
+            &app,
+            Method::POST,
+            "/api/v1/evidence",
+            json!({"event": format!("event-{i}")}),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+    }
+
+    let response = send(
+        &app,
+        Request::get("/api/v1/budget/status")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    let body = parse_body(response).await;
+    // Not blocked because enforce is false
+    assert_eq!(body["blocked"], false);
+    assert_eq!(body["usage"]["daily_count"], 2);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn budget_usage_persisted_to_disk() {
+    let ctx = TestContext::new("budget_usage_persisted_to_disk");
+    let app = ctx.app();
+
+    // Create an evidence event
+    let (status, _) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/evidence",
+        json!({"event": "persist-test"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+
+    // Verify usage file was written to disk
+    let usage_path = ctx.home.join("budget_usage.json");
+    assert!(usage_path.exists(), "budget_usage.json should be persisted");
+    let usage: config::BudgetUsage =
+        solace_runtime::persistence::read_json(&usage_path).unwrap();
+    assert_eq!(usage.daily_count, 1);
+    assert_eq!(usage.monthly_count, 1);
 }
 
 #[test]
@@ -721,6 +903,503 @@ async fn wiki_stats_returns_community_browsing() {
     assert_eq!(body["community_browsing"], true);
     assert_eq!(body["codecs_available"], 6);
     assert!(body["snapshot_count"].as_u64().is_some());
+}
+
+// ─── OAuth3 Scope & Expiry Enforcement Tests ────────────────────────
+
+#[test]
+fn validate_token_rejects_revoked() {
+    let token = OAuthToken {
+        token_id: "tok-revoked".to_string(),
+        agent_name: None,
+        service: None,
+        scope: None,
+        scopes: vec!["chat:write".to_string()],
+        expires_at: Some(9_999_999_999),
+        created_at: Some(1_700_000_000),
+        revoked: true,
+        extra: Default::default(),
+    };
+    let result = crypto::validate_token(&token, "chat:write");
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err(), "token is revoked");
+}
+
+#[test]
+fn validate_token_rejects_expired() {
+    let token = OAuthToken {
+        token_id: "tok-expired".to_string(),
+        agent_name: None,
+        service: None,
+        scope: None,
+        scopes: vec!["chat:write".to_string()],
+        expires_at: Some(1_000_000_000), // well in the past
+        created_at: Some(999_999_999),
+        revoked: false,
+        extra: Default::default(),
+    };
+    let result = crypto::validate_token(&token, "chat:write");
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err(), "token is expired");
+}
+
+#[test]
+fn validate_token_rejects_missing_scope() {
+    let token = OAuthToken {
+        token_id: "tok-noscope".to_string(),
+        agent_name: None,
+        service: None,
+        scope: None,
+        scopes: vec!["chat:write".to_string()],
+        expires_at: Some(9_999_999_999),
+        created_at: Some(1_700_000_000),
+        revoked: false,
+        extra: Default::default(),
+    };
+    let result = crypto::validate_token(&token, "tasks:run");
+    assert!(result.is_err());
+    assert!(result.unwrap_err().contains("missing required scope"));
+}
+
+#[test]
+fn validate_token_accepts_scope_in_scopes_vec() {
+    let token = OAuthToken {
+        token_id: "tok-ok".to_string(),
+        agent_name: None,
+        service: None,
+        scope: None,
+        scopes: vec!["chat:write".to_string(), "tasks:run".to_string()],
+        expires_at: Some(9_999_999_999),
+        created_at: Some(1_700_000_000),
+        revoked: false,
+        extra: Default::default(),
+    };
+    assert!(crypto::validate_token(&token, "tasks:run").is_ok());
+}
+
+#[test]
+fn validate_token_accepts_scope_in_singular_field() {
+    let token = OAuthToken {
+        token_id: "tok-singular".to_string(),
+        agent_name: None,
+        service: None,
+        scope: Some("admin:full".to_string()),
+        scopes: vec![],
+        expires_at: Some(9_999_999_999),
+        created_at: Some(1_700_000_000),
+        revoked: false,
+        extra: Default::default(),
+    };
+    assert!(crypto::validate_token(&token, "admin:full").is_ok());
+}
+
+#[test]
+fn validate_token_allows_no_expiry() {
+    let token = OAuthToken {
+        token_id: "tok-no-exp".to_string(),
+        agent_name: None,
+        service: None,
+        scope: None,
+        scopes: vec!["chat:write".to_string()],
+        expires_at: None,
+        created_at: Some(1_700_000_000),
+        revoked: false,
+        extra: Default::default(),
+    };
+    assert!(crypto::validate_token(&token, "chat:write").is_ok());
+}
+
+#[test]
+fn revoke_token_sets_revoked_flag() {
+    let mut tokens = vec![
+        OAuthToken {
+            token_id: "tok-a".to_string(),
+            agent_name: None,
+            service: None,
+            scope: None,
+            scopes: vec![],
+            expires_at: None,
+            created_at: None,
+            revoked: false,
+            extra: Default::default(),
+        },
+        OAuthToken {
+            token_id: "tok-b".to_string(),
+            agent_name: None,
+            service: None,
+            scope: None,
+            scopes: vec![],
+            expires_at: None,
+            created_at: None,
+            revoked: false,
+            extra: Default::default(),
+        },
+    ];
+    assert!(crypto::revoke_token(&mut tokens, "tok-b"));
+    assert!(!tokens[0].revoked);
+    assert!(tokens[1].revoked);
+}
+
+#[test]
+fn revoke_token_returns_false_for_unknown_id() {
+    let mut tokens = vec![OAuthToken {
+        token_id: "tok-x".to_string(),
+        agent_name: None,
+        service: None,
+        scope: None,
+        scopes: vec![],
+        expires_at: None,
+        created_at: None,
+        revoked: false,
+        extra: Default::default(),
+    }];
+    assert!(!crypto::revoke_token(&mut tokens, "tok-missing"));
+    assert!(!tokens[0].revoked); // unchanged
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn oauth3_validate_endpoint_accepts_valid_token() {
+    let ctx = TestContext::new("oauth3_validate_accepts");
+    let tokens = vec![OAuthToken {
+        token_id: "tok-valid".to_string(),
+        agent_name: Some("agent-1".to_string()),
+        service: Some("solace-cloud".to_string()),
+        scope: None,
+        scopes: vec!["chat:write".to_string(), "tasks:run".to_string()],
+        expires_at: Some(9_999_999_999),
+        created_at: Some(1_700_000_000),
+        revoked: false,
+        extra: Default::default(),
+    }];
+    crypto::save_vault(&tokens, "test-secret").unwrap();
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/oauth3/validate",
+        json!({
+            "token_id": "tok-valid",
+            "required_scope": "chat:write",
+            "vault_secret": "test-secret"
+        }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["valid"], true);
+    assert_eq!(body["token_id"], "tok-valid");
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn oauth3_validate_endpoint_rejects_expired_token() {
+    let ctx = TestContext::new("oauth3_validate_rejects_expired");
+    let tokens = vec![OAuthToken {
+        token_id: "tok-exp".to_string(),
+        agent_name: None,
+        service: None,
+        scope: None,
+        scopes: vec!["chat:write".to_string()],
+        expires_at: Some(1_000_000_000),
+        created_at: Some(999_999_999),
+        revoked: false,
+        extra: Default::default(),
+    }];
+    crypto::save_vault(&tokens, "test-secret").unwrap();
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/oauth3/validate",
+        json!({
+            "token_id": "tok-exp",
+            "required_scope": "chat:write",
+            "vault_secret": "test-secret"
+        }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::FORBIDDEN);
+    assert_eq!(body["valid"], false);
+    assert_eq!(body["error"], "token is expired");
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn oauth3_validate_endpoint_rejects_missing_scope() {
+    let ctx = TestContext::new("oauth3_validate_rejects_scope");
+    let tokens = vec![OAuthToken {
+        token_id: "tok-scope".to_string(),
+        agent_name: None,
+        service: None,
+        scope: None,
+        scopes: vec!["chat:write".to_string()],
+        expires_at: Some(9_999_999_999),
+        created_at: Some(1_700_000_000),
+        revoked: false,
+        extra: Default::default(),
+    }];
+    crypto::save_vault(&tokens, "test-secret").unwrap();
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/oauth3/validate",
+        json!({
+            "token_id": "tok-scope",
+            "required_scope": "admin:full",
+            "vault_secret": "test-secret"
+        }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::FORBIDDEN);
+    assert_eq!(body["valid"], false);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn oauth3_validate_endpoint_rejects_unknown_token() {
+    let ctx = TestContext::new("oauth3_validate_rejects_unknown");
+    let tokens: Vec<OAuthToken> = vec![];
+    crypto::save_vault(&tokens, "test-secret").unwrap();
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/oauth3/validate",
+        json!({
+            "token_id": "tok-missing",
+            "required_scope": "chat:write",
+            "vault_secret": "test-secret"
+        }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    assert_eq!(body["error"], "token not found");
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn oauth3_revoke_endpoint_revokes_and_persists() {
+    let ctx = TestContext::new("oauth3_revoke_persists");
+    let tokens = vec![OAuthToken {
+        token_id: "tok-rev".to_string(),
+        agent_name: None,
+        service: None,
+        scope: None,
+        scopes: vec!["chat:write".to_string()],
+        expires_at: Some(9_999_999_999),
+        created_at: Some(1_700_000_000),
+        revoked: false,
+        extra: Default::default(),
+    }];
+    crypto::save_vault(&tokens, "test-secret").unwrap();
+    let app = ctx.app();
+
+    // Revoke
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/oauth3/revoke",
+        json!({
+            "token_id": "tok-rev",
+            "vault_secret": "test-secret"
+        }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["revoked"], true);
+    assert_eq!(body["token_id"], "tok-rev");
+
+    // Verify the vault was updated on disk
+    let reloaded = crypto::load_vault("test-secret").unwrap();
+    assert_eq!(reloaded.len(), 1);
+    assert!(reloaded[0].revoked);
+
+    // Validate should now fail
+    let (status2, body2) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/oauth3/validate",
+        json!({
+            "token_id": "tok-rev",
+            "required_scope": "chat:write",
+            "vault_secret": "test-secret"
+        }),
+    )
+    .await;
+    assert_eq!(status2, StatusCode::FORBIDDEN);
+    assert_eq!(body2["error"], "token is revoked");
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn oauth3_revoke_endpoint_rejects_unknown_token() {
+    let ctx = TestContext::new("oauth3_revoke_rejects_unknown");
+    let tokens: Vec<OAuthToken> = vec![];
+    crypto::save_vault(&tokens, "test-secret").unwrap();
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/oauth3/revoke",
+        json!({
+            "token_id": "tok-missing",
+            "vault_secret": "test-secret"
+        }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    assert_eq!(body["error"], "token not found");
+}
+
+// ─── Browser Launch Dedup Tests ──────────────────────────────────────
+
+#[tokio::test(flavor = "current_thread")]
+async fn dedup_layer1_existing_session_returns_deduped() {
+    let ctx = TestContext::new("dedup_layer1_existing_session");
+    let app = ctx.app();
+
+    // First launch creates a new session
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/browser/launch",
+        json!({"profile":"work","url":"https://solaceagi.com","mode":"local-dev"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert!(body.get("deduped").is_none() || body["deduped"] == false);
+    let first_session_id = body["session"]["session_id"].as_str().unwrap().to_string();
+
+    // Second launch with same URL+profile+mode returns existing session
+    let (status2, body2) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/browser/launch",
+        json!({"profile":"work","url":"https://solaceagi.com","mode":"local-dev"}),
+    )
+    .await;
+    assert_eq!(status2, StatusCode::OK);
+    assert_eq!(body2["deduped"], true);
+    assert_eq!(body2["reason"], "existing_session");
+    assert_eq!(
+        body2["session"]["session_id"].as_str().unwrap(),
+        first_session_id
+    );
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn dedup_layer1_different_url_creates_new_session() {
+    let ctx = TestContext::new("dedup_layer1_different_url");
+    let app = ctx.app();
+
+    let (_, body1) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/browser/launch",
+        json!({"profile":"work","url":"https://solaceagi.com","mode":"local-dev"}),
+    )
+    .await;
+    let id1 = body1["session"]["session_id"].as_str().unwrap().to_string();
+
+    // Different URL should create a new session, not dedup
+    let (_, body2) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/browser/launch",
+        json!({"profile":"work","url":"https://example.com","mode":"local-dev"}),
+    )
+    .await;
+    let id2 = body2["session"]["session_id"].as_str().unwrap().to_string();
+    assert_ne!(id1, id2);
+    assert!(body2.get("deduped").is_none() || body2["deduped"] == false);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn dedup_layer3_storm_guard_after_close() {
+    let ctx = TestContext::new("dedup_layer3_storm_guard");
+    let app = ctx.app();
+
+    // Launch a session
+    let (_, body1) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/browser/launch",
+        json!({"profile":"default","url":"https://solaceagi.com","mode":"local-dev"}),
+    )
+    .await;
+    let session_id = body1["session"]["session_id"].as_str().unwrap();
+
+    // Close it (removes from sessions map but recent_launches still has the key)
+    let _ = send_json(
+        &app,
+        Method::POST,
+        &format!("/api/v1/browser/close/{session_id}"),
+        json!({}),
+    )
+    .await;
+
+    // Try to launch again immediately: Layer 1 won't match (session closed),
+    // but Layer 3 storm guard should fire because we launched within 30s
+    let (status, body2) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/browser/launch",
+        json!({"profile":"default","url":"https://solaceagi.com","mode":"local-dev"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body2["deduped"], true);
+    assert_eq!(body2["storm_guarded"], true);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn dedup_allow_duplicate_bypasses_all_guards() {
+    let ctx = TestContext::new("dedup_allow_duplicate_bypasses");
+    let app = ctx.app();
+
+    // First launch
+    let (_, body1) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/browser/launch",
+        json!({"profile":"work","url":"https://solaceagi.com","mode":"local-dev"}),
+    )
+    .await;
+    let id1 = body1["session"]["session_id"].as_str().unwrap().to_string();
+
+    // Second launch with allow_duplicate=true should bypass dedup
+    let (status, body2) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/browser/launch",
+        json!({"profile":"work","url":"https://solaceagi.com","mode":"local-dev","allow_duplicate":true}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let id2 = body2["session"]["session_id"].as_str().unwrap().to_string();
+    assert_ne!(id1, id2);
+    assert!(body2.get("deduped").is_none() || body2["deduped"] == false);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn dedup_different_profile_creates_new_session() {
+    let ctx = TestContext::new("dedup_different_profile");
+    let app = ctx.app();
+
+    let (_, body1) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/browser/launch",
+        json!({"profile":"work","url":"https://solaceagi.com","mode":"local-dev"}),
+    )
+    .await;
+    let id1 = body1["session"]["session_id"].as_str().unwrap().to_string();
+
+    // Same URL but different profile should create a new session
+    let (_, body2) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/browser/launch",
+        json!({"profile":"research","url":"https://solaceagi.com","mode":"local-dev"}),
+    )
+    .await;
+    let id2 = body2["session"]["session_id"].as_str().unwrap().to_string();
+    assert_ne!(id1, id2);
 }
 
 mod hex {

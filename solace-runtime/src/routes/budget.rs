@@ -14,14 +14,22 @@ pub fn routes() -> Router<AppState> {
 }
 
 async fn budget_status(State(state): State<AppState>) -> Json<serde_json::Value> {
-    let config = crate::config::load_budget_config(&crate::utils::solace_home());
+    let solace_home = crate::utils::solace_home();
+    let config = crate::config::load_budget_config(&solace_home);
+    let usage = state.budget_usage.read().clone();
+    let blocked = usage.is_blocked(&config);
+
     Json(json!({
         "config": config,
         "usage": {
             "app_runs": *state.app_count.read(),
             "evidence_events": *state.evidence_count.read(),
+            "daily_count": usage.daily_count,
+            "daily_date": usage.daily_date,
+            "monthly_count": usage.monthly_count,
+            "monthly_date": usage.monthly_date,
         },
-        "blocked": false,
+        "blocked": blocked,
     }))
 }
 
@@ -36,4 +44,15 @@ async fn update_budget_config(
     let solace_home = crate::utils::solace_home();
     let _ = crate::config::save_budget_config(&solace_home, &payload);
     Json(json!({"config": payload}))
+}
+
+/// Record a budget event (called when evidence_count increments).
+/// Returns `true` if the budget is now blocked (limit exceeded).
+pub fn record_budget_event(state: &AppState) -> bool {
+    let solace_home = crate::utils::solace_home();
+    let config = crate::config::load_budget_config(&solace_home);
+    let mut usage = state.budget_usage.write();
+    usage.record_event();
+    let _ = crate::config::save_budget_usage(&solace_home, &usage);
+    usage.is_blocked(&config)
 }

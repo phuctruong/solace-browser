@@ -16,6 +16,7 @@ pub fn build_router(state: crate::state::AppState) -> Router {
         .merge(crate::routes::sessions::routes())
         .merge(crate::routes::evidence::routes())
         .merge(crate::routes::notifications::routes())
+        .merge(crate::routes::oauth3::routes())
         .merge(crate::routes::domains::routes())
         .merge(crate::routes::cloud::routes())
         .merge(crate::routes::sidebar::routes())

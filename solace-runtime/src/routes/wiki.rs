@@ -66,11 +66,12 @@ async fn extract_page(
             let snapshot_path = wiki_dir.join(format!("{url_hash}.json"));
             let _ = fs::write(&snapshot_path, serde_json::to_string_pretty(&decomp).unwrap_or_default());
 
-            // Update evidence count
+            // Update evidence count + budget tracking
             {
                 let mut count = state.evidence_count.write();
                 *count += 1;
             }
+            crate::routes::budget::record_budget_event(&state);
 
             Json(json!({
                 "status": "extracted",

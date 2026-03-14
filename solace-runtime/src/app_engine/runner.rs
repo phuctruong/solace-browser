@@ -69,6 +69,7 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
 
     *state.app_count.write() += 1;
     *state.evidence_count.write() += 1;
+    crate::routes::budget::record_budget_event(state);
     state.notifications.write().push(Notification {
         id: uuid::Uuid::new_v4().to_string(),
         message: format!("App {} completed", manifest.name),

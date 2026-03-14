@@ -93,3 +93,65 @@ pub fn load_budget_config(solace_home: &Path) -> BudgetConfig {
 pub fn save_budget_config(solace_home: &Path, value: &BudgetConfig) -> Result<(), String> {
     crate::persistence::write_json(&solace_home.join("budget.json"), value)
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct BudgetUsage {
+    /// ISO-8601 date string (YYYY-MM-DD) for the current daily window.
+    pub daily_date: String,
+    /// Number of evidence events recorded on `daily_date`.
+    pub daily_count: u64,
+    /// ISO-8601 month string (YYYY-MM) for the current monthly window.
+    pub monthly_date: String,
+    /// Number of evidence events recorded during `monthly_date`.
+    pub monthly_count: u64,
+}
+
+impl Default for BudgetUsage {
+    fn default() -> Self {
+        let now = chrono::Utc::now();
+        Self {
+            daily_date: now.format("%Y-%m-%d").to_string(),
+            daily_count: 0,
+            monthly_date: now.format("%Y-%m").to_string(),
+            monthly_count: 0,
+        }
+    }
+}
+
+impl BudgetUsage {
+    /// Increment usage by one event, rolling over the daily/monthly window
+    /// when the calendar date changes.
+    pub fn record_event(&mut self) {
+        let now = chrono::Utc::now();
+        let today = now.format("%Y-%m-%d").to_string();
+        let month = now.format("%Y-%m").to_string();
+
+        if self.daily_date != today {
+            self.daily_date = today;
+            self.daily_count = 0;
+        }
+        if self.monthly_date != month {
+            self.monthly_date = month;
+            self.monthly_count = 0;
+        }
+
+        self.daily_count += 1;
+        self.monthly_count += 1;
+    }
+
+    /// Returns `true` when enforce is on and either limit is exceeded.
+    pub fn is_blocked(&self, config: &BudgetConfig) -> bool {
+        if !config.enforce {
+            return false;
+        }
+        self.daily_count >= config.daily_limit || self.monthly_count >= config.monthly_limit
+    }
+}
+
+pub fn load_budget_usage(solace_home: &Path) -> BudgetUsage {
+    crate::persistence::read_json(&solace_home.join("budget_usage.json")).unwrap_or_default()
+}
+
+pub fn save_budget_usage(solace_home: &Path, value: &BudgetUsage) -> Result<(), String> {
+    crate::persistence::write_json(&solace_home.join("budget_usage.json"), value)
+}
