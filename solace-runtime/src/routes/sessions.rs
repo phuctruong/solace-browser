@@ -107,12 +107,41 @@ async fn launch_session(
             dedup.inflight_launches.insert(key.clone(), Instant::now());
         }
 
-        // Create the session
+        // Actually launch the browser binary
+        let chrome_candidates = [
+            std::path::PathBuf::from("/home/phuc/projects/solace-browser/source/src/out/Solace/chrome"),
+            crate::utils::solace_home().join("bin").join("chrome"),
+        ];
+        let chrome_path = chrome_candidates.iter().find(|p| p.is_file());
+
+        let pid = if let Some(chrome) = chrome_path {
+            match std::process::Command::new(chrome)
+                .arg(&url)
+                .arg(format!("--profile-directory={}", &profile))
+                .spawn()
+            {
+                Ok(child) => child.id(),
+                Err(e) => {
+                    return Json(json!({
+                        "error": format!("Failed to launch browser: {e}"),
+                        "chrome_path": chrome.display().to_string(),
+                    }));
+                }
+            }
+        } else {
+            // No Chrome binary found — return error
+            return Json(json!({
+                "error": "Solace Browser binary not found. Build with: cd source/src && autoninja -C out/Solace chrome",
+                "searched": chrome_candidates.iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
+            }));
+        };
+
+        // Create the session with real PID
         let session = SessionInfo {
             session_id: uuid::Uuid::new_v4().to_string(),
             profile,
             url,
-            pid: rand::thread_rng().gen_range(10_000..99_999),
+            pid,
             started_at: crate::utils::now_iso8601(),
             mode,
         };
