@@ -14,6 +14,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/wiki/extract", post(extract_page))
         .route("/api/v1/wiki/codecs", get(list_codecs))
         .route("/api/v1/wiki/stats", get(wiki_stats))
+        .route("/api/v1/screenshot", post(capture_screenshot))
 }
 
 async fn list_snapshots() -> Json<serde_json::Value> {
@@ -98,9 +99,56 @@ async fn extract_page(
             // 3. Update domain sitemap (auto-create prime-wiki per domain)
             let domain = extract_domain(&decomp.url);
             let page_path_str = extract_path(&decomp.url);
+            let mut domain_stillwater_created = false;
             if !domain.is_empty() {
                 let domain_dir = wiki_dir.join("domains").join(&domain);
                 let _ = fs::create_dir_all(&domain_dir);
+
+                // 3a. Domain stillwater check — create on FIRST visit
+                // Stillwater = shared nav/header/footer structure, reused across pages
+                let stillwater_path = domain_dir.join("stillwater.prime-snapshot.md");
+                if !stillwater_path.exists() {
+                    let stillwater_md = format!(
+                        "<!-- Diagram: hub-browse-capture-pipeline -->\n\
+                         # Domain Stillwater: {domain}\n\
+                         # First captured: {ts}\n\
+                         # Template hash: {th}\n\n\
+                         ## Shared Structure (reused across all pages on this domain)\n\n\
+                         ### Navigation\n\
+                         {nav}\n\n\
+                         ### Headings\n\
+                         {headings}\n\n\
+                         ### CSS Tokens\n\
+                         {css}\n\n\
+                         ### Meta\n\
+                         {meta}\n",
+                        domain = domain,
+                        ts = decomp.ripple.timestamp,
+                        th = decomp.stillwater.template_hash,
+                        nav = decomp.stillwater.nav_links
+                            .iter()
+                            .map(|l| format!("- {l}"))
+                            .collect::<Vec<_>>()
+                            .join("\n"),
+                        headings = decomp.stillwater.headings
+                            .iter()
+                            .map(|h| format!("- {h}"))
+                            .collect::<Vec<_>>()
+                            .join("\n"),
+                        css = decomp.stillwater.css_tokens
+                            .iter()
+                            .map(|t| format!("- `{t}`"))
+                            .collect::<Vec<_>>()
+                            .join("\n"),
+                        meta = decomp.stillwater.meta
+                            .iter()
+                            .map(|(k, v)| format!("- {k}: {v}"))
+                            .collect::<Vec<_>>()
+                            .join("\n"),
+                    );
+                    let _ = fs::write(&stillwater_path, &stillwater_md);
+                    domain_stillwater_created = true;
+                }
 
                 // Save page snapshot in domain dir
                 let page_name = if page_path_str.is_empty() || page_path_str == "/" {
@@ -151,6 +199,29 @@ async fn extract_page(
             }
             crate::routes::budget::record_budget_event(&state);
 
+            // Auto-sync trigger: after evidence seal, push if paid user
+            // Non-blocking — spawn a background task so we don't delay the response
+            let is_paid = state
+                .cloud_config
+                .read()
+                .as_ref()
+                .map(|c| c.paid_user)
+                .unwrap_or(false);
+            if is_paid {
+                let sync_state = state.clone();
+                tokio::spawn(async move {
+                    // Fire-and-forget sync push — errors are logged, not propagated
+                    if let Err(error) = trigger_auto_sync(&sync_state).await {
+                        tracing::warn!(%error, "auto-sync after extract failed");
+                    }
+                });
+            }
+
+            // Check screenshot setting
+            let auto_screenshot = crate::config::load_settings(
+                &crate::utils::solace_home(),
+            ).auto_screenshot;
+
             Json(json!({
                 "status": "extracted",
                 "codec": decomp.codec.name(),
@@ -175,6 +246,8 @@ async fn extract_page(
                 } else {
                     "N/A".to_string()
                 },
+                "domain_stillwater_created": domain_stillwater_created,
+                "auto_screenshot": auto_screenshot,
             }))
         }
         Err(e) => Json(json!({
@@ -241,6 +314,180 @@ fn extract_path(url: &str) -> String {
         Some(pos) => after_scheme[pos..].to_string(),
         None => "/".to_string(),
     }
+}
+
+/// POST /api/v1/screenshot
+///
+/// Screenshot capture endpoint. Full-page PNG rendering requires a browser
+/// engine (Chromium), which the Rust runtime does not embed. This endpoint
+/// acts as a delegation point: the Hub or browser process calls this to
+/// record the intent, and the actual capture is performed by the browser.
+///
+/// When auto_screenshot is enabled in settings, the extract_page response
+/// includes `"auto_screenshot": true` so the caller knows to follow up
+/// with a screenshot capture via the browser.
+#[derive(Deserialize)]
+struct ScreenshotRequest {
+    url: String,
+    /// Base64-encoded PNG bytes provided by the browser after capture.
+    /// When empty, this is a "request to capture" (browser should capture
+    /// and call back with the data).
+    #[serde(default)]
+    png_base64: String,
+}
+
+async fn capture_screenshot(
+    State(state): State<AppState>,
+    Json(req): Json<ScreenshotRequest>,
+) -> Json<serde_json::Value> {
+    let solace_home = crate::utils::solace_home();
+    let settings = crate::config::load_settings(&solace_home);
+
+    if !settings.auto_screenshot {
+        return Json(json!({
+            "status": "skipped",
+            "reason": "auto_screenshot is disabled in settings",
+        }));
+    }
+
+    if req.png_base64.is_empty() {
+        // No screenshot data provided — tell the caller to delegate to browser
+        return Json(json!({
+            "status": "delegate_to_browser",
+            "url": req.url,
+            "message": "Screenshot capture requires the browser. \
+                        Capture the page and POST back with png_base64.",
+        }));
+    }
+
+    // Browser provided the screenshot — store it
+    let screenshots_dir = solace_home.join("screenshots");
+    let _ = fs::create_dir_all(&screenshots_dir);
+
+    let url_hash = &crate::utils::sha256_hex(&req.url)[..16];
+    let timestamp = chrono::Utc::now().format("%Y%m%d-%H%M%S").to_string();
+    let filename = format!("{timestamp}_{url_hash}.png");
+    let filepath = screenshots_dir.join(&filename);
+
+    // Decode base64 and write PNG
+    match base64_decode(&req.png_base64) {
+        Ok(png_bytes) => {
+            let screenshot_hash = crate::utils::sha256_hex(
+                &String::from_utf8_lossy(&png_bytes),
+            );
+            let _ = fs::write(&filepath, &png_bytes);
+
+            // Record evidence for the screenshot
+            let _ = crate::evidence::record_event(
+                &solace_home,
+                "screenshot_captured",
+                "runtime",
+                json!({
+                    "url": req.url,
+                    "filename": filename,
+                    "sha256": screenshot_hash,
+                    "size_bytes": png_bytes.len(),
+                }),
+            );
+
+            // Increment evidence count
+            {
+                let mut count = state.evidence_count.write();
+                *count += 1;
+            }
+
+            Json(json!({
+                "status": "captured",
+                "filename": filename,
+                "sha256": screenshot_hash,
+                "size_bytes": png_bytes.len(),
+            }))
+        }
+        Err(error) => Json(json!({
+            "status": "error",
+            "error": format!("base64 decode failed: {error}"),
+        })),
+    }
+}
+
+/// Decode base64 string to bytes (using the base64 crate).
+fn base64_decode(input: &str) -> Result<Vec<u8>, String> {
+    use ::base64::engine::general_purpose::STANDARD;
+    use ::base64::Engine;
+    STANDARD
+        .decode(input)
+        .map_err(|error| format!("{error}"))
+}
+
+/// Trigger an async cloud sync push. Called after evidence is sealed for
+/// paid users. Errors are returned (not panicked) so callers can log them.
+async fn trigger_auto_sync(state: &AppState) -> Result<(), String> {
+    let config = state
+        .cloud_config
+        .read()
+        .clone()
+        .ok_or_else(|| "no cloud config".to_string())?;
+
+    if !config.paid_user {
+        return Ok(());
+    }
+
+    let solace_home = crate::utils::solace_home();
+
+    // Collect recent evidence (last 100 entries for incremental sync)
+    let evidence_entries = crate::evidence::list_evidence(&solace_home, 100);
+    let evidence_values: Vec<serde_json::Value> = evidence_entries
+        .iter()
+        .filter_map(|record| serde_json::to_value(record).ok())
+        .collect();
+
+    let payload = json!({
+        "device_id": config.device_id,
+        "user_email": config.user_email,
+        "timestamp": crate::utils::now_iso8601(),
+        "evidence_count": evidence_values.len(),
+        "auto_sync": true,
+    });
+
+    let sync_url = "https://solaceagi-mfjzxmegpq-uc.a.run.app/api/v1/twin/sync";
+    let key = crate::crypto::derive_key(&config.api_key, b"solace-twin-sync:v1");
+    let plaintext = serde_json::to_vec(&payload).map_err(|e| e.to_string())?;
+    let ciphertext = crate::crypto::encrypt(&plaintext, &key)?;
+
+    use ::base64::engine::general_purpose::STANDARD;
+    use ::base64::Engine;
+    let encoded = STANDARD.encode(&ciphertext);
+
+    let response = reqwest::Client::new()
+        .post(sync_url)
+        .bearer_auth(&config.api_key)
+        .json(&json!({
+            "device_id": config.device_id,
+            "encrypted_payload": encoded,
+        }))
+        .timeout(std::time::Duration::from_secs(15))
+        .send()
+        .await
+        .map_err(|e| format!("auto-sync request failed: {e}"))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let body = response.text().await.unwrap_or_default();
+        return Err(format!("auto-sync cloud returned {status}: {body}"));
+    }
+
+    // Record evidence for the auto-sync itself
+    let _ = crate::evidence::record_event(
+        &solace_home,
+        "auto_sync_triggered",
+        "runtime",
+        json!({
+            "evidence_count": evidence_values.len(),
+            "trigger": "extract_page",
+        }),
+    );
+
+    Ok(())
 }
 
 async fn list_codecs() -> Json<serde_json::Value> {

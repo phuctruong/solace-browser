@@ -5,6 +5,7 @@ use std::time::Duration;
 use chrono::Utc;
 use serde_json::{Map, Value};
 
+use crate::event_log::{EventLog, EventType};
 use crate::state::{AppState, Notification};
 
 pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> {
@@ -13,7 +14,10 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
     let manifest = crate::app_engine::inbox::load_manifest(&app_dir)?;
     let run_id = Utc::now().format("%Y%m%d-%H%M%S").to_string();
 
-    let mut data = fetch_data_sources(&manifest).await?;
+    // Create event log for this run
+    let mut event_log = EventLog::new(app_id, &run_id);
+
+    let mut data = fetch_data_sources(&manifest, &mut event_log).await?;
     data.insert(
         "config".to_string(),
         crate::app_engine::inbox::load_config(&app_dir),
@@ -37,6 +41,21 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
         &app_dir,
         &Value::Object(data.clone()),
     )?;
+
+    // Log Render event
+    let template_name = if manifest.template.is_empty() {
+        manifest.report_template.clone()
+    } else {
+        manifest.template.clone()
+    };
+    let output_hash = crate::utils::sha256_hex(&html);
+    event_log.append_event(
+        EventType::Render,
+        None,
+        None,
+        None,
+        Some(format!("template={} output_hash={}", template_name, output_hash)),
+    );
 
     let outbox_dir = app_dir.join("outbox").join("runs").join(&run_id);
     std::fs::create_dir_all(&outbox_dir).map_err(|error| error.to_string())?;
@@ -67,6 +86,21 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
     crate::pzip::evidence::seal_run(app_id, &run_id, html.as_bytes())
         .map_err(|error| error.to_string())?;
 
+    // Log Seal event
+    let evidence_hash = crate::utils::sha256_hex(&format!("{app_id}:{run_id}:sealed"));
+    event_log.append_event(
+        EventType::Seal,
+        None,
+        None,
+        None,
+        Some(format!("evidence_hash={}", evidence_hash)),
+    );
+
+    // Save events.jsonl alongside report.html
+    event_log
+        .save_events(&outbox_dir)
+        .map_err(|error| format!("failed to save event log: {error}"))?;
+
     *state.app_count.write() += 1;
     *state.evidence_count.write() += 1;
     crate::routes::budget::record_budget_event(state);
@@ -83,6 +117,7 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
 
 async fn fetch_data_sources(
     manifest: &crate::app_engine::AppManifest,
+    event_log: &mut EventLog,
 ) -> Result<Map<String, Value>, String> {
     let client = reqwest::Client::new();
     let mut data = Map::new();
@@ -91,12 +126,31 @@ async fn fetch_data_sources(
     if manifest.data_sources.is_empty() {
         if let Some(url) = &manifest.source_url {
             let remote = fetch_json(&client, url).await?;
+            let response_hash = crate::utils::sha256_hex(&remote.to_string());
+            event_log.append_event(
+                EventType::Fetch,
+                Some(url.clone()),
+                None,
+                None,
+                Some(format!("status=200 response_hash={}", response_hash)),
+            );
             items.extend(normalize_items("remote", &remote, usize::MAX));
             data.insert("remote".to_string(), remote);
         }
     } else {
         for source in &manifest.data_sources {
             let json = fetch_json(&client, &source.url).await?;
+            let response_hash = crate::utils::sha256_hex(&json.to_string());
+            event_log.append_event(
+                EventType::Fetch,
+                Some(source.url.clone()),
+                None,
+                None,
+                Some(format!(
+                    "source={} status=200 response_hash={}",
+                    source.name, response_hash
+                )),
+            );
             items.extend(normalize_items(
                 &source.name,
                 &json,

@@ -66,6 +66,7 @@ fn seed_fixture(home: &Path, onboarding_complete: bool) {
         &Settings {
             theme: "dark".to_string(),
             telemetry: false,
+            auto_screenshot: false,
         },
     )
     .unwrap();
@@ -905,6 +906,174 @@ async fn wiki_stats_returns_community_browsing() {
     assert_eq!(body["community_browsing"], true);
     assert_eq!(body["codecs_available"], 6);
     assert!(body["snapshot_count"].as_u64().is_some());
+}
+
+// ─── Browse-Capture Pipeline: Domain Stillwater + Screenshot + Auto-Sync ──
+
+#[tokio::test(flavor = "current_thread")]
+async fn wiki_extract_creates_domain_stillwater_on_first_visit() {
+    let ctx = TestContext::new("wiki_extract_creates_domain_stillwater");
+    let app = ctx.app();
+
+    // First extract — should create domain stillwater
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/wiki/extract",
+        json!({
+            "url": "https://example.com/page1",
+            "content": "<html><head><title>Page 1</title></head><body><nav><a href=\"/about\">About</a></nav><main><h1>Hello</h1></main></body></html>",
+            "content_type": "text/html"
+        }),
+    ).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["status"], "extracted");
+    assert_eq!(body["domain_stillwater_created"], true);
+
+    // Verify stillwater file was created on disk
+    let stillwater_path = ctx.home.join("wiki/domains/example.com/stillwater.prime-snapshot.md");
+    assert!(stillwater_path.exists(), "stillwater.prime-snapshot.md should be created on first visit");
+    let content = fs::read_to_string(&stillwater_path).unwrap();
+    assert!(content.contains("Domain Stillwater: example.com"));
+    assert!(content.contains("Template hash:"));
+
+    // Second extract to the SAME domain — should NOT re-create stillwater
+    let (status2, body2) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/wiki/extract",
+        json!({
+            "url": "https://example.com/page2",
+            "content": "<html><head><title>Page 2</title></head><body><main><h1>World</h1></main></body></html>",
+            "content_type": "text/html"
+        }),
+    ).await;
+    assert_eq!(status2, StatusCode::OK);
+    assert_eq!(body2["domain_stillwater_created"], false);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn wiki_extract_reports_auto_screenshot_setting() {
+    let ctx = TestContext::new("wiki_extract_reports_auto_screenshot");
+    let app = ctx.app();
+
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/wiki/extract",
+        json!({
+            "url": "https://example.com/test",
+            "content": "<html><body><main><h1>Test</h1></main></body></html>",
+            "content_type": "text/html"
+        }),
+    ).await;
+    assert_eq!(status, StatusCode::OK);
+    // Default setting is false
+    assert_eq!(body["auto_screenshot"], false);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn screenshot_endpoint_skips_when_disabled() {
+    let ctx = TestContext::new("screenshot_endpoint_skips");
+    let app = ctx.app();
+
+    // auto_screenshot defaults to false in our test fixture
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/screenshot",
+        json!({
+            "url": "https://example.com/page",
+        }),
+    ).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["status"], "skipped");
+    assert!(body["reason"].as_str().unwrap().contains("disabled"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn screenshot_endpoint_delegates_when_enabled_and_no_data() {
+    let ctx = TestContext::new("screenshot_delegates");
+
+    // Enable auto_screenshot in settings
+    config::save_settings(
+        &ctx.home,
+        &Settings {
+            theme: "dark".to_string(),
+            telemetry: false,
+            auto_screenshot: true,
+        },
+    ).unwrap();
+
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/screenshot",
+        json!({
+            "url": "https://example.com/page",
+        }),
+    ).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["status"], "delegate_to_browser");
+    assert!(body["message"].as_str().unwrap().contains("browser"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn screenshot_endpoint_stores_png_when_provided() {
+    let ctx = TestContext::new("screenshot_stores_png");
+
+    // Enable auto_screenshot
+    config::save_settings(
+        &ctx.home,
+        &Settings {
+            theme: "dark".to_string(),
+            telemetry: false,
+            auto_screenshot: true,
+        },
+    ).unwrap();
+
+    let app = ctx.app();
+
+    // Send a fake PNG (base64-encoded "fake-png-data")
+    use ::base64::engine::general_purpose::STANDARD;
+    use ::base64::Engine;
+    let fake_png = STANDARD.encode(b"fake-png-data-for-test");
+
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/screenshot",
+        json!({
+            "url": "https://example.com/page",
+            "png_base64": fake_png,
+        }),
+    ).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["status"], "captured");
+    assert!(body["sha256"].as_str().is_some());
+    assert!(body["filename"].as_str().unwrap().ends_with(".png"));
+    assert_eq!(body["size_bytes"], b"fake-png-data-for-test".len());
+
+    // Verify screenshot file was written to disk
+    let screenshots_dir = ctx.home.join("screenshots");
+    assert!(screenshots_dir.exists());
+    let files: Vec<_> = fs::read_dir(&screenshots_dir)
+        .unwrap()
+        .flatten()
+        .collect();
+    assert_eq!(files.len(), 1);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn settings_auto_screenshot_defaults_to_false() {
+    // Verify that loading settings from a file that doesn't have
+    // auto_screenshot still defaults to false (serde default)
+    let ctx = TestContext::new("settings_auto_screenshot_default");
+    let json = r#"{"theme":"dark","telemetry":false}"#;
+    fs::write(ctx.home.join("settings.json"), json).unwrap();
+    let settings = config::load_settings(&ctx.home);
+    assert!(!settings.auto_screenshot);
 }
 
 // ─── OAuth3 Scope & Expiry Enforcement Tests ────────────────────────
@@ -1776,6 +1945,191 @@ mod hex {
             b'a'..=b'f' => Ok(10 + value - b'a'),
             b'A'..=b'F' => Ok(10 + value - b'A'),
             _ => Err(format!("invalid hex byte: {value}")),
+        }
+    }
+}
+
+// ── Event Log Integration Tests ──────────────────────────────────────────
+
+#[tokio::test(flavor = "current_thread")]
+async fn run_app_creates_events_jsonl() {
+    let ctx = TestContext::new("run_app_creates_events_jsonl");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::builder()
+            .method(Method::POST)
+            .uri("/api/v1/apps/run/weather-bot")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    let report_path = PathBuf::from(body["report"].as_str().unwrap());
+    let run_dir = report_path.parent().unwrap();
+    let events_path = run_dir.join("events.jsonl");
+    assert!(
+        events_path.exists(),
+        "events.jsonl must be created alongside report.html"
+    );
+
+    // Read and validate the events
+    let content = fs::read_to_string(&events_path).unwrap();
+    let events: Vec<Value> = content
+        .lines()
+        .filter(|l| !l.trim().is_empty())
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect();
+
+    // Must have at least Render + Seal events
+    assert!(
+        events.len() >= 2,
+        "expected at least 2 events, got {}",
+        events.len()
+    );
+
+    // Last two events should be Render and Seal (in order)
+    let render_event = &events[events.len() - 2];
+    let seal_event = &events[events.len() - 1];
+    assert_eq!(render_event["event_type"], "RENDER");
+    assert_eq!(seal_event["event_type"], "SEAL");
+
+    // Verify hash chain: first event has empty prev_hash
+    assert_eq!(events[0]["prev_hash"], "");
+    // Each subsequent event links to the previous
+    for i in 1..events.len() {
+        assert_eq!(
+            events[i]["prev_hash"].as_str().unwrap(),
+            events[i - 1]["sha256"].as_str().unwrap(),
+            "hash chain broken at event {}",
+            i
+        );
+    }
+
+    // All hashes are 64-char hex strings
+    for event in &events {
+        let sha = event["sha256"].as_str().unwrap();
+        assert_eq!(sha.len(), 64, "sha256 must be 64 hex chars");
+    }
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn get_run_events_returns_event_log() {
+    let ctx = TestContext::new("get_run_events_returns_event_log");
+    let app = ctx.app();
+
+    // First, run the app to generate events
+    let response = send(
+        &app,
+        Request::builder()
+            .method(Method::POST)
+            .uri("/api/v1/apps/run/weather-bot")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    let report_path = PathBuf::from(body["report"].as_str().unwrap());
+    let run_id = report_path
+        .parent()
+        .unwrap()
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
+
+    // Now query the events endpoint
+    let response = send(
+        &app,
+        Request::get(&format!("/api/v1/apps/weather-bot/runs/{run_id}/events"))
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["app_id"], "weather-bot");
+    assert_eq!(body["run_id"], run_id);
+    assert!(
+        body["chain_valid"].as_bool().unwrap(),
+        "chain must be valid"
+    );
+    let count = body["count"].as_u64().unwrap();
+    assert!(count >= 2, "expected at least 2 events, got {count}");
+    let events = body["events"].as_array().unwrap();
+    assert_eq!(events.len() as u64, count);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn get_run_events_returns_404_for_missing_run() {
+    let ctx = TestContext::new("get_run_events_returns_404");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/apps/weather-bot/runs/nonexistent-run/events")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    let body = parse_body(response).await;
+    assert!(body["error"].as_str().unwrap().contains("not found"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn event_log_prominent_field_in_response() {
+    let ctx = TestContext::new("event_log_prominent_field");
+    let app = ctx.app();
+
+    // Run app to create events
+    let response = send(
+        &app,
+        Request::builder()
+            .method(Method::POST)
+            .uri("/api/v1/apps/run/weather-bot")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    let report_path = PathBuf::from(body["report"].as_str().unwrap());
+    let run_id = report_path
+        .parent()
+        .unwrap()
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
+
+    // Query events
+    let response = send(
+        &app,
+        Request::get(&format!("/api/v1/apps/weather-bot/runs/{run_id}/events"))
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    let events = body["events"].as_array().unwrap();
+
+    // Render and Seal should NOT be prominent
+    for event in events {
+        let event_type = event["event_type"].as_str().unwrap();
+        let prominent = event["prominent"].as_bool().unwrap();
+        match event_type {
+            "RENDER" | "SEAL" | "FETCH" => {
+                assert!(!prominent, "{event_type} should not be prominent");
+            }
+            "PREVIEW" | "SIGN_OFF" => {
+                assert!(prominent, "{event_type} should be prominent");
+            }
+            _ => {}
         }
     }
 }

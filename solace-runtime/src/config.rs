@@ -7,6 +7,11 @@ use serde::{Deserialize, Serialize};
 pub struct Settings {
     pub theme: String,
     pub telemetry: bool,
+    /// When true, the browse-capture pipeline delegates to the browser for
+    /// full-page PNG screenshots alongside the text-based prime-snapshot.
+    /// Default: false (text snapshots are the default evidence format).
+    #[serde(default)]
+    pub auto_screenshot: bool,
 }
 
 impl Default for Settings {
@@ -14,6 +19,7 @@ impl Default for Settings {
         Self {
             theme: "light".to_string(),
             telemetry: false,
+            auto_screenshot: false,
         }
     }
 }

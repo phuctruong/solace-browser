@@ -5,6 +5,7 @@ pub mod cloud;
 pub mod config;
 pub mod cron;
 pub mod crypto;
+pub mod event_log;
 pub mod evidence;
 pub mod mcp;
 pub mod persistence;

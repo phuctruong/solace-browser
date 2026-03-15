@@ -15,6 +15,10 @@ pub fn routes() -> Router<AppState> {
         .route("/api/apps", get(list_apps))
         .route("/api/v1/apps/:app_id", get(app_detail))
         .route("/api/v1/apps/run/:app_id", post(run_app))
+        .route(
+            "/api/v1/apps/:app_id/runs/:run_id/events",
+            get(get_run_events),
+        )
 }
 
 async fn list_apps() -> Json<serde_json::Value> {
@@ -42,5 +46,38 @@ async fn run_app(State(state): State<AppState>, Path(app_id): Path<String>) -> i
             Json(json!({"error": error})),
         )
             .into_response(),
+    }
+}
+
+async fn get_run_events(
+    Path((app_id, run_id)): Path<(String, String)>,
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    match crate::event_log::load_run_events(&app_id, &run_id) {
+        Ok(events) => {
+            let chain_valid = {
+                let log_result = crate::event_log::EventLog::load_from_file(
+                    &app_id,
+                    &run_id,
+                    &crate::utils::find_app_dir(&app_id)
+                        .unwrap()
+                        .join("outbox")
+                        .join("runs")
+                        .join(&run_id)
+                        .join("events.jsonl"),
+                );
+                log_result.map(|log| log.verify_chain()).unwrap_or(false)
+            };
+            Ok(Json(json!({
+                "app_id": app_id,
+                "run_id": run_id,
+                "events": events,
+                "count": events.len(),
+                "chain_valid": chain_valid,
+            })))
+        }
+        Err(error) => Err((
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": error})),
+        )),
     }
 }
