@@ -14,6 +14,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/wiki/extract", post(extract_page))
         .route("/api/v1/wiki/codecs", get(list_codecs))
         .route("/api/v1/wiki/stats", get(wiki_stats))
+        .route("/api/v1/wiki/export", get(export_wiki))
         .route("/api/v1/screenshot", post(capture_screenshot))
 }
 
@@ -289,6 +290,55 @@ async fn wiki_stats() -> Json<serde_json::Value> {
         "total_size_human": format_size(total_size),
         "community_browsing": true,
         "codecs_available": 6,
+    }))
+}
+
+/// GET /api/v1/wiki/export
+///
+/// Bulk export all wiki snapshots as a JSON array.
+/// Used by community browsing to share/download domain knowledge.
+async fn export_wiki() -> Json<serde_json::Value> {
+    let wiki_dir = crate::utils::solace_home().join("wiki");
+    let domains_dir = wiki_dir.join("domains");
+    let mut exports = Vec::new();
+
+    if let Ok(domains) = fs::read_dir(&domains_dir) {
+        for domain_entry in domains.flatten() {
+            let domain_path = domain_entry.path();
+            if !domain_path.is_dir() {
+                continue;
+            }
+            let domain = domain_path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("")
+                .to_string();
+
+            if let Ok(files) = fs::read_dir(&domain_path) {
+                for file_entry in files.flatten() {
+                    let path = file_entry.path();
+                    if path.extension().is_some_and(|e| e == "md") {
+                        let filename = path
+                            .file_name()
+                            .and_then(|n| n.to_str())
+                            .unwrap_or("")
+                            .to_string();
+                        let size = fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
+                        exports.push(json!({
+                            "domain": domain,
+                            "filename": filename,
+                            "size_bytes": size,
+                        }));
+                    }
+                }
+            }
+        }
+    }
+
+    Json(json!({
+        "exports": exports,
+        "count": exports.len(),
+        "format": "prime-snapshot-index",
     }))
 }
 
