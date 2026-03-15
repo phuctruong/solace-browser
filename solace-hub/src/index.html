@@ -5,251 +5,375 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solace Hub</title>
-  <link rel="icon" href="icons/yinyang-logo.png" sizes="32x32">
-  <link rel="stylesheet" href="site.css">
-  <script src="solace.js" defer></script>
+  <link rel="icon" href="/icons/yinyang-logo.png">
+  <link rel="stylesheet" href="/styleguide.css">
+  <link rel="stylesheet" href="/vendor/jquery.dataTables.min.css">
+  <script src="/vendor/jquery-3.7.1.min.js"></script>
+  <script src="/vendor/jquery.dataTables.min.js"></script>
+  <script src="/vendor/mermaid.min.js"></script>
+  <style>
+    .hub-hero { border: 2px solid var(--sb-accent); background: linear-gradient(135deg, var(--sb-surface), var(--sb-surface-strong)); }
+    .hub-run-btn { margin-left: auto; }
+    #tab-content { min-height: 400px; }
+  </style>
 </head>
 <body>
-  <main class="hub-shell">
-    <section class="hub-hero">
-      <div class="hub-hero-copy">
-        <div class="hub-brand">
-          <img src="media/yinyang-rotating_70pct_128px.gif" alt="Rotating Yinyang logo" class="hub-logo">
-          <div>
-            <h1>Solace Hub</h1>
-            <p class="hub-brand-tag">Start here. Get one workflow working.</p>
-          </div>
-        </div>
-        <div class="hub-toolbar" aria-label="Appearance controls">
-          <div class="hub-toolbar-group hub-toolbar-group-language">
-            <span id="hub-label-language" class="hub-toolbar-label">Language</span>
-            <div class="hub-language-switcher">
-              <button
-                id="btn-language-menu"
-                type="button"
-                class="hub-language-button"
-                aria-expanded="false"
-                aria-controls="hub-language-menu"
-                aria-haspopup="menu"
-                aria-label="Choose language"
-              >
-                <img src="icons/lang/globe-default.png" alt="" class="hub-language-icon hub-language-icon-default">
-                <img src="icons/lang/globe-hover.png" alt="" class="hub-language-icon hub-language-icon-hover">
-                <span id="language-current">English</span>
-              </button>
-              <div id="hub-language-menu" class="hub-language-menu" role="menu" hidden></div>
-            </div>
-          </div>
-          <div class="hub-toolbar-group" role="group" aria-label="Theme">
-            <span id="hub-label-theme" class="hub-toolbar-label">Theme</span>
-            <button id="btn-theme-auto" type="button" class="hub-toolbar-button hub-toolbar-button-active">Auto</button>
-            <button id="btn-theme-light" type="button" class="hub-toolbar-button">Light</button>
-            <button id="btn-theme-dark" type="button" class="hub-toolbar-button">Dark</button>
-          </div>
-          <div class="hub-toolbar-group" role="group" aria-label="Text size">
-            <span id="hub-label-text" class="hub-toolbar-label">Text</span>
-            <button id="btn-font-down" type="button" class="hub-toolbar-button" aria-label="Decrease text size">A-</button>
-            <button id="btn-font-up" type="button" class="hub-toolbar-button" aria-label="Increase text size">A+</button>
-          </div>
-        </div>
-        <p id="hub-summary-text" class="hub-summary">
-          Hub keeps localhost:8888 alive on this machine. It opens Solace Browser. It stays free and local-first until you choose more.
-        </p>
-        <div class="hub-splash-wrap">
-          <img src="media/dragon-yinyang-splash.png" alt="Dragon splash artwork" class="hub-splash">
-        </div>
-        <div class="hub-actions">
-          <button id="btn-open-browser" type="button" class="hub-button hub-button-primary">Open Solace Browser</button>
-        </div>
-        <section class="hub-setup-rail hub-setup-rail-hero" aria-label="Quick setup">
-          <div class="hub-setup-header">
-            <p id="setup-kicker" class="hub-kicker">Quick setup</p>
-            <div class="hub-setup-heading-row">
-            <h3 id="setup-heading">Turn on apps in three steps</h3>
-              <span id="setup-progress-pill" class="hub-setup-progress-pill">Step 1 of 3</span>
-            </div>
-          </div>
-          <div class="hub-setup-steps" role="tablist" aria-label="Quick setup steps">
-            <button id="setup-step-1" type="button" class="hub-setup-step hub-setup-step-active" role="tab" aria-selected="true" aria-controls="hub-setup-panel" tabindex="0">
-              <span class="hub-setup-step-index">1</span>
-              <span id="setup-step-1-label">Sign in</span>
-            </button>
-            <button id="setup-step-2" type="button" class="hub-setup-step" role="tab" aria-selected="false" aria-controls="hub-setup-panel" tabindex="-1">
-              <span class="hub-setup-step-index">2</span>
-              <span id="setup-step-2-label">Choose model source</span>
-            </button>
-            <button id="setup-step-3" type="button" class="hub-setup-step" role="tab" aria-selected="false" aria-controls="hub-setup-panel" tabindex="-1">
-              <span class="hub-setup-step-index">3</span>
-              <span id="setup-step-3-label">Launch browser</span>
-            </button>
-          </div>
-          <div id="hub-setup-panel" class="hub-setup-panel" role="tabpanel" aria-live="polite" aria-labelledby="setup-step-1">
-            <p id="setup-step-title" class="hub-setup-title">Sign in or create an account.</p>
-            <p id="setup-step-copy" class="hub-setup-copy">
-              Logged out keeps AI Agent access on. Apps stay off until you sign in.
-            </p>
-            <ul id="setup-step-notes" class="hub-setup-notes">
-              <li>Free and paid both sign in here.</li>
-              <li>Paid turns on managed AI. Free turns on BYOK, Local CLI, or Ollama.</li>
-            </ul>
-            <div id="setup-step-status" class="hub-setup-status">Stay in agent-only mode until you are ready.</div>
-            <div class="hub-setup-actions">
-              <button id="setup-step-primary" type="button" class="hub-button hub-button-secondary">Sign In / Create Account</button>
-              <button id="setup-step-secondary" type="button" class="hub-button hub-button-secondary">Stay in agent mode</button>
-            </div>
-          </div>
-        </section>
-      </div>
-    </section>
 
-    <section class="hub-grid" aria-label="Hub setup options">
-      <article class="hub-card hub-card-primary">
-        <div class="hub-card-header">
-          <div>
-            <p id="free-kicker" class="hub-kicker">1. Default: Free</p>
-            <h2><span id="free-heading-text">AI Agent Access:</span> <span id="agent-access-label">ON</span></h2>
-          </div>
-          <label class="hub-switch">
-            <input id="agent-access-toggle" type="checkbox" checked>
-            <span id="agent-toggle-label">Enabled</span>
-          </label>
-        </div>
-        <div class="hub-card-body">
-          <img
-            src="media/droplet-logo-rotating_70pct_128px.gif"
-            alt="Rotating Yinyang droplet"
-            class="hub-droplet"
-          >
-          <div class="hub-card-copy">
-            <p id="free-copy">
-              Point any AI coding agent to
-              <strong>http://localhost:8888/agents</strong>
-              to learn how to control Solace Browser through the protected local runtime. Give an agent one URL and it can get to work. This mode is free, local-first, and stays on this machine by default.
-            </p>
-            <p id="agent-note" class="hub-note">
-              Solace Hub keeps AI Agent Access on even before you create an account.
-            </p>
-          </div>
-        </div>
-      </article>
+<!-- TOP BAR -->
+<header class="sb-topbar">
+  <div class="sb-topbar-brand">
+    <img src="/icons/yinyang-logo.png" alt="Solace">
+    <span>Solace Hub</span>
+  </div>
+  <div class="sb-topbar-spacer"></div>
+  <span class="sb-topbar-stat"><span class="sb-topbar-dot sb-topbar-dot--on" id="health-dot"></span> <span id="health-text">Checking...</span></span>
+  <span class="sb-topbar-stat" id="topbar-agents"></span>
+  <span class="sb-topbar-stat" id="topbar-apps"></span>
+  <span class="sb-topbar-stat" id="topbar-evidence"></span>
+  <div class="sb-theme-group">
+    <button class="sb-theme-btn sb-theme-btn--active" data-theme="dark">Dark</button>
+    <button class="sb-theme-btn" data-theme="light">Light</button>
+  </div>
+  <div class="sb-lang-switcher">
+    <button class="sb-lang-toggle" id="languageToggle" aria-label="Language" aria-expanded="false" aria-controls="languageMenu" aria-haspopup="menu" type="button">
+      <img src="/icons/lang/globe-default.png" alt="" class="sb-lang-icon sb-lang-icon--default">
+      <img src="/icons/lang/globe-hover.png" alt="" class="sb-lang-icon sb-lang-icon--hover">
+    </button>
+    <div class="sb-lang-menu" id="languageMenu" role="menu" hidden>
+      <a href="#" role="menuitem" aria-current="page">English</a>
+      <a href="#" role="menuitem">Tiếng Việt</a><a href="#" role="menuitem">日本語</a>
+      <a href="#" role="menuitem">한국어</a><a href="#" role="menuitem">中文</a>
+      <a href="#" role="menuitem">Español</a><a href="#" role="menuitem">Français</a>
+      <a href="#" role="menuitem">Deutsch</a><a href="#" role="menuitem">Português</a>
+      <a href="#" role="menuitem">العربية</a><a href="#" role="menuitem">हिन्दी</a>
+      <a href="#" role="menuitem">ไทย</a><a href="#" role="menuitem">Bahasa Indonesia</a>
+    </div>
+  </div>
+</header>
 
-      <article class="hub-card">
-        <div class="hub-card-header">
-          <div>
-            <p id="personal-kicker" class="hub-kicker">2. Personal AI Assistant (Always Free)</p>
-            <h2 id="personal-heading">Start free and get a working assistant today</h2>
-          </div>
-          <span id="personal-pill" class="hub-pill hub-pill-on">Default</span>
-        </div>
-        <div class="hub-card-body hub-card-body-stack">
-          <p id="personal-copy">
-            Use BYOK or autodetect a local coding CLI wrapper to get one useful workflow, one saved report, and one repeatable win without paying first.
-          </p>
-          <ul class="hub-benefits">
-            <li id="personal-benefit-1">Bring your own key and keep full local-first control</li>
-            <li id="personal-benefit-2">Autodetect Codex, Claude Code, Gemini, or Aider wrappers in minutes</li>
-            <li id="personal-benefit-3">Use Yinyang for free on supported domains and bundled starter apps with saved reports</li>
-          </ul>
-          <div class="hub-inline-actions">
-            <button id="btn-enable-byok" type="button" class="hub-button hub-button-secondary">Use BYOK</button>
-            <button id="btn-enable-cli" type="button" class="hub-button hub-button-secondary">Autodetect Local CLI</button>
-            <button id="btn-enable-ollama" type="button" class="hub-button hub-button-secondary">Use Ollama URL</button>
-          </div>
-            <p id="personal-note" class="hub-note">This is the no-risk path: get one useful report first, then decide if it is worth carrying to another machine later.</p>
-        </div>
-      </article>
+<!-- TABS -->
+<nav class="sb-tabs" role="tablist" id="main-tabs">
+  <button class="sb-tab sb-tab--active" data-view="overview" role="tab">Overview</button>
+  <button class="sb-tab" data-view="apps" role="tab">Apps <span class="sb-tab-badge" id="apps-badge">0</span></button>
+  <button class="sb-tab" data-view="evidence" role="tab">Evidence</button>
+  <button class="sb-tab" data-view="domains" role="tab">Domains</button>
+  <button class="sb-tab" data-view="agents" role="tab">Agents</button>
+</nav>
 
-      <article class="hub-card">
-        <div class="hub-card-header">
-          <div>
-            <p id="pro-kicker" class="hub-kicker">3. Managed Solace AGI (Dragon Warrior)</p>
-            <h2 id="pro-heading">Extend the same protected workflow to your team and other machines</h2>
-          </div>
-          <span id="account-pill" class="hub-pill hub-pill-off">Optional</span>
-        </div>
-        <div class="hub-card-body hub-card-body-stack">
-          <p id="pro-copy">
-            Sign in only after the local run is useful and you want cloud sync, remote control, eSign, or audit-ready proof on top of it.
-          </p>
-          <ul class="hub-benefits">
-            <li id="pro-benefit-1">Managed AI so teams do not have to wire BYOK or local wrappers on every machine</li>
-            <li id="pro-benefit-2">Remote access, tunnel relay, sync, backups, and shared team access from the same account</li>
-            <li id="pro-benefit-3">Enterprise evidence, approvals, schedules, and audit-ready workflows when proof matters most</li>
-          </ul>
-          <div class="hub-inline-actions">
-            <button id="btn-open-account" type="button" class="hub-button hub-button-primary">Sign In / Create Account</button>
-          </div>
-          <p id="pro-note" class="hub-note">
-            Start free first. Upgrade when the same local win is worth carrying to more people, more machines, and a shared workflow library.
-          </p>
-        </div>
-      </article>
-    </section>
+<!-- TAB CONTENT -->
+<div id="tab-content" style="padding:1rem 1.5rem">
 
-    <section class="hub-status" aria-label="System status">
-      <div class="hub-status-header">
+  <!-- OVERVIEW -->
+  <div class="sb-tab-panel" id="panel-overview">
+    <div class="sb-card hub-hero">
+      <div class="sb-flex" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
         <div>
-          <p id="runtime-kicker" class="hub-kicker">4. Know if the system is healthy</p>
-          <h2 id="runtime-heading">Runtime Status</h2>
+          <div style="font-size:1.4rem;font-weight:700" id="hero-greeting">Loading...</div>
+          <div class="sb-text-muted" id="hero-streak"></div>
         </div>
-        <p id="runtime-summary" class="hub-status-copy" aria-live="polite">Checking localhost:8888 so we can confirm everything is ready…</p>
+        <img src="/media/droplet-logo-rotating_70pct_128px.gif" style="width:64px;height:auto" alt="">
       </div>
-      <div class="hub-status-grid">
-        <article class="hub-status-card hub-status-card-on" id="status-mcp">
-          <span class="hub-status-dot"></span>
-          <strong id="status-mcp-label">MCP server</strong>
-          <p id="status-mcp-copy">Checking</p>
-        </article>
-        <article class="hub-status-card hub-status-card-on" id="status-webservices">
-          <span class="hub-status-dot"></span>
-          <strong id="status-webservices-label">Webservices :8888</strong>
-          <p id="status-webservices-copy">Checking</p>
-        </article>
-        <article class="hub-status-card hub-status-card-on" id="status-free">
-          <span class="hub-status-dot"></span>
-          <strong id="status-free-label">Free version</strong>
-          <p id="status-free-copy">Enabled</p>
-        </article>
-        <article class="hub-status-card hub-status-card-off" id="status-yinyang">
-          <span class="hub-status-dot"></span>
-          <strong id="status-yinyang-label">Yinyang sidebar</strong>
-          <p id="status-yinyang-copy">Browser not open yet</p>
-        </article>
-        <article class="hub-status-card hub-status-card-off" id="status-remote">
-          <span class="hub-status-dot"></span>
-          <strong id="status-remote-label">Remote access</strong>
-          <p id="status-remote-copy">Off</p>
-        </article>
-        <article class="hub-status-card hub-status-card-off" id="status-sync">
-          <span class="hub-status-dot"></span>
-          <strong id="status-sync-label">Solace AGI sync</strong>
-          <p id="status-sync-copy">Off</p>
-        </article>
+      <div class="sb-flex sb-gap-md sb-mt-md" style="flex-wrap:wrap">
+        <div class="sb-card" style="flex:1;min-width:180px">
+          <small class="sb-text-muted">Last run</small>
+          <div id="hero-last-run">—</div>
+        </div>
+        <div class="sb-card" style="flex:1;min-width:180px">
+          <small class="sb-text-muted">Next scheduled</small>
+          <div id="hero-next-run">—</div>
+        </div>
+        <div class="hub-run-btn">
+          <button class="sb-btn sb-btn--primary" id="btn-run-morning" onclick="runApp('morning-brief')">▶ Run Morning Cycle</button>
+        </div>
       </div>
-      <div class="hub-footer-note">
-        <p id="cli-note">Checking local coding agents…</p>
-        <p id="runtime-footer-note">Advanced admin stays behind the runtime API so the default surface stays smaller and safer.</p>
+    </div>
+    <div class="sb-mt-md" id="overview-upgrade" style="display:none">
+      <div class="sb-card" style="border-left:4px solid var(--sb-warning);padding:0.75rem 1rem">
+        <strong style="color:var(--sb-warning)">⚠</strong> <span id="upgrade-message"></span>
       </div>
-    </section>
+    </div>
+  </div>
 
-    <section class="hub-sr-only" aria-hidden="true">
-      <div>onboarding setup chat panel</div>
-      <div id="oauth3-panel">OAuth3 control plane</div>
-      <div data-mode="agent">agent</div>
-      <div data-mode="paid">paid</div>
-      <div id="advanced-manifest">
-        oauth3 register revoke extendToken refreshOAuth3Tokens vault token management panel
-        tunnel warning internet exposure expose sync export import verify chain evidence action filter
-        cron Every 9am recipe template enable disable recipe history run count
-        budget daily limit spend breakdown alert threshold usage provider metrics prometheus /metrics
-        tray status sessions profile store community notification bell mark all read toast
-        search pin accessibility a11y ping latency tag filter category settings feature config version shortcuts keyboard
-        broadcast storage favorite star watchdog restart dark theme templates
-        byok api key paid uplifts prime wiki remote control twin browser local cli wrapper pzip part11 esign
-        ws/dashboard onclose reconnect fallback polling setInterval ws/chat
+  <!-- APPS -->
+  <div class="sb-tab-panel" id="panel-apps" hidden>
+    <div class="sb-card-grid" id="apps-grid">
+      <div class="sb-empty"><div class="sb-empty-icon">📦</div><div>Loading apps...</div></div>
+    </div>
+  </div>
+
+  <!-- EVIDENCE -->
+  <div class="sb-tab-panel" id="panel-evidence" hidden>
+    <div class="sb-flex" style="justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <div>
+        <span class="sb-pill sb-pill--success" id="ev-chain-badge">Checking...</span>
+        <span class="sb-pill sb-pill--info" id="ev-part11-badge"></span>
+        <strong style="margin-left:8px" id="ev-count">0 entries</strong>
       </div>
-      <input type="password" aria-label="API key password input">
-    </section>
-  </main>
+    </div>
+    <div class="sb-card" style="padding:0;overflow:hidden">
+      <table class="sb-table" id="evidence-table">
+        <thead><tr><th>Event</th><th>Actor</th><th>Hash</th><th>Time</th></tr></thead>
+        <tbody id="evidence-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- DOMAINS -->
+  <div class="sb-tab-panel" id="panel-domains" hidden>
+    <div class="sb-card-grid" id="domains-grid">
+      <div class="sb-empty"><div class="sb-empty-icon">🌐</div><div>Loading domains...</div></div>
+    </div>
+  </div>
+
+  <!-- AGENTS -->
+  <div class="sb-tab-panel" id="panel-agents" hidden>
+    <div class="sb-card-grid" id="agents-grid">
+      <div class="sb-empty"><div class="sb-empty-icon">🤖</div><div>Loading agents...</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="sb-toast-container" id="toast-container"></div>
+
+<script>
+(function() {
+  'use strict';
+  var API = '';
+
+  // ─── Helpers ───
+  function get(path) { return fetch(API + path).then(function(r) { return r.json(); }); }
+  function post(path, body) { return fetch(API + path, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{}) }).then(function(r) { return r.json(); }); }
+  function $(id) { return document.getElementById(id); }
+  function toast(msg, type) {
+    var c = $('toast-container'), t = document.createElement('div');
+    t.className = 'sb-toast sb-toast--' + (type||'success');
+    t.textContent = msg; c.appendChild(t);
+    setTimeout(function() { t.style.opacity='0'; setTimeout(function() { t.remove(); }, 300); }, 4000);
+  }
+  function timeAgo(iso) {
+    if (!iso) return '—';
+    var diff = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (diff < 60) return Math.floor(diff) + 's ago';
+    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+  }
+  function esc(s) { var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+  // ─── Tabs ───
+  var tabs = [].slice.call(document.querySelectorAll('#main-tabs .sb-tab'));
+  var panels = document.querySelectorAll('.sb-tab-panel');
+  tabs.forEach(function(btn, idx) {
+    btn.addEventListener('click', function() {
+      tabs.forEach(function(b) { b.classList.toggle('sb-tab--active', b===btn); });
+      panels.forEach(function(p) { p.hidden = p.id !== 'panel-'+btn.dataset.view; });
+    });
+    btn.addEventListener('keydown', function(e) {
+      var next;
+      if (e.key==='ArrowRight') next=tabs[(idx+1)%tabs.length];
+      else if (e.key==='ArrowLeft') next=tabs[(idx-1+tabs.length)%tabs.length];
+      if (next) { e.preventDefault(); next.focus(); next.click(); }
+    });
+  });
+
+  // ─── Theme ───
+  document.querySelectorAll('.sb-theme-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.documentElement.setAttribute('data-theme', btn.dataset.theme);
+      document.querySelectorAll('.sb-theme-btn').forEach(function(b) { b.classList.toggle('sb-theme-btn--active', b===btn); });
+    });
+  });
+
+  // ─── Language ───
+  var langToggle = $('languageToggle'), langMenu = $('languageMenu');
+  if (langToggle) {
+    langToggle.addEventListener('click', function(e) { e.stopPropagation(); var open=!langMenu.classList.contains('active'); if(open) langMenu.removeAttribute('hidden'); langMenu.classList.toggle('active',open); langToggle.setAttribute('aria-expanded',open); if(!open) langMenu.setAttribute('hidden',''); });
+    document.addEventListener('click', function(e) { if(!langToggle.contains(e.target)&&!langMenu.contains(e.target)) { langMenu.classList.remove('active'); langMenu.setAttribute('hidden',''); } });
+  }
+
+  // ─── Load Overview ───
+  function loadOverview() {
+    get('/api/v1/delight').then(function(d) {
+      $('hero-greeting').textContent = d.greeting || 'Welcome';
+      var streak = '';
+      if (d.streak_days > 0) streak = 'Day ' + d.streak_days + ' streak · ';
+      streak += d.total_runs + ' total runs';
+      if (d.celebration) streak += ' · ' + d.celebration;
+      $('hero-streak').textContent = streak;
+    });
+    get('/api/v1/sidebar/state').then(function(d) {
+      if (d.upgrade_cta) {
+        $('overview-upgrade').style.display = 'block';
+        $('upgrade-message').textContent = d.upgrade_message || 'Upgrade available';
+      }
+    });
+  }
+
+  // ─── Load Health + Top Bar ───
+  function loadHealth() {
+    get('/health').then(function(d) {
+      $('health-dot').className = 'sb-topbar-dot sb-topbar-dot--on';
+      $('health-text').textContent = 'Runtime :8888';
+    }).catch(function() {
+      $('health-dot').className = 'sb-topbar-dot sb-topbar-dot--off';
+      $('health-text').textContent = 'Offline';
+    });
+    get('/api/v1/agents').then(function(d) {
+      var count = d.agents ? d.agents.length : 0;
+      $('topbar-agents').innerHTML = '<span class="sb-topbar-dot sb-topbar-dot--on"></span> ' + count + ' agents';
+    });
+    get('/api/apps').then(function(d) {
+      var count = d.apps ? d.apps.length : 0;
+      $('topbar-apps').textContent = count + ' apps';
+      $('apps-badge').textContent = count;
+    });
+    get('/api/v1/evidence/count').then(function(d) {
+      $('topbar-evidence').textContent = (d.count||0).toLocaleString() + ' evidence';
+    });
+  }
+
+  // ─── Load Apps ───
+  function loadApps() {
+    get('/api/apps').then(function(d) {
+      var grid = $('apps-grid');
+      if (!d.apps || d.apps.length === 0) {
+        grid.innerHTML = '<div class="sb-empty"><div class="sb-empty-icon">📦</div><div>No apps found</div><div class="sb-empty-action"><button class="sb-btn sb-btn--primary sb-btn--sm" onclick="runApp(\'hackernews-feed\')">▶ Run First App</button></div></div>';
+        return;
+      }
+      var html = '';
+      d.apps.forEach(function(app) {
+        var icon = '/icons/apps/' + app.domain.replace(/\..*/,'') + '.png';
+        html += '<div class="sb-card">' +
+          '<div class="sb-card-header">' +
+            '<span class="sb-app-name"><img src="' + icon + '" class="sb-app-icon" onerror="this.src=\'/icons/yinyang-logo.png\'"> ' + esc(app.id) + '</span>' +
+            '<span class="sb-pill sb-pill--success">●</span>' +
+          '</div>' +
+          '<div class="sb-card-body">' +
+            '<div class="sb-text-muted">' + esc(app.domain) + '</div>' +
+            (app.schedule ? '<div class="sb-text-mono sb-timestamp">' + esc(app.schedule) + '</div>' : '') +
+            '<div class="sb-mt-md"><button class="sb-btn sb-btn--sm" onclick="runApp(\'' + esc(app.id) + '\')">▶ Run</button> ' +
+            '<a href="/apps/' + esc(app.id) + '" class="sb-btn sb-btn--sm">Details</a></div>' +
+          '</div></div>';
+      });
+      grid.innerHTML = html;
+    });
+  }
+
+  // ─── Load Evidence ───
+  function loadEvidence() {
+    get('/api/v1/evidence/count').then(function(d) {
+      $('ev-count').textContent = (d.count||0).toLocaleString() + ' entries';
+    });
+    get('/api/v1/evidence/part11').then(function(d) {
+      var p = d.part11 || {};
+      $('ev-chain-badge').textContent = p.chain_valid ? 'Chain Valid ✓' : 'Chain Broken ✗';
+      $('ev-chain-badge').className = 'sb-pill ' + (p.chain_valid ? 'sb-pill--success' : 'sb-pill--danger');
+      $('ev-part11-badge').textContent = 'ALCOA Part 11' + (p.enabled ? ' ✓' : '');
+      $('ev-part11-badge').className = 'sb-pill sb-pill--info';
+    });
+    get('/api/v1/evidence?limit=50').then(function(d) {
+      var tbody = $('evidence-tbody');
+      var rows = '';
+      (d.entries || []).forEach(function(e) {
+        var hash = (e.hash || e.sha256_chain_link || '').substring(0, 16) + '...';
+        rows += '<tr><td>' + esc(e.event || e.action_type || '—') + '</td>' +
+          '<td>' + esc(e.actor || 'system') + '</td>' +
+          '<td class="sb-text-mono">' + hash + '</td>' +
+          '<td>' + timeAgo(e.timestamp || e.timestamp_iso8601) + '</td></tr>';
+      });
+      tbody.innerHTML = rows || '<tr><td colspan="4" class="sb-text-muted" style="text-align:center">No evidence entries yet. Run an app to create evidence.</td></tr>';
+      if (rows && jQuery.fn.DataTable && !jQuery.fn.DataTable.isDataTable('#evidence-table')) {
+        jQuery('#evidence-table').DataTable({ paging:true, searching:true, ordering:true, pageLength:25, dom:'ftip' });
+      }
+    });
+  }
+
+  // ─── Load Domains ───
+  function loadDomains() {
+    get('/api/v1/domains').then(function(d) {
+      var grid = $('domains-grid');
+      var domains = d.domains || {};
+      var keys = Object.keys(domains).sort();
+      if (keys.length === 0) {
+        grid.innerHTML = '<div class="sb-empty"><div class="sb-empty-icon">🌐</div><div>No domains found</div></div>';
+        return;
+      }
+      var html = '';
+      keys.forEach(function(domain) {
+        var count = domains[domain];
+        var icon = '/icons/apps/' + domain.replace(/\..*/,'') + '.png';
+        html += '<div class="sb-card">' +
+          '<div class="sb-card-header">' +
+            '<span class="sb-app-name"><img src="' + icon + '" class="sb-app-icon" onerror="this.src=\'/icons/yinyang-logo.png\'"> ' + esc(domain) + '</span>' +
+            '<span class="sb-pill sb-pill--info">' + count + ' apps</span>' +
+          '</div>' +
+          '<div class="sb-card-body">' +
+            '<a href="/domains/' + encodeURIComponent(domain) + '" class="sb-btn sb-btn--sm">View Domain →</a>' +
+          '</div></div>';
+      });
+      grid.innerHTML = html;
+    });
+  }
+
+  // ─── Load Agents ───
+  function loadAgents() {
+    get('/api/v1/agents').then(function(d) {
+      var grid = $('agents-grid');
+      var agents = d.agents || [];
+      if (agents.length === 0) {
+        grid.innerHTML = '<div class="sb-empty"><div class="sb-empty-icon">🤖</div><div>No AI agents detected</div><div class="sb-text-muted">Install claude, codex, or gemini on PATH</div></div>';
+        return;
+      }
+      var html = '';
+      agents.forEach(function(a) {
+        var models = (a.models || []).join(', ');
+        html += '<div class="sb-card">' +
+          '<div class="sb-card-header">' +
+            '<h3 class="sb-card-title">' + esc(a.name || a.id) + '</h3>' +
+            '<span class="sb-pill ' + (a.installed ? 'sb-pill--success' : 'sb-pill--danger') + '">● ' + (a.installed ? 'installed' : 'missing') + '</span>' +
+          '</div>' +
+          '<div class="sb-card-body">' +
+            '<div class="sb-text-muted">Models: ' + esc(models) + '</div>' +
+            '<div class="sb-text-mono sb-timestamp">' + esc(a.path || a.cmd || '') + '</div>' +
+          '</div></div>';
+      });
+      grid.innerHTML = html;
+    });
+  }
+
+  // ─── Run App ───
+  window.runApp = function(appId) {
+    toast('Running ' + appId + '...', 'success');
+    post('/api/v1/apps/run/' + appId).then(function(d) {
+      if (d.ok) {
+        toast(appId + ' completed!', 'success');
+        loadHealth();
+        loadEvidence();
+      } else {
+        toast('Error: ' + (d.error || 'unknown'), 'danger');
+      }
+    }).catch(function(e) { toast('Failed: ' + e, 'danger'); });
+  };
+
+  // ─── Init ───
+  loadHealth();
+  loadOverview();
+  loadApps();
+  loadEvidence();
+  loadDomains();
+  loadAgents();
+
+  // Mermaid
+  if (typeof mermaid !== 'undefined') {
+    mermaid.initialize({ startOnLoad:true, theme:'dark', themeVariables: {
+      primaryColor:'#1a2d47', primaryTextColor:'#e8ecf2', primaryBorderColor:'#78b9ff',
+      lineColor:'#78b9ff', fontFamily:'Segoe UI,system-ui,sans-serif', fontSize:'14px'
+    }});
+  }
+
+})();
+</script>
 </body>
 </html>

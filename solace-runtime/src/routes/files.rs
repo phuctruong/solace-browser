@@ -38,6 +38,16 @@ pub fn routes() -> Router<AppState> {
 }
 
 async fn index() -> Html<String> {
+    // Serve the real Hub index.html if available
+    let candidates = [
+        std::path::PathBuf::from("/home/phuc/projects/solace-browser/solace-hub/src/index.html"),
+        crate::utils::solace_home().join("hub").join("index.html"),
+    ];
+    for path in &candidates {
+        if let Ok(content) = fs::read_to_string(path) {
+            return Html(content);
+        }
+    }
     Html(page(
         "Solace Runtime",
         "Local-first runtime active on port 8888.",
