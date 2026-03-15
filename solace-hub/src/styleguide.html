@@ -865,6 +865,7 @@
         var root = am5.Root.new('chart-bar');
         themes(root);
         var chart = root.container.children.push(am5xy.XYChart.new(root, { panX:false, panY:false }));
+        chart.set('cursor', am5xy.XYCursor.new(root, { behavior:'none' }));
         var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField:'day', renderer:am5xy.AxisRendererX.new(root,{minGridDistance:30}) }));
         var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer:am5xy.AxisRendererY.new(root,{}) }));
         var series = chart.series.push(am5xy.ColumnSeries.new(root, { name:'Runs', xAxis:xAxis, yAxis:yAxis, valueYField:'runs', categoryXField:'day', tooltip:am5.Tooltip.new(root,{labelText:'{day}: {runs} runs'}) }));
@@ -878,6 +879,7 @@
         var root = am5.Root.new('chart-line');
         themes(root);
         var chart = root.container.children.push(am5xy.XYChart.new(root, { panX:true, panY:false }));
+        chart.set('cursor', am5xy.XYCursor.new(root, { behavior:'none', xAxis:undefined, yAxis:undefined }));
         var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField:'date', renderer:am5xy.AxisRendererX.new(root,{minGridDistance:80}) }));
         xAxis.get('renderer').labels.template.setAll({ rotation:-45, centerX:am5.percent(100), centerY:am5.percent(50), fontSize:12 });
         var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer:am5xy.AxisRendererY.new(root,{}) }));
@@ -914,6 +916,7 @@
         var root = am5.Root.new('chart-hbar');
         themes(root);
         var chart = root.container.children.push(am5xy.XYChart.new(root, { panX:false, panY:false }));
+        chart.set('cursor', am5xy.XYCursor.new(root, { behavior:'none' }));
         var yAxis = chart.yAxes.push(am5xy.CategoryAxis.new(root, { categoryField:'domain', renderer:am5xy.AxisRendererY.new(root,{inversed:true,minGridDistance:20}) }));
         var xAxis = chart.xAxes.push(am5xy.ValueAxis.new(root, { renderer:am5xy.AxisRendererX.new(root,{}) }));
         var series = chart.series.push(am5xy.ColumnSeries.new(root, { name:'Apps', xAxis:xAxis, yAxis:yAxis, valueXField:'apps', categoryYField:'domain', tooltip:am5.Tooltip.new(root,{labelText:'{domain}: {apps} apps'}) }));
@@ -927,6 +930,7 @@
         var root = am5.Root.new('chart-stacked');
         themes(root);
         var chart = root.container.children.push(am5xy.XYChart.new(root, { panX:false, panY:false }));
+        chart.set('cursor', am5xy.XYCursor.new(root, { behavior:'none' }));
         chart.set('legend', am5.Legend.new(root, { centerX:am5.percent(50), x:am5.percent(50) }));
         var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField:'agent', renderer:am5xy.AxisRendererX.new(root,{minGridDistance:30}) }));
         var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer:am5xy.AxisRendererY.new(root,{}) }));
@@ -948,6 +952,7 @@
         var root = am5.Root.new('chart-area');
         themes(root);
         var chart = root.container.children.push(am5xy.XYChart.new(root, { panX:true, panY:false }));
+        chart.set('cursor', am5xy.XYCursor.new(root, { behavior:'none' }));
         var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField:'time', renderer:am5xy.AxisRendererX.new(root,{minGridDistance:40}) }));
         var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer:am5xy.AxisRendererY.new(root,{}) }));
         var SeriesType = am5xy.SmoothedXLineSeries || am5xy.LineSeries;
