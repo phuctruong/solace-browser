@@ -222,11 +222,23 @@ async fn extract_page(
                 &crate::utils::solace_home(),
             ).auto_screenshot;
 
+            // Token savings: raw HTML tokens vs compressed snapshot tokens
+            let raw_tokens = content.len() / 4;
+            let snap_tokens = compressed / 4;
+            let tokens_saved = raw_tokens.saturating_sub(snap_tokens);
+            let savings_pct = if raw_tokens > 0 { tokens_saved * 100 / raw_tokens } else { 0 };
+
             Json(json!({
                 "status": "extracted",
                 "codec": decomp.codec.name(),
                 "url": decomp.url,
                 "sha256": decomp.sha256,
+                "token_savings": {
+                    "raw_html_tokens": raw_tokens,
+                    "snapshot_tokens": snap_tokens,
+                    "tokens_saved": tokens_saved,
+                    "savings_pct": savings_pct,
+                },
                 "stillwater": {
                     "headings": decomp.stillwater.headings,
                     "nav_links_count": decomp.stillwater.nav_links.len(),
