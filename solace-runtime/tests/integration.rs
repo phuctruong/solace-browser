@@ -453,6 +453,255 @@ async fn domains_list_groups_apps() {
 }
 
 #[tokio::test(flavor = "current_thread")]
+async fn domain_config_returns_defaults_for_unknown_domain() {
+    let ctx = TestContext::new("domain_config_returns_defaults");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/domains/unknown.com/config")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["domain"], "unknown.com");
+    assert_eq!(body["session_policy"]["session_ttl_hours"], 24);
+    assert_eq!(body["session_policy"]["auth_type"], "none");
+    assert_eq!(body["session_policy"]["keep_alive_interval_hours"], 6);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn domain_config_set_and_read_roundtrip() {
+    let ctx = TestContext::new("domain_config_set_read");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/domains/gmail.com/config",
+        json!({
+            "session_ttl_hours": 48,
+            "auth_type": "oauth3",
+            "keep_alive_url": "https://mail.google.com/mail/u/0/",
+            "check_selector": "div[role='navigation']"
+        }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["saved"], true);
+    assert_eq!(body["session_policy"]["session_ttl_hours"], 48);
+    assert_eq!(body["session_policy"]["auth_type"], "oauth3");
+    // Auto-computed keep-alive = TTL/4 = 12
+    assert_eq!(body["session_policy"]["keep_alive_interval_hours"], 12);
+
+    // Now read it back
+    let response = send(
+        &app,
+        Request::get("/api/v1/domains/gmail.com/config")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["session_policy"]["session_ttl_hours"], 48);
+    assert_eq!(body["session_policy"]["auth_type"], "oauth3");
+    assert_eq!(
+        body["session_policy"]["keep_alive_url"],
+        "https://mail.google.com/mail/u/0/"
+    );
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn domain_config_rejects_invalid_auth_type() {
+    let ctx = TestContext::new("domain_config_invalid_auth");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/domains/example.com/config",
+        json!({"auth_type": "invalid_type"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert!(body["error"].as_str().unwrap().contains("invalid auth_type"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn keep_alive_analysis_no_schedules() {
+    let ctx = TestContext::new("keep_alive_no_schedules");
+    let app = ctx.app();
+
+    // Set config for a domain with TTL
+    send_json(
+        &app,
+        Method::POST,
+        "/api/v1/domains/research/config",
+        json!({"session_ttl_hours": 24, "auth_type": "oauth2"}),
+    )
+    .await;
+
+    let response = send(
+        &app,
+        Request::get("/api/v1/domains/research/keep-alive")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["domain"], "research");
+    assert_eq!(body["session_ttl_hours"], 24);
+    assert_eq!(body["keep_alive_needed"], true);
+    assert!(body["recommendation"]
+        .as_str()
+        .unwrap()
+        .contains("No scheduled apps"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn keep_alive_analysis_public_domain() {
+    let ctx = TestContext::new("keep_alive_public");
+    let app = ctx.app();
+
+    // Set TTL=0 (public domain)
+    send_json(
+        &app,
+        Method::POST,
+        "/api/v1/domains/public.com/config",
+        json!({"session_ttl_hours": 0}),
+    )
+    .await;
+
+    let response = send(
+        &app,
+        Request::get("/api/v1/domains/public.com/keep-alive")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    let body = parse_body(response).await;
+    assert_eq!(body["keep_alive_needed"], false);
+    assert!(body["recommendation"]
+        .as_str()
+        .unwrap()
+        .contains("Public domain"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn recipe_get_returns_404_for_unknown_hash() {
+    let ctx = TestContext::new("recipe_get_404");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/recipes/0000000000000000000000000000000000000000000000000000000000000000")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    let body = parse_body(response).await;
+    assert!(body["error"].as_str().unwrap().contains("not found"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn recipe_execute_then_get_detail() {
+    let ctx = TestContext::new("recipe_execute_get");
+    let app = ctx.app();
+
+    // Execute a recipe to create it
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/recipes/execute",
+        json!({"task": "navigate to test page"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let task_hash = body["task_hash"].as_str().unwrap().to_string();
+
+    // Get detail for this recipe
+    let response = send(
+        &app,
+        Request::get(&format!("/api/v1/recipes/{task_hash}"))
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["task_hash"], task_hash);
+    assert!(body["steps"].is_array());
+    assert!(body["steps"].as_array().unwrap().len() > 0);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn recipe_delete_invalidates_cache() {
+    let ctx = TestContext::new("recipe_delete");
+    let app = ctx.app();
+
+    // Execute a recipe to create it
+    let (_, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/recipes/execute",
+        json!({"task": "task to delete"}),
+    )
+    .await;
+    let task_hash = body["task_hash"].as_str().unwrap().to_string();
+
+    // Verify it exists
+    let response = send(
+        &app,
+        Request::get(&format!("/api/v1/recipes/{task_hash}"))
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+
+    // Delete it
+    let response = send(
+        &app,
+        Request::builder()
+            .method(Method::DELETE)
+            .uri(format!("/api/v1/recipes/{task_hash}"))
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["deleted"], task_hash);
+
+    // Verify it's gone
+    let response = send(
+        &app,
+        Request::get(&format!("/api/v1/recipes/{task_hash}"))
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn recipe_delete_returns_404_for_unknown() {
+    let ctx = TestContext::new("recipe_delete_404");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::builder()
+            .method(Method::DELETE)
+            .uri("/api/v1/recipes/nonexistent_hash_value_here")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}
+
+#[tokio::test(flavor = "current_thread")]
 async fn cloud_connect_sets_state() {
     let ctx = TestContext::new("cloud_connect_sets_state");
     let app = ctx.app();
