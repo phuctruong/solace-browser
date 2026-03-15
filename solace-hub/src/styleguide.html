@@ -288,6 +288,225 @@
     </div>
   </section>
 
+  <!-- ─── TYPOGRAPHY ───────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Foundation</p>
+    <h2 class="sb-heading">Typography</h2>
+    <div class="sb-card">
+      <h1 style="margin:0 0 0.5rem">Heading 1 — Solace Hub</h1>
+      <h2 style="margin:0 0 0.5rem">Heading 2 — Panel Title</h2>
+      <h3 style="margin:0 0 0.5rem">Heading 3 — Card Title</h3>
+      <p>Body text — Hub keeps localhost:8888 alive on this machine. It opens Solace Browser. Free and local-first.</p>
+      <p class="sb-text-muted">Muted text — secondary information, timestamps, descriptions.</p>
+      <p><code class="sb-text-mono">Monospace — sha256:a4f2c891b3e6... evidence hash</code></p>
+      <p><a href="#">Link text — View evidence →</a></p>
+      <p class="sb-kicker">KICKER TEXT — section label</p>
+    </div>
+  </section>
+
+  <!-- ─── STATUS DOTS ─────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Status Indicators</h2>
+    <div class="sb-card">
+      <div class="sb-flex sb-gap-md" style="flex-wrap:wrap">
+        <span><span class="sb-topbar-dot sb-topbar-dot--on"></span> Runtime healthy</span>
+        <span><span class="sb-topbar-dot sb-topbar-dot--off"></span> Runtime down</span>
+        <span class="sb-pill sb-pill--success">● 6 agents</span>
+        <span class="sb-pill sb-pill--info">● 63 apps</span>
+        <span class="sb-pill sb-pill--warning">● 3 pending</span>
+        <span class="sb-pill sb-pill--danger">● 1 failed</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── ALERT / BANNER ─────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Alerts + Banners</h2>
+    <div class="sb-flex-col sb-gap-sm">
+      <div class="sb-card" style="border-left: 4px solid var(--sb-success); padding: 0.75rem 1rem;">
+        <strong class="sb-text-success">✓ Success</strong> — Morning brief completed. 30 items processed, report sealed.
+      </div>
+      <div class="sb-card" style="border-left: 4px solid var(--sb-warning); padding: 0.75rem 1rem;">
+        <strong style="color:var(--sb-warning)">⚠ Warning</strong> — Budget at 80% daily limit. 200/250 tasks used.
+      </div>
+      <div class="sb-card" style="border-left: 4px solid var(--sb-danger); padding: 0.75rem 1rem;">
+        <strong class="sb-text-danger">✗ Error</strong> — Reddit API returned 403. Browser-based fetch required.
+      </div>
+      <div class="sb-card" style="border-left: 4px solid var(--sb-signal); padding: 0.75rem 1rem;">
+        <strong style="color:var(--sb-signal)">ℹ Info</strong> — 6 CLI agents detected: claude, codex, gemini, copilot, cursor, aider.
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FORM INPUTS ─────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Form Inputs</h2>
+    <div class="sb-card">
+      <div class="sb-flex sb-gap-md" style="flex-wrap:wrap">
+        <div>
+          <label class="sb-text-muted" style="font-size:0.8rem;display:block;margin-bottom:4px">App ID</label>
+          <input type="text" value="hackernews-feed" style="background:var(--sb-surface-strong);border:2px solid var(--sb-border-strong);border-radius:var(--sb-radius);color:var(--sb-text);padding:8px 12px;font-family:var(--sb-font);font-size:0.9rem;min-width:200px">
+        </div>
+        <div>
+          <label class="sb-text-muted" style="font-size:0.8rem;display:block;margin-bottom:4px">Cron Schedule</label>
+          <input type="text" value="0 6 * * *" style="background:var(--sb-surface-strong);border:2px solid var(--sb-border-strong);border-radius:var(--sb-radius);color:var(--sb-text);padding:8px 12px;font-family:var(--sb-font-mono);font-size:0.9rem;min-width:150px">
+        </div>
+        <div>
+          <label class="sb-text-muted" style="font-size:0.8rem;display:block;margin-bottom:4px">Theme</label>
+          <select style="background:var(--sb-surface-strong);border:2px solid var(--sb-border-strong);border-radius:var(--sb-radius);color:var(--sb-text);padding:8px 12px;font-family:var(--sb-font);font-size:0.9rem;min-width:150px">
+            <option>Dark</option>
+            <option>Light</option>
+          </select>
+        </div>
+        <div>
+          <label class="sb-text-muted" style="font-size:0.8rem;display:block;margin-bottom:4px">Toggle</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" checked style="width:18px;height:18px;accent-color:var(--sb-accent)">
+            <span>Enabled</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── AGENT CARD ──────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Agent Cards</h2>
+    <div class="sb-card-grid">
+      <div class="sb-card">
+        <div class="sb-card-header">
+          <h3 class="sb-card-title">claude</h3>
+          <span class="sb-pill sb-pill--success">● installed</span>
+        </div>
+        <div class="sb-card-body">
+          <div class="sb-text-muted">Models: opus, sonnet, haiku</div>
+          <div class="sb-text-mono" style="font-size:0.75rem;margin-top:4px">/home/phuc/.local/bin/claude</div>
+          <div class="sb-mt-md"><button class="sb-btn sb-btn--sm">Generate</button></div>
+        </div>
+      </div>
+      <div class="sb-card">
+        <div class="sb-card-header">
+          <h3 class="sb-card-title">codex</h3>
+          <span class="sb-pill sb-pill--success">● installed</span>
+        </div>
+        <div class="sb-card-body">
+          <div class="sb-text-muted">Models: gpt-4.1, o3, o4-mini</div>
+          <div class="sb-text-mono" style="font-size:0.75rem;margin-top:4px">/usr/bin/codex</div>
+          <div class="sb-mt-md"><button class="sb-btn sb-btn--sm">Generate</button></div>
+        </div>
+      </div>
+      <div class="sb-card">
+        <div class="sb-card-header">
+          <h3 class="sb-card-title">gemini</h3>
+          <span class="sb-pill sb-pill--success">● installed</span>
+        </div>
+        <div class="sb-card-body">
+          <div class="sb-text-muted">Models: 2.5-pro, 2.5-flash</div>
+          <div class="sb-text-mono" style="font-size:0.75rem;margin-top:4px">/home/phuc/.npm-global/bin/gemini</div>
+          <div class="sb-mt-md"><button class="sb-btn sb-btn--sm">Generate</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── EVIDENCE ROW ────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Evidence Detail Row</h2>
+    <div class="sb-card">
+      <div class="sb-flex" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <div>
+          <span class="sb-pill sb-pill--success">ALCOA ✓</span>
+          <span class="sb-pill sb-pill--info">Chain Valid</span>
+          <strong style="margin-left:8px">13,741 entries</strong>
+        </div>
+        <button class="sb-btn sb-btn--sm">View Full Chain →</button>
+      </div>
+      <table class="sb-table sb-mt-md" style="font-size:0.8rem">
+        <tr>
+          <td class="sb-text-muted">Last entry</td>
+          <td><strong>app_run</strong> hackernews-feed</td>
+          <td class="sb-text-mono">a4f2c891...</td>
+          <td>2 min ago</td>
+        </tr>
+        <tr>
+          <td class="sb-text-muted">Previous hash</td>
+          <td colspan="3" class="sb-text-mono">2216ce33b136ad566badddb76d5d160b4b222a50f1dcaafe825cc5b9c06342b3</td>
+        </tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── DOMAIN CARD ─────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Domain Cards</h2>
+    <div class="sb-card-grid">
+      <div class="sb-card">
+        <div class="sb-card-header">
+          <h3 class="sb-card-title">news.ycombinator.com</h3>
+          <span class="sb-pill sb-pill--success">no auth</span>
+        </div>
+        <div class="sb-card-body">
+          1 app · hackernews-feed<br>
+          <span class="sb-text-muted">Schedule: 0 6 * * * · Last run: 12 min ago</span>
+        </div>
+      </div>
+      <div class="sb-card">
+        <div class="sb-card-header">
+          <h3 class="sb-card-title">mail.google.com</h3>
+          <span class="sb-pill sb-pill--warning">oauth3</span>
+        </div>
+        <div class="sb-card-body">
+          2 apps · inbox-triage, spam-cleaner<br>
+          <span class="sb-text-muted">Keep-alive: 6h · TTL: 24h · Auth: oauth3</span>
+        </div>
+      </div>
+      <div class="sb-card">
+        <div class="sb-card-header">
+          <h3 class="sb-card-title">linkedin.com</h3>
+          <span class="sb-pill sb-pill--warning">oauth3</span>
+        </div>
+        <div class="sb-card-body">
+          3 apps · outreach, poster, optimizer<br>
+          <span class="sb-text-muted">Keep-alive: 6h · TTL: 24h · Auth: oauth3</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── HERO PANEL MOCK ─────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Layout</p>
+    <h2 class="sb-heading">Hero Panel (What's Happening Now)</h2>
+    <div class="sb-card" style="border: 2px solid var(--sb-accent); background: linear-gradient(135deg, var(--sb-surface), var(--sb-surface-strong));">
+      <div class="sb-flex" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+        <div>
+          <div style="font-size:1.5rem;font-weight:700">Good afternoon ☀</div>
+          <div class="sb-text-muted" style="margin-top:4px">Day 3 streak · 2 apps ran today · 30 items collected</div>
+        </div>
+        <img src="media/yinyang-rotating_70pct_128px.gif" alt="" style="width:64px;height:auto">
+      </div>
+      <div class="sb-flex sb-gap-md sb-mt-md" style="flex-wrap:wrap">
+        <div class="sb-card" style="flex:1;min-width:200px">
+          <small class="sb-text-muted">Last run</small>
+          <div><strong>morning-brief</strong> · 12 min ago</div>
+        </div>
+        <div class="sb-card" style="flex:1;min-width:200px">
+          <small class="sb-text-muted">Next run</small>
+          <div><strong>hackernews-feed</strong> · in 48 min</div>
+        </div>
+        <div style="display:flex;align-items:center">
+          <button class="sb-btn sb-btn--primary">▶ Run Morning Cycle</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ─── TOP BAR STATUS ──────────────────────────────────── -->
   <section class="sb-mt-md">
     <p class="sb-kicker">Component</p>
