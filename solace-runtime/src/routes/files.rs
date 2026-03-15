@@ -593,7 +593,9 @@ fn page(title: &str, body: &str) -> String {
     )
 }
 
-/// Full Hub App page with navigation and styled CSS for event types.
+/// Full Hub App page — uses styleguide.css for all styling.
+/// The styleguide is the single source of truth for visual design.
+/// Rust assembles HTML using sb-* component classes from the styleguide.
 fn hub_page(title: &str, body_content: &str) -> String {
     format!(
         r#"<!doctype html>
@@ -602,152 +604,48 @@ fn hub_page(title: &str, body_content: &str) -> String {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title} — Solace Hub</title>
+<link rel="icon" href="/icons/yinyang-logo.png">
+<link rel="stylesheet" href="/styleguide.css">
+<link rel="stylesheet" href="/vendor/jquery.dataTables.min.css">
 <style>
-:root {{
-  --bg: #0f1117;
-  --surface: #1a1d27;
-  --text: #e2e4e9;
-  --text-muted: #8b8fa3;
-  --accent: #4f8cff;
-  --border: #2a2d3a;
-  --green: #22c55e;
-  --gold: #eab308;
-  --red: #ef4444;
-  --seal-blue: #3b82f6;
-}}
-* {{ margin: 0; padding: 0; box-sizing: border-box; }}
-body {{
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-}}
-nav {{
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0.75rem 1.5rem;
-  display: flex;
-  gap: 1.5rem;
-  align-items: center;
-}}
-nav a {{
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.875rem;
-}}
-nav a:hover {{ color: var(--accent); }}
-nav .brand {{
-  color: var(--text);
-  font-weight: 600;
-  font-size: 1rem;
-  margin-right: auto;
-}}
-main {{
-  max-width: 960px;
-  margin: 2rem auto;
-  padding: 0 1.5rem;
-}}
-h1 {{
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  color: var(--text);
-}}
-h2 {{
-  font-size: 1.125rem;
-  margin: 1.5rem 0 0.75rem;
-  color: var(--text-muted);
-}}
-p {{ margin-bottom: 0.75rem; }}
-a {{ color: var(--accent); text-decoration: none; }}
-a:hover {{ text-decoration: underline; }}
-table {{
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1.5rem;
-  background: var(--surface);
-  border-radius: 8px;
-  overflow: hidden;
-}}
-th, td {{
-  text-align: left;
-  padding: 0.625rem 1rem;
-  border-bottom: 1px solid var(--border);
-}}
-th {{
-  background: var(--surface);
-  color: var(--text-muted);
-  font-weight: 600;
-  font-size: 0.8125rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}}
-tr:last-child td {{ border-bottom: none; }}
-code {{
-  font-family: "SF Mono", "Fira Code", monospace;
-  font-size: 0.8125rem;
-  background: var(--bg);
-  padding: 0.125rem 0.375rem;
-  border-radius: 4px;
-}}
-pre {{
-  background: var(--bg);
-  padding: 1rem;
-  border-radius: 8px;
-  overflow-x: auto;
-  font-size: 0.8125rem;
-  margin-bottom: 1rem;
-}}
-.badge {{
-  display: inline-block;
-  padding: 0.125rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: var(--border);
-  color: var(--text-muted);
-  margin-right: 0.5rem;
-}}
-.chain-valid {{ background: var(--green); color: #000; }}
-.chain-invalid {{ background: var(--red); color: #fff; }}
-.btn {{
-  display: inline-block;
-  padding: 0.375rem 0.75rem;
-  background: var(--accent);
-  color: #fff;
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  text-decoration: none;
-  margin-right: 0.5rem;
-}}
-.btn:hover {{ opacity: 0.9; text-decoration: none; }}
-.event-normal td {{ color: var(--green); }}
-.event-preview {{ background: rgba(234, 179, 8, 0.08); }}
-.event-preview td {{ color: var(--gold); }}
-.event-signoff {{ background: rgba(239, 68, 68, 0.08); }}
-.event-signoff td {{ color: var(--red); }}
-.event-seal td {{ color: var(--seal-blue); }}
-.stillwater {{
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}}
-.manifest table {{ margin-bottom: 0; }}
+/* Event type highlight rows (evidence/event log specific) */
+.event-normal td {{ color: var(--sb-success); }}
+.event-preview {{ background: rgba(255, 212, 121, 0.08); }}
+.event-preview td {{ color: var(--sb-warning); }}
+.event-signoff {{ background: rgba(255, 123, 123, 0.08); }}
+.event-signoff td {{ color: var(--sb-danger); }}
+.event-seal td {{ color: var(--sb-signal); }}
+.chain-valid {{ background: var(--sb-success); color: var(--sb-on-accent); }}
+.chain-invalid {{ background: var(--sb-danger); color: #fff; }}
 </style>
 </head>
 <body>
-<nav>
-  <span class="brand">Solace Hub</span>
-  <a href="/domains">Domains</a>
-  <a href="/evidence">Evidence</a>
-  <a href="/health">Health</a>
-</nav>
-<main>
-<h1>{title}</h1>
+<header class="sb-topbar">
+  <div class="sb-topbar-brand">
+    <img src="/icons/yinyang-logo.png" alt="Solace">
+    <span>Solace Hub</span>
+  </div>
+  <div class="sb-topbar-spacer"></div>
+  <a href="/domains" style="color:var(--sb-text-muted);font-size:0.85rem">Domains</a>
+  <a href="/evidence" style="color:var(--sb-text-muted);font-size:0.85rem">Evidence</a>
+  <a href="/styleguide" style="color:var(--sb-text-muted);font-size:0.85rem">Styleguide</a>
+  <a href="/health" style="color:var(--sb-text-muted);font-size:0.85rem">Health</a>
+</header>
+<main style="max-width:1100px;margin:1.5rem auto;padding:0 1.5rem">
+<h1 class="sb-heading" style="font-size:1.4rem;margin-bottom:1rem">{title}</h1>
 {body_content}
 </main>
+<script src="/vendor/jquery-3.7.1.min.js"></script>
+<script src="/vendor/jquery.dataTables.min.js"></script>
+<script>
+if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {{
+  jQuery('.sb-table').each(function() {{
+    if (!jQuery.fn.DataTable.isDataTable(this)) {{
+      jQuery(this).DataTable({{ paging: true, searching: true, ordering: true, pageLength: 25, dom: 'ftip' }});
+    }}
+  }});
+}}
+</script>
 </body>
 </html>"#,
         title = html_escape::encode_text(title),
@@ -792,11 +690,12 @@ mod tests {
     #[test]
     fn hub_page_has_event_type_css() {
         let html = hub_page("Events", "");
+        // Event styles are now inline (styleguide.css handles base tokens)
         assert!(html.contains(".event-normal"));
         assert!(html.contains(".event-preview"));
         assert!(html.contains(".event-signoff"));
-        assert!(html.contains("var(--green)"));
-        assert!(html.contains("var(--gold)"));
-        assert!(html.contains("var(--red)"));
+        assert!(html.contains("--sb-success"));
+        assert!(html.contains("--sb-warning"));
+        assert!(html.contains("--sb-danger"));
     }
 }
