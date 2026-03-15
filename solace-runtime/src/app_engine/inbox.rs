@@ -104,6 +104,57 @@ fn parse_prime_mermaid_manifest(path: &Path) -> Result<AppManifest, String> {
         }
     }
 
+    // Parse Data Sources from ## Data Sources code block
+    // Format:
+    //   sources:
+    //     - name: topstories
+    //       url: https://example.com/api
+    //       type: json
+    //       limit: 30
+    let mut in_sources = false;
+    let mut current_source: Option<super::DataSource> = None;
+    for line in raw.lines() {
+        let trimmed = line.trim();
+        if trimmed == "## Data Sources" {
+            in_sources = true;
+            continue;
+        }
+        if in_sources && trimmed.starts_with("##") {
+            break;
+        }
+        if !in_sources {
+            continue;
+        }
+        if trimmed.starts_with("- name:") {
+            // Save previous source if any
+            if let Some(src) = current_source.take() {
+                if !src.url.is_empty() {
+                    manifest.data_sources.push(src);
+                }
+            }
+            current_source = Some(super::DataSource {
+                name: trimmed.strip_prefix("- name:").unwrap_or("").trim().to_string(),
+                url: String::new(),
+                source_type: "json".to_string(),
+                limit: 25,
+            });
+        } else if let Some(ref mut src) = current_source {
+            if let Some(rest) = trimmed.strip_prefix("url:") {
+                src.url = rest.trim().to_string();
+            } else if let Some(rest) = trimmed.strip_prefix("type:") {
+                src.source_type = rest.trim().to_string();
+            } else if let Some(rest) = trimmed.strip_prefix("limit:") {
+                src.limit = rest.trim().parse().unwrap_or(25);
+            }
+        }
+    }
+    // Don't forget the last source
+    if let Some(src) = current_source {
+        if !src.url.is_empty() {
+            manifest.data_sources.push(src);
+        }
+    }
+
     Ok(manifest)
 }
 

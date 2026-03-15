@@ -172,17 +172,58 @@ async fn fetch_data_sources(
 }
 
 async fn fetch_json(client: &reqwest::Client, url: &str) -> Result<Value, String> {
-    client
+    let response = client
         .get(url)
+        .header(
+            "User-Agent",
+            "SolaceRuntime/0.1.0 (by /u/solaceagi, contact: phuc@phuc.net)",
+        )
         .timeout(Duration::from_secs(30))
         .send()
         .await
         .map_err(|error| error.to_string())?
         .error_for_status()
-        .map_err(|error| error.to_string())?
-        .json::<Value>()
-        .await
-        .map_err(|error| error.to_string())
+        .map_err(|error| error.to_string())?;
+
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("")
+        .to_string();
+
+    let text = response.text().await.map_err(|e| e.to_string())?;
+
+    // Try JSON first
+    if let Ok(json) = serde_json::from_str::<Value>(&text) {
+        return Ok(json);
+    }
+
+    // RSS/Atom/XML: wrap raw text as { "raw_xml": "...", "content_type": "..." }
+    // Extract titles from <title> tags for basic normalization
+    let titles: Vec<String> = text
+        .split("<title>")
+        .skip(1)
+        .filter_map(|s| s.split("</title>").next())
+        .map(|s| s.trim().to_string())
+        .collect();
+
+    let items: Vec<Value> = titles
+        .iter()
+        .map(|title| {
+            serde_json::json!({
+                "title": title,
+                "source": "rss",
+            })
+        })
+        .collect();
+
+    Ok(serde_json::json!({
+        "items": items,
+        "content_type": content_type,
+        "raw_length": text.len(),
+        "format": "rss_parsed",
+    }))
 }
 
 fn normalize_items(source_name: &str, value: &Value, limit: usize) -> Vec<Value> {
