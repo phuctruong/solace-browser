@@ -11,6 +11,7 @@ pub fn build_router(state: crate::state::AppState) -> Router {
 
     Router::new()
         .merge(crate::routes::health::routes())
+        .merge(crate::routes::agents::routes())
         .merge(crate::routes::apps::routes())
         .merge(crate::routes::schedules::routes())
         .merge(crate::routes::sessions::routes())

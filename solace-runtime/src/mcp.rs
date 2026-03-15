@@ -73,6 +73,25 @@ pub fn mcp_tool_definitions() -> Vec<Value> {
             "description": "Return runtime status",
             "inputSchema": {"type": "object", "properties": {}}
         }),
+        json!({
+            "name": "agent_list",
+            "description": "List detected AI coding agents on PATH",
+            "inputSchema": {"type": "object", "properties": {}}
+        }),
+        json!({
+            "name": "agent_generate",
+            "description": "Invoke an AI coding agent to generate a response",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "agent_id": {"type": "string", "description": "Agent identifier (claude, codex, gemini, copilot, cursor, aider)"},
+                    "prompt": {"type": "string", "description": "The prompt to send to the agent"},
+                    "model": {"type": "string", "description": "Model to use (optional, defaults to agent's default)"},
+                    "timeout": {"type": "integer", "description": "Timeout in seconds (max 120)", "minimum": 1, "maximum": 120}
+                },
+                "required": ["agent_id", "prompt"]
+            }
+        }),
     ]
 }
 
@@ -238,6 +257,28 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             })
         }
         "system_status" => system_status_payload(state),
+        "agent_list" => {
+            let agents = crate::agents::detect_agents();
+            let installed_count = agents.iter().filter(|a| a.installed).count();
+            json!({"agents": agents, "total": agents.len(), "installed": installed_count})
+        }
+        "agent_generate" => {
+            let agent_id = require_string(&arguments, "agent_id")?;
+            let prompt = require_string(&arguments, "prompt")?;
+            let model = optional_string(&arguments, "model");
+            let timeout = arguments.get("timeout").and_then(Value::as_u64);
+            match crate::agents::generate(&agent_id, model.as_deref(), &prompt, timeout) {
+                Ok(response) => json!({
+                    "agent_id": response.agent_id,
+                    "model": response.model,
+                    "response": response.response,
+                    "exit_code": response.exit_code,
+                    "duration_ms": response.duration_ms,
+                    "evidence_hash": response.evidence_hash,
+                }),
+                Err(error) => return Err((-32000, error)),
+            }
+        }
         _ => return Err((-32601, format!("Unknown tool: {name}"))),
     };
 

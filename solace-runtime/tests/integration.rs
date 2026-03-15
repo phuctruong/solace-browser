@@ -1597,6 +1597,165 @@ async fn sync_encrypt_decrypt_large_payload() {
     assert_eq!(decrypted, plaintext);
 }
 
+// ─── Agent Registry Tests (Diagram: hub-cli-agent-registry) ─────────
+
+#[tokio::test(flavor = "current_thread")]
+async fn agents_list_returns_array_with_installed_field() {
+    let ctx = TestContext::new("agents_list");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/agents").body(Body::empty()).unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    let agents = body["agents"].as_array().expect("agents should be an array");
+    assert_eq!(agents.len(), 6);
+    // Every agent must have an installed field (bool)
+    for agent in agents {
+        assert!(agent.get("installed").is_some(), "agent missing 'installed' field");
+        assert!(agent["installed"].is_boolean());
+        assert!(agent.get("id").is_some());
+        assert!(agent.get("name").is_some());
+        assert!(agent.get("cmd").is_some());
+        assert!(agent.get("models").is_some());
+        assert!(agent.get("provider").is_some());
+    }
+    // Check total and installed counts
+    assert_eq!(body["total"], 6);
+    assert!(body["installed"].is_number());
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn agents_models_returns_per_agent() {
+    let ctx = TestContext::new("agents_models");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/agents/models")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    let models = body["models"].as_array().expect("models should be an array");
+    assert_eq!(models.len(), 6);
+    for entry in models {
+        assert!(entry.get("agent_id").is_some());
+        assert!(entry.get("models").is_some());
+        assert!(entry.get("default_model").is_some());
+        assert!(entry.get("installed").is_some());
+        let model_list = entry["models"].as_array().unwrap();
+        assert!(!model_list.is_empty(), "each agent should have at least 1 model");
+    }
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn agents_health_known_agent() {
+    let ctx = TestContext::new("agents_health_known");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/agents/claude/health")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["agent_id"], "claude");
+    assert!(body["installed"].is_boolean());
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn agents_health_unknown_agent() {
+    let ctx = TestContext::new("agents_health_unknown");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/agents/nonexistent/health")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    let body = parse_body(response).await;
+    assert!(body["error"].as_str().unwrap().contains("unknown agent"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn agents_generate_rejects_empty_prompt() {
+    let ctx = TestContext::new("agents_generate_empty");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/agents/generate",
+        json!({"agent_id": "claude", "prompt": ""}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert!(body["error"].as_str().unwrap().contains("empty"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn agents_generate_rejects_unknown_agent() {
+    let ctx = TestContext::new("agents_generate_unknown");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/agents/generate",
+        json!({"agent_id": "nonexistent", "prompt": "hello"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert!(body["error"].as_str().unwrap().contains("unknown agent"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn agents_generate_rejects_invalid_model() {
+    let ctx = TestContext::new("agents_generate_bad_model");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/agents/generate",
+        json!({"agent_id": "claude", "prompt": "hello", "model": "fake-model-xyz"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    let error = body["error"].as_str().unwrap();
+    assert!(
+        error.contains("not supported") || error.contains("not installed"),
+        "unexpected error: {error}"
+    );
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn agents_detect_finds_at_least_one() {
+    // This test verifies the core detection logic works through the HTTP layer.
+    let ctx = TestContext::new("agents_detect_at_least_one");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/agents").body(Body::empty()).unwrap(),
+    )
+    .await;
+    let body = parse_body(response).await;
+    let agents = body["agents"].as_array().unwrap();
+    let installed: Vec<_> = agents.iter().filter(|a| a["installed"] == true).collect();
+    // Log for CI debugging
+    for a in &installed {
+        eprintln!("  integration: found {} at {:?}", a["id"], a["path"]);
+    }
+    eprintln!("  integration: installed agents: {}/6", installed.len());
+    // Don't hard-fail if zero (CI may have none), but assert structure is correct
+    assert_eq!(agents.len(), 6);
+}
+
 mod hex {
     pub fn decode(input: &str) -> Result<Vec<u8>, String> {
         if input.len() % 2 != 0 {

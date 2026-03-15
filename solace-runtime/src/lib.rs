@@ -1,4 +1,5 @@
 // Diagram: 05-solace-runtime-architecture
+pub mod agents;
 pub mod app_engine;
 pub mod cloud;
 pub mod config;
