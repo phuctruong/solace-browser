@@ -15,6 +15,7 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/v1/recipes", get(list_recipes))
         .route("/api/v1/recipes/execute", post(run_recipe))
+        .route("/api/v1/recipes/classify", post(classify_task))
         .route(
             "/api/v1/recipes/:task_hash",
             get(get_recipe).delete(delete_recipe),
@@ -63,6 +64,25 @@ async fn run_recipe(
         "replay_count": result.replay_count,
         "steps_executed": result.steps_executed,
         "evidence_hash": result.evidence_hash,
+    }))
+}
+
+/// POST /api/v1/recipes/classify
+///
+/// Classify a task's intent without executing it.
+/// Returns the detected intent and confidence score.
+async fn classify_task(Json(req): Json<ExecuteRequest>) -> Json<serde_json::Value> {
+    let (intent, confidence) = crate::recipe::classify_intent(&req.task);
+    let task_hash = RecipeCache::task_hash(&req.task);
+    let cache = RecipeCache::new();
+    let cached = cache.lookup(&task_hash).is_some();
+
+    Json(json!({
+        "task": req.task,
+        "intent": intent,
+        "confidence": confidence,
+        "task_hash": task_hash,
+        "recipe_cached": cached,
     }))
 }
 

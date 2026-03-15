@@ -108,6 +108,28 @@ pub(crate) fn compute_sidebar_state(state: &AppState) -> serde_json::Value {
         _ => "none",
     };
 
+    // Upgrade CTAs based on current tier (hub-upgrade-journey diagram)
+    let (upgrade_cta, upgrade_message) = match gate {
+        "unregistered" => (
+            Some("register"),
+            Some("Sign up free at solaceagi.com — get 5 default apps + evidence trail"),
+        ),
+        "no_llm" => (
+            Some("starter"),
+            Some("Add an API key (BYOK) or upgrade to Starter ($8/mo) for managed LLM"),
+        ),
+        "byok" => (
+            Some("pro"),
+            Some("Upgrade to Pro ($28/mo) for cloud twin + vault sync + 10x uplifts"),
+        ),
+        _ => (None, None), // paid users see no CTA
+    };
+
+    // Tutorial progress
+    let tutorial = state.tutorial.read().clone();
+    let tutorial_complete = tutorial.is_complete();
+    let tutorial_step = tutorial.current_step();
+
     json!({
         "gate": gate,
         "chat_enabled": chat_enabled,
@@ -117,5 +139,9 @@ pub(crate) fn compute_sidebar_state(state: &AppState) -> serde_json::Value {
         "unread_notifications": state.notifications.read().iter().filter(|note| !note.read).count(),
         "uptime_seconds": state.uptime_seconds(),
         "apps_installed": crate::utils::scan_app_dirs().len(),
+        "upgrade_cta": upgrade_cta,
+        "upgrade_message": upgrade_message,
+        "tutorial_complete": tutorial_complete,
+        "tutorial_step": tutorial_step,
     })
 }

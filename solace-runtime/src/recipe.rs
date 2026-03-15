@@ -221,12 +221,56 @@ pub fn execute_recipe(task: &str, cache: &mut RecipeCache) -> RecipeResult {
     }
 }
 
+/// Intent classification — determines what kind of task this is.
+/// Returns (intent, confidence) tuple.
+/// In production, this calls the LLM for ambiguous tasks.
+/// Currently uses keyword matching for deterministic classification.
+pub fn classify_intent(task: &str) -> (&'static str, f64) {
+    let lower = task.to_ascii_lowercase();
+    if lower.contains("morning brief") || lower.contains("morning-brief") {
+        ("orchestrate", 0.95)
+    } else if lower.contains("navigate") || lower.contains("open") || lower.contains("go to") {
+        ("navigate", 0.90)
+    } else if lower.contains("click") || lower.contains("fill") || lower.contains("type") {
+        ("interact", 0.85)
+    } else if lower.contains("search") || lower.contains("find") || lower.contains("look up") {
+        ("search", 0.80)
+    } else if lower.contains("schedule") || lower.contains("cron") || lower.contains("every") {
+        ("schedule", 0.85)
+    } else if lower.contains("download") || lower.contains("save") || lower.contains("export") {
+        ("export", 0.80)
+    } else {
+        ("process", 0.50) // Low confidence → would trigger LLM in production
+    }
+}
+
+/// Checkpoint a recipe execution state for potential rollback.
+pub fn checkpoint_recipe(recipe: &Recipe, step_index: usize) -> RecipeCheckpoint {
+    let mut hasher = Sha256::new();
+    hasher.update(format!("{}:{}:{}", recipe.recipe_id, recipe.task_hash, step_index).as_bytes());
+    RecipeCheckpoint {
+        recipe_id: recipe.recipe_id.clone(),
+        step_index,
+        checkpoint_hash: format!("{:x}", hasher.finalize()),
+        created_at: crate::utils::now_iso8601(),
+    }
+}
+
+/// A checkpoint for rollback support.
+#[derive(Debug, Clone, Serialize)]
+pub struct RecipeCheckpoint {
+    pub recipe_id: String,
+    pub step_index: usize,
+    pub checkpoint_hash: String,
+    pub created_at: String,
+}
+
 /// Generate a recipe for a task.
 /// In production, this calls the LLM ONCE to produce steps.
 /// Currently generates deterministic steps based on task keywords.
 fn generate_recipe(task: &str, task_hash: &str, recipe_id: &str) -> Recipe {
-    let lower = task.to_ascii_lowercase();
-    let steps = if lower.contains("morning brief") || lower.contains("morning-brief") {
+    let (intent, _confidence) = classify_intent(task);
+    let steps = if intent == "orchestrate" {
         vec![
             RecipeStep { action: "fetch".into(), selector: None, value: Some("hackernews-feed".into()), expected: Some("200".into()) },
             RecipeStep { action: "fetch".into(), selector: None, value: Some("google-search-trends".into()), expected: Some("200".into()) },
@@ -234,7 +278,7 @@ fn generate_recipe(task: &str, task_hash: &str, recipe_id: &str) -> Recipe {
             RecipeStep { action: "render".into(), selector: Some("morning-brief".into()), value: None, expected: Some("report.html".into()) },
             RecipeStep { action: "seal".into(), selector: None, value: None, expected: Some("sha256".into()) },
         ]
-    } else if lower.contains("navigate") || lower.contains("open") {
+    } else if intent == "navigate" {
         vec![
             RecipeStep { action: "navigate".into(), selector: None, value: Some(task.to_string()), expected: Some("200".into()) },
         ]
@@ -355,5 +399,74 @@ mod tests {
         let result2 = execute_recipe("replay test", &mut cache);
         assert!(result2.cache_hit);
         assert_eq!(result2.replay_count, 2);
+    }
+
+    #[test]
+    fn intent_classify_orchestrate() {
+        let (intent, conf) = classify_intent("run morning brief");
+        assert_eq!(intent, "orchestrate");
+        assert!(conf > 0.9);
+    }
+
+    #[test]
+    fn intent_classify_navigate() {
+        let (intent, _) = classify_intent("navigate to google.com");
+        assert_eq!(intent, "navigate");
+    }
+
+    #[test]
+    fn intent_classify_interact() {
+        let (intent, _) = classify_intent("click the login button");
+        assert_eq!(intent, "interact");
+    }
+
+    #[test]
+    fn intent_classify_search() {
+        let (intent, _) = classify_intent("search for AI news");
+        assert_eq!(intent, "search");
+    }
+
+    #[test]
+    fn intent_classify_schedule() {
+        let (intent, _) = classify_intent("schedule every morning at 8am");
+        assert_eq!(intent, "schedule");
+    }
+
+    #[test]
+    fn intent_classify_unknown() {
+        let (intent, conf) = classify_intent("do something weird");
+        assert_eq!(intent, "process");
+        assert!(conf <= 0.5);
+    }
+
+    #[test]
+    fn checkpoint_creates_hash() {
+        let recipe = Recipe {
+            recipe_id: "test-id".to_string(),
+            task_hash: "test-hash".to_string(),
+            steps: vec![],
+            created_at: "2026-01-01".to_string(),
+            replay_count: 0,
+            verified: false,
+        };
+        let cp = checkpoint_recipe(&recipe, 0);
+        assert_eq!(cp.recipe_id, "test-id");
+        assert_eq!(cp.step_index, 0);
+        assert_eq!(cp.checkpoint_hash.len(), 64); // SHA-256 hex
+    }
+
+    #[test]
+    fn checkpoint_different_steps_different_hashes() {
+        let recipe = Recipe {
+            recipe_id: "test-id".to_string(),
+            task_hash: "test-hash".to_string(),
+            steps: vec![],
+            created_at: "2026-01-01".to_string(),
+            replay_count: 0,
+            verified: false,
+        };
+        let cp0 = checkpoint_recipe(&recipe, 0);
+        let cp1 = checkpoint_recipe(&recipe, 1);
+        assert_ne!(cp0.checkpoint_hash, cp1.checkpoint_hash);
     }
 }
