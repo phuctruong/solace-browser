@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use parking_lot::RwLock;
 
 /// Window in seconds: launches of the same key within this period are deduped.
@@ -41,6 +41,8 @@ pub struct AppState {
     pub theme: Arc<RwLock<String>>,
     pub launch_dedup: Arc<RwLock<LaunchDedup>>,
     pub pending_actions: Arc<RwLock<Vec<crate::routes::chat::PendingAction>>>,
+    pub delight: Arc<RwLock<DelightState>>,
+    pub tutorial: Arc<RwLock<TutorialState>>,
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
@@ -78,6 +80,125 @@ pub struct CloudConfig {
     pub user_email: String,
     pub device_id: String,
     pub paid_user: bool,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct DelightState {
+    pub streak_days: u32,
+    pub last_active_date: String,
+    pub total_runs: u64,
+}
+
+impl Default for DelightState {
+    fn default() -> Self {
+        Self {
+            streak_days: 0,
+            last_active_date: String::new(),
+            total_runs: 0,
+        }
+    }
+}
+
+impl DelightState {
+    /// Record a new activity. Increments total_runs and updates streak.
+    pub fn record_activity(&mut self) {
+        let today = Utc::now().format("%Y-%m-%d").to_string();
+        self.total_runs += 1;
+
+        if self.last_active_date == today {
+            // Already active today — no streak change
+            return;
+        }
+
+        // Check if yesterday was the last active date (streak continues)
+        let yesterday = (Utc::now() - chrono::Duration::days(1))
+            .format("%Y-%m-%d")
+            .to_string();
+
+        if self.last_active_date == yesterday {
+            self.streak_days += 1;
+        } else if self.last_active_date.is_empty() {
+            // First ever activity
+            self.streak_days = 1;
+        } else {
+            // Streak broken — reset to 1
+            self.streak_days = 1;
+        }
+
+        self.last_active_date = today;
+    }
+
+    /// Return a warm greeting based on current hour (UTC).
+    pub fn warm_greeting(&self) -> &'static str {
+        let hour = Utc::now().hour();
+        match hour {
+            5..=11 => "Good morning",
+            12..=16 => "Good afternoon",
+            17..=20 => "Good evening",
+            _ => "Welcome back",
+        }
+    }
+
+    /// Return a celebration message for streak milestones.
+    pub fn celebration_message(&self) -> Option<&'static str> {
+        match self.streak_days {
+            3 => Some("3-day streak! You're building a habit."),
+            7 => Some("One week streak! Consistency is power."),
+            14 => Some("Two week streak! You're unstoppable."),
+            30 => Some("30-day streak! A month of dedication."),
+            50 => Some("50-day streak! Half a century of focus."),
+            100 => Some("100-day streak! Legendary commitment."),
+            365 => Some("365-day streak! A full year. Incredible."),
+            _ if self.streak_days > 0 && self.streak_days % 100 == 0 => {
+                Some("Century milestone! Keep going.")
+            }
+            _ => None,
+        }
+    }
+}
+
+/// The three tutorial steps a new user walks through.
+pub const TUTORIAL_STEPS: [&str; 3] = ["run_first_app", "view_evidence", "try_chat"];
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct TutorialState {
+    pub completed_steps: Vec<String>,
+}
+
+impl Default for TutorialState {
+    fn default() -> Self {
+        Self {
+            completed_steps: Vec::new(),
+        }
+    }
+}
+
+impl TutorialState {
+    /// Mark a step complete. Returns true if the step was newly completed.
+    pub fn complete_step(&mut self, step: &str) -> bool {
+        if !TUTORIAL_STEPS.contains(&step) {
+            return false;
+        }
+        if self.completed_steps.iter().any(|s| s == step) {
+            return false;
+        }
+        self.completed_steps.push(step.to_string());
+        true
+    }
+
+    /// Current step number (1-indexed). Returns total_steps + 1 if all done.
+    pub fn current_step(&self) -> usize {
+        for (i, step) in TUTORIAL_STEPS.iter().enumerate() {
+            if !self.completed_steps.iter().any(|s| s == step) {
+                return i + 1;
+            }
+        }
+        TUTORIAL_STEPS.len() + 1
+    }
+
+    pub fn is_complete(&self) -> bool {
+        self.current_step() > TUTORIAL_STEPS.len()
+    }
 }
 
 impl AppState {

@@ -2133,3 +2133,237 @@ async fn event_log_prominent_field_in_response() {
         }
     }
 }
+
+// ── Browser Control API tests ────────────────────────────────────────
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_navigate_accepted() {
+    let ctx = TestContext::new("browser_navigate_accepted");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/navigate",
+        json!({"url": "https://example.com"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["status"], "accepted");
+    assert_eq!(body["action"], "navigate");
+    assert_eq!(body["url"], "https://example.com");
+    assert!(body["evidence"]["evidence_id"].is_string());
+    assert!(body["evidence"]["hash"].is_string());
+    assert_eq!(body["delegate_to_browser"], true);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_navigate_with_wait_for() {
+    let ctx = TestContext::new("browser_navigate_wait_for");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/navigate",
+        json!({"url": "https://example.com", "wait_for": "networkidle"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["status"], "accepted");
+    assert_eq!(body["wait_for"], "networkidle");
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_navigate_rejects_empty_url() {
+    let ctx = TestContext::new("browser_navigate_empty_url");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/navigate",
+        json!({"url": ""}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert!(body["error"].as_str().unwrap().contains("empty"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_navigate_rejects_invalid_scheme() {
+    let ctx = TestContext::new("browser_navigate_invalid_scheme");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/navigate",
+        json!({"url": "ftp://example.com"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert!(body["error"].as_str().unwrap().contains("http"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_click_accepted() {
+    let ctx = TestContext::new("browser_click_accepted");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/click",
+        json!({"selector": "#submit-btn"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["status"], "accepted");
+    assert_eq!(body["action"], "click");
+    assert_eq!(body["selector"], "#submit-btn");
+    assert!(body["evidence"]["evidence_id"].is_string());
+    assert_eq!(body["delegate_to_browser"], true);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_click_rejects_empty_selector() {
+    let ctx = TestContext::new("browser_click_empty_selector");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/click",
+        json!({"selector": "  "}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert!(body["error"].as_str().unwrap().contains("selector"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_fill_accepted() {
+    let ctx = TestContext::new("browser_fill_accepted");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/fill",
+        json!({"selector": "input[name=email]", "value": "test@example.com"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["status"], "accepted");
+    assert_eq!(body["action"], "fill");
+    assert_eq!(body["selector"], "input[name=email]");
+    assert_eq!(body["value_length"], 16);
+    assert!(body["evidence"]["evidence_id"].is_string());
+    assert_eq!(body["delegate_to_browser"], true);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_fill_rejects_empty_selector() {
+    let ctx = TestContext::new("browser_fill_empty_selector");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/fill",
+        json!({"selector": "", "value": "hello"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert!(body["error"].as_str().unwrap().contains("selector"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_fill_rejects_empty_value() {
+    let ctx = TestContext::new("browser_fill_empty_value");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/fill",
+        json!({"selector": "#input", "value": ""}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert!(body["error"].as_str().unwrap().contains("value"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_evaluate_accepted() {
+    let ctx = TestContext::new("browser_evaluate_accepted");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/evaluate",
+        json!({"script": "document.title"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["status"], "accepted");
+    assert_eq!(body["action"], "evaluate");
+    assert_eq!(body["script_length"], 14);
+    assert!(body["evidence"]["evidence_id"].is_string());
+    assert_eq!(body["delegate_to_browser"], true);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_evaluate_rejects_empty_script() {
+    let ctx = TestContext::new("browser_evaluate_empty_script");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/evaluate",
+        json!({"script": "   "}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert!(body["error"].as_str().unwrap().contains("script"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_dom_snapshot_delegates() {
+    let ctx = TestContext::new("browser_dom_snapshot");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/dom-snapshot").body(Body::empty()).unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["status"], "delegate_to_browser");
+    assert_eq!(body["action"], "dom_snapshot");
+    assert!(body["evidence"]["evidence_id"].is_string());
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_aria_snapshot_delegates() {
+    let ctx = TestContext::new("browser_aria_snapshot");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/aria-snapshot").body(Body::empty()).unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["status"], "delegate_to_browser");
+    assert_eq!(body["action"], "aria_snapshot");
+    assert!(body["evidence"]["evidence_id"].is_string());
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn browser_page_snapshot_delegates_to_wiki() {
+    let ctx = TestContext::new("browser_page_snapshot");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/page-snapshot").body(Body::empty()).unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["status"], "delegate_to_browser");
+    assert_eq!(body["action"], "page_snapshot");
+    assert_eq!(body["delegate_endpoint"], "/api/v1/wiki/extract");
+}

@@ -15,4 +15,5 @@ pub mod schedules;
 pub mod sessions;
 pub mod sidebar;
 pub mod websocket;
+pub mod browser_control;
 pub mod wiki;

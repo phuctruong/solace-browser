@@ -26,6 +26,7 @@ pub fn build_router(state: crate::state::AppState) -> Router {
         .merge(crate::routes::recipes::routes())
         .merge(crate::routes::wiki::routes())
         .merge(crate::routes::budget::routes())
+        .merge(crate::routes::browser_control::routes())
         .merge(crate::routes::files::routes())
         .layer(TraceLayer::new_for_http())
         .layer(cors)
