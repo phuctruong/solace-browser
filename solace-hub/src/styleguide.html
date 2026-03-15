@@ -30,16 +30,27 @@
     <button class="sb-theme-btn sb-theme-btn--active" data-theme="dark">Dark</button>
     <button class="sb-theme-btn" data-theme="light">Light</button>
   </div>
-  <select class="sb-lang-select" id="lang-select">
-    <option value="en">English</option>
-    <option value="vi">Tiếng Việt</option>
-    <option value="ja">日本語</option>
-    <option value="ko">한국어</option>
-    <option value="zh">中文</option>
-    <option value="es">Español</option>
-    <option value="fr">Français</option>
-    <option value="de">Deutsch</option>
-  </select>
+  <div class="sb-lang-switcher">
+    <button class="sb-lang-toggle" id="languageToggle" aria-label="Choose language" aria-expanded="false" aria-controls="languageMenu" aria-haspopup="menu" type="button">
+      <img src="icons/lang/globe-default.png" alt="" class="sb-lang-icon sb-lang-icon--default">
+      <img src="icons/lang/globe-hover.png" alt="" class="sb-lang-icon sb-lang-icon--hover">
+    </button>
+    <div class="sb-lang-menu" id="languageMenu" role="menu" hidden>
+      <a href="#" role="menuitem" aria-current="page">English</a>
+      <a href="#" role="menuitem">Tiếng Việt</a>
+      <a href="#" role="menuitem">日本語</a>
+      <a href="#" role="menuitem">한국어</a>
+      <a href="#" role="menuitem">中文</a>
+      <a href="#" role="menuitem">Español</a>
+      <a href="#" role="menuitem">Français</a>
+      <a href="#" role="menuitem">Deutsch</a>
+      <a href="#" role="menuitem">Português</a>
+      <a href="#" role="menuitem">العربية</a>
+      <a href="#" role="menuitem">हिन्दी</a>
+      <a href="#" role="menuitem">Bahasa Indonesia</a>
+      <a href="#" role="menuitem">ไทย</a>
+    </div>
+  </div>
 </header>
 
 <!-- COMPONENT CATALOG -->
@@ -338,6 +349,34 @@
       });
     });
   });
+
+  // ─── Language switcher (from solaceagi.com pattern) ───
+  var langToggle = document.getElementById('languageToggle');
+  var langMenu = document.getElementById('languageMenu');
+  if (langToggle && langMenu) {
+    langToggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var willOpen = !langMenu.classList.contains('active');
+      if (willOpen) { langMenu.removeAttribute('hidden'); }
+      langMenu.classList.toggle('active', willOpen);
+      langToggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      if (!willOpen) { langMenu.setAttribute('hidden', ''); }
+    });
+    document.addEventListener('click', function(e) {
+      if (!langToggle.contains(e.target) && !langMenu.contains(e.target)) {
+        langMenu.classList.remove('active');
+        langToggle.setAttribute('aria-expanded', 'false');
+        langMenu.setAttribute('hidden', '');
+      }
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        langMenu.classList.remove('active');
+        langToggle.setAttribute('aria-expanded', 'false');
+        langMenu.setAttribute('hidden', '');
+      }
+    });
+  }
 
   // ─── DataTables init (sorting + search + pagination) ───
   if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {

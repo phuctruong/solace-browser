@@ -277,26 +277,33 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--sb-border);
+  padding: 0.6rem 1.2rem;
+  border: 2px solid var(--sb-border-strong);
   border-radius: var(--sb-radius);
-  background: var(--sb-surface);
+  background: var(--sb-surface-strong);
   color: var(--sb-text);
   font-family: var(--sb-font);
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all var(--sb-transition);
-  min-height: 36px;
+  min-height: 40px;
 }
-.sb-btn:hover { background: var(--sb-surface-hover); border-color: var(--sb-border-strong); }
+.sb-btn:hover {
+  background: var(--sb-surface-hover);
+  border-color: var(--sb-accent);
+  color: var(--sb-accent);
+}
 .sb-btn--primary {
   background: var(--sb-accent);
   color: var(--sb-on-accent);
   border-color: var(--sb-accent);
 }
-.sb-btn--primary:hover { background: var(--sb-accent-hover); }
-.sb-btn--sm { padding: 0.25rem 0.75rem; font-size: 0.8rem; min-height: 28px; }
+.sb-btn--primary:hover {
+  background: var(--sb-accent-hover);
+  border-color: var(--sb-accent-hover);
+}
+.sb-btn--sm { padding: 0.35rem 0.85rem; font-size: 0.85rem; min-height: 32px; }
 
 /* ═══════════════════════════════════════════════════════════════════
    9. TABLES (DataTables compatible — .sb-table base styling)
@@ -371,14 +378,82 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
   transition: all var(--sb-transition);
 }
 .sb-theme-btn--active { background: var(--sb-accent); color: var(--sb-on-accent); }
-.sb-lang-select {
-  background: var(--sb-surface-strong);
+/* Language switcher — solaceagi.com globe icon pattern */
+.sb-lang-switcher { position: relative; display: flex; align-items: center; }
+.sb-lang-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: 1px solid var(--sb-border);
-  border-radius: var(--sb-radius-sm);
+  border-radius: var(--sb-radius);
+  background: var(--sb-accent-soft);
+  cursor: pointer;
+  overflow: hidden;
+}
+.sb-lang-toggle:hover,
+.sb-lang-toggle:focus-visible,
+.sb-lang-toggle[aria-expanded="true"] {
+  border-color: var(--sb-accent);
+  background: rgba(120, 185, 255, 0.15);
+}
+.sb-lang-icon {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  transition: opacity 0.18s ease;
+}
+.sb-lang-icon--hover { opacity: 0; }
+.sb-lang-toggle:hover .sb-lang-icon--hover,
+.sb-lang-toggle:focus-visible .sb-lang-icon--hover,
+.sb-lang-toggle[aria-expanded="true"] .sb-lang-icon--hover { opacity: 1; }
+.sb-lang-toggle:hover .sb-lang-icon--default,
+.sb-lang-toggle:focus-visible .sb-lang-icon--default,
+.sb-lang-toggle[aria-expanded="true"] .sb-lang-icon--default { opacity: 0; }
+.sb-lang-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 200px;
+  max-height: 70vh;
+  overflow-y: auto;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid var(--sb-border-strong);
+  border-radius: var(--sb-radius);
+  background: var(--sb-surface);
+  box-shadow: var(--sb-shadow);
+  z-index: 200;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sb-border) transparent;
+}
+.sb-lang-menu.active { display: flex; }
+.sb-lang-menu a {
   color: var(--sb-text);
-  padding: 4px 8px;
-  font-size: 0.8rem;
-  font-family: var(--sb-font);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border-radius: var(--sb-radius-sm);
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.sb-lang-menu a:hover,
+.sb-lang-menu a:focus-visible,
+.sb-lang-menu a[aria-current="page"] {
+  color: var(--sb-accent);
+  background: var(--sb-accent-soft);
+}
+.sb-lang-menu a:focus-visible {
+  outline: 2px solid var(--sb-accent);
+  outline-offset: 2px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
