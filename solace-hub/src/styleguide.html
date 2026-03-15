@@ -885,7 +885,8 @@
         var root = am5.Root.new('chart-line');
         themes(root);
         var chart = root.container.children.push(am5xy.XYChart.new(root, { panX:true, panY:false }));
-        var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField:'date', renderer:am5xy.AxisRendererX.new(root,{minGridDistance:50}) }));
+        var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField:'date', renderer:am5xy.AxisRendererX.new(root,{minGridDistance:80}) }));
+        xAxis.get('renderer').labels.template.setAll({ rotation:-45, centerX:am5.percent(100), centerY:am5.percent(50), fontSize:12 });
         var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer:am5xy.AxisRendererY.new(root,{}) }));
         var series = chart.series.push(am5xy.LineSeries.new(root, { name:'Evidence', xAxis:xAxis, yAxis:yAxis, valueYField:'count', categoryXField:'date', tooltip:am5.Tooltip.new(root,{labelText:'{count} entries'}) }));
         series.strokes.template.setAll({ strokeWidth:3 });
