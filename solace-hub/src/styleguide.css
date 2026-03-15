@@ -266,21 +266,24 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
 .sb-editable-pen {
   visibility: hidden;
   cursor: pointer;
-  width: 16px;
-  height: 16px;
-  background: url('/icons/pen.png') no-repeat center center;
-  background-size: contain;
-  border: 1px solid transparent;
+  width: 20px;
+  height: 20px;
+  /* Inline SVG pen/pencil icon — no external file needed */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2378b9ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E") no-repeat center center;
+  background-size: 16px 16px;
+  border: none;
   border-radius: var(--sb-radius-sm);
   transition: all var(--sb-transition);
   flex-shrink: 0;
+  opacity: 0.6;
 }
 .sb-editable:hover .sb-editable-pen {
   visibility: visible;
 }
 .sb-editable-pen:hover {
-  border-color: var(--sb-accent);
+  opacity: 1;
   background-color: var(--sb-accent-soft);
+  border-radius: var(--sb-radius-sm);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
