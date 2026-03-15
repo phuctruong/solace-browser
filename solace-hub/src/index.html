@@ -65,15 +65,34 @@
   <!-- PHASE 2: RESULTS (hidden until scan completes) -->
   <div id="results-phase" style="display:none">
 
-    <!-- LLM Setup -->
+    <!-- LLM Setup — must have at least 1 of 3 -->
     <div class="sb-card" id="llm-card">
-      <p class="sb-kicker">LLM Power Source</p>
-      <div class="hub-llm-chips" id="llm-chips"></div>
+      <p class="sb-kicker">LLM Power Source — at least 1 required</p>
+      <table class="sb-table" style="margin:0.5rem 0">
+        <thead><tr><th></th><th>Source</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>Local CLI</strong><br><span class="sb-text-muted" style="font-size:0.8rem">claude, codex, gemini on PATH</span></td>
+            <td id="src-local"><span class="sb-pill sb-pill--warning">Checking...</span></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>BYOK Key</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Bring your own Anthropic/OpenAI key</span></td>
+            <td id="src-byok"><span class="sb-pill sb-pill--warning">Not set</span></td>
+            <td><button class="sb-btn sb-btn--sm" onclick="promptBYOK()">Add Key</button></td>
+          </tr>
+          <tr style="background:var(--sb-accent-soft)">
+            <td>3</td>
+            <td><strong>Managed LLM</strong> <span class="sb-pill sb-pill--info" style="font-size:0.65rem">Recommended</span><br><span class="sb-text-muted" style="font-size:0.8rem">No key needed · +47 uplifts · $8/mo</span></td>
+            <td id="src-managed"><span class="sb-pill sb-pill--warning">Not signed in</span></td>
+            <td><button class="sb-btn sb-btn--sm" onclick="signIn()">Sign In</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <div id="llm-chips" class="hub-llm-chips"></div>
       <div id="llm-gate"></div>
-      <div class="sb-flex sb-gap-sm sb-mt-md" style="flex-wrap:wrap" id="llm-actions">
-        <button class="sb-btn sb-btn--sm" onclick="promptBYOK()">+ Add BYOK Key</button>
-        <button class="sb-btn sb-btn--sm" onclick="signIn()">Sign In</button>
-      </div>
       <div id="llm-account" style="display:none" class="sb-mt-md"></div>
     </div>
 
@@ -127,7 +146,14 @@
       $('scan-text').textContent = installed.length + ' AI tools found!';
       $('scan-text').style.color = installed.length > 0 ? 'var(--sb-success)' : 'var(--sb-danger)';
 
-      // Build LLM chips
+      // Source 1: Local CLI status
+      if (installed.length > 0) {
+        $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + installed.length + ' found</span>';
+      } else {
+        $('src-local').innerHTML = '<span class="sb-pill sb-pill--danger">✗ None found</span>';
+      }
+
+      // Build LLM chips (compact, below table)
       var chips = '';
       installed.forEach(function(a) {
         chips += '<span class="hub-llm-chip">✓ ' + esc(a.id) + '</span>';
@@ -136,20 +162,33 @@
       // Auth pill + account status + remote
       var auth = $('topbar-auth');
       var acct = $('llm-account');
+      // Source 2 + 3: BYOK + Managed status
       get('/api/v1/cloud/status').then(function(c) {
         $('dot-remote').className = 'sb-topbar-dot sb-topbar-dot--' + (c.connected ? 'on' : 'off');
         if (c.connected && c.config) {
-          // Signed in
           var email = c.config.user_email || 'User';
           var isPaid = c.config.paid_user;
-          auth.textContent = isPaid ? 'Managed LLM' : email;
-          auth.className = 'sb-pill sb-pill--success';
-          acct.style.display = 'block';
-          acct.innerHTML = '<span class="sb-pill sb-pill--success">● ' + esc(email) + '</span> ' +
-            (isPaid
-              ? '<span class="sb-text-muted">Powered by Managed LLM + 47 uplifts</span>'
-              : '<span class="sb-text-muted">' + esc(email) + ' · Managed LLM off</span>');
-          $('llm-actions').querySelector('[onclick*="signIn"]').textContent = 'Dashboard';
+
+          if (email === 'byok@local') {
+            // BYOK key set
+            $('src-byok').innerHTML = '<span class="sb-pill sb-pill--success">✓ Active</span>';
+            auth.textContent = 'BYOK Active';
+            auth.className = 'sb-pill sb-pill--success';
+          } else if (isPaid) {
+            // Managed LLM
+            $('src-managed').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + esc(email) + '</span>';
+            auth.textContent = 'Managed LLM';
+            auth.className = 'sb-pill sb-pill--success';
+            acct.style.display = 'block';
+            acct.innerHTML = '<span class="sb-pill sb-pill--success">● ' + esc(email) + '</span> <span class="sb-text-muted">Powered by Managed LLM + 47 uplifts</span>';
+          } else {
+            // Free account
+            $('src-managed').innerHTML = '<span class="sb-pill sb-pill--warning">' + esc(email) + ' · Managed off</span>';
+            auth.textContent = esc(email);
+            auth.className = 'sb-pill sb-pill--success';
+            acct.style.display = 'block';
+            acct.innerHTML = '<span class="sb-pill sb-pill--success">● ' + esc(email) + '</span> <span class="sb-text-muted">Managed LLM off</span>';
+          }
           hasLLM = true;
         } else if (hasLLM) {
           auth.textContent = installed.length + ' Local LLMs';
