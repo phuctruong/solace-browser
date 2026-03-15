@@ -141,19 +141,20 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
 
 .sb-tabs {
   display: flex;
-  gap: 4px;
-  background: var(--sb-surface);
-  border: 2px solid var(--sb-border-strong);
-  border-radius: var(--sb-radius);
-  padding: 4px;
+  gap: 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid var(--sb-border-strong);
+  padding: 0;
   margin: 1rem 1.5rem 0;
 }
 .sb-tab {
   background: var(--sb-surface-strong);
   border: 2px solid var(--sb-border-strong);
+  border-bottom: 2px solid var(--sb-border-strong);
   color: var(--sb-text-muted);
   padding: 0.5rem 1.2rem;
-  border-radius: calc(var(--sb-radius) - 2px);
+  border-radius: var(--sb-radius) var(--sb-radius) 0 0;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
@@ -161,16 +162,18 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
   transition: all var(--sb-transition);
   white-space: nowrap;
   min-height: 42px;
+  margin-bottom: -2px;
 }
 .sb-tab:hover:not(.sb-tab--active) {
   background: var(--sb-surface-hover);
-  border-color: var(--sb-accent);
+  border-color: var(--sb-accent) var(--sb-accent) var(--sb-border-strong);
   color: var(--sb-text);
 }
 .sb-tab--active {
-  background: var(--sb-accent);
-  color: var(--sb-on-accent);
-  border-color: var(--sb-accent);
+  background: var(--sb-bg);
+  color: var(--sb-accent);
+  border-color: var(--sb-accent) var(--sb-accent) var(--sb-bg);
+  font-weight: 700;
 }
 .sb-tab:focus-visible {
   outline: 2px solid var(--sb-accent);

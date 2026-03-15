@@ -271,26 +271,36 @@
   <!-- ─── ALL APP ICONS ────────────────────────────────── -->
   <section class="sb-mt-md">
     <p class="sb-kicker">App Icons</p>
-    <h2 class="sb-heading">All Available App Icons (17)</h2>
-    <div class="sb-flex sb-gap-md" style="flex-wrap: wrap; align-items: end;">
-      <div style="text-align:center"><img src="icons/apps/github.png" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">github</small></div>
-      <div style="text-align:center"><img src="icons/apps/gmail.jpg" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">gmail</small></div>
-      <div style="text-align:center"><img src="icons/apps/linkedin.png" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">linkedin</small></div>
-      <div style="text-align:center"><img src="icons/apps/slack.png" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">slack</small></div>
-      <div style="text-align:center"><img src="icons/apps/substack.png" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">substack</small></div>
-      <div style="text-align:center"><img src="icons/apps/reddit.jpg" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">reddit</small></div>
-      <div style="text-align:center"><img src="icons/apps/twitter.jpg" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">twitter</small></div>
-      <div style="text-align:center"><img src="icons/apps/instagram.jpg" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">instagram</small></div>
-      <div style="text-align:center"><img src="icons/apps/youtube.jpg" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">youtube</small></div>
-      <div style="text-align:center"><img src="icons/apps/facebook.jpg" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">facebook</small></div>
-      <div style="text-align:center"><img src="icons/apps/whats-app.jpg" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">whatsapp</small></div>
-      <div style="text-align:center"><img src="icons/apps/google-calendar.png" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">calendar</small></div>
-      <div style="text-align:center"><img src="icons/apps/morning-digest.png" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">morning</small></div>
-      <div style="text-align:center"><img src="icons/apps/medium.jpg" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">medium</small></div>
-      <div style="text-align:center"><img src="icons/apps/pinterest.jpg" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">pinterest</small></div>
-      <div style="text-align:center"><img src="icons/apps/podcast.jpg" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">podcast</small></div>
-      <div style="text-align:center"><img src="icons/apps/weather.jpg" style="width:40px;height:40px;object-fit:contain"><br><small class="sb-text-muted">weather</small></div>
-    </div>
+    <h2 class="sb-heading">All Available App Icons (45)</h2>
+    <div class="sb-flex sb-gap-sm" style="flex-wrap: wrap; align-items: end;" id="app-icons-grid"></div>
+    <script>
+    (function(){
+      var icons = [
+        'amazon','aws','chatgpt','claude','competitor','discord','dropbox',
+        'facebook','focus','gemini','github','gmail','google-calendar',
+        'google-drive','google-search','hackernews','instagram','jira',
+        'lead','linkedin','medium','morning-brief','morning-digest',
+        'netflix','notion','openai','pinterest','podcast','reddit',
+        'shopify','slack','solace','spotify','stripe','substack',
+        'telegram','trello','twitter','weather','weekly','whats-app',
+        'whatsapp','youtube','zoom','dragon'
+      ];
+      var grid = document.getElementById('app-icons-grid');
+      icons.forEach(function(name) {
+        var ext = ['facebook','gmail','instagram','medium','pinterest',
+                   'podcast','reddit','twitter','weather','whats-app','youtube']
+                   .indexOf(name) >= 0 ? 'jpg' : 'png';
+        var div = document.createElement('div');
+        div.style.textAlign = 'center';
+        div.style.width = '70px';
+        div.innerHTML = '<img src="icons/apps/' + name + '.' + ext + '" ' +
+          'style="width:40px;height:40px;object-fit:contain;border-radius:6px" ' +
+          'onerror="this.style.display=\'none\'">' +
+          '<br><small class="sb-text-muted" style="font-size:0.6rem">' + name + '</small>';
+        grid.appendChild(div);
+      });
+    })();
+    </script>
   </section>
 
   <!-- ─── ALL ANIMATED GIFS ──────────────────────────────── -->
