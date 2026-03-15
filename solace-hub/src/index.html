@@ -55,10 +55,11 @@
 <!-- TABS -->
 <nav class="sb-tabs" role="tablist" id="main-tabs">
   <button class="sb-tab sb-tab--active" data-view="overview" role="tab">Overview</button>
+  <button class="sb-tab" data-view="events" role="tab">Events <span class="sb-tab-badge" id="events-badge">0</span></button>
   <button class="sb-tab" data-view="apps" role="tab">Apps <span class="sb-tab-badge" id="apps-badge">0</span></button>
-  <button class="sb-tab" data-view="evidence" role="tab">Evidence</button>
   <button class="sb-tab" data-view="domains" role="tab">Domains</button>
-  <button class="sb-tab" data-view="agents" role="tab">Agents</button>
+  <button class="sb-tab" data-view="llms" role="tab">LLMs</button>
+  <button class="sb-tab" data-view="evidence" role="tab">Evidence</button>
 </nav>
 
 <!-- TAB CONTENT -->
@@ -95,6 +96,30 @@
     </div>
   </div>
 
+  <!-- EVENTS (the heartbeat) -->
+  <div class="sb-tab-panel" id="panel-events" hidden>
+    <div class="sb-flex sb-gap-sm" style="margin-bottom:1rem;flex-wrap:wrap">
+      <select id="events-domain-filter" class="sb-lang-select" style="min-width:180px">
+        <option value="">All domains</option>
+      </select>
+      <select id="events-level-filter" class="sb-lang-select" style="min-width:100px">
+        <option value="">All levels</option>
+        <option value="L1">L1 CPU</option>
+        <option value="L2">L2 Haiku</option>
+        <option value="L3">L3 Sonnet</option>
+        <option value="L4">L4 Opus</option>
+        <option value="L5">L5 Critical</option>
+      </select>
+      <button class="sb-btn sb-btn--sm" onclick="loadEvents()">Refresh</button>
+    </div>
+    <div class="sb-card" style="padding:0;overflow:hidden">
+      <table class="sb-table" id="events-table">
+        <thead><tr><th>Time</th><th>Domain</th><th>App</th><th>Event</th><th>Level</th><th>Run</th></tr></thead>
+        <tbody id="events-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- APPS -->
   <div class="sb-tab-panel" id="panel-apps" hidden>
     <div class="sb-card-grid" id="apps-grid">
@@ -126,10 +151,24 @@
     </div>
   </div>
 
-  <!-- AGENTS -->
-  <div class="sb-tab-panel" id="panel-agents" hidden>
-    <div class="sb-card-grid" id="agents-grid">
-      <div class="sb-empty"><div class="sb-empty-icon">🤖</div><div>Loading agents...</div></div>
+  <!-- LLMs (power sources L1-L5) -->
+  <div class="sb-tab-panel" id="panel-llms" hidden>
+    <div class="sb-card sb-mt-md" style="border-left:4px solid var(--sb-accent)">
+      <p class="sb-kicker">Power Levels</p>
+      <table class="sb-table" id="levels-table">
+        <thead><tr><th>Level</th><th>Model Class</th><th>Cost/call</th><th>Approval</th><th>Best For</th></tr></thead>
+        <tbody>
+          <tr><td><span class="sb-pill sb-pill--success">L1</span></td><td>CPU only</td><td>$0</td><td>Auto</td><td>Fetch, render, parse, seal, replay</td></tr>
+          <tr><td><span class="sb-pill sb-pill--info">L2</span></td><td>Haiku / Flash</td><td>~$0.001</td><td>Auto (3s)</td><td>Classify, extract, tag, filter</td></tr>
+          <tr><td><span class="sb-pill sb-pill--warning">L3</span></td><td>Sonnet / Pro</td><td>~$0.01</td><td>Preview</td><td>Draft, compose, analyze, summarize</td></tr>
+          <tr><td><span class="sb-pill" style="background:rgba(174,103,250,0.15);color:#ae67fa">L4</span></td><td>Opus / Ultra</td><td>~$0.10</td><td>Preview + cost</td><td>Reason, plan, review, audit</td></tr>
+          <tr><td><span class="sb-pill sb-pill--danger">L5</span></td><td>Multi-model (ABCD)</td><td>~$1.00</td><td>E-sign</td><td>Send, submit, delete, transfer</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sb-kicker sb-mt-md">Detected LLMs</p>
+    <div class="sb-card-grid" id="llms-grid">
+      <div class="sb-empty"><div class="sb-empty-icon">⚡</div><div>Loading LLMs...</div></div>
     </div>
   </div>
 
@@ -248,6 +287,51 @@
     });
   }
 
+  // ─── Load Events (the heartbeat) ───
+  function loadEvents() {
+    var domain = $('events-domain-filter').value;
+    var level = $('events-level-filter').value;
+    var url = '/api/v1/events?limit=100';
+    if (domain) url += '&domain=' + encodeURIComponent(domain);
+    get(url).then(function(d) {
+      var events = d.events || [];
+      // Client-side level filter (API doesn't support it yet)
+      if (level) events = events.filter(function(e) { return e.level === level; });
+      $('events-badge').textContent = events.length;
+      var tbody = $('events-tbody');
+      var rows = '';
+      var levelColors = { L1:'sb-pill--success', L2:'sb-pill--info', L3:'sb-pill--warning', L4:'', L5:'sb-pill--danger' };
+      events.forEach(function(e) {
+        var cls = levelColors[e.level] || 'sb-pill--info';
+        var l4style = e.level === 'L4' ? 'background:rgba(174,103,250,0.15);color:#ae67fa' : '';
+        rows += '<tr>' +
+          '<td class="sb-timestamp">' + (e.timestamp || '').substring(11, 19) + '</td>' +
+          '<td>' + esc(e.domain || '') + '</td>' +
+          '<td>' + esc(e.app_id || '') + '</td>' +
+          '<td><strong>' + esc(e.event_type || '') + '</strong></td>' +
+          '<td><span class="sb-pill ' + cls + '" style="' + l4style + '">' + esc(e.level || 'L1') + '</span></td>' +
+          '<td class="sb-text-mono sb-timestamp">' + esc(e.run_id || '') + '</td>' +
+          '</tr>';
+      });
+      tbody.innerHTML = rows || '<tr><td colspan="6" class="sb-text-muted" style="text-align:center">No events yet. Run an app to see events.</td></tr>';
+      if (rows && jQuery.fn.DataTable) {
+        if (jQuery.fn.DataTable.isDataTable('#events-table')) jQuery('#events-table').DataTable().destroy();
+        jQuery('#events-table').DataTable({ paging:true, searching:true, ordering:true, pageLength:25, order:[[0,'desc']], dom:'ftip' });
+      }
+      // Populate domain filter
+      var domainSelect = $('events-domain-filter');
+      if (domainSelect.options.length <= 1) {
+        var domains = {};
+        (d.events||[]).forEach(function(e) { if(e.domain) domains[e.domain]=1; });
+        Object.keys(domains).sort().forEach(function(dom) {
+          var opt = document.createElement('option');
+          opt.value = dom; opt.textContent = dom;
+          domainSelect.appendChild(opt);
+        });
+      }
+    });
+  }
+
   // ─── Load Apps ───
   function loadApps() {
     get('/api/apps').then(function(d) {
@@ -331,13 +415,13 @@
     });
   }
 
-  // ─── Load Agents ───
-  function loadAgents() {
+  // ─── Load LLMs (power sources) ───
+  function loadLLMs() {
     get('/api/v1/agents').then(function(d) {
-      var grid = $('agents-grid');
+      var grid = $('llms-grid');
       var agents = d.agents || [];
       if (agents.length === 0) {
-        grid.innerHTML = '<div class="sb-empty"><div class="sb-empty-icon">🤖</div><div>No AI agents detected</div><div class="sb-text-muted">Install claude, codex, or gemini on PATH</div></div>';
+        grid.innerHTML = '<div class="sb-empty"><div class="sb-empty-icon">⚡</div><div>No LLMs detected</div><div class="sb-text-muted">Install claude, codex, or gemini on PATH</div></div>';
         return;
       }
       var html = '';
@@ -374,10 +458,11 @@
   // ─── Init ───
   loadHealth();
   loadOverview();
+  loadEvents();
   loadApps();
   loadEvidence();
   loadDomains();
-  loadAgents();
+  loadLLMs();
 
   // Mermaid
   if (typeof mermaid !== 'undefined') {
