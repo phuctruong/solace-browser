@@ -170,9 +170,10 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
   color: var(--sb-text);
 }
 .sb-tab--active {
-  background: var(--sb-bg);
-  color: var(--sb-accent);
-  border-color: var(--sb-accent) var(--sb-accent) var(--sb-bg);
+  background: var(--sb-accent);
+  color: var(--sb-on-accent);
+  border-color: var(--sb-accent) var(--sb-accent) var(--sb-accent);
+  border-bottom: 3px solid var(--sb-accent);
   font-weight: 700;
 }
 .sb-tab:focus-visible {
