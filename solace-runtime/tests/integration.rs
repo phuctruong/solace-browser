@@ -3082,9 +3082,9 @@ async fn tunnel_status_not_connected() {
         reason.contains("Cloud not connected"),
         "unexpected reason: {reason}"
     );
-    assert_eq!(body["features"]["wss"], false);
-    assert_eq!(body["features"]["relay"], false);
-    assert_eq!(body["features"]["remote_control"], false);
+    // Custom tunnel architecture (NO Cloudflare)
+    assert_eq!(body["architecture"], "custom_reverse_tunnel");
+    assert!(body["banned"].is_array());
 }
 
 #[tokio::test(flavor = "current_thread")]
@@ -3158,7 +3158,8 @@ async fn tunnel_status_connected_paid_user() {
     assert_eq!(body["paid_user"], true);
     let reason = body["reason"].as_str().unwrap();
     assert!(
-        reason.contains("Phase 10"),
-        "paid user should see Phase 10 message: {reason}"
+        reason.contains("Rust port") || reason.contains("in progress"),
+        "paid user should see custom tunnel Rust port message: {reason}"
     );
+    assert_eq!(body["architecture"], "custom_reverse_tunnel");
 }

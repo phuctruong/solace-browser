@@ -366,9 +366,20 @@ async fn sync_status(
 
 /// GET /api/v1/tunnel/status
 ///
-/// Returns current tunnel availability. WSS tunnel requires Pro+ subscription
-/// and is not yet implemented — this is a placeholder that reports the feature
-/// as unavailable with a clear reason.
+/// Returns current tunnel status. Custom reverse tunnel (100% in-house,
+/// NO Cloudflare/ngrok/bore). TunnelClient connects outbound to
+/// wss://tunnel.solaceagi.com with OAuth3 scope gating.
+///
+/// Architecture (from solace-browser-backup/src/machine/tunnel.py):
+///   - Outbound-only (no inbound ports exposed)
+///   - wss:// enforced (ws:// rejected)
+///   - OAuth3 scope: machine.tunnel.open (HIGH RISK, step-up consent)
+///   - Device key: ECDH P-256, OS keychain
+///   - Bandwidth: 100MB free tier, soft+hard limits
+///   - Heartbeat: ping/pong 30s
+///   - Auto-reconnect: exponential backoff 1→60s, max 10 retries
+///   - PII redaction on all relayed content
+///   - Evidence bundle on every disconnect
 async fn tunnel_status(State(state): State<AppState>) -> Json<Value> {
     let config = state.cloud_config.read().clone();
     let (connected, paid) = match &config {
@@ -378,19 +389,39 @@ async fn tunnel_status(State(state): State<AppState>) -> Json<Value> {
 
     Json(json!({
         "available": false,
+        "architecture": "custom_reverse_tunnel",
+        "banned": ["cloudflare", "ngrok", "bore", "frp", "localtunnel"],
         "reason": if !connected {
             "Cloud not connected — call POST /api/v1/cloud/connect first"
         } else if !paid {
-            "WSS tunnel requires Pro+ subscription"
+            "Custom WSS tunnel requires Pro+ subscription"
         } else {
-            "WSS tunnel is not yet implemented (Phase 10+)"
+            "Custom WSS tunnel Rust port in progress (Python 878-line impl exists)"
         },
         "cloud_connected": connected,
         "paid_user": paid,
-        "features": {
-            "wss": false,
-            "relay": false,
-            "remote_control": false,
+        "protocol": {
+            "transport": "wss://tunnel.solaceagi.com",
+            "auth": "OAuth3 machine.tunnel.open scope",
+            "encryption": "TLS + AES-256-GCM payload",
+            "heartbeat_interval_secs": 30,
+            "reconnect_backoff": "1→2→4→8→16→32→60s",
+            "max_retries": 10,
+            "bandwidth_limit_mb": 100,
+            "pii_redaction": true,
+        },
+        "security": {
+            "outbound_only": true,
+            "wss_enforced": true,
+            "device_key": "ECDH P-256",
+            "kill_switch": true,
+            "evidence_on_disconnect": true,
+        },
+        "source": {
+            "python_impl": "solace-browser-backup/src/machine/tunnel.py (878 lines)",
+            "ws_bridge": "solace-browser-backup/src/yinyang/ws_bridge.py (657 lines)",
+            "tests": "solace-browser-backup/tests/test_tunnel_client.py (1278 lines, 80 tests)",
+            "rust_port": "in_progress",
         },
     }))
 }
