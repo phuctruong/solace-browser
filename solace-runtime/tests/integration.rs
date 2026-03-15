@@ -115,6 +115,11 @@ async fn parse_body(response: Response) -> Value {
     serde_json::from_slice(&bytes).unwrap()
 }
 
+async fn parse_html(response: Response) -> String {
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    String::from_utf8(bytes.to_vec()).unwrap_or_default()
+}
+
 async fn send(app: &Router, request: Request<Body>) -> Response {
     app.clone().oneshot(request).await.unwrap()
 }
@@ -2366,4 +2371,545 @@ async fn browser_page_snapshot_delegates_to_wiki() {
     assert_eq!(body["status"], "delegate_to_browser");
     assert_eq!(body["action"], "page_snapshot");
     assert_eq!(body["delegate_endpoint"], "/api/v1/wiki/extract");
+}
+
+// ---------------------------------------------------------------------------
+// Hub App HTML pages
+// ---------------------------------------------------------------------------
+
+#[tokio::test(flavor = "current_thread")]
+async fn hub_domains_page_lists_domains() {
+    let ctx = TestContext::new("hub_domains_page");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/domains").body(Body::empty()).unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let html = parse_html(response).await;
+    assert!(html.contains("Solace Hub"), "should contain nav brand");
+    assert!(html.contains("Domains"), "should contain page title");
+    // Fixture apps have domains "research" and "automation"
+    assert!(html.contains("research"), "should list research domain");
+    assert!(html.contains("automation"), "should list automation domain");
+    assert!(html.contains("/domains/research"), "should link to domain detail");
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn hub_domain_detail_shows_apps() {
+    let ctx = TestContext::new("hub_domain_detail");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/domains/research").body(Body::empty()).unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let html = parse_html(response).await;
+    assert!(html.contains("Domain: research"), "should show domain name");
+    assert!(html.contains("Weather Bot"), "should list the weather-bot app");
+    assert!(html.contains("/apps/weather-bot"), "should link to app detail");
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn hub_domain_detail_returns_404_for_unknown() {
+    let ctx = TestContext::new("hub_domain_404");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/domains/nonexistent-domain").body(Body::empty()).unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    let html = parse_html(response).await;
+    assert!(html.contains("Domain Not Found"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn hub_app_detail_shows_manifest() {
+    let ctx = TestContext::new("hub_app_detail");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/apps/weather-bot").body(Body::empty()).unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let html = parse_html(response).await;
+    assert!(html.contains("App: Weather Bot"), "should show app name");
+    assert!(html.contains("1.0.0"), "should show version");
+    assert!(html.contains("/domains/research"), "should link to domain");
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn hub_app_detail_returns_404_for_unknown() {
+    let ctx = TestContext::new("hub_app_404");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/apps/nonexistent-app").body(Body::empty()).unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    let html = parse_html(response).await;
+    assert!(html.contains("App Not Found"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn hub_run_detail_returns_404_for_unknown_app() {
+    let ctx = TestContext::new("hub_run_404_app");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/apps/nonexistent-app/runs/run-001")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn hub_run_detail_returns_404_for_unknown_run() {
+    let ctx = TestContext::new("hub_run_404_run");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/apps/weather-bot/runs/nonexistent-run")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    let html = parse_html(response).await;
+    assert!(html.contains("Run Not Found"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn hub_run_detail_shows_events() {
+    let ctx = TestContext::new("hub_run_events");
+    // Create a run with events
+    let run_dir = ctx
+        .home
+        .join("apps")
+        .join("weather-bot")
+        .join("outbox")
+        .join("runs")
+        .join("run-test-001");
+    fs::create_dir_all(&run_dir).unwrap();
+    let mut log = solace_runtime::event_log::EventLog::new("weather-bot", "run-test-001");
+    log.append_event(
+        solace_runtime::event_log::EventType::Fetch,
+        Some("https://api.weather.com".to_string()),
+        None,
+        None,
+        Some("fetched weather data".to_string()),
+    );
+    log.append_event(
+        solace_runtime::event_log::EventType::Preview,
+        None,
+        None,
+        None,
+        Some("email draft ready for review".to_string()),
+    );
+    log.append_event(
+        solace_runtime::event_log::EventType::SignOff,
+        None,
+        None,
+        None,
+        Some("user approved".to_string()),
+    );
+    log.append_event(
+        solace_runtime::event_log::EventType::Seal,
+        None,
+        None,
+        None,
+        Some("evidence sealed".to_string()),
+    );
+    log.save_events(&run_dir).unwrap();
+
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/apps/weather-bot/runs/run-test-001")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let html = parse_html(response).await;
+    assert!(html.contains("Run:"), "should show run title");
+    assert!(html.contains("FETCH"), "should show FETCH event type");
+    assert!(html.contains("PREVIEW"), "should show PREVIEW event type");
+    assert!(html.contains("SIGN_OFF"), "should show SIGN_OFF event type");
+    assert!(html.contains("SEAL"), "should show SEAL event type");
+    assert!(html.contains("event-preview"), "should have preview CSS class");
+    assert!(html.contains("event-signoff"), "should have signoff CSS class");
+    assert!(html.contains("Chain Valid"), "chain should be valid");
+    assert!(html.contains("/evidence"), "should link to evidence page");
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn hub_evidence_page_shows_chain() {
+    let ctx = TestContext::new("hub_evidence_page");
+    // Create some evidence
+    let _ = solace_runtime::evidence::record_event(
+        &ctx.home,
+        "app_run",
+        "runtime",
+        json!({"app_id": "weather-bot"}),
+    );
+    let _ = solace_runtime::evidence::record_event(
+        &ctx.home,
+        "evidence_sealed",
+        "runtime",
+        json!({"ok": true}),
+    );
+
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/evidence").body(Body::empty()).unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let html = parse_html(response).await;
+    assert!(html.contains("Evidence Chain"), "should show page title");
+    assert!(html.contains("Chain Valid"), "chain should be valid");
+    assert!(html.contains("2 records"), "should show record count");
+    assert!(html.contains("app_run"), "should show event name");
+    assert!(html.contains("evidence_sealed"), "should show second event");
+    assert!(html.contains("ALCOA"), "should show ALCOA compliance");
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn hub_evidence_page_empty_shows_no_records() {
+    let ctx = TestContext::new("hub_evidence_empty");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/evidence").body(Body::empty()).unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let html = parse_html(response).await;
+    assert!(html.contains("No Records") || html.contains("No evidence records"));
+}
+
+// ── Delight Engine Tests (Diagram: hub-cross-app — WARM, STREAK, CELEBRATE) ──
+
+#[tokio::test(flavor = "current_thread")]
+async fn delight_status_returns_defaults() {
+    let ctx = TestContext::new("delight_status_defaults");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/delight").body(Body::empty()).unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["streak_days"], 0);
+    assert_eq!(body["total_runs"], 0);
+    assert_eq!(body["last_active_date"], "");
+    // Greeting should be one of the time-of-day greetings
+    let greeting = body["greeting"].as_str().unwrap();
+    assert!(
+        ["Good morning", "Good afternoon", "Good evening", "Welcome back"]
+            .contains(&greeting),
+        "unexpected greeting: {greeting}"
+    );
+    // No celebration at streak 0
+    assert_eq!(body["celebration"], Value::Null);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn delight_record_increments_total_runs() {
+    let ctx = TestContext::new("delight_record_increments");
+    let app = ctx.app();
+
+    // Record first activity
+    let (status, body) = send_json(&app, Method::POST, "/api/v1/delight/record", json!({})).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["recorded"], true);
+    assert_eq!(body["total_runs"], 1);
+    assert_eq!(body["streak_days"], 1);
+    let last_date = body["last_active_date"].as_str().unwrap();
+    assert!(!last_date.is_empty());
+
+    // Record second activity (same day — streak stays at 1, total_runs goes to 2)
+    let (status, body) = send_json(&app, Method::POST, "/api/v1/delight/record", json!({})).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["total_runs"], 2);
+    assert_eq!(body["streak_days"], 1);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn delight_persists_to_disk() {
+    let ctx = TestContext::new("delight_persists_disk");
+    let app = ctx.app();
+
+    // Record activity
+    let (status, _) = send_json(&app, Method::POST, "/api/v1/delight/record", json!({})).await;
+    assert_eq!(status, StatusCode::OK);
+
+    // Verify file was written
+    let delight_path = ctx.home.join("daemon").join("delight.json");
+    assert!(
+        delight_path.exists(),
+        "delight.json should be persisted to disk"
+    );
+    let content = fs::read_to_string(&delight_path).unwrap();
+    let saved: Value = serde_json::from_str(&content).unwrap();
+    assert_eq!(saved["total_runs"], 1);
+    assert_eq!(saved["streak_days"], 1);
+}
+
+// ── Tutorial Tests (Diagram: hub-tutorial — TUTORIAL, FUNPACKS, INSTALL) ──
+
+#[tokio::test(flavor = "current_thread")]
+async fn tutorial_status_returns_defaults() {
+    let ctx = TestContext::new("tutorial_status_defaults");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/tutorial/status")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["total_steps"], 3);
+    assert_eq!(body["current_step"], 1);
+    assert_eq!(body["all_complete"], false);
+    let completed = body["completed_steps"].as_array().unwrap();
+    assert!(completed.is_empty());
+    let steps = body["steps"].as_array().unwrap();
+    assert_eq!(steps.len(), 3);
+    assert_eq!(steps[0], "run_first_app");
+    assert_eq!(steps[1], "view_evidence");
+    assert_eq!(steps[2], "try_chat");
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn tutorial_complete_step_progresses() {
+    let ctx = TestContext::new("tutorial_complete_step");
+    let app = ctx.app();
+
+    // Complete first step
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/tutorial/complete",
+        json!({"step": "run_first_app"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["newly_completed"], true);
+    assert_eq!(body["current_step"], 2);
+    assert_eq!(body["all_complete"], false);
+
+    // Complete same step again — should not be newly completed
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/tutorial/complete",
+        json!({"step": "run_first_app"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["newly_completed"], false);
+    assert_eq!(body["current_step"], 2);
+
+    // Complete remaining steps
+    let (_, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/tutorial/complete",
+        json!({"step": "view_evidence"}),
+    )
+    .await;
+    assert_eq!(body["current_step"], 3);
+
+    let (_, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/tutorial/complete",
+        json!({"step": "try_chat"}),
+    )
+    .await;
+    assert_eq!(body["all_complete"], true);
+    assert_eq!(body["current_step"], 4); // past last step
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn tutorial_complete_invalid_step_returns_400() {
+    let ctx = TestContext::new("tutorial_invalid_step");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/tutorial/complete",
+        json!({"step": "nonexistent_step"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert!(body["error"].as_str().unwrap().contains("invalid step"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn tutorial_reset_clears_progress() {
+    let ctx = TestContext::new("tutorial_reset");
+    let app = ctx.app();
+
+    // Complete a step first
+    let _ = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/tutorial/complete",
+        json!({"step": "run_first_app"}),
+    )
+    .await;
+
+    // Reset
+    let (status, body) = send_json(&app, Method::POST, "/api/v1/tutorial/reset", json!({})).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["reset"], true);
+    assert_eq!(body["current_step"], 1);
+    let completed = body["completed_steps"].as_array().unwrap();
+    assert!(completed.is_empty());
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn tutorial_persists_to_disk() {
+    let ctx = TestContext::new("tutorial_persists_disk");
+    let app = ctx.app();
+
+    // Complete a step
+    let (status, _) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/tutorial/complete",
+        json!({"step": "run_first_app"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+
+    // Verify file was written
+    let tutorial_path = ctx.home.join("daemon").join("tutorial.json");
+    assert!(
+        tutorial_path.exists(),
+        "tutorial.json should be persisted to disk"
+    );
+    let content = fs::read_to_string(&tutorial_path).unwrap();
+    let saved: Value = serde_json::from_str(&content).unwrap();
+    let completed = saved["completed_steps"].as_array().unwrap();
+    assert_eq!(completed.len(), 1);
+    assert_eq!(completed[0], "run_first_app");
+}
+
+// ── Tunnel Status Tests (Diagram: hub-tunnel — WSS, RELAY, REMOTE) ──
+
+#[tokio::test(flavor = "current_thread")]
+async fn tunnel_status_not_connected() {
+    let ctx = TestContext::new("tunnel_status_not_connected");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/tunnel/status")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["available"], false);
+    assert_eq!(body["cloud_connected"], false);
+    assert_eq!(body["paid_user"], false);
+    let reason = body["reason"].as_str().unwrap();
+    assert!(
+        reason.contains("Cloud not connected"),
+        "unexpected reason: {reason}"
+    );
+    assert_eq!(body["features"]["wss"], false);
+    assert_eq!(body["features"]["relay"], false);
+    assert_eq!(body["features"]["remote_control"], false);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn tunnel_status_connected_free_user() {
+    let ctx = TestContext::new("tunnel_status_free_user");
+    let app = ctx.app();
+
+    // Connect as free user
+    let _ = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/cloud/connect",
+        json!({
+            "api_key": "sw_sk_test_tunnel_free",
+            "user_email": "free@solaceagi.com",
+            "device_id": "device-tunnel-1",
+            "paid_user": false
+        }),
+    )
+    .await;
+
+    let response = send(
+        &app,
+        Request::get("/api/v1/tunnel/status")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["available"], false);
+    assert_eq!(body["cloud_connected"], true);
+    assert_eq!(body["paid_user"], false);
+    let reason = body["reason"].as_str().unwrap();
+    assert!(
+        reason.contains("Pro+"),
+        "free user should see Pro+ requirement: {reason}"
+    );
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn tunnel_status_connected_paid_user() {
+    let ctx = TestContext::new("tunnel_status_paid_user");
+    let app = ctx.app();
+
+    // Connect as paid user
+    let _ = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/cloud/connect",
+        json!({
+            "api_key": "sw_sk_test_tunnel_paid",
+            "user_email": "pro@solaceagi.com",
+            "device_id": "device-tunnel-2",
+            "paid_user": true
+        }),
+    )
+    .await;
+
+    let response = send(
+        &app,
+        Request::get("/api/v1/tunnel/status")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["available"], false);
+    assert_eq!(body["cloud_connected"], true);
+    assert_eq!(body["paid_user"], true);
+    let reason = body["reason"].as_str().unwrap();
+    assert!(
+        reason.contains("Phase 10"),
+        "paid user should see Phase 10 message: {reason}"
+    );
 }

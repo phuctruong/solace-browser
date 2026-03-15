@@ -138,6 +138,20 @@ impl RecipeCache {
         }
     }
 
+    /// Remove a recipe from cache and disk.
+    /// Returns true if the recipe was found and removed.
+    pub fn remove(&mut self, task_hash: &str) -> bool {
+        if self.cache.remove(task_hash).is_some() {
+            // Remove the on-disk file too
+            let dir = Self::recipes_dir();
+            let path = dir.join(format!("{}.json", &task_hash[..std::cmp::min(16, task_hash.len())]));
+            let _ = std::fs::remove_file(&path);
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn len(&self) -> usize {
         self.cache.len()
     }
@@ -292,5 +306,54 @@ mod tests {
         execute_recipe("task three", &mut cache);
         assert_eq!(cache.len(), 3);
         assert_eq!(cache.list().len(), 3);
+    }
+
+    #[test]
+    fn remove_existing_recipe() {
+        let mut cache = RecipeCache::default();
+        let result = execute_recipe("task to remove", &mut cache);
+        assert_eq!(cache.len(), 1);
+
+        let removed = cache.remove(&result.task_hash);
+        assert!(removed);
+        assert_eq!(cache.len(), 0);
+        assert!(cache.lookup(&result.task_hash).is_none());
+    }
+
+    #[test]
+    fn remove_nonexistent_recipe() {
+        let mut cache = RecipeCache::default();
+        let removed = cache.remove("nonexistent_hash");
+        assert!(!removed);
+    }
+
+    #[test]
+    fn unverified_recipe_causes_regeneration() {
+        let mut cache = RecipeCache::default();
+        // First run: generates recipe (unverified)
+        let result1 = execute_recipe("verify test", &mut cache);
+        assert!(!result1.cache_hit);
+        assert_eq!(result1.replay_count, 0);
+
+        // Second run: recipe exists but not verified → regenerate (cache miss)
+        let result2 = execute_recipe("verify test", &mut cache);
+        assert!(!result2.cache_hit);
+        assert_eq!(result2.replay_count, 0);
+    }
+
+    #[test]
+    fn verified_recipe_replays() {
+        let mut cache = RecipeCache::default();
+        let result1 = execute_recipe("replay test", &mut cache);
+        assert!(!result1.cache_hit);
+
+        // Manually verify the recipe
+        cache.cache.get_mut(&result1.task_hash).unwrap().verified = true;
+        cache.cache.get_mut(&result1.task_hash).unwrap().replay_count = 1;
+
+        // Now it should replay (cache hit)
+        let result2 = execute_recipe("replay test", &mut cache);
+        assert!(result2.cache_hit);
+        assert_eq!(result2.replay_count, 2);
     }
 }

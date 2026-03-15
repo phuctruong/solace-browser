@@ -20,6 +20,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/cloud/sync/up", post(sync_up))
         .route("/api/v1/cloud/sync/down", post(sync_down))
         .route("/api/v1/cloud/sync/status", get(sync_status))
+        .route("/api/v1/tunnel/status", get(tunnel_status))
 }
 
 // ---------------------------------------------------------------------------
@@ -356,6 +357,41 @@ async fn sync_status(
             "conflict_count": r.conflict_count,
             "success": r.success,
         })),
+    }))
+}
+
+// ---------------------------------------------------------------------------
+// Tunnel status placeholder (hub-tunnel diagram: WSS, RELAY, REMOTE)
+// ---------------------------------------------------------------------------
+
+/// GET /api/v1/tunnel/status
+///
+/// Returns current tunnel availability. WSS tunnel requires Pro+ subscription
+/// and is not yet implemented — this is a placeholder that reports the feature
+/// as unavailable with a clear reason.
+async fn tunnel_status(State(state): State<AppState>) -> Json<Value> {
+    let config = state.cloud_config.read().clone();
+    let (connected, paid) = match &config {
+        Some(cfg) => (true, cfg.paid_user),
+        None => (false, false),
+    };
+
+    Json(json!({
+        "available": false,
+        "reason": if !connected {
+            "Cloud not connected — call POST /api/v1/cloud/connect first"
+        } else if !paid {
+            "WSS tunnel requires Pro+ subscription"
+        } else {
+            "WSS tunnel is not yet implemented (Phase 10+)"
+        },
+        "cloud_connected": connected,
+        "paid_user": paid,
+        "features": {
+            "wss": false,
+            "relay": false,
+            "remote_control": false,
+        },
     }))
 }
 

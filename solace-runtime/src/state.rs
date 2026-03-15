@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::{DateTime, Timelike, Utc};
 use parking_lot::RwLock;
 
 /// Window in seconds: launches of the same key within this period are deduped.
@@ -227,6 +227,18 @@ impl AppState {
             theme: Arc::new(RwLock::new(settings.theme)),
             launch_dedup: Arc::new(RwLock::new(LaunchDedup::default())),
             pending_actions: Arc::new(RwLock::new(Vec::new())),
+            delight: Arc::new(RwLock::new(
+                crate::persistence::read_json::<DelightState>(
+                    &solace_home.join("daemon").join("delight.json"),
+                )
+                .unwrap_or_default(),
+            )),
+            tutorial: Arc::new(RwLock::new(
+                crate::persistence::read_json::<TutorialState>(
+                    &solace_home.join("daemon").join("tutorial.json"),
+                )
+                .unwrap_or_default(),
+            )),
         }
     }
 

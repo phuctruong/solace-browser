@@ -1,5 +1,10 @@
 // Diagram: 15-recipe-engine-fsm
-use axum::{extract::State, routing::{get, post}, Json, Router};
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    routing::{delete, get, post},
+    Json, Router,
+};
 use serde::Deserialize;
 use serde_json::json;
 
@@ -10,20 +15,28 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/v1/recipes", get(list_recipes))
         .route("/api/v1/recipes/execute", post(run_recipe))
+        .route(
+            "/api/v1/recipes/:task_hash",
+            get(get_recipe).delete(delete_recipe),
+        )
 }
 
 async fn list_recipes() -> Json<serde_json::Value> {
     let cache = RecipeCache::new();
-    let recipes: Vec<_> = cache.list().iter().map(|r| {
-        json!({
-            "recipe_id": r.recipe_id,
-            "task_hash": r.task_hash,
-            "steps": r.steps.len(),
-            "replay_count": r.replay_count,
-            "verified": r.verified,
-            "created_at": r.created_at,
+    let recipes: Vec<_> = cache
+        .list()
+        .iter()
+        .map(|r| {
+            json!({
+                "recipe_id": r.recipe_id,
+                "task_hash": r.task_hash,
+                "steps": r.steps.len(),
+                "replay_count": r.replay_count,
+                "verified": r.verified,
+                "created_at": r.created_at,
+            })
         })
-    }).collect();
+        .collect();
     Json(json!({"recipes": recipes, "count": recipes.len()}))
 }
 
@@ -51,4 +64,52 @@ async fn run_recipe(
         "steps_executed": result.steps_executed,
         "evidence_hash": result.evidence_hash,
     }))
+}
+
+/// GET /api/v1/recipes/:task_hash
+///
+/// Returns full recipe detail for a specific task hash, including all steps.
+async fn get_recipe(
+    Path(task_hash): Path<String>,
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    let cache = RecipeCache::new();
+    let recipe = cache.lookup(&task_hash).cloned();
+
+    match recipe {
+        Some(r) => Ok(Json(json!({
+            "recipe_id": r.recipe_id,
+            "task_hash": r.task_hash,
+            "steps": r.steps,
+            "replay_count": r.replay_count,
+            "verified": r.verified,
+            "created_at": r.created_at,
+        }))),
+        None => Err((
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": format!("recipe not found for task_hash: {task_hash}")})),
+        )),
+    }
+}
+
+/// DELETE /api/v1/recipes/:task_hash
+///
+/// Invalidate (remove) a cached recipe. Forces re-generation on next execution.
+async fn delete_recipe(
+    Path(task_hash): Path<String>,
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    let mut cache = RecipeCache::new();
+
+    if cache.lookup(&task_hash).is_none() {
+        return Err((
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": format!("recipe not found for task_hash: {task_hash}")})),
+        ));
+    }
+
+    cache.remove(&task_hash);
+
+    Ok(Json(json!({
+        "deleted": task_hash,
+        "remaining": cache.len(),
+    })))
 }
