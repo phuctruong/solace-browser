@@ -244,7 +244,7 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
   border-color: var(--sb-border);
 }
 .sb-editable-display {
-  cursor: default;
+  cursor: pointer;
   font-weight: 500;
 }
 .sb-editable-input {
@@ -266,18 +266,21 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
 .sb-editable-pen {
   visibility: hidden;
   cursor: pointer;
-  font-size: 0.85rem;
-  padding: 2px 4px;
-  border: 1px solid var(--sb-border);
+  width: 16px;
+  height: 16px;
+  background: url('/icons/pen.png') no-repeat center center;
+  background-size: contain;
+  border: 1px solid transparent;
   border-radius: var(--sb-radius-sm);
   transition: all var(--sb-transition);
+  flex-shrink: 0;
 }
 .sb-editable:hover .sb-editable-pen {
   visibility: visible;
 }
 .sb-editable-pen:hover {
-  background: var(--sb-accent-soft);
   border-color: var(--sb-accent);
+  background-color: var(--sb-accent-soft);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
