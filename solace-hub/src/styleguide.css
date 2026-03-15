@@ -143,32 +143,34 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
   display: flex;
   gap: 4px;
   background: var(--sb-surface);
-  border: 1px solid var(--sb-border);
+  border: 2px solid var(--sb-border-strong);
   border-radius: var(--sb-radius);
   padding: 4px;
   margin: 1rem 1.5rem 0;
 }
 .sb-tab {
-  background: none;
-  border: none;
+  background: var(--sb-surface-strong);
+  border: 2px solid var(--sb-border-strong);
   color: var(--sb-text-muted);
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.2rem;
   border-radius: calc(var(--sb-radius) - 2px);
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 600;
   font-family: var(--sb-font);
   transition: all var(--sb-transition);
   white-space: nowrap;
-  min-height: 40px;
+  min-height: 42px;
 }
 .sb-tab:hover:not(.sb-tab--active) {
   background: var(--sb-surface-hover);
+  border-color: var(--sb-accent);
   color: var(--sb-text);
 }
 .sb-tab--active {
   background: var(--sb-accent);
   color: var(--sb-on-accent);
+  border-color: var(--sb-accent);
 }
 .sb-tab:focus-visible {
   outline: 2px solid var(--sb-accent);
