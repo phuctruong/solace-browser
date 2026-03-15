@@ -15,6 +15,40 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/tutorial/status", get(tutorial_status))
         .route("/api/v1/tutorial/complete", post(complete_step))
         .route("/api/v1/tutorial/reset", post(reset_tutorial))
+        .route("/api/v1/funpacks", get(list_funpacks))
+}
+
+/// Built-in fun packs — personality themes for the sidebar.
+const FUNPACKS: &[(&str, &str, &str)] = &[
+    ("zen", "Zen Garden", "Calm, minimal, meditative responses. Uses nature metaphors."),
+    ("pirate", "Pirate Mode", "Arr! Every response in pirate speak. Treasure = evidence."),
+    ("haiku", "Haiku Master", "Responses in 5-7-5 syllable haiku format when possible."),
+    ("coach", "Motivational Coach", "Energetic, encouraging. Every task is a victory lap."),
+    ("detective", "Detective Noir", "Mysterious, investigative tone. Evidence = clues."),
+    ("chef", "Chef's Kitchen", "Cooking metaphors. Tasks = recipes. Results = dishes served."),
+    ("space", "Mission Control", "NASA-style communications. Tasks = missions. T-minus countdown."),
+];
+
+/// GET /api/v1/funpacks
+///
+/// Returns available fun packs — personality themes for the sidebar.
+/// Users can activate a fun pack to change the sidebar's tone and style.
+async fn list_funpacks() -> Json<serde_json::Value> {
+    let packs: Vec<_> = FUNPACKS
+        .iter()
+        .map(|(id, name, description)| {
+            json!({
+                "id": id,
+                "name": name,
+                "description": description,
+            })
+        })
+        .collect();
+    Json(json!({
+        "funpacks": packs,
+        "count": packs.len(),
+        "active": serde_json::Value::Null,
+    }))
 }
 
 /// GET /api/v1/tutorial/status
