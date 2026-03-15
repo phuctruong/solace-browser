@@ -33,16 +33,36 @@ async fn list_notifications(State(state): State<AppState>) -> Json<serde_json::V
 async fn create_notification(
     State(state): State<AppState>,
     Json(payload): Json<NotificationPayload>,
-) -> Json<serde_json::Value> {
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    // Security: sanitize message to prevent XSS
+    let sanitized = html_escape::encode_text(&payload.message).to_string();
+
+    // Security: enforce max message length (1024 chars)
+    if sanitized.len() > 1024 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "message too long (max 1024 chars)"})),
+        ));
+    }
+
+    let level = payload.level.unwrap_or_else(|| "info".to_string());
+    let valid_levels = ["info", "warn", "warning", "error", "success"];
+    if !valid_levels.contains(&level.as_str()) {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": format!("invalid level: {level}. Must be one of: {}", valid_levels.join(", "))})),
+        ));
+    }
+
     let notification = Notification {
         id: uuid::Uuid::new_v4().to_string(),
-        message: payload.message,
-        level: payload.level.unwrap_or_else(|| "info".to_string()),
+        message: sanitized,
+        level,
         read: false,
         created_at: crate::utils::now_iso8601(),
     };
     state.notifications.write().push(notification.clone());
-    Json(json!({"notification": notification}))
+    Ok(Json(json!({"notification": notification})))
 }
 
 async fn mark_read(

@@ -39,6 +39,24 @@ async fn create_evidence(
     State(state): State<AppState>,
     Json(payload): Json<EvidencePayload>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    // Security: enforce max event name length (256 chars)
+    if payload.event.len() > 256 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "event name too long (max 256 chars)"})),
+        ));
+    }
+    // Security: enforce max data payload size (64KB)
+    if let Some(ref data) = payload.data {
+        let data_str = data.to_string();
+        if data_str.len() > 65536 {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": "data payload too large (max 64KB)"})),
+            ));
+        }
+    }
+
     let solace_home = crate::utils::solace_home();
     let record = crate::evidence::record_event(
         &solace_home,
