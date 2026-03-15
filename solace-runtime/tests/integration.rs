@@ -1404,6 +1404,199 @@ async fn dedup_different_profile_creates_new_session() {
     assert_ne!(id1, id2);
 }
 
+// ---------------------------------------------------------------------------
+// Twin sync encrypted tunnel tests (Diagram: 21-twin-sync-flow)
+// ---------------------------------------------------------------------------
+
+#[tokio::test(flavor = "current_thread")]
+async fn sync_status_no_cloud_shows_disconnected() {
+    let ctx = TestContext::new("sync_status_no_cloud");
+    let app = ctx.app();
+    let response = send(
+        &app,
+        Request::get("/api/v1/cloud/sync/status")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["connected"], false);
+    assert_eq!(body["last_sync"], Value::Null);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn sync_up_requires_cloud_connection() {
+    let ctx = TestContext::new("sync_up_requires_cloud");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/cloud/sync/up",
+        json!({}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::PRECONDITION_FAILED);
+    assert!(body["error"].as_str().unwrap().contains("cloud not connected"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn sync_down_requires_cloud_connection() {
+    let ctx = TestContext::new("sync_down_requires_cloud");
+    let app = ctx.app();
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/cloud/sync/down",
+        json!({}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::PRECONDITION_FAILED);
+    assert!(body["error"].as_str().unwrap().contains("cloud not connected"));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn sync_up_returns_error_when_cloud_unreachable() {
+    let ctx = TestContext::new("sync_up_cloud_unreachable");
+    let app = ctx.app();
+
+    // Connect to cloud first (with a fake key — the real endpoint won't be reachable)
+    let _ = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/cloud/connect",
+        json!({
+            "api_key": "sw_sk_test_sync_up_001",
+            "user_email": "test@solaceagi.com",
+            "device_id": "device-sync-1",
+            "paid_user": true
+        }),
+    )
+    .await;
+
+    // Attempt sync up — cloud endpoint doesn't exist, expect graceful error
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/cloud/sync/up",
+        json!({}),
+    )
+    .await;
+    // Should be BAD_GATEWAY (502) because cloud is unreachable
+    assert_eq!(status, StatusCode::BAD_GATEWAY);
+    let error = body["error"].as_str().unwrap();
+    assert!(
+        error.contains("cloud unreachable") || error.contains("cloud returned"),
+        "unexpected error message: {error}"
+    );
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn sync_down_returns_error_when_cloud_unreachable() {
+    let ctx = TestContext::new("sync_down_cloud_unreachable");
+    let app = ctx.app();
+
+    // Connect to cloud first
+    let _ = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/cloud/connect",
+        json!({
+            "api_key": "sw_sk_test_sync_down_001",
+            "user_email": "test@solaceagi.com",
+            "device_id": "device-sync-2",
+            "paid_user": true
+        }),
+    )
+    .await;
+
+    // Attempt sync down — cloud endpoint doesn't exist, expect graceful error
+    let (status, body) = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/cloud/sync/down",
+        json!({}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_GATEWAY);
+    let error = body["error"].as_str().unwrap();
+    assert!(
+        error.contains("cloud unreachable") || error.contains("cloud returned"),
+        "unexpected error message: {error}"
+    );
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn sync_status_after_connected_but_no_sync() {
+    let ctx = TestContext::new("sync_status_connected_no_sync");
+    let app = ctx.app();
+
+    // Connect to cloud
+    let _ = send_json(
+        &app,
+        Method::POST,
+        "/api/v1/cloud/connect",
+        json!({
+            "api_key": "sw_sk_test_status_001",
+            "user_email": "status@solaceagi.com",
+            "device_id": "device-status-1",
+            "paid_user": true
+        }),
+    )
+    .await;
+
+    // Check sync status — should show connected but no last_sync
+    let response = send(
+        &app,
+        Request::get("/api/v1/cloud/sync/status")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = parse_body(response).await;
+    assert_eq!(body["connected"], true);
+    assert_eq!(body["last_sync"], Value::Null);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn sync_encrypt_decrypt_roundtrip() {
+    // Verify the encryption keys used for twin sync are consistent
+    let key = solace_runtime::crypto::derive_key("test_api_key", b"solace-twin-sync:v1");
+    let plaintext = b"hello twin sync";
+    let encrypted = solace_runtime::crypto::encrypt(plaintext, &key).unwrap();
+    let decrypted = solace_runtime::crypto::decrypt(&encrypted, &key).unwrap();
+    assert_eq!(decrypted, plaintext);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn sync_encrypt_decrypt_large_payload() {
+    // Simulate encrypting a realistic sync payload
+    let key = solace_runtime::crypto::derive_key("sw_sk_test_large", b"solace-twin-sync:v1");
+    let payload = json!({
+        "device_id": "device-large-test",
+        "user_email": "large@solaceagi.com",
+        "timestamp": "2026-03-14T00:00:00Z",
+        "evidence_entries": (0..100).map(|i| json!({
+            "id": format!("ev-{i}"),
+            "event": "test_event",
+            "actor": "runtime",
+            "timestamp": "2026-03-14T00:00:00Z",
+            "data": {"index": i},
+        })).collect::<Vec<_>>(),
+        "installed_apps": [
+            {"id": "weather-bot", "name": "Weather Bot", "version": "1.0.0", "domain": "research"},
+        ],
+        "payload_version": 1,
+    });
+    let plaintext = serde_json::to_vec(&payload).unwrap();
+    let encrypted = solace_runtime::crypto::encrypt(&plaintext, &key).unwrap();
+    // Encrypted should be larger than plaintext (nonce + auth tag)
+    assert!(encrypted.len() > plaintext.len());
+    let decrypted = solace_runtime::crypto::decrypt(&encrypted, &key).unwrap();
+    assert_eq!(decrypted, plaintext);
+}
+
 mod hex {
     pub fn decode(input: &str) -> Result<Vec<u8>, String> {
         if input.len() % 2 != 0 {

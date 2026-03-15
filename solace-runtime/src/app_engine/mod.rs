@@ -24,7 +24,7 @@ pub struct DataSource {
     pub limit: usize,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub struct AppManifest {
     #[serde(default)]
     pub id: String,
@@ -39,11 +39,19 @@ pub struct AppManifest {
     #[serde(default, alias = "report_template")]
     pub template: String,
     #[serde(default)]
+    pub report_template: String,
+    #[serde(default)]
     pub schedule: String,
     #[serde(default)]
     pub source_url: Option<String>,
     #[serde(default)]
     pub data_sources: Vec<DataSource>,
+    #[serde(default)]
+    pub category: String,
+    #[serde(default, alias = "type")]
+    pub app_type: String,
+    #[serde(default)]
+    pub tier: String,
 }
 
 pub fn scan_installed_apps() -> Vec<AppManifest> {
