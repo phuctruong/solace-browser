@@ -30,6 +30,7 @@
   <span class="sb-topbar-stat" id="topbar-agents"></span>
   <span class="sb-topbar-stat" id="topbar-apps"></span>
   <span class="sb-topbar-stat" id="topbar-evidence"></span>
+  <span class="sb-pill" id="topbar-auth" style="cursor:pointer" title="Click to sign in"></span>
   <div class="sb-theme-group">
     <button class="sb-theme-btn sb-theme-btn--active" data-theme="dark">Dark</button>
     <button class="sb-theme-btn" data-theme="light">Light</button>
@@ -204,6 +205,19 @@
       $('hero-streak').textContent = streak;
     });
     get('/api/v1/sidebar/state').then(function(d) {
+      // Auth status in top bar
+      var auth = $('topbar-auth');
+      var gateLabels = {
+        'unregistered': { text: 'Not signed in', cls: 'sb-pill--danger' },
+        'no_llm': { text: 'Signed in · No LLM', cls: 'sb-pill--warning' },
+        'byok': { text: 'Signed in · BYOK', cls: 'sb-pill--success' },
+        'paid': { text: 'Signed in · Managed', cls: 'sb-pill--success' }
+      };
+      var label = gateLabels[d.gate] || { text: d.gate, cls: 'sb-pill--info' };
+      auth.textContent = label.text;
+      auth.className = 'sb-pill ' + label.cls;
+      auth.style.cursor = 'pointer';
+      // Upgrade CTA
       if (d.upgrade_cta) {
         $('overview-upgrade').style.display = 'block';
         $('upgrade-message').textContent = d.upgrade_message || 'Upgrade available';
