@@ -15,6 +15,8 @@
   <script src="/vendor/amcharts5-index.js"></script>
   <script src="/vendor/amcharts5-xy.js"></script>
   <script src="/vendor/amcharts5-percent.js"></script>
+  <!-- Mermaid — render Prime Mermaid diagrams inline -->
+  <script src="/vendor/mermaid.min.js"></script>
   <script src="/vendor/amcharts5-dark.js"></script>
   <script src="/vendor/amcharts5-animated.js"></script>
 </head>
@@ -680,6 +682,143 @@
     </div>
   </section>
 
+  <!-- ─── MERMAID DIAGRAMS (Prime Mermaid rendering) ─────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Prime Mermaid</p>
+    <h2 class="sb-heading">Mermaid Diagrams — Rendered from Prime Mermaid Files</h2>
+    <p class="sb-text-muted">The Rust app engine reads .prime-mermaid.md files and renders diagrams inline using mermaid.js. Prime Mermaid = the universal coding language for architecture, settings, and saved reasoning.</p>
+
+    <div class="sb-card-grid" style="grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));">
+
+      <div class="sb-card">
+        <p class="sb-kicker">Architecture</p>
+        <h3 class="sb-card-title">Flowchart — Hub Runtime</h3>
+        <pre class="mermaid">
+flowchart TB
+    HUB[Solace Hub :8888] --> APPS[App Engine<br>63 apps]
+    HUB --> MCP[MCP Server<br>20 tools]
+    HUB --> WIKI[Wiki Capture<br>145 snapshots]
+    HUB --> EVIDENCE[Evidence Chain<br>13,741 entries]
+    APPS --> OUTBOX[Outbox<br>reports + evidence]
+    MCP --> AGENTS[6 CLI Agents<br>claude codex gemini]
+
+    classDef sealed fill:#2d5016,stroke:#4a8c2a,color:#fff
+    class HUB,APPS,MCP,WIKI,EVIDENCE,OUTBOX,AGENTS sealed
+        </pre>
+      </div>
+
+      <div class="sb-card">
+        <p class="sb-kicker">State Machine</p>
+        <h3 class="sb-card-title">State Diagram — Sidebar Gate</h3>
+        <pre class="mermaid">
+stateDiagram-v2
+    [*] --> CHECK_ONBOARDING
+    CHECK_ONBOARDING --> UNREGISTERED: no onboarding
+    CHECK_ONBOARDING --> CHECK_CLOUD: complete
+    CHECK_CLOUD --> NO_LLM: no keys
+    CHECK_CLOUD --> CHECK_KEYS: cloud config
+    CHECK_KEYS --> BYOK: API key set
+    CHECK_KEYS --> CHECK_PAID: no key
+    CHECK_PAID --> PAID: paid=true
+    CHECK_PAID --> NO_LLM: free+no key
+        </pre>
+      </div>
+
+      <div class="sb-card">
+        <p class="sb-kicker">Pipeline</p>
+        <h3 class="sb-card-title">Flowchart LR — App Engine Pipeline</h3>
+        <pre class="mermaid">
+flowchart LR
+    INBOX[Inbox<br>manifest + config] --> FETCH[Fetch<br>data sources]
+    FETCH --> TEMPLATE[Template<br>render HTML]
+    TEMPLATE --> OUTBOX[Outbox<br>report + evidence]
+    OUTBOX --> SEAL[Seal<br>SHA-256 + PZip]
+    SEAL --> SYNC[Cloud Sync<br>paid users]
+
+    style INBOX fill:#1a2d47,stroke:#78b9ff
+    style SEAL fill:#2d5016,stroke:#55d7aa
+        </pre>
+      </div>
+
+      <div class="sb-card">
+        <p class="sb-kicker">Sequence</p>
+        <h3 class="sb-card-title">Sequence Diagram — Twin Sync</h3>
+        <pre class="mermaid">
+sequenceDiagram
+    participant Local as Local Hub
+    participant Vault as OAuth3 Vault
+    participant Cloud as solaceagi.com
+
+    Local->>Vault: Fetch encryption key
+    Vault-->>Local: AES-256-GCM key
+    Local->>Local: Encrypt(state, key)
+    Local->>Cloud: POST /twin/sync (ciphertext)
+    Cloud-->>Local: sha256(receipt)
+    Local->>Local: Store sync_receipt.json
+        </pre>
+      </div>
+
+      <div class="sb-card">
+        <p class="sb-kicker">Recipe FSM</p>
+        <h3 class="sb-card-title">Flowchart — Recipe Engine</h3>
+        <pre class="mermaid">
+flowchart TD
+    INTAKE[Intake] --> CLASSIFY{Intent<br>Classify}
+    CLASSIFY --> CACHE[Cache<br>Lookup]
+    CACHE -->|hit| VERIFY[Verify<br>Recipe]
+    CACHE -->|miss| GENERATE[Generate<br>Steps]
+    VERIFY -->|valid| REPLAY[CPU Replay<br>$0 cost]
+    VERIFY -->|stale| GENERATE
+    GENERATE --> VALIDATE[Validate]
+    VALIDATE --> STORE[Store<br>to Cache]
+    REPLAY --> EXECUTE[Execute]
+    STORE --> EXECUTE
+    EXECUTE --> EVIDENCE[Evidence<br>Seal]
+
+    classDef cpu fill:#1a2d47,stroke:#78b9ff,color:#fff
+    classDef llm fill:#4a2d16,stroke:#ffd479,color:#fff
+    class REPLAY,EXECUTE,EVIDENCE cpu
+    class GENERATE,CLASSIFY llm
+        </pre>
+      </div>
+
+      <div class="sb-card">
+        <p class="sb-kicker">Domain</p>
+        <h3 class="sb-card-title">Flowchart — Domain Keep-Alive</h3>
+        <pre class="mermaid">
+flowchart TB
+    DOMAIN[gmail.com<br>TTL: 24h] --> SCHEDULE[Collect<br>App Schedules]
+    SCHEDULE --> TIMELINE[Build 24h<br>Timeline]
+    TIMELINE --> GAPS{Gaps > TTL/2?}
+    GAPS -->|no| IDLE[Keep-Alive<br>Idle Mode]
+    GAPS -->|yes| FILL[Keep-Alive<br>Fill Gaps]
+    FILL --> RUN[Navigate<br>Domain URL]
+    RUN --> CHECK{Session<br>Alive?}
+    CHECK -->|yes| IDLE
+    CHECK -->|no| AUTH[Re-Auth<br>from Vault]
+        </pre>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── PRIME MERMAID RAW RENDERER ──────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Prime Mermaid</p>
+    <h2 class="sb-heading">Live Editor — Paste Any Prime Mermaid</h2>
+    <div class="sb-card">
+      <textarea class="sb-textarea" id="mermaid-editor" rows="8" placeholder="Paste Prime Mermaid here...">flowchart LR
+    A[Your Diagram] --> B[Goes Here]
+    B --> C{Decision}
+    C -->|yes| D[Result]
+    C -->|no| E[Other]</textarea>
+      <div class="sb-mt-md">
+        <button class="sb-btn sb-btn--primary" onclick="renderMermaidEditor()">Render Diagram</button>
+      </div>
+      <div id="mermaid-preview" class="sb-mt-md" style="background:var(--sb-surface-strong);border-radius:var(--sb-radius);padding:1rem;min-height:60px"></div>
+    </div>
+  </section>
+
   <!-- ─── TEXTAREA + SEARCH ───────────────────────────────── -->
   <section class="sb-mt-md">
     <p class="sb-kicker">Component</p>
@@ -907,6 +1046,23 @@
       });
     });
   });
+
+  // ─── Mermaid init (render all <pre class="mermaid"> blocks) ───
+  if (typeof mermaid !== 'undefined') {
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: {
+      primaryColor: '#1a2d47', primaryTextColor: '#e8ecf2', primaryBorderColor: '#78b9ff',
+      lineColor: '#78b9ff', secondaryColor: '#2d5016', tertiaryColor: '#4a2d16',
+      fontFamily: 'Segoe UI, system-ui, sans-serif', fontSize: '14px'
+    }});
+  }
+  window.renderMermaidEditor = function() {
+    var code = document.getElementById('mermaid-editor').value;
+    var preview = document.getElementById('mermaid-preview');
+    preview.innerHTML = '';
+    var id = 'mermaid-live-' + Date.now();
+    preview.innerHTML = '<pre class="mermaid" id="' + id + '">' + code + '</pre>';
+    if (typeof mermaid !== 'undefined') { mermaid.run({ nodes: [document.getElementById(id)] }); }
+  };
 
   // ─── Toast notifications ───
   window.showToast = function(message, type) {
