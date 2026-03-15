@@ -23,7 +23,7 @@ pub fn write_port_lock(solace_home: &Path, port: u16, token_hash: &str) -> Resul
     let path = solace_home.join("port.lock");
     let payload = serde_json::json!({
         "port": port,
-        "token_hash": token_hash,
+        "token_sha256": token_hash,
         "pid": std::process::id(),
         "started_at": crate::utils::now_iso8601(),
     });
