@@ -89,19 +89,239 @@
       <button class="sb-tab" data-view="agents" role="tab">Agents</button>
     </div>
     <div class="sb-tab-panel" id="panel-overview">
-      <p>Overview panel content — shows hero + streak + last/next run.</p>
+      <div class="sb-card" style="border:2px solid var(--sb-accent);background:linear-gradient(135deg,var(--sb-surface),var(--sb-surface-strong))">
+        <div class="sb-flex" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+          <div>
+            <div style="font-size:1.4rem;font-weight:700">Good afternoon</div>
+            <div class="sb-text-muted">Day 3 streak · 2 apps ran today · 30 items collected</div>
+          </div>
+          <img src="media/yinyang-rotating_70pct_128px.gif" style="width:64px;height:auto">
+        </div>
+        <div class="sb-flex sb-gap-md sb-mt-md" style="flex-wrap:wrap">
+          <div class="sb-card" style="flex:1;min-width:180px">
+            <small class="sb-text-muted">Last run</small>
+            <div>
+              <span class="sb-editable" data-field="last_app">
+                <span class="sb-editable-display"><strong>morning-brief</strong></span>
+                <input class="sb-editable-input" value="morning-brief">
+                <span class="sb-editable-pen" title="Edit">edit</span>
+              </span>
+              · 12 min ago
+            </div>
+          </div>
+          <div class="sb-card" style="flex:1;min-width:180px">
+            <small class="sb-text-muted">Next run</small>
+            <div>
+              <span class="sb-editable" data-field="next_app">
+                <span class="sb-editable-display"><strong>hackernews-feed</strong></span>
+                <input class="sb-editable-input" value="hackernews-feed">
+                <span class="sb-editable-pen" title="Edit">edit</span>
+              </span>
+              · in 48 min
+            </div>
+          </div>
+          <div style="display:flex;align-items:center"><button class="sb-btn sb-btn--primary">▶ Run Morning Cycle</button></div>
+        </div>
+      </div>
     </div>
+
     <div class="sb-tab-panel" id="panel-apps" hidden>
-      <p>Apps panel — card grid from GET /api/apps.</p>
+      <div class="sb-card-grid">
+        <div class="sb-card">
+          <div class="sb-card-header">
+            <span class="sb-app-name"><img src="icons/apps/hackernews.png" class="sb-app-icon"> hackernews-feed</span>
+            <span class="sb-pill sb-pill--success">● Healthy</span>
+          </div>
+          <div class="sb-card-body">
+            <div class="sb-flex sb-gap-md" style="flex-wrap:wrap">
+              <div><small class="sb-text-muted">Domain</small><br>
+                <span class="sb-editable" data-field="hn_domain">
+                  <span class="sb-editable-display">news.ycombinator.com</span>
+                  <input class="sb-editable-input" value="news.ycombinator.com">
+                  <span class="sb-editable-pen" title="Edit">edit</span>
+                </span>
+              </div>
+              <div><small class="sb-text-muted">Schedule</small><br>
+                <span class="sb-editable" data-field="hn_cron">
+                  <span class="sb-editable-display sb-text-mono">0 6 * * *</span>
+                  <input class="sb-editable-input" value="0 6 * * *" style="font-family:var(--sb-font-mono)">
+                  <span class="sb-editable-pen" title="Edit">edit</span>
+                </span>
+              </div>
+              <div><small class="sb-text-muted">Items</small><br><strong>30</strong></div>
+              <div><small class="sb-text-muted">Report</small><br><strong>16KB</strong></div>
+            </div>
+            <div class="sb-timestamp sb-mt-md">Last run: 12 min ago · Next: in 48 min</div>
+            <div class="sb-mt-md"><button class="sb-btn sb-btn--sm">▶ Run</button></div>
+          </div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-card-header">
+            <span class="sb-app-name"><img src="icons/apps/google-search.png" class="sb-app-icon"> google-search-trends</span>
+            <span class="sb-pill sb-pill--success">● Healthy</span>
+          </div>
+          <div class="sb-card-body">
+            <div class="sb-flex sb-gap-md" style="flex-wrap:wrap">
+              <div><small class="sb-text-muted">Domain</small><br>
+                <span class="sb-editable" data-field="goog_domain">
+                  <span class="sb-editable-display">google.com</span>
+                  <input class="sb-editable-input" value="google.com">
+                  <span class="sb-editable-pen" title="Edit">edit</span>
+                </span>
+              </div>
+              <div><small class="sb-text-muted">Schedule</small><br>
+                <span class="sb-editable" data-field="goog_cron">
+                  <span class="sb-editable-display sb-text-mono">0 6 * * *</span>
+                  <input class="sb-editable-input" value="0 6 * * *" style="font-family:var(--sb-font-mono)">
+                  <span class="sb-editable-pen" title="Edit">edit</span>
+                </span>
+              </div>
+              <div><small class="sb-text-muted">Items</small><br><strong>20</strong></div>
+              <div><small class="sb-text-muted">Report</small><br><strong>25KB</strong></div>
+            </div>
+            <div class="sb-timestamp sb-mt-md">Last run: 15 min ago</div>
+            <div class="sb-mt-md"><button class="sb-btn sb-btn--sm">▶ Run</button></div>
+          </div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-card-header">
+            <span class="sb-app-name"><img src="icons/apps/gmail.jpg" class="sb-app-icon"> gmail-inbox-triage</span>
+            <span class="sb-pill sb-pill--warning">● oauth3</span>
+          </div>
+          <div class="sb-card-body">
+            <div class="sb-flex sb-gap-md" style="flex-wrap:wrap">
+              <div><small class="sb-text-muted">Domain</small><br>
+                <span class="sb-editable" data-field="gmail_domain">
+                  <span class="sb-editable-display">mail.google.com</span>
+                  <input class="sb-editable-input" value="mail.google.com">
+                  <span class="sb-editable-pen" title="Edit">edit</span>
+                </span>
+              </div>
+              <div><small class="sb-text-muted">Auth</small><br><span class="sb-pill sb-pill--warning">oauth3</span></div>
+            </div>
+            <div class="sb-timestamp sb-mt-md">Never run · Needs login</div>
+            <div class="sb-mt-md"><button class="sb-btn sb-btn--sm">▶ Run</button></div>
+          </div>
+        </div>
+      </div>
     </div>
+
     <div class="sb-tab-panel" id="panel-evidence" hidden>
-      <p>Evidence panel — DataTables table from GET /api/v1/evidence.</p>
+      <div class="sb-flex" style="justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div>
+          <span class="sb-pill sb-pill--success">ALCOA ✓</span>
+          <span class="sb-pill sb-pill--info">Chain Valid</span>
+          <strong style="margin-left:8px">13,741 entries</strong>
+        </div>
+        <button class="sb-btn sb-btn--sm">Export Chain</button>
+      </div>
+      <div class="sb-card" style="padding:0;overflow:hidden">
+        <table class="sb-table" id="evidence-tab-table">
+          <thead><tr><th>Event</th><th>Actor</th><th>Hash</th><th>Time</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>app_run</td><td>runtime</td><td class="sb-text-mono">a4f2c891... <button class="sb-copy-btn" onclick="this.textContent='✓';setTimeout(()=>this.textContent='copy',1500)">copy</button></td><td>2 min ago</td><td><span class="sb-pill sb-pill--success">Pass</span></td></tr>
+            <tr><td>self_qa_fix</td><td>saint_solace</td><td class="sb-text-mono">2216ce33... <button class="sb-copy-btn" onclick="this.textContent='✓';setTimeout(()=>this.textContent='copy',1500)">copy</button></td><td>15 min ago</td><td><span class="sb-pill sb-pill--success">Pass</span></td></tr>
+            <tr><td>oauth3_revoke</td><td>runtime</td><td class="sb-text-mono">b4cd8b73... <button class="sb-copy-btn" onclick="this.textContent='✓';setTimeout(()=>this.textContent='copy',1500)">copy</button></td><td>1 hour ago</td><td><span class="sb-pill sb-pill--warning">Revoked</span></td></tr>
+            <tr><td>budget_check</td><td>cron</td><td class="sb-text-mono">08f5903b... <button class="sb-copy-btn" onclick="this.textContent='✓';setTimeout(()=>this.textContent='copy',1500)">copy</button></td><td>2 hours ago</td><td><span class="sb-pill sb-pill--success">Pass</span></td></tr>
+            <tr><td>app_run</td><td>runtime</td><td class="sb-text-mono">3d815090... <button class="sb-copy-btn" onclick="this.textContent='✓';setTimeout(()=>this.textContent='copy',1500)">copy</button></td><td>3 hours ago</td><td><span class="sb-pill sb-pill--success">Pass</span></td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
+
     <div class="sb-tab-panel" id="panel-domains" hidden>
-      <p>Domains panel — domain cards from GET /api/v1/domains.</p>
+      <div class="sb-card-grid">
+        <div class="sb-card">
+          <div class="sb-card-header">
+            <span class="sb-app-name"><img src="icons/apps/hackernews.png" class="sb-app-icon"> news.ycombinator.com</span>
+            <span class="sb-pill sb-pill--success">no auth</span>
+          </div>
+          <div class="sb-card-body">
+            1 app · hackernews-feed<br>
+            <div class="sb-flex sb-gap-md sb-mt-md" style="flex-wrap:wrap">
+              <div><small class="sb-text-muted">TTL</small><br>
+                <span class="sb-editable" data-field="hn_ttl">
+                  <span class="sb-editable-display">24h</span>
+                  <input class="sb-editable-input" value="24" style="width:60px">
+                  <span class="sb-editable-pen" title="Edit">edit</span>
+                </span>
+              </div>
+              <div><small class="sb-text-muted">Keep-alive</small><br><span>6h</span></div>
+              <div><small class="sb-text-muted">Auth type</small><br>
+                <span class="sb-editable" data-field="hn_auth">
+                  <span class="sb-editable-display">none</span>
+                  <input class="sb-editable-input" value="none" style="width:80px">
+                  <span class="sb-editable-pen" title="Edit">edit</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-card-header">
+            <span class="sb-app-name"><img src="icons/apps/gmail.jpg" class="sb-app-icon"> mail.google.com</span>
+            <span class="sb-pill sb-pill--warning">oauth3</span>
+          </div>
+          <div class="sb-card-body">
+            2 apps · inbox-triage, spam-cleaner<br>
+            <div class="sb-flex sb-gap-md sb-mt-md" style="flex-wrap:wrap">
+              <div><small class="sb-text-muted">TTL</small><br>
+                <span class="sb-editable" data-field="gmail_ttl">
+                  <span class="sb-editable-display">24h</span>
+                  <input class="sb-editable-input" value="24" style="width:60px">
+                  <span class="sb-editable-pen" title="Edit">edit</span>
+                </span>
+              </div>
+              <div><small class="sb-text-muted">Keep-alive</small><br><span>6h</span></div>
+              <div><small class="sb-text-muted">Selector</small><br>
+                <span class="sb-editable" data-field="gmail_sel">
+                  <span class="sb-editable-display sb-text-mono">div[role=navigation]</span>
+                  <input class="sb-editable-input" value="div[role=navigation]" style="font-family:var(--sb-font-mono);width:180px">
+                  <span class="sb-editable-pen" title="Edit">edit</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
     <div class="sb-tab-panel" id="panel-agents" hidden>
-      <p>Agents panel — agent cards from GET /api/v1/agents.</p>
+      <div class="sb-card-grid">
+        <div class="sb-card">
+          <div class="sb-card-header"><h3 class="sb-card-title">claude</h3><span class="sb-pill sb-pill--success">● installed</span></div>
+          <div class="sb-card-body">
+            <div class="sb-text-muted">Models: opus, sonnet, haiku</div>
+            <div class="sb-text-mono sb-timestamp">/home/phuc/.local/bin/claude</div>
+            <div class="sb-mt-md">
+              <textarea class="sb-textarea" rows="2" placeholder="Ask claude something..."></textarea>
+              <div class="sb-mt-md"><button class="sb-btn sb-btn--sm sb-btn--primary">Generate</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-card-header"><h3 class="sb-card-title">codex</h3><span class="sb-pill sb-pill--success">● installed</span></div>
+          <div class="sb-card-body">
+            <div class="sb-text-muted">Models: gpt-4.1, o3, o4-mini</div>
+            <div class="sb-text-mono sb-timestamp">/usr/bin/codex</div>
+            <div class="sb-mt-md">
+              <textarea class="sb-textarea" rows="2" placeholder="Ask codex something..."></textarea>
+              <div class="sb-mt-md"><button class="sb-btn sb-btn--sm sb-btn--primary">Generate</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-card-header"><h3 class="sb-card-title">gemini</h3><span class="sb-pill sb-pill--success">● installed</span></div>
+          <div class="sb-card-body">
+            <div class="sb-text-muted">Models: 2.5-pro, 2.5-flash</div>
+            <div class="sb-text-mono sb-timestamp">/home/phuc/.npm-global/bin/gemini</div>
+            <div class="sb-mt-md">
+              <textarea class="sb-textarea" rows="2" placeholder="Ask gemini something..."></textarea>
+              <div class="sb-mt-md"><button class="sb-btn sb-btn--sm sb-btn--primary">Generate</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
