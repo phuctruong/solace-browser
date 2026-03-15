@@ -221,7 +221,9 @@ impl AppState {
             notifications: Arc::new(RwLock::new(Vec::new())),
             schedules: Arc::new(RwLock::new(schedules)),
             evidence_count: Arc::new(RwLock::new(0)),
-            app_count: Arc::new(RwLock::new(0)),
+            app_count: Arc::new(RwLock::new(
+                crate::utils::scan_apps().len() as u32,
+            )),
             budget_usage: Arc::new(RwLock::new(budget_usage)),
             cloud_config: Arc::new(RwLock::new(cloud_config)),
             theme: Arc::new(RwLock::new(settings.theme)),

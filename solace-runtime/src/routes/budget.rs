@@ -6,6 +6,7 @@ use crate::state::AppState;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
+        .route("/api/v1/budget", get(budget_status.clone()))
         .route("/api/v1/budget/status", get(budget_status))
         .route(
             "/api/v1/budget/config",

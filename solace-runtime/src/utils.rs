@@ -110,7 +110,9 @@ pub fn find_app_dir(app_id: &str) -> Option<PathBuf> {
 }
 
 fn has_manifest(path: &Path) -> bool {
-    path.join("manifest.yaml").is_file() || path.join("manifest.yml").is_file()
+    path.join("manifest.yaml").is_file()
+        || path.join("manifest.yml").is_file()
+        || path.join("manifest.md").is_file()
 }
 
 pub fn modified_iso8601(path: &Path) -> Option<String> {
