@@ -192,3 +192,102 @@ pub fn load_inbox_payload(app_dir: &Path) -> Value {
         "files": files,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn parse_prime_mermaid_manifest_identity() {
+        let dir = tempfile::tempdir().unwrap();
+        let manifest = dir.path().join("manifest.md");
+        let mut f = std::fs::File::create(&manifest).unwrap();
+        write!(f, r#"<!-- Diagram: 12-app-engine-pipeline -->
+# App: Test App
+# DNA: `test = fetch → render → seal`
+# Auth: 65537 | Status: installed | Tier: free
+
+## Identity
+- **ID**: test-app
+- **Version**: 2.0.0
+- **Domain**: example.com
+- **Category**: research
+- **Type**: standard
+
+## Configuration
+```
+schedule: "0 8 * * *"
+tier: free
+report_template: feed-digest
+```
+"#).unwrap();
+
+        let result = parse_prime_mermaid_manifest(&manifest).unwrap();
+        assert_eq!(result.id, "test-app");
+        assert_eq!(result.name, "Test App");
+        assert_eq!(result.version, "2.0.0");
+        assert_eq!(result.domain, "example.com");
+        assert_eq!(result.category, "research");
+        assert_eq!(result.schedule, "0 8 * * *");
+        assert_eq!(result.report_template, "feed-digest");
+    }
+
+    #[test]
+    fn parse_prime_mermaid_data_sources() {
+        let dir = tempfile::tempdir().unwrap();
+        let manifest = dir.path().join("manifest.md");
+        let mut f = std::fs::File::create(&manifest).unwrap();
+        write!(f, r#"# App: Feed App
+
+## Identity
+- **ID**: feed-app
+
+## Data Sources
+```
+sources:
+  - name: api-data
+    url: https://api.example.com/items.json
+    type: json
+    limit: 50
+  - name: rss-feed
+    url: https://example.com/feed.rss
+    type: rss
+    limit: 10
+```
+"#).unwrap();
+
+        let result = parse_prime_mermaid_manifest(&manifest).unwrap();
+        assert_eq!(result.data_sources.len(), 2);
+        assert_eq!(result.data_sources[0].name, "api-data");
+        assert_eq!(result.data_sources[0].url, "https://api.example.com/items.json");
+        assert_eq!(result.data_sources[0].limit, 50);
+        assert_eq!(result.data_sources[1].name, "rss-feed");
+        assert_eq!(result.data_sources[1].url, "https://example.com/feed.rss");
+        assert_eq!(result.data_sources[1].source_type, "rss");
+        assert_eq!(result.data_sources[1].limit, 10);
+    }
+
+    #[test]
+    fn parse_prime_mermaid_no_data_sources() {
+        let dir = tempfile::tempdir().unwrap();
+        let manifest = dir.path().join("manifest.md");
+        let mut f = std::fs::File::create(&manifest).unwrap();
+        write!(f, "# App: Simple\n\n## Identity\n- **ID**: simple\n").unwrap();
+
+        let result = parse_prime_mermaid_manifest(&manifest).unwrap();
+        assert!(result.data_sources.is_empty());
+    }
+
+    #[test]
+    fn load_manifest_prefers_md_over_missing_yaml() {
+        let dir = tempfile::tempdir().unwrap();
+        let manifest = dir.path().join("manifest.md");
+        let mut f = std::fs::File::create(&manifest).unwrap();
+        write!(f, "# App: MD App\n\n## Identity\n- **ID**: md-app\n- **Version**: 3.0.0\n").unwrap();
+
+        let result = load_manifest(dir.path()).unwrap();
+        assert_eq!(result.id, "md-app");
+        assert_eq!(result.version, "3.0.0");
+    }
+}
