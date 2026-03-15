@@ -52,6 +52,14 @@ async fn extract_page(
     State(state): State<AppState>,
     Json(req): Json<ExtractRequest>,
 ) -> Json<serde_json::Value> {
+    // Security: reject non-HTTP URLs (prevent file:// traversal)
+    if !req.url.starts_with("http://") && !req.url.starts_with("https://") && !req.url.starts_with("app://") {
+        return Json(json!({
+            "status": "error",
+            "error": "URL must start with http://, https://, or app://",
+        }));
+    }
+
     let content = req.content.as_bytes();
     match stillwater::extract(content, &req.content_type, &req.url) {
         Ok(decomp) => {

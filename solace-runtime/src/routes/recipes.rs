@@ -49,14 +49,21 @@ struct ExecuteRequest {
 async fn run_recipe(
     State(state): State<AppState>,
     Json(req): Json<ExecuteRequest>,
-) -> Json<serde_json::Value> {
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    // Security: reject empty tasks
+    if req.task.trim().is_empty() {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "task must not be empty"})),
+        ));
+    }
     let mut cache = RecipeCache::new();
     let result = execute_recipe(&req.task, &mut cache);
 
     *state.evidence_count.write() += 1;
     crate::routes::budget::record_budget_event(&state);
 
-    Json(json!({
+    Ok(Json(json!({
         "state": result.state,
         "recipe_id": result.recipe_id,
         "task_hash": result.task_hash,
@@ -64,7 +71,7 @@ async fn run_recipe(
         "replay_count": result.replay_count,
         "steps_executed": result.steps_executed,
         "evidence_hash": result.evidence_hash,
-    }))
+    })))
 }
 
 /// POST /api/v1/recipes/classify

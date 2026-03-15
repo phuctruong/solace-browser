@@ -61,7 +61,17 @@ async fn create_notification(
         read: false,
         created_at: crate::utils::now_iso8601(),
     };
-    state.notifications.write().push(notification.clone());
+    let mut notifications = state.notifications.write();
+    // Security: cap at 500 notifications to prevent memory bomb
+    if notifications.len() >= 500 {
+        // Remove oldest unread, or oldest read
+        if let Some(pos) = notifications.iter().position(|n| n.read) {
+            notifications.remove(pos);
+        } else {
+            notifications.remove(0);
+        }
+    }
+    notifications.push(notification.clone());
     Ok(Json(json!({"notification": notification})))
 }
 
