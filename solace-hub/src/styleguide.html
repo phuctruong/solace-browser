@@ -129,7 +129,7 @@
           <span class="sb-editable" data-field="app_name">
             <span class="sb-editable-display">hackernews-feed</span>
             <input class="sb-editable-input" value="hackernews-feed">
-            <span class="sb-editable-pen" title="Edit">✏️</span>
+            <span class="sb-editable-pen" title="Edit">edit</span>
           </span>
         </div>
         <div>
@@ -137,7 +137,7 @@
           <span class="sb-editable" data-field="schedule">
             <span class="sb-editable-display">0 6 * * *</span>
             <input class="sb-editable-input" value="0 6 * * *">
-            <span class="sb-editable-pen" title="Edit">✏️</span>
+            <span class="sb-editable-pen" title="Edit">edit</span>
           </span>
         </div>
         <div>
@@ -145,7 +145,7 @@
           <span class="sb-editable" data-field="domain">
             <span class="sb-editable-display">news.ycombinator.com</span>
             <input class="sb-editable-input" value="news.ycombinator.com">
-            <span class="sb-editable-pen" title="Edit">✏️</span>
+            <span class="sb-editable-pen" title="Edit">edit</span>
           </span>
         </div>
       </div>
@@ -897,11 +897,11 @@ flowchart TB
   <section class="sb-mt-md">
     <p class="sb-kicker">Component (from Crio)</p>
     <h2 class="sb-heading">Sortable List (drag to reorder)</h2>
-    <div class="sb-card" style="max-width:400px">
-      <div class="sb-sortable-item">1. hackernews-feed</div>
-      <div class="sb-sortable-item">2. google-search-trends</div>
-      <div class="sb-sortable-item">3. reddit-scanner</div>
-      <div class="sb-sortable-item">4. morning-brief</div>
+    <div class="sb-card" style="max-width:400px" id="sortable-list">
+      <div class="sb-sortable-item" draggable="true">1. hackernews-feed</div>
+      <div class="sb-sortable-item" draggable="true">2. google-search-trends</div>
+      <div class="sb-sortable-item" draggable="true">3. reddit-scanner</div>
+      <div class="sb-sortable-item" draggable="true">4. morning-brief</div>
     </div>
   </section>
 
@@ -1046,6 +1046,42 @@ flowchart TB
       });
     });
   });
+
+  // ─── Sortable drag-and-drop ───
+  (function() {
+    var list = document.getElementById('sortable-list');
+    if (!list) return;
+    var dragItem = null;
+    list.querySelectorAll('.sb-sortable-item').forEach(function(item) {
+      item.addEventListener('dragstart', function(e) {
+        dragItem = item;
+        item.style.opacity = '0.4';
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      item.addEventListener('dragend', function() {
+        item.style.opacity = '1';
+        dragItem = null;
+        list.querySelectorAll('.sb-sortable-item').forEach(function(el) { el.style.borderTop = ''; });
+      });
+      item.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (item !== dragItem) {
+          item.style.borderTop = '3px solid var(--sb-accent)';
+        }
+      });
+      item.addEventListener('dragleave', function() {
+        item.style.borderTop = '';
+      });
+      item.addEventListener('drop', function(e) {
+        e.preventDefault();
+        item.style.borderTop = '';
+        if (dragItem && item !== dragItem) {
+          list.insertBefore(dragItem, item);
+        }
+      });
+    });
+  })();
 
   // ─── Mermaid init (render all <pre class="mermaid"> blocks) ───
   if (typeof mermaid !== 'undefined') {
