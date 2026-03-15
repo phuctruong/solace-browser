@@ -1,0 +1,317 @@
+<!-- Diagram: 04-hub-lifecycle -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solace Hub — Styleguide</title>
+  <link rel="icon" href="icons/yinyang-logo.png">
+  <link rel="stylesheet" href="styleguide.css">
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="sb-topbar">
+  <div class="sb-topbar-brand">
+    <img src="icons/yinyang-logo.png" alt="Solace">
+    <span>Styleguide</span>
+  </div>
+  <div class="sb-topbar-spacer"></div>
+  <div class="sb-theme-group">
+    <button class="sb-theme-btn sb-theme-btn--active" data-theme="dark">Dark</button>
+    <button class="sb-theme-btn" data-theme="light">Light</button>
+  </div>
+  <select class="sb-lang-select" id="lang-select">
+    <option value="en">English</option>
+    <option value="vi">Tiếng Việt</option>
+    <option value="ja">日本語</option>
+    <option value="ko">한국어</option>
+    <option value="zh">中文</option>
+    <option value="es">Español</option>
+    <option value="fr">Français</option>
+    <option value="de">Deutsch</option>
+  </select>
+</header>
+
+<!-- COMPONENT CATALOG -->
+<div style="padding: 1.5rem; max-width: 1200px; margin: 0 auto;">
+
+  <h1 style="margin-bottom: 0.25rem;">Solace Hub Styleguide</h1>
+  <p class="sb-text-muted">Design tokens + components. Zero external CSS. DataTables is the only external JS.</p>
+  <p class="sb-text-muted">Origin: crio hover-edit + solace-browser-backup --sb-* tokens.</p>
+
+  <!-- ─── TOKENS ──────────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Design Tokens</p>
+    <h2 class="sb-heading">Colors</h2>
+    <div class="sb-flex sb-gap-sm" style="flex-wrap: wrap;">
+      <div class="sb-card" style="width:120px;text-align:center"><div style="height:40px;background:var(--sb-accent);border-radius:var(--sb-radius-sm)"></div><small>--sb-accent</small></div>
+      <div class="sb-card" style="width:120px;text-align:center"><div style="height:40px;background:var(--sb-success);border-radius:var(--sb-radius-sm)"></div><small>--sb-success</small></div>
+      <div class="sb-card" style="width:120px;text-align:center"><div style="height:40px;background:var(--sb-warning);border-radius:var(--sb-radius-sm)"></div><small>--sb-warning</small></div>
+      <div class="sb-card" style="width:120px;text-align:center"><div style="height:40px;background:var(--sb-danger);border-radius:var(--sb-radius-sm)"></div><small>--sb-danger</small></div>
+      <div class="sb-card" style="width:120px;text-align:center"><div style="height:40px;background:var(--sb-surface-strong);border-radius:var(--sb-radius-sm)"></div><small>--sb-surface</small></div>
+      <div class="sb-card" style="width:120px;text-align:center"><div style="height:40px;background:var(--sb-text);border-radius:var(--sb-radius-sm)"></div><small>--sb-text</small></div>
+    </div>
+  </section>
+
+  <!-- ─── TABS ────────────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Tabs</h2>
+    <div class="sb-tabs" role="tablist" id="demo-tabs">
+      <button class="sb-tab sb-tab--active" data-view="overview" role="tab">Overview</button>
+      <button class="sb-tab" data-view="apps" role="tab">Apps <span class="sb-tab-badge">63</span></button>
+      <button class="sb-tab" data-view="evidence" role="tab">Evidence</button>
+      <button class="sb-tab" data-view="domains" role="tab">Domains</button>
+      <button class="sb-tab" data-view="agents" role="tab">Agents</button>
+    </div>
+    <div class="sb-tab-panel" id="panel-overview">
+      <p>Overview panel content — shows hero + streak + last/next run.</p>
+    </div>
+    <div class="sb-tab-panel" id="panel-apps" hidden>
+      <p>Apps panel — card grid from GET /api/apps.</p>
+    </div>
+    <div class="sb-tab-panel" id="panel-evidence" hidden>
+      <p>Evidence panel — DataTables table from GET /api/v1/evidence.</p>
+    </div>
+    <div class="sb-tab-panel" id="panel-domains" hidden>
+      <p>Domains panel — domain cards from GET /api/v1/domains.</p>
+    </div>
+    <div class="sb-tab-panel" id="panel-agents" hidden>
+      <p>Agents panel — agent cards from GET /api/v1/agents.</p>
+    </div>
+  </section>
+
+  <!-- ─── PILLS ───────────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Status Pills</h2>
+    <div class="sb-flex sb-gap-sm">
+      <span class="sb-pill sb-pill--success">● Healthy</span>
+      <span class="sb-pill sb-pill--warning">● Pending</span>
+      <span class="sb-pill sb-pill--danger">● Failed</span>
+      <span class="sb-pill sb-pill--info">● Running</span>
+    </div>
+  </section>
+
+  <!-- ─── HOVER-EDIT ──────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Hover-Edit (from Crio)</h2>
+    <p class="sb-text-muted">Hover over a field to see the pen. Click pen to edit inline.</p>
+    <div class="sb-card">
+      <div class="sb-flex sb-gap-md" style="flex-wrap: wrap;">
+        <div>
+          <small class="sb-text-muted">App Name</small><br>
+          <span class="sb-editable" data-field="app_name">
+            <span class="sb-editable-display">hackernews-feed</span>
+            <input class="sb-editable-input" value="hackernews-feed">
+            <span class="sb-editable-pen" title="Edit">✏️</span>
+          </span>
+        </div>
+        <div>
+          <small class="sb-text-muted">Schedule</small><br>
+          <span class="sb-editable" data-field="schedule">
+            <span class="sb-editable-display">0 6 * * *</span>
+            <input class="sb-editable-input" value="0 6 * * *">
+            <span class="sb-editable-pen" title="Edit">✏️</span>
+          </span>
+        </div>
+        <div>
+          <small class="sb-text-muted">Domain</small><br>
+          <span class="sb-editable" data-field="domain">
+            <span class="sb-editable-display">news.ycombinator.com</span>
+            <input class="sb-editable-input" value="news.ycombinator.com">
+            <span class="sb-editable-pen" title="Edit">✏️</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── BUTTONS ─────────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Buttons</h2>
+    <div class="sb-flex sb-gap-sm">
+      <button class="sb-btn sb-btn--primary">Run Morning Cycle</button>
+      <button class="sb-btn">View Evidence</button>
+      <button class="sb-btn sb-btn--sm">Run</button>
+      <button class="sb-btn sb-btn--sm sb-text-danger">Stop</button>
+    </div>
+  </section>
+
+  <!-- ─── CARDS ───────────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Cards (App Grid)</h2>
+    <div class="sb-card-grid">
+      <div class="sb-card">
+        <div class="sb-card-header">
+          <h3 class="sb-card-title">hackernews-feed</h3>
+          <span class="sb-pill sb-pill--success">● Healthy</span>
+        </div>
+        <div class="sb-card-body">
+          30 items · 16KB report · <span class="sb-text-mono">0 6 * * *</span>
+          <div class="sb-mt-md"><button class="sb-btn sb-btn--sm">▶ Run</button></div>
+        </div>
+      </div>
+      <div class="sb-card">
+        <div class="sb-card-header">
+          <h3 class="sb-card-title">google-search-trends</h3>
+          <span class="sb-pill sb-pill--success">● Healthy</span>
+        </div>
+        <div class="sb-card-body">
+          20 items · 25KB report · <span class="sb-text-mono">0 6 * * *</span>
+          <div class="sb-mt-md"><button class="sb-btn sb-btn--sm">▶ Run</button></div>
+        </div>
+      </div>
+      <div class="sb-card">
+        <div class="sb-card-header">
+          <h3 class="sb-card-title">morning-brief</h3>
+          <span class="sb-pill sb-pill--info">● Orchestrator</span>
+        </div>
+        <div class="sb-card-body">
+          Combines feeds · 3.7KB report · <span class="sb-text-mono">0 8 * * *</span>
+          <div class="sb-mt-md"><button class="sb-btn sb-btn--sm">▶ Run</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TABLE (DataTables style) ────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Table (DataTables compatible)</h2>
+    <div class="sb-card">
+      <table class="sb-table" id="demo-table">
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Actor</th>
+            <th>Hash</th>
+            <th>Time</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>app_run</td>
+            <td>runtime</td>
+            <td class="sb-text-mono sb-truncate" style="max-width:120px">a4f2c891...</td>
+            <td>2 min ago</td>
+            <td><span class="sb-pill sb-pill--success">Pass</span></td>
+          </tr>
+          <tr>
+            <td>self_qa_fix</td>
+            <td>saint_solace</td>
+            <td class="sb-text-mono sb-truncate" style="max-width:120px">2216ce33...</td>
+            <td>15 min ago</td>
+            <td><span class="sb-pill sb-pill--success">Pass</span></td>
+          </tr>
+          <tr>
+            <td>oauth3_revoke</td>
+            <td>runtime</td>
+            <td class="sb-text-mono sb-truncate" style="max-width:120px">b4cd8b73...</td>
+            <td>1 hour ago</td>
+            <td><span class="sb-pill sb-pill--warning">Revoked</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── TOP BAR STATUS ──────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Top Bar (with status dots)</h2>
+    <header class="sb-topbar" style="position:static; border-radius: var(--sb-radius-lg);">
+      <div class="sb-topbar-brand">
+        <img src="icons/yinyang-logo.png" alt="Solace">
+        <span>Solace Hub</span>
+      </div>
+      <div class="sb-topbar-spacer"></div>
+      <span class="sb-topbar-stat"><span class="sb-topbar-dot sb-topbar-dot--on"></span> Runtime :8888</span>
+      <span class="sb-topbar-stat"><span class="sb-topbar-dot sb-topbar-dot--on"></span> 6 agents</span>
+      <span class="sb-topbar-stat"><span class="sb-topbar-dot sb-topbar-dot--on"></span> 63 apps</span>
+      <span class="sb-topbar-stat">13,741 evidence</span>
+      <div class="sb-theme-group">
+        <button class="sb-theme-btn sb-theme-btn--active">Dark</button>
+        <button class="sb-theme-btn">Light</button>
+      </div>
+    </header>
+  </section>
+
+</div>
+
+<!-- ═══ JAVASCRIPT — Tab switching, hover-edit, theme toggle ═══ -->
+<script>
+(function() {
+  'use strict';
+
+  // ─── Tab switching (from solace-browser-backup/schedule-core.js) ───
+  function setupTabs(container) {
+    var tabs = [].slice.call(container.querySelectorAll('.sb-tab'));
+    var panels = container.parentElement.querySelectorAll('.sb-tab-panel');
+
+    tabs.forEach(function(btn, idx) {
+      btn.addEventListener('click', function() {
+        tabs.forEach(function(b) {
+          b.classList.toggle('sb-tab--active', b === btn);
+          b.setAttribute('aria-selected', b === btn);
+        });
+        panels.forEach(function(p) {
+          p.hidden = p.id !== 'panel-' + btn.dataset.view;
+        });
+      });
+
+      btn.addEventListener('keydown', function(e) {
+        var next;
+        if (e.key === 'ArrowRight') next = tabs[(idx + 1) % tabs.length];
+        else if (e.key === 'ArrowLeft') next = tabs[(idx - 1 + tabs.length) % tabs.length];
+        if (next) { e.preventDefault(); next.focus(); next.click(); }
+      });
+    });
+  }
+
+  var tabContainers = document.querySelectorAll('.sb-tabs');
+  tabContainers.forEach(setupTabs);
+
+  // ─── Hover-edit (from crio study_data_template pattern) ───
+  document.querySelectorAll('.sb-editable').forEach(function(el) {
+    var display = el.querySelector('.sb-editable-display');
+    var input = el.querySelector('.sb-editable-input');
+    var pen = el.querySelector('.sb-editable-pen');
+
+    pen.addEventListener('click', function() {
+      el.classList.add('sb-editable--editing');
+      input.focus();
+      input.select();
+    });
+
+    input.addEventListener('blur', function() {
+      el.classList.remove('sb-editable--editing');
+      display.textContent = input.value;
+    });
+
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') input.blur();
+      if (e.key === 'Escape') { input.value = display.textContent; input.blur(); }
+    });
+  });
+
+  // ─── Theme toggle ───
+  document.querySelectorAll('.sb-theme-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.documentElement.setAttribute('data-theme', btn.dataset.theme);
+      document.querySelectorAll('.sb-theme-btn').forEach(function(b) {
+        b.classList.toggle('sb-theme-btn--active', b === btn);
+      });
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,397 @@
+/* Diagram: 04-hub-lifecycle */
+/* Solace Hub Styleguide — Design Tokens + Components
+   DNA: `style = tokens(--sb-*) × components(tab,hover-edit,card,table) × themes(dark,light) × i18n(47)`
+   Auth: 65537 | Zero external CSS. DataTables is the ONLY external JS library.
+   Origin: crio hover-edit pattern + solace-browser-backup --sb-* tokens */
+
+/* ═══════════════════════════════════════════════════════════════════
+   1. DESIGN TOKENS (--sb-* prefix, matches solace-browser-backup)
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Dark theme (default) */
+  --sb-bg: #0f1e33;
+  --sb-surface: rgba(15, 30, 51, 0.95);
+  --sb-surface-soft: rgba(20, 36, 55, 0.84);
+  --sb-surface-strong: #1a2d47;
+  --sb-surface-hover: #1e3550;
+  --sb-border: rgba(118, 160, 201, 0.15);
+  --sb-border-strong: rgba(118, 160, 201, 0.35);
+  --sb-text: #e8ecf2;
+  --sb-text-muted: #8899aa;
+  --sb-accent: #78b9ff;
+  --sb-accent-hover: #9fd5ff;
+  --sb-accent-soft: rgba(120, 185, 255, 0.12);
+  --sb-on-accent: #0a1628;
+  --sb-success: #55d7aa;
+  --sb-warning: #ffd479;
+  --sb-danger: #ff7b7b;
+  --sb-signal: #78b9ff;
+  --sb-shadow: 0 8px 32px rgba(2, 7, 15, 0.4);
+  --sb-shadow-glow: 0 0 20px rgba(120, 185, 255, 0.1);
+  --sb-radius: 8px;
+  --sb-radius-lg: 16px;
+  --sb-radius-sm: 4px;
+  --sb-transition: 150ms ease;
+  --sb-font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --sb-font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+  --sb-font-scale: 1;
+  --sb-kicker-track: 0.12em;
+  /* Status pills */
+  --sb-pill-success-bg: rgba(85, 215, 170, 0.15);
+  --sb-pill-success-text: #55d7aa;
+  --sb-pill-warning-bg: rgba(255, 212, 121, 0.15);
+  --sb-pill-warning-text: #ffd479;
+  --sb-pill-danger-bg: rgba(255, 123, 123, 0.15);
+  --sb-pill-danger-text: #ff7b7b;
+  --sb-pill-info-bg: rgba(120, 185, 255, 0.15);
+  --sb-pill-info-text: #78b9ff;
+}
+
+[data-theme="light"] {
+  --sb-bg: #f4f0eb;
+  --sb-surface: #ffffff;
+  --sb-surface-soft: #f7f4ef;
+  --sb-surface-strong: #ede8e1;
+  --sb-surface-hover: #f0ece6;
+  --sb-border: rgba(120, 100, 80, 0.15);
+  --sb-border-strong: rgba(120, 100, 80, 0.3);
+  --sb-text: #2c2420;
+  --sb-text-muted: #7a6e62;
+  --sb-accent: #1a7fb8;
+  --sb-accent-hover: #2090cc;
+  --sb-accent-soft: rgba(26, 127, 184, 0.08);
+  --sb-on-accent: #ffffff;
+  --sb-success: #1e8c64;
+  --sb-warning: #b8860b;
+  --sb-danger: #c0392b;
+  --sb-signal: #1a7fb8;
+  --sb-shadow: 0 8px 32px rgba(80, 60, 40, 0.08);
+  --sb-shadow-glow: 0 0 20px rgba(26, 127, 184, 0.1);
+  --sb-pill-success-bg: rgba(30, 140, 100, 0.1);
+  --sb-pill-success-text: #1e8c64;
+  --sb-pill-warning-bg: rgba(184, 134, 11, 0.1);
+  --sb-pill-warning-text: #b8860b;
+  --sb-pill-danger-bg: rgba(192, 57, 43, 0.1);
+  --sb-pill-danger-text: #c0392b;
+  --sb-pill-info-bg: rgba(26, 127, 184, 0.1);
+  --sb-pill-info-text: #1a7fb8;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   2. RESET + BASE
+   ═══════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; }
+html { font-size: calc(16px * var(--sb-font-scale)); }
+body {
+  margin: 0;
+  font-family: var(--sb-font);
+  background: var(--sb-bg);
+  color: var(--sb-text);
+  line-height: 1.5;
+}
+a { color: var(--sb-accent); text-decoration: none; }
+a:hover { color: var(--sb-accent-hover); }
+code, pre { font-family: var(--sb-font-mono); }
+pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--sb-radius); overflow-x: auto; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   3. TOP BAR
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1.5rem;
+  background: var(--sb-surface);
+  border-bottom: 1px solid var(--sb-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.sb-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: var(--sb-kicker-track);
+}
+.sb-topbar-brand img { height: 28px; width: 28px; }
+.sb-topbar-spacer { flex: 1; }
+.sb-topbar-stat {
+  font-size: 0.8rem;
+  color: var(--sb-text-muted);
+}
+.sb-topbar-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+.sb-topbar-dot--on { background: var(--sb-success); }
+.sb-topbar-dot--off { background: var(--sb-danger); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   4. TABS (from solace-browser-backup/schedule-core.js pattern)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--sb-surface);
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius);
+  padding: 4px;
+  margin: 1rem 1.5rem 0;
+}
+.sb-tab {
+  background: none;
+  border: none;
+  color: var(--sb-text-muted);
+  padding: 0.5rem 1rem;
+  border-radius: calc(var(--sb-radius) - 2px);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: var(--sb-font);
+  transition: all var(--sb-transition);
+  white-space: nowrap;
+  min-height: 40px;
+}
+.sb-tab:hover:not(.sb-tab--active) {
+  background: var(--sb-surface-hover);
+  color: var(--sb-text);
+}
+.sb-tab--active {
+  background: var(--sb-accent);
+  color: var(--sb-on-accent);
+}
+.sb-tab:focus-visible {
+  outline: 2px solid var(--sb-accent);
+  outline-offset: 2px;
+}
+.sb-tab-badge {
+  background: var(--sb-pill-warning-bg);
+  color: var(--sb-pill-warning-text);
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: 6px;
+}
+.sb-tab-panel { padding: 1rem 1.5rem; }
+.sb-tab-panel[hidden] { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   5. CARDS
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-card {
+  background: var(--sb-surface);
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--sb-shadow);
+  transition: border-color var(--sb-transition);
+}
+.sb-card:hover { border-color: var(--sb-border-strong); }
+.sb-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.sb-card-title { font-size: 1rem; font-weight: 600; margin: 0; }
+.sb-card-body { font-size: 0.9rem; color: var(--sb-text-muted); }
+.sb-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 0 1.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   6. HOVER-EDIT (from crio study_data_template pattern)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-editable {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2px 4px;
+  border-radius: var(--sb-radius-sm);
+  transition: background var(--sb-transition);
+}
+.sb-editable:hover {
+  background: var(--sb-accent-soft);
+}
+.sb-editable-display { cursor: default; }
+.sb-editable-input {
+  display: none;
+  background: var(--sb-surface-strong);
+  border: 1px solid var(--sb-accent);
+  border-radius: var(--sb-radius-sm);
+  color: var(--sb-text);
+  font-family: var(--sb-font);
+  font-size: inherit;
+  padding: 2px 6px;
+}
+.sb-editable--editing .sb-editable-display { display: none; }
+.sb-editable--editing .sb-editable-input { display: inline-block; }
+.sb-editable-pen {
+  visibility: hidden;
+  cursor: pointer;
+  font-size: 0.75rem;
+  opacity: 0.5;
+}
+.sb-editable:hover .sb-editable-pen { visibility: visible; }
+.sb-editable-pen:hover { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   7. STATUS PILLS
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.sb-pill--success { background: var(--sb-pill-success-bg); color: var(--sb-pill-success-text); }
+.sb-pill--warning { background: var(--sb-pill-warning-bg); color: var(--sb-pill-warning-text); }
+.sb-pill--danger { background: var(--sb-pill-danger-bg); color: var(--sb-pill-danger-text); }
+.sb-pill--info { background: var(--sb-pill-info-bg); color: var(--sb-pill-info-text); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   8. BUTTONS
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius);
+  background: var(--sb-surface);
+  color: var(--sb-text);
+  font-family: var(--sb-font);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--sb-transition);
+  min-height: 36px;
+}
+.sb-btn:hover { background: var(--sb-surface-hover); border-color: var(--sb-border-strong); }
+.sb-btn--primary {
+  background: var(--sb-accent);
+  color: var(--sb-on-accent);
+  border-color: var(--sb-accent);
+}
+.sb-btn--primary:hover { background: var(--sb-accent-hover); }
+.sb-btn--sm { padding: 0.25rem 0.75rem; font-size: 0.8rem; min-height: 28px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   9. TABLES (DataTables compatible — .sb-table base styling)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.sb-table thead th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sb-text-muted);
+  border-bottom: 1px solid var(--sb-border-strong);
+}
+.sb-table tbody td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--sb-border);
+}
+.sb-table tbody tr:hover {
+  background: var(--sb-surface-hover);
+}
+/* DataTables integration */
+.sb-table .dataTables_wrapper { font-family: var(--sb-font); }
+.sb-table .dataTables_filter input {
+  background: var(--sb-surface-strong);
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius-sm);
+  color: var(--sb-text);
+  padding: 4px 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   10. KICKER + HEADINGS
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-kicker {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--sb-kicker-track);
+  color: var(--sb-accent);
+  margin: 0 0 0.25rem;
+}
+.sb-heading { font-size: 1.1rem; font-weight: 700; margin: 0 0 0.5rem; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   11. THEME + LANGUAGE SWITCHERS
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-theme-group {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--sb-surface-strong);
+  border-radius: var(--sb-radius);
+  padding: 2px;
+}
+.sb-theme-btn {
+  background: none;
+  border: none;
+  color: var(--sb-text-muted);
+  padding: 4px 10px;
+  border-radius: calc(var(--sb-radius) - 2px);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: var(--sb-font);
+  transition: all var(--sb-transition);
+}
+.sb-theme-btn--active { background: var(--sb-accent); color: var(--sb-on-accent); }
+.sb-lang-select {
+  background: var(--sb-surface-strong);
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius-sm);
+  color: var(--sb-text);
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  font-family: var(--sb-font);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   12. UTILITY
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-flex { display: flex; }
+.sb-flex-col { display: flex; flex-direction: column; }
+.sb-gap-sm { gap: 0.5rem; }
+.sb-gap-md { gap: 1rem; }
+.sb-mt-md { margin-top: 1rem; }
+.sb-text-muted { color: var(--sb-text-muted); }
+.sb-text-success { color: var(--sb-success); }
+.sb-text-danger { color: var(--sb-danger); }
+.sb-text-mono { font-family: var(--sb-font-mono); font-size: 0.85em; }
+.sb-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

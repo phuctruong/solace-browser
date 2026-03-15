@@ -20,7 +20,17 @@ pub fn routes() -> Router<AppState> {
         .route("/apps/:app_id", get(app_detail_page))
         .route("/apps/:app_id/runs/:run_id", get(run_detail_page))
         .route("/evidence", get(evidence_page))
+        .route("/styleguide", get(styleguide_page))
+        .route("/styleguide.css", get(styleguide_css))
         .nest_service("/assets", tower_http::services::ServeDir::new("templates"))
+        .nest_service(
+            "/icons",
+            tower_http::services::ServeDir::new("/home/phuc/projects/solace-browser/solace-hub/src/icons"),
+        )
+        .nest_service(
+            "/media",
+            tower_http::services::ServeDir::new("/home/phuc/projects/solace-browser/solace-hub/src/media"),
+        )
 }
 
 async fn index() -> Html<String> {
@@ -536,6 +546,35 @@ fn latest_run_time(app_dir: &std::path::Path) -> Option<String> {
     dirs.sort();
     dirs.last()
         .and_then(|p| crate::utils::modified_iso8601(p))
+}
+
+/// Serve the styleguide page from the Hub frontend directory.
+async fn styleguide_page() -> Html<String> {
+    // Try to find the styleguide.html in the Hub src directory
+    let candidates = [
+        std::path::PathBuf::from("/home/phuc/projects/solace-browser/solace-hub/src/styleguide.html"),
+        crate::utils::solace_home().join("hub").join("styleguide.html"),
+    ];
+    for path in &candidates {
+        if let Ok(content) = fs::read_to_string(path) {
+            return Html(content);
+        }
+    }
+    Html("<html><body><h1>Styleguide not found</h1><p>Place styleguide.html in solace-hub/src/</p></body></html>".to_string())
+}
+
+/// Serve the styleguide CSS from the Hub frontend directory.
+async fn styleguide_css() -> (StatusCode, [(axum::http::header::HeaderName, &'static str); 1], String) {
+    let candidates = [
+        std::path::PathBuf::from("/home/phuc/projects/solace-browser/solace-hub/src/styleguide.css"),
+        crate::utils::solace_home().join("hub").join("styleguide.css"),
+    ];
+    for path in &candidates {
+        if let Ok(content) = fs::read_to_string(path) {
+            return (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "text/css")], content);
+        }
+    }
+    (StatusCode::NOT_FOUND, [(axum::http::header::CONTENT_TYPE, "text/css")], String::new())
 }
 
 /// Simple stub page (legacy — used by index, onboarding, sidebar).
