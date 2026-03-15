@@ -70,6 +70,11 @@
       <p class="sb-kicker">LLM Power Source</p>
       <div class="hub-llm-chips" id="llm-chips"></div>
       <div id="llm-gate"></div>
+      <div class="sb-flex sb-gap-sm sb-mt-md" style="flex-wrap:wrap" id="llm-actions">
+        <button class="sb-btn sb-btn--sm" onclick="promptBYOK()">+ Add BYOK Key</button>
+        <button class="sb-btn sb-btn--sm" onclick="signIn()">Sign In</button>
+      </div>
+      <div id="llm-account" style="display:none" class="sb-mt-md"></div>
     </div>
 
     <!-- Launch Button (right after LLMs) -->
@@ -128,19 +133,31 @@
         chips += '<span class="hub-llm-chip">✓ ' + esc(a.id) + '</span>';
       });
 
-      // Auth pill
+      // Auth pill + account status + remote
       var auth = $('topbar-auth');
-      if (hasLLM) {
-        auth.textContent = installed.length + ' Local LLMs';
-        auth.className = 'sb-pill sb-pill--success';
-      } else {
-        auth.textContent = 'No LLM';
-        auth.className = 'sb-pill sb-pill--danger';
-      }
-
-      // Remote status
+      var acct = $('llm-account');
       get('/api/v1/cloud/status').then(function(c) {
         $('dot-remote').className = 'sb-topbar-dot sb-topbar-dot--' + (c.connected ? 'on' : 'off');
+        if (c.connected && c.config) {
+          // Signed in
+          var email = c.config.user_email || 'User';
+          var isPaid = c.config.paid_user;
+          auth.textContent = isPaid ? 'Managed LLM' : email;
+          auth.className = 'sb-pill sb-pill--success';
+          acct.style.display = 'block';
+          acct.innerHTML = '<span class="sb-pill sb-pill--success">● ' + esc(email) + '</span> ' +
+            (isPaid
+              ? '<span class="sb-text-muted">Powered by Managed LLM + 47 uplifts</span>'
+              : '<span class="sb-text-muted">' + esc(email) + ' · Managed LLM off</span>');
+          $('llm-actions').querySelector('[onclick*="signIn"]').textContent = 'Dashboard';
+          hasLLM = true;
+        } else if (hasLLM) {
+          auth.textContent = installed.length + ' Local LLMs';
+          auth.className = 'sb-pill sb-pill--success';
+        } else {
+          auth.textContent = 'No LLM';
+          auth.className = 'sb-pill sb-pill--danger';
+        }
       });
 
       setTimeout(function() {
@@ -196,12 +213,26 @@
     var key = prompt('Enter your API key (Anthropic, OpenAI, or OpenRouter):');
     if (key && key.trim()) {
       fetch('/api/v1/cloud/connect', {method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({api_key:key.trim(), user_email:'local@solace', device_id:'local', paid_user:false})
+        body:JSON.stringify({api_key:key.trim(), user_email:'byok@local', device_id:'local', paid_user:false})
       }).then(function(){
-        toast('API key saved! Refreshing...', 'success');
+        toast('BYOK key saved! Refreshing...', 'success');
         setTimeout(function(){ location.reload(); }, 1500);
       });
     }
+  };
+
+  // ─── Sign In (launches browser to solaceagi.com/dashboard) ───
+  window.signIn = function() {
+    toast('Opening Solace Browser to sign in...', 'success');
+    fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:'https://solaceagi.com/dashboard', allow_duplicate:true})
+    }).then(function(r){return r.json();}).then(function(d) {
+      if (d.session_id || d.deduped) toast('Browser opened to solaceagi.com', 'success');
+      else if (d.error) toast(d.error, 'danger');
+    }).catch(function(){
+      // Fallback: open in default browser
+      window.open('https://solaceagi.com/dashboard', '_blank');
+    });
   };
 
   // ─── Init ───
