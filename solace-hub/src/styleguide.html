@@ -1055,6 +1055,49 @@ flowchart TB
       fontFamily: 'Segoe UI, system-ui, sans-serif', fontSize: '14px'
     }});
   }
+  // ─── Mermaid pan/zoom/fullscreen ───
+  document.querySelectorAll('.sb-card .mermaid').forEach(function(pre) {
+    var card = pre.closest('.sb-card');
+    if (!card || pre.closest('.sb-mermaid-wrap')) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'sb-mermaid-wrap';
+    var inner = document.createElement('div');
+    inner.className = 'sb-mermaid-inner';
+    pre.parentNode.insertBefore(wrap, pre);
+    inner.appendChild(pre);
+    wrap.appendChild(inner);
+    // Controls
+    var controls = document.createElement('div');
+    controls.className = 'sb-mermaid-controls';
+    controls.innerHTML = '<button class="sb-mermaid-ctrl" data-action="zoomin" title="Zoom in">+</button>' +
+      '<button class="sb-mermaid-ctrl" data-action="zoomout" title="Zoom out">−</button>' +
+      '<button class="sb-mermaid-ctrl" data-action="reset" title="Reset">↺</button>' +
+      '<button class="sb-mermaid-ctrl" data-action="fullscreen" title="Fullscreen">⛶</button>';
+    wrap.appendChild(controls);
+    // State
+    var scale = 1, tx = 0, ty = 0, dragging = false, startX = 0, startY = 0;
+    function applyTransform() { inner.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')'; }
+    controls.addEventListener('click', function(e) {
+      var action = e.target.dataset.action;
+      if (action === 'zoomin') { scale = Math.min(scale * 1.3, 5); applyTransform(); }
+      if (action === 'zoomout') { scale = Math.max(scale / 1.3, 0.2); applyTransform(); }
+      if (action === 'reset') { scale = 1; tx = 0; ty = 0; applyTransform(); }
+      if (action === 'fullscreen') {
+        if (wrap.classList.contains('sb-mermaid-fullscreen')) {
+          wrap.classList.remove('sb-mermaid-fullscreen');
+          e.target.textContent = '⛶';
+        } else {
+          wrap.classList.add('sb-mermaid-fullscreen');
+          e.target.textContent = '✕';
+        }
+      }
+    });
+    wrap.addEventListener('mousedown', function(e) { if (e.target.closest('.sb-mermaid-controls')) return; dragging = true; startX = e.clientX - tx; startY = e.clientY - ty; });
+    document.addEventListener('mousemove', function(e) { if (!dragging) return; tx = e.clientX - startX; ty = e.clientY - startY; applyTransform(); });
+    document.addEventListener('mouseup', function() { dragging = false; });
+    wrap.addEventListener('wheel', function(e) { e.preventDefault(); scale *= e.deltaY < 0 ? 1.1 : 0.9; scale = Math.max(0.2, Math.min(5, scale)); applyTransform(); }, { passive: false });
+  });
+
   window.renderMermaidEditor = function() {
     var code = document.getElementById('mermaid-editor').value;
     var preview = document.getElementById('mermaid-preview');

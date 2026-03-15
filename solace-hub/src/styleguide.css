@@ -575,6 +575,36 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
 .sb-empty-action { margin-top: 0.75rem; }
 
 /* ═══════════════════════════════════════════════════════════════════
+   12i. MERMAID CONTAINER (pan/zoom/fullscreen)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-mermaid-wrap {
+  position: relative; overflow: hidden; border-radius: var(--sb-radius);
+  background: var(--sb-surface-strong); cursor: grab;
+}
+.sb-mermaid-wrap:active { cursor: grabbing; }
+.sb-mermaid-inner {
+  transform-origin: 0 0; transition: transform 0.1s ease;
+  padding: 1rem; min-height: 120px;
+}
+.sb-mermaid-controls {
+  position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; z-index: 10;
+}
+.sb-mermaid-ctrl {
+  background: var(--sb-surface); border: 1px solid var(--sb-border-strong);
+  border-radius: var(--sb-radius-sm); color: var(--sb-text-muted);
+  width: 28px; height: 28px; cursor: pointer; font-size: 0.8rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--sb-transition);
+}
+.sb-mermaid-ctrl:hover { border-color: var(--sb-accent); color: var(--sb-accent); }
+.sb-mermaid-fullscreen {
+  position: fixed; inset: 0; z-index: 500; background: var(--sb-bg);
+  overflow: auto; padding: 2rem;
+}
+.sb-mermaid-fullscreen .sb-mermaid-controls { top: 1rem; right: 1rem; }
+
+/* ═══════════════════════════════════════════════════════════════════
    12h. TEXTAREA + SEARCH INPUT
    ═══════════════════════════════════════════════════════════════════ */
 
