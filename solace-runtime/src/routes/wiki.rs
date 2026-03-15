@@ -57,14 +57,27 @@ async fn extract_page(
             let wiki_dir = crate::utils::solace_home().join("wiki");
             let _ = fs::create_dir_all(&wiki_dir);
 
-            let compressed = stillwater::compress_decomposition(&decomp)
-                .map(|c| c.len())
-                .unwrap_or(0);
+            let compressed_blob = stillwater::compress_decomposition(&decomp)
+                .unwrap_or_default();
+            let compressed = compressed_blob.len();
 
-            // Save as JSON for agent readability
+            // Save decomposition JSON (agent-readable — structure + truncated content)
             let url_hash = &decomp.sha256[..16];
             let snapshot_path = wiki_dir.join(format!("{url_hash}.json"));
             let _ = fs::write(&snapshot_path, serde_json::to_string_pretty(&decomp).unwrap_or_default());
+
+            // Save PZip-compressed ORIGINAL HTML (for RTC reconstruction)
+            // decode(this file) == original HTML exactly
+            let pzwb_path = wiki_dir.join(format!("{url_hash}.pzwb"));
+            if let Ok(pzwb) = crate::pzip::web::compress(content, "text/html") {
+                let _ = fs::write(&pzwb_path, &pzwb);
+            }
+
+            // Save the PZSW decomposition blob (Stillwater + Ripple structure)
+            let pzsw_path = wiki_dir.join(format!("{url_hash}.pzsw"));
+            if !compressed_blob.is_empty() {
+                let _ = fs::write(&pzsw_path, &compressed_blob);
+            }
 
             // Update evidence count + budget tracking
             {
