@@ -72,6 +72,11 @@
       <div id="llm-gate"></div>
     </div>
 
+    <!-- Launch Button (right after LLMs) -->
+    <button class="sb-btn sb-btn--primary hub-launch sb-mt-md" id="btn-launch" disabled onclick="launchBrowser()">
+      Launch Solace Browser
+    </button>
+
     <!-- System Status -->
     <div class="sb-card sb-mt-md">
       <p class="sb-kicker">System Status</p>
@@ -80,17 +85,6 @@
       <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-sidebar"></span> Yinyang Sidebar</div>
       <div class="hub-status-row"><span class="sb-topbar-dot" id="dot-remote"></span> Remote Control</div>
       <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-cron"></span> Cron Services</div>
-    </div>
-
-    <!-- Launch Gate -->
-    <div class="sb-card sb-mt-md" id="launch-card">
-      <label class="hub-check" id="ready-check">
-        <input type="checkbox" id="ready-checkbox" disabled>
-        <span id="ready-label">Checking LLM access...</span>
-      </label>
-      <button class="sb-btn sb-btn--primary hub-launch" id="btn-launch" disabled onclick="launchBrowser()">
-        Launch Solace Browser
-      </button>
     </div>
 
 
@@ -161,12 +155,7 @@
             $('llm-gate').innerHTML = '';
             $('llm-card').classList.add('hub-ready');
             $('llm-card').classList.remove('hub-blocked');
-            $('ready-checkbox').checked = true;
-            $('ready-checkbox').disabled = false;
-            $('ready-label').textContent = 'Ready to launch Solace Browser';
-            $('ready-label').style.color = 'var(--sb-success)';
             $('btn-launch').disabled = false;
-            $('launch-card').classList.add('hub-ready');
           } else {
             // No LLMs — gate blocked
             $('llm-chips').innerHTML = '<span class="sb-text-muted">No AI tools detected on PATH</span>';
@@ -180,12 +169,7 @@
               '<div class="sb-text-muted sb-mt-md" style="font-size:0.8rem">Or install claude, codex, or gemini CLI on your PATH</div>' +
               '</div>';
             $('llm-card').classList.add('hub-blocked');
-            $('ready-checkbox').checked = false;
-            $('ready-checkbox').disabled = true;
-            $('ready-label').textContent = 'LLM required before launching browser';
-            $('ready-label').style.color = 'var(--sb-danger)';
             $('btn-launch').disabled = true;
-            $('launch-card').classList.add('hub-blocked');
           }
         }, 500);
       }, 1200);
@@ -219,11 +203,6 @@
       });
     }
   };
-
-  // ─── Ready checkbox toggle ───
-  $('ready-checkbox').addEventListener('change', function() {
-    $('btn-launch').disabled = !this.checked;
-  });
 
   // ─── Init ───
   runScan();
