@@ -899,8 +899,11 @@
       (function() {
         var root = am5.Root.new('chart-donut');
         themes(root);
-        var chart = root.container.children.push(am5.percent.PieChart.new(root, { innerRadius: am5.percent(60) }));
-        var series = chart.series.push(am5.percent.PieSeries.new(root, { valueField:'value', categoryField:'category', tooltip:am5.Tooltip.new(root,{labelText:'{category}: {value}'}) }));
+        var PieChart = am5percent ? am5percent.PieChart : (am5.percent && am5.percent.PieChart);
+        var PieSeries = am5percent ? am5percent.PieSeries : (am5.percent && am5.percent.PieSeries);
+        if (!PieChart) { document.getElementById('chart-donut').textContent = 'PieChart module not loaded'; return; }
+        var chart = root.container.children.push(PieChart.new(root, { innerRadius: am5.percent(60) }));
+        var series = chart.series.push(PieSeries.new(root, { valueField:'value', categoryField:'category', tooltip:am5.Tooltip.new(root,{labelText:'{category}: {value}'}) }));
         series.slices.template.setAll({ cornerRadius:5, strokeWidth:2, stroke:am5.color(0x0f1e33) });
         series.data.setAll([
           {category:'Used (32)', value:32, sliceSettings:{fill:am5.color(accent)}},
@@ -953,7 +956,8 @@
         var chart = root.container.children.push(am5xy.XYChart.new(root, { panX:true, panY:false }));
         var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField:'time', renderer:am5xy.AxisRendererX.new(root,{minGridDistance:40}) }));
         var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer:am5xy.AxisRendererY.new(root,{}) }));
-        var series = chart.series.push(am5xy.SmoothedXLineSeries.new(root, { name:'ms', xAxis:xAxis, yAxis:yAxis, valueYField:'ms', categoryXField:'time', tooltip:am5.Tooltip.new(root,{labelText:'{ms}ms'}) }));
+        var SeriesType = am5xy.SmoothedXLineSeries || am5xy.LineSeries;
+        var series = chart.series.push(SeriesType.new(root, { name:'ms', xAxis:xAxis, yAxis:yAxis, valueYField:'ms', categoryXField:'time', tooltip:am5.Tooltip.new(root,{labelText:'{ms}ms'}) }));
         series.fills.template.setAll({ visible:true, fillOpacity:0.3 });
         series.set('fill', am5.color(warning));
         series.set('stroke', am5.color(warning));
