@@ -223,39 +223,62 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
    6. HOVER-EDIT (from crio study_data_template pattern)
    ═══════════════════════════════════════════════════════════════════ */
 
+/* Hover-Edit — exact crio study_data_template pattern:
+   Normal: text displayed, pen hidden, input hidden
+   Hover:  pen appears (visibility:visible), background highlights
+   Click pen: input replaces text, auto-focus
+   Blur/Enter: input hides, text updates with input value */
 .sb-editable {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 2px 4px;
+  padding: 4px 8px;
   border-radius: var(--sb-radius-sm);
-  transition: background var(--sb-transition);
+  border: 1px solid transparent;
+  transition: all var(--sb-transition);
+  min-height: 32px;
 }
 .sb-editable:hover {
   background: var(--sb-accent-soft);
+  border-color: var(--sb-border);
 }
-.sb-editable-display { cursor: default; }
+.sb-editable-display {
+  cursor: default;
+  font-weight: 500;
+}
 .sb-editable-input {
   display: none;
   background: var(--sb-surface-strong);
-  border: 1px solid var(--sb-accent);
+  border: 2px solid var(--sb-accent);
   border-radius: var(--sb-radius-sm);
   color: var(--sb-text);
   font-family: var(--sb-font);
   font-size: inherit;
-  padding: 2px 6px;
+  font-weight: 500;
+  padding: 4px 8px;
+  min-width: 120px;
 }
+.sb-editable-input:focus { outline: none; box-shadow: 0 0 0 3px var(--sb-accent-soft); }
 .sb-editable--editing .sb-editable-display { display: none; }
 .sb-editable--editing .sb-editable-input { display: inline-block; }
+.sb-editable--editing .sb-editable-pen { display: none; }
 .sb-editable-pen {
   visibility: hidden;
   cursor: pointer;
-  font-size: 0.75rem;
-  opacity: 0.5;
+  font-size: 0.85rem;
+  padding: 2px 4px;
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius-sm);
+  transition: all var(--sb-transition);
 }
-.sb-editable:hover .sb-editable-pen { visibility: visible; }
-.sb-editable-pen:hover { opacity: 1; }
+.sb-editable:hover .sb-editable-pen {
+  visibility: visible;
+}
+.sb-editable-pen:hover {
+  background: var(--sb-accent-soft);
+  border-color: var(--sb-accent);
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    7. STATUS PILLS
