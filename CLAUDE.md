@@ -4,7 +4,7 @@
 
 ## Identity
 
-Solace Browser is a **Chromium fork** with a native AI sidebar (Yinyang), a desktop app (Solace Hub), and a Python backend (Yinyang Server). It is NOT a Chrome extension.
+Solace Browser is a **Chromium fork** with a native AI sidebar (Yinyang), a desktop app (Solace Hub), and a Python backend (Solace Runtime). It is NOT a Chrome extension.
 
 ## Absolute Laws (VIOLATION = KILL)
 
@@ -26,13 +26,13 @@ Solace Browser is a **Chromium fork** with a native AI sidebar (Yinyang), a desk
 ```
 Yinyang          = C++ WebUI sidebar built into Chromium fork (4 tabs: Now/Runs/Chat/More)
 Solace Hub       = Tauri desktop app 20MB (tray, scheduler, OAuth3 dashboard, evidence viewer)
-Yinyang Server   = Python backend localhost:8888 (serves both, 34+ apps, WebSocket, recipes)
+Solace Runtime   = Python backend localhost:8888 (serves both, 34+ apps, WebSocket, recipes)
 ```
 
 ## Project Structure
 
 ```
-yinyang_server.py          — Main server (port 8888, 102 routes, 534 tests)
+solace-runtime binary          — Main server (port 8888, 102 routes, 534 tests)
 solace-hub/src-tauri/      — Tauri app (main.rs, 48/48 tasks COMPLETE)
 data/default/apps/         — 36 apps (YAML manifests + inbox/outbox)
 data/default/recipes/      — 56 recipes (deterministic CPU replay)
@@ -69,7 +69,7 @@ source/src/out/Solace/     — Chromium build output for LOCAL DEV mode (gitigno
 | `local-dev` | `source/src/out/Solace/chrome-wrapper` → `chrome` fallback | repo checkout + Chromium build tree |
 | `production-bundle` | extracted `solace-browser-release/chrome` bundle | downloadable Browser package |
 
-The Hub must never treat a packaged `yinyang_server.py` executable as the Browser.
+The Hub must never treat a packaged `solace-runtime binary` executable as the Browser.
 
 ## FALLBACK BAN (Software 5.0 Law — ABSOLUTE)
 
