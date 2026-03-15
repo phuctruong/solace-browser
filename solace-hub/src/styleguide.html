@@ -14,6 +14,7 @@
   <!-- amCharts 5 — charting library (vendored, no CDN) -->
   <script src="/vendor/amcharts5-index.js"></script>
   <script src="/vendor/amcharts5-xy.js"></script>
+  <script src="/vendor/amcharts5-percent.js"></script>
   <script src="/vendor/amcharts5-dark.js"></script>
   <script src="/vendor/amcharts5-animated.js"></script>
 </head>
@@ -243,8 +244,8 @@
 
   <!-- ─── ICONS ────────────────────────────────────────── -->
   <section class="sb-mt-md">
-    <p class="sb-kicker">Brand + App Icons</p>
-    <h2 class="sb-heading">Icons (from solaceagi.com)</h2>
+    <p class="sb-kicker">Brand Icons (Solace only)</p>
+    <h2 class="sb-heading">Brand + System Icons</h2>
     <div class="sb-flex sb-gap-md" style="flex-wrap: wrap; align-items: end;">
       <div style="text-align:center"><img src="icons/yinyang-logo.png" alt="Yinyang" style="width:48px;height:48px"><br><small class="sb-text-muted">yinyang</small></div>
       <div style="text-align:center"><img src="icons/yinyang2.png" alt="Yinyang 2" style="width:48px;height:48px"><br><small class="sb-text-muted">yinyang2</small></div>
@@ -255,16 +256,8 @@
       <div style="text-align:center"><img src="icons/orchestration.png" alt="Orchestration" style="width:48px;height:48px"><br><small class="sb-text-muted">orchestration</small></div>
       <div style="text-align:center"><img src="icons/recipes.png" alt="Recipes" style="width:48px;height:48px"><br><small class="sb-text-muted">recipes</small></div>
       <div style="text-align:center"><img src="icons/fda-part11-approved-ai.png" alt="FDA" style="width:48px;height:48px"><br><small class="sb-text-muted">fda-part11</small></div>
-    </div>
-    <div class="sb-flex sb-gap-md sb-mt-md" style="flex-wrap: wrap; align-items: end;">
-      <div style="text-align:center"><img src="icons/apps/github.png" alt="GitHub" style="width:40px;height:40px"><br><small class="sb-text-muted">github</small></div>
-      <div style="text-align:center"><img src="icons/apps/linkedin.png" alt="LinkedIn" style="width:40px;height:40px"><br><small class="sb-text-muted">linkedin</small></div>
-      <div style="text-align:center"><img src="icons/apps/slack.png" alt="Slack" style="width:40px;height:40px"><br><small class="sb-text-muted">slack</small></div>
-      <div style="text-align:center"><img src="icons/apps/google-calendar.png" alt="Calendar" style="width:40px;height:40px"><br><small class="sb-text-muted">calendar</small></div>
-      <div style="text-align:center"><img src="icons/apps/substack.png" alt="Substack" style="width:40px;height:40px"><br><small class="sb-text-muted">substack</small></div>
-      <div style="text-align:center"><img src="icons/apps/morning-digest.png" alt="Morning" style="width:40px;height:40px"><br><small class="sb-text-muted">morning</small></div>
-      <div style="text-align:center"><img src="icons/lang/globe-default.png" alt="Globe" style="width:40px;height:40px"><br><small class="sb-text-muted">globe</small></div>
-      <div style="text-align:center"><img src="icons/lang/globe-hover.png" alt="Globe hover" style="width:40px;height:40px"><br><small class="sb-text-muted">globe-hover</small></div>
+      <div style="text-align:center"><img src="icons/lang/globe-default.png" alt="Globe" style="width:48px;height:48px"><br><small class="sb-text-muted">globe</small></div>
+      <div style="text-align:center"><img src="icons/lang/globe-hover.png" alt="Globe hover" style="width:48px;height:48px"><br><small class="sb-text-muted">globe-hover</small></div>
     </div>
   </section>
 
@@ -363,12 +356,49 @@
     </div>
   </section>
 
-  <!-- ─── CHART (amCharts 5) ──────────────────────────────── -->
+  <!-- ─── CHARTS (amCharts 5) ─────────────────────────────── -->
   <section class="sb-mt-md">
-    <p class="sb-kicker">Component</p>
-    <h2 class="sb-heading">Chart (amCharts 5)</h2>
-    <div class="sb-card">
-      <div id="chart-demo" style="width: 100%; height: 300px;"></div>
+    <p class="sb-kicker">Charts (amCharts 5)</p>
+    <h2 class="sb-heading">All Chart Types for Solace Hub</h2>
+
+    <div class="sb-card-grid" style="grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));">
+
+      <div class="sb-card">
+        <p class="sb-kicker">App Runs</p>
+        <h3 class="sb-card-title">Weekly App Runs (Bar)</h3>
+        <div id="chart-bar" style="width:100%;height:250px"></div>
+      </div>
+
+      <div class="sb-card">
+        <p class="sb-kicker">Evidence</p>
+        <h3 class="sb-card-title">Evidence Growth (Line)</h3>
+        <div id="chart-line" style="width:100%;height:250px"></div>
+      </div>
+
+      <div class="sb-card">
+        <p class="sb-kicker">Budget</p>
+        <h3 class="sb-card-title">Budget Usage (Donut)</h3>
+        <div id="chart-donut" style="width:100%;height:250px"></div>
+      </div>
+
+      <div class="sb-card">
+        <p class="sb-kicker">Domains</p>
+        <h3 class="sb-card-title">Apps per Domain (Horizontal Bar)</h3>
+        <div id="chart-hbar" style="width:100%;height:250px"></div>
+      </div>
+
+      <div class="sb-card">
+        <p class="sb-kicker">Agents</p>
+        <h3 class="sb-card-title">Agent Usage (Stacked Bar)</h3>
+        <div id="chart-stacked" style="width:100%;height:250px"></div>
+      </div>
+
+      <div class="sb-card">
+        <p class="sb-kicker">Performance</p>
+        <h3 class="sb-card-title">Response Time (Area)</h3>
+        <div id="chart-area" style="width:100%;height:250px"></div>
+      </div>
+
     </div>
   </section>
 
@@ -825,40 +855,113 @@
     document.head.appendChild(dtStyle);
   }
 
-  // ─── amCharts 5 demo chart ───
+  // ─── amCharts 5 — all chart types ───
   if (typeof am5 !== 'undefined') {
     am5.ready(function() {
-      var root = am5.Root.new('chart-demo');
-      root.setThemes([am5themes_Dark.new(root), am5themes_Animated.new(root)]);
-      var chart = root.container.children.push(am5xy.XYChart.new(root, {
-        panX: false, panY: false, wheelX: 'none', wheelY: 'none'
-      }));
-      var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
-        categoryField: 'day',
-        renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 30 })
-      }));
-      var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
-        renderer: am5xy.AxisRendererY.new(root, {})
-      }));
-      var series = chart.series.push(am5xy.ColumnSeries.new(root, {
-        name: 'App Runs', xAxis: xAxis, yAxis: yAxis,
-        valueYField: 'runs', categoryXField: 'day',
-        tooltip: am5.Tooltip.new(root, { labelText: '{day}: {runs} runs' })
-      }));
-      series.columns.template.setAll({
-        cornerRadiusTL: 4, cornerRadiusTR: 4,
-        fill: am5.color(0x78b9ff), stroke: am5.color(0x78b9ff)
-      });
-      var data = [
-        { day: 'Mon', runs: 12 }, { day: 'Tue', runs: 18 },
-        { day: 'Wed', runs: 24 }, { day: 'Thu', runs: 15 },
-        { day: 'Fri', runs: 30 }, { day: 'Sat', runs: 8 },
-        { day: 'Sun', runs: 5 }
-      ];
-      xAxis.data.setAll(data);
-      series.data.setAll(data);
-      series.appear(1000);
-      chart.appear(1000, 100);
+      var accent = 0x78b9ff;
+      var success = 0x55d7aa;
+      var warning = 0xffd479;
+      var danger = 0xff7b7b;
+
+      function themes(root) {
+        root.setThemes([am5themes_Dark.new(root), am5themes_Animated.new(root)]);
+      }
+
+      // 1. BAR — Weekly App Runs
+      (function() {
+        var root = am5.Root.new('chart-bar');
+        themes(root);
+        var chart = root.container.children.push(am5xy.XYChart.new(root, { panX:false, panY:false }));
+        var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField:'day', renderer:am5xy.AxisRendererX.new(root,{minGridDistance:30}) }));
+        var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer:am5xy.AxisRendererY.new(root,{}) }));
+        var series = chart.series.push(am5xy.ColumnSeries.new(root, { name:'Runs', xAxis:xAxis, yAxis:yAxis, valueYField:'runs', categoryXField:'day', tooltip:am5.Tooltip.new(root,{labelText:'{day}: {runs} runs'}) }));
+        series.columns.template.setAll({ cornerRadiusTL:4, cornerRadiusTR:4, fill:am5.color(accent), stroke:am5.color(accent) });
+        var data = [{day:'Mon',runs:12},{day:'Tue',runs:18},{day:'Wed',runs:24},{day:'Thu',runs:15},{day:'Fri',runs:30},{day:'Sat',runs:8},{day:'Sun',runs:5}];
+        xAxis.data.setAll(data); series.data.setAll(data); series.appear(1000); chart.appear(1000,100);
+      })();
+
+      // 2. LINE — Evidence Growth
+      (function() {
+        var root = am5.Root.new('chart-line');
+        themes(root);
+        var chart = root.container.children.push(am5xy.XYChart.new(root, { panX:true, panY:false }));
+        var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField:'date', renderer:am5xy.AxisRendererX.new(root,{minGridDistance:50}) }));
+        var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer:am5xy.AxisRendererY.new(root,{}) }));
+        var series = chart.series.push(am5xy.LineSeries.new(root, { name:'Evidence', xAxis:xAxis, yAxis:yAxis, valueYField:'count', categoryXField:'date', tooltip:am5.Tooltip.new(root,{labelText:'{count} entries'}) }));
+        series.strokes.template.setAll({ strokeWidth:3 });
+        series.set('fill', am5.color(success));
+        series.set('stroke', am5.color(success));
+        var data = [{date:'Mar 1',count:8200},{date:'Mar 5',count:9100},{date:'Mar 8',count:10400},{date:'Mar 10',count:11200},{date:'Mar 12',count:12100},{date:'Mar 14',count:13200},{date:'Mar 15',count:13741}];
+        xAxis.data.setAll(data); series.data.setAll(data); series.appear(1000); chart.appear(1000,100);
+      })();
+
+      // 3. DONUT — Budget Usage
+      (function() {
+        var root = am5.Root.new('chart-donut');
+        themes(root);
+        var chart = root.container.children.push(am5.percent.PieChart.new(root, { innerRadius: am5.percent(60) }));
+        var series = chart.series.push(am5.percent.PieSeries.new(root, { valueField:'value', categoryField:'category', tooltip:am5.Tooltip.new(root,{labelText:'{category}: {value}'}) }));
+        series.slices.template.setAll({ cornerRadius:5, strokeWidth:2, stroke:am5.color(0x0f1e33) });
+        series.data.setAll([
+          {category:'Used (32)', value:32, sliceSettings:{fill:am5.color(accent)}},
+          {category:'Remaining (968)', value:968, sliceSettings:{fill:am5.color(0x1a2d47)}}
+        ]);
+        series.slices.template.adapters.add('fill', function(fill, target) {
+          return target.dataItem && target.dataItem.dataContext.sliceSettings ? target.dataItem.dataContext.sliceSettings.fill : fill;
+        });
+        series.appear(1000); chart.appear(1000,100);
+      })();
+
+      // 4. HORIZONTAL BAR — Apps per Domain
+      (function() {
+        var root = am5.Root.new('chart-hbar');
+        themes(root);
+        var chart = root.container.children.push(am5xy.XYChart.new(root, { panX:false, panY:false }));
+        var yAxis = chart.yAxes.push(am5xy.CategoryAxis.new(root, { categoryField:'domain', renderer:am5xy.AxisRendererY.new(root,{inversed:true,minGridDistance:20}) }));
+        var xAxis = chart.xAxes.push(am5xy.ValueAxis.new(root, { renderer:am5xy.AxisRendererX.new(root,{}) }));
+        var series = chart.series.push(am5xy.ColumnSeries.new(root, { name:'Apps', xAxis:xAxis, yAxis:yAxis, valueXField:'apps', categoryYField:'domain', tooltip:am5.Tooltip.new(root,{labelText:'{domain}: {apps} apps'}) }));
+        series.columns.template.setAll({ cornerRadiusTR:4, cornerRadiusBR:4, height:am5.percent(60), fill:am5.color(success), stroke:am5.color(success) });
+        var data = [{domain:'google.com',apps:5},{domain:'linkedin.com',apps:3},{domain:'mail.google.com',apps:2},{domain:'github.com',apps:1},{domain:'reddit.com',apps:1},{domain:'x.com',apps:2},{domain:'news.ycombinator.com',apps:1}];
+        yAxis.data.setAll(data); series.data.setAll(data); series.appear(1000); chart.appear(1000,100);
+      })();
+
+      // 5. STACKED BAR — Agent Usage
+      (function() {
+        var root = am5.Root.new('chart-stacked');
+        themes(root);
+        var chart = root.container.children.push(am5xy.XYChart.new(root, { panX:false, panY:false }));
+        chart.set('legend', am5.Legend.new(root, { centerX:am5.percent(50), x:am5.percent(50) }));
+        var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField:'agent', renderer:am5xy.AxisRendererX.new(root,{minGridDistance:30}) }));
+        var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer:am5xy.AxisRendererY.new(root,{}) }));
+        function addSeries(name, field, color) {
+          var s = chart.series.push(am5xy.ColumnSeries.new(root, { name:name, xAxis:xAxis, yAxis:yAxis, valueYField:field, categoryXField:'agent', stacked:true, tooltip:am5.Tooltip.new(root,{labelText:'{name}: {valueY}'}) }));
+          s.columns.template.setAll({ fill:am5.color(color), stroke:am5.color(color), cornerRadiusTL:2, cornerRadiusTR:2 });
+          return s;
+        }
+        var s1 = addSeries('Generate', 'generate', accent);
+        var s2 = addSeries('Chat', 'chat', success);
+        var s3 = addSeries('Code', 'code', warning);
+        var data = [{agent:'claude',generate:45,chat:30,code:25},{agent:'codex',generate:20,chat:10,code:50},{agent:'gemini',generate:15,chat:25,code:10},{agent:'copilot',generate:5,chat:5,code:30},{agent:'cursor',generate:3,chat:2,code:20},{agent:'aider',generate:2,chat:1,code:15}];
+        xAxis.data.setAll(data); s1.data.setAll(data); s2.data.setAll(data); s3.data.setAll(data);
+        s1.appear(1000); s2.appear(1000); s3.appear(1000); chart.appear(1000,100);
+      })();
+
+      // 6. AREA — Response Time
+      (function() {
+        var root = am5.Root.new('chart-area');
+        themes(root);
+        var chart = root.container.children.push(am5xy.XYChart.new(root, { panX:true, panY:false }));
+        var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField:'time', renderer:am5xy.AxisRendererX.new(root,{minGridDistance:40}) }));
+        var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer:am5xy.AxisRendererY.new(root,{}) }));
+        var series = chart.series.push(am5xy.SmoothedXLineSeries.new(root, { name:'ms', xAxis:xAxis, yAxis:yAxis, valueYField:'ms', categoryXField:'time', tooltip:am5.Tooltip.new(root,{labelText:'{ms}ms'}) }));
+        series.fills.template.setAll({ visible:true, fillOpacity:0.3 });
+        series.set('fill', am5.color(warning));
+        series.set('stroke', am5.color(warning));
+        series.strokes.template.setAll({ strokeWidth:2 });
+        var data = [{time:'12:00',ms:45},{time:'12:05',ms:52},{time:'12:10',ms:38},{time:'12:15',ms:120},{time:'12:20',ms:65},{time:'12:25',ms:42},{time:'12:30',ms:48},{time:'12:35',ms:55},{time:'12:40',ms:40},{time:'12:45',ms:35}];
+        xAxis.data.setAll(data); series.data.setAll(data); series.appear(1000); chart.appear(1000,100);
+      })();
+
     });
   }
 
