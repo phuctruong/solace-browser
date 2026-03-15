@@ -222,24 +222,23 @@
         $('dot-remote').className = 'sb-topbar-dot sb-topbar-dot--' + (c.connected ? 'on' : 'off');
       });
 
-      // Auth pill
+      // Auth pill — if CLIs detected, that IS LLM access
       get('/api/v1/sidebar/state').then(function(s) {
         var auth = $('topbar-auth');
-        if (!s.chat_enabled && s.gate === 'unregistered') {
-          auth.textContent = 'Free · Local Mode';
-          auth.className = 'sb-pill sb-pill--info';
-        } else if (s.gate === 'no_llm') {
-          auth.textContent = 'No LLM configured';
-          auth.className = 'sb-pill sb-pill--warning';
+        var hasLocalLLMs = agents.some(function(a) { return a.installed; });
+
+        if (s.gate === 'paid') {
+          auth.textContent = 'Managed LLM';
+          auth.className = 'sb-pill sb-pill--success';
         } else if (s.gate === 'byok') {
           auth.textContent = 'BYOK Active';
           auth.className = 'sb-pill sb-pill--success';
-        } else if (s.gate === 'paid') {
-          auth.textContent = 'Managed LLM';
+        } else if (hasLocalLLMs) {
+          auth.textContent = agents.length + ' Local LLMs';
           auth.className = 'sb-pill sb-pill--success';
         } else {
-          auth.textContent = s.gate;
-          auth.className = 'sb-pill sb-pill--info';
+          auth.textContent = 'No LLM found';
+          auth.className = 'sb-pill sb-pill--warning';
         }
       });
 
