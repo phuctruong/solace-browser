@@ -306,8 +306,9 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
   border-color: var(--sb-accent);
 }
 .sb-btn--primary:hover {
-  background: var(--sb-accent-hover);
-  border-color: var(--sb-accent-hover);
+  background: var(--sb-on-accent);
+  color: var(--sb-accent);
+  border-color: var(--sb-accent);
 }
 .sb-btn--sm { padding: 0.35rem 0.85rem; font-size: 0.85rem; min-height: 32px; }
 
@@ -476,6 +477,104 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
 .sb-text-danger { color: var(--sb-danger); }
 .sb-text-mono { font-family: var(--sb-font-mono); font-size: 0.85em; }
 .sb-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   12b. APP ICON + NAME (side by side in cards)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-app-icon { width: 28px; height: 28px; object-fit: contain; border-radius: 6px; }
+.sb-app-name { display: inline-flex; align-items: center; gap: 8px; }
+.sb-timestamp { font-size: 0.75rem; color: var(--sb-text-muted); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   12c. COPY BUTTON (hash copy-to-clipboard)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-copy-btn {
+  background: none; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-sm);
+  color: var(--sb-text-muted); cursor: pointer; padding: 2px 6px; font-size: 0.7rem;
+  transition: all var(--sb-transition);
+}
+.sb-copy-btn:hover { border-color: var(--sb-accent); color: var(--sb-accent); }
+.sb-copy-btn--done { border-color: var(--sb-success); color: var(--sb-success); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   12d. MODAL (popup dialog)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+}
+.sb-modal-overlay[hidden] { display: none; }
+.sb-modal {
+  background: var(--sb-surface); border: 2px solid var(--sb-border-strong);
+  border-radius: var(--sb-radius-lg); padding: 1.5rem; min-width: 360px;
+  max-width: 90vw; box-shadow: var(--sb-shadow);
+}
+.sb-modal-title { font-size: 1.1rem; font-weight: 700; margin: 0 0 0.75rem; }
+.sb-modal-body { color: var(--sb-text-muted); margin-bottom: 1rem; }
+.sb-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   12e. TOAST (notification popup)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-toast-container { position: fixed; bottom: 1rem; right: 1rem; z-index: 400; display: flex; flex-direction: column; gap: 8px; }
+.sb-toast {
+  background: var(--sb-surface); border: 2px solid var(--sb-border-strong);
+  border-radius: var(--sb-radius); padding: 0.75rem 1rem; min-width: 280px;
+  box-shadow: var(--sb-shadow); animation: sb-toast-in 0.3s ease;
+}
+.sb-toast--success { border-left: 4px solid var(--sb-success); }
+.sb-toast--danger { border-left: 4px solid var(--sb-danger); }
+.sb-toast--warning { border-left: 4px solid var(--sb-warning); }
+@keyframes sb-toast-in { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+/* ═══════════════════════════════════════════════════════════════════
+   12f. LOADING SKELETON (shimmer)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-skeleton {
+  background: linear-gradient(90deg, var(--sb-surface-strong) 25%, var(--sb-surface-hover) 50%, var(--sb-surface-strong) 75%);
+  background-size: 200% 100%; animation: sb-shimmer 1.5s infinite; border-radius: var(--sb-radius-sm);
+}
+@keyframes sb-shimmer { 0% { background-position:200% 0; } 100% { background-position:-200% 0; } }
+
+/* ═══════════════════════════════════════════════════════════════════
+   12g. EMPTY STATE
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-empty {
+  text-align: center; padding: 2rem; color: var(--sb-text-muted);
+}
+.sb-empty-icon { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.4; }
+.sb-empty-action { margin-top: 0.75rem; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   12h. TEXTAREA + SEARCH INPUT
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sb-textarea {
+  background: var(--sb-surface-strong); border: 2px solid var(--sb-border-strong);
+  border-radius: var(--sb-radius); color: var(--sb-text); padding: 8px 12px;
+  font-family: var(--sb-font); font-size: 0.9rem; resize: vertical; width: 100%;
+  min-height: 80px;
+}
+.sb-textarea:focus { border-color: var(--sb-accent); outline: none; }
+.sb-search {
+  position: relative; display: inline-flex; align-items: center;
+}
+.sb-search-icon {
+  position: absolute; left: 10px; color: var(--sb-text-muted); font-size: 0.9rem;
+  pointer-events: none;
+}
+.sb-search-input {
+  background: var(--sb-surface-strong); border: 2px solid var(--sb-border-strong);
+  border-radius: var(--sb-radius); color: var(--sb-text); padding: 8px 12px 8px 32px;
+  font-family: var(--sb-font); font-size: 0.9rem; min-width: 220px;
+}
+.sb-search-input:focus { border-color: var(--sb-accent); outline: none; }
 
 /* ═══════════════════════════════════════════════════════════════════
    13. LEFT SIDEBAR NAV (from crio study-left-pane pattern)

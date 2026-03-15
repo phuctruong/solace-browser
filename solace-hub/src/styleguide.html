@@ -586,6 +586,121 @@
     </div>
   </section>
 
+  <!-- ─── APP ICON + NAME (in card) ────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">App Card with Icon + Timestamp</h2>
+    <div class="sb-card-grid">
+      <div class="sb-card">
+        <div class="sb-card-header">
+          <span class="sb-app-name"><img src="icons/apps/hackernews.png" class="sb-app-icon"> hackernews-feed</span>
+          <span class="sb-pill sb-pill--success">● Healthy</span>
+        </div>
+        <div class="sb-card-body">
+          30 items · 16KB report<br>
+          <span class="sb-timestamp">Last run: 12 min ago · Next: in 48 min</span>
+          <div class="sb-mt-md"><button class="sb-btn sb-btn--sm">▶ Run</button></div>
+        </div>
+      </div>
+      <div class="sb-card">
+        <div class="sb-card-header">
+          <span class="sb-app-name"><img src="icons/apps/gmail.jpg" class="sb-app-icon"> gmail-inbox-triage</span>
+          <span class="sb-pill sb-pill--warning">● oauth3</span>
+        </div>
+        <div class="sb-card-body">
+          Needs login · mail.google.com<br>
+          <span class="sb-timestamp">Never run · Schedule: 0 9 * * 1-5</span>
+          <div class="sb-mt-md"><button class="sb-btn sb-btn--sm">▶ Run</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── COPY BUTTON + HASH ─────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Copy-to-Clipboard Hash</h2>
+    <div class="sb-card">
+      <span class="sb-text-mono">a4f2c891b3e6...</span>
+      <button class="sb-copy-btn" onclick="this.textContent='Copied ✓';this.classList.add('sb-copy-btn--done');setTimeout(()=>{this.textContent='Copy';this.classList.remove('sb-copy-btn--done')},2000)">Copy</button>
+    </div>
+  </section>
+
+  <!-- ─── MODAL ───────────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Modal Dialog</h2>
+    <button class="sb-btn" onclick="document.getElementById('demo-modal').hidden=false">Open Modal</button>
+    <div class="sb-modal-overlay" id="demo-modal" hidden>
+      <div class="sb-modal">
+        <h3 class="sb-modal-title">Confirm Action</h3>
+        <div class="sb-modal-body">Are you sure you want to run the morning cycle? This will fetch data from 3 APIs.</div>
+        <div class="sb-modal-actions">
+          <button class="sb-btn" onclick="document.getElementById('demo-modal').hidden=true">Cancel</button>
+          <button class="sb-btn sb-btn--primary" onclick="document.getElementById('demo-modal').hidden=true">Run</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TOAST ───────────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Toast Notifications</h2>
+    <div class="sb-flex sb-gap-sm">
+      <button class="sb-btn sb-btn--sm" onclick="showToast('Morning brief completed. 30 items.','success')">Success Toast</button>
+      <button class="sb-btn sb-btn--sm" onclick="showToast('Budget at 80% daily limit.','warning')">Warning Toast</button>
+      <button class="sb-btn sb-btn--sm" onclick="showToast('Reddit API returned 403.','danger')">Error Toast</button>
+    </div>
+    <div class="sb-toast-container" id="toast-container"></div>
+  </section>
+
+  <!-- ─── LOADING SKELETON ────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Loading Skeleton (shimmer)</h2>
+    <div class="sb-card">
+      <div class="sb-skeleton" style="height:20px;width:60%;margin-bottom:8px"></div>
+      <div class="sb-skeleton" style="height:14px;width:80%;margin-bottom:8px"></div>
+      <div class="sb-skeleton" style="height:14px;width:45%"></div>
+    </div>
+  </section>
+
+  <!-- ─── EMPTY STATE ─────────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Empty State</h2>
+    <div class="sb-card">
+      <div class="sb-empty">
+        <div class="sb-empty-icon">📭</div>
+        <div>No evidence entries yet</div>
+        <div class="sb-text-muted">Run an app to create your first evidence entry.</div>
+        <div class="sb-empty-action"><button class="sb-btn sb-btn--primary sb-btn--sm">▶ Run First App</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TEXTAREA + SEARCH ───────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Textarea + Search Input</h2>
+    <div class="sb-card">
+      <div class="sb-flex sb-gap-md" style="flex-wrap:wrap">
+        <div style="flex:1;min-width:250px">
+          <label class="sb-text-muted" style="font-size:0.8rem;display:block;margin-bottom:4px">Chat / Notes</label>
+          <textarea class="sb-textarea" placeholder="Type a message to the AI agent..."></textarea>
+        </div>
+        <div>
+          <label class="sb-text-muted" style="font-size:0.8rem;display:block;margin-bottom:4px">Search</label>
+          <div class="sb-search">
+            <span class="sb-search-icon">🔍</span>
+            <input class="sb-search-input" type="text" placeholder="Search apps, evidence...">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ─── LEFT SIDEBAR NAV (from crio) ─────────────────────── -->
   <section class="sb-mt-md">
     <p class="sb-kicker">Layout (from Crio)</p>
@@ -792,6 +907,16 @@
       });
     });
   });
+
+  // ─── Toast notifications ───
+  window.showToast = function(message, type) {
+    var container = document.getElementById('toast-container');
+    var toast = document.createElement('div');
+    toast.className = 'sb-toast sb-toast--' + (type || 'success');
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(function() { toast.style.opacity = '0'; toast.style.transform = 'translateY(20px)'; setTimeout(function() { toast.remove(); }, 300); }, 3000);
+  };
 
   // ─── Language switcher (from solaceagi.com pattern) ───
   var langToggle = document.getElementById('languageToggle');
