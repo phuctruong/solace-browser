@@ -31,6 +31,10 @@ pub fn routes() -> Router<AppState> {
             "/media",
             tower_http::services::ServeDir::new("/home/phuc/projects/solace-browser/solace-hub/src/media"),
         )
+        .nest_service(
+            "/vendor",
+            tower_http::services::ServeDir::new("/home/phuc/projects/solace-browser/solace-hub/src/vendor"),
+        )
 }
 
 async fn index() -> Html<String> {

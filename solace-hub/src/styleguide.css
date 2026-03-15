@@ -83,7 +83,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 *, *::before, *::after { box-sizing: border-box; }
-html { font-size: calc(16px * var(--sb-font-scale)); }
+html { font-size: calc(20px * var(--sb-font-scale)); }
 body {
   margin: 0;
   font-family: var(--sb-font);

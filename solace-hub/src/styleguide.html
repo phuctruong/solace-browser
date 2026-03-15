@@ -7,6 +7,15 @@
   <title>Solace Hub — Styleguide</title>
   <link rel="icon" href="icons/yinyang-logo.png">
   <link rel="stylesheet" href="styleguide.css">
+  <!-- DataTables — sorting + search + pagination (vendored, no CDN) -->
+  <link rel="stylesheet" href="/vendor/jquery.dataTables.min.css">
+  <script src="/vendor/jquery-3.7.1.min.js"></script>
+  <script src="/vendor/jquery.dataTables.min.js"></script>
+  <!-- amCharts 5 — charting library (vendored, no CDN) -->
+  <script src="/vendor/amcharts5-index.js"></script>
+  <script src="/vendor/amcharts5-xy.js"></script>
+  <script src="/vendor/amcharts5-dark.js"></script>
+  <script src="/vendor/amcharts5-animated.js"></script>
 </head>
 <body>
 
@@ -221,6 +230,26 @@
     </div>
   </section>
 
+  <!-- ─── DRAGON SPLASH ─────────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Brand</p>
+    <h2 class="sb-heading">Dragon Splash + Yinyang Logo</h2>
+    <div class="sb-flex sb-gap-md" style="align-items: center; flex-wrap: wrap;">
+      <img src="media/dragon-yinyang-splash.png" alt="Dragon Yinyang splash" style="max-width: 300px; border-radius: var(--sb-radius-lg);">
+      <img src="media/yinyang-rotating_70pct_128px.gif" alt="Rotating Yinyang" style="width: 128px; height: auto;">
+      <img src="icons/yinyang-logo.png" alt="Yinyang logo" style="width: 48px; height: 48px;">
+    </div>
+  </section>
+
+  <!-- ─── CHART (amCharts 5) ──────────────────────────────── -->
+  <section class="sb-mt-md">
+    <p class="sb-kicker">Component</p>
+    <h2 class="sb-heading">Chart (amCharts 5)</h2>
+    <div class="sb-card">
+      <div id="chart-demo" style="width: 100%; height: 300px;"></div>
+    </div>
+  </section>
+
   <!-- ─── TOP BAR STATUS ──────────────────────────────────── -->
   <section class="sb-mt-md">
     <p class="sb-kicker">Component</p>
@@ -309,6 +338,70 @@
       });
     });
   });
+
+  // ─── DataTables init (sorting + search + pagination) ───
+  if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {
+    jQuery('#demo-table').DataTable({
+      paging: true,
+      searching: true,
+      ordering: true,
+      pageLength: 10,
+      language: { search: 'Filter:' },
+      dom: 'ftip'
+    });
+    // Style DataTables to match our theme
+    var dtStyle = document.createElement('style');
+    dtStyle.textContent = [
+      '.dataTables_wrapper { color: var(--sb-text); font-family: var(--sb-font); }',
+      '.dataTables_filter input { background: var(--sb-surface-strong) !important; border: 1px solid var(--sb-border) !important; color: var(--sb-text) !important; padding: 6px 10px !important; border-radius: var(--sb-radius) !important; font-size: 0.9rem; }',
+      '.dataTables_info { color: var(--sb-text-muted) !important; font-size: 0.8rem; }',
+      '.dataTables_paginate .paginate_button { color: var(--sb-text-muted) !important; border: 1px solid var(--sb-border) !important; background: var(--sb-surface) !important; border-radius: var(--sb-radius-sm) !important; }',
+      '.dataTables_paginate .paginate_button.current { background: var(--sb-accent) !important; color: var(--sb-on-accent) !important; border-color: var(--sb-accent) !important; }',
+      '.dataTables_paginate .paginate_button:hover { background: var(--sb-surface-hover) !important; color: var(--sb-text) !important; }',
+      'table.dataTable thead th { cursor: pointer; }',
+      'table.dataTable thead .sorting::after { content: " ⇅"; opacity: 0.3; }',
+      'table.dataTable thead .sorting_asc::after { content: " ↑"; }',
+      'table.dataTable thead .sorting_desc::after { content: " ↓"; }',
+    ].join('\n');
+    document.head.appendChild(dtStyle);
+  }
+
+  // ─── amCharts 5 demo chart ───
+  if (typeof am5 !== 'undefined') {
+    am5.ready(function() {
+      var root = am5.Root.new('chart-demo');
+      root.setThemes([am5themes_Dark.new(root), am5themes_Animated.new(root)]);
+      var chart = root.container.children.push(am5xy.XYChart.new(root, {
+        panX: false, panY: false, wheelX: 'none', wheelY: 'none'
+      }));
+      var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
+        categoryField: 'day',
+        renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 30 })
+      }));
+      var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererY.new(root, {})
+      }));
+      var series = chart.series.push(am5xy.ColumnSeries.new(root, {
+        name: 'App Runs', xAxis: xAxis, yAxis: yAxis,
+        valueYField: 'runs', categoryXField: 'day',
+        tooltip: am5.Tooltip.new(root, { labelText: '{day}: {runs} runs' })
+      }));
+      series.columns.template.setAll({
+        cornerRadiusTL: 4, cornerRadiusTR: 4,
+        fill: am5.color(0x78b9ff), stroke: am5.color(0x78b9ff)
+      });
+      var data = [
+        { day: 'Mon', runs: 12 }, { day: 'Tue', runs: 18 },
+        { day: 'Wed', runs: 24 }, { day: 'Thu', runs: 15 },
+        { day: 'Fri', runs: 30 }, { day: 'Sat', runs: 8 },
+        { day: 'Sun', runs: 5 }
+      ];
+      xAxis.data.setAll(data);
+      series.data.setAll(data);
+      series.appear(1000);
+      chart.appear(1000, 100);
+    });
+  }
 
 })();
 </script>
