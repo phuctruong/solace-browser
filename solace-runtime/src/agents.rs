@@ -92,43 +92,9 @@ fn agent_defs() -> Vec<AgentDef> {
             installed: false,
             path: None,
         },
-        AgentDef {
-            id: "copilot".to_string(),
-            name: "GitHub Copilot".to_string(),
-            cmd: "copilot".to_string(),
-            invoke_pattern: vec![
-                "copilot".to_string(),
-                "{prompt}".to_string(),
-            ],
-            models: vec![
-                "gpt-4.1".to_string(),
-                "claude-sonnet-4-6".to_string(),
-                "o4-mini".to_string(),
-            ],
-            default_model: "gpt-4.1".to_string(),
-            provider: "github".to_string(),
-            installed: false,
-            path: None,
-        },
-        AgentDef {
-            id: "cursor".to_string(),
-            name: "Cursor".to_string(),
-            cmd: "cursor".to_string(),
-            invoke_pattern: vec![
-                "cursor".to_string(),
-                "--prompt".to_string(),
-                "{prompt}".to_string(),
-            ],
-            models: vec![
-                "claude-sonnet-4-6".to_string(),
-                "gpt-4.1".to_string(),
-                "cursor-fast".to_string(),
-            ],
-            default_model: "claude-sonnet-4-6".to_string(),
-            provider: "cursor".to_string(),
-            installed: false,
-            path: None,
-        },
+        // copilot and cursor removed — they are interactive-only (no headless mode)
+        // copilot: GitHub Copilot CLI opens interactive UI
+        // cursor: IDE launcher, not a headless CLI tool
         AgentDef {
             id: "aider".to_string(),
             name: "Aider".to_string(),
@@ -376,7 +342,7 @@ mod tests {
     #[test]
     fn test_agent_defs_has_six_entries() {
         let defs = agent_defs();
-        assert_eq!(defs.len(), 6);
+        assert_eq!(defs.len(), 4);
     }
 
     #[test]
@@ -385,7 +351,7 @@ mod tests {
         let mut ids: Vec<&str> = defs.iter().map(|d| d.id.as_str()).collect();
         ids.sort();
         ids.dedup();
-        assert_eq!(ids.len(), 6);
+        assert_eq!(ids.len(), 4);
     }
 
     #[test]
@@ -410,7 +376,7 @@ mod tests {
     #[test]
     fn test_detect_agents_returns_six() {
         let agents = detect_agents();
-        assert_eq!(agents.len(), 6);
+        assert_eq!(agents.len(), 4);
         // Each agent must have id, name, cmd filled
         for a in &agents {
             assert!(!a.id.is_empty());
@@ -438,7 +404,7 @@ mod tests {
     #[test]
     fn test_all_models_returns_entries() {
         let models = all_models();
-        assert_eq!(models.len(), 6);
+        assert_eq!(models.len(), 4);
         for entry in &models {
             assert!(entry.get("agent_id").is_some());
             assert!(entry.get("models").is_some());
