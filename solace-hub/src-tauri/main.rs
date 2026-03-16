@@ -650,7 +650,7 @@ fn restore_dashboard_window(win: &Window) {
     })));
     let _ = win.set_size(Size::Logical(LogicalSize {
         width: 1400.0,
-        height: 1000.0,
+        height: 1200.0,
     }));
     let _ = win.center();
     let _ = win.show();
