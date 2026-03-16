@@ -193,6 +193,26 @@
         });
         $('llm-chips').innerHTML = '<div class="hub-llm-chips">' + chips + '</div>';
         $('cli-details-row').style.display = '';
+
+        // Async validation — ping each CLI's health endpoint after display
+        installed.forEach(function(a) {
+          get('/api/v1/agents/' + encodeURIComponent(a.id) + '/health').then(function(h) {
+            var chip = document.querySelector('.hub-llm-chip:nth-child(' + (installed.indexOf(a)+1) + ')');
+            // Find the chip by text content instead
+            var allChips = document.querySelectorAll('.hub-llm-chip');
+            allChips.forEach(function(c) {
+              if (c.textContent.trim() === '✓ ' + a.id) {
+                var models = (a.models || []).map(function(m) {
+                  // Shorten model names for display
+                  return m.replace('claude-','').replace('gpt-','').replace('-20251001','');
+                }).join(', ');
+                c.innerHTML = '✓ ' + esc(a.id) + ' <span style="font-size:0.7rem;font-weight:400;color:var(--sb-text-muted)">' + models + '</span>';
+              }
+            });
+          }).catch(function() {
+            // Health check failed — mark as warning
+          });
+        });
       } else {
         $('src-local').innerHTML = '<span class="sb-pill sb-pill--danger">✗ None found</span>';
         $('src-local-gif').innerHTML = '';
