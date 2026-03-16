@@ -82,6 +82,11 @@ fn domain_config_path(domain: &str) -> PathBuf {
         .join("session_policy.json")
 }
 
+/// Public accessor for domain config (used by files.rs for domain detail tabs).
+pub fn load_domain_config_pub(domain: &str) -> SessionPolicy {
+    load_domain_config(domain)
+}
+
 fn load_domain_config(domain: &str) -> SessionPolicy {
     let path = domain_config_path(domain);
     crate::persistence::read_json(&path).unwrap_or_default()

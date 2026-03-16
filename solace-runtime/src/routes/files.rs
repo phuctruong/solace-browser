@@ -361,6 +361,7 @@ async fn domains_page() -> Html<String> {
 // GET /domains/:domain — domain detail page
 // ---------------------------------------------------------------------------
 async fn domain_detail_page(
+    State(state): State<AppState>,
     Path(domain): Path<String>,
 ) -> Result<Html<String>, (StatusCode, Html<String>)> {
     let apps: Vec<_> = crate::app_engine::scan_installed_apps()
@@ -444,14 +445,78 @@ async fn domain_detail_page(
         run_rows = "<tr><td colspan=\"3\">No runs yet.</td></tr>".to_string();
     }
 
+    // Domain tab status — read directly from AppState
+    let tab_status = {
+        let tabs = state.domain_tabs.read();
+        if let Some(tab) = tabs.get(&domain) {
+            if tab.tab_state == crate::state::TabState::Idle {
+                "<span class=\"sb-pill sb-pill--success\">Idle</span> — tab available for next app".to_string()
+            } else {
+                format!("<span class=\"sb-pill sb-pill--warning\">Working</span> — active app: <strong>{}</strong>",
+                    html_escape::encode_text(tab.active_app_id.as_deref().unwrap_or("unknown")))
+            }
+        } else {
+            "<span class=\"sb-pill sb-pill--success\">Idle</span> — no tab registered yet".to_string()
+        }
+    };
+
+    // Domain config
+    let config = crate::routes::domains::load_domain_config_pub(&domain);
+    let config_section = format!(
+        "<table class=\"sb-table\">\
+         <tr><td><strong>Session TTL</strong></td><td>{} hours</td></tr>\
+         <tr><td><strong>Auth Type</strong></td><td>{}</td></tr>\
+         <tr><td><strong>Keep-Alive</strong></td><td>Every {} hours</td></tr>\
+         </table>",
+        config.session_ttl_hours,
+        html_escape::encode_text(&config.auth_type),
+        config.keep_alive_interval_hours,
+    );
+
+    let icon = domain_icon_path(&domain);
     let body = format!(
-        "<p><a href=\"/domains\">&larr; All Domains</a></p>\
-         {stillwater_section}\
-         <h2>Apps ({count})</h2>\
-         <table><thead><tr><th>App</th><th>Version</th><th>Runs</th><th>Last Run</th></tr></thead><tbody>{app_rows}</tbody></table>\
-         <h2>Recent Runs</h2>\
-         <table><thead><tr><th>Run</th><th>App</th><th>Time</th></tr></thead><tbody>{run_rows}</tbody></table>",
-        count = apps.len(),
+        r#"<p><a href="/domains">&larr; All Domains</a></p>
+<div class="sb-flex" style="align-items:center;gap:0.75rem;margin-bottom:1rem">
+  <img class="sb-app-icon" src="{icon}" alt="" style="width:36px;height:36px" onerror="this.style.display='none'">
+  <span class="sb-pill sb-pill--info">{app_count} apps</span>
+</div>
+
+<div class="sb-tabs" role="tablist" id="domain-tabs">
+  <button class="sb-tab sb-tab--active" data-tab="apps" onclick="showTab(this,'apps')">Apps</button>
+  <button class="sb-tab" data-tab="events" onclick="showTab(this,'events')">Events</button>
+  <button class="sb-tab" data-tab="tab-status" onclick="showTab(this,'tab-status')">Tab Status</button>
+  <button class="sb-tab" data-tab="config" onclick="showTab(this,'config')">Config</button>
+</div>
+
+<div id="panel-apps" class="sb-tab-panel">
+  {stillwater_section}
+  <table class="sb-table"><thead><tr><th>App</th><th>Version</th><th>Runs</th><th>Last Run</th></tr></thead><tbody>{app_rows}</tbody></table>
+</div>
+
+<div id="panel-events" class="sb-tab-panel" hidden>
+  <h3 class="sb-heading">Recent Runs</h3>
+  <table class="sb-table"><thead><tr><th>Run</th><th>App</th><th>Time</th></tr></thead><tbody>{run_rows}</tbody></table>
+</div>
+
+<div id="panel-tab-status" class="sb-tab-panel" hidden>
+  <div class="sb-card"><p>{tab_status}</p>
+  <p class="sb-text-muted" style="margin-top:0.5rem">Rule: 1 browser tab per domain. Apps share the tab via acquire/release protocol.</p></div>
+</div>
+
+<div id="panel-config" class="sb-tab-panel" hidden>
+  <div class="sb-card">{config_section}</div>
+</div>
+
+<script>
+function showTab(btn, id) {{
+  document.querySelectorAll('.sb-tab').forEach(t => t.classList.remove('sb-tab--active'));
+  document.querySelectorAll('.sb-tab-panel').forEach(p => p.hidden = true);
+  btn.classList.add('sb-tab--active');
+  document.getElementById('panel-' + id).hidden = false;
+}}
+</script>"#,
+        icon = html_escape::encode_text(&icon),
+        app_count = apps.len(),
     );
 
     Ok(Html(hub_page(
@@ -554,12 +619,83 @@ async fn app_detail_page(
         run_rows = "<tr><td colspan=\"2\">No runs yet.</td></tr>".to_string();
     }
 
+    // Evidence for this app
+    let solace_home = crate::utils::solace_home();
+    let all_evidence = crate::evidence::list_evidence(&solace_home, 200);
+    let app_evidence: Vec<_> = all_evidence
+        .iter()
+        .filter(|e| e.event.contains(&app.id) || e.actor.contains(&app.id))
+        .take(20)
+        .collect();
+    let mut evidence_rows = String::new();
+    for entry in &app_evidence {
+        evidence_rows.push_str(&format!(
+            "<tr><td>{}</td><td><strong>{}</strong></td><td><code title=\"{}\">{}&hellip;</code></td></tr>",
+            html_escape::encode_text(&entry.timestamp),
+            html_escape::encode_text(&entry.event),
+            html_escape::encode_text(&entry.hash),
+            html_escape::encode_text(&entry.hash[..12.min(entry.hash.len())]),
+        ));
+    }
+    if evidence_rows.is_empty() {
+        evidence_rows = "<tr><td colspan=\"3\" class=\"sb-text-muted\">No evidence records for this app yet.</td></tr>".to_string();
+    }
+
+    let icon = domain_icon_path(&app.domain);
     let body = format!(
-        "<p><a href=\"/domains/{domain}\">&larr; {domain}</a></p>\
-         {manifest_section}\
-         <h2>Runs</h2>\
-         <table><thead><tr><th>Run ID</th><th>Time</th></tr></thead><tbody>{run_rows}</tbody></table>",
+        r#"<p><a href="/domains/{domain}">&larr; {domain}</a></p>
+<div class="sb-flex" style="align-items:center;gap:0.75rem;margin-bottom:1rem">
+  <img class="sb-app-icon" src="{icon}" alt="" style="width:36px;height:36px" onerror="this.style.display='none'">
+  <span class="sb-pill sb-pill--info">{domain}</span>
+  <span class="sb-pill sb-pill--success">v{version}</span>
+</div>
+
+<div class="sb-tabs" role="tablist">
+  <button class="sb-tab sb-tab--active" data-tab="overview" onclick="showTab(this,'overview')">Overview</button>
+  <button class="sb-tab" data-tab="runs" onclick="showTab(this,'runs')">Runs</button>
+  <button class="sb-tab" data-tab="evidence" onclick="showTab(this,'evidence')">Evidence</button>
+  <button class="sb-tab" data-tab="settings" onclick="showTab(this,'settings')">Settings</button>
+</div>
+
+<div id="panel-overview" class="sb-tab-panel">
+  {manifest_section}
+</div>
+
+<div id="panel-runs" class="sb-tab-panel" hidden>
+  <table class="sb-table"><thead><tr><th>Run ID</th><th>Time</th></tr></thead><tbody>{run_rows}</tbody></table>
+</div>
+
+<div id="panel-evidence" class="sb-tab-panel" hidden>
+  <table class="sb-table"><thead><tr><th>Timestamp</th><th>Event</th><th>Hash</th></tr></thead><tbody>{evidence_rows}</tbody></table>
+  <p style="margin-top:0.5rem"><a href="/evidence" class="sb-btn sb-btn--sm">Full Evidence Chain</a></p>
+</div>
+
+<div id="panel-settings" class="sb-tab-panel" hidden>
+  <div class="sb-card">
+    <table class="sb-table">
+      <tr><td><strong>Schedule</strong></td><td><code>{schedule}</code></td></tr>
+      <tr><td><strong>Tier</strong></td><td>{tier}</td></tr>
+      <tr><td><strong>Template</strong></td><td>{template}</td></tr>
+      <tr><td><strong>Source URL</strong></td><td>{source_url}</td></tr>
+    </table>
+  </div>
+</div>
+
+<script>
+function showTab(btn, id) {{
+  document.querySelectorAll('.sb-tab').forEach(t => t.classList.remove('sb-tab--active'));
+  document.querySelectorAll('.sb-tab-panel').forEach(p => p.hidden = true);
+  btn.classList.add('sb-tab--active');
+  document.getElementById('panel-' + id).hidden = false;
+}}
+</script>"#,
         domain = html_escape::encode_text(&app.domain),
+        icon = html_escape::encode_text(&icon),
+        version = html_escape::encode_text(&app.version),
+        schedule = schedule_display,
+        tier = tier_display,
+        template = html_escape::encode_text(&app.report_template),
+        source_url = app.source_url.as_deref().filter(|s| !s.is_empty()).map(|s| html_escape::encode_text(s).to_string()).unwrap_or_else(|| "—".to_string()),
     );
 
     Ok(Html(hub_page(
