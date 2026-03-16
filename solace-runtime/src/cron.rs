@@ -7,11 +7,15 @@ use serde::{Deserialize, Serialize};
 use crate::state::AppState;
 
 pub async fn run_scheduler(state: AppState) {
+    // Load persisted schedules
     if let Ok(schedules) =
         crate::persistence::read_json::<Vec<crate::state::Schedule>>(&schedules_path())
     {
         *state.schedules.write() = schedules;
     }
+
+    // Auto-discover: scan app manifests for schedule fields and register any missing
+    auto_discover_schedules(&state);
 
     loop {
         let schedules = state.schedules.read().clone();
@@ -161,6 +165,42 @@ fn schedule_runs_path() -> std::path::PathBuf {
 
 fn read_schedule_runs() -> Vec<ScheduleRunRecord> {
     crate::persistence::read_json(&schedule_runs_path()).unwrap_or_default()
+}
+
+/// Auto-discover schedules from app manifests.
+/// Any app with a non-empty `schedule` field gets a schedule entry if not already tracked.
+/// This ensures apps self-register their schedule just by having it in manifest.md.
+fn auto_discover_schedules(state: &AppState) {
+    let apps = crate::app_engine::scan_installed_apps();
+    let mut schedules = state.schedules.write();
+    let existing_app_ids: Vec<String> = schedules.iter().map(|s| s.app_id.clone()).collect();
+
+    let mut added = 0u32;
+    for app in &apps {
+        if app.schedule.is_empty() || !validate_cron(&app.schedule) {
+            continue;
+        }
+        if existing_app_ids.contains(&app.id) {
+            continue;
+        }
+        // Auto-register this app's schedule
+        let schedule = crate::state::Schedule {
+            id: format!("auto-{}", app.id),
+            app_id: app.id.clone(),
+            cron: app.schedule.clone(),
+            enabled: true,
+            label: format!("{} (auto-discovered)", app.name),
+            next_run: None,
+        };
+        schedules.push(schedule);
+        added += 1;
+    }
+
+    if added > 0 {
+        tracing::info!(added, "auto-discovered schedules from app manifests");
+        // Persist the updated schedules
+        let _ = crate::persistence::write_json(&schedules_path(), &*schedules);
+    }
 }
 
 fn already_ran_this_minute(
