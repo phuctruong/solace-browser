@@ -57,7 +57,7 @@
       }
     },
     "security": {
-      "csp": "default-src 'self'; connect-src 'self' http://localhost:8888; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
+      "csp": "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:8888; connect-src * http://localhost:8888 https://solaceagi.com; img-src * data: blob:; style-src 'self' 'unsafe-inline' http://localhost:8888; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:8888; font-src 'self' data:"
     },
     "systemTray": {
       "iconPath": "icons/yinyang-logo.png",
