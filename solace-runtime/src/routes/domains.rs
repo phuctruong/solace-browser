@@ -25,6 +25,15 @@ pub fn routes() -> Router<AppState> {
             "/api/v1/domains/:domain/keep-alive",
             get(keep_alive_analysis),
         )
+        .route("/api/v1/domains/tabs", get(list_domain_tabs))
+        .route(
+            "/api/v1/domains/:domain/tab",
+            get(get_domain_tab).post(acquire_domain_tab),
+        )
+        .route(
+            "/api/v1/domains/:domain/tab/release",
+            axum::routing::post(release_domain_tab),
+        )
 }
 
 /// Per-domain session policy — controls TTL, auth type, keep-alive interval.
@@ -348,6 +357,129 @@ fn estimate_cron_interval_hours(cron: &str) -> Option<u64> {
 
     // Default: assume daily (24h)
     Some(24)
+}
+
+// ---------------------------------------------------------------------------
+// Domain Tab Coordination — 1 browser tab per domain
+// Apps in the same domain SHARE a tab. Prevents runaway tabs + throttles.
+// ---------------------------------------------------------------------------
+
+/// GET /api/v1/domains/tabs — list all active domain tabs
+async fn list_domain_tabs(State(state): State<AppState>) -> Json<serde_json::Value> {
+    let tabs = state.domain_tabs.read().clone();
+    Json(json!({
+        "tabs": tabs,
+        "count": tabs.len(),
+    }))
+}
+
+/// GET /api/v1/domains/:domain/tab — get current tab state for a domain
+async fn get_domain_tab(
+    State(state): State<AppState>,
+    Path(domain): Path<String>,
+) -> Json<serde_json::Value> {
+    let tabs = state.domain_tabs.read();
+    if let Some(tab) = tabs.get(&domain) {
+        Json(json!({"tab": tab, "available": tab.tab_state == crate::state::TabState::Idle}))
+    } else {
+        Json(json!({"tab": null, "available": true}))
+    }
+}
+
+#[derive(Deserialize)]
+struct AcquireTabPayload {
+    app_id: String,
+    url: String,
+    session_id: Option<String>,
+}
+
+/// POST /api/v1/domains/:domain/tab — acquire the domain tab for an app.
+/// Returns the tab assignment. If another app is using it, returns busy status.
+/// This is the coordination point: apps call this BEFORE navigating.
+async fn acquire_domain_tab(
+    State(state): State<AppState>,
+    Path(domain): Path<String>,
+    Json(payload): Json<AcquireTabPayload>,
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    let mut tabs = state.domain_tabs.write();
+    let now = crate::utils::now_iso8601();
+
+    if let Some(existing) = tabs.get(&domain) {
+        match existing.tab_state {
+            crate::state::TabState::Working => {
+                // Tab is busy — another app is using it
+                return Err((
+                    StatusCode::CONFLICT,
+                    Json(json!({
+                        "error": "domain_tab_busy",
+                        "domain": domain,
+                        "active_app_id": existing.active_app_id,
+                        "message": format!(
+                            "Domain tab for {} is in use by app {}. Wait for release.",
+                            domain,
+                            existing.active_app_id.as_deref().unwrap_or("unknown")
+                        ),
+                    })),
+                ));
+            }
+            _ => {
+                // Tab is idle or in cooldown — reassign to new app
+            }
+        }
+    }
+
+    let session_id = payload
+        .session_id
+        .unwrap_or_else(|| {
+            // Find the first active session
+            state
+                .sessions
+                .read()
+                .keys()
+                .next()
+                .cloned()
+                .unwrap_or_else(|| "no-session".to_string())
+        });
+
+    let tab = crate::state::DomainTab {
+        domain: domain.clone(),
+        current_url: payload.url.clone(),
+        session_id: session_id.clone(),
+        active_app_id: Some(payload.app_id.clone()),
+        last_activity: now,
+        tab_state: crate::state::TabState::Working,
+    };
+    tabs.insert(domain.clone(), tab.clone());
+
+    Ok(Json(json!({
+        "acquired": true,
+        "tab": tab,
+        "message": format!("App {} acquired domain tab for {}", payload.app_id, domain),
+    })))
+}
+
+/// POST /api/v1/domains/:domain/tab/release — release the domain tab after an app finishes.
+async fn release_domain_tab(
+    State(state): State<AppState>,
+    Path(domain): Path<String>,
+) -> Json<serde_json::Value> {
+    let mut tabs = state.domain_tabs.write();
+    if let Some(tab) = tabs.get_mut(&domain) {
+        let prev_app = tab.active_app_id.take();
+        tab.tab_state = crate::state::TabState::Idle;
+        tab.last_activity = crate::utils::now_iso8601();
+        Json(json!({
+            "released": true,
+            "domain": domain,
+            "previous_app": prev_app,
+        }))
+    } else {
+        Json(json!({
+            "released": false,
+            "domain": domain,
+            "message": "No active tab for this domain",
+        }))
+    }
 }
 
 #[cfg(test)]

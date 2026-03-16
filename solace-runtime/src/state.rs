@@ -48,6 +48,28 @@ pub struct AppState {
     /// When a browser sidebar connects with ?session=xxx, it registers here.
     /// Hub/MCP sends commands via POST /api/v1/browser/command/{session_id}.
     pub session_channels: Arc<RwLock<HashMap<String, tokio::sync::mpsc::UnboundedSender<String>>>>,
+    /// Domain tab coordination: domain → DomainTab.
+    /// Rule: 1 browser tab per domain. Apps in the same domain share a tab.
+    /// This prevents runaway tabs and throttles apps per domain owner's site.
+    pub domain_tabs: Arc<RwLock<HashMap<String, DomainTab>>>,
+}
+
+/// Tracks one browser tab per domain. Apps in the same domain queue here.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct DomainTab {
+    pub domain: String,
+    pub current_url: String,
+    pub session_id: String,
+    pub active_app_id: Option<String>,
+    pub last_activity: String,
+    pub tab_state: TabState,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq)]
+pub enum TabState {
+    Idle,
+    Working,
+    Cooldown,
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
@@ -248,6 +270,7 @@ impl AppState {
             )),
             runtime_events: Arc::new(RwLock::new(Vec::new())),
             session_channels: Arc::new(RwLock::new(HashMap::new())),
+            domain_tabs: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
