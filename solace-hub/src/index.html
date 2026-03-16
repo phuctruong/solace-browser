@@ -174,7 +174,8 @@
     get('/api/v1/agents').then(function(d) {
       var agents = d.agents || [];
       var installed = agents.filter(function(a){return a.installed;});
-      hasLLM = installed.length > 0;
+      // Don't set hasLLM here — CLIs on PATH doesn't mean connected
+      // hasLLM only becomes true after: Connect CLIs verified, BYOK saved, or signed in
 
       // Transition: merge → rotate → reveal
       $('scan-img').src = '/media/yinyang-rotating_70pct_128px.gif';
