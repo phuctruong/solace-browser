@@ -194,25 +194,47 @@
         $('llm-chips').innerHTML = '<div class="hub-llm-chips">' + chips + '</div>';
         $('cli-details-row').style.display = '';
 
-        // Async validation — ping each CLI's health endpoint after display
+        // Async validation — actually call each CLI + model to verify credits/access
+        var validateArea = document.createElement('div');
+        validateArea.className = 'sb-mt-md';
+        validateArea.id = 'cli-validate';
+        validateArea.innerHTML = '<small class="sb-text-muted">Validating models...</small>';
+        $('llm-chips').appendChild(validateArea);
+
+        var results = [];
+        var pending = 0;
         installed.forEach(function(a) {
-          get('/api/v1/agents/' + encodeURIComponent(a.id) + '/health').then(function(h) {
-            var chip = document.querySelector('.hub-llm-chip:nth-child(' + (installed.indexOf(a)+1) + ')');
-            // Find the chip by text content instead
-            var allChips = document.querySelectorAll('.hub-llm-chip');
-            allChips.forEach(function(c) {
-              if (c.textContent.trim() === '✓ ' + a.id) {
-                var models = (a.models || []).map(function(m) {
-                  // Shorten model names for display
-                  return m.replace('claude-','').replace('gpt-','').replace('-20251001','');
-                }).join(', ');
-                c.innerHTML = '✓ ' + esc(a.id) + ' <span style="font-size:0.7rem;font-weight:400;color:var(--sb-text-muted)">' + models + '</span>';
-              }
+          (a.models || []).forEach(function(model) {
+            pending++;
+            var shortModel = model.replace('claude-','').replace('gpt-','').replace('-20251001','').replace('claude-','');
+            // Call the generate endpoint with a tiny ping prompt
+            fetch('/api/v1/agents/generate', {
+              method:'POST', headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({agent_id:a.id, model:model, prompt:'respond with just the word ok', timeout:10})
+            }).then(function(r){return r.json();}).then(function(d) {
+              var ok = d.output || d.text || d.result;
+              results.push({cli:a.id, model:shortModel, ok:!!ok, error:d.error||null});
+            }).catch(function(e) {
+              results.push({cli:a.id, model:shortModel, ok:false, error:'timeout'});
+            }).finally(function() {
+              pending--;
+              if (pending <= 0) renderValidation();
             });
-          }).catch(function() {
-            // Health check failed — mark as warning
           });
         });
+
+        function renderValidation() {
+          var html = '<table style="width:100%;font-size:0.8rem;border-collapse:collapse">';
+          html += '<tr style="color:var(--sb-text-muted)"><th style="text-align:left;padding:2px 6px">CLI</th><th style="text-align:left;padding:2px 6px">Model</th><th style="text-align:left;padding:2px 6px">Status</th></tr>';
+          results.forEach(function(r) {
+            var status = r.ok
+              ? '<span class="sb-pill sb-pill--success" style="font-size:0.65rem">✓ verified</span>'
+              : '<span class="sb-pill sb-pill--danger" style="font-size:0.65rem">✗ ' + esc(r.error||'failed') + '</span>';
+            html += '<tr><td style="padding:2px 6px">' + esc(r.cli) + '</td><td style="padding:2px 6px;font-family:var(--sb-font-mono)">' + esc(r.model) + '</td><td style="padding:2px 6px">' + status + '</td></tr>';
+          });
+          html += '</table>';
+          $('cli-validate').innerHTML = html;
+        }
       } else {
         $('src-local').innerHTML = '<span class="sb-pill sb-pill--danger">✗ None found</span>';
         $('src-local-gif').innerHTML = '';
