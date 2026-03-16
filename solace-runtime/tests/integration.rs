@@ -2034,7 +2034,7 @@ async fn agents_list_returns_array_with_installed_field() {
     assert_eq!(response.status(), StatusCode::OK);
     let body = parse_body(response).await;
     let agents = body["agents"].as_array().expect("agents should be an array");
-    assert_eq!(agents.len(), 4);
+    assert_eq!(agents.len(), 3);
     // Every agent must have an installed field (bool)
     for agent in agents {
         assert!(agent.get("installed").is_some(), "agent missing 'installed' field");
@@ -2046,7 +2046,7 @@ async fn agents_list_returns_array_with_installed_field() {
         assert!(agent.get("provider").is_some());
     }
     // Check total and installed counts
-    assert_eq!(body["total"], 4);
+    assert_eq!(body["total"], 3);
     assert!(body["installed"].is_number());
 }
 
@@ -2064,7 +2064,7 @@ async fn agents_models_returns_per_agent() {
     assert_eq!(response.status(), StatusCode::OK);
     let body = parse_body(response).await;
     let models = body["models"].as_array().expect("models should be an array");
-    assert_eq!(models.len(), 4);
+    assert_eq!(models.len(), 3);
     for entry in models {
         assert!(entry.get("agent_id").is_some());
         assert!(entry.get("models").is_some());
@@ -2174,9 +2174,9 @@ async fn agents_detect_finds_at_least_one() {
     for a in &installed {
         eprintln!("  integration: found {} at {:?}", a["id"], a["path"]);
     }
-    eprintln!("  integration: installed agents: {}/4", installed.len());
+    eprintln!("  integration: installed agents: {}/3", installed.len());
     // Don't hard-fail if zero (CI may have none), but assert structure is correct
-    assert_eq!(agents.len(), 4);
+    assert_eq!(agents.len(), 3);
 }
 
 mod hex {

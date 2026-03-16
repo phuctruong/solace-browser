@@ -442,6 +442,18 @@
     });
   };
 
+  // ─── Delegated click handler for dynamically created buttons ───
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('button');
+    if (!btn) return;
+    var text = btn.textContent.trim();
+    if (text === 'Launch Solace Browser') { e.preventDefault(); launchBrowser(); }
+    else if (text === 'Sign In' && btn.closest('#src-managed-gif')) { e.preventDefault(); signIn(); }
+    else if (text === 'Connect CLIs') { e.preventDefault(); connectCLIs(); }
+    else if (text === 'Add Key') { e.preventDefault(); promptBYOK(); }
+    else if (text === 'Retry') { e.preventDefault(); connectCLIs(); }
+  });
+
   // ─── Init ───
   runScan();
 
