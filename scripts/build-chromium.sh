@@ -36,6 +36,6 @@ fi
 # Step 3: Build
 echo "INFO: Starting autoninja build..."
 cd "${SOURCE_DIR}"
-autoninja -C out/Solace chrome
+autoninja -C out/Solace solace
 
 echo "INFO: Build complete."

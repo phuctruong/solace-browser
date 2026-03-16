@@ -167,7 +167,9 @@ class TestDebian:
 
     def test_linux_bundle_includes_sidebar_assets(self):
         content = _read("scripts/build-linux-release.sh")
-        assert 'source/src/chrome/browser/resources/solace' in content
+        # Script uses _UPSTREAM_DIR variable for upstream Chromium source tree path
+        assert '_UPSTREAM_DIR' in content
+        assert 'browser/resources/solace' in content
         assert 'resources/solace-sidebar' in content
 
     def test_install_script_unsets_snap_environment(self):

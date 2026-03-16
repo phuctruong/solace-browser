@@ -70,7 +70,7 @@ def test_snapshot_ua_hashed():
     h._handle_user_agent_create({
         "user_agent": user_agent,
         "platform": "Linux",
-        "browser": "Chrome",
+        "browser": "Solace",
         "is_mobile": False,
         "is_spoofed": False,
     })
@@ -83,7 +83,7 @@ def test_snapshot_invalid_platform():
     h._handle_user_agent_create({
         "user_agent": "Mozilla/5.0 Test",
         "platform": "BeOS",
-        "browser": "Chrome",
+        "browser": "Solace",
         "is_mobile": False,
         "is_spoofed": False,
     })
@@ -167,7 +167,7 @@ def test_ua_stats():
     second._handle_user_agent_create({
         "user_agent": "Mozilla/5.0 Two",
         "platform": "Android",
-        "browser": "Chrome",
+        "browser": "Solace",
         "is_mobile": True,
         "is_spoofed": True,
     })

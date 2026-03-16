@@ -19,7 +19,7 @@ Cross-ref: Diagram 10 (capture-pipeline), Paper 05 (PZip Stillwater),
 Invariants:
   1. ALL computation is client-side (zero cloud compute)
   2. 100% RTC must pass before ripple is stored
-  3. Domain exclusions enforced before capture (no localhost, no chrome://)
+  3. Domain exclusions enforced before capture (no localhost, no solace://)
   4. Fallback Ban: PZip ONLY, no zlib fallback, no silent degradation
 
 Rung: 641
@@ -129,7 +129,7 @@ class CaptureNotFoundError(CaptureError):
 # Domain exclusion patterns
 # ---------------------------------------------------------------------------
 
-_EXCLUDED_SCHEMES = frozenset({"chrome", "about", "data", "file"})
+_EXCLUDED_SCHEMES = frozenset({"solace", "about", "data", "file"})
 
 _EXCLUDED_HOSTS = frozenset({"localhost", "127.0.0.1", "0.0.0.0"})
 
@@ -595,7 +595,7 @@ class CapturePipeline:
         """Check if a URL's domain is in the exclusion list.
 
         Excluded:
-        - Schemes: chrome://, about:, data:, file://
+        - Schemes: solace://, about:, data:, file://
         - Hosts: localhost, 127.0.0.1, 0.0.0.0
         - Private IPs: 192.168.*, 10.*, 172.16-31.*, and other RFC 1918
 

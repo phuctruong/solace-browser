@@ -96,7 +96,7 @@
     },
     {
       "floor_number": 4,
-      "persona_name": "Google Chrome Auto-Browse",
+      "persona_name": "Google Chromium Auto-Browse",
       "persona_domain": "platform_bundled_3b_users",
       "questions": [
         "We have 3 billion users pre-installed. What is your total addressable install base?",
@@ -108,12 +108,12 @@
         "Our infrastructure scales to any load with zero configuration. How does yours scale?",
         "We have a dedicated team of 1,000+ engineers. You have one founder. How do you compete?",
         "Our AI integration is directly tied to Google DeepMind's latest models. Which models do you use?",
-        "We distribute through the Google Play Store and Chrome Web Store. Where do you distribute?",
+        "We distribute through the Google Play Store and browser extension store. Where do you distribute?",
         "We have Google's legal and compliance infrastructure. What legal infrastructure do you have?",
         "Our mobile browser is on 5B+ smartphones. What is your mobile strategy?",
         "We will integrate browser automation into Google Assistant seamlessly. Can you?",
         "Our market penetration is guaranteed by device preinstallation. How do you achieve distribution?",
-        "We support Chrome extensions ecosystem (100,000+ extensions). Does your system?"
+        "We support browser extensions ecosystem (100,000+ extensions). Does your system?"
       ],
       "question_expansion_instruction": "Expand from seed questions to ~100 questions covering the full domain. Prioritize questions that expose fixable competitive gaps."
     },
@@ -166,20 +166,20 @@
     {
       "floor_number": 7,
       "persona_name": "Bardeen",
-      "persona_domain": "chrome_extension_zero_install",
+      "persona_domain": "chromium_extension_zero_install",
       "questions": [
-        "We are a Chrome extension with zero installation required. Your product requires a terminal. Explain.",
+        "We are a browser extension with zero installation required. Your product requires a terminal. Explain.",
         "We have 100+ pre-built playbooks users can activate in one click. How many can yours?",
         "Our users are active on day 1 without reading documentation. What is your day-1 activation rate?",
         "We have a visual no-code builder. Your recipes require YAML knowledge. How do you serve non-technical users?",
         "We have 500,000+ active users. How many active users do you have?",
-        "Our Chrome Web Store listing is available to any Chrome user. Where do they find you?",
+        "Our browser extension store listing is available to any Chromium user. Where do they find you?",
         "We integrate with Salesforce, HubSpot, Notion, Google Sheets in one click. How do yours compare?",
         "Our playbooks are community-shared and growing daily. How does your recipe library grow?",
         "Our UX research shows users succeed in under 3 minutes. What is your time-to-value?",
         "We have raised $22M from top investors. What is your funding status?",
-        "Our marketing reach includes product review sites, Chrome Web Store reviews. Yours?",
-        "We support mobile Chrome on Android. What is your mobile support?",
+        "Our marketing reach includes product review sites, browser extension store reviews. Yours?",
+        "We support mobile Chromium on Android. What is your mobile support?",
         "Our in-browser automation doesn't require managing a separate application. Yours requires a daemon. Why?",
         "We have a visual recipe editor that non-developers love. When will you build one?",
         "Our freemium model with generous free tier drives viral growth. What drives your growth?"
@@ -1135,7 +1135,7 @@
       "persona_domain": "survival_2030_compete_on_governance",
       "questions": [
         "Your best 3 engineers get poached. What IP walks out the door?",
-        "Google ships Chrome-native browser automation for free to 3 billion users. What do you do?",
+        "Google ships Chromium-native browser automation for free to 3 billion users. What do you do?",
         "Anthropic revokes your API access with 30 days notice. What happens to your business?",
         "Microsoft bundles a Copilot automation feature into M365 at no additional cost. Response?",
         "A YC company clones your recipe format and raises $10M. How do you compete?",

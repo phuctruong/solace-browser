@@ -43,12 +43,12 @@ function Copy-Tree([string]$sourcePath, [string]$destinationPath) {
 }
 
 Require-Path $ChromiumOut
-if (-not (Test-Path -LiteralPath (Join-Path $ChromiumOut "chrome.exe"))) {
+if (-not (Test-Path -LiteralPath (Join-Path $ChromiumOut "solace.exe"))) {
     New-Item -ItemType Directory -Force -Path $ChromiumOut | Out-Null
     Write-Host "Bootstrapping Windows browser payload from $bootstrapUrl"
-    Invoke-WebRequest -Uri $bootstrapUrl -OutFile (Join-Path $ChromiumOut "chrome.exe")
+    Invoke-WebRequest -Uri $bootstrapUrl -OutFile (Join-Path $ChromiumOut "solace.exe")
 }
-Require-Path (Join-Path $ChromiumOut "chrome.exe")
+Require-Path (Join-Path $ChromiumOut "solace.exe")
 Require-Path (Join-Path $repoRoot "yinyang_server.py")
 Require-Path (Join-Path $repoRoot "yinyang-server.py")
 
@@ -128,7 +128,7 @@ $manifest = @{
     bundle = "solace-browser-release-windows"
     windows_portable = $true
     hub_binary = "solace-hub.exe"
-    browser_binary = "chrome.exe"
+    browser_binary = "solace.exe"
     runtime_port = 8888
 } | ConvertTo-Json -Depth 4
 Set-Content -LiteralPath (Join-Path $BundleDir "manifest.json") -Value $manifest -Encoding UTF8

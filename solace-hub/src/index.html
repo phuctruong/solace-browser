@@ -7,6 +7,9 @@
   <title>Solace Hub</title>
   <link rel="icon" href="/icons/yinyang-logo.png">
   <link rel="stylesheet" href="/styleguide.css">
+  <link rel="stylesheet" href="/vendor/jquery.dataTables.min.css">
+  <script src="/vendor/jquery-3.7.1.min.js"></script>
+  <script src="/vendor/jquery.dataTables.min.js"></script>
   <style>
     .hub-center { max-width:100%; margin:1rem 2rem; padding:0; }
     .hub-scan { text-align:center; padding:2rem 1rem; }
@@ -58,13 +61,33 @@
 
 <div class="hub-center">
 
+  <!-- SIGNOFFS BANNER (L3+ actions needing approval) -->
+  <div id="signoffs-banner" style="display:none" class="sb-card" style="border-left:4px solid var(--sb-warning);margin-bottom:0.5rem">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <p class="sb-kicker" style="color:var(--sb-warning)">Pending Signoffs</p>
+      <span class="sb-pill sb-pill--warning" id="signoffs-count">0</span>
+    </div>
+    <div id="signoffs-list" style="max-height:200px;overflow-y:auto"></div>
+  </div>
+
   <!-- PHASE 1: SCANNING -->
   <div id="scan-phase" class="hub-scan">
     <img src="/media/droplet-logo-merge_3x_128px.gif" alt="Scanning..." id="scan-img">
     <div class="hub-scan-text" id="scan-text">Detecting local AI tools...</div>
   </div>
 
-  <!-- PHASE 2: RESULTS (hidden until scan completes) -->
+  <!-- TABS -->
+  <div id="hub-tabs" style="display:none">
+    <div class="sb-tabs" role="tablist">
+      <button class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+      <button class="sb-tab" data-tab="sessions" role="tab">Sessions</button>
+      <button class="sb-tab" data-tab="events" role="tab">Events</button>
+      <button class="sb-tab" data-tab="settings" role="tab">Settings</button>
+    </div>
+  </div>
+
+  <!-- TAB: OVERVIEW (default — gate + launch + status) -->
+  <div id="tab-overview" class="hub-tab-panel">
   <div id="results-phase" style="display:none">
 
     <!-- LLM Setup — must have at least 1 of 3 -->
@@ -120,8 +143,39 @@
     </div>
 
     <!-- Launch Area -->
-    <div class="sb-mt-md" style="text-align:center" id="launch-area">
-      <p class="sb-text-muted" id="launch-msg">Solace Browser requires an LLM power source. Set up one above.</p>
+    <div class="sb-mt-md" id="launch-area">
+      <!-- Single Session Mode (default) -->
+      <div id="single-mode" style="text-align:center">
+        <div id="launch-btn-area">
+          <p class="sb-text-muted" id="launch-msg">Solace Browser requires an LLM power source. Set up one above.</p>
+        </div>
+        <div id="single-session-info" style="display:none;margin-top:0.75rem">
+          <span class="sb-pill sb-pill--success" id="single-pid-pill"></span>
+          <button class="sb-btn sb-btn--sm sb-btn--danger" onclick="closeSingleSession()" style="margin-left:0.5rem">Close Browser</button>
+        </div>
+      </div>
+      <!-- Multiple Sessions Mode -->
+      <div id="multi-mode" style="display:none">
+        <div class="sb-card">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <p class="sb-kicker">Browser Sessions</p>
+            <button class="sb-btn sb-btn--sm" id="reload-btn" onclick="reloadSessions()">Refresh</button>
+            <button class="sb-btn sb-btn--sm sb-btn--primary" onclick="newSession()">+ New Session</button>
+          </div>
+          <table class="sb-table" style="margin:0.5rem 0">
+            <thead><tr><th>Profile</th><th>URL</th><th>PID</th><th>Started</th><th></th></tr></thead>
+            <tbody id="multi-sessions-body"></tbody>
+          </table>
+          <div id="multi-sessions-empty" class="sb-text-muted" style="text-align:center;padding:0.75rem">No sessions. Click "+ New Session" to start.</div>
+        </div>
+      </div>
+      <!-- Mode Toggle -->
+      <div style="margin-top:0.75rem;text-align:center">
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;cursor:pointer;color:var(--sb-text-muted)">
+          <input type="checkbox" id="multi-session-toggle" style="accent-color:var(--sb-accent)">
+          Multiple Sessions <span class="sb-pill sb-pill--info" style="font-size:0.6rem">Advanced</span>
+        </label>
+      </div>
     </div>
 
     <!-- System Status -->
@@ -158,6 +212,81 @@
 
 
   </div>
+  </div><!-- end tab-overview -->
+
+  <!-- TAB: SESSIONS -->
+  <div id="tab-sessions" class="hub-tab-panel" style="display:none">
+    <div class="sb-card">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <p class="sb-kicker">Active Browser Sessions</p>
+        <div class="sb-flex sb-gap-sm">
+          <button class="sb-btn sb-btn--sm" onclick="launchBrowser()">Launch Default</button>
+          <button class="sb-btn sb-btn--sm sb-btn--primary" onclick="newSession()">+ New Session</button>
+        </div>
+      </div>
+      <table class="sb-table" style="margin:0.5rem 0">
+        <thead><tr><th>Profile</th><th>URL</th><th>PID</th><th>Started</th><th></th></tr></thead>
+        <tbody id="sessions-tab-body"></tbody>
+      </table>
+      <div id="sessions-tab-empty" class="sb-text-muted" style="text-align:center;padding:1rem">Loading...</div>
+    </div>
+    <div class="sb-card sb-mt-md">
+      <p class="sb-kicker">Profiles</p>
+      <div id="profiles-list" class="hub-llm-chips"></div>
+    </div>
+  </div>
+
+  <!-- TAB: EVENTS -->
+  <div id="tab-events" class="hub-tab-panel" style="display:none">
+    <div class="sb-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+        <p class="sb-kicker">Events — Universal Transparency View</p>
+        <div class="sb-flex sb-gap-sm">
+          <select id="events-level-filter" class="sb-select" style="font-size:0.8rem;padding:4px 8px">
+            <option value="">All Levels</option>
+            <option value="L1">L1 CPU</option>
+            <option value="L2">L2 Haiku</option>
+            <option value="L3">L3 Sonnet</option>
+            <option value="L4">L4 Opus</option>
+            <option value="L5">L5 Multi</option>
+          </select>
+          <button class="sb-btn sb-btn--sm" onclick="refreshEvents()">Refresh</button>
+        </div>
+      </div>
+      <table id="events-datatable" class="sb-table display" style="width:100%;font-size:0.85rem">
+        <thead><tr><th>Time</th><th>Level</th><th>Type</th><th>Domain</th><th>App</th><th>Session</th><th>Details</th></tr></thead>
+        <tbody id="events-body"></tbody>
+      </table>
+      <div id="events-empty" class="sb-text-muted" style="text-align:center;padding:1rem">Loading events...</div>
+    </div>
+  </div>
+
+  <!-- TAB: SETTINGS -->
+  <div id="tab-settings" class="hub-tab-panel" style="display:none">
+    <div class="sb-card">
+      <p class="sb-kicker">Runtime</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 2rem;font-size:0.9rem">
+        <div>Port: <strong>8888</strong></div>
+        <div>Binary: <span class="sb-text-mono" id="settings-binary">solace-runtime</span></div>
+        <div>Browser: <span class="sb-text-mono">solace</span></div>
+        <div>PID: <span id="settings-pid" class="sb-text-muted">?</span></div>
+      </div>
+    </div>
+    <div class="sb-card sb-mt-md">
+      <p class="sb-kicker">LLM Configuration</p>
+      <div id="settings-llm"></div>
+    </div>
+    <div class="sb-card sb-mt-md">
+      <p class="sb-kicker">Data Directories</p>
+      <div style="font-size:0.85rem;font-family:var(--sb-font-mono)">
+        <div>Apps: ~/.solace/apps/</div>
+        <div>Evidence: ~/.solace/evidence/</div>
+        <div>Vault: ~/.solace/vault.enc</div>
+        <div>Config: ~/.solace/config/</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div class="sb-toast-container" id="toast-container"></div>
@@ -270,6 +399,7 @@
         $('scan-phase').style.opacity = '0';
         setTimeout(function() {
           $('scan-phase').style.display = 'none';
+          $('hub-tabs').style.display = 'block';
           $('results-phase').style.display = 'block';
 
           if (hasLLM) {
@@ -296,28 +426,138 @@
     });
   }
 
-  // ─── Launch Browser ───
-  window.launchBrowser = function() {
-    toast('Launching Solace Browser...', 'success');
-    // Clear stale sessions first so dedup doesn't block
+  // ─── Session Mode ───
+  var multiMode = false;
+  var singleSessionId = null;
+
+  function setSessionMode(isMulti) {
+    // Close all sessions + browsers when switching modes (no orphans)
     get('/api/v1/browser/sessions').then(function(d) {
       (d.sessions || []).forEach(function(s) {
         fetch('/api/v1/browser/close/' + s.session_id, {method:'POST'}).catch(function(){});
       });
+      singleSessionId = null;
+      $('single-session-info').style.display = 'none';
     }).catch(function(){});
+
+    multiMode = isMulti;
+    $('single-mode').style.display = isMulti ? 'none' : 'block';
+    $('multi-mode').style.display = isMulti ? 'block' : 'none';
+    try { localStorage.setItem('solace_multi_session', isMulti ? '1' : '0'); } catch(e) {}
+    setTimeout(refreshSessions, 500);
+  }
+
+  // ─── Launch Browser (Single Mode) ───
+  window.launchBrowser = function() {
     $('dot-sidebar').className = 'sb-topbar-dot sb-topbar-dot--on';
-    fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({allow_duplicate:true})})
+    fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({})})
       .then(function(r){return r.json();})
       .then(function(d) {
-        if (d.session || d.session_id || d.deduped) {
+        if (d.deduped && d.session) {
+          toast('Solace Browser already running', 'success');
+          showSingleSession(d.session);
+        } else if (d.session) {
           toast('Solace Browser launched!', 'success');
+          showSingleSession(d.session);
         } else if (d.error) {
-          toast('Launch error: ' + d.error, 'danger');
-        } else {
-          toast('Unexpected response', 'warning');
+          toast(d.error, 'danger');
         }
       })
       .catch(function(e) { toast('Launch failed: ' + e, 'danger'); });
+  };
+
+  function showSingleSession(session) {
+    singleSessionId = session.session_id;
+    $('single-session-info').style.display = 'block';
+    $('single-pid-pill').textContent = 'PID ' + session.pid + ' · ' + (session.profile || 'default');
+  }
+
+  window.closeSingleSession = function() {
+    if (!singleSessionId) return;
+    fetch('/api/v1/browser/close/' + singleSessionId, {method:'POST'})
+      .then(function(r){return r.json();})
+      .then(function() {
+        toast('Browser closed', 'success');
+        singleSessionId = null;
+        $('single-session-info').style.display = 'none';
+      }).catch(function(e) { toast('Error: ' + e, 'danger'); });
+  };
+
+  // ─── New Session (Multi Mode) ───
+  window.newSession = function() {
+    var name = prompt('Session profile name:', 'session-' + Date.now());
+    if (!name) return;
+    fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({profile: name, allow_duplicate: true})
+    }).then(function(r){return r.json();}).then(function(d) {
+      if (d.session) toast('Session "' + name + '" launched!', 'success');
+      else if (d.error) toast(d.error, 'danger');
+      refreshSessions();
+    }).catch(function(e) { toast('Failed: ' + e, 'danger'); });
+  };
+
+  // ─── Refresh Sessions ───
+  function refreshSessions() {
+    get('/api/v1/browser/sessions').then(function(d) {
+      var sessions = d.sessions || [];
+
+      // Single mode: check if our session is still alive
+      if (!multiMode) {
+        if (singleSessionId) {
+          var alive = sessions.some(function(s) { return s.session_id === singleSessionId; });
+          if (!alive) {
+            singleSessionId = null;
+            $('single-session-info').style.display = 'none';
+          }
+        }
+        // If there's a session but we don't know about it (e.g. page reload), pick it up
+        if (!singleSessionId && sessions.length > 0) {
+          showSingleSession(sessions[0]);
+        }
+        return;
+      }
+
+      // Multi mode: render table
+      var tbody = $('multi-sessions-body');
+      var empty = $('multi-sessions-empty');
+      if (!sessions.length) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      tbody.innerHTML = sessions.map(function(s) {
+        var started = s.started_at ? s.started_at.substring(11, 19) : '?';
+        var urlShort = (s.url || '').replace('http://','').replace('https://','').substring(0,30);
+        return '<tr>' +
+          '<td><strong>' + esc(s.profile) + '</strong></td>' +
+          '<td class="sb-text-mono" style="font-size:0.8rem">' + esc(urlShort) + '</td>' +
+          '<td class="sb-text-muted">' + (s.pid || '?') + '</td>' +
+          '<td class="sb-text-muted" style="font-size:0.8rem">' + started + '</td>' +
+          '<td>' +
+            '<button class="sb-btn sb-btn--sm sb-btn--danger" onclick="closeSession(\'' + esc(s.session_id) + '\')">Close</button>' +
+          '</td>' +
+          '</tr>';
+      }).join('');
+    });
+  }
+
+  window.reloadSessions = function() {
+    var btn = $('reload-btn');
+    if (btn) { btn.textContent = 'Refreshing...'; btn.disabled = true; }
+    refreshSessions();
+    setTimeout(function() {
+      if (btn) { btn.textContent = 'Refresh'; btn.disabled = false; }
+    }, 1000);
+  };
+
+  window.focusSession = function(id) {
+    fetch('/api/v1/browser/focus/' + id, {method:'POST'})
+      .then(function(r){return r.json();})
+      .then(function(d) {
+        if (d.focused) toast('Browser window focused', 'success');
+        else toast('Could not focus: ' + (d.reason || 'unknown'), 'warning');
+      }).catch(function(e) { toast('Error: ' + e, 'danger'); });
   };
 
   // ─── BYOK inline edit ───
@@ -349,7 +589,7 @@
         }).then(function(){
           toast('BYOK key saved!', 'success');
           $('src-byok-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
-          $('launch-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch" onclick="launchBrowser()">Launch Solace Browser</button>';
+          enableLaunchButton();
           ($('topbar-user')||{}).textContent = 'BYOK Active';
           ($('topbar-user')||{}).className = 'sb-pill sb-pill--success';
         });
@@ -422,7 +662,7 @@
               $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + verified + ' connected</span> <a href="#" onclick="connectCLIs();return false" style="font-size:0.75rem;color:var(--sb-text-muted)">rerun</a>';
               $('src-local-action').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
               hasLLM = true;
-              $('launch-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch" onclick="launchBrowser()">Launch Solace Browser</button>';
+              enableLaunchButton();
               // Persist validated state
               var chipsHTML = $('cli-models-area').innerHTML;
               try { localStorage.setItem('solace_validated_clis', JSON.stringify({count:verified, chips:chipsHTML})); } catch(e) {}
@@ -479,7 +719,7 @@
         display.style.color = 'var(--sb-success)';
         $('src-ollama-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
         hasLLM = true;
-        $('launch-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch">Launch Solace Browser</button>';
+        enableLaunchButton();
         toast('Ollama URL saved!', 'success');
       } else if (url) {
         toast('URL must start with http', 'warning');
@@ -501,8 +741,212 @@
     else if (text === 'Retry') { e.preventDefault(); connectCLIs(); }
   });
 
+  // ─── Enable Launch Button (single mode) ───
+  function enableLaunchButton() {
+    $('launch-btn-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch" onclick="launchBrowser()">Launch Solace Browser</button>';
+  }
+
+  // ─── Mode Toggle ───
+  var modeInitialized = false;
+  var toggle = $('multi-session-toggle');
+  if (toggle) {
+    var saved = '0';
+    try { saved = localStorage.getItem('solace_multi_session') || '0'; } catch(e) {}
+    toggle.checked = saved === '1';
+    // On init: just set UI, don't close sessions
+    multiMode = toggle.checked;
+    $('single-mode').style.display = multiMode ? 'none' : 'block';
+    $('multi-mode').style.display = multiMode ? 'block' : 'none';
+    modeInitialized = true;
+    toggle.addEventListener('change', function() { setSessionMode(toggle.checked); });
+  }
+
+  // ─── Close Session ───
+  window.closeSession = function(id) {
+    fetch('/api/v1/browser/close/' + id, {method:'POST'})
+      .then(function(r){return r.json();})
+      .then(function(d) {
+        toast('Session closed: ' + (d.profile || id), 'success');
+        if (id === singleSessionId) {
+          singleSessionId = null;
+          $('single-session-info').style.display = 'none';
+        }
+        refreshSessions();
+        refreshSessionsTab();
+      }).catch(function(e) { toast('Error: ' + e, 'danger'); });
+  };
+
+  // ─── Sessions Tab (full view) ───
+  function refreshSessionsTab() {
+    get('/api/v1/browser/sessions').then(function(d) {
+      var sessions = d.sessions || [];
+      var tbody = $('sessions-tab-body');
+      var empty = $('sessions-tab-empty');
+      if (!sessions.length) { tbody.innerHTML = ''; empty.style.display = 'block'; empty.textContent = 'No active sessions. Click "Launch Default" or "+ New Session".'; return; }
+      empty.style.display = 'none';
+      tbody.innerHTML = sessions.map(function(s) {
+        var started = s.started_at ? s.started_at.substring(0, 19).replace('T',' ') : '?';
+        return '<tr>' +
+          '<td><strong>' + esc(s.profile) + '</strong></td>' +
+          '<td class="sb-text-mono" style="font-size:0.8rem">' + esc(s.url || '') + '</td>' +
+          '<td class="sb-text-muted">' + (s.pid || '?') + '</td>' +
+          '<td class="sb-text-muted" style="font-size:0.8rem">' + started + '</td>' +
+          '<td><button class="sb-btn sb-btn--sm sb-btn--danger" onclick="closeSession(\'' + esc(s.session_id) + '\')">Close</button></td>' +
+          '</tr>';
+      }).join('');
+    });
+    get('/api/v1/browser/profiles').then(function(d) {
+      var profiles = d.profiles || [];
+      $('profiles-list').innerHTML = profiles.map(function(p) {
+        return '<span class="hub-llm-chip">' + esc(p) + '</span>';
+      }).join('');
+    });
+  }
+
+  // ─── Events Tab (DataTables) ───
+  var eventsTable = null;
+  window.refreshEvents = function() {
+    $('events-empty').textContent = 'Loading...';
+    get('/api/v1/events').then(function(d) {
+      var events = d.events || [];
+      var empty = $('events-empty');
+      if (!events.length) { empty.style.display = 'block'; empty.textContent = 'No events yet. Heartbeat events will appear here.'; return; }
+      empty.style.display = 'none';
+
+      // Destroy existing DataTable if any
+      if (eventsTable) { eventsTable.destroy(); eventsTable = null; }
+
+      var levelColors = {L1:'info',L2:'success',L3:'warning',L4:'danger',L5:'danger'};
+      var tbody = $('events-body');
+      tbody.innerHTML = events.map(function(ev) {
+        var ts = (ev.timestamp || '').substring(0, 19).replace('T',' ');
+        var lvl = ev.level || 'L1';
+        var cls = levelColors[lvl] || 'info';
+        var evType = ev.type || ev.event_type || '?';
+        var domain = ev.domain || '';
+        var appId = ev.app_id || '';
+        var detail = ev.message || ev.details || '';
+        if (!detail && ev.data) detail = JSON.stringify(ev.data).substring(0,120);
+        var eventUrl = '/dashboard#event-' + (ev.id || ev.timestamp || '');
+        var sessionShort = ev.session_id ? ev.session_id.substring(0,8) : '';
+        return '<tr style="cursor:pointer" onclick="openEventDetail(\'' + esc(eventUrl) + '\')">' +
+          '<td class="sb-text-muted" style="white-space:nowrap">' + ts + '</td>' +
+          '<td><span class="sb-pill sb-pill--' + cls + '" style="font-size:0.65rem">' + lvl + '</span></td>' +
+          '<td>' + esc(evType) + '</td>' +
+          '<td class="sb-text-muted">' + esc(domain) + '</td>' +
+          '<td class="sb-text-muted">' + esc(appId) + '</td>' +
+          '<td class="sb-text-mono sb-text-muted" style="font-size:0.75rem">' + sessionShort + '</td>' +
+          '<td style="font-size:0.8rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(detail) + '</td>' +
+          '</tr>';
+      }).join('');
+
+      // Initialize DataTable if jQuery + DataTables available
+      if (window.jQuery && jQuery.fn.DataTable) {
+        eventsTable = jQuery('#events-datatable').DataTable({
+          order: [[0, 'desc']],
+          pageLength: 25,
+          dom: 'frtip',
+          language: { search: 'Filter:' }
+        });
+        // Level filter dropdown
+        var levelFilter = $('events-level-filter');
+        if (levelFilter) {
+          levelFilter.onchange = function() {
+            if (eventsTable) eventsTable.column(1).search(this.value).draw();
+          };
+        }
+      }
+    }).catch(function() {
+      $('events-empty').textContent = 'Failed to load events';
+      $('events-empty').style.display = 'block';
+    });
+  };
+
+  // Open event detail in Solace Browser
+  window.openEventDetail = function(url) {
+    var fullUrl = 'http://localhost:8888' + url;
+    fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url: fullUrl})
+    }).then(function(r){return r.json();}).then(function(d) {
+      if (d.deduped) toast('Opened in existing browser', 'success');
+      else if (d.session) toast('Browser opened to event', 'success');
+    }).catch(function(){ window.open(fullUrl, '_blank'); });
+  };
+
+  // ─── Settings Tab ───
+  function refreshSettings() {
+    get('/health').then(function(d) {
+      if (d.pid) $('settings-pid').textContent = d.pid;
+      if (d.server) $('settings-binary').textContent = d.server;
+    });
+    get('/api/v1/agents').then(function(d) {
+      var agents = d.agents || [];
+      var installed = agents.filter(function(a){return a.installed;});
+      $('settings-llm').innerHTML = installed.length ?
+        installed.map(function(a) {
+          return '<div style="margin:0.3rem 0"><strong>' + esc(a.id) + '</strong> — ' + (a.models||[]).join(', ') + '</div>';
+        }).join('') :
+        '<span class="sb-text-muted">No LLM CLIs detected</span>';
+    });
+  }
+
+  // ─── Tab Switching ───
+  document.querySelectorAll('.sb-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); t.setAttribute('aria-selected','false'); });
+      tab.classList.add('sb-tab--active');
+      tab.setAttribute('aria-selected','true');
+      var target = tab.dataset.tab;
+      document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; });
+      var panel = $('tab-' + target);
+      if (panel) panel.style.display = 'block';
+      // Refresh data when switching tabs
+      if (target === 'sessions') refreshSessionsTab();
+      if (target === 'events') refreshEvents();
+      if (target === 'settings') refreshSettings();
+    });
+  });
+
+  // ─── Signoffs (L3+ pending approvals) ───
+  function refreshSignoffs() {
+    get('/api/v1/notifications').then(function(d) {
+      var items = (d.notifications || []).filter(function(n) { return n.action_required || n.level >= 3; });
+      var banner = $('signoffs-banner');
+      if (!items.length) { banner.style.display = 'none'; return; }
+      banner.style.display = 'block';
+      $('signoffs-count').textContent = items.length;
+      $('signoffs-list').innerHTML = items.map(function(n) {
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--sb-border)">' +
+          '<div><span class="sb-pill sb-pill--warning" style="font-size:0.6rem">L' + (n.level || 3) + '</span> ' + esc(n.message || n.title || 'Action required') +
+          (n.session_id ? ' <span class="sb-text-muted" style="font-size:0.75rem">[' + esc(n.session_id.substring(0,8)) + ']</span>' : '') +
+          '</div>' +
+          '<div class="sb-flex sb-gap-sm">' +
+          '<button class="sb-btn sb-btn--sm sb-btn--primary" onclick="approveSignoff(\'' + esc(n.id || '') + '\')">Approve</button>' +
+          '<button class="sb-btn sb-btn--sm sb-btn--danger" onclick="rejectSignoff(\'' + esc(n.id || '') + '\')">Reject</button>' +
+          '</div></div>';
+      }).join('');
+    }).catch(function(){});
+  }
+
+  window.approveSignoff = function(id) {
+    fetch('/api/v1/notifications/' + id + '/read', {method:'POST'}).then(function() {
+      toast('Approved', 'success'); refreshSignoffs();
+    });
+  };
+  window.rejectSignoff = function(id) {
+    fetch('/api/v1/notifications/' + id + '/read', {method:'POST'}).then(function() {
+      toast('Rejected', 'warning'); refreshSignoffs();
+    });
+  };
+
   // ─── Init ───
   runScan();
+  // Refresh sessions on load and every 10s
+  setTimeout(refreshSessions, 2000);
+  setInterval(refreshSessions, 10000);
+  // Signoffs poll every 5s
+  setTimeout(refreshSignoffs, 3000);
+  setInterval(refreshSignoffs, 5000);
 
 })();
 </script>

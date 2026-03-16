@@ -689,7 +689,7 @@
         "Is the performance budget documented and enforced?",
         "Does performance improve over time (not just not-regress)?",
         "Is the recipe replay model delivering on the cost-reduction promise through performance?",
-        "Would a power user choose Solace Browser over Chrome for daily use based on speed?",
+        "Would a power user choose Solace Browser over Chromium for daily use based on speed?",
         "Is the performance testing infrastructure as strong as the security testing?",
         "Does the Dragon Rider feel proud of the browser's performance?"
       ]
@@ -701,10 +701,10 @@
       "questions": [
         "Does the browser feel snappy to a non-technical user?",
         "Are there any moments where a non-technical user would think 'this is slow'?",
-        "Does the browser start up fast enough that the user doesn't switch to Chrome?",
+        "Does the browser start up fast enough that the user doesn't switch to Chromium?",
         "Are loading states clear (the user knows something is happening, not frozen)?",
         "Does the browser work well on the user's existing hardware (not just developer machines)?",
-        "Is the battery drain noticeable compared to regular Chrome?",
+        "Is the battery drain noticeable compared to regular Chromium?",
         "Would a non-technical user say 'this feels smooth' after a week of daily use?"
       ]
     }

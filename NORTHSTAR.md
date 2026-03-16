@@ -52,7 +52,7 @@
 
 ## Next Milestone
 
-1. Chromium fork compiles + `chrome --version` returns `Solace/1.0.0`
+1. Chromium fork compiles + `solace --version` returns `Solace/1.0.0`
 2. Native sidebar renders in fork (Mojo IPC to yinyang_server.py)
 3. Sign all 3 platform binaries (eSign cert pending for Windows)
 4. Ship to Snap Store + Homebrew tap + winget

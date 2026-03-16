@@ -43,6 +43,11 @@ pub struct AppState {
     pub pending_actions: Arc<RwLock<Vec<crate::routes::chat::PendingAction>>>,
     pub delight: Arc<RwLock<DelightState>>,
     pub tutorial: Arc<RwLock<TutorialState>>,
+    pub runtime_events: Arc<RwLock<Vec<serde_json::Value>>>,
+    /// WebSocket command channels: session_id → sender for browser control.
+    /// When a browser sidebar connects with ?session=xxx, it registers here.
+    /// Hub/MCP sends commands via POST /api/v1/browser/command/{session_id}.
+    pub session_channels: Arc<RwLock<HashMap<String, tokio::sync::mpsc::UnboundedSender<String>>>>,
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
@@ -241,6 +246,8 @@ impl AppState {
                 )
                 .unwrap_or_default(),
             )),
+            runtime_events: Arc::new(RwLock::new(Vec::new())),
+            session_channels: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 

@@ -327,12 +327,12 @@ fn push_linux_browser_candidates(
     mode: BrowserLaunchMode,
 ) {
     let local_dev = [
-        candidate_root.join("source/src/out/Solace/chrome-wrapper"),
-        candidate_root.join("source/src/out/Solace/chrome"),
+        candidate_root.join("source/src/out/Solace/solace-wrapper"),
+        candidate_root.join("source/src/out/Solace/solace"),
     ];
     let production_bundle = [
-        candidate_root.join("solace-browser-release/chrome"),
-        candidate_root.join("dist/solace-browser-release/chrome"),
+        candidate_root.join("solace-browser-release/solace"),
+        candidate_root.join("dist/solace-browser-release/solace"),
     ];
 
     match mode {

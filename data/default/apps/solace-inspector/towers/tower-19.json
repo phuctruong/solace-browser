@@ -648,7 +648,7 @@
         "Does the app reduce activity on battery power?",
         "Can Windows background app settings control the daemon?",
         "Does the app prevent system sleep when performing critical operations?",
-        "Is the app's energy impact reasonable compared to Chrome?",
+        "Is the app's energy impact reasonable compared to Chromium?",
         "Does the app handle hibernation and resume correctly?"
       ]
     },

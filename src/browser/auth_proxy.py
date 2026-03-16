@@ -1,9 +1,9 @@
 # Diagram: 01-triangle-architecture
 """
-Auth Proxy — 3-Layer Defense for Chrome CDP Access
+Auth Proxy — 3-Layer Defense for Chromium CDP Access
 
 Layer 1: Auth Proxy (port 8888) — validates Bearer tokens on every request
-Layer 2: Hidden Chrome CDP (port 9225) — localhost only, never exposed
+Layer 2: Hidden Chromium CDP (port 9225) — localhost only, never exposed
 Layer 3: Session token exchange — short-lived session tokens for WebSocket
 
 Design:
@@ -168,10 +168,10 @@ def validate_token_format(token: str) -> bool:
 
 class AuthProxy:
     """
-    3-layer defense proxy for Chrome CDP access.
+    3-layer defense proxy for Chromium CDP access.
 
     Layer 1: HTTP proxy on port 8888 that validates Bearer tokens.
-    Layer 2: Forward authenticated requests to Chrome CDP on port 9225.
+    Layer 2: Forward authenticated requests to Chromium CDP on port 9225.
     Layer 3: Session token exchange for WebSocket connections.
 
     Usage:
@@ -199,7 +199,7 @@ class AuthProxy:
 
         Args:
             proxy_port: Port for the auth proxy to listen on (default 8888).
-            cdp_port:   Port where Chrome CDP is listening (default 9225).
+            cdp_port:   Port where Chromium CDP is listening (default 9225).
             bind_host:  Host to bind to (default 127.0.0.1 — localhost only).
             now_fn:     Optional callable returning current UTC datetime (for testing).
 
@@ -484,7 +484,7 @@ class AuthProxy:
 
     @property
     def cdp_port(self) -> int:
-        """The port Chrome CDP is expected on."""
+        """The port Chromium CDP is expected on."""
         return self._cdp_port
 
     # -----------------------------------------------------------------------
@@ -669,7 +669,7 @@ def _build_handler_class(proxy: AuthProxy) -> type[BaseHTTPRequestHandler]:
 
         def _forward_to_cdp(self, method: str) -> None:
             """
-            Forward the authenticated request to the Chrome CDP backend.
+            Forward the authenticated request to the Chromium CDP backend.
 
             Reads the request body (for POST/PUT), forwards to CDP, and
             relays the CDP response back to the client.
@@ -691,7 +691,7 @@ def _build_handler_class(proxy: AuthProxy) -> type[BaseHTTPRequestHandler]:
             except ConnectionRefusedError:
                 error_body = json.dumps({
                     "error": "cdp_unavailable",
-                    "message": "Chrome CDP is not running on the expected port.",
+                    "message": "Chromium CDP is not running on the expected port.",
                 }).encode("utf-8")
                 self.send_response(HTTPStatus.BAD_GATEWAY)
                 self.send_header("Content-Type", "application/json; charset=utf-8")

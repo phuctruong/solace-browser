@@ -26,9 +26,9 @@ The Browser now has two explicit modes:
 
 1. `local dev`
    Uses the real Chromium build tree from `source/src/out/Solace/`.
-   Hub should resolve `chrome-wrapper` first, then `chrome`.
+   Hub should resolve `solace-wrapper` first, then `solace`.
 2. `production bundle`
-   Uses the downloadable Browser bundle layout (`solace-browser-release/chrome`) that is meant to be uploaded to GCS and installed by humans.
+   Uses the downloadable Browser bundle layout (`solace-browser-release/solace`) that is meant to be uploaded to GCS and installed by humans.
 
 Override mode explicitly when needed:
 
@@ -58,8 +58,8 @@ bash scripts/build-deb.sh
 - `scripts/build-linux-release.sh` assembles `dist/solace-browser-release/` and `dist/solace-browser-chromium-linux-x86_64.tar.gz`.
 - `scripts/build-deb.sh` reads the repo `VERSION`, reuses the portable release root, and builds `dist/solace-browser_<version>_amd64.deb`.
 - The portable release root includes the real Chromium runtime, Solace Hub, Yinyang Server, and runtime assets.
-- Local dev browser input: `source/src/out/Solace/chrome-wrapper` or `source/src/out/Solace/chrome`.
-- Production browser bundle contract: extracted `solace-browser-release/chrome`.
+- Local dev browser input: `source/src/out/Solace/solace-wrapper` or `source/src/out/Solace/solace`.
+- Production browser bundle contract: extracted `solace-browser-release/solace`.
 - `dpkg-deb` must be installed before running the packager.
 
 ## Manual Development
@@ -90,10 +90,10 @@ sudo python3 build/install-build-deps.py --no-arm --no-prompt
 gn gen out/Solace --args='is_debug=false chrome_pgo_phase=0 is_component_build=true use_sysroot=true proprietary_codecs=false'
 
 # Build (takes several hours on first run)
-autoninja -C out/Solace chrome
+autoninja -C out/Solace solace
 
 # Run
-./out/Solace/chrome
+./out/Solace/solace
 ```
 
 Or use the script: `scripts/build-chromium.sh`
@@ -102,7 +102,7 @@ Or use the script: `scripts/build-chromium.sh`
 
 - Port **8888 ONLY**
 - Use the name **Solace Hub**
-- No Chrome extensions / MV3 — sidebar is native C++ WebUI
+- No Chromium extensions / MV3 — sidebar is native C++ WebUI
 - Bearer auth required for mutating endpoints (POST/DELETE)
 
 ## Apps

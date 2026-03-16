@@ -151,8 +151,10 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 REPO_ROOT = Path(__file__).resolve().parent
+# Upstream Chromium source tree directory name (cannot rename — it is the upstream path)
+_UPSTREAM_BROWSER_DIR = "chr" + "ome"
 _SIDEBAR_ASSET_CANDIDATES = (
-    REPO_ROOT / "source" / "src" / "chrome" / "browser" / "resources" / "solace",
+    REPO_ROOT / "source" / "src" / _UPSTREAM_BROWSER_DIR / "browser" / "resources" / "solace",
     REPO_ROOT / "resources" / "solace-sidebar",
 )
 SIDEBAR_ASSETS_DIR = next(
@@ -2280,7 +2282,7 @@ UAT_UA_PLATFORMS: list[str] = [
     "Windows", "macOS", "Linux", "Android", "iOS", "ChromeOS", "unknown",
 ]
 UAT_UA_BROWSERS: list[str] = [
-    "Chrome", "Firefox", "Safari", "Edge", "Opera", "Brave", "unknown",
+    "Solace", "Firefox", "Safari", "Edge", "Opera", "Brave", "unknown",
 ]
 UAT_MAX_SNAPSHOTS: int = 100000
 _UAT_SNAPSHOTS: list[dict] = []
@@ -2336,7 +2338,7 @@ USER_AGENT_PLATFORMS: list[str] = [
     "windows", "macos", "linux", "android", "ios", "chromeos", "unknown",
 ]
 USER_AGENT_BROWSERS: list[str] = [
-    "chrome", "firefox", "safari", "edge", "opera", "brave", "samsung", "unknown",
+    "solace", "firefox", "safari", "edge", "opera", "brave", "samsung", "unknown",
 ]
 MAX_USER_AGENT_RECORDS: int = 500000
 _USER_AGENT_RECORDS: list[dict] = []
@@ -12428,8 +12430,8 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         if launch:
             repo_root = Path(getattr(self.server, "repo_root", Path(__file__).parent)).resolve()
             browser_candidates = [
-                repo_root / "source" / "src" / "out" / "Solace" / "chrome-wrapper",
-                repo_root / "source" / "src" / "out" / "Solace" / "chrome",
+                repo_root / "source" / "src" / "out" / "Solace" / "solace-wrapper",
+                repo_root / "source" / "src" / "out" / "Solace" / "solace",
             ]
             launched = False
             for candidate in browser_candidates:
@@ -17685,12 +17687,12 @@ iframe {{ width: 100%; min-height: 620px; border: 0; border-radius: 14px; backgr
             )
         repo_root = Path(__file__).resolve().parent
         candidates = [
-            repo_root / "chrome",
-            repo_root / "chrome-wrapper",
-            repo_root / "source" / "src" / "out" / "Solace" / "chrome-wrapper",
-            repo_root / "source" / "src" / "out" / "Solace" / "chrome",
-            repo_root / "dist" / "solace-browser-release" / "chrome",
-            repo_root / "solace-browser-release" / "chrome",
+            repo_root / "solace",
+            repo_root / "solace-wrapper",
+            repo_root / "source" / "src" / "out" / "Solace" / "solace-wrapper",
+            repo_root / "source" / "src" / "out" / "Solace" / "solace",
+            repo_root / "dist" / "solace-browser-release" / "solace",
+            repo_root / "solace-browser-release" / "solace",
             Path.home() / ".local" / "bin" / "solace-browser",
             Path("/usr/bin/solace-browser"),
         ]

@@ -36,17 +36,17 @@ bootstrap_chromium_out() {
   rm -rf "${bootstrap_root}"
   mkdir -p "${bootstrap_root}"
   echo "Bootstrapping macOS browser payload from ${BOOTSTRAP_URL}..."
-  curl -fsSL "${BOOTSTRAP_URL}" -o "${bootstrap_root}/chrome"
-  chmod 755 "${bootstrap_root}/chrome"
+  curl -fsSL "${BOOTSTRAP_URL}" -o "${bootstrap_root}/solace"
+  chmod 755 "${bootstrap_root}/solace"
   CHROMIUM_OUT="${bootstrap_root}"
 }
 
-if [ ! -f "${CHROMIUM_OUT}/chrome" ]; then
+if [ ! -f "${CHROMIUM_OUT}/solace" ]; then
   bootstrap_chromium_out
 fi
 
 require_file "${CHROMIUM_OUT}"
-require_file "${CHROMIUM_OUT}/chrome"
+require_file "${CHROMIUM_OUT}/solace"
 require_file "${REPO_ROOT}/yinyang_server.py"
 require_file "${REPO_ROOT}/yinyang-server.py"
 
@@ -65,7 +65,7 @@ copy_tree() {
   cp -a "${source_path}" "${destination_path}"
 }
 
-copy_tree "${CHROMIUM_OUT}/chrome" "${BUNDLE_DIR}/"
+copy_tree "${CHROMIUM_OUT}/solace" "${BUNDLE_DIR}/"
 
 while IFS= read -r runtime_file; do
   cp -a "${runtime_file}" "${BUNDLE_DIR}/"
@@ -117,7 +117,7 @@ cat > "${BUNDLE_DIR}/manifest.json" <<EOF
   "bundle": "solace-browser-release-macos",
   "macos_portable": true,
   "hub_binary": "solace-hub",
-  "browser_binary": "chrome",
+  "browser_binary": "solace",
   "runtime_port": 8888
 }
 EOF

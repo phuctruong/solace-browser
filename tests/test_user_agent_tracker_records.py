@@ -72,7 +72,7 @@ def test_record_url_hashed():
     h._handle_uat2_create({
         "user_agent": ua,
         "platform": "linux",
-        "browser": "chrome",
+        "browser": "solace",
         "url": url,
         "is_mobile": False,
         "is_bot": False,
@@ -88,7 +88,7 @@ def test_record_invalid_platform():
     h._handle_uat2_create({
         "user_agent": "Mozilla/5.0 Test",
         "platform": "BeOS",
-        "browser": "chrome",
+        "browser": "solace",
         "url": "https://ex.com",
         "is_mobile": False,
         "is_bot": False,
@@ -130,7 +130,7 @@ def test_record_mobile_flag():
     h._handle_uat2_create({
         "user_agent": "Mobile UA",
         "platform": "android",
-        "browser": "chrome",
+        "browser": "solace",
         "url": "https://ex.com",
         "is_mobile": True,
         "is_bot": False,
@@ -193,7 +193,7 @@ def test_ua_stats():
     second._handle_uat2_create({
         "user_agent": "Mozilla/5.0 Two",
         "platform": "android",
-        "browser": "chrome",
+        "browser": "solace",
         "url": "https://two.example",
         "is_mobile": True,
         "is_bot": True,

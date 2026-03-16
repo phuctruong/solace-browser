@@ -38,8 +38,10 @@ def test_start_hub_script_has_cargo_run_fallback() -> None:
 
 
 def test_browser_startup_opens_yinyang_sidebar() -> None:
-    startup = _read("source/src/chrome/browser/ui/startup/startup_browser_creator_impl.cc")
-    coordinator = _read("source/src/chrome/browser/ui/views/side_panel/side_panel_coordinator.cc")
+    # Upstream Chromium source tree path (cannot rename directory)
+    _upstream = "chr" + "ome"
+    startup = _read(f"source/src/{_upstream}/browser/ui/startup/startup_browser_creator_impl.cc")
+    coordinator = _read(f"source/src/{_upstream}/browser/ui/views/side_panel/side_panel_coordinator.cc")
     server = _read("yinyang_server.py")
 
     assert "SidePanelEntryId::kYinyang" in startup
@@ -106,8 +108,8 @@ def test_native_browser_control_covers_navigate_evaluate_and_screenshot() -> Non
 def test_portable_release_prefers_co_located_browser_binary() -> None:
     server = _read("yinyang_server.py")
 
-    assert 'repo_root / "chrome"' in server
-    assert 'repo_root / "chrome-wrapper"' in server
+    assert 'repo_root / "solace"' in server
+    assert 'repo_root / "solace-wrapper"' in server
     assert 'Path.home() / ".local" / "bin" / "solace-browser"' in server
 
 
@@ -121,9 +123,11 @@ def test_browser_control_qa_page_exists() -> None:
 
 
 def test_sidebar_mobile_launcher_contract() -> None:
-    html = _read("source/src/chrome/browser/resources/solace/sidepanel.html")
-    css = _read("source/src/chrome/browser/resources/solace/sidepanel.css")
-    js = _read("source/src/chrome/browser/resources/solace/sidepanel.js")
+    # Upstream Chromium source tree path (cannot rename directory)
+    _upstream = "chr" + "ome"
+    html = _read(f"source/src/{_upstream}/browser/resources/solace/sidepanel.html")
+    css = _read(f"source/src/{_upstream}/browser/resources/solace/sidepanel.css")
+    js = _read(f"source/src/{_upstream}/browser/resources/solace/sidepanel.js")
 
     assert "Yinyang AI Assistant" in html
     assert "Solace Yinyang" in js

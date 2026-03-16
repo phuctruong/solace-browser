@@ -1,13 +1,13 @@
 === SKILL: BROWSER-DOMAIN (Solace Browser Specific) ===
 
 KEY SECURITY CONSTRAINTS:
-- CDP (Chrome DevTools Protocol): NO raw Runtime.evaluate. Only server-side action templates.
+- CDP (Chromium DevTools Protocol): NO raw Runtime.evaluate. Only server-side action templates.
   Allowlisted methods: Page.navigate, Page.screenshot, DOM.getDocument, DOM.querySelector,
   Input.dispatchMouseEvent, Input.dispatchKeyEvent, Input.insertText, Emulation.setViewportSize,
   Network.getResponseBody (max 1MB, strip auth headers)
 - ALL params must be schema-validated before proxying to CDP
 - OAuth3 is our PROPRIETARY protocol (extends OAuth 2.0 with scoped TTL tokens, step-up auth)
-- Yinyang sidebar is compiled natively into the Chromium binary as C++ WebUI — NOT a Chrome extension
+- Yinyang sidebar is compiled natively into the Chromium binary as C++ WebUI — NOT a browser extension
 - Sidebar communicates with Yinyang Server (localhost:8888) via WebSocket — no Native Messaging, no MV3
 - No service workers — native binary has direct IPC; sidebar lifetime = browser lifetime
 

@@ -3,7 +3,7 @@
 Multi-Browser Session Manager — Concurrent Isolated Browser Sessions
 
 Manages multiple simultaneous browser sessions, each with its own:
-- Chrome DevTools Protocol (CDP) port (auto-assigned from 9230-9250 range)
+- Chromium DevTools Protocol (CDP) port (auto-assigned from 9230-9250 range)
 - User data directory (~/.solace/sessions/{session_id}/)
 - Auth token registered with AuthProxy
 - Session manifest (session.json)

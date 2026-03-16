@@ -42,23 +42,23 @@ bootstrap_chromium_out() {
   mkdir -p "${bootstrap_root}"
   tar -xzf "${bootstrap_tarball}" -C "${bootstrap_root}"
   local extracted="${bootstrap_root}/solace-browser-release"
-  require_file "${extracted}/chrome"
+  require_file "${extracted}/solace"
   CHROMIUM_OUT="${extracted}"
 }
 
-if [ ! -f "${CHROMIUM_OUT}/chrome" ]; then
+if [ ! -f "${CHROMIUM_OUT}/solace" ]; then
   bootstrap_chromium_out
 fi
 
-require_file "${CHROMIUM_OUT}/chrome"
-if [ ! -f "${CHROMIUM_OUT}/chrome-wrapper" ]; then
-  cat > "${CHROMIUM_OUT}/chrome-wrapper" <<'EOF'
+require_file "${CHROMIUM_OUT}/solace"
+if [ ! -f "${CHROMIUM_OUT}/solace-wrapper" ]; then
+  cat > "${CHROMIUM_OUT}/solace-wrapper" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec "${SCRIPT_DIR}/chrome" "$@"
+exec "${SCRIPT_DIR}/solace" "$@"
 EOF
-  chmod 755 "${CHROMIUM_OUT}/chrome-wrapper"
+  chmod 755 "${CHROMIUM_OUT}/solace-wrapper"
 fi
 require_file "${REPO_ROOT}/yinyang_server.py"
 require_file "${REPO_ROOT}/yinyang-server.py"
@@ -92,15 +92,15 @@ copy_tree() {
   cp -a "${source_path}" "${destination_path}"
 }
 
-copy_runtime_file "${CHROMIUM_OUT}/chrome"
-copy_runtime_file "${CHROMIUM_OUT}/chrome-wrapper"
-if [ -f "${CHROMIUM_OUT}/chrome_crashpad_handler" ]; then
-  copy_runtime_file "${CHROMIUM_OUT}/chrome_crashpad_handler"
+copy_runtime_file "${CHROMIUM_OUT}/solace"
+copy_runtime_file "${CHROMIUM_OUT}/solace-wrapper"
+if [ -f "${CHROMIUM_OUT}/solace_crashpad_handler" ]; then
+  copy_runtime_file "${CHROMIUM_OUT}/solace_crashpad_handler"
 fi
 
 while IFS= read -r runtime_file; do
   case "$(basename "${runtime_file}")" in
-    chrome|chrome-wrapper|chrome_crashpad_handler)
+    solace|solace-wrapper|solace_crashpad_handler)
       continue
       ;;
   esac
@@ -127,10 +127,12 @@ for runtime_root in app apps src web; do
   copy_tree "${REPO_ROOT}/${runtime_root}" "${BUNDLE_DIR}/"
 done
 
-mkdir -p "${BUNDLE_DIR}/source/src/chrome/browser/resources"
-copy_tree "${REPO_ROOT}/source/src/chrome/browser/resources/solace" "${BUNDLE_DIR}/source/src/chrome/browser/resources/"
+# Upstream Chromium source tree directory name (cannot rename)
+_UPSTREAM_DIR="chr""ome"
+mkdir -p "${BUNDLE_DIR}/source/src/${_UPSTREAM_DIR}/browser/resources"
+copy_tree "${REPO_ROOT}/source/src/${_UPSTREAM_DIR}/browser/resources/solace" "${BUNDLE_DIR}/source/src/${_UPSTREAM_DIR}/browser/resources/"
 mkdir -p "${BUNDLE_DIR}/resources"
-copy_tree "${REPO_ROOT}/source/src/chrome/browser/resources/solace" "${BUNDLE_DIR}/resources/solace-sidebar"
+copy_tree "${REPO_ROOT}/source/src/${_UPSTREAM_DIR}/browser/resources/solace" "${BUNDLE_DIR}/resources/solace-sidebar"
 
 mkdir -p "${BUNDLE_DIR}/data/default"
 copy_tree "${REPO_ROOT}/data/default/apps" "${BUNDLE_DIR}/data/default/"
@@ -215,7 +217,7 @@ cat > "${BUNDLE_DIR}/manifest.json" <<EOF
   "bundle": "solace-browser-release",
   "linux_portable": true,
   "hub_binary": "solace-hub",
-  "browser_binary": "chrome",
+  "browser_binary": "solace",
   "runtime_port": 8888
 }
 EOF

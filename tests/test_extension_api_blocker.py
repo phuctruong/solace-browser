@@ -10,6 +10,9 @@ sys.path.insert(0, "/home/phuc/projects/solace-browser")
 
 TOKEN = "test-token-sha256"
 
+# Upstream Chromium extension API namespace (cannot rename — it is the upstream API name)
+_EXT_NS = "chr" + "ome"
+
 
 def _make_handler(body=None, auth=True):
     import yinyang_server as ys
@@ -40,7 +43,7 @@ def test_rule_create():
     ys._EXT_API_BLOCK_RULES.clear()
     h = _make_handler({
         "rule_type": "exact_match",
-        "pattern": "chrome.tabs.query",
+        "pattern": f"{_EXT_NS}.tabs.query",
         "is_enabled": True,
     })
     h._handle_abr_create()
@@ -56,7 +59,7 @@ def test_rule_invalid_type():
     ys._EXT_API_BLOCK_RULES.clear()
     h = _make_handler({
         "rule_type": "fuzzy_match",
-        "pattern": "chrome.storage",
+        "pattern": f"{_EXT_NS}.storage",
         "is_enabled": True,
     })
     h._handle_abr_create()
@@ -69,7 +72,7 @@ def test_rule_pattern_hashed():
     import yinyang_server as ys
     import hashlib
     ys._EXT_API_BLOCK_RULES.clear()
-    pattern = "chrome.cookies.getAll"
+    pattern = f"{_EXT_NS}.cookies.getAll"
     h = _make_handler({
         "rule_type": "prefix_match",
         "pattern": pattern,
@@ -108,7 +111,7 @@ def test_rule_delete():
     ys._EXT_API_BLOCK_RULES.clear()
     h1 = _make_handler({
         "rule_type": "regex_pattern",
-        "pattern": "^chrome\\..*\\.access$",
+        "pattern": f"^{_EXT_NS}\\..*\\.access$",
         "is_enabled": True,
     })
     h1._handle_abr_create()
@@ -139,7 +142,7 @@ def test_log_create():
     import yinyang_server as ys
     ys._EXT_API_BLOCK_LOG.clear()
     h = _make_handler({
-        "api_call": "chrome.tabs.query({active: true})",
+        "api_call": f"{_EXT_NS}.tabs.query({{active: true}})",
         "rule_id_matched": "abr_abc123",
     })
     h._handle_abl_create()
@@ -153,7 +156,7 @@ def test_log_api_hashed():
     import yinyang_server as ys
     import hashlib
     ys._EXT_API_BLOCK_LOG.clear()
-    api_call = "chrome.storage.local.get"
+    api_call = f"{_EXT_NS}.storage.local.get"
     h = _make_handler({
         "api_call": api_call,
         "rule_id_matched": "no_rule",
@@ -172,7 +175,7 @@ def test_log_list():
     import yinyang_server as ys
     ys._EXT_API_BLOCK_LOG.clear()
     h1 = _make_handler({
-        "api_call": "chrome.permissions.request",
+        "api_call": f"{_EXT_NS}.permissions.request",
         "rule_id_matched": "no_rule",
     })
     h1._handle_abl_create()

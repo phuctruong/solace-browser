@@ -113,7 +113,7 @@ jobs:
               assert deb.is_file(), f"Missing deb: {deb}"
               with tarfile.open(tarball, "r:gz") as archive:
                   names = archive.getnames()
-              assert "solace-browser-release/chrome" in names
+              assert "solace-browser-release/solace" in names
               assert "solace-browser-release/solace-hub" in names
               print(f"OK Linux bundle: {tarball}")
               print(f"OK Debian package: {deb}")
@@ -122,7 +122,7 @@ jobs:
               assert tarball.is_file(), f"Missing tarball: {tarball}"
               with tarfile.open(tarball, "r:gz") as archive:
                   names = archive.getnames()
-              assert "solace-browser-release-macos/chrome" in names
+              assert "solace-browser-release-macos/solace" in names
               assert "solace-browser-release-macos/solace-hub" in names
               print(f"OK macOS bundle: {tarball}")
           elif platform == "windows":

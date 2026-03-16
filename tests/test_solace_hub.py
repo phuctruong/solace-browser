@@ -370,10 +370,10 @@ def test_hub_resolves_browser_binary_with_local_dev_and_bundle_modes():
     source = main_rs_source()
     assert "fn resolve_browser_binary" in source
     assert "SOLACE_BROWSER_MODE" in source
-    assert 'join("source/src/out/Solace/chrome-wrapper")' in source
-    assert 'join("source/src/out/Solace/chrome")' in source
-    assert 'join("dist/solace-browser-release/chrome")' in source
-    assert 'join("solace-browser-release/chrome")' in source
+    assert 'join("source/src/out/Solace/solace-wrapper")' in source
+    assert 'join("source/src/out/Solace/solace")' in source
+    assert 'join("dist/solace-browser-release/solace")' in source
+    assert 'join("solace-browser-release/solace")' in source
     assert 'join("dist/solace-browser-linux-x86_64")' not in source
     assert "for candidate_root in exe_dir.ancestors()" in source
 

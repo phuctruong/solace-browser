@@ -13,7 +13,7 @@
 - Added the cloud twin Docker image and Cloud Build config.
 - Added the Xvfb startup script for head-hidden browser execution.
 - Updated the deploy script to build and deploy the new twin image.
-- Added cloud twin CLI parsing, runtime mode helpers, health payload metadata, and Chrome launch support.
+- Added cloud twin CLI parsing, runtime mode helpers, health payload metadata, and Chromium launch support.
 - Added seven cloud twin tests covering the new container artifacts and server mode wiring.
 
 ## Diffstat

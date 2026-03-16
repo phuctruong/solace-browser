@@ -64,7 +64,7 @@ def _verify_linux_tarball(path: Path) -> None:
         raise ValueError(f"Linux tarball is invalid: {path}") from exc
 
     required = {
-        "solace-browser-release/chrome",
+        "solace-browser-release/solace",
         "solace-browser-release/solace-hub",
         "solace-browser-release/manifest.json",
     }
@@ -90,7 +90,7 @@ def _verify_macos_tarball(path: Path) -> None:
         raise ValueError(f"macOS tarball is invalid: {path}") from exc
 
     required = {
-        "solace-browser-release-macos/chrome",
+        "solace-browser-release-macos/solace",
         "solace-browser-release-macos/solace-hub",
         "solace-browser-release-macos/manifest.json",
     }

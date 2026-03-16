@@ -34,7 +34,7 @@ require_file "$DESKTOP_FILE"
 
 rm -rf "$BUNDLE_DIR"
 "$BUNDLE_SCRIPT" >/dev/null
-require_file "$BUNDLE_DIR/chrome"
+require_file "$BUNDLE_DIR/solace"
 require_file "$BUNDLE_DIR/solace-hub"
 
 rm -rf "$PKG_ROOT"

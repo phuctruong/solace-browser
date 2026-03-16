@@ -700,7 +700,7 @@ index 4ff4c76d..26fb3301 100644
 +    "Windows", "macOS", "Linux", "Android", "iOS", "ChromeOS", "unknown",
 +]
 +UAT_UA_BROWSERS: list[str] = [
-+    "Chrome", "Firefox", "Safari", "Edge", "Opera", "Brave", "unknown",
++    "Solace", "Firefox", "Safari", "Edge", "Opera", "Brave", "unknown",
 +]
 +UAT_MAX_SNAPSHOTS: int = 100000
 +_UAT_SNAPSHOTS: list[dict] = []

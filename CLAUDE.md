@@ -4,7 +4,7 @@
 
 ## Identity
 
-Solace Browser is a **Chromium fork** with a native AI sidebar (Yinyang), a desktop app (Solace Hub), and a Python backend (Solace Runtime). It is NOT a Chrome extension.
+Solace Browser is a **Chromium fork** with a native AI sidebar (Yinyang), a desktop app (Solace Hub), and a Python backend (Solace Runtime). It is NOT a browser extension.
 
 ## Absolute Laws (VIOLATION = KILL)
 
@@ -12,7 +12,7 @@ Solace Browser is a **Chromium fork** with a native AI sidebar (Yinyang), a desk
 |-----|------|
 | **Port** | 8888 ONLY. 9222 PERMANENTLY BANNED. Even in comments. Even as examples. |
 | **Naming** | "Solace Hub" ONLY. "Companion App" BANNED everywhere. |
-| **Extensions** | ZERO. No chrome.runtime, no MV3, no --load-extension. |
+| **Extensions** | ZERO. No Chromium extension APIs, no MV3, no --load-extension. |
 | **Lifecycle** | Hub spawns Server FIRST. Browser SECOND. Never reversed. |
 | **Token** | sha256 in port.lock. Plaintext token NEVER in files/logs. |
 | **Evidence** | Written at event time. Never retroactive. chmod 444 after seal. |
@@ -66,8 +66,8 @@ source/src/out/Solace/     — Chromium build output for LOCAL DEV mode (gitigno
 
 | Mode | Intended artifact | Owner |
 |------|-------------------|-------|
-| `local-dev` | `source/src/out/Solace/chrome-wrapper` → `chrome` fallback | repo checkout + Chromium build tree |
-| `production-bundle` | extracted `solace-browser-release/chrome` bundle | downloadable Browser package |
+| `local-dev` | `source/src/out/Solace/solace-wrapper` → `solace` fallback | repo checkout + Chromium build tree |
+| `production-bundle` | extracted `solace-browser-release/solace` bundle | downloadable Browser package |
 
 The Hub must never treat a packaged `solace-runtime binary` executable as the Browser.
 
@@ -89,7 +89,7 @@ except json.JSONDecodeError: ...
 ```bash
 pytest tests/ -q          # must be 534+ pass, 0 fail
 cargo check               # solace-hub/src-tauri/ must compile
-ninja -C source/src/out/Solace chrome  # Chromium fork must link
+ninja -C source/src/out/Solace solace  # Chromium fork must link
 ```
 
 ## Distribution Checklist

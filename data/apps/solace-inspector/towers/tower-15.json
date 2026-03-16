@@ -310,7 +310,7 @@
       "persona_domain": "migrating from other platforms",
       "questions": [
         "Can users import automations from Zapier, Make, or Bardeen into Solace recipes?",
-        "Is there a migration guide for developers coming from Chrome extensions?",
+        "Is there a migration guide for developers coming from browser extensions?",
         "Can OAuth tokens from other services be imported into the Solace OAuth3 vault?",
         "Does the platform provide adapters for popular APIs (Google, Microsoft, Slack)?",
         "Is there a compatibility layer for Selenium/Puppeteer scripts?",
@@ -589,7 +589,7 @@
       "persona_name": "Competitive App Maker",
       "persona_domain": "competing with established apps on other platforms",
       "questions": [
-        "Does Solace's sealed store model give app makers a competitive advantage over Chrome Web Store?",
+        "Does Solace's sealed store model give app makers a competitive advantage over browser extension store?",
         "Can app makers build things on Solace that are impossible on other browser platforms?",
         "Does the recipe system create a moat for app makers (replay = recurring value)?",
         "Are there exclusive platform capabilities (twin, OAuth3 vault) that attract app makers?",

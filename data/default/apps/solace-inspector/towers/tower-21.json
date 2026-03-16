@@ -56,7 +56,7 @@
       "persona_name": "PWA Expert (Android)",
       "persona_domain": "Progressive Web App on Android",
       "questions": [
-        "Does the PWA install prompt appear when visiting the web app in Chrome?",
+        "Does the PWA install prompt appear when visiting the web app in Chromium?",
         "Is the web app manifest correct (icons, colors, display mode)?",
         "Does the PWA work offline with a service worker?",
         "Can the PWA receive push notifications on Android?",

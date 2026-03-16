@@ -7,7 +7,7 @@ Option C: Headless core + optional debugging UI
 
 Features:
 - Real browser automation (Chromium-based)
-- Chrome DevTools Protocol (CDP) support
+- Chromium DevTools Protocol (CDP) support
 - Headless by default
 - Optional web-based debugging UI
 - Screenshot and DOM snapshot capture
@@ -839,12 +839,12 @@ class SolaceBrowser:
             start_page = Path(__file__).parent / "web" / "start.html"
             if start_page.exists():
                 try:
-                    # Wait briefly for any pending chrome-error:// navigation to settle
+                    # Wait briefly for any pending solace-error:// navigation to settle
                     await asyncio.sleep(0.3)
                     await page.goto(start_page.resolve().as_uri(), wait_until="domcontentloaded", timeout=5000)
                     logger.info("Fallback: start page loaded from file")
                 except Exception as fallback_exc:
-                    # Chrome error page can interrupt file:// navigation — not fatal
+                    # Browser error page can interrupt file:// navigation — not fatal
                     logger.warning(f"Fallback navigation also failed: {fallback_exc} — browser started on blank/error page")
             else:
                 logger.error("Neither web server nor local start.html available — browser started on blank page")
@@ -1816,7 +1816,7 @@ Memory × Care × Iteration = Intelligence (LEK)
 
 Recent wins:
 ✓ 100% SWE-bench verified (6/6 benchmarks)
-✓ Browser automation complete (Chrome, Edge, Safari control)
+✓ Browser automation complete (Chromium, Edge, Safari control)
 ✓ OOLONG verified (99.3% infinite context accuracy)
 
 Building in public. Always shipping. Always verifying.

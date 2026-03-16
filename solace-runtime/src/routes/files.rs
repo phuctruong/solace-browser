@@ -15,6 +15,8 @@ pub fn routes() -> Router<AppState> {
         .route("/", get(index))
         .route("/onboarding", get(onboarding_page))
         .route("/sidebar", get(sidebar_page))
+        .route("/sidepanel.js", get(sidebar_js))
+        .route("/sidepanel.css", get(sidebar_css))
         .route("/domains", get(domains_page))
         .route("/domains/:domain", get(domain_detail_page))
         .route("/apps/:app_id", get(app_detail_page))
@@ -62,10 +64,50 @@ async fn onboarding_page() -> Html<String> {
 }
 
 async fn sidebar_page() -> Html<String> {
+    // Serve the real Yinyang sidebar from Chromium source tree
+    let sidebar_paths = [
+        std::path::PathBuf::from("/home/phuc/projects/solace-browser/source/src/chrome/browser/resources/solace/sidepanel.html"),
+        crate::utils::solace_home().join("resources").join("solace-sidebar").join("sidepanel.html"),
+    ];
+    for path in &sidebar_paths {
+        if let Ok(content) = std::fs::read_to_string(path) {
+            return Html(content);
+        }
+    }
     Html(page(
         "Sidebar",
-        "Yinyang sidebar backend is available at /api/v1/sidebar/state.",
+        "Yinyang sidebar — sidepanel.html not found. Build Solace Browser first.",
     ))
+}
+
+async fn sidebar_js() -> (axum::http::HeaderMap, String) {
+    let paths = [
+        std::path::PathBuf::from("/home/phuc/projects/solace-browser/source/src/chrome/browser/resources/solace/sidepanel.js"),
+        crate::utils::solace_home().join("resources").join("solace-sidebar").join("sidepanel.js"),
+    ];
+    let mut headers = axum::http::HeaderMap::new();
+    headers.insert("content-type", "application/javascript".parse().unwrap());
+    for path in &paths {
+        if let Ok(content) = std::fs::read_to_string(path) {
+            return (headers, content);
+        }
+    }
+    (headers, "// sidepanel.js not found".to_string())
+}
+
+async fn sidebar_css() -> (axum::http::HeaderMap, String) {
+    let paths = [
+        std::path::PathBuf::from("/home/phuc/projects/solace-browser/source/src/chrome/browser/resources/solace/sidepanel.css"),
+        crate::utils::solace_home().join("resources").join("solace-sidebar").join("sidepanel.css"),
+    ];
+    let mut headers = axum::http::HeaderMap::new();
+    headers.insert("content-type", "text/css".parse().unwrap());
+    for path in &paths {
+        if let Ok(content) = std::fs::read_to_string(path) {
+            return (headers, content);
+        }
+    }
+    (headers, "/* sidepanel.css not found */".to_string())
 }
 
 // ---------------------------------------------------------------------------

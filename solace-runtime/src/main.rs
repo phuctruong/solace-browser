@@ -26,6 +26,10 @@ async fn main() {
     let cloud_state = state.clone();
     tokio::spawn(async move { cloud::run_heartbeat(cloud_state).await });
 
+    // Runtime heartbeat — emit event every 60s so Events tab always has data
+    let heartbeat_state = state.clone();
+    tokio::spawn(async move { run_runtime_heartbeat(heartbeat_state).await });
+
     tracing::info!(
         tools = mcp::mcp_tool_definitions().len(),
         "mcp tool catalog loaded"
@@ -54,6 +58,52 @@ async fn main() {
         tracing::error!(%error, "failed to remove port.lock");
     }
     tracing::info!("Solace Runtime stopped");
+}
+
+async fn run_runtime_heartbeat(state: AppState) {
+    // Emit a startup event immediately
+    {
+        let mut events = state.runtime_events.write();
+        events.push(serde_json::json!({
+            "event_type": "HEARTBEAT",
+            "timestamp": utils::now_iso8601(),
+            "level": "L1",
+            "domain": "system",
+            "app_id": "solace-runtime",
+            "message": "Solace Runtime started",
+            "data": {
+                "apps": *state.app_count.read(),
+                "sessions": state.sessions.read().len(),
+            }
+        }));
+    }
+
+    let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
+    loop {
+        interval.tick().await;
+        let sessions = state.sessions.read().len();
+        let apps = *state.app_count.read();
+        let uptime = state.uptime_seconds();
+        let mut events = state.runtime_events.write();
+        events.push(serde_json::json!({
+            "event_type": "HEARTBEAT",
+            "timestamp": utils::now_iso8601(),
+            "level": "L1",
+            "domain": "system",
+            "app_id": "solace-runtime",
+            "message": format!("uptime={}s sessions={} apps={}", uptime, sessions, apps),
+            "data": {
+                "uptime_seconds": uptime,
+                "sessions": sessions,
+                "apps": apps,
+            }
+        }));
+        // Cap at 1000 events
+        if events.len() > 1000 {
+            let drain = events.len() - 1000;
+            events.drain(..drain);
+        }
+    }
 }
 
 async fn shutdown_signal() {

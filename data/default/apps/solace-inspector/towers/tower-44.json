@@ -79,15 +79,15 @@
       "floor_number": 4,
       "persona_name": "Ravi Krishnamurthy",
       "persona_domain": "mobile_interaction",
-      "persona_context": "35, Mumbai, Sales executive who is always on his phone between client meetings, Intermediate tech, Pro tier, accesses Solace from his Android phone's Chrome browser, needs quick interactions without typing long messages",
+      "persona_context": "35, Mumbai, Sales executive who is always on his phone between client meetings, Intermediate tech, Pro tier, accesses Solace from his Android phone's Chromium-based browser, needs quick interactions without typing long messages",
       "pass_rate_prior": "0%",
       "questions": [
-        "Does the chat interface render correctly on a mobile screen (Android Chrome) without overlapping elements or cut-off text?",
+        "Does the chat interface render correctly on a mobile screen (Android Chromium) without overlapping elements or cut-off text?",
         "Can I tap a quick-action button (e.g., 'Run Triage', 'Morning Brief') instead of typing the command manually?",
         "Does the assistant support voice input so I can speak my question instead of typing on a small screen?",
         "Are the assistant's responses concise enough to read on a phone without excessive scrolling?",
         "Can I tap on a suggestion card and have it execute immediately with one tap, not two?",
-        "Does the mobile chat persist across browser sessions so I do not lose my conversation when Chrome restarts?",
+        "Does the mobile chat persist across browser sessions so I do not lose my conversation when browser restarts?",
         "If I switch between mobile and desktop mid-conversation, does the chat history sync between devices?"
       ],
       "question_expansion_instruction": "Ravi uses Solace on his phone between meetings and needs fast, thumb-friendly interaction. Every question verifies the mobile experience is responsive, supports quick actions, and works on real Android hardware. A desktop-only chat interface is a FAIL."

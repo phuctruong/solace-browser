@@ -99,7 +99,7 @@
       "persona_name": "Cross-Browser Tester",
       "persona_domain": "browser compatibility",
       "questions": [
-        "Does the web app work in Chrome, Firefox, Safari, and Edge?",
+        "Does the web app work in Chromium, Firefox, Safari, and Edge?",
         "Are there browser-specific CSS issues (webkit, moz prefixes)?",
         "Does the app handle different JavaScript engine behaviors?",
         "Are there polyfills for features not supported in older browsers?",

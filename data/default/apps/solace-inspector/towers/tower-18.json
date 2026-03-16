@@ -545,11 +545,11 @@
       "persona_name": "Benchmark Tester (macOS)",
       "persona_domain": "macOS-specific performance benchmarks",
       "questions": [
-        "How does Solace Browser compare to Chrome on macOS Speedometer?",
+        "How does Solace Browser compare to Chromium on macOS Speedometer?",
         "What is the cold start time on M1 vs M2 vs Intel Macs?",
         "Does the app maintain 60fps animations on all supported Macs?",
         "What is the memory footprint on a base 8GB MacBook Air?",
-        "How does battery life compare when using Solace vs Chrome for browsing?",
+        "How does battery life compare when using Solace vs Chromium for browsing?",
         "What is the file I/O performance for evidence chain operations?",
         "Does the app handle 20+ tabs without significant memory growth?"
       ]

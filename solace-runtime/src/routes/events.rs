@@ -2,7 +2,7 @@
 // Events API — the universal view. Every action is an event.
 // Events are the atoms of the system. Show them and everything is transparent.
 
-use axum::{extract::Query, routing::get, Json, Router};
+use axum::{extract::{Query, State}, routing::{get, post}, Json, Router};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::fs;
@@ -11,7 +11,9 @@ use std::path::PathBuf;
 use crate::state::AppState;
 
 pub fn routes() -> Router<AppState> {
-    Router::new().route("/api/v1/events", get(list_events))
+    Router::new()
+        .route("/api/v1/events", get(list_events))
+        .route("/api/v1/events/emit", post(emit_event))
 }
 
 #[derive(Deserialize)]
@@ -23,14 +25,57 @@ struct EventQuery {
     event_type: Option<String>,
 }
 
+/// POST /api/v1/events/emit — record an event from any source (browser, cron, hub).
+async fn emit_event(
+    State(state): State<AppState>,
+    Json(payload): Json<Value>,
+) -> Json<Value> {
+    let mut event = payload;
+    if let Some(obj) = event.as_object_mut() {
+        if !obj.contains_key("timestamp") {
+            obj.insert("timestamp".to_string(), json!(crate::utils::now_iso8601()));
+        }
+        if !obj.contains_key("level") {
+            let et = obj.get("event_type").and_then(|v| v.as_str()).unwrap_or("");
+            obj.insert("level".to_string(), json!(classify_event_level(et)));
+        }
+    }
+    state.runtime_events.write().push(event.clone());
+    // Cap at 1000 events in memory
+    let mut events = state.runtime_events.write();
+    if events.len() > 1000 {
+        let drain_count = events.len() - 1000;
+        events.drain(..drain_count);
+    }
+    Json(json!({"status": "ok", "event": event}))
+}
+
 /// GET /api/v1/events — the heartbeat of the system.
 ///
 /// Scans all app outbox/runs/*/events.jsonl files and returns a unified,
 /// time-sorted list of events across all apps and domains.
+/// Also includes in-memory runtime events (heartbeats, session launches, etc).
 /// Filterable by domain, app, and event type.
-async fn list_events(Query(query): Query<EventQuery>) -> Json<Value> {
-    let limit = query.limit.unwrap_or(100);
+async fn list_events(
+    State(state): State<AppState>,
+    Query(query): Query<EventQuery>,
+) -> Json<Value> {
+    let limit = query.limit.unwrap_or(200);
     let mut all_events: Vec<Value> = Vec::new();
+
+    // Include in-memory runtime events (heartbeats, sessions, etc.)
+    {
+        let runtime_events = state.runtime_events.read();
+        for event in runtime_events.iter() {
+            if let Some(ref type_filter) = query.event_type {
+                let et = event.get("event_type").and_then(|v| v.as_str()).unwrap_or("");
+                if !et.eq_ignore_ascii_case(type_filter) {
+                    continue;
+                }
+            }
+            all_events.push(event.clone());
+        }
+    }
 
     // Scan all app directories for events.jsonl files
     for app_dir in crate::utils::scan_app_dirs() {

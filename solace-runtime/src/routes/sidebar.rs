@@ -6,7 +6,7 @@ use axum::{
     },
     http::StatusCode,
     response::IntoResponse,
-    routing::get,
+    routing::{get, post},
     Json, Router,
 };
 use serde_json::json;
@@ -17,6 +17,22 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/v1/sidebar/state", get(sidebar_state))
         .route("/api/v1/sidebar/ws", get(sidebar_ws))
+        .route("/api/v1/settings/theme", post(set_theme))
+        .route("/api/v1/settings/theme", get(get_theme))
+}
+
+async fn set_theme(
+    State(state): State<AppState>,
+    Json(payload): Json<serde_json::Value>,
+) -> Json<serde_json::Value> {
+    if let Some(theme) = payload.get("theme").and_then(|v| v.as_str()) {
+        *state.theme.write() = theme.to_string();
+    }
+    Json(json!({"theme": state.theme.read().clone()}))
+}
+
+async fn get_theme(State(state): State<AppState>) -> Json<serde_json::Value> {
+    Json(json!({"theme": state.theme.read().clone()}))
 }
 
 async fn sidebar_state(State(state): State<AppState>) -> Json<serde_json::Value> {
