@@ -404,8 +404,8 @@
           if (total <= 0) {
             // All done
             if (verified > 0) {
-              $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + verified + ' connected</span>';
-              $('src-local-action').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto"> <a href="#" onclick="connectCLIs();return false" style="font-size:0.75rem;color:var(--sb-text-muted)">rerun</a>';
+              $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + verified + ' connected</span> <a href="#" onclick="connectCLIs();return false" style="font-size:0.75rem;color:var(--sb-text-muted)">rerun</a>';
+              $('src-local-action').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
               hasLLM = true;
               $('launch-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch" onclick="launchBrowser()">Launch Solace Browser</button>';
               // Persist validated state
