@@ -109,7 +109,7 @@
 
     <!-- Launch Button (centered) -->
     <div class="sb-mt-md" style="text-align:center">
-      <button class="sb-btn sb-btn--primary hub-launch" id="btn-launch" disabled onclick="launchBrowser()">
+      <button class="sb-btn sb-btn--primary hub-launch" id="btn-launch" onclick="launchBrowser()">
         Launch Solace Browser
       </button>
     </div>
@@ -282,7 +282,10 @@
 
   // ─── Launch Browser ───
   window.launchBrowser = function() {
-    if (!hasLLM) { toast('LLM required. Set up BYOK or install a CLI tool.', 'danger'); return; }
+    if (!hasLLM) {
+      toast('You must set up at least 1 LLM power source first: Sign In for Managed LLM, enter a BYOK key, or click Connect CLIs.', 'danger');
+      return;
+    }
     toast('Launching Solace Browser...', 'success');
     $('dot-sidebar').className = 'sb-topbar-dot sb-topbar-dot--on';
     // Launch the actual browser binary
