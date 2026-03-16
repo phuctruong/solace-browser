@@ -105,13 +105,33 @@
 
     <!-- System Status -->
     <div class="sb-card sb-mt-md">
-      <p class="sb-kicker">System Status</p>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.25rem 1.5rem">
-        <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-dashboard"></span> Dashboard :8888</div>
-        <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-mcp"></span> MCP Server</div>
-        <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-sidebar"></span> Yinyang Sidebar</div>
-        <div class="hub-status-row"><span class="sb-topbar-dot" id="dot-remote"></span> Remote Control</div>
-        <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-cron"></span> Cron Services</div>
+      <div class="sb-flex sb-gap-md" style="flex-wrap:wrap">
+        <div style="flex:1;min-width:280px">
+          <p class="sb-kicker" style="color:var(--sb-success)">Free · Local-First</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.2rem 1rem">
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-dashboard"></span> Dashboard</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-mcp"></span> MCP Server</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-cron"></span> Cron / Scheduler</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-apps"></span> App Engine</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-evidence"></span> Evidence Chain</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-fda"></span> FDA Part 11</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-recipes"></span> Recipe Cache</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-wiki"></span> Wiki Capture</div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:280px">
+          <p class="sb-kicker" style="color:var(--sb-accent)">Paid · Cloud Features</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.2rem 1rem">
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-sidebar"></span> Yinyang Sidebar</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot" id="dot-remote"></span> Remote Control</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-tunnel"></span> Custom Tunnel</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-sync"></span> Cloud Sync</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-esign"></span> E-Sign</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-team"></span> Team Workspace</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-twin"></span> Twin Browser</div>
+            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-fleet"></span> Device Fleet</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -168,7 +188,14 @@
       var acct = $('llm-account');
       // Source 2 + 3: BYOK + Managed status
       get('/api/v1/cloud/status').then(function(c) {
-        $('dot-remote').className = 'sb-topbar-dot sb-topbar-dot--' + (c.connected ? 'on' : 'off');
+        var on = c.connected && c.config && c.config.paid_user;
+        $('dot-remote').className = 'sb-topbar-dot sb-topbar-dot--' + (on ? 'on' : 'off');
+        $('dot-tunnel').className = 'sb-topbar-dot sb-topbar-dot--' + (on ? 'on' : 'off');
+        $('dot-sync').className = 'sb-topbar-dot sb-topbar-dot--' + (c.connected ? 'on' : 'off');
+        $('dot-esign').className = 'sb-topbar-dot sb-topbar-dot--' + (on ? 'on' : 'off');
+        $('dot-team').className = 'sb-topbar-dot sb-topbar-dot--' + (on ? 'on' : 'off');
+        $('dot-twin').className = 'sb-topbar-dot sb-topbar-dot--' + (on ? 'on' : 'off');
+        $('dot-fleet').className = 'sb-topbar-dot sb-topbar-dot--' + (on ? 'on' : 'off');
         if (c.connected && c.config) {
           var email = c.config.user_email || 'User';
           var isPaid = c.config.paid_user;
