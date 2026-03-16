@@ -84,10 +84,14 @@ fn app_search_paths() -> Vec<PathBuf> {
         }
     }
 
-    // Fallback: common development path
-    let fallback = PathBuf::from("/home/phuc/projects/solace-cli/data/default/apps");
-    if fallback.is_dir() && !paths.iter().any(|p| p == &fallback) {
-        paths.push(fallback);
+    // Fallback: dev path relative to CARGO_MANIFEST_DIR (cross-platform)
+    let dev_fallback = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."))
+        .join("solace-cli/data/default/apps");
+    if dev_fallback.is_dir() && !paths.iter().any(|p| p == &dev_fallback) {
+        paths.push(dev_fallback);
     }
 
     paths

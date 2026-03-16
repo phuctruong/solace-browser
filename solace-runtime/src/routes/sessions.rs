@@ -251,7 +251,11 @@ async fn launch_session(
 
         // Actually launch the browser binary
         let browser_candidates = [
-            std::path::PathBuf::from("/home/phuc/projects/solace-browser/source/src/out/Solace/solace"),
+            // Dev build output (relative to CARGO_MANIFEST_DIR for portability)
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .unwrap_or(std::path::Path::new("."))
+                .join("source/src/out/Solace/solace"),
             crate::utils::solace_home().join("bin").join("solace"),
         ];
         let browser_path = browser_candidates.iter().find(|p| p.is_file());
@@ -321,7 +325,11 @@ async fn launch_session(
     } else {
         // allow_duplicate = true: skip all dedup, spawn unconditionally
         let browser_candidates = [
-            std::path::PathBuf::from("/home/phuc/projects/solace-browser/source/src/out/Solace/solace"),
+            // Dev build output (relative to CARGO_MANIFEST_DIR for portability)
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .unwrap_or(std::path::Path::new("."))
+                .join("source/src/out/Solace/solace"),
             crate::utils::solace_home().join("bin").join("solace"),
         ];
         let browser_path = browser_candidates.iter().find(|p| p.is_file());

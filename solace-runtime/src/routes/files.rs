@@ -10,6 +10,66 @@ use axum::Router;
 
 use crate::state::AppState;
 
+/// Find Hub assets directory — checks dev path then installed path.
+/// Works on mac/windows/linux: ~/.solace/hub/ is the production location.
+fn hub_assets_dir(subdir: &str) -> std::path::PathBuf {
+    // Dev path (only exists on dev machine)
+    let dev = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap_or(std::path::Path::new("."))
+        .join("solace-hub")
+        .join("src")
+        .join(subdir);
+    if dev.is_dir() {
+        return dev;
+    }
+    // Installed path (~/.solace/hub/{subdir})
+    let installed = crate::utils::solace_home().join("hub").join(subdir);
+    if installed.is_dir() {
+        return installed;
+    }
+    // Fallback to dev path (will 404 gracefully via ServeDir)
+    dev
+}
+
+/// Find sidebar assets — checks Chromium source tree then installed path.
+fn sidebar_asset(filename: &str) -> Option<String> {
+    let candidates = [
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap_or(std::path::Path::new("."))
+            .join("source/src/chrome/browser/resources/solace")
+            .join(filename),
+        crate::utils::solace_home()
+            .join("resources")
+            .join("solace-sidebar")
+            .join(filename),
+    ];
+    for path in &candidates {
+        if let Ok(content) = fs::read_to_string(path) {
+            return Some(content);
+        }
+    }
+    None
+}
+
+/// Find Hub index.html — checks dev path then installed path.
+fn hub_index_html() -> Option<String> {
+    let candidates = [
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap_or(std::path::Path::new("."))
+            .join("solace-hub/src/index.html"),
+        crate::utils::solace_home().join("hub").join("index.html"),
+    ];
+    for path in &candidates {
+        if let Ok(content) = fs::read_to_string(path) {
+            return Some(content);
+        }
+    }
+    None
+}
+
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(index))
@@ -34,30 +94,14 @@ pub fn routes() -> Router<AppState> {
         .route("/styleguide", get(styleguide_page))
         .route("/styleguide.css", get(styleguide_css))
         .nest_service("/assets", tower_http::services::ServeDir::new("templates"))
-        .nest_service(
-            "/icons",
-            tower_http::services::ServeDir::new("/home/phuc/projects/solace-browser/solace-hub/src/icons"),
-        )
-        .nest_service(
-            "/media",
-            tower_http::services::ServeDir::new("/home/phuc/projects/solace-browser/solace-hub/src/media"),
-        )
-        .nest_service(
-            "/vendor",
-            tower_http::services::ServeDir::new("/home/phuc/projects/solace-browser/solace-hub/src/vendor"),
-        )
+        .nest_service("/icons", tower_http::services::ServeDir::new(hub_assets_dir("icons")))
+        .nest_service("/media", tower_http::services::ServeDir::new(hub_assets_dir("media")))
+        .nest_service("/vendor", tower_http::services::ServeDir::new(hub_assets_dir("vendor")))
 }
 
 async fn index() -> Html<String> {
-    // Serve the real Hub index.html if available
-    let candidates = [
-        std::path::PathBuf::from("/home/phuc/projects/solace-browser/solace-hub/src/index.html"),
-        crate::utils::solace_home().join("hub").join("index.html"),
-    ];
-    for path in &candidates {
-        if let Ok(content) = fs::read_to_string(path) {
-            return Html(content);
-        }
+    if let Some(content) = hub_index_html() {
+        return Html(content);
     }
     Html(page(
         "Solace Runtime",
@@ -270,15 +314,8 @@ async fn onboarding_page() -> Html<String> {
 }
 
 async fn sidebar_page() -> Html<String> {
-    // Serve the real Yinyang sidebar from Chromium source tree
-    let sidebar_paths = [
-        std::path::PathBuf::from("/home/phuc/projects/solace-browser/source/src/chrome/browser/resources/solace/sidepanel.html"),
-        crate::utils::solace_home().join("resources").join("solace-sidebar").join("sidepanel.html"),
-    ];
-    for path in &sidebar_paths {
-        if let Ok(content) = std::fs::read_to_string(path) {
-            return Html(content);
-        }
+    if let Some(content) = sidebar_asset("sidepanel.html") {
+        return Html(content);
     }
     Html(page(
         "Sidebar",
@@ -287,33 +324,17 @@ async fn sidebar_page() -> Html<String> {
 }
 
 async fn sidebar_js() -> (axum::http::HeaderMap, String) {
-    let paths = [
-        std::path::PathBuf::from("/home/phuc/projects/solace-browser/source/src/chrome/browser/resources/solace/sidepanel.js"),
-        crate::utils::solace_home().join("resources").join("solace-sidebar").join("sidepanel.js"),
-    ];
     let mut headers = axum::http::HeaderMap::new();
     headers.insert("content-type", "application/javascript".parse().unwrap());
-    for path in &paths {
-        if let Ok(content) = std::fs::read_to_string(path) {
-            return (headers, content);
-        }
-    }
-    (headers, "// sidepanel.js not found".to_string())
+    let content = sidebar_asset("sidepanel.js").unwrap_or_else(|| "// sidepanel.js not found".to_string());
+    (headers, content)
 }
 
 async fn sidebar_css() -> (axum::http::HeaderMap, String) {
-    let paths = [
-        std::path::PathBuf::from("/home/phuc/projects/solace-browser/source/src/chrome/browser/resources/solace/sidepanel.css"),
-        crate::utils::solace_home().join("resources").join("solace-sidebar").join("sidepanel.css"),
-    ];
     let mut headers = axum::http::HeaderMap::new();
     headers.insert("content-type", "text/css".parse().unwrap());
-    for path in &paths {
-        if let Ok(content) = std::fs::read_to_string(path) {
-            return (headers, content);
-        }
-    }
-    (headers, "/* sidepanel.css not found */".to_string())
+    let content = sidebar_asset("sidepanel.css").unwrap_or_else(|| "/* sidepanel.css not found */".to_string());
+    (headers, content)
 }
 
 // ---------------------------------------------------------------------------
@@ -1442,15 +1463,12 @@ fn domain_icon_path(domain: &str) -> String {
         parts[0]
     };
 
-    // Try common extensions
+    // Try common extensions in the Hub icons directory (cross-platform)
+    let icons_dir = hub_assets_dir("icons").join("apps");
     for ext in &["png", "jpg", "svg"] {
-        let candidate = format!("/icons/apps/{}.{}", root, ext);
-        let fs_path = format!(
-            "/home/phuc/projects/solace-browser/solace-hub/src/icons/apps/{}.{}",
-            root, ext
-        );
-        if std::path::Path::new(&fs_path).exists() {
-            return candidate;
+        let filename = format!("{}.{}", root, ext);
+        if icons_dir.join(&filename).exists() {
+            return format!("/icons/apps/{}", filename);
         }
     }
 
@@ -1515,31 +1533,29 @@ fn latest_run_time(app_dir: &std::path::Path) -> Option<String> {
         .and_then(|p| crate::utils::modified_iso8601(p))
 }
 
-/// Serve the styleguide page from the Hub frontend directory.
+/// Serve the styleguide page from the Hub frontend directory (cross-platform).
 async fn styleguide_page() -> Html<String> {
-    // Try to find the styleguide.html in the Hub src directory
-    let candidates = [
-        std::path::PathBuf::from("/home/phuc/projects/solace-browser/solace-hub/src/styleguide.html"),
-        crate::utils::solace_home().join("hub").join("styleguide.html"),
-    ];
-    for path in &candidates {
-        if let Ok(content) = fs::read_to_string(path) {
-            return Html(content);
-        }
+    let path = hub_assets_dir(".").join("styleguide.html");
+    if let Ok(content) = fs::read_to_string(&path) {
+        return Html(content);
     }
-    Html("<html><body><h1>Styleguide not found</h1><p>Place styleguide.html in solace-hub/src/</p></body></html>".to_string())
+    // Try parent (hub/src/ in dev has styleguide at same level as icons/)
+    let alt = hub_assets_dir("..").join("styleguide.html");
+    if let Ok(content) = fs::read_to_string(&alt) {
+        return Html(content);
+    }
+    Html("<html><body><h1>Styleguide not found</h1><p>Place styleguide.html in ~/.solace/hub/</p></body></html>".to_string())
 }
 
-/// Serve the styleguide CSS from the Hub frontend directory.
+/// Serve the styleguide CSS from the Hub frontend directory (cross-platform).
 async fn styleguide_css() -> (StatusCode, [(axum::http::header::HeaderName, &'static str); 1], String) {
-    let candidates = [
-        std::path::PathBuf::from("/home/phuc/projects/solace-browser/solace-hub/src/styleguide.css"),
-        crate::utils::solace_home().join("hub").join("styleguide.css"),
-    ];
-    for path in &candidates {
-        if let Ok(content) = fs::read_to_string(path) {
-            return (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "text/css")], content);
-        }
+    let path = hub_assets_dir(".").join("styleguide.css");
+    if let Ok(content) = fs::read_to_string(&path) {
+        return (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "text/css")], content);
+    }
+    let alt = hub_assets_dir("..").join("styleguide.css");
+    if let Ok(content) = fs::read_to_string(&alt) {
+        return (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "text/css")], content);
     }
     (StatusCode::NOT_FOUND, [(axum::http::header::CONTENT_TYPE, "text/css")], String::new())
 }
