@@ -80,7 +80,7 @@
         "decorations": true,
         "visible": true,
         "center": true,
-        "url": "index.html"
+        "url": "http://localhost:8888/"
       }
     ]
   }

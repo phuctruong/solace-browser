@@ -353,18 +353,34 @@ fn push_linux_browser_candidates(
 
 fn ensure_runtime_port_available() -> Result<(), String> {
     if TcpStream::connect(("127.0.0.1", YINYANG_PORT)).is_ok() {
-        let lock_hint = match read_port_lock() {
-            Ok(lock) => format!(
-                "port.lock pid={}, token_sha256_present={}",
-                lock.pid,
-                !lock.token_sha256.is_empty()
-            ),
-            Err(_) => "port.lock unreadable or missing".to_string(),
-        };
-        return Err(format!(
-            "Refusing to start Solace Hub: localhost:{} is already occupied. {}",
-            YINYANG_PORT, lock_hint
-        ));
+        // Port occupied — check if it's our runtime via curl
+        let health_check = std::process::Command::new("curl")
+            .args(["-sf", "--max-time", "2", &format!("http://localhost:{}/health", YINYANG_PORT)])
+            .output();
+        if let Ok(output) = health_check {
+            if output.status.success() {
+                let body = String::from_utf8_lossy(&output.stdout);
+                if body.contains("solace-runtime") {
+                    eprintln!("INFO: Solace Runtime already healthy on port {}. Reusing.", YINYANG_PORT);
+                    return Ok(());
+                }
+            }
+        }
+        // Port occupied by unknown process — kill via port.lock pid
+        if let Ok(lock) = read_port_lock() {
+            eprintln!("INFO: Killing orphan process pid={}", lock.pid);
+            let _ = std::process::Command::new("kill").arg(lock.pid.to_string()).status();
+            std::thread::sleep(std::time::Duration::from_secs(2));
+            let _ = std::fs::remove_file(port_lock_path());
+        } else {
+            // No port.lock — try to free port
+            let _ = std::fs::remove_file(port_lock_path());
+            std::thread::sleep(std::time::Duration::from_secs(1));
+        }
+        // Final check
+        if TcpStream::connect(("127.0.0.1", YINYANG_PORT)).is_ok() {
+            return Err(format!("Port {} still occupied after cleanup", YINYANG_PORT));
+        }
     }
     Ok(())
 }
