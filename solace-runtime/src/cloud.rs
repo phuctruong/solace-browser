@@ -30,19 +30,11 @@ pub async fn run_heartbeat(state: AppState) {
                     }
                 }
                 Ok(false) => {
-                    tracing::warn!("cloud reconnect: API key expired/revoked — clearing config");
-                    *state.cloud_config.write() = None;
-                    let solace_home = crate::utils::solace_home();
-                    let _ = crate::config::clear_cloud_config(&solace_home);
-                    // Add notification for sidebar to show "Sign in again"
-                    state.notifications.write().push(crate::state::Notification {
-                        id: uuid::Uuid::new_v4().to_string(),
-                        message: "Cloud session expired. Please sign in again at solaceagi.com"
-                            .to_string(),
-                        level: "warning".to_string(),
-                        read: false,
-                        created_at: crate::utils::now_iso8601(),
-                    });
+                    // On startup, don't clear config immediately — the bridge from
+                    // solaceagi.com may re-send a fresh token. Only clear after
+                    // multiple consecutive failures in the heartbeat loop.
+                    tracing::warn!("cloud reconnect: API key validation failed — keeping config, will retry");
+                    consecutive_failures += 1;
                 }
                 Err(error) => {
                     tracing::warn!(%error, "cloud reconnect: network error — staying offline");
