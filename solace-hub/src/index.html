@@ -93,9 +93,21 @@
           </tr>
           <tr>
             <td>3</td>
+            <td><strong>Ollama</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Self-hosted, no API key needed</span></td>
+            <td id="src-ollama">
+              <span class="sb-editable" data-field="ollama_url" id="ollama-editable">
+                <span class="sb-editable-display sb-text-muted">Not set — click to enter URL</span>
+                <input class="sb-editable-input" id="ollama-input" placeholder="http://localhost:11434" style="font-family:var(--sb-font-mono);width:220px">
+                <span class="sb-editable-pen" title="Edit"></span>
+              </span>
+            </td>
+            <td id="src-ollama-gif"></td>
+          </tr>
+          <tr>
+            <td>4</td>
             <td><strong>Local CLI</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Auto-detect AI tools on PATH</span></td>
             <td id="src-local"><span class="sb-pill sb-pill--warning">Not connected</span></td>
-            <td id="src-local-action"><button class="sb-btn sb-btn--sm" onclick="connectCLIs()">Connect CLIs</button></td>
+            <td id="src-local-action"></td>
           </tr>
           <tr id="cli-details-row" style="display:none">
             <td></td>
@@ -441,6 +453,34 @@
       window.open('https://solaceagi.com/dashboard', '_blank');
     });
   };
+
+  // ─── Ollama inline edit ───
+  (function() {
+    var el = $('ollama-editable');
+    if (!el) return;
+    var display = el.querySelector('.sb-editable-display');
+    var input = el.querySelector('.sb-editable-input');
+    var pen = el.querySelector('.sb-editable-pen');
+    function startEdit() { el.classList.add('sb-editable--editing'); input.value = ''; input.focus(); }
+    display.addEventListener('click', startEdit);
+    pen.addEventListener('click', startEdit);
+    function saveUrl() {
+      el.classList.remove('sb-editable--editing');
+      var url = input.value.trim();
+      if (url && url.startsWith('http')) {
+        display.textContent = url;
+        display.style.color = 'var(--sb-success)';
+        $('src-ollama-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
+        hasLLM = true;
+        $('launch-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch">Launch Solace Browser</button>';
+        toast('Ollama URL saved!', 'success');
+      } else if (url) {
+        toast('URL must start with http', 'warning');
+      }
+    }
+    input.addEventListener('blur', saveUrl);
+    input.addEventListener('keydown', function(e) { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') el.classList.remove('sb-editable--editing'); });
+  })();
 
   // ─── Delegated click handler for dynamically created buttons ───
   document.addEventListener('click', function(e) {

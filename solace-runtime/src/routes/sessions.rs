@@ -52,7 +52,7 @@ async fn launch_session(
     let profile = payload.profile.unwrap_or_else(|| "default".to_string());
     let url = payload
         .url
-        .unwrap_or_else(|| "https://solaceagi.com".to_string());
+        .unwrap_or_else(|| "http://localhost:8888".to_string());
     let mode = payload.mode.unwrap_or_else(|| "local-dev".to_string());
     let allow_duplicate = payload.allow_duplicate;
 
@@ -118,6 +118,10 @@ async fn launch_session(
             match std::process::Command::new(chrome)
                 .arg(&url)
                 .arg(format!("--profile-directory={}", &profile))
+                .arg("--no-first-run")
+                .arg("--disable-session-crashed-bubble")
+                .arg("--disable-infobars")
+                .env("DISPLAY", std::env::var("DISPLAY").unwrap_or_else(|_| ":1".to_string()))
                 .spawn()
             {
                 Ok(child) => child.id(),
