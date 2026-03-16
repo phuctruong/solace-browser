@@ -255,15 +255,12 @@
           $('results-phase').style.display = 'block';
 
           if (hasLLM) {
-            // LLMs found — ready to launch
-            $('llm-chips').innerHTML = chips;
-            $('llm-gate').innerHTML = '';
+            // Signed in or BYOK set — ready to launch
             $('llm-card').classList.add('hub-ready');
             $('llm-card').classList.remove('hub-blocked');
-            $('btn-launch').disabled = false;
-          } else {
-            // No LLMs — gate blocked
-            $('llm-chips').innerHTML = '<span class="sb-text-muted">No AI tools detected on PATH</span>';
+            // btn-launch stays enabled (hasLLM is true from cloud/byok)
+          } else if (!installed.length) {
+            // No CLIs AND no cloud — show setup prompts
             $('llm-gate').innerHTML =
               '<div class="hub-gate">' +
               '<div class="hub-gate-msg">Solace Browser requires an LLM to power it.</div>' +
