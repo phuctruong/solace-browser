@@ -645,12 +645,12 @@ fn restore_dashboard_window(win: &Window) {
     // Force a real dashboard geometry so the tray app cannot get stuck as a tiny shell window.
     let _ = win.unminimize();
     let _ = win.set_min_size(Some(Size::Logical(LogicalSize {
-        width: 430.0,
-        height: 760.0,
+        width: 800.0,
+        height: 800.0,
     })));
     let _ = win.set_size(Size::Logical(LogicalSize {
-        width: 980.0,
-        height: 920.0,
+        width: 1400.0,
+        height: 1000.0,
     }));
     let _ = win.center();
     let _ = win.show();
