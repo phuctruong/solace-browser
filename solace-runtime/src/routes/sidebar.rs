@@ -101,7 +101,12 @@ pub(crate) fn compute_sidebar_state(state: &AppState) -> serde_json::Value {
     let cloud = state.cloud_config.read().clone();
     let has_byok = crate::config::has_byok_key(&solace_home);
 
-    let gate = if !onboarding.completed {
+    // Gate logic: cloud connect OR onboarding complete → registered.
+    // Cloud connect = proof of registration (Firebase token from solaceagi.com).
+    // Onboarding complete = local-only setup done (BYOK path, no cloud needed).
+    let registered = cloud.is_some() || onboarding.completed;
+
+    let gate = if !registered && !has_byok {
         "unregistered"
     } else if let Some(ref config) = cloud {
         if config.paid_user {
