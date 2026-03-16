@@ -23,6 +23,14 @@ pub fn routes() -> Router<AppState> {
         .route("/apps/:app_id", get(app_detail_page))
         .route("/apps/:app_id/runs/:run_id", get(run_detail_page))
         .route("/evidence", get(evidence_page))
+        .route("/appstore", get(appstore_page))
+        .route("/llms", get(llms_page))
+        .route("/budget", get(budget_page))
+        .route("/recipes", get(recipes_page))
+        .route("/oauth3", get(oauth3_page))
+        .route("/esign", get(esign_page))
+        .route("/wiki-hub", get(wiki_page))
+        .route("/settings", get(settings_page))
         .route("/styleguide", get(styleguide_page))
         .route("/styleguide.css", get(styleguide_css))
         .nest_service("/assets", tower_http::services::ServeDir::new("templates"))
@@ -745,6 +753,502 @@ async fn evidence_page() -> Html<String> {
 // Helpers
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// GET /appstore — local app store (installed vs available)
+// ---------------------------------------------------------------------------
+async fn appstore_page(State(state): State<AppState>) -> Html<String> {
+    let apps = crate::app_engine::scan_installed_apps();
+    let mut domain_map: BTreeMap<String, Vec<&crate::app_engine::AppManifest>> = BTreeMap::new();
+    for app in &apps {
+        domain_map.entry(app.domain.clone()).or_default().push(app);
+    }
+
+    let mut installed_cards = String::new();
+    for app in &apps {
+        let icon = domain_icon_path(&app.domain);
+        let tier_pill = if app.tier.is_empty() || app.tier == "free" {
+            "<span class=\"sb-pill sb-pill--success\">Free</span>"
+        } else {
+            "<span class=\"sb-pill sb-pill--info\">Paid</span>"
+        };
+        installed_cards.push_str(&format!(
+            r#"<div class="sb-card">
+  <div class="sb-card-header">
+    <h3 class="sb-card-title sb-app-name"><img class="sb-app-icon" src="{icon}" alt="" onerror="this.style.display='none'"><a href="/apps/{id}">{name}</a></h3>
+    {tier_pill}
+  </div>
+  <div class="sb-card-body"><p>{desc}</p>
+    <div style="margin-top:0.5rem"><span class="sb-pill sb-pill--info">{domain}</span> <span class="sb-text-muted">v{ver}</span></div>
+  </div>
+</div>"#,
+            icon = html_escape::encode_text(&icon),
+            id = html_escape::encode_text(&app.id),
+            name = html_escape::encode_text(&app.name),
+            desc = html_escape::encode_text(&app.description),
+            domain = html_escape::encode_text(&app.domain),
+            ver = html_escape::encode_text(&app.version),
+        ));
+    }
+
+    let cloud = state.cloud_config.read().is_some();
+    let store_section = if cloud {
+        "<div class=\"sb-card\"><p>Connected to solaceagi.com — <a href=\"https://solaceagi.com/app-store\">Browse App Store</a></p></div>"
+    } else {
+        "<div class=\"sb-card\"><p class=\"sb-text-muted\">Connect to solaceagi.com to browse the full app store with 35+ apps.</p>\
+         <p style=\"margin-top:0.5rem\"><a href=\"/settings\" class=\"sb-btn sb-btn--sm\">Connect Cloud</a> \
+         <a href=\"https://solaceagi.com/app-store\" class=\"sb-btn sb-btn--sm sb-btn--primary\" target=\"_blank\">Browse Online</a></p></div>"
+    };
+
+    let body = format!(
+        r#"<div class="sb-flex" style="justify-content:space-between;align-items:center;margin-bottom:1rem">
+  <div><span class="sb-pill sb-pill--success">{count} installed</span> across <strong>{domains}</strong> domains</div>
+  <a href="https://solaceagi.com/app-store" class="sb-btn sb-btn--sm sb-btn--primary" target="_blank">Browse App Store</a>
+</div>
+<h2 class="sb-heading">Installed Apps</h2>
+<div class="sb-card-grid">{installed_cards}</div>
+<h2 class="sb-heading" style="margin-top:1.5rem">Available from Store</h2>
+{store_section}
+<h2 class="sb-heading" style="margin-top:1.5rem">Create Custom App</h2>
+<div class="sb-card"><p>Create a folder in <code>~/.solace/apps/{{domain}}/{{app-id}}/</code> with a <code>manifest.md</code> file.</p>
+<p style="margin-top:0.5rem">The <a href="https://solaceagi.com/docs/app-standard">Solace App Standard</a> defines the manifest format, icons, templates, and inbox/outbox structure.</p>
+<p style="margin-top:0.5rem"><a href="https://solaceagi.com/app-store/submit" class="sb-btn sb-btn--sm" target="_blank">Submit to Store</a></p></div>"#,
+        count = apps.len(),
+        domains = domain_map.len(),
+    );
+    Html(hub_page("App Store", &body))
+}
+
+// ---------------------------------------------------------------------------
+// GET /llms — connected LLM sources
+// ---------------------------------------------------------------------------
+async fn llms_page(State(state): State<AppState>) -> Html<String> {
+    let solace_home = crate::utils::solace_home();
+    let has_byok = crate::config::has_byok_key(&solace_home);
+    let cloud = state.cloud_config.read().clone();
+    let is_paid = cloud.as_ref().map(|c| c.paid_user).unwrap_or(false);
+
+    // Detect CLI agents
+    let agents_json = match reqwest::Client::new()
+        .get("http://127.0.0.1:8888/api/v1/agents")
+        .timeout(std::time::Duration::from_secs(2))
+        .send()
+        .await
+    {
+        Ok(resp) => resp.text().await.unwrap_or_default(),
+        Err(_) => String::new(),
+    };
+    let agents: Vec<serde_json::Value> = serde_json::from_str(&agents_json)
+        .or_else(|_| {
+            serde_json::from_str::<serde_json::Value>(&agents_json)
+                .map(|v| v.get("agents").cloned().unwrap_or(serde_json::Value::Array(vec![])))
+                .and_then(|v| serde_json::from_value(v))
+        })
+        .unwrap_or_default();
+
+    let mut agent_rows = String::new();
+    for agent in &agents {
+        let name = agent.get("name").and_then(|v| v.as_str()).unwrap_or("unknown");
+        let path = agent.get("path").and_then(|v| v.as_str()).unwrap_or("—");
+        let status = agent.get("available").and_then(|v| v.as_bool()).unwrap_or(false);
+        let pill = if status {
+            "<span class=\"sb-pill sb-pill--success\">Available</span>"
+        } else {
+            "<span class=\"sb-pill sb-pill--danger\">Not Found</span>"
+        };
+        agent_rows.push_str(&format!(
+            "<tr><td><strong>{}</strong></td><td><code>{}</code></td><td>{}</td></tr>",
+            html_escape::encode_text(name),
+            html_escape::encode_text(path),
+            pill,
+        ));
+    }
+    if agent_rows.is_empty() {
+        agent_rows = "<tr><td colspan=\"3\" class=\"sb-text-muted\">No AI agents detected on PATH. Install claude, codex, gemini, or ollama.</td></tr>".to_string();
+    }
+
+    let byok_status = if has_byok {
+        "<span class=\"sb-pill sb-pill--success\">BYOK Key Configured</span>"
+    } else {
+        "<span class=\"sb-pill sb-pill--warning\">No BYOK Key</span>"
+    };
+
+    let managed_status = if is_paid {
+        "<span class=\"sb-pill sb-pill--success\">Managed LLM Active</span> — Together.ai + OpenRouter"
+    } else {
+        "<span class=\"sb-pill sb-pill--info\">Managed LLM</span> — <a href=\"https://solaceagi.com/pricing\">Upgrade to Starter ($8/mo)</a>"
+    };
+
+    let body = format!(
+        r#"<h2 class="sb-heading">Detected AI Agents</h2>
+<div class="sb-card">
+  <p class="sb-text-muted" style="margin-bottom:0.75rem">Solace auto-detects AI tools on your PATH and wraps them as HTTP endpoints.</p>
+  <table class="sb-table"><thead><tr><th>Agent</th><th>Path</th><th>Status</th></tr></thead>
+  <tbody>{agent_rows}</tbody></table>
+</div>
+
+<h2 class="sb-heading" style="margin-top:1.5rem">API Keys (BYOK)</h2>
+<div class="sb-card">
+  <p>{byok_status}</p>
+  <p class="sb-text-muted" style="margin-top:0.5rem">BYOK keys are stored locally in AES-256-GCM encrypted vault. Never sent to solaceagi.com.</p>
+</div>
+
+<h2 class="sb-heading" style="margin-top:1.5rem">Managed LLM</h2>
+<div class="sb-card">
+  <p>{managed_status}</p>
+  <p class="sb-text-muted" style="margin-top:0.5rem">Primary: Llama 3.3 70B ($0.59/M tokens) via Together.ai. Fallback: OpenRouter (Claude, GPT-4, Mixtral).</p>
+</div>
+
+<h2 class="sb-heading" style="margin-top:1.5rem">Models</h2>
+<div class="sb-card">
+  <table class="sb-table"><thead><tr><th>Level</th><th>Use Case</th><th>Example Models</th></tr></thead>
+  <tbody>
+    <tr><td><strong>L1</strong></td><td>Fast tasks, formatting</td><td>Haiku, GPT-4o-mini</td></tr>
+    <tr><td><strong>L2</strong></td><td>General coding, analysis</td><td>Sonnet, GPT-4o</td></tr>
+    <tr><td><strong>L3</strong></td><td>Complex reasoning</td><td>Opus, GPT-5</td></tr>
+    <tr><td><strong>L4</strong></td><td>Deep research, math</td><td>Opus (extended), O3</td></tr>
+    <tr><td><strong>L5</strong></td><td>Architecture, strategy</td><td>Multi-model consensus</td></tr>
+  </tbody></table>
+</div>"#,
+    );
+    Html(hub_page("LLMs", &body))
+}
+
+// ---------------------------------------------------------------------------
+// GET /budget — cost tracking
+// ---------------------------------------------------------------------------
+async fn budget_page(State(state): State<AppState>) -> Html<String> {
+    let usage = state.budget_usage.read().clone();
+    let solace_home = crate::utils::solace_home();
+    let config = crate::config::load_budget_config(&solace_home);
+
+    let daily_pct = if config.daily_limit > 0 {
+        ((usage.daily_count as f64 / config.daily_limit as f64) * 100.0).min(100.0)
+    } else {
+        0.0
+    };
+    let monthly_pct = if config.monthly_limit > 0 {
+        ((usage.monthly_count as f64 / config.monthly_limit as f64) * 100.0).min(100.0)
+    } else {
+        0.0
+    };
+
+    let daily_bar_class = if daily_pct > 80.0 { "sb-progress-bar--danger" } else if daily_pct > 50.0 { "sb-progress-bar--warning" } else { "sb-progress-bar--success" };
+    let monthly_bar_class = if monthly_pct > 80.0 { "sb-progress-bar--danger" } else if monthly_pct > 50.0 { "sb-progress-bar--warning" } else { "sb-progress-bar--success" };
+
+    let pause_status = if config.enforce {
+        "<span class=\"sb-pill sb-pill--success\">Fail-Closed</span> — apps pause when budget exceeded"
+    } else {
+        "<span class=\"sb-pill sb-pill--warning\">Fail-Open</span> — apps continue past budget (not recommended)"
+    };
+
+    let body = format!(
+        r#"<div class="sb-flex" style="gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem">
+  <div class="sb-card" style="flex:1;min-width:250px">
+    <p class="sb-kicker">Today ({date})</p>
+    <div style="font-size:1.5rem;font-weight:700">{daily_count} <span class="sb-text-muted" style="font-size:0.85rem">/ {daily_limit} events</span></div>
+    <div class="sb-progress" style="margin-top:0.5rem"><div class="sb-progress-bar {daily_bar_class}" style="width:{daily_pct:.0}%"></div></div>
+  </div>
+  <div class="sb-card" style="flex:1;min-width:250px">
+    <p class="sb-kicker">This Month ({month})</p>
+    <div style="font-size:1.5rem;font-weight:700">{monthly_count} <span class="sb-text-muted" style="font-size:0.85rem">/ {monthly_limit} events</span></div>
+    <div class="sb-progress" style="margin-top:0.5rem"><div class="sb-progress-bar {monthly_bar_class}" style="width:{monthly_pct:.0}%"></div></div>
+  </div>
+</div>
+
+<h2 class="sb-heading">Budget Policy</h2>
+<div class="sb-card"><p>{pause_status}</p></div>
+
+<h2 class="sb-heading" style="margin-top:1.5rem">Cost Breakdown</h2>
+<div class="sb-card"><p class="sb-text-muted">Per-app and per-model cost breakdown available via <code>GET /api/v1/budget</code>.</p></div>"#,
+        date = html_escape::encode_text(&usage.daily_date),
+        daily_count = usage.daily_count,
+        daily_limit = config.daily_limit,
+        month = html_escape::encode_text(&usage.monthly_date),
+        monthly_count = usage.monthly_count,
+        monthly_limit = config.monthly_limit,
+    );
+    Html(hub_page("Budget", &body))
+}
+
+// ---------------------------------------------------------------------------
+// GET /recipes — saved automations
+// ---------------------------------------------------------------------------
+async fn recipes_page() -> Html<String> {
+    // Fetch recipes from API
+    let recipes_json = match reqwest::Client::new()
+        .get("http://127.0.0.1:8888/api/v1/recipes")
+        .timeout(std::time::Duration::from_secs(2))
+        .send()
+        .await
+    {
+        Ok(resp) => resp.text().await.unwrap_or_default(),
+        Err(_) => String::new(),
+    };
+    let recipes: Vec<serde_json::Value> = serde_json::from_str::<serde_json::Value>(&recipes_json)
+        .ok()
+        .and_then(|v| v.get("recipes").cloned())
+        .and_then(|v| serde_json::from_value(v).ok())
+        .unwrap_or_default();
+
+    let mut recipe_cards = String::new();
+    for recipe in &recipes {
+        let name = recipe.get("name").and_then(|v| v.as_str()).unwrap_or("Unnamed");
+        let domain = recipe.get("domain").and_then(|v| v.as_str()).unwrap_or("—");
+        let hit_rate = recipe.get("hit_rate").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        let hit_pill = if hit_rate >= 0.7 {
+            format!("<span class=\"sb-pill sb-pill--success\">{:.0}% hit</span>", hit_rate * 100.0)
+        } else if hit_rate >= 0.4 {
+            format!("<span class=\"sb-pill sb-pill--warning\">{:.0}% hit</span>", hit_rate * 100.0)
+        } else {
+            format!("<span class=\"sb-pill sb-pill--danger\">{:.0}% hit</span>", hit_rate * 100.0)
+        };
+        recipe_cards.push_str(&format!(
+            r#"<div class="sb-card"><div class="sb-card-header"><h3 class="sb-card-title">{name}</h3>{hit_pill}</div>
+  <div class="sb-card-body"><span class="sb-pill sb-pill--info">{domain}</span></div></div>"#,
+            name = html_escape::encode_text(name),
+            domain = html_escape::encode_text(domain),
+        ));
+    }
+    if recipe_cards.is_empty() {
+        recipe_cards = r#"<div class="sb-empty"><div class="sb-empty-icon">&#x1F4DC;</div>
+<p>No recipes yet.</p><p class="sb-text-muted">Recipes are saved automations that replay at zero LLM cost. They're created automatically when the hit rate is high enough.</p></div>"#.to_string();
+    }
+
+    let body = format!(
+        r#"<p class="sb-text-muted" style="margin-bottom:1rem">Recipes = deterministic replay at $0.001/task (vs $0.01+ with LLM). 70% hit rate target.</p>
+<div class="sb-card-grid">{recipe_cards}</div>"#,
+    );
+    Html(hub_page("Recipes", &body))
+}
+
+// ---------------------------------------------------------------------------
+// GET /oauth3 — token management
+// ---------------------------------------------------------------------------
+async fn oauth3_page() -> Html<String> {
+    let oauth3_json = match reqwest::Client::new()
+        .get("http://127.0.0.1:8888/api/v1/oauth3/tokens")
+        .timeout(std::time::Duration::from_secs(2))
+        .send()
+        .await
+    {
+        Ok(resp) => resp.text().await.unwrap_or_default(),
+        Err(_) => String::new(),
+    };
+    let tokens: Vec<serde_json::Value> = serde_json::from_str::<serde_json::Value>(&oauth3_json)
+        .ok()
+        .and_then(|v| v.get("tokens").cloned())
+        .and_then(|v| serde_json::from_value(v).ok())
+        .unwrap_or_default();
+
+    let mut token_rows = String::new();
+    for token in &tokens {
+        let scope = token.get("scope").and_then(|v| v.as_str()).unwrap_or("—");
+        let app = token.get("app_id").and_then(|v| v.as_str()).unwrap_or("—");
+        let expires = token.get("expires_at").and_then(|v| v.as_str()).unwrap_or("—");
+        let status = token.get("revoked").and_then(|v| v.as_bool()).unwrap_or(false);
+        let pill = if status {
+            "<span class=\"sb-pill sb-pill--danger\">Revoked</span>"
+        } else {
+            "<span class=\"sb-pill sb-pill--success\">Active</span>"
+        };
+        token_rows.push_str(&format!(
+            "<tr><td>{}</td><td><code>{}</code></td><td>{}</td><td>{}</td></tr>",
+            html_escape::encode_text(app),
+            html_escape::encode_text(scope),
+            html_escape::encode_text(expires),
+            pill,
+        ));
+    }
+    if token_rows.is_empty() {
+        token_rows = "<tr><td colspan=\"4\" class=\"sb-text-muted\">No OAuth3 tokens. Tokens are created when apps request scoped access to your data.</td></tr>".to_string();
+    }
+
+    let body = format!(
+        r#"<p class="sb-text-muted" style="margin-bottom:1rem">OAuth3 tokens are scoped, time-limited, and revocable. Each app gets only the permissions it needs.</p>
+<h2 class="sb-heading">Active Tokens</h2>
+<div class="sb-card">
+  <table class="sb-table"><thead><tr><th>App</th><th>Scope</th><th>Expires</th><th>Status</th></tr></thead>
+  <tbody>{token_rows}</tbody></table>
+</div>
+<h2 class="sb-heading" style="margin-top:1.5rem">Register New Token</h2>
+<div class="sb-card"><p class="sb-text-muted">Use <code>POST /api/v1/oauth3/register</code> to create a new scoped token for an app.</p></div>"#,
+    );
+    Html(hub_page("OAuth3 Tokens", &body))
+}
+
+// ---------------------------------------------------------------------------
+// GET /esign — e-signatures + approval queue
+// ---------------------------------------------------------------------------
+async fn esign_page(State(state): State<AppState>) -> Html<String> {
+    let notifications = state.notifications.read().clone();
+    let pending: Vec<_> = notifications.iter().filter(|n| n.level == "signoff" || n.level == "L3" || n.level == "L4" || n.level == "L5").collect();
+
+    let mut pending_rows = String::new();
+    for note in &pending {
+        let level_pill = match note.level.as_str() {
+            "L3" => "<span class=\"sb-pill sb-pill--warning\">L3</span>",
+            "L4" => "<span class=\"sb-pill sb-pill--danger\">L4</span>",
+            "L5" => "<span class=\"sb-pill sb-pill--danger\">L5 Critical</span>",
+            _ => "<span class=\"sb-pill sb-pill--warning\">Signoff</span>",
+        };
+        pending_rows.push_str(&format!(
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>\
+             <button class=\"sb-btn sb-btn--sm sb-btn--primary\">Approve</button> \
+             <button class=\"sb-btn sb-btn--sm\">Reject</button></td></tr>",
+            level_pill,
+            html_escape::encode_text(&note.message),
+            html_escape::encode_text(&note.created_at),
+        ));
+    }
+    if pending_rows.is_empty() {
+        pending_rows = "<tr><td colspan=\"4\" class=\"sb-text-muted\">No pending approvals. L3+ actions require human signoff before execution.</td></tr>".to_string();
+    }
+
+    let body = format!(
+        r#"<p class="sb-text-muted" style="margin-bottom:1rem">FDA Part 11 compliant electronic signatures. L3+ actions require human approval. Timeout = auto-DENY (never auto-approve).</p>
+<h2 class="sb-heading">Pending Approvals</h2>
+<div class="sb-card">
+  <table class="sb-table"><thead><tr><th>Level</th><th>Action</th><th>Time</th><th>Decision</th></tr></thead>
+  <tbody>{pending_rows}</tbody></table>
+</div>
+
+<h2 class="sb-heading" style="margin-top:1.5rem">Tunnel Access Consent</h2>
+<div class="sb-card">
+  <p class="sb-text-muted">Remote access requires FDA Part 11 signed consent. All remote actions are fully audited.</p>
+  <p style="margin-top:0.5rem"><a href="/settings" class="sb-btn sb-btn--sm">Configure Tunnel</a></p>
+</div>
+
+<h2 class="sb-heading" style="margin-top:1.5rem">Signature History</h2>
+<div class="sb-card"><p class="sb-text-muted">View past approvals and rejections via <code>GET /api/v1/evidence</code> (filtered by type=signoff).</p>
+<p style="margin-top:0.5rem"><a href="/evidence" class="sb-btn sb-btn--sm">View Evidence Chain</a></p></div>"#,
+    );
+    Html(hub_page("E-Signatures", &body))
+}
+
+// ---------------------------------------------------------------------------
+// GET /wiki-hub — captured knowledge
+// ---------------------------------------------------------------------------
+async fn wiki_page() -> Html<String> {
+    let wiki_json = match reqwest::Client::new()
+        .get("http://127.0.0.1:8888/api/v1/wiki/stats")
+        .timeout(std::time::Duration::from_secs(2))
+        .send()
+        .await
+    {
+        Ok(resp) => resp.text().await.unwrap_or_default(),
+        Err(_) => String::new(),
+    };
+    let stats: serde_json::Value = serde_json::from_str(&wiki_json).unwrap_or(serde_json::json!({}));
+    let snapshot_count = stats.get("snapshot_count").and_then(|v| v.as_u64()).unwrap_or(0);
+    let domain_count = stats.get("domain_count").and_then(|v| v.as_u64()).unwrap_or(0);
+
+    let body = format!(
+        r#"<div class="sb-flex" style="gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem">
+  <div class="sb-card" style="flex:1;min-width:200px;text-align:center">
+    <div class="sb-kicker">Snapshots</div>
+    <div style="font-size:1.8rem;font-weight:700">{snapshot_count}</div>
+  </div>
+  <div class="sb-card" style="flex:1;min-width:200px;text-align:center">
+    <div class="sb-kicker">Domains</div>
+    <div style="font-size:1.8rem;font-weight:700">{domain_count}</div>
+  </div>
+</div>
+
+<h2 class="sb-heading">Prime Wiki Snapshots</h2>
+<div class="sb-card">
+  <p class="sb-text-muted">Every page navigation creates a Prime Wiki snapshot: compressed, agent-readable, replayable at $0.</p>
+  <p style="margin-top:0.5rem">Formats: <code>.prime-snapshot.md</code> (Mermaid) + <code>.pzwb</code> (PZip Web Binary)</p>
+</div>
+
+<h2 class="sb-heading" style="margin-top:1.5rem">Stillwater Codecs</h2>
+<div class="sb-card">
+  <table class="sb-table"><thead><tr><th>Codec</th><th>Format</th><th>Use Case</th></tr></thead>
+  <tbody>
+    <tr><td><strong>semantic-html</strong></td><td>PZSW</td><td>Structured HTML pages</td></tr>
+    <tr><td><strong>table-html</strong></td><td>PZSW</td><td>Data tables + forms</td></tr>
+    <tr><td><strong>json-api</strong></td><td>PZJ0</td><td>API responses</td></tr>
+    <tr><td><strong>rss-xml</strong></td><td>PZSW</td><td>RSS/Atom feeds</td></tr>
+    <tr><td><strong>jinja-template</strong></td><td>PZSW</td><td>HTML templates</td></tr>
+    <tr><td><strong>spa-shell</strong></td><td>PZSW</td><td>Single-page apps</td></tr>
+  </tbody></table>
+</div>"#,
+    );
+    Html(hub_page("Wiki", &body))
+}
+
+// ---------------------------------------------------------------------------
+// GET /settings — global configuration
+// ---------------------------------------------------------------------------
+async fn settings_page(State(state): State<AppState>) -> Html<String> {
+    let theme = state.theme.read().clone();
+    let cloud = state.cloud_config.read().clone();
+    let uptime = state.uptime_seconds();
+
+    let cloud_status = if let Some(ref config) = cloud {
+        format!(
+            "<span class=\"sb-pill sb-pill--success\">Connected</span> — {} ({})",
+            html_escape::encode_text(&config.user_email),
+            if config.paid_user { "Paid" } else { "Free" },
+        )
+    } else {
+        "<span class=\"sb-pill sb-pill--warning\">Not Connected</span> — <a href=\"https://solaceagi.com/dashboard\">Sign in to connect</a>".to_string()
+    };
+
+    let body = format!(
+        r#"<h2 class="sb-heading">Appearance</h2>
+<div class="sb-card">
+  <p>Theme: <strong>{theme}</strong></p>
+  <div class="sb-theme-group" style="margin-top:0.5rem">
+    <button class="sb-theme-btn {dark_active}" onclick="fetch('/api/v1/settings/theme',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{theme:'dark'}})}}).then(()=>location.reload())">Dark</button>
+    <button class="sb-theme-btn {light_active}" onclick="fetch('/api/v1/settings/theme',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{theme:'light'}})}}).then(()=>location.reload())">Light</button>
+  </div>
+</div>
+
+<h2 class="sb-heading" style="margin-top:1.5rem">Cloud Connection</h2>
+<div class="sb-card"><p>{cloud_status}</p></div>
+
+<h2 class="sb-heading" style="margin-top:1.5rem">Tunnel &amp; Remote Access</h2>
+<div class="sb-card">
+  <p class="sb-text-muted">Allow remote control from solaceagi.com for demos, support, or team collaboration.</p>
+  <p style="margin-top:0.5rem">Status: <span class="sb-pill sb-pill--info">Not Connected</span></p>
+  <p style="margin-top:0.5rem" class="sb-text-muted">Requires FDA Part 11 signed consent. All remote actions audited.</p>
+</div>
+
+<h2 class="sb-heading" style="margin-top:1.5rem">Runtime Info</h2>
+<div class="sb-card">
+  <table class="sb-table">
+    <tr><td><strong>Platform</strong></td><td>{platform}</td></tr>
+    <tr><td><strong>Port</strong></td><td>8888 (fixed)</td></tr>
+    <tr><td><strong>Uptime</strong></td><td>{hours}h {mins}m</td></tr>
+    <tr><td><strong>Data Dir</strong></td><td><code>~/.solace/</code></td></tr>
+    <tr><td><strong>Version</strong></td><td>Solace Runtime v0.1.0</td></tr>
+  </table>
+</div>
+
+<h2 class="sb-heading" style="margin-top:1.5rem">Export / Import</h2>
+<div class="sb-card">
+  <p class="sb-text-muted">Export your settings, apps, and evidence as a portable bundle.</p>
+  <p style="margin-top:0.5rem">
+    <a href="/api/v1/cloud/sync/export" class="sb-btn sb-btn--sm">Export Settings</a>
+    <a href="/api/v1/cloud/sync/import" class="sb-btn sb-btn--sm">Import Settings</a>
+  </p>
+</div>
+
+<h2 class="sb-heading" style="margin-top:1.5rem">Developer</h2>
+<div class="sb-card">
+  <p><a href="/api/v1/system/status">System Status API</a> | <a href="/api/v1/health">Health</a> | <a href="/styleguide">Styleguide</a></p>
+  <p style="margin-top:0.5rem" class="sb-text-muted">MCP: <code>solace-runtime --mcp</code> (stdio, 8 tools + 2 resources)</p>
+</div>"#,
+        theme = html_escape::encode_text(&theme),
+        dark_active = if theme == "dark" { "sb-theme-btn--active" } else { "" },
+        light_active = if theme == "light" { "sb-theme-btn--active" } else { "" },
+        platform = std::env::consts::OS,
+        hours = uptime / 3600,
+        mins = (uptime % 3600) / 60,
+    );
+    Html(hub_page("Settings", &body))
+}
+
 /// Map a domain name to its icon path in /icons/apps/.
 /// Tries common names: domain root, subdomain keyword, known brands.
 fn domain_icon_path(domain: &str) -> String {
@@ -929,10 +1433,16 @@ fn hub_page(title: &str, body_content: &str) -> String {
     <span>Solace Hub</span>
   </div>
   <div class="sb-topbar-spacer"></div>
+  <a href="/dashboard" style="color:var(--sb-text-muted);font-size:0.85rem">Dashboard</a>
   <a href="/domains" style="color:var(--sb-text-muted);font-size:0.85rem">Domains</a>
+  <a href="/appstore" style="color:var(--sb-text-muted);font-size:0.85rem">App Store</a>
+  <a href="/llms" style="color:var(--sb-text-muted);font-size:0.85rem">LLMs</a>
   <a href="/evidence" style="color:var(--sb-text-muted);font-size:0.85rem">Evidence</a>
-  <a href="/styleguide" style="color:var(--sb-text-muted);font-size:0.85rem">Styleguide</a>
-  <a href="/health" style="color:var(--sb-text-muted);font-size:0.85rem">Health</a>
+  <a href="/budget" style="color:var(--sb-text-muted);font-size:0.85rem">Budget</a>
+  <a href="/recipes" style="color:var(--sb-text-muted);font-size:0.85rem">Recipes</a>
+  <a href="/oauth3" style="color:var(--sb-text-muted);font-size:0.85rem">OAuth3</a>
+  <a href="/esign" style="color:var(--sb-text-muted);font-size:0.85rem">E-Sign</a>
+  <a href="/settings" style="color:var(--sb-text-muted);font-size:0.85rem">Settings</a>
 </header>
 <main style="max-width:1100px;margin:1.5rem auto;padding:0 1.5rem">
 <h1 class="sb-heading" style="font-size:1.4rem;margin-bottom:1rem">{title}</h1>
