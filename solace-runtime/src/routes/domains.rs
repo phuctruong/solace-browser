@@ -99,11 +99,24 @@ fn save_domain_config(domain: &str, policy: &SessionPolicy) -> Result<(), String
 
 async fn list_domains() -> Json<serde_json::Value> {
     let apps = crate::app_engine::scan_installed_apps();
-    let mut counts = BTreeMap::new();
-    for app in apps {
-        *counts.entry(app.domain).or_insert(0usize) += 1;
+    let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+    for app in &apps {
+        *counts.entry(app.domain.clone()).or_insert(0) += 1;
     }
-    Json(json!({"domains": counts}))
+    // Return both the simple counts map and a sidebar-friendly items array
+    let items: Vec<serde_json::Value> = counts
+        .iter()
+        .map(|(domain, count)| {
+            json!({
+                "id": domain,
+                "host": domain,
+                "label": domain,
+                "url": format!("http://127.0.0.1:8888/domains/{}", domain),
+                "app_count": count,
+            })
+        })
+        .collect();
+    Json(json!({"domains": counts, "items": items, "total": apps.len()}))
 }
 
 async fn domain_detail(

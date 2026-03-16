@@ -326,7 +326,7 @@ async fn domains_page() -> Html<String> {
         domain_map.entry(app.domain.clone()).or_default().push(app);
     }
 
-    let mut rows = String::new();
+    let mut cards = String::new();
     for (domain, domain_apps) in &domain_map {
         let count = domain_apps.len();
         let last_activity = domain_apps
@@ -336,23 +336,43 @@ async fn domains_page() -> Html<String> {
                 latest_run_time(&dir)
             })
             .max()
-            .unwrap_or_else(|| "—".to_string());
-        rows.push_str(&format!(
-            "<tr><td><a href=\"/domains/{}\">{}</a></td><td>{}</td><td>{}</td></tr>",
-            html_escape::encode_text(domain),
-            html_escape::encode_text(domain),
-            count,
-            html_escape::encode_text(&last_activity),
+            .unwrap_or_else(|| "Never".to_string());
+        let icon = domain_icon_path(domain);
+        let app_names: Vec<_> = domain_apps.iter().map(|a| a.name.as_str()).take(3).collect();
+        let app_preview = app_names.join(", ");
+        let more = if domain_apps.len() > 3 {
+            format!(" +{} more", domain_apps.len() - 3)
+        } else {
+            String::new()
+        };
+        cards.push_str(&format!(
+            r#"<a href="/domains/{domain_enc}" class="sb-card" style="text-decoration:none;display:block">
+  <div class="sb-card-header">
+    <h3 class="sb-card-title sb-app-name"><img class="sb-app-icon" src="{icon}" alt="" onerror="this.style.display='none'">{domain_disp}</h3>
+    <span class="sb-pill sb-pill--info">{count} apps</span>
+  </div>
+  <div class="sb-card-body">
+    <p class="sb-text-muted">{app_preview}{more}</p>
+    <p class="sb-timestamp">Last: {last}</p>
+  </div>
+</a>"#,
+            domain_enc = html_escape::encode_text(domain),
+            domain_disp = html_escape::encode_text(domain),
+            icon = html_escape::encode_text(&icon),
+            app_preview = html_escape::encode_text(&app_preview),
+            last = html_escape::encode_text(&last_activity),
         ));
     }
 
-    if rows.is_empty() {
-        rows = "<tr><td colspan=\"3\">No domains found. Install apps to get started.</td></tr>"
-            .to_string();
+    if cards.is_empty() {
+        cards = r#"<div class="sb-empty"><p>No domains found. Install apps to get started.</p><p style="margin-top:0.5rem"><a href="/appstore" class="sb-btn sb-btn--sm sb-btn--primary">Browse App Store</a></p></div>"#.to_string();
     }
 
     let body = format!(
-        "<table><thead><tr><th>Domain</th><th>Apps</th><th>Last Activity</th></tr></thead><tbody>{rows}</tbody></table>"
+        r#"<p class="sb-text-muted" style="margin-bottom:1rem">{total} domains with {app_total} total apps. Each domain gets 1 browser tab.</p>
+<div class="sb-card-grid">{cards}</div>"#,
+        total = domain_map.len(),
+        app_total = apps.len(),
     );
     Html(hub_page("Domains", &body))
 }
