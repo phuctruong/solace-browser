@@ -92,10 +92,11 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         } else {
             &app.schedule
         };
+        let icon_path = domain_icon_path(&app.domain);
         app_cards.push_str(&format!(
             r#"<div class="sb-card">
   <div class="sb-card-header">
-    <h3 class="sb-card-title"><a href="/apps/{id}">{name}</a></h3>
+    <h3 class="sb-card-title sb-app-name"><img class="sb-app-icon" src="{icon}" alt="" onerror="this.style.display='none'"><a href="/apps/{id}">{name}</a></h3>
     <span class="sb-pill sb-pill--info">{domain}</span>
   </div>
   <div class="sb-card-body">
@@ -107,6 +108,7 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
     </div>
   </div>
 </div>"#,
+            icon = html_escape::encode_text(&icon_path),
             id = html_escape::encode_text(&app.id),
             name = html_escape::encode_text(&app.name),
             domain = html_escape::encode_text(&app.domain),
@@ -742,6 +744,59 @@ async fn evidence_page() -> Html<String> {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/// Map a domain name to its icon path in /icons/apps/.
+/// Tries common names: domain root, subdomain keyword, known brands.
+fn domain_icon_path(domain: &str) -> String {
+    // Map domain → icon filename (order: exact match, root domain, keyword)
+    let mappings: &[(&str, &str)] = &[
+        ("google.com", "google-search.png"),
+        ("news.google.com", "google-search.png"),
+        ("mail.google.com", "gmail.jpg"),
+        ("drive.google.com", "google-drive.png"),
+        ("calendar.google.com", "google-calendar.png"),
+        ("news.ycombinator.com", "hackernews.png"),
+        ("reddit.com", "reddit.jpg"),
+        ("gmail.com", "gmail.jpg"),
+        ("github.com", "github.png"),
+        ("amazon.com", "amazon.png"),
+        ("web.whatsapp.com", "whats-app.jpg"),
+        ("solaceagi.com", "/icons/yinyang-logo.png"),
+        ("multi-site", "/icons/orchestration.png"),
+    ];
+
+    for (d, icon) in mappings {
+        if domain == *d {
+            if icon.starts_with('/') {
+                return icon.to_string();
+            }
+            return format!("/icons/apps/{}", icon);
+        }
+    }
+
+    // Try the root domain (strip subdomain) — e.g. "portal.example.com" → "example"
+    let parts: Vec<&str> = domain.split('.').collect();
+    let root = if parts.len() >= 2 {
+        parts[parts.len() - 2]
+    } else {
+        parts[0]
+    };
+
+    // Try common extensions
+    for ext in &["png", "jpg", "svg"] {
+        let candidate = format!("/icons/apps/{}.{}", root, ext);
+        let fs_path = format!(
+            "/home/phuc/projects/solace-browser/solace-hub/src/icons/apps/{}.{}",
+            root, ext
+        );
+        if std::path::Path::new(&fs_path).exists() {
+            return candidate;
+        }
+    }
+
+    // Fallback: yinyang logo
+    "/icons/yinyang-logo.png".to_string()
+}
 
 /// CSS class for event type rows.
 fn event_css_class(event_type: &crate::event_log::EventType) -> &'static str {
