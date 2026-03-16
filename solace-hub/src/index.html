@@ -290,7 +290,7 @@
     fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({allow_duplicate:true})})
       .then(function(r){return r.json();})
       .then(function(d) {
-        if (d.session_id || d.deduped) {
+        if (d.session || d.session_id || d.deduped) {
           toast('Solace Browser launched!', 'success');
         } else if (d.error) {
           toast('Launch error: ' + d.error, 'danger');
