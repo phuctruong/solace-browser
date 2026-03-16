@@ -107,11 +107,9 @@
       <div id="llm-account" style="display:none" class="sb-mt-md"></div>
     </div>
 
-    <!-- Launch Button (centered) -->
-    <div class="sb-mt-md" style="text-align:center">
-      <button class="sb-btn sb-btn--primary hub-launch" id="btn-launch" onclick="launchBrowser()">
-        Launch Solace Browser
-      </button>
+    <!-- Launch Area -->
+    <div class="sb-mt-md" style="text-align:center" id="launch-area">
+      <p class="sb-text-muted" id="launch-msg">Solace Browser requires an LLM power source. Set up one above.</p>
     </div>
 
     <!-- System Status -->
@@ -244,7 +242,7 @@
           auth.textContent = 'Setup required';
           auth.className = 'sb-pill sb-pill--warning';
           hasLLM = false;
-          $('btn-launch').disabled = true;
+          
         }
       });
 
@@ -271,7 +269,7 @@
               '<div class="sb-text-muted sb-mt-md" style="font-size:0.8rem">Or install claude, codex, or gemini CLI on your PATH</div>' +
               '</div>';
             $('llm-card').classList.add('hub-blocked');
-            $('btn-launch').disabled = true;
+            
           }
         }, 500);
       }, 1200);
@@ -325,7 +323,7 @@
         }).then(function(){
           toast('BYOK key saved!', 'success');
           $('src-byok-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
-          $('btn-launch').disabled = false;
+          $('launch-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch" onclick="launchBrowser()">Launch Solace Browser</button>';
           ($('topbar-user')||{}).textContent = 'BYOK Active';
           ($('topbar-user')||{}).className = 'sb-pill sb-pill--success';
         });
@@ -398,7 +396,7 @@
               $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + verified + ' connected</span>';
               $('src-local-action').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
               hasLLM = true;
-              $('btn-launch').disabled = false;
+              $('launch-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch" onclick="launchBrowser()">Launch Solace Browser</button>';
               ($('topbar-user')||{}).textContent = verified + ' Local LLMs';
               ($('topbar-user')||{}).className = 'sb-pill sb-pill--success';
             } else {
