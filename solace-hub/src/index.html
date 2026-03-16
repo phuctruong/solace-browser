@@ -167,6 +167,8 @@
 
   // ─── SCAN + GATE LOGIC ───
   var hasLLM = false;
+  var savedCLIs = null;
+  try { savedCLIs = JSON.parse(localStorage.getItem('solace_validated_clis')); } catch(e) {}
 
   function runScan() {
     get('/api/v1/agents').then(function(d) {
@@ -180,8 +182,16 @@
       $('scan-text').textContent = installed.length + ' AI tools found!';
       $('scan-text').style.color = installed.length > 0 ? 'var(--sb-success)' : 'var(--sb-danger)';
 
-      // Source 1: Local CLI — just show count, don't connect yet
-      if (installed.length > 0) {
+      // Source 1: Local CLI — restore if previously validated, else show Connect
+      if (savedCLIs && savedCLIs.count > 0) {
+        // Previously validated — restore state
+        $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + savedCLIs.count + ' connected</span>';
+        $('src-local-action').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto"> <a href="#" onclick="connectCLIs();return false" style="font-size:0.75rem;color:var(--sb-text-muted)">rerun</a>';
+        $('cli-details-row').style.display = '';
+        $('cli-models-area').innerHTML = '<div class="hub-llm-chips">' + savedCLIs.chips + '</div>';
+        hasLLM = true;
+        $('launch-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch" onclick="launchBrowser()">Launch Solace Browser</button>';
+      } else if (installed.length > 0) {
         $('src-local').innerHTML = '<span class="sb-pill sb-pill--info">' + installed.length + ' found on PATH</span>';
       } else {
         $('src-local').innerHTML = '<span class="sb-pill sb-pill--danger">✗ None found</span>';
@@ -285,11 +295,15 @@
     toast('Launching Solace Browser...', 'success');
     $('dot-sidebar').className = 'sb-topbar-dot sb-topbar-dot--on';
     // Launch the actual browser binary
-    fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({})})
+    fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({allow_duplicate:true})})
       .then(function(r){return r.json();})
       .then(function(d) {
-        if (d.session_id) toast('Browser launched!', 'success');
-        else toast(d.error || 'Launch failed', 'danger');
+        if (d.session_id || d.deduped) {
+          toast('Solace Browser launched!', 'success');
+          $('dot-sidebar').className = 'sb-topbar-dot sb-topbar-dot--on';
+        } else if (d.error) {
+          toast(d.error, 'danger');
+        }
       })
       .catch(function() { toast('Browser launch API not available', 'warning'); });
   };
@@ -394,9 +408,12 @@
             // All done
             if (verified > 0) {
               $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + verified + ' connected</span>';
-              $('src-local-action').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
+              $('src-local-action').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto"> <a href="#" onclick="connectCLIs();return false" style="font-size:0.75rem;color:var(--sb-text-muted)">rerun</a>';
               hasLLM = true;
               $('launch-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch" onclick="launchBrowser()">Launch Solace Browser</button>';
+              // Persist validated state
+              var chipsHTML = $('cli-models-area').innerHTML;
+              try { localStorage.setItem('solace_validated_clis', JSON.stringify({count:verified, chips:chipsHTML})); } catch(e) {}
               ($('topbar-user')||{}).textContent = verified + ' Local LLMs';
               ($('topbar-user')||{}).className = 'sb-pill sb-pill--success';
             } else {
