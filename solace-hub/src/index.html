@@ -34,9 +34,6 @@
     <span>Solace Hub</span>
   </div>
   <div class="sb-topbar-spacer"></div>
-  <span class="sb-pill" id="topbar-auth"></span>
-  <button class="sb-btn sb-btn--sm" id="topbar-signin" onclick="signIn()" style="display:none">Sign In</button>
-  <span id="topbar-user" style="display:none;font-size:0.85rem;color:var(--sb-text-muted)"></span>
   <div class="sb-theme-group">
     <button class="sb-theme-btn sb-theme-btn--active" data-theme="dark">Dark</button>
     <button class="sb-theme-btn" data-theme="light">Light</button>
@@ -47,6 +44,7 @@
       <img src="/icons/lang/globe-hover.png" alt="" class="sb-lang-icon sb-lang-icon--hover">
     </button>
     <div class="sb-lang-menu" id="languageMenu" role="menu" hidden>
+
       <a href="#" role="menuitem" aria-current="page">English</a>
       <a href="#" role="menuitem">Tiếng Việt</a><a href="#" role="menuitem">日本語</a>
       <a href="#" role="menuitem">한국어</a><a href="#" role="menuitem">中文</a>
@@ -54,6 +52,8 @@
       <a href="#" role="menuitem">Deutsch</a>
     </div>
   </div>
+  <span id="topbar-user" style="display:none;font-size:0.85rem;color:var(--sb-text-muted)"></span>
+  <button class="sb-btn sb-btn--sm" id="topbar-signin" onclick="signIn()" style="display:none">Sign In</button>
 </header>
 
 <div class="hub-center">
@@ -93,13 +93,13 @@
           </tr>
           <tr>
             <td>3</td>
-            <td><strong>Local CLI</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Auto-detected on PATH</span></td>
-            <td id="src-local"><span class="sb-pill sb-pill--warning">Checking...</span></td>
-            <td id="src-local-gif"></td>
+            <td><strong>Local CLI</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Auto-detect AI tools on PATH</span></td>
+            <td id="src-local"><span class="sb-pill sb-pill--warning">Not connected</span></td>
+            <td id="src-local-action"><button class="sb-btn sb-btn--sm" onclick="connectCLIs()">Connect CLIs</button></td>
           </tr>
           <tr id="cli-details-row" style="display:none">
             <td></td>
-            <td colspan="3" id="llm-chips" style="padding:0.25rem 0"></td>
+            <td colspan="3" id="cli-models-area" style="padding:0.5rem 0"></td>
           </tr>
         </tbody>
       </table>
@@ -181,61 +181,16 @@
       $('scan-text').textContent = installed.length + ' AI tools found!';
       $('scan-text').style.color = installed.length > 0 ? 'var(--sb-success)' : 'var(--sb-danger)';
 
-      // Source 1: Local CLI status + yinyang gif + chips row
-      var yinyangGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto;vertical-align:middle">';
+      // Source 1: Local CLI — just show count, don't connect yet
       if (installed.length > 0) {
-        $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + installed.length + ' auto-detected</span>';
-        $('src-local-gif').innerHTML = yinyangGif;
-        // Show chips in indented row below
-        var chips = '';
-        installed.forEach(function(a) {
-          chips += '<span class="hub-llm-chip">✓ ' + esc(a.id) + '</span>';
-        });
-        $('llm-chips').innerHTML = '<div class="hub-llm-chips">' + chips + '</div>';
-        $('cli-details-row').style.display = '';
-
-        // Async validation — ping DEFAULT model per CLI, show results live
-        var validateArea = document.createElement('div');
-        validateArea.className = 'sb-mt-md';
-        validateArea.id = 'cli-validate';
-        validateArea.innerHTML = '<small class="sb-text-muted">Validating CLIs...</small>';
-        $('llm-chips').appendChild(validateArea);
-
-        var validateHTML = '<table style="width:100%;font-size:0.8rem;border-collapse:collapse">' +
-          '<tr style="color:var(--sb-text-muted)"><th style="text-align:left;padding:3px 8px">CLI</th><th style="text-align:left;padding:3px 8px">Models</th><th style="text-align:left;padding:3px 8px">Status</th></tr>';
-        installed.forEach(function(a) {
-          var models = (a.models||[]).map(function(m){return m.replace('claude-','').replace('gpt-','').replace('-20251001','');}).join(', ');
-          validateHTML += '<tr id="vrow-'+esc(a.id)+'"><td style="padding:3px 8px"><strong>'+esc(a.id)+'</strong></td><td style="padding:3px 8px;font-family:var(--sb-font-mono);font-size:0.75rem">'+esc(models)+'</td><td style="padding:3px 8px" id="vstatus-'+esc(a.id)+'"><span class="sb-pill sb-pill--warning" style="font-size:0.65rem">⏳ checking</span></td></tr>';
-        });
-        validateHTML += '</table>';
-        validateArea.innerHTML = validateHTML;
-
-        // Ping each CLI with default model (one call per CLI, not per model)
-        installed.forEach(function(a) {
-          fetch('/api/v1/agents/generate', {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({agent_id:a.id, prompt:'respond with ok', timeout:15})
-          }).then(function(r){return r.json();}).then(function(d) {
-            var cell = $('vstatus-'+a.id);
-            if (cell) {
-              if (d.response || d.output || d.text) {
-                cell.innerHTML = '<span class="sb-pill sb-pill--success" style="font-size:0.65rem">✓ verified</span>';
-              } else if (d.error) {
-                cell.innerHTML = '<span class="sb-pill sb-pill--danger" style="font-size:0.65rem">✗ '+esc(d.error).substring(0,30)+'</span>';
-              }
-            }
-          }).catch(function() {
-            var cell = $('vstatus-'+a.id);
-            if (cell) cell.innerHTML = '<span class="sb-pill sb-pill--danger" style="font-size:0.65rem">✗ timeout</span>';
-          });
-        });
+        $('src-local').innerHTML = '<span class="sb-pill sb-pill--info">' + installed.length + ' found on PATH</span>';
       } else {
         $('src-local').innerHTML = '<span class="sb-pill sb-pill--danger">✗ None found</span>';
-        $('src-local-gif').innerHTML = '';
+        $('src-local-action').innerHTML = '<span class="sb-text-muted" style="font-size:0.8rem">Install claude, codex, or gemini</span>';
       }
 
       // Auth pill + account status + remote
-      var auth = $('topbar-auth');
+      var auth = ($('topbar-user')||{});
       var acct = $('llm-account');
       // Source 2 + 3: BYOK + Managed status
       get('/api/v1/cloud/status').then(function(c) {
@@ -282,16 +237,13 @@
           }
           hasLLM = true;
         } else {
-          // Not signed in — show sign in button
+          // Not signed in — launch button stays disabled until CLI connected or BYOK set
           $('topbar-signin').style.display = 'inline-flex';
           $('topbar-user').style.display = 'none';
-          if (hasLLM) {
-            auth.textContent = installed.length + ' Local LLMs';
-            auth.className = 'sb-pill sb-pill--success';
-          } else {
-            auth.textContent = 'No LLM';
-            auth.className = 'sb-pill sb-pill--danger';
-          }
+          auth.textContent = 'Setup required';
+          auth.className = 'sb-pill sb-pill--warning';
+          hasLLM = false;
+          $('btn-launch').disabled = true;
         }
       });
 
@@ -373,8 +325,8 @@
           toast('BYOK key saved!', 'success');
           $('src-byok-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
           $('btn-launch').disabled = false;
-          $('topbar-auth').textContent = 'BYOK Active';
-          $('topbar-auth').className = 'sb-pill sb-pill--success';
+          ($('topbar-user')||{}).textContent = 'BYOK Active';
+          ($('topbar-user')||{}).className = 'sb-pill sb-pill--success';
         });
       } else if (key) {
         toast('Key too short', 'warning');
@@ -388,6 +340,75 @@
       if (e.key === 'Escape') { el.classList.remove('sb-editable--editing'); }
     });
   })();
+
+  // ─── Connect CLIs — user clicks button, we validate each CLI+model ───
+  window.connectCLIs = function() {
+    $('src-local-action').innerHTML = '<span class="sb-text-muted">Connecting...</span>';
+    $('src-local').innerHTML = '<span class="sb-pill sb-pill--warning">⏳ Connecting...</span>';
+    $('cli-details-row').style.display = '';
+
+    get('/api/v1/agents').then(function(d) {
+      var agents = (d.agents || []).filter(function(a){return a.installed;});
+      if (!agents.length) {
+        $('cli-models-area').innerHTML = '<span class="sb-text-muted">No CLIs found on PATH</span>';
+        return;
+      }
+
+      // Build model checklist with ⏳ status
+      var html = '';
+      agents.forEach(function(a) {
+        html += '<div style="margin-bottom:0.5rem"><strong>' + esc(a.id) + '</strong> <span id="cli-status-'+esc(a.id)+'" class="sb-pill sb-pill--warning" style="font-size:0.65rem">⏳ testing</span>';
+        html += '<div style="margin-left:1rem;margin-top:0.25rem">';
+        (a.models||[]).forEach(function(m) {
+          var short = m.replace('claude-','').replace('gpt-','').replace('-20251001','');
+          html += '<label style="display:inline-flex;align-items:center;gap:4px;margin-right:1rem;font-size:0.85rem;cursor:pointer">';
+          html += '<input type="checkbox" checked style="accent-color:var(--sb-accent)" data-cli="'+esc(a.id)+'" data-model="'+esc(m)+'">';
+          html += '<span class="sb-text-mono">' + esc(short) + '</span></label>';
+        });
+        html += '</div></div>';
+      });
+      $('cli-models-area').innerHTML = html;
+
+      // Validate each CLI (default model ping)
+      var verified = 0;
+      var total = agents.length;
+      agents.forEach(function(a) {
+        fetch('/api/v1/agents/generate', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({agent_id:a.id, prompt:'respond with ok', timeout:15})
+        }).then(function(r){return r.json();}).then(function(d) {
+          var cell = $('cli-status-'+a.id);
+          if (d.response || d.output || d.text) {
+            if (cell) cell.innerHTML = '✓ verified'; cell.className = 'sb-pill sb-pill--success';
+            cell.style.fontSize = '0.65rem';
+            verified++;
+          } else {
+            if (cell) cell.innerHTML = '✗ ' + esc((d.error||'failed').substring(0,30)); cell.className = 'sb-pill sb-pill--danger';
+            cell.style.fontSize = '0.65rem';
+          }
+        }).catch(function() {
+          var cell = $('cli-status-'+a.id);
+          if (cell) { cell.innerHTML = '✗ timeout'; cell.className = 'sb-pill sb-pill--danger'; cell.style.fontSize = '0.65rem'; }
+        }).finally(function() {
+          total--;
+          if (total <= 0) {
+            // All done
+            if (verified > 0) {
+              $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + verified + ' connected</span>';
+              $('src-local-action').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
+              hasLLM = true;
+              $('btn-launch').disabled = false;
+              ($('topbar-user')||{}).textContent = verified + ' Local LLMs';
+              ($('topbar-user')||{}).className = 'sb-pill sb-pill--success';
+            } else {
+              $('src-local').innerHTML = '<span class="sb-pill sb-pill--danger">✗ No working CLIs</span>';
+              $('src-local-action').innerHTML = '<button class="sb-btn sb-btn--sm" onclick="connectCLIs()">Retry</button>';
+            }
+          }
+        });
+      });
+    });
+  };
 
   window.promptBYOK = function() {
     var el = $('byok-editable');
