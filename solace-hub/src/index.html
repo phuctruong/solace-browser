@@ -77,19 +77,25 @@
             <td>1</td>
             <td><strong>Local CLI</strong><br><span class="sb-text-muted" style="font-size:0.8rem">claude, codex, gemini on PATH</span></td>
             <td id="src-local"><span class="sb-pill sb-pill--warning">Checking...</span></td>
-            <td></td>
+            <td id="src-local-gif"></td>
           </tr>
           <tr>
             <td>2</td>
             <td><strong>BYOK Key</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Bring your own Anthropic/OpenAI key</span></td>
-            <td id="src-byok"><span class="sb-pill sb-pill--warning">Not set</span></td>
-            <td><button class="sb-btn sb-btn--sm" onclick="promptBYOK()">Add Key</button></td>
+            <td id="src-byok">
+              <span class="sb-editable" data-field="byok_key" id="byok-editable">
+                <span class="sb-editable-display sb-text-muted">Not set — click to enter key</span>
+                <input class="sb-editable-input" id="byok-input" placeholder="sk-..." style="font-family:var(--sb-font-mono);width:200px">
+                <span class="sb-editable-pen" title="Edit"></span>
+              </span>
+            </td>
+            <td id="src-byok-gif"></td>
           </tr>
           <tr style="background:var(--sb-accent-soft)">
             <td>3</td>
             <td><strong>Managed LLM</strong> <span class="sb-pill sb-pill--info" style="font-size:0.65rem">Recommended</span><br><span class="sb-text-muted" style="font-size:0.8rem">No key needed · +47 uplifts · $8/mo</span></td>
             <td id="src-managed"><span class="sb-pill sb-pill--warning">Not signed in</span></td>
-            <td><button class="sb-btn sb-btn--sm" onclick="signIn()">Sign In</button></td>
+            <td id="src-managed-gif"><button class="sb-btn sb-btn--sm" onclick="signIn()">Sign In</button></td>
           </tr>
         </tbody>
       </table>
@@ -172,11 +178,14 @@
       $('scan-text').textContent = installed.length + ' AI tools found!';
       $('scan-text').style.color = installed.length > 0 ? 'var(--sb-success)' : 'var(--sb-danger)';
 
-      // Source 1: Local CLI status
+      // Source 1: Local CLI status + yinyang gif if active
+      var yinyangGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="width:24px;height:auto;vertical-align:middle">';
       if (installed.length > 0) {
         $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + installed.length + ' found</span>';
+        $('src-local-gif').innerHTML = yinyangGif;
       } else {
         $('src-local').innerHTML = '<span class="sb-pill sb-pill--danger">✗ None found</span>';
+        $('src-local-gif').innerHTML = '';
       }
 
       // Build LLM chips (compact, below table)
@@ -207,14 +216,18 @@
           $('topbar-user').textContent = email;
           $('topbar-signin').style.display = 'none';
 
+          var yGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="width:24px;height:auto;vertical-align:middle">';
+
           if (email === 'byok@local') {
             // BYOK key set
             $('src-byok').innerHTML = '<span class="sb-pill sb-pill--success">✓ Active</span>';
+            $('src-byok-gif').innerHTML = yGif;
             auth.textContent = 'BYOK Active';
             auth.className = 'sb-pill sb-pill--success';
           } else if (isPaid) {
             // Managed LLM
             $('src-managed').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + esc(email) + '</span>';
+            $('src-managed-gif').innerHTML = yGif;
             auth.textContent = 'Managed LLM';
             auth.className = 'sb-pill sb-pill--success';
             acct.style.display = 'block';
@@ -290,16 +303,58 @@
       .catch(function() { toast('Browser launch API not available', 'warning'); });
   };
 
-  // ─── BYOK prompt ───
+  // ─── BYOK inline edit ───
+  (function() {
+    var el = $('byok-editable');
+    if (!el) return;
+    var display = el.querySelector('.sb-editable-display');
+    var input = el.querySelector('.sb-editable-input');
+    var pen = el.querySelector('.sb-editable-pen');
+
+    function startEdit() {
+      el.classList.add('sb-editable--editing');
+      input.value = '';
+      input.focus();
+    }
+
+    display.addEventListener('click', startEdit);
+    pen.addEventListener('click', startEdit);
+
+    function saveKey() {
+      el.classList.remove('sb-editable--editing');
+      var key = input.value.trim();
+      if (key && key.length > 4) {
+        var masked = key.substring(0, 4) + '...' + key.substring(key.length - 4);
+        display.textContent = masked;
+        display.style.color = 'var(--sb-success)';
+        fetch('/api/v1/cloud/connect', {method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({api_key:key, user_email:'byok@local', device_id:'local', paid_user:false})
+        }).then(function(){
+          toast('BYOK key saved!', 'success');
+          $('src-byok-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="width:24px;height:auto">';
+          $('btn-launch').disabled = false;
+          $('topbar-auth').textContent = 'BYOK Active';
+          $('topbar-auth').className = 'sb-pill sb-pill--success';
+        });
+      } else if (key) {
+        toast('Key too short', 'warning');
+        display.textContent = 'Not set — click to enter key';
+      }
+    }
+
+    input.addEventListener('blur', saveKey);
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') input.blur();
+      if (e.key === 'Escape') { el.classList.remove('sb-editable--editing'); }
+    });
+  })();
+
   window.promptBYOK = function() {
-    var key = prompt('Enter your API key (Anthropic, OpenAI, or OpenRouter):');
-    if (key && key.trim()) {
-      fetch('/api/v1/cloud/connect', {method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({api_key:key.trim(), user_email:'byok@local', device_id:'local', paid_user:false})
-      }).then(function(){
-        toast('BYOK key saved! Refreshing...', 'success');
-        setTimeout(function(){ location.reload(); }, 1500);
-      });
+    var el = $('byok-editable');
+    if (el) {
+      el.classList.add('sb-editable--editing');
+      $('byok-input').value = '';
+      $('byok-input').focus();
     }
   };
 
