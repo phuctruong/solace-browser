@@ -69,19 +69,28 @@ pub async fn run_heartbeat(state: AppState) {
                     if status.is_success() {
                         consecutive_failures = 0;
                     } else if status.as_u16() == 401 {
-                        // API key revoked/expired → clear config (PROPAGATE node)
-                        tracing::warn!("heartbeat 401: API key revoked — clearing cloud config");
-                        *state.cloud_config.write() = None;
-                        let solace_home = crate::utils::solace_home();
-                        let _ = crate::config::clear_cloud_config(&solace_home);
-                        state.notifications.write().push(crate::state::Notification {
-                            id: uuid::Uuid::new_v4().to_string(),
-                            message: "Cloud access revoked. Sign in again at solaceagi.com"
-                                .to_string(),
-                            level: "error".to_string(),
-                            read: false,
-                            created_at: crate::utils::now_iso8601(),
-                        });
+                        // API key may be expired — don't clear immediately.
+                        // The bridge from solaceagi.com will re-send a fresh token.
+                        // Only clear after 3 consecutive 401s (15 min of failures).
+                        consecutive_failures += 1;
+                        tracing::warn!(
+                            failures = consecutive_failures,
+                            "heartbeat 401: token rejected — will clear after 3 consecutive failures"
+                        );
+                        if consecutive_failures >= 3 {
+                            tracing::error!("heartbeat: 3 consecutive 401s — clearing cloud config");
+                            *state.cloud_config.write() = None;
+                            let solace_home = crate::utils::solace_home();
+                            let _ = crate::config::clear_cloud_config(&solace_home);
+                            state.notifications.write().push(crate::state::Notification {
+                                id: uuid::Uuid::new_v4().to_string(),
+                                message: "Cloud access expired after multiple failures. Sign in again at solaceagi.com"
+                                    .to_string(),
+                                level: "error".to_string(),
+                                read: false,
+                                created_at: crate::utils::now_iso8601(),
+                            });
+                        }
                     } else {
                         consecutive_failures += 1;
                         tracing::warn!(
