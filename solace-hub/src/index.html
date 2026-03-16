@@ -299,6 +299,12 @@
   // ─── Launch Browser ───
   window.launchBrowser = function() {
     toast('Launching Solace Browser...', 'success');
+    // Clear stale sessions first so dedup doesn't block
+    get('/api/v1/browser/sessions').then(function(d) {
+      (d.sessions || []).forEach(function(s) {
+        fetch('/api/v1/browser/close/' + s.session_id, {method:'POST'}).catch(function(){});
+      });
+    }).catch(function(){});
     $('dot-sidebar').className = 'sb-topbar-dot sb-topbar-dot--on';
     fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({allow_duplicate:true})})
       .then(function(r){return r.json();})

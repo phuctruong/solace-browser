@@ -121,6 +121,8 @@ async fn launch_session(
                 .arg("--no-first-run")
                 .arg("--disable-session-crashed-bubble")
                 .arg("--disable-infobars")
+                .arg("--hide-crash-restore-bubble")
+                .arg("--no-default-browser-check")
                 .env("DISPLAY", std::env::var("DISPLAY").unwrap_or_else(|_| ":1".to_string()))
                 .spawn()
             {
