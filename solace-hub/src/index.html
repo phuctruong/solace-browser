@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solace Hub</title>
   <link rel="icon" href="/icons/yinyang-logo.png">
-  <link rel="stylesheet" href="/styleguide.css">
+  <link rel="stylesheet" href="http://localhost:8888/styleguide.css">
   <style>
     .hub-center { max-width:100%; margin:1rem 2rem; padding:0; }
     .hub-scan { text-align:center; padding:2rem 1rem; }
@@ -30,7 +30,7 @@
 <!-- TOP BAR -->
 <header class="sb-topbar">
   <div class="sb-topbar-brand">
-    <img src="/icons/yinyang-logo.png" alt="Solace">
+    <img src="icons/yinyang-logo.png" alt="Solace">
     <span>Solace Hub</span>
   </div>
   <div class="sb-topbar-spacer"></div>
@@ -40,8 +40,8 @@
   </div>
   <div class="sb-lang-switcher">
     <button class="sb-lang-toggle" id="languageToggle" aria-label="Language" aria-expanded="false" type="button">
-      <img src="/icons/lang/globe-default.png" alt="" class="sb-lang-icon sb-lang-icon--default">
-      <img src="/icons/lang/globe-hover.png" alt="" class="sb-lang-icon sb-lang-icon--hover">
+      <img src="icons/lang/globe-default.png" alt="" class="sb-lang-icon sb-lang-icon--default">
+      <img src="icons/lang/globe-hover.png" alt="" class="sb-lang-icon sb-lang-icon--hover">
     </button>
     <div class="sb-lang-menu" id="languageMenu" role="menu" hidden>
 
@@ -60,7 +60,7 @@
 
   <!-- PHASE 1: SCANNING -->
   <div id="scan-phase" class="hub-scan">
-    <img src="/media/droplet-logo-merge_3x_128px.gif" alt="Scanning..." id="scan-img">
+    <img src="media/droplet-logo-merge_3x_128px.gif" alt="Scanning..." id="scan-img">
     <div class="hub-scan-text" id="scan-text">Detecting local AI tools...</div>
   </div>
 
@@ -165,7 +165,8 @@
 <script>
 (function() {
   'use strict';
-  function get(p){return fetch(p).then(function(r){return r.json()});}
+  var API = 'http://localhost:8888';
+  function get(p){return fetch(API+p).then(function(r){return r.json()});}
   function $(id){return document.getElementById(id);}
   function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
   function toast(m,t){var c=$('toast-container'),e=document.createElement('div');e.className='sb-toast sb-toast--'+(t||'success');e.textContent=m;c.appendChild(e);setTimeout(function(){e.remove();},4000);}
@@ -229,7 +230,7 @@
           $('topbar-user').textContent = email;
           $('topbar-signin').style.display = 'none';
 
-          var yGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto;vertical-align:middle">';
+          var yGif = '<img src="media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto;vertical-align:middle">';
 
           if (email === 'byok@local') {
             // BYOK key set
@@ -299,7 +300,7 @@
   window.launchBrowser = function() {
     toast('Launching Solace Browser...', 'success');
     $('dot-sidebar').className = 'sb-topbar-dot sb-topbar-dot--on';
-    fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({allow_duplicate:true})})
+    fetch(API+'/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({allow_duplicate:true})})
       .then(function(r){return r.json();})
       .then(function(d) {
         if (d.session || d.session_id || d.deduped) {
@@ -337,11 +338,11 @@
         var masked = key.substring(0, 4) + '...' + key.substring(key.length - 4);
         display.textContent = masked;
         display.style.color = 'var(--sb-success)';
-        fetch('/api/v1/cloud/connect', {method:'POST', headers:{'Content-Type':'application/json'},
+        fetch(API+'/api/v1/cloud/connect', {method:'POST', headers:{'Content-Type':'application/json'},
           body:JSON.stringify({api_key:key, user_email:'byok@local', device_id:'local', paid_user:false})
         }).then(function(){
           toast('BYOK key saved!', 'success');
-          $('src-byok-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
+          $('src-byok-gif').innerHTML = '<img src="media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
           $('launch-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch" onclick="launchBrowser()">Launch Solace Browser</button>';
           ($('topbar-user')||{}).textContent = 'BYOK Active';
           ($('topbar-user')||{}).className = 'sb-pill sb-pill--success';
@@ -391,7 +392,7 @@
       var verified = 0;
       var total = agents.length;
       agents.forEach(function(a) {
-        fetch('/api/v1/agents/generate', {
+        fetch(API+'/api/v1/agents/generate', {
           method:'POST', headers:{'Content-Type':'application/json'},
           body:JSON.stringify({agent_id:a.id, prompt:'respond with ok', timeout:15})
         }).then(function(r){return r.json();}).then(function(d) {
@@ -413,7 +414,7 @@
             // All done
             if (verified > 0) {
               $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + verified + ' connected</span> <a href="#" onclick="connectCLIs();return false" style="font-size:0.75rem;color:var(--sb-text-muted)">rerun</a>';
-              $('src-local-action').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
+              $('src-local-action').innerHTML = '<img src="media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
               hasLLM = true;
               $('launch-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch" onclick="launchBrowser()">Launch Solace Browser</button>';
               // Persist validated state
@@ -443,7 +444,7 @@
   // ─── Sign In (launches browser to solaceagi.com/dashboard) ───
   window.signIn = function() {
     toast('Opening Solace Browser to sign in...', 'success');
-    fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
+    fetch(API+'/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({url:'https://solaceagi.com/dashboard', allow_duplicate:true})
     }).then(function(r){return r.json();}).then(function(d) {
       if (d.session_id || d.deduped) toast('Browser opened to solaceagi.com', 'success');
@@ -470,7 +471,7 @@
       if (url && url.startsWith('http')) {
         display.textContent = url;
         display.style.color = 'var(--sb-success)';
-        $('src-ollama-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
+        $('src-ollama-gif').innerHTML = '<img src="media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
         hasLLM = true;
         $('launch-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch">Launch Solace Browser</button>';
         toast('Ollama URL saved!', 'success');
