@@ -179,7 +179,7 @@
       $('scan-text').style.color = installed.length > 0 ? 'var(--sb-success)' : 'var(--sb-danger)';
 
       // Source 1: Local CLI status + yinyang gif if active
-      var yinyangGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="width:24px;height:auto;vertical-align:middle">';
+      var yinyangGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:36px;width:auto;vertical-align:middle">';
       if (installed.length > 0) {
         $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + installed.length + ' found</span>';
         $('src-local-gif').innerHTML = yinyangGif;
@@ -216,7 +216,7 @@
           $('topbar-user').textContent = email;
           $('topbar-signin').style.display = 'none';
 
-          var yGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="width:24px;height:auto;vertical-align:middle">';
+          var yGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:36px;width:auto;vertical-align:middle">';
 
           if (email === 'byok@local') {
             // BYOK key set
@@ -331,7 +331,7 @@
           body:JSON.stringify({api_key:key, user_email:'byok@local', device_id:'local', paid_user:false})
         }).then(function(){
           toast('BYOK key saved!', 'success');
-          $('src-byok-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="width:24px;height:auto">';
+          $('src-byok-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:36px;width:auto">';
           $('btn-launch').disabled = false;
           $('topbar-auth').textContent = 'BYOK Active';
           $('topbar-auth').className = 'sb-pill sb-pill--success';
