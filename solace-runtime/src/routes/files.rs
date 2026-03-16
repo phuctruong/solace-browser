@@ -1575,7 +1575,11 @@ fn page(title: &str, body: &str) -> String {
 /// Full Hub App page — uses styleguide.css for all styling.
 /// The styleguide is the single source of truth for visual design.
 /// Rust assembles HTML using sb-* component classes from the styleguide.
+/// Read the VERSION file at compile time for display in UI.
+const SOLACE_VERSION: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../VERSION"));
+
 fn hub_page(title: &str, body_content: &str) -> String {
+    let version = SOLACE_VERSION.trim();
     format!(
         r#"<!doctype html>
 <html lang="en">
@@ -1615,6 +1619,7 @@ fn hub_page(title: &str, body_content: &str) -> String {
   <a href="/oauth3" style="color:var(--sb-text-muted);font-size:0.85rem">OAuth3</a>
   <a href="/esign" style="color:var(--sb-text-muted);font-size:0.85rem">E-Sign</a>
   <a href="/settings" style="color:var(--sb-text-muted);font-size:0.85rem">Settings</a>
+  <span class="sb-topbar-stat">v{version}</span>
 </header>
 <main style="max-width:1100px;margin:1.5rem auto;padding:0 1.5rem">
 <h1 class="sb-heading" style="font-size:1.4rem;margin-bottom:1rem">{title}</h1>
