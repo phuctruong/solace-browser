@@ -18,6 +18,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/browser/launch", post(launch_session))
         .route("/api/v1/browser/close/:session_id", post(close_session))
         .route("/api/v1/browser/command/:session_id", post(send_command))
+        .route("/api/v1/browser/close-all", post(close_all_sessions))
         .route("/api/v1/browser/profiles", get(list_profiles))
 }
 
@@ -133,6 +134,27 @@ async fn list_sessions(State(state): State<AppState>) -> Json<serde_json::Value>
     Json(json!({"sessions": sessions}))
 }
 
+/// Kill all tracked browser sessions and their OS processes.
+fn kill_all_sessions(state: &AppState) -> Vec<String> {
+    let mut killed = Vec::new();
+    let mut sessions = state.sessions.write();
+    for (sid, info) in sessions.drain() {
+        if info.pid > 0 && is_process_alive(info.pid) {
+            let _ = std::process::Command::new("kill").arg(info.pid.to_string()).output();
+            killed.push(format!("{}(pid={})", sid, info.pid));
+        }
+    }
+    // Also kill any untracked solace browser processes
+    for pid in scan_solace_pids() {
+        let _ = std::process::Command::new("kill").arg(pid.to_string()).output();
+    }
+    // Clear all dedup guards
+    let mut dedup = state.launch_dedup.write();
+    dedup.recent_launches.clear();
+    dedup.inflight_launches.clear();
+    killed
+}
+
 async fn launch_session(
     State(state): State<AppState>,
     Json(payload): Json<LaunchPayload>,
@@ -141,8 +163,22 @@ async fn launch_session(
     let url = payload
         .url
         .unwrap_or_else(|| "https://solaceagi.com/dashboard".to_string());
-    let mode = payload.mode.unwrap_or_else(|| "local-dev".to_string());
+    let mode = payload.mode.unwrap_or_else(|| "single".to_string());
     let allow_duplicate = payload.allow_duplicate;
+
+    // ── SINGLE BROWSER MODE (default) ──────────────────────────────
+    // Unless mode is "multi" or allow_duplicate is true, enforce exactly
+    // one browser at a time. Kill all existing sessions before launching.
+    if mode != "multi" && !allow_duplicate {
+        let existing_count = state.sessions.read().len();
+        if existing_count > 0 {
+            let killed = kill_all_sessions(&state);
+            if !killed.is_empty() {
+                // Brief pause to let processes die
+                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            }
+        }
+    }
 
     if !allow_duplicate {
         let key = launch_key(&url, &profile, &mode);
@@ -424,6 +460,13 @@ async fn send_command(
             })),
         ))
     }
+}
+
+async fn close_all_sessions(
+    State(state): State<AppState>,
+) -> Json<serde_json::Value> {
+    let killed = kill_all_sessions(&state);
+    Json(json!({"closed": killed.len(), "details": killed}))
 }
 
 async fn list_profiles() -> Json<serde_json::Value> {
