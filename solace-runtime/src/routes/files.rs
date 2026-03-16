@@ -2,7 +2,7 @@
 use std::collections::BTreeMap;
 use std::fs;
 
-use axum::extract::Path;
+use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::Html;
 use axum::routing::get;
@@ -13,6 +13,7 @@ use crate::state::AppState;
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(index))
+        .route("/dashboard", get(dashboard_page))
         .route("/onboarding", get(onboarding_page))
         .route("/sidebar", get(sidebar_page))
         .route("/sidepanel.js", get(sidebar_js))
@@ -54,6 +55,201 @@ async fn index() -> Html<String> {
         "Solace Runtime",
         "Local-first runtime active on port 8888.",
     ))
+}
+
+// ---------------------------------------------------------------------------
+// GET /dashboard — full Solace Dashboard (app cards, events, sessions, evidence)
+// ---------------------------------------------------------------------------
+async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
+    let apps = crate::app_engine::scan_installed_apps();
+    let sessions = state.sessions.read().clone();
+    let events = state.runtime_events.read().clone();
+    let uptime = state.uptime_seconds();
+    let theme = state.theme.read().clone();
+    let delight = state.delight.read().clone();
+    let notifications = state.notifications.read().clone();
+    let solace_home = crate::utils::solace_home();
+    let part11 = crate::evidence::part11_status(&solace_home);
+
+    // Greeting
+    let greeting = delight.warm_greeting();
+    let celebration = delight
+        .celebration_message()
+        .map(|m| format!("<p class=\"sb-pill sb-pill--success\" style=\"display:inline-block;margin-left:0.5rem\">{m}</p>"))
+        .unwrap_or_default();
+
+    // App status cards
+    let mut app_cards = String::new();
+    for app in &apps {
+        let app_dir = crate::utils::find_app_dir(&app.id);
+        let run_count = app_dir.as_ref().map(|d| count_runs(d)).unwrap_or(0);
+        let last_run = app_dir
+            .as_ref()
+            .and_then(|d| latest_run_time(d))
+            .unwrap_or_else(|| "Never".to_string());
+        let schedule_label = if app.schedule.is_empty() {
+            "Manual"
+        } else {
+            &app.schedule
+        };
+        app_cards.push_str(&format!(
+            r#"<div class="sb-card">
+  <div class="sb-card-header">
+    <h3 class="sb-card-title"><a href="/apps/{id}">{name}</a></h3>
+    <span class="sb-pill sb-pill--info">{domain}</span>
+  </div>
+  <div class="sb-card-body">
+    <p>{desc}</p>
+    <div class="sb-flex" style="gap:1.5rem;margin-top:0.5rem">
+      <span><strong>{run_count}</strong> runs</span>
+      <span>Last: {last_run}</span>
+      <span>Schedule: <code>{sched}</code></span>
+    </div>
+  </div>
+</div>"#,
+            id = html_escape::encode_text(&app.id),
+            name = html_escape::encode_text(&app.name),
+            domain = html_escape::encode_text(&app.domain),
+            desc = html_escape::encode_text(&app.description),
+            last_run = html_escape::encode_text(&last_run),
+            sched = html_escape::encode_text(schedule_label),
+        ));
+    }
+    if app_cards.is_empty() {
+        app_cards = r#"<div class="sb-empty"><div class="sb-empty-icon">&#x1F4E6;</div><p>No apps installed yet.</p></div>"#.to_string();
+    }
+
+    // Session cards
+    let mut session_rows = String::new();
+    for (sid, info) in &sessions {
+        session_rows.push_str(&format!(
+            "<tr><td><code>{}</code></td><td>{}</td><td>{}</td><td><span class=\"sb-pill sb-pill--success\">PID {}</span></td><td>{}</td></tr>",
+            html_escape::encode_text(&sid[..8.min(sid.len())]),
+            html_escape::encode_text(&info.profile),
+            html_escape::encode_text(&info.url),
+            info.pid,
+            html_escape::encode_text(&info.started_at),
+        ));
+    }
+    if session_rows.is_empty() {
+        session_rows = "<tr><td colspan=\"5\" class=\"sb-text-muted\">No active browser sessions.</td></tr>".to_string();
+    }
+
+    // Recent events (last 25)
+    let mut event_rows = String::new();
+    let recent_events: Vec<_> = events.iter().rev().take(25).collect();
+    for evt in &recent_events {
+        let ts = evt.get("timestamp").and_then(|v| v.as_str()).unwrap_or("—");
+        let etype = evt.get("type").and_then(|v| v.as_str()).unwrap_or("event");
+        let detail = evt.get("detail").and_then(|v| v.as_str())
+            .or_else(|| evt.get("message").and_then(|v| v.as_str()))
+            .unwrap_or("—");
+        let level = evt.get("level").and_then(|v| v.as_str()).unwrap_or("L1");
+        let pill_class = match level {
+            "L1" => "sb-pill--info",
+            "L2" => "sb-pill--success",
+            "L3" => "sb-pill--warning",
+            "L4" | "L5" => "sb-pill--danger",
+            _ => "sb-pill--info",
+        };
+        event_rows.push_str(&format!(
+            "<tr><td>{}</td><td><span class=\"sb-pill {}\">{}</span></td><td><strong>{}</strong></td><td>{}</td></tr>",
+            html_escape::encode_text(ts),
+            pill_class,
+            html_escape::encode_text(level),
+            html_escape::encode_text(etype),
+            html_escape::encode_text(detail),
+        ));
+    }
+    if event_rows.is_empty() {
+        event_rows = "<tr><td colspan=\"4\" class=\"sb-text-muted\">No events yet. Run an app to generate events.</td></tr>".to_string();
+    }
+
+    // Evidence summary
+    let chain_badge = if part11.chain_valid {
+        "<span class=\"sb-pill sb-pill--success\">Chain Valid</span>"
+    } else if part11.record_count > 0 {
+        "<span class=\"sb-pill sb-pill--danger\">Chain Broken</span>"
+    } else {
+        "<span class=\"sb-pill sb-pill--info\">No Records</span>"
+    };
+
+    // Unread notifications
+    let unread = notifications.iter().filter(|n| !n.read).count();
+    let notif_badge = if unread > 0 {
+        format!("<span class=\"sb-pill sb-pill--warning\">{unread} unread</span>")
+    } else {
+        String::new()
+    };
+
+    // Format uptime
+    let hours = uptime / 3600;
+    let mins = (uptime % 3600) / 60;
+    let uptime_str = if hours > 0 {
+        format!("{}h {}m", hours, mins)
+    } else {
+        format!("{}m", mins)
+    };
+
+    let body = format!(
+        r#"<!-- Status bar -->
+<div class="sb-flex" style="gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center">
+  <div class="sb-card" style="flex:1;min-width:150px;text-align:center">
+    <div class="sb-kicker">Apps</div>
+    <div style="font-size:1.8rem;font-weight:700">{app_count}</div>
+  </div>
+  <div class="sb-card" style="flex:1;min-width:150px;text-align:center">
+    <div class="sb-kicker">Sessions</div>
+    <div style="font-size:1.8rem;font-weight:700">{session_count}</div>
+  </div>
+  <div class="sb-card" style="flex:1;min-width:150px;text-align:center">
+    <div class="sb-kicker">Evidence</div>
+    <div style="font-size:1.8rem;font-weight:700">{evidence_count}</div>
+    <div>{chain_badge}</div>
+  </div>
+  <div class="sb-card" style="flex:1;min-width:150px;text-align:center">
+    <div class="sb-kicker">Uptime</div>
+    <div style="font-size:1.8rem;font-weight:700">{uptime_str}</div>
+  </div>
+  <div class="sb-card" style="flex:1;min-width:150px;text-align:center">
+    <div class="sb-kicker">Streak</div>
+    <div style="font-size:1.8rem;font-weight:700">{streak} days</div>
+  </div>
+</div>
+
+<!-- App Status Cards -->
+<section>
+  <div class="sb-flex" style="justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+    <h2 class="sb-heading" style="margin:0">Installed Apps</h2>
+    <a href="/domains" class="sb-btn sb-btn--sm">All Domains</a>
+  </div>
+  <div class="sb-card-grid">{app_cards}</div>
+</section>
+
+<!-- Active Sessions -->
+<section style="margin-top:1.5rem">
+  <h2 class="sb-heading">Active Sessions {notif_badge}</h2>
+  <table class="sb-table"><thead><tr><th>Session</th><th>Profile</th><th>URL</th><th>Status</th><th>Started</th></tr></thead>
+  <tbody>{session_rows}</tbody></table>
+</section>
+
+<!-- Events (Transparency) -->
+<section style="margin-top:1.5rem">
+  <div class="sb-flex" style="justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+    <h2 class="sb-heading" style="margin:0">Recent Events</h2>
+    <a href="/evidence" class="sb-btn sb-btn--sm">Evidence Chain</a>
+  </div>
+  <table class="sb-table" id="events-table"><thead><tr><th>Time</th><th>Level</th><th>Type</th><th>Detail</th></tr></thead>
+  <tbody>{event_rows}</tbody></table>
+</section>"#,
+        app_count = apps.len(),
+        session_count = sessions.len(),
+        evidence_count = part11.record_count,
+        streak = delight.streak_days,
+    );
+
+    let title = format!("{}, Dragon Rider", greeting);
+    Html(hub_page(&title, &body))
 }
 
 async fn onboarding_page() -> Html<String> {
