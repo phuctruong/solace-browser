@@ -96,19 +96,23 @@
       <div id="llm-account" style="display:none" class="sb-mt-md"></div>
     </div>
 
-    <!-- Launch Button (right after LLMs) -->
-    <button class="sb-btn sb-btn--primary hub-launch sb-mt-md" id="btn-launch" disabled onclick="launchBrowser()">
-      Launch Solace Browser
-    </button>
+    <!-- Launch Button (centered) -->
+    <div class="sb-mt-md" style="text-align:center">
+      <button class="sb-btn sb-btn--primary hub-launch" id="btn-launch" disabled onclick="launchBrowser()">
+        Launch Solace Browser
+      </button>
+    </div>
 
     <!-- System Status -->
     <div class="sb-card sb-mt-md">
       <p class="sb-kicker">System Status</p>
-      <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-dashboard"></span> Dashboard :8888</div>
-      <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-mcp"></span> MCP Server</div>
-      <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-sidebar"></span> Yinyang Sidebar</div>
-      <div class="hub-status-row"><span class="sb-topbar-dot" id="dot-remote"></span> Remote Control</div>
-      <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-cron"></span> Cron Services</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.25rem 1.5rem">
+        <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-dashboard"></span> Dashboard :8888</div>
+        <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-mcp"></span> MCP Server</div>
+        <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-sidebar"></span> Yinyang Sidebar</div>
+        <div class="hub-status-row"><span class="sb-topbar-dot" id="dot-remote"></span> Remote Control</div>
+        <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-cron"></span> Cron Services</div>
+      </div>
     </div>
 
 
