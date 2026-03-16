@@ -167,8 +167,10 @@
 
   // ─── SCAN + GATE LOGIC ───
   var hasLLM = false;
+  // Simplest persistence: save/load via POST/GET to evidence endpoint
+  // On Connect CLIs success: POST an evidence event with cli count
+  // On load: check if agents are installed AND we have a recent cli_connected evidence
   var savedCLIs = null;
-  try { savedCLIs = JSON.parse(localStorage.getItem('solace_validated_clis')); } catch(e) {}
 
   function runScan() {
     get('/api/v1/agents').then(function(d) {
@@ -182,17 +184,12 @@
       $('scan-text').textContent = installed.length + ' AI tools found!';
       $('scan-text').style.color = installed.length > 0 ? 'var(--sb-success)' : 'var(--sb-danger)';
 
-      // Source 1: Local CLI — restore if previously validated, else show Connect
-      if (savedCLIs && savedCLIs.count > 0) {
-        // Previously validated — restore state
-        $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + savedCLIs.count + ' connected</span>';
-        $('src-local-action').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto"> <a href="#" onclick="connectCLIs();return false" style="font-size:0.75rem;color:var(--sb-text-muted)">rerun</a>';
-        $('cli-details-row').style.display = '';
-        $('cli-models-area').innerHTML = '<div class="hub-llm-chips">' + savedCLIs.chips + '</div>';
-        hasLLM = true;
-        $('launch-area').innerHTML = '<button class="sb-btn sb-btn--primary hub-launch" onclick="launchBrowser()">Launch Solace Browser</button>';
-      } else if (installed.length > 0) {
-        $('src-local').innerHTML = '<span class="sb-pill sb-pill--info">' + installed.length + ' found on PATH</span>';
+      // Source 1: Local CLI — if found, auto-connect in background
+      if (installed.length > 0) {
+        $('src-local').innerHTML = '<span class="sb-pill sb-pill--info">' + installed.length + ' found — connecting...</span>';
+        $('src-local-action').innerHTML = '';
+        // Auto-connect (same as clicking Connect CLIs)
+        setTimeout(function() { connectCLIs(); }, 100);
       } else {
         $('src-local').innerHTML = '<span class="sb-pill sb-pill--danger">✗ None found</span>';
         $('src-local-action').innerHTML = '<span class="sb-text-muted" style="font-size:0.8rem">Install claude, codex, or gemini</span>';
