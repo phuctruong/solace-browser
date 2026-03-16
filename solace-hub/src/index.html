@@ -73,15 +73,11 @@
       <table class="sb-table" style="margin:0.5rem 0">
         <thead><tr><th></th><th>Source</th><th>Status</th><th></th></tr></thead>
         <tbody>
-          <tr>
+          <tr style="background:var(--sb-accent-soft)">
             <td>1</td>
-            <td><strong>Local CLI</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Auto-detected on PATH</span></td>
-            <td id="src-local"><span class="sb-pill sb-pill--warning">Checking...</span></td>
-            <td id="src-local-gif"></td>
-          </tr>
-          <tr id="cli-details-row" style="display:none">
-            <td></td>
-            <td colspan="3" id="llm-chips" style="padding:0.25rem 0"></td>
+            <td><strong>Managed LLM</strong> <span class="sb-pill sb-pill--info" style="font-size:0.65rem">Recommended</span><br><span class="sb-text-muted" style="font-size:0.8rem">No key needed · +47 uplifts · $8/mo</span></td>
+            <td id="src-managed"><span class="sb-pill sb-pill--warning">Not signed in</span></td>
+            <td id="src-managed-gif"><button class="sb-btn sb-btn--sm" onclick="signIn()">Sign In</button></td>
           </tr>
           <tr>
             <td>2</td>
@@ -95,11 +91,15 @@
             </td>
             <td id="src-byok-gif"></td>
           </tr>
-          <tr style="background:var(--sb-accent-soft)">
+          <tr>
             <td>3</td>
-            <td><strong>Managed LLM</strong> <span class="sb-pill sb-pill--info" style="font-size:0.65rem">Recommended</span><br><span class="sb-text-muted" style="font-size:0.8rem">No key needed · +47 uplifts · $8/mo</span></td>
-            <td id="src-managed"><span class="sb-pill sb-pill--warning">Not signed in</span></td>
-            <td id="src-managed-gif"><button class="sb-btn sb-btn--sm" onclick="signIn()">Sign In</button></td>
+            <td><strong>Local CLI</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Auto-detected on PATH</span></td>
+            <td id="src-local"><span class="sb-pill sb-pill--warning">Checking...</span></td>
+            <td id="src-local-gif"></td>
+          </tr>
+          <tr id="cli-details-row" style="display:none">
+            <td></td>
+            <td colspan="3" id="llm-chips" style="padding:0.25rem 0"></td>
           </tr>
         </tbody>
       </table>
