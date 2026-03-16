@@ -285,24 +285,20 @@
 
   // ─── Launch Browser ───
   window.launchBrowser = function() {
-    if (!hasLLM) {
-      toast('You must set up at least 1 LLM power source first: Sign In for Managed LLM, enter a BYOK key, or click Connect CLIs.', 'danger');
-      return;
-    }
     toast('Launching Solace Browser...', 'success');
     $('dot-sidebar').className = 'sb-topbar-dot sb-topbar-dot--on';
-    // Launch the actual browser binary
     fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({allow_duplicate:true})})
       .then(function(r){return r.json();})
       .then(function(d) {
         if (d.session_id || d.deduped) {
           toast('Solace Browser launched!', 'success');
-          $('dot-sidebar').className = 'sb-topbar-dot sb-topbar-dot--on';
         } else if (d.error) {
-          toast(d.error, 'danger');
+          toast('Launch error: ' + d.error, 'danger');
+        } else {
+          toast('Unexpected response', 'warning');
         }
       })
-      .catch(function() { toast('Browser launch API not available', 'warning'); });
+      .catch(function(e) { toast('Launch failed: ' + e, 'danger'); });
   };
 
   // ─── BYOK inline edit ───
