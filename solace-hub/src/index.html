@@ -75,9 +75,13 @@
         <tbody>
           <tr>
             <td>1</td>
-            <td><strong>Local CLI</strong><br><span class="sb-text-muted" style="font-size:0.8rem">claude, codex, gemini on PATH</span></td>
+            <td><strong>Local CLI</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Auto-detected on PATH</span></td>
             <td id="src-local"><span class="sb-pill sb-pill--warning">Checking...</span></td>
             <td id="src-local-gif"></td>
+          </tr>
+          <tr id="cli-details-row" style="display:none">
+            <td></td>
+            <td colspan="3" id="llm-chips" style="padding:0.25rem 0"></td>
           </tr>
           <tr>
             <td>2</td>
@@ -99,7 +103,6 @@
           </tr>
         </tbody>
       </table>
-      <div id="llm-chips" class="hub-llm-chips"></div>
       <div id="llm-gate"></div>
       <div id="llm-account" style="display:none" class="sb-mt-md"></div>
     </div>
@@ -128,7 +131,7 @@
           </div>
         </div>
         <div style="flex:1;min-width:280px">
-          <p class="sb-kicker" style="color:var(--sb-accent)">Paid · Cloud Features · <a href="#" onclick="signIn();return false" style="color:var(--sb-accent)">starting at $8/mo →</a></p>
+          <p class="sb-kicker" style="color:var(--sb-accent)">Paid · Cloud Features · <a href="#" onclick="signIn();return false" style="color:var(--sb-success)">starting at $8/mo →</a></p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.2rem 1rem">
             <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-sidebar"></span> Yinyang Sidebar</div>
             <div class="hub-status-row"><span class="sb-topbar-dot" id="dot-remote"></span> Remote Control</div>
@@ -178,21 +181,22 @@
       $('scan-text').textContent = installed.length + ' AI tools found!';
       $('scan-text').style.color = installed.length > 0 ? 'var(--sb-success)' : 'var(--sb-danger)';
 
-      // Source 1: Local CLI status + yinyang gif if active
-      var yinyangGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:36px;width:auto;vertical-align:middle">';
+      // Source 1: Local CLI status + yinyang gif + chips row
+      var yinyangGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto;vertical-align:middle">';
       if (installed.length > 0) {
-        $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + installed.length + ' found</span>';
+        $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + installed.length + ' auto-detected</span>';
         $('src-local-gif').innerHTML = yinyangGif;
+        // Show chips in indented row below
+        var chips = '';
+        installed.forEach(function(a) {
+          chips += '<span class="hub-llm-chip">✓ ' + esc(a.id) + '</span>';
+        });
+        $('llm-chips').innerHTML = '<div class="hub-llm-chips">' + chips + '</div>';
+        $('cli-details-row').style.display = '';
       } else {
         $('src-local').innerHTML = '<span class="sb-pill sb-pill--danger">✗ None found</span>';
         $('src-local-gif').innerHTML = '';
       }
-
-      // Build LLM chips (compact, below table)
-      var chips = '';
-      installed.forEach(function(a) {
-        chips += '<span class="hub-llm-chip">✓ ' + esc(a.id) + '</span>';
-      });
 
       // Auth pill + account status + remote
       var auth = $('topbar-auth');
@@ -216,7 +220,7 @@
           $('topbar-user').textContent = email;
           $('topbar-signin').style.display = 'none';
 
-          var yGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:36px;width:auto;vertical-align:middle">';
+          var yGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto;vertical-align:middle">';
 
           if (email === 'byok@local') {
             // BYOK key set
@@ -331,7 +335,7 @@
           body:JSON.stringify({api_key:key, user_email:'byok@local', device_id:'local', paid_user:false})
         }).then(function(){
           toast('BYOK key saved!', 'success');
-          $('src-byok-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:36px;width:auto">';
+          $('src-byok-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
           $('btn-launch').disabled = false;
           $('topbar-auth').textContent = 'BYOK Active';
           $('topbar-auth').className = 'sb-pill sb-pill--success';
