@@ -42,7 +42,9 @@ mkdir -p \
   "$PKG_ROOT/DEBIAN" \
   "$PKG_ROOT/usr/bin" \
   "$PKG_ROOT/usr/lib/solace-browser" \
-  "$PKG_ROOT/usr/share/applications"
+  "$PKG_ROOT/usr/share/applications" \
+  "$PKG_ROOT/usr/share/metainfo" \
+  "$PKG_ROOT/usr/share/pixmaps"
 
 cat > "$PKG_ROOT/DEBIAN/control" <<EOF
 Package: solace-browser
@@ -75,6 +77,29 @@ EOF
 chmod 755 "$PKG_ROOT/usr/bin/solace-hub"
 
 install -m 644 "$DESKTOP_FILE" "$PKG_ROOT/usr/share/applications/solace-browser.desktop"
+
+# Install Hub desktop file + icons
+HUB_DESKTOP="${SOURCE_DIR}/solace-hub.desktop"
+if [ -f "$HUB_DESKTOP" ]; then
+  install -m 644 "$HUB_DESKTOP" "$PKG_ROOT/usr/share/applications/solace-hub.desktop"
+fi
+mkdir -p "$PKG_ROOT/usr/share/icons/hicolor/128x128/apps"
+for icon_pair in "solace-hub-icon-128.png:solace-hub.png" "solace-browser-icon-128.png:solace-browser.png"; do
+  src="${icon_pair%%:*}"
+  dst="${icon_pair##*:}"
+  if [ -f "$BUNDLE_DIR/$src" ]; then
+    install -m 644 "$BUNDLE_DIR/$src" "$PKG_ROOT/usr/share/icons/hicolor/128x128/apps/$dst"
+  fi
+done
+
+# AppStream metadata + pixmap icon (for software center display)
+APPDATA="${SOURCE_DIR}/com.solaceagi.hub.appdata.xml"
+if [ -f "$APPDATA" ]; then
+  install -m 644 "$APPDATA" "$PKG_ROOT/usr/share/metainfo/com.solaceagi.hub.appdata.xml"
+fi
+if [ -f "$BUNDLE_DIR/solace-hub-icon-128.png" ]; then
+  install -m 644 "$BUNDLE_DIR/solace-hub-icon-128.png" "$PKG_ROOT/usr/share/pixmaps/solace-browser.png"
+fi
 
 mkdir -p "$OUTPUT_DIR"
 dpkg-deb -Zgzip -z1 --build "$PKG_ROOT" "$OUTPUT_DEB"

@@ -131,6 +131,21 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
                             let _ = title; // available for future use
                         }
                     }
+                    "auth_handshake" => {
+                        // Browser sidebar detected login on solaceagi.com/dashboard
+                        // Payload: { type: "auth_handshake", token: "firebase_id_token", email: "user@example.com" }
+                        if let (Some(token), Some(email)) = (
+                            parsed.get("token").and_then(|v| v.as_str()),
+                            parsed.get("email").and_then(|v| v.as_str()),
+                        ) {
+                            let handshake_state = state.clone();
+                            let handshake_token = token.to_string();
+                            let handshake_email = email.to_string();
+                            tokio::spawn(async move {
+                                handle_auth_handshake(&handshake_state, &handshake_token, &handshake_email).await;
+                            });
+                        }
+                    }
                     _ => {
                         // Default: echo as chat reply
                     }
@@ -142,4 +157,119 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
     // Browser disconnected — cleanup
     send_task.abort();
     state.session_channels.write().remove(&session_id);
+}
+
+/// Handle auth handshake from browser sidebar after user logs into solaceagi.com/dashboard.
+///
+/// Flow:
+/// 1. Sidebar detects URL = solaceagi.com/dashboard + user is logged in
+/// 2. Sidebar sends { type: "auth_handshake", token: "...", email: "..." } via WebSocket
+/// 3. Runtime calls solaceagi.com to get/create API key for this device
+/// 4. Stores cloud config locally (activates sidebar + apps)
+/// 5. Downloads default apps if missing
+async fn handle_auth_handshake(state: &AppState, token: &str, email: &str) {
+    let solace_home = crate::utils::solace_home();
+
+    // Skip if already connected
+    if state.cloud_config.read().is_some() {
+        return;
+    }
+
+    // Call solaceagi.com to verify token and get API key
+    let client = reqwest::Client::new();
+    let verify_url = "https://solaceagi-mfjzxmegpq-uc.a.run.app/api/v1/auth/verify";
+    let verify_result = client
+        .get(verify_url)
+        .bearer_auth(token)
+        .timeout(std::time::Duration::from_secs(10))
+        .send()
+        .await;
+
+    let api_key = match verify_result {
+        Ok(resp) if resp.status().is_success() => {
+            match resp.json::<serde_json::Value>().await {
+                Ok(body) => {
+                    // Try to get existing API key or use the token
+                    body.get("api_key")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string())
+                        .unwrap_or_else(|| format!("firebase_{}", &token[..20.min(token.len())]))
+                }
+                Err(_) => return,
+            }
+        }
+        _ => return,
+    };
+
+    // Generate stable device ID from email + machine ID
+    let machine_id = std::fs::read_to_string("/etc/machine-id")
+        .unwrap_or_else(|_| uuid::Uuid::new_v4().to_string());
+    let device_id = format!(
+        "hub-{}",
+        &crate::utils::sha256_hex(&format!("{}:{}", email, machine_id.trim()))[..12]
+    );
+
+    // Store cloud config
+    let config = crate::state::CloudConfig {
+        api_key: api_key.clone(),
+        user_email: email.to_string(),
+        device_id: device_id.clone(),
+        paid_user: false, // Updated later from account info
+    };
+    *state.cloud_config.write() = Some(config.clone());
+    let _ = crate::config::save_cloud_config(&solace_home, &config);
+
+    // Record evidence
+    let _ = crate::evidence::record_event(
+        &solace_home,
+        "auth.handshake_complete",
+        "sidebar",
+        serde_json::json!({
+            "email": email,
+            "device_id": device_id,
+        }),
+    );
+
+    // Push notification
+    state.notifications.write().push(crate::state::Notification {
+        id: uuid::Uuid::new_v4().to_string(),
+        message: format!("Connected as {}", email),
+        level: "info".to_string(),
+        read: false,
+        created_at: crate::utils::now_iso8601(),
+    });
+
+    // Download default apps from solaceagi.com if missing
+    let app_count = crate::utils::scan_apps().len();
+    if app_count < 5 {
+        let download_url = "https://solaceagi-mfjzxmegpq-uc.a.run.app/api/v1/appstore/bundle";
+        if let Ok(resp) = client
+            .get(download_url)
+            .bearer_auth(&api_key)
+            .timeout(std::time::Duration::from_secs(30))
+            .send()
+            .await
+        {
+            if resp.status().is_success() {
+                if let Ok(body) = resp.json::<serde_json::Value>().await {
+                    if let Some(apps) = body.get("apps").and_then(|v| v.as_array()) {
+                        for app in apps {
+                            if let Some(app_id) = app.get("id").and_then(|v| v.as_str()) {
+                                let app_dir = solace_home.join("apps").join(app_id);
+                                if !app_dir.exists() {
+                                    let _ = std::fs::create_dir_all(&app_dir);
+                                    // Write manifest
+                                    if let Ok(manifest_str) = serde_json::to_string_pretty(app) {
+                                        let _ = std::fs::write(app_dir.join("manifest.json"), manifest_str);
+                                    }
+                                }
+                            }
+                        }
+                        // Update app count
+                        *state.app_count.write() = crate::utils::scan_apps().len() as u32;
+                    }
+                }
+            }
+        }
+    }
 }

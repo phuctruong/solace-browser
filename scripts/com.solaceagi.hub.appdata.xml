@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.solaceagi.hub</id>
+  <name>Solace Browser</name>
+  <summary>AI Agent Control Center with local-first browser automation and evidence trails</summary>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>LicenseRef-proprietary=https://solaceagi.com/terms</project_license>
+  <description>
+    <p>Solace Browser is a Chromium fork with a native AI sidebar (Yinyang), evidence-based audit trails, and an app store for browser automation. Hub starts first, controls the browser lifecycle, and keeps all data local.</p>
+    <p>22 free apps included. Zero telemetry. SHA-256 evidence chains. FDA Part 11 architected.</p>
+  </description>
+  <launchable type="desktop-id">solace-hub.desktop</launchable>
+  <icon type="local" width="128" height="128">/usr/share/icons/hicolor/128x128/apps/solace-hub.png</icon>
+  <url type="homepage">https://solaceagi.com</url>
+  <url type="bugtracker">https://github.com/phuctruong/solace-browser/issues</url>
+  <categories>
+    <category>Development</category>
+    <category>Utility</category>
+    <category>WebBrowser</category>
+  </categories>
+</component>

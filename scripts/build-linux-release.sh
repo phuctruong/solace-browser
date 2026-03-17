@@ -181,6 +181,12 @@ fi
 if [ -f "${REPO_ROOT}/solace-hub/src-tauri/icons/yinyang-logo.png" ]; then
   install -m 644 "${REPO_ROOT}/solace-hub/src-tauri/icons/yinyang-logo.png" "${BUNDLE_DIR}/yinyang-logo.png"
 fi
+# New Hub + Browser icons (256px + 128px + 32px)
+for icon_file in solace-hub-icon.png solace-hub-icon-128.png solace-hub-icon-32.png solace-browser-icon.png solace-browser-icon-128.png; do
+  if [ -f "${REPO_ROOT}/solace-hub/src-tauri/icons/${icon_file}" ]; then
+    install -m 644 "${REPO_ROOT}/solace-hub/src-tauri/icons/${icon_file}" "${BUNDLE_DIR}/${icon_file}"
+  fi
+done
 
 cat > "${BUNDLE_DIR}/solace-hub" <<'EOF'
 #!/usr/bin/env bash
