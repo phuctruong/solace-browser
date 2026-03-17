@@ -94,8 +94,7 @@ jobs:
         if: matrix.platform == 'windows'
         shell: pwsh
         run: |
-          $env:TARGET_OS = "${{ matrix.platform }}"
-          ./scripts/release_browser_cycle.sh
+          ./scripts/build-windows-release.ps1
 
       - name: Verify binary headers
         shell: python

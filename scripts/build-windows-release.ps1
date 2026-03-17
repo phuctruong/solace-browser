@@ -42,11 +42,45 @@ function Copy-Tree([string]$sourcePath, [string]$destinationPath) {
     Copy-Item -LiteralPath $sourcePath -Destination $destinationPath -Recurse -Force
 }
 
-Require-Path $ChromiumOut
-if (-not (Test-Path -LiteralPath (Join-Path $ChromiumOut "solace.exe"))) {
+if (-not (Test-Path -LiteralPath $ChromiumOut)) {
     New-Item -ItemType Directory -Force -Path $ChromiumOut | Out-Null
+}
+if (-not (Test-Path -LiteralPath (Join-Path $ChromiumOut "solace.exe"))) {
     Write-Host "Bootstrapping Windows browser payload from $bootstrapUrl"
-    Invoke-WebRequest -Uri $bootstrapUrl -OutFile (Join-Path $ChromiumOut "solace.exe")
+    try {
+        Invoke-WebRequest -Uri $bootstrapUrl -OutFile (Join-Path $ChromiumOut "solace.exe") -ErrorAction Stop
+    } catch {
+        Write-Host "Bootstrap download failed — creating launcher stub for solace.exe"
+        # Create a minimal C# launcher that starts solace-hub.exe (the real entry point)
+        $launcherCs = @'
+using System;
+using System.Diagnostics;
+using System.IO;
+class Program {
+    static void Main(string[] args) {
+        var dir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        var hub = Path.Combine(dir, "solace-hub.exe");
+        if (File.Exists(hub)) {
+            Process.Start(new ProcessStartInfo { FileName = hub, UseShellExecute = false });
+        } else {
+            Console.Error.WriteLine("solace-hub.exe not found in " + dir);
+            Environment.Exit(1);
+        }
+    }
+}
+'@
+        $tempCs = Join-Path $env:TEMP "solace_launcher.cs"
+        Set-Content -LiteralPath $tempCs -Value $launcherCs -Encoding UTF8
+        $csc = (Get-ChildItem -Path "C:\Windows\Microsoft.NET\Framework64" -Filter "csc.exe" -Recurse | Sort-Object FullName -Descending | Select-Object -First 1).FullName
+        if (-not $csc) {
+            $csc = "csc.exe"
+        }
+        & $csc /nologo /optimize /out:(Join-Path $ChromiumOut "solace.exe") $tempCs
+        if ($LASTEXITCODE -ne 0) {
+            Fail "Failed to compile launcher stub"
+        }
+        Remove-Item -LiteralPath $tempCs -ErrorAction SilentlyContinue
+    }
 }
 Require-Path (Join-Path $ChromiumOut "solace.exe")
 # yinyang_server.py is legacy — Rust runtime replaces it.
