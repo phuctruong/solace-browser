@@ -49,17 +49,24 @@ if (-not (Test-Path -LiteralPath (Join-Path $ChromiumOut "solace.exe"))) {
     Invoke-WebRequest -Uri $bootstrapUrl -OutFile (Join-Path $ChromiumOut "solace.exe")
 }
 Require-Path (Join-Path $ChromiumOut "solace.exe")
-Require-Path (Join-Path $repoRoot "yinyang_server.py")
-Require-Path (Join-Path $repoRoot "yinyang-server.py")
+# yinyang_server.py is legacy — Rust runtime replaces it.
+# Only warn if missing (backwards compat with older releases).
 
+# Build Solace Runtime
+$RuntimeDir = Join-Path $repoRoot "solace-runtime"
+$RuntimeBinary = Join-Path $RuntimeDir "target\release\solace-runtime.exe"
+if (-not (Test-Path -LiteralPath $RuntimeBinary)) {
+    Push-Location $RuntimeDir
+    try { cargo build --release }
+    finally { Pop-Location }
+}
+Require-Path $RuntimeBinary
+
+# Build Solace Hub
 if (-not (Test-Path -LiteralPath $HubBinary)) {
     Push-Location (Join-Path $repoRoot "solace-hub\src-tauri")
-    try {
-        cargo build --release
-    }
-    finally {
-        Pop-Location
-    }
+    try { cargo build --release }
+    finally { Pop-Location }
 }
 Require-Path $HubBinary
 
@@ -99,6 +106,7 @@ Copy-Tree (Join-Path $repoRoot "data\default\app-store") (Join-Path $BundleDir "
 Copy-Tree (Join-Path $repoRoot "data\fun-packs") (Join-Path $BundleDir "data")
 
 Copy-Item -LiteralPath $HubBinary -Destination (Join-Path $BundleDir "solace-hub.exe") -Force
+Copy-Item -LiteralPath $RuntimeBinary -Destination (Join-Path $BundleDir "solace-runtime.exe") -Force
 
 foreach ($scriptName in @("yinyang_server.py", "yinyang-server.py", "yinyang_mcp_server.py", "hub_tunnel_client.py", "evidence_bundle.py", "solace_cli.py")) {
     $scriptPath = Join-Path $repoRoot $scriptName
