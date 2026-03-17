@@ -14,6 +14,7 @@ pub mod recipe;
 pub mod routes;
 pub mod server;
 pub mod state;
+pub mod updates;
 pub mod utils;
 
 pub use server::build_router;

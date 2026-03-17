@@ -9,6 +9,7 @@ pub fn routes() -> Router<AppState> {
         .route("/health", get(health))
         .route("/api/status", get(health))
         .route("/api/v1/system/status", get(system_status))
+        .route("/api/v1/system/updates", get(update_status))
         .route("/agents", get(agents))
 }
 
@@ -16,10 +17,15 @@ async fn health() -> Json<serde_json::Value> {
     Json(json!({
         "ok": true,
         "service": "solace-runtime",
-        "version": "0.1.0",
+        "version": crate::updates::local_version(),
         "port": 8888,
         "time": crate::utils::now_iso8601(),
     }))
+}
+
+async fn update_status(State(state): State<AppState>) -> Json<serde_json::Value> {
+    let status = state.update_status.read().clone();
+    Json(serde_json::to_value(status).unwrap_or(json!({"error": "serialization failed"})))
 }
 
 async fn system_status(State(state): State<AppState>) -> Json<serde_json::Value> {

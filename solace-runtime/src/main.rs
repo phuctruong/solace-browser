@@ -1,7 +1,7 @@
 // Diagram: 05-solace-runtime-architecture
 use std::net::SocketAddr;
 
-use solace_runtime::{cloud, cron, mcp, persistence, server, utils, AppState};
+use solace_runtime::{cloud, cron, mcp, persistence, server, updates, utils, AppState};
 use tokio::signal;
 
 #[tokio::main]
@@ -25,6 +25,10 @@ async fn main() {
 
     let cloud_state = state.clone();
     tokio::spawn(async move { cloud::run_heartbeat(cloud_state).await });
+
+    // Auto-update checker — checks GCS every hour, downloads + installs if newer
+    let update_state = state.clone();
+    updates::spawn_update_checker(update_state);
 
     // Runtime heartbeat — emit event every 60s so Events tab always has data
     let heartbeat_state = state.clone();

@@ -54,6 +54,8 @@ pub struct AppState {
     pub domain_tabs: Arc<RwLock<HashMap<String, DomainTab>>>,
     /// Tunnel state: consent + connection to solaceagi.com for remote control.
     pub tunnel: Arc<RwLock<TunnelState>>,
+    /// Auto-update status: version check + download + install progress.
+    pub update_status: Arc<RwLock<crate::updates::UpdateStatus>>,
 }
 
 /// Tunnel state for remote access (FDA Part 11 consent + WSS connection).
@@ -283,6 +285,7 @@ impl AppState {
             session_channels: Arc::new(RwLock::new(HashMap::new())),
             domain_tabs: Arc::new(RwLock::new(HashMap::new())),
             tunnel: Arc::new(RwLock::new(TunnelState::default())),
+            update_status: Arc::new(RwLock::new(crate::updates::UpdateStatus::default())),
         }
     }
 

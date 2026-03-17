@@ -21,6 +21,12 @@ pub fn sha256_hex(input: &str) -> String {
     format!("{:x}", hasher.finalize())
 }
 
+pub fn sha256_bytes(input: &[u8]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(input);
+    format!("{:x}", hasher.finalize())
+}
+
 pub fn now_iso8601() -> String {
     Utc::now().to_rfc3339()
 }
