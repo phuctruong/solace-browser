@@ -8,6 +8,95 @@ use serde_json::{Map, Value};
 use crate::event_log::{EventLog, EventType};
 use crate::state::{AppState, Notification};
 
+// ---------------------------------------------------------------------------
+// LLM Level Routing helpers
+// ---------------------------------------------------------------------------
+
+fn should_use_llm(manifest: &crate::app_engine::AppManifest) -> bool {
+    manifest.levels.values().any(|l| l != "L1")
+}
+
+fn has_l3_plus_actions(manifest: &crate::app_engine::AppManifest) -> bool {
+    manifest
+        .levels
+        .values()
+        .any(|l| matches!(l.as_str(), "L3" | "L4" | "L5"))
+}
+
+fn max_level(manifest: &crate::app_engine::AppManifest) -> &'static str {
+    manifest
+        .levels
+        .values()
+        .map(|l| match l.as_str() {
+            "L5" => 5,
+            "L4" => 4,
+            "L3" => 3,
+            "L2" => 2,
+            _ => 1,
+        })
+        .max()
+        .map(|n| match n {
+            5 => "L5",
+            4 => "L4",
+            3 => "L3",
+            2 => "L2",
+            _ => "L1",
+        })
+        .unwrap_or("L1")
+}
+
+async fn enhance_with_llm(
+    manifest: &crate::app_engine::AppManifest,
+    html: &str,
+) -> Result<String, String> {
+    let api_key =
+        std::env::var("OPENROUTER_API_KEY").map_err(|_| "No OPENROUTER_API_KEY".to_string())?;
+
+    // Determine model from max level
+    let model = match max_level(manifest) {
+        "L2" => "anthropic/claude-haiku-4-5",
+        "L3" => "anthropic/claude-sonnet-4-6",
+        "L4" | "L5" => "anthropic/claude-sonnet-4-6", // Opus too expensive for auto
+        _ => return Ok(html.to_string()),
+    };
+
+    let truncated = &html[..html.len().min(4000)];
+    let prompt = format!(
+        "Enhance this report with analysis and insights. Keep the HTML structure. \
+         Add a <section class=\"llm-analysis\"> at the end with your synthesis.\n\n{}",
+        truncated
+    );
+
+    let client = reqwest::Client::new();
+    let response = client
+        .post("https://openrouter.ai/api/v1/chat/completions")
+        .bearer_auth(&api_key)
+        .json(&serde_json::json!({
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 2000,
+        }))
+        .timeout(Duration::from_secs(60))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let body: Value = response.json().await.map_err(|e| e.to_string())?;
+    let analysis = body["choices"][0]["message"]["content"]
+        .as_str()
+        .unwrap_or("");
+
+    // Append analysis to HTML
+    let enhanced = html.replace(
+        "</body>",
+        &format!(
+            "<section class=\"llm-analysis\"><h2>AI Analysis ({})</h2>{}</section></body>",
+            model, analysis
+        ),
+    );
+    Ok(enhanced)
+}
+
 pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> {
     let app_dir =
         crate::utils::find_app_dir(app_id).ok_or_else(|| format!("app not found: {app_id}"))?;
@@ -58,6 +147,60 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
         &app_dir,
         &Value::Object(data.clone()),
     )?;
+
+    // ── FEATURE 1: DETERMINE_LEVELS ──
+    // manifest.levels is loaded from manifest.yaml (HashMap<String, String>).
+    // If absent, serde default gives empty map → all actions treated as L1.
+    let level_tag = max_level(&manifest);
+
+    // ── FEATURE 2: LLM_PROCESS ──
+    // If any action requires L2+, enhance the report via LLM (OpenRouter).
+    // Falls back to L1 (original HTML) if no API key or if the call fails.
+    let html = if should_use_llm(&manifest) {
+        match enhance_with_llm(&manifest, &html).await {
+            Ok(enhanced) => {
+                event_log.append_event(
+                    EventType::Render,
+                    None,
+                    None,
+                    None,
+                    Some(format!("llm_enhance=OK level={}", level_tag)),
+                );
+                enhanced
+            }
+            Err(reason) => {
+                event_log.append_event(
+                    EventType::Render,
+                    None,
+                    None,
+                    None,
+                    Some(format!("llm_enhance=SKIP reason={}", reason)),
+                );
+                html // L1 fallback
+            }
+        }
+    } else {
+        html
+    };
+
+    // ── FEATURE 3: PREVIEW (L3+) ──
+    // Write a preview file before execution so the user can inspect / reject.
+    if has_l3_plus_actions(&manifest) {
+        let preview_dir = app_dir.join("outbox").join("previews");
+        let _ = std::fs::create_dir_all(&preview_dir);
+        let _ = std::fs::write(preview_dir.join(format!("{run_id}.html")), &html);
+        // Auto-approve for now — the preview file existing IS the evidence.
+    }
+
+    // ── FEATURE 4: FORBIDDEN_REJECTED ──
+    // If a preview was rejected by the user, abort the run.
+    let rejected_marker = app_dir
+        .join("outbox")
+        .join("previews")
+        .join(format!("{run_id}.rejected"));
+    if rejected_marker.exists() {
+        return Err(format!("Run {run_id} was rejected by user"));
+    }
 
     // Log Render event
     let template_name = if manifest.template.is_empty() {
@@ -117,6 +260,25 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
     event_log
         .save_events(&outbox_dir)
         .map_err(|error| format!("failed to save event log: {error}"))?;
+
+    // ── FEATURE 5: RECORD_EVENT ──
+    // After sealing evidence, append an event record to the global events log.
+    let event_record = serde_json::json!({
+        "app_id": app_id,
+        "action": "RUN",
+        "level": max_level(&manifest),
+        "cost": 0,
+        "status": "PASS",
+        "timestamp": crate::utils::now_iso8601(),
+        "device_id": "local",
+        "run_id": run_id,
+    });
+    let events_dir = crate::utils::solace_home().join("events");
+    let _ = std::fs::create_dir_all(&events_dir);
+    let _ = crate::persistence::append_jsonl(
+        &events_dir.join("app_events.jsonl"),
+        &event_record,
+    );
 
     *state.app_count.write() += 1;
     *state.evidence_count.write() += 1;

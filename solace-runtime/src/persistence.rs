@@ -53,6 +53,19 @@ pub fn append_evidence_jsonl(solace_home: &Path, value: &impl Serialize) -> Resu
     writeln!(file, "{line}").map_err(|error| error.to_string())
 }
 
+pub fn append_jsonl(path: &Path, value: &impl Serialize) -> Result<(), String> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+    }
+    let line = serde_json::to_string(value).map_err(|error| error.to_string())?;
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+        .map_err(|error| error.to_string())?;
+    writeln!(file, "{line}").map_err(|error| error.to_string())
+}
+
 pub fn read_jsonl<T: DeserializeOwned>(path: &Path) -> Result<Vec<T>, String> {
     let raw = fs::read_to_string(path).map_err(|error| error.to_string())?;
     raw.lines()

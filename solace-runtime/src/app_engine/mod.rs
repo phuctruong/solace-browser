@@ -4,6 +4,8 @@ pub mod outbox;
 pub mod runner;
 pub mod template;
 
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 fn default_source_type() -> String {
@@ -52,6 +54,8 @@ pub struct AppManifest {
     pub app_type: String,
     #[serde(default)]
     pub tier: String,
+    #[serde(default)]
+    pub levels: HashMap<String, String>,
 }
 
 pub fn scan_installed_apps() -> Vec<AppManifest> {
