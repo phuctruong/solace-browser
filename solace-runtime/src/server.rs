@@ -1,7 +1,24 @@
 // Diagram: 05-solace-runtime-architecture
+use axum::http::Request;
+use axum::middleware::{self, Next};
+use axum::response::Response;
 use axum::Router;
+use std::time::Instant;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
+
+async fn add_service_headers(req: Request<axum::body::Body>, next: Next) -> Response {
+    let start = Instant::now();
+    let mut response = next.run(req).await;
+    let duration_ms = start.elapsed().as_millis();
+    response
+        .headers_mut()
+        .insert("X-Service-Id", "solace-runtime".parse().unwrap());
+    response
+        .headers_mut()
+        .insert("X-Duration-Ms", duration_ms.to_string().parse().unwrap());
+    response
+}
 
 pub fn build_router(state: crate::state::AppState) -> Router {
     let cors = CorsLayer::new()
@@ -32,6 +49,7 @@ pub fn build_router(state: crate::state::AppState) -> Router {
         .merge(crate::routes::tutorial::routes())
         .merge(crate::routes::tunnel::routes())
         .merge(crate::routes::events::routes())
+        .layer(middleware::from_fn(add_service_headers))
         .layer(TraceLayer::new_for_http())
         .layer(cors)
         .with_state(state)

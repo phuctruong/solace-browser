@@ -7,6 +7,7 @@ use crate::state::AppState;
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/health", get(health))
+        .route("/api/status", get(health))
         .route("/api/v1/system/status", get(system_status))
         .route("/agents", get(agents))
 }

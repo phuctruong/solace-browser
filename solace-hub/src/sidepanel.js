@@ -286,6 +286,13 @@
     state.controlSocket = socket;
 
     socket.addEventListener('open', function () {
+      // Reset reconnect backoff on successful connection
+      state.reconnectAttempt = 0;
+      // Update UI to show connected state
+      var dot = document.getElementById('ws-status-dot');
+      var statusEl = document.getElementById('hero-status');
+      if (dot) dot.className = 'yy-status-dot status-online';
+      if (statusEl) statusEl.textContent = 'Connected to Solace Runtime';
       // Report current state on connect
       reportStatus();
       // Start URL monitoring
@@ -304,8 +311,15 @@
 
     socket.addEventListener('close', function () {
       state.controlSocket = null;
-      // Reconnect after 3s
-      setTimeout(connectControlSocket, 3000);
+      // Update UI to show disconnected state
+      var dot = document.getElementById('ws-status-dot');
+      var statusEl = document.getElementById('hero-status');
+      if (dot) dot.className = 'yy-status-dot status-offline';
+      if (statusEl) statusEl.textContent = 'Disconnected — reconnecting...';
+      // Exponential backoff for reconnection
+      state.reconnectAttempt = (state.reconnectAttempt || 0) + 1;
+      var delay = Math.min(1000 * Math.pow(2, state.reconnectAttempt - 1), 30000); // 1s → 2s → 4s → ... → 30s max
+      setTimeout(connectControlSocket, delay);
     });
 
     socket.addEventListener('error', function () {
