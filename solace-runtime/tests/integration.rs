@@ -3059,7 +3059,7 @@ async fn tutorial_persists_to_disk() {
     assert_eq!(completed[0], "run_first_app");
 }
 
-// ── Tunnel Status Tests (Diagram: hub-tunnel — WSS, RELAY, REMOTE) ──
+// ── Tunnel Status Tests (Diagram: hub-tunnel-remote-control — consent + WSS + audit) ──
 
 #[tokio::test(flavor = "current_thread")]
 async fn tunnel_status_not_connected() {
@@ -3074,17 +3074,15 @@ async fn tunnel_status_not_connected() {
     .await;
     assert_eq!(response.status(), StatusCode::OK);
     let body = parse_body(response).await;
-    assert_eq!(body["available"], false);
+    assert_eq!(body["tunnel_connected"], false);
+    assert_eq!(body["consent_active"], false);
     assert_eq!(body["cloud_connected"], false);
-    assert_eq!(body["paid_user"], false);
-    let reason = body["reason"].as_str().unwrap();
-    assert!(
-        reason.contains("Cloud not connected"),
-        "unexpected reason: {reason}"
-    );
     // Custom tunnel architecture (NO Cloudflare)
     assert_eq!(body["architecture"], "custom_reverse_tunnel");
-    assert!(body["banned"].is_array());
+    // Security properties
+    assert_eq!(body["security"]["outbound_only"], true);
+    assert_eq!(body["security"]["consent_required"], true);
+    assert_eq!(body["security"]["evidence_on_everything"], true);
 }
 
 #[tokio::test(flavor = "current_thread")]
@@ -3115,14 +3113,10 @@ async fn tunnel_status_connected_free_user() {
     .await;
     assert_eq!(response.status(), StatusCode::OK);
     let body = parse_body(response).await;
-    assert_eq!(body["available"], false);
+    assert_eq!(body["tunnel_connected"], false);
+    assert_eq!(body["consent_active"], false);
     assert_eq!(body["cloud_connected"], true);
-    assert_eq!(body["paid_user"], false);
-    let reason = body["reason"].as_str().unwrap();
-    assert!(
-        reason.contains("Pro+"),
-        "free user should see Pro+ requirement: {reason}"
-    );
+    assert_eq!(body["architecture"], "custom_reverse_tunnel");
 }
 
 #[tokio::test(flavor = "current_thread")]
@@ -3153,13 +3147,9 @@ async fn tunnel_status_connected_paid_user() {
     .await;
     assert_eq!(response.status(), StatusCode::OK);
     let body = parse_body(response).await;
-    assert_eq!(body["available"], false);
+    assert_eq!(body["tunnel_connected"], false);
+    assert_eq!(body["consent_active"], false);
     assert_eq!(body["cloud_connected"], true);
-    assert_eq!(body["paid_user"], true);
-    let reason = body["reason"].as_str().unwrap();
-    assert!(
-        reason.contains("Rust port") || reason.contains("in progress"),
-        "paid user should see custom tunnel Rust port message: {reason}"
-    );
     assert_eq!(body["architecture"], "custom_reverse_tunnel");
+    assert_eq!(body["security"]["auto_disconnect"], true);
 }
