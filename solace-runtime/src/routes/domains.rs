@@ -13,6 +13,27 @@ use serde_json::json;
 
 use crate::state::AppState;
 
+/// Extract root domain from a subdomain.
+/// `mail.google.com` → `google.com`, `github.com` → `github.com`.
+/// Handles compound TLDs like `.co.uk` by checking if the second-to-last
+/// part is a known short TLD segment (co, com, org, net, ac, gov, edu).
+pub fn extract_root_domain(domain: &str) -> String {
+    let parts: Vec<&str> = domain.split('.').collect();
+    if parts.len() <= 2 {
+        return domain.to_string();
+    }
+    // Known second-level TLD segments (e.g. co.uk, com.au, org.uk)
+    let compound_tlds = ["co", "com", "org", "net", "ac", "gov", "edu"];
+    let len = parts.len();
+    if len >= 3 && compound_tlds.contains(&parts[len - 2]) {
+        // e.g. bbc.co.uk → take last 3 parts
+        parts[len - 3..].join(".")
+    } else {
+        // e.g. mail.google.com → take last 2 parts
+        parts[len - 2..].join(".")
+    }
+}
+
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/v1/domains", get(list_domains))
@@ -419,29 +440,32 @@ async fn acquire_domain_tab(
     Path(domain): Path<String>,
     Json(payload): Json<AcquireTabPayload>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    let domain = extract_root_domain(&domain);
     let mut tabs = state.domain_tabs.write();
     let now = crate::utils::now_iso8601();
 
     if let Some(existing) = tabs.get(&domain) {
         match existing.tab_state {
-            crate::state::TabState::Working => {
-                // Tab is busy — another app is using it
+            crate::state::TabState::Working | crate::state::TabState::Cooldown => {
+                // Tab is busy or cooling down — another app is using it
                 return Err((
                     StatusCode::CONFLICT,
                     Json(json!({
                         "error": "domain_tab_busy",
                         "domain": domain,
                         "active_app_id": existing.active_app_id,
+                        "tab_state": format!("{:?}", existing.tab_state),
                         "message": format!(
-                            "Domain tab for {} is in use by app {}. Wait for release.",
+                            "Domain tab for {} is {:?} (app {}). Wait for release.",
                             domain,
+                            existing.tab_state,
                             existing.active_app_id.as_deref().unwrap_or("unknown")
                         ),
                     })),
                 ));
             }
             _ => {
-                // Tab is idle or in cooldown — reassign to new app
+                // Tab is idle — reassign to new app
             }
         }
     }
@@ -468,6 +492,19 @@ async fn acquire_domain_tab(
         tab_state: crate::state::TabState::Working,
     };
     tabs.insert(domain.clone(), tab.clone());
+    drop(tabs);
+
+    // Notify all connected sidebars of tab state change
+    let channels = state.session_channels.read();
+    for (_sid, tx) in channels.iter() {
+        let msg = serde_json::json!({
+            "type": "domain_tab_changed",
+            "domain": &domain,
+            "tab_state": "Working",
+            "app_id": &payload.app_id,
+        });
+        let _ = tx.send(msg.to_string());
+    }
 
     Ok(Json(json!({
         "acquired": true,
@@ -477,27 +514,74 @@ async fn acquire_domain_tab(
 }
 
 /// POST /api/v1/domains/:domain/tab/release — release the domain tab after an app finishes.
+/// Sets state to Cooldown for 30 seconds before returning to Idle.
 async fn release_domain_tab(
     State(state): State<AppState>,
     Path(domain): Path<String>,
 ) -> Json<serde_json::Value> {
-    let mut tabs = state.domain_tabs.write();
-    if let Some(tab) = tabs.get_mut(&domain) {
-        let prev_app = tab.active_app_id.take();
-        tab.tab_state = crate::state::TabState::Idle;
-        tab.last_activity = crate::utils::now_iso8601();
-        Json(json!({
-            "released": true,
-            "domain": domain,
-            "previous_app": prev_app,
-        }))
-    } else {
-        Json(json!({
-            "released": false,
-            "domain": domain,
-            "message": "No active tab for this domain",
-        }))
+    let domain = extract_root_domain(&domain);
+    let prev_app;
+    {
+        let mut tabs = state.domain_tabs.write();
+        if let Some(tab) = tabs.get_mut(&domain) {
+            prev_app = tab.active_app_id.take();
+            tab.tab_state = crate::state::TabState::Cooldown;
+            tab.last_activity = crate::utils::now_iso8601();
+        } else {
+            return Json(json!({
+                "released": false,
+                "domain": domain,
+                "message": "No active tab for this domain",
+            }));
+        }
+    } // drop write lock
+
+    // Notify all connected sidebars of cooldown state
+    {
+        let channels = state.session_channels.read();
+        for (_sid, tx) in channels.iter() {
+            let msg = serde_json::json!({
+                "type": "domain_tab_changed",
+                "domain": &domain,
+                "tab_state": "Cooldown",
+                "app_id": serde_json::Value::Null,
+            });
+            let _ = tx.send(msg.to_string());
+        }
     }
+
+    // Spawn cooldown timer — after 30s, transition Cooldown → Idle
+    let cooldown_state = state.clone();
+    let cooldown_domain = domain.clone();
+    tokio::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+        let mut tabs = cooldown_state.domain_tabs.write();
+        if let Some(tab) = tabs.get_mut(&cooldown_domain) {
+            if tab.tab_state == crate::state::TabState::Cooldown {
+                tab.tab_state = crate::state::TabState::Idle;
+                tab.last_activity = crate::utils::now_iso8601();
+            }
+        }
+        drop(tabs);
+        // Notify sidebars that cooldown is over
+        let channels = cooldown_state.session_channels.read();
+        for (_sid, tx) in channels.iter() {
+            let msg = serde_json::json!({
+                "type": "domain_tab_changed",
+                "domain": &cooldown_domain,
+                "tab_state": "Idle",
+                "app_id": serde_json::Value::Null,
+            });
+            let _ = tx.send(msg.to_string());
+        }
+    });
+
+    Json(json!({
+        "released": true,
+        "domain": domain,
+        "previous_app": prev_app,
+        "cooldown_seconds": 30,
+    }))
 }
 
 #[cfg(test)]
@@ -574,5 +658,22 @@ mod tests {
         assert!(path_str.contains("domains"));
         assert!(path_str.contains("gmail.com"));
         assert!(path_str.ends_with("session_policy.json"));
+    }
+
+    #[test]
+    fn extract_root_domain_subdomain() {
+        assert_eq!(extract_root_domain("mail.google.com"), "google.com");
+        assert_eq!(extract_root_domain("drive.google.com"), "google.com");
+    }
+
+    #[test]
+    fn extract_root_domain_already_root() {
+        assert_eq!(extract_root_domain("github.com"), "github.com");
+        assert_eq!(extract_root_domain("example.com"), "example.com");
+    }
+
+    #[test]
+    fn extract_root_domain_co_uk() {
+        assert_eq!(extract_root_domain("bbc.co.uk"), "bbc.co.uk");
     }
 }

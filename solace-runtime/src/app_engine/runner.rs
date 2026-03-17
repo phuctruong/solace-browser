@@ -14,6 +14,23 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
     let manifest = crate::app_engine::inbox::load_manifest(&app_dir)?;
     let run_id = Utc::now().format("%Y%m%d-%H%M%S").to_string();
 
+    // Acquire domain tab if app has a domain
+    if !manifest.domain.is_empty() {
+        let domain = crate::routes::domains::extract_root_domain(&manifest.domain);
+        let mut tabs = state.domain_tabs.write();
+        let now = crate::utils::now_iso8601();
+        let tab = crate::state::DomainTab {
+            domain: domain.clone(),
+            current_url: String::new(),
+            session_id: String::new(),
+            active_app_id: Some(app_id.to_string()),
+            last_activity: now,
+            tab_state: crate::state::TabState::Working,
+        };
+        tabs.insert(domain, tab);
+        drop(tabs);
+    }
+
     // Create event log for this run
     let mut event_log = EventLog::new(app_id, &run_id);
 
@@ -111,6 +128,17 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
         read: false,
         created_at: crate::utils::now_iso8601(),
     });
+
+    // Release domain tab after app completes
+    if !manifest.domain.is_empty() {
+        let domain = crate::routes::domains::extract_root_domain(&manifest.domain);
+        let mut tabs = state.domain_tabs.write();
+        if let Some(tab) = tabs.get_mut(&domain) {
+            tab.active_app_id = None;
+            tab.tab_state = crate::state::TabState::Idle;
+            tab.last_activity = crate::utils::now_iso8601();
+        }
+    }
 
     Ok(report_path)
 }
