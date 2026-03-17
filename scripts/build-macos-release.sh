@@ -134,6 +134,61 @@ rm -f "${TARBALL}" "${TARBALL}.sha256"
 (cd "${DIST_DIR}" && tar -czf "$(basename "${TARBALL}")" "$(basename "${BUNDLE_DIR}")")
 shasum -a 256 "${TARBALL}" > "${TARBALL}.sha256"
 
+# Build .app bundle for DMG
+APP_NAME="Solace Browser.app"
+APP_DIR="${DIST_DIR}/${APP_NAME}"
+DMG="${DIST_DIR}/solace-browser-macos-universal.dmg"
+
+rm -rf "${APP_DIR}" "${DMG}"
+mkdir -p "${APP_DIR}/Contents/MacOS"
+mkdir -p "${APP_DIR}/Contents/Resources"
+
+# Copy all release files into app bundle
+cp -a "${BUNDLE_DIR}/"* "${APP_DIR}/Contents/MacOS/"
+
+# App icon
+if [ -f "${REPO_ROOT}/solace-hub/src-tauri/icons/yinyang-logo.png" ]; then
+  install -m 644 "${REPO_ROOT}/solace-hub/src-tauri/icons/yinyang-logo.png" "${APP_DIR}/Contents/Resources/AppIcon.png"
+fi
+
+# Info.plist
+cat > "${APP_DIR}/Contents/Info.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key>
+  <string>Solace Browser</string>
+  <key>CFBundleDisplayName</key>
+  <string>Solace Browser</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.solaceagi.browser</string>
+  <key>CFBundleVersion</key>
+  <string>${VERSION}</string>
+  <key>CFBundleShortVersionString</key>
+  <string>${VERSION}</string>
+  <key>CFBundleExecutable</key>
+  <string>solace-hub</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>12.0</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+</dict>
+</plist>
+PLIST
+
+# Create DMG
+if command -v hdiutil >/dev/null 2>&1; then
+  hdiutil create -volname "Solace Browser" -srcfolder "${APP_DIR}" -ov -format UDZO "${DMG}"
+  shasum -a 256 "${DMG}" > "${DMG}.sha256"
+  echo "${DMG}"
+  echo "${DMG}.sha256"
+else
+  echo "WARNING: hdiutil not available — DMG not created (tarball still available)"
+fi
+
 echo "${BUNDLE_DIR}"
 echo "${TARBALL}"
 echo "${TARBALL}.sha256"

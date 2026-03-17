@@ -38,6 +38,8 @@ jobs:
             artifact_paths: |
               dist/solace-browser-macos-universal.tar.gz
               dist/solace-browser-macos-universal.tar.gz.sha256
+              dist/solace-browser-macos-universal.dmg
+              dist/solace-browser-macos-universal.dmg.sha256
           - os: windows-latest
             platform: windows
             artifact_name: native-windows
@@ -128,6 +130,10 @@ jobs:
               assert "solace-browser-release-macos/solace" in names
               assert "solace-browser-release-macos/solace-hub" in names
               print(f"OK macOS bundle: {tarball}")
+              dmg = dist / "solace-browser-macos-universal.dmg"
+              assert dmg.is_file(), f"Missing DMG: {dmg}"
+              assert dmg.stat().st_size > 1_000_000, "DMG too small"
+              print(f"OK macOS DMG: {dmg} ({dmg.stat().st_size} bytes)")
           elif platform == "windows":
               msi = dist / "${{ matrix.msi }}"
               assert msi.is_file(), f"Missing MSI: {msi}"
