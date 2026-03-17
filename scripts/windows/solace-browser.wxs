@@ -49,7 +49,7 @@
       <Component Id="MainExecutable" Guid="B7D3E2A1-9C4F-4D81-A0B5-3E8C6F2D1A94">
         <File
           Id="SolaceHubExe"
-          Source="!(bind.Variable.BundleDir)\solace-hub.exe"
+          Source="$(var.BundleDir)\solace-hub.exe"
           Name="solace-hub.exe"
           KeyPath="yes" />
         <RegistryValue
