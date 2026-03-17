@@ -47,9 +47,16 @@ fi
 
 require_file "${CHROMIUM_OUT}"
 require_file "${CHROMIUM_OUT}/solace"
-require_file "${REPO_ROOT}/yinyang_server.py"
-require_file "${REPO_ROOT}/yinyang-server.py"
+# yinyang_server.py is legacy — Rust runtime replaces it.
+# Only include if present (backwards compat with older releases).
 
+echo "Building Solace Runtime release binary..."
+RUNTIME_DIR="${REPO_ROOT}/solace-runtime"
+(cd "${RUNTIME_DIR}" && cargo build --release)
+RUNTIME_BINARY="${RUNTIME_DIR}/target/release/solace-runtime"
+require_file "${RUNTIME_BINARY}"
+
+echo "Building Solace Hub release binary..."
 if [ ! -x "${HUB_BINARY}" ]; then
   (cd "${REPO_ROOT}/solace-hub/src-tauri" && cargo build --release)
 fi
@@ -91,6 +98,7 @@ copy_tree "${REPO_ROOT}/data/default/app-store" "${BUNDLE_DIR}/data/default/"
 copy_tree "${REPO_ROOT}/data/fun-packs" "${BUNDLE_DIR}/data/"
 
 install -m 755 "${HUB_BINARY}" "${BUNDLE_DIR}/solace-hub"
+install -m 755 "${RUNTIME_BINARY}" "${BUNDLE_DIR}/solace-runtime"
 
 for script_name in yinyang_server.py yinyang-server.py yinyang_mcp_server.py hub_tunnel_client.py evidence_bundle.py solace_cli.py; do
   if [ -f "${REPO_ROOT}/${script_name}" ]; then

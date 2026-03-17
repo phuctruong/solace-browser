@@ -26,12 +26,11 @@ jobs:
             platform: linux
             artifact_name: native-linux
             tarball: solace-browser-chromium-linux-x86_64.tar.gz
-            deb: solace-browser_1.0.0_amd64.deb
             artifact_paths: |
               dist/solace-browser-chromium-linux-x86_64.tar.gz
               dist/solace-browser-chromium-linux-x86_64.tar.gz.sha256
-              dist/solace-browser_1.0.0_amd64.deb
-              dist/solace-browser_1.0.0_amd64.deb.sha256
+              dist/solace-browser_*_amd64.deb
+              dist/solace-browser_*_amd64.deb.sha256
           - os: macos-latest
             platform: macos
             artifact_name: native-macos
@@ -106,9 +105,10 @@ jobs:
 
           dist = Path("dist")
           platform = "${{ matrix.platform }}"
+          version = (Path("VERSION").read_text(encoding="utf-8")).strip()
           if platform == "linux":
               tarball = dist / "${{ matrix.tarball }}"
-              deb = dist / "${{ matrix.deb }}"
+              deb = dist / f"solace-browser_{version}_amd64.deb"
               assert tarball.is_file(), f"Missing tarball: {tarball}"
               assert deb.is_file(), f"Missing deb: {deb}"
               with tarfile.open(tarball, "r:gz") as archive:
