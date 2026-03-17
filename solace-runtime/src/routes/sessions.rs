@@ -290,6 +290,9 @@ async fn launch_session(
                 .arg("--disable-infobars")
                 .arg("--hide-crash-restore-bubble")
                 .arg("--no-default-browser-check")
+                .arg("--disable-background-networking")
+                .arg("--disable-client-side-phishing-detection")
+                .arg("--disable-component-update")
                 .env("DISPLAY", std::env::var("DISPLAY").unwrap_or_else(|_| ":1".to_string()))
                 .spawn()
             {
@@ -364,6 +367,9 @@ async fn launch_session(
                 .arg("--disable-infobars")
                 .arg("--hide-crash-restore-bubble")
                 .arg("--no-default-browser-check")
+                .arg("--disable-background-networking")
+                .arg("--disable-client-side-phishing-detection")
+                .arg("--disable-component-update")
                 .env("DISPLAY", std::env::var("DISPLAY").unwrap_or_else(|_| ":1".to_string()))
                 .spawn()
             {

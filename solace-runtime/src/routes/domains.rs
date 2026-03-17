@@ -441,60 +441,55 @@ async fn acquire_domain_tab(
     Json(payload): Json<AcquireTabPayload>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
     let domain = extract_root_domain(&domain);
-    let mut tabs = state.domain_tabs.write();
     let now = crate::utils::now_iso8601();
 
-    if let Some(existing) = tabs.get(&domain) {
-        match existing.tab_state {
-            crate::state::TabState::Working | crate::state::TabState::Cooldown => {
-                // Tab is busy or cooling down — another app is using it
-                return Err((
-                    StatusCode::CONFLICT,
-                    Json(json!({
-                        "error": "domain_tab_busy",
-                        "domain": domain,
-                        "active_app_id": existing.active_app_id,
-                        "tab_state": format!("{:?}", existing.tab_state),
-                        "message": format!(
-                            "Domain tab for {} is {:?} (app {}). Wait for release.",
-                            domain,
-                            existing.tab_state,
-                            existing.active_app_id.as_deref().unwrap_or("unknown")
-                        ),
-                    })),
-                ));
-            }
-            _ => {
-                // Tab is idle — reassign to new app
-            }
-        }
-    }
-
+    // Read session_id BEFORE acquiring domain_tabs write lock (avoid deadlock)
     let session_id = payload
         .session_id
         .unwrap_or_else(|| {
-            // Find the first active session
-            state
-                .sessions
-                .read()
-                .keys()
-                .next()
-                .cloned()
-                .unwrap_or_else(|| "no-session".to_string())
+            state.sessions.read().keys().next().cloned().unwrap_or_else(|| "no-session".to_string())
         });
 
-    let tab = crate::state::DomainTab {
-        domain: domain.clone(),
-        current_url: payload.url.clone(),
-        session_id: session_id.clone(),
-        active_app_id: Some(payload.app_id.clone()),
-        last_activity: now,
-        tab_state: crate::state::TabState::Working,
-    };
-    tabs.insert(domain.clone(), tab.clone());
-    drop(tabs);
+    // Now acquire the domain_tabs write lock
+    let tab = {
+        let mut tabs = state.domain_tabs.write();
 
-    // Notify all connected sidebars of tab state change
+        if let Some(existing) = tabs.get(&domain) {
+            match existing.tab_state {
+                crate::state::TabState::Working | crate::state::TabState::Cooldown => {
+                    return Err((
+                        StatusCode::CONFLICT,
+                        Json(json!({
+                            "error": "domain_tab_busy",
+                            "domain": domain,
+                            "active_app_id": existing.active_app_id,
+                            "tab_state": format!("{:?}", existing.tab_state),
+                            "message": format!(
+                                "Domain tab for {} is {:?} (app {}). Wait for release.",
+                                domain,
+                                existing.tab_state,
+                                existing.active_app_id.as_deref().unwrap_or("unknown")
+                            ),
+                        })),
+                    ));
+                }
+                _ => {}
+            }
+        }
+
+        let tab = crate::state::DomainTab {
+            domain: domain.clone(),
+            current_url: payload.url.clone(),
+            session_id: session_id.clone(),
+            active_app_id: Some(payload.app_id.clone()),
+            last_activity: now,
+            tab_state: crate::state::TabState::Working,
+        };
+        tabs.insert(domain.clone(), tab.clone());
+        tab
+    }; // write lock dropped here
+
+    // Notify sidebars AFTER releasing domain_tabs lock
     let channels = state.session_channels.read();
     for (_sid, tx) in channels.iter() {
         let msg = serde_json::json!({
