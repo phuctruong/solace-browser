@@ -61,6 +61,30 @@ cp "${SCRIPT_DIR}/yinyang.service" "${SYSTEMD_DIR}/yinyang.service"
 systemctl --user daemon-reload
 systemctl --user enable yinyang
 
+## Icons and desktop entry
+ICON_DIR="${HOME}/.local/share/icons/hicolor/128x128/apps"
+APP_DIR="${HOME}/.local/share/applications"
+mkdir -p "${ICON_DIR}" "${APP_DIR}"
+
+if [ -f "${SCRIPT_DIR}/../solace-hub/src-tauri/icons/solace-hub-icon-128.png" ]; then
+  cp "${SCRIPT_DIR}/../solace-hub/src-tauri/icons/solace-hub-icon-128.png" "${ICON_DIR}/solace-hub.png"
+  echo "Installed solace-hub icon to ${ICON_DIR}/solace-hub.png"
+fi
+
+if [ -f "${SCRIPT_DIR}/../solace-hub/src-tauri/icons/solace-browser-icon-128.png" ]; then
+  cp "${SCRIPT_DIR}/../solace-hub/src-tauri/icons/solace-browser-icon-128.png" "${ICON_DIR}/solace-browser.png"
+  echo "Installed solace-browser icon to ${ICON_DIR}/solace-browser.png"
+fi
+
+if [ -f "${SCRIPT_DIR}/solace-hub.desktop" ]; then
+  cp "${SCRIPT_DIR}/solace-hub.desktop" "${APP_DIR}/solace-hub.desktop"
+  echo "Installed desktop entry to ${APP_DIR}/solace-hub.desktop"
+fi
+
+if command -v update-desktop-database >/dev/null 2>&1; then
+  update-desktop-database "${APP_DIR}" 2>/dev/null || true
+fi
+
 echo "Installed Yinyang launcher to ${LIB_DIR}"
 echo "Installed solace CLI to ${BIN_DIR}/solace"
 echo "Systemd user unit installed at ${SYSTEMD_DIR}/yinyang.service"

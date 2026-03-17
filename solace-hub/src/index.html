@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solace Hub</title>
-  <link rel="icon" href="/icons/yinyang-logo.png">
+  <link rel="icon" href="/icons/solace-hub-icon.png">
   <link rel="stylesheet" href="/styleguide.css">
   <link rel="stylesheet" href="/vendor/jquery.dataTables.min.css">
   <script src="/vendor/jquery-3.7.1.min.js"></script>
@@ -33,7 +33,7 @@
 <!-- TOP BAR -->
 <header class="sb-topbar">
   <div class="sb-topbar-brand">
-    <img src="/icons/yinyang-logo.png" alt="Solace">
+    <img src="/icons/solace-hub-icon.png" alt="Solace">
     <span>Solace Hub</span>
   </div>
   <div class="sb-topbar-spacer"></div>
@@ -221,7 +221,7 @@
         <p class="sb-kicker">Active Browser Sessions</p>
         <div class="sb-flex sb-gap-sm">
           <button class="sb-btn sb-btn--sm" onclick="launchBrowser()">Launch Default</button>
-          <button class="sb-btn sb-btn--sm sb-btn--primary" onclick="newSession()">+ New Session</button>
+          <button class="sb-btn sb-btn--sm sb-btn--primary" id="sessions-tab-new-btn" onclick="newSession()" style="display:none">+ New Session</button>
         </div>
       </div>
       <table class="sb-table" style="margin:0.5rem 0">
@@ -443,6 +443,9 @@
     multiMode = isMulti;
     $('single-mode').style.display = isMulti ? 'none' : 'block';
     $('multi-mode').style.display = isMulti ? 'block' : 'none';
+    // Show/hide "+ New Session" in Sessions tab based on mode
+    var sessNewBtn = $('sessions-tab-new-btn');
+    if (sessNewBtn) sessNewBtn.style.display = isMulti ? 'inline-flex' : 'none';
     try { localStorage.setItem('solace_multi_session', isMulti ? '1' : '0'); } catch(e) {}
     setTimeout(refreshSessions, 500);
   }
@@ -757,6 +760,8 @@
     multiMode = toggle.checked;
     $('single-mode').style.display = multiMode ? 'none' : 'block';
     $('multi-mode').style.display = multiMode ? 'block' : 'none';
+    var sessNewBtnInit = $('sessions-tab-new-btn');
+    if (sessNewBtnInit) sessNewBtnInit.style.display = multiMode ? 'inline-flex' : 'none';
     modeInitialized = true;
     toggle.addEventListener('change', function() { setSessionMode(toggle.checked); });
   }

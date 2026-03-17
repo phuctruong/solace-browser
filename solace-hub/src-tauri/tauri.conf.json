@@ -39,7 +39,7 @@
       "targets": "all",
       "identifier": "com.solaceagi.hub",
       "icon": [
-        "icons/yinyang-logo.png"
+        "icons/solace-hub-icon.png"
       ],
       "shortDescription": "Solace Hub — AI Worker Platform Desktop Orchestrator",
       "longDescription": "Solace Hub manages the Yinyang Server lifecycle, browser sessions, schedules, billing, and evidence chain for the Solace AI Worker Platform.",
@@ -60,7 +60,7 @@
       "csp": "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:8888; connect-src * http://localhost:8888 https://solaceagi.com; img-src * data: blob:; style-src 'self' 'unsafe-inline' http://localhost:8888; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:8888; font-src 'self' data:"
     },
     "systemTray": {
-      "iconPath": "icons/yinyang-logo.png",
+      "iconPath": "icons/solace-hub-icon-32.png",
       "iconAsTemplate": false,
       "menuOnLeftClick": false
     },

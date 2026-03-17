@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Solace Hub
+Comment=AI Agent Control Center — Local-first browser automation with evidence
+Exec=solace-hub %U
+Icon=solace-hub
+Type=Application
+Categories=Development;Utility;
+Terminal=false
+StartupWMClass=solace-hub

@@ -93,21 +93,44 @@ pub fn save_onboarding(solace_home: &Path, value: &Onboarding) -> Result<(), Str
 }
 
 /// Check if user has a BYOK (Bring Your Own Key) API key configured.
-/// Looks for ~/.solace/byok.json with at least one non-empty key.
+/// Looks for environment variables, ~/.solace/byok.json, or ~/.solace/config/byok.json.
 pub fn has_byok_key(solace_home: &Path) -> bool {
+    // Check well-known LLM provider environment variables
+    for var in &[
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY",
+        "OPENROUTER_API_KEY",
+        "TOGETHER_API_KEY",
+        "SOLACE_LLM_API_KEY",
+    ] {
+        if std::env::var(var).map(|v| !v.is_empty()).unwrap_or(false) {
+            return true;
+        }
+    }
+    // Check ~/.solace/byok.json (legacy location)
     let path = solace_home.join("byok.json");
     if let Ok(content) = std::fs::read_to_string(&path) {
         if let Ok(value) = serde_json::from_str::<serde_json::Value>(&content) {
-            // Check for any non-empty key field
             if let Some(obj) = value.as_object() {
-                return obj.values().any(|v| {
-                    v.as_str().is_some_and(|s| !s.is_empty())
-                });
+                if obj
+                    .values()
+                    .any(|v| v.as_str().is_some_and(|s| !s.is_empty()))
+                {
+                    return true;
+                }
             }
         }
     }
-    // Also check environment variable
-    std::env::var("SOLACE_LLM_API_KEY").is_ok_and(|k| !k.is_empty())
+    // Check ~/.solace/config/byok.json (new location)
+    let config_path = solace_home.join("config").join("byok.json");
+    if config_path.exists() {
+        if let Ok(content) = std::fs::read_to_string(&config_path) {
+            if content.len() > 10 {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 pub fn load_budget_config(solace_home: &Path) -> BudgetConfig {

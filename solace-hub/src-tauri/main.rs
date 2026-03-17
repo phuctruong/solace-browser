@@ -809,8 +809,7 @@ fn main() {
 
     // ── Step 6: Build system tray ─────────────────────────────────────────────
     let tray_menu = SystemTrayMenu::new()
-        .add_item(CustomMenuItem::new("open_browser", "Open Solace Browser"))
-        .add_item(CustomMenuItem::new("show_dashboard", "Show Dashboard"))
+        .add_item(CustomMenuItem::new("show_dashboard", "Open Solace Hub"))
         .add_native_item(SystemTrayMenuItem::Separator)
         .add_item(CustomMenuItem::new("status", "Status"))
         .add_native_item(SystemTrayMenuItem::Separator)
@@ -845,23 +844,6 @@ fn main() {
         ])
         .on_system_tray_event(|app, event| match event {
             SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
-                "open_browser" => {
-                    // Route through the runtime API so dedup + session tracking apply.
-                    // Direct launch_solace_browser() bypasses all guards → multiple windows.
-                    let start_url = if check_onboarding_complete() {
-                        "https://solaceagi.com/dashboard".to_string()
-                    } else {
-                        format!("http://localhost:{}/onboarding", YINYANG_PORT)
-                    };
-                    if !wait_for_port_lock(SERVER_HEALTH_TIMEOUT_SECS) {
-                        eprintln!("ERROR: Yinyang Server not ready (port.lock missing)");
-                        return;
-                    }
-                    match launch_browser_via_runtime(&start_url) {
-                        Ok(_) => update_tray_tooltip(app),
-                        Err(e) => eprintln!("ERROR: Cannot launch browser via runtime: {e}"),
-                    }
-                }
                 "show_dashboard" => {
                     if let Some(win) = app.get_window("main") {
                         restore_dashboard_window(&win);

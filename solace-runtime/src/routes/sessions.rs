@@ -158,7 +158,23 @@ fn kill_all_sessions(state: &AppState) -> Vec<String> {
 async fn launch_session(
     State(state): State<AppState>,
     Json(payload): Json<LaunchPayload>,
-) -> Json<serde_json::Value> {
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    // LLM gate: at least 1 power source must be configured before launching browser
+    let has_llm = {
+        let config = state.cloud_config.read();
+        config.is_some()
+    } || crate::config::has_byok_key(&crate::utils::solace_home());
+
+    if !has_llm {
+        return Err((
+            StatusCode::PRECONDITION_FAILED,
+            Json(json!({
+                "error": "No LLM power source configured. Set up Managed LLM, BYOK key, or local CLI agent first.",
+                "llm_gate": true,
+            })),
+        ));
+    }
+
     let profile = payload.profile.unwrap_or_else(|| "default".to_string());
     let url = payload
         .url
@@ -190,11 +206,11 @@ async fn launch_session(
             for session in sessions.values() {
                 if session.url == url && session.profile == profile && session.mode == mode {
                     if is_process_alive(session.pid) {
-                        return Json(json!({
+                        return Ok(Json(json!({
                             "session": session,
                             "deduped": true,
                             "reason": "existing_session"
-                        }));
+                        })));
                     } else {
                         dead_ids.push(session.session_id.clone());
                     }
@@ -223,12 +239,12 @@ async fn launch_session(
 
             if let Some(started_at) = dedup.inflight_launches.get(&key) {
                 if *started_at >= cutoff {
-                    return Json(json!({
+                    return Ok(Json(json!({
                         "status": "ok",
                         "deduped": true,
                         "launch_in_progress": true,
                         "message": "A matching Solace Browser launch is already in progress."
-                    }));
+                    })));
                 }
             }
 
@@ -236,12 +252,12 @@ async fn launch_session(
             // Only blocks if the session is still alive (dead sessions cleared above)
             if let Some(last_launch) = dedup.recent_launches.get(&key) {
                 if *last_launch >= cutoff {
-                    return Json(json!({
+                    return Ok(Json(json!({
                         "status": "ok",
                         "deduped": true,
                         "storm_guarded": true,
                         "message": "A matching Solace Browser window was recently launched."
-                    }));
+                    })));
                 }
             }
 
@@ -286,18 +302,18 @@ async fn launch_session(
                     child_pid
                 }
                 Err(e) => {
-                    return Json(json!({
+                    return Ok(Json(json!({
                         "error": format!("Failed to launch browser: {e}"),
                         "browser_path": solace_bin.display().to_string(),
-                    }));
+                    })));
                 }
             }
         } else {
             // No Solace binary found — return error
-            return Json(json!({
+            return Ok(Json(json!({
                 "error": "Solace Browser binary not found. Build with: cd source/src && autoninja -C out/Solace solace",
                 "searched": browser_candidates.iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
-            }));
+            })));
         };
 
         // Create the session with real PID
@@ -321,7 +337,7 @@ async fn launch_session(
             dedup.inflight_launches.remove(&key);
         }
 
-        Json(json!({"session": session}))
+        Ok(Json(json!({"session": session})))
     } else {
         // allow_duplicate = true: skip all dedup, spawn unconditionally
         let browser_candidates = [
@@ -359,17 +375,17 @@ async fn launch_session(
                     child_pid
                 }
                 Err(e) => {
-                    return Json(json!({
+                    return Ok(Json(json!({
                         "error": format!("Failed to launch browser: {e}"),
                         "browser_path": solace_bin.display().to_string(),
-                    }));
+                    })));
                 }
             }
         } else {
-            return Json(json!({
+            return Ok(Json(json!({
                 "error": "Solace Browser binary not found. Build with: cd source/src && autoninja -C out/Solace solace",
                 "searched": browser_candidates.iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
-            }));
+            })));
         };
 
         let session = SessionInfo {
@@ -384,7 +400,7 @@ async fn launch_session(
             .sessions
             .write()
             .insert(session.session_id.clone(), session.clone());
-        Json(json!({"session": session}))
+        Ok(Json(json!({"session": session})))
     }
 }
 
