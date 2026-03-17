@@ -663,25 +663,47 @@
   }
 
   // ─── Registration gate ───
+  var _sidebarUnlocked = false;
+
   function checkRegistration() {
     getJson('/api/v1/cloud/status').then(function (d) {
-      const loggedIn = d.connected && d.config;
-      qs('gate-overlay').style.display = loggedIn ? 'none' : 'block';
-      qs('main-content').style.display = loggedIn ? 'block' : 'none';
+      var loggedIn = d.connected && d.config;
+      var gate = qs('gate-overlay');
+      var main = qs('main-content');
+      if (gate) gate.style.display = loggedIn ? 'none' : 'block';
+      if (main) main.style.display = loggedIn ? 'block' : 'none';
       if (loggedIn) {
-        const dot = qs('gate-status-dot');
+        var dot = qs('gate-status-dot');
         if (dot) dot.className = 'yy-status-dot status-online';
-        setText('gate-status', 'Signed in');
+        setText('gate-status', 'Signed in as ' + (d.config.user_email || ''));
+        // First time unlocking — refresh data
+        if (!_sidebarUnlocked) {
+          _sidebarUnlocked = true;
+          renderDomains();
+          renderEvents();
+        }
       }
     }).catch(function () {
       // Runtime not reachable — show gate
-      qs('gate-overlay').style.display = 'block';
-      qs('main-content').style.display = 'none';
+      var gate = qs('gate-overlay');
+      var main = qs('main-content');
+      if (gate) gate.style.display = 'block';
+      if (main) main.style.display = 'none';
+      setText('gate-status', 'Waiting for Solace Runtime...');
     });
   }
 
-  // Poll registration status every 5s (user might sign in on solaceagi.com)
-  setInterval(checkRegistration, 5000);
+  // Poll fast initially (every 2s for first 30s), then every 5s
+  var _regPollCount = 0;
+  var _regPollInterval = setInterval(function() {
+    _regPollCount++;
+    checkRegistration();
+    if (_regPollCount >= 15) {
+      // After 30s, slow down to 5s
+      clearInterval(_regPollInterval);
+      setInterval(checkRegistration, 5000);
+    }
+  }, 2000);
 
   document.addEventListener('DOMContentLoaded', function () {
     initTheme();

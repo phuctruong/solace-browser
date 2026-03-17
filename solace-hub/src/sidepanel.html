@@ -38,8 +38,8 @@
       </div>
     </header>
 
-    <!-- REGISTRATION GATE (shown when not logged in) -->
-    <div id="gate-overlay" style="display:none;padding:1.5rem;text-align:center">
+    <!-- REGISTRATION GATE (shown by default — hidden when cloud connected) -->
+    <div id="gate-overlay" style="padding:1.5rem;text-align:center">
       <img src="http://127.0.0.1:8888/media/droplet-logo-merge_3x_128px.gif" alt="" style="width:80px;margin:1rem auto">
       <h2 style="margin:0.5rem 0">Welcome to Solace</h2>
       <p class="yy-copy">Sign in or create an account to activate the Yinyang sidebar.</p>
@@ -50,7 +50,7 @@
       </div>
     </div>
 
-    <main class="yy-main" id="main-content">
+    <main class="yy-main" id="main-content" style="display:none">
       <section class="yy-card yy-hero-card">
         <div class="yy-status-row" aria-live="polite">
           <span id="ws-status-dot" class="yy-status-dot status-connecting"></span>
