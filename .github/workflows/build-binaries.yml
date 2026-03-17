@@ -77,12 +77,16 @@ jobs:
             librsvg2-dev \
             dpkg-dev
 
-      - name: Install WiX toolset
+      - name: Install WiX toolset and generate Windows icon
         if: matrix.platform == 'windows'
         shell: pwsh
         run: |
           dotnet tool install --global wix --version 4.*
           "$env:USERPROFILE\\.dotnet\\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          choco install imagemagick -y --no-progress
+          $env:PATH = "C:\ProgramData\chocolatey\bin;$env:PATH"
+          magick solace-hub/src-tauri/icons/yinyang-logo.png -define icon:auto-resize=256,128,64,48,32,16 solace-hub/src-tauri/icons/icon.ico
+          if (-not (Test-Path solace-hub/src-tauri/icons/icon.ico)) { throw "Failed to generate icon.ico" }
 
       - name: Build native release
         if: matrix.platform != 'windows'
