@@ -76,10 +76,23 @@
     <div class="hub-scan-text" id="scan-text">Detecting local AI tools...</div>
   </div>
 
+  <!-- Local dashboard header with cloud link -->
+  <div id="hub-header" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+      <div>
+        <span class="sb-kicker">Local Dashboard</span>
+        <span class="sb-pill sb-pill--success" style="margin-left:0.5rem">Your Data</span>
+      </div>
+      <a href="https://solaceagi.com/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm">Open Cloud Dashboard &rarr;</a>
+    </div>
+  </div>
+
   <!-- TABS -->
   <div id="hub-tabs" style="display:none">
     <div class="sb-tabs" role="tablist">
       <button class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+      <button class="sb-tab" data-tab="apps" role="tab">Apps</button>
+      <button class="sb-tab" data-tab="domains" role="tab">Domains</button>
       <button class="sb-tab" data-tab="sessions" role="tab">Sessions</button>
       <button class="sb-tab" data-tab="events" role="tab">Events</button>
       <button class="sb-tab" data-tab="settings" role="tab">Settings</button>
@@ -213,6 +226,28 @@
 
   </div>
   </div><!-- end tab-overview -->
+
+  <!-- TAB: APPS (local installed apps) -->
+  <div id="tab-apps" class="hub-tab-panel" style="display:none">
+    <div class="sb-card">
+      <p class="sb-kicker">Installed Apps</p>
+      <p class="sb-text-muted" style="font-size:0.85rem;margin:0.25rem 0 0.75rem">Apps on your local machine. All data stays here.</p>
+      <div id="local-apps-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.75rem">
+        <div class="sb-text-muted" style="text-align:center;padding:2rem">Loading apps...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: DOMAINS (local domain ecosystem) -->
+  <div id="tab-domains" class="hub-tab-panel" style="display:none">
+    <div class="sb-card">
+      <p class="sb-kicker">Domain Ecosystem</p>
+      <p class="sb-text-muted" style="font-size:0.85rem;margin:0.25rem 0 0.75rem">Domains with apps installed. Click to manage.</p>
+      <div id="local-domains-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem">
+        <div class="sb-text-muted" style="text-align:center;padding:2rem">Loading domains...</div>
+      </div>
+    </div>
+  </div>
 
   <!-- TAB: SESSIONS -->
   <div id="tab-sessions" class="hub-tab-panel" style="display:none">
@@ -400,7 +435,10 @@
         setTimeout(function() {
           $('scan-phase').style.display = 'none';
           $('hub-tabs').style.display = 'block';
+          if ($('hub-header')) $('hub-header').style.display = 'block';
           $('results-phase').style.display = 'block';
+          loadLocalApps();
+          loadLocalDomains();
 
           if (hasLLM) {
             // Signed in or BYOK set — ready to launch
@@ -952,6 +990,56 @@
   // Signoffs poll every 5s
   setTimeout(refreshSignoffs, 3000);
   setInterval(refreshSignoffs, 5000);
+
+  // ─── Local Apps + Domains tabs ───
+  function loadLocalApps() {
+    fetch('/api/apps').then(function(r){return r.json()}).then(function(d) {
+      var apps = d.apps || [];
+      var grid = $('local-apps-grid');
+      if (!grid) return;
+      if (!apps.length) { grid.innerHTML = '<div class="sb-text-muted" style="text-align:center;padding:2rem">No apps installed yet</div>'; return; }
+      var html = '';
+      apps.forEach(function(a) {
+        html += '<div class="sb-card" style="padding:0.75rem">' +
+          '<strong style="font-size:0.9rem">' + esc(a.name || a.id) + '</strong>' +
+          '<div class="sb-text-muted" style="font-size:0.75rem">' + esc(a.domain || 'general') + '</div>' +
+          '<div style="margin-top:0.5rem"><button class="sb-btn sb-btn--sm" onclick="runApp(\'' + esc(a.id) + '\')">Run</button></div>' +
+          '</div>';
+      });
+      grid.innerHTML = html;
+    }).catch(function() {
+      var g = $('local-apps-grid'); if (g) g.innerHTML = '<div class="sb-text-muted" style="text-align:center;padding:2rem">Could not load apps</div>';
+    });
+  }
+
+  function loadLocalDomains() {
+    fetch('/api/v1/domains').then(function(r){return r.json()}).then(function(d) {
+      var domains = d.domains || {};
+      var grid = $('local-domains-grid');
+      if (!grid) return;
+      var keys = Object.keys(domains).sort();
+      if (!keys.length) { grid.innerHTML = '<div class="sb-text-muted" style="text-align:center;padding:2rem">No domains yet. Run an app to discover domains.</div>'; return; }
+      var html = '';
+      keys.forEach(function(domain) {
+        html += '<a href="/domains/' + esc(domain) + '" target="_blank" rel="noopener" class="sb-card" style="padding:0.75rem;text-decoration:none;display:block">' +
+          '<strong style="font-size:0.9rem">' + esc(domain) + '</strong>' +
+          '<div class="sb-text-muted" style="font-size:0.75rem">' + domains[domain] + ' apps</div>' +
+          '</a>';
+      });
+      grid.innerHTML = html;
+    }).catch(function() {
+      var g = $('local-domains-grid'); if (g) g.innerHTML = '<div class="sb-text-muted" style="text-align:center;padding:2rem">Could not load domains</div>';
+    });
+  }
+
+  function runApp(appId) {
+    fetch('/api/v1/apps/run/' + appId, {method:'POST'}).then(function(r){return r.json()}).then(function(d) {
+      if (d.ok || d.report) { addNotification('App ' + appId + ' completed', 'success'); }
+      else { addNotification('App error: ' + (d.error || 'unknown'), 'error'); }
+    }).catch(function(e) { addNotification('Run failed: ' + e.message, 'error'); });
+  }
+
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 })();
 </script>
