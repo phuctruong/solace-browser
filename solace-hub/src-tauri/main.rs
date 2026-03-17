@@ -353,30 +353,24 @@ fn push_linux_browser_candidates(
 
 fn ensure_runtime_port_available() -> Result<(), String> {
     if TcpStream::connect(("127.0.0.1", YINYANG_PORT)).is_ok() {
-        // Port occupied — check if it's our runtime via curl
-        let health_check = std::process::Command::new("curl")
-            .args(["-sf", "--max-time", "2", &format!("http://localhost:{}/health", YINYANG_PORT)])
-            .output();
-        if let Ok(output) = health_check {
-            if output.status.success() {
-                let body = String::from_utf8_lossy(&output.stdout);
-                if body.contains("solace-runtime") {
-                    eprintln!("INFO: Solace Runtime already healthy on port {}. Reusing.", YINYANG_PORT);
-                    return Ok(());
-                }
-            }
-        }
-        // Port occupied by unknown process — kill via port.lock pid
+        // Port occupied — ALWAYS kill and restart to ensure fresh binary.
+        // This prevents stale binaries from persisting across upgrades.
+        eprintln!("INFO: Port {} occupied. Killing existing process to start fresh.", YINYANG_PORT);
+
+        // Try port.lock pid first (most reliable)
         if let Ok(lock) = read_port_lock() {
-            eprintln!("INFO: Killing orphan process pid={}", lock.pid);
-            let _ = std::process::Command::new("kill").arg(lock.pid.to_string()).status();
-            std::thread::sleep(std::time::Duration::from_secs(2));
-            let _ = std::fs::remove_file(port_lock_path());
-        } else {
-            // No port.lock — try to free port
-            let _ = std::fs::remove_file(port_lock_path());
+            eprintln!("INFO: Killing process pid={} from port.lock", lock.pid);
+            let _ = std::process::Command::new("kill").arg("-9").arg(lock.pid.to_string()).status();
             std::thread::sleep(std::time::Duration::from_secs(1));
         }
+
+        // Also try pkill as fallback (catches orphans without port.lock)
+        let _ = std::process::Command::new("pkill").args(["-9", "-f", "solace-runtime"]).status();
+        std::thread::sleep(std::time::Duration::from_secs(1));
+
+        // Clean up port.lock
+        let _ = std::fs::remove_file(port_lock_path());
+
         // Final check
         if TcpStream::connect(("127.0.0.1", YINYANG_PORT)).is_ok() {
             return Err(format!("Port {} still occupied after cleanup", YINYANG_PORT));

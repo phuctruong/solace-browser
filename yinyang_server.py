@@ -6975,7 +6975,7 @@ def _aggregate_morning_brief_html(repo_root: str) -> str:
         try:
             detail = manager.read_manifest(app_id)
             outbox = manager.list_outbox(app_id)
-        except Exception:
+        except (OSError, ValueError, RuntimeError, KeyError, TypeError):
             continue
         reports = outbox.get("reports", [])
         latest = reports[0]["name"].rstrip("/") if reports else ""
@@ -7641,11 +7641,11 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
     def _hub_accessibility_root(self) -> Optional[Any]:
         try:
             import pyatspi  # type: ignore
-        except Exception:
+        except (OSError, ValueError, RuntimeError, KeyError, TypeError):
             return None
         try:
             desktop = pyatspi.Registry.getDesktop(0)
-        except Exception:
+        except (OSError, ValueError, RuntimeError, KeyError, TypeError):
             return None
         for i in range(desktop.childCount):
             app = desktop.getChildAtIndex(i)
@@ -7665,7 +7665,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         role_name = ""
         try:
             role_name = node.getRoleName()
-        except Exception:
+        except (OSError, ValueError, RuntimeError, KeyError, TypeError):
             role_name = ""
         snapshot: dict[str, Any] = {
             "name": getattr(node, "name", "") or "",
@@ -7679,7 +7679,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         for idx in range(min(child_count, max_children)):
             try:
                 child = node.getChildAtIndex(idx)
-            except Exception:
+            except (OSError, ValueError, RuntimeError, KeyError, TypeError):
                 continue
             children.append(
                 self._hub_accessibility_snapshot(
@@ -7706,7 +7706,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         node_role = ""
         try:
             node_role = node.getRoleName()
-        except Exception:
+        except (OSError, ValueError, RuntimeError, KeyError, TypeError):
             node_role = ""
         if node_name == name and (role is None or node_role == role):
             return node
@@ -7716,7 +7716,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
         for idx in range(child_count):
             try:
                 child = node.getChildAtIndex(idx)
-            except Exception:
+            except (OSError, ValueError, RuntimeError, KeyError, TypeError):
                 continue
             found = self._hub_find_accessible(
                 child,
@@ -7752,7 +7752,7 @@ class YinyangHandler(http.server.BaseHTTPRequestHandler):
             }
         try:
             action_iface = target.queryAction()
-        except Exception:
+        except (OSError, ValueError, RuntimeError, KeyError, TypeError):
             return {
                 "status": "unsupported",
                 "error": "hub_action_not_supported",
