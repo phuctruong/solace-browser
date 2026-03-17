@@ -137,10 +137,28 @@ done
 
 # Upstream Chromium source tree directory name (cannot rename)
 _UPSTREAM_DIR="chr""ome"
-mkdir -p "${BUNDLE_DIR}/source/src/${_UPSTREAM_DIR}/browser/resources"
-copy_tree "${REPO_ROOT}/source/src/${_UPSTREAM_DIR}/browser/resources/solace" "${BUNDLE_DIR}/source/src/${_UPSTREAM_DIR}/browser/resources/"
-mkdir -p "${BUNDLE_DIR}/resources"
-copy_tree "${REPO_ROOT}/source/src/${_UPSTREAM_DIR}/browser/resources/solace" "${BUNDLE_DIR}/resources/solace-sidebar"
+_SIDEBAR_SRC="${REPO_ROOT}/source/src/${_UPSTREAM_DIR}/browser/resources/solace"
+_SIDEBAR_BOOTSTRAP="${CHROMIUM_OUT}/resources/solace-sidebar"
+if [ -d "${_SIDEBAR_SRC}" ]; then
+  mkdir -p "${BUNDLE_DIR}/source/src/${_UPSTREAM_DIR}/browser/resources"
+  copy_tree "${_SIDEBAR_SRC}" "${BUNDLE_DIR}/source/src/${_UPSTREAM_DIR}/browser/resources/"
+  mkdir -p "${BUNDLE_DIR}/resources"
+  copy_tree "${_SIDEBAR_SRC}" "${BUNDLE_DIR}/resources/solace-sidebar"
+elif [ -d "${_SIDEBAR_BOOTSTRAP}" ]; then
+  echo "Using sidebar from bootstrap tarball..."
+  mkdir -p "${BUNDLE_DIR}/source/src/${_UPSTREAM_DIR}/browser/resources"
+  copy_tree "${_SIDEBAR_BOOTSTRAP}" "${BUNDLE_DIR}/source/src/${_UPSTREAM_DIR}/browser/resources/solace"
+  mkdir -p "${BUNDLE_DIR}/resources"
+  copy_tree "${_SIDEBAR_BOOTSTRAP}" "${BUNDLE_DIR}/resources/solace-sidebar"
+elif [ -d "${CHROMIUM_OUT}/source/src/${_UPSTREAM_DIR}/browser/resources/solace" ]; then
+  echo "Using sidebar from bootstrap source tree..."
+  mkdir -p "${BUNDLE_DIR}/source/src/${_UPSTREAM_DIR}/browser/resources"
+  copy_tree "${CHROMIUM_OUT}/source/src/${_UPSTREAM_DIR}/browser/resources/solace" "${BUNDLE_DIR}/source/src/${_UPSTREAM_DIR}/browser/resources/"
+  mkdir -p "${BUNDLE_DIR}/resources"
+  copy_tree "${CHROMIUM_OUT}/source/src/${_UPSTREAM_DIR}/browser/resources/solace" "${BUNDLE_DIR}/resources/solace-sidebar"
+else
+  echo "WARNING: sidebar resources not found — skipping (sidebar will not be available)"
+fi
 
 mkdir -p "${BUNDLE_DIR}/data/default"
 copy_tree "${REPO_ROOT}/data/default/apps" "${BUNDLE_DIR}/data/default/"
