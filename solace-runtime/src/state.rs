@@ -52,6 +52,17 @@ pub struct AppState {
     /// Rule: 1 browser tab per domain. Apps in the same domain share a tab.
     /// This prevents runaway tabs and throttles apps per domain owner's site.
     pub domain_tabs: Arc<RwLock<HashMap<String, DomainTab>>>,
+    /// Tunnel state: consent + connection to solaceagi.com for remote control.
+    pub tunnel: Arc<RwLock<TunnelState>>,
+}
+
+/// Tunnel state for remote access (FDA Part 11 consent + WSS connection).
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+pub struct TunnelState {
+    pub consent: Option<crate::routes::tunnel::ConsentRecord>,
+    pub connected: bool,
+    pub connected_at: Option<String>,
+    pub cloud_url: Option<String>,
 }
 
 /// Tracks one browser tab per domain. Apps in the same domain queue here.
@@ -271,6 +282,7 @@ impl AppState {
             runtime_events: Arc::new(RwLock::new(Vec::new())),
             session_channels: Arc::new(RwLock::new(HashMap::new())),
             domain_tabs: Arc::new(RwLock::new(HashMap::new())),
+            tunnel: Arc::new(RwLock::new(TunnelState::default())),
         }
     }
 

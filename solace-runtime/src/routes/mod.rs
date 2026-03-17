@@ -19,4 +19,5 @@ pub mod tutorial;
 pub mod websocket;
 pub mod browser_control;
 pub mod events;
+pub mod tunnel;
 pub mod wiki;
