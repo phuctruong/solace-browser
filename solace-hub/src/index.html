@@ -76,17 +76,14 @@
     <div class="hub-scan-text" id="scan-text">Detecting local AI tools...</div>
   </div>
 
-  <!-- Local dashboard header with dragon branding -->
+  <!-- Hub navigation bar -->
   <div id="hub-header" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;padding:0.75rem 1rem;background:var(--sb-success-bg, rgba(34,197,94,0.08));border:1px solid var(--sb-success, #22c55e);border-radius:var(--sb-radius, 8px)">
-      <div style="display:flex;align-items:center;gap:0.75rem">
-        <span style="font-size:1.5rem">&#128009;</span>
-        <div>
-          <strong style="color:var(--sb-success, #22c55e)">Local Dashboard</strong>
-          <div style="font-size:0.75rem;color:var(--sb-text-muted)">100% on your machine. Zero telemetry. Your data never leaves.</div>
-        </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+      <div style="display:flex;align-items:center;gap:0.5rem">
+        <a href="http://127.0.0.1:8888/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm" style="border-color:var(--sb-success, #22c55e);color:var(--sb-success, #22c55e)">&#128009; Local Dashboard</a>
+        <a href="https://solaceagi.com/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm" style="border-color:var(--sb-accent);color:var(--sb-accent)">&#9729; Cloud Dashboard</a>
       </div>
-      <a href="https://solaceagi.com/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm" style="white-space:nowrap">Cloud Dashboard &rarr;</a>
+      <span id="hub-version-badge" class="sb-pill sb-pill--info" style="font-size:0.7rem">v...</span>
     </div>
   </div>
 
@@ -302,12 +299,30 @@
   <!-- TAB: SETTINGS -->
   <div id="tab-settings" class="hub-tab-panel" style="display:none">
     <div class="sb-card">
+      <p class="sb-kicker">Version &amp; Updates</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 2rem;font-size:0.9rem">
+        <div>Version: <strong id="settings-version">loading...</strong></div>
+        <div>Auto-update: <strong id="settings-autoupdate">ON</strong></div>
+        <div>Latest available: <span id="settings-latest" class="sb-text-muted">checking...</span></div>
+        <div>Last checked: <span id="settings-last-check" class="sb-text-muted">—</span></div>
+      </div>
+    </div>
+    <div class="sb-card sb-mt-md">
       <p class="sb-kicker">Runtime</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 2rem;font-size:0.9rem">
         <div>Port: <strong>8888</strong></div>
         <div>Binary: <span class="sb-text-mono" id="settings-binary">solace-runtime</span></div>
         <div>Browser: <span class="sb-text-mono">solace</span></div>
         <div>PID: <span id="settings-pid" class="sb-text-muted">?</span></div>
+      </div>
+    </div>
+    <div class="sb-card sb-mt-md">
+      <p class="sb-kicker">Account</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 2rem;font-size:0.9rem">
+        <div>Status: <strong id="settings-auth-status">checking...</strong></div>
+        <div>Email: <span id="settings-auth-email" class="sb-text-muted">—</span></div>
+        <div>Device: <span id="settings-device-id" class="sb-text-muted">—</span></div>
+        <div>Plan: <span id="settings-plan" class="sb-text-muted">Free</span></div>
       </div>
     </div>
     <div class="sb-card sb-mt-md">
@@ -318,9 +333,10 @@
       <p class="sb-kicker">Data Directories</p>
       <div style="font-size:0.85rem;font-family:var(--sb-font-mono)">
         <div>Apps: ~/.solace/apps/</div>
-        <div>Evidence: ~/.solace/evidence/</div>
+        <div>Evidence: ~/.solace/runtime/evidence.jsonl</div>
         <div>Vault: ~/.solace/vault.enc</div>
         <div>Config: ~/.solace/config/</div>
+        <div>Backups: ~/.solace/backups/</div>
       </div>
     </div>
   </div>
@@ -442,6 +458,8 @@
           $('results-phase').style.display = 'block';
           loadLocalApps();
           loadLocalDomains();
+          loadVersionInfo();
+          loadSettingsInfo();
 
           if (hasLLM) {
             // Signed in or BYOK set — ready to launch
@@ -1043,6 +1061,45 @@
   }
 
   function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function loadVersionInfo() {
+    get('/health').then(function(d) {
+      var v = d.version || '?';
+      var badge = $('hub-version-badge');
+      if (badge) badge.textContent = 'v' + v;
+      var sv = $('settings-version');
+      if (sv) sv.textContent = v;
+    }).catch(function(){});
+
+    get('/api/v1/system/updates').then(function(d) {
+      if ($('settings-autoupdate')) $('settings-autoupdate').textContent = d.auto_update_enabled ? 'ON' : 'OFF';
+      if ($('settings-latest')) $('settings-latest').textContent = d.latest_version || 'up to date';
+      if ($('settings-last-check')) $('settings-last-check').textContent = d.last_check ? d.last_check.substring(0,19).replace('T',' ') : '—';
+      if (d.update_available) {
+        var badge = $('hub-version-badge');
+        if (badge) { badge.textContent = 'v' + d.current_version + ' → v' + d.latest_version; badge.className = 'sb-pill sb-pill--warning'; }
+      }
+    }).catch(function(){});
+  }
+
+  function loadSettingsInfo() {
+    get('/api/v1/cloud/status').then(function(d) {
+      if (d.connected && d.config) {
+        if ($('settings-auth-status')) $('settings-auth-status').textContent = 'Connected';
+        if ($('settings-auth-status')) $('settings-auth-status').style.color = 'var(--sb-success, #22c55e)';
+        if ($('settings-auth-email')) $('settings-auth-email').textContent = d.config.user_email || '—';
+        if ($('settings-device-id')) $('settings-device-id').textContent = d.config.device_id || '—';
+        if ($('settings-plan')) $('settings-plan').textContent = d.config.paid_user ? 'Paid' : 'Free';
+        // Update managed LLM sign-in button to show connected state
+        if ($('src-managed-gif') && d.config.user_email) {
+          $('src-managed-gif').innerHTML = '<span class="sb-pill sb-pill--success" style="font-size:0.75rem">Connected</span>';
+        }
+      } else {
+        if ($('settings-auth-status')) $('settings-auth-status').textContent = 'Not connected';
+        if ($('settings-auth-status')) $('settings-auth-status').style.color = 'var(--sb-text-muted)';
+      }
+    }).catch(function(){});
+  }
 
 })();
 </script>
