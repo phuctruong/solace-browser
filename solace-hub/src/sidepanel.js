@@ -618,6 +618,27 @@
     }
   }
 
+  // ─── Sidebar Mode Toggle (Navigate vs Create) ───
+  window.setYYMode = function(mode) {
+    var navMode = document.getElementById('yy-nav-mode');
+    var createMode = document.getElementById('yy-create-mode');
+    var navBtn = document.getElementById('mode-nav-btn');
+    var createBtn = document.getElementById('mode-create-btn');
+    if (!navMode || !createMode) return;
+
+    if (mode === 'create') {
+      navMode.style.display = 'none';
+      createMode.style.display = 'block';
+      if (navBtn) navBtn.classList.remove('yy-mode-btn--active');
+      if (createBtn) createBtn.classList.add('yy-mode-btn--active');
+    } else {
+      navMode.style.display = 'block';
+      createMode.style.display = 'none';
+      if (navBtn) navBtn.classList.add('yy-mode-btn--active');
+      if (createBtn) createBtn.classList.remove('yy-mode-btn--active');
+    }
+  };
+
   // ─── Language switcher (matches Solace Hub) ───
   function initLanguageSwitcher() {
     var toggle = qs('lang-toggle');

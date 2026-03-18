@@ -51,6 +51,7 @@
     </div>
 
     <main class="yy-main" id="main-content" style="display:none">
+      <!-- Status bar -->
       <section class="yy-card yy-hero-card">
         <div class="yy-status-row" aria-live="polite">
           <span id="ws-status-dot" class="yy-status-dot status-connecting"></span>
@@ -61,54 +62,66 @@
           <span id="source-pill" class="yy-pill yy-pill-muted">No model source</span>
           <span id="device-pill" class="yy-pill yy-pill-muted">Device pending</span>
         </div>
-        <p id="hero-copy" class="yy-copy">Start local. Apps activate after sign-in.</p>
       </section>
 
-      <section class="yy-card yy-chat-card">
-        <div class="yy-section-head yy-section-head-tight">
-          <div>
-            <p class="yy-section-kicker">Chat</p>
-            <h2>Ask Yinyang to create apps or domains</h2>
-          </div>
-          <span id="chat-model-pill" class="yy-pill yy-pill-muted">Model: checking</span>
-        </div>
-        <form class="yy-create-form" id="chat-form">
-          <label class="yy-sr-only" for="chat-input">Ask Yinyang</label>
-          <input type="text" id="chat-input" class="yy-input" placeholder="Create a new app or domain workflow..." autocomplete="off" maxlength="1000">
-          <button type="submit" class="yy-send-btn">Ask</button>
-        </form>
-        <p id="assistant-helper" class="yy-copy">Use chat to create a custom app, add a new domain, or explain a workflow.</p>
-        <div class="yy-prompt-row" id="prompt-row">
-          <button type="button" class="yy-prompt-chip" data-prompt="Create a Google Search app that tracks AI browser funding and writes to Morning Brief.">Search to brief</button>
-          <button type="button" class="yy-prompt-chip" data-prompt="Create a Gmail app that keeps unread triage moving and saves a review report.">Gmail triage</button>
-          <button type="button" class="yy-prompt-chip" data-prompt="Create a new domain workflow for Slack that keeps one keepalive app running.">New domain</button>
-        </div>
-        <div class="yy-chat-messages" id="chat-messages" aria-live="polite"></div>
-      </section>
+      <!-- Mode toggle: Navigate vs Create -->
+      <div class="yy-mode-toggle">
+        <button class="yy-mode-btn yy-mode-btn--active" id="mode-nav-btn" onclick="setYYMode('nav')">Navigate</button>
+        <button class="yy-mode-btn" id="mode-create-btn" onclick="setYYMode('create')">+ Create App</button>
+      </div>
 
-      <section class="yy-card">
-        <div class="yy-section-head">
-          <div>
-            <p class="yy-section-kicker">Domains</p>
-            <h2>Pick one place to manage</h2>
+      <!-- ═══ NAVIGATE MODE (default) ═══ -->
+      <div id="yy-nav-mode">
+        <section class="yy-card">
+          <div class="yy-section-head">
+            <div>
+              <p class="yy-section-kicker">Domains</p>
+              <h2>Your apps by domain</h2>
+            </div>
+            <span id="domain-count" class="yy-pill yy-pill-muted">0 active</span>
           </div>
-          <span id="domain-count" class="yy-pill yy-pill-muted">0 active</span>
-        </div>
-        <p id="domains-copy" class="yy-copy">Click a domain to open its local management page in the main browser area.</p>
+          <p id="domains-copy" class="yy-copy">Tap a domain to see its apps. Tap an app to manage it.</p>
         <div class="yy-domain-grid" id="domain-grid"></div>
       </section>
 
-      <section class="yy-card">
-        <div class="yy-section-head">
-          <div>
-            <p class="yy-section-kicker">Recent activity</p>
-            <h2 id="event-feed-title">All events</h2>
+        <section class="yy-card">
+          <div class="yy-section-head">
+            <div>
+              <p class="yy-section-kicker">Recent activity</p>
+              <h2 id="event-feed-title">All events</h2>
+            </div>
+            <span id="event-feed-pill" class="yy-pill yy-pill-muted">0 events</span>
           </div>
-          <span id="event-feed-pill" class="yy-pill yy-pill-muted">0 events</span>
-        </div>
-        <p id="event-feed-copy" class="yy-copy">Click an event to open the full local details page in the browser.</p>
-        <div class="yy-event-feed" id="event-feed" aria-live="polite"></div>
-      </section>
+          <p id="event-feed-copy" class="yy-copy">Click an event to see details.</p>
+          <div class="yy-event-feed" id="event-feed" aria-live="polite"></div>
+        </section>
+      </div><!-- end yy-nav-mode -->
+
+      <!-- ═══ CREATE MODE ═══ -->
+      <div id="yy-create-mode" style="display:none">
+        <section class="yy-card yy-chat-card">
+          <div class="yy-section-head yy-section-head-tight">
+            <div>
+              <p class="yy-section-kicker">Create Custom App</p>
+              <h2>Describe what you want</h2>
+            </div>
+            <span id="chat-model-pill" class="yy-pill yy-pill-muted">Model: checking</span>
+          </div>
+          <form class="yy-create-form" id="chat-form">
+            <label class="yy-sr-only" for="chat-input">Describe your app</label>
+            <input type="text" id="chat-input" class="yy-input" placeholder="e.g., Monitor HackerNews for AI funding news and email me a daily digest" autocomplete="off" maxlength="1000">
+            <button type="submit" class="yy-send-btn">Create</button>
+          </form>
+          <p id="assistant-helper" class="yy-copy">Describe what you want in plain English. Yinyang will create the app for you.</p>
+          <div class="yy-prompt-row" id="prompt-row">
+            <button type="button" class="yy-prompt-chip" data-prompt="Create a Google Search app that tracks AI browser funding and writes to Morning Brief.">Search to brief</button>
+            <button type="button" class="yy-prompt-chip" data-prompt="Create a Gmail app that keeps unread triage moving and saves a review report.">Gmail triage</button>
+            <button type="button" class="yy-prompt-chip" data-prompt="Create a new domain workflow for Slack that keeps one keepalive app running.">New domain</button>
+          </div>
+          <div class="yy-chat-messages" id="chat-messages" aria-live="polite"></div>
+        </section>
+      </div><!-- end yy-create-mode -->
+
     </main>
   </div>
   <script src="sidepanel.js"></script>
