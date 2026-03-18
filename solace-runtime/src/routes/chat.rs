@@ -339,7 +339,7 @@ async fn chat_reject(
 async fn execute_intent(intent: &Intent, message: &str, state: &AppState) -> String {
     match intent {
         Intent::Query => {
-            // Answer queries about system status
+            // Answer queries — try local context first, then LLM
             let lower = message.to_ascii_lowercase();
             if lower.contains("status") || lower.contains("health") {
                 let sessions = state.sessions.read().len();
@@ -349,11 +349,15 @@ async fn execute_intent(intent: &Intent, message: &str, state: &AppState) -> Str
                     "System status: {} active sessions, {} evidence entries, cloud {}.",
                     sessions, evidence, if cloud { "connected" } else { "disconnected" }
                 )
-            } else if lower.contains("app") {
+            } else if lower.contains("app") && (lower.contains("how many") || lower.contains("list") || lower.contains("count")) {
                 let apps = crate::utils::scan_app_dirs();
                 format!("You have {} apps installed.", apps.len())
             } else {
-                format!("I understand your question: '{}'. In production, this would query an LLM for a detailed answer.", message)
+                // Call LLM — try Claude CLI first, then OpenRouter API
+                match call_llm(message).await {
+                    Ok(response) => response,
+                    Err(_) => format!("I understand: '{}'. Connect an LLM (sign in or add API key) for detailed answers.", message),
+                }
             }
         }
         Intent::Navigate => {
@@ -377,6 +381,83 @@ async fn execute_intent(intent: &Intent, message: &str, state: &AppState) -> Str
             "I didn't understand that. Try 'run morning brief', 'show status', or ask a question.".to_string()
         }
     }
+}
+
+// ─── LLM Integration ────────────────────────────────────────────────
+
+/// Call an LLM to answer a query. Tries: OpenRouter API → Claude CLI → error.
+async fn call_llm(message: &str) -> Result<String, String> {
+    // Try 1: OpenRouter API (if OPENROUTER_API_KEY set)
+    if let Ok(api_key) = std::env::var("OPENROUTER_API_KEY") {
+        if !api_key.is_empty() {
+            let client = reqwest::Client::new();
+            let resp = client
+                .post("https://openrouter.ai/api/v1/chat/completions")
+                .bearer_auth(&api_key)
+                .json(&serde_json::json!({
+                    "model": "anthropic/claude-haiku-4-5",
+                    "messages": [
+                        {"role": "system", "content": "You are Yinyang, the AI assistant for Solace Browser. Answer concisely in 1-3 sentences. You help users manage their AI apps, domains, and automation workflows."},
+                        {"role": "user", "content": message}
+                    ],
+                    "max_tokens": 300,
+                }))
+                .timeout(std::time::Duration::from_secs(15))
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+
+            if resp.status().is_success() {
+                let body: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+                if let Some(content) = body["choices"][0]["message"]["content"].as_str() {
+                    return Ok(content.to_string());
+                }
+            }
+        }
+    }
+
+    // Try 2: Claude CLI (if installed)
+    let claude_path = which_claude();
+    if let Some(path) = claude_path {
+        let output = tokio::process::Command::new(&path)
+            .args(["--print", "--model", "haiku", message])
+            .output()
+            .await
+            .map_err(|e| e.to_string())?;
+
+        if output.status.success() {
+            let response = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if !response.is_empty() {
+                return Ok(response);
+            }
+        }
+    }
+
+    Err("No LLM available".to_string())
+}
+
+fn which_claude() -> Option<String> {
+    for path in &[
+        "/home/phuc/.local/bin/claude",
+        "/usr/local/bin/claude",
+        "/usr/bin/claude",
+    ] {
+        if std::path::Path::new(path).exists() {
+            return Some(path.to_string());
+        }
+    }
+    // Try which
+    std::process::Command::new("which")
+        .arg("claude")
+        .output()
+        .ok()
+        .and_then(|o| {
+            if o.status.success() {
+                Some(String::from_utf8_lossy(&o.stdout).trim().to_string())
+            } else {
+                None
+            }
+        })
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
