@@ -59,6 +59,16 @@ fn parse_prime_mermaid_manifest(path: &Path) -> Result<AppManifest, String> {
             manifest.category = rest.trim().to_string();
         } else if let Some(rest) = trimmed.strip_prefix("**Type**:") {
             manifest.app_type = rest.trim().to_string();
+        } else if let Some(rest) = trimmed.strip_prefix("**Orchestrates**:") {
+            // Parse comma-separated list of app IDs
+            manifest.orchestrates = rest
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+        } else if let Some(rest) = trimmed.strip_prefix("**Safety**:") {
+            // Safety level (A, B, C) — store in tier if tier is empty
+            let _ = rest; // Available for future use
         }
     }
 

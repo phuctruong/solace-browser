@@ -134,13 +134,19 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
     );
     // For conductor apps: load ONLY orchestrated apps' outboxes
     // For standard apps: load all other apps' latest reports
-    let source_reports = if manifest.app_type == "conductor" && !manifest.orchestrates.is_empty() {
+    // Conductor detection: "conductor" or legacy "orchestrator"
+    let is_conductor = manifest.app_type == "conductor" || manifest.app_type == "orchestrator";
+    let source_reports = if is_conductor && !manifest.orchestrates.is_empty() {
         load_orchestrated_reports(&manifest.orchestrates)
+    } else if is_conductor {
+        // Legacy orchestrator without explicit orchestrates — load all other apps
+        load_source_reports(app_id)
     } else {
         load_source_reports(app_id)
     };
     data.insert("source_reports".to_string(), Value::Array(source_reports));
-    data.insert("is_conductor".to_string(), Value::Bool(manifest.app_type == "conductor"));
+    data.insert("is_conductor".to_string(), Value::Bool(is_conductor));
+    data.insert("app_type".to_string(), Value::String(manifest.app_type.clone()));
     data.insert("run_id".to_string(), Value::String(run_id.clone()));
     data.insert(
         "evidence_hash".to_string(),
