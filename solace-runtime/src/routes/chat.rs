@@ -336,6 +336,11 @@ async fn chat_reject(
 
 // ─── Intent Execution ────────────────────────────────────────────────
 
+/// Public wrapper for approval queue to call
+pub async fn execute_approved_intent(intent: &Intent, message: &str, state: &AppState) -> String {
+    execute_intent(intent, message, state).await
+}
+
 async fn execute_intent(intent: &Intent, message: &str, state: &AppState) -> String {
     match intent {
         Intent::Query => {
@@ -494,7 +499,7 @@ fn extract_app_name(message: &str) -> String {
 }
 
 /// Pending action awaiting user approval
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PendingAction {
     pub id: String,
     pub intent: Intent,

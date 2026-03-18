@@ -22,6 +22,9 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/esign/package", post(build_package))
         .route("/api/v1/esign/packages", get(list_packages))
         .route("/api/v1/esign/verify/:package_id", get(verify_package))
+        .route("/api/v1/approvals/pending", get(pending_approvals))
+        .route("/api/v1/approvals/approve", post(approve_action))
+        .route("/api/v1/approvals/reject", post(reject_action))
 }
 
 // ---------------------------------------------------------------------------
@@ -331,4 +334,165 @@ async fn verify_package(
         "package": pkg,
         "integrity": "sha256_chain_valid",
     })))
+}
+
+// ---------------------------------------------------------------------------
+// Approval Queue — Universal sign-off cards
+// ---------------------------------------------------------------------------
+
+/// GET /api/v1/approvals/pending — list all pending sign-off cards
+async fn pending_approvals(State(state): State<AppState>) -> Json<Value> {
+    let actions = state.pending_actions.read().clone();
+    let cloud = state.cloud_config.read().clone();
+    let esign_available = cloud.is_some();
+
+    let cards: Vec<Value> = actions
+        .iter()
+        .map(|a| {
+            json!({
+                "id": a.id,
+                "level": format!("L{}", match format!("{:?}", a.intent).as_str() {
+                    "Query" => "1", "Navigate" => "1", "RunApp" => "2",
+                    "Automate" => "3", "Configure" => "3", _ => "3"
+                }),
+                "app_id": extract_app_from_message(&a.message),
+                "action": format!("{:?}", a.intent),
+                "summary": if a.message.len() > 80 { format!("{}...", &a.message[..80]) } else { a.message.clone() },
+                "details": {
+                    "full_message": a.message,
+                    "preview": a.preview,
+                },
+                "cooldown_seconds": a.cooldown_secs,
+                "created_at": a.created_at.elapsed().as_secs(),
+                "esign_available": esign_available,
+            })
+        })
+        .collect();
+
+    Json(json!({
+        "pending": cards,
+        "total": cards.len(),
+        "esign_available": esign_available,
+    }))
+}
+
+fn extract_app_from_message(msg: &str) -> String {
+    let lower = msg.to_ascii_lowercase();
+    if lower.contains("morning") && lower.contains("brief") { return "morning-brief".to_string(); }
+    if lower.contains("hackernews") || lower.contains("hn") { return "hackernews-feed".to_string(); }
+    if lower.contains("gmail") || lower.contains("email") { return "gmail-inbox-triage".to_string(); }
+    if lower.contains("reddit") { return "reddit-scanner".to_string(); }
+    if lower.contains("linkedin") { return "linkedin-outreach".to_string(); }
+    if lower.contains("twitter") { return "twitter-poster".to_string(); }
+    "unknown".to_string()
+}
+
+#[derive(Deserialize)]
+struct ActionIdPayload { action_id: String }
+
+/// POST /api/v1/approvals/approve — approve a pending action
+async fn approve_action(
+    State(state): State<AppState>,
+    Json(payload): Json<ActionIdPayload>,
+) -> Json<Value> {
+    let action_id = payload.action_id;
+    let removed = {
+        let mut actions = state.pending_actions.write();
+        let idx = actions.iter().position(|a| a.id == action_id);
+        idx.map(|i| actions.remove(i))
+    };
+
+    match removed {
+        Some(action) => {
+            let solace_home = crate::utils::solace_home();
+            let _ = crate::evidence::record_event(
+                &solace_home,
+                "approval.approved",
+                "user",
+                json!({
+                    "action_id": action_id,
+                    "intent": format!("{:?}", action.intent),
+                    "message": action.message,
+                }),
+            );
+            Json(json!({"approved": true, "action_id": action_id}))
+        }
+        None => Json(json!({"error": "Approval not found or expired"})),
+    }
+}
+
+/// POST /api/v1/approvals/reject — reject a pending action
+async fn reject_action(
+    State(state): State<AppState>,
+    Json(payload): Json<ActionIdPayload>,
+) -> Json<Value> {
+    let action_id = payload.action_id;
+    let removed = {
+        let mut actions = state.pending_actions.write();
+        let idx = actions.iter().position(|a| a.id == action_id);
+        idx.map(|i| actions.remove(i))
+    };
+
+    match removed {
+        Some(action) => {
+            let solace_home = crate::utils::solace_home();
+            let _ = crate::evidence::record_event(
+                &solace_home,
+                "approval.rejected",
+                "user",
+                json!({
+                    "action_id": action_id,
+                    "intent": format!("{:?}", action.intent),
+                    "message": action.message,
+                }),
+            );
+            Json(json!({"rejected": true, "action_id": action_id}))
+        }
+        None => Json(json!({"error": "Approval not found or expired"})),
+    }
+}
+
+#[derive(Deserialize)]
+struct PreviewQuery { action_id: String }
+
+/// GET /api/v1/approvals/preview?action_id=xxx — full page preview (future: PZip reconstruction)
+#[allow(dead_code)]
+async fn approval_preview(
+    axum::extract::Query(q): axum::extract::Query<PreviewQuery>,
+) -> axum::response::Html<String> {
+    let action_id = q.action_id;
+    // For now, return a simple card preview
+    // In production: reconstruct full page from PZip Stillwater + Ripple
+    let html = format!(r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Approval Preview — {id}</title>
+<link rel="stylesheet" href="/styleguide.css">
+<style>
+body {{ font-family: var(--sb-font-sans, system-ui); background: var(--sb-bg, #0a0a0a); color: var(--sb-text, #e0e0e0); margin: 0; padding: 2rem; }}
+.preview-card {{ max-width: 600px; margin: 0 auto; background: var(--sb-surface, #1a1a2e); border-radius: 12px; padding: 2rem; border: 1px solid var(--sb-border, #333); }}
+.preview-card h1 {{ font-size: 1.25rem; margin: 0 0 1rem; }}
+.preview-actions {{ display: flex; gap: 0.75rem; margin-top: 1.5rem; }}
+.btn-approve {{ padding: 0.75rem 2rem; background: var(--sb-success, #22c55e); color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }}
+.btn-reject {{ padding: 0.75rem 2rem; background: var(--sb-danger, #ef4444); color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }}
+.btn-esign {{ padding: 0.75rem 2rem; background: var(--sb-accent, #4f46e5); color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }}
+</style>
+</head>
+<body>
+<div class="preview-card">
+  <h1>Approval Required</h1>
+  <p>Action ID: <code>{id}</code></p>
+  <p>This action requires your approval before execution.</p>
+  <div class="preview-actions">
+    <button class="btn-approve" onclick="fetch('/api/v1/approvals/{id}/approve',{{method:'POST'}}).then(()=>window.close())">✓ Approve</button>
+    <button class="btn-reject" onclick="fetch('/api/v1/approvals/{id}/reject',{{method:'POST'}}).then(()=>window.close())">✗ Reject</button>
+    <button class="btn-esign" onclick="window.location='/api/v1/esign/package'">🔏 E-Sign</button>
+  </div>
+</div>
+</body>
+</html>"#, id = action_id);
+
+    axum::response::Html(html)
 }
