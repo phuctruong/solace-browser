@@ -60,6 +60,7 @@
     <div id="topbar-user-info" style="display:none;align-items:center;gap:0.5rem">
       <span class="sb-pill sb-pill--success" style="font-size:0.7rem">Connected</span>
       <span id="topbar-user" style="font-size:0.85rem;color:var(--sb-text)"></span>
+      <button class="sb-btn sb-btn--sm" onclick="signOut()" style="font-size:0.75rem;padding:0.2rem 0.5rem">Sign out</button>
     </div>
   </div>
 </header>
@@ -97,7 +98,7 @@
     <div class="sb-tabs" role="tablist">
       <button class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
       <button class="sb-tab" data-tab="sessions" role="tab">Sessions</button>
-      <button class="sb-tab" data-tab="events" role="tab">Events</button>
+      <button class="sb-tab" data-tab="events" role="tab">Events <span id="events-badge" class="sb-pill sb-pill--danger" style="font-size:0.65rem;padding:0.1rem 0.4rem;display:none">0</span></button>
       <button class="sb-tab" data-tab="remote" role="tab">Remote</button>
       <button class="sb-tab" data-tab="settings" role="tab">Settings</button>
     </div>
@@ -767,6 +768,35 @@
       // Fallback: open in default browser
       window.open('https://solaceagi.com/dashboard', '_blank');
     });
+    // Poll for login completion (bridge will POST cloud/connect)
+    var loginPoll = setInterval(function() {
+      get('/api/v1/cloud/status').then(function(c) {
+        if (c.connected && c.config) {
+          clearInterval(loginPoll);
+          toast('Signed in as ' + (c.config.user_email || 'user'), 'success');
+          // Refresh UI
+          $('topbar-signin').style.display = 'none';
+          $('topbar-user-info').style.display = 'flex';
+          $('topbar-user').textContent = c.config.user_email || 'Connected';
+          loadSettingsInfo();
+          loadRemoteStatus();
+        }
+      }).catch(function(){});
+    }, 3000);
+    // Stop polling after 5 minutes
+    setTimeout(function() { clearInterval(loginPoll); }, 300000);
+  };
+
+  // ─── Sign Out (disconnects cloud, reverts to gate state) ───
+  window.signOut = function() {
+    fetch('/api/v1/cloud/disconnect', {method:'POST'}).then(function(r){return r.json();}).then(function() {
+      toast('Signed out', 'success');
+      $('topbar-signin').style.display = 'inline-flex';
+      $('topbar-user-info').style.display = 'none';
+      $('src-managed').innerHTML = '<span class="sb-pill sb-pill--warning">Not signed in</span>';
+      $('src-managed-gif').innerHTML = '<button class="sb-btn sb-btn--sm" onclick="signIn()">Sign In</button>';
+      loadSettingsInfo();
+    }).catch(function(e) { toast('Sign out failed: ' + e.message, 'error'); });
   };
 
   // ─── Ollama inline edit ───
@@ -982,9 +1012,11 @@
     get('/api/v1/notifications').then(function(d) {
       var items = (d.notifications || []).filter(function(n) { return n.action_required || n.level >= 3; });
       var banner = $('signoffs-banner');
-      if (!items.length) { banner.style.display = 'none'; return; }
+      var badge = $('events-badge');
+      if (!items.length) { banner.style.display = 'none'; if (badge) badge.style.display = 'none'; return; }
       banner.style.display = 'block';
       $('signoffs-count').textContent = items.length;
+      if (badge) { badge.textContent = items.length; badge.style.display = 'inline'; }
       $('signoffs-list').innerHTML = items.map(function(n) {
         return '<div style="display:flex;align-items:center;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--sb-border)">' +
           '<div><span class="sb-pill sb-pill--warning" style="font-size:0.6rem">L' + (n.level || 3) + '</span> ' + esc(n.message || n.title || 'Action required') +
