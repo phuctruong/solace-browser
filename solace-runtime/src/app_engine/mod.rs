@@ -56,6 +56,9 @@ pub struct AppManifest {
     pub tier: String,
     #[serde(default)]
     pub levels: HashMap<String, String>,
+    /// Conductor apps: list of app IDs whose outboxes this app reads.
+    #[serde(default)]
+    pub orchestrates: Vec<String>,
 }
 
 pub fn scan_installed_apps() -> Vec<AppManifest> {

@@ -132,10 +132,15 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
         "inbox".to_string(),
         crate::app_engine::inbox::load_inbox_payload(&app_dir),
     );
-    data.insert(
-        "source_reports".to_string(),
-        Value::Array(load_source_reports(app_id)),
-    );
+    // For conductor apps: load ONLY orchestrated apps' outboxes
+    // For standard apps: load all other apps' latest reports
+    let source_reports = if manifest.app_type == "conductor" && !manifest.orchestrates.is_empty() {
+        load_orchestrated_reports(&manifest.orchestrates)
+    } else {
+        load_source_reports(app_id)
+    };
+    data.insert("source_reports".to_string(), Value::Array(source_reports));
+    data.insert("is_conductor".to_string(), Value::Bool(manifest.app_type == "conductor"));
     data.insert("run_id".to_string(), Value::String(run_id.clone()));
     data.insert(
         "evidence_hash".to_string(),
@@ -468,6 +473,29 @@ fn pick_string(value: &Value, keys: &[&str]) -> Option<String> {
 
 fn pick_value(value: &Value, keys: &[&str]) -> Option<Value> {
     keys.iter().find_map(|key| value.get(*key).cloned())
+}
+
+/// Load reports from specific orchestrated apps (Conductor pattern).
+fn load_orchestrated_reports(orchestrated_ids: &[String]) -> Vec<Value> {
+    orchestrated_ids
+        .iter()
+        .filter_map(|app_id| {
+            let app_dir = crate::utils::find_app_dir(app_id)?;
+            let manifest = crate::app_engine::inbox::load_manifest(&app_dir).ok()?;
+            let latest_run = latest_run_dir(&app_dir)?;
+            let report_path = latest_run.join("report.html");
+            let report = std::fs::read_to_string(&report_path).ok()?;
+            Some(serde_json::json!({
+                "app_id": manifest.id,
+                "name": manifest.name,
+                "domain": manifest.domain,
+                "report_path": report_path.display().to_string(),
+                "generated_at": crate::utils::modified_iso8601(&report_path),
+                "report_html": report,
+                "preview": preview_html(&report),
+            }))
+        })
+        .collect()
 }
 
 fn load_source_reports(current_app_id: &str) -> Vec<Value> {
