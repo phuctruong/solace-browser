@@ -82,14 +82,21 @@
     <div class="hub-scan-text" id="scan-text">Setting up your AI workspace...</div>
   </div>
 
-  <!-- Hub navigation bar -->
+  <!-- Hub navigation bar with yinyang indicator -->
   <div id="hub-header" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <img src="/media/yinyang-rotating_70pct_128px.gif" alt="" style="width:28px;height:auto;border-radius:50%">
+        <div>
+          <strong style="font-size:0.9rem;color:var(--sb-text)">Solace Hub</strong>
+          <span class="sb-text-muted" style="font-size:0.75rem;margin-left:0.5rem">Local Control Plane</span>
+        </div>
+      </div>
       <div style="display:flex;align-items:center;gap:0.5rem">
         <a href="http://127.0.0.1:8888/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm" style="border-color:var(--sb-success, #22c55e);color:var(--sb-success, #22c55e)">&#128009; Local Dashboard</a>
         <a href="https://solaceagi.com/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm" style="border-color:var(--sb-accent);color:var(--sb-accent)">&#9729; Cloud Dashboard</a>
+        <span id="hub-version-badge" class="sb-pill sb-pill--info" style="font-size:0.7rem">v...</span>
       </div>
-      <span id="hub-version-badge" class="sb-pill sb-pill--info" style="font-size:0.7rem">v...</span>
     </div>
   </div>
 
