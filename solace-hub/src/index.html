@@ -450,8 +450,8 @@
             acct.style.display = 'block';
             acct.innerHTML = '<span class="sb-pill sb-pill--success">● ' + esc(email) + '</span> <span class="sb-text-muted">Powered by Managed LLM + 47 uplifts</span>';
           } else {
-            // Free account
-            $('src-managed').innerHTML = '<span class="sb-pill sb-pill--warning">' + esc(email) + ' · Managed off</span>';
+            // Free account — connected but not paying for managed LLM
+            $('src-managed').innerHTML = '<span class="sb-pill sb-pill--success">' + esc(email) + '</span> <span class="sb-text-muted" style="font-size:0.75rem">Free account</span>';
             auth.textContent = esc(email);
             auth.className = 'sb-pill sb-pill--success';
             acct.style.display = 'block';

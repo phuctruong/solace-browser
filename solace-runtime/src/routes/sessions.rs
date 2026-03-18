@@ -293,7 +293,11 @@ async fn launch_session(
                 .arg("--disable-background-networking")
                 .arg("--disable-client-side-phishing-detection")
                 .arg("--disable-component-update")
+                .arg("--disable-default-apps")
                 .env("DISPLAY", std::env::var("DISPLAY").unwrap_or_else(|_| ":1".to_string()))
+                .env("GOOGLE_API_KEY", "no")
+                .env("GOOGLE_DEFAULT_CLIENT_ID", "no")
+                .env("GOOGLE_DEFAULT_CLIENT_SECRET", "no")
                 .spawn()
             {
                 Ok(mut child) => {
@@ -370,7 +374,11 @@ async fn launch_session(
                 .arg("--disable-background-networking")
                 .arg("--disable-client-side-phishing-detection")
                 .arg("--disable-component-update")
+                .arg("--disable-default-apps")
                 .env("DISPLAY", std::env::var("DISPLAY").unwrap_or_else(|_| ":1".to_string()))
+                .env("GOOGLE_API_KEY", "no")
+                .env("GOOGLE_DEFAULT_CLIENT_ID", "no")
+                .env("GOOGLE_DEFAULT_CLIENT_SECRET", "no")
                 .spawn()
             {
                 Ok(mut child) => {
