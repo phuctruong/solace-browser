@@ -96,10 +96,9 @@
   <div id="hub-tabs" style="display:none">
     <div class="sb-tabs" role="tablist">
       <button class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
-      <button class="sb-tab" data-tab="apps" role="tab">Apps</button>
-      <button class="sb-tab" data-tab="domains" role="tab">Domains</button>
       <button class="sb-tab" data-tab="sessions" role="tab">Sessions</button>
       <button class="sb-tab" data-tab="events" role="tab">Events</button>
+      <button class="sb-tab" data-tab="remote" role="tab">Remote</button>
       <button class="sb-tab" data-tab="settings" role="tab">Settings</button>
     </div>
   </div>
@@ -232,28 +231,6 @@
   </div>
   </div><!-- end tab-overview -->
 
-  <!-- TAB: APPS (local installed apps) -->
-  <div id="tab-apps" class="hub-tab-panel" style="display:none">
-    <div class="sb-card">
-      <p class="sb-kicker">Installed Apps</p>
-      <p class="sb-text-muted" style="font-size:0.85rem;margin:0.25rem 0 0.75rem">Apps on your local machine. All data stays here.</p>
-      <div id="local-apps-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.75rem">
-        <div class="sb-text-muted" style="text-align:center;padding:2rem">Loading apps...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- TAB: DOMAINS (local domain ecosystem) -->
-  <div id="tab-domains" class="hub-tab-panel" style="display:none">
-    <div class="sb-card">
-      <p class="sb-kicker">Domain Ecosystem</p>
-      <p class="sb-text-muted" style="font-size:0.85rem;margin:0.25rem 0 0.75rem">Domains with apps installed. Click to manage.</p>
-      <div id="local-domains-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem">
-        <div class="sb-text-muted" style="text-align:center;padding:2rem">Loading domains...</div>
-      </div>
-    </div>
-  </div>
-
   <!-- TAB: SESSIONS -->
   <div id="tab-sessions" class="hub-tab-panel" style="display:none">
     <div class="sb-card">
@@ -298,6 +275,31 @@
         <tbody id="events-body"></tbody>
       </table>
       <div id="events-empty" class="sb-text-muted" style="text-align:center;padding:1rem">Loading events...</div>
+    </div>
+  </div>
+
+  <!-- TAB: REMOTE (consent + audit for remote access) -->
+  <div id="tab-remote" class="hub-tab-panel" style="display:none">
+    <div class="sb-card">
+      <p class="sb-kicker">Remote Access Control</p>
+      <p class="sb-text-muted" style="font-size:0.85rem;margin:0.25rem 0 0.75rem">Allow a support agent or team member to control your browser remotely. Every action is recorded.</p>
+      <div style="display:flex;align-items:center;gap:1rem;margin:1rem 0">
+        <div id="remote-status-dot" style="width:12px;height:12px;border-radius:50%;background:var(--sb-danger)"></div>
+        <div>
+          <strong id="remote-status-text">Remote access: OFF</strong>
+          <div class="sb-text-muted" style="font-size:0.8rem" id="remote-status-detail">No active consent. Your machine is private.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.5rem">
+        <a href="http://127.0.0.1:8888/api/v1/tunnel/consent" target="_blank" rel="noopener" class="sb-btn sb-btn--sm" id="remote-consent-btn">Sign Consent Form</a>
+        <button class="sb-btn sb-btn--sm sb-btn--danger" id="remote-disconnect-btn" style="display:none" onclick="disconnectRemote()">Disconnect</button>
+      </div>
+    </div>
+    <div class="sb-card sb-mt-md">
+      <p class="sb-kicker">Remote Audit Trail</p>
+      <div id="remote-audit-list" style="max-height:300px;overflow-y:auto">
+        <p class="sb-text-muted" style="text-align:center;padding:1rem">No remote actions recorded</p>
+      </div>
     </div>
   </div>
 
@@ -461,10 +463,9 @@
           $('hub-tabs').style.display = 'block';
           if ($('hub-header')) $('hub-header').style.display = 'block';
           $('results-phase').style.display = 'block';
-          loadLocalApps();
-          loadLocalDomains();
           loadVersionInfo();
           loadSettingsInfo();
+          loadRemoteStatus();
 
           if (hasLLM) {
             // Signed in or BYOK set — ready to launch
@@ -1018,53 +1019,6 @@
   setInterval(refreshSignoffs, 5000);
 
   // ─── Local Apps + Domains tabs ───
-  function loadLocalApps() {
-    fetch('/api/apps').then(function(r){return r.json()}).then(function(d) {
-      var apps = d.apps || [];
-      var grid = $('local-apps-grid');
-      if (!grid) return;
-      if (!apps.length) { grid.innerHTML = '<div class="sb-text-muted" style="text-align:center;padding:2rem">No apps installed yet</div>'; return; }
-      var html = '';
-      apps.forEach(function(a) {
-        html += '<div class="sb-card" style="padding:0.75rem">' +
-          '<strong style="font-size:0.9rem">' + esc(a.name || a.id) + '</strong>' +
-          '<div class="sb-text-muted" style="font-size:0.75rem">' + esc(a.domain || 'general') + '</div>' +
-          '<div style="margin-top:0.5rem"><button class="sb-btn sb-btn--sm" onclick="runApp(\'' + esc(a.id) + '\')">Run</button></div>' +
-          '</div>';
-      });
-      grid.innerHTML = html;
-    }).catch(function() {
-      var g = $('local-apps-grid'); if (g) g.innerHTML = '<div class="sb-text-muted" style="text-align:center;padding:2rem">Could not load apps</div>';
-    });
-  }
-
-  function loadLocalDomains() {
-    fetch('/api/v1/domains').then(function(r){return r.json()}).then(function(d) {
-      var domains = d.domains || {};
-      var grid = $('local-domains-grid');
-      if (!grid) return;
-      var keys = Object.keys(domains).sort();
-      if (!keys.length) { grid.innerHTML = '<div class="sb-text-muted" style="text-align:center;padding:2rem">No domains yet. Run an app to discover domains.</div>'; return; }
-      var html = '';
-      keys.forEach(function(domain) {
-        html += '<a href="/domains/' + esc(domain) + '" target="_blank" rel="noopener" class="sb-card" style="padding:0.75rem;text-decoration:none;display:block">' +
-          '<strong style="font-size:0.9rem">' + esc(domain) + '</strong>' +
-          '<div class="sb-text-muted" style="font-size:0.75rem">' + domains[domain] + ' apps</div>' +
-          '</a>';
-      });
-      grid.innerHTML = html;
-    }).catch(function() {
-      var g = $('local-domains-grid'); if (g) g.innerHTML = '<div class="sb-text-muted" style="text-align:center;padding:2rem">Could not load domains</div>';
-    });
-  }
-
-  function runApp(appId) {
-    fetch('/api/v1/apps/run/' + appId, {method:'POST'}).then(function(r){return r.json()}).then(function(d) {
-      if (d.ok || d.report) { addNotification('App ' + appId + ' completed', 'success'); }
-      else { addNotification('App error: ' + (d.error || 'unknown'), 'error'); }
-    }).catch(function(e) { addNotification('Run failed: ' + e.message, 'error'); });
-  }
-
   function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   function loadVersionInfo() {
@@ -1085,6 +1039,51 @@
         if (badge) { badge.textContent = 'v' + d.current_version + ' → v' + d.latest_version; badge.className = 'sb-pill sb-pill--warning'; }
       }
     }).catch(function(){});
+  }
+
+  function loadRemoteStatus() {
+    get('/api/v1/tunnel/status').then(function(d) {
+      var connected = d.tunnel_connected;
+      var consent = d.consent_active || (d.consent && d.consent !== null);
+      var dot = $('remote-status-dot');
+      var text = $('remote-status-text');
+      var detail = $('remote-status-detail');
+      var consentBtn = $('remote-consent-btn');
+      var disconnectBtn = $('remote-disconnect-btn');
+      if (connected || consent) {
+        if (dot) dot.style.background = 'var(--sb-warning, #f59e0b)';
+        if (text) text.textContent = 'Remote access: ACTIVE';
+        if (detail) detail.textContent = connected ? 'Tunnel connected. Remote agent can control your browser.' : 'Consent signed. Waiting for connection.';
+        if (consentBtn) consentBtn.style.display = 'none';
+        if (disconnectBtn) disconnectBtn.style.display = 'inline-flex';
+      } else {
+        if (dot) dot.style.background = 'var(--sb-success, #22c55e)';
+        if (text) text.textContent = 'Remote access: OFF';
+        if (detail) detail.textContent = 'No active consent. Your machine is private.';
+        if (consentBtn) consentBtn.style.display = 'inline-flex';
+        if (disconnectBtn) disconnectBtn.style.display = 'none';
+      }
+    }).catch(function(){});
+
+    get('/api/v1/tunnel/audit').then(function(d) {
+      var entries = d.entries || [];
+      var list = $('remote-audit-list');
+      if (!list) return;
+      if (!entries.length) { list.innerHTML = '<p class="sb-text-muted" style="text-align:center;padding:1rem">No remote actions recorded</p>'; return; }
+      var html = '<table class="sb-table" style="font-size:0.8rem"><thead><tr><th>Event</th><th>Actor</th><th>Time</th><th>Hash</th></tr></thead><tbody>';
+      entries.slice(0,20).forEach(function(e) {
+        html += '<tr><td>' + esc(e.event||'?') + '</td><td>' + esc(e.actor||'?') + '</td><td style="font-size:0.75rem">' + esc((e.timestamp||'').substring(0,19)) + '</td><td style="font-family:var(--sb-font-mono);font-size:0.7rem">' + esc((e.hash||'').substring(0,12)) + '...</td></tr>';
+      });
+      html += '</tbody></table>';
+      list.innerHTML = html;
+    }).catch(function(){});
+  }
+
+  function disconnectRemote() {
+    fetch('/api/v1/tunnel/disconnect', {method:'POST'}).then(function(r){return r.json()}).then(function(d) {
+      toast('Remote access disconnected', 'success');
+      loadRemoteStatus();
+    }).catch(function(e) { toast('Disconnect failed: ' + e.message, 'error'); });
   }
 
   function loadSettingsInfo() {
