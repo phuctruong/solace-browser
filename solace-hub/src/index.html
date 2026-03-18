@@ -55,8 +55,13 @@
       <a href="#" role="menuitem">Deutsch</a>
     </div>
   </div>
-  <span id="topbar-user" style="display:none;font-size:0.85rem;color:var(--sb-text-muted)"></span>
-  <button class="sb-btn sb-btn--sm" id="topbar-signin" onclick="signIn()" style="display:none">Sign In</button>
+  <div id="topbar-auth" style="display:flex;align-items:center;gap:0.5rem">
+    <button class="sb-btn sb-btn--sm sb-btn--primary" id="topbar-signin" onclick="signIn()">Sign in</button>
+    <div id="topbar-user-info" style="display:none;align-items:center;gap:0.5rem">
+      <span class="sb-pill sb-pill--success" style="font-size:0.7rem">Connected</span>
+      <span id="topbar-user" style="font-size:0.85rem;color:var(--sb-text)"></span>
+    </div>
+  </div>
 </header>
 
 <div class="hub-center">
@@ -408,10 +413,10 @@
           var email = c.config.user_email || 'User';
           var isPaid = c.config.paid_user;
 
-          // Show username in top bar
-          $('topbar-user').style.display = 'inline';
-          $('topbar-user').textContent = email;
+          // Show username in top bar (matching solaceagi.com pattern)
           $('topbar-signin').style.display = 'none';
+          $('topbar-user-info').style.display = 'flex';
+          $('topbar-user').textContent = email;
 
           var yGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto;vertical-align:middle">';
 
@@ -441,7 +446,7 @@
         } else {
           // Not signed in — launch button stays disabled until CLI connected or BYOK set
           $('topbar-signin').style.display = 'inline-flex';
-          $('topbar-user').style.display = 'none';
+          $('topbar-user-info').style.display = 'none';
           auth.textContent = 'Setup required';
           auth.className = 'sb-pill sb-pill--warning';
           hasLLM = false;
