@@ -44,7 +44,10 @@ pub fn load_manifest(app_dir: &Path) -> Result<AppManifest, String> {
 fn parse_prime_mermaid_manifest(path: &Path) -> Result<AppManifest, String> {
     let raw = fs::read_to_string(path).map_err(|e| e.to_string())?;
 
-    let mut manifest = AppManifest::default();
+    let mut manifest = AppManifest {
+        timeout_seconds: 60, // Default timeout for CLI apps
+        ..AppManifest::default()
+    };
 
     // Parse ## Identity section for key-value pairs
     for line in raw.lines() {
