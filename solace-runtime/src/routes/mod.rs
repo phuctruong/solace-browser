@@ -1,5 +1,6 @@
 // Diagram: 05-solace-runtime-architecture
 pub mod agents;
+pub mod app_create;
 pub mod apps;
 pub mod budget;
 pub mod chat;

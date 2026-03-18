@@ -47,6 +47,7 @@ pub fn build_router(state: crate::state::AppState) -> Router {
         .merge(crate::routes::files::routes())
         .merge(crate::routes::delight::routes())
         .merge(crate::routes::tutorial::routes())
+        .merge(crate::routes::app_create::routes())
         .merge(crate::routes::esign::routes())
         .merge(crate::routes::hub_control::routes())
         .merge(crate::routes::tunnel::routes())
