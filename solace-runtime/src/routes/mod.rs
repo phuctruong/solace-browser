@@ -18,6 +18,7 @@ pub mod sidebar;
 pub mod tutorial;
 pub mod websocket;
 pub mod browser_control;
+pub mod esign;
 pub mod events;
 pub mod hub_control;
 pub mod tunnel;
