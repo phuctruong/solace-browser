@@ -67,8 +67,15 @@ fn parse_prime_mermaid_manifest(path: &Path) -> Result<AppManifest, String> {
                 .filter(|s| !s.is_empty())
                 .collect();
         } else if let Some(rest) = trimmed.strip_prefix("**Safety**:") {
-            // Safety level (A, B, C) — store in tier if tier is empty
-            let _ = rest; // Available for future use
+            let _ = rest;
+        } else if let Some(rest) = trimmed.strip_prefix("**Binary**:") {
+            manifest.binary = rest.trim().to_string();
+        } else if let Some(rest) = trimmed.strip_prefix("**Args**:") {
+            manifest.args = rest.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+        } else if let Some(rest) = trimmed.strip_prefix("**Input Type**:") {
+            manifest.input_type = rest.trim().to_string();
+        } else if let Some(rest) = trimmed.strip_prefix("**Timeout**:") {
+            manifest.timeout_seconds = rest.trim().parse().unwrap_or(60);
         }
     }
 

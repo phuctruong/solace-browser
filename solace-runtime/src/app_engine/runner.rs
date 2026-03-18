@@ -103,6 +103,11 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
     let manifest = crate::app_engine::inbox::load_manifest(&app_dir)?;
     let run_id = Utc::now().format("%Y%m%d-%H%M%S").to_string();
 
+    // CLI wrapper apps: spawn binary instead of standard pipeline
+    if manifest.app_type == "cli" && !manifest.binary.is_empty() {
+        return run_cli_app(app_id, &app_dir, &manifest, &run_id, state).await;
+    }
+
     // Acquire domain tab if app has a domain
     if !manifest.domain.is_empty() {
         let domain = crate::routes::domains::extract_root_domain(&manifest.domain);
@@ -479,6 +484,124 @@ fn pick_string(value: &Value, keys: &[&str]) -> Option<String> {
 
 fn pick_value(value: &Value, keys: &[&str]) -> Option<Value> {
     keys.iter().find_map(|key| value.get(*key).cloned())
+}
+
+// ---------------------------------------------------------------------------
+// CLI Wrapper App Execution
+// ---------------------------------------------------------------------------
+
+async fn run_cli_app(
+    app_id: &str,
+    app_dir: &std::path::Path,
+    manifest: &crate::app_engine::AppManifest,
+    run_id: &str,
+    state: &AppState,
+) -> Result<PathBuf, String> {
+    let solace_home = crate::utils::solace_home();
+    let outbox_dir = app_dir.join("outbox").join("runs").join(run_id);
+    std::fs::create_dir_all(&outbox_dir).map_err(|e| e.to_string())?;
+
+    // Find input: check inbox/pending/ for files, or use a default prompt
+    let inbox_pending = app_dir.join("inbox").join("pending");
+    let input = if inbox_pending.exists() {
+        // Use first file in pending/
+        std::fs::read_dir(&inbox_pending)
+            .ok()
+            .and_then(|mut entries| entries.next())
+            .and_then(|e| e.ok())
+            .map(|e| e.path().to_string_lossy().to_string())
+    } else {
+        None
+    };
+
+    // Build command
+    let binary = &manifest.binary;
+    let mut cmd = tokio::process::Command::new(binary);
+    for arg in &manifest.args {
+        cmd.arg(arg);
+    }
+    if let Some(ref input_path) = input {
+        cmd.arg(input_path);
+    }
+
+    let timeout = std::time::Duration::from_secs(manifest.timeout_seconds.min(300));
+
+    // Spawn and capture
+    let output = tokio::time::timeout(timeout, cmd.output())
+        .await
+        .map_err(|_| format!("CLI timeout after {}s", manifest.timeout_seconds))?
+        .map_err(|e| format!("CLI spawn failed: {} (binary: {})", e, binary))?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    let exit_code = output.status.code().unwrap_or(-1);
+
+    // Write outputs
+    std::fs::write(outbox_dir.join("stdout.txt"), &stdout).map_err(|e| e.to_string())?;
+    if !stderr.is_empty() {
+        let _ = std::fs::write(outbox_dir.join("stderr.txt"), &stderr);
+    }
+
+    // Build report HTML
+    let html = format!(
+        r#"<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>CLI: {} — {}</title>
+<link rel="stylesheet" href="/styleguide.css">
+</head><body>
+<h1>{} — CLI Result</h1>
+<p>Binary: <code>{}</code> | Exit: {} | Run: {}</p>
+{}
+<h2>Output</h2>
+<pre style="background:var(--sb-surface, #1a1a2e);padding:1rem;border-radius:8px;overflow-x:auto;white-space:pre-wrap">{}</pre>
+{}</body></html>"#,
+        manifest.name, run_id,
+        manifest.name,
+        binary, exit_code, run_id,
+        if let Some(ref p) = input { format!("<p>Input: <code>{}</code></p>", p) } else { String::new() },
+        html_escape::encode_text(&stdout),
+        if stderr.is_empty() { String::new() } else { format!("<h2>Errors</h2><pre style=\"color:var(--sb-danger)\">{}</pre>", html_escape::encode_text(&stderr)) },
+    );
+
+    let report_path = outbox_dir.join("report.html");
+    std::fs::write(&report_path, &html).map_err(|e| e.to_string())?;
+
+    // Evidence
+    let evidence_input = format!("{}:{}:{}:{}", app_id, run_id, binary, stdout.len());
+    let _ = crate::evidence::record_event(
+        &solace_home,
+        &format!("cli.run.{}", app_id),
+        "runtime",
+        serde_json::json!({
+            "binary": binary,
+            "args": manifest.args,
+            "exit_code": exit_code,
+            "stdout_bytes": stdout.len(),
+            "stderr_bytes": stderr.len(),
+            "input": input,
+            "timeout_seconds": manifest.timeout_seconds,
+        }),
+    );
+
+    // Update counters
+    *state.app_count.write() += 1;
+    *state.evidence_count.write() += 1;
+    state.notifications.write().push(Notification {
+        id: uuid::Uuid::new_v4().to_string(),
+        message: format!("CLI {} completed (exit {})", manifest.name, exit_code),
+        level: if exit_code == 0 { "info" } else { "warning" }.to_string(),
+        read: false,
+        created_at: crate::utils::now_iso8601(),
+    });
+
+    // Move processed input file to processed/
+    if let Some(ref input_path) = input {
+        let processed_dir = app_dir.join("inbox").join("processed");
+        let _ = std::fs::create_dir_all(&processed_dir);
+        let filename = std::path::Path::new(input_path).file_name().unwrap_or_default();
+        let _ = std::fs::rename(input_path, processed_dir.join(filename));
+    }
+
+    Ok(report_path)
 }
 
 /// Load reports from specific orchestrated apps (Conductor pattern).

@@ -59,6 +59,22 @@ pub struct AppManifest {
     /// Conductor apps: list of app IDs whose outboxes this app reads.
     #[serde(default)]
     pub orchestrates: Vec<String>,
+    /// CLI wrapper apps: binary to execute.
+    #[serde(default)]
+    pub binary: String,
+    /// CLI wrapper apps: arguments to pass to binary.
+    #[serde(default)]
+    pub args: Vec<String>,
+    /// CLI wrapper apps: input type (file, prompt, stdin).
+    #[serde(default)]
+    pub input_type: String,
+    /// CLI wrapper apps: timeout in seconds (default 60).
+    #[serde(default = "default_cli_timeout")]
+    pub timeout_seconds: u64,
+}
+
+fn default_cli_timeout() -> u64 {
+    60
 }
 
 pub fn scan_installed_apps() -> Vec<AppManifest> {
