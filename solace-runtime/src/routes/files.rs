@@ -527,6 +527,7 @@ async fn domain_detail_page(
   <button class="sb-tab" data-tab="events" onclick="showTab(this,'events')">Events</button>
   <button class="sb-tab" data-tab="tab-status" onclick="showTab(this,'tab-status')">Tab Status</button>
   <button class="sb-tab" data-tab="config" onclick="showTab(this,'config')">Config</button>
+  <button class="sb-tab" data-tab="share" onclick="showTab(this,'share')">Share</button>
 </div>
 
 <div id="panel-apps" class="sb-tab-panel">
@@ -546,6 +547,20 @@ async fn domain_detail_page(
 
 <div id="panel-config" class="sb-tab-panel" hidden>
   <div class="sb-card">{config_section}</div>
+</div>
+
+<div id="panel-share" class="sb-tab-panel" hidden>
+  <div class="sb-card">
+    <h3>Share this domain's apps</h3>
+    <p class="sb-text-muted">Share all apps in this domain with a team member or anyone.</p>
+    <div style="margin:1rem 0">
+      <label style="display:block;margin-bottom:0.25rem;font-size:0.85rem;font-weight:600">Recipient email</label>
+      <input type="email" id="share-domain-email" placeholder="colleague@company.com" style="padding:0.5rem;width:100%;border:1px solid var(--sb-border);border-radius:var(--sb-radius);background:var(--sb-bg);color:var(--sb-text);font-size:0.9rem">
+    </div>
+    <button class="sb-btn sb-btn--sm sb-btn--primary" onclick="shareDomain()">Share via solaceagi.com</button>
+    <p id="share-domain-result" class="sb-text-muted" style="margin-top:0.5rem;font-size:0.85rem"></p>
+    <p class="sb-text-muted" style="margin-top:1rem;font-size:0.8rem">Free: share with 1 person. <a href="https://solaceagi.com/pricing" target="_blank" rel="noopener">Team plan</a> ($88/mo): 5 seats + workspace.</p>
+  </div>
 </div>
 
 <script>
@@ -696,6 +711,7 @@ async fn app_detail_page(
   <button class="sb-tab" data-tab="runs" onclick="showTab(this,'runs')">Runs</button>
   <button class="sb-tab" data-tab="evidence" onclick="showTab(this,'evidence')">Evidence</button>
   <button class="sb-tab" data-tab="settings" onclick="showTab(this,'settings')">Settings</button>
+  <button class="sb-tab" data-tab="share" onclick="showTab(this,'share')">Share</button>
 </div>
 
 <div id="panel-overview" class="sb-tab-panel">
@@ -719,6 +735,19 @@ async fn app_detail_page(
       <tr><td><strong>Template</strong></td><td>{template}</td></tr>
       <tr><td><strong>Source URL</strong></td><td>{source_url}</td></tr>
     </table>
+  </div>
+</div>
+
+<div id="panel-share" class="sb-tab-panel" hidden>
+  <div class="sb-card">
+    <h3>Share this app</h3>
+    <p class="sb-text-muted">Send this app to a colleague. They install it locally — your data stays yours.</p>
+    <div style="margin:1rem 0">
+      <label style="display:block;margin-bottom:0.25rem;font-size:0.85rem;font-weight:600">Recipient email</label>
+      <input type="email" id="share-app-email" placeholder="colleague@company.com" style="padding:0.5rem;width:100%;border:1px solid var(--sb-border);border-radius:var(--sb-radius);background:var(--sb-bg);color:var(--sb-text);font-size:0.9rem">
+    </div>
+    <button class="sb-btn sb-btn--sm sb-btn--primary" onclick="shareApp()">Share via solaceagi.com</button>
+    <p id="share-app-result" class="sb-text-muted" style="margin-top:0.5rem;font-size:0.85rem"></p>
   </div>
 </div>
 
