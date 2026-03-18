@@ -79,7 +79,7 @@
   <!-- PHASE 1: SCANNING -->
   <div id="scan-phase" class="hub-scan">
     <img src="/media/droplet-logo-merge_3x_128px.gif" alt="Scanning..." id="scan-img">
-    <div class="hub-scan-text" id="scan-text">Detecting local AI tools...</div>
+    <div class="hub-scan-text" id="scan-text">Setting up your AI workspace...</div>
   </div>
 
   <!-- Hub navigation bar -->
@@ -108,21 +108,22 @@
   <div id="tab-overview" class="hub-tab-panel">
   <div id="results-phase" style="display:none">
 
-    <!-- LLM Setup — must have at least 1 of 3 -->
+    <!-- AI Engine Setup — friendly language -->
     <div class="sb-card" id="llm-card">
-      <p class="sb-kicker">LLM Power Source — at least 1 required</p>
+      <p class="sb-kicker">Choose Your AI Engine</p>
+      <p class="sb-text-muted" style="font-size:0.85rem;margin:0 0 0.75rem">Pick how AI powers your apps. Sign in is the easiest way to start.</p>
       <table class="sb-table" style="margin:0.5rem 0">
-        <thead><tr><th></th><th>Source</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Option</th><th>Status</th><th></th></tr></thead>
         <tbody>
           <tr style="background:var(--sb-accent-soft)">
             <td>1</td>
-            <td><strong>Managed LLM</strong> <span class="sb-pill sb-pill--info" style="font-size:0.65rem">Recommended</span><br><span class="sb-text-muted" style="font-size:0.8rem">No key needed · +47 uplifts · $8/mo</span></td>
+            <td><strong>Sign in to solaceagi.com</strong> <span class="sb-pill sb-pill--info" style="font-size:0.65rem">Easiest</span><br><span class="sb-text-muted" style="font-size:0.8rem">Free account · No API key needed · We handle everything</span></td>
             <td id="src-managed"><span class="sb-pill sb-pill--warning">Not signed in</span></td>
-            <td id="src-managed-gif"><button class="sb-btn sb-btn--sm" onclick="signIn()">Sign In</button></td>
+            <td id="src-managed-gif"><button class="sb-btn sb-btn--sm sb-btn--primary" onclick="signIn()">Sign in free</button></td>
           </tr>
           <tr>
             <td>2</td>
-            <td><strong>BYOK Key</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Bring your own Anthropic/OpenAI key</span></td>
+            <td><strong>Your own API key</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Paste your Anthropic or OpenAI key</span></td>
             <td id="src-byok">
               <span class="sb-editable" data-field="byok_key" id="byok-editable">
                 <span class="sb-editable-display sb-text-muted">Not set — click to enter key</span>
@@ -160,12 +161,23 @@
       <div id="llm-account" style="display:none" class="sb-mt-md"></div>
     </div>
 
+    <!-- App Discovery Card (always visible after scan) -->
+    <div class="sb-card sb-mt-md" id="app-discovery-card" style="border-left:3px solid var(--sb-success, #22c55e)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <strong id="app-discovery-count">63 apps ready</strong>
+          <span class="sb-text-muted" style="font-size:0.85rem"> — manage apps, domains, evidence, and schedules in the dashboard</span>
+        </div>
+        <a href="http://127.0.0.1:8888/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm" style="border-color:var(--sb-success);color:var(--sb-success);white-space:nowrap">Open Apps Dashboard</a>
+      </div>
+    </div>
+
     <!-- Launch Area -->
     <div class="sb-mt-md" id="launch-area">
       <!-- Single Session Mode (default) -->
       <div id="single-mode" style="text-align:center">
         <div id="launch-btn-area">
-          <p class="sb-text-muted" id="launch-msg">Solace Browser requires an LLM power source. Set up one above.</p>
+          <p class="sb-text-muted" id="launch-msg">Choose an AI engine above to start.</p>
         </div>
         <div id="single-session-info" style="display:none;margin-top:0.75rem">
           <span class="sb-pill sb-pill--success" id="single-pid-pill"></span>
@@ -467,6 +479,12 @@
           loadVersionInfo();
           loadSettingsInfo();
           loadRemoteStatus();
+          // Update app discovery count
+          get('/api/v1/system/status').then(function(s) {
+            var count = s.app_count || 0;
+            var el = $('app-discovery-count');
+            if (el) el.textContent = count + ' apps ready';
+          }).catch(function(){});
 
           if (hasLLM) {
             // Signed in or BYOK set — ready to launch
@@ -758,7 +776,10 @@
 
   // ─── Sign In (launches browser to solaceagi.com/dashboard) ───
   window.signIn = function() {
-    toast('Opening Solace Browser to sign in...', 'success');
+    toast('Opening browser — complete sign-in there. Hub will detect automatically.', 'success');
+    // Show waiting state in LLM card
+    var managedGif = $('src-managed-gif');
+    if (managedGif) managedGif.innerHTML = '<span class="sb-text-muted" style="font-size:0.8rem">Waiting for sign-in...</span>';
     fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({url:'https://solaceagi.com/dashboard', allow_duplicate:true})
     }).then(function(r){return r.json();}).then(function(d) {
