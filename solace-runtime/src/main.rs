@@ -8,6 +8,11 @@ use tokio::signal;
 async fn main() {
     tracing_subscriber::fmt::init();
 
+    // Suppress Google API warning in child Chromium processes
+    std::env::set_var("GOOGLE_API_KEY", "no");
+    std::env::set_var("GOOGLE_DEFAULT_CLIENT_ID", "no");
+    std::env::set_var("GOOGLE_DEFAULT_CLIENT_SECRET", "no");
+
     let state = AppState::new();
     if std::env::args().skip(1).any(|arg| arg == "--mcp") {
         tracing::info!("starting MCP stdio server");
