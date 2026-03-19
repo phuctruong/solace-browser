@@ -11,13 +11,424 @@
   <script src="/vendor/jquery-3.7.1.min.js"></script>
   <script src="/vendor/jquery.dataTables.min.js"></script>
   <link rel="stylesheet" href="/site.css">
+  <style>
+    /* ═══════════════════════════════════════════════════════════════════
+       Solace Hub — Extracted inline styles (sh-* prefix)
+       Zero inline style= attributes. All classes here.
+       ═══════════════════════════════════════════════════════════════════ */
+
+    /* ─── Skip-to-main (a11y) ─── */
+    .sh-skip-link {
+      position: absolute;
+      top: -100%;
+      left: 0;
+      z-index: 1000;
+      padding: 0.5rem 1rem;
+      background: var(--sb-accent);
+      color: var(--sb-on-accent);
+      font-weight: 700;
+      border-radius: 0 0 var(--sb-radius) 0;
+      text-decoration: none;
+    }
+    .sh-skip-link:focus {
+      top: 0;
+    }
+
+    /* ─── Focus-visible (a11y) ─── */
+    :focus-visible {
+      outline: 2px solid var(--sb-accent);
+      outline-offset: 2px;
+    }
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--sb-accent);
+      outline-offset: 2px;
+    }
+
+    /* ─── Topbar auth area ─── */
+    .sh-topbar-auth {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ─── Topbar user info (hidden initially, shown by JS as flex) ─── */
+    .sh-topbar-user-info {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ─── Connected pill ─── */
+    .sh-pill-connected {
+      font-size: 0.7rem;
+    }
+
+    /* ─── Topbar username ─── */
+    .sh-topbar-username {
+      font-size: 0.85rem;
+      color: var(--sb-text);
+    }
+
+    /* ─── Sign out button ─── */
+    .sh-btn-signout {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+    }
+
+    /* ─── Signoffs banner ─── */
+    .sh-signoffs-banner {
+      border-left: 4px solid var(--sb-warning);
+      margin-bottom: 0.5rem;
+    }
+
+    /* ─── Signoffs kicker ─── */
+    .sh-kicker-warning {
+      color: var(--sb-warning);
+    }
+
+    /* ─── Signoffs list scrollable ─── */
+    .sh-signoffs-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    /* ─── Hub header (hidden initially, shown by JS) ─── */
+    .sh-hub-header {
+      display: none;
+    }
+
+    /* ─── Hub header row ─── */
+    .sh-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    /* ─── Hub brand group ─── */
+    .sh-brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* ─── Yinyang icon ─── */
+    .sh-yinyang-icon {
+      width: 28px;
+      height: auto;
+      border-radius: 50%;
+    }
+
+    /* ─── Hub title ─── */
+    .sh-hub-title {
+      font-size: 0.9rem;
+      color: var(--sb-text);
+    }
+
+    /* ─── Hub subtitle ─── */
+    .sh-hub-subtitle {
+      font-size: 0.75rem;
+      margin-left: 0.5rem;
+    }
+
+    /* ─── Dashboard link group ─── */
+    .sh-dashboard-links {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ─── Local dashboard button ─── */
+    .sh-btn-local-dashboard {
+      border-color: var(--sb-success, #22c55e);
+      color: var(--sb-success, #22c55e);
+    }
+
+    /* ─── Cloud dashboard button ─── */
+    .sh-btn-cloud-dashboard {
+      border-color: var(--sb-accent);
+      color: var(--sb-accent);
+    }
+
+    /* ─── Version badge ─── */
+    .sh-version-badge {
+      font-size: 0.7rem;
+    }
+
+    /* ─── Tabs container (hidden initially) ─── */
+    .sh-tabs-container {
+      display: none;
+    }
+
+    /* ─── Events badge ─── */
+    .sh-events-badge {
+      font-size: 0.65rem;
+      padding: 0.1rem 0.4rem;
+      display: none;
+    }
+
+    /* ─── Results phase (hidden initially) ─── */
+    .sh-results-phase {
+      display: none;
+    }
+
+    /* ─── LLM card description ─── */
+    .sh-llm-description {
+      font-size: 0.85rem;
+      margin: 0 0 0.75rem;
+    }
+
+    /* ─── Table with vertical margin ─── */
+    .sh-table-spaced {
+      margin: 0.5rem 0;
+    }
+
+    /* ─── Highlighted row (managed sign-in) ─── */
+    .sh-row-highlight {
+      background: var(--sb-accent-soft);
+    }
+
+    /* ─── Small pill (easiest / advanced) ─── */
+    .sh-pill-xs {
+      font-size: 0.65rem;
+    }
+
+    /* ─── Option description text ─── */
+    .sh-option-desc {
+      font-size: 0.8rem;
+    }
+
+    /* ─── BYOK input ─── */
+    .sh-input-byok {
+      font-family: var(--sb-font-mono);
+      width: 200px;
+    }
+
+    /* ─── Ollama input ─── */
+    .sh-input-ollama {
+      font-family: var(--sb-font-mono);
+      width: 220px;
+    }
+
+    /* ─── CLI details row (hidden initially) ─── */
+    .sh-cli-details-row {
+      display: none;
+    }
+
+    /* ─── CLI models area ─── */
+    .sh-cli-models-area {
+      padding: 0.5rem 0;
+    }
+
+    /* ─── LLM account (hidden initially) ─── */
+    .sh-llm-account {
+      display: none;
+    }
+
+    /* ─── App discovery card ─── */
+    .sh-app-discovery {
+      border-left: 3px solid var(--sb-success, #22c55e);
+    }
+
+    /* ─── App discovery description ─── */
+    .sh-app-discovery-desc {
+      font-size: 0.85rem;
+    }
+
+    /* ─── Open apps dashboard button ─── */
+    .sh-btn-apps-dashboard {
+      border-color: var(--sb-success);
+      color: var(--sb-success);
+      white-space: nowrap;
+    }
+
+    /* ─── Single session mode ─── */
+    .sh-single-mode {
+      text-align: center;
+    }
+
+    /* ─── Single session info (hidden initially) ─── */
+    .sh-single-session-info {
+      display: none;
+      margin-top: 0.75rem;
+    }
+
+    /* ─── Close browser button margin ─── */
+    .sh-btn-close-browser {
+      margin-left: 0.5rem;
+    }
+
+    /* ─── Multi mode (hidden initially) ─── */
+    .sh-multi-mode {
+      display: none;
+    }
+
+    /* ─── Multi sessions empty ─── */
+    .sh-sessions-empty {
+      text-align: center;
+      padding: 0.75rem;
+    }
+
+    /* ─── Mode toggle area ─── */
+    .sh-mode-toggle {
+      margin-top: 0.75rem;
+      text-align: center;
+    }
+
+    /* ─── Multi-session toggle label ─── */
+    .sh-toggle-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: var(--sb-text-muted);
+    }
+
+    /* ─── Checkbox accent ─── */
+    .sh-checkbox-accent {
+      accent-color: var(--sb-accent);
+    }
+
+    /* ─── Advanced pill ─── */
+    .sh-pill-advanced {
+      font-size: 0.6rem;
+    }
+
+    /* ─── Flex wrap utility ─── */
+    .sh-flex-wrap {
+      flex-wrap: wrap;
+    }
+
+    /* ─── Status column ─── */
+    .sh-status-column {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    /* ─── Kicker variants ─── */
+    .sh-kicker-success {
+      color: var(--sb-success);
+    }
+    .sh-kicker-accent {
+      color: var(--sb-accent);
+    }
+
+    /* ─── Status grid (2-col) ─── */
+    .sh-status-grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.2rem 1rem;
+    }
+
+    /* ─── Pricing link ─── */
+    .sh-pricing-link {
+      color: var(--sb-success);
+    }
+
+    /* ─── Tab panels (hidden initially, shown by JS) ─── */
+    .sh-tab-panel-hidden {
+      display: none;
+    }
+
+    /* ─── Sessions tab header ─── */
+    .sh-sessions-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ─── Sessions tab empty ─── */
+    .sh-tab-empty {
+      text-align: center;
+      padding: 1rem;
+    }
+
+    /* ─── Events header ─── */
+    .sh-events-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ─── Events filter select ─── */
+    .sh-events-filter {
+      font-size: 0.8rem;
+      padding: 4px 8px;
+    }
+
+    /* ─── Events datatable ─── */
+    .sh-events-table {
+      width: 100%;
+      font-size: 0.85rem;
+    }
+
+    /* ─── Remote description ─── */
+    .sh-remote-description {
+      font-size: 0.85rem;
+      margin: 0.25rem 0 0.75rem;
+    }
+
+    /* ─── Remote status row ─── */
+    .sh-remote-status-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    /* ─── Remote status dot ─── */
+    .sh-remote-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--sb-danger);
+    }
+
+    /* ─── Remote status detail ─── */
+    .sh-remote-detail {
+      font-size: 0.8rem;
+    }
+
+    /* ─── Remote buttons row ─── */
+    .sh-remote-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* ─── Remote audit list ─── */
+    .sh-remote-audit-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    /* ─── Settings grid (2-col) ─── */
+    .sh-settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem 2rem;
+      font-size: 0.9rem;
+    }
+
+    /* ─── Data directories mono ─── */
+    .sh-data-dirs {
+      font-size: 0.85rem;
+      font-family: var(--sb-font-mono);
+    }
+  </style>
 </head>
 <body>
+
+<a href="#main-content" class="sh-skip-link">Skip to main content</a>
 
 <!-- TOP BAR -->
 <header class="sb-topbar">
   <div class="sb-topbar-brand">
-    <img src="/icons/solace-hub-icon.png" alt="Solace">
+    <img src="/icons/solace-hub-icon.png" alt="Solace Hub logo" loading="lazy">
     <span>Solace Hub</span>
   </div>
   <div class="sb-topbar-spacer"></div>
@@ -27,8 +438,8 @@
   </div>
   <div class="sb-lang-switcher">
     <button class="sb-lang-toggle" id="languageToggle" aria-label="Language" aria-expanded="false" type="button">
-      <img src="/icons/lang/globe-default.png" alt="" class="sb-lang-icon sb-lang-icon--default">
-      <img src="/icons/lang/globe-hover.png" alt="" class="sb-lang-icon sb-lang-icon--hover">
+      <img src="/icons/lang/globe-default.png" alt="" class="sb-lang-icon sb-lang-icon--default" loading="lazy">
+      <img src="/icons/lang/globe-hover.png" alt="" class="sb-lang-icon sb-lang-icon--hover" loading="lazy">
     </button>
     <div class="sb-lang-menu" id="languageMenu" role="menu" hidden>
 
@@ -39,57 +450,57 @@
       <a href="#" role="menuitem">Deutsch</a>
     </div>
   </div>
-  <div id="topbar-auth" style="display:flex;align-items:center;gap:0.5rem">
+  <div id="topbar-auth" class="sh-topbar-auth">
     <button class="sb-btn sb-btn--sm sb-btn--primary" id="topbar-signin" data-action="signIn">Sign in</button>
-    <div id="topbar-user-info" style="display:none;align-items:center;gap:0.5rem">
-      <span class="sb-pill sb-pill--success" style="font-size:0.7rem">Connected</span>
-      <span id="topbar-user" style="font-size:0.85rem;color:var(--sb-text)"></span>
-      <button class="sb-btn sb-btn--sm" data-action="signOut" style="font-size:0.75rem;padding:0.2rem 0.5rem">Sign out</button>
+    <div id="topbar-user-info" class="sh-topbar-user-info">
+      <span class="sb-pill sb-pill--success sh-pill-connected">Connected</span>
+      <span id="topbar-user" class="sh-topbar-username"></span>
+      <button class="sb-btn sb-btn--sm sh-btn-signout" data-action="signOut">Sign out</button>
     </div>
   </div>
 </header>
 
-<div class="hub-center">
+<div class="hub-center" id="main-content" role="main">
 
   <!-- SIGNOFFS BANNER (L3+ actions needing approval) -->
-  <div id="signoffs-banner" class="sb-card hidden" style="border-left:4px solid var(--sb-warning);margin-bottom:0.5rem">
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <p class="sb-kicker" style="color:var(--sb-warning)">Pending Signoffs</p>
+  <div id="signoffs-banner" class="sb-card hidden sh-signoffs-banner">
+    <div class="hub-flex-between">
+      <p class="sb-kicker sh-kicker-warning">Pending Signoffs</p>
       <span class="sb-pill sb-pill--warning" id="signoffs-count">0</span>
     </div>
-    <div id="signoffs-list" style="max-height:200px;overflow-y:auto"></div>
+    <div id="signoffs-list" class="sh-signoffs-list"></div>
   </div>
 
   <!-- PHASE 1: SCANNING -->
   <div id="scan-phase" class="hub-scan">
-    <img src="/media/droplet-logo-merge_3x_128px.gif" alt="Scanning..." id="scan-img">
+    <img src="/media/droplet-logo-merge_3x_128px.gif" alt="Scanning for AI workspace" id="scan-img" loading="lazy">
     <div class="hub-scan-text" id="scan-text">Setting up your AI workspace...</div>
   </div>
 
   <!-- Hub navigation bar with yinyang indicator -->
-  <div id="hub-header" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-      <div style="display:flex;align-items:center;gap:0.75rem">
-        <img src="/media/yinyang-rotating_70pct_128px.gif" alt="" style="width:28px;height:auto;border-radius:50%">
+  <div id="hub-header" class="sh-hub-header">
+    <div class="sh-header-row">
+      <div class="sh-brand-group">
+        <img src="/media/yinyang-rotating_70pct_128px.gif" alt="Solace yinyang indicator" class="sh-yinyang-icon" loading="lazy">
         <div>
-          <strong style="font-size:0.9rem;color:var(--sb-text)">Solace Hub</strong>
-          <span class="sb-text-muted" style="font-size:0.75rem;margin-left:0.5rem">Local Control Plane</span>
+          <strong class="sh-hub-title">Solace Hub</strong>
+          <span class="sb-text-muted sh-hub-subtitle">Local Control Plane</span>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:0.5rem">
-        <a href="http://127.0.0.1:8888/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm" style="border-color:var(--sb-success, #22c55e);color:var(--sb-success, #22c55e)">&#128009; Local Dashboard</a>
-        <a href="https://solaceagi.com/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm" style="border-color:var(--sb-accent);color:var(--sb-accent)">&#9729; Cloud Dashboard</a>
-        <span id="hub-version-badge" class="sb-pill sb-pill--info" style="font-size:0.7rem">v...</span>
+      <div class="sh-dashboard-links">
+        <a href="http://127.0.0.1:8888/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm sh-btn-local-dashboard">&#128009; Local Dashboard</a>
+        <a href="https://solaceagi.com/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm sh-btn-cloud-dashboard">&#9729; Cloud Dashboard</a>
+        <span id="hub-version-badge" class="sb-pill sb-pill--info sh-version-badge">v...</span>
       </div>
     </div>
   </div>
 
   <!-- TABS -->
-  <div id="hub-tabs" style="display:none">
+  <div id="hub-tabs" class="sh-tabs-container">
     <div class="sb-tabs" role="tablist">
       <button class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
       <button class="sb-tab" data-tab="sessions" role="tab">Sessions</button>
-      <button class="sb-tab" data-tab="events" role="tab">Events <span id="events-badge" class="sb-pill sb-pill--danger" style="font-size:0.65rem;padding:0.1rem 0.4rem;display:none">0</span></button>
+      <button class="sb-tab" data-tab="events" role="tab">Events <span id="events-badge" class="sb-pill sb-pill--danger sh-events-badge">0</span></button>
       <button class="sb-tab" data-tab="remote" role="tab">Remote</button>
       <button class="sb-tab" data-tab="settings" role="tab">Settings</button>
     </div>
@@ -97,28 +508,28 @@
 
   <!-- TAB: OVERVIEW (default — gate + launch + status) -->
   <div id="tab-overview" class="hub-tab-panel">
-  <div id="results-phase" style="display:none">
+  <div id="results-phase" class="sh-results-phase">
 
     <!-- AI Engine Setup — friendly language -->
     <div class="sb-card" id="llm-card">
       <p class="sb-kicker">Choose Your AI Engine</p>
-      <p class="sb-text-muted" style="font-size:0.85rem;margin:0 0 0.75rem">Pick how AI powers your apps. Sign in is the easiest way to start.</p>
-      <table class="sb-table" style="margin:0.5rem 0">
+      <p class="sb-text-muted sh-llm-description">Pick how AI powers your apps. Sign in is the easiest way to start.</p>
+      <table class="sb-table sh-table-spaced">
         <thead><tr><th></th><th>Option</th><th>Status</th><th></th></tr></thead>
         <tbody>
-          <tr style="background:var(--sb-accent-soft)">
+          <tr class="sh-row-highlight">
             <td>1</td>
-            <td><strong>Sign in to solaceagi.com</strong> <span class="sb-pill sb-pill--info" style="font-size:0.65rem">Easiest</span><br><span class="sb-text-muted" style="font-size:0.8rem">Free account · No API key needed · We handle everything</span></td>
+            <td><strong>Sign in to solaceagi.com</strong> <span class="sb-pill sb-pill--info sh-pill-xs">Easiest</span><br><span class="sb-text-muted sh-option-desc">Free account · No API key needed · We handle everything</span></td>
             <td id="src-managed"><span class="sb-pill sb-pill--warning">Not signed in</span></td>
             <td id="src-managed-gif"><button class="sb-btn sb-btn--sm sb-btn--primary" data-action="signIn">Sign in free</button></td>
           </tr>
           <tr>
             <td>2</td>
-            <td><strong>Your own API key</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Paste your Anthropic or OpenAI key</span></td>
+            <td><strong>Your own API key</strong><br><span class="sb-text-muted sh-option-desc">Paste your Anthropic or OpenAI key</span></td>
             <td id="src-byok">
               <span class="sb-editable" data-field="byok_key" id="byok-editable">
                 <span class="sb-editable-display sb-text-muted">Not set — click to enter key</span>
-                <input class="sb-editable-input" id="byok-input" placeholder="sk-..." style="font-family:var(--sb-font-mono);width:200px">
+                <input class="sb-editable-input sh-input-byok" id="byok-input" placeholder="sk-...">
                 <span class="sb-editable-pen" title="Edit"></span>
               </span>
             </td>
@@ -126,11 +537,11 @@
           </tr>
           <tr>
             <td>3</td>
-            <td><strong>Ollama</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Self-hosted, no API key needed</span></td>
+            <td><strong>Ollama</strong><br><span class="sb-text-muted sh-option-desc">Self-hosted, no API key needed</span></td>
             <td id="src-ollama">
               <span class="sb-editable" data-field="ollama_url" id="ollama-editable">
                 <span class="sb-editable-display sb-text-muted">Not set — click to enter URL</span>
-                <input class="sb-editable-input" id="ollama-input" placeholder="http://localhost:11434" style="font-family:var(--sb-font-mono);width:220px">
+                <input class="sb-editable-input sh-input-ollama" id="ollama-input" placeholder="http://localhost:11434">
                 <span class="sb-editable-pen" title="Edit"></span>
               </span>
             </td>
@@ -138,73 +549,73 @@
           </tr>
           <tr>
             <td>4</td>
-            <td><strong>Local CLI</strong><br><span class="sb-text-muted" style="font-size:0.8rem">Auto-detect AI tools on PATH</span></td>
+            <td><strong>Local CLI</strong><br><span class="sb-text-muted sh-option-desc">Auto-detect AI tools on PATH</span></td>
             <td id="src-local"><span class="sb-pill sb-pill--warning">Not connected</span></td>
             <td id="src-local-action"></td>
           </tr>
-          <tr id="cli-details-row" style="display:none">
+          <tr id="cli-details-row" class="sh-cli-details-row">
             <td></td>
-            <td colspan="3" id="cli-models-area" style="padding:0.5rem 0"></td>
+            <td colspan="3" id="cli-models-area" class="sh-cli-models-area"></td>
           </tr>
         </tbody>
       </table>
       <div id="llm-gate"></div>
-      <div id="llm-account" style="display:none" class="sb-mt-md"></div>
+      <div id="llm-account" class="sb-mt-md sh-llm-account"></div>
     </div>
 
     <!-- App Discovery Card (always visible after scan) -->
-    <div class="sb-card sb-mt-md" id="app-discovery-card" style="border-left:3px solid var(--sb-success, #22c55e)">
-      <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="sb-card sb-mt-md sh-app-discovery" id="app-discovery-card">
+      <div class="hub-flex-between">
         <div>
           <strong id="app-discovery-count">63 apps ready</strong>
-          <span class="sb-text-muted" style="font-size:0.85rem"> — manage apps, domains, evidence, and schedules in the dashboard</span>
+          <span class="sb-text-muted sh-app-discovery-desc"> — manage apps, domains, evidence, and schedules in the dashboard</span>
         </div>
-        <a href="http://127.0.0.1:8888/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm" style="border-color:var(--sb-success);color:var(--sb-success);white-space:nowrap">Open Apps Dashboard</a>
+        <a href="http://127.0.0.1:8888/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm sh-btn-apps-dashboard">Open Apps Dashboard</a>
       </div>
     </div>
 
     <!-- Launch Area -->
     <div class="sb-mt-md" id="launch-area">
       <!-- Single Session Mode (default) -->
-      <div id="single-mode" style="text-align:center">
+      <div id="single-mode" class="sh-single-mode">
         <div id="launch-btn-area">
           <p class="sb-text-muted" id="launch-msg">Choose an AI engine above to start.</p>
         </div>
-        <div id="single-session-info" style="display:none;margin-top:0.75rem">
+        <div id="single-session-info" class="sh-single-session-info">
           <span class="sb-pill sb-pill--success" id="single-pid-pill"></span>
-          <button class="sb-btn sb-btn--sm sb-btn--danger" data-action="closeSingleSession" style="margin-left:0.5rem">Close Browser</button>
+          <button class="sb-btn sb-btn--sm sb-btn--danger sh-btn-close-browser" data-action="closeSingleSession">Close Browser</button>
         </div>
       </div>
       <!-- Multiple Sessions Mode -->
-      <div id="multi-mode" style="display:none">
+      <div id="multi-mode" class="sh-multi-mode">
         <div class="sb-card">
-          <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="hub-flex-between">
             <p class="sb-kicker">Browser Sessions</p>
             <button class="sb-btn sb-btn--sm" id="reload-btn" data-action="reloadSessions">Refresh</button>
             <button class="sb-btn sb-btn--sm sb-btn--primary" data-action="newSession">+ New Session</button>
           </div>
-          <table class="sb-table" style="margin:0.5rem 0">
+          <table class="sb-table sh-table-spaced">
             <thead><tr><th>Profile</th><th>URL</th><th>PID</th><th>Started</th><th></th></tr></thead>
             <tbody id="multi-sessions-body"></tbody>
           </table>
-          <div id="multi-sessions-empty" class="sb-text-muted" style="text-align:center;padding:0.75rem">No sessions. Click "+ New Session" to start.</div>
+          <div id="multi-sessions-empty" class="sb-text-muted sh-sessions-empty">No sessions. Click "+ New Session" to start.</div>
         </div>
       </div>
       <!-- Mode Toggle -->
-      <div style="margin-top:0.75rem;text-align:center">
-        <label style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;cursor:pointer;color:var(--sb-text-muted)">
-          <input type="checkbox" id="multi-session-toggle" style="accent-color:var(--sb-accent)">
-          Multiple Sessions <span class="sb-pill sb-pill--info" style="font-size:0.6rem">Advanced</span>
+      <div class="sh-mode-toggle">
+        <label class="sh-toggle-label">
+          <input type="checkbox" id="multi-session-toggle" class="sh-checkbox-accent">
+          Multiple Sessions <span class="sb-pill sb-pill--info sh-pill-advanced">Advanced</span>
         </label>
       </div>
     </div>
 
     <!-- System Status -->
     <div class="sb-card sb-mt-md">
-      <div class="sb-flex sb-gap-md" style="flex-wrap:wrap">
-        <div style="flex:1;min-width:280px">
-          <p class="sb-kicker" style="color:var(--sb-success)">Free · Local-First</p>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.2rem 1rem">
+      <div class="sb-flex sb-gap-md sh-flex-wrap">
+        <div class="sh-status-column">
+          <p class="sb-kicker sh-kicker-success">Free · Local-First</p>
+          <div class="sh-status-grid-2col">
             <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-dashboard"></span> Dashboard</div>
             <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-mcp"></span> MCP Server</div>
             <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-cron"></span> Cron / Scheduler</div>
@@ -215,9 +626,9 @@
             <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-wiki"></span> Wiki Capture</div>
           </div>
         </div>
-        <div style="flex:1;min-width:280px">
-          <p class="sb-kicker" style="color:var(--sb-accent)">Paid · Cloud Features · <a href="#" data-action="signIn" style="color:var(--sb-success)">starting at $8/mo &rarr;</a></p>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.2rem 1rem">
+        <div class="sh-status-column">
+          <p class="sb-kicker sh-kicker-accent">Paid · Cloud Features · <a href="#" data-action="signIn" class="sh-pricing-link">starting at $8/mo &rarr;</a></p>
+          <div class="sh-status-grid-2col">
             <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-sidebar"></span> Yinyang Sidebar</div>
             <div class="hub-status-row"><span class="sb-topbar-dot" id="dot-remote"></span> Remote Control</div>
             <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-tunnel"></span> Custom Tunnel</div>
@@ -236,20 +647,20 @@
   </div><!-- end tab-overview -->
 
   <!-- TAB: SESSIONS -->
-  <div id="tab-sessions" class="hub-tab-panel" style="display:none">
+  <div id="tab-sessions" class="hub-tab-panel sh-tab-panel-hidden">
     <div class="sb-card">
-      <div style="display:flex;align-items:center;justify-content:space-between">
+      <div class="sh-sessions-header">
         <p class="sb-kicker">Active Browser Sessions</p>
         <div class="sb-flex sb-gap-sm">
           <button class="sb-btn sb-btn--sm" data-action="launchBrowser">Launch Default</button>
           <button class="sb-btn sb-btn--sm sb-btn--primary hidden" id="sessions-tab-new-btn" data-action="newSession">+ New Session</button>
         </div>
       </div>
-      <table class="sb-table" style="margin:0.5rem 0">
+      <table class="sb-table sh-table-spaced">
         <thead><tr><th>Profile</th><th>URL</th><th>PID</th><th>Started</th><th></th></tr></thead>
         <tbody id="sessions-tab-body"></tbody>
       </table>
-      <div id="sessions-tab-empty" class="sb-text-muted" style="text-align:center;padding:1rem">Loading...</div>
+      <div id="sessions-tab-empty" class="sb-text-muted sh-tab-empty">Loading...</div>
     </div>
     <div class="sb-card sb-mt-md">
       <p class="sb-kicker">Profiles</p>
@@ -258,12 +669,12 @@
   </div>
 
   <!-- TAB: EVENTS -->
-  <div id="tab-events" class="hub-tab-panel" style="display:none">
+  <div id="tab-events" class="hub-tab-panel sh-tab-panel-hidden">
     <div class="sb-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+      <div class="sh-events-header">
         <p class="sb-kicker">Events — Universal Transparency View</p>
         <div class="sb-flex sb-gap-sm">
-          <select id="events-level-filter" class="sb-select" style="font-size:0.8rem;padding:4px 8px">
+          <select id="events-level-filter" class="sb-select sh-events-filter">
             <option value="">All Levels</option>
             <option value="L1">L1 CPU</option>
             <option value="L2">L2 Haiku</option>
@@ -274,44 +685,44 @@
           <button class="sb-btn sb-btn--sm" data-action="refreshEvents">Refresh</button>
         </div>
       </div>
-      <table id="events-datatable" class="sb-table display" style="width:100%;font-size:0.85rem">
+      <table id="events-datatable" class="sb-table display sh-events-table">
         <thead><tr><th>Time</th><th>Level</th><th>Type</th><th>Domain</th><th>App</th><th>Session</th><th>Details</th></tr></thead>
         <tbody id="events-body"></tbody>
       </table>
-      <div id="events-empty" class="sb-text-muted" style="text-align:center;padding:1rem">Loading events...</div>
+      <div id="events-empty" class="sb-text-muted sh-tab-empty">Loading events...</div>
     </div>
   </div>
 
   <!-- TAB: REMOTE (consent + audit for remote access) -->
-  <div id="tab-remote" class="hub-tab-panel" style="display:none">
+  <div id="tab-remote" class="hub-tab-panel sh-tab-panel-hidden">
     <div class="sb-card">
       <p class="sb-kicker">Remote Access Control</p>
-      <p class="sb-text-muted" style="font-size:0.85rem;margin:0.25rem 0 0.75rem">Allow a support agent or team member to control your browser remotely. Every action is recorded.</p>
-      <div style="display:flex;align-items:center;gap:1rem;margin:1rem 0">
-        <div id="remote-status-dot" style="width:12px;height:12px;border-radius:50%;background:var(--sb-danger)"></div>
+      <p class="sb-text-muted sh-remote-description">Allow a support agent or team member to control your browser remotely. Every action is recorded.</p>
+      <div class="sh-remote-status-row">
+        <div id="remote-status-dot" class="sh-remote-dot"></div>
         <div>
           <strong id="remote-status-text">Remote access: OFF</strong>
-          <div class="sb-text-muted" style="font-size:0.8rem" id="remote-status-detail">No active consent. Your machine is private.</div>
+          <div class="sb-text-muted sh-remote-detail" id="remote-status-detail">No active consent. Your machine is private.</div>
         </div>
       </div>
-      <div style="display:flex;gap:0.5rem">
+      <div class="sh-remote-buttons">
         <a href="http://127.0.0.1:8888/api/v1/tunnel/consent" target="_blank" rel="noopener" class="sb-btn sb-btn--sm" id="remote-consent-btn">Sign Consent Form</a>
         <button class="sb-btn sb-btn--sm sb-btn--danger hidden" id="remote-disconnect-btn" data-action="disconnectRemote">Disconnect</button>
       </div>
     </div>
     <div class="sb-card sb-mt-md">
       <p class="sb-kicker">Remote Audit Trail</p>
-      <div id="remote-audit-list" style="max-height:300px;overflow-y:auto">
-        <p class="sb-text-muted" style="text-align:center;padding:1rem">No remote actions recorded</p>
+      <div id="remote-audit-list" class="sh-remote-audit-list">
+        <p class="sb-text-muted sh-tab-empty">No remote actions recorded</p>
       </div>
     </div>
   </div>
 
   <!-- TAB: SETTINGS -->
-  <div id="tab-settings" class="hub-tab-panel" style="display:none">
+  <div id="tab-settings" class="hub-tab-panel sh-tab-panel-hidden">
     <div class="sb-card">
       <p class="sb-kicker">Version &amp; Updates</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 2rem;font-size:0.9rem">
+      <div class="sh-settings-grid">
         <div>Version: <strong id="settings-version">loading...</strong></div>
         <div>Auto-update: <strong id="settings-autoupdate">ON</strong></div>
         <div>Latest available: <span id="settings-latest" class="sb-text-muted">checking...</span></div>
@@ -320,7 +731,7 @@
     </div>
     <div class="sb-card sb-mt-md">
       <p class="sb-kicker">Runtime</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 2rem;font-size:0.9rem">
+      <div class="sh-settings-grid">
         <div>Port: <strong>8888</strong></div>
         <div>Binary: <span class="sb-text-mono" id="settings-binary">solace-runtime</span></div>
         <div>Browser: <span class="sb-text-mono">solace</span></div>
@@ -329,7 +740,7 @@
     </div>
     <div class="sb-card sb-mt-md">
       <p class="sb-kicker">Account</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 2rem;font-size:0.9rem">
+      <div class="sh-settings-grid">
         <div>Status: <strong id="settings-auth-status">checking...</strong></div>
         <div>Email: <span id="settings-auth-email" class="sb-text-muted">—</span></div>
         <div>Device: <span id="settings-device-id" class="sb-text-muted">—</span></div>
@@ -342,7 +753,7 @@
     </div>
     <div class="sb-card sb-mt-md">
       <p class="sb-kicker">Data Directories</p>
-      <div style="font-size:0.85rem;font-family:var(--sb-font-mono)">
+      <div class="sh-data-dirs">
         <div>Apps: ~/.solace/apps/</div>
         <div>Evidence: ~/.solace/runtime/evidence.jsonl</div>
         <div>Vault: ~/.solace/vault.enc</div>
