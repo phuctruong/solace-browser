@@ -120,15 +120,30 @@ fn classify_intent(message: &str) -> Intent {
         || lower.starts_with("why ")
         || lower.starts_with("when ")
         || lower.starts_with("where ")
+        || lower.starts_with("who ")
         || lower.starts_with("show ")
         || lower.starts_with("list ")
+        || lower.starts_with("tell ")
+        || lower.starts_with("explain ")
+        || lower.starts_with("describe ")
+        || lower.starts_with("summarize ")
+        || lower.starts_with("summarise ")
+        || lower.starts_with("compare ")
+        || lower.starts_with("analyze ")
+        || lower.starts_with("analyse ")
+        || lower.starts_with("can ")
+        || lower.starts_with("does ")
+        || lower.starts_with("is ")
+        || lower.starts_with("are ")
+        || lower.starts_with("do ")
         || lower.starts_with("status")
         || lower.starts_with("help")
     {
         return Intent::Query;
     }
 
-    Intent::Unknown
+    // Fallback: if nothing else matched, treat as a query (send to LLM)
+    Intent::Query
 }
 
 // ─── FSM States ──────────────────────────────────────────────────────
