@@ -12,10 +12,14 @@ pub fn load_manifest(app_dir: &Path) -> Result<AppManifest, String> {
     let yaml_path = app_dir.join("manifest.yaml");
     let yml_path = app_dir.join("manifest.yml");
 
-    let mut manifest = if md_path.exists() {
+    let mut manifest = if yaml_path.exists() {
+        // Prefer YAML when it exists (has proper data_sources, orchestrates, etc.)
+        let raw = fs::read_to_string(&yaml_path).map_err(|error| error.to_string())?;
+        serde_yaml::from_str::<AppManifest>(&raw).map_err(|error| error.to_string())?
+    } else if md_path.exists() {
         parse_prime_mermaid_manifest(&md_path)?
     } else {
-        let manifest_path = if yaml_path.exists() { yaml_path } else { yml_path };
+        let manifest_path = yml_path;
         let raw = fs::read_to_string(&manifest_path).map_err(|error| error.to_string())?;
         serde_yaml::from_str::<AppManifest>(&raw).map_err(|error| error.to_string())?
     };
