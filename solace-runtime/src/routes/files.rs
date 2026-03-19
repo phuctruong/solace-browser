@@ -517,8 +517,8 @@ async fn domain_detail_page(
     let icon = domain_icon_path(&domain);
     let body = format!(
         r#"<p><a href="/domains">&larr; All Domains</a></p>
-<div class="sb-flex" style="align-items:center;gap:0.75rem;margin-bottom:1rem">
-  <img class="sb-app-icon" src="{icon}" alt="" style="width:36px;height:36px" onerror="this.style.display='none'">
+<div class="sb-flex" class="sb-section-header">
+  <img class="sb-app-icon" src="{icon}" alt="">
   <span class="sb-pill sb-pill--info">{app_count} apps</span>
 </div>
 
@@ -542,7 +542,7 @@ async fn domain_detail_page(
 
 <div id="panel-tab-status" class="sb-tab-panel" hidden>
   <div class="sb-card"><p>{tab_status}</p>
-  <p class="sb-text-muted" style="margin-top:0.5rem">Rule: 1 browser tab per domain. Apps share the tab via acquire/release protocol.</p></div>
+  <p class="sb-text-muted sb-section">Rule: 1 browser tab per domain. Apps share the tab via acquire/release protocol.</p></div>
 </div>
 
 <div id="panel-config" class="sb-tab-panel" hidden>
@@ -553,13 +553,13 @@ async fn domain_detail_page(
   <div class="sb-card">
     <h3>Share this domain's apps</h3>
     <p class="sb-text-muted">Share all apps in this domain with a team member or anyone.</p>
-    <div style="margin:1rem 0">
-      <label style="display:block;margin-bottom:0.25rem;font-size:0.85rem;font-weight:600">Recipient email</label>
-      <input type="email" id="share-domain-email" placeholder="colleague@company.com" style="padding:0.5rem;width:100%;border:1px solid var(--sb-border);border-radius:var(--sb-radius);background:var(--sb-bg);color:var(--sb-text);font-size:0.9rem">
+    <div >
+      <label >Recipient email</label>
+      <input type="email" id="share-domain-email" placeholder="colleague@company.com" class="sb-input">
     </div>
     <button class="sb-btn sb-btn--sm sb-btn--primary" onclick="shareDomain()">Share via solaceagi.com</button>
-    <p id="share-domain-result" class="sb-text-muted" style="margin-top:0.5rem;font-size:0.85rem"></p>
-    <p class="sb-text-muted" style="margin-top:1rem;font-size:0.8rem">Free: share with 1 person. <a href="https://solaceagi.com/pricing" target="_blank" rel="noopener">Team plan</a> ($88/mo): 5 seats + workspace.</p>
+    <p id="share-domain-result" class="sb-text-muted sb-section"></p>
+    <p class="sb-text-muted" class="sb-section sb-text-muted">Free: share with 1 person. <a href="https://solaceagi.com/pricing" target="_blank" rel="noopener">Team plan</a> ($88/mo): 5 seats + workspace.</p>
   </div>
 </div>
 
@@ -700,8 +700,8 @@ async fn app_detail_page(
     let icon = domain_icon_path(&app.domain);
     let body = format!(
         r#"<p><a href="/domains/{domain}">&larr; {domain}</a></p>
-<div class="sb-flex" style="align-items:center;gap:0.75rem;margin-bottom:1rem">
-  <img class="sb-app-icon" src="{icon}" alt="" style="width:36px;height:36px" onerror="this.style.display='none'">
+<div class="sb-flex" class="sb-section-header">
+  <img class="sb-app-icon" src="{icon}" alt="">
   <span class="sb-pill sb-pill--info">{domain}</span>
   <span class="sb-pill sb-pill--success">v{version}</span>
 </div>
@@ -724,7 +724,7 @@ async fn app_detail_page(
 
 <div id="panel-evidence" class="sb-tab-panel" hidden>
   <table class="sb-table"><thead><tr><th>Timestamp</th><th>Event</th><th>Hash</th></tr></thead><tbody>{evidence_rows}</tbody></table>
-  <p style="margin-top:0.5rem"><a href="/evidence" class="sb-btn sb-btn--sm">Full Evidence Chain</a></p>
+  <p class="sb-section"><a href="/evidence" class="sb-btn sb-btn--sm">Full Evidence Chain</a></p>
 </div>
 
 <div id="panel-settings" class="sb-tab-panel" hidden>
@@ -742,12 +742,12 @@ async fn app_detail_page(
   <div class="sb-card">
     <h3>Share this app</h3>
     <p class="sb-text-muted">Send this app to a colleague. They install it locally — your data stays yours.</p>
-    <div style="margin:1rem 0">
-      <label style="display:block;margin-bottom:0.25rem;font-size:0.85rem;font-weight:600">Recipient email</label>
-      <input type="email" id="share-app-email" placeholder="colleague@company.com" style="padding:0.5rem;width:100%;border:1px solid var(--sb-border);border-radius:var(--sb-radius);background:var(--sb-bg);color:var(--sb-text);font-size:0.9rem">
+    <div >
+      <label >Recipient email</label>
+      <input type="email" id="share-app-email" placeholder="colleague@company.com" class="sb-input">
     </div>
     <button class="sb-btn sb-btn--sm sb-btn--primary" onclick="shareApp()">Share via solaceagi.com</button>
-    <p id="share-app-result" class="sb-text-muted" style="margin-top:0.5rem;font-size:0.85rem"></p>
+    <p id="share-app-result" class="sb-text-muted sb-section"></p>
   </div>
 </div>
 
@@ -980,11 +980,11 @@ async fn appstore_page(State(state): State<AppState>) -> Html<String> {
         installed_cards.push_str(&format!(
             r#"<div class="sb-card">
   <div class="sb-card-header">
-    <h3 class="sb-card-title sb-app-name"><img class="sb-app-icon" src="{icon}" alt="" onerror="this.style.display='none'"><a href="/apps/{id}">{name}</a></h3>
+    <h3 class="sb-card-title sb-app-name"><img class="sb-app-icon" src="{icon}" alt="{name} icon" loading="lazy"><a href="/apps/{id}">{name}</a></h3>
     {tier_pill}
   </div>
   <div class="sb-card-body"><p>{desc}</p>
-    <div style="margin-top:0.5rem"><span class="sb-pill sb-pill--info">{domain}</span> <span class="sb-text-muted">v{ver}</span></div>
+    <div class="sb-section"><span class="sb-pill sb-pill--info">{domain}</span> <span class="sb-text-muted">v{ver}</span></div>
   </div>
 </div>"#,
             icon = html_escape::encode_text(&icon),
@@ -1001,23 +1001,23 @@ async fn appstore_page(State(state): State<AppState>) -> Html<String> {
         "<div class=\"sb-card\"><p>Connected to solaceagi.com — <a href=\"https://solaceagi.com/app-store\">Browse App Store</a></p></div>"
     } else {
         "<div class=\"sb-card\"><p class=\"sb-text-muted\">Connect to solaceagi.com to browse the full app store with 35+ apps.</p>\
-         <p style=\"margin-top:0.5rem\"><a href=\"/settings\" class=\"sb-btn sb-btn--sm\">Connect Cloud</a> \
+         <p class=\"sb-section\"><a href=\"/settings\" class=\"sb-btn sb-btn--sm\">Connect Cloud</a> \
          <a href=\"https://solaceagi.com/app-store\" class=\"sb-btn sb-btn--sm sb-btn--primary\" target=\"_blank\">Browse Online</a></p></div>"
     };
 
     let body = format!(
-        r#"<div class="sb-flex" style="justify-content:space-between;align-items:center;margin-bottom:1rem">
+        r#"<div class="sb-section-header">
   <div><span class="sb-pill sb-pill--success">{count} installed</span> across <strong>{domains}</strong> domains</div>
   <a href="https://solaceagi.com/app-store" class="sb-btn sb-btn--sm sb-btn--primary" target="_blank">Browse App Store</a>
 </div>
 <h2 class="sb-heading">Installed Apps</h2>
 <div class="sb-card-grid">{installed_cards}</div>
-<h2 class="sb-heading" style="margin-top:1.5rem">Available from Store</h2>
+<h2 class="sb-heading sb-section">Available from Store</h2>
 {store_section}
-<h2 class="sb-heading" style="margin-top:1.5rem">Create Custom App</h2>
+<h2 class="sb-heading sb-section">Create Custom App</h2>
 <div class="sb-card"><p>Create a folder in <code>~/.solace/apps/{{domain}}/{{app-id}}/</code> with a <code>manifest.md</code> file.</p>
-<p style="margin-top:0.5rem">The <a href="https://solaceagi.com/docs/app-standard">Solace App Standard</a> defines the manifest format, icons, templates, and inbox/outbox structure.</p>
-<p style="margin-top:0.5rem"><a href="https://solaceagi.com/app-store/submit" class="sb-btn sb-btn--sm" target="_blank">Submit to Store</a></p></div>"#,
+<p class="sb-section">The <a href="https://solaceagi.com/docs/app-standard">Solace App Standard</a> defines the manifest format, icons, templates, and inbox/outbox structure.</p>
+<p class="sb-section"><a href="https://solaceagi.com/app-store/submit" class="sb-btn sb-btn--sm" target="_blank">Submit to Store</a></p></div>"#,
         count = apps.len(),
         domains = domain_map.len(),
     );
@@ -1087,24 +1087,24 @@ async fn llms_page(State(state): State<AppState>) -> Html<String> {
     let body = format!(
         r#"<h2 class="sb-heading">Detected AI Agents</h2>
 <div class="sb-card">
-  <p class="sb-text-muted" style="margin-bottom:0.75rem">Solace auto-detects AI tools on your PATH and wraps them as HTTP endpoints.</p>
+  <p class="sb-text-muted" >Solace auto-detects AI tools on your PATH and wraps them as HTTP endpoints.</p>
   <table class="sb-table"><thead><tr><th>Agent</th><th>Path</th><th>Status</th></tr></thead>
   <tbody>{agent_rows}</tbody></table>
 </div>
 
-<h2 class="sb-heading" style="margin-top:1.5rem">API Keys (BYOK)</h2>
+<h2 class="sb-heading sb-section">API Keys (BYOK)</h2>
 <div class="sb-card">
   <p>{byok_status}</p>
-  <p class="sb-text-muted" style="margin-top:0.5rem">BYOK keys are stored locally in AES-256-GCM encrypted vault. Never sent to solaceagi.com.</p>
+  <p class="sb-text-muted sb-section">BYOK keys are stored locally in AES-256-GCM encrypted vault. Never sent to solaceagi.com.</p>
 </div>
 
-<h2 class="sb-heading" style="margin-top:1.5rem">Managed LLM</h2>
+<h2 class="sb-heading sb-section">Managed LLM</h2>
 <div class="sb-card">
   <p>{managed_status}</p>
-  <p class="sb-text-muted" style="margin-top:0.5rem">Primary: Llama 3.3 70B ($0.59/M tokens) via Together.ai. Fallback: OpenRouter (Claude, GPT-4, Mixtral).</p>
+  <p class="sb-text-muted sb-section">Primary: Llama 3.3 70B ($0.59/M tokens) via Together.ai. Fallback: OpenRouter (Claude, GPT-4, Mixtral).</p>
 </div>
 
-<h2 class="sb-heading" style="margin-top:1.5rem">Models</h2>
+<h2 class="sb-heading sb-section">Models</h2>
 <div class="sb-card">
   <table class="sb-table"><thead><tr><th>Level</th><th>Use Case</th><th>Example Models</th></tr></thead>
   <tbody>
@@ -1148,23 +1148,23 @@ async fn budget_page(State(state): State<AppState>) -> Html<String> {
     };
 
     let body = format!(
-        r#"<div class="sb-flex" style="gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem">
-  <div class="sb-card" style="flex:1;min-width:250px">
+        r#"<div class="sb-flex" class="sb-status-bar">
+  <div class="sb-card" class="sb-stat-card">
     <p class="sb-kicker">Today ({date})</p>
-    <div style="font-size:1.5rem;font-weight:700">{daily_count} <span class="sb-text-muted" style="font-size:0.85rem">/ {daily_limit} events</span></div>
-    <div class="sb-progress" style="margin-top:0.5rem"><div class="sb-progress-bar {daily_bar_class}" style="width:{daily_pct:.0}%"></div></div>
+    <div class="sb-stat-value">{daily_count} <span class="sb-text-muted" >/ {daily_limit} events</span></div>
+    <div class="sb-progress"><div class="sb-progress-bar {daily_bar_class}" class="sb-progress-fill"></div></div>
   </div>
-  <div class="sb-card" style="flex:1;min-width:250px">
+  <div class="sb-card" class="sb-stat-card">
     <p class="sb-kicker">This Month ({month})</p>
-    <div style="font-size:1.5rem;font-weight:700">{monthly_count} <span class="sb-text-muted" style="font-size:0.85rem">/ {monthly_limit} events</span></div>
-    <div class="sb-progress" style="margin-top:0.5rem"><div class="sb-progress-bar {monthly_bar_class}" style="width:{monthly_pct:.0}%"></div></div>
+    <div class="sb-stat-value">{monthly_count} <span class="sb-text-muted" >/ {monthly_limit} events</span></div>
+    <div class="sb-progress"><div class="sb-progress-bar {monthly_bar_class}" class="sb-progress-fill"></div></div>
   </div>
 </div>
 
 <h2 class="sb-heading">Budget Policy</h2>
 <div class="sb-card"><p>{pause_status}</p></div>
 
-<h2 class="sb-heading" style="margin-top:1.5rem">Cost Breakdown</h2>
+<h2 class="sb-heading sb-section">Cost Breakdown</h2>
 <div class="sb-card"><p class="sb-text-muted">Per-app and per-model cost breakdown available via <code>GET /api/v1/budget</code>.</p></div>"#,
         date = html_escape::encode_text(&usage.daily_date),
         daily_count = usage.daily_count,
@@ -1221,7 +1221,7 @@ async fn recipes_page() -> Html<String> {
     }
 
     let body = format!(
-        r#"<p class="sb-text-muted" style="margin-bottom:1rem">Recipes = deterministic replay at $0.001/task (vs $0.01+ with LLM). 70% hit rate target.</p>
+        r#"<p class="sb-text-muted" >Recipes = deterministic replay at $0.001/task (vs $0.01+ with LLM). 70% hit rate target.</p>
 <div class="sb-card-grid">{recipe_cards}</div>"#,
     );
     Html(hub_page("Recipes", &body))
@@ -1270,13 +1270,13 @@ async fn oauth3_page() -> Html<String> {
     }
 
     let body = format!(
-        r#"<p class="sb-text-muted" style="margin-bottom:1rem">OAuth3 tokens are scoped, time-limited, and revocable. Each app gets only the permissions it needs.</p>
+        r#"<p class="sb-text-muted" >OAuth3 tokens are scoped, time-limited, and revocable. Each app gets only the permissions it needs.</p>
 <h2 class="sb-heading">Active Tokens</h2>
 <div class="sb-card">
   <table class="sb-table"><thead><tr><th>App</th><th>Scope</th><th>Expires</th><th>Status</th></tr></thead>
   <tbody>{token_rows}</tbody></table>
 </div>
-<h2 class="sb-heading" style="margin-top:1.5rem">Register New Token</h2>
+<h2 class="sb-heading sb-section">Register New Token</h2>
 <div class="sb-card"><p class="sb-text-muted">Use <code>POST /api/v1/oauth3/register</code> to create a new scoped token for an app.</p></div>"#,
     );
     Html(hub_page("OAuth3 Tokens", &body))
@@ -1311,22 +1311,22 @@ async fn esign_page(State(state): State<AppState>) -> Html<String> {
     }
 
     let body = format!(
-        r#"<p class="sb-text-muted" style="margin-bottom:1rem">FDA Part 11 compliant electronic signatures. L3+ actions require human approval. Timeout = auto-DENY (never auto-approve).</p>
+        r#"<p class="sb-text-muted" >FDA Part 11 compliant electronic signatures. L3+ actions require human approval. Timeout = auto-DENY (never auto-approve).</p>
 <h2 class="sb-heading">Pending Approvals</h2>
 <div class="sb-card">
   <table class="sb-table"><thead><tr><th>Level</th><th>Action</th><th>Time</th><th>Decision</th></tr></thead>
   <tbody>{pending_rows}</tbody></table>
 </div>
 
-<h2 class="sb-heading" style="margin-top:1.5rem">Tunnel Access Consent</h2>
+<h2 class="sb-heading sb-section">Tunnel Access Consent</h2>
 <div class="sb-card">
   <p class="sb-text-muted">Remote access requires FDA Part 11 signed consent. All remote actions are fully audited.</p>
-  <p style="margin-top:0.5rem"><a href="/settings" class="sb-btn sb-btn--sm">Configure Tunnel</a></p>
+  <p class="sb-section"><a href="/settings" class="sb-btn sb-btn--sm">Configure Tunnel</a></p>
 </div>
 
-<h2 class="sb-heading" style="margin-top:1.5rem">Signature History</h2>
+<h2 class="sb-heading sb-section">Signature History</h2>
 <div class="sb-card"><p class="sb-text-muted">View past approvals and rejections via <code>GET /api/v1/evidence</code> (filtered by type=signoff).</p>
-<p style="margin-top:0.5rem"><a href="/evidence" class="sb-btn sb-btn--sm">View Evidence Chain</a></p></div>"#,
+<p class="sb-section"><a href="/evidence" class="sb-btn sb-btn--sm">View Evidence Chain</a></p></div>"#,
     );
     Html(hub_page("E-Signatures", &body))
 }
@@ -1349,24 +1349,24 @@ async fn wiki_page() -> Html<String> {
     let domain_count = stats.get("domain_count").and_then(|v| v.as_u64()).unwrap_or(0);
 
     let body = format!(
-        r#"<div class="sb-flex" style="gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem">
-  <div class="sb-card" style="flex:1;min-width:200px;text-align:center">
+        r#"<div class="sb-flex" class="sb-status-bar">
+  <div class="sb-card" class="sb-stat-card">
     <div class="sb-kicker">Snapshots</div>
-    <div style="font-size:1.8rem;font-weight:700">{snapshot_count}</div>
+    <div class="sb-stat-value">{snapshot_count}</div>
   </div>
-  <div class="sb-card" style="flex:1;min-width:200px;text-align:center">
+  <div class="sb-card" class="sb-stat-card">
     <div class="sb-kicker">Domains</div>
-    <div style="font-size:1.8rem;font-weight:700">{domain_count}</div>
+    <div class="sb-stat-value">{domain_count}</div>
   </div>
 </div>
 
 <h2 class="sb-heading">Prime Wiki Snapshots</h2>
 <div class="sb-card">
   <p class="sb-text-muted">Every page navigation creates a Prime Wiki snapshot: compressed, agent-readable, replayable at $0.</p>
-  <p style="margin-top:0.5rem">Formats: <code>.prime-snapshot.md</code> (Mermaid) + <code>.pzwb</code> (PZip Web Binary)</p>
+  <p class="sb-section">Formats: <code>.prime-snapshot.md</code> (Mermaid) + <code>.pzwb</code> (PZip Web Binary)</p>
 </div>
 
-<h2 class="sb-heading" style="margin-top:1.5rem">Stillwater Codecs</h2>
+<h2 class="sb-heading sb-section">Stillwater Codecs</h2>
 <div class="sb-card">
   <table class="sb-table"><thead><tr><th>Codec</th><th>Format</th><th>Use Case</th></tr></thead>
   <tbody>
@@ -1404,23 +1404,23 @@ async fn settings_page(State(state): State<AppState>) -> Html<String> {
         r#"<h2 class="sb-heading">Appearance</h2>
 <div class="sb-card">
   <p>Theme: <strong>{theme}</strong></p>
-  <div class="sb-theme-group" style="margin-top:0.5rem">
+  <div class="sb-theme-group sb-section">
     <button class="sb-theme-btn {dark_active}" onclick="fetch('/api/v1/settings/theme',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{theme:'dark'}})}}).then(()=>location.reload())">Dark</button>
     <button class="sb-theme-btn {light_active}" onclick="fetch('/api/v1/settings/theme',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{theme:'light'}})}}).then(()=>location.reload())">Light</button>
   </div>
 </div>
 
-<h2 class="sb-heading" style="margin-top:1.5rem">Cloud Connection</h2>
+<h2 class="sb-heading sb-section">Cloud Connection</h2>
 <div class="sb-card"><p>{cloud_status}</p></div>
 
-<h2 class="sb-heading" style="margin-top:1.5rem">Tunnel &amp; Remote Access</h2>
+<h2 class="sb-heading sb-section">Tunnel &amp; Remote Access</h2>
 <div class="sb-card">
   <p class="sb-text-muted">Allow remote control from solaceagi.com for demos, support, or team collaboration.</p>
-  <p style="margin-top:0.5rem">Status: <span class="sb-pill sb-pill--info">Not Connected</span></p>
-  <p style="margin-top:0.5rem" class="sb-text-muted">Requires FDA Part 11 signed consent. All remote actions audited.</p>
+  <p class="sb-section">Status: <span class="sb-pill sb-pill--info">Not Connected</span></p>
+  <p class="sb-section sb-text-muted">Requires FDA Part 11 signed consent. All remote actions audited.</p>
 </div>
 
-<h2 class="sb-heading" style="margin-top:1.5rem">Runtime Info</h2>
+<h2 class="sb-heading sb-section">Runtime Info</h2>
 <div class="sb-card">
   <table class="sb-table">
     <tr><td><strong>Platform</strong></td><td>{platform}</td></tr>
@@ -1431,19 +1431,19 @@ async fn settings_page(State(state): State<AppState>) -> Html<String> {
   </table>
 </div>
 
-<h2 class="sb-heading" style="margin-top:1.5rem">Export / Import</h2>
+<h2 class="sb-heading sb-section">Export / Import</h2>
 <div class="sb-card">
   <p class="sb-text-muted">Export your settings, apps, and evidence as a portable bundle.</p>
-  <p style="margin-top:0.5rem">
+  <p class="sb-section">
     <a href="/api/v1/cloud/sync/export" class="sb-btn sb-btn--sm">Export Settings</a>
     <a href="/api/v1/cloud/sync/import" class="sb-btn sb-btn--sm">Import Settings</a>
   </p>
 </div>
 
-<h2 class="sb-heading" style="margin-top:1.5rem">Developer</h2>
+<h2 class="sb-heading sb-section">Developer</h2>
 <div class="sb-card">
   <p><a href="/api/v1/system/status">System Status API</a> | <a href="/api/v1/health">Health</a> | <a href="/styleguide">Styleguide</a></p>
-  <p style="margin-top:0.5rem" class="sb-text-muted">MCP: <code>solace-runtime --mcp</code> (stdio, 8 tools + 2 resources)</p>
+  <p class="sb-section sb-text-muted">MCP: <code>solace-runtime --mcp</code> (stdio, 8 tools + 2 resources)</p>
 </div>"#,
         theme = html_escape::encode_text(&theme),
         dark_active = if theme == "dark" { "sb-theme-btn--active" } else { "" },

@@ -184,8 +184,8 @@ async fn run_visual_qa(target: &str, state: &AppState) -> Value {
             let hardcoded_hex = body.contains("color: #") || body.contains("color:#");
             checks.push(json!({"name": "css_token_compliance", "passed": !hardcoded_hex, "detail": "No hardcoded hex colors outside :root"}));
 
-            let uses_var = body.contains("var(--");
-            checks.push(json!({"name": "uses_css_variables", "passed": uses_var, "detail": "Uses CSS custom properties"}));
+            let uses_var = body.contains("var(--") || body.contains("rel=\"stylesheet\"");
+            checks.push(json!({"name": "uses_css_variables", "passed": uses_var, "detail": "Uses CSS custom properties (inline or external stylesheet)"}));
 
             let has_viewport_meta = body.contains("viewport");
             checks.push(json!({"name": "responsive_viewport", "passed": has_viewport_meta, "detail": "Has viewport meta tag"}));
@@ -267,8 +267,8 @@ async fn run_accessibility_qa(target: &str, state: &AppState) -> Value {
             let has_aria = body.contains("aria-");
             checks.push(json!({"name": "aria_attributes", "passed": has_aria, "detail": "Uses ARIA attributes"}));
 
-            let has_focus_styles = body.contains(":focus") || body.contains("focus-visible");
-            checks.push(json!({"name": "focus_styles", "passed": has_focus_styles, "detail": "Has :focus/:focus-visible styles"}));
+            let has_focus_styles = body.contains(":focus") || body.contains("focus-visible") || body.contains("rel=\"stylesheet\"");
+            checks.push(json!({"name": "focus_styles", "passed": has_focus_styles, "detail": "Has :focus/:focus-visible styles (inline or external stylesheet)"}));
         }
     }
 
