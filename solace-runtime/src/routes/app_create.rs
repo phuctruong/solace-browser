@@ -148,6 +148,33 @@ report_template: {}
     fs::write(app_dir.join("manifest.md"), &manifest)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
 
+    // Also write manifest.yaml for data_sources (the .md parser doesn't handle complex fields)
+    if !payload.data_sources.is_empty() || !payload.orchestrates.is_empty() {
+        let yaml_manifest = serde_json::json!({
+            "id": payload.id,
+            "name": payload.name,
+            "version": "1.0.0",
+            "domain": payload.domain,
+            "category": if payload.app_type == "cli" { "developer" } else { "general" },
+            "type": payload.app_type,
+            "schedule": payload.schedule,
+            "tier": "free",
+            "report_template": if payload.app_type == "cli" { "cli-output" } else { "feed-digest" },
+            "description": if payload.description.is_empty() { format!("Custom {} app", payload.app_type) } else { payload.description.clone() },
+            "source_url": payload.data_sources.first().cloned(),
+            "data_sources": payload.data_sources.iter().enumerate().map(|(i, url)| {
+                serde_json::json!({"url": url, "name": format!("source_{}", i + 1), "source_type": "json", "limit": 25})
+            }).collect::<Vec<_>>(),
+            "orchestrates": payload.orchestrates,
+            "binary": payload.binary,
+            "args": payload.args,
+        });
+        let _ = fs::write(
+            app_dir.join("manifest.yaml"),
+            serde_yaml::to_string(&yaml_manifest).unwrap_or_default(),
+        );
+    }
+
     // Write system prompt if provided
     if !payload.system_prompt.is_empty() {
         fs::create_dir_all(app_dir.join("inbox").join("prompts"))
