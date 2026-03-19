@@ -57,7 +57,7 @@
       }
     },
     "security": {
-      "csp": "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:8888; connect-src * http://localhost:8888 https://solaceagi.com; img-src * data: blob:; style-src 'self' 'unsafe-inline' http://localhost:8888; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:8888; font-src 'self' data:"
+      "csp": "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:"
     },
     "systemTray": {
       "iconPath": "icons/solace-hub-icon-32.png",
@@ -80,7 +80,7 @@
         "decorations": true,
         "visible": true,
         "center": true,
-        "url": "index.html"
+        "url": "http://localhost:8888/"
       }
     ]
   }

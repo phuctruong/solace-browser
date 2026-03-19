@@ -501,12 +501,21 @@
   <!-- TABS -->
   <div id="hub-tabs" class="sh-tabs-container">
     <div class="sb-tabs" role="tablist">
-      <button class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
-      <button class="sb-tab" data-tab="sessions" role="tab">Sessions</button>
-      <button class="sb-tab" data-tab="events" role="tab">Events <span id="events-badge" class="sb-pill sb-pill--danger sh-events-badge">0</span></button>
-      <button class="sb-tab" data-tab="remote" role="tab">Remote</button>
-      <button class="sb-tab" data-tab="settings" role="tab">Settings</button>
+      <button class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true" onclick="switchTab(this,'overview')">Overview</button>
+      <button class="sb-tab" data-tab="sessions" role="tab" onclick="switchTab(this,'sessions')">Sessions</button>
+      <button class="sb-tab" data-tab="events" role="tab" onclick="switchTab(this,'events')">Events <span id="events-badge" class="sb-pill sb-pill--danger sh-events-badge">0</span></button>
+      <button class="sb-tab" data-tab="remote" role="tab" onclick="switchTab(this,'remote')">Remote</button>
+      <button class="sb-tab" data-tab="settings" role="tab" onclick="switchTab(this,'settings')">Settings</button>
     </div>
+    <script>
+    function switchTab(btn, tabId) {
+      document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); });
+      btn.classList.add('sb-tab--active');
+      document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; p.classList.add('sh-tab-panel-hidden'); });
+      var panel = document.getElementById('tab-' + tabId);
+      if (panel) { panel.style.display = 'block'; panel.classList.remove('sh-tab-panel-hidden'); }
+    }
+    </script>
   </div>
 
   <!-- TAB: OVERVIEW (default — gate + launch + status) -->
@@ -773,7 +782,16 @@
 <script>
 // Inline hub-app.js
 // Diagram: 04-hub-lifecycle
-// Extracted from index.html inline <script> block
+// Global tab switcher (must be outside IIFE for onclick= to reach it)
+function switchTab(btn, tabId) {
+  document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); });
+  btn.classList.add('sb-tab--active');
+  document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; });
+  var panel = document.getElementById('tab-' + tabId);
+  if (panel) { panel.style.display = 'block'; }
+}
+
+// IIFE for all other functionality
 (function() {
   'use strict';
   var API = 'http://localhost:8888';
@@ -1477,8 +1495,10 @@
       });
     });
   }
-  // Init tabs immediately (script is at bottom of body, DOM is ready)
+  // Init tabs — try immediately, also on DOMContentLoaded, also on load
   initTabs();
+  document.addEventListener('DOMContentLoaded', initTabs);
+  window.addEventListener('load', initTabs);
 
   // ─── Open Local Dashboard (via Solace Browser, not system browser) ───
   window.openLocalDashboard = function() {

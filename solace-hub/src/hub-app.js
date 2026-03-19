@@ -1,5 +1,14 @@
 // Diagram: 04-hub-lifecycle
-// Extracted from index.html inline <script> block
+// Global tab switcher (must be outside IIFE for onclick= to reach it)
+function switchTab(btn, tabId) {
+  document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); });
+  btn.classList.add('sb-tab--active');
+  document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; });
+  var panel = document.getElementById('tab-' + tabId);
+  if (panel) { panel.style.display = 'block'; }
+}
+
+// IIFE for all other functionality
 (function() {
   'use strict';
   var API = 'http://localhost:8888';
@@ -703,8 +712,10 @@
       });
     });
   }
-  // Init tabs immediately (script is at bottom of body, DOM is ready)
+  // Init tabs — try immediately, also on DOMContentLoaded, also on load
   initTabs();
+  document.addEventListener('DOMContentLoaded', initTabs);
+  window.addEventListener('load', initTabs);
 
   // ─── Open Local Dashboard (via Solace Browser, not system browser) ───
   window.openLocalDashboard = function() {

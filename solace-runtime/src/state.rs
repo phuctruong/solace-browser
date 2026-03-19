@@ -56,6 +56,8 @@ pub struct AppState {
     pub tunnel: Arc<RwLock<TunnelState>>,
     /// Auto-update status: version check + download + install progress.
     pub update_status: Arc<RwLock<crate::updates::UpdateStatus>>,
+    /// Pending JS to execute in Hub WebView (polled by Hub).
+    pub pending_js: Arc<RwLock<Option<String>>>,
 }
 
 /// Tunnel state for remote access (FDA Part 11 consent + WSS connection).
@@ -286,6 +288,7 @@ impl AppState {
             domain_tabs: Arc::new(RwLock::new(HashMap::new())),
             tunnel: Arc::new(RwLock::new(TunnelState::default())),
             update_status: Arc::new(RwLock::new(crate::updates::UpdateStatus::default())),
+            pending_js: Arc::new(RwLock::new(None)),
         }
     }
 
