@@ -20,6 +20,7 @@ use crate::state::AppState;
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/v1/apps/create", post(create_app))
+        .route("/api/v1/apps/create-from-job", post(create_from_job_description))
         .route("/api/v1/apps/types", get(list_app_types))
         .route("/api/v1/apps/:app_id/delete", post(delete_app))
         .route("/api/v1/apps/:app_id/update", post(update_app))
@@ -285,8 +286,22 @@ async fn list_app_types() -> Json<Value> {
                 "input": "Service A data",
                 "output": "Transformed data pushed to Service B",
             },
+            {
+                "id": "role",
+                "name": "Role App",
+                "description": "AI worker for a business function — upload a job description, get a working AI employee",
+                "domain": "localhost (orchestrates external apps)",
+                "input": "Job description (text or YAML)",
+                "output": "Weekly role reports + actions taken",
+                "roles": [
+                    "bizdev", "competitor", "market", "sales", "customer_success",
+                    "content", "recruiting", "financial", "legal", "product",
+                    "security", "operations", "executive"
+                ],
+                "note": "Role apps are conductor apps organized by business function. Users upload a job description and the app configures itself.",
+            },
         ],
-        "total": 6,
+        "total": 7,
     }))
 }
 
@@ -400,5 +415,193 @@ async fn update_app(
         "updated": true,
         "app_id": app_id,
         "fields_changed": updated_fields,
+    })))
+}
+
+// ─── Job Description → Role App ─────────────────────────────────────
+
+/// Role keywords → role type mapping
+const ROLE_KEYWORDS: &[(&str, &str)] = &[
+    ("business development", "bizdev"),
+    ("biz dev", "bizdev"),
+    ("sales", "sales"),
+    ("lead generation", "bizdev"),
+    ("competitor", "competitor"),
+    ("competitive analysis", "competitor"),
+    ("market research", "market"),
+    ("market analysis", "market"),
+    ("market scan", "market"),
+    ("content", "content"),
+    ("marketing", "content"),
+    ("social media", "content"),
+    ("seo", "content"),
+    ("recruiting", "recruiting"),
+    ("hiring", "recruiting"),
+    ("talent", "recruiting"),
+    ("financial", "financial"),
+    ("finance", "financial"),
+    ("accounting", "financial"),
+    ("legal", "legal"),
+    ("compliance", "legal"),
+    ("regulatory", "legal"),
+    ("product manager", "product"),
+    ("product management", "product"),
+    ("security", "security"),
+    ("cybersecurity", "security"),
+    ("risk", "security"),
+    ("operations", "operations"),
+    ("ops", "operations"),
+    ("customer success", "customer_success"),
+    ("customer support", "customer_success"),
+    ("executive", "executive"),
+    ("ceo", "executive"),
+    ("strategy", "executive"),
+];
+
+/// Apps commonly used by each role
+fn role_apps(role: &str) -> Vec<&'static str> {
+    match role {
+        "bizdev" => vec!["google-search-trends", "hackernews-feed", "reddit-scanner"],
+        "competitor" => vec!["google-search-trends", "reddit-scanner", "hackernews-feed"],
+        "market" => vec!["google-search-trends", "reddit-scanner"],
+        "sales" => vec!["google-search-trends"],
+        "customer_success" => vec!["google-search-trends"],
+        "content" => vec!["hackernews-feed", "reddit-scanner", "google-search-trends"],
+        "recruiting" => vec!["google-search-trends", "hackernews-feed"],
+        "financial" => vec!["google-search-trends"],
+        "legal" => vec!["google-search-trends"],
+        "product" => vec!["hackernews-feed", "reddit-scanner", "google-search-trends"],
+        "security" => vec!["hackernews-feed", "reddit-scanner"],
+        "operations" => vec!["google-search-trends"],
+        "executive" => vec!["google-search-trends", "hackernews-feed", "reddit-scanner"],
+        _ => vec!["google-search-trends"],
+    }
+}
+
+fn role_persona(role: &str) -> &'static str {
+    match role {
+        "bizdev" => "Alex Hormozi",
+        "competitor" => "Peter Thiel",
+        "market" => "Ben Thompson",
+        "sales" => "Grant Cardone",
+        "customer_success" => "Lincoln Murphy",
+        "content" => "Gary Vaynerchuk",
+        "recruiting" => "Liz Ryan",
+        "financial" => "Aswath Damodaran",
+        "legal" => "Marc Andreessen",
+        "product" => "Marty Cagan",
+        "security" => "Bruce Schneier",
+        "operations" => "Eliyahu Goldratt",
+        "executive" => "Peter Drucker",
+        _ => "Peter Drucker",
+    }
+}
+
+#[derive(Deserialize)]
+struct JobDescriptionPayload {
+    /// The job description text (plain text or structured)
+    job_description: String,
+    /// Optional: override the detected role
+    #[serde(default)]
+    role: Option<String>,
+    /// Optional: company name for customization
+    #[serde(default)]
+    company: Option<String>,
+}
+
+/// POST /api/v1/apps/create-from-job — create a role app from a job description
+async fn create_from_job_description(
+    State(state): State<AppState>,
+    Json(payload): Json<JobDescriptionPayload>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let jd_lower = payload.job_description.to_lowercase();
+
+    // Detect role from job description keywords
+    let detected_role = payload.role.clone().unwrap_or_else(|| {
+        for (keyword, role) in ROLE_KEYWORDS {
+            if jd_lower.contains(keyword) {
+                return role.to_string();
+            }
+        }
+        "executive".to_string() // default
+    });
+
+    let company = payload.company.clone().unwrap_or_else(|| "My Company".to_string());
+    let app_id = format!("{}-role-{}", company.to_lowercase().replace(' ', "-"), detected_role);
+    let app_name = format!("{} — {}", company, detected_role.replace('_', " "));
+    let persona = role_persona(&detected_role);
+    let apps = role_apps(&detected_role);
+
+    // Create the app directory
+    let solace_home = crate::utils::solace_home();
+    let app_dir = solace_home.join("apps").join("localhost").join(&app_id);
+    std::fs::create_dir_all(&app_dir).map_err(|e| {
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()})))
+    })?;
+    std::fs::create_dir_all(app_dir.join("inbox")).ok();
+    std::fs::create_dir_all(app_dir.join("outbox")).ok();
+
+    // Write manifest.yaml
+    let manifest = format!(
+        r#"id: {app_id}
+name: "{app_name}"
+version: "1.0.0"
+description: "{desc}"
+domain: localhost
+app_type: conductor
+category: role
+tier: free
+visibility: team
+schedule: "0 8 * * 1"
+orchestrates:
+{orch}
+levels:
+  default: "L2"
+  synthesis: "L3"
+"#,
+        app_id = app_id,
+        app_name = app_name,
+        desc = payload.job_description.chars().take(200).collect::<String>().replace('"', "'"),
+        orch = apps.iter().map(|a| format!("  - {}", a)).collect::<Vec<_>>().join("\n"),
+    );
+
+    std::fs::write(app_dir.join("manifest.yaml"), &manifest).map_err(|e| {
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()})))
+    })?;
+
+    // Write manifest.md with Prime Mermaid format
+    let manifest_md = format!(
+        "<!-- Diagram: apps-role-based -->\n# Solace Role: {role}\n## DNA: `{role} = {apps_dna} → report(weekly)`\n\n## Job Description\n{jd}\n\n## Persona: {persona}\n\n## Orchestrates\n{orch_list}\n",
+        role = detected_role,
+        apps_dna = apps.iter().map(|a| a.replace("-", "_")).collect::<Vec<_>>().join(" × "),
+        jd = payload.job_description,
+        persona = persona,
+        orch_list = apps.iter().map(|a| format!("- {}", a)).collect::<Vec<_>>().join("\n"),
+    );
+    std::fs::write(app_dir.join("manifest.md"), manifest_md).ok();
+
+    // Save job description to inbox
+    std::fs::write(app_dir.join("inbox").join("job-description.md"), &payload.job_description).ok();
+
+    // Record evidence
+    let _ = crate::evidence::record_event(
+        &solace_home,
+        &format!("app.created_from_job.{}", app_id),
+        "user",
+        json!({"app_id": app_id, "role": detected_role, "company": company, "persona": persona}),
+    );
+
+    // Update app count
+    *state.app_count.write() = crate::app_engine::scan_installed_apps().len() as u32;
+
+    Ok(Json(json!({
+        "created": true,
+        "app_id": app_id,
+        "role": detected_role,
+        "persona": persona,
+        "orchestrates": apps,
+        "company": company,
+        "path": app_dir.display().to_string(),
+        "usage": "This role app runs weekly. Edit inbox/job-description.md to customize.",
     })))
 }

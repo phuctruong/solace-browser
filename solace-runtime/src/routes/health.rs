@@ -73,7 +73,12 @@ async fn agents() -> Json<serde_json::Value> {
             "tunnel_remote_control", "approval_queue",
             "qa_platform",
         ],
-        "app_types": ["standard", "conductor", "cli", "monitor", "agent", "bridge", "qa"],
+        "app_types": ["standard", "conductor", "cli", "monitor", "agent", "bridge", "qa", "role"],
+        "role_types": [
+            "bizdev", "competitor", "market", "sales", "customer_success",
+            "content", "recruiting", "financial", "legal", "product",
+            "security", "operations", "executive",
+        ],
         "create_app_api": {
             "endpoint": "POST /api/v1/apps/create",
             "description": "AI agents can create new Solace apps programmatically",
