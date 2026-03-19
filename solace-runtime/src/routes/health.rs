@@ -49,9 +49,9 @@ async fn agents() -> Json<serde_json::Value> {
     Json(json!({
         "runtime": {
             "id": "solace-runtime",
-            "version": "0.1.0",
+            "version": crate::updates::local_version(),
             "port": 8888,
-            "endpoints": 70,
+            "endpoints": 75,
             "mcp_tools": crate::mcp::mcp_tool_definitions().len(),
         },
         "cli_agents": {
@@ -71,8 +71,9 @@ async fn agents() -> Json<serde_json::Value> {
             "app_creation", "cli_wrapper", "conductor_orchestration",
             "team_sharing", "esign_fda_part11", "auto_update",
             "tunnel_remote_control", "approval_queue",
+            "qa_platform",
         ],
-        "app_types": ["standard", "conductor", "cli", "monitor", "agent", "bridge"],
+        "app_types": ["standard", "conductor", "cli", "monitor", "agent", "bridge", "qa"],
         "create_app_api": {
             "endpoint": "POST /api/v1/apps/create",
             "description": "AI agents can create new Solace apps programmatically",
@@ -101,6 +102,27 @@ async fn agents() -> Json<serde_json::Value> {
             "domains": "GET /api/v1/domains",
             "tunnel": "GET /api/v1/tunnel/status",
             "team_share": "POST /api/v1/team/share (via solaceagi.com)",
+            "qa_run": "POST /api/v1/qa/run",
+            "qa_report": "GET /api/v1/qa/report",
+            "qa_types": "GET /api/v1/qa/types",
+            "qa_reports": "GET /api/v1/qa/reports",
+            "qa_status": "GET /api/v1/qa/status",
+        },
+        "qa_platform": {
+            "description": "QA-as-a-Platform: the browser tests itself and lets you test anything",
+            "types": [
+                {"id": "visual", "name": "Visual QA", "desc": "Screenshot diff, CSS tokens, responsive"},
+                {"id": "api", "name": "API QA", "desc": "Endpoint smoke, schema, latency"},
+                {"id": "accessibility", "name": "Accessibility QA", "desc": "WCAG 2.1 AA, ARIA, keyboard"},
+                {"id": "security", "name": "Security QA", "desc": "XSS, CSRF, injection, headers"},
+                {"id": "performance", "name": "Performance QA", "desc": "FCP, LCP, CLS, memory"},
+                {"id": "evidence", "name": "Evidence QA", "desc": "Hash chain, ALCOA+, Part 11"},
+                {"id": "integration", "name": "Integration QA", "desc": "Cross-app, e2e journeys"},
+            ],
+            "visibility": "public",
+            "tier": "free",
+            "extends_to": "AI coding agents can use QA apps to test any web project — not just Solace apps",
+            "usage": "POST /api/v1/qa/run {\"qa_type\": \"visual\", \"target\": \"https://example.com\"}",
         },
     }))
 }

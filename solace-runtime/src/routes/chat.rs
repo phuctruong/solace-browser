@@ -568,8 +568,9 @@ mod tests {
     }
 
     #[test]
-    fn classify_unknown() {
-        assert_eq!(classify_intent("banana"), Intent::Unknown);
+    fn classify_fallback_to_query() {
+        // Unknown inputs now fall back to Query (GLOW 617 — broadened intent)
+        assert_eq!(classify_intent("banana"), Intent::Query);
     }
 
     #[test]

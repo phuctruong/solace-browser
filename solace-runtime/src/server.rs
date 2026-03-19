@@ -18,6 +18,20 @@ async fn add_service_headers(req: Request<axum::body::Body>, next: Next) -> Resp
         .headers_mut()
         .insert("X-Duration-Ms", duration_ms.to_string().parse().unwrap());
     response
+        .headers_mut()
+        .insert("X-Frame-Options", "DENY".parse().unwrap());
+    response
+        .headers_mut()
+        .insert("X-Content-Type-Options", "nosniff".parse().unwrap());
+    response
+        .headers_mut()
+        .insert(
+            "Content-Security-Policy",
+            "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* https://*.solaceagi.com; img-src 'self' data: https:; connect-src 'self' ws://localhost:* http://localhost:* https://*.solaceagi.com https://*.googleapis.com"
+                .parse()
+                .unwrap(),
+        );
+    response
 }
 
 pub fn build_router(state: crate::state::AppState) -> Router {
@@ -51,6 +65,7 @@ pub fn build_router(state: crate::state::AppState) -> Router {
         .merge(crate::routes::esign::routes())
         .merge(crate::routes::hub_control::routes())
         .merge(crate::routes::tunnel::routes())
+        .merge(crate::routes::qa::routes())
         .merge(crate::routes::events::routes())
         .layer(middleware::from_fn(add_service_headers))
         .layer(TraceLayer::new_for_http())

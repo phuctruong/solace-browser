@@ -23,4 +23,5 @@ pub mod esign;
 pub mod events;
 pub mod hub_control;
 pub mod tunnel;
+pub mod qa;
 pub mod wiki;
