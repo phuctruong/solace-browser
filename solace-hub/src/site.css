@@ -869,3 +869,117 @@ body[data-theme="light"] {
     min-width: 2.6rem;
   }
 }
+
+/* ─── Extracted from index.html <style> block ─── */
+.hub-center { max-width: 100%; margin: 1rem 2rem; padding: 0; }
+.hub-scan { text-align: center; padding: 2rem 1rem; }
+.hub-scan img { width: 100px; height: auto; }
+.hub-scan-text { font-size: 1.1rem; font-weight: 600; margin-top: 1rem; }
+.hub-llm-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.75rem 0; }
+.hub-llm-chip { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: var(--sb-accent-soft); border: 1px solid var(--sb-accent); border-radius: var(--sb-radius); font-size: 0.9rem; font-weight: 600; }
+.hub-status-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.3rem 0; font-size: 0.85rem; }
+.hub-gate { text-align: center; padding: 2rem; }
+.hub-gate-msg { font-size: 1rem; color: var(--sb-text-muted); margin: 1rem 0; }
+.hub-ready { border: 2px solid var(--sb-success); }
+.hub-blocked { border: 2px solid var(--sb-danger); opacity: 0.6; }
+.hub-check { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; cursor: pointer; }
+.hub-check input { width: 20px; height: 20px; accent-color: var(--sb-accent); }
+.hub-launch { width: auto; padding: 0.75rem 2rem; font-size: 1rem; }
+#scan-phase { transition: opacity 0.5s; }
+
+/* ─── Utility: hidden (replaces style="display:none") ─── */
+.hidden { display: none !important; }
+
+/* ─── Utility: flex helpers for inline style replacement ─── */
+.hub-flex-center { display: flex; align-items: center; }
+.hub-flex-between { display: flex; align-items: center; justify-content: space-between; }
+.hub-flex-gap-sm { gap: 0.5rem; }
+.hub-flex-gap-md { gap: 0.75rem; }
+.hub-flex-wrap { flex-wrap: wrap; }
+
+/* ─── Hub event row cursor ─── */
+.hub-event-row { cursor: pointer; }
+
+/* ─── Styleguide: icon grid cells ─── */
+.sg-icon-cell { text-align: center; width: 70px; }
+.sg-icon-img { width: 40px; height: 40px; object-fit: contain; border-radius: 6px; }
+.sg-icon-label { font-size: 0.6rem; }
+
+/* ─── Styleguide: chart containers ─── */
+.sg-chart-container { width: 100%; height: 250px; }
+
+/* ─── Styleguide: skeleton ─── */
+.sg-skeleton-lg { height: 20px; width: 60%; margin-bottom: 8px; }
+.sg-skeleton-md { height: 14px; width: 80%; margin-bottom: 8px; }
+.sg-skeleton-sm { height: 14px; width: 45%; }
+
+/* ─── Styleguide: progress bar widths ─── */
+.sg-progress-3 { width: 3%; }
+.sg-progress-100 { width: 100%; }
+.sg-progress-80 { width: 80%; }
+.sg-progress-2 { width: 2%; }
+
+/* ─── Styleguide: alert borders ─── */
+.sg-alert-success { border-left: 4px solid var(--sb-success); padding: 0.75rem 1rem; }
+.sg-alert-warning { border-left: 4px solid var(--sb-warning); padding: 0.75rem 1rem; }
+.sg-alert-danger { border-left: 4px solid var(--sb-danger); padding: 0.75rem 1rem; }
+.sg-alert-info { border-left: 4px solid var(--sb-signal); padding: 0.75rem 1rem; }
+
+/* ─── Styleguide: form input styling ─── */
+.sg-form-input {
+  background: var(--sb-surface-strong);
+  border: 2px solid var(--sb-border-strong);
+  border-radius: var(--sb-radius);
+  color: var(--sb-text);
+  padding: 8px 12px;
+  font-family: var(--sb-font);
+  font-size: 0.9rem;
+  min-width: 200px;
+}
+.sg-form-input-mono {
+  background: var(--sb-surface-strong);
+  border: 2px solid var(--sb-border-strong);
+  border-radius: var(--sb-radius);
+  color: var(--sb-text);
+  padding: 8px 12px;
+  font-family: var(--sb-font-mono);
+  font-size: 0.9rem;
+  min-width: 150px;
+}
+.sg-form-select {
+  background: var(--sb-surface-strong);
+  border: 2px solid var(--sb-border-strong);
+  border-radius: var(--sb-radius);
+  color: var(--sb-text);
+  padding: 8px 12px;
+  font-family: var(--sb-font);
+  font-size: 0.9rem;
+  min-width: 150px;
+}
+.sg-form-label {
+  font-size: 0.8rem;
+  display: block;
+  margin-bottom: 4px;
+}
+.sg-form-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.sg-form-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--sb-accent);
+}
+
+/* ─── Styleguide: truncate helper ─── */
+.sg-truncate-hash { max-width: 120px; }
+
+/* ─── Styleguide: mermaid preview area ─── */
+.sg-mermaid-preview {
+  background: var(--sb-surface-strong);
+  border-radius: var(--sb-radius);
+  padding: 1rem;
+  min-height: 60px;
+}
