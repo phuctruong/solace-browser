@@ -405,6 +405,11 @@ async fn execute_intent(intent: &Intent, message: &str, state: &AppState) -> Str
 
 // ─── LLM Integration ────────────────────────────────────────────────
 
+/// Public wrapper for other modules to call LLM
+pub async fn call_llm_public(message: &str) -> Result<String, String> {
+    call_llm(message).await
+}
+
 /// Call an LLM to answer a query. Tries: OpenRouter API → Claude CLI → error.
 async fn call_llm(message: &str) -> Result<String, String> {
     // Try 1: OpenRouter API (if OPENROUTER_API_KEY set)

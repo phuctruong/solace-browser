@@ -108,6 +108,21 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
         return run_cli_app(app_id, &app_dir, &manifest, &run_id, state).await;
     }
 
+    // Monitor apps: fetch URL, compare to previous run, alert on change
+    if manifest.app_type == "monitor" {
+        return run_monitor_app(app_id, &app_dir, &manifest, &run_id, state).await;
+    }
+
+    // Agent apps: multi-step with HITL approval between steps
+    if manifest.app_type == "agent" {
+        return run_agent_app(app_id, &app_dir, &manifest, &run_id, state).await;
+    }
+
+    // Bridge apps: fetch from source, transform, push to destination
+    if manifest.app_type == "bridge" {
+        return run_bridge_app(app_id, &app_dir, &manifest, &run_id, state).await;
+    }
+
     // Acquire domain tab if app has a domain
     if !manifest.domain.is_empty() {
         let domain = crate::routes::domains::extract_root_domain(&manifest.domain);
@@ -600,6 +615,290 @@ async fn run_cli_app(
         let filename = std::path::Path::new(input_path).file_name().unwrap_or_default();
         let _ = std::fs::rename(input_path, processed_dir.join(filename));
     }
+
+    Ok(report_path)
+}
+
+// ---------------------------------------------------------------------------
+// Monitor App — poll URL, compare to previous, alert on change
+// ---------------------------------------------------------------------------
+
+async fn run_monitor_app(
+    app_id: &str,
+    app_dir: &std::path::Path,
+    manifest: &crate::app_engine::AppManifest,
+    run_id: &str,
+    state: &AppState,
+) -> Result<PathBuf, String> {
+    let solace_home = crate::utils::solace_home();
+    let outbox_dir = app_dir.join("outbox").join("runs").join(run_id);
+    std::fs::create_dir_all(&outbox_dir).map_err(|e| e.to_string())?;
+
+    // Fetch current state
+    let url = manifest.source_url.as_deref()
+        .or_else(|| manifest.data_sources.first().map(|ds| ds.url.as_str()))
+        .unwrap_or("https://example.com");
+
+    let client = reqwest::Client::new();
+    let current = client.get(url)
+        .header("User-Agent", "SolaceRuntime/0.1.0 (monitor)")
+        .timeout(std::time::Duration::from_secs(30))
+        .send().await
+        .map_err(|e| format!("Monitor fetch failed: {}", e))?
+        .text().await
+        .map_err(|e| format!("Monitor read failed: {}", e))?;
+
+    let current_hash = crate::utils::sha256_hex(&current);
+
+    // Load previous hash
+    let state_file = app_dir.join("outbox").join("monitor_state.json");
+    let previous_hash = std::fs::read_to_string(&state_file)
+        .ok()
+        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+        .and_then(|v| v.get("hash").and_then(|h| h.as_str()).map(|s| s.to_string()))
+        .unwrap_or_default();
+
+    let changed = !previous_hash.is_empty() && previous_hash != current_hash;
+    let first_run = previous_hash.is_empty();
+
+    // Save current state
+    let _ = std::fs::write(&state_file, serde_json::to_string_pretty(&serde_json::json!({
+        "hash": current_hash,
+        "url": url,
+        "timestamp": crate::utils::now_iso8601(),
+        "content_length": current.len(),
+    })).unwrap_or_default());
+
+    // Build report
+    let status_text = if first_run { "First check — baseline recorded" }
+        else if changed { "CHANGE DETECTED" }
+        else { "No change" };
+
+    let html = format!(
+        r#"<!doctype html><html><head><meta charset="utf-8"><title>Monitor: {name}</title>
+<link rel="stylesheet" href="/styleguide.css"></head><body>
+<h1>{name} — Monitor Report</h1>
+<p>URL: <a href="{url}">{url}</a></p>
+<p>Status: <strong style="color:{color}">{status}</strong></p>
+<p>Current hash: <code>{hash}</code></p>
+<p>Previous hash: <code>{prev}</code></p>
+<p>Content length: {len} bytes</p>
+<p>Checked: {time}</p>
+</body></html>"#,
+        name = manifest.name, url = url,
+        color = if changed { "var(--sb-danger, red)" } else { "var(--sb-success, green)" },
+        status = status_text, hash = current_hash,
+        prev = if previous_hash.is_empty() { "none (first run)" } else { &previous_hash },
+        len = current.len(), time = crate::utils::now_iso8601(),
+    );
+
+    let report_path = outbox_dir.join("report.html");
+    std::fs::write(&report_path, &html).map_err(|e| e.to_string())?;
+
+    // Record evidence
+    let _ = crate::evidence::record_event(&solace_home, &format!("monitor.check.{}", app_id), "runtime",
+        serde_json::json!({"url": url, "changed": changed, "hash": current_hash, "first_run": first_run}));
+
+    // Alert notification if changed
+    if changed {
+        state.notifications.write().push(Notification {
+            id: uuid::Uuid::new_v4().to_string(),
+            message: format!("ALERT: {} detected change at {}", manifest.name, url),
+            level: "warning".to_string(),
+            read: false,
+            created_at: crate::utils::now_iso8601(),
+        });
+    }
+
+    *state.app_count.write() += 1;
+    *state.evidence_count.write() += 1;
+
+    Ok(report_path)
+}
+
+// ---------------------------------------------------------------------------
+// Agent App — multi-step task with HITL approval gates between steps
+// ---------------------------------------------------------------------------
+
+async fn run_agent_app(
+    app_id: &str,
+    app_dir: &std::path::Path,
+    manifest: &crate::app_engine::AppManifest,
+    run_id: &str,
+    state: &AppState,
+) -> Result<PathBuf, String> {
+    let solace_home = crate::utils::solace_home();
+    let outbox_dir = app_dir.join("outbox").join("runs").join(run_id);
+    std::fs::create_dir_all(&outbox_dir).map_err(|e| e.to_string())?;
+
+    // Agent apps execute in steps. Each step can be:
+    // 1. Fetch data (L1 auto)
+    // 2. Analyze with LLM (L2 auto)
+    // 3. Draft action (L3 needs approval)
+    // 4. Execute action (L3+ after approval)
+
+    // Step 1: Load task from inbox
+    let task_dir = app_dir.join("inbox").join("tasks");
+    let task_content = if task_dir.exists() {
+        std::fs::read_dir(&task_dir).ok()
+            .and_then(|mut entries| entries.next())
+            .and_then(|e| e.ok())
+            .and_then(|e| std::fs::read_to_string(e.path()).ok())
+            .unwrap_or_else(|| format!("Default task for {}", manifest.name))
+    } else {
+        format!("Default task for {}", manifest.name)
+    };
+
+    // Step 2: Fetch context (if data sources exist)
+    let mut context = String::new();
+    for source in &manifest.data_sources {
+        let client = reqwest::Client::new();
+        if let Ok(resp) = client.get(&source.url)
+            .timeout(std::time::Duration::from_secs(30))
+            .send().await
+        {
+            if let Ok(text) = resp.text().await {
+                context.push_str(&format!("--- Source: {} ---\n{}\n\n", source.name, &text[..text.len().min(2000)]));
+            }
+        }
+    }
+
+    // Step 3: Draft with LLM (if available)
+    let draft = if let Ok(llm_response) = crate::routes::chat::call_llm_public(
+        &format!("Task: {}\n\nContext:\n{}\n\nDraft a response or action plan.", task_content, context)
+    ).await {
+        llm_response
+    } else {
+        format!("Agent task loaded. Context gathered from {} sources. Awaiting LLM for draft.", manifest.data_sources.len())
+    };
+
+    // Step 4: Queue for approval (L3+)
+    let action_id = uuid::Uuid::new_v4().to_string();
+    state.pending_actions.write().push(crate::routes::chat::PendingAction {
+        id: action_id.clone(),
+        intent: crate::routes::chat::Intent::Automate,
+        message: format!("Agent {} draft: {}", manifest.name, &draft[..draft.len().min(200)]),
+        preview: draft.clone(),
+        cooldown_secs: 30,
+        created_at: std::time::Instant::now(),
+    });
+
+    // Build report
+    let html = format!(
+        r#"<!doctype html><html><head><meta charset="utf-8"><title>Agent: {name}</title>
+<link rel="stylesheet" href="/styleguide.css"></head><body>
+<h1>{name} — Agent Report</h1>
+<h2>Task</h2><pre>{task}</pre>
+<h2>Context ({sources} sources)</h2><pre>{context}</pre>
+<h2>Draft (pending approval)</h2><pre>{draft}</pre>
+<p>Approval ID: <code>{action_id}</code></p>
+<p>Approve: <code>POST /api/v1/approvals/approve</code> with {{"action_id": "{action_id}"}}</p>
+</body></html>"#,
+        name = manifest.name, task = html_escape::encode_text(&task_content),
+        sources = manifest.data_sources.len(),
+        context = html_escape::encode_text(&context[..context.len().min(3000)]),
+        draft = html_escape::encode_text(&draft),
+        action_id = action_id,
+    );
+
+    let report_path = outbox_dir.join("report.html");
+    std::fs::write(&report_path, &html).map_err(|e| e.to_string())?;
+
+    let _ = crate::evidence::record_event(&solace_home, &format!("agent.draft.{}", app_id), "runtime",
+        serde_json::json!({"action_id": action_id, "task_length": task_content.len(), "draft_length": draft.len(), "sources": manifest.data_sources.len()}));
+
+    state.notifications.write().push(Notification {
+        id: uuid::Uuid::new_v4().to_string(),
+        message: format!("Agent {} needs approval (action {})", manifest.name, &action_id[..8]),
+        level: "warning".to_string(),
+        read: false,
+        created_at: crate::utils::now_iso8601(),
+    });
+
+    *state.app_count.write() += 1;
+    *state.evidence_count.write() += 1;
+
+    Ok(report_path)
+}
+
+// ---------------------------------------------------------------------------
+// Bridge App — read from source service, transform, push to destination
+// ---------------------------------------------------------------------------
+
+async fn run_bridge_app(
+    app_id: &str,
+    app_dir: &std::path::Path,
+    manifest: &crate::app_engine::AppManifest,
+    run_id: &str,
+    state: &AppState,
+) -> Result<PathBuf, String> {
+    let solace_home = crate::utils::solace_home();
+    let outbox_dir = app_dir.join("outbox").join("runs").join(run_id);
+    std::fs::create_dir_all(&outbox_dir).map_err(|e| e.to_string())?;
+
+    // Bridge requires at least 2 data sources: source and destination
+    if manifest.data_sources.len() < 2 {
+        return Err(format!("Bridge app {} requires at least 2 data_sources (source + destination). Has {}.",
+            app_id, manifest.data_sources.len()));
+    }
+
+    let source = &manifest.data_sources[0];
+    let destination = &manifest.data_sources[1];
+
+    // Step 1: Fetch from source
+    let client = reqwest::Client::new();
+    let source_data = client.get(&source.url)
+        .header("User-Agent", "SolaceRuntime/0.1.0 (bridge)")
+        .timeout(std::time::Duration::from_secs(30))
+        .send().await
+        .map_err(|e| format!("Bridge source fetch failed: {}", e))?
+        .text().await
+        .map_err(|e| format!("Bridge source read failed: {}", e))?;
+
+    let source_hash = crate::utils::sha256_hex(&source_data);
+
+    // Step 2: Transform (via LLM or template)
+    let transformed = if let Ok(llm_response) = crate::routes::chat::call_llm_public(
+        &format!("Transform this data from {} format to {} format:\n\n{}", source.name, destination.name, &source_data[..source_data.len().min(3000)])
+    ).await {
+        llm_response
+    } else {
+        // Passthrough if no LLM
+        source_data.clone()
+    };
+
+    // Step 3: Push to destination (simulate — real push would POST to destination URL)
+    let push_result = format!("Would push {} bytes to {}", transformed.len(), destination.url);
+
+    // Save transformed data
+    std::fs::write(outbox_dir.join("source_data.txt"), &source_data).map_err(|e| e.to_string())?;
+    std::fs::write(outbox_dir.join("transformed_data.txt"), &transformed).map_err(|e| e.to_string())?;
+
+    // Build report
+    let html = format!(
+        r#"<!doctype html><html><head><meta charset="utf-8"><title>Bridge: {name}</title>
+<link rel="stylesheet" href="/styleguide.css"></head><body>
+<h1>{name} — Bridge Report</h1>
+<h2>Source: {src_name}</h2><p>URL: {src_url}</p><p>Fetched: {src_len} bytes (hash: <code>{src_hash}</code>)</p>
+<h2>Destination: {dst_name}</h2><p>URL: {dst_url}</p>
+<h2>Transform</h2><pre>{transformed}</pre>
+<h2>Push Result</h2><p>{push}</p>
+</body></html>"#,
+        name = manifest.name,
+        src_name = source.name, src_url = source.url, src_len = source_data.len(), src_hash = source_hash,
+        dst_name = destination.name, dst_url = destination.url,
+        transformed = html_escape::encode_text(&transformed[..transformed.len().min(2000)]),
+        push = push_result,
+    );
+
+    let report_path = outbox_dir.join("report.html");
+    std::fs::write(&report_path, &html).map_err(|e| e.to_string())?;
+
+    let _ = crate::evidence::record_event(&solace_home, &format!("bridge.sync.{}", app_id), "runtime",
+        serde_json::json!({"source": source.url, "destination": destination.url, "source_bytes": source_data.len(), "transformed_bytes": transformed.len()}));
+
+    *state.app_count.write() += 1;
+    *state.evidence_count.write() += 1;
 
     Ok(report_path)
 }
