@@ -8,12 +8,19 @@
   const HUB_FONT_KEY = 'solace-hub-font-scale';
   const HUB_LOCALE_KEY = 'solace-hub-locale';
   const HUB_LOCALES = [
-    'am', 'ar', 'bg', 'bn', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es', 'et',
-    'fa', 'fi', 'fil', 'fr', 'ha', 'he', 'hi', 'hr', 'hu', 'id', 'it', 'ja',
-    'ko', 'lt', 'lv', 'ms', 'nl', 'no', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl',
-    'sr', 'sv', 'sw', 'th', 'tr', 'uk', 'vi', 'yo', 'zh-hant', 'zh', 'zu'
+    'af', 'ak', 'am', 'ar', 'as', 'az', 'be', 'bg', 'bm', 'bn', 'bo', 'bs',
+    'ca', 'ceb', 'cs', 'cy', 'da', 'de', 'dz', 'ee', 'el', 'en', 'eo', 'es',
+    'et', 'eu', 'fa', 'ff', 'fi', 'fj', 'fil', 'fr', 'ga', 'gd', 'gl', 'gu',
+    'ha', 'haw', 'he', 'hi', 'hr', 'ht', 'hu', 'hy', 'id', 'ig', 'is', 'it',
+    'ja', 'jv', 'ka', 'kk', 'km', 'kn', 'ko', 'ku', 'ky', 'la', 'lb', 'lg',
+    'ln', 'lo', 'lt', 'lv', 'mg', 'mi', 'mk', 'ml', 'mn', 'mr', 'ms', 'mt',
+    'my', 'ne', 'nl', 'no', 'nso', 'ny', 'om', 'or', 'pa', 'pl', 'ps', 'pt',
+    'ro', 'ru', 'rw', 'sa', 'sd', 'si', 'sk', 'sl', 'sm', 'sn', 'so', 'sq',
+    'sr', 'ss', 'st', 'su', 'sv', 'sw', 'ta', 'te', 'tg', 'th', 'ti', 'tk',
+    'tl', 'tn', 'to', 'tr', 'ts', 'tt', 'ug', 'uk', 'ur', 'uz', 've', 'vi',
+    'wo', 'xh', 'yi', 'yo', 'zh-hant', 'zh', 'zu'
   ];
-  const RTL_LOCALES = ['ar'];
+  const RTL_LOCALES = ['ar', 'he', 'fa'];
   const TRANSLATIONS = {
     en: {
       toolbar_language: 'Language',
@@ -430,11 +437,45 @@
     return document.documentElement.lang || 'en';
   }
 
+  const _remoteLocaleCache = {};
+  const _remoteLocalePending = {};
+
+  function _fetchRemoteLocale(locale) {
+    if (_remoteLocaleCache[locale] || _remoteLocalePending[locale]) {
+      return;
+    }
+    _remoteLocalePending[locale] = true;
+    var url = HUB_API_BASE + '/locales/yinyang/' + encodeURIComponent(locale) + '.json';
+    fetch(url)
+      .then(function (res) {
+        if (!res.ok) { throw new Error('HTTP ' + res.status); }
+        return res.json();
+      })
+      .then(function (data) {
+        _remoteLocaleCache[locale] = (data && data.ui) ? data.ui : {};
+        _remoteLocalePending[locale] = false;
+        applyTranslations();
+      })
+      .catch(function () {
+        _remoteLocaleCache[locale] = {};
+        _remoteLocalePending[locale] = false;
+      });
+  }
+
   function translationTable(locale) {
+    var hasHardcoded = !!(TRANSLATIONS[locale] || EXTRA_TRANSLATIONS[locale]);
+    var remote = {};
+    if (!hasHardcoded) {
+      remote = _remoteLocaleCache[locale] || {};
+      if (!_remoteLocaleCache[locale]) {
+        _fetchRemoteLocale(locale);
+      }
+    }
     return Object.assign(
       {},
       TRANSLATIONS.en,
       EXTRA_TRANSLATIONS.en,
+      remote,
       TRANSLATIONS[locale] || {},
       EXTRA_TRANSLATIONS[locale] || {}
     );
