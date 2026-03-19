@@ -127,7 +127,7 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
     let greeting = delight.warm_greeting();
     let celebration = delight
         .celebration_message()
-        .map(|m| format!("<p class=\"sb-pill sb-pill--success\" style=\"display:inline-block;margin-left:0.5rem\">{m}</p>"))
+        .map(|m| format!("<p class=\"sb-pill sb-pill--success\">{m}</p>"))
         .unwrap_or_default();
 
     // App status cards
@@ -148,12 +148,12 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         app_cards.push_str(&format!(
             r#"<div class="sb-card">
   <div class="sb-card-header">
-    <h3 class="sb-card-title sb-app-name"><img class="sb-app-icon" src="{icon}" alt="" onerror="this.style.display='none'"><a href="/apps/{id}">{name}</a></h3>
+    <h3 class="sb-card-title sb-app-name"><img class="sb-app-icon" src="{icon}" alt="{name} icon" loading="lazy"><a href="/apps/{id}">{name}</a></h3>
     <span class="sb-pill sb-pill--info">{domain}</span>
   </div>
   <div class="sb-card-body">
     <p>{desc}</p>
-    <div class="sb-flex" style="gap:1.5rem;margin-top:0.5rem">
+    <div class="sb-app-meta">
       <span><strong>{run_count}</strong> runs</span>
       <span>Last: {last_run}</span>
       <span>Schedule: <code>{sched}</code></span>
@@ -247,50 +247,50 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
 
     let body = format!(
         r#"<!-- Status bar -->
-<div class="sb-flex" style="gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center">
-  <div class="sb-card" style="flex:1;min-width:150px;text-align:center">
+<div class="sb-status-bar">
+  <div class="sb-card sb-stat-card">
     <div class="sb-kicker">Apps</div>
-    <div style="font-size:1.8rem;font-weight:700">{app_count}</div>
+    <div class="sb-stat-value">{app_count}</div>
   </div>
-  <div class="sb-card" style="flex:1;min-width:150px;text-align:center">
+  <div class="sb-card sb-stat-card">
     <div class="sb-kicker">Sessions</div>
-    <div style="font-size:1.8rem;font-weight:700">{session_count}</div>
+    <div class="sb-stat-value">{session_count}</div>
   </div>
-  <div class="sb-card" style="flex:1;min-width:150px;text-align:center">
+  <div class="sb-card sb-stat-card">
     <div class="sb-kicker">Evidence</div>
-    <div style="font-size:1.8rem;font-weight:700">{evidence_count}</div>
+    <div class="sb-stat-value">{evidence_count}</div>
     <div>{chain_badge}</div>
   </div>
-  <div class="sb-card" style="flex:1;min-width:150px;text-align:center">
+  <div class="sb-card sb-stat-card">
     <div class="sb-kicker">Uptime</div>
-    <div style="font-size:1.8rem;font-weight:700">{uptime_str}</div>
+    <div class="sb-stat-value">{uptime_str}</div>
   </div>
-  <div class="sb-card" style="flex:1;min-width:150px;text-align:center">
+  <div class="sb-card sb-stat-card">
     <div class="sb-kicker">Streak</div>
-    <div style="font-size:1.8rem;font-weight:700">{streak} days</div>
+    <div class="sb-stat-value">{streak} days</div>
   </div>
 </div>
 
 <!-- App Status Cards -->
-<section>
-  <div class="sb-flex" style="justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-    <h2 class="sb-heading" style="margin:0">Installed Apps</h2>
+<section aria-labelledby="apps-heading">
+  <div class="sb-section-header">
+    <h2 id="apps-heading" class="sb-heading">Installed Apps</h2>
     <a href="/domains" class="sb-btn sb-btn--sm">All Domains</a>
   </div>
   <div class="sb-card-grid">{app_cards}</div>
 </section>
 
 <!-- Active Sessions -->
-<section style="margin-top:1.5rem">
-  <h2 class="sb-heading">Active Sessions {notif_badge}</h2>
+<section class="sb-section" aria-labelledby="sessions-heading">
+  <h2 id="sessions-heading" class="sb-heading">Active Sessions {notif_badge}</h2>
   <table class="sb-table"><thead><tr><th>Session</th><th>Profile</th><th>URL</th><th>Status</th><th>Started</th></tr></thead>
   <tbody>{session_rows}</tbody></table>
 </section>
 
 <!-- Events (Transparency) -->
-<section style="margin-top:1.5rem">
-  <div class="sb-flex" style="justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-    <h2 class="sb-heading" style="margin:0">Recent Events</h2>
+<section class="sb-section" aria-labelledby="events-heading">
+  <div class="sb-section-header">
+    <h2 id="events-heading" class="sb-heading">Recent Events</h2>
     <a href="/evidence" class="sb-btn sb-btn--sm">Evidence Chain</a>
   </div>
   <table class="sb-table" id="events-table"><thead><tr><th>Time</th><th>Level</th><th>Type</th><th>Detail</th></tr></thead>
@@ -367,9 +367,9 @@ async fn domains_page() -> Html<String> {
             String::new()
         };
         cards.push_str(&format!(
-            r#"<a href="/domains/{domain_enc}" class="sb-card" style="text-decoration:none;display:block">
+            r#"<a href="/domains/{domain_enc}" class="sb-card sb-domain-link">
   <div class="sb-card-header">
-    <h3 class="sb-card-title sb-app-name"><img class="sb-app-icon" src="{icon}" alt="" onerror="this.style.display='none'">{domain_disp}</h3>
+    <h3 class="sb-card-title sb-app-name"><img class="sb-app-icon" src="{icon}" alt="{domain_disp} icon" loading="lazy">{domain_disp}</h3>
     <span class="sb-pill sb-pill--info">{count} apps</span>
   </div>
   <div class="sb-card-body">
@@ -386,11 +386,11 @@ async fn domains_page() -> Html<String> {
     }
 
     if cards.is_empty() {
-        cards = r#"<div class="sb-empty"><p>No domains found. Install apps to get started.</p><p style="margin-top:0.5rem"><a href="/appstore" class="sb-btn sb-btn--sm sb-btn--primary">Browse App Store</a></p></div>"#.to_string();
+        cards = r#"<div class="sb-empty"><p>No domains found. Install apps to get started.</p><p class="sb-section"><a href="/appstore" class="sb-btn sb-btn--sm sb-btn--primary">Browse App Store</a></p></div>"#.to_string();
     }
 
     let body = format!(
-        r#"<p class="sb-text-muted" style="margin-bottom:1rem">{total} domains with {app_total} total apps. Each domain gets 1 browser tab.</p>
+        r#"<p class="sb-text-muted sb-domain-desc">{total} domains with {app_total} total apps. Each domain gets 1 browser tab.</p>
 <div class="sb-card-grid">{cards}</div>"#,
         total = domain_map.len(),
         app_total = apps.len(),
@@ -1610,7 +1610,7 @@ const SOLACE_VERSION: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/
 fn hub_page(title: &str, body_content: &str) -> String {
     let version = SOLACE_VERSION.trim();
     format!(
-        r#"<!doctype html>
+        r##"<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1628,30 +1628,55 @@ fn hub_page(title: &str, body_content: &str) -> String {
 .event-signoff td {{ color: var(--sb-danger); }}
 .event-seal td {{ color: var(--sb-signal); }}
 .chain-valid {{ background: var(--sb-success); color: var(--sb-on-accent); }}
-.chain-invalid {{ background: var(--sb-danger); color: #fff; }}
+.chain-invalid {{ background: var(--sb-danger); color: var(--sb-on-accent); }}
+/* A11Y: Focus styles (WCAG 2.1 AA) */
+:focus-visible {{ outline: 2px solid var(--sb-signal); outline-offset: 2px; }}
+a:focus-visible {{ outline: 2px solid var(--sb-signal); outline-offset: 2px; }}
+.sb-btn:focus-visible {{ outline: 2px solid var(--sb-signal); outline-offset: 2px; box-shadow: 0 0 0 3px rgba(0,113,227,0.2); }}
+/* Skip to main content link (screen readers) */
+.sb-skip-link {{ position: absolute; left: -999px; top: auto; width: 1px; height: 1px; overflow: hidden; z-index: 9999; }}
+.sb-skip-link:focus {{ position: fixed; left: 1rem; top: 1rem; width: auto; height: auto; padding: 0.5rem 1rem; background: var(--sb-surface); color: var(--sb-text); border: 2px solid var(--sb-signal); border-radius: 0.25rem; font-size: 0.9rem; }}
+/* Dashboard layout classes (replacing inline styles) */
+.sb-status-bar {{ display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center; }}
+.sb-stat-card {{ flex: 1; min-width: 150px; text-align: center; }}
+.sb-stat-value {{ font-size: 1.8rem; font-weight: 700; }}
+.sb-section-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }}
+.sb-section {{ margin-top: 1.5rem; }}
+.sb-app-meta {{ display: flex; gap: 1.5rem; margin-top: 0.5rem; }}
+.sb-main-content {{ max-width: 1100px; margin: 1.5rem auto; padding: 0 1.5rem; }}
+.sb-page-title {{ font-size: 1.4rem; margin-bottom: 1rem; }}
+.sb-nav-link {{ color: var(--sb-text-muted); font-size: 0.85rem; text-decoration: none; }}
+.sb-nav-link:hover {{ color: var(--sb-text); }}
+.sb-domain-desc {{ margin-bottom: 1rem; }}
+.sb-domain-link {{ text-decoration: none; display: block; }}
+/* Icon fallback (replaces inline onerror) */
+.sb-app-icon[src=""] {{ display: none; }}
 </style>
 </head>
 <body>
+<a href="#main-content" class="sb-skip-link">Skip to main content</a>
 <header class="sb-topbar">
+  <nav aria-label="Main navigation">
   <div class="sb-topbar-brand">
-    <img src="/icons/yinyang-logo.png" alt="Solace">
+    <img src="/icons/yinyang-logo.png" alt="Solace Hub logo" loading="lazy">
     <span>Solace Hub</span>
   </div>
   <div class="sb-topbar-spacer"></div>
-  <a href="/dashboard" style="color:var(--sb-text-muted);font-size:0.85rem">Dashboard</a>
-  <a href="/domains" style="color:var(--sb-text-muted);font-size:0.85rem">Domains</a>
-  <a href="/appstore" style="color:var(--sb-text-muted);font-size:0.85rem">App Store</a>
-  <a href="/llms" style="color:var(--sb-text-muted);font-size:0.85rem">LLMs</a>
-  <a href="/evidence" style="color:var(--sb-text-muted);font-size:0.85rem">Evidence</a>
-  <a href="/budget" style="color:var(--sb-text-muted);font-size:0.85rem">Budget</a>
-  <a href="/recipes" style="color:var(--sb-text-muted);font-size:0.85rem">Recipes</a>
-  <a href="/oauth3" style="color:var(--sb-text-muted);font-size:0.85rem">OAuth3</a>
-  <a href="/esign" style="color:var(--sb-text-muted);font-size:0.85rem">E-Sign</a>
-  <a href="/settings" style="color:var(--sb-text-muted);font-size:0.85rem">Settings</a>
+  <a href="/dashboard" class="sb-nav-link">Dashboard</a>
+  <a href="/domains" class="sb-nav-link">Domains</a>
+  <a href="/appstore" class="sb-nav-link">App Store</a>
+  <a href="/llms" class="sb-nav-link">LLMs</a>
+  <a href="/evidence" class="sb-nav-link">Evidence</a>
+  <a href="/budget" class="sb-nav-link">Budget</a>
+  <a href="/recipes" class="sb-nav-link">Recipes</a>
+  <a href="/oauth3" class="sb-nav-link">OAuth3</a>
+  <a href="/esign" class="sb-nav-link">E-Sign</a>
+  <a href="/settings" class="sb-nav-link">Settings</a>
   <span class="sb-topbar-stat">v{version}</span>
+  </nav>
 </header>
-<main style="max-width:1100px;margin:1.5rem auto;padding:0 1.5rem">
-<h1 class="sb-heading" style="font-size:1.4rem;margin-bottom:1rem">{title}</h1>
+<main id="main-content" class="sb-main-content" role="main">
+<h1 class="sb-heading sb-page-title">{title}</h1>
 {body_content}
 </main>
 <script src="/vendor/jquery-3.7.1.min.js"></script>
@@ -1666,7 +1691,7 @@ if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {{
 }}
 </script>
 </body>
-</html>"#,
+</html>"##,
         title = html_escape::encode_text(title),
         body_content = body_content,
     )
