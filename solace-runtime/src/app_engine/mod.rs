@@ -71,10 +71,17 @@ pub struct AppManifest {
     /// CLI wrapper apps: timeout in seconds (default 60).
     #[serde(default = "default_cli_timeout")]
     pub timeout_seconds: u64,
+    /// Visibility: public (app store), team (workspace), secret (creator), template (partner).
+    #[serde(default = "default_visibility")]
+    pub visibility: String,
 }
 
 fn default_cli_timeout() -> u64 {
     60
+}
+
+fn default_visibility() -> String {
+    "public".to_string()
 }
 
 pub fn scan_installed_apps() -> Vec<AppManifest> {

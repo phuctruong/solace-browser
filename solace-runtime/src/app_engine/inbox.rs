@@ -79,6 +79,8 @@ fn parse_prime_mermaid_manifest(path: &Path) -> Result<AppManifest, String> {
             manifest.input_type = rest.trim().to_string();
         } else if let Some(rest) = trimmed.strip_prefix("**Timeout**:") {
             manifest.timeout_seconds = rest.trim().parse().unwrap_or(60);
+        } else if let Some(rest) = trimmed.strip_prefix("**Visibility**:") {
+            manifest.visibility = rest.trim().to_string();
         }
     }
 
