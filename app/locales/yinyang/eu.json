@@ -15,7 +15,7 @@
     "blocked": "Blokeatua",
     "failed": "Huts egin du",
     "idle": "GELDI",
-    "title": "YinYang",
+    "title": "Yinyang",
     "nav_home": "Hasiera",
     "nav_apps": "Aplikazioak",
     "nav_machine": "Makina",
@@ -97,7 +97,7 @@
     "home_setup_p": "Bring your own API key (free) or use Solace Managed LLM ($8/mo).",
     "home_setup_cta": "Set up now",
     "home_hero_h1": "Zure AI agentea weberako.",
-    "home_hero_p": "Every action approved by you. Recipes capture what worked. Evidence keeps every run sealed and audit-ready forever.",
+    "home_hero_p": "Ekintza bakoitza zuk onartua. Errezetak funtzionatu zuena gordetzen dute. Ebidentziak exekuzio bakoitza zigilatuta eta auditoretzarako prest gordetzen dute betiko.",
     "home_hero_browse": "Browse Apps",
     "home_hero_status": "● Agent ready",
     "home_remote_label": "Remote control",
@@ -425,13 +425,13 @@
   },
   "personality": {
     "professional": {
-      "greeting": "Hello.",
+      "greeting": "Kaixo.",
       "farewell": "Goodbye.",
       "encouragement": "Task completed successfully.",
       "error": "An error occurred. Details follow."
     },
     "friendly": {
-      "greeting": "Hey there!",
+      "greeting": "Kaixo!",
       "farewell": "See you next time!",
       "encouragement": "Great work! You're making real progress.",
       "error": "Oops, something went wrong. Let's figure it out."
@@ -443,8 +443,8 @@
       "error": "Whoops! Hit a bump. No worries, we got this!"
     },
     "minimal": {
-      "greeting": "Ready.",
-      "farewell": "Done.",
+      "greeting": "Prest.",
+      "farewell": "Egina.",
       "encouragement": "Done.",
       "error": "Error."
     },

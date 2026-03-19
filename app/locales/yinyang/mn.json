@@ -15,9 +15,9 @@
     "blocked": "Хориглосон",
     "failed": "Амжилтгүй",
     "idle": "ХҮЛЭЭЖ БАЙНА",
-    "title": "YinYang",
+    "title": "Yinyang",
     "nav_home": "Нүүр",
-    "nav_apps": "Аппликейшнүүд",
+    "nav_apps": "Аппликейшн",
     "nav_machine": "Машин",
     "nav_tunnel": "Туннел",
     "nav_settings": "Тохиргоо",
@@ -97,7 +97,7 @@
     "home_setup_p": "Bring your own API key (free) or use Solace Managed LLM ($8/mo).",
     "home_setup_cta": "Set up now",
     "home_hero_h1": "Вэбэд зориулсан таны AI агент.",
-    "home_hero_p": "Every action approved by you. Recipes capture what worked. Evidence keeps every run sealed and audit-ready forever.",
+    "home_hero_p": "Бүх үйлдлийг та зөвшөөрнө. Жорууд ажилласан зүйлийг хадгална. Нотолгоо бүх ажиллагааг лацдан дарсан, аудитад бэлэн хадгална.",
     "home_hero_browse": "Browse Apps",
     "home_hero_status": "● Agent ready",
     "home_remote_label": "Remote control",
@@ -425,13 +425,13 @@
   },
   "personality": {
     "professional": {
-      "greeting": "Hello.",
+      "greeting": "Сайн байна уу.",
       "farewell": "Goodbye.",
       "encouragement": "Task completed successfully.",
       "error": "An error occurred. Details follow."
     },
     "friendly": {
-      "greeting": "Hey there!",
+      "greeting": "Сайн уу!",
       "farewell": "See you next time!",
       "encouragement": "Great work! You're making real progress.",
       "error": "Oops, something went wrong. Let's figure it out."
@@ -443,8 +443,8 @@
       "error": "Whoops! Hit a bump. No worries, we got this!"
     },
     "minimal": {
-      "greeting": "Ready.",
-      "farewell": "Done.",
+      "greeting": "Бэлэн.",
+      "farewell": "Дууслаа.",
       "encouragement": "Done.",
       "error": "Error."
     },

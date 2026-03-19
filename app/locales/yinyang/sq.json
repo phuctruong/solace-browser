@@ -15,7 +15,7 @@
     "blocked": "Bllokuar",
     "failed": "Dështoi",
     "idle": "PASIV",
-    "title": "YinYang",
+    "title": "Yinyang",
     "nav_home": "Kryefaqja",
     "nav_apps": "Aplikacionet",
     "nav_machine": "Makina",
@@ -97,7 +97,7 @@
     "home_setup_p": "Bring your own API key (free) or use Solace Managed LLM ($8/mo).",
     "home_setup_cta": "Set up now",
     "home_hero_h1": "Agjenti juaj AI për uebin.",
-    "home_hero_p": "Every action approved by you. Recipes capture what worked. Evidence keeps every run sealed and audit-ready forever.",
+    "home_hero_p": "Çdo veprim i aprovuar nga ju. Recetat ruajnë atë që funksionoi. Dëshmitë mbajnë çdo ekzekutim të vulosur dhe gati për auditim përgjithmonë.",
     "home_hero_browse": "Browse Apps",
     "home_hero_status": "● Agent ready",
     "home_remote_label": "Remote control",
@@ -210,7 +210,7 @@
     "dash_app_setup": "Set Up",
     "dash_agent_setup": "Or let your AI agent set up all apps",
     "settings_account": "Llogaria",
-    "settings_log_out": "Dil",
+    "settings_log_out": "Dilni",
     "settings_about": "About",
     "settings_appearance": "Appearance",
     "settings_history": "History & Capture",
@@ -425,26 +425,26 @@
   },
   "personality": {
     "professional": {
-      "greeting": "Hello.",
+      "greeting": "Përshëndetje.",
       "farewell": "Goodbye.",
       "encouragement": "Task completed successfully.",
       "error": "An error occurred. Details follow."
     },
     "friendly": {
-      "greeting": "Hey there!",
+      "greeting": "Përshëndetje!",
       "farewell": "See you next time!",
       "encouragement": "Great work! You're making real progress.",
       "error": "Oops, something went wrong. Let's figure it out."
     },
     "playful": {
-      "greeting": "Heyyy! Ready to build something awesome?",
+      "greeting": "Përshëëndetje! Gati për diçka të mrekullueshme?",
       "farewell": "Catch you later, superstar!",
       "encouragement": "You're on fire! Keep that momentum going!",
       "error": "Whoops! Hit a bump. No worries, we got this!"
     },
     "minimal": {
-      "greeting": "Ready.",
-      "farewell": "Done.",
+      "greeting": "Gati.",
+      "farewell": "Kryer.",
       "encouragement": "Done.",
       "error": "Error."
     },
