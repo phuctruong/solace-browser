@@ -6,7 +6,7 @@
 //! An agent can build an app, test it, and share it — all via API.
 
 use axum::{
-    extract::State,
+    extract::{Path, State},
     http::StatusCode,
     routing::{get, post},
     Json, Router,
@@ -21,6 +21,8 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/v1/apps/create", post(create_app))
         .route("/api/v1/apps/types", get(list_app_types))
+        .route("/api/v1/apps/:app_id/delete", post(delete_app))
+        .route("/api/v1/apps/:app_id/update", post(update_app))
 }
 
 #[derive(Deserialize)]
@@ -286,4 +288,117 @@ async fn list_app_types() -> Json<Value> {
         ],
         "total": 6,
     }))
+}
+
+/// POST /api/v1/apps/:app_id/delete — delete an app and all its data
+async fn delete_app(
+    Path(app_id): Path<String>,
+    State(state): State<AppState>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let app_dir = crate::utils::find_app_dir(&app_id)
+        .ok_or_else(|| (StatusCode::NOT_FOUND, Json(json!({"error": format!("App {} not found", app_id)}))))?;
+
+    // Only allow deleting apps in ~/.solace/apps/ (not bundled defaults)
+    let solace_home = crate::utils::solace_home();
+    if !app_dir.starts_with(solace_home.join("apps")) {
+        return Err((StatusCode::FORBIDDEN, Json(json!({"error": "Cannot delete bundled default apps. Only user-created apps can be deleted."}))));
+    }
+
+    let _ = crate::evidence::record_event(
+        &solace_home, &format!("app.deleted.{}", app_id), "user",
+        json!({"app_id": app_id, "path": app_dir.display().to_string()}),
+    );
+
+    fs::remove_dir_all(&app_dir).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+
+    *state.app_count.write() = crate::utils::scan_apps().len() as u32;
+
+    Ok(Json(json!({"deleted": true, "app_id": app_id})))
+}
+
+#[derive(Deserialize)]
+struct UpdateAppPayload {
+    #[serde(default)]
+    description: Option<String>,
+    #[serde(default)]
+    schedule: Option<String>,
+    #[serde(default)]
+    data_sources: Option<Vec<String>>,
+    #[serde(default)]
+    orchestrates: Option<Vec<String>>,
+    #[serde(default)]
+    binary: Option<String>,
+    #[serde(default)]
+    args: Option<Vec<String>>,
+    #[serde(default)]
+    visibility: Option<String>,
+    #[serde(default)]
+    system_prompt: Option<String>,
+}
+
+/// POST /api/v1/apps/:app_id/update — update app manifest fields
+async fn update_app(
+    Path(app_id): Path<String>,
+    State(state): State<AppState>,
+    Json(payload): Json<UpdateAppPayload>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let app_dir = crate::utils::find_app_dir(&app_id)
+        .ok_or_else(|| (StatusCode::NOT_FOUND, Json(json!({"error": format!("App {} not found", app_id)}))))?;
+
+    // Load current manifest
+    let mut manifest = crate::app_engine::inbox::load_manifest(&app_dir)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
+
+    let mut updated_fields = Vec::new();
+
+    if let Some(desc) = &payload.description {
+        manifest.description = desc.clone();
+        updated_fields.push("description");
+    }
+    if let Some(sched) = &payload.schedule {
+        manifest.schedule = sched.clone();
+        updated_fields.push("schedule");
+    }
+    if let Some(vis) = &payload.visibility {
+        manifest.visibility = vis.clone();
+        updated_fields.push("visibility");
+    }
+    if let Some(bin) = &payload.binary {
+        manifest.binary = bin.clone();
+        updated_fields.push("binary");
+    }
+    if let Some(args) = &payload.args {
+        manifest.args = args.clone();
+        updated_fields.push("args");
+    }
+    if let Some(orch) = &payload.orchestrates {
+        manifest.orchestrates = orch.clone();
+        updated_fields.push("orchestrates");
+    }
+
+    // Write updated manifest.yaml
+    let yaml_str = serde_yaml::to_string(&manifest)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+    fs::write(app_dir.join("manifest.yaml"), &yaml_str)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+
+    // Update system prompt if provided
+    if let Some(prompt) = &payload.system_prompt {
+        let prompts_dir = app_dir.join("inbox").join("prompts");
+        let _ = fs::create_dir_all(&prompts_dir);
+        let _ = fs::write(prompts_dir.join("system-prompt.md"), prompt);
+        updated_fields.push("system_prompt");
+    }
+
+    let solace_home = crate::utils::solace_home();
+    let _ = crate::evidence::record_event(
+        &solace_home, &format!("app.updated.{}", app_id), "user",
+        json!({"app_id": app_id, "updated_fields": updated_fields}),
+    );
+
+    Ok(Json(json!({
+        "updated": true,
+        "app_id": app_id,
+        "fields_changed": updated_fields,
+    })))
 }
