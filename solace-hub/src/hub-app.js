@@ -685,21 +685,38 @@
   }
 
   // ─── Tab Switching ───
-  document.querySelectorAll('.sb-tab').forEach(function(tab) {
-    tab.addEventListener('click', function() {
-      document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); t.setAttribute('aria-selected','false'); });
-      tab.classList.add('sb-tab--active');
-      tab.setAttribute('aria-selected','true');
-      var target = tab.dataset.tab;
-      document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; });
-      var panel = $('tab-' + target);
-      if (panel) panel.style.display = 'block';
-      // Refresh data when switching tabs
-      if (target === 'sessions') refreshSessionsTab();
-      if (target === 'events') refreshEvents();
-      if (target === 'settings') refreshSettings();
+  function initTabs() {
+    document.querySelectorAll('.sb-tab').forEach(function(tab) {
+      tab.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); t.setAttribute('aria-selected','false'); });
+        tab.classList.add('sb-tab--active');
+        tab.setAttribute('aria-selected','true');
+        var target = tab.dataset.tab;
+        document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; });
+        var panel = $('tab-' + target);
+        if (panel) { panel.style.display = 'block'; panel.classList.remove('sh-tab-panel-hidden'); }
+        // Refresh data when switching tabs
+        if (target === 'sessions') try { refreshSessionsTab(); } catch(e) {}
+        if (target === 'events') try { refreshEvents(); } catch(e) {}
+        if (target === 'settings') try { refreshSettings(); } catch(e) {}
+      });
     });
-  });
+  }
+  // Init tabs immediately (script is at bottom of body, DOM is ready)
+  initTabs();
+
+  // ─── Open Local Dashboard (via Solace Browser, not system browser) ───
+  window.openLocalDashboard = function() {
+    fetch(API + '/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:'http://localhost:8888/dashboard'})
+    }).then(function(r){return r.json();}).then(function(d) {
+      if (d.session || d.deduped) toast('Dashboard opened in Solace Browser', 'success');
+      else window.open('http://localhost:8888/dashboard', '_blank');
+    }).catch(function() {
+      window.open('http://localhost:8888/dashboard', '_blank');
+    });
+  };
 
   // ─── Signoffs (L3+ pending approvals) ───
   function refreshSignoffs() {

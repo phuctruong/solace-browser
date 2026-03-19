@@ -160,6 +160,9 @@
 
     /* ─── Tabs container (hidden initially) ─── */
     .sh-tabs-container {
+      display: block;
+    }
+    .sh-tab-panel-hidden {
       display: none;
     }
 
@@ -570,7 +573,7 @@
           <strong id="app-discovery-count">63 apps ready</strong>
           <span class="sb-text-muted sh-app-discovery-desc"> — manage apps, domains, evidence, and schedules in the dashboard</span>
         </div>
-        <a href="http://127.0.0.1:8888/dashboard" target="_blank" rel="noopener" class="sb-btn sb-btn--sm sh-btn-apps-dashboard">Open Apps Dashboard</a>
+        <a href="http://127.0.0.1:8888/dashboard" class="sb-btn sb-btn--sm sh-btn-apps-dashboard" data-action="openLocalDashboard">Open Apps Dashboard</a>
       </div>
     </div>
 
@@ -579,7 +582,7 @@
       <!-- Single Session Mode (default) -->
       <div id="single-mode" class="sh-single-mode">
         <div id="launch-btn-area">
-          <p class="sb-text-muted" id="launch-msg">Choose an AI engine above to start.</p>
+          <button class="sb-btn sb-btn--primary hub-launch" data-action="launchBrowser">Launch Solace Browser</button>
         </div>
         <div id="single-session-info" class="sh-single-session-info">
           <span class="sb-pill sb-pill--success" id="single-pid-pill"></span>
@@ -1456,21 +1459,38 @@
   }
 
   // ─── Tab Switching ───
-  document.querySelectorAll('.sb-tab').forEach(function(tab) {
-    tab.addEventListener('click', function() {
-      document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); t.setAttribute('aria-selected','false'); });
-      tab.classList.add('sb-tab--active');
-      tab.setAttribute('aria-selected','true');
-      var target = tab.dataset.tab;
-      document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; });
-      var panel = $('tab-' + target);
-      if (panel) panel.style.display = 'block';
-      // Refresh data when switching tabs
-      if (target === 'sessions') refreshSessionsTab();
-      if (target === 'events') refreshEvents();
-      if (target === 'settings') refreshSettings();
+  function initTabs() {
+    document.querySelectorAll('.sb-tab').forEach(function(tab) {
+      tab.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); t.setAttribute('aria-selected','false'); });
+        tab.classList.add('sb-tab--active');
+        tab.setAttribute('aria-selected','true');
+        var target = tab.dataset.tab;
+        document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; });
+        var panel = $('tab-' + target);
+        if (panel) { panel.style.display = 'block'; panel.classList.remove('sh-tab-panel-hidden'); }
+        // Refresh data when switching tabs
+        if (target === 'sessions') try { refreshSessionsTab(); } catch(e) {}
+        if (target === 'events') try { refreshEvents(); } catch(e) {}
+        if (target === 'settings') try { refreshSettings(); } catch(e) {}
+      });
     });
-  });
+  }
+  // Init tabs immediately (script is at bottom of body, DOM is ready)
+  initTabs();
+
+  // ─── Open Local Dashboard (via Solace Browser, not system browser) ───
+  window.openLocalDashboard = function() {
+    fetch(API + '/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:'http://localhost:8888/dashboard'})
+    }).then(function(r){return r.json();}).then(function(d) {
+      if (d.session || d.deduped) toast('Dashboard opened in Solace Browser', 'success');
+      else window.open('http://localhost:8888/dashboard', '_blank');
+    }).catch(function() {
+      window.open('http://localhost:8888/dashboard', '_blank');
+    });
+  };
 
   // ─── Signoffs (L3+ pending approvals) ───
   function refreshSignoffs() {
