@@ -16,19 +16,12 @@
   if(lt){lt.addEventListener('click',function(e){e.stopPropagation();var o=!lm.classList.contains('active');if(o)lm.removeAttribute('hidden');lm.classList.toggle('active',o);if(!o)lm.setAttribute('hidden','');});document.addEventListener('click',function(e){if(!lt.contains(e.target)&&!lm.contains(e.target)){lm.classList.remove('active');lm.setAttribute('hidden','');}});}
 
   // ─── SCAN + GATE LOGIC ───
-  // EMERGENCY: force UI visible immediately to debug
-  document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-      var sp = document.getElementById('scan-phase');
-      if (sp) sp.style.display = 'none';
-      var ht = document.getElementById('hub-tabs');
-      if (ht) ht.style.display = 'block';
-      var hh = document.getElementById('hub-header');
-      if (hh) hh.style.display = 'block';
-      var rp = document.getElementById('results-phase');
-      if (rp) rp.style.display = 'block';
-    }, 2000);
-  });
+  // Debug: show JS execution status
+  window.onerror = function(msg, url, line) {
+    var el = document.getElementById('scan-text');
+    if (el) el.textContent = 'JS ERROR: ' + msg + ' line:' + line;
+    if (el) el.style.color = 'red';
+  };
   var hasLLM = false;
   // Simplest persistence: save/load via POST/GET to evidence endpoint
   // On Connect CLIs success: POST an evidence event with cli count
@@ -756,7 +749,10 @@
   };
 
   // ─── Init ───
-  runScan();
+  // Debug: mark that JS reached this point
+  var dbg = document.getElementById('app-discovery-count');
+  if (dbg) dbg.textContent = 'JS LOADED — running scan...';
+  try { runScan(); } catch(e) { if (dbg) dbg.textContent = 'SCAN ERROR: ' + e.message; }
   // Refresh sessions on load and every 10s
   setTimeout(refreshSessions, 2000);
   setInterval(refreshSessions, 10000);
