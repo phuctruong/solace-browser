@@ -1,0 +1,35 @@
+/* evidence-viewer-page.css — extracted from evidence-viewer.html (the standalone page) */
+:root {
+  --hub-bg: #0d0d1a;
+  --hub-surface: #1a1a2e;
+  --hub-border: #2a2a3e;
+  --hub-text: #e2e8f0;
+  --hub-text-muted: #94a3b8;
+  --hub-accent: #6366f1;
+  --hub-success: #10b981;
+  --hub-error: #ef4444;
+  --hub-success-surface: #123c31;
+  --hub-muted-surface: #202838;
+  --hub-error-surface: #3f1b24;
+  --hub-white: #ffffff;
+}
+body{background:var(--hub-bg);color:var(--hub-text);font-family:system-ui,sans-serif;margin:0;padding:1.5rem;}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.5rem;}
+.page-title{font-size:1.5rem;font-weight:700;}
+.chain-status{font-size:.85rem;padding:4px 12px;border-radius:20px;}
+.chain-status--verified{background:var(--hub-success-surface);color:var(--hub-success);}
+.chain-status--unknown{background:var(--hub-muted-surface);color:var(--hub-text-muted);}
+.chain-status--error{background:var(--hub-error-surface);color:var(--hub-error);}
+.filter-bar{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.filter-btn{background:var(--hub-surface);border:1px solid var(--hub-border);color:var(--hub-text-muted);border-radius:20px;padding:4px 14px;cursor:pointer;font-size:.8rem;}
+.filter-btn--active{background:var(--hub-accent);border-color:var(--hub-accent);color:var(--hub-white);}
+.evidence-timeline{display:flex;flex-direction:column;gap:.5rem;}
+.evidence-item{background:var(--hub-surface);border:1px solid var(--hub-border);border-radius:8px;padding:.875rem 1rem;display:flex;gap:1rem;}
+.ev-time{font-size:.75rem;color:var(--hub-text-muted);white-space:nowrap;min-width:90px;padding-top:2px;}
+.ev-body{flex:1;min-width:0;}
+.ev-action{font-weight:600;font-size:.9rem;}
+.ev-desc{font-size:.8rem;color:var(--hub-text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ev-hash{font-family:monospace;font-size:.7rem;color:var(--hub-accent);margin-top:4px;opacity:.7;}
+.btn-verify{background:var(--hub-accent);color:var(--hub-white);border:none;border-radius:8px;padding:.4rem 1rem;cursor:pointer;font-size:.85rem;}
+.empty-state{text-align:center;padding:3rem;color:var(--hub-text-muted);}
+.header-actions{display:flex;gap:.5rem;align-items:center;}

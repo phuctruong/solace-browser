@@ -5,105 +5,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Evidence Viewer — Solace Hub</title>
-<style>
-:root {
-  --hub-bg: #0d0d1a;
-  --hub-surface: #1a1a2e;
-  --hub-border: #2a2a3e;
-  --hub-text: #e2e8f0;
-  --hub-text-muted: #94a3b8;
-  --hub-accent: #6366f1;
-  --hub-success: #10b981;
-  --hub-error: #ef4444;
-  --hub-success-surface: #123c31;
-  --hub-muted-surface: #202838;
-  --hub-error-surface: #3f1b24;
-  --hub-white: #ffffff;
-}
-body{background:var(--hub-bg);color:var(--hub-text);font-family:system-ui,sans-serif;margin:0;padding:1.5rem;}
-.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.5rem;}
-.page-title{font-size:1.5rem;font-weight:700;}
-.chain-status{font-size:.85rem;padding:4px 12px;border-radius:20px;}
-.chain-status--verified{background:var(--hub-success-surface);color:var(--hub-success);}
-.chain-status--unknown{background:var(--hub-muted-surface);color:var(--hub-text-muted);}
-.chain-status--error{background:var(--hub-error-surface);color:var(--hub-error);}
-.filter-bar{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap;}
-.filter-btn{background:var(--hub-surface);border:1px solid var(--hub-border);color:var(--hub-text-muted);border-radius:20px;padding:4px 14px;cursor:pointer;font-size:.8rem;}
-.filter-btn--active{background:var(--hub-accent);border-color:var(--hub-accent);color:var(--hub-white);}
-.evidence-timeline{display:flex;flex-direction:column;gap:.5rem;}
-.evidence-item{background:var(--hub-surface);border:1px solid var(--hub-border);border-radius:8px;padding:.875rem 1rem;display:flex;gap:1rem;}
-.ev-time{font-size:.75rem;color:var(--hub-text-muted);white-space:nowrap;min-width:90px;padding-top:2px;}
-.ev-body{flex:1;min-width:0;}
-.ev-action{font-weight:600;font-size:.9rem;}
-.ev-desc{font-size:.8rem;color:var(--hub-text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.ev-hash{font-family:monospace;font-size:.7rem;color:var(--hub-accent);margin-top:4px;opacity:.7;}
-.btn-verify{background:var(--hub-accent);color:var(--hub-white);border:none;border-radius:8px;padding:.4rem 1rem;cursor:pointer;font-size:.85rem;}
-.empty-state{text-align:center;padding:3rem;color:var(--hub-text-muted);}
-</style>
+<link rel="stylesheet" href="/css/evidence-viewer-page.css">
 </head>
 <body>
 <div class="page-header">
   <h1 class="page-title">🔐 Evidence Viewer</h1>
-  <div style="display:flex;gap:.5rem;align-items:center">
+  <div class="header-actions">
     <span id="chain-status" class="chain-status chain-status--unknown">Chain: unchecked</span>
-    <button class="btn-verify" onclick="verifyChain()">Verify Chain</button>
+    <button class="btn-verify" data-action="verify-chain">Verify Chain</button>
   </div>
 </div>
 <div class="filter-bar" id="filter-bar">
-  <button class="filter-btn filter-btn--active" onclick="setFilter(this,'')">All</button>
+  <button class="filter-btn filter-btn--active" data-action="filter" data-filter-type="">All</button>
 </div>
 <div id="evidence-list"><div class="empty-state">Loading evidence...</div></div>
-<script>
-'use strict';
-const TOKEN=localStorage.getItem('solace_token')||'';
-const AUTH={headers:{'Authorization':`Bearer ${TOKEN}`}};
-function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function _fmt(ts){if(!ts)return '';try{return new Date(ts).toLocaleString();}catch(e){return ts;}}
-let _activeFilter='',_allEntries=[];
-
-async function verifyChain(){
-  const b=document.getElementById('chain-status');
-  b.textContent='Verifying...';b.className='chain-status chain-status--unknown';
-  try{
-    const r=await fetch('/api/v1/evidence/verify',AUTH);const d=await r.json();
-    if(d.valid||d.verified||d.status==='ok'){b.textContent='✓ Chain verified';b.className='chain-status chain-status--verified';}
-    else{b.textContent='⚠ Chain error';b.className='chain-status chain-status--error';}
-  }catch(e){b.textContent='Chain: error';b.className='chain-status chain-status--error';}
-}
-
-function setFilter(btn,type){
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('filter-btn--active'));
-  btn.classList.add('filter-btn--active');_activeFilter=type;renderEntries();
-}
-
-function renderEntries(){
-  const filtered=_activeFilter?_allEntries.filter(e=>(e.action_type||e.event_type||'')===_activeFilter):_allEntries;
-  const list=document.getElementById('evidence-list');
-  if(!filtered.length){list.innerHTML='<div class="empty-state">No evidence entries found</div>';return;}
-  list.innerHTML='<div class="evidence-timeline">'+filtered.map(e=>{
-    const hash=(e.sha256||e.hash||e.entry_hash||'').substring(0,16);
-    return `<div class="evidence-item">
-      <div class="ev-time">${_esc(_fmt(e.ts||e.timestamp||e.created_at))}</div>
-      <div class="ev-body"><div class="ev-action">${_esc(e.action_type||e.event_type||'event')}</div>
-      <div class="ev-desc">${_esc(e.description||e.summary||e.message||'')}</div>
-      ${hash?`<div class="ev-hash">${_esc(hash)}…</div>`:''}</div></div>`;
-  }).join('')+'</div>';
-}
-
-function buildFilters(entries){
-  const types=[...new Set(entries.map(e=>e.action_type||e.event_type||'').filter(Boolean))];
-  const bar=document.getElementById('filter-bar');
-  bar.innerHTML='<button class="filter-btn filter-btn--active" onclick="setFilter(this,\'\')">All</button>'+
-    types.map(t=>`<button class="filter-btn" onclick="setFilter(this,'${_esc(t)}')">${_esc(t)}</button>`).join('');
-}
-
-async function loadEvidence(){
-  try{
-    const r=await fetch('/api/v1/evidence/log?limit=50',AUTH);const d=await r.json();
-    _allEntries=d.entries||d.log||d||[];buildFilters(_allEntries);renderEntries();
-  }catch(e){document.getElementById('evidence-list').innerHTML='<div class="empty-state">Could not load evidence</div>';}
-}
-loadEvidence();
-</script>
+<script src="/js/evidence-viewer-page.js"></script>
 </body>
 </html>
