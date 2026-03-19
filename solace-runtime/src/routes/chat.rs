@@ -81,6 +81,21 @@ fn classify_intent(message: &str) -> Intent {
         return Intent::Configure;
     }
 
+    // QA patterns — check BEFORE navigation (so "run visual qa on http://..." → RunApp, not Navigate)
+    if lower.starts_with("qa ")
+        || lower.starts_with("test ")
+        || lower.contains(" qa")
+        || lower.contains("visual qa")
+        || lower.contains("api qa")
+        || lower.contains("security qa")
+        || lower.contains("accessibility qa")
+        || lower.contains("performance qa")
+        || lower.contains("evidence qa")
+        || lower.contains("integration qa")
+    {
+        return Intent::RunApp;
+    }
+
     // Navigation patterns
     if lower.starts_with("go to ")
         || lower.starts_with("open ")
@@ -386,9 +401,63 @@ async fn execute_intent(intent: &Intent, message: &str, state: &AppState) -> Str
         }
         Intent::RunApp => {
             let app_name = extract_app_name(message);
-            match crate::app_engine::runner::run_app(&app_name, state).await {
-                Ok(path) => format!("App '{}' completed. Report: {}", app_name, path.display()),
-                Err(e) => format!("App '{}' failed: {}", app_name, e),
+            let lower_msg = message.to_ascii_lowercase();
+
+            // QA dispatch: "run visual qa", "qa api", "test security", etc.
+            let qa_types = ["visual", "api", "accessibility", "security", "performance", "evidence", "integration"];
+            let matched_qa = qa_types.iter().find(|t| lower_msg.contains(*t));
+
+            if lower_msg.contains("qa") || lower_msg.starts_with("test ") {
+                if let Some(qa_type) = matched_qa {
+                    // Extract target URL if present, default to localhost:8888
+                    let target = extract_url(message)
+                        .unwrap_or_else(|| "http://localhost:8888/dashboard".to_string());
+                    let client = reqwest::Client::new();
+                    match client.post("http://localhost:8888/api/v1/qa/run")
+                        .json(&serde_json::json!({"qa_type": qa_type, "target": target}))
+                        .send().await
+                    {
+                        Ok(resp) => {
+                            if let Ok(result) = resp.json::<serde_json::Value>().await {
+                                let passed = result.get("passed").and_then(|v| v.as_bool()).unwrap_or(false);
+                                let total = result.get("total_checks").and_then(|v| v.as_u64()).unwrap_or(0);
+                                let pass_count = result.get("passed_checks").and_then(|v| v.as_u64()).unwrap_or(0);
+                                let run_id = result.get("run_id").and_then(|v| v.as_str()).unwrap_or("unknown");
+                                let status = if passed { "PASS" } else { "FAIL" };
+                                format!("{} QA on {}: {} ({}/{} checks). Run ID: {}",
+                                    qa_type.to_uppercase(), target, status, pass_count, total, run_id)
+                            } else {
+                                format!("{} QA completed but could not parse result.", qa_type)
+                            }
+                        }
+                        Err(e) => format!("{} QA failed: {}", qa_type, e),
+                    }
+                } else {
+                    // Run all 7 QA types
+                    let target = extract_url(message)
+                        .unwrap_or_else(|| "http://localhost:8888/dashboard".to_string());
+                    let client = reqwest::Client::new();
+                    let mut results = Vec::new();
+                    for qt in &qa_types {
+                        if let Ok(resp) = client.post("http://localhost:8888/api/v1/qa/run")
+                            .json(&serde_json::json!({"qa_type": qt, "target": target}))
+                            .send().await
+                        {
+                            if let Ok(r) = resp.json::<serde_json::Value>().await {
+                                let p = r.get("passed").and_then(|v| v.as_bool()).unwrap_or(false);
+                                let pc = r.get("passed_checks").and_then(|v| v.as_u64()).unwrap_or(0);
+                                let tc = r.get("total_checks").and_then(|v| v.as_u64()).unwrap_or(0);
+                                results.push(format!("{}: {}/{} {}", qt, pc, tc, if p { "PASS" } else { "FAIL" }));
+                            }
+                        }
+                    }
+                    format!("Full QA on {}:\n{}", target, results.join("\n"))
+                }
+            } else {
+                match crate::app_engine::runner::run_app(&app_name, state).await {
+                    Ok(path) => format!("App '{}' completed. Report: {}", app_name, path.display()),
+                    Err(e) => format!("App '{}' failed: {}", app_name, e),
+                }
             }
         }
         Intent::Automate => {
