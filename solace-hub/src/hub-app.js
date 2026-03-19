@@ -2,7 +2,7 @@
 // Extracted from index.html inline <script> block
 (function() {
   'use strict';
-  var API = '';
+  var API = 'http://localhost:8888';
   function get(p){return fetch(API+p).then(function(r){return r.json()});}
   function $(id){return document.getElementById(id);}
   function esc(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
@@ -16,13 +16,47 @@
   if(lt){lt.addEventListener('click',function(e){e.stopPropagation();var o=!lm.classList.contains('active');if(o)lm.removeAttribute('hidden');lm.classList.toggle('active',o);if(!o)lm.setAttribute('hidden','');});document.addEventListener('click',function(e){if(!lt.contains(e.target)&&!lm.contains(e.target)){lm.classList.remove('active');lm.setAttribute('hidden','');}});}
 
   // ─── SCAN + GATE LOGIC ───
+  // EMERGENCY: force UI visible immediately to debug
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+      var sp = document.getElementById('scan-phase');
+      if (sp) sp.style.display = 'none';
+      var ht = document.getElementById('hub-tabs');
+      if (ht) ht.style.display = 'block';
+      var hh = document.getElementById('hub-header');
+      if (hh) hh.style.display = 'block';
+      var rp = document.getElementById('results-phase');
+      if (rp) rp.style.display = 'block';
+    }, 2000);
+  });
   var hasLLM = false;
   // Simplest persistence: save/load via POST/GET to evidence endpoint
   // On Connect CLIs success: POST an evidence event with cli count
   // On load: check if agents are installed AND we have a recent cli_connected evidence
   var savedCLIs = null;
 
+  function showMainUI() {
+    $('scan-phase').style.opacity = '0';
+    setTimeout(function() {
+      $('scan-phase').style.display = 'none';
+      if ($('hub-tabs')) $('hub-tabs').style.display = 'block';
+      if ($('hub-header')) $('hub-header').style.display = 'block';
+      if ($('results-phase')) $('results-phase').style.display = 'block';
+      try { loadVersionInfo(); } catch(e) {}
+      try { loadSettingsInfo(); } catch(e) {}
+      try { loadRemoteStatus(); } catch(e) {}
+      get('/api/v1/system/status').then(function(s) {
+        var count = s.app_count || 0;
+        var el = $('app-discovery-count');
+        if (el) el.textContent = count + ' apps ready';
+      }).catch(function(){});
+    }, 500);
+  }
+
   function runScan() {
+    // Always show main UI after 3 seconds even if API calls fail
+    var transitionTimer = setTimeout(function() { showMainUI(); }, 3000);
+
     get('/api/v1/agents').then(function(d) {
       var agents = d.agents || [];
       var installed = agents.filter(function(a){return a.installed;});
@@ -103,22 +137,9 @@
         }
       });
 
+      clearTimeout(transitionTimer);
       setTimeout(function() {
-        $('scan-phase').style.opacity = '0';
-        setTimeout(function() {
-          $('scan-phase').style.display = 'none';
-          $('hub-tabs').style.display = 'block';
-          if ($('hub-header')) $('hub-header').style.display = 'block';
-          $('results-phase').style.display = 'block';
-          loadVersionInfo();
-          loadSettingsInfo();
-          loadRemoteStatus();
-          // Update app discovery count
-          get('/api/v1/system/status').then(function(s) {
-            var count = s.app_count || 0;
-            var el = $('app-discovery-count');
-            if (el) el.textContent = count + ' apps ready';
-          }).catch(function(){});
+        showMainUI();
 
           if (hasLLM) {
             // Signed in or BYOK set — ready to launch
