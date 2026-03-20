@@ -74,6 +74,7 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(index))
         .route("/dashboard", get(dashboard_page))
+        .route("/hire", get(hire_page))
         .route("/onboarding", get(onboarding_page))
         .route("/sidebar", get(sidebar_page))
         .route("/sidepanel.js", get(sidebar_js))
@@ -1455,6 +1456,94 @@ async fn settings_page(State(state): State<AppState>) -> Html<String> {
     Html(hub_page("Settings", &body))
 }
 
+// ---------------------------------------------------------------------------
+// GET /hire — "Hire an AI Worker" job description wizard
+// ---------------------------------------------------------------------------
+async fn hire_page(State(state): State<AppState>) -> Html<String> {
+    let apps = crate::app_engine::scan_installed_apps();
+    let role_apps: Vec<_> = apps.iter().filter(|a| a.category == "role").collect();
+
+    // Existing team org chart
+    let mut team_rows = String::new();
+    for app in &role_apps {
+        let app_dir = crate::utils::find_app_dir(&app.id);
+        let run_count = app_dir.as_ref().map(|d| count_runs(d)).unwrap_or(0);
+        team_rows.push_str(&format!(
+            "<tr><td><strong>{name}</strong></td><td>{id}</td><td>{sched}</td><td>{runs}</td></tr>",
+            name = html_escape::encode_text(&app.name),
+            id = html_escape::encode_text(&app.id),
+            sched = if app.schedule.is_empty() { "Manual" } else { &app.schedule },
+            runs = run_count,
+        ));
+    }
+    if team_rows.is_empty() {
+        team_rows = "<tr><td colspan=\"4\" class=\"sb-text-muted\">No AI workers hired yet. Use the form below to hire your first worker.</td></tr>".to_string();
+    }
+
+    let body = format!(
+        r##"<section aria-labelledby="team-heading">
+  <div class="sb-section-header">
+    <h2 id="team-heading" class="sb-heading">Your AI Team</h2>
+    <span class="sb-pill sb-pill--success">{team_count} workers</span>
+  </div>
+  <table class="sb-table"><thead><tr><th>Role</th><th>Worker ID</th><th>Schedule</th><th>Runs</th></tr></thead>
+  <tbody>{team_rows}</tbody></table>
+</section>
+
+<section class="sb-section" aria-labelledby="hire-heading">
+  <h2 id="hire-heading" class="sb-heading">Hire a New AI Worker</h2>
+  <p class="sb-text-muted">Describe the job like a job posting. The system detects the role, assigns a persona, and creates a working AI employee.</p>
+
+  <form method="POST" action="/api/v1/apps/create-from-job" class="sb-card" id="hire-form">
+    <div class="sb-section">
+      <label class="sb-kicker">Company Name</label>
+      <input type="text" name="company" placeholder="e.g., BrainLife, Metalmark, Acme Corp" class="sb-input" required>
+    </div>
+    <div class="sb-section">
+      <label class="sb-kicker">Job Description</label>
+      <textarea name="job_description" rows="6" placeholder="Describe what this AI worker should do. Example: 'Monitor competitors in the neurotechnology space. Track product launches, pricing changes, partnerships, funding rounds. Produce a weekly competitor digest.'" class="sb-input" required></textarea>
+    </div>
+    <div class="sb-section">
+      <label class="sb-kicker">Department (optional — auto-detected from description)</label>
+      <select name="role" class="sb-input">
+        <option value="">Auto-detect from description</option>
+        <option value="bizdev">Business Development</option>
+        <option value="competitor">Competitor Research</option>
+        <option value="market">Market Analysis</option>
+        <option value="sales">Sales Operations</option>
+        <option value="customer_success">Customer Success</option>
+        <option value="content">Content Marketing</option>
+        <option value="recruiting">Recruiting</option>
+        <option value="financial">Financial Analysis</option>
+        <option value="legal">Legal &amp; Compliance</option>
+        <option value="product">Product Management</option>
+        <option value="security">Security &amp; Risk</option>
+        <option value="operations">Operations</option>
+        <option value="executive">Executive Intelligence</option>
+      </select>
+    </div>
+    <button type="submit" class="sb-btn sb-btn--primary">Hire AI Worker</button>
+  </form>
+</section>
+
+<section class="sb-section" aria-labelledby="roles-heading">
+  <h2 id="roles-heading" class="sb-heading">Available Departments</h2>
+  <div class="sb-card-grid">
+    <div class="sb-card"><h3>Business Development</h3><p class="sb-text-muted">Find leads, research prospects, draft outreach. Persona: Alex Hormozi.</p></div>
+    <div class="sb-card"><h3>Competitor Research</h3><p class="sb-text-muted">Monitor competitors, pricing, features, hiring, funding. Persona: Peter Thiel.</p></div>
+    <div class="sb-card"><h3>Market Analysis</h3><p class="sb-text-muted">Market size, trends, demand drivers, growth projections. Persona: Ben Thompson.</p></div>
+    <div class="sb-card"><h3>Content Marketing</h3><p class="sb-text-muted">Blog drafts, social posts, SEO keywords, content calendar. Persona: Gary Vaynerchuk.</p></div>
+    <div class="sb-card"><h3>Sales Operations</h3><p class="sb-text-muted">Pipeline tracking, deal scoring, CRM sync. Persona: Grant Cardone.</p></div>
+    <div class="sb-card"><h3>Financial Analysis</h3><p class="sb-text-muted">Revenue modeling, unit economics, benchmarks. Persona: Aswath Damodaran.</p></div>
+    <div class="sb-card"><h3>Legal &amp; Compliance</h3><p class="sb-text-muted">Contract review, regulatory monitoring, compliance. Persona: Marc Andreessen.</p></div>
+    <div class="sb-card"><h3>Executive Intelligence</h3><p class="sb-text-muted">CEO briefing, strategic signals, board prep. Persona: Peter Drucker.</p></div>
+  </div>
+</section>"##,
+        team_count = role_apps.len(),
+    );
+    Html(hub_page("Hire AI Workers", &body))
+}
+
 /// Map a domain name to its icon path in /icons/apps/.
 /// Tries common names: domain root, subdomain keyword, known brands.
 fn domain_icon_path(domain: &str) -> String {
@@ -1649,6 +1738,11 @@ a:focus-visible {{ outline: 2px solid var(--sb-signal); outline-offset: 2px; }}
 .sb-nav-link:hover {{ color: var(--sb-text); }}
 .sb-domain-desc {{ margin-bottom: 1rem; }}
 .sb-domain-link {{ text-decoration: none; display: block; }}
+/* Form inputs */
+.sb-input {{ padding: 0.5rem; width: 100%; border: 1px solid var(--sb-border); border-radius: var(--sb-radius); background: var(--sb-bg); color: var(--sb-text); font-size: 0.9rem; font-family: inherit; }}
+.sb-input:focus {{ border-color: var(--sb-accent); outline: none; box-shadow: 0 0 0 2px rgba(0,113,227,0.15); }}
+textarea.sb-input {{ resize: vertical; min-height: 100px; }}
+select.sb-input {{ cursor: pointer; }}
 /* Icon fallback (replaces inline onerror) */
 .sb-app-icon[src=""] {{ display: none; }}
 </style>
@@ -1663,6 +1757,7 @@ a:focus-visible {{ outline: 2px solid var(--sb-signal); outline-offset: 2px; }}
   </div>
   <div class="sb-topbar-spacer"></div>
   <a href="/dashboard" class="sb-nav-link">Dashboard</a>
+  <a href="/hire" class="sb-nav-link">Hire AI</a>
   <a href="/domains" class="sb-nav-link">Domains</a>
   <a href="/appstore" class="sb-nav-link">App Store</a>
   <a href="/llms" class="sb-nav-link">LLMs</a>
