@@ -58,6 +58,8 @@ pub struct AppState {
     pub update_status: Arc<RwLock<crate::updates::UpdateStatus>>,
     /// Pending JS to execute in Hub WebView (polled by Hub).
     pub pending_js: Arc<RwLock<Option<String>>>,
+    /// Backoffice database manager: one SQLite DB per backoffice app, lazy init.
+    pub backoffice_db: Arc<crate::backoffice::db::DbManager>,
 }
 
 /// Tunnel state for remote access (FDA Part 11 consent + WSS connection).
@@ -289,6 +291,9 @@ impl AppState {
             tunnel: Arc::new(RwLock::new(TunnelState::default())),
             update_status: Arc::new(RwLock::new(crate::updates::UpdateStatus::default())),
             pending_js: Arc::new(RwLock::new(None)),
+            backoffice_db: Arc::new(crate::backoffice::db::DbManager::new(
+                solace_home.join("backoffice"),
+            )),
         }
     }
 

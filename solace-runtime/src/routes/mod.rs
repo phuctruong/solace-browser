@@ -25,3 +25,4 @@ pub mod hub_control;
 pub mod tunnel;
 pub mod qa;
 pub mod wiki;
+pub mod backoffice;
