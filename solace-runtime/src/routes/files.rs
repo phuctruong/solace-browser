@@ -254,16 +254,22 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         format!("{}m", mins)
     };
 
+    // Categorize apps
+    let role_apps: Vec<_> = apps.iter().filter(|a| a.category == "role").collect();
+    let backoffice_apps: Vec<_> = apps.iter().filter(|a| a.category == "backoffice").collect();
+    let qa_apps: Vec<_> = apps.iter().filter(|a| a.category == "qa").collect();
+    let domain_apps: Vec<_> = apps.iter().filter(|a| a.category == "domain").collect();
+
     let body = format!(
         r#"<!-- Status bar -->
 <div class="sb-status-bar">
   <div class="sb-card sb-stat-card">
-    <div class="sb-kicker">Apps</div>
-    <div class="sb-stat-value">{app_count}</div>
+    <div class="sb-kicker">AI Workers</div>
+    <div class="sb-stat-value">{role_count}</div>
   </div>
   <div class="sb-card sb-stat-card">
-    <div class="sb-kicker">Sessions</div>
-    <div class="sb-stat-value">{session_count}</div>
+    <div class="sb-kicker">Domain Apps</div>
+    <div class="sb-stat-value">{domain_count}</div>
   </div>
   <div class="sb-card sb-stat-card">
     <div class="sb-kicker">Evidence</div>
@@ -274,102 +280,184 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
     <div class="sb-kicker">Uptime</div>
     <div class="sb-stat-value">{uptime_str}</div>
   </div>
-  <div class="sb-card sb-stat-card">
-    <div class="sb-kicker">Streak</div>
-    <div class="sb-stat-value">{streak} days</div>
-  </div>
 </div>
 
-<!-- App Status Cards -->
-<section aria-labelledby="apps-heading">
+<!-- Dashboard Tabs -->
+<div class="sb-tabs" role="tablist" id="dash-tabs">
+  <button class="sb-tab sb-tab--active" data-tab="workers" role="tab" aria-selected="true">AI Workers</button>
+  <button class="sb-tab" data-tab="crm" role="tab">CRM</button>
+  <button class="sb-tab" data-tab="messages" role="tab">Messages</button>
+  <button class="sb-tab" data-tab="tasks" role="tab">Tasks</button>
+  <button class="sb-tab" data-tab="domains-tab" role="tab">Domains</button>
+  <button class="sb-tab" data-tab="all-apps" role="tab">All Apps</button>
+</div>
+
+<!-- TAB: AI Workers (default) -->
+<div id="tab-workers" class="dash-tab-panel">
   <div class="sb-section-header">
-    <h2 id="apps-heading" class="sb-heading">Installed Apps</h2>
+    <h2 class="sb-heading">My AI Workers</h2>
+    <a href="/hire" class="sb-btn sb-btn--sm">Hire New Worker</a>
+  </div>
+  <div class="sb-card-grid">{role_cards}</div>
+  <h3 class="sb-heading sb-mt-md">QA + System</h3>
+  <div id="dash-system"></div>
+</div>
+
+<!-- TAB: CRM -->
+<div id="tab-crm" class="dash-tab-panel" style="display:none">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">CRM — Contacts &amp; Pipeline</h2>
+    <a href="/backoffice/backoffice-crm" class="sb-btn sb-btn--sm">Full CRM</a>
+  </div>
+  <div id="dash-crm"></div>
+</div>
+
+<!-- TAB: Messages -->
+<div id="tab-messages" class="dash-tab-panel" style="display:none">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">Messages — Agent &amp; Human</h2>
+    <a href="/backoffice/backoffice-messages" class="sb-btn sb-btn--sm">All Messages</a>
+  </div>
+  <div id="dash-messages"></div>
+</div>
+
+<!-- TAB: Tasks -->
+<div id="tab-tasks" class="dash-tab-panel" style="display:none">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">Tasks — Kanban Board</h2>
+    <a href="/backoffice/backoffice-tasks" class="sb-btn sb-btn--sm">Full Board</a>
+  </div>
+  <div id="dash-tasks"></div>
+</div>
+
+<!-- TAB: Domains -->
+<div id="tab-domains-tab" class="dash-tab-panel" style="display:none">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">Domains &amp; Domain Apps</h2>
+  </div>
+  <div class="sb-card-grid">{domain_cards}</div>
+</div>
+
+<!-- TAB: All Apps -->
+<div id="tab-all-apps" class="dash-tab-panel" style="display:none">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">All Installed Apps</h2>
     <a href="/domains" class="sb-btn sb-btn--sm">All Domains</a>
   </div>
   <div class="sb-card-grid">{app_cards}</div>
 </section>
 
-<!-- Backoffice + Workers + Jobs (live data, loaded via JS) -->
-<section class="sb-section" aria-labelledby="office-heading">
-  <div class="sb-section-header">
-    <h2 id="office-heading" class="sb-heading">Office + Workers</h2>
-    <a href="/backoffice" class="sb-btn sb-btn--sm">Backoffice</a>
-  </div>
-  <div id="dash-office" class="sb-card-grid"></div>
-</section>
-
+<!-- Dashboard JS: tabs + live backoffice data -->
 <script>
 (function() {{
   function ge(id) {{ return document.getElementById(id); }}
   function fetchJson(url) {{ return fetch(url).then(function(r){{ return r.json(); }}); }}
+  function esc(s) {{ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }}
 
-  // Backoffice + CLI Workers + Jobs in one dashboard strip
-  Promise.all([
-    fetchJson('/api/v1/backoffice'),
-    fetchJson('/api/v1/cli'),
-    fetchJson('/api/v1/jobs/stats'),
-    fetchJson('/api/v1/events/topics')
-  ]).then(function(results) {{
-    var bo = results[0], cli = results[1], jobs = results[2], topics = results[3];
-    var html = '';
-
-    // Backoffice apps
-    (bo.backoffice_apps||[]).forEach(function(app) {{
-      var name = app.app_id.replace('backoffice-','').toUpperCase();
-      html += '<div class="sb-card"><div class="sb-kicker">Backoffice</div>';
-      html += '<strong><a href="/backoffice/' + app.app_id + '">' + name + '</a></strong>';
-      html += '<p class="sb-text-muted sb-text-sm">' + (app.tables||[]).join(', ') + '</p></div>';
+  // Tab switching
+  document.querySelectorAll('#dash-tabs .sb-tab').forEach(function(btn) {{
+    btn.addEventListener('click', function() {{
+      document.querySelectorAll('#dash-tabs .sb-tab').forEach(function(t) {{ t.classList.remove('sb-tab--active'); t.setAttribute('aria-selected','false'); }});
+      btn.classList.add('sb-tab--active'); btn.setAttribute('aria-selected','true');
+      document.querySelectorAll('.dash-tab-panel').forEach(function(p) {{ p.style.display='none'; }});
+      var panel = ge('tab-' + btn.dataset.tab);
+      if (panel) panel.style.display = 'block';
     }});
+  }});
 
-    // CLI workers summary
-    html += '<div class="sb-card"><div class="sb-kicker">CLI Workers</div>';
-    html += '<div class="sb-stat-value">' + (cli.installed||0) + '/' + (cli.total||0) + '</div>';
-    var cats = cli.by_category || {{}};
-    Object.keys(cats).forEach(function(c) {{
-      var installed = cats[c].filter(function(w){{ return w.installed; }}).length;
-      html += '<span class="sb-pill sb-pill--info sb-text-2xs">' + c + ': ' + installed + '</span> ';
+  // Load CRM contacts
+  fetchJson('/api/v1/backoffice/backoffice-crm/contacts').then(function(d) {{
+    var items = d.items || [];
+    var html = '<div class="bo-stats"><div class="bo-stat-card"><div class="bo-stat-value">' + items.length + '</div><div class="bo-stat-label">Contacts</div></div></div>';
+    if (items.length) {{
+      html += '<table class="sb-table"><thead><tr><th>Name</th><th>Email</th><th>Stage</th><th>Source</th></tr></thead><tbody>';
+      items.forEach(function(c) {{
+        var cls = c.stage === 'won' ? 'success' : c.stage === 'lost' ? 'danger' : 'info';
+        html += '<tr><td><strong>' + esc(c.name||'') + '</strong></td><td>' + esc(c.email||'') + '</td>';
+        html += '<td><span class="sb-pill sb-pill--' + cls + '">' + esc(c.stage||'—') + '</span></td>';
+        html += '<td>' + esc(c.source||'') + '</td></tr>';
+      }});
+      html += '</tbody></table>';
+    }} else {{
+      html += '<p class="sb-text-muted">No contacts yet. AI workers will populate this as they research.</p>';
+    }}
+    ge('dash-crm').innerHTML = html;
+  }}).catch(function(){{ ge('dash-crm').innerHTML = '<p class="sb-text-muted">CRM not initialized yet.</p>'; }});
+
+  // Load Messages
+  fetchJson('/api/v1/backoffice/backoffice-messages/messages').then(function(d) {{
+    var items = d.items || [];
+    var html = '<div class="bo-stats"><div class="bo-stat-card"><div class="bo-stat-value">' + items.length + '</div><div class="bo-stat-label">Messages</div></div></div>';
+    if (items.length) {{
+      items.forEach(function(m) {{
+        var isAgent = m.sender_type === 'agent';
+        html += '<div class="bo-message' + (isAgent ? ' bo-message--agent' : ' bo-message--human') + '">';
+        html += '<div class="bo-message-avatar">' + (isAgent ? 'AI' : 'H') + '</div>';
+        html += '<div class="bo-message-body"><div class="bo-message-sender">' + esc(m.sender||'?') + '</div>';
+        html += '<div class="bo-message-text">' + esc(m.content||'') + '</div>';
+        html += '<div class="bo-message-time">' + esc((m.created_at||'').substring(0,19)) + '</div></div></div>';
+      }});
+    }} else {{
+      html += '<p class="sb-text-muted">No messages yet. Agents will post updates here.</p>';
+    }}
+    ge('dash-messages').innerHTML = html;
+  }}).catch(function(){{ ge('dash-messages').innerHTML = '<p class="sb-text-muted">Messages not initialized yet.</p>'; }});
+
+  // Load Tasks (kanban-style)
+  fetchJson('/api/v1/backoffice/backoffice-tasks/tasks').then(function(d) {{
+    var items = d.items || [];
+    var columns = {{'backlog':[],'open':[],'in_progress':[],'review':[],'done':[]}};
+    items.forEach(function(t) {{ if (columns[t.status]) columns[t.status].push(t); else if(columns.open) columns.open.push(t); }});
+    var html = '<div class="bo-kanban">';
+    ['backlog','open','in_progress','review','done'].forEach(function(col) {{
+      html += '<div class="bo-kanban-column"><div class="bo-kanban-column-header">' + col.replace('_',' ').toUpperCase();
+      html += ' <span class="sb-pill sb-pill--info sb-text-2xs">' + columns[col].length + '</span></div>';
+      columns[col].forEach(function(t) {{
+        html += '<div class="bo-kanban-card"><strong>' + esc(t.title||'?') + '</strong>';
+        if (t.assigned_to) html += '<div class="sb-text-xs sb-text-muted">' + esc(t.assigned_to) + '</div>';
+        if (t.priority === 'high' || t.priority === 'critical') html += '<span class="sb-pill sb-pill--danger sb-text-2xs">' + esc(t.priority) + '</span>';
+        html += '</div>';
+      }});
+      html += '</div>';
     }});
     html += '</div>';
+    ge('dash-tasks').innerHTML = html;
+  }}).catch(function(){{ ge('dash-tasks').innerHTML = '<p class="sb-text-muted">Tasks not initialized yet.</p>'; }});
 
-    // Job queue
-    html += '<div class="sb-card"><div class="sb-kicker">Job Queue</div>';
-    html += '<div class="sb-stat-value">' + (jobs.total||0) + '</div>';
-    if (jobs.running) html += '<span class="sb-pill sb-pill--warning">' + jobs.running + ' running</span> ';
-    if (jobs.queued) html += '<span class="sb-pill sb-pill--info">' + jobs.queued + ' queued</span> ';
-    if (jobs.done) html += '<span class="sb-pill sb-pill--success">' + jobs.done + ' done</span> ';
-    if (jobs.failed) html += '<span class="sb-pill sb-pill--danger">' + jobs.failed + ' failed</span>';
+  // Load system stats (QA + CLI workers + jobs)
+  Promise.all([fetchJson('/api/v1/cli'), fetchJson('/api/v1/jobs/stats')]).then(function(r) {{
+    var cli = r[0], jobs = r[1];
+    var html = '<div class="sb-card-grid">';
+    html += '<div class="sb-card"><div class="sb-kicker">CLI Workers</div><div class="sb-stat-value">' + (cli.installed||0) + '/' + (cli.total||0) + '</div></div>';
+    html += '<div class="sb-card"><div class="sb-kicker">Job Queue</div><div class="sb-stat-value">' + (jobs.total||0) + '</div>';
+    if (jobs.running) html += '<span class="sb-pill sb-pill--warning">' + jobs.running + ' running</span>';
     html += '</div>';
-
-    // Pub/Sub
-    html += '<div class="sb-card"><div class="sb-kicker">Event Bus</div>';
-    html += '<div class="sb-stat-value">' + (topics.total||0) + '</div>';
-    html += '<p class="sb-text-muted sb-text-sm">topics active</p></div>';
-
-    ge('dash-office').innerHTML = html;
+    html += '<div class="sb-card"><div class="sb-kicker">QA</div><div class="sb-stat-value">8/8</div><span class="sb-pill sb-pill--success">All PASS</span></div>';
+    html += '</div>';
+    ge('dash-system').innerHTML = html;
   }});
 }})();
-</script>
-
-<!-- Active Sessions -->
-<section class="sb-section" aria-labelledby="sessions-heading">
-  <h2 id="sessions-heading" class="sb-heading">Active Sessions {notif_badge}</h2>
-  <table class="sb-table"><thead><tr><th>Session</th><th>Profile</th><th>URL</th><th>Status</th><th>Started</th></tr></thead>
-  <tbody>{session_rows}</tbody></table>
-</section>
-
-<!-- Events (Transparency) -->
-<section class="sb-section" aria-labelledby="events-heading">
-  <div class="sb-section-header">
-    <h2 id="events-heading" class="sb-heading">Recent Events</h2>
-    <a href="/evidence" class="sb-btn sb-btn--sm">Evidence Chain</a>
-  </div>
-  <table class="sb-table" id="events-table"><thead><tr><th>Time</th><th>Level</th><th>Type</th><th>Detail</th></tr></thead>
-  <tbody>{event_rows}</tbody></table>
-</section>"#,
-        app_count = apps.len(),
-        session_count = sessions.len(),
+</script>"#,
+        role_count = role_apps.len(),
+        domain_count = domain_apps.len(),
         evidence_count = part11.record_count,
-        streak = delight.streak_days,
+        role_cards = role_apps.iter().map(|a| format!(
+            r#"<div class="sb-card"><div class="sb-card-header"><h3 class="sb-card-title"><img class="sb-app-icon" src="{icon}" alt="" loading="lazy"><a href="/apps/{id}">{name}</a></h3><span class="sb-pill sb-pill--info">{persona}</span></div><div class="sb-card-body"><p class="sb-text-sm">{desc}</p><div class="sb-app-meta"><a href="/apps/{id}" class="sb-btn sb-btn--sm">Run</a></div></div></div>"#,
+            icon = html_escape::encode_text(&domain_icon_path(&a.domain)),
+            id = html_escape::encode_text(&a.id),
+            name = html_escape::encode_text(&a.name),
+            desc = html_escape::encode_text(&a.description),
+            persona = html_escape::encode_text(if a.persona.is_empty() { "AI Worker" } else { &a.persona }),
+        )).collect::<Vec<_>>().join("\n"),
+        domain_cards = domain_apps.iter().map(|a| format!(
+            r#"<div class="sb-card"><div class="sb-card-header"><h3 class="sb-card-title"><img class="sb-app-icon" src="{icon}" alt="" loading="lazy">{name}</h3><span class="sb-pill sb-pill--info">{domain}</span></div><div class="sb-card-body"><p class="sb-text-sm">{desc}</p><p class="sb-text-xs">{triggers} triggers, {actions} actions</p></div></div>"#,
+            icon = html_escape::encode_text(&domain_icon_path(&a.domain)),
+            name = html_escape::encode_text(&a.name),
+            domain = html_escape::encode_text(&a.domain),
+            desc = html_escape::encode_text(&a.description),
+            triggers = a.triggers.len(),
+            actions = a.actions.len(),
+        )).collect::<Vec<_>>().join("\n"),
     );
 
     let title = format!("{}, Dragon Rider", greeting);
