@@ -153,20 +153,31 @@
   function renderDomains() {
     const container = qs('domain-grid');
     container.innerHTML = '';
+    // Detect current domain from browser URL
+    var currentDomain = '';
+    try { currentDomain = window.top.location.hostname; } catch(e) {}
+    if (!currentDomain || currentDomain === '127.0.0.1') currentDomain = 'localhost';
+
     state.domains.forEach(function (domain) {
-      const status = state.domainStatuses[domain.host];
-      const button = document.createElement('button');
-      const current = selectedDomainOrFallback();
+      var status = state.domainStatuses[domain.host];
+      var button = document.createElement('button');
+      var current = selectedDomainOrFallback();
+      var isLocalhost = domain.host === 'localhost';
+      var isCurrentDomain = domain.host === currentDomain || (isLocalhost && (currentDomain === 'localhost' || currentDomain === '127.0.0.1'));
       button.type = 'button';
-      button.className = 'yy-domain-button' + (domain.id === current.id ? ' is-selected' : '');
-      button.setAttribute('aria-pressed', domain.id === current.id ? 'true' : 'false');
+      button.className = 'yy-domain-button' + (isCurrentDomain ? ' is-selected' : '') + (isLocalhost ? ' yy-domain-home' : '');
+      button.setAttribute('aria-pressed', isCurrentDomain ? 'true' : 'false');
       button.innerHTML = [
-        '<img src="' + escapeHtml(domain.icon) + '" alt="">',
+        '<img src="' + escapeHtml(domain.icon || '') + '" alt="" onerror="this.src=\'http://127.0.0.1:8888/icons/yinyang-logo.png\'">',
         '<span class="yy-domain-label">' + escapeHtml(domain.label) + '</span>',
-        '<span class="yy-domain-status">' + escapeHtml(domainStatusLabel(status)) + '</span>'
+        '<span class="yy-domain-count">' + (domain.app_count || 0) + ' apps</span>'
       ].join('');
       button.addEventListener('click', function () {
         selectDomain(domain.id);
+        // Navigate browser to domain dashboard
+        if (isLocalhost) {
+          try { window.top.location.href = 'http://localhost:8888/dashboard'; } catch(e) {}
+        }
       });
       container.appendChild(button);
     });

@@ -1716,6 +1716,8 @@ pub fn domain_icon_path_pub(domain: &str) -> String {
 fn domain_icon_path(domain: &str) -> String {
     // Map domain → icon filename (order: exact match, root domain, keyword)
     let mappings: &[(&str, &str)] = &[
+        ("localhost", "/media/yinyang-rotating_70pct_128px.gif"),
+        ("dev.local", "/media/yinyang-rotating_70pct_128px.gif"),
         ("google.com", "google-search.png"),
         ("news.google.com", "google-search.png"),
         ("mail.google.com", "gmail.jpg"),

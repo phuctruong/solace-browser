@@ -233,6 +233,77 @@ body[data-theme="light"] {
   gap: 0.55rem;
 }
 
+.yy-domain-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.6rem 0.4rem;
+  background: var(--yy-surface-soft);
+  border: 1px solid transparent;
+  border-radius: var(--yy-radius-sm);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: center;
+  color: var(--yy-text);
+  font-family: var(--yy-font-body);
+}
+
+.yy-domain-button img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.yy-domain-button:hover {
+  background: var(--yy-surface-accent);
+  border-color: var(--yy-border);
+}
+
+.yy-domain-button.is-selected {
+  border-color: var(--yy-accent);
+  background: var(--yy-surface-accent);
+  box-shadow: 0 0 8px var(--yy-glow);
+}
+
+.yy-domain-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  line-height: 1.2;
+  word-break: break-all;
+}
+
+.yy-domain-count {
+  font-size: 0.55rem;
+  color: var(--yy-text-muted);
+}
+
+/* Localhost = home domain, spans 2 columns, bigger */
+.yy-domain-home {
+  grid-column: span 2;
+  flex-direction: row;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.8rem;
+  background: var(--yy-surface-brand);
+  border: 1px solid var(--yy-border);
+}
+
+.yy-domain-home img {
+  width: 48px;
+  height: 48px;
+}
+
+.yy-domain-home .yy-domain-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.yy-domain-home .yy-domain-count {
+  font-size: 0.7rem;
+}
+
 .yy-event-feed {
   display: grid;
   gap: 0.55rem;

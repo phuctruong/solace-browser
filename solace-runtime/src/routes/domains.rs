@@ -132,20 +132,31 @@ async fn list_domains() -> Json<serde_json::Value> {
     for app in &apps {
         *counts.entry(app.domain.clone()).or_insert(0) += 1;
     }
-    // Return both the simple counts map and a sidebar-friendly items array
-    let items: Vec<serde_json::Value> = counts
-        .iter()
-        .map(|(domain, count)| {
-            json!({
-                "id": domain,
-                "host": domain,
-                "label": domain,
-                "url": format!("http://127.0.0.1:8888/domains/{}", domain),
-                "icon": format!("http://127.0.0.1:8888{}", crate::routes::files::domain_icon_path_pub(domain)),
-                "app_count": count,
-            })
-        })
-        .collect();
+    // Return sidebar-friendly items array with localhost FIRST
+    let mut items: Vec<serde_json::Value> = Vec::new();
+    // localhost always first (home domain)
+    if let Some(count) = counts.get("localhost") {
+        items.push(json!({
+            "id": "localhost",
+            "host": "localhost",
+            "label": "Solace Home",
+            "url": "http://127.0.0.1:8888/dashboard",
+            "icon": format!("http://127.0.0.1:8888{}", crate::routes::files::domain_icon_path_pub("localhost")),
+            "app_count": count,
+        }));
+    }
+    // Then all other domains alphabetically
+    for (domain, count) in &counts {
+        if domain == "localhost" { continue; }
+        items.push(json!({
+            "id": domain,
+            "host": domain,
+            "label": domain,
+            "url": format!("http://127.0.0.1:8888/domains/{}", domain),
+            "icon": format!("http://127.0.0.1:8888{}", crate::routes::files::domain_icon_path_pub(domain)),
+            "app_count": count,
+        }));
+    }
     Json(json!({"domains": counts, "items": items, "total": apps.len()}))
 }
 
