@@ -150,38 +150,136 @@
     setText('domain-count', String(activeDomainCount()) + ' active');
   }
 
+  // Domain traffic rankings (approximate, for sort order)
+  var DOMAIN_TRAFFIC = {
+    'google.com': 90000, 'mail.google.com': 25000, 'youtube.com': 80000,
+    'calendar.google.com': 5000, 'drive.google.com': 4000, 'gemini.google.com': 1000,
+    'amazon.com': 4000, 'github.com': 3000, 'linkedin.com': 2500,
+    'reddit.com': 2200, 'chatgpt.com': 2000, 'instagram.com': 6000,
+    'twitter.com': 5000, 'slack.com': 500, 'news.ycombinator.com': 100,
+    'whatsapp.com': 3000, 'claude.ai': 300, 'solaceagi.com': 1,
+    'phuc.net': 1, 'localhost': 99999, 'openai.com': 800,
+    'openrouter.ai': 50, 'opnsr.al': 10
+  };
+
   function renderDomains() {
-    const container = qs('domain-grid');
-    container.innerHTML = '';
-    // Detect current domain from browser URL
+    var tbody = qs('domain-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    // Detect current domain
     var currentDomain = '';
     try { currentDomain = window.top.location.hostname; } catch(e) {}
     if (!currentDomain || currentDomain === '127.0.0.1') currentDomain = 'localhost';
 
-    state.domains.forEach(function (domain) {
-      var status = state.domainStatuses[domain.host];
-      var button = document.createElement('button');
-      var current = selectedDomainOrFallback();
-      var isLocalhost = domain.host === 'localhost';
-      var isCurrentDomain = domain.host === currentDomain || (isLocalhost && (currentDomain === 'localhost' || currentDomain === '127.0.0.1'));
-      button.type = 'button';
-      button.className = 'yy-domain-button' + (isCurrentDomain ? ' is-selected' : '') + (isLocalhost ? ' yy-domain-home' : '');
-      button.setAttribute('aria-pressed', isCurrentDomain ? 'true' : 'false');
-      button.innerHTML = [
-        '<img src="' + escapeHtml(domain.icon || '') + '" alt="" onerror="this.src=\'http://127.0.0.1:8888/icons/yinyang-logo.png\'">',
-        '<span class="yy-domain-label">' + escapeHtml(domain.label) + '</span>',
-        '<span class="yy-domain-count">' + (domain.app_count || 0) + ' apps</span>'
-      ].join('');
-      button.addEventListener('click', function () {
+    // Sort by traffic (localhost always first, then by traffic desc)
+    var sorted = state.domains.slice().sort(function(a, b) {
+      if (a.host === 'localhost') return -1;
+      if (b.host === 'localhost') return 1;
+      var ta = DOMAIN_TRAFFIC[a.host] || 0;
+      var tb = DOMAIN_TRAFFIC[b.host] || 0;
+      return tb - ta;
+    });
+
+    sorted.forEach(function (domain) {
+      var isCurrentDomain = domain.host === currentDomain || (domain.host === 'localhost' && (currentDomain === 'localhost' || currentDomain === '127.0.0.1'));
+      var tr = document.createElement('tr');
+      if (isCurrentDomain) tr.className = 'yy-current-domain';
+      tr.innerHTML = '<td><img class="yy-domain-row-icon" src="' + escapeHtml(domain.icon || '') + '" alt="" onerror="this.src=\'http://127.0.0.1:8888/icons/yinyang-logo.png\'">' + escapeHtml(domain.label) + '</td>' +
+        '<td><span class="yy-pill yy-pill-muted" style="font-size:0.6rem">' + (domain.app_count || 0) + '</span></td>';
+      tr.addEventListener('click', function () {
         selectDomain(domain.id);
-        // Navigate browser to domain dashboard
-        if (isLocalhost) {
-          try { window.top.location.href = 'http://localhost:8888/dashboard'; } catch(e) {}
+        openDomainDrillDown(domain);
+        // Navigate main browser to domain dashboard
+        var url = domain.host === 'localhost' ? 'http://localhost:8888/dashboard' : 'http://localhost:8888/domains/' + encodeURIComponent(domain.host);
+        try { window.top.location.href = url; } catch(e) {
+          postJson('/api/navigate', { url: url });
         }
       });
-      container.appendChild(button);
+      tbody.appendChild(tr);
+    });
+
+    setText('domain-count', sorted.length + ' active');
+
+    // Init DataTables on domain table
+    if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {
+      jQuery.fn.dataTable.ext.errMode = 'none';
+      if (jQuery.fn.DataTable.isDataTable('#domain-table')) {
+        jQuery('#domain-table').DataTable().destroy();
+      }
+      try {
+        jQuery('#domain-table').DataTable({
+          paging: false, searching: true, ordering: true, info: false,
+          order: [], // preserve our traffic sort
+          language: { search: '', searchPlaceholder: 'Filter domains...' },
+          dom: 'ft'
+        });
+      } catch(e) {}
+    }
+  }
+
+  // Drill-down: show selected domain + its apps
+  function openDomainDrillDown(domain) {
+    var section = qs('selected-domain-section');
+    var listSection = qs('domain-list-section');
+    if (!section) return;
+
+    // Show selected domain, hide domain list
+    section.style.display = 'block';
+    if (listSection) listSection.style.display = 'none';
+
+    qs('selected-domain-icon').src = domain.icon || '';
+    setText('selected-domain-name', domain.label);
+    setText('selected-domain-apps-pill', (domain.app_count || 0) + ' apps');
+
+    // Load domain apps
+    var appsList = qs('domain-apps-list');
+    if (!appsList) return;
+    appsList.innerHTML = '<p class="yy-copy">Loading apps...</p>';
+
+    getJson('/api/v1/domains/' + encodeURIComponent(domain.host) + '/status').then(function(d) {
+      // OAuth3 status
+      var oauth = d.oauth3_status || 'not_configured';
+      var oauthPill = qs('selected-domain-oauth3');
+      if (oauthPill) {
+        if (oauth === 'active') { oauthPill.textContent = 'OAuth3 ✓'; oauthPill.className = 'yy-pill yy-pill-success'; }
+        else { oauthPill.textContent = ''; oauthPill.className = ''; }
+      }
+
+      var apps = d.apps || [];
+      if (!apps.length) {
+        appsList.innerHTML = '<p class="yy-copy">No apps for this domain yet.</p>';
+        return;
+      }
+
+      var html = '';
+      apps.forEach(function(app) {
+        html += '<div class="yy-app-row">';
+        html += '<strong style="font-size:0.8rem">' + escapeHtml(app.name || app.app_id) + '</strong>';
+        if (app.triggers > 0) html += ' <span class="yy-pill yy-pill-success" style="font-size:0.55rem">' + app.triggers + ' triggers</span>';
+        html += '<div class="yy-app-actions">';
+        html += '<button onclick="window.runDomainAction(\'' + escapeHtml(app.app_id) + '\',\'run\')">Run</button>';
+        html += '<button onclick="window.top.location.href=\'http://localhost:8888/apps/' + escapeHtml(app.app_id) + '\'">Details</button>';
+        html += '</div></div>';
+      });
+      appsList.innerHTML = html;
+    }).catch(function() {
+      appsList.innerHTML = '<p class="yy-copy">Could not load apps.</p>';
     });
   }
+
+  // Back button: return to domain list
+  (function() {
+    var backBtn = qs('back-to-domains');
+    if (backBtn) {
+      backBtn.addEventListener('click', function() {
+        var section = qs('selected-domain-section');
+        var listSection = qs('domain-list-section');
+        if (section) section.style.display = 'none';
+        if (listSection) listSection.style.display = 'block';
+      });
+    }
+  })();
 
   function renderEvents() {
     const container = qs('event-feed');
