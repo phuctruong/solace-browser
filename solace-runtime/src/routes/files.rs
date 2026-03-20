@@ -673,64 +673,121 @@ async fn domain_detail_page(
     );
 
     let icon = domain_icon_path(&domain);
+
+    // Build trigger info for domain apps
+    let mut trigger_rows = String::new();
+    for app in &apps {
+        for trigger in &app.triggers {
+            trigger_rows.push_str(&format!(
+                "<tr><td><strong>{name}</strong></td><td><code>{path}</code></td><td>{ctx}</td><td><span class=\"sb-pill sb-pill--{acls}\">{act}</span></td><td><code class=\"sb-text-xs\">{sel}</code></td></tr>",
+                name = html_escape::encode_text(&app.name),
+                path = html_escape::encode_text(&trigger.path),
+                ctx = html_escape::encode_text(&trigger.context),
+                act = html_escape::encode_text(&trigger.activation),
+                acls = if trigger.activation == "auto" { "success" } else { "info" },
+                sel = html_escape::encode_text(&trigger.dom_selector),
+            ));
+        }
+    }
+
+    // OAuth3 status
+    let solace_home = crate::utils::solace_home();
+    let vault_path = solace_home.join("vault").join("oauth3.json");
+    let oauth3_html = if vault_path.exists() {
+        if let Ok(content) = fs::read_to_string(&vault_path) {
+            if content.contains(&domain) {
+                "<span class=\"sb-pill sb-pill--success\">OAuth3 Active</span>".to_string()
+            } else {
+                format!("<span class=\"sb-pill sb-pill--warning\">Not logged in</span> <a href=\"https://{domain}/login\" class=\"sb-btn sb-btn--sm\">Setup OAuth3</a>")
+            }
+        } else {
+            format!("<span class=\"sb-pill sb-pill--warning\">Not configured</span> <a href=\"https://{domain}/login\" class=\"sb-btn sb-btn--sm\">Setup OAuth3</a>")
+        }
+    } else {
+        format!("<span class=\"sb-pill sb-pill--warning\">Not configured</span> <a href=\"https://{domain}/login\" class=\"sb-btn sb-btn--sm\">Setup OAuth3</a>")
+    };
+
+    // Wiki snapshot count
+    let wiki_dir = solace_home.join("wiki").join("domains").join(&domain);
+    let snapshot_count = if wiki_dir.exists() {
+        std::fs::read_dir(&wiki_dir).into_iter().flatten().filter_map(|e| e.ok())
+            .filter(|e| e.file_name().to_string_lossy().ends_with(".prime-snapshot.md")).count()
+    } else { 0 };
+
     let body = format!(
-        r#"<p><a href="/domains">&larr; All Domains</a></p>
-<div class="sb-flex" class="sb-section-header">
-  <img class="sb-app-icon" src="{icon}" alt="">
-  <span class="sb-pill sb-pill--info">{app_count} apps</span>
-</div>
-
-<div class="sb-tabs" role="tablist" id="domain-tabs">
-  <button class="sb-tab sb-tab--active" data-tab="apps" onclick="showTab(this,'apps')">Apps</button>
-  <button class="sb-tab" data-tab="events" onclick="showTab(this,'events')">Events</button>
-  <button class="sb-tab" data-tab="tab-status" onclick="showTab(this,'tab-status')">Tab Status</button>
-  <button class="sb-tab" data-tab="config" onclick="showTab(this,'config')">Config</button>
-  <button class="sb-tab" data-tab="share" onclick="showTab(this,'share')">Share</button>
-</div>
-
-<div id="panel-apps" class="sb-tab-panel">
-  {stillwater_section}
-  <table class="sb-table"><thead><tr><th>App</th><th>Version</th><th>Runs</th><th>Last Run</th></tr></thead><tbody>{app_rows}</tbody></table>
-</div>
-
-<div id="panel-events" class="sb-tab-panel" hidden>
-  <h3 class="sb-heading">Recent Runs</h3>
-  <table class="sb-table"><thead><tr><th>Run</th><th>App</th><th>Time</th></tr></thead><tbody>{run_rows}</tbody></table>
-</div>
-
-<div id="panel-tab-status" class="sb-tab-panel" hidden>
-  <div class="sb-card"><p>{tab_status}</p>
-  <p class="sb-text-muted sb-section">Rule: 1 browser tab per domain. Apps share the tab via acquire/release protocol.</p></div>
-</div>
-
-<div id="panel-config" class="sb-tab-panel" hidden>
-  <div class="sb-card">{config_section}</div>
-</div>
-
-<div id="panel-share" class="sb-tab-panel" hidden>
-  <div class="sb-card">
-    <h3>Share this domain's apps</h3>
-    <p class="sb-text-muted">Share all apps in this domain with a team member or anyone.</p>
-    <div >
-      <label >Recipient email</label>
-      <input type="email" id="share-domain-email" placeholder="colleague@company.com" class="sb-input">
-    </div>
-    <button class="sb-btn sb-btn--sm sb-btn--primary" onclick="shareDomain()">Share via solaceagi.com</button>
-    <p id="share-domain-result" class="sb-text-muted sb-section"></p>
-    <p class="sb-text-muted" class="sb-section sb-text-muted">Free: share with 1 person. <a href="https://solaceagi.com/pricing" target="_blank" rel="noopener">Team plan</a> ($88/mo): 5 seats + workspace.</p>
+        r#"<p><a href="/domains">&larr; All Domains</a> | <a href="/dashboard">Dashboard</a></p>
+<div class="sb-status-bar">
+  <div class="sb-card sb-stat-card">
+    <img src="{icon}" alt="" style="width:48px;height:48px;border-radius:12px">
+  </div>
+  <div class="sb-card sb-stat-card">
+    <div class="sb-kicker">Apps</div>
+    <div class="sb-stat-value">{app_count}</div>
+  </div>
+  <div class="sb-card sb-stat-card">
+    <div class="sb-kicker">OAuth3</div>
+    <div>{oauth3_html}</div>
+  </div>
+  <div class="sb-card sb-stat-card">
+    <div class="sb-kicker">Wiki</div>
+    <div class="sb-stat-value">{snapshot_count}</div>
+    <div class="sb-text-xs sb-text-muted">snapshots</div>
   </div>
 </div>
 
-<script>
-function showTab(btn, id) {{
-  document.querySelectorAll('.sb-tab').forEach(t => t.classList.remove('sb-tab--active'));
-  document.querySelectorAll('.sb-tab-panel').forEach(p => p.hidden = true);
-  btn.classList.add('sb-tab--active');
-  document.getElementById('panel-' + id).hidden = false;
-}}
-</script>"#,
+<!-- Domain Apps with Triggers -->
+<section>
+  <h2 class="sb-heading">Domain Apps</h2>
+  <div class="sb-card-grid">{app_cards_html}</div>
+</section>
+
+<!-- Trigger Rules Table -->
+<section class="sb-section">
+  <h2 class="sb-heading">Activation Triggers</h2>
+  <table class="sb-table"><thead><tr><th>App</th><th>Path</th><th>Context</th><th>Activation</th><th>DOM Selector</th></tr></thead>
+  <tbody>{trigger_rows}</tbody></table>
+  {no_triggers}
+</section>
+
+<!-- Recent Runs -->
+<section class="sb-section">
+  <h2 class="sb-heading">Recent Runs</h2>
+  <table class="sb-table"><thead><tr><th>Run</th><th>App</th><th>Time</th></tr></thead>
+  <tbody>{run_rows}</tbody></table>
+</section>
+
+<!-- Domain Config -->
+<section class="sb-section">
+  <h2 class="sb-heading">Configuration</h2>
+  <div class="sb-card">{config_section}</div>
+  <div class="sb-card sb-mt-md"><p>{tab_status}</p></div>
+</section>"#,
         icon = html_escape::encode_text(&icon),
         app_count = apps.len(),
+        oauth3_html = oauth3_html,
+        snapshot_count = snapshot_count,
+        app_cards_html = apps.iter().map(|a| {{
+            let actions_html = a.actions.iter().map(|act|
+                format!("<button class=\"sb-btn sb-btn--sm\">{}</button>", html_escape::encode_text(&act.label))
+            ).collect::<Vec<_>>().join(" ");
+            let triggers_html = if a.triggers.is_empty() { String::new() } else {
+                format!("<p class=\"sb-text-xs sb-text-muted\">{} triggers: {}</p>",
+                    a.triggers.len(),
+                    a.triggers.iter().map(|t| html_escape::encode_text(&t.context).to_string()).collect::<Vec<_>>().join(", "))
+            };
+            format!(
+                r#"<div class="sb-card"><h3><a href="/apps/{id}">{name}</a></h3>
+                <p class="sb-text-sm">{desc}</p>
+                {triggers_html}
+                <div class="sb-app-meta">{actions_html} <a href="/apps/{id}" class="sb-btn sb-btn--sm">Run</a></div></div>"#,
+                id = html_escape::encode_text(&a.id),
+                name = html_escape::encode_text(&a.name),
+                desc = html_escape::encode_text(&a.description),
+                triggers_html = triggers_html,
+                actions_html = actions_html,
+            )
+        }}).collect::<Vec<_>>().join("\n"),
+        no_triggers = if trigger_rows.is_empty() { "<p class=\"sb-text-muted\">No trigger rules defined for apps in this domain.</p>" } else { "" },
     );
 
     Ok(Html(hub_page(
