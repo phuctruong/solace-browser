@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use chrono::Utc;
-use serde_json::{Map, Value};
+use serde_json::{json, Map, Value};
 
 use crate::event_log::{EventLog, EventType};
 use crate::state::{AppState, Notification};
@@ -152,6 +152,20 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
         "inbox".to_string(),
         crate::app_engine::inbox::load_inbox_payload(&app_dir),
     );
+
+    // ── REINFORCEMENT LEARNING: Load feedback from inbox/feedback/ ──
+    // Past approve/reject decisions + human edits = RL training signal.
+    // Injected into data so templates and LLM can use it.
+    let feedback = load_feedback(&app_dir);
+    if !feedback.is_empty() {
+        data.insert("feedback_history".to_string(), Value::Array(feedback.clone()));
+        data.insert("feedback_count".to_string(), Value::Number(serde_json::Number::from(feedback.len())));
+        let approval_count = feedback.iter()
+            .filter(|f| f.get("decision").and_then(|d| d.as_str()) == Some("approve"))
+            .count();
+        data.insert("approval_rate".to_string(),
+            Value::String(format!("{:.0}%", approval_count as f64 / feedback.len() as f64 * 100.0)));
+    }
     // For conductor apps: load ONLY orchestrated apps' outboxes
     // For standard apps: load all other apps' latest reports
     // Conductor detection: "conductor" or legacy "orchestrator"
@@ -980,4 +994,62 @@ fn preview_html(report: &str) -> String {
 fn app_path(app_id: &str) -> PathBuf {
     crate::utils::find_app_dir(app_id)
         .unwrap_or_else(|| crate::utils::solace_home().join("apps").join(app_id))
+}
+
+/// Load all feedback deltas from inbox/feedback/ — the RL training signal.
+/// Returns a Vec of feedback entries sorted newest-first.
+fn load_feedback(app_dir: &std::path::Path) -> Vec<Value> {
+    let feedback_dir = app_dir.join("inbox").join("feedback");
+    let mut entries = Vec::new();
+
+    if let Ok(dir) = std::fs::read_dir(&feedback_dir) {
+        for entry in dir.flatten() {
+            let path = entry.path();
+            if path.extension().map(|e| e == "md").unwrap_or(false) {
+                let filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+                let content = std::fs::read_to_string(&path).unwrap_or_default();
+
+                let decision = if filename.starts_with("approve") { "approve" }
+                    else if filename.starts_with("reject") { "reject" }
+                    else { "unknown" };
+
+                // Extract human feedback text
+                let feedback_text = content
+                    .split("## Human Feedback\n")
+                    .nth(1)
+                    .and_then(|s| s.split("\n\n").next())
+                    .unwrap_or("")
+                    .trim()
+                    .to_string();
+
+                // Extract edited output
+                let edited = content
+                    .split("## Edited Output\n")
+                    .nth(1)
+                    .and_then(|s| s.split("\n\n").next())
+                    .unwrap_or("")
+                    .trim()
+                    .to_string();
+
+                entries.push(json!({
+                    "decision": decision,
+                    "feedback": feedback_text,
+                    "has_edits": !edited.is_empty() && edited != "(no edits — output accepted as-is)",
+                    "edited_output": edited,
+                    "filename": filename,
+                }));
+            }
+        }
+    }
+
+    // Sort newest first (filenames contain timestamps)
+    entries.sort_by(|a, b| {
+        let fa = a.get("filename").and_then(|f| f.as_str()).unwrap_or("");
+        let fb = b.get("filename").and_then(|f| f.as_str()).unwrap_or("");
+        fb.cmp(fa)
+    });
+
+    // Keep last 20 feedback entries (prevent context overflow)
+    entries.truncate(20);
+    entries
 }

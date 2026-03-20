@@ -25,6 +25,159 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/approvals/pending", get(pending_approvals))
         .route("/api/v1/approvals/approve", post(approve_action))
         .route("/api/v1/approvals/reject", post(reject_action))
+        .route("/api/v1/feedback/history", get(feedback_history))
+        .route("/api/v1/feedback/metrics", get(feedback_metrics))
+}
+
+// ─── Reinforcement Learning from Sign-offs ───────────────────────────
+
+/// Write feedback delta to app's inbox/feedback/ directory.
+/// This is the RL training signal: delta(proposed, approved) = learning.
+fn write_feedback_delta(
+    solace_home: &std::path::Path,
+    app_id: &str,
+    run_id: &str,
+    decision: &str,
+    feedback: &str,
+    edited_output: &str,
+    action_description: &str,
+) -> bool {
+    // Find the app's directory
+    let app_dir = match crate::utils::find_app_dir(app_id) {
+        Some(d) => d,
+        None => return false,
+    };
+
+    let feedback_dir = app_dir.join("inbox").join("feedback");
+    if std::fs::create_dir_all(&feedback_dir).is_err() {
+        return false;
+    }
+
+    let timestamp = chrono::Utc::now().format("%Y%m%d-%H%M%S").to_string();
+    let filename = if run_id.is_empty() {
+        format!("{}-{}.md", decision, timestamp)
+    } else {
+        format!("{}-{}-{}.md", decision, run_id, timestamp)
+    };
+
+    let content = format!(
+        "# Feedback: {} | {}\n\n## Decision: {}\n\n## Action\n{}\n\n## Human Feedback\n{}\n\n## Edited Output\n{}\n\n## Timestamp\n{}\n\n---\n*This feedback is reinforcement learning data. The AI worker reads this on the next run to improve.*\n",
+        app_id,
+        timestamp,
+        decision.to_uppercase(),
+        action_description,
+        if feedback.is_empty() { "(no feedback text)" } else { feedback },
+        if edited_output.is_empty() { "(no edits — output accepted as-is)" } else { edited_output },
+        chrono::Utc::now().to_rfc3339(),
+    );
+
+    std::fs::write(feedback_dir.join(&filename), content).is_ok()
+}
+
+/// GET /api/v1/feedback/history — list all feedback across all apps
+async fn feedback_history() -> Json<Value> {
+    let solace_home = crate::utils::solace_home();
+    let apps = crate::app_engine::scan_installed_apps();
+    let mut all_feedback = Vec::new();
+
+    for app in &apps {
+        if let Some(app_dir) = crate::utils::find_app_dir(&app.id) {
+            let feedback_dir = app_dir.join("inbox").join("feedback");
+            if let Ok(entries) = std::fs::read_dir(&feedback_dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.extension().map(|e| e == "md").unwrap_or(false) {
+                        let filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+                        let decision = if filename.starts_with("approve") { "approve" }
+                            else if filename.starts_with("reject") { "reject" }
+                            else { "unknown" };
+                        let content = std::fs::read_to_string(&path).unwrap_or_default();
+                        all_feedback.push(json!({
+                            "app_id": app.id,
+                            "app_name": app.name,
+                            "decision": decision,
+                            "filename": filename,
+                            "content_length": content.len(),
+                            "has_feedback_text": content.contains("## Human Feedback") && !content.contains("(no feedback text)"),
+                            "has_edits": content.contains("## Edited Output") && !content.contains("(no edits"),
+                        }));
+                    }
+                }
+            }
+        }
+    }
+
+    all_feedback.sort_by(|a, b| {
+        let fa = a.get("filename").and_then(|f| f.as_str()).unwrap_or("");
+        let fb = b.get("filename").and_then(|f| f.as_str()).unwrap_or("");
+        fb.cmp(fa)
+    });
+
+    let total = all_feedback.len();
+    let approvals = all_feedback.iter().filter(|f| f.get("decision").and_then(|d| d.as_str()) == Some("approve")).count();
+    let rejections = total - approvals;
+
+    Json(json!({
+        "feedback": all_feedback,
+        "total": total,
+        "approvals": approvals,
+        "rejections": rejections,
+        "approval_rate": if total > 0 { approvals as f64 / total as f64 } else { 0.0 },
+    }))
+}
+
+/// GET /api/v1/feedback/metrics — RL metrics across all workers
+async fn feedback_metrics() -> Json<Value> {
+    let apps = crate::app_engine::scan_installed_apps();
+    let mut per_app = Vec::new();
+
+    for app in &apps {
+        if let Some(app_dir) = crate::utils::find_app_dir(&app.id) {
+            let feedback_dir = app_dir.join("inbox").join("feedback");
+            let mut approvals = 0u32;
+            let mut rejections = 0u32;
+            let mut has_edits = 0u32;
+
+            if let Ok(entries) = std::fs::read_dir(&feedback_dir) {
+                for entry in entries.flatten() {
+                    let name = entry.file_name().to_string_lossy().to_string();
+                    if name.starts_with("approve") { approvals += 1; }
+                    else if name.starts_with("reject") { rejections += 1; }
+                    let content = std::fs::read_to_string(entry.path()).unwrap_or_default();
+                    if content.contains("## Edited Output") && !content.contains("(no edits") {
+                        has_edits += 1;
+                    }
+                }
+            }
+
+            let total = approvals + rejections;
+            if total > 0 {
+                per_app.push(json!({
+                    "app_id": app.id,
+                    "app_name": app.name,
+                    "category": app.category,
+                    "total_reviews": total,
+                    "approvals": approvals,
+                    "rejections": rejections,
+                    "approval_rate": approvals as f64 / total as f64,
+                    "edits": has_edits,
+                    "learning_signals": total,
+                }));
+            }
+        }
+    }
+
+    let total_reviews: u32 = per_app.iter().map(|a| a.get("total_reviews").and_then(|t| t.as_u64()).unwrap_or(0) as u32).sum();
+    let total_approvals: u32 = per_app.iter().map(|a| a.get("approvals").and_then(|t| t.as_u64()).unwrap_or(0) as u32).sum();
+
+    Json(json!({
+        "workers": per_app,
+        "total_workers_with_feedback": per_app.len(),
+        "total_reviews": total_reviews,
+        "total_approvals": total_approvals,
+        "overall_approval_rate": if total_reviews > 0 { total_approvals as f64 / total_reviews as f64 } else { 0.0 },
+        "rl_status": if total_reviews > 10 { "learning" } else if total_reviews > 0 { "warming_up" } else { "no_data" },
+    }))
 }
 
 // ---------------------------------------------------------------------------
@@ -38,6 +191,19 @@ struct StandardSignPayload {
     app_id: String,
     #[serde(default)]
     run_id: String,
+    /// Human feedback text — "What would make this better?"
+    #[serde(default)]
+    feedback: String,
+    /// Human-edited version of the output (the delta source)
+    #[serde(default)]
+    edited_output: String,
+    /// Decision: "approve" or "reject"
+    #[serde(default = "default_approve")]
+    decision: String,
+}
+
+fn default_approve() -> String {
+    "approve".to_string()
 }
 
 async fn standard_sign(
@@ -61,12 +227,26 @@ async fn standard_sign(
     )
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
+    // ─── REINFORCEMENT LEARNING: Write feedback delta to app's inbox ───
+    let feedback_written = write_feedback_delta(
+        &solace_home,
+        &payload.app_id,
+        &payload.run_id,
+        &payload.decision,
+        &payload.feedback,
+        &payload.edited_output,
+        &payload.action_description,
+    );
+
     Ok(Json(json!({
         "signed": true,
         "mode": "standard",
+        "decision": payload.decision,
         "evidence_id": evidence.id,
         "evidence_hash": evidence.hash,
         "timestamp": evidence.timestamp,
+        "feedback_written": feedback_written,
+        "rl_note": "Feedback delta saved to app inbox. Next run will incorporate learning.",
     })))
 }
 
