@@ -497,6 +497,120 @@ fn role_persona(role: &str) -> &'static str {
     }
 }
 
+/// Extracted targets from a job description
+struct ExtractedTargets {
+    companies: Vec<String>,
+    keywords: Vec<String>,
+}
+
+/// Extract company names and keywords from a job description using pattern matching.
+/// In production, this would call an LLM for better extraction.
+fn extract_targets_from_jd(jd: &str) -> ExtractedTargets {
+    let mut companies = Vec::new();
+    let mut keywords = Vec::new();
+
+    // Extract capitalized multi-word names (likely company names)
+    for word in jd.split(|c: char| c == ',' || c == '.' || c == ';' || c == '\n') {
+        let trimmed = word.trim();
+        // Company names: 2+ consecutive capitalized words
+        let words: Vec<&str> = trimmed.split_whitespace().collect();
+        for window in words.windows(2) {
+            if window[0].chars().next().map(|c| c.is_uppercase()).unwrap_or(false)
+                && window[1].chars().next().map(|c| c.is_uppercase()).unwrap_or(false)
+                && window[0].len() > 1 && window[1].len() > 1
+                && !["The", "This", "That", "With", "From", "Into", "Each", "For", "And", "Not", "All"].contains(&window[0])
+            {
+                let name = format!("{} {}", window[0], window[1]);
+                if !companies.contains(&name) && companies.len() < 10 {
+                    companies.push(name);
+                }
+            }
+        }
+    }
+
+    // Extract keywords: nouns and noun phrases relevant to business roles
+    let industry_terms = [
+        "pricing", "market", "revenue", "growth", "competitor", "product",
+        "sales", "pipeline", "customer", "churn", "retention", "acquisition",
+        "compliance", "regulatory", "patent", "funding", "partnership",
+        "technology", "platform", "saas", "enterprise", "startup",
+        "engagement", "conversion", "roi", "kpi", "benchmark",
+        "distribution", "channel", "e-commerce", "retail", "b2b", "b2c",
+    ];
+    let jd_lower = jd.to_lowercase();
+    for term in &industry_terms {
+        if jd_lower.contains(term) && !keywords.contains(&term.to_string()) {
+            keywords.push(term.to_string());
+        }
+    }
+
+    ExtractedTargets { companies, keywords }
+}
+
+/// Generate search queries specific to the role and targets
+fn generate_search_queries(role: &str, company: &str, targets: &ExtractedTargets) -> Vec<String> {
+    let mut queries = Vec::new();
+
+    // Role-specific query templates
+    match role {
+        "competitor" => {
+            for c in &targets.companies {
+                queries.push(format!("{} product launch 2026", c));
+                queries.push(format!("{} pricing", c));
+            }
+            queries.push(format!("{} competitors", company));
+        }
+        "market" => {
+            for kw in &targets.keywords {
+                queries.push(format!("{} market size 2026", kw));
+                queries.push(format!("{} industry trends", kw));
+            }
+            queries.push(format!("{} market analysis", company));
+        }
+        "bizdev" => {
+            queries.push(format!("{} potential customers", company));
+            queries.push(format!("{} partnerships", company));
+            for kw in &targets.keywords {
+                queries.push(format!("{} leads {}", kw, company));
+            }
+        }
+        "content" => {
+            for kw in &targets.keywords {
+                queries.push(format!("{} blog topics trending", kw));
+                queries.push(format!("{} social media strategy", kw));
+            }
+        }
+        "sales" => {
+            queries.push(format!("{} sales leads", company));
+            queries.push(format!("{} customer acquisition", company));
+        }
+        "legal" => {
+            for kw in &targets.keywords {
+                queries.push(format!("{} regulation 2026", kw));
+                queries.push(format!("{} compliance requirements", kw));
+            }
+        }
+        "financial" => {
+            queries.push(format!("{} revenue model", company));
+            queries.push(format!("{} unit economics", company));
+        }
+        _ => {
+            queries.push(format!("{} latest news", company));
+            for kw in targets.keywords.iter().take(3) {
+                queries.push(format!("{} {}", company, kw));
+            }
+        }
+    }
+
+    // Always add the company name as a query
+    if !queries.iter().any(|q| q == company) {
+        queries.push(company.to_string());
+    }
+
+    queries.truncate(10); // Max 10 queries
+    queries
+}
+
 #[derive(Deserialize)]
 struct JobDescriptionPayload {
     /// The job description text (plain text or structured)
@@ -583,6 +697,56 @@ levels:
     // Save job description to inbox
     std::fs::write(app_dir.join("inbox").join("job-description.md"), &payload.job_description).ok();
 
+    // ── ONBOARD PHASE: Parse JD into actionable config ──
+    std::fs::create_dir_all(app_dir.join("inbox").join("context")).ok();
+
+    // Extract target companies/keywords from JD using simple NLP
+    let targets = extract_targets_from_jd(&payload.job_description);
+    let search_queries = generate_search_queries(&detected_role, &company, &targets);
+
+    // Write context/targets.yaml
+    let targets_yaml = format!(
+        "# Auto-generated from job description\ncompany: {company}\nrole: {role}\ntargets:\n{targets_list}\nkeywords:\n{keywords}\n",
+        company = company,
+        role = detected_role,
+        targets_list = targets.companies.iter().map(|c| format!("  - {}", c)).collect::<Vec<_>>().join("\n"),
+        keywords = targets.keywords.iter().map(|k| format!("  - {}", k)).collect::<Vec<_>>().join("\n"),
+    );
+    std::fs::write(app_dir.join("inbox").join("context").join("targets.yaml"), &targets_yaml).ok();
+
+    // Write context/search-queries.yaml
+    let queries_yaml = format!(
+        "# Auto-generated search queries for {role} role\nqueries:\n{queries}\n",
+        role = detected_role,
+        queries = search_queries.iter().map(|q| format!("  - \"{}\"", q)).collect::<Vec<_>>().join("\n"),
+    );
+    std::fs::write(app_dir.join("inbox").join("context").join("search-queries.yaml"), &queries_yaml).ok();
+
+    // Write Prime Mermaid diagram for this role
+    let diagram = format!(
+        "<!-- Diagram: apps-role-{role} -->\n# {name} — Role Worker Diagram\n## DNA: `{role} = onboard(jd) × operate({apps}) × learn(feedback) → report`\n## Status: ONBOARDED | Persona: {persona}\n\n```mermaid\nflowchart TD\n    JD[Job Description] --> CONFIG[inbox/context/]\n    CONFIG --> TARGETS[targets.yaml<br>{target_count} targets]\n    CONFIG --> QUERIES[search-queries.yaml<br>{query_count} queries]\n    {app_nodes}\n    SYNTH[LLM Synthesis<br>{persona}] --> REPORT[Weekly Report]\n    REPORT --> SIGNOFF[Human Sign-off]\n    SIGNOFF --> FEEDBACK[inbox/feedback/]\n    FEEDBACK --> CONFIG\n```\n\n## PM Status\n| Node | Status |\n|------|--------|\n| Job Description | SEALED |\n| Config Generation | SEALED |\n| Search Queries | SEALED |\n| App Orchestration | GOOD |\n| LLM Synthesis | PENDING |\n| Human Sign-off | PENDING |\n| RL Feedback Loop | PENDING |\n",
+        role = detected_role,
+        name = app_name,
+        persona = persona,
+        apps = apps.iter().map(|a| a.replace("-", "_")).collect::<Vec<_>>().join(" × "),
+        target_count = targets.companies.len() + targets.keywords.len(),
+        query_count = search_queries.len(),
+        app_nodes = apps.iter().map(|a| format!("    {}[{}] --> SYNTH", a.replace("-","_"), a)).collect::<Vec<_>>().join("\n"),
+    );
+    std::fs::write(app_dir.join("diagram.prime-mermaid.md"), &diagram).ok();
+
+    // Write persona system prompt for LLM calls
+    let persona_prompt = format!(
+        "You are {persona}, an expert in {role_desc}. You work for {company}.\n\nYour job description:\n{jd}\n\nYour targets:\n{targets_str}\n\nYour search focus:\n{queries_str}\n\nProduce actionable, specific reports. Include data, numbers, and recommendations. Be direct and practical.\n",
+        persona = persona,
+        role_desc = detected_role.replace('_', " "),
+        company = company,
+        jd = payload.job_description,
+        targets_str = targets.companies.join(", "),
+        queries_str = search_queries.join("; "),
+    );
+    std::fs::write(app_dir.join("inbox").join("context").join("persona-prompt.md"), &persona_prompt).ok();
+
     // Record evidence
     let _ = crate::evidence::record_event(
         &solace_home,
@@ -602,6 +766,26 @@ levels:
         "orchestrates": apps,
         "company": company,
         "path": app_dir.display().to_string(),
-        "usage": "This role app runs weekly. Edit inbox/job-description.md to customize.",
+        "onboarding": {
+            "targets_extracted": targets.companies.len() + targets.keywords.len(),
+            "companies": targets.companies,
+            "keywords": targets.keywords,
+            "search_queries": search_queries,
+            "files_created": [
+                "manifest.yaml",
+                "manifest.md",
+                "diagram.prime-mermaid.md",
+                "inbox/job-description.md",
+                "inbox/context/targets.yaml",
+                "inbox/context/search-queries.yaml",
+                "inbox/context/persona-prompt.md",
+            ],
+        },
+        "lifecycle": {
+            "phase": "ONBOARDED",
+            "next": "FIRST_RUN — run this app to produce baseline report",
+            "then": "HUMAN_REVIEW — approve/reject to start RL training loop",
+        },
+        "usage": "Run: POST /api/v1/apps/run/{app_id}. Review output, approve/reject to train.",
     })))
 }
