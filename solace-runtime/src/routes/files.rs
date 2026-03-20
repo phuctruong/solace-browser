@@ -32,14 +32,22 @@ fn hub_assets_dir(subdir: &str) -> std::path::PathBuf {
     dev
 }
 
-/// Find sidebar assets — checks Chromium source tree then installed path.
+/// Find sidebar assets — checks Hub src, Chromium source, then installed path.
 fn sidebar_asset(filename: &str) -> Option<String> {
     let candidates = [
+        // Hub src (development — latest edits)
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap_or(std::path::Path::new("."))
+            .join("solace-hub/src")
+            .join(filename),
+        // Chromium source tree
         std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .unwrap_or(std::path::Path::new("."))
             .join("source/src/chrome/browser/resources/solace")
             .join(filename),
+        // Installed path
         crate::utils::solace_home()
             .join("resources")
             .join("solace-sidebar")
