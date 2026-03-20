@@ -521,6 +521,8 @@
   <div id="hub-tabs" class="sh-tabs-container">
     <div class="sb-tabs" role="tablist">
       <button class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+      <button class="sb-tab" data-tab="backoffice" role="tab">Backoffice</button>
+      <button class="sb-tab" data-tab="workers" role="tab">Workers</button>
       <button class="sb-tab" data-tab="sessions" role="tab">Sessions</button>
       <button class="sb-tab" data-tab="events" role="tab">Events <span id="events-badge" class="sb-pill sb-pill--danger sh-events-badge">0</span></button>
       <button class="sb-tab" data-tab="remote" role="tab">Remote</button>
@@ -676,6 +678,26 @@
 
   </div>
   </div><!-- end tab-overview -->
+
+  <!-- TAB: BACKOFFICE -->
+  <div id="tab-backoffice" class="hub-tab-panel sh-tab-panel-hidden">
+    <h2>Backoffice Apps <span id="bo-count" class="sb-pill sb-pill--info">0</span></h2>
+    <p class="sb-text-muted sb-mb-sm">SQLite-backed workspace apps. Agents write via API, humans read here.</p>
+    <div id="bo-stats" class="bo-stats"></div>
+    <div id="bo-apps" class="sb-grid"></div>
+    <h3 class="sb-mt-md">Pub/Sub Topics <span id="pubsub-count" class="sb-pill sb-pill--info">0</span></h3>
+    <div id="pubsub-topics"></div>
+    <h3 class="sb-mt-md">Job Queue</h3>
+    <div id="job-stats"></div>
+    <div id="job-list"></div>
+  </div>
+
+  <!-- TAB: WORKERS -->
+  <div id="tab-workers" class="hub-tab-panel sh-tab-panel-hidden">
+    <h2>CLI Workers <span id="cli-count" class="sb-pill sb-pill--info">0</span></h2>
+    <p class="sb-text-muted sb-mb-sm">Auto-detected local tools. Agents call via POST /api/v1/cli/:id/run.</p>
+    <div id="cli-workers"></div>
+  </div>
 
   <!-- TAB: SESSIONS -->
   <div id="tab-sessions" class="hub-tab-panel sh-tab-panel-hidden">
@@ -1594,6 +1616,94 @@ document.querySelectorAll('.sb-tab[data-tab]').forEach(function(btn) {
   // Signoffs poll every 5s
   setTimeout(refreshSignoffs, 3000);
   setInterval(refreshSignoffs, 5000);
+
+  // ── BACKOFFICE TAB ──
+  function loadBackoffice() {
+    get('/api/v1/backoffice').then(function(d) {
+      var apps = d.backoffice_apps || [];
+      $('bo-count').textContent = apps.length;
+      var html = '';
+      apps.forEach(function(app) {
+        html += '<div class="sb-card sb-mb-sm">';
+        html += '<h3><a href="/backoffice/' + esc(app.app_id) + '">' + esc(app.app_id.replace('backoffice-','').toUpperCase()) + '</a></h3>';
+        html += '<p class="sb-text-muted">' + (app.tables||[]).length + ' tables: ' + (app.tables||[]).join(', ') + '</p>';
+        html += '<p class="sb-text-xs">' + (app.views||[]).length + ' views: ' + (app.views||[]).join(', ') + '</p>';
+        html += '</div>';
+      });
+      $('bo-apps').innerHTML = html || '<p class="sb-text-muted">No backoffice apps detected</p>';
+    });
+
+    get('/api/v1/events/topics').then(function(d) {
+      var topics = d.topics || [];
+      $('pubsub-count').textContent = topics.length;
+      var html = '<table class="sb-table"><thead><tr><th>Topic</th><th>Events</th></tr></thead><tbody>';
+      topics.forEach(function(t) {
+        html += '<tr><td>' + esc(t.topic) + '</td><td>' + t.event_count + '</td></tr>';
+      });
+      html += '</tbody></table>';
+      $('pubsub-topics').innerHTML = topics.length ? html : '<p class="sb-text-muted">No events published yet</p>';
+    });
+
+    get('/api/v1/jobs/stats').then(function(d) {
+      var html = '<div class="bo-stats">';
+      html += '<div class="bo-stat-card"><div class="bo-stat-value">' + (d.total||0) + '</div><div class="bo-stat-label">Total Jobs</div></div>';
+      html += '<div class="bo-stat-card"><div class="bo-stat-value">' + (d.queued||0) + '</div><div class="bo-stat-label">Queued</div></div>';
+      html += '<div class="bo-stat-card"><div class="bo-stat-value">' + (d.running||0) + '</div><div class="bo-stat-label">Running</div></div>';
+      html += '<div class="bo-stat-card"><div class="bo-stat-value">' + (d.done||0) + '</div><div class="bo-stat-label">Done</div></div>';
+      html += '<div class="bo-stat-card"><div class="bo-stat-value">' + (d.failed||0) + '</div><div class="bo-stat-label">Failed</div></div>';
+      html += '</div>';
+      $('job-stats').innerHTML = html;
+    });
+
+    get('/api/v1/jobs?limit=10').then(function(d) {
+      var jobs = d.jobs || [];
+      if (!jobs.length) { $('job-list').innerHTML = '<p class="sb-text-muted">No jobs yet</p>'; return; }
+      var html = '<table class="sb-table"><thead><tr><th>Type</th><th>Status</th><th>Worker</th><th>Created</th></tr></thead><tbody>';
+      jobs.forEach(function(j) {
+        var cls = j.status === 'done' ? 'success' : j.status === 'failed' ? 'danger' : j.status === 'running' ? 'warning' : 'info';
+        html += '<tr><td>' + esc(j.job_type) + '</td>';
+        html += '<td><span class="sb-pill sb-pill--' + cls + '">' + esc(j.status) + '</span></td>';
+        html += '<td>' + esc(j.assigned_to||'—') + '</td>';
+        html += '<td class="sb-text-xs">' + esc((j.created_at||'').substring(0,19)) + '</td></tr>';
+      });
+      html += '</tbody></table>';
+      $('job-list').innerHTML = html;
+    });
+  }
+  loadBackoffice();
+  setInterval(loadBackoffice, 10000);
+
+  // ── WORKERS TAB ──
+  function loadWorkers() {
+    get('/api/v1/cli').then(function(d) {
+      var workers = d.workers || [];
+      $('cli-count').textContent = d.installed + '/' + d.total;
+      var byCat = {};
+      workers.forEach(function(w) {
+        if (!byCat[w.category]) byCat[w.category] = [];
+        byCat[w.category].push(w);
+      });
+      var html = '';
+      ['reasoning','perception','action','utility'].forEach(function(cat) {
+        var list = byCat[cat] || [];
+        if (!list.length) return;
+        html += '<h3 class="sb-mt-md">' + cat.charAt(0).toUpperCase() + cat.slice(1) + '</h3>';
+        list.forEach(function(w) {
+          var status = w.installed ? '<span class="sb-pill sb-pill--success">installed</span>' : '<span class="sb-pill sb-pill--danger">not found</span>';
+          html += '<div class="sb-card sb-mb-sm">';
+          html += '<strong>' + esc(w.id) + '</strong> ' + status;
+          html += '<p class="sb-text-muted sb-text-sm">' + esc(w.description) + '</p>';
+          if (w.installed) {
+            html += '<p class="sb-text-xs sb-text-mono">' + esc(w.path) + ' — ' + esc(w.version).substring(0,50) + '</p>';
+            html += '<p class="sb-text-xs">API: <code>POST ' + esc(w.api) + '</code></p>';
+          }
+          html += '</div>';
+        });
+      });
+      $('cli-workers').innerHTML = html;
+    });
+  }
+  loadWorkers();
 
   function loadVersionInfo() {
     get('/health').then(function(d) {
