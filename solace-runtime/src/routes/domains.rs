@@ -748,7 +748,11 @@ async fn domain_status(
 ) -> Json<serde_json::Value> {
     let apps = crate::utils::scan_apps();
     let domain_apps: Vec<_> = apps.iter()
-        .filter(|a| a.triggers.iter().any(|t| domain.contains(&t.domain)))
+        .filter(|a| {
+            // Match by app domain field OR by trigger domain
+            a.domain == domain
+                || a.triggers.iter().any(|t| domain.contains(&t.domain))
+        })
         .collect();
 
     // Check OAuth3 tokens for this domain
