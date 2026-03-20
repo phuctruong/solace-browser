@@ -281,6 +281,67 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
   <div class="sb-card-grid">{app_cards}</div>
 </section>
 
+<!-- Backoffice + Workers + Jobs (live data, loaded via JS) -->
+<section class="sb-section" aria-labelledby="office-heading">
+  <div class="sb-section-header">
+    <h2 id="office-heading" class="sb-heading">Office + Workers</h2>
+    <a href="/backoffice" class="sb-btn sb-btn--sm">Backoffice</a>
+  </div>
+  <div id="dash-office" class="sb-card-grid"></div>
+</section>
+
+<script>
+(function() {{
+  function ge(id) {{ return document.getElementById(id); }}
+  function fetchJson(url) {{ return fetch(url).then(function(r){{ return r.json(); }}); }}
+
+  // Backoffice + CLI Workers + Jobs in one dashboard strip
+  Promise.all([
+    fetchJson('/api/v1/backoffice'),
+    fetchJson('/api/v1/cli'),
+    fetchJson('/api/v1/jobs/stats'),
+    fetchJson('/api/v1/events/topics')
+  ]).then(function(results) {{
+    var bo = results[0], cli = results[1], jobs = results[2], topics = results[3];
+    var html = '';
+
+    // Backoffice apps
+    (bo.backoffice_apps||[]).forEach(function(app) {{
+      var name = app.app_id.replace('backoffice-','').toUpperCase();
+      html += '<div class="sb-card"><div class="sb-kicker">Backoffice</div>';
+      html += '<strong><a href="/backoffice/' + app.app_id + '">' + name + '</a></strong>';
+      html += '<p class="sb-text-muted sb-text-sm">' + (app.tables||[]).join(', ') + '</p></div>';
+    }});
+
+    // CLI workers summary
+    html += '<div class="sb-card"><div class="sb-kicker">CLI Workers</div>';
+    html += '<div class="sb-stat-value">' + (cli.installed||0) + '/' + (cli.total||0) + '</div>';
+    var cats = cli.by_category || {{}};
+    Object.keys(cats).forEach(function(c) {{
+      var installed = cats[c].filter(function(w){{ return w.installed; }}).length;
+      html += '<span class="sb-pill sb-pill--info sb-text-2xs">' + c + ': ' + installed + '</span> ';
+    }});
+    html += '</div>';
+
+    // Job queue
+    html += '<div class="sb-card"><div class="sb-kicker">Job Queue</div>';
+    html += '<div class="sb-stat-value">' + (jobs.total||0) + '</div>';
+    if (jobs.running) html += '<span class="sb-pill sb-pill--warning">' + jobs.running + ' running</span> ';
+    if (jobs.queued) html += '<span class="sb-pill sb-pill--info">' + jobs.queued + ' queued</span> ';
+    if (jobs.done) html += '<span class="sb-pill sb-pill--success">' + jobs.done + ' done</span> ';
+    if (jobs.failed) html += '<span class="sb-pill sb-pill--danger">' + jobs.failed + ' failed</span>';
+    html += '</div>';
+
+    // Pub/Sub
+    html += '<div class="sb-card"><div class="sb-kicker">Event Bus</div>';
+    html += '<div class="sb-stat-value">' + (topics.total||0) + '</div>';
+    html += '<p class="sb-text-muted sb-text-sm">topics active</p></div>';
+
+    ge('dash-office').innerHTML = html;
+  }});
+}})();
+</script>
+
 <!-- Active Sessions -->
 <section class="sb-section" aria-labelledby="sessions-heading">
   <h2 id="sessions-heading" class="sb-heading">Active Sessions {notif_badge}</h2>
