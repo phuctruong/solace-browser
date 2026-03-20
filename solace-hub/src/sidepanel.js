@@ -413,11 +413,44 @@
           if (currentUrl.indexOf('solaceagi.com/dashboard') !== -1 && !state.handshakeAttempted) {
             detectDashboardLogin();
           }
+          // Auto-capture: create Prime Wiki snapshot + Stillwater + PZip
+          capturePageSnapshot(currentUrl);
         }
       } catch (e) {
-        // Cross-origin — sidebar can't read top URL
+        // Cross-origin — sidebar can't read top URL, try runtime URL API
+        getJson('/api/v1/browser/current-url').then(function(d) {
+          if (d && d.url && d.url !== state.lastReportedUrl) {
+            state.lastReportedUrl = d.url;
+            // Can't capture HTML cross-origin, but notify runtime
+            sendToRuntime({ type: 'url_changed', url: d.url, title: '' });
+          }
+        }).catch(function(){});
       }
     }, 2000);
+  }
+
+  // Auto-capture: grab page HTML and send to wiki/extract (Part 11 evidence)
+  function capturePageSnapshot(url) {
+    try {
+      // Only capture if same-origin (cross-origin pages can't be read)
+      const html = window.top.document.documentElement.outerHTML;
+      if (!html || html.length < 100) return;
+      // Skip localhost pages (we're the sidebar itself)
+      if (url.indexOf('localhost:8888') !== -1) return;
+      if (url.indexOf('127.0.0.1:8888') !== -1) return;
+
+      fetch(API_BASE + '/api/v1/wiki/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url, content: html })
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.status === 'extracted') {
+          console.log('[Solace] Wiki snapshot:', d.codec, d.ratio, 'savings:', d.token_savings?.savings_pct + '%');
+        }
+      }).catch(function(){});
+    } catch (e) {
+      // Cross-origin — can't capture HTML, that's expected
+    }
   }
 
   // Detect login on solaceagi.com/dashboard and trigger auth handshake
