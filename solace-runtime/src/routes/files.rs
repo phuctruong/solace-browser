@@ -574,8 +574,7 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         domain_count = domain_apps.len(),
         evidence_count = part11.record_count,
         role_cards = role_apps.iter().map(|a| format!(
-            r#"<div class="sb-card"><div class="sb-card-header"><h3 class="sb-card-title"><img class="sb-app-icon" src="{icon}" alt="" loading="lazy"><a href="/apps/{id}">{name}</a></h3><span class="sb-pill sb-pill--info">{persona}</span></div><div class="sb-card-body"><p class="sb-text-sm">{desc}</p><div class="sb-app-meta"><a href="/apps/{id}" class="sb-btn sb-btn--sm">Run</a></div></div></div>"#,
-            icon = html_escape::encode_text(&domain_icon_path(&a.domain)),
+            r#"<div class="sb-card"><div class="sb-card-header"><h3 class="sb-card-title"><a href="/apps/{id}">{name}</a></h3><span class="sb-pill sb-pill--info">{persona}</span></div><div class="sb-card-body"><p class="sb-text-sm">{desc}</p><div class="sb-app-meta"><a href="/apps/{id}" class="sb-btn sb-btn--sm">Run</a></div></div></div>"#,
             id = html_escape::encode_text(&a.id),
             name = html_escape::encode_text(&a.name),
             desc = html_escape::encode_text(&a.description),
@@ -2090,7 +2089,27 @@ a:focus-visible {{ outline: 2px solid var(--sb-signal); outline-offset: 2px; }}
 .sb-section-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }}
 .sb-section {{ margin-top: 1.5rem; }}
 .sb-app-meta {{ display: flex; gap: 1.5rem; margin-top: 0.5rem; }}
-.sb-main-content {{ max-width: 1100px; margin: 1.5rem auto; padding: 0 1.5rem; }}
+.sb-main-content {{ max-width: 1400px; margin: 1.5rem auto; padding: 0 1.5rem; }}
+/* Dashboard tabs: single row, scrollable */
+.sb-tabs {{ display: flex; gap: 0.25rem; overflow-x: auto; white-space: nowrap; padding-bottom: 0.25rem; }}
+.sb-tab {{ flex-shrink: 0; font-size: 0.85rem; padding: 0.4rem 0.8rem; }}
+/* Backoffice custom components */
+.bo-stats {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }}
+.bo-stat-card {{ background: var(--sb-surface, #1e293b); border: 1px solid var(--sb-border, #334155); border-radius: 8px; padding: 0.75rem; text-align: center; }}
+.bo-stat-value {{ font-size: 1.5rem; font-weight: 700; }}
+.bo-stat-label {{ font-size: 0.75rem; color: var(--sb-text-muted, #94a3b8); margin-top: 0.25rem; }}
+.bo-kanban {{ display: flex; gap: 0.75rem; overflow-x: auto; padding: 0.5rem 0; }}
+.bo-kanban-column {{ min-width: 180px; flex-shrink: 0; background: var(--sb-surface, #1e293b); border-radius: 8px; padding: 0.75rem; }}
+.bo-kanban-column-header {{ font-weight: 600; font-size: 0.8rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }}
+.bo-kanban-card {{ background: var(--sb-bg, #0f172a); border: 1px solid var(--sb-border, #334155); border-radius: 6px; padding: 0.5rem; margin-bottom: 0.4rem; font-size: 0.8rem; }}
+.bo-message {{ display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }}
+.bo-message-avatar {{ width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: white; flex-shrink: 0; }}
+.bo-message--agent .bo-message-avatar {{ background: #a855f7; }}
+.bo-message--human .bo-message-avatar {{ background: #22c55e; }}
+.bo-message-sender {{ font-weight: 600; font-size: 0.8rem; }}
+.bo-message-text {{ font-size: 0.8rem; margin-top: 0.15rem; }}
+.bo-message-time {{ font-size: 0.65rem; color: var(--sb-text-muted, #94a3b8); }}
+.bo-chart {{ height: 200px; background: var(--sb-surface, #1e293b); border-radius: 8px; border: 1px solid var(--sb-border, #334155); }}
 .sb-page-title {{ font-size: 1.4rem; margin-bottom: 1rem; }}
 .sb-nav-link {{ color: var(--sb-text-muted); font-size: 0.85rem; text-decoration: none; }}
 .sb-nav-link:hover {{ color: var(--sb-text); }}
