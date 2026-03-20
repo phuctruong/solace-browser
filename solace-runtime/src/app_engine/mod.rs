@@ -74,6 +74,54 @@ pub struct AppManifest {
     /// Visibility: public (app store), team (workspace), secret (creator), template (partner).
     #[serde(default = "default_visibility")]
     pub visibility: String,
+    /// Domain app triggers: activate on specific URL + DOM state.
+    #[serde(default)]
+    pub triggers: Vec<Trigger>,
+    /// Domain app actions: what the user can do when app is active.
+    #[serde(default)]
+    pub actions: Vec<AppAction>,
+    /// Backoffice workspace config (SQLite-backed apps).
+    #[serde(default)]
+    pub backoffice: Option<serde_json::Value>,
+    /// Worker power sources (L1-L5).
+    #[serde(default)]
+    pub worker: Option<serde_json::Value>,
+    /// Persona assigned to this app.
+    #[serde(default)]
+    pub persona: String,
+    /// Tags for categorization and search.
+    #[serde(default)]
+    pub tags: Vec<String>,
+}
+
+/// Domain app trigger: activate when URL + DOM match.
+#[derive(Clone, Default, Serialize, Deserialize, Debug)]
+pub struct Trigger {
+    #[serde(default)]
+    pub domain: String,
+    #[serde(default)]
+    pub path: String,
+    #[serde(default)]
+    pub dom_selector: String,
+    #[serde(default)]
+    pub context: String,
+    #[serde(default = "default_activation")]
+    pub activation: String,
+}
+
+fn default_activation() -> String {
+    "auto".to_string()
+}
+
+/// Action a domain app can perform.
+#[derive(Clone, Default, Serialize, Deserialize, Debug)]
+pub struct AppAction {
+    #[serde(default)]
+    pub id: String,
+    #[serde(default)]
+    pub label: String,
+    #[serde(default)]
+    pub description: String,
 }
 
 fn default_cli_timeout() -> u64 {

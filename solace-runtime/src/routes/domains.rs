@@ -55,6 +55,14 @@ pub fn routes() -> Router<AppState> {
             "/api/v1/domains/:domain/tab/release",
             axum::routing::post(release_domain_tab),
         )
+        .route(
+            "/api/v1/domains/:domain/triggers",
+            get(match_triggers),
+        )
+        .route(
+            "/api/v1/domains/:domain/status",
+            get(domain_status),
+        )
 }
 
 /// Per-domain session policy — controls TTL, auth type, keep-alive interval.
@@ -671,4 +679,97 @@ mod tests {
     fn extract_root_domain_co_uk() {
         assert_eq!(extract_root_domain("bbc.co.uk"), "bbc.co.uk");
     }
+}
+
+/// Match triggers: which domain apps should activate for a given URL?
+async fn match_triggers(
+    State(_state): State<AppState>,
+    Path(domain): Path<String>,
+    axum::extract::Query(params): axum::extract::Query<std::collections::HashMap<String, String>>,
+) -> Json<serde_json::Value> {
+    let url_path = params.get("path").cloned().unwrap_or_else(|| "/".to_string());
+
+    let apps = crate::utils::scan_apps();
+    let mut matched = Vec::new();
+
+    for app in &apps {
+        for trigger in &app.triggers {
+            // Domain match (exact or subdomain)
+            let trigger_domain = &trigger.domain;
+            if !domain.contains(trigger_domain) && trigger_domain != &domain {
+                continue;
+            }
+
+            // Path match (glob-like: /* matches everything)
+            let path_pattern = &trigger.path;
+            let path_matches = path_pattern == "/*"
+                || path_pattern == &url_path
+                || (path_pattern.ends_with('*') && url_path.starts_with(&path_pattern[..path_pattern.len()-1]));
+
+            if path_matches {
+                matched.push(serde_json::json!({
+                    "app_id": app.id,
+                    "app_name": app.name,
+                    "trigger_context": trigger.context,
+                    "dom_selector": trigger.dom_selector,
+                    "activation": trigger.activation,
+                    "actions": app.actions,
+                    "category": app.category,
+                    "persona": app.persona,
+                }));
+            }
+        }
+    }
+
+    Json(serde_json::json!({
+        "domain": domain,
+        "path": url_path,
+        "matched_apps": matched,
+        "count": matched.len(),
+    }))
+}
+
+/// Domain status: OAuth3, apps, wiki snapshots.
+async fn domain_status(
+    State(state): State<AppState>,
+    Path(domain): Path<String>,
+) -> Json<serde_json::Value> {
+    let apps = crate::utils::scan_apps();
+    let domain_apps: Vec<_> = apps.iter()
+        .filter(|a| a.triggers.iter().any(|t| domain.contains(&t.domain)))
+        .collect();
+
+    // Check OAuth3 tokens for this domain
+    let solace_home = crate::utils::solace_home();
+    let vault_path = solace_home.join("vault").join("oauth3.json");
+    let oauth3_status = if vault_path.exists() {
+        if let Ok(content) = std::fs::read_to_string(&vault_path) {
+            if content.contains(&domain) { "active" } else { "not_configured" }
+        } else { "not_configured" }
+    } else { "not_configured" };
+
+    // Wiki snapshot count for this domain
+    let wiki_dir = solace_home.join("wiki").join("domains").join(&domain);
+    let snapshot_count = if wiki_dir.exists() {
+        std::fs::read_dir(&wiki_dir)
+            .into_iter().flatten().filter_map(|e| e.ok())
+            .filter(|e| e.file_name().to_string_lossy().ends_with(".prime-snapshot.md"))
+            .count()
+    } else { 0 };
+
+    let cloud = state.cloud_config.read().is_some();
+
+    Json(serde_json::json!({
+        "domain": domain,
+        "oauth3_status": oauth3_status,
+        "apps_count": domain_apps.len(),
+        "apps": domain_apps.iter().map(|a| serde_json::json!({
+            "app_id": a.id,
+            "name": a.name,
+            "triggers": a.triggers.len(),
+            "actions": a.actions.len(),
+        })).collect::<Vec<_>>(),
+        "wiki_snapshots": snapshot_count,
+        "cloud_connected": cloud,
+    }))
 }
