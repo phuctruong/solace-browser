@@ -77,7 +77,7 @@ fn find_table<'a>(config: &'a WorkspaceConfig, table_name: &str) -> Result<&'a c
 
 async fn list_backoffice_apps(State(_state): State<AppState>) -> Json<Value> {
     // Find all apps with category: backoffice
-    let known = ["backoffice-messages", "backoffice-tasks", "backoffice-crm", "backoffice-files"];
+    let known = ["backoffice-messages", "backoffice-tasks", "backoffice-crm", "backoffice-docs", "backoffice-email", "backoffice-analytics", "backoffice-support", "backoffice-invoicing", "backoffice-scheduling", "backoffice-forms"];
     let mut apps = Vec::new();
 
     for app_id in &known {
@@ -307,7 +307,7 @@ async fn search_records(
 // ── HTML Page Handlers ──
 
 async fn backoffice_home(State(_state): State<AppState>) -> Html<String> {
-    let known = ["backoffice-messages", "backoffice-tasks", "backoffice-crm"];
+    let known = ["backoffice-messages", "backoffice-tasks", "backoffice-crm", "backoffice-docs", "backoffice-email", "backoffice-analytics", "backoffice-support", "backoffice-invoicing", "backoffice-scheduling", "backoffice-forms"];
     let mut cards = String::new();
 
     for app_id in &known {

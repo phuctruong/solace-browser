@@ -283,11 +283,15 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
 </div>
 
 <!-- Dashboard Tabs -->
-<div class="sb-tabs" role="tablist" id="dash-tabs">
+<div class="sb-tabs" role="tablist" id="dash-tabs" style="flex-wrap:wrap">
   <button class="sb-tab sb-tab--active" data-tab="workers" role="tab" aria-selected="true">AI Workers</button>
   <button class="sb-tab" data-tab="crm" role="tab">CRM</button>
   <button class="sb-tab" data-tab="messages" role="tab">Messages</button>
   <button class="sb-tab" data-tab="tasks" role="tab">Tasks</button>
+  <button class="sb-tab" data-tab="docs" role="tab">Docs</button>
+  <button class="sb-tab" data-tab="email-tab" role="tab">Email</button>
+  <button class="sb-tab" data-tab="support" role="tab">Support</button>
+  <button class="sb-tab" data-tab="invoicing" role="tab">Invoicing</button>
   <button class="sb-tab" data-tab="domains-tab" role="tab">Domains</button>
   <button class="sb-tab" data-tab="all-apps" role="tab">All Apps</button>
 </div>
@@ -328,6 +332,43 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
     <a href="/backoffice/backoffice-tasks" class="sb-btn sb-btn--sm">Full Board</a>
   </div>
   <div id="dash-tasks"></div>
+</div>
+
+<!-- TAB: Domains -->
+<!-- TAB: Docs -->
+<div id="tab-docs" class="dash-tab-panel" style="display:none">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">Docs &amp; Knowledge Base</h2>
+    <a href="/backoffice/backoffice-docs" class="sb-btn sb-btn--sm">Full Docs</a>
+  </div>
+  <div id="dash-docs"></div>
+</div>
+
+<!-- TAB: Email -->
+<div id="tab-email-tab" class="dash-tab-panel" style="display:none">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">Email Campaigns &amp; Sequences</h2>
+    <a href="/backoffice/backoffice-email" class="sb-btn sb-btn--sm">Full Email</a>
+  </div>
+  <div id="dash-email"></div>
+</div>
+
+<!-- TAB: Support -->
+<div id="tab-support" class="dash-tab-panel" style="display:none">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">Support Tickets</h2>
+    <a href="/backoffice/backoffice-support" class="sb-btn sb-btn--sm">Full Support</a>
+  </div>
+  <div id="dash-support"></div>
+</div>
+
+<!-- TAB: Invoicing -->
+<div id="tab-invoicing" class="dash-tab-panel" style="display:none">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">Invoicing &amp; Expenses</h2>
+    <a href="/backoffice/backoffice-invoicing" class="sb-btn sb-btn--sm">Full Invoicing</a>
+  </div>
+  <div id="dash-invoicing"></div>
 </div>
 
 <!-- TAB: Domains -->
@@ -487,6 +528,46 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
     html += '</div>';
     ge('dash-system').innerHTML = html;
   }});
+
+  // Generic backoffice tab loader — shows table from any backoffice app
+  function loadBackofficeTab(appId, tableName, elementId, emptyMsg) {{
+    fetchJson('/api/v1/backoffice/' + appId + '/' + tableName).then(function(d) {{
+      var items = d.items || [];
+      if (!items.length) {{ ge(elementId).innerHTML = '<p class="sb-text-muted">' + emptyMsg + '</p>'; return; }}
+      var cols = Object.keys(items[0]).filter(function(k){{ return k !== 'evidence_hash'; }});
+      var html = '<table class="sb-table"><thead><tr>';
+      cols.forEach(function(c) {{ html += '<th>' + c + '</th>'; }});
+      html += '</tr></thead><tbody>';
+      items.forEach(function(row) {{
+        html += '<tr>';
+        cols.forEach(function(c) {{
+          var val = row[c] || '';
+          if (c === 'status' || c === 'stage' || c === 'priority') {{
+            var cls = val === 'done' || val === 'paid' || val === 'published' ? 'success' : val === 'failed' || val === 'overdue' || val === 'urgent' ? 'danger' : 'info';
+            html += '<td><span class="sb-pill sb-pill--' + cls + '">' + esc(val) + '</span></td>';
+          }} else if (c === 'id' || c === 'created_at' || c === 'updated_at') {{
+            html += '<td class="sb-text-xs sb-text-muted">' + esc(String(val).substring(0,16)) + '</td>';
+          }} else {{
+            html += '<td>' + esc(String(val).substring(0,80)) + '</td>';
+          }}
+        }});
+        html += '</tr>';
+      }});
+      html += '</tbody></table>';
+      ge(elementId).innerHTML = html;
+      // Init DataTables
+      if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {{
+        jQuery.fn.dataTable.ext.errMode = 'none';
+        try {{ jQuery('#' + elementId + ' table').DataTable({{paging:true,searching:true,ordering:true,pageLength:10,dom:'ftip'}}); }} catch(e) {{}}
+      }}
+    }}).catch(function(){{ ge(elementId).innerHTML = '<p class="sb-text-muted">Not initialized yet. Data will appear as agents work.</p>'; }});
+  }}
+
+  // Load new backoffice tabs
+  loadBackofficeTab('backoffice-docs', 'pages', 'dash-docs', 'No docs yet. Create pages in the knowledge base.');
+  loadBackofficeTab('backoffice-email', 'campaigns', 'dash-email', 'No email campaigns yet.');
+  loadBackofficeTab('backoffice-support', 'tickets', 'dash-support', 'No support tickets yet.');
+  loadBackofficeTab('backoffice-invoicing', 'invoices', 'dash-invoicing', 'No invoices yet.');
 }})();
 </script>"#,
         role_count = role_apps.len(),
