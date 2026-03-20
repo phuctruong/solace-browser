@@ -165,57 +165,113 @@
   };
 
   function renderDomains() {
-    var tbody = qs('domain-tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
+    var container = qs('domain-accordion');
+    if (!container) return;
+    container.innerHTML = '';
 
-    // Detect current domain
+    // Detect current domain from browser URL
     var currentDomain = '';
     try { currentDomain = window.top.location.hostname; } catch(e) {}
     if (!currentDomain || currentDomain === '127.0.0.1') currentDomain = 'localhost';
 
-    // Sort by traffic (localhost always first, then by traffic desc)
+    // Sort by traffic (localhost always first)
     var sorted = state.domains.slice().sort(function(a, b) {
       if (a.host === 'localhost') return -1;
       if (b.host === 'localhost') return 1;
-      var ta = DOMAIN_TRAFFIC[a.host] || 0;
-      var tb = DOMAIN_TRAFFIC[b.host] || 0;
-      return tb - ta;
+      return (DOMAIN_TRAFFIC[b.host] || 0) - (DOMAIN_TRAFFIC[a.host] || 0);
     });
 
     sorted.forEach(function (domain) {
       var isCurrentDomain = domain.host === currentDomain || (domain.host === 'localhost' && (currentDomain === 'localhost' || currentDomain === '127.0.0.1'));
-      var tr = document.createElement('tr');
-      if (isCurrentDomain) tr.className = 'yy-current-domain';
-      tr.innerHTML = '<td><img class="yy-domain-row-icon" src="' + escapeHtml(domain.icon || '') + '" alt="" onerror="this.src=\'http://127.0.0.1:8888/icons/yinyang-logo.png\'">' + escapeHtml(domain.label) + '</td>' +
-        '<td><span class="yy-pill yy-pill-muted" style="font-size:0.6rem">' + (domain.app_count || 0) + '</span></td>';
-      tr.addEventListener('click', function () {
+
+      var item = document.createElement('div');
+      item.className = 'yy-domain-item';
+      item.dataset.domain = domain.host;
+
+      // Header row
+      var header = document.createElement('div');
+      header.className = 'yy-domain-header' + (isCurrentDomain ? ' yy-selected yy-expanded' : '');
+      header.innerHTML = '<img src="' + escapeHtml(domain.icon || '') + '" alt="" onerror="this.src=\'http://127.0.0.1:8888/icons/yinyang-logo.png\'">' +
+        '<div class="yy-domain-info"><div class="yy-domain-name">' + escapeHtml(domain.label) + '</div>' +
+        '<div class="yy-domain-apps-preview">' + (domain.app_count || 0) + ' apps</div></div>' +
+        '<span class="yy-domain-badge"><span class="yy-pill yy-pill-muted" style="font-size:0.6rem">' + (domain.app_count || 0) + '</span></span>' +
+        '<span class="yy-chevron">▶</span>';
+
+      // Apps panel (hidden by default, open for current domain)
+      var appsPanel = document.createElement('div');
+      appsPanel.className = 'yy-domain-apps' + (isCurrentDomain ? ' yy-open' : '');
+      appsPanel.id = 'apps-' + domain.host.replace(/\./g, '-');
+      appsPanel.innerHTML = '<p class="yy-copy" style="font-size:0.65rem">Loading apps...</p>';
+
+      header.addEventListener('click', function() {
+        // Toggle expand
+        var wasExpanded = header.classList.contains('yy-expanded');
+
+        // Collapse all others
+        container.querySelectorAll('.yy-domain-header').forEach(function(h) { h.classList.remove('yy-expanded', 'yy-selected'); });
+        container.querySelectorAll('.yy-domain-apps').forEach(function(p) { p.classList.remove('yy-open'); });
+
+        if (!wasExpanded) {
+          header.classList.add('yy-expanded', 'yy-selected');
+          appsPanel.classList.add('yy-open');
+          loadDomainApps(domain, appsPanel);
+          // Scroll into view
+          setTimeout(function() { header.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+        }
+
+        // Navigate main browser
         selectDomain(domain.id);
-        openDomainDrillDown(domain);
-        // Navigate main browser to domain dashboard
         var url = domain.host === 'localhost' ? 'http://localhost:8888/dashboard' : 'http://localhost:8888/domains/' + encodeURIComponent(domain.host);
         navigateMainBrowser(url);
       });
-      tbody.appendChild(tr);
+
+      item.appendChild(header);
+      item.appendChild(appsPanel);
+      container.appendChild(item);
+
+      // Auto-load apps for current domain
+      if (isCurrentDomain) {
+        loadDomainApps(domain, appsPanel);
+      }
     });
 
     setText('domain-count', sorted.length + ' active');
 
-    // Init DataTables on domain table
-    if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {
-      jQuery.fn.dataTable.ext.errMode = 'none';
-      if (jQuery.fn.DataTable.isDataTable('#domain-table')) {
-        jQuery('#domain-table').DataTable().destroy();
-      }
-      try {
-        jQuery('#domain-table').DataTable({
-          paging: false, searching: true, ordering: true, info: false,
-          order: [], // preserve our traffic sort
-          language: { search: '', searchPlaceholder: 'Filter domains...' },
-          dom: 'ft'
+    // Filter input
+    var filterInput = qs('domain-filter');
+    if (filterInput) {
+      filterInput.addEventListener('input', function() {
+        var query = this.value.toLowerCase();
+        container.querySelectorAll('.yy-domain-item').forEach(function(item) {
+          var domain = item.dataset.domain || '';
+          item.style.display = domain.toLowerCase().indexOf(query) !== -1 ? '' : 'none';
         });
-      } catch(e) {}
+      });
     }
+  }
+
+  // Load apps for a domain into its expand panel
+  function loadDomainApps(domain, panel) {
+    getJson('/api/v1/domains/' + encodeURIComponent(domain.host) + '/status').then(function(d) {
+      var apps = d.apps || [];
+      if (!apps.length) {
+        panel.innerHTML = '<p class="yy-copy" style="font-size:0.7rem">No apps for this domain.</p>';
+        return;
+      }
+      var html = '';
+      apps.forEach(function(app) {
+        html += '<div class="yy-app-row">';
+        html += '<div class="yy-app-name">' + escapeHtml(app.name || app.app_id) + '</div>';
+        html += '<div class="yy-app-meta">' + (app.triggers || 0) + ' triggers · ' + (app.actions || 0) + ' actions</div>';
+        html += '<div class="yy-app-actions">';
+        html += '<button class="yy-btn-primary" onclick="window.runDomainAction(\'' + escapeHtml(app.app_id) + '\',\'run\')">Run</button>';
+        html += '<button onclick="navigateMainBrowser(\'http://localhost:8888/apps/' + escapeHtml(app.app_id) + '\')">Details</button>';
+        html += '</div></div>';
+      });
+      panel.innerHTML = html;
+    }).catch(function() {
+      panel.innerHTML = '<p class="yy-copy" style="font-size:0.7rem">Could not load apps.</p>';
+    });
   }
 
   // Drill-down: show selected domain + its apps
@@ -265,6 +321,31 @@
       appsList.innerHTML = html;
     }).catch(function() {
       appsList.innerHTML = '<p class="yy-copy">Could not load apps.</p>';
+    });
+  }
+
+  // Auto-expand current domain when URL changes
+  function autoExpandCurrentDomain() {
+    var currentDomain = '';
+    try { currentDomain = window.top.location.hostname; } catch(e) {}
+    if (!currentDomain || currentDomain === '127.0.0.1') currentDomain = 'localhost';
+
+    var container = qs('domain-accordion');
+    if (!container) return;
+
+    container.querySelectorAll('.yy-domain-item').forEach(function(item) {
+      var domainHost = item.dataset.domain;
+      var header = item.querySelector('.yy-domain-header');
+      var panel = item.querySelector('.yy-domain-apps');
+      if (domainHost === currentDomain && !header.classList.contains('yy-expanded')) {
+        container.querySelectorAll('.yy-domain-header').forEach(function(h) { h.classList.remove('yy-expanded', 'yy-selected'); });
+        container.querySelectorAll('.yy-domain-apps').forEach(function(p) { p.classList.remove('yy-open'); });
+        header.classList.add('yy-expanded', 'yy-selected');
+        panel.classList.add('yy-open');
+        var domainData = state.domains.find(function(d) { return d.host === domainHost; });
+        if (domainData) loadDomainApps(domainData, panel);
+        setTimeout(function() { header.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
+      }
     });
   }
 
@@ -568,6 +649,8 @@
           capturePageSnapshot(currentUrl);
           // Check for domain app triggers on this page
           checkDomainTriggers(currentUrl);
+          // Auto-expand current domain in sidebar accordion
+          autoExpandCurrentDomain();
         }
       } catch (e) {
         // Cross-origin — sidebar can't read top URL, try runtime URL API

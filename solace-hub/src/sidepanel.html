@@ -7,24 +7,31 @@
   <link rel="stylesheet" href="sidepanel.css">
   <link rel="stylesheet" href="http://127.0.0.1:8888/vendor/jquery.dataTables.min.css">
   <style>
-    .yy-domain-table { border-collapse: collapse; }
-    .yy-domain-table td, .yy-domain-table th { padding: 0.3rem 0.4rem; border-bottom: 1px solid var(--yy-border); color: var(--yy-text); font-size: 0.72rem; }
-    .yy-domain-table thead th { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--yy-text-muted); }
-    .yy-domain-table tbody tr { cursor: pointer; transition: background 0.15s; }
-    .yy-domain-table tbody tr:hover { background: var(--yy-surface-accent); }
-    .yy-domain-table tbody tr.yy-current-domain { background: var(--yy-surface-brand); border-left: 3px solid var(--yy-accent); }
-    .yy-domain-row-icon { width: 20px; height: 20px; border-radius: 4px; vertical-align: middle; margin-right: 0.3rem; }
-    .yy-app-row { padding: 0.4rem; margin-bottom: 0.3rem; background: var(--yy-surface-soft); border-radius: 8px; border: 1px solid var(--yy-border); }
+    /* Domain accordion */
+    .yy-domain-filter { width: 100%; padding: 0.4rem 0.6rem; background: var(--yy-surface); border: 1px solid var(--yy-border); color: var(--yy-text); border-radius: 8px; font-size: 0.8rem; margin-bottom: 0.5rem; box-sizing: border-box; }
+    .yy-domain-filter:focus { border-color: var(--yy-accent); outline: none; }
+    .yy-domain-item { border-bottom: 1px solid var(--yy-border); }
+    .yy-domain-header { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.4rem; cursor: pointer; transition: background 0.15s; }
+    .yy-domain-header:hover { background: var(--yy-surface-accent); }
+    .yy-domain-header.yy-selected { background: var(--yy-surface-brand); border-left: 3px solid var(--yy-accent); }
+    .yy-domain-header img { width: 30px; height: 30px; border-radius: 6px; object-fit: contain; flex-shrink: 0; }
+    .yy-domain-header .yy-domain-info { flex: 1; min-width: 0; }
+    .yy-domain-header .yy-domain-name { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .yy-domain-header .yy-domain-apps-preview { font-size: 0.65rem; color: var(--yy-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .yy-domain-header .yy-domain-badge { flex-shrink: 0; }
+    .yy-domain-header .yy-chevron { font-size: 0.7rem; color: var(--yy-text-muted); transition: transform 0.2s; flex-shrink: 0; }
+    .yy-domain-header.yy-expanded .yy-chevron { transform: rotate(90deg); }
+    .yy-domain-apps { display: none; padding: 0.3rem 0.4rem 0.5rem 2.8rem; }
+    .yy-domain-apps.yy-open { display: block; }
+    .yy-app-row { padding: 0.5rem; margin-bottom: 0.3rem; background: var(--yy-surface-soft); border-radius: 8px; border: 1px solid transparent; transition: border-color 0.15s; }
     .yy-app-row:hover { border-color: var(--yy-accent); }
-    .yy-app-actions { display: flex; gap: 0.25rem; margin-top: 0.3rem; }
-    .yy-app-actions button { font-size: 0.65rem; padding: 0.15rem 0.4rem; background: var(--yy-surface-accent); border: 1px solid var(--yy-border); border-radius: 4px; color: var(--yy-text); cursor: pointer; }
+    .yy-app-row.yy-app-active { border-color: var(--yy-success); background: rgba(74,217,173,0.08); }
+    .yy-app-name { font-size: 0.8rem; font-weight: 600; }
+    .yy-app-meta { font-size: 0.65rem; color: var(--yy-text-muted); margin-top: 0.15rem; }
+    .yy-app-actions { display: flex; gap: 0.25rem; margin-top: 0.35rem; }
+    .yy-app-actions button { font-size: 0.7rem; padding: 0.2rem 0.5rem; background: var(--yy-surface-accent); border: 1px solid var(--yy-border); border-radius: 6px; color: var(--yy-text); cursor: pointer; transition: background 0.15s; }
     .yy-app-actions button:hover { background: var(--yy-accent); color: var(--yy-bg); }
-    /* DataTables overrides for dark sidebar */
-    .yy-domain-table_wrapper .dataTables_filter input { background: var(--yy-surface); border: 1px solid var(--yy-border); color: var(--yy-text); border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.7rem; }
-    .yy-domain-table_wrapper .dataTables_info, .yy-domain-table_wrapper .dataTables_paginate { font-size: 0.6rem; color: var(--yy-text-muted); }
-    .dataTables_wrapper .dataTables_paginate .paginate_button { color: var(--yy-text-muted) !important; font-size: 0.6rem; }
-    .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: var(--yy-accent) !important; color: var(--yy-bg) !important; border-radius: 4px; }
-    .dataTables_wrapper .dataTables_filter label { color: var(--yy-text-muted); font-size: 0.65rem; }
+    .yy-app-actions button.yy-btn-primary { background: var(--yy-accent); color: var(--yy-bg); }
   </style>
 </head>
 <body class="yy-body" data-theme="dark">
@@ -125,7 +132,7 @@
           <div id="active-apps-list"></div>
         </section>
 
-        <!-- Domain List (DataTables-powered) -->
+        <!-- Domain List (expandable rows with inline apps) -->
         <section class="yy-card" id="domain-list-section">
           <div class="yy-section-head">
             <div>
@@ -134,10 +141,8 @@
             </div>
             <span id="domain-count" class="yy-pill yy-pill-muted">0 active</span>
           </div>
-          <table id="domain-table" class="yy-domain-table" style="width:100%;font-size:0.75rem">
-            <thead><tr><th>Domain</th><th>Apps</th></tr></thead>
-            <tbody id="domain-tbody"></tbody>
-          </table>
+          <input type="text" id="domain-filter" class="yy-domain-filter" placeholder="Filter domains...">
+          <div id="domain-accordion"></div>
         </section>
 
         <section class="yy-card">
