@@ -27,3 +27,4 @@ pub mod qa;
 pub mod wiki;
 pub mod backoffice;
 pub mod cli_workers;
+pub mod pubsub_api;

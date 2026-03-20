@@ -60,6 +60,10 @@ pub struct AppState {
     pub pending_js: Arc<RwLock<Option<String>>>,
     /// Backoffice database manager: one SQLite DB per backoffice app, lazy init.
     pub backoffice_db: Arc<crate::backoffice::db::DbManager>,
+    /// Pub/Sub event bus: agents subscribe to topics, events trigger subscribers.
+    pub event_bus: Arc<crate::pubsub::EventBus>,
+    /// Job queue: priority-based task dispatch with retry + evidence.
+    pub job_queue: Arc<crate::job_queue::JobQueue>,
 }
 
 /// Tunnel state for remote access (FDA Part 11 consent + WSS connection).
@@ -294,6 +298,8 @@ impl AppState {
             backoffice_db: Arc::new(crate::backoffice::db::DbManager::new(
                 solace_home.join("backoffice"),
             )),
+            event_bus: Arc::new(crate::pubsub::EventBus::new(&solace_home)),
+            job_queue: Arc::new(crate::job_queue::JobQueue::new(&solace_home)),
         }
     }
 

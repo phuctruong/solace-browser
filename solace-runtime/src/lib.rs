@@ -2,6 +2,8 @@
 pub mod agents;
 pub mod app_engine;
 pub mod backoffice;
+pub mod pubsub;
+pub mod job_queue;
 pub mod cloud;
 pub mod config;
 pub mod cron;
